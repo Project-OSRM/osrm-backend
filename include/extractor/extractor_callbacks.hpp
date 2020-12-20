@@ -47,7 +47,7 @@ struct ExtractionNode;
 struct ExtractionWay;
 struct ExtractionRelation;
 struct ProfileProperties;
-struct InputConditionalTurnRestriction;
+struct InputTurnRestriction;
 struct InputManeuverOverride;
 
 /**
@@ -87,7 +87,7 @@ class ExtractorCallbacks
     void ProcessNode(const osmium::Node &current_node, const ExtractionNode &result_node);
 
     // warning: caller needs to take care of synchronization!
-    void ProcessRestriction(const InputConditionalTurnRestriction &restriction);
+    void ProcessRestriction(const InputTurnRestriction &restriction);
 
     // warning: caller needs to take care of synchronization!
     void ProcessWay(const osmium::Way &current_way, const ExtractionWay &result_way);

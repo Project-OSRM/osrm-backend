@@ -61,8 +61,8 @@ void inplacePermutation(RandomAccessIterator begin,
 template <typename IndexT>
 std::vector<IndexT> orderingToPermutation(const std::vector<IndexT> &ordering)
 {
-    std::vector<std::uint32_t> permutation(ordering.size());
-    for (auto index : util::irange<std::uint32_t>(0, ordering.size()))
+    std::vector<IndexT> permutation(ordering.size());
+    for (auto index : util::irange<IndexT>(0, ordering.size()))
         permutation[ordering[index]] = index;
 
     return permutation;

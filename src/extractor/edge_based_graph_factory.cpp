@@ -239,7 +239,7 @@ void EdgeBasedGraphFactory::Run(
     const std::string &cnbg_ebg_mapping_path,
     const std::string &conditional_penalties_filename,
     const std::string &maneuver_overrides_filename,
-    const RestrictionMap &node_restriction_map,
+    const RestrictionMap &unconditional_node_restriction_map,
     const ConditionalRestrictionMap &conditional_node_restriction_map,
     const WayRestrictionMap &way_restriction_map,
     const std::vector<UnresolvedManeuverOverride> &unresolved_maneuver_overrides)
@@ -268,7 +268,7 @@ void EdgeBasedGraphFactory::Run(
                               turn_penalties_index_filename,
                               conditional_penalties_filename,
                               maneuver_overrides_filename,
-                              node_restriction_map,
+                              unconditional_node_restriction_map,
                               conditional_node_restriction_map,
                               way_restriction_map,
                               unresolved_maneuver_overrides);
@@ -374,17 +374,17 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
     // Add copies of the nodes
     {
         util::UnbufferedLog log;
-        const auto via_ways = way_restriction_map.DuplicatedNodeRepresentatives();
-        util::Percent progress(log, via_ways.size());
+        const auto via_edges = way_restriction_map.DuplicatedViaEdges();
+        util::Percent progress(log, via_edges.size());
 
         NodeID edge_based_node_id =
             NodeID(m_number_of_edge_based_nodes - way_restriction_map.NumberOfDuplicatedNodes());
         std::size_t progress_counter = 0;
         // allocate enough space for the mapping
-        for (const auto way : via_ways)
+        for (const auto edge : via_edges)
         {
-            const auto node_u = way.from;
-            const auto node_v = way.to;
+            const auto node_u = edge.from;
+            const auto node_v = edge.to;
             // we know that the edge exists as non-reversed edge
             const auto eid = m_node_based_graph.FindEdge(node_u, node_v);
 
@@ -437,8 +437,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     const std::string &turn_penalties_index_filename,
     const std::string &conditional_penalties_filename,
     const std::string &maneuver_overrides_filename,
-    const RestrictionMap &node_restriction_map,
-    const ConditionalRestrictionMap &conditional_restriction_map,
+    const RestrictionMap &unconditional_node_restriction_map,
+    const ConditionalRestrictionMap &conditional_node_restriction_map,
     const WayRestrictionMap &way_restriction_map,
     const std::vector<UnresolvedManeuverOverride> &unresolved_maneuver_overrides)
 {
@@ -452,7 +452,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                               m_edge_based_node_container,
                                                               m_coordinates,
                                                               m_compressed_edge_container,
-                                                              node_restriction_map,
+                                                              unconditional_node_restriction_map,
                                                               m_barrier_nodes,
                                                               turn_lanes_data,
                                                               name_table,
@@ -544,10 +544,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             });
 
         // Generate edges for either artificial nodes or the main graph
-        const auto generate_edge = [this,
-                                    &scripting_environment,
-                                    weight_multiplier,
-                                    &conditional_restriction_map](
+        const auto generate_edge = [this, &scripting_environment, weight_multiplier](
                                        // what nodes will be used? In most cases this will be the id
                                        // stored in the edge_data. In case of duplicated nodes (e.g.
                                        // due to via-way restrictions), one/both of these might
@@ -563,24 +560,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                        const auto &road_legs_on_the_right,
                                        const auto &road_legs_on_the_left,
                                        const auto &edge_geometries) {
-            const auto node_restricted =
-                isRestricted(node_along_road_entering,
-                             intersection_node,
-                             m_node_based_graph.GetTarget(node_based_edge_to),
-                             conditional_restriction_map);
-
-            boost::optional<Conditional> conditional = boost::none;
-            if (node_restricted.first)
-            {
-                auto const &conditions = node_restricted.second->condition;
-                // get conditions of the restriction limiting the node
-                conditional = {{edge_based_node_from,
-                                edge_based_node_to,
-                                {static_cast<std::uint64_t>(-1),
-                                 m_coordinates[intersection_node],
-                                 conditions}}};
-            }
-
             const auto &edge_data1 = m_node_based_graph.GetEdgeData(node_based_edge_from);
             const auto &edge_data2 = m_node_based_graph.GetEdgeData(node_based_edge_to);
 
@@ -676,9 +655,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             lookup::TurnIndexBlock turn_index_block = {from_node, intersection_node, to_node};
 
             // insert data into the designated buffer
-            return std::make_pair(
-                EdgeWithData{edge_based_edge, turn_index_block, weight_penalty, duration_penalty},
-                conditional);
+            return EdgeWithData{
+                edge_based_edge, turn_index_block, weight_penalty, duration_penalty};
         };
 
         //
@@ -739,7 +717,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         const auto intersection_view =
                             convertToIntersectionView(m_node_based_graph,
                                                       m_edge_based_node_container,
-                                                      node_restriction_map,
+                                                      unconditional_node_restriction_map,
                                                       m_barrier_nodes,
                                                       edge_geometries,
                                                       turn_lanes_data,
@@ -747,16 +725,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                       outgoing_edges,
                                                       merged_edge_ids);
 
-                        // check if we are turning off a via way
-                        const auto turning_off_via_way =
-                            way_restriction_map.IsViaWay(incoming_edge.node, intersection_node);
+                        // check if this edge is part of a restriction via-way
+                        const auto is_restriction_via_edge =
+                            way_restriction_map.IsViaWayEdge(incoming_edge.node, intersection_node);
 
                         for (const auto &outgoing_edge : outgoing_edges)
                         {
                             auto is_turn_allowed =
                                 intersection::isTurnAllowed(m_node_based_graph,
                                                             m_edge_based_node_container,
-                                                            node_restriction_map,
+                                                            unconditional_node_restriction_map,
                                                             m_barrier_nodes,
                                                             edge_geometries,
                                                             turn_lanes_data,
@@ -850,7 +828,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             }
 
                             // In case a way restriction starts at a given location, add a turn onto
-                            // every artificial node eminating here.
+                            // every artificial node emanating here.
                             //
                             //     e - f
                             //     |
@@ -861,14 +839,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             // ab via bc to cd
                             // ab via be to ef
                             //
-                            // has two artifical nodes (be/bc) with restrictions starting at `ab`.
+                            // has two artificial nodes (be/bc) with restrictions starting at `ab`.
                             // Since every restriction group (abc | abe) refers to the same
                             // artificial node, we simply have to find a single representative for
                             // the turn. Here we check whether the turn in question is the start of
                             // a via way restriction. If that should be the case, we switch the id
                             // of the edge-based-node for the target to the ID of the duplicated
                             // node associated with the turn. (e.g. ab via bc switches bc to bc_dup)
-                            auto const target_id = way_restriction_map.RemapIfRestricted(
+                            auto const target_id = way_restriction_map.RemapIfRestrictionStart(
                                 nbe_to_ebn_mapping[outgoing_edge.edge],
                                 incoming_edge.node,
                                 outgoing_edge.node,
@@ -877,7 +855,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                             /***************************/
 
-                            const auto edgetarget =
+                            const auto outgoing_edge_target =
                                 m_node_based_graph.GetTarget(outgoing_edge.edge);
 
                             // TODO: this loop is not optimized - once we have a few
@@ -888,7 +866,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                 for (auto &turn : override.turn_sequence)
                                 {
                                     if (turn.from == incoming_edge.node &&
-                                        turn.via == intersection_node && turn.to == edgetarget)
+                                        turn.via == intersection_node &&
+                                        turn.to == outgoing_edge_target)
                                     {
                                         const auto &ebn_from =
                                             nbe_to_ebn_mapping[incoming_edge.edge];
@@ -900,7 +879,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             }
 
                             { // scope to forget edge_with_data after
-                                const auto edge_with_data_and_condition =
+                                const auto edge_with_data =
                                     generate_edge(nbe_to_ebn_mapping[incoming_edge.edge],
                                                   target_id,
                                                   incoming_edge.node,
@@ -912,20 +891,30 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                   road_legs_on_the_left,
                                                   edge_geometries);
 
-                                buffer->continuous_data.push_back(
-                                    edge_with_data_and_condition.first);
-                                if (edge_with_data_and_condition.second)
+                                buffer->continuous_data.push_back(edge_with_data);
+
+                                // get conditional restrictions that apply to this turn
+                                const auto &restrictions =
+                                    conditional_node_restriction_map.Restrictions(
+                                        incoming_edge.node,
+                                        outgoing_edge.node,
+                                        outgoing_edge_target);
+                                for (const auto &restriction : restrictions)
                                 {
                                     buffer->conditionals.push_back(
-                                        *edge_with_data_and_condition.second);
+                                        {nbe_to_ebn_mapping[incoming_edge.edge],
+                                         target_id,
+                                         {static_cast<std::uint64_t>(-1),
+                                          m_coordinates[intersection_node],
+                                          restriction->condition}});
                                 }
                             }
 
-                            // when turning off a a via-way turn restriction, we need to not only
+                            // When on the edge of a via-way turn restriction, we need to not only
                             // handle the normal edges for the way, but also add turns for every
                             // duplicated node. This process is integrated here to avoid doing the
                             // turn analysis multiple times.
-                            if (turning_off_via_way)
+                            if (is_restriction_via_edge)
                             {
                                 const auto duplicated_nodes = way_restriction_map.DuplicatedNodeIDs(
                                     incoming_edge.node, intersection_node);
@@ -943,71 +932,91 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                     auto const node_at_end_of_turn =
                                         m_node_based_graph.GetTarget(outgoing_edge.edge);
 
-                                    const auto is_way_restricted = way_restriction_map.IsRestricted(
+                                    const auto is_restricted = way_restriction_map.IsRestricted(
                                         duplicated_node_id, node_at_end_of_turn);
 
-                                    if (is_way_restricted)
+                                    if (is_restricted)
                                     {
-                                        auto const restriction = way_restriction_map.GetRestriction(
-                                            duplicated_node_id, node_at_end_of_turn);
+                                        auto const &restrictions =
+                                            way_restriction_map.GetRestrictions(
+                                                duplicated_node_id, node_at_end_of_turn);
 
-                                        if (restriction.condition.empty())
+                                        auto const has_unconditional =
+                                            std::any_of(restrictions.begin(),
+                                                        restrictions.end(),
+                                                        [](const auto &restriction) {
+                                                            return restriction->IsUnconditional();
+                                                        });
+                                        if (has_unconditional)
                                             continue;
 
-                                        // add into delayed data
-                                        auto edge_with_data_and_condition =
-                                            generate_edge(from_id,
-                                                          nbe_to_ebn_mapping[outgoing_edge.edge],
-                                                          incoming_edge.node,
-                                                          incoming_edge.edge,
-                                                          outgoing_edge.node,
-                                                          outgoing_edge.edge,
-                                                          turn->angle,
-                                                          road_legs_on_the_right,
-                                                          road_legs_on_the_left,
-                                                          edge_geometries);
+                                        // From this via way, the outgoing edge will either:
+                                        // a) take a conditional turn transferring to a via
+                                        // path of an overlapping restriction.
+                                        // b) take a conditional turn to exit the restriction.
+                                        // If a) is applicable here, we change the target to be
+                                        // the duplicate restriction node.
+                                        auto const via_target_id =
+                                            way_restriction_map.RemapIfRestrictionVia(
+                                                nbe_to_ebn_mapping[outgoing_edge.edge],
+                                                from_id,
+                                                m_node_based_graph.GetTarget(outgoing_edge.edge),
+                                                m_number_of_edge_based_nodes);
 
-                                        buffer->delayed_data.push_back(
-                                            edge_with_data_and_condition.first);
-                                        if (edge_with_data_and_condition.second)
-                                        {
-                                            buffer->conditionals.push_back(
-                                                *edge_with_data_and_condition.second);
-                                        }
+                                        // add into delayed data
+                                        auto edge_with_data = generate_edge(from_id,
+                                                                            via_target_id,
+                                                                            incoming_edge.node,
+                                                                            incoming_edge.edge,
+                                                                            outgoing_edge.node,
+                                                                            outgoing_edge.edge,
+                                                                            turn->angle,
+                                                                            road_legs_on_the_right,
+                                                                            road_legs_on_the_left,
+                                                                            edge_geometries);
+
+                                        buffer->delayed_data.push_back(edge_with_data);
 
                                         // also add the conditions for the way
-                                        if (is_way_restricted && !restriction.condition.empty())
+                                        for (const auto &restriction : restrictions)
                                         {
-                                            // add a new conditional for the edge we just created
+                                            // add a new conditional for the edge we just
+                                            // created
                                             buffer->conditionals.push_back(
                                                 {from_id,
-                                                 nbe_to_ebn_mapping[outgoing_edge.edge],
+                                                 via_target_id,
                                                  {static_cast<std::uint64_t>(-1),
                                                   m_coordinates[intersection_node],
-                                                  restriction.condition}});
+                                                  restriction->condition}});
                                         }
                                     }
                                     else
                                     {
-                                        auto edge_with_data_and_condition =
-                                            generate_edge(from_id,
-                                                          nbe_to_ebn_mapping[outgoing_edge.edge],
-                                                          incoming_edge.node,
-                                                          incoming_edge.edge,
-                                                          outgoing_edge.node,
-                                                          outgoing_edge.edge,
-                                                          turn->angle,
-                                                          road_legs_on_the_right,
-                                                          road_legs_on_the_left,
-                                                          edge_geometries);
+                                        // From this via way, the outgoing edge will either:
+                                        // a) continue along the current via path
+                                        // b) transfer to a via path of an overlapping restriction.
+                                        // c) exit the restriction
+                                        // If a) or b) are applicable here, we change the target to
+                                        // be the duplicate restriction node.
+                                        auto const via_target_id =
+                                            way_restriction_map.RemapIfRestrictionVia(
+                                                nbe_to_ebn_mapping[outgoing_edge.edge],
+                                                from_id,
+                                                m_node_based_graph.GetTarget(outgoing_edge.edge),
+                                                m_number_of_edge_based_nodes);
 
-                                        buffer->delayed_data.push_back(
-                                            edge_with_data_and_condition.first);
-                                        if (edge_with_data_and_condition.second)
-                                        {
-                                            buffer->conditionals.push_back(
-                                                *edge_with_data_and_condition.second);
-                                        }
+                                        auto edge_with_data = generate_edge(from_id,
+                                                                            via_target_id,
+                                                                            incoming_edge.node,
+                                                                            incoming_edge.edge,
+                                                                            outgoing_edge.node,
+                                                                            outgoing_edge.edge,
+                                                                            turn->angle,
+                                                                            road_legs_on_the_right,
+                                                                            road_legs_on_the_left,
+                                                                            edge_geometries);
+
+                                        buffer->delayed_data.push_back(edge_with_data);
                                     }
                                 }
                             }

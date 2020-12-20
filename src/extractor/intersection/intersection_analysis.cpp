@@ -428,24 +428,10 @@ double findEdgeLength(const IntersectionEdgeGeometries &geometries, const EdgeID
 template <typename RestrictionsRange>
 bool isTurnRestricted(const RestrictionsRange &restrictions, const NodeID to)
 {
-    // Check turn restrictions to find a node that is the only allowed target when coming from a
-    // node to an intersection
-    //     d
-    //     |
-    // a - b - c  and `only_straight_on ab | bc would return `c` for `a,b`
-    const auto is_only = std::find_if(restrictions.first,
-                                      restrictions.second,
-                                      [](const auto &pair) { return pair.second->is_only; });
-    if (is_only != restrictions.second)
-        return is_only->second->AsNodeRestriction().to != to;
-
-    // Check if explicitly forbidden
-    const auto no_turn =
-        std::find_if(restrictions.first, restrictions.second, [&to](const auto &restriction) {
-            return restriction.second->AsNodeRestriction().to == to;
-        });
-
-    return no_turn != restrictions.second;
+    // Check if any of the restrictions would prevent a turn to 'to'
+    return std::any_of(restrictions.begin(), restrictions.end(), [&to](const auto &restriction) {
+        return restriction->IsTurnRestricted(to);
+    });
 }
 
 bool isTurnAllowed(const util::NodeBasedDynamicGraph &graph,

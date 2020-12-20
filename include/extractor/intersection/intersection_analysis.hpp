@@ -5,7 +5,7 @@
 #include "extractor/intersection/intersection_edge.hpp"
 #include "extractor/intersection/intersection_view.hpp"
 #include "extractor/intersection/mergable_road_detector.hpp"
-#include "extractor/restriction_index.hpp"
+#include "extractor/node_restriction_map.hpp"
 #include "extractor/turn_lane_types.hpp"
 
 #include "util/coordinate.hpp"

@@ -1,6 +1,7 @@
 # Unreleased
   - Changes from 5.23.0
-    - Features:
+    - Features
+      - ADDED: Added support for multiple via-way restrictions. [#5907](https://github.com/Project-OSRM/osrm-backend/pull/5907)
       - ADDED: Add node bindings support for Node 12, 14, and publish binaries [#5918](https://github.com/Project-OSRM/osrm-backend/pull/5918)
       - REMOVED: we no longer publish Node 8 binary modules (they are still buildable from source) [#5918](https://github.com/Project-OSRM/osrm-backend/pull/5918)
     - Misc:

@@ -20,46 +20,40 @@ namespace osrm
 namespace extractor
 {
 
-void GraphCompressor::Compress(
-    const std::unordered_set<NodeID> &barrier_nodes,
-    const std::unordered_set<NodeID> &traffic_signals,
-    ScriptingEnvironment &scripting_environment,
-    std::vector<TurnRestriction> &turn_restrictions,
-    std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
-    std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
-    util::NodeBasedDynamicGraph &graph,
-    const std::vector<NodeBasedEdgeAnnotation> &node_data_container,
-    CompressedEdgeContainer &geometry_compressor)
+void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
+                               const std::unordered_set<NodeID> &traffic_signals,
+                               ScriptingEnvironment &scripting_environment,
+                               std::vector<TurnRestriction> &turn_restrictions,
+                               std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
+                               util::NodeBasedDynamicGraph &graph,
+                               const std::vector<NodeBasedEdgeAnnotation> &node_data_container,
+                               CompressedEdgeContainer &geometry_compressor)
 {
     const unsigned original_number_of_nodes = graph.GetNumberOfNodes();
     const unsigned original_number_of_edges = graph.GetNumberOfEdges();
 
-    RestrictionCompressor restriction_compressor(
-        turn_restrictions, conditional_turn_restrictions, maneuver_overrides);
+    RestrictionCompressor restriction_compressor(turn_restrictions, maneuver_overrides);
 
-    // we do not compress turn restrictions on degree two nodes. These nodes are usually used to
-    // indicated `directed` barriers
+    // Some degree two nodes are not compressed if they act as entry/exit points into a
+    // restriction path.
     std::unordered_set<NodeID> restriction_via_nodes;
 
     const auto remember_via_nodes = [&](const auto &restriction) {
         if (restriction.Type() == RestrictionType::NODE_RESTRICTION)
         {
-            const auto &node = restriction.AsNodeRestriction();
-            restriction_via_nodes.insert(node.via);
+            restriction_via_nodes.insert(restriction.AsNodeRestriction().via);
         }
         else
         {
             BOOST_ASSERT(restriction.Type() == RestrictionType::WAY_RESTRICTION);
-            const auto &way = restriction.AsWayRestriction();
-            restriction_via_nodes.insert(way.in_restriction.via);
-            restriction_via_nodes.insert(way.out_restriction.via);
+            const auto &way_restriction = restriction.AsWayRestriction();
+            // We do not compress the first and last via nodes so that we know how to enter/exit
+            // a restriction path and apply the restrictions correctly.
+            restriction_via_nodes.insert(way_restriction.via.front());
+            restriction_via_nodes.insert(way_restriction.via.back());
         }
     };
     std::for_each(turn_restrictions.begin(), turn_restrictions.end(), remember_via_nodes);
-    std::for_each(conditional_turn_restrictions.begin(),
-                  conditional_turn_restrictions.end(),
-                  remember_via_nodes);
-
     {
         const auto weight_multiplier =
             scripting_environment.GetProfileProperties().GetWeightMultiplier();
@@ -82,8 +76,8 @@ void GraphCompressor::Compress(
                 continue;
             }
 
-            // check if v is a via node for a turn restriction, i.e. a 'directed' barrier node
-            if (restriction_via_nodes.count(node_v))
+            // check if v is an entry/exit via node for a turn restriction
+            if (restriction_via_nodes.count(node_v) > 0)
             {
                 continue;
             }
@@ -181,7 +175,7 @@ void GraphCompressor::Compress(
                  * reasonable, since the announcements have to come early anyhow. So there is a
                  * potential danger in here, but it saves us from adding a lot of additional edges
                  * for
-                 * turn-lanes. Without this,we would have to treat any turn-lane beginning/ending
+                 * turn-lanes. Without this, we would have to treat any turn-lane beginning/ending
                  * just
                  * like a barrier.
                  */
