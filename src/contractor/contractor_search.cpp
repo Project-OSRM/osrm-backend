@@ -32,16 +32,18 @@ void relaxNode(ContractorHeap &heap,
         }
         const EdgeWeight to_weight = node_weight + data.weight;
 
+        const auto toHeapNode = heap.GetHeapNodeIfWasInserted(to);
         // New Node discovered -> Add to Heap + Node Info Storage
-        if (!heap.WasInserted(to))
+        if (!toHeapNode)
         {
             heap.Insert(to, to_weight, ContractorHeapData{current_hop, false});
         }
         // Found a shorter Path -> Update weight
-        else if (to_weight < heap.GetKey(to))
+        else if (to_weight < toHeapNode->weight)
         {
-            heap.DecreaseKey(to, to_weight);
-            heap.GetData(to).hop = current_hop;
+            toHeapNode->weight = to_weight;
+            heap.DecreaseKey(*toHeapNode);
+            toHeapNode->data.hop = current_hop;
         }
     }
 }
