@@ -50,6 +50,7 @@
       - ADDED: Add support for non-round-trips with a single fixed endpoint. [#6050](https://github.com/Project-OSRM/osrm-backend/pull/6050)
       - FIXED: Improvements to maneuver override processing [#6125](https://github.com/Project-OSRM/osrm-backend/pull/6125)
       - ADDED: Support snapping to multiple ways at an input location. [#5953](https://github.com/Project-OSRM/osrm-backend/pull/5953)
+      - FIXED: Fix snapping target locations to ways used in turn restrictions. [#6339](https://github.com/Project-OSRM/osrm-backend/pull/6339)
 
 # 5.26.0
   - Changes from 5.25.0

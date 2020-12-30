@@ -414,6 +414,48 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
             // the only consumer of this mapping).
             mapping.push_back(NBGToEBG{node_u, node_v, edge_based_node_id, SPECIAL_NODEID});
 
+            // We also want to include duplicate via edges in the list of segments that
+            // an input location can snap to. Without this, it would be possible to not find
+            // certain routes that end on a via-way, because they are only routable via the
+            // duplicated edge.
+            const auto &forward_geometry = m_compressed_edge_container.GetBucketReference(eid);
+            const auto segment_count = forward_geometry.size();
+
+            NodeID current_edge_source_coordinate_id = node_u;
+            const EdgeData &forward_data = m_node_based_graph.GetEdgeData(eid);
+
+            const auto edge_id_to_segment_id = [](const NodeID edge_based_node_id) {
+                if (edge_based_node_id == SPECIAL_NODEID)
+                {
+                    return SegmentID{SPECIAL_SEGMENTID, false};
+                }
+
+                return SegmentID{edge_based_node_id, true};
+            };
+
+            // Add segments of edge-based nodes
+            for (const auto i : util::irange(std::size_t{0}, segment_count))
+            {
+                const NodeID current_edge_target_coordinate_id = forward_geometry[i].node_id;
+
+                // don't add node-segments for penalties
+                if (current_edge_target_coordinate_id == current_edge_source_coordinate_id)
+                    continue;
+
+                BOOST_ASSERT(current_edge_target_coordinate_id !=
+                             current_edge_source_coordinate_id);
+
+                // build edges
+                m_edge_based_node_segments.emplace_back(edge_id_to_segment_id(edge_based_node_id),
+                                                        SegmentID{SPECIAL_SEGMENTID, false},
+                                                        current_edge_source_coordinate_id,
+                                                        current_edge_target_coordinate_id,
+                                                        i,
+                                                        forward_data.flags.startpoint);
+
+                current_edge_source_coordinate_id = current_edge_target_coordinate_id;
+            }
+
             edge_based_node_id++;
             progress.PrintStatus(progress_counter++);
         }

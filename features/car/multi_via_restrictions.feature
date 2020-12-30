@@ -1031,3 +1031,61 @@ Feature: Car - Multiple Via Turn restrictions
             | from | to | route             | locations   |
 	    | a    | f  | ab,bc,cd,de,ef,ef | a,b,c,d,e,f |
 
+
+    @restriction-way
+    Scenario: Snap source/target to via restriction way
+        Given the node map
+            """
+            a-1-b-2-c-3-d
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | cd    |
+
+        And the relations
+            | type        | way:from | way:via | way:to  | restriction    |
+            | restriction | ab       | bc      | cd      | no_straight_on |
+
+        When I route I should get
+            | from | to | route    |
+            | 1    | 2  | ab,bc,bc |
+            | 2    | 3  | bc,cd,cd |
+
+
+    @restriction-way
+    Scenario: Car - Snap source/target to multi-via restriction way
+    # Example: https://www.openstreetmap.org/relation/11787041
+        Given the node map
+            """
+            |--g---f---e
+            a      |   1
+            |--b---c---d
+
+            """
+
+       And the nodes
+            | node | highway         |
+            | b    | traffic_signals |
+
+        And the ways
+            | nodes | oneway | name  |
+            | ab    | yes    | enter |
+            | bc    | yes    | enter |
+            | cd    | yes    | right |
+            | de    | yes    | up    |
+            | ef    | yes    | left  |
+            | fc    | yes    | down  |
+            | fg    | yes    | exit  |
+            | ga    | yes    | exit  |
+
+        And the relations
+            | type        | way:from | way:via    | way:to | restriction  |
+            | restriction | bc       | cd,de,ef   | fg     | no_u_turn    |
+
+        When I route I should get
+            | from | to | route              | locations           |
+            | a    | 1  | enter,right,up,up  | a,c,d,_             |
+            | 1    | a  | up,left,exit,exit  | _,e,f,a             |
