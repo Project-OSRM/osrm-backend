@@ -248,7 +248,7 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
         }
     }
 
-    return std::make_pair(durations_table, distances_table);
+    return std::make_pair(std::move(durations_table), std::move(distances_table));
 }
 
 } // namespace routing_algorithms
