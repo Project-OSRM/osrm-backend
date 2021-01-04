@@ -219,8 +219,8 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                 const std::vector<std::size_t> &phantom_indices,
                 const bool calculate_distance)
 {
-    std::vector<EdgeWeight> weights(phantom_indices.size(), INVALID_EDGE_WEIGHT);
-    std::vector<EdgeDuration> durations(phantom_indices.size(), MAXIMAL_EDGE_DURATION);
+    std::vector<EdgeWeight> weights_table(phantom_indices.size(), INVALID_EDGE_WEIGHT);
+    std::vector<EdgeDuration> durations_table(phantom_indices.size(), MAXIMAL_EDGE_DURATION);
     std::vector<EdgeDistance> distances_table(calculate_distance ? phantom_indices.size() : 0,
                                               MAXIMAL_EDGE_DISTANCE);
     std::vector<NodeID> middle_nodes_table(phantom_indices.size(), SPECIAL_NODEID);
@@ -298,10 +298,10 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                         distances_table.empty() ? nulldistance : distances_table[index];
 
                     if (std::tie(path_weight, path_duration, path_distance) <
-                        std::tie(weights[index], durations[index], current_distance))
+                        std::tie(weights_table[index], durations_table[index], current_distance))
                     {
-                        weights[index] = path_weight;
-                        durations[index] = path_duration;
+                        weights_table[index] = path_weight;
+                        durations_table[index] = path_duration;
                         current_distance = path_distance;
                         middle_nodes_table[index] = node;
                     }
@@ -392,7 +392,7 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
             facade, heapNode, query_heap, phantom_nodes, phantom_index, phantom_indices);
     }
 
-    return std::make_pair(durations, distances_table);
+    return std::make_pair(std::move(durations_table), std::move(distances_table));
 }
 
 //
@@ -601,7 +601,7 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
         }
     }
 
-    return std::make_pair(durations_table, distances_table);
+    return std::make_pair(std::move(durations_table), std::move(distances_table));
 }
 
 } // namespace mld
