@@ -87,7 +87,7 @@ struct RouteParameters : public BaseParameters
                     const GeometriesType geometries_,
                     const OverviewType overview_,
                     const boost::optional<bool> continue_straight_,
-                    Args... args_)
+                    Args &&... args_)
         // Once we perfectly-forward `args` (see #2990) this constructor can delegate to the one
         // below.
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
@@ -105,7 +105,7 @@ struct RouteParameters : public BaseParameters
                     const GeometriesType geometries_,
                     const OverviewType overview_,
                     const boost::optional<bool> continue_straight_,
-                    Args... args_)
+                    Args &&... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{annotations_},
           annotations_type{annotations_ ? AnnotationsType::All : AnnotationsType::None},
@@ -123,12 +123,12 @@ struct RouteParameters : public BaseParameters
                     const GeometriesType geometries_,
                     const OverviewType overview_,
                     const boost::optional<bool> continue_straight_,
-                    Args... args_)
+                    Args &&... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           number_of_alternatives{alternatives_ ? 1u : 0u},
-          annotations{annotations_ == AnnotationsType::None ? false : true},
-          annotations_type{annotations_}, geometries{geometries_}, overview{overview_},
-          continue_straight{continue_straight_}, waypoints()
+          annotations{annotations_ != AnnotationsType::None}, annotations_type{annotations_},
+          geometries{geometries_}, overview{overview_}, continue_straight{continue_straight_},
+          waypoints()
     {
     }
 
@@ -141,12 +141,12 @@ struct RouteParameters : public BaseParameters
                     const OverviewType overview_,
                     const boost::optional<bool> continue_straight_,
                     std::vector<std::size_t> waypoints_,
-                    const Args... args_)
+                    const Args &&... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{annotations_},
           annotations_type{annotations_ ? AnnotationsType::All : AnnotationsType::None},
           geometries{geometries_}, overview{overview_},
-          continue_straight{continue_straight_}, waypoints{waypoints_}
+          continue_straight{continue_straight_}, waypoints{std::move(waypoints_)}
     {
     }
 
@@ -159,12 +159,12 @@ struct RouteParameters : public BaseParameters
                     const OverviewType overview_,
                     const boost::optional<bool> continue_straight_,
                     std::vector<std::size_t> waypoints_,
-                    Args... args_)
+                    Args &&... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
-          number_of_alternatives{alternatives_ ? 1u : 0u},
-          annotations{annotations_ == AnnotationsType::None ? false : true},
+          number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{annotations_ !=
+                                                                       AnnotationsType::None},
           annotations_type{annotations_}, geometries{geometries_}, overview{overview_},
-          continue_straight{continue_straight_}, waypoints{waypoints_}
+          continue_straight{continue_straight_}, waypoints{std::move(waypoints_)}
     {
     }
 
