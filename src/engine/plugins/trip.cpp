@@ -215,65 +215,65 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     BOOST_ASSERT(snapped_phantoms.size() == number_of_locations);
 
-    // compute the duration table of all phantom nodes
-    auto result_duration_table = util::DistTableWrapper<EdgeWeight>(
+    // compute the weight table of all phantom nodes
+    auto result_weight_table = util::DistTableWrapper<EdgeWeight>(
         std::get<0>(
             algorithms.ManyToManySearch(snapped_phantoms, {}, {}, /*requestDistance*/ false)),
         number_of_locations);
 
-    if (result_duration_table.size() == 0)
+    if (result_weight_table.size() == 0)
     {
         return Status::Error;
     }
 
     const constexpr std::size_t BF_MAX_FEASABLE = 10;
-    BOOST_ASSERT_MSG(result_duration_table.size() == number_of_locations * number_of_locations,
-                     "Distance Table has wrong size");
+    BOOST_ASSERT_MSG(result_weight_table.size() == number_of_locations * number_of_locations,
+                     "Weight Table has wrong size");
 
-    if (!IsStronglyConnectedComponent(result_duration_table))
+    if (!IsStronglyConnectedComponent(result_weight_table))
     {
         return Error("NoTrips", "No trip visiting all destinations possible.", result);
     }
 
     if (fixed_start && fixed_end)
     {
-        ManipulateTableForFSE(source_id, destination_id, result_duration_table);
+        ManipulateTableForFSE(source_id, destination_id, result_weight_table);
     }
 
-    std::vector<NodeID> duration_trip;
-    duration_trip.reserve(number_of_locations);
+    std::vector<NodeID> weight_trip;
+    weight_trip.reserve(number_of_locations);
     // get an optimized order in which the destinations should be visited
     if (number_of_locations < BF_MAX_FEASABLE)
     {
-        duration_trip = trip::BruteForceTrip(number_of_locations, result_duration_table);
+        weight_trip = trip::BruteForceTrip(number_of_locations, result_weight_table);
     }
     else
     {
-        duration_trip = trip::FarthestInsertionTrip(number_of_locations, result_duration_table);
+        weight_trip = trip::FarthestInsertionTrip(number_of_locations, result_weight_table);
     }
 
     // rotate result such that roundtrip starts at node with index 0
     // thist first if covers scenarios: !fixed_end || fixed_start || (fixed_start && fixed_end)
     if (!fixed_end || fixed_start)
     {
-        auto desired_start_index = std::find(std::begin(duration_trip), std::end(duration_trip), 0);
-        BOOST_ASSERT(desired_start_index != std::end(duration_trip));
-        std::rotate(std::begin(duration_trip), desired_start_index, std::end(duration_trip));
+        auto desired_start_index = std::find(std::begin(weight_trip), std::end(weight_trip), 0);
+        BOOST_ASSERT(desired_start_index != std::end(weight_trip));
+        std::rotate(std::begin(weight_trip), desired_start_index, std::end(weight_trip));
     }
     else if (fixed_end && !fixed_start && parameters.roundtrip)
     {
         auto desired_start_index =
-            std::find(std::begin(duration_trip), std::end(duration_trip), destination_id);
-        BOOST_ASSERT(desired_start_index != std::end(duration_trip));
-        std::rotate(std::begin(duration_trip), desired_start_index, std::end(duration_trip));
+            std::find(std::begin(weight_trip), std::end(weight_trip), destination_id);
+        BOOST_ASSERT(desired_start_index != std::end(weight_trip));
+        std::rotate(std::begin(weight_trip), desired_start_index, std::end(weight_trip));
     }
 
     // get the route when visiting all destinations in optimized order
     InternalRouteResult route =
-        ComputeRoute(algorithms, snapped_phantoms, duration_trip, parameters.roundtrip);
+        ComputeRoute(algorithms, snapped_phantoms, weight_trip, parameters.roundtrip);
 
     // get api response
-    const std::vector<std::vector<NodeID>> trips = {duration_trip};
+    const std::vector<std::vector<NodeID>> trips = {std::move(weight_trip)};
     const std::vector<InternalRouteResult> routes = {route};
     api::TripAPI trip_api{facade, parameters};
     trip_api.MakeResponse(trips, routes, snapped_phantoms, result);
