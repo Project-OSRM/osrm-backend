@@ -178,7 +178,7 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
 } // namespace ch
 
 template <>
-std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>>
+std::tuple<std::vector<EdgeWeight>, std::vector<EdgeDuration>, std::vector<EdgeDistance>>
 manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                  const DataFacade<ch::Algorithm> &facade,
                  const std::vector<PhantomNode> &phantom_nodes,
@@ -248,7 +248,8 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
         }
     }
 
-    return std::make_pair(std::move(durations_table), std::move(distances_table));
+    return std::make_tuple(
+        std::move(weights_table), std::move(durations_table), std::move(distances_table));
 }
 
 } // namespace routing_algorithms

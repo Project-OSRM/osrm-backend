@@ -15,6 +15,7 @@
     - Windows:
       - FIXED: Fix bit-shift overflow in MLD partition step. [#5878](https://github.com/Project-OSRM/osrm-backend/pull/5878)
       - FIXED: Fix vector bool permutation in graph contraction step [#5882](https://github.com/Project-OSRM/osrm-backend/pull/5882)
+      - FIXED: Fix trip api to use weight instead of duration internally [#5930](https://github.com/Project-OSRM/osrm-backend/pull/5930)
 
 
 # 5.23.0

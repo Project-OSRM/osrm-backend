@@ -217,7 +217,8 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     // compute the duration table of all phantom nodes
     auto result_duration_table = util::DistTableWrapper<EdgeWeight>(
-        algorithms.ManyToManySearch(snapped_phantoms, {}, {}, /*requestDistance*/ false).first,
+        std::get<0>(
+            algorithms.ManyToManySearch(snapped_phantoms, {}, {}, /*requestDistance*/ false)),
         number_of_locations);
 
     if (result_duration_table.size() == 0)

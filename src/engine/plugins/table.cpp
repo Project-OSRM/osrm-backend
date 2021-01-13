@@ -84,11 +84,13 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     bool request_distance = params.annotations & api::TableParameters::AnnotationsType::Distance;
     bool request_duration = params.annotations & api::TableParameters::AnnotationsType::Duration;
 
-    auto result_tables_pair = algorithms.ManyToManySearch(
+    auto result_tables_tuple = algorithms.ManyToManySearch(
         snapped_phantoms, params.sources, params.destinations, request_distance);
+    auto &durations_table = std::get<1>(result_tables_tuple);
+    auto &distances_table = std::get<2>(result_tables_tuple);
 
-    if ((request_duration && result_tables_pair.first.empty()) ||
-        (request_distance && result_tables_pair.second.empty()))
+    if ((request_duration && durations_table.empty()) ||
+        (request_distance && distances_table.empty()))
     {
         return Error("NoTable", "No table found", result);
     }
@@ -103,9 +105,9 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             for (std::size_t column = 0; column < num_destinations; column++)
             {
                 const auto &table_index = row * num_destinations + column;
-                BOOST_ASSERT(table_index < result_tables_pair.first.size());
+                BOOST_ASSERT(table_index < durations_table.size());
                 if (params.fallback_speed != INVALID_FALLBACK_SPEED && params.fallback_speed > 0 &&
-                    result_tables_pair.first[table_index] == MAXIMAL_EDGE_DURATION)
+                    durations_table[table_index] == MAXIMAL_EDGE_DURATION)
                 {
                     const auto &source =
                         snapped_phantoms[params.sources.empty() ? row : params.sources[row]];
@@ -121,30 +123,29 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                             : util::coordinate_calculation::fccApproximateDistance(
                                   source.location, destination.location);
 
-                    result_tables_pair.first[table_index] =
+                    durations_table[table_index] =
                         distance_estimate / (double)params.fallback_speed;
-                    if (!result_tables_pair.second.empty())
+                    if (!distances_table.empty())
                     {
-                        result_tables_pair.second[table_index] = distance_estimate;
+                        distances_table[table_index] = distance_estimate;
                     }
 
                     estimated_pairs.emplace_back(row, column);
                 }
                 if (params.scale_factor > 0 && params.scale_factor != 1 &&
-                    result_tables_pair.first[table_index] != MAXIMAL_EDGE_DURATION &&
-                    result_tables_pair.first[table_index] != 0)
+                    durations_table[table_index] != MAXIMAL_EDGE_DURATION &&
+                    durations_table[table_index] != 0)
                 {
-                    EdgeDuration diff =
-                        MAXIMAL_EDGE_DURATION / result_tables_pair.first[table_index];
+                    EdgeDuration diff = MAXIMAL_EDGE_DURATION / durations_table[table_index];
 
                     if (params.scale_factor >= diff)
                     {
-                        result_tables_pair.first[table_index] = MAXIMAL_EDGE_DURATION - 1;
+                        durations_table[table_index] = MAXIMAL_EDGE_DURATION - 1;
                     }
                     else
                     {
-                        result_tables_pair.first[table_index] = std::lround(
-                            result_tables_pair.first[table_index] * params.scale_factor);
+                        durations_table[table_index] =
+                            std::lround(durations_table[table_index] * params.scale_factor);
                     }
                 }
             }
@@ -152,7 +153,10 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     }
 
     api::TableAPI table_api{facade, params};
-    table_api.MakeResponse(result_tables_pair, snapped_phantoms, estimated_pairs, result);
+    table_api.MakeResponse(std::make_pair(std::move(durations_table), std::move(distances_table)),
+                           snapped_phantoms,
+                           estimated_pairs,
+                           result);
 
     return Status::Ok;
 }
