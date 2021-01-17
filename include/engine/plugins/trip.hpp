@@ -31,7 +31,7 @@ class TripPlugin final : public BasePlugin
     const int max_locations_trip;
 
     InternalRouteResult ComputeRoute(const RoutingAlgorithmsInterface &algorithms,
-                                     const std::vector<PhantomNode> &phantom_node_list,
+                                     const std::vector<PhantomNodeCandidates> &candidates_list,
                                      const std::vector<NodeID> &trip,
                                      const bool roundtrip) const;
 

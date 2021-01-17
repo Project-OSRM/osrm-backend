@@ -35,6 +35,7 @@
 #include <boost/range/any_range.hpp>
 #include <cstddef>
 
+#include <engine/bearing.hpp>
 #include <string>
 #include <utility>
 #include <vector>
@@ -130,62 +131,24 @@ class BaseDataFacade
 
     virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
-                               const float max_distance,
-                               const int bearing,
-                               const int bearing_range,
-                               const Approach approach,
-                               const bool use_all_edges) const = 0;
-    virtual std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
-                               const float max_distance,
+                               const double max_distance,
+                               const boost::optional<Bearing> bearing,
                                const Approach approach,
                                const bool use_all_edges) const = 0;
 
     virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results,
-                        const double max_distance,
-                        const int bearing,
-                        const int bearing_range,
-                        const Approach approach) const = 0;
-    virtual std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results,
-                        const int bearing,
-                        const int bearing_range,
-                        const Approach approach) const = 0;
-    virtual std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results,
-                        const Approach approach) const = 0;
-    virtual std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results,
-                        const double max_distance,
+                        const size_t max_results,
+                        const boost::optional<double> max_distance,
+                        const boost::optional<Bearing> bearing,
                         const Approach approach) const = 0;
 
-    virtual std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const Approach approach,
-                                                      const bool use_all_edges) const = 0;
-    virtual std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const double max_distance,
-                                                      const Approach approach,
-                                                      const bool use_all_edges) const = 0;
-    virtual std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const double max_distance,
-                                                      const int bearing,
-                                                      const int bearing_range,
-                                                      const Approach approach,
-                                                      const bool use_all_edges) const = 0;
-    virtual std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const int bearing,
-                                                      const int bearing_range,
-                                                      const Approach approach,
-                                                      const bool use_all_edges = false) const = 0;
+    virtual PhantomCandidateAlternatives
+    NearestCandidatesWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                     const boost::optional<double> max_distance,
+                                                     const boost::optional<Bearing> bearing,
+                                                     const Approach approach,
+                                                     const bool use_all_edges) const = 0;
 
     virtual bool HasLaneData(const EdgeID edge_based_edge_id) const = 0;
     virtual util::guidance::LaneTupleIdPair GetLaneData(const EdgeID edge_based_edge_id) const = 0;

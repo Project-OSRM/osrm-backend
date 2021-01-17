@@ -7,30 +7,104 @@ namespace engine
 namespace routing_algorithms
 {
 
-bool needsLoopForward(const PhantomNode &source_phantom, const PhantomNode &target_phantom)
+bool requiresForwardLoop(const PhantomNode &source, const PhantomNode &target)
 {
-    return source_phantom.IsValidForwardSource() && target_phantom.IsValidForwardTarget() &&
-           source_phantom.forward_segment_id.id == target_phantom.forward_segment_id.id &&
-           source_phantom.GetForwardWeightPlusOffset() >
-               target_phantom.GetForwardWeightPlusOffset();
+    return source.IsValidForwardSource() && target.IsValidForwardTarget() &&
+           source.forward_segment_id.id == target.forward_segment_id.id &&
+           source.GetForwardWeightPlusOffset() > target.GetForwardWeightPlusOffset();
 }
 
-bool needsLoopBackwards(const PhantomNode &source_phantom, const PhantomNode &target_phantom)
+bool requiresBackwardLoop(const PhantomNode &source, const PhantomNode &target)
 {
-    return source_phantom.IsValidReverseSource() && target_phantom.IsValidReverseTarget() &&
-           source_phantom.reverse_segment_id.id == target_phantom.reverse_segment_id.id &&
-           source_phantom.GetReverseWeightPlusOffset() >
-               target_phantom.GetReverseWeightPlusOffset();
+    return source.IsValidReverseSource() && target.IsValidReverseTarget() &&
+           source.reverse_segment_id.id == target.reverse_segment_id.id &&
+           source.GetReverseWeightPlusOffset() > target.GetReverseWeightPlusOffset();
 }
 
-bool needsLoopForward(const PhantomNodes &phantoms)
+std::vector<NodeID> getForwardLoopNodes(const PhantomEndpointCandidates &endpoint_candidates)
 {
-    return needsLoopForward(phantoms.source_phantom, phantoms.target_phantom);
+    std::vector<NodeID> res;
+    for (const auto &source_phantom : endpoint_candidates.source_phantoms)
+    {
+        auto requires_loop =
+            std::any_of(endpoint_candidates.target_phantoms.begin(),
+                        endpoint_candidates.target_phantoms.end(),
+                        [&](const auto &target_phantom) {
+                            return requiresForwardLoop(source_phantom, target_phantom);
+                        });
+        if (requires_loop)
+        {
+            res.push_back(source_phantom.forward_segment_id.id);
+        }
+    }
+    return res;
 }
 
-bool needsLoopBackwards(const PhantomNodes &phantoms)
+std::vector<NodeID> getForwardLoopNodes(const PhantomCandidatesToTarget &endpoint_candidates)
 {
-    return needsLoopBackwards(phantoms.source_phantom, phantoms.target_phantom);
+    std::vector<NodeID> res;
+    for (const auto &source_phantom : endpoint_candidates.source_phantoms)
+    {
+        if (requiresForwardLoop(source_phantom, endpoint_candidates.target_phantom))
+        {
+            res.push_back(source_phantom.forward_segment_id.id);
+        }
+    }
+    return res;
+}
+
+std::vector<NodeID> getBackwardLoopNodes(const PhantomEndpointCandidates &endpoint_candidates)
+{
+    std::vector<NodeID> res;
+    for (const auto &source_phantom : endpoint_candidates.source_phantoms)
+    {
+        auto requires_loop =
+            std::any_of(endpoint_candidates.target_phantoms.begin(),
+                        endpoint_candidates.target_phantoms.end(),
+                        [&](const auto &target_phantom) {
+                            return requiresBackwardLoop(source_phantom, target_phantom);
+                        });
+        if (requires_loop)
+        {
+            res.push_back(source_phantom.reverse_segment_id.id);
+        }
+    }
+    return res;
+}
+
+std::vector<NodeID> getBackwardLoopNodes(const PhantomCandidatesToTarget &endpoint_candidates)
+{
+    std::vector<NodeID> res;
+    for (const auto &source_phantom : endpoint_candidates.source_phantoms)
+    {
+        if (requiresBackwardLoop(source_phantom, endpoint_candidates.target_phantom))
+        {
+            res.push_back(source_phantom.reverse_segment_id.id);
+        }
+    }
+    return res;
+}
+
+PhantomEndpoints endpointsFromCandidates(const PhantomEndpointCandidates &candidates,
+                                         const std::vector<NodeID> &path)
+{
+    auto source_it = std::find_if(candidates.source_phantoms.begin(),
+                                  candidates.source_phantoms.end(),
+                                  [&path](const auto &source_phantom) {
+                                      return path.front() == source_phantom.forward_segment_id.id ||
+                                             path.front() == source_phantom.reverse_segment_id.id;
+                                  });
+    BOOST_ASSERT(source_it != candidates.source_phantoms.end());
+
+    auto target_it = std::find_if(candidates.target_phantoms.begin(),
+                                  candidates.target_phantoms.end(),
+                                  [&path](const auto &target_phantom) {
+                                      return path.back() == target_phantom.forward_segment_id.id ||
+                                             path.back() == target_phantom.reverse_segment_id.id;
+                                  });
+    BOOST_ASSERT(target_it != candidates.target_phantoms.end());
+
+    return PhantomEndpoints{*source_it, *target_it};
 }
 
 } // namespace routing_algorithms

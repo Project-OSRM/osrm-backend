@@ -49,7 +49,7 @@ void relaxOutgoingEdges(
     const DataFacade<Algorithm> &facade,
     const typename SearchEngineData<Algorithm>::ManyToManyQueryHeap::HeapNode &heapNode,
     typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
-    const PhantomNode &)
+    const PhantomNodeCandidates &)
 {
     if (stallAtNode<DIRECTION>(facade, heapNode, query_heap))
     {
@@ -99,7 +99,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         std::vector<EdgeDuration> &durations_table,
                         std::vector<EdgeDistance> &distances_table,
                         std::vector<NodeID> &middle_nodes_table,
-                        const PhantomNode &phantom_node)
+                        const PhantomNodeCandidates &candidates)
 {
     // Take a copy of the extracted node because otherwise could be modified later if toHeapNode is
     // the same
@@ -151,14 +151,14 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         }
     }
 
-    relaxOutgoingEdges<FORWARD_DIRECTION>(facade, heapNode, query_heap, phantom_node);
+    relaxOutgoingEdges<FORWARD_DIRECTION>(facade, heapNode, query_heap, candidates);
 }
 
 void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                          const unsigned column_index,
                          typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
                          std::vector<NodeBucket> &search_space_with_buckets,
-                         const PhantomNode &phantom_node)
+                         const PhantomNodeCandidates &candidates)
 {
     // Take a copy (no ref &) of the extracted node because otherwise could be modified later if
     // toHeapNode is the same
@@ -172,7 +172,7 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                                            heapNode.data.duration,
                                            heapNode.data.distance);
 
-    relaxOutgoingEdges<REVERSE_DIRECTION>(facade, heapNode, query_heap, phantom_node);
+    relaxOutgoingEdges<REVERSE_DIRECTION>(facade, heapNode, query_heap, candidates);
 }
 
 } // namespace ch
@@ -181,7 +181,7 @@ template <>
 std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>>
 manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                  const DataFacade<ch::Algorithm> &facade,
-                 const std::vector<PhantomNode> &phantom_nodes,
+                 const std::vector<PhantomNodeCandidates> &candidates_list,
                  const std::vector<std::size_t> &source_indices,
                  const std::vector<std::size_t> &target_indices,
                  const bool calculate_distance)
@@ -202,18 +202,18 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
     for (std::uint32_t column_index = 0; column_index < target_indices.size(); ++column_index)
     {
         const auto index = target_indices[column_index];
-        const auto &phantom = phantom_nodes[index];
+        const auto &target_candidates = candidates_list[index];
 
         engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(
             facade.GetNumberOfNodes());
         auto &query_heap = *(engine_working_data.many_to_many_heap);
-        insertTargetInHeap(query_heap, phantom);
+        insertTargetInHeap(query_heap, target_candidates);
 
         // Explore search space
         while (!query_heap.Empty())
         {
             backwardRoutingStep(
-                facade, column_index, query_heap, search_space_with_buckets, phantom);
+                facade, column_index, query_heap, search_space_with_buckets, target_candidates);
         }
     }
 
@@ -224,13 +224,13 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
     for (std::uint32_t row_index = 0; row_index < source_indices.size(); ++row_index)
     {
         const auto source_index = source_indices[row_index];
-        const auto &source_phantom = phantom_nodes[source_index];
+        const auto &source_candidates = candidates_list[source_index];
 
         // Clear heap and insert source nodes
         engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(
             facade.GetNumberOfNodes());
         auto &query_heap = *(engine_working_data.many_to_many_heap);
-        insertSourceInHeap(query_heap, source_phantom);
+        insertSourceInHeap(query_heap, source_candidates);
 
         // Explore search space
         while (!query_heap.Empty())
@@ -244,7 +244,7 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                                durations_table,
                                distances_table,
                                middle_nodes_table,
-                               source_phantom);
+                               source_candidates);
         }
     }
 

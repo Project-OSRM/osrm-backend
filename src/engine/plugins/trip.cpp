@@ -4,18 +4,12 @@
 #include "engine/api/trip_parameters.hpp"
 #include "engine/trip/trip_brute_force.hpp"
 #include "engine/trip/trip_farthest_insertion.hpp"
-#include "engine/trip/trip_nearest_neighbour.hpp"
 #include "util/dist_table_wrapper.hpp" // to access the dist table more easily
-#include "util/json_container.hpp"
 
 #include <boost/assert.hpp>
 
 #include <algorithm>
-#include <cstdlib>
-#include <iterator>
 #include <limits>
-#include <memory>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -41,40 +35,33 @@ bool IsSupportedParameterCombination(const bool fixed_start,
 
 // given the node order in which to visit, compute the actual route (with geometry, travel time and
 // so on) and return the result
-InternalRouteResult TripPlugin::ComputeRoute(const RoutingAlgorithmsInterface &algorithms,
-                                             const std::vector<PhantomNode> &snapped_phantoms,
-                                             const std::vector<NodeID> &trip,
-                                             const bool roundtrip) const
+InternalRouteResult
+TripPlugin::ComputeRoute(const RoutingAlgorithmsInterface &algorithms,
+                         const std::vector<PhantomNodeCandidates> &waypoint_candidates,
+                         const std::vector<NodeID> &trip,
+                         const bool roundtrip) const
 {
-    InternalRouteResult min_route;
-    // given the final trip, compute total duration and return the route and location permutation
-    PhantomNodes viapoint;
 
-    // computes a roundtrip from the nodes in trip
-    for (auto node = trip.begin(); node < trip.end() - 1; ++node)
-    {
-        const auto from_node = *node;
-        const auto to_node = *std::next(node);
-
-        viapoint = PhantomNodes{snapped_phantoms[from_node], snapped_phantoms[to_node]};
-        min_route.segment_end_coordinates.emplace_back(viapoint);
-    }
-
+    // TODO make a more efficient solution that doesn't require copying all the waypoints vectors.
+    std::vector<PhantomNodeCandidates> trip_candidates;
+    std::transform(trip.begin(),
+                   trip.end(),
+                   std::back_inserter(trip_candidates),
+                   [&](const auto &node) { return waypoint_candidates[node]; });
     // return back to the first node if it is a round trip
     if (roundtrip)
     {
-        viapoint = PhantomNodes{snapped_phantoms[trip.back()], snapped_phantoms[trip.front()]};
-        min_route.segment_end_coordinates.emplace_back(viapoint);
+        trip_candidates.push_back(waypoint_candidates[trip.front()]);
         // trip comes out to be something like 0 1 4 3 2 0
-        BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size());
+        BOOST_ASSERT(trip_candidates.size() == trip.size() + 1);
     }
     else
     {
-        // trip comes out to be something like 0 1 4 3 2, so the sizes don't match
-        BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size() - 1);
+        // trip comes out to be something like 0 1 4 3 2
+        BOOST_ASSERT(trip_candidates.size() == trip.size());
     }
 
-    min_route = algorithms.ShortestPathSearch(min_route.segment_end_coordinates, {false});
+    auto min_route = algorithms.ShortestPathSearch(trip_candidates, {false});
     BOOST_ASSERT_MSG(min_route.shortest_path_weight < INVALID_EDGE_WEIGHT, "unroutable route");
     return min_route;
 }
@@ -226,7 +213,7 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error("InvalidValue", "Invalid source or destination value.", result);
     }
 
-    auto snapped_phantoms = SnapPhantomNodes(phantom_node_pairs);
+    auto snapped_phantoms = SnapPhantomNodes(std::move(phantom_node_pairs));
 
     BOOST_ASSERT(snapped_phantoms.size() == number_of_locations);
 

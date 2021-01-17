@@ -1,10 +1,7 @@
 #include "engine/plugins/nearest.hpp"
 #include "engine/api/nearest_api.hpp"
 #include "engine/api/nearest_parameters.hpp"
-#include "engine/phantom_node.hpp"
-#include "util/integer_range.hpp"
 
-#include <cstddef>
 #include <string>
 
 #include <boost/assert.hpp>

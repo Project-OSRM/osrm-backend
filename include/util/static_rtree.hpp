@@ -68,7 +68,7 @@ write(storage::tar::FileWriter &writer,
 
 /***
  * Static RTree for serving nearest neighbour queries
- * // All coordinates are pojected first to Web Mercator before the bounding boxes
+ * // All coordinates are projected first to Web Mercator before the bounding boxes
  * // are computed, this means the internal distance metric doesn not represent meters!
  */
 
@@ -556,8 +556,8 @@ class StaticRTree
     }
 
     // Override filter and terminator for the desired behaviour.
-    std::vector<EdgeDataT> Nearest(const Coordinate input_coordinate,
-                                   const std::size_t max_results) const
+    std::vector<CandidateSegment> Nearest(const Coordinate input_coordinate,
+                                          const std::size_t max_results) const
     {
         return Nearest(
             input_coordinate,
@@ -567,13 +567,13 @@ class StaticRTree
             });
     }
 
-    // Override filter and terminator for the desired behaviour.
+    // Return edges in distance order with the coordinate of the closest point on the edge.
     template <typename FilterT, typename TerminationT>
-    std::vector<EdgeDataT> Nearest(const Coordinate input_coordinate,
-                                   const FilterT filter,
-                                   const TerminationT terminate) const
+    std::vector<CandidateSegment> Nearest(const Coordinate input_coordinate,
+                                          const FilterT filter,
+                                          const TerminationT terminate) const
     {
-        std::vector<EdgeDataT> results;
+        std::vector<CandidateSegment> results;
         auto projected_coordinate = web_mercator::fromWGS84(input_coordinate);
         Coordinate fixed_projected_coordinate{projected_coordinate};
         // initialize queue with root element
@@ -603,10 +603,10 @@ class StaticRTree
             }
             else
             { // current candidate is an actual road segment
-                // We deliberatly make a copy here, we mutate the value below
-                auto edge_data = m_objects[current_query_node.segment_index];
-                const auto &current_candidate =
-                    CandidateSegment{current_query_node.fixed_projected_coordinate, edge_data};
+                const auto &edge_data = m_objects[current_query_node.segment_index];
+                // We deliberately make an edge data copy here, we mutate the value below
+                CandidateSegment current_candidate{current_query_node.fixed_projected_coordinate,
+                                                   edge_data};
 
                 // to allow returns of no-results if too restrictive filtering, this needs to be
                 // done here even though performance would indicate that we want to stop after
@@ -621,11 +621,11 @@ class StaticRTree
                 {
                     continue;
                 }
-                edge_data.forward_segment_id.enabled &= use_segment.first;
-                edge_data.reverse_segment_id.enabled &= use_segment.second;
+                current_candidate.data.forward_segment_id.enabled &= use_segment.first;
+                current_candidate.data.reverse_segment_id.enabled &= use_segment.second;
 
                 // store phantom node in result vector
-                results.push_back(std::move(edge_data));
+                results.push_back(std::move(current_candidate));
             }
         }
 
@@ -676,7 +676,7 @@ class StaticRTree
      * Iterates over all the children of a TreeNode and inserts them into the search
      * priority queue using their distance from the search coordinate as the
      * priority metric.
-     * The closests distance to a box from our point is also the closest distance
+     * The closest distance to a box from our point is also the closest distance
      * to the closest line in that box (assuming the boxes hug their contents).
      */
     template <class QueueT>
