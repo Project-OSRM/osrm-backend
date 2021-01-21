@@ -568,7 +568,9 @@ namespace sol {
 		runtime = LUA_ERRRUN,
 		memory = LUA_ERRMEM,
 		handler = LUA_ERRERR,
+#if SOL_LUA_VERSION < 504
 		gc = LUA_ERRGCMM,
+#endif
 		syntax = LUA_ERRSYNTAX,
 		file = LUA_ERRFILE,
 	};
@@ -578,7 +580,9 @@ namespace sol {
 		yielded = LUA_YIELD,
 		runtime = LUA_ERRRUN,
 		memory = LUA_ERRMEM,
+#if SOL_LUA_VERSION < 504
 		gc = LUA_ERRGCMM,
+#endif
 		handler = LUA_ERRERR,
 		dead = -1,
 	};
@@ -587,7 +591,9 @@ namespace sol {
 		ok = LUA_OK,
 		syntax = LUA_ERRSYNTAX,
 		memory = LUA_ERRMEM,
+#if SOL_LUA_VERSION < 504
 		gc = LUA_ERRGCMM,
+#endif
 		file = LUA_ERRFILE,
 	};
 
@@ -630,8 +636,10 @@ namespace sol {
 			return names[3];
 		case call_status::handler:
 			return names[4];
+#if SOL_LUA_VERSION < 504
 		case call_status::gc:
 			return names[5];
+#endif
 		case call_status::syntax:
 			return names[6];
 		case call_status::file:
@@ -651,7 +659,9 @@ namespace sol {
 		case call_status::runtime:
 		case call_status::memory:
 		case call_status::handler:
+#if SOL_LUA_VERSION < 504
 		case call_status::gc:
+#endif
 		case call_status::syntax:
 		case call_status::file:
 			return false;
@@ -672,8 +682,10 @@ namespace sol {
 			return names[0];
 		case load_status::memory:
 			return names[1];
+#if SOL_LUA_VERSION < 504
 		case load_status::gc:
 			return names[2];
+#endif
 		case load_status::syntax:
 			return names[3];
 		case load_status::file:
