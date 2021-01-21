@@ -6,6 +6,7 @@
       - REMOVED: we no longer publish Node 8 binary modules (they are still buildable from source) [#5918](https://github.com/Project-OSRM/osrm-backend/pull/5918)
     - Routing:
       - FIXED: Avoid copying ManyToMany table results [#5923](https://github.com/Project-OSRM/osrm-backend/pull/5923)
+      - FIXED: Reduce copying in API parameter constructors [#5925](https://github.com/Project-OSRM/osrm-backend/pull/5925)
     - Misc:
       - CHANGED: Unify `.osrm.turn_penalites_index` dump processing same with `.osrm.turn_weight_penalties` and `.osrm.turn_duration_penalties` [#5868](https://github.com/Project-OSRM/osrm-backend/pull/5868)
     - Profile:
