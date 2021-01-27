@@ -8,8 +8,15 @@
 #  If called without a test case it will iterate over all test cases generating
 #  all data.
 #
+#  This program should be called with the "test" directory as current directory.
+#
 
 set -e
+
+if [ -z "$CXX" ]; then
+    echo "Please set CXX before running this script"
+    exit 1
+fi
 
 if [ -z "$1" ]; then
     for dir in t/*; do

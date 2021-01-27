@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -149,7 +149,7 @@ namespace osmium {
          * Complexity: Constant.
          */
         bool from_way() const noexcept {
-            return (positive_id() & 0x1u) == 0;
+            return (positive_id() & 0x1U) == 0;
         }
 
         /**
@@ -202,7 +202,7 @@ namespace osmium {
 
         /**
          * Check whether this area is a multipolygon, ie. whether it has more
-         * than one outer ring?
+         * than one outer ring.
          */
         bool is_multipolygon() const {
             return num_rings().first > 1;

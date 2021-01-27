@@ -19,14 +19,10 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
     const boost::filesystem::path &input_file,
     ScriptingEnvironment &scripting_environment,
     std::vector<TurnRestriction> &turn_restrictions,
-    std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
     std::vector<UnresolvedManeuverOverride> &maneuver_overrides)
 {
     LoadDataFromFile(input_file);
-    Compress(scripting_environment,
-             turn_restrictions,
-             conditional_turn_restrictions,
-             maneuver_overrides);
+    Compress(scripting_environment, turn_restrictions, maneuver_overrides);
     CompressGeometry();
     CompressAnnotationData();
 }
@@ -82,18 +78,15 @@ void NodeBasedGraphFactory::LoadDataFromFile(const boost::filesystem::path &inpu
     }());
 }
 
-void NodeBasedGraphFactory::Compress(
-    ScriptingEnvironment &scripting_environment,
-    std::vector<TurnRestriction> &turn_restrictions,
-    std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
-    std::vector<UnresolvedManeuverOverride> &maneuver_overrides)
+void NodeBasedGraphFactory::Compress(ScriptingEnvironment &scripting_environment,
+                                     std::vector<TurnRestriction> &turn_restrictions,
+                                     std::vector<UnresolvedManeuverOverride> &maneuver_overrides)
 {
     GraphCompressor graph_compressor;
     graph_compressor.Compress(barriers,
                               traffic_signals,
                               scripting_environment,
                               turn_restrictions,
-                              conditional_turn_restrictions,
                               maneuver_overrides,
                               compressed_output_graph,
                               annotation_data,

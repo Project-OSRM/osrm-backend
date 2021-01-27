@@ -28,7 +28,7 @@ template <storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
                   const detail::NameTableImpl<Ownership> &index_data);
-}
+} // namespace serialization
 
 namespace detail
 {
@@ -111,7 +111,7 @@ template <storage::Ownership Ownership> class NameTableImpl
   private:
     IndexedData indexed_data;
 };
-}
+} // namespace detail
 
 using NameTable = detail::NameTableImpl<storage::Ownership::Container>;
 using NameTableView = detail::NameTableImpl<storage::Ownership::View>;

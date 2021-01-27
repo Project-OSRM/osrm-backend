@@ -1,15 +1,58 @@
 # Unreleased
+  - Changes from 5.23.0
+    - Features
+      - ADDED: Added support for multiple via-way restrictions. [#5907](https://github.com/Project-OSRM/osrm-backend/pull/5907)
+      - ADDED: Add node bindings support for Node 12, 14, and publish binaries [#5918](https://github.com/Project-OSRM/osrm-backend/pull/5918)
+      - REMOVED: we no longer publish Node 8 binary modules (they are still buildable from source) [#5918](https://github.com/Project-OSRM/osrm-backend/pull/5918)
+    - Routing:
+      - FIXED: Avoid copying ManyToMany table results [#5923](https://github.com/Project-OSRM/osrm-backend/pull/5923)
+      - FIXED: Reduce copying in API parameter constructors [#5925](https://github.com/Project-OSRM/osrm-backend/pull/5925)
+    - Misc:
+      - CHANGED: Unify `.osrm.turn_penalites_index` dump processing same with `.osrm.turn_weight_penalties` and `.osrm.turn_duration_penalties` [#5868](https://github.com/Project-OSRM/osrm-backend/pull/5868)
+    - Profile:
+      - ADDED: Profile debug script which fetches a way from OSM then outputs the result of the profile. [#5908](https://github.com/Project-OSRM/osrm-backend/pull/5908)
+    - Infrastructure
+      - CHANGED: Bundled protozero updated to v1.7.0. [#5858](https://github.com/Project-OSRM/osrm-backend/pull/5858)
+    - Windows:
+      - FIXED: Fix bit-shift overflow in MLD partition step. [#5878](https://github.com/Project-OSRM/osrm-backend/pull/5878)
+      - FIXED: Fix vector bool permutation in graph contraction step [#5882](https://github.com/Project-OSRM/osrm-backend/pull/5882)
+    - API:
+      - FIXED: Undo libosrm API break by adding old interface as method overload [#5861](https://github.com/Project-OSRM/osrm-backend/pull/5861)
+
+# 5.23.0
+  - Changes from 5.22.0
+    - Build:
+      - FIXED: pessimistic calls to std::move [#5560](https://github.com/Project-OSRM/osrm-backend/pull/5561)
+    - Features:
+      - ADDED: new API parameter - `snapping=any|default` to allow snapping to previously unsnappable edges [#5361](https://github.com/Project-OSRM/osrm-backend/pull/5361)
+      - ADDED: keepalive support to the osrm-routed HTTP server [#5518](https://github.com/Project-OSRM/osrm-backend/pull/5518)
+      - ADDED: flatbuffers output format support [#5513](https://github.com/Project-OSRM/osrm-backend/pull/5513)
+      - ADDED: Global 'skip_waypoints' option [#5556](https://github.com/Project-OSRM/osrm-backend/pull/5556)
+      - FIXED: Install the libosrm_guidance library correctly [#5604](https://github.com/Project-OSRM/osrm-backend/pull/5604)
+      - FIXED: Http Handler can now deal witch optional whitespace between header-key and -value [#5606](https://github.com/Project-OSRM/osrm-backend/issues/5606)
+    - Routing:
+      - CHANGED: allow routing past `barrier=arch` [#5352](https://github.com/Project-OSRM/osrm-backend/pull/5352)
+      - CHANGED: default car weight was reduced to 2000 kg. [#5371](https://github.com/Project-OSRM/osrm-backend/pull/5371)
+      - CHANGED: default car height was reduced to 2 meters. [#5389](https://github.com/Project-OSRM/osrm-backend/pull/5389)
+      - FIXED: treat `bicycle=use_sidepath` as no access on the tagged way. [#5622](https://github.com/Project-OSRM/osrm-backend/pull/5622)
+      - FIXED: fix table result when source and destination on same one-way segment. [#5828](https://github.com/Project-OSRM/osrm-backend/pull/5828)
+      - FIXED: fix occasional segfault when swapping data with osrm-datastore and using `exclude=` [#5844](https://github.com/Project-OSRM/osrm-backend/pull/5844)
+      - FIXED: fix crash in MLD alternative search if source or target are invalid [#5851](https://github.com/Project-OSRM/osrm-backend/pull/5851)
+    - Misc:
+      - CHANGED: Reduce memory usage for raster source handling. [#5572](https://github.com/Project-OSRM/osrm-backend/pull/5572)
+      - CHANGED: Add cmake option `ENABLE_DEBUG_LOGGING` to control whether output debug logging. [#3427](https://github.com/Project-OSRM/osrm-backend/issues/3427)
+      - CHANGED: updated extent of Hong Kong as left hand drive country. [#5535](https://github.com/Project-OSRM/osrm-backend/issues/5535)
+      - FIXED: corrected error message when failing to snap input coordinates [#5846](https://github.com/Project-OSRM/osrm-backend/pull/5846)
+    - Infrastructure
+      - REMOVED: STXXL support removed as STXXL became abandonware. [#5760](https://github.com/Project-OSRM/osrm-backend/pull/5760)
+
+# 5.22.0
   - Changes from 5.21.0
     - Build:
       - ADDED: optionally build Node `lts` and `latest` bindings [#5347](https://github.com/Project-OSRM/osrm-backend/pull/5347)
     - Features:
       - ADDED: new waypoints parameter to the `route` plugin, enabling silent waypoints [#5345](https://github.com/Project-OSRM/osrm-backend/pull/5345)
       - ADDED: data timestamp information in the response (saved in new file `.osrm.timestamp`). [#5115](https://github.com/Project-OSRM/osrm-backend/issues/5115)
-      - ADDED: new API parameter - `snapping=any|default` to allow snapping to previously unsnappable edges [#5361](https://github.com/Project-OSRM/osrm-backend/pull/5361)
-    - Routing:
-      - CHANGED: allow routing past `barrier=arch` [#5352](https://github.com/Project-OSRM/osrm-backend/pull/5352)
-      - CHANGED: default car weight was reduced to 2000 kg. [#5371](https://github.com/Project-OSRM/osrm-backend/pull/5371)
-      - CHANGED: default car height was reduced to 2 meters. [#5389](https://github.com/Project-OSRM/osrm-backend/pull/5389)
 
 # 5.21.0
   - Changes from 5.20.0

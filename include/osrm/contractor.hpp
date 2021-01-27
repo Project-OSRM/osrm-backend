@@ -34,7 +34,7 @@ namespace contractor
 {
 struct ContractorConfig;
 
-} // ns contractor
+} // namespace contractor
 
 /**
  * Runs contraction hierarchy computation process.
@@ -45,6 +45,6 @@ struct ContractorConfig;
  */
 void contract(const contractor::ContractorConfig &config);
 
-} // ns osrm
+} // namespace osrm
 
 #endif // OSRM_CONTRACTOR_HPP

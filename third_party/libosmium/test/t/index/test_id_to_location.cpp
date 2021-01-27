@@ -14,6 +14,10 @@
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/types.hpp>
 
+#include <memory>
+#include <string>
+#include <vector>
+
 static_assert(osmium::index::empty_value<osmium::Location>() == osmium::Location{}, "Empty value for location is wrong");
 
 template <typename TIndex>
@@ -126,7 +130,7 @@ TEST_CASE("Map Id to location: DenseMmapArray") {
     test_func_real<index_type>(index2);
 }
 #else
-# pragma message("not running 'DenseMapMmap' test case on this machine")
+# pragma message("not running 'DenseMmapArray' test case on this machine")
 #endif
 
 TEST_CASE("Map Id to location: DenseFileArray") {
@@ -178,6 +182,20 @@ TEST_CASE("Map Id to location: SparseMemArray") {
     index_type index2;
     test_func_real<index_type>(index2);
 }
+
+#ifdef __linux__
+TEST_CASE("Map Id to location: SparseMmapArray") {
+    using index_type = osmium::index::map::SparseMmapArray<osmium::unsigned_object_id_type, osmium::Location>;
+
+    index_type index1;
+    test_func_all<index_type>(index1);
+
+    index_type index2;
+    test_func_real<index_type>(index2);
+}
+#else
+# pragma message("not running 'SparseMmapArray' test case on this machine")
+#endif
 
 TEST_CASE("Map Id to location: FlexMem sparse") {
     using index_type = osmium::index::map::FlexMem<osmium::unsigned_object_id_type, osmium::Location>;

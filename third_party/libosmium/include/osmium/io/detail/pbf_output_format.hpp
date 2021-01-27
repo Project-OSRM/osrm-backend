@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -58,7 +58,6 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/way.hpp>
 #include <osmium/thread/pool.hpp>
-#include <osmium/util/cast.hpp>
 #include <osmium/util/delta.hpp>
 #include <osmium/util/misc.hpp>
 #include <osmium/visitor.hpp>
@@ -123,9 +122,13 @@ namespace osmium {
              * as well as Osmium implementation always
              * uses at most 8k entities in a block.
              */
-            constexpr int32_t max_entities_per_block = 8000;
+            enum {
+                max_entities_per_block = 8000
+            };
 
-            constexpr int location_granularity = 100;
+            enum {
+                location_granularity = 100
+            };
 
             /**
              * convert a double lat or lon value to an int, respecting the granularity
@@ -185,19 +188,24 @@ namespace osmium {
                     protozero::pbf_builder<FileFormat::BlobHeader> pbf_blob_header{blob_header_data};
 
                     pbf_blob_header.add_string(FileFormat::BlobHeader::required_string_type, m_blob_type == pbf_blob_type::data ? "OSMData" : "OSMHeader");
-                    pbf_blob_header.add_int32(FileFormat::BlobHeader::required_int32_datasize, static_cast_with_assert<int32_t>(blob_data.size()));
 
-#ifndef _WIN32
-                    const uint32_t sz = htonl(static_cast_with_assert<uint32_t>(blob_header_data.size()));
-#else
-                    uint32_t sz = static_cast_with_assert<uint32_t>(blob_header_data.size());
-                    protozero::detail::byteswap_inplace(&sz);
-#endif
+                    // The static_cast is okay, because the size can never
+                    // be much larger than max_uncompressed_blob_size. This
+                    // is due to the assert above and the fact that the zlib
+                    // library will not grow deflated data beyond the original
+                    // data plus a few header bytes (https://zlib.net/zlib_tech.html).
+                    pbf_blob_header.add_int32(FileFormat::BlobHeader::required_int32_datasize, static_cast<int32_t>(blob_data.size()));
 
-                    // write to output: the 4-byte BlobHeader-Size followed by the BlobHeader followed by the Blob
+                    const auto size = static_cast<uint32_t>(blob_header_data.size());
+
+                    // write to output: the 4-byte BlobHeader size in network
+                    // byte order followed by the BlobHeader followed by the Blob
                     std::string output;
-                    output.reserve(sizeof(sz) + blob_header_data.size() + blob_data.size());
-                    output.append(reinterpret_cast<const char*>(&sz), sizeof(sz));
+                    output.reserve(4 + blob_header_data.size() + blob_data.size());
+                    output += static_cast<char>((size >> 24U) & 0xffU);
+                    output += static_cast<char>((size >> 16U) & 0xffU);
+                    output += static_cast<char>((size >>  8U) & 0xffU);
+                    output += static_cast<char>( size         & 0xffU);
                     output.append(blob_header_data);
                     output.append(blob_data);
 
@@ -236,7 +244,7 @@ namespace osmium {
                 osmium::DeltaEncode<uint32_t, int64_t> m_delta_timestamp;
                 osmium::DeltaEncode<changeset_id_type, int64_t> m_delta_changeset;
                 osmium::DeltaEncode<user_id_type, int32_t> m_delta_uid;
-                osmium::DeltaEncode<uint32_t, int32_t> m_delta_user_sid;
+                osmium::DeltaEncode<int32_t, int32_t> m_delta_user_sid;
 
                 osmium::DeltaEncode<int64_t, int64_t> m_delta_lat;
                 osmium::DeltaEncode<int64_t, int64_t> m_delta_lon;
@@ -284,7 +292,8 @@ namespace osmium {
                     m_ids.push_back(m_delta_id.update(node.id()));
 
                     if (m_options.add_metadata.version()) {
-                        m_versions.push_back(static_cast_with_assert<int32_t>(node.version()));
+                        assert(node.version() <= static_cast<std::size_t>(std::numeric_limits<int32_t>::max()));
+                        m_versions.push_back(static_cast<int32_t>(node.version()));
                     }
                     if (m_options.add_metadata.timestamp()) {
                         m_timestamps.push_back(m_delta_timestamp.update(uint32_t(node.timestamp())));
@@ -306,8 +315,8 @@ namespace osmium {
                     m_lons.push_back(m_delta_lon.update(lonlat2int(node.location().lon_without_check())));
 
                     for (const auto& tag : node.tags()) {
-                        m_tags.push_back(static_cast_with_assert<int32_t>(m_stringtable.add(tag.key())));
-                        m_tags.push_back(static_cast_with_assert<int32_t>(m_stringtable.add(tag.value())));
+                        m_tags.push_back(m_stringtable.add(tag.key()));
+                        m_tags.push_back(m_stringtable.add(tag.value()));
                     }
                     m_tags.push_back(0);
                 }
@@ -397,8 +406,18 @@ namespace osmium {
                     ++m_count;
                 }
 
-                uint32_t store_in_stringtable(const char* s) {
+                // There are two functions store_in_stringtable(_unsigned)
+                // here because of an inconsistency in the OSMPBF format
+                // specification. Both uint32 and sint32 types are used in
+                // the format for essentially the same thing.
+
+                int32_t store_in_stringtable(const char* s) {
                     return m_stringtable.add(s);
+                }
+
+                uint32_t store_in_stringtable_unsigned(const char* s) {
+                    // static_cast okay, because result of add is always >= 0
+                    return static_cast<uint32_t>(m_stringtable.add(s));
                 }
 
                 int count() const noexcept {
@@ -419,7 +438,9 @@ namespace osmium {
                  * enough space for the string table (which typically
                  * needs about 0.1 to 0.3% of the block size).
                  */
-                constexpr static std::size_t max_used_blob_size = max_uncompressed_blob_size * 95 / 100;
+                enum {
+                    max_used_blob_size = max_uncompressed_blob_size * 95U / 100U
+                };
 
                 bool can_add(OSMFormat::PrimitiveGroup type) const noexcept {
                     if (type != m_type) {
@@ -466,14 +487,14 @@ namespace osmium {
                     {
                         protozero::packed_field_uint32 field{pbf_object, protozero::pbf_tag_type(T::enum_type::packed_uint32_keys)};
                         for (const auto& tag : object.tags()) {
-                            field.add_element(m_primitive_block.store_in_stringtable(tag.key()));
+                            field.add_element(m_primitive_block.store_in_stringtable_unsigned(tag.key()));
                         }
                     }
 
                     {
                         protozero::packed_field_uint32 field{pbf_object, protozero::pbf_tag_type(T::enum_type::packed_uint32_vals)};
                         for (const auto& tag : object.tags()) {
-                            field.add_element(m_primitive_block.store_in_stringtable(tag.value()));
+                            field.add_element(m_primitive_block.store_in_stringtable_unsigned(tag.value()));
                         }
                     }
 
@@ -481,7 +502,8 @@ namespace osmium {
                         protozero::pbf_builder<OSMFormat::Info> pbf_info{pbf_object, T::enum_type::optional_Info_info};
 
                         if (m_options.add_metadata.version()) {
-                            pbf_info.add_int32(OSMFormat::Info::optional_int32_version, static_cast_with_assert<int32_t>(object.version()));
+                            assert(object.version() <= static_cast<std::size_t>(std::numeric_limits<int32_t>::max()));
+                            pbf_info.add_int32(OSMFormat::Info::optional_int32_version, static_cast<int32_t>(object.version()));
                         }
                         if (m_options.add_metadata.timestamp()) {
                             pbf_info.add_int64(OSMFormat::Info::optional_int64_timestamp, uint32_t(object.timestamp()));
@@ -490,10 +512,11 @@ namespace osmium {
                             pbf_info.add_int64(OSMFormat::Info::optional_int64_changeset, object.changeset());
                         }
                         if (m_options.add_metadata.uid()) {
-                            pbf_info.add_int32(OSMFormat::Info::optional_int32_uid, static_cast_with_assert<int32_t>(object.uid()));
+                            assert(object.uid() <= static_cast<std::size_t>(std::numeric_limits<int32_t>::max()));
+                            pbf_info.add_int32(OSMFormat::Info::optional_int32_uid, static_cast<int32_t>(object.uid()));
                         }
                         if (m_options.add_metadata.user()) {
-                            pbf_info.add_uint32(OSMFormat::Info::optional_uint32_user_sid, m_primitive_block.store_in_stringtable(object.user()));
+                            pbf_info.add_uint32(OSMFormat::Info::optional_uint32_user_sid, m_primitive_block.store_in_stringtable_unsigned(object.user()));
                         }
                         if (m_options.add_visible_flag) {
                             pbf_info.add_bool(OSMFormat::Info::optional_bool_visible, object.visible());
@@ -552,6 +575,10 @@ namespace osmium {
 
                     if (m_options.locations_on_ways) {
                         pbf_header_block.add_string(OSMFormat::HeaderBlock::repeated_string_optional_features, "LocationsOnWays");
+                    }
+
+                    if (header.get("sorting") == "Type_then_ID") {
+                        pbf_header_block.add_string(OSMFormat::HeaderBlock::repeated_string_optional_features, "Sort.Type_then_ID");
                     }
 
                     pbf_header_block.add_string(OSMFormat::HeaderBlock::optional_string_writingprogram, header.get("generator"));

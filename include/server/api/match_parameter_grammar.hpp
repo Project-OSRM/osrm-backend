@@ -18,7 +18,7 @@ namespace
 {
 namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
-}
+} // namespace
 
 template <typename Iterator = std::string::iterator,
           typename Signature = void(engine::api::MatchParameters &)>
@@ -46,7 +46,7 @@ struct MatchParametersGrammar final : public RouteParametersGrammar<Iterator, Si
             "ignore", engine::api::MatchParameters::GapsType::Ignore);
 
         root_rule =
-            BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
+            BaseGrammar::query_rule(qi::_r1) > BaseGrammar::format_rule(qi::_r1) >
             -('?' > (timestamps_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1) |
                      (qi::lit("gaps=") >
                       gaps_type[ph::bind(&engine::api::MatchParameters::gaps, qi::_r1) = qi::_1]) |
@@ -62,8 +62,8 @@ struct MatchParametersGrammar final : public RouteParametersGrammar<Iterator, Si
 
     qi::symbols<char, engine::api::MatchParameters::GapsType> gaps_type;
 };
-}
-}
-}
+} // namespace api
+} // namespace server
+} // namespace osrm
 
 #endif

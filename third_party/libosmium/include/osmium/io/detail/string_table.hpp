@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -216,7 +216,7 @@ namespace osmium {
                     int c;
 
                     while ((c = *str++)) {
-                        hash = ((hash << 5u) + hash) + c; /* hash * 33 + c */
+                        hash = ((hash << 5U) + hash) + c; /* hash * 33 + c */
                     }
 
                     return hash;
@@ -231,7 +231,9 @@ namespace osmium {
                 // make sure it doesn't. If we had max_uncompressed_blob_size
                 // many entries, we are sure they would never fit into a PBF
                 // Blob.
-                static constexpr const uint32_t max_entries = max_uncompressed_blob_size;
+                enum {
+                    max_entries = static_cast<int32_t>(max_uncompressed_blob_size)
+                };
 
                 // There is one string table per PBF primitive block. Most of
                 // them are really small, because most blocks are full of nodes
@@ -240,11 +242,13 @@ namespace osmium {
                 // The chosen size is enough so that 99% of all string tables
                 // in typical OSM files will only need a single memory
                 // allocation.
-                static constexpr const size_t default_stringtable_chunk_size = 100 * 1024;
+                enum {
+                    default_stringtable_chunk_size = 100U * 1024U
+                };
 
                 StringStore m_strings;
-                std::unordered_map<const char*, size_t, djb2_hash, str_equal> m_index;
-                uint32_t m_size = 0;
+                std::unordered_map<const char*, int32_t, djb2_hash, str_equal> m_index;
+                int32_t m_size = 0;
 
             public:
 
@@ -260,14 +264,14 @@ namespace osmium {
                     m_strings.add("");
                 }
 
-                uint32_t size() const noexcept {
+                int32_t size() const noexcept {
                     return m_size + 1;
                 }
 
-                uint32_t add(const char* s) {
+                int32_t add(const char* s) {
                     const auto f = m_index.find(s);
                     if (f != m_index.end()) {
-                        return uint32_t(f->second);
+                        return f->second;
                     }
 
                     const char* cs = m_strings.add(s);

@@ -220,7 +220,8 @@ inline unsigned generateServerProgramOptions(const int argc,
     return INIT_OK_DO_NOT_START_ENGINE;
 }
 
-int main(int argc, const char *argv[]) try
+int main(int argc, const char *argv[])
+try
 {
     util::LogPolicy::GetInstance().Unmute();
 

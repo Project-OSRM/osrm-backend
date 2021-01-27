@@ -39,7 +39,7 @@ inline std::size_t countOnes(unsigned int value) { return __builtin_popcount(val
 inline std::size_t countOnes(unsigned long value) { return __builtin_popcountl(value); }
 inline std::size_t countOnes(unsigned long long value) { return __builtin_popcountll(value); }
 #endif
-}
+} // namespace detail
 
 // Investigate if we can replace this with
 // http://www.boost.org/doc/libs/1_64_0/libs/dynamic_bitset/dynamic_bitset.html
@@ -93,7 +93,7 @@ template <typename T> auto makeBitRange(const T value)
 {
     return boost::make_iterator_range(BitIterator<T>{value}, BitIterator<T>{});
 }
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif

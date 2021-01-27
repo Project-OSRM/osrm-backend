@@ -18,7 +18,7 @@ namespace
 {
 namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
-}
+} // namespace
 
 template <typename Iterator = std::string::iterator,
           typename Signature = void(engine::api::NearestParameters &)>
@@ -32,7 +32,7 @@ struct NearestParametersGrammar final : public BaseParametersGrammar<Iterator, S
                         qi::uint_)[ph::bind(&engine::api::NearestParameters::number_of_results,
                                             qi::_r1) = qi::_1];
 
-        root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
+        root_rule = BaseGrammar::query_rule(qi::_r1) > BaseGrammar::format_rule(qi::_r1) >
                     -('?' > (nearest_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) % '&');
     }
 
@@ -40,8 +40,8 @@ struct NearestParametersGrammar final : public BaseParametersGrammar<Iterator, S
     qi::rule<Iterator, Signature> root_rule;
     qi::rule<Iterator, Signature> nearest_rule;
 };
-}
-}
-}
+} // namespace api
+} // namespace server
+} // namespace osrm
 
 #endif

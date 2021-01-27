@@ -28,7 +28,7 @@ ViaRoutePlugin::ViaRoutePlugin(int max_locations_viaroute, int max_alternatives)
 
 Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                      const api::RouteParameters &route_parameters,
-                                     util::json::Object &json_result) const
+                                     osrm::engine::api::ResultT &result) const
 {
     BOOST_ASSERT(route_parameters.IsValid());
 
@@ -37,7 +37,7 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
         return Error("NotImplemented",
                      "Shortest path search is not implemented for the chosen search algorithm. "
                      "Only two coordinates supported.",
-                     json_result);
+                     result);
     }
 
     if (!algorithms.HasDirectShortestPathSearch() && !algorithms.HasShortestPathSearch())
@@ -45,7 +45,7 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
         return Error(
             "NotImplemented",
             "Direct shortest path search is not implemented for the chosen search algorithm.",
-            json_result);
+            result);
     }
 
     if (max_locations_viaroute > 0 &&
@@ -55,7 +55,7 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
                      "Number of entries " + std::to_string(route_parameters.coordinates.size()) +
                          " is higher than current maximum (" +
                          std::to_string(max_locations_viaroute) + ")",
-                     json_result);
+                     result);
     }
 
     // Takes care of alternatives=n and alternatives=true
@@ -65,12 +65,12 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
         return Error("TooBig",
                      "Requested number of alternatives is higher than current maximum (" +
                          std::to_string(max_alternatives) + ")",
-                     json_result);
+                     result);
     }
 
     if (!CheckAllCoordinates(route_parameters.coordinates))
     {
-        return Error("InvalidValue", "Invalid coordinate value.", json_result);
+        return Error("InvalidValue", "Invalid coordinate value.", result);
     }
 
     // Error: first and last points should be waypoints
@@ -78,12 +78,11 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
         (route_parameters.waypoints[0] != 0 ||
          route_parameters.waypoints.back() != (route_parameters.coordinates.size() - 1)))
     {
-        return Error("InvalidValue",
-                     "First and last coordinates must be specified as waypoints.",
-                     json_result);
+        return Error(
+            "InvalidValue", "First and last coordinates must be specified as waypoints.", result);
     }
 
-    if (!CheckAlgorithms(route_parameters, algorithms, json_result))
+    if (!CheckAlgorithms(route_parameters, algorithms, result))
         return Status::Error;
 
     const auto &facade = algorithms.GetFacade();
@@ -91,9 +90,8 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
     if (phantom_node_pairs.size() != route_parameters.coordinates.size())
     {
         return Error("NoSegment",
-                     std::string("Could not find a matching segment for coordinate ") +
-                         std::to_string(phantom_node_pairs.size()),
-                     json_result);
+                     MissingPhantomErrorMessage(phantom_node_pairs, route_parameters.coordinates),
+                     result);
     }
     BOOST_ASSERT(phantom_node_pairs.size() == route_parameters.coordinates.size());
 
@@ -162,7 +160,7 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
             }
         }
 
-        route_api.MakeResponse(routes, start_end_nodes, json_result);
+        route_api.MakeResponse(routes, start_end_nodes, result);
     }
     else
     {
@@ -175,16 +173,16 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
 
         if (not_in_same_component)
         {
-            return Error("NoRoute", "Impossible route between points", json_result);
+            return Error("NoRoute", "Impossible route between points", result);
         }
         else
         {
-            return Error("NoRoute", "No route found between points", json_result);
+            return Error("NoRoute", "No route found between points", result);
         }
     }
 
     return Status::Ok;
 }
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm

@@ -173,7 +173,7 @@ inline InternalRouteResult CollapseInternalRouteResult(const InternalRouteResult
                  collapsed.unpacked_path_segments.size());
     return collapsed;
 }
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif // RAW_ROUTE_DATA_H

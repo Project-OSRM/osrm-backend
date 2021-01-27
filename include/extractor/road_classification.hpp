@@ -50,7 +50,7 @@ const constexpr Enum FOOT_PATH = 18;
 // a road simply offered for connectivity. Will be ignored in forks/other decisions. Always
 // considered non-obvious to continue on
 const constexpr Enum CONNECTIVITY = 31;
-} // namespace Road Class
+} // namespace RoadPriorityClass
 
 #pragma pack(push, 1)
 class RoadClassification

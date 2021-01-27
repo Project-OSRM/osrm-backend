@@ -41,7 +41,7 @@ template <typename NodeIterator, typename EdgeDataT> struct DynamicEdge
     NodeIterator target;
     EdgeDataT data;
 };
-}
+} // namespace detail
 
 template <typename EdgeDataT> class DynamicGraph
 {
@@ -468,7 +468,7 @@ template <typename EdgeDataT> class DynamicGraph
     std::vector<Node> node_array;
     DeallocatingVector<Edge> edge_list;
 };
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // DYNAMICGRAPH_HPP

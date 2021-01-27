@@ -3,6 +3,8 @@
 #include <osmium/osm/timestamp.hpp>
 #include <osmium/util/minmax.hpp>
 
+#include <limits>
+
 TEST_CASE("min_op numeric") {
     osmium::min_op<int> x;
     REQUIRE(x() == std::numeric_limits<int>::max());

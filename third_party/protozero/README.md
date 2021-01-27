@@ -56,9 +56,9 @@ You have to have a working knowledge of how
 * Read the [upgrading instructions](UPGRADING.md) if you are upgrading from
   an older version of Protozero.
 
-The build process will also build the Doxygen-based reference documentation
-if you have [Doxygen](http://www.stack.nl/~dimitri/doxygen/) installed. Then
-open `doc/html/index.html` in your browser to read it.
+The build process will also build the Doxygen-based reference documentation if
+you have Doxygen installed. Then open `doc/html/index.html` in your browser to
+read it.
 
 
 ## Endianness

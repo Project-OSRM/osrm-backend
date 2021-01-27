@@ -1,17 +1,17 @@
 # Libosmium
 
-http://osmcode.org/libosmium
+https://osmcode.org/libosmium
 
 A fast and flexible C++ library for working with OpenStreetMap data.
 
 Libosmium works on Linux, Mac OSX and Windows.
 
 [![Travis Build Status](https://secure.travis-ci.org/osmcode/libosmium.svg)](https://travis-ci.org/osmcode/libosmium)
-[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/github/osmcode/libosmium?svg=true)](https://ci.appveyor.com/project/Mapbox/libosmium)
+[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/yy099a4vxcb604rn/branch/master?svg=true)](https://ci.appveyor.com/project/lonvia/libosmium-eq41p/branch/master)
 [![Coverage Status](https://codecov.io/gh/osmcode/libosmium/branch/master/graph/badge.svg)](https://codecov.io/gh/osmcode/libosmium)
 [![Packaging status](https://repology.org/badge/tiny-repos/libosmium.svg)](https://repology.org/metapackage/libosmium)
 
-Please see the [Libosmium manual](http://osmcode.org/libosmium/manual.html)
+Please see the [Libosmium manual](https://osmcode.org/libosmium/manual.html)
 for more details than this README can provide.
 
 
@@ -26,13 +26,12 @@ different libraries. You DO NOT NEED to install all of them, just install those
 you need for your programs.
 
 For details see the [list of
-dependencies](http://osmcode.org/libosmium/manual.html#dependencies) in the
+dependencies](https://osmcode.org/libosmium/manual.html#dependencies) in the
 manual.
 
 The following external (header-only) libraries are included in the libosmium
 repository:
 * [gdalcpp](https://github.com/joto/gdalcpp)
-* [utfcpp](http://utfcpp.sourceforge.net/)
 
 Note that [protozero](https://github.com/mapbox/protozero) was included in
 earlier versions of libosmium, but isn't any more.
@@ -69,8 +68,8 @@ cmake:
 
 This will build the examples and tests. Call `ctest` to run the tests.
 
-For more detals see the
-[Building Libosmium](http://osmcode.org/libosmium/manual.html#building-libosmium)
+For more details see the
+[Building Libosmium](https://osmcode.org/libosmium/manual.html#building-libosmium)
 chapter in the manual.
 
 
@@ -85,7 +84,7 @@ git submodule update --init
 This will enable additional tests.
 
 See the
-[Libosmium Manual](http://osmcode.org/libosmium/manual.html#running-tests)
+[Libosmium Manual](https://osmcode.org/libosmium/manual.html#running-tests)
 for instructions.
 
 
@@ -93,7 +92,7 @@ for instructions.
 
 If you have been using the old version of Osmium at
 https://github.com/joto/osmium you might want to read about the [changes
-needed](http://osmcode.org/libosmium/manual.html#changes-from-old-versions-of-osmium).
+needed](https://osmcode.org/libosmium/manual.html#changes-from-old-versions-of-osmium).
 
 
 ## License

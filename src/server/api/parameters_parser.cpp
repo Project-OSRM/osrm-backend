@@ -45,9 +45,8 @@ boost::optional<ParameterT> parseParameters(std::string::iterator &iter,
         const auto ok =
             boost::spirit::qi::parse(iter, end, grammar(boost::phoenix::ref(parameters)));
 
-        // return move(a.b) is needed to move b out of a and then return the rvalue by implicit move
         if (ok && iter == end)
-            return std::move(parameters);
+            return parameters;
     }
     catch (const qi::expectation_failure<It> &failure)
     {
@@ -63,7 +62,7 @@ boost::optional<ParameterT> parseParameters(std::string::iterator &iter,
 
     return boost::none;
 }
-} // ns detail
+} // namespace detail
 
 template <>
 boost::optional<engine::api::RouteParameters> parseParameters(std::string::iterator &iter,
@@ -111,6 +110,6 @@ boost::optional<engine::api::TileParameters> parseParameters(std::string::iterat
     return detail::parseParameters<engine::api::TileParameters, TileParametersGrammar<>>(iter, end);
 }
 
-} // ns api
-} // ns server
-} // ns osrm
+} // namespace api
+} // namespace server
+} // namespace osrm

@@ -60,7 +60,7 @@ util::vector_view<T> mmapFile(const boost::filesystem::path &file,
             SOURCE_REF);
     }
 }
-}
+} // namespace detail
 
 template <typename T>
 util::vector_view<const T> mmapFile(const boost::filesystem::path &file,
@@ -83,7 +83,7 @@ util::vector_view<T> mmapFile(const boost::filesystem::path &file,
 {
     return detail::mmapFile<T>(file, mmap_container, size);
 }
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif

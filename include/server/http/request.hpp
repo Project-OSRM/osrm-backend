@@ -17,10 +17,11 @@ struct request
     std::string uri;
     std::string referrer;
     std::string agent;
+    std::string connection;
     boost::asio::ip::address endpoint;
 };
-}
-}
-}
+} // namespace http
+} // namespace server
+} // namespace osrm
 
 #endif // REQUEST_HPP

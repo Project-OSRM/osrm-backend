@@ -1,10 +1,12 @@
 #include "catch.hpp"
 
+#include "test_crc.hpp"
+
 #include <osmium/builder/attr.hpp>
 #include <osmium/osm/crc.hpp>
 #include <osmium/osm/relation.hpp>
 
-#include <boost/crc.hpp>
+#include <string>
 
 using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
@@ -58,7 +60,7 @@ TEST_CASE("Build relation") {
         ++n;
     }
 
-    osmium::CRC<boost::crc_32_type> crc32;
+    osmium::CRC<crc_type> crc32;
     crc32.update(relation);
     REQUIRE(crc32().checksum() == 0x2c2352e);
 }

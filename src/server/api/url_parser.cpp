@@ -60,7 +60,7 @@ struct URLParser final : qi::grammar<Iterator, Into>
     qi::rule<Iterator, char()> percent_encoding;
 };
 
-} // anon.
+} // namespace
 
 namespace osrm
 {
@@ -93,6 +93,6 @@ boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::stri
     return boost::none;
 }
 
-} // api
-} // server
-} // osrm
+} // namespace api
+} // namespace server
+} // namespace osrm

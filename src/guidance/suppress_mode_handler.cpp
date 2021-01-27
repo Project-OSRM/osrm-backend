@@ -61,8 +61,8 @@ bool SuppressModeHandler::canProcess(const NodeID,
     return (suppress_in_mode != end(suppressed)) && all_share_mode;
 }
 
-Intersection SuppressModeHandler::
-operator()(const NodeID, const EdgeID, Intersection intersection) const
+Intersection
+SuppressModeHandler::operator()(const NodeID, const EdgeID, Intersection intersection) const
 {
     const auto first = begin(intersection);
     const auto last = end(intersection);
@@ -77,5 +77,5 @@ operator()(const NodeID, const EdgeID, Intersection intersection) const
 
     return intersection;
 }
-}
-}
+} // namespace guidance
+} // namespace osrm

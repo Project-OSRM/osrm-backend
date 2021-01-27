@@ -1,7 +1,6 @@
 #include "guidance/turn_instruction.hpp"
 
 #include "engine/plugins/plugin_base.hpp"
-#include "engine/plugins/plugin_base.hpp"
 #include "engine/plugins/tile.hpp"
 
 #include "util/coordinate_calculation.hpp"
@@ -661,14 +660,15 @@ void encodeVectorTile(const DataFacadeBase &facade,
 
     tile.serialize(pbf_buffer);
 }
-}
+} // namespace
 
 Status TilePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                  const api::TileParameters &parameters,
-                                 std::string &pbf_buffer) const
+                                 osrm::engine::api::ResultT &result) const
 {
     BOOST_ASSERT(parameters.IsValid());
 
+    auto &pbf_buffer = result.get<std::string>();
     const auto &facade = algorithms.GetFacade();
     auto edges = getEdges(facade, parameters.x, parameters.y, parameters.z);
     auto segregated_nodes = getSegregatedNodes(facade, edges);
@@ -696,6 +696,6 @@ Status TilePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     return Status::Ok;
 }
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm

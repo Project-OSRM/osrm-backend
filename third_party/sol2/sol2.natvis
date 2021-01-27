@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="sol::optional&lt;*&gt;">
+		<DisplayString Condition="init_ == false">empty</DisplayString>
+		<DisplayString>{*((value_type*)(&amp;storage_[0]))}</DisplayString>
+		<Expand>
+			<Item Name="value" Condition="init_ == true">*((value_type*)(&amp;storage_[0]))</Item>
+		</Expand>
+	</Type>
+	<Type Name="sol::basic_reference&lt;*&gt;">
+		<DisplayString>ref={ref} state={luastate}</DisplayString>
+		<Expand>
+			<Item Name="reference index">ref</Item>
+			<Item Name="state">luastate</Item>
+		</Expand>
+	</Type>
+	<Type Name="sol::stack_reference">
+		<DisplayString>index={index} state={luastate}</DisplayString>
+		<Expand>
+			<Item Name="stack index">index</Item>
+			<Item Name="state">luastate</Item>
+		</Expand>
+	</Type>
+</AutoVisualizer>

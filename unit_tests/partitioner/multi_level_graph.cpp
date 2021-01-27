@@ -3,7 +3,6 @@
 
 #include "../common/range_tools.hpp"
 
-#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
@@ -40,7 +39,7 @@ auto makeGraph(const MultiLevelPartition &mlp, const std::vector<MockEdge> &mock
     std::sort(edges.begin(), edges.end());
     return MultiLevelGraph<EdgeData, osrm::storage::Ownership::Container>(mlp, max_id + 1, edges);
 }
-}
+} // namespace
 
 BOOST_AUTO_TEST_SUITE(multi_level_graph)
 

@@ -28,7 +28,11 @@
 #include <boost/assert.hpp>
 #include <boost/filesystem/operations.hpp>
 
+#if TBB_VERSION_MAJOR == 2020
+#include <tbb/global_control.h>
+#else
 #include <tbb/task_scheduler_init.h>
+#endif
 
 #include "util/geojson_debug_logger.hpp"
 #include "util/geojson_debug_policies.hpp"
@@ -70,8 +74,13 @@ auto getGraphBisection(const PartitionerConfig &config)
 
 int Partitioner::Run(const PartitionerConfig &config)
 {
+#if TBB_VERSION_MAJOR == 2020
+    tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
+                           config.requested_num_threads);
+#else
     tbb::task_scheduler_init init(config.requested_num_threads);
     BOOST_ASSERT(init.is_active());
+#endif
 
     const std::vector<BisectionID> &node_based_partition_ids = getGraphBisection(config);
 

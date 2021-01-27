@@ -53,11 +53,11 @@ IntersectionPrinter<IntersectionType>::IntersectionPrinter(
 }
 
 template <typename IntersectionType>
-util::json::Array IntersectionPrinter<IntersectionType>::
-operator()(const NodeID intersection_node,
-           const IntersectionType &intersection,
-           const boost::optional<util::json::Object> &node_style,
-           const boost::optional<util::json::Object> &way_style) const
+util::json::Array IntersectionPrinter<IntersectionType>::operator()(
+    const NodeID intersection_node,
+    const IntersectionType &intersection,
+    const boost::optional<util::json::Object> &node_style,
+    const boost::optional<util::json::Object> &way_style) const
 {
     // request the number of lanes. This process needs to be in sync with what happens over at
     // intersection analysis

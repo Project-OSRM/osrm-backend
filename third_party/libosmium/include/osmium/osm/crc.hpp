@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -83,8 +83,21 @@ namespace osmium {
 #endif
         }
 
-    } // inline namespace util
+    } // namespace util
 
+    /**
+     * Framework for computing a checksum from OSM data. This class must be
+     * instantiated with a policy class that does the actual CRC calculations.
+     * It must have the process_byte(), process_bytes(), and checksum()
+     * member functions implemented according to the description in Boost
+     * (https://www.boost.org/doc/libs/release/libs/crc/crc.html).
+     *
+     * Typically you will either use the boost::crc_32_type from the Boost
+     * CRC library or the osmium::CRC_zlib class which uses the zlib library
+     * for this, but other checksums are possible.
+     *
+     * @tparam TCRC A CRC type.
+     */
     template <typename TCRC>
     class CRC {
 

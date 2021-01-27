@@ -1,5 +1,6 @@
 #include "extractor/extractor.hpp"
 
+#include "extractor/compressed_edge_container.hpp"
 #include "extractor/compressed_node_based_graph_edge.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/extraction_containers.hpp"
@@ -11,62 +12,50 @@
 #include "extractor/maneuver_override_relation_parser.hpp"
 #include "extractor/name_table.hpp"
 #include "extractor/node_based_graph_factory.hpp"
-#include "extractor/raster_source.hpp"
+#include "extractor/node_restriction_map.hpp"
 #include "extractor/restriction_filter.hpp"
+#include "extractor/restriction_graph.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
+#include "extractor/tarjan_scc.hpp"
+#include "extractor/way_restriction_map.hpp"
 
 #include "guidance/files.hpp"
 #include "guidance/guidance_processing.hpp"
 #include "guidance/segregated_intersection_classification.hpp"
 #include "guidance/turn_data_container.hpp"
 
-#include "storage/io.hpp"
-
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
-#include "util/range_table.hpp"
-#include "util/timing_util.hpp"
-
-#include "extractor/compressed_edge_container.hpp"
-#include "extractor/restriction_index.hpp"
-#include "extractor/way_restriction_map.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
+#include "util/timing_util.hpp"
 
 // Keep debug include to make sure the debug header is in sync with types.
 #include "util/debug.hpp"
 
-#include "extractor/tarjan_scc.hpp"
-
 #include <boost/assert.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/iterator/function_input_iterator.hpp>
-#include <boost/optional/optional.hpp>
-#include <boost/scope_exit.hpp>
 
 #include <osmium/handler/node_locations_for_ways.hpp>
 #include <osmium/index/map/flex_mem.hpp>
 #include <osmium/io/any_input.hpp>
-#include <osmium/osm/timestamp.hpp>
 #include <osmium/thread/pool.hpp>
 #include <osmium/visitor.hpp>
 
-#include <tbb/pipeline.h>
+#if TBB_VERSION_MAJOR == 2020
+#include <tbb/global_control.h>
+#else
 #include <tbb/task_scheduler_init.h>
-
-#include <cstdlib>
+#endif
+#include <tbb/pipeline.h>
 
 #include <algorithm>
 #include <atomic>
 #include <bitset>
 #include <chrono>
-#include <future>
 #include <iostream>
-#include <iterator>
 #include <memory>
 #include <thread>
 #include <tuple>
@@ -189,7 +178,7 @@ std::vector<CompressedNodeBasedGraphEdge> toEdgeList(const util::NodeBasedDynami
 
     return edges;
 }
-}
+} // namespace
 
 /**
  * TODO: Refactor this function into smaller functions for better readability.
@@ -214,20 +203,21 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 {
     util::LogPolicy::GetInstance().Unmute();
 
-    const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
+    const unsigned recommended_num_threads = std::thread::hardware_concurrency();
     const auto number_of_threads = std::min(recommended_num_threads, config.requested_num_threads);
-    tbb::task_scheduler_init init(number_of_threads ? number_of_threads
-                                                    : tbb::task_scheduler_init::automatic);
+
+#if TBB_VERSION_MAJOR == 2020
+    tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
+                           config.requested_num_threads);
+#else
+    tbb::task_scheduler_init init(config.requested_num_threads);
     BOOST_ASSERT(init.is_active());
+#endif
 
     LaneDescriptionMap turn_lane_map;
     std::vector<TurnRestriction> turn_restrictions;
-    std::vector<ConditionalTurnRestriction> conditional_turn_restrictions;
     std::vector<UnresolvedManeuverOverride> unresolved_maneuver_overrides;
-    std::tie(turn_lane_map,
-             turn_restrictions,
-             conditional_turn_restrictions,
-             unresolved_maneuver_overrides) =
+    std::tie(turn_lane_map, turn_restrictions, unresolved_maneuver_overrides) =
         ParseOSMData(scripting_environment, number_of_threads);
 
     // Transform the node-based graph that OSM is based on into an edge-based graph
@@ -249,7 +239,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     NodeBasedGraphFactory node_based_graph_factory(config.GetPath(".osrm"),
                                                    scripting_environment,
                                                    turn_restrictions,
-                                                   conditional_turn_restrictions,
                                                    unresolved_maneuver_overrides);
 
     NameTable name_table;
@@ -279,16 +268,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     //
     // Luckily node based node ids still coincide with the coordinate array.
     // That's the reason we can only here write out the final compressed node based graph.
-
-    // Dumps to file asynchronously and makes sure we wait for its completion.
-    std::future<void> compressed_node_based_graph_writing;
-
-    BOOST_SCOPE_EXIT_ALL(&)
-    {
-        if (compressed_node_based_graph_writing.valid())
-            compressed_node_based_graph_writing.wait();
-    };
-
     files::writeCompressedNodeBasedGraph(config.GetPath(".osrm.cnbg").string(),
                                          toEdgeList(node_based_graph));
 
@@ -300,8 +279,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     edge_based_nodes_container =
         EdgeBasedNodeDataContainer({}, std::move(node_based_graph_factory.GetAnnotationData()));
 
-    conditional_turn_restrictions =
-        removeInvalidRestrictions(std::move(conditional_turn_restrictions), node_based_graph);
+    turn_restrictions = removeInvalidRestrictions(std::move(turn_restrictions), node_based_graph);
+    auto restriction_graph = constructRestrictionGraph(turn_restrictions);
 
     const auto number_of_node_based_nodes = node_based_graph.GetNumberOfNodes();
 
@@ -311,8 +290,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                node_based_graph_factory.GetCompressedEdges(),
                                barrier_nodes,
                                traffic_signals,
-                               turn_restrictions,
-                               conditional_turn_restrictions,
+                               restriction_graph,
                                segregated_edges,
                                name_table,
                                unresolved_maneuver_overrides,
@@ -331,8 +309,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                          coordinates,
                          node_based_graph_factory.GetCompressedEdges(),
                          barrier_nodes,
-                         turn_restrictions,
-                         conditional_turn_restrictions,
+                         restriction_graph,
                          name_table,
                          std::move(turn_lane_map),
                          scripting_environment);
@@ -391,12 +368,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     return 0;
 }
 
-std::tuple<LaneDescriptionMap,
-           std::vector<TurnRestriction>,
-           std::vector<ConditionalTurnRestriction>,
-           std::vector<UnresolvedManeuverOverride>>
-Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
-                        const unsigned number_of_threads)
+std::
+    tuple<LaneDescriptionMap, std::vector<TurnRestriction>, std::vector<UnresolvedManeuverOverride>>
+    Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
+                            const unsigned number_of_threads)
 {
     TIMER_START(extracting);
 
@@ -472,7 +447,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         std::vector<std::pair<const osmium::Node &, ExtractionNode>> resulting_nodes;
         std::vector<std::pair<const osmium::Way &, ExtractionWay>> resulting_ways;
         std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> resulting_relations;
-        std::vector<InputConditionalTurnRestriction> resulting_restrictions;
+        std::vector<InputTurnRestriction> resulting_restrictions;
         std::vector<InputManeuverOverride> resulting_maneuver_overrides;
     };
 
@@ -510,7 +485,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     // OSM elements Lua parser
     tbb::filter_t<SharedBuffer, ParsedBuffer> buffer_transformer(
         tbb::filter::parallel, [&](const SharedBuffer buffer) {
-
             ParsedBuffer parsed_buffer;
             parsed_buffer.buffer = buffer;
             scripting_environment.ProcessElements(*buffer,
@@ -531,7 +505,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     unsigned number_of_maneuver_overrides = 0;
     tbb::filter_t<ParsedBuffer, void> buffer_storage(
         tbb::filter::serial_in_order, [&](const ParsedBuffer &parsed_buffer) {
-
             number_of_nodes += parsed_buffer.resulting_nodes.size();
             // put parsed objects thru extractor callbacks
             for (const auto &result : parsed_buffer.resulting_nodes)
@@ -555,7 +528,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             {
                 extractor_callbacks->ProcessManeuverOverride(result);
             }
-
         });
 
     tbb::filter_t<SharedBuffer, std::shared_ptr<ExtractionRelationContainer>> buffer_relation_cache(
@@ -572,9 +544,9 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                 const auto &rel = static_cast<const osmium::Relation &>(*entity);
 
                 const char *rel_type = rel.get_value_by_key("type");
-                if (!rel_type ||
-                    !std::binary_search(
-                        relation_types.begin(), relation_types.end(), std::string(rel_type)))
+                if (!rel_type || !std::binary_search(relation_types.begin(),
+                                                     relation_types.end(),
+                                                     std::string(rel_type)))
                     continue;
 
                 ExtractionRelation extracted_rel({rel.id(), osmium::item_type::relation});
@@ -597,14 +569,13 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     tbb::filter_t<std::shared_ptr<ExtractionRelationContainer>, void> buffer_storage_relation(
         tbb::filter::serial_in_order,
         [&](const std::shared_ptr<ExtractionRelationContainer> parsed_relations) {
-
             number_of_relations += parsed_relations->GetRelationsNum();
             relations.Merge(std::move(*parsed_relations));
         });
 
     // Parse OSM elements with parallel transformer
     // Number of pipeline tokens that yielded the best speedup was about 1.5 * num_cores
-    const auto num_threads = tbb::task_scheduler_init::default_num_threads() * 1.5;
+    const auto num_threads = std::thread::hardware_concurrency() * 1.5;
     const auto read_meta =
         config.use_metadata ? osmium::io::read_meta::yes : osmium::io::read_meta::no;
 
@@ -659,8 +630,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     util::Log() << "extraction finished after " << TIMER_SEC(extracting) << "s";
 
     return std::make_tuple(std::move(turn_lane_map),
-                           std::move(extraction_containers.unconditional_turn_restrictions),
-                           std::move(extraction_containers.conditional_turn_restrictions),
+                           std::move(extraction_containers.turn_restrictions),
                            std::move(extraction_containers.internal_maneuver_overrides));
 }
 
@@ -733,8 +703,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     const CompressedEdgeContainer &compressed_edge_container,
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::unordered_set<NodeID> &traffic_signals,
-    const std::vector<TurnRestriction> &turn_restrictions,
-    const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
+    const RestrictionGraph &restriction_graph,
     const std::unordered_set<EdgeID> &segregated_edges,
     const NameTable &name_table,
     const std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
@@ -761,21 +730,10 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
                                                    turn_lane_map);
 
     const auto create_edge_based_edges = [&]() {
-        // scoped to relase intermediate datastructures right after the call
-        std::vector<TurnRestriction> node_restrictions;
-        for (auto const &t : turn_restrictions)
-            if (t.Type() == RestrictionType::NODE_RESTRICTION)
-                node_restrictions.push_back(t);
-
-        std::vector<ConditionalTurnRestriction> conditional_node_restrictions;
-        for (auto const &t : conditional_turn_restrictions)
-            if (t.Type() == RestrictionType::NODE_RESTRICTION)
-                conditional_node_restrictions.push_back(t);
-
-        RestrictionMap via_node_restriction_map(node_restrictions, IndexNodeByFromAndVia());
-        WayRestrictionMap via_way_restriction_map(conditional_turn_restrictions);
-        ConditionalRestrictionMap conditional_node_restriction_map(conditional_node_restrictions,
-                                                                   IndexNodeByFromAndVia());
+        // scoped to release intermediate data structures right after the call
+        RestrictionMap unconditional_node_restriction_map(restriction_graph);
+        ConditionalRestrictionMap conditional_node_restriction_map(restriction_graph);
+        WayRestrictionMap via_way_restriction_map(restriction_graph);
         edge_based_graph_factory.Run(scripting_environment,
                                      config.GetPath(".osrm.turn_weight_penalties").string(),
                                      config.GetPath(".osrm.turn_duration_penalties").string(),
@@ -783,7 +741,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
                                      config.GetPath(".osrm.cnbg_to_ebg").string(),
                                      config.GetPath(".osrm.restrictions").string(),
                                      config.GetPath(".osrm.maneuver_overrides").string(),
-                                     via_node_restriction_map,
+                                     unconditional_node_restriction_map,
                                      conditional_node_restriction_map,
                                      via_way_restriction_map,
                                      maneuver_overrides);
@@ -854,8 +812,7 @@ void Extractor::ProcessGuidanceTurns(
     const std::vector<util::Coordinate> &node_coordinates,
     const CompressedEdgeContainer &compressed_edge_container,
     const std::unordered_set<NodeID> &barrier_nodes,
-    const std::vector<TurnRestriction> &turn_restrictions,
-    const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
+    const RestrictionGraph &restriction_graph,
     const NameTable &name_table,
     LaneDescriptionMap lane_description_map,
     ScriptingEnvironment &scripting_environment)
@@ -874,20 +831,15 @@ void Extractor::ProcessGuidanceTurns(
         SuffixTable street_name_suffix_table(scripting_environment);
         const auto &turn_lanes_data = transformTurnLaneMapIntoArrays(lane_description_map);
 
-        std::vector<TurnRestriction> node_restrictions;
-        for (auto const &t : turn_restrictions)
-            if (t.Type() == RestrictionType::NODE_RESTRICTION)
-                node_restrictions.push_back(t);
-
-        RestrictionMap node_restriction_map(node_restrictions, IndexNodeByFromAndVia());
-        WayRestrictionMap way_restriction_map(conditional_turn_restrictions);
+        RestrictionMap unconditional_node_restriction_map(restriction_graph);
+        WayRestrictionMap way_restriction_map(restriction_graph);
 
         osrm::guidance::annotateTurns(node_based_graph,
                                       edge_based_node_container,
                                       node_coordinates,
                                       compressed_edge_container,
                                       barrier_nodes,
-                                      node_restriction_map,
+                                      unconditional_node_restriction_map,
                                       way_restriction_map,
                                       name_table,
                                       street_name_suffix_table,

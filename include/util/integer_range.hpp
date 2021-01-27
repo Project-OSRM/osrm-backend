@@ -90,7 +90,7 @@ irange(const Integer first,
 {
     return range<Integer>(first, last);
 }
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // INTEGER_RANGE_HPP

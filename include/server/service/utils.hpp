@@ -24,6 +24,6 @@ bool constrainParamSize(const char *msg_template,
     }
     return false;
 }
-}
-}
-}
+} // namespace service
+} // namespace server
+} // namespace osrm

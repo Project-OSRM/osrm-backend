@@ -5,7 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-
 ## [unreleased] -
 
 ### Added
@@ -13,6 +12,87 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 ### Fixed
+
+
+## [1.7.0] - 2020-06-08
+
+### Added
+
+- Support for buffer types other that `std::string`. `pbf_writer` is now
+  just a typedef for `basic_pbf_writer<std::string>`. Other buffer types
+  can be used with `basic_pbf_writer`. See `doc/advanced.md` for details.
+
+### Changed
+
+- Switched to *catch2* for testing.
+- Some minor tweaks.
+
+### Fixed
+
+- Removed some undefined behaviour.
+
+
+## [1.6.8] - 2019-08-15
+
+### Changed
+
+- Various code cleanups due to clang-tidy warnings.
+
+### Fixed
+
+- Made `data_view::compare` noexcept.
+
+
+## [1.6.7] - 2018-02-21
+
+### Fixed
+
+- Signed-unsigned comparison on 32 bit systems.
+
+
+## [1.6.6] - 2018-02-20
+
+### Fixed
+
+- Fixed several place with possible undefined behaviour.
+
+
+## [1.6.5] - 2018-02-05
+
+### Fixed
+
+- Avoid UB: Do not calculate pointer outside array bounds.
+- Specify proto2 syntax in .proto files to appease protoc.
+
+
+## [1.6.4] - 2018-11-08
+
+### Added
+
+- Add function `data()` to get the not yet read data from a `pbf_reader`.
+- New `add_packed_fixed()` template function for `pbf_writer`.
+- New `length_of_varint()` helper function calculates how long a varint
+  would be for a specified value.
+
+### Changed
+
+- More consistent implementation of operators as free friend functions.
+
+### Fixed
+
+- Fixed some zigzag encoding tests on MSVC.
+- Add extra cast so we do an xor with unsigned ints.
+- No more bitwise operations on signed integers in varint decoder.
+- No more bitwise operations on signed integers in zigzag encoder/decoder.
+
+
+## [1.6.3] - 2018-07-17
+
+### Changed
+
+- Moved `byteswap_inplace` functions from detail into protozero namespace.
+  They can be useful outsize protozero.
+- More asserts and unit tests and small cleanups.
 
 
 ## [1.6.2] - 2018-03-09
@@ -301,7 +381,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Make pbf reader and writer code endianess-aware.
 
 
-[unreleased]: https://github.com/osmcode/libosmium/compare/v1.6.2...HEAD
+[unreleased]: https://github.com/osmcode/libosmium/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/osmcode/libosmium/compare/v1.6.8...v1.7.0
+[1.6.8]: https://github.com/osmcode/libosmium/compare/v1.6.7...v1.6.8
+[1.6.7]: https://github.com/osmcode/libosmium/compare/v1.6.6...v1.6.7
+[1.6.6]: https://github.com/osmcode/libosmium/compare/v1.6.5...v1.6.6
+[1.6.5]: https://github.com/osmcode/libosmium/compare/v1.6.4...v1.6.5
+[1.6.4]: https://github.com/osmcode/libosmium/compare/v1.6.3...v1.6.4
+[1.6.3]: https://github.com/osmcode/libosmium/compare/v1.6.2...v1.6.3
 [1.6.2]: https://github.com/osmcode/libosmium/compare/v1.6.1...v1.6.2
 [1.6.1]: https://github.com/osmcode/libosmium/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/osmcode/libosmium/compare/v1.5.3...v1.6.0

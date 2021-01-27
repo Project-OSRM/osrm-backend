@@ -273,7 +273,9 @@ template <typename ElementT> class DeallocatingVector
         ++current_size;
     }
 
-    void reserve(const std::size_t) const { /* don't do anything */}
+    void reserve(const std::size_t) const
+    { /* don't do anything */
+    }
 
     void resize(const std::size_t new_size)
     {
@@ -350,7 +352,7 @@ template <typename T> void swap(DeallocatingVector<T> &lhs, DeallocatingVector<T
 {
     lhs.swap(rhs);
 }
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif /* DEALLOCATING_VECTOR_HPP */

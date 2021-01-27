@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -98,20 +98,16 @@ namespace osmium {
                 }
             }
 
-            class OPLParser : public Parser {
+            class OPLParser final : public Parser {
 
-                osmium::memory::Buffer m_buffer{1024*1024};
+                enum {
+                    initial_buffer_size = 1024UL * 1024UL
+                };
+
+                osmium::memory::Buffer m_buffer{initial_buffer_size,
+                                                osmium::memory::Buffer::auto_grow::internal};
+
                 uint64_t m_line_count = 0;
-
-                void maybe_flush() {
-                    if (m_buffer.committed() > 800*1024) {
-                        osmium::memory::Buffer buffer{1024*1024};
-                        using std::swap;
-                        swap(m_buffer, buffer);
-                        send_to_output_queue(std::move(buffer));
-
-                    }
-                }
 
             public:
 
@@ -126,16 +122,19 @@ namespace osmium {
                 OPLParser(OPLParser&&) = delete;
                 OPLParser& operator=(OPLParser&&) = delete;
 
-                ~OPLParser() noexcept final = default;
+                ~OPLParser() noexcept = default;
 
                 void parse_line(const char* data) {
                     if (opl_parse_line(m_line_count, data, m_buffer, read_types())) {
-                        maybe_flush();
+                        if (m_buffer.has_nested_buffers()) {
+                            std::unique_ptr<osmium::memory::Buffer> buffer_ptr{m_buffer.get_last_nested()};
+                            send_to_output_queue(std::move(*buffer_ptr));
+                        }
                     }
                     ++m_line_count;
                 }
 
-                void run() final {
+                void run() override {
                     osmium::thread::set_thread_name("_osmium_opl_in");
 
                     line_by_line(*this);

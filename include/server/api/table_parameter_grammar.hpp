@@ -18,7 +18,7 @@ namespace
 {
 namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
-}
+} // namespace
 
 template <typename Iterator = std::string::iterator,
           typename Signature = void(engine::api::TableParameters &)>
@@ -62,7 +62,7 @@ struct TableParametersGrammar : public BaseParametersGrammar<Iterator, Signature
 
         table_rule = destinations_rule(qi::_r1) | sources_rule(qi::_r1);
 
-        root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
+        root_rule = BaseGrammar::query_rule(qi::_r1) > BaseGrammar::format_rule(qi::_r1) >
                     -('?' > (table_rule(qi::_r1) | base_rule(qi::_r1) | scale_factor_rule(qi::_r1) |
                              fallback_speed_rule(qi::_r1) |
                              (qi::lit("fallback_coordinate=") >
@@ -106,8 +106,8 @@ struct TableParametersGrammar : public BaseParametersGrammar<Iterator, Signature
         fallback_coordinate_type;
     qi::real_parser<double, json_policy> double_;
 };
-}
-}
-}
+} // namespace api
+} // namespace server
+} // namespace osrm
 
 #endif

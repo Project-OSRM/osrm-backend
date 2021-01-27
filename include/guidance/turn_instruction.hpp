@@ -26,7 +26,7 @@ const constexpr Enum SlightLeft = 5;
 const constexpr Enum Left = 6;
 const constexpr Enum SharpLeft = 7;
 const constexpr Enum MaxDirectionModifier = 8;
-}
+} // namespace DirectionModifier
 
 namespace TurnType
 {
@@ -63,7 +63,7 @@ const constexpr Enum StayOnRoundabout = 25; // Continue on Either a small or a l
 const constexpr Enum Sliproad =
     26; // Something that looks like a ramp, but is actually just a small sliproad
 const constexpr Enum MaxTurnType = 27; // Special value for static asserts
-}
+} // namespace TurnType
 
 struct TurnInstruction
 {
@@ -367,7 +367,7 @@ const constexpr TurnTypeName turn_type_names[] = {
     {"invalid", "(sliproad)"},
     {"MAXVALUE", "MAXVALUE"}};
 
-} // ns detail
+} // namespace detail
 
 inline std::string instructionTypeToString(const TurnType::Enum type)
 {

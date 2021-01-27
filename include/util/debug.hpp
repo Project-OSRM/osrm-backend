@@ -27,7 +27,7 @@ inline std::ostream &operator<<(std::ostream &out, const Coordinate &coordinate)
         << toFloating(coordinate.lat) << "}";
     return out;
 }
-}
+} // namespace util
 
 namespace engine
 {
@@ -62,8 +62,8 @@ inline std::ostream &operator<<(std::ostream &out, const RouteStep &step)
 
     return out;
 }
-}
-}
+} // namespace guidance
+} // namespace engine
 
 namespace guidance
 {
@@ -76,7 +76,7 @@ inline std::ostream &operator<<(std::ostream &out, const ConnectedRoad &road)
         << static_cast<std::int32_t>(road.lane_data_id) << "}";
     return out;
 }
-}
+} // namespace guidance
 
 namespace extractor
 {
@@ -95,7 +95,7 @@ inline std::ostream &operator<<(std::ostream &out, const IntersectionViewData &v
         << " angle: " << view.angle << " bearing: " << view.perceived_bearing << "}";
     return out;
 }
-}
+} // namespace intersection
 
 namespace TurnLaneType
 {
@@ -125,9 +125,9 @@ inline std::ostream &operator<<(std::ostream &out, const Mask lane_type)
 
     return out;
 }
-}
-}
-}
+} // namespace TurnLaneType
+} // namespace extractor
+} // namespace osrm
 
 namespace std
 {
@@ -147,7 +147,7 @@ inline std::ostream &operator<<(std::ostream &out,
 
     return out;
 }
-}
+} // namespace std
 
 namespace osrm
 {
@@ -186,8 +186,8 @@ inline std::ostream &operator<<(std::ostream &out, const LaneDataVector &turn_la
 
     return out;
 }
-}
-}
+} // namespace lanes
+} // namespace guidance
 
 namespace extractor
 {
@@ -204,7 +204,7 @@ inline std::ostream &operator<<(std::ostream &out, const EdgeBasedEdge &edge)
     out << "}";
     return out;
 }
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif /*OSRM_ENGINE_GUIDANCE_DEBUG_HPP_*/

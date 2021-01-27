@@ -15,7 +15,7 @@ struct NBGToEBG
     NodeID u, v;
     NodeID forward_ebg_node, backward_ebg_node;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif

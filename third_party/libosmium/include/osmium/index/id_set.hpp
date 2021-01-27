@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/types.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstring>
@@ -95,33 +96,47 @@ namespace osmium {
 
         }; // class IdSet
 
-        template <typename T>
+        namespace detail {
+
+            // This value is a compromise. For node Ids it could be bigger
+            // which would mean less (but larger) memory allocations. For
+            // relations Ids it could be smaller, because they would all fit
+            // into a smaller allocation.
+            enum : std::size_t {
+                default_chunk_bits = 22U
+            };
+
+        } // namespace detail
+
+        template <typename T, std::size_t chunk_bits = detail::default_chunk_bits>
         class IdSetDense;
 
         /**
          * Const_iterator for iterating over a IdSetDense.
          */
-        template <typename T>
+        template <typename T, std::size_t chunk_bits>
         class IdSetDenseIterator {
 
             static_assert(std::is_unsigned<T>::value, "Needs unsigned type");
             static_assert(sizeof(T) >= 4, "Needs at least 32bit type");
 
-            const IdSetDense<T>* m_set;
+            using id_set = IdSetDense<T, chunk_bits>;
+
+            const id_set* m_set;
             T m_value;
             T m_last;
 
             void next() noexcept {
                 while (m_value != m_last && !m_set->get(m_value)) {
-                    const T cid = IdSetDense<T>::chunk_id(m_value);
+                    const T cid = id_set::chunk_id(m_value);
                     assert(cid < m_set->m_data.size());
                     if (!m_set->m_data[cid]) {
-                        m_value = (cid + 1) << (IdSetDense<T>::chunk_bits + 3);
+                        m_value = (cid + 1) << (chunk_bits + 3);
                     } else {
-                        const auto slot = m_set->m_data[cid][IdSetDense<T>::offset(m_value)];
+                        const auto slot = m_set->m_data[cid][id_set::offset(m_value)];
                         if (slot == 0) {
                             m_value += 8;
-                            m_value &= ~0x7ull;
+                            m_value &= ~0x7ULL;
                         } else {
                             ++m_value;
                         }
@@ -136,14 +151,14 @@ namespace osmium {
             using pointer           = value_type*;
             using reference         = value_type&;
 
-            IdSetDenseIterator(const IdSetDense<T>* set, T value, T last) noexcept :
+            IdSetDenseIterator(const id_set* set, T value, T last) noexcept :
                 m_set(set),
                 m_value(value),
                 m_last(last) {
                 next();
             }
 
-            IdSetDenseIterator<T>& operator++() noexcept {
+            IdSetDenseIterator& operator++() noexcept {
                 if (m_value != m_last) {
                     ++m_value;
                     next();
@@ -151,17 +166,17 @@ namespace osmium {
                 return *this;
             }
 
-            IdSetDenseIterator<T> operator++(int) noexcept {
-                IdSetDenseIterator<T> tmp{*this};
+            IdSetDenseIterator operator++(int) noexcept {
+                IdSetDenseIterator tmp{*this};
                 operator++();
                 return tmp;
             }
 
-            bool operator==(const IdSetDenseIterator<T>& rhs) const noexcept {
+            bool operator==(const IdSetDenseIterator& rhs) const noexcept {
                 return m_set == rhs.m_set && m_value == rhs.m_value;
             }
 
-            bool operator!=(const IdSetDenseIterator<T>& rhs) const noexcept {
+            bool operator!=(const IdSetDenseIterator& rhs) const noexcept {
                 return !(*this == rhs);
             }
 
@@ -179,34 +194,31 @@ namespace osmium {
          * and larger Id sets. If it is not used, no memory is allocated at
          * all.
          */
-        template <typename T>
+        template <typename T, std::size_t chunk_bits>
         class IdSetDense : public IdSet<T> {
 
             static_assert(std::is_unsigned<T>::value, "Needs unsigned type");
             static_assert(sizeof(T) >= 4, "Needs at least 32bit type");
 
-            friend class IdSetDenseIterator<T>;
+            friend class IdSetDenseIterator<T, chunk_bits>;
 
-            // This value is a compromise. For node Ids it could be bigger
-            // which would mean less (but larger) memory allocations. For
-            // relations Ids it could be smaller, because they would all fit
-            // into a smaller allocation.
-            constexpr static const std::size_t chunk_bits = 22u;
-            constexpr static const std::size_t chunk_size = 1u << chunk_bits;
+            enum : std::size_t {
+                chunk_size = 1U << chunk_bits
+            };
 
             std::vector<std::unique_ptr<unsigned char[]>> m_data;
             T m_size = 0;
 
             static std::size_t chunk_id(T id) noexcept {
-                return id >> (chunk_bits + 3u);
+                return id >> (chunk_bits + 3U);
             }
 
             static std::size_t offset(T id) noexcept {
-                return (id >> 3u) & ((1u << chunk_bits) - 1u);
+                return (id >> 3U) & ((1U << chunk_bits) - 1U);
             }
 
-            static unsigned char bitmask(T id) noexcept {
-                return 1u << (id & 0x7u);
+            static unsigned int bitmask(T id) noexcept {
+                return 1U << (id & 0x7U);
             }
 
             T last() const noexcept {
@@ -230,9 +242,42 @@ namespace osmium {
 
         public:
 
-            using const_iterator = IdSetDenseIterator<T>;
+            using const_iterator = IdSetDenseIterator<T, chunk_bits>;
+
+            friend void swap(IdSetDense& first, IdSetDense& second) noexcept {
+                using std::swap;
+                swap(first.m_data, second.m_data);
+                swap(first.m_size, second.m_size);
+            }
 
             IdSetDense() = default;
+
+            IdSetDense(const IdSetDense& other) :
+                IdSet<T>(other) {
+                m_data.reserve(other.m_data.size());
+                for (const auto& ptr: other.m_data) {
+                    if (ptr) {
+                        m_data.emplace_back(new unsigned char[chunk_size]);
+                        ::memcpy(m_data.back().get(), ptr.get(), chunk_size);
+                    } else {
+                        m_data.emplace_back();
+                    }
+                }
+                m_size = other.m_size;
+            }
+
+            IdSetDense& operator=(IdSetDense other) {
+                swap(*this, other);
+                return *this;
+            }
+
+            IdSetDense(IdSetDense&&) noexcept = default;
+
+            // This should really be noexcept, but GCC 4.8 doesn't like it.
+            // NOLINTNEXTLINE(hicpp-noexcept-move, performance-noexcept-move-constructor)
+            IdSetDense& operator=(IdSetDense&&) = default;
+
+            ~IdSetDense() noexcept override = default;
 
             /**
              * Add the Id to the set if it is not already in there.
@@ -284,7 +329,7 @@ namespace osmium {
                 if (chunk_id(id) >= m_data.size()) {
                     return false;
                 }
-                auto* r = m_data[chunk_id(id)].get();
+                const auto* r = m_data[chunk_id(id)].get();
                 if (!r) {
                     return false;
                 }
@@ -317,11 +362,11 @@ namespace osmium {
                 return m_data.size() * chunk_size;
             }
 
-            IdSetDenseIterator<T> begin() const {
+            const_iterator begin() const {
                 return {this, 0, last()};
             }
 
-            IdSetDenseIterator<T> end() const {
+            const_iterator end() const {
                 return {this, last(), last()};
             }
 
@@ -342,7 +387,9 @@ namespace osmium {
              * Add the given Id to the set.
              */
             void set(T id) final {
-                m_data.push_back(id);
+                if (m_data.empty() || m_data.back() != id) {
+                    m_data.push_back(id);
+                }
             }
 
             /**
@@ -385,7 +432,8 @@ namespace osmium {
 
             /**
              * Sort the internal vector and remove any duplicates. Call this
-             * before using size(), get_binary_search() or using an iterator.
+             * before using size(), get_binary_search(), merge_sorted() or
+             * using an iterator.
              */
             void sort_unique() {
                 std::sort(m_data.begin(), m_data.end());
@@ -406,6 +454,22 @@ namespace osmium {
 
             std::size_t used_memory() const noexcept final {
                 return m_data.capacity() * sizeof(T);
+            }
+
+            /**
+             * Merge the other set into this one. The result is sorted.
+             *
+             * @pre Both sets must be sorted and must not contain any
+             *      duplicates. Call sort_unique() if you are not sure.
+             */
+            void merge_sorted(const IdSetSmall<T>& other) {
+                std::vector<T> new_data;
+                new_data.reserve(m_data.size() + other.m_data.size());
+                std::set_union(m_data.cbegin(), m_data.cend(),
+                               other.m_data.cbegin(), other.m_data.cend(),
+                               std::back_inserter(new_data));
+                using std::swap;
+                swap(new_data, m_data);
             }
 
             /// Iterator type. There is no non-const iterator.
@@ -435,7 +499,7 @@ namespace osmium {
 
             using id_set_type = IdSetType<osmium::unsigned_object_id_type>;
 
-            id_set_type m_sets[3];
+            std::array<id_set_type, 3> m_sets;
 
         public:
 

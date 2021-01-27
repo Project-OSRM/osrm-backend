@@ -13,6 +13,8 @@
 #include <osmium/thread/queue.hpp>
 #include <osmium/thread/util.hpp>
 
+#include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 

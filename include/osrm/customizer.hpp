@@ -34,7 +34,7 @@ namespace osrm
 namespace customizer
 {
 struct CustomizationConfig;
-} // ns customizer
+} // namespace customizer
 
 /**
  * Runs customize pipeline stage.
@@ -45,6 +45,6 @@ struct CustomizationConfig;
  */
 void customize(const customizer::CustomizationConfig &config);
 
-} // ns osrm
+} // namespace osrm
 
 #endif // OSRM_CUSTOMIZER_HPP

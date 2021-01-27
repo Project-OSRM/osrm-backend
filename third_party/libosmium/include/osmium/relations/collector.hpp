@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -46,6 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/visitor.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -185,14 +186,16 @@ namespace osmium {
              */
             using mm_vector_type = std::vector<MemberMeta>;
             using mm_iterator = mm_vector_type::iterator;
-            mm_vector_type m_member_meta[3];
+            std::array<mm_vector_type, 3> m_member_meta;
 
             int m_count_complete = 0;
 
             using callback_func_type = std::function<void(osmium::memory::Buffer&&)>;
             callback_func_type m_callback;
 
-            static constexpr size_t initial_buffer_size = 1024 * 1024;
+            enum {
+                initial_buffer_size = 1024UL * 1024UL
+            };
 
             iterator_range<mm_iterator> find_member_meta(osmium::item_type type, osmium::object_id_type id) {
                 auto& mmv = member_meta(type);

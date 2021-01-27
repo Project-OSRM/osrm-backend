@@ -13,6 +13,11 @@ macro `PROTOZERO_STRICT_API` in which case Protozero will compile without the
 code used for backwards compatibilty. You will then get compile errors for
 older API usages.
 
+## Upgrading from *v1.6* to *v1.7*
+
+* The `pbf_writer` class is now a typedef for `basic_pbf_writer<std::string>`
+  If you have forward declared it in your code, it might have to change.
+
 ## Upgrading from *v1.5* to *v1.6.0*
 
 * The `data_view` class moved from `types.hpp` into its own header file

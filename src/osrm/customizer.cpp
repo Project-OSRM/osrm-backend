@@ -9,4 +9,4 @@ namespace osrm
 
 void customize(const CustomizationConfig &config) { customizer::Customizer().Run(config); }
 
-} // ns osrm
+} // namespace osrm

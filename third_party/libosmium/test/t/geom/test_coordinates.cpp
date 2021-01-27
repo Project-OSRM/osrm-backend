@@ -2,6 +2,8 @@
 
 #include <osmium/geom/coordinates.hpp>
 
+#include <string>
+
 TEST_CASE("Default constructed coordinates are invalid") {
     const osmium::geom::Coordinates c;
     REQUIRE_FALSE(c.valid());

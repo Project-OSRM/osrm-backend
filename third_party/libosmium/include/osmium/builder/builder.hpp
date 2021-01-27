@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -65,7 +65,7 @@ namespace osmium {
             explicit Builder(osmium::memory::Buffer& buffer, Builder* parent, osmium::memory::item_size_type size) :
                 m_buffer(buffer),
                 m_parent(parent),
-                m_item_offset(buffer.written()) {
+                m_item_offset(buffer.written() - buffer.committed()) {
                 reserve_space(size);
                 assert(buffer.is_aligned());
                 if (m_parent) {
@@ -80,7 +80,7 @@ namespace osmium {
             }
 
 #ifdef NDEBUG
-            ~Builder() = default;
+            ~Builder() noexcept = default;
 #else
             ~Builder() noexcept {
                 m_buffer.decrement_builder_count();
@@ -88,7 +88,7 @@ namespace osmium {
 #endif
 
             osmium::memory::Item& item() const {
-                return *reinterpret_cast<osmium::memory::Item*>(m_buffer.data() + m_item_offset);
+                return *reinterpret_cast<osmium::memory::Item*>(m_buffer.data() + m_buffer.committed() + m_item_offset);
             }
 
             unsigned char* reserve_space(std::size_t size) {

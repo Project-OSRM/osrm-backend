@@ -88,7 +88,7 @@ TEST_CASE("Reserve space in a growing buffer") {
 }
 
 TEST_CASE("Create buffer from existing data with good alignment works") {
-    std::array<unsigned char, 128> data;
+    std::array<unsigned char, 128> data = {{0}};
 
     osmium::memory::Buffer buffer{data.data(), data.size()};
     REQUIRE(buffer.capacity() == 128);
@@ -96,7 +96,7 @@ TEST_CASE("Create buffer from existing data with good alignment works") {
 }
 
 TEST_CASE("Create buffer from existing data with good alignment and committed value works") {
-    std::array<unsigned char, 128> data;
+    std::array<unsigned char, 128> data = {{0}};
 
     osmium::memory::Buffer buffer{data.data(), data.size(), 32};
     REQUIRE(buffer.capacity() == 128);
@@ -105,7 +105,7 @@ TEST_CASE("Create buffer from existing data with good alignment and committed va
 }
 
 TEST_CASE("Create buffer from existing data with bad alignment fails") {
-    std::array<unsigned char, 128> data;
+    std::array<unsigned char, 128> data = {{0}};
 
     const auto l1 = [&](){
         osmium::memory::Buffer buffer{data.data(), 127};

@@ -143,8 +143,8 @@ void write(storage::tar::FileWriter &writer,
     storage::serialization::write(
         writer, name + "/search_tree_level_starts", rtree.m_tree_level_starts);
 }
-}
-}
-}
+} // namespace serialization
+} // namespace util
+} // namespace osrm
 
 #endif

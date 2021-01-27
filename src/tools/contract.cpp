@@ -10,12 +10,11 @@
 #include <boost/program_options.hpp>
 #include <boost/program_options/errors.hpp>
 
-#include <tbb/task_scheduler_init.h>
-
 #include <cstdlib>
 #include <exception>
 #include <new>
 #include <ostream>
+#include <thread>
 
 #include "util/meminfo.hpp"
 
@@ -45,7 +44,7 @@ return_code parseArguments(int argc,
     config_options.add_options()(
         "threads,t",
         boost::program_options::value<unsigned int>(&contractor_config.requested_num_threads)
-            ->default_value(tbb::task_scheduler_init::default_num_threads()),
+            ->default_value(std::thread::hardware_concurrency()),
         "Number of threads to use")(
         "core,k",
         boost::program_options::value<double>(&contractor_config.core_factor)->default_value(1.0),
@@ -143,7 +142,8 @@ return_code parseArguments(int argc,
     return return_code::ok;
 }
 
-int main(int argc, char *argv[]) try
+int main(int argc, char *argv[])
+try
 {
     util::LogPolicy::GetInstance().Unmute();
     std::string verbosity;
@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) try
         return EXIT_FAILURE;
     }
 
-    const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
+    const unsigned recommended_num_threads = std::thread::hardware_concurrency();
 
     if (recommended_num_threads != contractor_config.requested_num_threads)
     {
@@ -189,21 +189,18 @@ int main(int argc, char *argv[]) try
 
     osrm::contract(contractor_config);
 
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
 
     return EXIT_SUCCESS;
 }
 catch (const osrm::RuntimeError &e)
 {
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
     util::Log(logERROR) << e.what();
     return e.GetCode();
 }
 catch (const std::bad_alloc &e)
 {
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
     util::Log(logERROR) << e.what();
     util::Log(logERROR) << "Please provide more memory or consider using a larger swapfile";

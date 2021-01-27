@@ -32,7 +32,7 @@ template <storage::Ownership Ownership>
 void write(storage::tar::FileWriter &writer,
            const std::string &name,
            const detail::TurnDataContainerImpl<Ownership> &turn_data);
-}
+} // namespace serialization
 
 struct TurnData
 {
@@ -111,12 +111,12 @@ template <storage::Ownership Ownership> class TurnDataContainerImpl
     Vector<TurnBearing> pre_turn_bearings;
     Vector<TurnBearing> post_turn_bearings;
 };
-}
+} // namespace detail
 
 using TurnDataExternalContainer = detail::TurnDataContainerImpl<storage::Ownership::External>;
 using TurnDataContainer = detail::TurnDataContainerImpl<storage::Ownership::Container>;
 using TurnDataView = detail::TurnDataContainerImpl<storage::Ownership::View>;
-}
-}
+} // namespace guidance
+} // namespace osrm
 
 #endif

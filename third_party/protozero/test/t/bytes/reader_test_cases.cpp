@@ -51,7 +51,7 @@ TEST_CASE("read bytes field: end of buffer") {
     for (std::string::size_type i = 1; i < buffer.size(); ++i) {
         protozero::pbf_reader item{buffer.data(), i};
         REQUIRE(item.next());
-        REQUIRE_THROWS_AS(item.get_bytes(), const protozero::end_of_buffer_exception&);
+        REQUIRE_THROWS_AS(item.get_bytes(), protozero::end_of_buffer_exception);
     }
 }
 

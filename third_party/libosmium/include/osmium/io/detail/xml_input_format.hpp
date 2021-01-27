@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -60,6 +60,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cassert>
 #include <cstring>
+#include <exception>
 #include <future>
 #include <limits>
 #include <memory>
@@ -124,9 +125,11 @@ namespace osmium {
 
         namespace detail {
 
-            class XMLParser : public Parser {
+            class XMLParser final : public Parser {
 
-                static constexpr std::size_t buffer_size = 2 * 1000 * 1000;
+                enum {
+                    initial_buffer_size = 1024UL * 1024UL
+                };
 
                 enum class context {
                     osm,
@@ -145,6 +148,7 @@ namespace osmium {
                     discussion,
                     comment,
                     text,
+                    obj_bbox,
                     other
                 }; // enum class context
 
@@ -152,7 +156,8 @@ namespace osmium {
 
                 osmium::io::Header m_header{};
 
-                osmium::memory::Buffer m_buffer;
+                osmium::memory::Buffer m_buffer{initial_buffer_size,
+                                                osmium::memory::Buffer::auto_grow::internal};
 
                 std::unique_ptr<osmium::builder::NodeBuilder>                m_node_builder{};
                 std::unique_ptr<osmium::builder::WayBuilder>                 m_way_builder{};
@@ -173,17 +178,44 @@ namespace osmium {
                 class ExpatXMLParser {
 
                     XML_Parser m_parser;
+                    std::exception_ptr m_exception_ptr{};
 
-                    static void XMLCALL start_element_wrapper(void* data, const XML_Char* element, const XML_Char** attrs) {
-                        static_cast<XMLParser*>(data)->start_element(element, attrs);
+                    template <typename TFunc>
+                    void member_wrap(XMLParser& xml_parser, TFunc&& func) noexcept {
+                        if (m_exception_ptr) {
+                            return;
+                        }
+                        try {
+                            std::forward<TFunc>(func)(xml_parser);
+                        } catch (...) {
+                            m_exception_ptr = std::current_exception();
+                            XML_StopParser(m_parser, 0);
+                        }
                     }
 
-                    static void XMLCALL end_element_wrapper(void* data, const XML_Char* element) {
-                        static_cast<XMLParser*>(data)->end_element(element);
+                    template <typename TFunc>
+                    static void wrap(void* data, TFunc&& func) noexcept {
+                        assert(data);
+                        auto& xml_parser = *static_cast<XMLParser*>(data);
+                        xml_parser.m_expat_xml_parser->member_wrap(xml_parser, std::forward<TFunc>(func));
                     }
 
-                    static void XMLCALL character_data_wrapper(void* data, const XML_Char* text, int len) {
-                        static_cast<XMLParser*>(data)->characters(text, len);
+                    static void XMLCALL start_element_wrapper(void* data, const XML_Char* element, const XML_Char** attrs) noexcept {
+                        wrap(data, [&](XMLParser& xml_parser) {
+                            xml_parser.start_element(element, attrs);
+                        });
+                    }
+
+                    static void XMLCALL end_element_wrapper(void* data, const XML_Char* element) noexcept {
+                        wrap(data, [&](XMLParser& xml_parser) {
+                            xml_parser.end_element(element);
+                        });
+                    }
+
+                    static void XMLCALL character_data_wrapper(void* data, const XML_Char* text, int len) noexcept {
+                        wrap(data, [&](XMLParser& xml_parser) {
+                            xml_parser.characters(text, len);
+                        });
                     }
 
                     // This handler is called when there are any XML entities
@@ -191,7 +223,7 @@ namespace osmium {
                     // but they can be misused. See
                     // https://en.wikipedia.org/wiki/Billion_laughs
                     // The handler will just throw an error.
-                    static void entity_declaration_handler(void* /*userData*/,
+                    static void entity_declaration_handler(void* data,
                             const XML_Char* /*entityName*/,
                             int /*is_parameter_entity*/,
                             const XML_Char* /*value*/,
@@ -199,8 +231,10 @@ namespace osmium {
                             const XML_Char* /*base*/,
                             const XML_Char* /*systemId*/,
                             const XML_Char* /*publicId*/,
-                            const XML_Char* /*notationName*/) {
-                        throw osmium::xml_error{"XML entities are not supported"};
+                            const XML_Char* /*notationName*/) noexcept {
+                        wrap(data, [&](XMLParser& /*xml_parser*/) {
+                            throw osmium::xml_error{"XML entities are not supported"};
+                        });
                     }
 
                 public:
@@ -229,11 +263,16 @@ namespace osmium {
                     void operator()(const std::string& data, bool last) {
                         assert(data.size() < std::numeric_limits<int>::max());
                         if (XML_Parse(m_parser, data.data(), static_cast<int>(data.size()), last) == XML_STATUS_ERROR) {
+                            if (m_exception_ptr) {
+                                std::rethrow_exception(m_exception_ptr);
+                            }
                             throw osmium::xml_error{m_parser};
                         }
                     }
 
                 }; // class ExpatXMLParser
+
+                ExpatXMLParser* m_expat_xml_parser{nullptr};
 
                 template <typename T>
                 static void check_attributes(const XML_Char** attrs, T&& check) {
@@ -271,7 +310,7 @@ namespace osmium {
                     return user;
                 }
 
-                void init_changeset(osmium::builder::ChangesetBuilder& builder, const XML_Char** attrs) {
+                static void init_changeset(osmium::builder::ChangesetBuilder& builder, const XML_Char** attrs) {
                     osmium::Box box;
 
                     check_attributes(attrs, [&builder, &box](const XML_Char* name, const XML_Char* value) {
@@ -333,6 +372,8 @@ namespace osmium {
                             }
                         } else if (!std::strcmp(name, "generator")) {
                             m_header.set("generator", value);
+                        } else if (!std::strcmp(name, "upload")) {
+                            m_header.set("xml_josm_upload", value);
                         }
                         // ignore other attributes
                     });
@@ -491,6 +532,8 @@ namespace osmium {
                                     m_wnl_builder.reset();
                                     get_tag(*m_way_builder, attrs);
                                 }
+                            } else if (!std::strcmp(element, "bbox") || !std::strcmp(element, "bounds")) {
+                                m_context_stack.push_back(context::obj_bbox);
                             } else {
                                 throw xml_error{std::string{"Unknown element in <way>: "} + element};
                             }
@@ -533,6 +576,8 @@ namespace osmium {
                                     m_rml_builder.reset();
                                     get_tag(*m_relation_builder, attrs);
                                 }
+                            } else if (!std::strcmp(element, "bbox") || !std::strcmp(element, "bounds")) {
+                                m_context_stack.push_back(context::obj_bbox);
                             } else {
                                 throw xml_error{std::string{"Unknown element in <relation>: "} + element};
                             }
@@ -595,12 +640,18 @@ namespace osmium {
                             throw osmium::xml_error{"No element in <text> allowed"};
                         case context::bounds:
                             throw osmium::xml_error{"No element in <bounds> allowed"};
+                        case context::obj_bbox:
+                            throw osmium::xml_error{"No element in <bbox>/<bounds> allowed"};
                         case context::other:
                             throw xml_error{"xml file nested too deep"};
                     }
                 }
 
+#ifdef NDEBUG
+                void end_element(const XML_Char* /*element*/) {
+#else
                 void end_element(const XML_Char* element) {
+#endif
                     assert(!m_context_stack.empty());
                     switch (m_context_stack.back()) {
                         case context::osm:
@@ -681,6 +732,9 @@ namespace osmium {
                         case context::bounds:
                             assert(!std::strcmp(element, "bounds"));
                             break;
+                        case context::obj_bbox:
+                            assert(!std::strcmp(element, "bbox") || !std::strcmp(element, "bounds"));
+                            break;
                         case context::other:
                             break;
                     }
@@ -696,19 +750,16 @@ namespace osmium {
                 }
 
                 void flush_buffer() {
-                    if (m_buffer.committed() > buffer_size / 10 * 9) {
-                        send_to_output_queue(std::move(m_buffer));
-                        osmium::memory::Buffer buffer{buffer_size};
-                        using std::swap;
-                        swap(m_buffer, buffer);
+                    if (m_buffer.has_nested_buffers()) {
+                        std::unique_ptr<osmium::memory::Buffer> buffer_ptr{m_buffer.get_last_nested()};
+                        send_to_output_queue(std::move(*buffer_ptr));
                     }
                 }
 
             public:
 
                 explicit XMLParser(parser_arguments& args) :
-                    Parser(args),
-                    m_buffer(buffer_size) {
+                    Parser(args) {
                 }
 
                 XMLParser(const XMLParser&) = delete;
@@ -717,12 +768,13 @@ namespace osmium {
                 XMLParser(XMLParser&&) = delete;
                 XMLParser& operator=(XMLParser&&) = delete;
 
-                ~XMLParser() noexcept final = default;
+                ~XMLParser() noexcept = default;
 
-                void run() final {
+                void run() override {
                     osmium::thread::set_thread_name("_osmium_xml_in");
 
                     ExpatXMLParser parser{this};
+                    m_expat_xml_parser = &parser;
 
                     while (!input_done()) {
                         const std::string data{get_input()};
