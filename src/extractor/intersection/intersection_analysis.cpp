@@ -755,14 +755,15 @@ IntersectionView getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
                                               merged_edge_ids);
 }
 
-IntersectionView getConnectedRoadsForEdgeGeometries(const util::NodeBasedDynamicGraph &graph,
-                                                    const EdgeBasedNodeDataContainer &node_data_container,
-                                                    const RestrictionMap &node_restriction_map,
-                                                    const std::unordered_set<NodeID> &barrier_nodes,
-                                                    const TurnLanesIndexedArray &turn_lanes_data,
-                                                    const IntersectionEdge &incoming_edge,
-                                                    const IntersectionEdgeGeometries &edge_geometries,
-                                                    const std::unordered_set<EdgeID> &merged_edge_ids)
+IntersectionView
+getConnectedRoadsForEdgeGeometries(const util::NodeBasedDynamicGraph &graph,
+                                   const EdgeBasedNodeDataContainer &node_data_container,
+                                   const RestrictionMap &node_restriction_map,
+                                   const std::unordered_set<NodeID> &barrier_nodes,
+                                   const TurnLanesIndexedArray &turn_lanes_data,
+                                   const IntersectionEdge &incoming_edge,
+                                   const IntersectionEdgeGeometries &edge_geometries,
+                                   const std::unordered_set<EdgeID> &merged_edge_ids)
 {
     const auto intersection_node = graph.GetTarget(incoming_edge.edge);
     const auto &outgoing_edges = intersection::getOutgoingEdges(graph, intersection_node);
@@ -776,10 +777,11 @@ IntersectionView getConnectedRoadsForEdgeGeometries(const util::NodeBasedDynamic
         const auto &geometry = processed_edge_geometries[index];
         const auto remote_node = graph.GetTarget(geometry.eid);
         const auto incoming_edge = graph.FindEdge(remote_node, intersection_node);
-        processed_edge_geometries[edges_number + index] = {incoming_edge,
-                                                           util::bearing::reverse(geometry.initial_bearing),
-                                                           util::bearing::reverse(geometry.perceived_bearing),
-                                                           geometry.segment_length};
+        processed_edge_geometries[edges_number + index] = {
+            incoming_edge,
+            util::bearing::reverse(geometry.initial_bearing),
+            util::bearing::reverse(geometry.perceived_bearing),
+            geometry.segment_length};
     }
 
     // Enforce ordering of edges by IDs

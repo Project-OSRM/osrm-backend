@@ -715,14 +715,15 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         ++node_based_edge_counter;
 
                         const auto connected_roads =
-                            extractor::intersection::getConnectedRoadsForEdgeGeometries(m_node_based_graph,
-                                                                                        m_edge_based_node_container,
-                                                                                        unconditional_node_restriction_map,
-                                                                                        m_barrier_nodes,
-                                                                                        turn_lanes_data,
-                                                                                        incoming_edge,
-                                                                                        edge_geometries,
-                                                                                        merged_edge_ids);
+                            extractor::intersection::getConnectedRoadsForEdgeGeometries(
+                                m_node_based_graph,
+                                m_edge_based_node_container,
+                                unconditional_node_restriction_map,
+                                m_barrier_nodes,
+                                turn_lanes_data,
+                                incoming_edge,
+                                edge_geometries,
+                                merged_edge_ids);
 
                         // check if this edge is part of a restriction via-way
                         const auto is_restriction_via_edge =
@@ -770,8 +771,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                 }
                                 else
                                 {
-                                    // It does not add incoming edge if there is outgoing so we should
-                                    // find it ourselves
+                                    // It does not add incoming edge if there is outgoing so we
+                                    // should find it ourselves
                                     is_incoming = false;
                                     auto reversed_edge = m_node_based_graph.FindEdge(
                                         m_node_based_graph.GetTarget(connected_edge.eid),
