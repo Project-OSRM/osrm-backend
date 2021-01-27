@@ -42,6 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "util/guidance/entry_class.hpp"
 #include "util/guidance/turn_lanes.hpp"
 
+#include "restriction_graph.hpp"
 #include "util/typedefs.hpp"
 
 namespace osrm
@@ -63,7 +64,6 @@ class Extractor
 
     std::tuple<LaneDescriptionMap,
                std::vector<TurnRestriction>,
-               std::vector<ConditionalTurnRestriction>,
                std::vector<UnresolvedManeuverOverride>>
     ParseOSMData(ScriptingEnvironment &scripting_environment, const unsigned number_of_threads);
 
@@ -74,8 +74,7 @@ class Extractor
         const CompressedEdgeContainer &compressed_edge_container,
         const std::unordered_set<NodeID> &barrier_nodes,
         const std::unordered_set<NodeID> &traffic_lights,
-        const std::vector<TurnRestriction> &turn_restrictions,
-        const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
+        const RestrictionGraph &restriction_graph,
         const std::unordered_set<EdgeID> &segregated_edges,
         const NameTable &name_table,
         const std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
@@ -97,25 +96,18 @@ class Extractor
                         EdgeBasedNodeDataContainer &nodes_container) const;
     void BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_segments,
                     const std::vector<util::Coordinate> &coordinates);
-    std::shared_ptr<RestrictionMap> LoadRestrictionMap();
 
-    void WriteConditionalRestrictions(
-        const std::string &path,
-        std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions);
-
-    void ProcessGuidanceTurns(
-        const util::NodeBasedDynamicGraph &node_based_graph,
-        const EdgeBasedNodeDataContainer &edge_based_node_container,
-        const std::vector<util::Coordinate> &node_coordinates,
-        const CompressedEdgeContainer &compressed_edge_container,
-        const std::unordered_set<NodeID> &barrier_nodes,
-        const std::vector<TurnRestriction> &turn_restrictions,
-        const std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
-        const NameTable &name_table,
-        LaneDescriptionMap lane_description_map,
-        ScriptingEnvironment &scripting_environment);
+    void ProcessGuidanceTurns(const util::NodeBasedDynamicGraph &node_based_graph,
+                              const EdgeBasedNodeDataContainer &edge_based_node_container,
+                              const std::vector<util::Coordinate> &node_coordinates,
+                              const CompressedEdgeContainer &compressed_edge_container,
+                              const std::unordered_set<NodeID> &barrier_nodes,
+                              const RestrictionGraph &restriction_graph,
+                              const NameTable &name_table,
+                              LaneDescriptionMap lane_description_map,
+                              ScriptingEnvironment &scripting_environment);
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif /* EXTRACTOR_HPP */

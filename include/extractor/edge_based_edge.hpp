@@ -96,7 +96,7 @@ inline bool EdgeBasedEdge::operator<(const EdgeBasedEdge &other) const
     return std::tie(source, target, data.weight, unidirectional) <
            std::tie(other.source, other.target, other.data.weight, other_is_unidirectional);
 }
-} // ns extractor
-} // ns osrm
+} // namespace extractor
+} // namespace osrm
 
 #endif /* EDGE_BASED_EDGE_HPP */

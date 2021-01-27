@@ -1,4 +1,3 @@
-#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "coordinates.hpp"
@@ -8,14 +7,28 @@
 #include "osrm/match_parameters.hpp"
 
 #include "osrm/coordinate.hpp"
-#include "osrm/engine_config.hpp"
 #include "osrm/json_container.hpp"
 #include "osrm/osrm.hpp"
 #include "osrm/status.hpp"
 
+osrm::Status run_match_json(const osrm::OSRM &osrm,
+                            const MatchParameters &params,
+                            json::Object &json_result,
+                            bool use_json_only_api)
+{
+    if (use_json_only_api)
+    {
+        return osrm.Match(params, json_result);
+    }
+    engine::api::ResultT result = json::Object();
+    auto rc = osrm.Match(params, result);
+    json_result = result.get<json::Object>();
+    return rc;
+}
+
 BOOST_AUTO_TEST_SUITE(match)
 
-BOOST_AUTO_TEST_CASE(test_match)
+void test_match(bool use_json_only_api)
 {
     using namespace osrm;
 
@@ -26,11 +39,9 @@ BOOST_AUTO_TEST_CASE(test_match)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    engine::api::ResultT result = json::Object();
+    json::Object json_result;
+    const auto rc = run_match_json(osrm, params, json_result, use_json_only_api);
 
-    const auto rc = osrm.Match(params, result);
-
-    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
@@ -64,8 +75,10 @@ BOOST_AUTO_TEST_CASE(test_match)
         }
     }
 }
+BOOST_AUTO_TEST_CASE(test_match_new_api) { test_match(false); }
+BOOST_AUTO_TEST_CASE(test_match_old_api) { test_match(true); }
 
-BOOST_AUTO_TEST_CASE(test_match_skip_waypoints)
+void test_match_skip_waypoints(bool use_json_only_api)
 {
     using namespace osrm;
 
@@ -77,19 +90,19 @@ BOOST_AUTO_TEST_CASE(test_match_skip_waypoints)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    engine::api::ResultT result = json::Object();
+    json::Object json_result;
+    const auto rc = run_match_json(osrm, params, json_result, use_json_only_api);
 
-    const auto rc = osrm.Match(params, result);
-
-    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
     BOOST_CHECK(json_result.values.find("tracepoints") == json_result.values.end());
 }
+BOOST_AUTO_TEST_CASE(test_match_skip_waypoints_old_api) { test_match_skip_waypoints(true); }
+BOOST_AUTO_TEST_CASE(test_match_skip_waypoints_new_api) { test_match_skip_waypoints(false); }
 
-BOOST_AUTO_TEST_CASE(test_match_split)
+void test_match_split(bool use_json_only_api)
 {
     using namespace osrm;
 
@@ -99,11 +112,9 @@ BOOST_AUTO_TEST_CASE(test_match_split)
     params.coordinates = get_split_trace_locations();
     params.timestamps = {1, 2, 1700, 1800};
 
-    engine::api::ResultT result = json::Object();
+    json::Object json_result;
+    const auto rc = run_match_json(osrm, params, json_result, use_json_only_api);
 
-    const auto rc = osrm.Match(params, result);
-
-    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
@@ -141,6 +152,8 @@ BOOST_AUTO_TEST_CASE(test_match_split)
         }
     }
 }
+BOOST_AUTO_TEST_CASE(test_match_split_old_api) { test_match_split(true); }
+BOOST_AUTO_TEST_CASE(test_match_split_new_api) { test_match_split(false); }
 
 BOOST_AUTO_TEST_CASE(test_match_fb_serialization)
 {

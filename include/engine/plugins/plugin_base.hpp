@@ -131,8 +131,10 @@ class BasePlugin
                 return phantom_pair.first;
             };
 
-        const auto use_closed_phantom = [](
-            const std::pair<PhantomNode, PhantomNode> &phantom_pair) { return phantom_pair.first; };
+        const auto use_closed_phantom =
+            [](const std::pair<PhantomNode, PhantomNode> &phantom_pair) {
+                return phantom_pair.first;
+            };
 
         const bool every_phantom_is_in_tiny_cc = std::all_of(std::begin(phantom_node_pair_list),
                                                              std::end(phantom_node_pair_list),
@@ -371,9 +373,25 @@ class BasePlugin
         }
         return phantom_node_pairs;
     }
+
+    std::string MissingPhantomErrorMessage(const std::vector<PhantomNodePair> &phantom_nodes,
+                                           const std::vector<util::Coordinate> &coordinates) const
+    {
+        BOOST_ASSERT(phantom_nodes.size() < coordinates.size());
+        auto mismatch = std::mismatch(phantom_nodes.begin(),
+                                      phantom_nodes.end(),
+                                      coordinates.begin(),
+                                      coordinates.end(),
+                                      [](const auto &phantom_node, const auto &coordinate) {
+                                          return phantom_node.first.input_location == coordinate;
+                                      });
+        std::size_t missing_index = std::distance(phantom_nodes.begin(), mismatch.first);
+        return std::string("Could not find a matching segment for coordinate ") +
+               std::to_string(missing_index);
+    }
 };
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm
 
 #endif /* BASE_PLUGIN_HPP */

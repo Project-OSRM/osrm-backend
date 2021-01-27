@@ -199,14 +199,14 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     if (phantom_node_pairs.size() != number_of_locations)
     {
         return Error("NoSegment",
-                     std::string("Could not find a matching segment for coordinate ") +
-                         std::to_string(phantom_node_pairs.size()),
+                     MissingPhantomErrorMessage(phantom_node_pairs, parameters.coordinates),
                      result);
     }
     BOOST_ASSERT(phantom_node_pairs.size() == number_of_locations);
 
-    if (fixed_start && fixed_end && (source_id >= parameters.coordinates.size() ||
-                                     destination_id >= parameters.coordinates.size()))
+    if (fixed_start && fixed_end &&
+        (source_id >= parameters.coordinates.size() ||
+         destination_id >= parameters.coordinates.size()))
     {
         return Error("InvalidValue", "Invalid source or destination value.", result);
     }
@@ -279,6 +279,6 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     return Status::Ok;
 }
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm

@@ -11,8 +11,8 @@ namespace tar
 class FileReader;
 class FileWriter;
 
-} // ns io
-} // ns storage
-} // ns osrm
+} // namespace tar
+} // namespace storage
+} // namespace osrm
 
 #endif

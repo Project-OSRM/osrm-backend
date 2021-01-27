@@ -149,7 +149,7 @@ DinicMaxFlow::MinCut bestMinCut(const BisectionGraphView &view,
 
     return best;
 }
-}
+} // namespace
 
 DinicMaxFlow::MinCut computeInertialFlowCut(const BisectionGraphView &view,
                                             const std::size_t num_slopes,

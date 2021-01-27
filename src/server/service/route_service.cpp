@@ -37,7 +37,7 @@ std::string getWrongOptionHelp(const engine::api::RouteParameters &parameters)
 
     return help;
 }
-} // anon. ns
+} // namespace
 
 engine::Status RouteService::RunQuery(std::size_t prefix_length,
                                       std::string &query,
@@ -76,6 +76,6 @@ engine::Status RouteService::RunQuery(std::size_t prefix_length,
     }
     return BaseService::routing_machine.Route(*parameters, result);
 }
-}
-}
-}
+} // namespace service
+} // namespace server
+} // namespace osrm

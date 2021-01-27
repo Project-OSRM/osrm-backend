@@ -17,6 +17,8 @@
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
+#include <exception>
+#include <stdexcept>
 #include <vector>
 
 namespace osrm
@@ -46,18 +48,16 @@ template <typename Key, typename Value> struct CSVFilesParser
         {
             tbb::spin_mutex mutex;
             std::vector<std::pair<Key, Value>> lookup;
-            tbb::parallel_for(std::size_t{0},
-                              csv_filenames.size(),
-                              [&](const std::size_t idx) {
-                                  auto local = ParseCSVFile(csv_filenames[idx], start_index + idx);
+            tbb::parallel_for(std::size_t{0}, csv_filenames.size(), [&](const std::size_t idx) {
+                auto local = ParseCSVFile(csv_filenames[idx], start_index + idx);
 
-                                  { // Merge local CSV results into a flat global vector
-                                      tbb::spin_mutex::scoped_lock _{mutex};
-                                      lookup.insert(end(lookup),
-                                                    std::make_move_iterator(begin(local)),
-                                                    std::make_move_iterator(end(local)));
-                                  }
-                              });
+                { // Merge local CSV results into a flat global vector
+                    tbb::spin_mutex::scoped_lock _{mutex};
+                    lookup.insert(end(lookup),
+                                  std::make_move_iterator(begin(local)),
+                                  std::make_move_iterator(end(local)));
+                }
+            });
 
             // With flattened map-ish view of all the files, make a stable sort on key and source
             // and unique them on key to keep only the value with the largest file index
@@ -80,7 +80,9 @@ template <typename Key, typename Value> struct CSVFilesParser
 
             return LookupTable<Key, Value>{lookup};
         }
-        catch (const tbb::captured_exception &e)
+        catch (const std::exception &e)
+        // TBB should capture to std::exception_ptr and automatically rethrow in this thread.
+        // https://software.intel.com/en-us/node/506317
         {
             throw util::exception(e.what() + SOURCE_REF);
         }
@@ -136,7 +138,7 @@ template <typename Key, typename Value> struct CSVFilesParser
     const KeyRule key_rule;
     const ValueRule value_rule;
 };
-}
-}
+} // namespace updater
+} // namespace osrm
 
 #endif

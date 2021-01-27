@@ -1,4 +1,3 @@
-#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "osrm/match_parameters.hpp"
@@ -19,7 +18,7 @@ osrm::util::Coordinate getZeroCoordinate()
 {
     return {osrm::util::FloatLongitude{0}, osrm::util::FloatLatitude{0}};
 }
-}
+} // namespace
 
 BOOST_AUTO_TEST_SUITE(limits)
 

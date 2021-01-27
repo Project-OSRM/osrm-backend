@@ -4,8 +4,6 @@
 #include <osmium/geom/mercator_projection.hpp>
 #include <osmium/geom/projection.hpp>
 
-#include <random>
-
 TEST_CASE("Indentity Projection") {
     osmium::geom::IdentityProjection projection;
     REQUIRE(4326 == projection.epsg());
@@ -76,35 +74,35 @@ TEST_CASE("Projection 3857") {
     }
 }
 
-TEST_CASE("MercatorProjection") {
+TEST_CASE("MercatorProjection: Zero coordinates") {
     osmium::geom::MercatorProjection projection;
+    const osmium::Location loc{0.0, 0.0};
+    const osmium::geom::Coordinates c{0.0, 0.0};
+    REQUIRE(projection(loc).x == Approx(c.x).epsilon(0.00001));
+    REQUIRE(projection(loc).y == Approx(c.y).epsilon(0.00001));
+}
 
-    SECTION("Zero coordinates") {
-        const osmium::Location loc{0.0, 0.0};
-        const osmium::geom::Coordinates c{0.0, 0.0};
-        REQUIRE(projection(loc).x == Approx(c.x).epsilon(0.00001));
-        REQUIRE(projection(loc).y == Approx(c.y).epsilon(0.00001));
-    }
+TEST_CASE("MercatorProjection: Max longitude") {
+    osmium::geom::MercatorProjection projection;
+    const osmium::Location loc{180.0, 0.0};
+    const osmium::geom::Coordinates c{20037508.34, 0.0};
+    REQUIRE(projection(loc).x == Approx(c.x).epsilon(0.00001));
+    REQUIRE(projection(loc).y == Approx(c.y).epsilon(0.00001));
+}
 
-    SECTION("Max longitude") {
-        const osmium::Location loc{180.0, 0.0};
-        const osmium::geom::Coordinates c{20037508.34, 0.0};
-        REQUIRE(projection(loc).x == Approx(c.x).epsilon(0.00001));
-        REQUIRE(projection(loc).y == Approx(c.y).epsilon(0.00001));
-    }
+TEST_CASE("MercatorProjection: Min longitude") {
+    osmium::geom::MercatorProjection projection;
+    const osmium::Location loc{-180.0, 0.0};
+    const osmium::geom::Coordinates c{-20037508.34, 0.0};
+    REQUIRE(projection(loc).x == Approx(c.x).epsilon(0.00001));
+    REQUIRE(projection(loc).y == Approx(c.y).epsilon(0.00001));
+}
 
-    SECTION("Min longitude") {
-        const osmium::Location loc{-180.0, 0.0};
-        const osmium::geom::Coordinates c{-20037508.34, 0.0};
-        REQUIRE(projection(loc).x == Approx(c.x).epsilon(0.00001));
-        REQUIRE(projection(loc).y == Approx(c.y).epsilon(0.00001));
-    }
-
-    SECTION("Max latitude") {
-        const osmium::Location loc{0.0, 85.0511288};
-        const osmium::geom::Coordinates c{0.0, 20037508.34};
-        REQUIRE(projection(loc).x == Approx(c.x).epsilon(0.00001));
-        REQUIRE(projection(loc).y == Approx(c.y).epsilon(0.00001));
-    }
+TEST_CASE("MercatorProjection: Max latitude") {
+    osmium::geom::MercatorProjection projection;
+    const osmium::Location loc{0.0, 85.0511288};
+    const osmium::geom::Coordinates c{0.0, 20037508.34};
+    REQUIRE(projection(loc).x == Approx(c.x).epsilon(0.00001));
+    REQUIRE(projection(loc).y == Approx(c.y).epsilon(0.00001));
 }
 

@@ -62,8 +62,8 @@ matrix:
         - npm ci --ignore-scripts
       script:
         - ./scripts/check_taginfo.py taginfo.json profiles/car.lua
-        - ${MASON} install clang-format 3.8.1
-        - PATH=$(${MASON} prefix clang-format 3.8.1)/bin:${PATH} ./scripts/format.sh && ./scripts/error_on_dirty.sh
+        - ${MASON} install clang-format 10.0.0
+        - PATH=$(${MASON} prefix clang-format 10.0.0)/bin:${PATH} ./scripts/format.sh && ./scripts/error_on_dirty.sh
         - node ./scripts/validate_changelog.js
         # See issue 4043
         #- npm run docs && ./scripts/error_on_dirty.sh
@@ -177,9 +177,17 @@ matrix:
 
     - os: osx
       osx_image: xcode9.2
-      compiler: "mason-osx-release-node-8"
+      compiler: "mason-osx-release-node-12"
       # we use the xcode provides clang and don't install our own
-      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE="8"
+      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE="12"
+      after_success:
+        - ./scripts/travis/publish.sh
+
+    - os: osx
+      osx_image: xcode9.2
+      compiler: "mason-osx-release-node-14"
+      # we use the xcode provides clang and don't install our own
+      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE="14"
       after_success:
         - ./scripts/travis/publish.sh
 
@@ -195,12 +203,12 @@ matrix:
     # Node build jobs. These skip running the tests.
     - os: linux
       sudo: false
-      compiler: "node-8-mason-linux-release"
+      compiler: "node-14-mason-linux-release"
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-4.9-dev']
-      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="8"
+      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="14"
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -219,12 +227,60 @@ matrix:
 
     - os: linux
       sudo: false
-      compiler: "node-8-mason-linux-debug"
+      compiler: "node-14-mason-linux-debug"
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-4.9-dev']
-      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="8"
+      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="14"
+      install:
+        - pushd ${OSRM_BUILD_DIR}
+        - |
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+              -DENABLE_MASON=${ENABLE_MASON:-OFF} \
+              -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
+              -DENABLE_CCACHE=ON \
+              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
+              -DENABLE_GLIBC_WORKAROUND=ON
+        - make --jobs=${JOBS}
+        - popd
+      script:
+        - npm run nodejs-tests
+      after_success:
+        - ./scripts/travis/publish.sh
+
+    - os: linux
+      sudo: false
+      compiler: "node-12-mason-linux-release"
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['libstdc++-4.9-dev']
+      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="12"
+      install:
+        - pushd ${OSRM_BUILD_DIR}
+        - |
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+              -DENABLE_MASON=${ENABLE_MASON:-OFF} \
+              -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
+              -DENABLE_CCACHE=ON \
+              -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
+              -DENABLE_GLIBC_WORKAROUND=ON
+        - make --jobs=${JOBS}
+        - popd
+      script:
+        - npm run nodejs-tests
+      after_success:
+        - ./scripts/travis/publish.sh
+
+    - os: linux
+      sudo: false
+      compiler: "node-12-mason-linux-debug"
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['libstdc++-4.9-dev']
+      env: CLANG_VERSION='5.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="12"
       install:
         - pushd ${OSRM_BUILD_DIR}
         - |
@@ -510,6 +566,7 @@ script:
   - ./unit_tests/util-tests
   - ./unit_tests/server-tests
   - ./unit_tests/partitioner-tests
+  - ./unit_tests/customizer-tests
   - |
     if [ -z "${ENABLE_SANITIZER}" ] && [ "$TARGET_ARCH" != "i686" ]; then
       npm run nodejs-tests

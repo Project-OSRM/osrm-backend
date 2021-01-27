@@ -1,4 +1,3 @@
-#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "fixture.hpp"
@@ -18,6 +17,21 @@
 #include <vtzero/vector_tile.hpp>
 
 #include <map>
+
+osrm::Status run_tile(const osrm::OSRM &osrm,
+                      const osrm::TileParameters &params,
+                      std::string &string_result,
+                      bool use_string_only_api)
+{
+    if (use_string_only_api)
+    {
+        return osrm.Tile(params, string_result);
+    }
+    osrm::engine::api::ResultT result = std::string();
+    auto rc = osrm.Tile(params, result);
+    string_result = result.get<std::string>();
+    return rc;
+}
 
 #define CHECK_EQUAL_RANGE(R1, R2)                                                                  \
     BOOST_CHECK_EQUAL_COLLECTIONS(R1.begin(), R1.end(), R2.begin(), R2.end());
@@ -154,19 +168,17 @@ void validate_internal_nodes_layer(vtzero::layer layer)
     }
 }
 
-void validate_tile(const osrm::OSRM &osrm)
+void validate_tile(const osrm::OSRM &osrm, bool use_string_only_api)
 {
     using namespace osrm;
 
     // This tile should contain most of monaco
     TileParameters params{17059, 11948, 15};
 
-    engine::api::ResultT result = std::string();
-
-    const auto rc = osrm.Tile(params, result);
+    std::string str_result;
+    const auto rc = run_tile(osrm, params, str_result, use_string_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &str_result = result.get<std::string>();
     BOOST_CHECK(str_result.size() > 114000);
 
     vtzero::vector_tile tile{str_result};
@@ -177,42 +189,47 @@ void validate_tile(const osrm::OSRM &osrm)
     validate_internal_nodes_layer(tile.next_layer());
 }
 
-BOOST_AUTO_TEST_CASE(test_tile_ch)
+void test_tile_ch(bool use_string_only_api)
 {
     using namespace osrm;
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CH);
-    validate_tile(osrm);
+    validate_tile(osrm, use_string_only_api);
 }
+BOOST_AUTO_TEST_CASE(test_tile_ch_old_api) { test_tile_ch(true); }
+BOOST_AUTO_TEST_CASE(test_tile_ch_new_api) { test_tile_ch(false); }
 
-BOOST_AUTO_TEST_CASE(test_tile_corech)
+void test_tile_corech(bool use_string_only_api)
 {
     // Note: this tests that given the CoreCH algorithm config option, configuration falls back to
     // CH and is compatible with CH data
     using namespace osrm;
     auto osrm =
         getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH);
-    validate_tile(osrm);
+    validate_tile(osrm, use_string_only_api);
 }
+BOOST_AUTO_TEST_CASE(test_tile_corech_old_api) { test_tile_corech(true); }
+BOOST_AUTO_TEST_CASE(test_tile_corech_new_api) { test_tile_corech(false); }
 
-BOOST_AUTO_TEST_CASE(test_tile_mld)
+void test_tile_mld(bool use_string_only_api)
 {
     using namespace osrm;
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/mld/monaco.osrm", osrm::EngineConfig::Algorithm::MLD);
-    validate_tile(osrm);
+    validate_tile(osrm, use_string_only_api);
 }
+BOOST_AUTO_TEST_CASE(test_tile_mld_old_api) { test_tile_mld(true); }
+BOOST_AUTO_TEST_CASE(test_tile_mld_new_api) { test_tile_mld(false); }
 
-void test_tile_turns(const osrm::OSRM &osrm)
+void test_tile_turns(const osrm::OSRM &osrm, bool use_string_only_api)
 {
     using namespace osrm;
 
     // Small tile where we can test all the values
     TileParameters params{272953, 191177, 19};
 
-    engine::api::ResultT result = std::string();
-    const auto rc = osrm.Tile(params, result);
+    std::string str_result;
+    const auto rc = run_tile(osrm, params, str_result, use_string_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &str_result = result.get<std::string>();
     BOOST_CHECK_GT(str_result.size(), 128);
 
     vtzero::vector_tile tile{str_result};
@@ -315,34 +332,41 @@ void test_tile_turns(const osrm::OSRM &osrm)
     CHECK_EQUAL_RANGE(actual_turn_bearings, expected_turn_bearings);
 }
 
-BOOST_AUTO_TEST_CASE(test_tile_turns_ch)
+void test_tile_turns_ch(osrm::EngineConfig::Algorithm algorithm, bool use_string_only_api)
 {
     using namespace osrm;
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CH);
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", algorithm);
 
-    test_tile_turns(osrm);
+    test_tile_turns(osrm, use_string_only_api);
 }
-
-BOOST_AUTO_TEST_CASE(test_tile_turns_corech)
+BOOST_AUTO_TEST_CASE(test_tile_turns_ch_old_api)
 {
-    // Note: this tests that given the CoreCH algorithm config option, configuration falls back to
-    // CH and is compatible with CH data
-    using namespace osrm;
-    auto osrm =
-        getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH);
-
-    test_tile_turns(osrm);
+    test_tile_turns_ch(osrm::EngineConfig::Algorithm::CH, true);
+}
+BOOST_AUTO_TEST_CASE(test_tile_turns_ch_new_api)
+{
+    test_tile_turns_ch(osrm::EngineConfig::Algorithm::CH, false);
+}
+BOOST_AUTO_TEST_CASE(test_tile_turns_corech_old_api)
+{
+    test_tile_turns_ch(osrm::EngineConfig::Algorithm::CoreCH, true);
+}
+BOOST_AUTO_TEST_CASE(test_tile_turns_corech_new_api)
+{
+    test_tile_turns_ch(osrm::EngineConfig::Algorithm::CoreCH, false);
 }
 
-BOOST_AUTO_TEST_CASE(test_tile_turns_mld)
+void test_tile_turns_mld(bool use_string_only_api)
 {
     using namespace osrm;
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/mld/monaco.osrm", osrm::EngineConfig::Algorithm::MLD);
 
-    test_tile_turns(osrm);
+    test_tile_turns(osrm, use_string_only_api);
 }
+BOOST_AUTO_TEST_CASE(test_tile_turns_mld_old_api) { test_tile_turns_mld(true); }
+BOOST_AUTO_TEST_CASE(test_tile_turns_mld_new_api) { test_tile_turns_mld(false); }
 
-void test_tile_speeds(const osrm::OSRM &osrm)
+void test_tile_speeds(const osrm::OSRM &osrm, bool use_string_only_api)
 {
     using namespace osrm;
 
@@ -350,11 +374,10 @@ void test_tile_speeds(const osrm::OSRM &osrm)
     // TileParameters params{272953, 191177, 19};
     TileParameters params{136477, 95580, 18};
 
-    engine::api::ResultT result = std::string();
-    const auto rc = osrm.Tile(params, result);
+    std::string str_result;
+    const auto rc = run_tile(osrm, params, str_result, use_string_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &str_result = result.get<std::string>();
     BOOST_CHECK_GT(str_result.size(), 128);
 
     vtzero::vector_tile tile{str_result};
@@ -394,34 +417,41 @@ void test_tile_speeds(const osrm::OSRM &osrm)
     BOOST_CHECK(actual_names == expected_names);
 }
 
-BOOST_AUTO_TEST_CASE(test_tile_speeds_ch)
+void test_tile_speeds_ch(osrm::EngineConfig::Algorithm algorithm, bool use_string_only_api)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CH);
-    test_tile_speeds(osrm);
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", algorithm);
+    test_tile_speeds(osrm, use_string_only_api);
 }
-
-BOOST_AUTO_TEST_CASE(test_tile_speeds_corech)
+BOOST_AUTO_TEST_CASE(test_tile_speeds_ch_old_api)
 {
-    // Note: this tests that given the CoreCH algorithm config option, configuration falls back to
-    // CH and is compatible with CH data
-    using namespace osrm;
-
-    auto osrm =
-        getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH);
-    test_tile_speeds(osrm);
+    test_tile_speeds_ch(osrm::EngineConfig::Algorithm::CH, true);
+}
+BOOST_AUTO_TEST_CASE(test_tile_speeds_ch_new_api)
+{
+    test_tile_speeds_ch(osrm::EngineConfig::Algorithm::CH, false);
+}
+BOOST_AUTO_TEST_CASE(test_tile_speeds_corech_old_api)
+{
+    test_tile_speeds_ch(osrm::EngineConfig::Algorithm::CoreCH, true);
+}
+BOOST_AUTO_TEST_CASE(test_tile_speeds_corech_new_api)
+{
+    test_tile_speeds_ch(osrm::EngineConfig::Algorithm::CoreCH, false);
 }
 
-BOOST_AUTO_TEST_CASE(test_tile_speeds_mld)
+void test_tile_speeds_mld(bool use_string_only_api)
 {
     using namespace osrm;
 
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/mld/monaco.osrm", osrm::EngineConfig::Algorithm::MLD);
-    test_tile_speeds(osrm);
+    test_tile_speeds(osrm, use_string_only_api);
 }
+BOOST_AUTO_TEST_CASE(test_tile_speeds_mld_old_api) { test_tile_speeds_mld(true); }
+BOOST_AUTO_TEST_CASE(test_tile_speeds_mld_new_api) { test_tile_speeds_mld(false); }
 
-void test_tile_nodes(const osrm::OSRM &osrm)
+void test_tile_nodes(const osrm::OSRM &osrm, bool use_string_only_api)
 {
     using namespace osrm;
 
@@ -431,11 +461,10 @@ void test_tile_nodes(const osrm::OSRM &osrm)
     // Small tile where we can test all the values
     TileParameters params{272953, 191177, 19};
 
-    engine::api::ResultT result = std::string();
-    const auto rc = osrm.Tile(params, result);
+    std::string str_result;
+    const auto rc = run_tile(osrm, params, str_result, use_string_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &str_result = result.get<std::string>();
     BOOST_CHECK_GT(str_result.size(), 128);
 
     vtzero::vector_tile tile{str_result};
@@ -457,31 +486,38 @@ void test_tile_nodes(const osrm::OSRM &osrm)
     BOOST_CHECK(found_node_ids == expected_node_ids);
 }
 
-BOOST_AUTO_TEST_CASE(test_tile_nodes_ch)
+void test_tile_nodes_ch(osrm::EngineConfig::Algorithm algorithm, bool use_string_only_api)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CH);
-    test_tile_nodes(osrm);
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", algorithm);
+    test_tile_nodes(osrm, use_string_only_api);
 }
-
-BOOST_AUTO_TEST_CASE(test_tile_nodes_corech)
+BOOST_AUTO_TEST_CASE(test_tile_node_ch_old_api)
 {
-    // Note: this tests that given the CoreCH algorithm config option, configuration falls back to
-    // CH and is compatible with CH data
-    using namespace osrm;
-
-    auto osrm =
-        getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH);
-    test_tile_nodes(osrm);
+    test_tile_nodes_ch(osrm::EngineConfig::Algorithm::CH, true);
+}
+BOOST_AUTO_TEST_CASE(test_tile_node_ch_new_api)
+{
+    test_tile_nodes_ch(osrm::EngineConfig::Algorithm::CH, false);
+}
+BOOST_AUTO_TEST_CASE(test_tile_node_corech_old_api)
+{
+    test_tile_nodes_ch(osrm::EngineConfig::Algorithm::CoreCH, true);
+}
+BOOST_AUTO_TEST_CASE(test_tile_node_corech_new_api)
+{
+    test_tile_nodes_ch(osrm::EngineConfig::Algorithm::CoreCH, false);
 }
 
-BOOST_AUTO_TEST_CASE(test_tile_nodes_mld)
+void test_tile_nodes_mld(bool use_string_only_api)
 {
     using namespace osrm;
 
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/mld/monaco.osrm", osrm::EngineConfig::Algorithm::MLD);
-    test_tile_nodes(osrm);
+    test_tile_nodes(osrm, use_string_only_api);
 }
+BOOST_AUTO_TEST_CASE(test_tile_node_mld_old_api) { test_tile_nodes_mld(true); }
+BOOST_AUTO_TEST_CASE(test_tile_node_mld_new_api) { test_tile_nodes_mld(false); }
 
 BOOST_AUTO_TEST_SUITE_END()

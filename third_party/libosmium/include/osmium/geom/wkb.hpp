@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/geom/factory.hpp>
-#include <osmium/util/cast.hpp>
 #include <osmium/util/endian.hpp>
 
 #include <algorithm>
@@ -70,8 +69,8 @@ namespace osmium {
                 out.reserve(str.size() * 2);
 
                 for (char c : str) {
-                    out += lookup_hex[(static_cast<unsigned int>(c) >> 4u) & 0xfu];
-                    out += lookup_hex[ static_cast<unsigned int>(c)        & 0xfu];
+                    out += lookup_hex[(static_cast<unsigned int>(c) >> 4U) & 0xfU];
+                    out += lookup_hex[ static_cast<unsigned int>(c)        & 0xfU];
                 }
 
                 return out;

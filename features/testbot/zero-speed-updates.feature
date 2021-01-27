@@ -93,6 +93,31 @@ Feature: Check zero speed updates
           |    1 |  2 | NoRoute |
 
 
+    Scenario: Routing with alternatives on restricted way
+        Given the node map
+            """
+            a-1-b-2-c
+            """
+
+        And the ways
+            | nodes | oneway |
+            | abc   | no     |
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+        And the speed file
+            """
+            1,2,0
+            2,1,0
+            """
+        And the query options
+            | alternatives | true |
+
+
+        When I route I should get
+          | from | to | code    | alternative |
+          |    1 |  2 | NoRoute |             |
+
+
     Scenario: Routing on restricted oneway
         Given the node map
             """

@@ -39,8 +39,8 @@ namespace util
 namespace json
 {
 struct Object;
-} // ns json
-} // ns util
+} // namespace json
+} // namespace util
 
 namespace engine
 {
@@ -52,11 +52,11 @@ struct NearestParameters;
 struct TripParameters;
 struct MatchParameters;
 struct TileParameters;
-} // ns api
+} // namespace api
 
 class EngineInterface;
 struct EngineConfig;
-} // ns engine
-} // ns osrm
+} // namespace engine
+} // namespace osrm
 
 #endif

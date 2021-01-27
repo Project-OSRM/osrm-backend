@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -196,12 +196,14 @@ namespace osmium {
                 }
 
                 void join_forward(ProtoRing& other) {
+                    m_segments.reserve(m_segments.size() + other.m_segments.size());
                     for (NodeRefSegment* segment : other.m_segments) {
                         add_segment_back(segment);
                     }
                 }
 
                 void join_backward(ProtoRing& other) {
+                    m_segments.reserve(m_segments.size() + other.m_segments.size());
                     for (auto it = other.m_segments.rbegin(); it != other.m_segments.rend(); ++it) {
                         (*it)->reverse();
                         add_segment_back(*it);

@@ -663,6 +663,10 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
     Heap &reverse_heap = *search_engine_data.reverse_heap_1;
 
     insertNodesInHeaps(forward_heap, reverse_heap, phantom_node_pair);
+    if (forward_heap.Empty() || reverse_heap.Empty())
+    {
+        return {};
+    }
 
     // The single via node in the shortest paths s,via and via,t sub-paths and
     // the weight for the shortest path s,t we return and compare alternatives to.

@@ -1,4 +1,3 @@
-#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "coordinates.hpp"
@@ -8,14 +7,28 @@
 #include "osrm/table_parameters.hpp"
 
 #include "osrm/coordinate.hpp"
-#include "osrm/engine_config.hpp"
 #include "osrm/json_container.hpp"
 #include "osrm/osrm.hpp"
 #include "osrm/status.hpp"
 
+osrm::Status run_table_json(const osrm::OSRM &osrm,
+                            const osrm::TableParameters &params,
+                            osrm::json::Object &json_result,
+                            bool use_json_only_api)
+{
+    if (use_json_only_api)
+    {
+        return osrm.Table(params, json_result);
+    }
+    osrm::engine::api::ResultT result = osrm::json::Object();
+    auto rc = osrm.Table(params, result);
+    json_result = result.get<osrm::json::Object>();
+    return rc;
+}
+
 BOOST_AUTO_TEST_SUITE(table)
 
-BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix)
+void test_table_three_coords_one_source_one_dest_matrix(bool use_json_only_api)
 {
     using namespace osrm;
 
@@ -29,11 +42,9 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix)
     params.destinations.push_back(2);
     params.annotations = TableParameters::AnnotationsType::All;
 
-    engine::api::ResultT result = json::Object();
+    json::Object json_result;
+    const auto rc = run_table_json(osrm, params, json_result, use_json_only_api);
 
-    const auto rc = osrm.Table(params, result);
-
-    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
@@ -76,8 +87,16 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix)
         BOOST_CHECK(waypoint_check(source));
     }
 }
+BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix_old_api)
+{
+    test_table_three_coords_one_source_one_dest_matrix(true);
+}
+BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix_new_api)
+{
+    test_table_three_coords_one_source_one_dest_matrix(false);
+}
 
-BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix_no_waypoints)
+void test_table_three_coords_one_source_one_dest_matrix_no_waypoints(bool use_json_only_api)
 {
     using namespace osrm;
 
@@ -92,11 +111,9 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix_no_waypo
     params.destinations.push_back(2);
     params.annotations = TableParameters::AnnotationsType::All;
 
-    engine::api::ResultT result = json::Object();
+    json::Object json_result;
+    const auto rc = run_table_json(osrm, params, json_result, use_json_only_api);
 
-    const auto rc = osrm.Table(params, result);
-
-    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
@@ -127,8 +144,16 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix_no_waypo
     BOOST_CHECK(json_result.values.find("destinations") == json_result.values.end());
     BOOST_CHECK(json_result.values.find("sources") == json_result.values.end());
 }
+BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix_no_waypoints_old_api)
+{
+    test_table_three_coords_one_source_one_dest_matrix_no_waypoints(true);
+}
+BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix_no_waypoints_new_api)
+{
+    test_table_three_coords_one_source_one_dest_matrix_no_waypoints(false);
+}
 
-BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix)
+void test_table_three_coords_one_source_matrix(bool use_json_only_api)
 {
     using namespace osrm;
 
@@ -141,9 +166,9 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix)
     params.sources.push_back(0);
     engine::api::ResultT result = json::Object();
 
-    const auto rc = osrm.Table(params, result);
+    json::Object json_result;
+    const auto rc = run_table_json(osrm, params, json_result, use_json_only_api);
 
-    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
@@ -175,8 +200,16 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix)
         BOOST_CHECK(waypoint_check(source));
     }
 }
+BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix_old_api)
+{
+    test_table_three_coords_one_source_matrix(true);
+}
+BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix_new_api)
+{
+    test_table_three_coords_one_source_matrix(false);
+}
 
-BOOST_AUTO_TEST_CASE(test_table_three_coordinates_matrix)
+void test_table_three_coordinates_matrix(bool use_json_only_api)
 {
     using namespace osrm;
 
@@ -188,11 +221,9 @@ BOOST_AUTO_TEST_CASE(test_table_three_coordinates_matrix)
     params.coordinates.push_back(get_dummy_location());
     params.annotations = TableParameters::AnnotationsType::Duration;
 
-    engine::api::ResultT result = json::Object();
+    json::Object json_result;
+    const auto rc = run_table_json(osrm, params, json_result, use_json_only_api);
 
-    const auto rc = osrm.Table(params, result);
-
-    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
@@ -220,9 +251,17 @@ BOOST_AUTO_TEST_CASE(test_table_three_coordinates_matrix)
         BOOST_CHECK(waypoint_check(source));
     }
 }
+BOOST_AUTO_TEST_CASE(test_table_three_coordinates_matrix_old_api)
+{
+    test_table_three_coordinates_matrix(true);
+}
+BOOST_AUTO_TEST_CASE(test_table_three_coordinates_matrix_new_api)
+{
+    test_table_three_coordinates_matrix(false);
+}
 
 // See https://github.com/Project-OSRM/osrm-backend/pull/3992
-BOOST_AUTO_TEST_CASE(test_table_no_segment_for_some_coordinates)
+void test_table_no_segment_for_some_coordinates(bool use_json_only_api)
 {
     using namespace osrm;
 
@@ -235,14 +274,22 @@ BOOST_AUTO_TEST_CASE(test_table_no_segment_for_some_coordinates)
     params.radiuses.push_back(boost::make_optional(0.));
     params.radiuses.push_back(boost::none);
 
-    engine::api::ResultT result = json::Object();
+    json::Object json_result;
+    const auto rc = run_table_json(osrm, params, json_result, use_json_only_api);
 
-    const auto rc = osrm.Table(params, result);
-
-    auto &json_result = result.get<json::Object>();
     BOOST_CHECK(rc == Status::Error);
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "NoSegment");
+    const auto message = json_result.values.at("message").get<json::String>().value;
+    BOOST_CHECK_EQUAL(message, "Could not find a matching segment for coordinate 0");
+}
+BOOST_AUTO_TEST_CASE(test_table_no_segment_for_some_coordinates_old_api)
+{
+    test_table_no_segment_for_some_coordinates(true);
+}
+BOOST_AUTO_TEST_CASE(test_table_no_segment_for_some_coordinates_new_api)
+{
+    test_table_no_segment_for_some_coordinates(false);
 }
 
 BOOST_AUTO_TEST_CASE(test_table_serialiaze_fb)

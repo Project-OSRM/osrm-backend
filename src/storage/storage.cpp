@@ -165,7 +165,7 @@ bool swapData(Monitor &monitor,
 
     return true;
 }
-}
+} // namespace
 
 void populateLayoutFromFile(const boost::filesystem::path &path, storage::BaseDataLayout &layout)
 {
@@ -596,5 +596,5 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
         }
     }
 }
-}
-}
+} // namespace storage
+} // namespace osrm

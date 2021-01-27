@@ -36,7 +36,7 @@ template <typename BlockPolicy, storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
                   const detail::IndexedDataImpl<BlockPolicy, Ownership> &index_data);
-}
+} // namespace serialization
 
 template <int N, typename T = std::string> struct VariableGroupBlock
 {
@@ -69,9 +69,7 @@ template <int N, typename T = std::string> struct VariableGroupBlock
     inline void
     var_advance(DataIterator &data, DataIterator &length, std::uint32_t byte_length) const
     {
-        if (byte_length == 0)
-        {
-        }
+        if (byte_length == 0) {}
         else if (byte_length == 1)
         {
             data += static_cast<unsigned char>(*length++);
@@ -331,6 +329,9 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
     // Return value at the given index
     ResultType at(std::uint32_t index) const
     {
+        if (values.empty())
+            return ResultType();
+
         // Get block external ad internal indices
         const BlocksNumberType block_idx = index / (BLOCK_SIZE + 1);
         const std::uint32_t internal_idx = index % (BLOCK_SIZE + 1);
@@ -346,7 +347,7 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
         const GroupBlockPolicy block;
         block.ReadRefrencedBlock(blocks[block_idx], internal_idx, first, last);
 
-        return adapt(&*first, &*last);
+        return adapt(first, last);
     }
 
     friend void serialization::read<GroupBlockPolicy, Ownership>(storage::tar::FileReader &reader,
@@ -359,30 +360,35 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
                                                       const IndexedDataImpl &index_data);
 
   private:
-    template <class T = ResultType>
+    template <typename Iter, typename T>
+    using IsValueIterator =
+        std::enable_if_t<std::is_same<T, typename std::iterator_traits<Iter>::value_type>::value>;
+
+    template <typename T = ResultType, typename Iter, typename = IsValueIterator<Iter, ValueType>>
     typename std::enable_if<!std::is_same<T, StringView>::value, T>::type
-    adapt(const ValueType *first, const ValueType *last) const
+    adapt(const Iter first, const Iter last) const
     {
         return ResultType(first, last);
     }
 
-    template <class T = ResultType>
+    template <typename T = ResultType, typename Iter, typename = IsValueIterator<Iter, ValueType>>
     typename std::enable_if<std::is_same<T, StringView>::value, T>::type
-    adapt(const ValueType *first, const ValueType *last) const
+    adapt(const Iter first, const Iter last) const
     {
-        return ResultType(first, std::distance(first, last));
+        auto diff = std::distance(first, last);
+        return diff == 0 ? ResultType() : ResultType(&*first, diff);
     }
 
     template <typename T> using Vector = util::ViewOrVector<T, Ownership>;
     Vector<BlockReference> blocks;
     Vector<ValueType> values;
 };
-}
+} // namespace detail
 
 template <typename GroupBlockPolicy>
 using IndexedData = detail::IndexedDataImpl<GroupBlockPolicy, storage::Ownership::Container>;
 template <typename GroupBlockPolicy>
 using IndexedDataView = detail::IndexedDataImpl<GroupBlockPolicy, storage::Ownership::View>;
-}
-}
+} // namespace util
+} // namespace osrm
 #endif // OSRM_INDEXED_DATA_HPP

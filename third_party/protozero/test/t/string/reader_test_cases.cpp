@@ -37,7 +37,7 @@ TEST_CASE("read string field using get_string: end of buffer") {
     for (std::string::size_type i = 1; i < buffer.size(); ++i) {
         protozero::pbf_reader item{buffer.data(), i};
         REQUIRE(item.next());
-        REQUIRE_THROWS_AS(item.get_string(), const protozero::end_of_buffer_exception&);
+        REQUIRE_THROWS_AS(item.get_string(), protozero::end_of_buffer_exception);
     }
 }
 
@@ -80,7 +80,7 @@ TEST_CASE("read string field using get_view: end of buffer") {
     for (std::string::size_type i = 1; i < buffer.size(); ++i) {
         protozero::pbf_reader item{buffer.data(), i};
         REQUIRE(item.next());
-        REQUIRE_THROWS_AS(item.get_view(), const protozero::end_of_buffer_exception&);
+        REQUIRE_THROWS_AS(item.get_view(), protozero::end_of_buffer_exception);
     }
 }
 

@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -34,18 +34,13 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <osmium/io/writer_options.hpp>
+#include <osmium/util/file.hpp>
 
 #include <cerrno>
 #include <cstddef>
 #include <fcntl.h>
 #include <string>
 #include <system_error>
-
-#ifndef _MSC_VER
-# include <unistd.h>
-#else
-# include <io.h>
-#endif
 
 namespace osmium {
 
@@ -66,7 +61,11 @@ namespace osmium {
              * @returns File descriptor of open file.
              * @throws system_error if the file can't be opened.
              */
-            inline int open_for_writing(const std::string& filename, osmium::io::overwrite allow_overwrite = osmium::io::overwrite::no) {
+            inline int open_for_writing(const std::string& filename, const osmium::io::overwrite allow_overwrite = osmium::io::overwrite::no) {
+#ifdef _MSC_VER
+                osmium::detail::disable_invalid_parameter_handler diph;
+#endif
+
                 if (filename.empty() || filename == "-") {
 #ifdef _WIN32
                     _setmode(1, _O_BINARY);
@@ -76,12 +75,12 @@ namespace osmium {
 
                 int flags = O_WRONLY | O_CREAT; // NOLINT(hicpp-signed-bitwise)
                 if (allow_overwrite == osmium::io::overwrite::allow) {
-                    flags |= O_TRUNC;
+                    flags |= O_TRUNC; // NOLINT(hicpp-signed-bitwise)
                 } else {
-                    flags |= O_EXCL;
+                    flags |= O_EXCL; // NOLINT(hicpp-signed-bitwise)
                 }
 #ifdef _WIN32
-                flags |= O_BINARY;
+                flags |= O_BINARY; // NOLINT(hicpp-signed-bitwise)
 #endif
                 const int fd = ::open(filename.c_str(), flags, 0666);
                 if (fd < 0) {
@@ -99,6 +98,10 @@ namespace osmium {
              * @throws system_error if the file can't be opened.
              */
             inline int open_for_reading(const std::string& filename) {
+#ifdef _MSC_VER
+                osmium::detail::disable_invalid_parameter_handler diph;
+#endif
+
                 if (filename.empty() || filename == "-") {
                     return 0; // stdin
                 }
@@ -125,7 +128,14 @@ namespace osmium {
              * @throws std::system_error On error.
              */
             inline void reliable_write(const int fd, const unsigned char* output_buffer, const size_t size) {
-                constexpr size_t max_write = 100L * 1024L * 1024L; // Max 100 MByte per write
+#ifdef _MSC_VER
+                osmium::detail::disable_invalid_parameter_handler diph;
+#endif
+
+                enum : std::size_t {
+                    // Max 100 MByte per write
+                    max_write = 100UL * 1024UL * 1024UL
+                };
                 size_t offset = 0;
                 do {
                     auto write_count = size - offset;
@@ -170,10 +180,18 @@ namespace osmium {
              * @throws std::system_error On error.
              */
             inline int64_t reliable_read(const int fd, char* input_buffer, const unsigned int size) {
+#ifdef _MSC_VER
+                osmium::detail::disable_invalid_parameter_handler diph;
+#endif
+
                 int64_t nread = 0;
 
                 do {
+#ifdef _WIN32
+                    nread = _read(fd, input_buffer, size);
+#else
                     nread = ::read(fd, input_buffer, size);
+#endif
                     if (nread < 0 && errno != EINTR) {
                         throw std::system_error{errno, std::system_category(), "Read failed"};
                     }
@@ -183,6 +201,10 @@ namespace osmium {
             }
 
             inline void reliable_fsync(const int fd) {
+#ifdef _MSC_VER
+                osmium::detail::disable_invalid_parameter_handler diph;
+#endif
+
 #ifdef _WIN32
                 if (_commit(fd) != 0) {
 #else
@@ -193,9 +215,36 @@ namespace osmium {
             }
 
             inline void reliable_close(const int fd) {
+                if (fd < 0) {
+                    return;
+                }
+#ifdef _MSC_VER
+                osmium::detail::disable_invalid_parameter_handler diph;
+#endif
+
+#ifdef _WIN32
+                if (_close(fd) != 0) {
+#else
                 if (::close(fd) != 0) {
+#endif
                     throw std::system_error{errno, std::system_category(), "Close failed"};
                 }
+            }
+
+            inline int reliable_dup(const int fd) {
+#ifdef _MSC_VER
+                osmium::detail::disable_invalid_parameter_handler diph;
+#endif
+
+#ifdef _WIN32
+                const int fd2 = _dup(fd);
+#else
+                const int fd2 = ::dup(fd);
+#endif
+                if (fd2 < 0) {
+                    throw std::system_error{errno, std::system_category(), "Dup failed"};
+                }
+                return fd2;
             }
 
         } // namespace detail

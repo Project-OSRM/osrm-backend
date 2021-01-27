@@ -15,4 +15,4 @@ void extract(const extractor::ExtractorConfig &config)
     extractor::Extractor(config).run(scripting_environment);
 }
 
-} // ns osrm
+} // namespace osrm

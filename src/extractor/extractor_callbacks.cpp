@@ -11,7 +11,6 @@
 #include "util/guidance/turn_lanes.hpp"
 #include "util/log.hpp"
 
-#include <boost/numeric/conversion/cast.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/tokenizer.hpp>
 
@@ -19,8 +18,6 @@
 
 #include "osrm/coordinate.hpp"
 
-#include <cstring>
-#include <iterator>
 #include <limits>
 #include <string>
 #include <vector>
@@ -69,13 +66,12 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
     }
 }
 
-void ExtractorCallbacks::ProcessRestriction(const InputConditionalTurnRestriction &restriction)
+void ExtractorCallbacks::ProcessRestriction(const InputTurnRestriction &restriction)
 {
     external_memory.restrictions_list.push_back(restriction);
-    // util::Log() << restriction.toString();
 }
 
-void ExtractorCallbacks::ProcessManeuverOverride(const InputManeuverOverride & override)
+void ExtractorCallbacks::ProcessManeuverOverride(const InputManeuverOverride &override)
 {
     external_memory.external_maneuver_overrides_list.push_back(override);
 }
@@ -477,12 +473,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                        return OSMNodeID{static_cast<std::uint64_t>(ref.ref())};
                    });
 
-    external_memory.way_start_end_id_list.push_back(
-        {OSMWayID{static_cast<std::uint32_t>(input_way.id())},
-         OSMNodeID{static_cast<std::uint64_t>(nodes[0].ref())},
-         OSMNodeID{static_cast<std::uint64_t>(nodes[1].ref())},
-         OSMNodeID{static_cast<std::uint64_t>(nodes[nodes.size() - 2].ref())},
-         OSMNodeID{static_cast<std::uint64_t>(nodes.back().ref())}});
+    auto way_id = OSMWayID{static_cast<std::uint64_t>(input_way.id())};
+    external_memory.ways_list.push_back(way_id);
+    external_memory.way_node_id_offsets.push_back(external_memory.used_node_id_list.size());
 }
 
 } // namespace extractor

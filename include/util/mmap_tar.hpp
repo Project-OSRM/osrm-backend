@@ -38,7 +38,7 @@ inline DataMap mmapTarFile(const boost::filesystem::path &path,
 
     return map;
 }
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif

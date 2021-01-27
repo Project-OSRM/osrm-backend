@@ -94,7 +94,7 @@ inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
     return GraphAndFilter{QueryGraph{num_nodes, std::move(edge_container.edges)},
                           edge_container.MakeEdgeFilters()};
 }
-}
-}
+} // namespace contractor
+} // namespace osrm
 
 #endif

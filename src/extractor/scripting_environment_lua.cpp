@@ -37,7 +37,7 @@ template <> struct is_container<osmium::Way> : std::false_type
 template <> struct is_container<osmium::Relation> : std::false_type
 {
 };
-}
+} // namespace sol
 
 namespace osrm
 {
@@ -88,10 +88,10 @@ struct to_lua_object : public boost::static_visitor<sol::object>
 {
     to_lua_object(sol::state &state) : state(state) {}
     template <typename T> auto operator()(T &v) const { return sol::make_object(state, v); }
-    auto operator()(boost::blank &) const { return sol::nil; }
+    auto operator()(boost::blank &) const { return sol::lua_nil; }
     sol::state &state;
 };
-}
+} // namespace
 
 Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(
     const std::string &file_name,
@@ -236,7 +236,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
     auto get_location_tag = [](auto &context, const auto &location, const char *key) {
         if (context.location_dependent_data.empty())
-            return sol::object(sol::nil);
+            return sol::object(context.state);
 
         const LocationDependentData::point_t point{location.lon(), location.lat()};
         if (!boost::geometry::equals(context.last_location_point, point))
@@ -259,7 +259,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "version",
         &osmium::Way::version,
         "get_nodes",
-        [](const osmium::Way &way) { return sol::as_table(way.nodes()); },
+        [](const osmium::Way &way) { return sol::as_table(&way.nodes()); },
         "get_location_tag",
         [&context, &get_location_tag](const osmium::Way &way, const char *key) {
             // HEURISTIC: use a single node (last) of the way to localize the way
@@ -424,8 +424,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "get_relations",
         [&getTypedRefBySol](ExtractionRelationContainer &cont, const sol::object &obj)
             -> const ExtractionRelationContainer::RelationIDList & {
-                return cont.GetRelations(getTypedRefBySol(obj));
-            },
+            return cont.GetRelations(getTypedRefBySol(obj));
+        },
         "relation",
         [](ExtractionRelationContainer &cont, const ExtractionRelation::OsmIDTyped &rel_id)
             -> const ExtractionRelation & { return cont.GetRelationData(rel_id); });
@@ -589,7 +589,6 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
     };
 
     auto initialize_V3_extraction_turn = [&]() {
-
         context.state.new_usertype<ExtractionTurn>(
             "ExtractionTurn",
             "angle",
@@ -871,7 +870,7 @@ void Sol2ScriptingEnvironment::ProcessElements(
     const ExtractionRelationContainer &relations,
     std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
     std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
-    std::vector<InputConditionalTurnRestriction> &resulting_restrictions,
+    std::vector<InputTurnRestriction> &resulting_restrictions,
     std::vector<InputManeuverOverride> &resulting_maneuver_overrides)
 {
     ExtractionNode result_node;
@@ -928,7 +927,7 @@ std::vector<std::string>
 Sol2ScriptingEnvironment::GetStringListFromFunction(const std::string &function_name)
 {
     auto &context = GetSol2Context();
-    BOOST_ASSERT(context.state.lua_state() != nullptr);
+    BOOST_ASSERT(context.state.lua_state());
     std::vector<std::string> strings;
     sol::function function = context.state[function_name];
     if (function.valid())
@@ -944,6 +943,10 @@ Sol2ScriptingEnvironment::GetStringListFromTable(const std::string &table_name)
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state() != nullptr);
     std::vector<std::string> strings;
+    if (!context.profile_table[table_name])
+    {
+        return strings;
+    }
     sol::table table = context.profile_table[table_name];
     if (table.valid())
     {
@@ -962,6 +965,10 @@ Sol2ScriptingEnvironment::GetStringListsFromTable(const std::string &table_name)
 
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state() != nullptr);
+    if (!context.profile_table[table_name])
+    {
+        return string_lists;
+    }
     sol::table table = context.profile_table[table_name];
     if (!table.valid())
     {

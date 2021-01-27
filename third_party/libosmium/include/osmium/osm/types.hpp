@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -65,8 +65,10 @@ namespace osmium {
      */
     using changeset_comment_size_type = uint32_t;
 
-    // maximum of 256 characters of max 4 bytes each (in UTF-8 encoding)
-    constexpr const int max_osm_string_length = 256 * 4;
+    /// Maximum of 256 characters of max 4 bytes each (in UTF-8 encoding)
+    enum {
+        max_osm_string_length = 256 * 4
+    };
 
 } // namespace osmium
 

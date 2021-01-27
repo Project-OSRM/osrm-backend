@@ -13,6 +13,6 @@ enum class Ownership
     External
 };
 }
-}
+} // namespace osrm
 
 #endif // SHARED_MEMORY_OWNERSHIP_HPP

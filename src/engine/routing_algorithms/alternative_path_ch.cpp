@@ -62,11 +62,12 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
     QueryHeap &forward_heap = DIRECTION == FORWARD_DIRECTION ? heap1 : heap2;
     QueryHeap &reverse_heap = DIRECTION == FORWARD_DIRECTION ? heap2 : heap1;
 
-    const NodeID node = forward_heap.DeleteMin();
-    const EdgeWeight weight = forward_heap.GetKey(node);
+    // Take a copy (no ref &) of the extracted node because otherwise could be modified later if
+    // toHeapNode is the same
+    const auto heapNode = forward_heap.DeleteMinGetHeapNode();
 
     const auto scaled_weight =
-        static_cast<EdgeWeight>((weight + min_edge_offset) / (1. + VIAPATH_EPSILON));
+        static_cast<EdgeWeight>((heapNode.weight + min_edge_offset) / (1. + VIAPATH_EPSILON));
     if ((INVALID_EDGE_WEIGHT != *upper_bound_to_shortest_path_weight) &&
         (scaled_weight > *upper_bound_to_shortest_path_weight))
     {
@@ -74,35 +75,36 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
         return;
     }
 
-    search_space.emplace_back(forward_heap.GetData(node).parent, node);
+    search_space.emplace_back(heapNode.data.parent, heapNode.node);
 
-    if (reverse_heap.WasInserted(node))
+    const auto reverseHeapNode = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
+    if (reverseHeapNode)
     {
-        search_space_intersection.emplace_back(node);
-        const EdgeWeight new_weight = reverse_heap.GetKey(node) + weight;
+        search_space_intersection.emplace_back(heapNode.node);
+        const EdgeWeight new_weight = reverseHeapNode->weight + heapNode.weight;
         if (new_weight < *upper_bound_to_shortest_path_weight)
         {
             if (new_weight >= 0)
             {
-                *middle_node = node;
+                *middle_node = heapNode.node;
                 *upper_bound_to_shortest_path_weight = new_weight;
             }
             else
             {
                 // check whether there is a loop present at the node
-                const auto loop_weight = std::get<0>(getLoopWeight<false>(facade, node));
+                const auto loop_weight = std::get<0>(getLoopWeight<false>(facade, heapNode.node));
                 const EdgeWeight new_weight_with_loop = new_weight + loop_weight;
                 if (loop_weight != INVALID_EDGE_WEIGHT &&
                     new_weight_with_loop <= *upper_bound_to_shortest_path_weight)
                 {
-                    *middle_node = node;
+                    *middle_node = heapNode.node;
                     *upper_bound_to_shortest_path_weight = loop_weight;
                 }
             }
         }
     }
 
-    for (auto edge : facade.GetAdjacentEdgeRange(node))
+    for (auto edge : facade.GetAdjacentEdgeRange(heapNode.node))
     {
         const auto &data = facade.GetEdgeData(edge);
         if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
@@ -111,20 +113,22 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
             const EdgeWeight edge_weight = data.weight;
 
             BOOST_ASSERT(edge_weight > 0);
-            const EdgeWeight to_weight = weight + edge_weight;
+            const EdgeWeight to_weight = heapNode.weight + edge_weight;
 
+            const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
             // New Node discovered -> Add to Heap + Node Info Storage
-            if (!forward_heap.WasInserted(to))
+            if (!toHeapNode)
             {
-                forward_heap.Insert(to, to_weight, node);
+                forward_heap.Insert(to, to_weight, heapNode.node);
             }
             // Found a shorter Path -> Update weight
-            else if (to_weight < forward_heap.GetKey(to))
+            else if (to_weight < toHeapNode->weight)
             {
                 // new parent
-                forward_heap.GetData(to).parent = node;
+                toHeapNode->data.parent = heapNode.node;
                 // decreased weight
-                forward_heap.DecreaseKey(to, to_weight);
+                toHeapNode->weight = to_weight;
+                forward_heap.DecreaseKey(*toHeapNode);
             }
         }
     }
@@ -558,7 +562,7 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
     }
     return (upper_bound <= t_test_path_weight);
 }
-} // anon. namespace
+} // namespace
 
 InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engine_working_data,
                                                const DataFacade<Algorithm> &facade,
@@ -853,4 +857,4 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engi
 
 } // namespace routing_algorithms
 } // namespace engine
-} // namespace osrm}
+} // namespace osrm

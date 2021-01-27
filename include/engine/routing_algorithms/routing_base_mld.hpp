@@ -97,7 +97,6 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                                  const std::vector<std::size_t> &phantom_indices)
 {
     auto min_level = [&partition, node](const PhantomNode &phantom_node) {
-
         const auto &forward_segment = phantom_node.forward_segment_id;
         const auto forward_level =
             forward_segment.enabled ? partition.GetHighestDifferentLevel(node, forward_segment.id)
@@ -120,7 +119,7 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
     }
     return result;
 }
-}
+} // namespace
 
 // Heaps only record for each node its predecessor ("parent") on the shortest path.
 // For re-constructing the actual path we need to trace back all parent "pointers".
@@ -229,40 +228,42 @@ retrievePackedPathFromHeap(const SearchEngineData<Algorithm>::QueryHeap &forward
 template <bool DIRECTION, typename Algorithm, typename... Args>
 void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                         typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                        const NodeID node,
-                        const EdgeWeight weight,
+                        const typename SearchEngineData<Algorithm>::QueryHeap::HeapNode &heapNode,
                         Args... args)
 {
     const auto &partition = facade.GetMultiLevelPartition();
     const auto &cells = facade.GetCellStorage();
     const auto &metric = facade.GetCellMetric();
 
-    const auto level = getNodeQueryLevel(partition, node, args...);
+    const auto level = getNodeQueryLevel(partition, heapNode.node, args...);
 
-    if (level >= 1 && !forward_heap.GetData(node).from_clique_arc)
+    if (level >= 1 && !heapNode.data.from_clique_arc)
     {
         if (DIRECTION == FORWARD_DIRECTION)
         {
             // Shortcuts in forward direction
-            const auto &cell = cells.GetCell(metric, level, partition.GetCell(level, node));
+            const auto &cell =
+                cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
             auto destination = cell.GetDestinationNodes().begin();
-            for (auto shortcut_weight : cell.GetOutWeight(node))
+            for (auto shortcut_weight : cell.GetOutWeight(heapNode.node))
             {
                 BOOST_ASSERT(destination != cell.GetDestinationNodes().end());
                 const NodeID to = *destination;
 
-                if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
+                if (shortcut_weight != INVALID_EDGE_WEIGHT && heapNode.node != to)
                 {
-                    const EdgeWeight to_weight = weight + shortcut_weight;
-                    BOOST_ASSERT(to_weight >= weight);
-                    if (!forward_heap.WasInserted(to))
+                    const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
+                    BOOST_ASSERT(to_weight >= heapNode.weight);
+                    const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
+                    if (!toHeapNode)
                     {
-                        forward_heap.Insert(to, to_weight, {node, true});
+                        forward_heap.Insert(to, to_weight, {heapNode.node, true});
                     }
-                    else if (to_weight < forward_heap.GetKey(to))
+                    else if (to_weight < toHeapNode->weight)
                     {
-                        forward_heap.GetData(to) = {node, true};
-                        forward_heap.DecreaseKey(to, to_weight);
+                        toHeapNode->data = {heapNode.node, true};
+                        toHeapNode->weight = to_weight;
+                        forward_heap.DecreaseKey(*toHeapNode);
                     }
                 }
                 ++destination;
@@ -271,25 +272,28 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
         else
         {
             // Shortcuts in backward direction
-            const auto &cell = cells.GetCell(metric, level, partition.GetCell(level, node));
+            const auto &cell =
+                cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
             auto source = cell.GetSourceNodes().begin();
-            for (auto shortcut_weight : cell.GetInWeight(node))
+            for (auto shortcut_weight : cell.GetInWeight(heapNode.node))
             {
                 BOOST_ASSERT(source != cell.GetSourceNodes().end());
                 const NodeID to = *source;
 
-                if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
+                if (shortcut_weight != INVALID_EDGE_WEIGHT && heapNode.node != to)
                 {
-                    const EdgeWeight to_weight = weight + shortcut_weight;
-                    BOOST_ASSERT(to_weight >= weight);
-                    if (!forward_heap.WasInserted(to))
+                    const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
+                    BOOST_ASSERT(to_weight >= heapNode.weight);
+                    const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
+                    if (!toHeapNode)
                     {
-                        forward_heap.Insert(to, to_weight, {node, true});
+                        forward_heap.Insert(to, to_weight, {heapNode.node, true});
                     }
-                    else if (to_weight < forward_heap.GetKey(to))
+                    else if (to_weight < toHeapNode->weight)
                     {
-                        forward_heap.GetData(to) = {node, true};
-                        forward_heap.DecreaseKey(to, to_weight);
+                        toHeapNode->data = {heapNode.node, true};
+                        toHeapNode->weight = to_weight;
+                        forward_heap.DecreaseKey(*toHeapNode);
                     }
                 }
                 ++source;
@@ -298,7 +302,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
     }
 
     // Boundary edges
-    for (const auto edge : facade.GetBorderEdgeRange(level, node))
+    for (const auto edge : facade.GetBorderEdgeRange(level, heapNode.node))
     {
         const auto &edge_data = facade.GetEdgeData(edge);
 
@@ -311,21 +315,23 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 checkParentCellRestriction(partition.GetCell(level + 1, to), args...))
             {
                 const auto node_weight =
-                    facade.GetNodeWeight(DIRECTION == FORWARD_DIRECTION ? node : to);
+                    facade.GetNodeWeight(DIRECTION == FORWARD_DIRECTION ? heapNode.node : to);
                 const auto turn_penalty = facade.GetWeightPenaltyForEdgeID(edge_data.turn_id);
 
                 // TODO: BOOST_ASSERT(edge_data.weight == node_weight + turn_penalty);
 
-                const EdgeWeight to_weight = weight + node_weight + turn_penalty;
+                const EdgeWeight to_weight = heapNode.weight + node_weight + turn_penalty;
 
-                if (!forward_heap.WasInserted(to))
+                const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
+                if (!toHeapNode)
                 {
-                    forward_heap.Insert(to, to_weight, {node, false});
+                    forward_heap.Insert(to, to_weight, {heapNode.node, false});
                 }
-                else if (to_weight < forward_heap.GetKey(to))
+                else if (to_weight < toHeapNode->weight)
                 {
-                    forward_heap.GetData(to) = {node, false};
-                    forward_heap.DecreaseKey(to, to_weight);
+                    toHeapNode->data = {heapNode.node, false};
+                    toHeapNode->weight = to_weight;
+                    forward_heap.DecreaseKey(*toHeapNode);
                 }
             }
         }
@@ -342,34 +348,35 @@ void routingStep(const DataFacade<Algorithm> &facade,
                  const bool force_loop_reverse,
                  Args... args)
 {
-    const auto node = forward_heap.DeleteMin();
-    const auto weight = forward_heap.GetKey(node);
+    const auto heapNode = forward_heap.DeleteMinGetHeapNode();
+    const auto weight = heapNode.weight;
 
-    BOOST_ASSERT(!facade.ExcludeNode(node));
+    BOOST_ASSERT(!facade.ExcludeNode(heapNode.node));
 
     // Upper bound for the path source -> target with
     // weight(source -> node) = weight weight(to -> target) ≤ reverse_weight
     // is weight + reverse_weight
     // More tighter upper bound requires additional condition reverse_heap.WasRemoved(to)
     // with weight(to -> target) = reverse_weight and all weights ≥ 0
-    if (reverse_heap.WasInserted(node))
+    const auto reverseHeapNode = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
+    if (reverseHeapNode)
     {
-        auto reverse_weight = reverse_heap.GetKey(node);
+        auto reverse_weight = reverseHeapNode->weight;
         auto path_weight = weight + reverse_weight;
 
         // MLD uses loops forcing only to prune single node paths in forward and/or
         // backward direction (there is no need to force loops in MLD but in CH)
-        if (!(force_loop_forward && forward_heap.GetData(node).parent == node) &&
-            !(force_loop_reverse && reverse_heap.GetData(node).parent == node) &&
+        if (!(force_loop_forward && heapNode.data.parent == heapNode.node) &&
+            !(force_loop_reverse && reverseHeapNode->data.parent == heapNode.node) &&
             (path_weight >= 0) && (path_weight < path_upper_bound))
         {
-            middle_node = node;
+            middle_node = heapNode.node;
             path_upper_bound = path_weight;
         }
     }
 
     // Relax outgoing edges from node
-    relaxOutgoingEdges<DIRECTION>(facade, forward_heap, node, weight, args...);
+    relaxOutgoingEdges<DIRECTION>(facade, forward_heap, heapNode, args...);
 }
 
 // With (s, middle, t) we trace back the paths middle -> s and middle -> t.

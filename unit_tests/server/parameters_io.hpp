@@ -47,7 +47,7 @@ inline std::ostream &operator<<(std::ostream &out, api::RouteParameters::Overvie
     }
     return out;
 }
-}
+} // namespace api
 
 inline std::ostream &operator<<(std::ostream &out, Bearing bearing)
 {
@@ -60,7 +60,7 @@ inline std::ostream &operator<<(std::ostream &out, Approach approach)
     out << static_cast<int>(approach);
     return out;
 }
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif

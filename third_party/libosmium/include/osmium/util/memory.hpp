@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -47,7 +47,7 @@ namespace osmium {
         int64_t m_peak    = 0;
 
 #ifdef __linux__
-        static int parse_number(const std::string& line) {
+        static int64_t parse_number(const std::string& line) {
             const auto f = line.find_first_of("0123456789");
             const auto l = line.find_last_of("0123456789");
             return osmium::detail::str_to_int<int64_t>(line.substr(f, l - f + 1).c_str());

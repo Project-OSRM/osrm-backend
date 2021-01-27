@@ -107,92 +107,98 @@ int main(int argc, char* argv[]) {
         print_usage(argv[0]);
     }
 
-    // Initialize an empty DynamicHandler. Later it will be associated
-    // with one of the handlers. You can think of the DynamicHandler as
-    // a kind of "variant handler" or a "pointer handler" pointing to the
-    // real handler.
-    osmium::handler::DynamicHandler handler;
+    try {
+        // Initialize an empty DynamicHandler. Later it will be associated
+        // with one of the handlers. You can think of the DynamicHandler as
+        // a kind of "variant handler" or a "pointer handler" pointing to the
+        // real handler.
+        osmium::handler::DynamicHandler handler;
 
-    if (!std::strcmp(argv[1], "-w") || !std::strcmp(argv[1], "--dump-wkt")) {
-        handler.set<WKTDump>();
-    } else if (!std::strcmp(argv[1], "-o") || !std::strcmp(argv[1], "--dump-objects")) {
-        handler.set<osmium::handler::Dump>(std::cout);
-    } else {
-        print_usage(argv[0]);
-    }
-
-    osmium::io::File input_file{argv[2]};
-
-    // Configuration for the multipolygon assembler. Here the default settings
-    // are used, but you could change multiple settings.
-    osmium::area::Assembler::config_type assembler_config;
-
-    // Set up a filter matching only forests. This will be used to only build
-    // areas with matching tags.
-    osmium::TagsFilter filter{false};
-    filter.add_rule(true, "landuse", "forest");
-    filter.add_rule(true, "natural", "wood");
-
-    // Initialize the MultipolygonManager. Its job is to collect all
-    // relations and member ways needed for each area. It then calls an
-    // instance of the osmium::area::Assembler class (with the given config)
-    // to actually assemble one area. The filter parameter is optional, if
-    // it is not set, all areas will be built.
-    osmium::area::MultipolygonManager<osmium::area::Assembler> mp_manager{assembler_config, filter};
-
-    // We read the input file twice. In the first pass, only relations are
-    // read and fed into the multipolygon manager.
-    std::cerr << "Pass 1...\n";
-    osmium::relations::read_relations(input_file, mp_manager);
-    std::cerr << "Pass 1 done\n";
-
-    // Output the amount of main memory used so far. All multipolygon relations
-    // are in memory now.
-    std::cerr << "Memory:\n";
-    osmium::relations::print_used_memory(std::cerr, mp_manager.used_memory());
-
-    // The index storing all node locations.
-    index_type index;
-
-    // The handler that stores all node locations in the index and adds them
-    // to the ways.
-    location_handler_type location_handler{index};
-
-    // If a location is not available in the index, we ignore it. It might
-    // not be needed (if it is not part of a multipolygon relation), so why
-    // create an error?
-    location_handler.ignore_errors();
-
-    // On the second pass we read all objects and run them first through the
-    // node location handler and then the multipolygon collector. The collector
-    // will put the areas it has created into the "buffer" which are then
-    // fed through our "handler".
-    std::cerr << "Pass 2...\n";
-    osmium::io::Reader reader{input_file};
-    osmium::apply(reader, location_handler, mp_manager.handler([&handler](osmium::memory::Buffer&& buffer) {
-        osmium::apply(buffer, handler);
-    }));
-    reader.close();
-    std::cerr << "Pass 2 done\n";
-
-    // Output the amount of main memory used so far. All complete multipolygon
-    // relations have been cleaned up.
-    std::cerr << "Memory:\n";
-    osmium::relations::print_used_memory(std::cerr, mp_manager.used_memory());
-
-    // If there were multipolgyon relations in the input, but some of their
-    // members are not in the input file (which often happens for extracts)
-    // this will write the IDs of the incomplete relations to stderr.
-    std::vector<osmium::object_id_type> incomplete_relations_ids;
-    mp_manager.for_each_incomplete_relation([&](const osmium::relations::RelationHandle& handle){
-        incomplete_relations_ids.push_back(handle->id());
-    });
-    if (!incomplete_relations_ids.empty()) {
-        std::cerr << "Warning! Some member ways missing for these multipolygon relations:";
-        for (const auto id : incomplete_relations_ids) {
-            std::cerr << " " << id;
+        if (!std::strcmp(argv[1], "-w") || !std::strcmp(argv[1], "--dump-wkt")) {
+            handler.set<WKTDump>();
+        } else if (!std::strcmp(argv[1], "-o") || !std::strcmp(argv[1], "--dump-objects")) {
+            handler.set<osmium::handler::Dump>(std::cout);
+        } else {
+            print_usage(argv[0]);
         }
-        std::cerr << "\n";
+
+        osmium::io::File input_file{argv[2]};
+
+        // Configuration for the multipolygon assembler. Here the default settings
+        // are used, but you could change multiple settings.
+        osmium::area::Assembler::config_type assembler_config;
+
+        // Set up a filter matching only forests. This will be used to only build
+        // areas with matching tags.
+        osmium::TagsFilter filter{false};
+        filter.add_rule(true, "landuse", "forest");
+        filter.add_rule(true, "natural", "wood");
+
+        // Initialize the MultipolygonManager. Its job is to collect all
+        // relations and member ways needed for each area. It then calls an
+        // instance of the osmium::area::Assembler class (with the given config)
+        // to actually assemble one area. The filter parameter is optional, if
+        // it is not set, all areas will be built.
+        osmium::area::MultipolygonManager<osmium::area::Assembler> mp_manager{assembler_config, filter};
+
+        // We read the input file twice. In the first pass, only relations are
+        // read and fed into the multipolygon manager.
+        std::cerr << "Pass 1...\n";
+        osmium::relations::read_relations(input_file, mp_manager);
+        std::cerr << "Pass 1 done\n";
+
+        // Output the amount of main memory used so far. All multipolygon relations
+        // are in memory now.
+        std::cerr << "Memory:\n";
+        osmium::relations::print_used_memory(std::cerr, mp_manager.used_memory());
+
+        // The index storing all node locations.
+        index_type index;
+
+        // The handler that stores all node locations in the index and adds them
+        // to the ways.
+        location_handler_type location_handler{index};
+
+        // If a location is not available in the index, we ignore it. It might
+        // not be needed (if it is not part of a multipolygon relation), so why
+        // create an error?
+        location_handler.ignore_errors();
+
+        // On the second pass we read all objects and run them first through the
+        // node location handler and then the multipolygon collector. The collector
+        // will put the areas it has created into the "buffer" which are then
+        // fed through our "handler".
+        std::cerr << "Pass 2...\n";
+        osmium::io::Reader reader{input_file};
+        osmium::apply(reader, location_handler, mp_manager.handler([&handler](osmium::memory::Buffer&& buffer) {
+            osmium::apply(buffer, handler);
+        }));
+        reader.close();
+        std::cerr << "Pass 2 done\n";
+
+        // Output the amount of main memory used so far. All complete multipolygon
+        // relations have been cleaned up.
+        std::cerr << "Memory:\n";
+        osmium::relations::print_used_memory(std::cerr, mp_manager.used_memory());
+
+        // If there were multipolgyon relations in the input, but some of their
+        // members are not in the input file (which often happens for extracts)
+        // this will write the IDs of the incomplete relations to stderr.
+        std::vector<osmium::object_id_type> incomplete_relations_ids;
+        mp_manager.for_each_incomplete_relation([&](const osmium::relations::RelationHandle& handle){
+            incomplete_relations_ids.push_back(handle->id());
+        });
+        if (!incomplete_relations_ids.empty()) {
+            std::cerr << "Warning! Some member ways missing for these multipolygon relations:";
+            for (const auto id : incomplete_relations_ids) {
+                std::cerr << " " << id;
+            }
+            std::cerr << "\n";
+        }
+    } catch (const std::exception& e) {
+        // All exceptions used by the Osmium library derive from std::exception.
+        std::cerr << e.what() << '\n';
+        std::exit(1);
     }
 }
 

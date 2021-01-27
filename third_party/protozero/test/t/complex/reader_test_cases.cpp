@@ -1,6 +1,12 @@
 
 #include <test.hpp>
 
+#include <protozero/buffer_fixed.hpp>
+
+#include <algorithm>
+#include <array>
+#include <numeric>
+
 namespace TestComplex {
 
 enum class Test : protozero::pbf_tag_type {
@@ -120,11 +126,7 @@ TEST_CASE("read complex data using pbf_reader: all") {
             }
             case 7: {
                 const auto pi = item.get_packed_sint32();
-                int32_t sum = 0;
-                for (auto val : pi) {
-                    sum += val;
-                }
-                REQUIRE(sum == 5);
+                REQUIRE(std::accumulate(pi.cbegin(), pi.cend(), 0) == 5);
                 break;
             }
             case 8: {
@@ -265,11 +267,7 @@ TEST_CASE("read complex data using pbf_message: all") {
             }
             case TestComplex::Test::packed_sint32_d: {
                 const auto pi = item.get_packed_sint32();
-                int32_t sum = 0;
-                for (auto val : pi) {
-                    sum += val;
-                }
-                REQUIRE(sum == 5);
+                REQUIRE(std::accumulate(pi.cbegin(), pi.cend(), 0) == 5);
                 break;
             }
             case TestComplex::Test::optional_string_s: {
@@ -416,7 +414,7 @@ TEST_CASE("write complex data using pbf_writer: all") {
     pw.add_uint32(4, 66);
     pw.add_uint32(4, 66);
 
-    const int32_t d[] = { -17, 22 };
+    const std::array<int32_t, 2> d = {{ -17, 22 }};
     pw.add_packed_sint32(7, std::begin(d), std::end(d));
 
     pw.add_int64(3, 555555555);
@@ -453,15 +451,7 @@ TEST_CASE("write complex data using pbf_writer: all") {
             }
             case 7: {
                 const auto pi = item.get_packed_sint32();
-                int32_t sum = 0;
-                for (auto val : pi) {
-                    sum += val;
-                }
-                REQUIRE(sum == 5);
-                break;
-            }
-            case 8: {
-                REQUIRE(item.get_string() == "optionalstring");
+                REQUIRE(std::accumulate(pi.cbegin(), pi.cend(), 0) == 5);
                 break;
             }
             default: {
@@ -577,7 +567,7 @@ TEST_CASE("write complex data using pbf_builder: all") {
     pw.add_uint32(TestComplex::Test::repeated_uint32_u, 66);
     pw.add_uint32(TestComplex::Test::repeated_uint32_u, 66);
 
-    const int32_t d[] = { -17, 22 };
+    const std::array<int32_t, 2> d = {{ -17, 22 }};
     pw.add_packed_sint32(TestComplex::Test::packed_sint32_d, std::begin(d), std::end(d));
 
     pw.add_int64(TestComplex::Test::optional_int64_j, 555555555);
@@ -614,15 +604,7 @@ TEST_CASE("write complex data using pbf_builder: all") {
             }
             case 7: {
                 const auto pi = item.get_packed_sint32();
-                int32_t sum = 0;
-                for (auto val : pi) {
-                    sum += val;
-                }
-                REQUIRE(sum == 5);
-                break;
-            }
-            case 8: {
-                REQUIRE(item.get_string() == "optionalstring");
+                REQUIRE(std::accumulate(pi.cbegin(), pi.cend(), 0) == 5);
                 break;
             }
             default: {
@@ -682,5 +664,79 @@ TEST_CASE("write complex with subwriter using pbf_builder") {
     }
 
     check_message(buffer_test);
+}
+
+TEST_CASE("write complex data using basic_pbf_writer<fixed_size_buffer_adaptor>: all") {
+    std::string data;
+    data.resize(10240);
+    protozero::fixed_size_buffer_adaptor buffer{&*data.begin(), data.size()};
+    protozero::basic_pbf_writer<protozero::fixed_size_buffer_adaptor> pw{buffer};
+    pw.add_fixed32(1, 12345678);
+
+    std::string sdata;
+    sdata.resize(10240);
+    protozero::fixed_size_buffer_adaptor submessage{&*sdata.begin(), sdata.size()};
+    protozero::basic_pbf_writer<protozero::fixed_size_buffer_adaptor> pws{submessage};
+    pws.add_string(1, "foobar");
+    pw.add_message(5, submessage.data(), submessage.size());
+
+    pw.add_uint32(4, 22);
+    pw.add_uint32(4, 44);
+    pw.add_int64(2, -9876543);
+    pw.add_uint32(4, 44);
+    pw.add_uint32(4, 66);
+    pw.add_uint32(4, 66);
+
+    const std::array<int32_t, 2> d = {{ -17, 22 }};
+    pw.add_packed_sint32(7, std::begin(d), std::end(d));
+
+    pw.add_int64(3, 555555555);
+
+    protozero::pbf_reader item{buffer.data(), buffer.size()};
+
+    int number_of_u = 0;
+    while (item.next()) {
+        switch (item.tag()) {
+            case 1: {
+                REQUIRE(item.get_fixed32() == 12345678L);
+                break;
+            }
+            case 2: {
+                REQUIRE(true);
+                item.skip();
+                break;
+            }
+            case 3: {
+                REQUIRE(item.get_int64() == 555555555LL);
+                break;
+            }
+            case 4: {
+                item.skip();
+                ++number_of_u;
+                break;
+            }
+            case 5: {
+                protozero::pbf_reader subitem = item.get_message();
+                REQUIRE(subitem.next());
+                REQUIRE(subitem.get_string() == "foobar");
+                REQUIRE_FALSE(subitem.next());
+                break;
+            }
+            case 7: {
+                const auto pi = item.get_packed_sint32();
+                REQUIRE(std::accumulate(pi.cbegin(), pi.cend(), 0) == 5);
+                break;
+            }
+            case 8: {
+                REQUIRE(item.get_string() == "optionalstring");
+                break;
+            }
+            default: {
+                REQUIRE(false); // should not be here
+                break;
+            }
+        }
+    }
+    REQUIRE(number_of_u == 5);
 }
 

@@ -222,8 +222,8 @@ inline void read(storage::tar::FileReader &reader,
     std::string buffer;
     util::serialization::read(reader, name, name_table.indexed_data);
 }
-}
-}
-}
+} // namespace serialization
+} // namespace extractor
+} // namespace osrm
 
 #endif

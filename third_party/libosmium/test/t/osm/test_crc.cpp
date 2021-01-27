@@ -1,11 +1,11 @@
 #include "catch.hpp"
 
+#include "test_crc.hpp"
+
 #include <osmium/osm/crc.hpp>
 
-#include <boost/crc.hpp>
-
 TEST_CASE("CRC of bool") {
-    osmium::CRC<boost::crc_32_type> crc32;
+    osmium::CRC<crc_type> crc32;
 
     crc32.update_bool(true);
     crc32.update_bool(false);
@@ -14,7 +14,7 @@ TEST_CASE("CRC of bool") {
 }
 
 TEST_CASE("CRC of char") {
-    osmium::CRC<boost::crc_32_type> crc32;
+    osmium::CRC<crc_type> crc32;
 
     crc32.update_int8('x');
     crc32.update_int8('y');
@@ -23,7 +23,7 @@ TEST_CASE("CRC of char") {
 }
 
 TEST_CASE("CRC of int16") {
-    osmium::CRC<boost::crc_32_type> crc32;
+    osmium::CRC<crc_type> crc32;
 
     crc32.update_int16(0x0123U);
     crc32.update_int16(0x1234U);
@@ -32,7 +32,7 @@ TEST_CASE("CRC of int16") {
 }
 
 TEST_CASE("CRC of int32") {
-    osmium::CRC<boost::crc_32_type> crc32;
+    osmium::CRC<crc_type> crc32;
 
     crc32.update_int32(0x01234567UL);
     crc32.update_int32(0x12345678UL);
@@ -41,7 +41,7 @@ TEST_CASE("CRC of int32") {
 }
 
 TEST_CASE("CRC of int64") {
-    osmium::CRC<boost::crc_32_type> crc32;
+    osmium::CRC<crc_type> crc32;
 
     crc32.update_int64(0x0123456789abcdefULL);
     crc32.update_int64(0x123456789abcdef0ULL);
@@ -50,7 +50,7 @@ TEST_CASE("CRC of int64") {
 }
 
 TEST_CASE("CRC of string") {
-    osmium::CRC<boost::crc_32_type> crc32;
+    osmium::CRC<crc_type> crc32;
 
     const char* str = "foobar";
     crc32.update_string(str);
@@ -59,7 +59,7 @@ TEST_CASE("CRC of string") {
 }
 
 TEST_CASE("CRC of Timestamp") {
-    osmium::CRC<boost::crc_32_type> crc32;
+    osmium::CRC<crc_type> crc32;
 
     const osmium::Timestamp t{"2015-07-12T13:10:46Z"};
     crc32.update(t);
@@ -68,7 +68,7 @@ TEST_CASE("CRC of Timestamp") {
 }
 
 TEST_CASE("CRC of Location") {
-    osmium::CRC<boost::crc_32_type> crc32;
+    osmium::CRC<crc_type> crc32;
 
     const osmium::Location loc{3.46, 2.001};
     crc32.update(loc);

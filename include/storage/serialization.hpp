@@ -104,7 +104,7 @@ void writeBoolVector(tar::FileWriter &writer, const std::string &name, const Vec
         boost::make_function_input_iterator(encode_function, boost::infinite()),
         number_of_blocks);
 }
-}
+} // namespace detail
 
 /* All vector formats here use the same on-disk format.
  * This is important because we want to be able to write from a vector
@@ -268,8 +268,8 @@ inline void write(io::BufferWriter &writer, const BaseDataLayout &layout)
 {
     write(writer, layout.blocks);
 }
-}
-}
-}
+} // namespace serialization
+} // namespace storage
+} // namespace osrm
 
 #endif

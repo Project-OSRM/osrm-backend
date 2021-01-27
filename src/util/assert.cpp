@@ -18,7 +18,7 @@ namespace
 
     std::terminate();
 }
-}
+} // namespace
 
 // Boost.Assert only declares the following two functions and let's us define them here.
 namespace boost
@@ -32,4 +32,4 @@ void assertion_failed_msg(
 {
     ::assertion_failed_msg_helper(expr, msg, function, file, line);
 }
-}
+} // namespace boost

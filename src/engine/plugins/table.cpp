@@ -75,10 +75,8 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     if (phantom_nodes.size() != params.coordinates.size())
     {
-        return Error("NoSegment",
-                     std::string("Could not find a matching segment for coordinate ") +
-                         std::to_string(phantom_nodes.size()),
-                     result);
+        return Error(
+            "NoSegment", MissingPhantomErrorMessage(phantom_nodes, params.coordinates), result);
     }
 
     auto snapped_phantoms = SnapPhantomNodes(phantom_nodes);
@@ -158,6 +156,6 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     return Status::Ok;
 }
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm

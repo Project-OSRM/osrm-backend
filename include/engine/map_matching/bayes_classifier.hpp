@@ -98,8 +98,8 @@ class BayesClassifier
     double positive_apriori_probability;
     double negative_apriori_probability;
 };
-}
-}
-}
+} // namespace map_matching
+} // namespace engine
+} // namespace osrm
 
 #endif // BAYES_CLASSIFIER_HPP

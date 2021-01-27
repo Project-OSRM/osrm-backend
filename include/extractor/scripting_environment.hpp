@@ -18,7 +18,7 @@ namespace osmium
 class Node;
 class Way;
 class Relation;
-}
+} // namespace osmium
 
 namespace osrm
 {
@@ -68,12 +68,12 @@ class ScriptingEnvironment
                     const ExtractionRelationContainer &relations,
                     std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
                     std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
-                    std::vector<InputConditionalTurnRestriction> &resulting_restrictions,
+                    std::vector<InputTurnRestriction> &resulting_restrictions,
                     std::vector<InputManeuverOverride> &resulting_maneuver_overrides) = 0;
 
     virtual bool HasLocationDependentData() const = 0;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif /* SCRIPTING_ENVIRONMENT_HPP */

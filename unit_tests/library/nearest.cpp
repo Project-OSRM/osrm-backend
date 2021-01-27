@@ -1,4 +1,3 @@
-#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "coordinates.hpp"
@@ -8,14 +7,28 @@
 #include "osrm/nearest_parameters.hpp"
 
 #include "osrm/coordinate.hpp"
-#include "osrm/engine_config.hpp"
 #include "osrm/json_container.hpp"
 #include "osrm/osrm.hpp"
 #include "osrm/status.hpp"
 
+osrm::Status run_nearest_json(const osrm::OSRM &osrm,
+                              const osrm::NearestParameters &params,
+                              osrm::json::Object &json_result,
+                              bool use_json_only_api)
+{
+    if (use_json_only_api)
+    {
+        return osrm.Nearest(params, json_result);
+    }
+    osrm::engine::api::ResultT result = osrm::json::Object();
+    auto rc = osrm.Nearest(params, result);
+    json_result = result.get<osrm::json::Object>();
+    return rc;
+}
+
 BOOST_AUTO_TEST_SUITE(nearest)
 
-BOOST_AUTO_TEST_CASE(test_nearest_response)
+void test_nearest_response(bool use_json_only_api)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
@@ -24,11 +37,10 @@ BOOST_AUTO_TEST_CASE(test_nearest_response)
     NearestParameters params;
     params.coordinates.push_back(get_dummy_location());
 
-    engine::api::ResultT result = json::Object();
-    const auto rc = osrm.Nearest(params, result);
+    json::Object json_result;
+    const auto rc = run_nearest_json(osrm, params, json_result, use_json_only_api);
     BOOST_REQUIRE(rc == Status::Ok);
 
-    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
@@ -42,8 +54,10 @@ BOOST_AUTO_TEST_CASE(test_nearest_response)
         BOOST_CHECK(distance >= 0);
     }
 }
+BOOST_AUTO_TEST_CASE(test_nearest_response_old_api) { test_nearest_response(true); }
+BOOST_AUTO_TEST_CASE(test_nearest_response_new_api) { test_nearest_response(false); }
 
-BOOST_AUTO_TEST_CASE(test_nearest_response_skip_waypoints)
+void test_nearest_response_skip_waypoints(bool use_json_only_api)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
@@ -53,18 +67,25 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_skip_waypoints)
     params.skip_waypoints = true;
     params.coordinates.push_back(get_dummy_location());
 
-    engine::api::ResultT result = json::Object();
-    const auto rc = osrm.Nearest(params, result);
+    json::Object json_result;
+    const auto rc = run_nearest_json(osrm, params, json_result, use_json_only_api);
     BOOST_REQUIRE(rc == Status::Ok);
 
-    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
     BOOST_CHECK(json_result.values.find("waypoints") == json_result.values.end());
 }
+BOOST_AUTO_TEST_CASE(test_nearest_response_skip_waypoints_old_api)
+{
+    test_nearest_response_skip_waypoints(true);
+}
+BOOST_AUTO_TEST_CASE(test_nearest_response_skip_waypoints_new_api)
+{
+    test_nearest_response_skip_waypoints(false);
+}
 
-BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates)
+void test_nearest_response_no_coordinates(bool use_json_only_api)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
@@ -72,16 +93,23 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates)
 
     NearestParameters params;
 
-    engine::api::ResultT result = json::Object();
-    const auto rc = osrm.Nearest(params, result);
+    json::Object json_result;
+    const auto rc = run_nearest_json(osrm, params, json_result, use_json_only_api);
     BOOST_REQUIRE(rc == Status::Error);
 
-    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "InvalidOptions");
 }
+BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates_old_api)
+{
+    test_nearest_response_no_coordinates(true);
+}
+BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates_new_api)
+{
+    test_nearest_response_no_coordinates(false);
+}
 
-BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates)
+void test_nearest_response_multiple_coordinates(bool use_json_only_api)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
@@ -91,16 +119,23 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    engine::api::ResultT result = json::Object();
-    const auto rc = osrm.Nearest(params, result);
+    json::Object json_result;
+    const auto rc = run_nearest_json(osrm, params, json_result, use_json_only_api);
     BOOST_REQUIRE(rc == Status::Error);
 
-    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "InvalidOptions");
 }
+BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates_old_api)
+{
+    test_nearest_response_multiple_coordinates(true);
+}
+BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates_new_api)
+{
+    test_nearest_response_multiple_coordinates(false);
+}
 
-BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component)
+void test_nearest_response_for_location_in_small_component(bool use_json_only_api)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
@@ -112,11 +147,10 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component)
     params.coordinates.push_back(locations.at(0));
     params.number_of_results = 3;
 
-    engine::api::ResultT result = json::Object();
-    const auto rc = osrm.Nearest(params, result);
+    json::Object json_result;
+    const auto rc = run_nearest_json(osrm, params, json_result, use_json_only_api);
     BOOST_REQUIRE(rc == Status::Ok);
 
-    auto &json_result = result.get<json::Object>();
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
@@ -137,6 +171,14 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component)
         BOOST_CHECK(nodes[0].get<util::json::Number>().value != 0);
         BOOST_CHECK(nodes[1].get<util::json::Number>().value != 0);
     }
+}
+BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component_old_api)
+{
+    test_nearest_response_for_location_in_small_component(true);
+}
+BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component_new_api)
+{
+    test_nearest_response_for_location_in_small_component(false);
 }
 
 BOOST_AUTO_TEST_CASE(test_nearest_fb_serialization)

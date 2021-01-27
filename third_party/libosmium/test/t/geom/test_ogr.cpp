@@ -5,19 +5,18 @@
 
 #include <osmium/geom/ogr.hpp>
 
+#include <memory>
+
 TEST_CASE("OGR point geometry") {
     osmium::geom::OGRFactory<> factory;
+    std::unique_ptr<OGRPoint> point{factory.create_point(osmium::Location{3.2, 4.2})};
+    REQUIRE(3.2 == point->getX());
+    REQUIRE(4.2 == point->getY());
+}
 
-    SECTION("point") {
-        std::unique_ptr<OGRPoint> point{factory.create_point(osmium::Location{3.2, 4.2})};
-        REQUIRE(3.2 == point->getX());
-        REQUIRE(4.2 == point->getY());
-    }
-
-    SECTION("empty_point") {
-        REQUIRE_THROWS_AS(factory.create_point(osmium::Location()), const osmium::invalid_location&);
-    }
-
+TEST_CASE("OGR empty point geometry") {
+    osmium::geom::OGRFactory<> factory;
+    REQUIRE_THROWS_AS(factory.create_point(osmium::Location()), const osmium::invalid_location&);
 }
 
 TEST_CASE("OGR linestring geometry") {

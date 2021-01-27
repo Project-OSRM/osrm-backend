@@ -61,7 +61,7 @@ TEST_CASE("convert data_view to std::string") {
 // that one contains the protozero_assert() which generates the exception.
 TEST_CASE("converting default constructed data_view to string fails") {
     const protozero::data_view view{};
-    REQUIRE_THROWS_AS(view.to_string(), const assert_error&);
+    REQUIRE_THROWS_AS(view.to_string(), assert_error);
 }
 #endif
 

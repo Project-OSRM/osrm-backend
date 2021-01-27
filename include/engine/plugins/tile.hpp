@@ -30,8 +30,8 @@ class TilePlugin final : public BasePlugin
                          const api::TileParameters &parameters,
                          osrm::engine::api::ResultT &pbf_buffer) const;
 };
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm
 
 #endif /* TILEPLUGIN_HPP */

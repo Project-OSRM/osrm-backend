@@ -16,7 +16,7 @@ documentation.
  * @brief Contains functions to swap bytes in values (for different endianness).
  */
 
-#include <protozero/config.hpp>
+#include "config.hpp"
 
 #include <cstdint>
 
@@ -27,10 +27,10 @@ inline uint32_t byteswap_impl(uint32_t value) noexcept {
 #ifdef PROTOZERO_USE_BUILTIN_BSWAP
     return __builtin_bswap32(value);
 #else
-    return ((value & 0xff000000) >> 24) |
-           ((value & 0x00ff0000) >>  8) |
-           ((value & 0x0000ff00) <<  8) |
-           ((value & 0x000000ff) << 24);
+    return ((value & 0xff000000U) >> 24U) |
+           ((value & 0x00ff0000U) >>  8U) |
+           ((value & 0x0000ff00U) <<  8U) |
+           ((value & 0x000000ffU) << 24U);
 #endif
 }
 
@@ -38,46 +38,62 @@ inline uint64_t byteswap_impl(uint64_t value) noexcept {
 #ifdef PROTOZERO_USE_BUILTIN_BSWAP
     return __builtin_bswap64(value);
 #else
-    return ((value & 0xff00000000000000ULL) >> 56) |
-           ((value & 0x00ff000000000000ULL) >> 40) |
-           ((value & 0x0000ff0000000000ULL) >> 24) |
-           ((value & 0x000000ff00000000ULL) >>  8) |
-           ((value & 0x00000000ff000000ULL) <<  8) |
-           ((value & 0x0000000000ff0000ULL) << 24) |
-           ((value & 0x000000000000ff00ULL) << 40) |
-           ((value & 0x00000000000000ffULL) << 56);
+    return ((value & 0xff00000000000000ULL) >> 56U) |
+           ((value & 0x00ff000000000000ULL) >> 40U) |
+           ((value & 0x0000ff0000000000ULL) >> 24U) |
+           ((value & 0x000000ff00000000ULL) >>  8U) |
+           ((value & 0x00000000ff000000ULL) <<  8U) |
+           ((value & 0x0000000000ff0000ULL) << 24U) |
+           ((value & 0x000000000000ff00ULL) << 40U) |
+           ((value & 0x00000000000000ffULL) << 56U);
 #endif
 }
 
+} // end namespace detail
+
+/// byteswap the data pointed to by ptr in-place.
 inline void byteswap_inplace(uint32_t* ptr) noexcept {
-    *ptr = byteswap_impl(*ptr);
+    *ptr = detail::byteswap_impl(*ptr);
 }
 
+/// byteswap the data pointed to by ptr in-place.
 inline void byteswap_inplace(uint64_t* ptr) noexcept {
-    *ptr = byteswap_impl(*ptr);
+    *ptr = detail::byteswap_impl(*ptr);
 }
 
+/// byteswap the data pointed to by ptr in-place.
 inline void byteswap_inplace(int32_t* ptr) noexcept {
-    auto bptr = reinterpret_cast<uint32_t*>(ptr);
-    *bptr = byteswap_impl(*bptr);
+    auto* bptr = reinterpret_cast<uint32_t*>(ptr);
+    *bptr = detail::byteswap_impl(*bptr);
 }
 
+/// byteswap the data pointed to by ptr in-place.
 inline void byteswap_inplace(int64_t* ptr) noexcept {
-    auto bptr = reinterpret_cast<uint64_t*>(ptr);
-    *bptr = byteswap_impl(*bptr);
+    auto* bptr = reinterpret_cast<uint64_t*>(ptr);
+    *bptr = detail::byteswap_impl(*bptr);
 }
 
+/// byteswap the data pointed to by ptr in-place.
 inline void byteswap_inplace(float* ptr) noexcept {
-    auto bptr = reinterpret_cast<uint32_t*>(ptr);
-    *bptr = byteswap_impl(*bptr);
+    auto* bptr = reinterpret_cast<uint32_t*>(ptr);
+    *bptr = detail::byteswap_impl(*bptr);
 }
 
+/// byteswap the data pointed to by ptr in-place.
 inline void byteswap_inplace(double* ptr) noexcept {
-    auto bptr = reinterpret_cast<uint64_t*>(ptr);
-    *bptr = byteswap_impl(*bptr);
+    auto* bptr = reinterpret_cast<uint64_t*>(ptr);
+    *bptr = detail::byteswap_impl(*bptr);
 }
+
+namespace detail {
+
+    // Added for backwards compatibility with any code that might use this
+    // function (even if it shouldn't have). Will be removed in a later
+    // version of protozero.
+    using ::protozero::byteswap_inplace;
 
 } // end namespace detail
+
 } // end namespace protozero
 
 #endif // PROTOZERO_BYTESWAP_HPP

@@ -22,8 +22,8 @@ inline boost::optional<ParsedURL> parseURL(std::string url_string)
     auto iter = url_string.begin();
     return parseURL(iter, url_string.end());
 }
-}
-}
-}
+} // namespace api
+} // namespace server
+} // namespace osrm
 
 #endif

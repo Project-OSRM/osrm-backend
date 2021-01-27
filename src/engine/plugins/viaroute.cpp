@@ -90,8 +90,7 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
     if (phantom_node_pairs.size() != route_parameters.coordinates.size())
     {
         return Error("NoSegment",
-                     std::string("Could not find a matching segment for coordinate ") +
-                         std::to_string(phantom_node_pairs.size()),
+                     MissingPhantomErrorMessage(phantom_node_pairs, route_parameters.coordinates),
                      result);
     }
     BOOST_ASSERT(phantom_node_pairs.size() == route_parameters.coordinates.size());
@@ -184,6 +183,6 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
 
     return Status::Ok;
 }
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm
