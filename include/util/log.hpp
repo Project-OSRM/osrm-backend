@@ -101,7 +101,7 @@ class UnbufferedLog : public Log
   public:
     UnbufferedLog(LogLevel level_ = logINFO);
 };
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif /* LOG_HPP */

@@ -65,8 +65,8 @@ inline void write(storage::tar::FileWriter &writer,
     storage::serialization::write(writer, name + "/is_backward_edge", graph.is_backward_edge);
     storage::serialization::write(writer, name + "/node_to_edge_offset", graph.node_to_edge_offset);
 }
-}
-}
-}
+} // namespace serialization
+} // namespace customizer
+} // namespace osrm
 
 #endif

@@ -1,11 +1,18 @@
 #include "catch.hpp"
 
+#include <stdexcept>
+
 // Define assert() to throw this error. This enables the tests to check that
 // the assert() fails.
 struct assert_error : public std::runtime_error {
     explicit assert_error(const char* what_arg) : std::runtime_error(what_arg) {
     }
 };
+
+#ifdef assert
+#undef assert
+#endif
+
 #define assert(x) if (!(x)) { throw assert_error{#x}; }
 
 #include <osmium/util/cast.hpp>

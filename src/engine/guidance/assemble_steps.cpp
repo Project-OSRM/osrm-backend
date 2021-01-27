@@ -48,7 +48,7 @@ std::pair<short, short> getArriveBearings(const LegGeometry &leg_geometry,
     return std::make_pair<short, short>(
         std::round(util::coordinate_calculation::bearing(pre_turn_coordinate, turn_coordinate)), 0);
 }
-} // ns detail
-} // ns engine
-} // ns guidance
-} // ns detail
+} // namespace detail
+} // namespace guidance
+} // namespace engine
+} // namespace osrm

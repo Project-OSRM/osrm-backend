@@ -90,7 +90,7 @@ TEST_CASE("Node comparisons") {
         nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(           12), _version(2), _timestamp("2016-01-01T00:00:00Z"))));
         nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(           12), _version(2), _timestamp("2016-01-01T00:01:00Z"))));
         nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(           15), _version(1), _timestamp("2016-01-01T00:00:00Z"))));
-        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(10000000000ll), _version(2), _timestamp("2016-01-01T00:00:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(10000000000LL), _version(2), _timestamp("2016-01-01T00:00:00Z"))));
 
         REQUIRE(std::is_sorted(nodes.cbegin(), nodes.cend()));
     }
@@ -122,7 +122,7 @@ TEST_CASE("Node comparisons") {
         nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(           12), _version(2), _timestamp("2016-01-01T00:01:00Z"))));
         nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(           12), _version(2), _timestamp("2016-01-01T00:00:00Z"))));
         nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(           15), _version(1), _timestamp("2016-01-01T00:00:00Z"))));
-        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(10000000000ll), _version(2), _timestamp("2016-01-01T00:00:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(10000000000LL), _version(2), _timestamp("2016-01-01T00:00:00Z"))));
 
         REQUIRE(std::is_sorted(nodes.cbegin(), nodes.cend(), osmium::object_order_type_id_reverse_version{}));
     }

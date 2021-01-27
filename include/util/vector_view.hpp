@@ -268,7 +268,7 @@ struct is_view_or_vector
                                  std::is_same<util::vector_view<ValueT>, VectorT>::value>
 {
 };
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // SHARED_MEMORY_VECTOR_WRAPPER_HPP

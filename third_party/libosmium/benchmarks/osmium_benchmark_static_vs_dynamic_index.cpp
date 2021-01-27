@@ -44,101 +44,106 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     }
 
-    const std::string input_filename{argv[1]};
+    try {
+        const std::string input_filename{argv[1]};
 
-    osmium::memory::Buffer buffer{osmium::io::read_file(input_filename)};
+        osmium::memory::Buffer buffer{osmium::io::read_file(input_filename)};
 
-    const auto& map_factory = osmium::index::MapFactory<osmium::unsigned_object_id_type, osmium::Location>::instance();
+        const auto& map_factory = osmium::index::MapFactory<osmium::unsigned_object_id_type, osmium::Location>::instance();
 
-    const auto buffer_size = buffer.committed() / (1024 * 1024); // buffer size in MBytes
-    const int runs = std::max(10, static_cast<int>(5000ull / buffer_size));
+        const auto buffer_size = buffer.committed() / (1024 * 1024); // buffer size in MBytes
+        const int runs = std::max(10, static_cast<int>(5000ULL / buffer_size));
 
-    std::cout << "input: filename=" << input_filename << " buffer_size=" << buffer_size << "MBytes\n";
-    std::cout << "runs: " << runs << "\n";
+        std::cout << "input: filename=" << input_filename << " buffer_size=" << buffer_size << "MBytes\n";
+        std::cout << "runs: " << runs << "\n";
 
-    double static_min = std::numeric_limits<double>::max();
-    double static_sum = 0;
-    double static_max = 0;
+        double static_min = std::numeric_limits<double>::max();
+        double static_sum = 0;
+        double static_max = 0;
 
-    double dynamic_min = std::numeric_limits<double>::max();
-    double dynamic_sum = 0;
-    double dynamic_max = 0;
+        double dynamic_min = std::numeric_limits<double>::max();
+        double dynamic_sum = 0;
+        double dynamic_max = 0;
 
-    for (int i = 0; i < runs; ++i) {
+        for (int i = 0; i < runs; ++i) {
 
-        {
-            // static index
-            osmium::memory::Buffer tmp_buffer{buffer.committed()};
-            for (const auto& item : buffer) {
-                tmp_buffer.add_item(item);
-                tmp_buffer.commit();
+            {
+                // static index
+                osmium::memory::Buffer tmp_buffer{buffer.committed()};
+                for (const auto& item : buffer) {
+                    tmp_buffer.add_item(item);
+                    tmp_buffer.commit();
+                }
+
+                static_index_type static_index;
+                static_location_handler_type static_location_handler{static_index};
+
+                const auto start = std::chrono::steady_clock::now();
+                osmium::apply(tmp_buffer, static_location_handler);
+                const auto end = std::chrono::steady_clock::now();
+
+                const double duration = std::chrono::duration<double, std::milli>(end - start).count();
+
+                if (duration < static_min) {
+                    static_min = duration;
+                }
+                if (duration > static_max) {
+                    static_max = duration;
+                }
+                static_sum += duration;
             }
 
-            static_index_type static_index;
-            static_location_handler_type static_location_handler{static_index};
+            {
+                // dynamic index
+                osmium::memory::Buffer tmp_buffer{buffer.committed()};
+                for (const auto& item : buffer) {
+                    tmp_buffer.add_item(item);
+                    tmp_buffer.commit();
+                }
 
-            const auto start = std::chrono::steady_clock::now();
-            osmium::apply(tmp_buffer, static_location_handler);
-            const auto end = std::chrono::steady_clock::now();
+                std::unique_ptr<dynamic_index_type> index = map_factory.create_map(location_store);
+                dynamic_location_handler_type dynamic_location_handler{*index};
+                dynamic_location_handler.ignore_errors();
 
-            const double duration = std::chrono::duration<double, std::milli>(end - start).count();
+                const auto start = std::chrono::steady_clock::now();
+                osmium::apply(tmp_buffer, dynamic_location_handler);
+                const auto end = std::chrono::steady_clock::now();
 
-            if (duration < static_min) {
-                static_min = duration;
+                const double duration = std::chrono::duration<double, std::milli>(end - start).count();
+
+                if (duration < dynamic_min) {
+                    dynamic_min = duration;
+                }
+                if (duration > dynamic_max) {
+                    dynamic_max = duration;
+                }
+                dynamic_sum += duration;
             }
-            if (duration > static_max) {
-                static_max = duration;
-            }
-            static_sum += duration;
         }
 
-        {
-            // dynamic index
-            osmium::memory::Buffer tmp_buffer{buffer.committed()};
-            for (const auto& item : buffer) {
-                tmp_buffer.add_item(item);
-                tmp_buffer.commit();
-            }
+        const double static_avg = static_sum / runs;
+        const double dynamic_avg = dynamic_sum / runs;
 
-            std::unique_ptr<dynamic_index_type> index = map_factory.create_map(location_store);
-            dynamic_location_handler_type dynamic_location_handler{*index};
-            dynamic_location_handler.ignore_errors();
+        std::cout << "static  min=" << static_min << "ms avg=" << static_avg << "ms max=" << static_max << "ms\n";
+        std::cout << "dynamic min=" << dynamic_min << "ms avg=" << dynamic_avg << "ms max=" << dynamic_max << "ms\n";
 
-            const auto start = std::chrono::steady_clock::now();
-            osmium::apply(tmp_buffer, dynamic_location_handler);
-            const auto end = std::chrono::steady_clock::now();
+        const double rfactor = 100.0;
+        const double diff_min = std::round((dynamic_min - static_min) * rfactor) / rfactor;
+        const double diff_avg = std::round((dynamic_avg - static_avg) * rfactor) / rfactor;
+        const double diff_max = std::round((dynamic_max - static_max) * rfactor) / rfactor;
 
-            const double duration = std::chrono::duration<double, std::milli>(end - start).count();
+        const double prfactor = 10.0;
+        const double percent_min = std::round((100.0 * diff_min / static_min) * prfactor) / prfactor;
+        const double percent_avg = std::round((100.0 * diff_avg / static_avg) * prfactor) / prfactor;
+        const double percent_max = std::round((100.0 * diff_max / static_max) * prfactor) / prfactor;
 
-            if (duration < dynamic_min) {
-                dynamic_min = duration;
-            }
-            if (duration > dynamic_max) {
-                dynamic_max = duration;
-            }
-            dynamic_sum += duration;
-        }
+        std::cout << "difference:";
+        std::cout << " min=" << diff_min << "ms (" << percent_min << "%)";
+        std::cout << " avg=" << diff_avg << "ms (" << percent_avg << "%)";
+        std::cout << " max=" << diff_max << "ms (" << percent_max << "%)\n";
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << '\n';
+        std::exit(1);
     }
-
-    const double static_avg = static_sum / runs;
-    const double dynamic_avg = dynamic_sum / runs;
-
-    std::cout << "static  min=" << static_min << "ms avg=" << static_avg << "ms max=" << static_max << "ms\n";
-    std::cout << "dynamic min=" << dynamic_min << "ms avg=" << dynamic_avg << "ms max=" << dynamic_max << "ms\n";
-
-    const double rfactor = 100.0;
-    const double diff_min = std::round((dynamic_min - static_min) * rfactor) / rfactor;
-    const double diff_avg = std::round((dynamic_avg - static_avg) * rfactor) / rfactor;
-    const double diff_max = std::round((dynamic_max - static_max) * rfactor) / rfactor;
-
-    const double prfactor = 10.0;
-    const double percent_min = std::round((100.0 * diff_min / static_min) * prfactor) / prfactor;
-    const double percent_avg = std::round((100.0 * diff_avg / static_avg) * prfactor) / prfactor;
-    const double percent_max = std::round((100.0 * diff_max / static_max) * prfactor) / prfactor;
-
-    std::cout << "difference:";
-    std::cout << " min=" << diff_min << "ms (" << percent_min << "%)";
-    std::cout << " avg=" << diff_avg << "ms (" << percent_avg << "%)";
-    std::cout << " max=" << diff_max << "ms (" << percent_max << "%)\n";
 }
 

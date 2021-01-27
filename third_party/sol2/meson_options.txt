@@ -1,0 +1,2 @@
+option('single', type: 'boolean', value: false, description: 'Generate the sol2 single header and expose the corresponding build targets')
+option('lua_cpp', type: 'boolean', value: false, description: 'Compile lua as C++ code')

@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -57,6 +57,7 @@ DEALINGS IN THE SOFTWARE.
 #include <protozero/varint.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -97,14 +98,20 @@ namespace osmium {
                 // The following settings are from the o5m description:
 
                 // The maximum number of entries in this table.
-                const uint64_t number_of_entries = 15000;
+                enum {
+                    number_of_entries = 15000U
+                };
 
                 // The size of one entry in the table.
-                const unsigned int entry_size = 256;
+                enum {
+                    entry_size = 256U
+                };
 
                 // The maximum length of a string in the table including
                 // two \0 bytes.
-                const unsigned int max_length = 250 + 2;
+                enum {
+                    max_length = 250U + 2U
+                };
 
                 // The data is stored in this string. It is default constructed
                 // and then resized on demand the first time something is added.
@@ -143,13 +150,16 @@ namespace osmium {
 
             }; // class ReferenceTable
 
-            class O5mParser : public Parser {
+            class O5mParser final : public Parser {
 
-                static constexpr std::size_t buffer_size = 2 * 1000 * 1000;
+                enum {
+                    initial_buffer_size = 1024UL * 1024UL
+                };
 
                 osmium::io::Header m_header{};
 
-                osmium::memory::Buffer m_buffer;
+                osmium::memory::Buffer m_buffer{initial_buffer_size,
+                                                osmium::memory::Buffer::auto_grow::internal};
 
                 std::string m_input{};
 
@@ -239,7 +249,7 @@ namespace osmium {
                 osmium::DeltaDecode<int64_t> m_delta_lat;
 
                 osmium::DeltaDecode<osmium::object_id_type> m_delta_way_node_id;
-                osmium::DeltaDecode<osmium::object_id_type> m_delta_member_ids[3];
+                std::array<osmium::DeltaDecode<osmium::object_id_type>, 3> m_delta_member_ids;
 
                 void reset() {
                     m_reference_table.clear();
@@ -356,7 +366,7 @@ namespace osmium {
                             object.set_timestamp(timestamp);
                             object.set_changeset(m_delta_changeset.update(zvarint(dataptr, end)));
                             if (*dataptr != end) {
-                                auto uid_user = decode_user(dataptr, end);
+                                const auto uid_user = decode_user(dataptr, end);
                                 object.set_uid(uid_user.first);
                                 user = uid_user.second;
                             } else {
@@ -421,7 +431,7 @@ namespace osmium {
                     }
                 }
 
-                osmium::item_type decode_member_type(char c) {
+                static osmium::item_type decode_member_type(char c) {
                     if (c < '0' || c > '2') {
                         throw o5m_error{"unknown member type"};
                     }
@@ -433,7 +443,7 @@ namespace osmium {
                     const char* data = decode_string(dataptr, end);
                     const char* start = data;
 
-                    auto member_type = decode_member_type(*data++);
+                    const auto member_type = decode_member_type(*data++);
                     if (data == end) {
                         throw o5m_error{"missing role"};
                     }
@@ -474,13 +484,13 @@ namespace osmium {
                             osmium::builder::RelationMemberListBuilder rml_builder{builder};
 
                             while (data < end_refs) {
-                                auto delta_id = zvarint(&data, end);
+                                const auto delta_id = zvarint(&data, end);
                                 if (data == end) {
                                     throw o5m_error{"relation member format error"};
                                 }
-                                auto type_role = decode_role(&data, end);
-                                auto i = osmium::item_type_to_nwr_index(type_role.first);
-                                auto ref = m_delta_member_ids[i].update(delta_id);
+                                const auto type_role = decode_role(&data, end);
+                                const auto i = osmium::item_type_to_nwr_index(type_role.first);
+                                const auto ref = m_delta_member_ids[i].update(delta_id);
                                 rml_builder.add_member(type_role.first, ref, type_role.second);
                             }
                         }
@@ -502,16 +512,9 @@ namespace osmium {
                 }
 
                 void decode_timestamp(const char* data, const char* const end) {
-                    const auto timestamp = osmium::Timestamp(zvarint(&data, end)).to_iso();
+                    const auto timestamp = osmium::Timestamp{zvarint(&data, end)}.to_iso();
                     m_header.set("o5m_timestamp", timestamp);
                     m_header.set("timestamp", timestamp);
-                }
-
-                void flush() {
-                    osmium::memory::Buffer buffer{buffer_size};
-                    using std::swap;
-                    swap(m_buffer, buffer);
-                    send_to_output_queue(std::move(buffer));
                 }
 
                 enum class dataset_type : unsigned char {
@@ -586,14 +589,15 @@ namespace osmium {
 
                             m_data += length;
 
-                            if (m_buffer.committed() > buffer_size / 10 * 9) {
-                                flush();
+                            if (m_buffer.has_nested_buffers()) {
+                                std::unique_ptr<osmium::memory::Buffer> buffer_ptr{m_buffer.get_last_nested()};
+                                send_to_output_queue(std::move(*buffer_ptr));
                             }
                         }
                     }
 
-                    if (m_buffer.committed()) {
-                        flush();
+                    if (m_buffer.committed() > 0) {
+                        send_to_output_queue(std::move(m_buffer));
                     }
 
                     mark_header_as_done();
@@ -603,7 +607,6 @@ namespace osmium {
 
                 explicit O5mParser(parser_arguments& args) :
                     Parser(args),
-                    m_buffer(buffer_size),
                     m_data(m_input.data()),
                     m_end(m_data) {
                 }
@@ -614,9 +617,9 @@ namespace osmium {
                 O5mParser(O5mParser&&) = delete;
                 O5mParser& operator=(O5mParser&&) = delete;
 
-                ~O5mParser() noexcept final = default;
+                ~O5mParser() noexcept = default;
 
-                void run() final {
+                void run() override {
                     osmium::thread::set_thread_name("_osmium_o5m_in");
 
                     decode_header();

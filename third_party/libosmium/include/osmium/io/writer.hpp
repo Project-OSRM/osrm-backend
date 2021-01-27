@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -68,9 +68,8 @@ namespace osmium {
 
         namespace detail {
 
-            inline size_t get_output_queue_size() noexcept {
-                size_t n = osmium::config::get_max_queue_size("OUTPUT", 20);
-                return n > 2 ? n : 2;
+            inline std::size_t get_output_queue_size() noexcept {
+                return osmium::config::get_max_queue_size("OUTPUT", 20);
             }
 
         } // namespace detail
@@ -100,7 +99,9 @@ namespace osmium {
          */
         class Writer {
 
-            static constexpr size_t default_buffer_size = 10 * 1024 * 1024;
+            enum {
+                default_buffer_size = 10UL * 1024UL * 1024UL
+            };
 
             osmium::io::File m_file;
 

@@ -399,6 +399,28 @@ inline void readTurnDurationPenalty(const boost::filesystem::path &path, TurnPen
     storage::serialization::read(reader, "/common/turn_penalty/duration", turn_penalty);
 }
 
+// writes .osrm.turn_penalties_index
+template <typename TurnIndexT>
+inline void writeTurnPenaltiesIndex(const boost::filesystem::path &path,
+                                    const TurnIndexT &turn_penalties_index)
+{
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
+
+    storage::serialization::write(writer, "/extractor/turn_index", turn_penalties_index);
+}
+
+// read .osrm.turn_penalties_index
+template <typename TurnIndexT>
+inline void readTurnPenaltiesIndex(const boost::filesystem::path &path,
+                                   TurnIndexT &turn_penalties_index)
+{
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
+
+    storage::serialization::read(reader, "/extractor/turn_index", turn_penalties_index);
+}
+
 // writes .osrm.restrictions
 template <typename ConditionalRestrictionsT>
 inline void writeConditionalRestrictions(const boost::filesystem::path &path,
@@ -564,8 +586,8 @@ void readCompressedNodeBasedGraph(const boost::filesystem::path &path, EdgeListT
 
     storage::serialization::read(reader, "/extractor/cnbg", edge_list);
 }
-}
-}
-}
+} // namespace files
+} // namespace extractor
+} // namespace osrm
 
 #endif

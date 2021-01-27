@@ -5,6 +5,7 @@
 #include <osmium/io/compression.hpp>
 #include <osmium/io/xml_input.hpp>
 
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -13,7 +14,7 @@
 // constructor it can be instructed to throw an exception in specific parts
 // of its code. This is then used to test the internals of the Reader.
 
-class MockDecompressor : public osmium::io::Decompressor {
+class MockDecompressor final : public osmium::io::Decompressor {
 
     std::string m_fail_in;
     int m_read_count = 0;
@@ -33,15 +34,15 @@ public:
     MockDecompressor(MockDecompressor&&) = delete;
     MockDecompressor& operator=(MockDecompressor&&) = delete;
 
-    ~MockDecompressor() noexcept final = default;
+    ~MockDecompressor() noexcept = default;
 
-    void add_node(std::string& s, int i) {
+    static void add_node(std::string& s, int i) {
         s += "<node id='";
         s += std::to_string(i);
         s += "' version='1' timestamp='2014-01-01T00:00:00Z' uid='1' user='test' changeset='1' lon='1.02' lat='1.02'/>\n";
     }
 
-    std::string read() final {
+    std::string read() override {
         std::string buffer;
         ++m_read_count;
 
@@ -67,7 +68,7 @@ public:
         return buffer;
     }
 
-    void close() final {
+    void close() override {
         if (m_fail_in == "close") {
             throw std::runtime_error{"error close"};
         }
@@ -80,9 +81,9 @@ TEST_CASE("Test Reader using MockDecompressor") {
     std::string fail_in;
 
     osmium::io::CompressionFactory::instance().register_compression(osmium::io::file_compression::gzip,
-        [](int, osmium::io::fsync) { return nullptr; },
-        [&](int) { return new MockDecompressor(fail_in); },
-        [](const char*, size_t) { return nullptr; }
+        [](int /*unused*/, osmium::io::fsync /*unused*/) { return nullptr; },
+        [&](int /*unused*/) { return new MockDecompressor(fail_in); },
+        [](const char* /*unused*/, size_t /*unused*/) { return nullptr; }
     );
 
     SECTION("fail in constructor") {

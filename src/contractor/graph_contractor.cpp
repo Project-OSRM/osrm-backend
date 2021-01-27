@@ -560,7 +560,7 @@ bool IsNodeIndependent(const util::XORFastHash<> &hash,
     }
     return true;
 }
-}
+} // namespace
 
 std::vector<bool> contractGraph(ContractorGraph &graph,
                                 std::vector<bool> node_is_uncontracted_,

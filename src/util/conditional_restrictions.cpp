@@ -16,8 +16,8 @@ inline std::ostream &operator<<(std::ostream &stream, const ConditionalRestricti
     return stream << restriction.value << "=" << restriction.condition;
 }
 #endif
-}
-}
+} // namespace util
+} // namespace osrm
 
 BOOST_FUSION_ADAPT_STRUCT(osrm::util::ConditionalRestriction,
                           (std::string, value)(std::string, condition))
@@ -33,7 +33,7 @@ namespace
 {
 namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
-}
+} // namespace
 
 template <typename Iterator, typename Skipper = qi::blank_type>
 struct conditional_restrictions_grammar
@@ -76,7 +76,7 @@ struct conditional_restrictions_grammar
     qi::rule<Iterator, Skipper, ConditionalRestriction()> restriction;
     qi::rule<Iterator, Skipper, std::string()> value, condition;
 };
-}
+} // namespace detail
 
 std::vector<ConditionalRestriction> ParseConditionalRestrictions(const std::string &str)
 {
@@ -92,5 +92,5 @@ std::vector<ConditionalRestriction> ParseConditionalRestrictions(const std::stri
     return result;
 }
 
-} // util
-} // osrm
+} // namespace util
+} // namespace osrm

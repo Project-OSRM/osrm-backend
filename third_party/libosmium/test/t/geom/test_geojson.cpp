@@ -5,18 +5,18 @@
 
 #include <osmium/geom/geojson.hpp>
 
+#include <iterator>
+#include <string>
+
 TEST_CASE("GeoJSON point geometry") {
     osmium::geom::GeoJSONFactory<> factory;
+    const std::string json{factory.create_point(osmium::Location{3.2, 4.2})};
+    REQUIRE(std::string{"{\"type\":\"Point\",\"coordinates\":[3.2,4.2]}"} == json);
+}
 
-    SECTION("point") {
-        const std::string json{factory.create_point(osmium::Location{3.2, 4.2})};
-        REQUIRE(std::string{"{\"type\":\"Point\",\"coordinates\":[3.2,4.2]}"} == json);
-    }
-
-    SECTION("empty_point") {
-        REQUIRE_THROWS_AS(factory.create_point(osmium::Location{}), const osmium::invalid_location&);
-    }
-
+TEST_CASE("GeoJSON empty point geometry") {
+    osmium::geom::GeoJSONFactory<> factory;
+    REQUIRE_THROWS_AS(factory.create_point(osmium::Location{}), const osmium::invalid_location&);
 }
 
 TEST_CASE("GeoJSON linestring geometry") {

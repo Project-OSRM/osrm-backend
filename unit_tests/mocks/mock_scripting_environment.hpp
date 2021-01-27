@@ -42,7 +42,7 @@ class MockScriptingEnvironment : public extractor::ScriptingEnvironment
                          const extractor::ExtractionRelationContainer &,
                          std::vector<std::pair<const osmium::Node &, extractor::ExtractionNode>> &,
                          std::vector<std::pair<const osmium::Way &, extractor::ExtractionWay>> &,
-                         std::vector<extractor::InputConditionalTurnRestriction> &,
+                         std::vector<extractor::InputTurnRestriction> &,
                          std::vector<extractor::InputManeuverOverride> &) override final
     {
     }

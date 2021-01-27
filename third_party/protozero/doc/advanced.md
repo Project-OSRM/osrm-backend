@@ -269,3 +269,58 @@ still considerably cheaper than decoding the varints. You have to benchmark
 your use case to see whether the `reserve()` (or whatever you are using the
 `size()` for) is worth it.
 
+
+## Using a different buffer class than std::string
+
+Normally you are using the `pbf_writer` or `pbf_builder` classes which use a
+`std::string` that you supply as their buffer for building the actual protocol
+buffers message into. But you can use a different buffer implementation
+instead. This might be useful if you want to use a fixed-size buffer for
+instance.
+
+The `pbf_writer` and `pbf_builder` classes are actually only aliases for the
+`basic_pbf_writer` and `basic_pbf_builder` template classes:
+
+```cpp
+using pbf_writer = basic_pbf_writer<std::string>;
+
+template <typename T>
+using pbf_builder = basic_pbf_builder<std::string, T>;
+```
+
+If you want to use a different buffer type, use the `basic_*` form of the
+class and use the buffer class as template parameter. When instantiating the
+`basic_pbf_writer` or `basic_pbf_builder`, the only parameter to the
+constructor must always be a reference to an object of the buffer class.
+
+```cpp
+some_buffer_class buffer;
+basic_pbf_writer<some_buffer_class> writer{buffer};
+```
+
+For this to work you must supply template specializations for some static
+functions in the `protozero::buffer_customization` struct, see
+`buffer_tmpl.hpp` for details.
+
+Protozero already supports two buffer types:
+* `std::string` (to use include `protozero/buffer_string.hpp`)
+* `std::vector<char>` (to use include `protozero/buffer_vector.hpp`)
+
+There is a class `protozero::fixed_size_buffer_adaptor` you can use as adaptor
+for any fixed-sized buffer you might have. Include `protozero/buffer_fixed.hpp`
+to use it:
+
+```cpp
+#include <protozero/buffer_fixed.hpp>
+
+your_buffer_class some_buffer;
+protozero::fixed_size_buffer_adaptor buffer_adaptor{some_buffer.data(), some_buffer.size()};
+basic_pbf_writer<protozero::fixed_size_buffer_adaptor> writer{buffer_adaptor};
+```
+
+The buffer adaptor can be initialized with any container if it supports the
+`data()` and `size()` member functions:
+
+```cpp
+protozero::fixed_size_buffer_adaptor buffer_adaptor{some_buffer};
+```

@@ -20,8 +20,9 @@ namespace extractor
 struct EdgeBasedNodeSegment
 {
     EdgeBasedNodeSegment()
-        : forward_segment_id{SPECIAL_SEGMENTID, false},
-          reverse_segment_id{SPECIAL_SEGMENTID, false}, u(SPECIAL_NODEID), v(SPECIAL_NODEID),
+        : forward_segment_id{SPECIAL_SEGMENTID, false}, reverse_segment_id{SPECIAL_SEGMENTID,
+                                                                           false},
+          u(SPECIAL_NODEID), v(SPECIAL_NODEID),
           fwd_segment_position(std::numeric_limits<unsigned short>::max() >>
                                1), // >> 1 because we've only got 15 bits
           is_startpoint(false)
@@ -47,7 +48,7 @@ struct EdgeBasedNodeSegment
     unsigned short fwd_segment_position : 15; // segment id in a compressed geometry
     bool is_startpoint : 1;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif // OSRM_EXTRACT_EDGE_BASED_NODE_SEGMENT_HPP

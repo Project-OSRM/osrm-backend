@@ -107,8 +107,8 @@ struct FeatureWriter
 };
 
 //
-}
-}
+} // namespace tools
+} // namespace osrm
 
 int main(int argc, char *argv[])
 {

@@ -154,7 +154,7 @@ boost::optional<struct tm> Timezoner::operator()(const point_t &point) const
 {
     std::vector<rtree_t::value_type> result;
     rtree.query(boost::geometry::index::intersects(point), std::back_inserter(result));
-    for (const auto v : result)
+    for (const auto &v : result)
     {
         const auto index = v.second;
         if (boost::geometry::within(point, local_times[index].first))
@@ -162,5 +162,5 @@ boost::optional<struct tm> Timezoner::operator()(const point_t &point) const
     }
     return boost::none;
 }
-}
-}
+} // namespace updater
+} // namespace osrm

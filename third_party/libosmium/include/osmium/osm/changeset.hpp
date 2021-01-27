@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -80,7 +80,7 @@ namespace osmium {
             return endpos();
         }
 
-        unsigned const char* next() const {
+        const unsigned char* next() const {
             return endpos();
         }
 
@@ -364,6 +364,11 @@ namespace osmium {
         /// Get user name.
         const char* user() const {
             return reinterpret_cast<const char*>(data() + sizeof(Changeset));
+        }
+
+        /// Clear user name.
+        void clear_user() noexcept {
+            std::memset(data() + sizeof(Changeset), 0, user_size());
         }
 
         /// Get the list of tags.

@@ -149,7 +149,8 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
         {
         }
 
-        void Execute() override try
+        void Execute() override
+        try
         {
             osrm::engine::api::ResultT r;
             r = osrm::util::json::Object();
@@ -230,7 +231,8 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
         {
         }
 
-        void Execute() override try
+        void Execute() override
+        try
         {
             result = std::string();
             const auto status = ((*osrm).*(service))(*params, result);

@@ -41,7 +41,7 @@ template <storage::Ownership Ownership>
 void write(storage::tar::FileWriter &writer,
            const std::string &name,
            const detail::MultiLevelPartitionImpl<Ownership> &mlp);
-}
+} // namespace serialization
 
 namespace detail
 {
@@ -164,11 +164,11 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
     // of cell ids efficiently.
     inline NodeID GetSentinelNode() const { return partition.size() - 1; }
 
-    void SetCellID(LevelID l, NodeID node, std::size_t cell_id)
+    void SetCellID(LevelID l, NodeID node, CellID cell_id)
     {
         auto lidx = LevelIDToIndex(l);
 
-        auto shifted_id = cell_id << level_data->lidx_to_offset[lidx];
+        auto shifted_id = static_cast<std::uint64_t>(cell_id) << level_data->lidx_to_offset[lidx];
         auto cleared_cell = partition[node] & ~level_data->lidx_to_mask[lidx];
         partition[node] = cleared_cell | shifted_id;
     }
@@ -212,10 +212,10 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
                                 // create mask that has `bits` ones at its LSBs.
                                 // 000011
                                 BOOST_ASSERT(offset < NUM_PARTITION_BITS);
-                                PartitionID mask = (1UL << offset) - 1UL;
+                                PartitionID mask = (1ULL << offset) - 1ULL;
                                 // 001111
                                 BOOST_ASSERT(next_offset < NUM_PARTITION_BITS);
-                                PartitionID next_mask = (1UL << next_offset) - 1UL;
+                                PartitionID next_mask = (1ULL << next_offset) - 1ULL;
                                 // 001100
                                 masks[lidx++] = next_mask ^ mask;
                             });
@@ -338,8 +338,8 @@ inline MultiLevelPartitionImpl<storage::Ownership::View>::MultiLevelPartitionImp
     : level_data(nullptr)
 {
 }
-}
-}
-}
+} // namespace detail
+} // namespace partitioner
+} // namespace osrm
 
 #endif

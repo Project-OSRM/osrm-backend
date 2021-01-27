@@ -59,7 +59,7 @@ class ManeuverOverrideRelationParser
     ManeuverOverrideRelationParser();
     boost::optional<InputManeuverOverride> TryParse(const osmium::Relation &relation) const;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif /* RESTRICTION_PARSER_HPP */

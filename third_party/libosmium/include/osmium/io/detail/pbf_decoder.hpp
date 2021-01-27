@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -80,7 +80,9 @@ namespace osmium {
 
             class PBFPrimitiveBlockDecoder {
 
-                static constexpr const size_t initial_buffer_size = 2 * 1024 * 1024;
+                enum {
+                    initial_buffer_size = 64UL * 1024UL
+                };
 
                 data_view m_data;
                 std::vector<osm_string_len_type> m_stringtable;
@@ -92,7 +94,7 @@ namespace osmium {
 
                 osmium::osm_entity_bits::type m_read_types;
 
-                osmium::memory::Buffer m_buffer { initial_buffer_size };
+                osmium::memory::Buffer m_buffer{initial_buffer_size, osmium::memory::Buffer::auto_grow::internal};
 
                 osmium::io::read_meta m_read_metadata;
 
@@ -258,8 +260,12 @@ namespace osmium {
                     }
                 }
 
-                int32_t convert_pbf_coordinate(int64_t c) const noexcept {
+                int32_t convert_pbf_lon(const int64_t c) const noexcept {
                     return int32_t((c * m_granularity + m_lon_offset) / resolution_convert);
+                }
+
+                int32_t convert_pbf_lat(const int64_t c) const noexcept {
+                    return int32_t((c * m_granularity + m_lat_offset) / resolution_convert);
                 }
 
                 void decode_node(const data_view& data) {
@@ -309,8 +315,8 @@ namespace osmium {
                             throw osmium::pbf_error{"illegal coordinate format"};
                         }
                         node.set_location(osmium::Location{
-                                convert_pbf_coordinate(lon),
-                                convert_pbf_coordinate(lat)
+                                convert_pbf_lon(lon),
+                                convert_pbf_lat(lat)
                         });
                     }
 
@@ -378,8 +384,8 @@ namespace osmium {
                             while (!refs.empty() && !lons.empty() && !lats.empty()) {
                                 wnl_builder.add_node_ref(
                                     ref.update(refs.front()),
-                                    osmium::Location{convert_pbf_coordinate(lon.update(lons.front())),
-                                                     convert_pbf_coordinate(lat.update(lats.front()))}
+                                    osmium::Location{convert_pbf_lon(lon.update(lons.front())),
+                                                     convert_pbf_lat(lat.update(lats.front()))}
                                 );
                                 refs.drop_front();
                                 lons.drop_front();
@@ -517,24 +523,27 @@ namespace osmium {
                             throw osmium::pbf_error{"PBF format error"};
                         }
 
-                        osmium::builder::NodeBuilder builder{m_buffer};
-                        osmium::Node& node = builder.object();
+                        {
+                            osmium::builder::NodeBuilder builder{m_buffer};
+                            osmium::Node& node = builder.object();
 
-                        node.set_id(dense_id.update(ids.front()));
-                        ids.drop_front();
+                            node.set_id(dense_id.update(ids.front()));
+                            ids.drop_front();
 
-                        const auto lon = dense_longitude.update(lons.front());
-                        lons.drop_front();
-                        const auto lat = dense_latitude.update(lats.front());
-                        lats.drop_front();
-                        builder.object().set_location(osmium::Location(
-                                convert_pbf_coordinate(lon),
-                                convert_pbf_coordinate(lat)
-                        ));
+                            const auto lon = dense_longitude.update(lons.front());
+                            lons.drop_front();
+                            const auto lat = dense_latitude.update(lats.front());
+                            lats.drop_front();
+                            builder.object().set_location(osmium::Location{
+                                    convert_pbf_lon(lon),
+                                    convert_pbf_lat(lat)
+                            });
 
-                        if (tag_it != tags.end()) {
-                            build_tag_list_from_dense_nodes(builder, tag_it, tags.end());
+                            if (tag_it != tags.end()) {
+                                build_tag_list_from_dense_nodes(builder, tag_it, tags.end());
+                            }
                         }
+                        m_buffer.commit();
                     }
 
                 }
@@ -624,87 +633,89 @@ namespace osmium {
 
                         bool visible = true;
 
-                        osmium::builder::NodeBuilder builder{m_buffer};
-                        osmium::Node& node = builder.object();
+                        {
+                            osmium::builder::NodeBuilder builder{m_buffer};
+                            osmium::Node& node = builder.object();
 
-                        node.set_id(dense_id.update(ids.front()));
-                        ids.drop_front();
+                            node.set_id(dense_id.update(ids.front()));
+                            ids.drop_front();
 
-                        if (has_info) {
-                            if (!versions.empty()) {
-                                const auto version = versions.front();
-                                versions.drop_front();
-                                if (version < -1) {
-                                    throw osmium::pbf_error{"object version must not be negative"};
+                            if (has_info) {
+                                if (!versions.empty()) {
+                                    const auto version = versions.front();
+                                    versions.drop_front();
+                                    if (version < -1) {
+                                        throw osmium::pbf_error{"object version must not be negative"};
+                                    }
+
+                                    if (version == -1) {
+                                        node.set_version(0U);
+                                    } else {
+                                        node.set_version(static_cast<osmium::object_version_type>(version));
+                                    }
                                 }
 
-                                if (version == -1) {
-                                    node.set_version(0U);
-                                } else {
-                                    node.set_version(static_cast<osmium::object_version_type>(version));
+                                if (!changesets.empty()) {
+                                    const auto changeset_id = dense_changeset.update(changesets.front());
+                                    changesets.drop_front();
+                                    if (changeset_id < -1 || changeset_id >= std::numeric_limits<changeset_id_type>::max()) {
+                                        throw osmium::pbf_error{"object changeset_id must be between 0 and 2^32-1"};
+                                    }
+
+                                    if (changeset_id == -1) {
+                                        node.set_changeset(0U);
+                                    } else {
+                                        node.set_changeset(static_cast<osmium::changeset_id_type>(changeset_id));
+                                    }
+                                }
+
+                                if (!timestamps.empty()) {
+                                    node.set_timestamp(dense_timestamp.update(timestamps.front()) * m_date_factor / 1000);
+                                    timestamps.drop_front();
+                                }
+
+                                if (!uids.empty()) {
+                                    node.set_uid_from_signed(static_cast<osmium::signed_user_id_type>(dense_uid.update(uids.front())));
+                                    uids.drop_front();
+                                }
+
+                                if (!visibles.empty()) {
+                                    visible = (visibles.front() != 0);
+                                    visibles.drop_front();
+                                }
+                                node.set_visible(visible);
+
+                                if (!user_sids.empty()) {
+                                    const auto& u = m_stringtable.at(dense_user_sid.update(user_sids.front()));
+                                    user_sids.drop_front();
+                                    builder.set_user(u.first, u.second);
                                 }
                             }
 
-                            if (!changesets.empty()) {
-                                const auto changeset_id = dense_changeset.update(changesets.front());
-                                changesets.drop_front();
-                                if (changeset_id < -1 || changeset_id >= std::numeric_limits<changeset_id_type>::max()) {
-                                    throw osmium::pbf_error{"object changeset_id must be between 0 and 2^32-1"};
-                                }
-
-                                if (changeset_id == -1) {
-                                    node.set_changeset(0U);
-                                } else {
-                                    node.set_changeset(static_cast<osmium::changeset_id_type>(changeset_id));
-                                }
+                            // even if the node isn't visible, there's still a record
+                            // of its lat/lon in the dense arrays.
+                            const auto lon = dense_longitude.update(lons.front());
+                            lons.drop_front();
+                            const auto lat = dense_latitude.update(lats.front());
+                            lats.drop_front();
+                            if (visible) {
+                                builder.object().set_location(osmium::Location{
+                                        convert_pbf_lon(lon),
+                                        convert_pbf_lat(lat)
+                                });
                             }
 
-                            if (!timestamps.empty()) {
-                                node.set_timestamp(dense_timestamp.update(timestamps.front()) * m_date_factor / 1000);
-                                timestamps.drop_front();
-                            }
-
-                            if (!uids.empty()) {
-                                node.set_uid_from_signed(static_cast<osmium::signed_user_id_type>(dense_uid.update(uids.front())));
-                                uids.drop_front();
-                            }
-
-                            if (!visibles.empty()) {
-                                visible = (visibles.front() != 0);
-                                visibles.drop_front();
-                            }
-                            node.set_visible(visible);
-
-                            if (!user_sids.empty()) {
-                                const auto& u = m_stringtable.at(dense_user_sid.update(user_sids.front()));
-                                user_sids.drop_front();
-                                builder.set_user(u.first, u.second);
+                            if (tag_it != tags.end()) {
+                                build_tag_list_from_dense_nodes(builder, tag_it, tags.end());
                             }
                         }
-
-                        // even if the node isn't visible, there's still a record
-                        // of its lat/lon in the dense arrays.
-                        const auto lon = dense_longitude.update(lons.front());
-                        lons.drop_front();
-                        const auto lat = dense_latitude.update(lats.front());
-                        lats.drop_front();
-                        if (visible) {
-                            builder.object().set_location(osmium::Location{
-                                    convert_pbf_coordinate(lon),
-                                    convert_pbf_coordinate(lat)
-                            });
-                        }
-
-                        if (tag_it != tags.end()) {
-                            build_tag_list_from_dense_nodes(builder, tag_it, tags.end());
-                        }
+                        m_buffer.commit();
                     }
-
                 }
 
             public:
 
-                PBFPrimitiveBlockDecoder(const data_view& data, osmium::osm_entity_bits::type read_types, osmium::io::read_meta read_metadata) :
+                PBFPrimitiveBlockDecoder(const data_view& data, const osmium::osm_entity_bits::type read_types, const osmium::io::read_meta read_metadata) :
                     m_data(data),
                     m_read_types(read_types),
                     m_read_metadata(read_metadata) {
@@ -808,8 +819,8 @@ namespace osmium {
                     }
 
                     osmium::Box box;
-                    box.extend(osmium::Location(left  / resolution_convert, bottom / resolution_convert));
-                    box.extend(osmium::Location(right / resolution_convert, top    / resolution_convert));
+                    box.extend(osmium::Location{left  / resolution_convert, bottom / resolution_convert});
+                    box.extend(osmium::Location{right / resolution_convert, top    / resolution_convert});
 
                     return box;
             }
@@ -840,8 +851,13 @@ namespace osmium {
                                 }
                             }
                             break;
-                        case protozero::tag_and_type(OSMFormat::HeaderBlock::repeated_string_optional_features, protozero::pbf_wire_type::length_delimited):
-                            header.set("pbf_optional_feature_" + std::to_string(i++), pbf_header_block.get_string());
+                        case protozero::tag_and_type(OSMFormat::HeaderBlock::repeated_string_optional_features, protozero::pbf_wire_type::length_delimited): {
+                                const auto opt = pbf_header_block.get_string();
+                                header.set("pbf_optional_feature_" + std::to_string(i++), opt);
+                                if (opt == "Sort.Type_then_ID") {
+                                    header.set("sorting", "Type_then_ID");
+                                }
+                            }
                             break;
                         case protozero::tag_and_type(OSMFormat::HeaderBlock::optional_string_writingprogram, protozero::pbf_wire_type::length_delimited):
                             header.set("generator", pbf_header_block.get_string());
@@ -888,7 +904,7 @@ namespace osmium {
 
             public:
 
-                PBFDataBlobDecoder(std::string&& input_buffer, osmium::osm_entity_bits::type read_types, osmium::io::read_meta read_metadata) :
+                PBFDataBlobDecoder(std::string&& input_buffer, const osmium::osm_entity_bits::type read_types, const osmium::io::read_meta read_metadata) :
                     m_input_buffer(std::make_shared<std::string>(std::move(input_buffer))),
                     m_read_types(read_types),
                     m_read_metadata(read_metadata) {

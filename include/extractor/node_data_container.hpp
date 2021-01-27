@@ -37,7 +37,7 @@ template <storage::Ownership Ownership>
 void write(storage::tar::FileWriter &writer,
            const std::string &name,
            const detail::EdgeBasedNodeDataContainerImpl<Ownership> &ebn_data);
-}
+} // namespace serialization
 
 namespace detail
 {
@@ -122,7 +122,7 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
     Vector<EdgeBasedNode> nodes;
     Vector<NodeBasedEdgeAnnotation> annotation_data;
 };
-}
+} // namespace detail
 
 using EdgeBasedNodeDataExternalContainer =
     detail::EdgeBasedNodeDataContainerImpl<storage::Ownership::External>;

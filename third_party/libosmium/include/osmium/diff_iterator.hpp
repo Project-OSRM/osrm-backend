@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -49,6 +49,9 @@ namespace osmium {
      * An input iterator wrapping any iterator over OSMObjects. When
      * dereferenced it will yield DiffObject objects pointing to the
      * underlying OSMObjects.
+     *
+     * Note that this class uses a mutable member variable internally.
+     * It can not be used safely in multiple threads!
      */
     template <typename TBasicIterator>
     class DiffIterator {

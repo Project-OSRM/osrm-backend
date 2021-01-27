@@ -69,7 +69,7 @@ template <typename T1, typename T2> struct hash<std::tuple<T1, T2>>
         return hash_val(std::get<0>(t), std::get<1>(t));
     }
 };
-}
+} // namespace std
 
 namespace osrm
 {
@@ -162,9 +162,10 @@ updateSegmentData(const UpdaterConfig &config,
 
     // closure to convert SpeedSource value to weight and count fallbacks to durations
     std::atomic<std::uint32_t> fallbacks_to_duration{0};
-    auto convertToWeight = [&profile_properties, &fallbacks_to_duration](
-        const SegmentWeight &existing_weight, const SpeedSource &value, double distance_in_meters) {
-
+    auto convertToWeight = [&profile_properties,
+                            &fallbacks_to_duration](const SegmentWeight &existing_weight,
+                                                    const SpeedSource &value,
+                                                    double distance_in_meters) {
         double rate = std::numeric_limits<double>::quiet_NaN();
 
         // if value.rate is not set, we fall back to duration
@@ -432,6 +433,10 @@ updateTurnPenalties(const UpdaterConfig &config,
 {
     const auto weight_multiplier = profile_properties.GetWeightMultiplier();
 
+    // [NOTE] turn_index_blocks could be simply loaded by `files::readTurnPenaltiesIndex()`,
+    //      however, we leave the below mmap to keep compatiblity.
+    //      Use `files::readTurnPenaltiesIndex()` instead once the compatiblity is not that
+    //      important.
     // Mapped file pointer for turn indices
     boost::iostreams::mapped_file_source turn_index_region;
     const extractor::lookup::TurnIndexBlock *turn_index_blocks;
@@ -523,7 +528,7 @@ updateConditionalTurns(std::vector<TurnPenalty> &turn_weight_penalties,
     }
     return updated_turns;
 }
-}
+} // namespace
 
 EdgeID
 Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
@@ -770,9 +775,9 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
             {
                 if (turn_weight_penalty < 0)
                 {
-                    util::Log(logWARNING) << "turn penalty " << turn_weight_penalty
-                                          << " is too negative: clamping turn weight to "
-                                          << weight_min_value;
+                    util::Log(logWARNING)
+                        << "turn penalty " << turn_weight_penalty
+                        << " is too negative: clamping turn weight to " << weight_min_value;
                     turn_weight_penalty = weight_min_value - new_weight;
                     turn_weight_penalties[edge.data.turn_id] = turn_weight_penalty;
                 }
@@ -826,5 +831,5 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     util::Log() << "Done reading edges in " << TIMER_MSEC(load_edges) << "ms.";
     return number_of_edge_based_nodes;
 }
-}
-}
+} // namespace updater
+} // namespace osrm

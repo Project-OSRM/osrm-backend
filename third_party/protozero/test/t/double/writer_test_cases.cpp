@@ -1,19 +1,20 @@
 
-#include <test.hpp>
+#include <buffer.hpp>
 
 #include "t/double/double_testcase.pb.h"
 
-TEST_CASE("write double field and check with libprotobuf") {
+TEMPLATE_TEST_CASE("write double field and check with libprotobuf", "",
+    buffer_test_string, buffer_test_vector, buffer_test_array, buffer_test_external) {
 
-    std::string buffer;
-    protozero::pbf_writer pw{buffer};
+    TestType buffer;
+    typename TestType::writer_type pw{buffer.buffer()};
 
     TestDouble::Test msg;
 
     SECTION("zero") {
         pw.add_double(1, 0.0);
 
-        msg.ParseFromString(buffer);
+        msg.ParseFromArray(buffer.data(), buffer.size());
 
         REQUIRE(msg.x() == Approx(0.0));
     }
@@ -21,7 +22,7 @@ TEST_CASE("write double field and check with libprotobuf") {
     SECTION("positive") {
         pw.add_double(1, 4.893);
 
-        msg.ParseFromString(buffer);
+        msg.ParseFromArray(buffer.data(), buffer.size());
 
         REQUIRE(msg.x() == Approx(4.893));
     }
@@ -29,7 +30,7 @@ TEST_CASE("write double field and check with libprotobuf") {
     SECTION("negative") {
         pw.add_double(1, -9232.33);
 
-        msg.ParseFromString(buffer);
+        msg.ParseFromArray(buffer.data(), buffer.size());
 
         REQUIRE(msg.x() == Approx(-9232.33));
     }

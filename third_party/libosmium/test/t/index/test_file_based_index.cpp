@@ -8,6 +8,8 @@
 #include <osmium/osm/types.hpp>
 #include <osmium/util/file.hpp>
 
+#include <iterator>
+
 TEST_CASE("File based dense index") {
     const int fd = osmium::detail::create_tmp_file();
 

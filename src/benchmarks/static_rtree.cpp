@@ -74,8 +74,8 @@ void benchmark(BenchStaticRTree &rtree, unsigned num_queries)
         return rtree.Nearest(q, 10);
     });
 }
-}
-}
+} // namespace benchmarks
+} // namespace osrm
 
 int main(int argc, char **argv)
 {

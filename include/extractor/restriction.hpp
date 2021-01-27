@@ -30,17 +30,19 @@ struct InputNodeRestriction
     OSMWayID to;
 };
 
-// A restriction that uses a single via-way in between
+// A restriction that uses one or more via-way in between
 //
-// f - e - d
+// e - f - g
+//     |
+//     d
 //     |
 // a - b - c
 //
-// ab via be to ef -- no u turn
+// ab via bd,df to fe -- no u turn
 struct InputWayRestriction
 {
     OSMWayID from;
-    OSMWayID via;
+    std::vector<OSMWayID> via;
     OSMWayID to;
 };
 
@@ -57,6 +59,9 @@ struct InputTurnRestriction
     // keep in the same order as the turn restrictions below
     mapbox::util::variant<InputNodeRestriction, InputWayRestriction> node_or_way;
     bool is_only;
+    // We represent conditional and unconditional restrictions with the same structure.
+    // Unconditional restrictions will have empty conditions.
+    std::vector<util::OpeningHours> condition;
 
     OSMWayID From() const
     {
@@ -102,13 +107,15 @@ struct InputTurnRestriction
         return mapbox::util::get<InputNodeRestriction>(node_or_way);
     }
 };
-struct InputConditionalTurnRestriction : InputTurnRestriction
-{
-    std::vector<util::OpeningHours> condition;
-};
 
 // OSRM manages restrictions based on node IDs which refer to the last node along the edge. Note
 // that this has the side-effect of not allowing parallel edges!
+//
+// a - b - c
+//     |
+//     d
+//
+// ab via b to bd
 struct NodeRestriction
 {
     NodeID from;
@@ -131,39 +138,46 @@ struct NodeRestriction
 // compression happening in the graph creation process which would make it difficult to track
 // way-ids over a series of operations. Having access to the nodes directly allows look-up of the
 // edges in the processed structures
+//
+// e - f - g
+//     |
+//     d
+//     |
+// a - b - c
+//
+// ab via bd,df to fe -- no u turn
 struct WayRestriction
 {
-    // a way restriction in OSRM is essentially a dual node turn restriction;
-    //
-    // |     |
-    // c -x- b
-    // |     |
-    // d     a
-    //
-    // from ab via bxc to cd: no_uturn
-    //
-    // Technically, we would need only a,b,c,d to describe the full turn in terms of nodes. When
-    // parsing the relation, though, we do not know about the final representation in the node-based
-    // graph for the restriction. In case of a traffic light, for example, we might end up with bxc
-    // not being compressed to bc. For that reason, we need to maintain two node restrictions in
-    // case a way restrction is not fully collapsed
-    NodeRestriction in_restriction;
-    NodeRestriction out_restriction;
+    // A way restriction in OSRM needs to track all nodes that make up the via ways. Whilst most
+    // of these nodes will be removed by compression, some nodes will contain features that need to
+    // be considered when routing (e.g. intersections, nested restrictions, etc).
+    NodeID from;
+    std::vector<NodeID> via;
+    NodeID to;
+
+    // check if all parts of the restriction reference an actual node
+    bool Valid() const
+    {
+        return from != SPECIAL_NODEID && to != SPECIAL_NODEID && via.size() >= 2 &&
+               std::all_of(via.begin(), via.end(), [](NodeID i) { return i != SPECIAL_NODEID; });
+    };
 
     bool operator==(const WayRestriction &other) const
     {
-        return std::tie(in_restriction, out_restriction) ==
-               std::tie(other.in_restriction, other.out_restriction);
+        return std::tie(from, via, to) == std::tie(other.from, other.via, other.to);
     }
 };
 
 // Wrapper for turn restrictions that gives more information on its type / handles the switch
-// between node/way/multi-way restrictions
+// between node/way restrictions
 struct TurnRestriction
 {
     // keep in the same order as the turn restrictions above
     mapbox::util::variant<NodeRestriction, WayRestriction> node_or_way;
     bool is_only;
+    // We represent conditional and unconditional restrictions with the same structure.
+    // Unconditional restrictions will have empty conditions.
+    std::vector<util::OpeningHours> condition;
 
     // construction for NodeRestrictions
     explicit TurnRestriction(NodeRestriction node_restriction, bool is_only = false)
@@ -179,8 +193,39 @@ struct TurnRestriction
 
     explicit TurnRestriction()
     {
-        node_or_way = NodeRestriction{SPECIAL_EDGEID, SPECIAL_NODEID, SPECIAL_EDGEID};
+        node_or_way = NodeRestriction{SPECIAL_NODEID, SPECIAL_NODEID, SPECIAL_NODEID};
     }
+
+    NodeID To() const
+    {
+        return node_or_way.which() == RestrictionType::NODE_RESTRICTION
+                   ? mapbox::util::get<NodeRestriction>(node_or_way).to
+                   : mapbox::util::get<WayRestriction>(node_or_way).to;
+    }
+
+    NodeID From() const
+    {
+        return node_or_way.which() == RestrictionType::NODE_RESTRICTION
+                   ? mapbox::util::get<NodeRestriction>(node_or_way).from
+                   : mapbox::util::get<WayRestriction>(node_or_way).from;
+    }
+
+    NodeID FirstVia() const
+    {
+        if (node_or_way.which() == RestrictionType::NODE_RESTRICTION)
+        {
+            return mapbox::util::get<NodeRestriction>(node_or_way).via;
+        }
+        else
+        {
+            BOOST_ASSERT(!mapbox::util::get<WayRestriction>(node_or_way).via.empty());
+            return mapbox::util::get<WayRestriction>(node_or_way).via[0];
+        }
+    }
+
+    bool IsTurnRestricted(NodeID to) const { return is_only ? To() != to : To() == to; }
+
+    bool IsUnconditional() const { return condition.empty(); }
 
     WayRestriction &AsWayRestriction()
     {
@@ -218,7 +263,7 @@ struct TurnRestriction
         if (node_or_way.which() == RestrictionType::WAY_RESTRICTION)
         {
             auto const &restriction = AsWayRestriction();
-            return restriction.in_restriction.Valid() && restriction.out_restriction.Valid();
+            return restriction.Valid();
         }
         else
         {
@@ -245,12 +290,7 @@ struct TurnRestriction
         }
     }
 };
-
-struct ConditionalTurnRestriction : TurnRestriction
-{
-    std::vector<util::OpeningHours> condition;
-};
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif // RESTRICTION_HPP

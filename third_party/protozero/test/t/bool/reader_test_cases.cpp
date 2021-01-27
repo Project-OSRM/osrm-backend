@@ -126,7 +126,7 @@ TEST_CASE("write bool field using moved pbf_builder") {
 
     protozero::pbf_builder<TestBoolean::Test> pw{std::move(pw2)};
     REQUIRE(pw.valid());
-    REQUIRE_FALSE(pw2.valid()); // NOLINT(hicpp-invalid-access-moved, bugprone-use-after-move)
+    REQUIRE_FALSE(pw2.valid()); // NOLINT(hicpp-invalid-access-moved, bugprone-use-after-move, clang-analyzer-cplusplus.Move)
 
     SECTION("false") {
         pw.add_bool(TestBoolean::Test::required_bool_b, false);

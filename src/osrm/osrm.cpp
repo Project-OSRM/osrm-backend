@@ -135,4 +135,4 @@ Status OSRM::Tile(const engine::api::TileParameters &params, engine::api::Result
     return engine_->Tile(params, result);
 }
 
-} // ns osrm
+} // namespace osrm

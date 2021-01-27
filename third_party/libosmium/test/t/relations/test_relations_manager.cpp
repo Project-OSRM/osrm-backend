@@ -6,6 +6,8 @@
 #include <osmium/osm/relation.hpp>
 #include <osmium/relations/relations_manager.hpp>
 
+#include <iterator>
+
 struct EmptyRM : public osmium::relations::RelationsManager<EmptyRM, true, true, true> {
 };
 
@@ -82,7 +84,7 @@ struct CallbackRM : public osmium::relations::RelationsManager<CallbackRM, true,
         return member.type() == osmium::item_type::node;
     }
 
-    void complete_relation(const osmium::Relation& relation) noexcept {
+    void complete_relation(const osmium::Relation& relation) {
         for (const auto& member : relation.members()) {
             if (member.type() == osmium::item_type::node) {
                 ++count_nodes;
@@ -94,6 +96,16 @@ struct CallbackRM : public osmium::relations::RelationsManager<CallbackRM, true,
         }
     }
 
+};
+
+struct AnyRM : public osmium::relations::RelationsManager<AnyRM, true, true, true> {
+    bool new_relation(const osmium::Relation& /*relation*/) noexcept {
+        return true;
+    }
+
+    bool new_member(const osmium::Relation& /*relation*/, const osmium::RelationMember& /*member*/, std::size_t /*n*/) noexcept {
+        return true;
+    }
 };
 
 TEST_CASE("Use RelationsManager without any overloaded functions in derived class") {
@@ -134,7 +146,7 @@ TEST_CASE("Relations manager derived class") {
 
     bool callback_called = false;
     osmium::io::Reader reader{file};
-    osmium::apply(reader, manager.handler([&](osmium::memory::Buffer&&) {
+    osmium::apply(reader, manager.handler([&](osmium::memory::Buffer&& /*unused*/) {
         callback_called = true;
     }));
     reader.close();
@@ -245,5 +257,66 @@ TEST_CASE("Handle duplicate members correctly") {
     REQUIRE(manager.count_new_members   == 5);
     REQUIRE(manager.count_complete_rels == 2);
     REQUIRE(manager.count_not_in_any    == 2); // 2 relations
+}
+
+TEST_CASE("Check handling of missing members") {
+    osmium::io::File file{with_data_dir("t/relations/missing_members.osm")};
+
+    AnyRM manager;
+
+    osmium::relations::read_relations(file, manager);
+
+    osmium::io::Reader reader{file};
+    osmium::apply(reader, manager.handler());
+    reader.close();
+
+
+    size_t nodes = 0;
+    size_t ways = 0;
+    size_t relations = 0;
+    size_t missing_nodes = 0;
+    size_t missing_ways = 0;
+    size_t missing_relations = 0;
+
+    manager.for_each_incomplete_relation([&](const osmium::relations::RelationHandle& handle){
+        if (handle->id() != 31) {
+            // count relation 31 only
+            return;
+        }
+        for (const auto& member : handle->members()) {
+            // RelationMember::ref() is supposed to returns 0 if we are interested in the member.
+            // RelationsManagerBase::get_member_object() is supposed to return a nullptr if the
+            // member is not available (missing in the input file).
+            const osmium::OSMObject* object = manager.get_member_object(member);
+            switch (member.type()) {
+            case osmium::item_type::node :
+                ++nodes;
+                if (member.ref() != 0 && !object) {
+                    ++missing_nodes;
+                }
+                break;
+            case osmium::item_type::way :
+                ++ways;
+                if (member.ref() != 0 && !object) {
+                    ++missing_ways;
+                }
+                break;
+            case osmium::item_type::relation :
+                ++relations;
+                if (member.ref() != 0 && !object) {
+                    ++missing_relations;
+                }
+                break;
+            default:
+                break;
+            }
+        }
+    });
+    REQUIRE(nodes == 2);
+    REQUIRE(ways == 3);
+    REQUIRE(relations == 3);
+    REQUIRE(missing_nodes == 1);
+    REQUIRE(missing_ways == 1);
+    REQUIRE(missing_relations == 2);
 }
 

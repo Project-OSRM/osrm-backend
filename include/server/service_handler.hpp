@@ -16,7 +16,7 @@ namespace json
 {
 struct Object;
 }
-}
+} // namespace util
 namespace server
 {
 namespace api
@@ -44,7 +44,7 @@ class ServiceHandler final : public ServiceHandlerInterface
     std::unordered_map<std::string, std::unique_ptr<service::BaseService>> service_map;
     OSRM routing_machine;
 };
-}
-}
+} // namespace server
+} // namespace osrm
 
 #endif

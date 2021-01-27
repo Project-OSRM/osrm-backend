@@ -1,7 +1,7 @@
 #ifndef OSRM_GUIDANCE_TURN_DISCOVERY_HPP_
 #define OSRM_GUIDANCE_TURN_DISCOVERY_HPP_
 
-#include "extractor/restriction_index.hpp"
+#include "extractor/node_restriction_map.hpp"
 #include "guidance/intersection.hpp"
 #include "guidance/turn_lane_data.hpp"
 #include "util/typedefs.hpp"

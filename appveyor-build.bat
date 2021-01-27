@@ -131,6 +131,10 @@ ECHO running extractor-tests.exe ...
 unit_tests\%Configuration%\extractor-tests.exe
 IF %ERRORLEVEL% EQU 1 GOTO ERROR
 
+ECHO running contractor-tests.exe ...
+unit_tests\%Configuration%\contractor-tests.exe
+IF %ERRORLEVEL% EQU 1 GOTO ERROR
+
 ECHO running engine-tests.exe ...
 unit_tests\%Configuration%\engine-tests.exe
 IF %ERRORLEVEL% EQU 1 GOTO ERROR
@@ -143,34 +147,41 @@ ECHO running server-tests.exe ...
 unit_tests\%Configuration%\server-tests.exe
 IF %ERRORLEVEL% EQU 1 GOTO ERROR
 
-::TODO: CH processing sometimes mysteriously hangs, need to find why and enable tests below.
-::ECHO running library-tests.exe ...
-::SET test_region=monaco
-::SET test_region_ch=ch\monaco
-::SET test_region_corech=corech\monaco
-::SET test_region_mld=mld\monaco
-::SET test_osm=%test_region%.osm.pbf
-::IF NOT EXIST %test_osm% powershell Invoke-WebRequest http://project-osrm.wolt.com/testing/monaco.osm.pbf -OutFile %test_osm%
-::ECHO running %Configuration%\osrm-extract.exe -p ../profiles/car.lua %test_osm%
-::%Configuration%\osrm-extract.exe
-::%Configuration%\osrm-extract.exe -p ../profiles/car.lua %test_osm%
-::MKDIR ch
-::XCOPY %test_region%.osrm.* ch\
-::XCOPY %test_region%.osrm ch\
-::MKDIR corech
-::XCOPY %test_region%.osrm.* corech\
-::XCOPY %test_region%.osrm corech\
-::MKDIR mld
-::XCOPY %test_region%.osrm.* mld\
-::XCOPY %test_region%.osrm mld\
-::%Configuration%\osrm-contract.exe %test_region_ch%.osrm
-::%Configuration%\osrm-contract.exe --core 0.8 %test_region_corech%.osrm
-::%Configuration%\osrm-partition.exe %test_region_mld%.osrm
-::%Configuration%\osrm-customize.exe %test_region_mld%.osrm
-::XCOPY /Y ch\*.* ..\test\data\ch\
-::XCOPY /Y corech\*.* ..\test\data\corech\
-::XCOPY /Y mld\*.* ..\test\data\mld\
-::unit_tests\%Configuration%\library-tests.exe
+ECHO running partitioner-tests.exe ...
+unit_tests\%Configuration%\partitioner-tests.exe
+IF %ERRORLEVEL% EQU 1 GOTO ERROR
+
+ECHO running customizer-tests.exe ...
+unit_tests\%Configuration%\customizer-tests.exe
+IF %ERRORLEVEL% EQU 1 GOTO ERROR
+
+ECHO running library-tests.exe ...
+SET test_region=monaco
+SET test_region_ch=ch\monaco
+SET test_region_corech=corech\monaco
+SET test_region_mld=mld\monaco
+SET test_osm=%test_region%.osm.pbf
+IF NOT EXIST %test_osm% powershell Invoke-WebRequest http://project-osrm.wolt.com/testing/monaco.osm.pbf -OutFile %test_osm%
+ECHO running %Configuration%\osrm-extract.exe -p ../profiles/car.lua %test_osm%
+%Configuration%\osrm-extract.exe
+%Configuration%\osrm-extract.exe -p ../profiles/car.lua %test_osm%
+MKDIR ch
+XCOPY %test_region%.osrm.* ch\
+XCOPY %test_region%.osrm ch\
+MKDIR corech
+XCOPY %test_region%.osrm.* corech\
+XCOPY %test_region%.osrm corech\
+MKDIR mld
+XCOPY %test_region%.osrm.* mld\
+XCOPY %test_region%.osrm mld\
+%Configuration%\osrm-contract.exe %test_region_ch%.osrm
+%Configuration%\osrm-contract.exe --core 0.8 %test_region_corech%.osrm
+%Configuration%\osrm-partition.exe %test_region_mld%.osrm
+%Configuration%\osrm-customize.exe %test_region_mld%.osrm
+XCOPY /Y ch\*.* ..\test\data\ch\
+XCOPY /Y corech\*.* ..\test\data\corech\
+XCOPY /Y mld\*.* ..\test\data\mld\
+unit_tests\%Configuration%\library-tests.exe
 
 :ERROR
 ECHO ~~~~~~~~~~~~~~~~~~~~~~ ERROR %~f0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

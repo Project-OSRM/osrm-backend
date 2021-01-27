@@ -140,6 +140,6 @@ class OSRM final
   private:
     std::unique_ptr<engine::EngineInterface> engine_;
 };
-}
+} // namespace osrm
 
 #endif // OSRM_HPP

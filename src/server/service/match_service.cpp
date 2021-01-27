@@ -39,7 +39,7 @@ std::string getWrongOptionHelp(const engine::api::MatchParameters &parameters)
 
     return help;
 }
-} // anon. ns
+} // namespace
 
 engine::Status MatchService::RunQuery(std::size_t prefix_length,
                                       std::string &query,
@@ -78,6 +78,6 @@ engine::Status MatchService::RunQuery(std::size_t prefix_length,
     }
     return BaseService::routing_machine.Match(*parameters, result);
 }
-}
-}
-}
+} // namespace service
+} // namespace server
+} // namespace osrm

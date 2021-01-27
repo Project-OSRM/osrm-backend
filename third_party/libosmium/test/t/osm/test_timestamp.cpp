@@ -3,6 +3,7 @@
 #include <osmium/osm/timestamp.hpp>
 
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -10,6 +11,7 @@ TEST_CASE("Timestamp can be default initialized to invalid value") {
     const osmium::Timestamp t{};
     REQUIRE(0 == uint32_t(t));
     REQUIRE(t.to_iso().empty());
+    REQUIRE(t.to_iso_all() == "1970-01-01T00:00:00Z");
     REQUIRE_FALSE(t.valid());
 }
 
@@ -17,6 +19,7 @@ TEST_CASE("Timestamp invalid value is zero") {
     const osmium::Timestamp t{static_cast<time_t>(0)};
     REQUIRE(0 == uint32_t(t));
     REQUIRE(t.to_iso().empty());
+    REQUIRE(t.to_iso_all() == "1970-01-01T00:00:00Z");
     REQUIRE_FALSE(t.valid());
 }
 
@@ -119,6 +122,7 @@ TEST_CASE("Valid timestamps") {
     for (const auto& tc : test_cases) {
         const osmium::Timestamp t{tc};
         REQUIRE(tc == t.to_iso());
+        REQUIRE(tc == t.to_iso_all());
     }
 }
 

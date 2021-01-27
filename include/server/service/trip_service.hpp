@@ -28,8 +28,8 @@ class TripService final : public BaseService
 
     unsigned GetVersion() final override { return 1; }
 };
-}
-}
-}
+} // namespace service
+} // namespace server
+} // namespace osrm
 
 #endif
