@@ -9,6 +9,7 @@
       - FIXED: Reduce copying in API parameter constructors [#5925](https://github.com/Project-OSRM/osrm-backend/pull/5925)
     - Misc:
       - CHANGED: Unify `.osrm.turn_penalites_index` dump processing same with `.osrm.turn_weight_penalties` and `.osrm.turn_duration_penalties` [#5868](https://github.com/Project-OSRM/osrm-backend/pull/5868)
+      - FIXED: Properly validate source/destination validation in NodeJS table service [#5595](https://github.com/Project-OSRM/osrm-backend/pull/5595/files)
     - Profile:
       - ADDED: Profile debug script which fetches a way from OSM then outputs the result of the profile. [#5908](https://github.com/Project-OSRM/osrm-backend/pull/5908)
     - Infrastructure
