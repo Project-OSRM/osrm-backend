@@ -8,6 +8,7 @@
       - FIXED: Avoid copying ManyToMany table results [#5923](https://github.com/Project-OSRM/osrm-backend/pull/5923)
       - FIXED: Reduce copying in API parameter constructors [#5925](https://github.com/Project-OSRM/osrm-backend/pull/5925)
     - Misc:
+      - CHANGED: Cleanup NodeJS dependencies [#5945](https://github.com/Project-OSRM/osrm-backend/pull/5945)
       - CHANGED: Unify `.osrm.turn_penalites_index` dump processing same with `.osrm.turn_weight_penalties` and `.osrm.turn_duration_penalties` [#5868](https://github.com/Project-OSRM/osrm-backend/pull/5868)
     - Profile:
       - ADDED: Profile debug script which fetches a way from OSM then outputs the result of the profile. [#5908](https://github.com/Project-OSRM/osrm-backend/pull/5908)
