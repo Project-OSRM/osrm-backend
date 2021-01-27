@@ -62,7 +62,6 @@
     "mkdirp",
     "nan",
     "node-cmake",
-    "node-pre-gyp",
     "rimraf"
   ],
   "main": "lib/index.js",
