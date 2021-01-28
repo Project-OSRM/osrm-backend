@@ -1,4 +1,4 @@
-# Unreleased
+# 5.24.0
   - Changes from 5.23.0
     - Features
       - ADDED: Added support for multiple via-way restrictions. [#5907](https://github.com/Project-OSRM/osrm-backend/pull/5907)
