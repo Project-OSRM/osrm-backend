@@ -180,3 +180,30 @@ Feature: Turn Function Information
         And stdout should contain /roads_on_the_right \[1\] speed: [0-9]+, is_incoming: true, is_outgoing: false, highway_turn_classification: 3, access_turn_classification: 0/
         # turning abc, give information about about db
         And stdout should contain /roads_on_the_left \[1\] speed: [0-9]+, is_incoming: true, is_outgoing: false, highway_turn_classification: 0, access_turn_classification: 1/
+
+    Scenario: Turns should have correct information of two-way roads at intersection
+        Given the node map
+            """
+              b
+              |
+            a-c-d
+              |
+              e
+            """
+        And the ways
+            | nodes | highway       | oneway |
+            | ac    | motorway      | yes    |
+            | cd    | motorway_link | yes    |
+            | bc    | trunk         | yes    |
+            | cb    | trunk_link    | yes    |
+            | ce    | primary       | yes    |
+            | ec    | primary_link  | yes    |
+        And the data has been saved to disk
+
+        When I run "osrm-extract --profile {profile_file} {osm_file}"
+        Then it should exit successfully
+        # Turn acd
+        # on the left there should be cb (and bc)
+        And stdout should contain /roads_on_the_left \[1\] speed: [0-9]+, is_incoming: true, is_outgoing: true, highway_turn_classification: [0-9]+, access_turn_classification: 0, priority_class: 3/
+        # on the right there should be ce and ec
+        And stdout should contain /roads_on_the_right \[1\] speed: [0-9]+, is_incoming: true, is_outgoing: true, highway_turn_classification: [0-9]+, access_turn_classification: 0, priority_class: 4/
