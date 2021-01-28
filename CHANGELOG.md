@@ -10,6 +10,7 @@
     - Misc:
       - CHANGED: Cleanup NodeJS dependencies [#5945](https://github.com/Project-OSRM/osrm-backend/pull/5945)
       - CHANGED: Unify `.osrm.turn_penalites_index` dump processing same with `.osrm.turn_weight_penalties` and `.osrm.turn_duration_penalties` [#5868](https://github.com/Project-OSRM/osrm-backend/pull/5868)
+      - FIXED: Properly validate source/destination validation in NodeJS table service [#5595](https://github.com/Project-OSRM/osrm-backend/pull/5595/files)
       - FIXED: turn.roads_on_the_left not containing incoming roads and turn.roads_on_the_right not containing outgoing roads on two-way roads [#5128](https://github.com/Project-OSRM/osrm-backend/issues/5128)
     - Profile:
       - ADDED: Profile debug script which fetches a way from OSM then outputs the result of the profile. [#5908](https://github.com/Project-OSRM/osrm-backend/pull/5908)
@@ -20,6 +21,7 @@
       - FIXED: Fix vector bool permutation in graph contraction step [#5882](https://github.com/Project-OSRM/osrm-backend/pull/5882)
     - API:
       - FIXED: Undo libosrm API break by adding old interface as method overload [#5861](https://github.com/Project-OSRM/osrm-backend/pull/5861)
+      - FIXED: Fixed validation of sources/destinations when accessed via node bindings [#5595](https://github.com/Project-OSRM/osrm-backend/pull/5595)
 
 # 5.23.0
   - Changes from 5.22.0

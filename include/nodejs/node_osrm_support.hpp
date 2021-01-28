@@ -1210,10 +1210,9 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
             if (source->IsUint32())
             {
                 size_t source_value = Nan::To<unsigned>(source).FromJust();
-                if (source_value > params->coordinates.size())
+                if (source_value >= params->coordinates.size())
                 {
-                    Nan::ThrowError(
-                        "Source indices must be less than or equal to the number of coordinates");
+                    Nan::ThrowError("Source indices must be less than the number of coordinates");
                     return table_parameters_ptr();
                 }
 
@@ -1250,9 +1249,9 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
             if (destination->IsUint32())
             {
                 size_t destination_value = Nan::To<unsigned>(destination).FromJust();
-                if (destination_value > params->coordinates.size())
+                if (destination_value >= params->coordinates.size())
                 {
-                    Nan::ThrowError("Destination indices must be less than or equal to the number "
+                    Nan::ThrowError("Destination indices must be less than the number "
                                     "of coordinates");
                     return table_parameters_ptr();
                 }

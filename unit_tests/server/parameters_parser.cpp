@@ -108,6 +108,13 @@ BOOST_AUTO_TEST_CASE(invalid_table_urls)
     BOOST_CHECK_EQUAL(
         testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&fallback_speed=-1"),
         28UL);
+    // TODO(danpat): this is only testing invalid grammar which isn't capable of checking
+    //               for values that need to reference other things currently.  These
+    //               requests are gramatically correct, but semantically incorrect.
+    //               The table service properly fails these, as it checks IsValid() after
+    //               parsing, which fails when sources/destinations are too large
+    // BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?sources=2"), 7UL);
+    // BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?destinations=2"), 7UL);
 }
 
 BOOST_AUTO_TEST_CASE(valid_route_hint)
