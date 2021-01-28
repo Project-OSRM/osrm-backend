@@ -20,6 +20,7 @@
       - FIXED: Fix vector bool permutation in graph contraction step [#5882](https://github.com/Project-OSRM/osrm-backend/pull/5882)
     - API:
       - FIXED: Undo libosrm API break by adding old interface as method overload [#5861](https://github.com/Project-OSRM/osrm-backend/pull/5861)
+      - FIXED: Fixed validation of sources/destinations when accessed via node bindings [#5595](https://github.com/Project-OSRM/osrm-backend/pull/5595)
 
 # 5.23.0
   - Changes from 5.22.0
