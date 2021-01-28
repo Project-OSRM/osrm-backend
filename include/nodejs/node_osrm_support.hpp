@@ -1212,8 +1212,7 @@ argumentsToTableParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                 size_t source_value = Nan::To<unsigned>(source).FromJust();
                 if (source_value >= params->coordinates.size())
                 {
-                    Nan::ThrowError(
-                        "Source indices must be less than the number of coordinates");
+                    Nan::ThrowError("Source indices must be less than the number of coordinates");
                     return table_parameters_ptr();
                 }
 
