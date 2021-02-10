@@ -57,6 +57,10 @@ class BaseDataFacade
         boost::iterator_range<extractor::SegmentDataView::SegmentNodeVector::const_iterator>;
     using NodeReverseRange = boost::reversed_range<const NodeForwardRange>;
 
+    using OSMWayForwardRange =
+        boost::iterator_range<extractor::SegmentDataView::SegmentOSMWayVector::const_iterator>;
+    using OSMWayReverseRange = boost::reversed_range<const OSMWayForwardRange>;
+
     using WeightForwardRange =
         boost::iterator_range<extractor::SegmentDataView::SegmentWeightVector::const_iterator>;
     using WeightReverseRange = boost::reversed_range<const WeightForwardRange>;
@@ -84,6 +88,9 @@ class BaseDataFacade
     virtual GeometryID GetGeometryIndex(const NodeID id) const = 0;
 
     virtual ComponentID GetComponentID(const NodeID id) const = 0;
+
+    virtual OSMWayForwardRange GetUncompressedForwardWayIDs(const EdgeID id) const = 0;
+    virtual OSMWayReverseRange GetUncompressedReverseWayIDs(const EdgeID id) const = 0;
 
     virtual NodeForwardRange GetUncompressedForwardGeometry(const EdgeID id) const = 0;
     virtual NodeReverseRange GetUncompressedReverseGeometry(const EdgeID id) const = 0;

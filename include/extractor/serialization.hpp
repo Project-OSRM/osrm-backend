@@ -84,6 +84,7 @@ inline void read(storage::tar::FileReader &reader,
 {
     storage::serialization::read(reader, name + "/index", segment_data.index);
     storage::serialization::read(reader, name + "/nodes", segment_data.nodes);
+    storage::serialization::read(reader, name + "/osm_ways", segment_data.osm_ways);
     util::serialization::read(reader, name + "/forward_weights", segment_data.fwd_weights);
     util::serialization::read(reader, name + "/reverse_weights", segment_data.rev_weights);
     util::serialization::read(reader, name + "/forward_durations", segment_data.fwd_durations);
@@ -101,6 +102,7 @@ inline void write(storage::tar::FileWriter &writer,
 {
     storage::serialization::write(writer, name + "/index", segment_data.index);
     storage::serialization::write(writer, name + "/nodes", segment_data.nodes);
+    storage::serialization::write(writer, name + "/osm_ways", segment_data.osm_ways);
     util::serialization::write(writer, name + "/forward_weights", segment_data.fwd_weights);
     util::serialization::write(writer, name + "/reverse_weights", segment_data.rev_weights);
     util::serialization::write(writer, name + "/forward_durations", segment_data.fwd_durations);

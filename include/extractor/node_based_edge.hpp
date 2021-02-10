@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <tuple>
+#include <map>
 
 #include "extractor/class_data.hpp"
 #include "extractor/travel_mode.hpp"
@@ -14,6 +15,12 @@ namespace osrm
 {
 namespace extractor
 {
+
+// Intermediate map to lookup OSMWayID by neighbor nbg node pair
+// while CompressedEdgeContainer::ZipEdges and store it in the segment data
+// to use when building found path annotations
+using OSMWayIDMapKey = std::pair<NodeID, NodeID>;
+using OSMWayIDMap = std::map<OSMWayIDMapKey, OSMWayID>;
 
 // Flags describing the class of the road. This data is used during creation of graphs/guidance
 // generation but is not available in annotation/navigation
@@ -120,6 +127,7 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
 
     NodeBasedEdgeWithOSM(OSMNodeID source,
                          OSMNodeID target,
+                         OSMWayID way,
                          EdgeWeight weight,
                          EdgeDuration duration,
                          EdgeDistance distance,
@@ -129,6 +137,7 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
 
     OSMNodeID osm_source_id;
     OSMNodeID osm_target_id;
+    OSMWayID osm_way_id;
 };
 
 // Impl.
@@ -178,6 +187,7 @@ inline bool NodeBasedEdge::operator<(const NodeBasedEdge &other) const
 
 inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
                                                   OSMNodeID target,
+                                                  OSMWayID way,
                                                   EdgeWeight weight,
                                                   EdgeDuration duration,
                                                   EdgeDistance distance,
@@ -192,12 +202,12 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
                     geometry_id,
                     annotation_data,
                     flags),
-      osm_source_id(std::move(source)), osm_target_id(std::move(target))
+      osm_source_id(std::move(source)), osm_target_id(std::move(target)), osm_way_id(std::move(way))
 {
 }
 
 inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM()
-    : osm_source_id(MIN_OSM_NODEID), osm_target_id(MIN_OSM_NODEID)
+    : osm_source_id(MIN_OSM_NODEID), osm_target_id(MIN_OSM_NODEID), osm_way_id(MIN_OSM_WAYID)
 {
 }
 

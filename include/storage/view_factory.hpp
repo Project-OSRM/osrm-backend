@@ -134,6 +134,8 @@ inline auto make_segment_data_view(const SharedDataIndex &index, const std::stri
 
     auto num_entries = index.GetBlockEntries(name + "/nodes");
 
+    auto osm_way_list = make_vector_view<OSMWayID>(index, name + "/osm_ways");
+
     extractor::SegmentDataView::SegmentWeightVector fwd_weight_list(
         make_vector_view<extractor::SegmentDataView::SegmentWeightVector::block_type>(
             index, name + "/forward_weights/packed"),
@@ -162,6 +164,7 @@ inline auto make_segment_data_view(const SharedDataIndex &index, const std::stri
 
     return extractor::SegmentDataView{std::move(geometry_begin_indices),
                                       std::move(node_list),
+                                      std::move(osm_way_list),
                                       std::move(fwd_weight_list),
                                       std::move(rev_weight_list),
                                       std::move(fwd_duration_list),

@@ -262,7 +262,7 @@ void CompressedEdgeContainer::InitializeBothwayVector()
     segment_data->rev_datasources.reserve(m_compressed_oneway_geometries.size());
 }
 
-unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID r_edge_id)
+unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID r_edge_id, OSMWayIDMap &osm_way_id_map)
 {
     if (!segment_data)
         InitializeBothwayVector();
@@ -279,7 +279,8 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
     segment_data->index.emplace_back(segment_data->nodes.size());
 
     const auto &first_node = reverse_bucket.back();
-
+    auto prev_node_id = first_node.node_id;
+    auto osm_way_id = SPECIAL_OSM_WAYID;
     constexpr DatasourceID LUA_SOURCE = 0;
 
     segment_data->nodes.emplace_back(first_node.node_id);
@@ -297,6 +298,23 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
 
         BOOST_ASSERT(fwd_node.node_id == rev_node.node_id);
 
+        auto node_id = fwd_node.node_id;
+        if( node_id != prev_node_id ) {
+            auto find_way_id = osm_way_id_map.find( OSMWayIDMapKey(prev_node_id, node_id) );
+            if( find_way_id == osm_way_id_map.cend() ) {
+                find_way_id = osm_way_id_map.find( OSMWayIDMapKey(node_id, prev_node_id) );
+            }
+            if( find_way_id == osm_way_id_map.cend() ) {
+                util::Log(logERROR) << "OSM Way ID not found for (nbg) nodes, it should never be happened: " << prev_node_id << "<-x->" << node_id;
+                segment_data->osm_ways.emplace_back(osm_way_id);
+            } else {
+                segment_data->osm_ways.emplace_back(osm_way_id = find_way_id->second);
+            }
+        } else {
+            // Special case (artificial lighting signal edge)
+            segment_data->osm_ways.emplace_back(osm_way_id);
+        }
+
         segment_data->nodes.emplace_back(fwd_node.node_id);
         segment_data->fwd_weights.emplace_back(fwd_node.weight);
         segment_data->rev_weights.emplace_back(rev_node.weight);
@@ -304,9 +322,30 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
         segment_data->rev_durations.emplace_back(rev_node.duration);
         segment_data->fwd_datasources.emplace_back(LUA_SOURCE);
         segment_data->rev_datasources.emplace_back(LUA_SOURCE);
+        prev_node_id = node_id;
     }
 
     const auto &last_node = forward_bucket.back();
+    auto node_id = last_node.node_id;
+    if( node_id != prev_node_id ) {
+        auto find_way_id = osm_way_id_map.find( OSMWayIDMapKey(prev_node_id, node_id) );
+        if( find_way_id == osm_way_id_map.cend() ) {
+            find_way_id = osm_way_id_map.find( OSMWayIDMapKey(node_id, prev_node_id) );
+        }
+        if( find_way_id == osm_way_id_map.cend() ) {
+            util::Log(logERROR) << "OSM Way ID not found for (nbg) nodes, it should never be happened: " << prev_node_id << "<-x->" << node_id;
+            segment_data->osm_ways.emplace_back(osm_way_id);
+        } else {
+            segment_data->osm_ways.emplace_back(osm_way_id = find_way_id->second);
+        }
+    } else {
+        // Special case (artificial lighting signal edge)
+        segment_data->osm_ways.emplace_back(osm_way_id);
+    }
+
+    // Make osm_ways vector size the same as
+    // nodes vector size to use index vector for the both
+    segment_data->osm_ways.emplace_back(osm_way_id);
 
     segment_data->nodes.emplace_back(last_node.node_id);
     segment_data->fwd_weights.emplace_back(last_node.weight);

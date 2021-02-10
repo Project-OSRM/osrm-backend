@@ -462,6 +462,7 @@ struct AnnotationT : public flatbuffers::NativeTable {
   std::vector<uint32_t> duration;
   std::vector<uint32_t> datasources;
   std::vector<uint32_t> nodes;
+  std::vector<uint32_t> ways;
   std::vector<uint32_t> weight;
   std::vector<float> speed;
   std::unique_ptr<osrm::engine::api::fbresult::MetadataT> metadata;
@@ -476,9 +477,10 @@ struct Annotation FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_DURATION = 6,
     VT_DATASOURCES = 8,
     VT_NODES = 10,
-    VT_WEIGHT = 12,
-    VT_SPEED = 14,
-    VT_METADATA = 16
+    VT_WAYS = 12,
+    VT_WEIGHT = 14,
+    VT_SPEED = 16,
+    VT_METADATA = 18
   };
   const flatbuffers::Vector<uint32_t> *distance() const {
     return GetPointer<const flatbuffers::Vector<uint32_t> *>(VT_DISTANCE);
@@ -491,6 +493,9 @@ struct Annotation FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   const flatbuffers::Vector<uint32_t> *nodes() const {
     return GetPointer<const flatbuffers::Vector<uint32_t> *>(VT_NODES);
+  }
+  const flatbuffers::Vector<uint32_t> *ways() const {
+    return GetPointer<const flatbuffers::Vector<uint32_t> *>(VT_WAYS);
   }
   const flatbuffers::Vector<uint32_t> *weight() const {
     return GetPointer<const flatbuffers::Vector<uint32_t> *>(VT_WEIGHT);
@@ -511,6 +516,8 @@ struct Annotation FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyVector(datasources()) &&
            VerifyOffset(verifier, VT_NODES) &&
            verifier.VerifyVector(nodes()) &&
+           VerifyOffset(verifier, VT_WAYS) &&
+           verifier.VerifyVector(ways()) &&
            VerifyOffset(verifier, VT_WEIGHT) &&
            verifier.VerifyVector(weight()) &&
            VerifyOffset(verifier, VT_SPEED) &&
@@ -539,6 +546,9 @@ struct AnnotationBuilder {
   void add_nodes(flatbuffers::Offset<flatbuffers::Vector<uint32_t>> nodes) {
     fbb_.AddOffset(Annotation::VT_NODES, nodes);
   }
+  void add_ways(flatbuffers::Offset<flatbuffers::Vector<uint32_t>> ways) {
+    fbb_.AddOffset(Annotation::VT_WAYS, ways);
+  }
   void add_weight(flatbuffers::Offset<flatbuffers::Vector<uint32_t>> weight) {
     fbb_.AddOffset(Annotation::VT_WEIGHT, weight);
   }
@@ -566,6 +576,7 @@ inline flatbuffers::Offset<Annotation> CreateAnnotation(
     flatbuffers::Offset<flatbuffers::Vector<uint32_t>> duration = 0,
     flatbuffers::Offset<flatbuffers::Vector<uint32_t>> datasources = 0,
     flatbuffers::Offset<flatbuffers::Vector<uint32_t>> nodes = 0,
+    flatbuffers::Offset<flatbuffers::Vector<uint32_t>> ways = 0,
     flatbuffers::Offset<flatbuffers::Vector<uint32_t>> weight = 0,
     flatbuffers::Offset<flatbuffers::Vector<float>> speed = 0,
     flatbuffers::Offset<osrm::engine::api::fbresult::Metadata> metadata = 0) {
@@ -573,6 +584,7 @@ inline flatbuffers::Offset<Annotation> CreateAnnotation(
   builder_.add_metadata(metadata);
   builder_.add_speed(speed);
   builder_.add_weight(weight);
+  builder_.add_ways(ways);
   builder_.add_nodes(nodes);
   builder_.add_datasources(datasources);
   builder_.add_duration(duration);
@@ -586,6 +598,7 @@ inline flatbuffers::Offset<Annotation> CreateAnnotationDirect(
     const std::vector<uint32_t> *duration = nullptr,
     const std::vector<uint32_t> *datasources = nullptr,
     const std::vector<uint32_t> *nodes = nullptr,
+    const std::vector<uint32_t> *ways = nullptr,
     const std::vector<uint32_t> *weight = nullptr,
     const std::vector<float> *speed = nullptr,
     flatbuffers::Offset<osrm::engine::api::fbresult::Metadata> metadata = 0) {
@@ -593,6 +606,7 @@ inline flatbuffers::Offset<Annotation> CreateAnnotationDirect(
   auto duration__ = duration ? _fbb.CreateVector<uint32_t>(*duration) : 0;
   auto datasources__ = datasources ? _fbb.CreateVector<uint32_t>(*datasources) : 0;
   auto nodes__ = nodes ? _fbb.CreateVector<uint32_t>(*nodes) : 0;
+  auto ways__ = ways ? _fbb.CreateVector<uint32_t>(*ways) : 0;
   auto weight__ = weight ? _fbb.CreateVector<uint32_t>(*weight) : 0;
   auto speed__ = speed ? _fbb.CreateVector<float>(*speed) : 0;
   return osrm::engine::api::fbresult::CreateAnnotation(
@@ -601,6 +615,7 @@ inline flatbuffers::Offset<Annotation> CreateAnnotationDirect(
       duration__,
       datasources__,
       nodes__,
+      ways__,
       weight__,
       speed__,
       metadata);
@@ -1974,6 +1989,7 @@ inline void Annotation::UnPackTo(AnnotationT *_o, const flatbuffers::resolver_fu
   { auto _e = duration(); if (_e) { _o->duration.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->duration[_i] = _e->Get(_i); } } };
   { auto _e = datasources(); if (_e) { _o->datasources.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->datasources[_i] = _e->Get(_i); } } };
   { auto _e = nodes(); if (_e) { _o->nodes.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->nodes[_i] = _e->Get(_i); } } };
+  { auto _e = ways(); if (_e) { _o->ways.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->ways[_i] = _e->Get(_i); } } };
   { auto _e = weight(); if (_e) { _o->weight.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->weight[_i] = _e->Get(_i); } } };
   { auto _e = speed(); if (_e) { _o->speed.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->speed[_i] = _e->Get(_i); } } };
   { auto _e = metadata(); if (_e) _o->metadata = std::unique_ptr<osrm::engine::api::fbresult::MetadataT>(_e->UnPack(_resolver)); };
@@ -1991,6 +2007,7 @@ inline flatbuffers::Offset<Annotation> CreateAnnotation(flatbuffers::FlatBufferB
   auto _duration = _o->duration.size() ? _fbb.CreateVector(_o->duration) : 0;
   auto _datasources = _o->datasources.size() ? _fbb.CreateVector(_o->datasources) : 0;
   auto _nodes = _o->nodes.size() ? _fbb.CreateVector(_o->nodes) : 0;
+  auto _ways = _o->ways.size() ? _fbb.CreateVector(_o->ways) : 0;
   auto _weight = _o->weight.size() ? _fbb.CreateVector(_o->weight) : 0;
   auto _speed = _o->speed.size() ? _fbb.CreateVector(_o->speed) : 0;
   auto _metadata = _o->metadata ? CreateMetadata(_fbb, _o->metadata.get(), _rehasher) : 0;
@@ -2000,6 +2017,7 @@ inline flatbuffers::Offset<Annotation> CreateAnnotation(flatbuffers::FlatBufferB
       _duration,
       _datasources,
       _nodes,
+      _ways,
       _weight,
       _speed,
       _metadata);

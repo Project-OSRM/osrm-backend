@@ -215,9 +215,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 #endif
 
     LaneDescriptionMap turn_lane_map;
+    OSMWayIDMap osm_way_id_map;
     std::vector<TurnRestriction> turn_restrictions;
     std::vector<UnresolvedManeuverOverride> unresolved_maneuver_overrides;
-    std::tie(turn_lane_map, turn_restrictions, unresolved_maneuver_overrides) =
+    std::tie(turn_lane_map, osm_way_id_map, turn_restrictions, unresolved_maneuver_overrides) =
         ParseOSMData(scripting_environment, number_of_threads);
 
     // Transform the node-based graph that OSM is based on into an edge-based graph
@@ -238,6 +239,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     // Create a node-based graph from the OSRM file
     NodeBasedGraphFactory node_based_graph_factory(config.GetPath(".osrm"),
                                                    scripting_environment,
+                                                   osm_way_id_map,
                                                    turn_restrictions,
                                                    unresolved_maneuver_overrides);
 
@@ -369,7 +371,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 }
 
 std::
-    tuple<LaneDescriptionMap, std::vector<TurnRestriction>, std::vector<UnresolvedManeuverOverride>>
+    tuple<LaneDescriptionMap, OSMWayIDMap, std::vector<TurnRestriction>, std::vector<UnresolvedManeuverOverride>>
     Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                             const unsigned number_of_threads)
 {
@@ -420,10 +422,12 @@ std::
     ExtractionContainers extraction_containers;
     ExtractorCallbacks::ClassesMap classes_map;
     LaneDescriptionMap turn_lane_map;
+    OSMWayIDMap osm_way_id_map;
     auto extractor_callbacks =
         std::make_unique<ExtractorCallbacks>(extraction_containers,
                                              classes_map,
                                              turn_lane_map,
+                                             osm_way_id_map,
                                              scripting_environment.GetProfileProperties());
 
     // get list of supported relation types
@@ -626,10 +630,18 @@ std::
     SetExcludableClasses(classes_map, excludable_classes, profile_properties);
     files::writeProfileProperties(config.GetPath(".osrm.properties").string(), profile_properties);
 
+    // Fill OSM Way ID Lookup Map to use it later
+    for(auto edge: extraction_containers.all_edges_list) {
+        osm_way_id_map[
+            OSMWayIDMapKey(edge.result.source, edge.result.target)
+        ] = edge.result.osm_way_id;
+    }
+
     TIMER_STOP(extracting);
     util::Log() << "extraction finished after " << TIMER_SEC(extracting) << "s";
 
     return std::make_tuple(std::move(turn_lane_map),
+                           std::move(osm_way_id_map),
                            std::move(extraction_containers.turn_restrictions),
                            std::move(extraction_containers.internal_maneuver_overrides));
 }

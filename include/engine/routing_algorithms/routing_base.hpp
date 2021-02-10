@@ -144,6 +144,7 @@ void annotatePath(const FacadeT &facade,
 
     // datastructures to hold extracted data from geometry
     std::vector<NodeID> id_vector;
+    std::vector<OSMWayID> osm_way_id_vector;
     std::vector<SegmentWeight> weight_vector;
     std::vector<SegmentDuration> duration_vector;
     std::vector<DatasourceID> datasource_vector;
@@ -157,6 +158,8 @@ void annotatePath(const FacadeT &facade,
         if (geometry_index.forward)
         {
             copy(id_vector, facade.GetUncompressedForwardGeometry(geometry_index.id));
+            copy(osm_way_id_vector, facade.GetUncompressedForwardWayIDs(geometry_index.id));
+
             copy(weight_vector, facade.GetUncompressedForwardWeights(geometry_index.id));
             copy(duration_vector, facade.GetUncompressedForwardDurations(geometry_index.id));
             copy(datasource_vector, facade.GetUncompressedForwardDatasources(geometry_index.id));
@@ -164,6 +167,8 @@ void annotatePath(const FacadeT &facade,
         else
         {
             copy(id_vector, facade.GetUncompressedReverseGeometry(geometry_index.id));
+            copy(osm_way_id_vector, facade.GetUncompressedReverseWayIDs(geometry_index.id));
+
             copy(weight_vector, facade.GetUncompressedReverseWeights(geometry_index.id));
             copy(duration_vector, facade.GetUncompressedReverseDurations(geometry_index.id));
             copy(datasource_vector, facade.GetUncompressedReverseDatasources(geometry_index.id));
@@ -213,6 +218,7 @@ void annotatePath(const FacadeT &facade,
         {
             unpacked_path.push_back(
                 PathData{*node_from,
+                         osm_way_id_vector[segment_idx],
                          id_vector[segment_idx + 1],
                          name_index,
                          is_segregated,
@@ -288,6 +294,7 @@ void annotatePath(const FacadeT &facade,
         BOOST_ASSERT(facade.GetTravelMode(target_node_id) > 0);
         unpacked_path.push_back(
             PathData{target_node_id,
+                     osm_way_id_vector[segment_idx],
                      id_vector[start_index < end_index ? segment_idx + 1 : segment_idx - 1],
                      facade.GetNameIndex(target_node_id),
                      facade.IsSegregated(target_node_id),
