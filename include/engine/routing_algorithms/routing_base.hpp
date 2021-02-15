@@ -194,6 +194,7 @@ void annotatePath(const FacadeT &facade,
         BOOST_ASSERT(datasource_vector.size() > 0);
         BOOST_ASSERT(weight_vector.size() + 1 == id_vector.size());
         BOOST_ASSERT(duration_vector.size() + 1 == id_vector.size());
+        BOOST_ASSERT(osm_way_id_vector.size() + 1 == id_vector.size());
 
         const bool is_first_segment = unpacked_path.empty();
 

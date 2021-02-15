@@ -281,6 +281,8 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
                                        geometry.annotations.begin() + offset);
             geometry.osm_node_ids.erase(geometry.osm_node_ids.begin(),
                                         geometry.osm_node_ids.begin() + offset);
+            geometry.osm_way_ids.erase(geometry.osm_way_ids.begin(),
+                                        geometry.osm_way_ids.begin() + offset);
         }
 
         auto const first_bearing = steps.front().maneuver.bearing_after;
@@ -378,6 +380,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         geometry.locations.resize(geometry.segment_offsets.back() + 1);
         geometry.annotations.resize(geometry.segment_offsets.back());
         geometry.osm_node_ids.resize(geometry.segment_offsets.back() + 1);
+        geometry.osm_way_ids.resize(geometry.segment_offsets.back());
 
         BOOST_ASSERT(geometry.segment_distances.back() <= 1);
         geometry.segment_distances.pop_back();
@@ -415,6 +418,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         geometry.locations.pop_back();
         geometry.annotations.pop_back();
         geometry.osm_node_ids.pop_back();
+        geometry.osm_way_ids.pop_back();
         geometry.segment_offsets.back()--;
         // since the last geometry includes the location of arrival, the arrival instruction
         // geometry overlaps with the previous segment
