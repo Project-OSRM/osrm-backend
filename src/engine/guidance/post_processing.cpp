@@ -282,7 +282,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             geometry.osm_node_ids.erase(geometry.osm_node_ids.begin(),
                                         geometry.osm_node_ids.begin() + offset);
             geometry.osm_way_ids.erase(geometry.osm_way_ids.begin(),
-                                        geometry.osm_way_ids.begin() + offset);
+                                       geometry.osm_way_ids.begin() + offset);
         }
 
         auto const first_bearing = steps.front().maneuver.bearing_after;

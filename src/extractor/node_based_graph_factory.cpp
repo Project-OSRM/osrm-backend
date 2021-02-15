@@ -127,7 +127,8 @@ void NodeBasedGraphFactory::CompressGeometry(OSMWayIDMap &osm_way_id_map)
             const EdgeID edge_id_2 = compressed_output_graph.FindEdge(to, from);
             BOOST_ASSERT(edge_id_2 != SPECIAL_EDGEID);
 
-            auto packed_geometry_id = compressed_edge_container.ZipEdges(edge_id_1, edge_id_2, osm_way_id_map);
+            auto packed_geometry_id =
+                compressed_edge_container.ZipEdges(edge_id_1, edge_id_2, osm_way_id_map);
 
             // remember the geometry ID for both edges in the node-based graph
             compressed_output_graph.GetEdgeData(edge_id_1).geometry_id = {packed_geometry_id, true};

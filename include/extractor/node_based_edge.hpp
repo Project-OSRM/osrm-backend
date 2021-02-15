@@ -2,8 +2,8 @@
 #define NODE_BASED_EDGE_HPP
 
 #include <cstdint>
-#include <tuple>
 #include <map>
+#include <tuple>
 
 #include "extractor/class_data.hpp"
 #include "extractor/travel_mode.hpp"

@@ -73,10 +73,8 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
             "full", engine::api::RouteParameters::OverviewType::Full)(
             "false", engine::api::RouteParameters::OverviewType::False);
 
-        annotations_type.add(
-            "duration", AnnotationsType::Duration)(
-            "nodes", AnnotationsType::Nodes)(
-            "ways", AnnotationsType::Ways)(
+        annotations_type.add("duration", AnnotationsType::Duration)(
+            "nodes", AnnotationsType::Nodes)("ways", AnnotationsType::Ways)(
             "distance", AnnotationsType::Distance)("weight", AnnotationsType::Weight)(
             "datasources", AnnotationsType::Datasources)("speed", AnnotationsType::Speed);
 

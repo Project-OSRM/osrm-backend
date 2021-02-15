@@ -370,10 +370,12 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     return 0;
 }
 
-std::
-    tuple<LaneDescriptionMap, OSMWayIDMap, std::vector<TurnRestriction>, std::vector<UnresolvedManeuverOverride>>
-    Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
-                            const unsigned number_of_threads)
+std::tuple<LaneDescriptionMap,
+           OSMWayIDMap,
+           std::vector<TurnRestriction>,
+           std::vector<UnresolvedManeuverOverride>>
+Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
+                        const unsigned number_of_threads)
 {
     TIMER_START(extracting);
 
@@ -631,10 +633,10 @@ std::
     files::writeProfileProperties(config.GetPath(".osrm.properties").string(), profile_properties);
 
     // Fill OSM Way ID Lookup Map to use it later
-    for(auto edge: extraction_containers.all_edges_list) {
-        osm_way_id_map[
-            OSMWayIDMapKey(edge.result.source, edge.result.target)
-        ] = edge.result.osm_way_id;
+    for (auto edge : extraction_containers.all_edges_list)
+    {
+        osm_way_id_map[OSMWayIDMapKey(edge.result.source, edge.result.target)] =
+            edge.result.osm_way_id;
     }
 
     TIMER_STOP(extracting);

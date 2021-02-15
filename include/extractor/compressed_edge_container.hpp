@@ -1,8 +1,8 @@
 #ifndef GEOMETRY_COMPRESSOR_HPP_
 #define GEOMETRY_COMPRESSOR_HPP_
 
-#include "extractor/segment_data_container.hpp"
 #include "extractor/node_based_edge.hpp"
+#include "extractor/segment_data_container.hpp"
 
 #include "util/typedefs.hpp"
 
@@ -49,7 +49,8 @@ class CompressedEdgeContainer
                              const SegmentWeight duration);
 
     void InitializeBothwayVector();
-    unsigned ZipEdges(const unsigned f_edge_pos, const unsigned r_edge_pos, OSMWayIDMap &osm_way_id_map);
+    unsigned
+    ZipEdges(const unsigned f_edge_pos, const unsigned r_edge_pos, OSMWayIDMap &osm_way_id_map);
 
     bool HasEntryForID(const EdgeID edge_id) const;
     bool HasZippedEntryForForwardID(const EdgeID edge_id) const;

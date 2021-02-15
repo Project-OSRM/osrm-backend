@@ -14,9 +14,9 @@
 #include "osrm/osrm.hpp"
 #include "osrm/route_parameters.hpp"
 #include "osrm/status.hpp"
-#include <osmium/io/reader.hpp>
-#include <osmium/io/pbf_input.hpp>
 #include <osmium/handler.hpp>
+#include <osmium/io/pbf_input.hpp>
+#include <osmium/io/reader.hpp>
 #include <osmium/osm/node.hpp>
 #include <osmium/osm/way.hpp>
 #include <osmium/visitor.hpp>
@@ -601,17 +601,22 @@ BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property_new_api)
     test_manual_setting_of_annotations_property(false);
 }
 
-using NodePair = std::pair<osmium::unsigned_object_id_type,osmium::unsigned_object_id_type>;
-using NodePairToWayIDMap = std::map<NodePair,osmium::unsigned_object_id_type>;
+using NodePair = std::pair<osmium::unsigned_object_id_type, osmium::unsigned_object_id_type>;
+using NodePairToWayIDMap = std::map<NodePair, osmium::unsigned_object_id_type>;
 
-NodePairToWayIDMap read_node_pair_to_way_id_map(osmium::io::Reader &osm) {
-    struct H: public osmium::handler::Handler {
+NodePairToWayIDMap read_node_pair_to_way_id_map(osmium::io::Reader &osm)
+{
+    struct H : public osmium::handler::Handler
+    {
         NodePairToWayIDMap ret;
-        void way(const osmium::Way &way) {
+        void way(const osmium::Way &way)
+        {
             auto first = osmium::unsigned_object_id_type(-1);
-            for( const auto &n: way.nodes() ) {
+            for (const auto &n : way.nodes())
+            {
                 const auto second = n.positive_ref();
-                if( first != osmium::unsigned_object_id_type(-1) ) {
+                if (first != osmium::unsigned_object_id_type(-1))
+                {
                     ret[{first, second}] = way.id();
                 }
                 first = second;
@@ -625,19 +630,17 @@ NodePairToWayIDMap read_node_pair_to_way_id_map(osmium::io::Reader &osm) {
 using LonLat = std::pair<float, float>;
 using LonLatVector = std::vector<LonLat>;
 
-LonLatVector check_route_annotated_ways(
-        std::vector<osrm::util::Coordinate> &coordinates,
-        osrm::OSRM &osrm,
-        NodePairToWayIDMap &node_pair_to_way_id_map,
-        bool use_steps
-) {
+LonLatVector check_route_annotated_ways(std::vector<osrm::util::Coordinate> &coordinates,
+                                        osrm::OSRM &osrm,
+                                        NodePairToWayIDMap &node_pair_to_way_id_map,
+                                        bool use_steps)
+{
     LonLatVector ret;
     using namespace osrm;
-    (void) node_pair_to_way_id_map;
+    (void)node_pair_to_way_id_map;
     RouteParameters params{};
     params.annotations_type =
-        RouteParameters::AnnotationsType::Nodes |
-        RouteParameters::AnnotationsType::Ways;
+        RouteParameters::AnnotationsType::Nodes | RouteParameters::AnnotationsType::Ways;
     params.steps = use_steps;
     params.geometries = engine::api::RouteParameters::GeometriesType::GeoJSON;
     params.coordinates = coordinates;
@@ -649,37 +652,33 @@ LonLatVector check_route_annotated_ways(
     const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    auto routes = json_result.values["routes"]
-                           .get<json::Array>()
-                           .values;
+    auto routes = json_result.values["routes"].get<json::Array>().values;
     BOOST_CHECK_EQUAL(routes.size(), 1);
     auto route = routes[0];
 
     auto geom = route.get<json::Object>()
-                           .values["geometry"]
-                           .get<json::Object>()
-                           .values["coordinates"]
-                           .get<json::Array>()
-                           .values;
+                    .values["geometry"]
+                    .get<json::Object>()
+                    .values["coordinates"]
+                    .get<json::Array>()
+                    .values;
 
-    auto legs = route.get<json::Object>()
-                           .values["legs"]
-                           .get<json::Array>()
-                           .values;
-    for(auto leg: legs) {
-        if( use_steps ) {
-            auto steps = leg.get<json::Object>()
-                            .values["steps"]
-                            .get<json::Array>()
-                            .values;
-            for(auto step: steps) {
+    auto legs = route.get<json::Object>().values["legs"].get<json::Array>().values;
+    for (auto leg : legs)
+    {
+        if (use_steps)
+        {
+            auto steps = leg.get<json::Object>().values["steps"].get<json::Array>().values;
+            for (auto step : steps)
+            {
                 auto geom = step.get<json::Object>()
-                            .values["geometry"]
-                            .get<json::Object>()
-                            .values["coordinates"]
-                            .get<json::Array>()
-                            .values;
-                for(auto gleg: geom) {
+                                .values["geometry"]
+                                .get<json::Object>()
+                                .values["coordinates"]
+                                .get<json::Array>()
+                                .values;
+                for (auto gleg : geom)
+                {
                     auto p = gleg.get<json::Array>().values;
                     auto lon = p[0].get<json::Number>().value;
                     auto lat = p[1].get<json::Number>().value;
@@ -687,38 +686,30 @@ LonLatVector check_route_annotated_ways(
                 }
             }
         }
-        auto annotations = leg.get<json::Object>()
-                           .values["annotation"]
-                           .get<json::Object>()
-                           .values;
+        auto annotations = leg.get<json::Object>().values["annotation"].get<json::Object>().values;
         BOOST_CHECK_EQUAL(annotations.size(), 2);
 
-        auto nodes = annotations["nodes"]
-                            .get<json::Array>()
-                            .values;
-        auto ways = annotations["ways"]
-                            .get<json::Array>()
-                            .values;
+        auto nodes = annotations["nodes"].get<json::Array>().values;
+        auto ways = annotations["ways"].get<json::Array>().values;
 
         BOOST_CHECK_GT(nodes.size(), 1);
         BOOST_CHECK_EQUAL(nodes.size() - 1, ways.size());
         auto nodes_it = nodes.cbegin();
         auto ways_it = ways.cbegin();
         osmium::unsigned_object_id_type first = nodes_it->get<json::Number>().value;
-        for(nodes_it++; nodes_it != nodes.cend(); nodes_it++, ways_it++) {
+        for (nodes_it++; nodes_it != nodes.cend(); nodes_it++, ways_it++)
+        {
             osmium::unsigned_object_id_type second = nodes_it->get<json::Number>().value;
             osmium::unsigned_object_id_type way_id = ways_it->get<json::Number>().value;
             auto found = node_pair_to_way_id_map.find(NodePair(first, second));
-            if( found == node_pair_to_way_id_map.end() )
+            if (found == node_pair_to_way_id_map.end())
                 found = node_pair_to_way_id_map.find(NodePair(second, first));
-            BOOST_CHECK_MESSAGE(
-                found != node_pair_to_way_id_map.end(),
-                "The node pair not found: " << first << "<->" << second
-            );
-            BOOST_CHECK_MESSAGE(
-                found->second == way_id,
-                "The node pair way doesn't correspond: " << first << "<->" << second << "=" << found->second << "=?=" << way_id
-            );
+            BOOST_CHECK_MESSAGE(found != node_pair_to_way_id_map.end(),
+                                "The node pair not found: " << first << "<->" << second);
+            BOOST_CHECK_MESSAGE(found->second == way_id,
+                                "The node pair way doesn't correspond: " << first << "<->" << second
+                                                                         << "=" << found->second
+                                                                         << "=?=" << way_id);
             first = second;
         }
     }
@@ -737,21 +728,22 @@ BOOST_AUTO_TEST_CASE(test_route_annotated_ways)
     BOOST_TEST_MESSAGE("split_trace_locations with steps");
     check_route_annotated_ways(coordinates, osrm, node_pair_to_way_id_map, true);
     coordinates = get_locations_in_big_component();
-    // auto coords = 
+    // auto coords =
     BOOST_TEST_MESSAGE("locations_in_big_component without steps");
     check_route_annotated_ways(coordinates, osrm, node_pair_to_way_id_map, false);
     BOOST_TEST_MESSAGE("locations_in_big_component with steps");
     auto coords = check_route_annotated_ways(coordinates, osrm, node_pair_to_way_id_map, true);
     auto c1 = coords.cbegin(), c2 = coords.cend();
-    for( c1++, c2--; c1 != coords.cend() && c2 != coords.cbegin(); c1++, c2--) {
-        if( c1 == c2 )
+    for (c1++, c2--; c1 != coords.cend() && c2 != coords.cbegin(); c1++, c2--)
+    {
+        if (c1 == c2)
             continue;
-        coordinates = Locations{{Longitude{c1->first},Latitude{c1->second}},{Longitude{c2->first},Latitude{c2->second}}};
-        BOOST_TEST_MESSAGE(
-            "Checking: <" <<
-            osrm::util::toFloating(coordinates[0].lat) << ":" << osrm::util::toFloating(coordinates[0].lon) << "> -> <" <<
-            osrm::util::toFloating(coordinates[1].lat) << ":" << osrm::util::toFloating(coordinates[1].lon) << ">"
-        );
+        coordinates = Locations{{Longitude{c1->first}, Latitude{c1->second}},
+                                {Longitude{c2->first}, Latitude{c2->second}}};
+        BOOST_TEST_MESSAGE("Checking: <" << osrm::util::toFloating(coordinates[0].lat) << ":"
+                                         << osrm::util::toFloating(coordinates[0].lon) << "> -> <"
+                                         << osrm::util::toFloating(coordinates[1].lat) << ":"
+                                         << osrm::util::toFloating(coordinates[1].lon) << ">");
         check_route_annotated_ways(coordinates, osrm, node_pair_to_way_id_map, false);
         check_route_annotated_ways(coordinates, osrm, node_pair_to_way_id_map, true);
     }
