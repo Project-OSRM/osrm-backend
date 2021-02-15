@@ -494,7 +494,7 @@ class RouteAPI : public BaseAPI
                     return anno.datasource;
                 });
         }
-        std::vector<uint32_t> nodes;
+        std::vector<uint64_t> nodes;
         if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
         {
             nodes.reserve(leg_geometry.osm_node_ids.size());
@@ -503,7 +503,7 @@ class RouteAPI : public BaseAPI
                 nodes.emplace_back(static_cast<uint64_t>(node_id));
             }
         }
-        std::vector<uint32_t> ways;
+        std::vector<uint64_t> ways;
         if (requested_annotations & RouteParameters::AnnotationsType::Ways)
         {
             ways.reserve(leg_geometry.osm_way_ids.size());
