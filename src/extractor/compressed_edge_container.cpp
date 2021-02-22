@@ -282,7 +282,7 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id,
 
     const auto &first_node = reverse_bucket.back();
     auto prev_node_id = first_node.node_id;
-    auto osm_way_id = SPECIAL_OSM_WAYID;
+    OSMWayIDDir osm_way_id = 0;
     constexpr DatasourceID LUA_SOURCE = 0;
 
     segment_data->nodes.emplace_back(first_node.node_id);
@@ -304,20 +304,18 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id,
         if (node_id != prev_node_id)
         {
             auto find_way_id = osm_way_id_map.find(OSMWayIDMapKey(prev_node_id, node_id));
-            if (find_way_id == osm_way_id_map.cend())
+            if (find_way_id != osm_way_id_map.cend())
             {
-                find_way_id = osm_way_id_map.find(OSMWayIDMapKey(node_id, prev_node_id));
+                segment_data->osm_ways.emplace_back(osm_way_id = find_way_id->second);
+                util::Log(logDEBUG) << "zipped_geometry_id: " << zipped_geometry_id << " "
+                                    << prev_node_id << "->" << node_id << " = " << osm_way_id;
             }
-            if (find_way_id == osm_way_id_map.cend())
+            else
             {
                 util::Log(logERROR)
                     << "OSM Way ID not found for (nbg) nodes, it should never be happened: "
                     << prev_node_id << "<-x->" << node_id;
                 segment_data->osm_ways.emplace_back(osm_way_id);
-            }
-            else
-            {
-                segment_data->osm_ways.emplace_back(osm_way_id = find_way_id->second);
             }
         }
         else
@@ -341,20 +339,18 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id,
     if (node_id != prev_node_id)
     {
         auto find_way_id = osm_way_id_map.find(OSMWayIDMapKey(prev_node_id, node_id));
-        if (find_way_id == osm_way_id_map.cend())
+        if (find_way_id != osm_way_id_map.cend())
         {
-            find_way_id = osm_way_id_map.find(OSMWayIDMapKey(node_id, prev_node_id));
+            segment_data->osm_ways.emplace_back(osm_way_id = find_way_id->second);
+            util::Log(logDEBUG) << "zipped_geometry_id: " << zipped_geometry_id << " "
+                                << prev_node_id << "->" << node_id << " = " << osm_way_id;
         }
-        if (find_way_id == osm_way_id_map.cend())
+        else
         {
             util::Log(logERROR)
                 << "OSM Way ID not found for (nbg) nodes, it should never be happened: "
                 << prev_node_id << "<-x->" << node_id;
             segment_data->osm_ways.emplace_back(osm_way_id);
-        }
-        else
-        {
-            segment_data->osm_ways.emplace_back(osm_way_id = find_way_id->second);
         }
     }
     else

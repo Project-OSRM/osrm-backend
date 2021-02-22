@@ -161,10 +161,19 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     const auto target_segment_end_coordinate =
         target_node.fwd_segment_position + (reversed_target ? 0 : 1);
     const auto target_geometry = facade.GetUncompressedForwardGeometry(target_geometry_id);
-    const auto target_osm_way_ids = facade.GetUncompressedForwardWayIDs(target_geometry_id);
     geometry.osm_node_ids.push_back(
         facade.GetOSMNodeIDOfNode(target_geometry(target_segment_end_coordinate)));
-    geometry.osm_way_ids.push_back(target_osm_way_ids(target_node.fwd_segment_position));
+    if (reversed_target)
+    {
+        const auto target_osm_way_ids = facade.GetUncompressedReverseWayIDs(target_geometry_id);
+        geometry.osm_way_ids.push_back(
+            target_osm_way_ids(target_osm_way_ids.size() - target_node.fwd_segment_position - 1));
+    }
+    else
+    {
+        const auto target_osm_way_ids = facade.GetUncompressedForwardWayIDs(target_geometry_id);
+        geometry.osm_way_ids.push_back(target_osm_way_ids(target_node.fwd_segment_position));
+    }
 
     BOOST_ASSERT(geometry.segment_distances.size() == geometry.segment_offsets.size() - 1);
     BOOST_ASSERT(geometry.locations.size() > geometry.segment_distances.size());

@@ -503,13 +503,13 @@ class RouteAPI : public BaseAPI
                 nodes.emplace_back(static_cast<uint64_t>(node_id));
             }
         }
-        std::vector<uint64_t> ways;
+        std::vector<int64_t> ways;
         if (requested_annotations & RouteParameters::AnnotationsType::Ways)
         {
             ways.reserve(leg_geometry.osm_way_ids.size());
             for (const auto way_id : leg_geometry.osm_way_ids)
             {
-                ways.emplace_back(static_cast<uint64_t>(way_id));
+                ways.emplace_back(static_cast<int64_t>(way_id));
             }
         }
         auto nodes_vector = fb_result.CreateVector(nodes);
@@ -849,7 +849,7 @@ class RouteAPI : public BaseAPI
                     ways.values.reserve(leg_geometry.osm_way_ids.size());
                     for (const auto way_id : leg_geometry.osm_way_ids)
                     {
-                        ways.values.push_back(static_cast<std::uint64_t>(way_id));
+                        ways.values.push_back(static_cast<std::int64_t>(way_id));
                     }
                     annotation.values["ways"] = std::move(ways);
                 }

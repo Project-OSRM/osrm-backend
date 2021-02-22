@@ -462,7 +462,7 @@ struct AnnotationT : public flatbuffers::NativeTable {
   std::vector<uint32_t> duration;
   std::vector<uint32_t> datasources;
   std::vector<uint64_t> nodes;
-  std::vector<uint64_t> ways;
+  std::vector<int64_t> ways;
   std::vector<uint32_t> weight;
   std::vector<float> speed;
   std::unique_ptr<osrm::engine::api::fbresult::MetadataT> metadata;
@@ -494,8 +494,8 @@ struct Annotation FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::Vector<uint64_t> *nodes() const {
     return GetPointer<const flatbuffers::Vector<uint64_t> *>(VT_NODES);
   }
-  const flatbuffers::Vector<uint64_t> *ways() const {
-    return GetPointer<const flatbuffers::Vector<uint64_t> *>(VT_WAYS);
+  const flatbuffers::Vector<int64_t> *ways() const {
+    return GetPointer<const flatbuffers::Vector<int64_t> *>(VT_WAYS);
   }
   const flatbuffers::Vector<uint32_t> *weight() const {
     return GetPointer<const flatbuffers::Vector<uint32_t> *>(VT_WEIGHT);
@@ -546,7 +546,7 @@ struct AnnotationBuilder {
   void add_nodes(flatbuffers::Offset<flatbuffers::Vector<uint64_t>> nodes) {
     fbb_.AddOffset(Annotation::VT_NODES, nodes);
   }
-  void add_ways(flatbuffers::Offset<flatbuffers::Vector<uint64_t>> ways) {
+  void add_ways(flatbuffers::Offset<flatbuffers::Vector<int64_t>> ways) {
     fbb_.AddOffset(Annotation::VT_WAYS, ways);
   }
   void add_weight(flatbuffers::Offset<flatbuffers::Vector<uint32_t>> weight) {
@@ -576,7 +576,7 @@ inline flatbuffers::Offset<Annotation> CreateAnnotation(
     flatbuffers::Offset<flatbuffers::Vector<uint32_t>> duration = 0,
     flatbuffers::Offset<flatbuffers::Vector<uint32_t>> datasources = 0,
     flatbuffers::Offset<flatbuffers::Vector<uint64_t>> nodes = 0,
-    flatbuffers::Offset<flatbuffers::Vector<uint64_t>> ways = 0,
+    flatbuffers::Offset<flatbuffers::Vector<int64_t>> ways = 0,
     flatbuffers::Offset<flatbuffers::Vector<uint32_t>> weight = 0,
     flatbuffers::Offset<flatbuffers::Vector<float>> speed = 0,
     flatbuffers::Offset<osrm::engine::api::fbresult::Metadata> metadata = 0) {
@@ -598,7 +598,7 @@ inline flatbuffers::Offset<Annotation> CreateAnnotationDirect(
     const std::vector<uint32_t> *duration = nullptr,
     const std::vector<uint32_t> *datasources = nullptr,
     const std::vector<uint64_t> *nodes = nullptr,
-    const std::vector<uint64_t> *ways = nullptr,
+    const std::vector<int64_t> *ways = nullptr,
     const std::vector<uint32_t> *weight = nullptr,
     const std::vector<float> *speed = nullptr,
     flatbuffers::Offset<osrm::engine::api::fbresult::Metadata> metadata = 0) {
@@ -606,7 +606,7 @@ inline flatbuffers::Offset<Annotation> CreateAnnotationDirect(
   auto duration__ = duration ? _fbb.CreateVector<uint32_t>(*duration) : 0;
   auto datasources__ = datasources ? _fbb.CreateVector<uint32_t>(*datasources) : 0;
   auto nodes__ = nodes ? _fbb.CreateVector<uint64_t>(*nodes) : 0;
-  auto ways__ = ways ? _fbb.CreateVector<uint64_t>(*ways) : 0;
+  auto ways__ = ways ? _fbb.CreateVector<int64_t>(*ways) : 0;
   auto weight__ = weight ? _fbb.CreateVector<uint32_t>(*weight) : 0;
   auto speed__ = speed ? _fbb.CreateVector<float>(*speed) : 0;
   return osrm::engine::api::fbresult::CreateAnnotation(

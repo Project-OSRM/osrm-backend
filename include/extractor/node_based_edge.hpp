@@ -20,7 +20,7 @@ namespace extractor
 // while CompressedEdgeContainer::ZipEdges and store it in the segment data
 // to use when building found path annotations
 using OSMWayIDMapKey = std::pair<NodeID, NodeID>;
-using OSMWayIDMap = std::map<OSMWayIDMapKey, OSMWayID>;
+using OSMWayIDMap = std::map<OSMWayIDMapKey, OSMWayIDDir>;
 
 // Flags describing the class of the road. This data is used during creation of graphs/guidance
 // generation but is not available in annotation/navigation

@@ -635,8 +635,32 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     // Fill OSM Way ID Lookup Map to use it later
     for (auto edge : extraction_containers.all_edges_list)
     {
-        osm_way_id_map[OSMWayIDMapKey(edge.result.source, edge.result.target)] =
-            edge.result.osm_way_id;
+        OSMWayIDDir way_id = edge.result.osm_way_id.__value;
+        OSMNodeID osm_source_id = edge.result.osm_source_id;
+        OSMNodeID osm_target_id = edge.result.osm_target_id;
+        if ((edge.result.source < edge.result.target && osm_source_id > osm_target_id) ||
+            (edge.result.source > edge.result.target && osm_source_id < osm_target_id))
+        {
+            // Bogus criteria?
+            way_id = -way_id;
+            std::swap(osm_source_id, osm_target_id);
+        }
+        if (edge.result.flags.forward)
+        {
+            osm_way_id_map[OSMWayIDMapKey(edge.result.source, edge.result.target)] = way_id;
+            util::Log(logDEBUG)
+                << "osm_way_id_map: " << edge.result.source << "->" << edge.result.target << " = "
+                << osm_way_id_map[OSMWayIDMapKey(edge.result.source, edge.result.target)] << " ("
+                << osm_source_id << "->" << osm_target_id << ")";
+        }
+        if (edge.result.flags.backward)
+        {
+            osm_way_id_map[OSMWayIDMapKey(edge.result.target, edge.result.source)] = -way_id;
+            util::Log(logDEBUG)
+                << "osm_way_id_map: " << edge.result.target << "->" << edge.result.source << " = "
+                << osm_way_id_map[OSMWayIDMapKey(edge.result.target, edge.result.source)] << " ("
+                << osm_target_id << "->" << osm_source_id << ")";
+        }
     }
 
     TIMER_STOP(extracting);

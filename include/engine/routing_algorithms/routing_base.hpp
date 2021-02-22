@@ -144,7 +144,7 @@ void annotatePath(const FacadeT &facade,
 
     // datastructures to hold extracted data from geometry
     std::vector<NodeID> id_vector;
-    std::vector<OSMWayID> osm_way_id_vector;
+    std::vector<OSMWayIDDir> osm_way_id_vector;
     std::vector<SegmentWeight> weight_vector;
     std::vector<SegmentDuration> duration_vector;
     std::vector<DatasourceID> datasource_vector;

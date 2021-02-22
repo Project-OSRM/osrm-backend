@@ -59,7 +59,9 @@ class BaseDataFacade
 
     using OSMWayForwardRange =
         boost::iterator_range<extractor::SegmentDataView::SegmentOSMWayVector::const_iterator>;
-    using OSMWayReverseRange = boost::reversed_range<const OSMWayForwardRange>;
+    using OSMWayNegateForwardRange =
+        boost::transformed_range<std::negate<OSMWayIDDir>, const OSMWayForwardRange>;
+    using OSMWayReverseRange = boost::reversed_range<const OSMWayNegateForwardRange>;
 
     using WeightForwardRange =
         boost::iterator_range<extractor::SegmentDataView::SegmentWeightVector::const_iterator>;

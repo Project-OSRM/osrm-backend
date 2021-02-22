@@ -602,7 +602,7 @@ BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property_new_api)
 }
 
 using NodePair = std::pair<osmium::unsigned_object_id_type, osmium::unsigned_object_id_type>;
-using NodePairToWayIDMap = std::map<NodePair, osmium::unsigned_object_id_type>;
+using NodePairToWayIDMap = std::map<NodePair, int64_t>;
 
 NodePairToWayIDMap read_node_pair_to_way_id_map(osmium::io::Reader &osm)
 {
@@ -611,11 +611,11 @@ NodePairToWayIDMap read_node_pair_to_way_id_map(osmium::io::Reader &osm)
         NodePairToWayIDMap ret;
         void way(const osmium::Way &way)
         {
-            auto first = osmium::unsigned_object_id_type(-1);
+            osmium::unsigned_object_id_type first = 0;
             for (const auto &n : way.nodes())
             {
                 const auto second = n.positive_ref();
-                if (first != osmium::unsigned_object_id_type(-1))
+                if (first != 0)
                 {
                     ret[{first, second}] = way.id();
                 }
@@ -700,15 +700,20 @@ LonLatVector check_route_annotated_ways(std::vector<osrm::util::Coordinate> &coo
         for (nodes_it++; nodes_it != nodes.cend(); nodes_it++, ways_it++)
         {
             osmium::unsigned_object_id_type second = nodes_it->get<json::Number>().value;
-            osmium::unsigned_object_id_type way_id = ways_it->get<json::Number>().value;
+            int64_t way_id = ways_it->get<json::Number>().value;
             auto found = node_pair_to_way_id_map.find(NodePair(first, second));
+            auto reverse = false;
             if (found == node_pair_to_way_id_map.end())
+            {
+                reverse = true;
                 found = node_pair_to_way_id_map.find(NodePair(second, first));
+            }
             BOOST_CHECK_MESSAGE(found != node_pair_to_way_id_map.end(),
                                 "The node pair not found: " << first << "<->" << second);
-            BOOST_CHECK_MESSAGE(found->second == way_id,
+            int64_t found_way_id = reverse ? -found->second : found->second;
+            BOOST_CHECK_MESSAGE(found_way_id == way_id,
                                 "The node pair way doesn't correspond: " << first << "<->" << second
-                                                                         << "=" << found->second
+                                                                         << "=" << found_way_id
                                                                          << "=?=" << way_id);
             first = second;
         }

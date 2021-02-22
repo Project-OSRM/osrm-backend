@@ -66,7 +66,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     }
     OSMWayForwardRange GetUncompressedForwardWayIDs(const EdgeID /* id */) const override
     {
-        static OSMWayID data[] = {0, 1, 2, 3};
+        static OSMWayIDDir data[] = {0, 1, 2, 3};
         static extractor::SegmentDataView::SegmentOSMWayVector ways(data, 4);
         return boost::make_iterator_range(ways.cbegin(), ways.cend());
     }

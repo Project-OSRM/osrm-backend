@@ -134,7 +134,7 @@ inline auto make_segment_data_view(const SharedDataIndex &index, const std::stri
 
     auto num_entries = index.GetBlockEntries(name + "/nodes");
 
-    auto osm_way_list = make_vector_view<OSMWayID>(index, name + "/osm_ways");
+    auto osm_way_list = make_vector_view<OSMWayIDDir>(index, name + "/osm_ways");
 
     extractor::SegmentDataView::SegmentWeightVector fwd_weight_list(
         make_vector_view<extractor::SegmentDataView::SegmentWeightVector::block_type>(

@@ -27,7 +27,7 @@ struct PathData
     // from edge-based-node id
     NodeID from_edge_based_node;
     // OSM Way ID of the edge immediately followed by via node
-    OSMWayID osm_way_id;
+    OSMWayIDDir osm_way_id;
     // the internal OSRM id of the OSM node id that is the via node of the turn
     NodeID turn_via_node;
     // name of the street that leads to the turn

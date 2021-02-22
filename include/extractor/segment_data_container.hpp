@@ -10,10 +10,12 @@
 
 #include <boost/filesystem/path.hpp>
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/iterator_range.hpp>
 
 #include <unordered_map>
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -56,7 +58,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     using DirectionalGeometryID = std::uint32_t;
     using SegmentOffset = std::uint32_t;
     using SegmentNodeVector = Vector<NodeID>;
-    using SegmentOSMWayVector = Vector<OSMWayID>;
+    using SegmentOSMWayVector = Vector<OSMWayIDDir>;
     using SegmentWeightVector = PackedVector<SegmentWeight, SEGMENT_WEIGHT_BITS>;
     using SegmentDurationVector = PackedVector<SegmentDuration, SEGMENT_DURATION_BITS>;
     using SegmentDatasourceVector = Vector<DatasourceID>;
@@ -102,7 +104,9 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetReverseOSMWayIDs(const DirectionalGeometryID id)
     {
-        return boost::adaptors::reverse(GetForwardOSMWayIDs(id));
+        // return boost::adaptors::reverse(GetForwardOSMWayIDs(id));
+        return boost::adaptors::reverse(
+            boost::adaptors::transform(GetForwardOSMWayIDs(id), std::negate<OSMWayIDDir>()));
     }
 
     auto GetForwardDurations(const DirectionalGeometryID id)
@@ -176,7 +180,9 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetReverseOSMWayIDs(const DirectionalGeometryID id) const
     {
-        return boost::adaptors::reverse(GetForwardOSMWayIDs(id));
+        // return boost::adaptors::reverse(GetForwardOSMWayIDs(id));
+        return boost::adaptors::reverse(
+            boost::adaptors::transform(GetForwardOSMWayIDs(id), std::negate<OSMWayIDDir>()));
     }
 
     auto GetForwardDurations(const DirectionalGeometryID id) const

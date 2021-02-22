@@ -34,7 +34,7 @@ struct LegGeometry
     // original OSM node IDs for each coordinate
     std::vector<OSMNodeID> osm_node_ids;
     // original OSM way IDs between every pair of nodes
-    std::vector<OSMWayID> osm_way_ids;
+    std::vector<OSMWayIDDir> osm_way_ids;
 
     // Per-coordinate metadata
     struct Annotation
