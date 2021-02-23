@@ -1,9 +1,9 @@
 # Unreleased
   - Changes from 5.24.0
     - Features:
-      - ADDED: a new `ways` subsection in the `annotations` section containing way IDs along the found path, with sign meaning direction [#5325]
+      - ADDED: a new `ways` subsection in the `annotations` section containing way IDs along the found path, with sign meaning direction [#5325](https://github.com/Project-OSRM/osrm-backend/issues/5325)
     - API:
-      - Fixed item type for `nodes` section of the `annotations` flatbuffers output format
+      - FIXED: item type for `nodes` section of the `annotations` flatbuffers output format
 
 # 5.24.0
   - Changes from 5.23.0

@@ -429,7 +429,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         std::make_unique<ExtractorCallbacks>(extraction_containers,
                                              classes_map,
                                              turn_lane_map,
-                                             osm_way_id_map,
                                              scripting_environment.GetProfileProperties());
 
     // get list of supported relation types

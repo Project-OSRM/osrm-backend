@@ -171,9 +171,10 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
         return {};
     }
 
-    OSMWayReverseRange GetUncompressedReverseWayIDs(const EdgeID /*id*/) const override
+    OSMWayReverseRange GetUncompressedReverseWayIDs(const EdgeID id) const override
     {
-        return OSMWayReverseRange(OSMWayForwardRange());
+        return boost::adaptors::reverse(
+            boost::adaptors::transform(GetUncompressedForwardWayIDs(id), std::negate<OSMWayIDDir>()));
     }
 
     TurnPenalty GetWeightPenaltyForEdgeID(const unsigned /*id*/) const override

@@ -29,10 +29,9 @@ namespace extractor
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers_,
                                        std::unordered_map<std::string, ClassData> &classes_map,
                                        LaneDescriptionMap &lane_description_map,
-                                       OSMWayIDMap &osm_way_id_map,
                                        const ProfileProperties &properties)
     : external_memory(extraction_containers_), classes_map(classes_map),
-      lane_description_map(lane_description_map), osm_way_id_map(osm_way_id_map),
+      lane_description_map(lane_description_map),
       fallback_to_duration(properties.fallback_to_duration),
       force_split_edges(properties.force_split_edges)
 {

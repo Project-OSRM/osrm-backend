@@ -70,7 +70,6 @@ class ExtractorCallbacks
     ExtractionContainers &external_memory;
     std::unordered_map<std::string, ClassData> &classes_map;
     LaneDescriptionMap &lane_description_map;
-    OSMWayIDMap &osm_way_id_map;
     bool fallback_to_duration;
     bool force_split_edges;
 
@@ -80,7 +79,6 @@ class ExtractorCallbacks
     explicit ExtractorCallbacks(ExtractionContainers &extraction_containers,
                                 std::unordered_map<std::string, ClassData> &classes_map,
                                 LaneDescriptionMap &lane_description_map,
-                                OSMWayIDMap &osm_way_id_map,
                                 const ProfileProperties &properties);
 
     ExtractorCallbacks(const ExtractorCallbacks &) = delete;

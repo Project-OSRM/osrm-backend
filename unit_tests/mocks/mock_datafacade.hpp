@@ -72,7 +72,8 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     }
     OSMWayReverseRange GetUncompressedReverseWayIDs(const EdgeID id) const override
     {
-        return OSMWayReverseRange(GetUncompressedForwardWayIDs(id));
+        return boost::adaptors::reverse(
+            boost::adaptors::transform(GetUncompressedForwardWayIDs(id), std::negate<OSMWayIDDir>()));
     }
     WeightForwardRange GetUncompressedForwardWeights(const EdgeID /* id */) const override
     {
