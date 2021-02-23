@@ -56,11 +56,9 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         reversed_source ? source_node.reverse_segment_id.id : source_node.forward_segment_id.id;
     const auto source_geometry_id = facade.GetGeometryIndex(source_node_id).id;
     const auto source_geometry = facade.GetUncompressedForwardGeometry(source_geometry_id);
-    // const auto source_osm_way_ids = facade.GetUncompressedForwardWayIDs(source_geometry_id);
 
     geometry.osm_node_ids.push_back(
         facade.GetOSMNodeIDOfNode(source_geometry(source_segment_start_coordinate)));
-    // geometry.osm_way_ids.push_back(source_osm_way_ids(source_segment_start_coordinate)));
 
     auto cumulative_distance = 0.;
     auto current_distance = 0.;
