@@ -104,7 +104,6 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetReverseOSMWayIDs(const DirectionalGeometryID id)
     {
-        // return boost::adaptors::reverse(GetForwardOSMWayIDs(id));
         return boost::adaptors::reverse(
             boost::adaptors::transform(GetForwardOSMWayIDs(id), std::negate<OSMWayIDDir>()));
     }
@@ -180,7 +179,6 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetReverseOSMWayIDs(const DirectionalGeometryID id) const
     {
-        // return boost::adaptors::reverse(GetForwardOSMWayIDs(id));
         return boost::adaptors::reverse(
             boost::adaptors::transform(GetForwardOSMWayIDs(id), std::negate<OSMWayIDDir>()));
     }

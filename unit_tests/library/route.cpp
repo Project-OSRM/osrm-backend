@@ -733,7 +733,6 @@ BOOST_AUTO_TEST_CASE(test_route_annotated_ways)
     BOOST_TEST_MESSAGE("split_trace_locations with steps");
     check_route_annotated_ways(coordinates, osrm, node_pair_to_way_id_map, true);
     coordinates = get_locations_in_big_component();
-    // auto coords =
     BOOST_TEST_MESSAGE("locations_in_big_component without steps");
     check_route_annotated_ways(coordinates, osrm, node_pair_to_way_id_map, false);
     BOOST_TEST_MESSAGE("locations_in_big_component with steps");

@@ -74,7 +74,7 @@ class NodeBasedGraphFactory
     // Most ways are bidirectional, making the geometry in forward and backward direction the same,
     // except for reversal. We make use of this fact by keeping only one representation of the
     // geometry around
-    void CompressGeometry(OSMWayIDMap &osm_way_id_map);
+    void CompressGeometry(const OSMWayIDMap &osm_way_id_map);
 
     // After graph compression, some of the annotation entries might not be referenced anymore. We
     // compress the annotation data by relabeling the node-based graph references and removing all

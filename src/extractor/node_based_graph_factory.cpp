@@ -94,7 +94,7 @@ void NodeBasedGraphFactory::Compress(ScriptingEnvironment &scripting_environment
                               compressed_edge_container);
 }
 
-void NodeBasedGraphFactory::CompressGeometry(OSMWayIDMap &osm_way_id_map)
+void NodeBasedGraphFactory::CompressGeometry(const OSMWayIDMap &osm_way_id_map)
 {
     for (const auto nbg_node_u : util::irange(0u, compressed_output_graph.GetNumberOfNodes()))
     {
