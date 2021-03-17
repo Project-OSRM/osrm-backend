@@ -194,7 +194,7 @@ void annotatePath(const FacadeT &facade,
         BOOST_ASSERT(datasource_vector.size() > 0);
         BOOST_ASSERT(weight_vector.size() + 1 == id_vector.size());
         BOOST_ASSERT(duration_vector.size() + 1 == id_vector.size());
-        BOOST_ASSERT(osm_way_id_vector.size() + 1 == id_vector.size());
+        BOOST_ASSERT(!osm_way_id_vector.size() || osm_way_id_vector.size() + 1 == id_vector.size());
 
         const bool is_first_segment = unpacked_path.empty();
 
@@ -219,7 +219,7 @@ void annotatePath(const FacadeT &facade,
         {
             unpacked_path.push_back(
                 PathData{*node_from,
-                         osm_way_id_vector[segment_idx],
+                         osm_way_id_vector.size() ? osm_way_id_vector[segment_idx] : 0,
                          id_vector[segment_idx + 1],
                          name_index,
                          is_segregated,
@@ -295,7 +295,7 @@ void annotatePath(const FacadeT &facade,
         BOOST_ASSERT(facade.GetTravelMode(target_node_id) > 0);
         unpacked_path.push_back(
             PathData{target_node_id,
-                     osm_way_id_vector[segment_idx],
+                     osm_way_id_vector.size() ? osm_way_id_vector[segment_idx] : 0,
                      id_vector[start_index < end_index ? segment_idx + 1 : segment_idx - 1],
                      facade.GetNameIndex(target_node_id),
                      facade.IsSegregated(target_node_id),

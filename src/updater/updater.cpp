@@ -623,7 +623,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                              coordinates,
                                              osm_node_ids);
         // Now save out the updated compressed geometries
-        extractor::files::writeSegmentData(config.GetPath(".osrm.geometry"), segment_data);
+        extractor::files::writeSegmentData(
+            config.GetPath(".osrm.geometry"), segment_data.GetOSMWaysSkipped(), segment_data);
         TIMER_STOP(segment);
         util::Log() << "Updating segment data took " << TIMER_MSEC(segment) << "ms.";
     }

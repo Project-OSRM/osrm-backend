@@ -206,7 +206,9 @@ inline void readSegmentData(const boost::filesystem::path &path, SegmentDataT &s
 
 // writes .osrm.geometry
 template <typename SegmentDataT>
-inline void writeSegmentData(const boost::filesystem::path &path, const SegmentDataT &segment_data)
+inline void writeSegmentData(const boost::filesystem::path &path,
+                             bool skip_osm_ways,
+                             const SegmentDataT &segment_data)
 {
     static_assert(std::is_same<SegmentDataContainer, SegmentDataT>::value ||
                       std::is_same<SegmentDataView, SegmentDataT>::value,
@@ -214,7 +216,7 @@ inline void writeSegmentData(const boost::filesystem::path &path, const SegmentD
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
 
-    serialization::write(writer, "/common/segment_data", segment_data);
+    serialization::write(writer, "/common/segment_data", skip_osm_ways, segment_data);
 }
 
 // reads .osrm.ebg_nodes

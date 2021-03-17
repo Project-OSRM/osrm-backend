@@ -70,7 +70,8 @@ struct ExtractorConfig final : storage::IOConfig
                ".osrm.cnbg",
                ".osrm.cnbg_to_ebg",
                ".osrm.maneuver_overrides"}),
-          requested_num_threads(0), parse_conditionals(false), use_locations_cache(true)
+          requested_num_threads(0), parse_conditionals(false), use_locations_cache(true),
+          skip_osm_ways(false)
     {
     }
 
@@ -92,6 +93,7 @@ struct ExtractorConfig final : storage::IOConfig
     bool use_metadata;
     bool parse_conditionals;
     bool use_locations_cache;
+    bool skip_osm_ways;
 };
 } // namespace extractor
 } // namespace osrm

@@ -74,7 +74,12 @@ return_code parseArguments(int argc,
         boost::program_options::bool_switch(&extractor_config.use_locations_cache)
             ->implicit_value(false)
             ->default_value(true),
-        "Use internal nodes locations cache for location-dependent data lookups");
+        "Use internal nodes locations cache for location-dependent data lookups")(
+        "skip-osm-ways",
+        boost::program_options::bool_switch(&extractor_config.skip_osm_ways)
+            ->implicit_value(true)
+            ->default_value(false),
+        "Skip OSM Way IDs in annotations");
 
     bool dummy;
     // hidden options, will be allowed on command line, but will not be

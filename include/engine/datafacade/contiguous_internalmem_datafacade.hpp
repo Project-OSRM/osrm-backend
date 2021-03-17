@@ -259,6 +259,10 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         return segment_data.GetReverseOSMWayIDs(id);
     }
+    bool GetUncompressedWayIDsSkipped() const override final
+    {
+        return segment_data.GetOSMWaysSkipped();
+    }
 
     DurationForwardRange GetUncompressedForwardDurations(const EdgeID id) const override final
     {

@@ -98,11 +98,18 @@ inline void read(storage::tar::FileReader &reader,
 template <storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
+                  const bool skip_osm_ways,
                   const detail::SegmentDataContainerImpl<Ownership> &segment_data)
 {
     storage::serialization::write(writer, name + "/index", segment_data.index);
     storage::serialization::write(writer, name + "/nodes", segment_data.nodes);
-    storage::serialization::write(writer, name + "/osm_ways", segment_data.osm_ways);
+    if (!skip_osm_ways)
+        storage::serialization::write(writer, name + "/osm_ways", segment_data.osm_ways);
+    else
+        storage::serialization::write(
+            writer,
+            name + "/osm_ways",
+            osrm::util::ViewOrVector<OSMWayIDDir, osrm::storage::Ownership::Container>());
     util::serialization::write(writer, name + "/forward_weights", segment_data.fwd_weights);
     util::serialization::write(writer, name + "/reverse_weights", segment_data.rev_weights);
     util::serialization::write(writer, name + "/forward_durations", segment_data.fwd_durations);

@@ -93,6 +93,7 @@ class BaseDataFacade
 
     virtual OSMWayForwardRange GetUncompressedForwardWayIDs(const EdgeID id) const = 0;
     virtual OSMWayReverseRange GetUncompressedReverseWayIDs(const EdgeID id) const = 0;
+    virtual bool GetUncompressedWayIDsSkipped() const = 0;
 
     virtual NodeForwardRange GetUncompressedForwardGeometry(const EdgeID id) const = 0;
     virtual NodeReverseRange GetUncompressedReverseGeometry(const EdgeID id) const = 0;

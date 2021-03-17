@@ -40,6 +40,7 @@ inline void read(storage::tar::FileReader &reader,
 template <storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
+                  const bool skip_osm_ways,
                   const detail::SegmentDataContainerImpl<Ownership> &segment_data);
 } // namespace serialization
 
@@ -171,6 +172,8 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetForwardOSMWayIDs(const DirectionalGeometryID id) const
     {
+        if (GetOSMWaysSkipped())
+            return boost::make_iterator_range(osm_ways.cend(), osm_ways.cend());
         const auto begin = osm_ways.cbegin() + index[id];
         const auto end = osm_ways.cbegin() + index[id + 1] - 1;
 
@@ -233,6 +236,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetNumberOfGeometries() const { return index.size() - 1; }
     auto GetNumberOfSegments() const { return fwd_weights.size(); }
+    auto GetOSMWaysSkipped() const { return osm_ways.size() == 0; }
 
     friend void
     serialization::read<Ownership>(storage::tar::FileReader &reader,
@@ -241,6 +245,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     friend void serialization::write<Ownership>(
         storage::tar::FileWriter &writer,
         const std::string &name,
+        const bool skip_osm_ways,
         const detail::SegmentDataContainerImpl<Ownership> &segment_data);
 
   private:

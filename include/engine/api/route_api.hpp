@@ -504,7 +504,8 @@ class RouteAPI : public BaseAPI
             }
         }
         std::vector<int64_t> ways;
-        if (requested_annotations & RouteParameters::AnnotationsType::Ways)
+        if (requested_annotations & RouteParameters::AnnotationsType::Ways &&
+            leg_geometry.osm_way_ids.size())
         {
             ways.reserve(leg_geometry.osm_way_ids.size());
             for (const auto way_id : leg_geometry.osm_way_ids)
@@ -843,7 +844,8 @@ class RouteAPI : public BaseAPI
                     }
                     annotation.values["nodes"] = std::move(nodes);
                 }
-                if (requested_annotations & RouteParameters::AnnotationsType::Ways)
+                if (requested_annotations & RouteParameters::AnnotationsType::Ways &&
+                    leg_geometry.osm_way_ids.size())
                 {
                     util::json::Array ways;
                     ways.values.reserve(leg_geometry.osm_way_ids.size());

@@ -321,6 +321,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     // output the geometry of the node-based graph, needs to be done after the last usage, since it
     // destroys internal containers
     files::writeSegmentData(config.GetPath(".osrm.geometry"),
+                            config.skip_osm_ways,
                             *node_based_graph_factory.GetCompressedEdges().ToSegmentData());
 
     util::Log() << "Saving edge-based node weights to file.";

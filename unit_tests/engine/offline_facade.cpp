@@ -170,6 +170,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     {
         return {};
     }
+    bool GetUncompressedWayIDsSkipped() const override { return true; }
 
     OSMWayReverseRange GetUncompressedReverseWayIDs(const EdgeID id) const override
     {
