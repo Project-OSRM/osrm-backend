@@ -909,13 +909,15 @@ void Sol2ScriptingEnvironment::ProcessElements(
         case osmium::item_type::relation:
         {
             const auto &relation = static_cast<const osmium::Relation &>(*entity);
-            if (auto result_res = restriction_parser.TryParse(relation))
+            auto results = restriction_parser.TryParse(relation);
+            if (!results.empty())
             {
-                resulting_restrictions.push_back(*result_res);
+                std::move(
+                    results.begin(), results.end(), std::back_inserter(resulting_restrictions));
             }
             else if (auto result_res = maneuver_override_parser.TryParse(relation))
             {
-                resulting_maneuver_overrides.push_back(*result_res);
+                resulting_maneuver_overrides.push_back(std::move(*result_res));
             }
         }
         break;
