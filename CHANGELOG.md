@@ -1,4 +1,7 @@
 # Unreleased
+  - Changes from 5.24.0
+    - Misc:
+      - FIXED: Upgrade to @mapbox/node-pre-gyp fix various bugs with Node 12/14 [#5991](https://github.com/Project-OSRM/osrm-backend/pull/5991)
 
 # 5.24.0
   - Changes from 5.23.0
