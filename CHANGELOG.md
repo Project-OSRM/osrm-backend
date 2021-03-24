@@ -4,6 +4,8 @@
       - ADDED: a new `ways` subsection in the `annotations` section containing way IDs along the found path, with sign meaning direction [#5325](https://github.com/Project-OSRM/osrm-backend/issues/5325)
     - API:
       - FIXED: item type for `nodes` section of the `annotations` flatbuffers output format [#5970](https://github.com/Project-OSRM/osrm-backend/issues/5970)
+    - Misc:
+      - FIXED: Upgrade to @mapbox/node-pre-gyp fix various bugs with Node 12/14 [#5991](https://github.com/Project-OSRM/osrm-backend/pull/5991)
 
 # 5.24.0
   - Changes from 5.23.0
