@@ -762,8 +762,8 @@ step.
       {  "bearings" : [ 10, 92, 184, 270 ],
          "lanes" : [
             { "indications" : [ "left", "straight" ],
-               "valid" : "false" },
-            { "valid" : "true",
+               "valid" : false },
+            { "valid" : true,
                "indications" : [ "right" ] }
          ],
          "out" : 2,
@@ -774,9 +774,9 @@ step.
       {  "out" : 1,
          "lanes" : [
             { "indications" : [ "straight" ],
-               "valid" : "true" },
+               "valid" : true },
             { "indications" : [ "right" ],
-               "valid" : "false" }
+               "valid" : false }
          ],
          "bearings" : [ 60, 240, 330 ],
          "in" : 0,
@@ -884,7 +884,7 @@ A `Lane` represents a turn lane at the corresponding turn location.
 ```json
 {
     "indications": ["left", "straight"],
-    "valid": "false"
+    "valid": false
 }
  ```
 
@@ -919,7 +919,7 @@ location of the StepManeuver. Further intersections are listed for every cross-w
     "classes": ["toll", "restricted"],
     "lanes":{
         "indications": ["left", "straight"],
-        "valid": "false"
+        "valid": false
     }
 }
 ```
