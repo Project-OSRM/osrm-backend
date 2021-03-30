@@ -342,7 +342,18 @@ function process_node(profile, node, result, relations)
       local bollard = node:get_value_by_key("bollard")
       local rising_bollard = bollard and "rising" == bollard
 
-      if not profile.barrier_whitelist[barrier] and not rising_bollard or restricted_by_height then
+      -- make an exception for lowered/flat barrier=kerb
+      -- and incorrect tagging of highway crossing kerb as highway barrier
+      local kerb = node:get_value_by_key("kerb")
+      local highway = node:get_value_by_key("highway")
+      local flat_kerb = kerb and ("lowered" == kerb or "flush" == kerb)
+      local highway_crossing_kerb = barrier == "kerb" and highway and highway == "crossing"
+
+      if not profile.barrier_whitelist[barrier]
+                and not rising_bollard
+                and not flat_kerb
+                and not highway_crossing_kerb
+                or restricted_by_height then
         result.barrier = true
       end
     end
