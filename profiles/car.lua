@@ -431,9 +431,9 @@ function process_way(profile, way, result, relations)
     WayHandlers.hov,
 
     -- compute speed taking into account way type, maxspeed tags, etc.
+    WayHandlers.maxspeed,
     WayHandlers.speed,
     WayHandlers.surface,
-    WayHandlers.maxspeed,
     WayHandlers.penalties,
 
     -- compute class labels
