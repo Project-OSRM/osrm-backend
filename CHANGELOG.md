@@ -5,7 +5,7 @@
       - FIXED: `valid` type in documentation examples [#5990](https://github.com/Project-OSRM/osrm-backend/issues/5990)
     - Profile:
       - FIXED: Add kerb barrier exception to default car profile. [#5999](https://github.com/Project-OSRM/osrm-backend/pull/5999)
-      - ADDED: output messages for shared memory block creation of Boost - catch exceptions and give reasonable error messages
+      - ADDED: output messages for shared memory block creation of Boost - catch exceptions and give reasonable error messages [#6009](https://github.com/Project-OSRM/osrm-backend/pull/6009)
 
 # 5.24.0
   - Changes from 5.23.0
