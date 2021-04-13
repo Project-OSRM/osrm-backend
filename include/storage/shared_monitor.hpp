@@ -48,8 +48,8 @@ template <typename Data> struct SharedMonitor
         }
         catch (const bi::interprocess_exception &exception)
         {
-            auto message = boost::format("could not create directory or file '%1%' \n") %
-                           exception.what();
+            auto message =
+                boost::format("could not create directory or file '%1%' \n") % exception.what();
             throw util::exception(message.str() + SOURCE_REF);
         }
 
@@ -135,8 +135,8 @@ template <typename Data> struct SharedMonitor
         }
         catch (const bi::interprocess_exception &exception)
         {
-            auto message = boost::format("could not create directory or file '%1%' \n") %
-                           exception.what();
+            auto message =
+                boost::format("could not create directory or file '%1%' \n") % exception.what();
             throw util::exception(message.str() + SOURCE_REF);
         }
         return true;
