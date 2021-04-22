@@ -226,7 +226,7 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
     auto const collect_edge_info_fn = [&](auto const &edges1, NodeID node2) {
         std::vector<EdgeInfo> info;
 
-        for (auto const &e : edges1)
+        for (auto e : edges1)
         {
             NodeID const target = graph.GetTarget(e);
             if (target == node2)

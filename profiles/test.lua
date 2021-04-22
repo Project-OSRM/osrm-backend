@@ -15,7 +15,7 @@ local pprint = require('lib/pprint')
 -- profiles code modifies this table
 properties = {}
 
--- should match values defined in include/extractor/guidance/road_classification.hpp
+-- should match values defined in include/extractor/road_classification.hpp
 road_priority_class = {
   motorway = 0,
   trunk = 2,

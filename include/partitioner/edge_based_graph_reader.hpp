@@ -143,22 +143,22 @@ inline std::vector<extractor::EdgeBasedEdge>
 graphToEdges(const DynamicEdgeBasedGraph &edge_based_graph)
 {
     auto range = tbb::blocked_range<NodeID>(0, edge_based_graph.GetNumberOfNodes());
-    auto max_turn_id =
-        tbb::parallel_reduce(range,
-                             NodeID{0},
-                             [&edge_based_graph](const auto range, NodeID initial) {
-                                 NodeID max_turn_id = initial;
-                                 for (auto node = range.begin(); node < range.end(); ++node)
-                                 {
-                                     for (auto edge : edge_based_graph.GetAdjacentEdgeRange(node))
-                                     {
-                                         const auto &data = edge_based_graph.GetEdgeData(edge);
-                                         max_turn_id = std::max(max_turn_id, data.turn_id);
-                                     }
-                                 }
-                                 return max_turn_id;
-                             },
-                             [](const NodeID lhs, const NodeID rhs) { return std::max(lhs, rhs); });
+    auto max_turn_id = tbb::parallel_reduce(
+        range,
+        NodeID{0},
+        [&edge_based_graph](const auto range, NodeID initial) {
+            NodeID max_turn_id = initial;
+            for (auto node = range.begin(); node < range.end(); ++node)
+            {
+                for (auto edge : edge_based_graph.GetAdjacentEdgeRange(node))
+                {
+                    const auto &data = edge_based_graph.GetEdgeData(edge);
+                    max_turn_id = std::max(max_turn_id, data.turn_id);
+                }
+            }
+            return max_turn_id;
+        },
+        [](const NodeID lhs, const NodeID rhs) { return std::max(lhs, rhs); });
 
     std::vector<extractor::EdgeBasedEdge> edges(max_turn_id + 1);
     tbb::parallel_for(range, [&](const auto range) {
@@ -198,7 +198,7 @@ inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const boost::filesystem::path &p
     return DynamicEdgeBasedGraph(number_of_edge_based_nodes, std::move(tidied), checksum);
 }
 
-} // ns partition
-} // ns osrm
+} // namespace partitioner
+} // namespace osrm
 
 #endif

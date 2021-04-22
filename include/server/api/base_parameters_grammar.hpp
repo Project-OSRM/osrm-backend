@@ -25,18 +25,20 @@ namespace
 {
 namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
-}
+} // namespace
 
 template <typename T, char... Fmt> struct no_trailing_dot_policy : qi::real_policies<T>
 {
     template <typename Iterator> static bool parse_dot(Iterator &first, Iterator const &last)
     {
-        if (first == last || *first != '.')
+        auto diff = std::distance(first, last);
+        if (diff <= 0 || *first != '.')
             return false;
 
         static const constexpr char fmt[sizeof...(Fmt)] = {Fmt...};
 
-        if (first + sizeof(fmt) < last && std::equal(fmt, fmt + sizeof(fmt), first + 1u))
+        if (sizeof(fmt) < static_cast<size_t>(diff) &&
+            std::equal(fmt, fmt + sizeof(fmt), first + 1u))
             return false;
 
         ++first;
@@ -152,6 +154,10 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
             qi::lit("generate_hints=") >
             qi::bool_[ph::bind(&engine::api::BaseParameters::generate_hints, qi::_r1) = qi::_1];
 
+        skip_waypoints_rule =
+            qi::lit("skip_waypoints=") >
+            qi::bool_[ph::bind(&engine::api::BaseParameters::skip_waypoints, qi::_r1) = qi::_1];
+
         bearings_rule =
             qi::lit("bearings=") >
             (-(qi::short_ > ',' > qi::short_))[ph::bind(add_bearing, qi::_r1, qi::_1)] % ';';
@@ -162,6 +168,19 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                         (-approach_type %
                          ';')[ph::bind(&engine::api::BaseParameters::approaches, qi::_r1) = qi::_1];
 
+        snapping_type.add("default", engine::api::BaseParameters::SnappingType::Default)(
+            "any", engine::api::BaseParameters::SnappingType::Any);
+
+        snapping_rule =
+            qi::lit("snapping=") >
+            snapping_type[ph::bind(&engine::api::BaseParameters::snapping, qi::_r1) = qi::_1];
+
+        format_type.add(".json", engine::api::BaseParameters::OutputFormatType::JSON)(
+            ".flatbuffers", engine::api::BaseParameters::OutputFormatType::FLATBUFFERS);
+
+        format_rule =
+            -format_type[ph::bind(&engine::api::BaseParameters::format, qi::_r1) = qi::_1];
+
         exclude_rule = qi::lit("exclude=") >
                        (qi::as_string[+qi::char_("a-zA-Z0-9")] %
                         ',')[ph::bind(&engine::api::BaseParameters::exclude, qi::_r1) = qi::_1];
@@ -170,13 +189,18 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                     | hints_rule(qi::_r1)          //
                     | bearings_rule(qi::_r1)       //
                     | generate_hints_rule(qi::_r1) //
+                    | skip_waypoints_rule(qi::_r1) //
                     | approach_rule(qi::_r1)       //
-                    | exclude_rule(qi::_r1);
+                    | exclude_rule(qi::_r1)        //
+                    | snapping_rule(qi::_r1);
     }
 
   protected:
     qi::rule<Iterator, Signature> base_rule;
     qi::rule<Iterator, Signature> query_rule;
+    qi::rule<Iterator, Signature> format_rule;
+
+    qi::symbols<char, engine::api::BaseParameters::OutputFormatType> format_type;
 
     qi::real_parser<double, json_policy> double_;
 
@@ -186,6 +210,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::rule<Iterator, Signature> hints_rule;
 
     qi::rule<Iterator, Signature> generate_hints_rule;
+    qi::rule<Iterator, Signature> skip_waypoints_rule;
     qi::rule<Iterator, Signature> approach_rule;
     qi::rule<Iterator, Signature> exclude_rule;
 
@@ -197,11 +222,13 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::rule<Iterator, unsigned char()> base64_char;
     qi::rule<Iterator, std::string()> polyline_chars;
     qi::rule<Iterator, double()> unlimited_rule;
+    qi::rule<Iterator, Signature> snapping_rule;
 
     qi::symbols<char, engine::Approach> approach_type;
+    qi::symbols<char, engine::api::BaseParameters::SnappingType> snapping_type;
 };
-}
-}
-}
+} // namespace api
+} // namespace server
+} // namespace osrm
 
 #endif

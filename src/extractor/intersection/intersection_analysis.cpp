@@ -248,7 +248,7 @@ getIntersectionOutgoingGeometries(const util::NodeBasedDynamicGraph &graph,
     });
     return edge_geometries;
 }
-}
+} // namespace
 
 std::pair<IntersectionEdgeGeometries, std::unordered_set<EdgeID>>
 getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
@@ -428,24 +428,10 @@ double findEdgeLength(const IntersectionEdgeGeometries &geometries, const EdgeID
 template <typename RestrictionsRange>
 bool isTurnRestricted(const RestrictionsRange &restrictions, const NodeID to)
 {
-    // Check turn restrictions to find a node that is the only allowed target when coming from a
-    // node to an intersection
-    //     d
-    //     |
-    // a - b - c  and `only_straight_on ab | bc would return `c` for `a,b`
-    const auto is_only = std::find_if(restrictions.first,
-                                      restrictions.second,
-                                      [](const auto &pair) { return pair.second->is_only; });
-    if (is_only != restrictions.second)
-        return is_only->second->AsNodeRestriction().to != to;
-
-    // Check if explicitly forbidden
-    const auto no_turn =
-        std::find_if(restrictions.first, restrictions.second, [&to](const auto &restriction) {
-            return restriction.second->AsNodeRestriction().to == to;
-        });
-
-    return no_turn != restrictions.second;
+    // Check if any of the restrictions would prevent a turn to 'to'
+    return std::any_of(restrictions.begin(), restrictions.end(), [&to](const auto &restriction) {
+        return restriction->IsTurnRestricted(to);
+    });
 }
 
 bool isTurnAllowed(const util::NodeBasedDynamicGraph &graph,
@@ -755,36 +741,61 @@ IntersectionView getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
                                    const IntersectionEdge &incoming_edge)
 {
     const auto intersection_node = graph.GetTarget(incoming_edge.edge);
-    const auto &outgoing_edges = intersection::getOutgoingEdges(graph, intersection_node);
     auto edge_geometries = getIntersectionOutgoingGeometries<USE_CLOSE_COORDINATE>(
         graph, compressed_geometries, node_coordinates, intersection_node);
+    auto merged_edge_ids = std::unordered_set<EdgeID>();
+
+    return getConnectedRoadsForEdgeGeometries(graph,
+                                              node_data_container,
+                                              node_restriction_map,
+                                              barrier_nodes,
+                                              turn_lanes_data,
+                                              incoming_edge,
+                                              edge_geometries,
+                                              merged_edge_ids);
+}
+
+IntersectionView
+getConnectedRoadsForEdgeGeometries(const util::NodeBasedDynamicGraph &graph,
+                                   const EdgeBasedNodeDataContainer &node_data_container,
+                                   const RestrictionMap &node_restriction_map,
+                                   const std::unordered_set<NodeID> &barrier_nodes,
+                                   const TurnLanesIndexedArray &turn_lanes_data,
+                                   const IntersectionEdge &incoming_edge,
+                                   const IntersectionEdgeGeometries &edge_geometries,
+                                   const std::unordered_set<EdgeID> &merged_edge_ids)
+{
+    const auto intersection_node = graph.GetTarget(incoming_edge.edge);
+    const auto &outgoing_edges = intersection::getOutgoingEdges(graph, intersection_node);
 
     // Add incoming edges with reversed bearings
-    const auto edges_number = edge_geometries.size();
-    edge_geometries.resize(2 * edges_number);
+    auto processed_edge_geometries = IntersectionEdgeGeometries(edge_geometries);
+    const auto edges_number = processed_edge_geometries.size();
+    processed_edge_geometries.resize(2 * edges_number);
     for (std::size_t index = 0; index < edges_number; ++index)
     {
-        const auto &geometry = edge_geometries[index];
+        const auto &geometry = processed_edge_geometries[index];
         const auto remote_node = graph.GetTarget(geometry.eid);
         const auto incoming_edge = graph.FindEdge(remote_node, intersection_node);
-        edge_geometries[edges_number + index] = {incoming_edge,
-                                                 util::bearing::reverse(geometry.initial_bearing),
-                                                 util::bearing::reverse(geometry.perceived_bearing),
-                                                 geometry.segment_length};
+        processed_edge_geometries[edges_number + index] = {
+            incoming_edge,
+            util::bearing::reverse(geometry.initial_bearing),
+            util::bearing::reverse(geometry.perceived_bearing),
+            geometry.segment_length};
     }
 
     // Enforce ordering of edges by IDs
-    std::sort(edge_geometries.begin(), edge_geometries.end());
+    std::sort(processed_edge_geometries.begin(), processed_edge_geometries.end());
 
     return convertToIntersectionView(graph,
                                      node_data_container,
                                      node_restriction_map,
                                      barrier_nodes,
-                                     edge_geometries,
+                                     processed_edge_geometries,
                                      turn_lanes_data,
                                      incoming_edge,
                                      outgoing_edges,
-                                     std::unordered_set<EdgeID>());
+                                     merged_edge_ids);
 }
 
 template IntersectionView
@@ -827,6 +838,6 @@ IntersectionEdge skipDegreeTwoNodes(const util::NodeBasedDynamicGraph &graph, In
 
     return road;
 }
-}
-}
-}
+} // namespace intersection
+} // namespace extractor
+} // namespace osrm

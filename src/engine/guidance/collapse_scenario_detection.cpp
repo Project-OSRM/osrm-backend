@@ -181,9 +181,10 @@ bool isUTurn(const RouteStepIterator step_prior_to_intersection,
     const auto only_allowed_turn = (numberOfAllowedTurns(*step_leaving_intersection) == 1) &&
                                    noIntermediaryIntersections(*step_entering_intersection);
 
-    return collapsable || isLinkRoad(*step_prior_to_intersection,
-                                     *step_entering_intersection,
-                                     *step_leaving_intersection) ||
+    return collapsable ||
+           isLinkRoad(*step_prior_to_intersection,
+                      *step_entering_intersection,
+                      *step_leaving_intersection) ||
            only_allowed_turn;
 }
 

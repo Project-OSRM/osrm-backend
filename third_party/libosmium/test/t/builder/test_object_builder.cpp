@@ -4,6 +4,8 @@
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm.hpp>
 
+#include <string>
+
 TEST_CASE("create objects using builder") {
     osmium::memory::Buffer buffer{1024 * 10};
     std::string user;
@@ -439,5 +441,42 @@ TEST_CASE("set_user with length on changeset") {
     const auto& changeset = buffer.get<osmium::Changeset>(buffer.commit());
 
     REQUIRE(std::string{"user"} == changeset.user());
+}
+
+TEST_CASE("clear_user should clear the user field but nothing else") {
+    osmium::memory::Buffer buffer{1024 * 10};
+    std::string user = "user";
+
+    {
+        osmium::builder::NodeBuilder builder{buffer};
+        builder.set_id(17)
+            .set_visible(true)
+            .set_version(1)
+            .set_changeset(123)
+            .set_uid(555)
+            .set_timestamp("2015-07-01T00:00:01Z")
+            .set_location(osmium::Location{1.2, 3.4})
+            .set_user(user);
+        builder.add_tags({{"highway", "primary"}, {"oneway", "yes"}});
+    }
+
+    auto& node = buffer.get<osmium::Node>(buffer.commit());
+
+    REQUIRE(std::string{"user"} == node.user());
+
+    node.clear_user();
+
+    REQUIRE(std::string{""} == node.user());
+    REQUIRE(node.uid() == 555);
+    REQUIRE(node.tags().size() == 2);
+
+    auto it = node.tags().begin();
+    REQUIRE(it->key() == std::string{"highway"});
+    REQUIRE(it->value() == std::string{"primary"});
+    ++it;
+    REQUIRE(it->key() == std::string{"oneway"});
+    REQUIRE(it->value() == std::string{"yes"});
+    ++it;
+    REQUIRE(it == node.tags().end());
 }
 

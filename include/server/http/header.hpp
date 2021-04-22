@@ -27,8 +27,8 @@ struct header
     std::string name;
     std::string value;
 };
-}
-}
-}
+} // namespace http
+} // namespace server
+} // namespace osrm
 
 #endif // HEADER_HPP

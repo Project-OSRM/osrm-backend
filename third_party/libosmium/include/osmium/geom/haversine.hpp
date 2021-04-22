@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/geom/util.hpp>
-#include <osmium/osm/node_ref.hpp>
+#include <osmium/osm/node_ref_list.hpp>
 #include <osmium/osm/way.hpp>
 
 #include <cmath>
@@ -63,13 +63,13 @@ namespace osmium {
              *
              * @pre @code c1.valid() && c2.valid() @endcode
              */
-            inline double distance(const osmium::geom::Coordinates& c1, const osmium::geom::Coordinates& c2) {
-                double lonh = sin(deg_to_rad(c1.x - c2.x) * 0.5);
+            inline double distance(const osmium::geom::Coordinates& c1, const osmium::geom::Coordinates& c2) noexcept {
+                double lonh = std::sin(deg_to_rad(c1.x - c2.x) * 0.5);
                 lonh *= lonh;
-                double lath = sin(deg_to_rad(c1.y - c2.y) * 0.5);
+                double lath = std::sin(deg_to_rad(c1.y - c2.y) * 0.5);
                 lath *= lath;
-                const double tmp = cos(deg_to_rad(c1.y)) * cos(deg_to_rad(c2.y));
-                return 2.0 * EARTH_RADIUS_IN_METERS * asin(sqrt(lath + tmp * lonh));
+                const double tmp = std::cos(deg_to_rad(c1.y)) * std::cos(deg_to_rad(c2.y));
+                return 2.0 * EARTH_RADIUS_IN_METERS * std::asin(std::sqrt(lath + tmp * lonh));
             }
 
             /**
@@ -80,6 +80,21 @@ namespace osmium {
 
                 for (auto it = wnl.begin(); it != wnl.end(); ++it) {
                     if (std::next(it) != wnl.end()) {
+                        sum_length += distance(it->location(), std::next(it)->location());
+                    }
+                }
+
+                return sum_length;
+            }
+
+            /**
+             * Calculate length of node list.
+             */
+            inline double distance(const osmium::NodeRefList& nrl) {
+                double sum_length = 0;
+
+                for (auto it = nrl.begin(); it != nrl.end(); ++it) {
+                    if (std::next(it) != nrl.end()) {
                         sum_length += distance(it->location(), std::next(it)->location());
                     }
                 }

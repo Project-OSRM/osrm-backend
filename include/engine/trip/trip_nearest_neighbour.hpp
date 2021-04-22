@@ -92,8 +92,8 @@ std::vector<NodeID> NearestNeighbourTrip(const NodeIDIterator &start,
     }
     return route;
 }
-}
-}
-}
+} // namespace trip
+} // namespace engine
+} // namespace osrm
 
 #endif // TRIP_NEAREST_NEIGHBOUR_HPP

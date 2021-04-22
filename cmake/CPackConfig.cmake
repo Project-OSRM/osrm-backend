@@ -11,7 +11,7 @@ SET(CPACK_INCLUDE_TOPLEVEL_DIRECTORY "FALSE")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_SOURCE_DIR}/README.md")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Open Source Routing Machine (OSRM) is a high-performance routing engine. It combines sophisticated routing algorithms with the open and free data of the OpenStreetMap.")
 SET(CPACK_PACKAGE_CONTACT "Project OSRM <info@project-osrm.org>")
-SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENCE.TXT")
+SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.TXT")
 
 SET(CPACK_STRIP_FILES "TRUE")
 file(GLOB_RECURSE ProfileGlob ${CMAKE_SOURCE_DIR}/profiles/*)

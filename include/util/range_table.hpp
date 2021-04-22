@@ -33,7 +33,7 @@ template <unsigned BlockSize, storage::Ownership Ownership>
 void read(storage::tar::FileReader &reader,
           const std::string &name,
           util::RangeTable<BlockSize, Ownership> &table);
-}
+} // namespace serialization
 
 /**
  * Stores adjacent ranges in a compressed format.
@@ -209,7 +209,7 @@ unsigned RangeTable<BLOCK_SIZE, Ownership>::PrefixSumAtIndex(int index, const Bl
 
     return sum;
 }
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // RANGE_TABLE_HPP

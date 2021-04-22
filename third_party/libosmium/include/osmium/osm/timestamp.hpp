@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/util/compatibility.hpp>
 #include <osmium/util/minmax.hpp> // IWYU pragma: keep
 
+#include <array>
 #include <cassert>
 #include <cstdint>
 #include <ctime>
@@ -80,10 +81,11 @@ namespace osmium {
         }
 
         inline time_t parse_timestamp(const char* str) {
-            static const int mon_lengths[] = {
+            static const std::array<int, 12> mon_lengths = {{
                 31, 29, 31, 30, 31, 30,
                 31, 31, 30, 31, 30, 31
-            };
+            }};
+
             if (str[ 0] >= '0' && str[ 0] <= '9' &&
                 str[ 1] >= '0' && str[ 1] <= '9' &&
                 str[ 2] >= '0' && str[ 2] <= '9' &&
@@ -104,7 +106,7 @@ namespace osmium {
                 str[17] >= '0' && str[17] <= '9' &&
                 str[18] >= '0' && str[18] <= '9' &&
                 str[19] == 'Z') {
-                struct tm tm;
+                std::tm tm; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
                 tm.tm_year = (str[ 0] - '0') * 1000 +
                              (str[ 1] - '0') *  100 +
                              (str[ 2] - '0') *   10 +
@@ -130,7 +132,7 @@ namespace osmium {
 #endif
                 }
             }
-            throw std::invalid_argument{"can not parse timestamp"};
+            throw std::invalid_argument{std::string{"can not parse timestamp: '"} + str + "'"};
         }
 
     } // namespace detail
@@ -145,6 +147,34 @@ namespace osmium {
     class Timestamp {
 
         uint32_t m_timestamp = 0;
+
+        void to_iso_str(std::string& s) const {
+            std::tm tm; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+            time_t sse = seconds_since_epoch();
+#ifndef NDEBUG
+            auto result =
+#endif
+#ifndef _WIN32
+            gmtime_r(&sse, &tm);
+            assert(result != nullptr);
+#else
+            gmtime_s(&tm, &sse);
+            assert(result == 0);
+#endif
+
+            detail::add_4digit_int_to_string(tm.tm_year + 1900, s);
+            s += '-';
+            detail::add_2digit_int_to_string(tm.tm_mon + 1, s);
+            s += '-';
+            detail::add_2digit_int_to_string(tm.tm_mday, s);
+            s += 'T';
+            detail::add_2digit_int_to_string(tm.tm_hour, s);
+            s += ':';
+            detail::add_2digit_int_to_string(tm.tm_min, s);
+            s += ':';
+            detail::add_2digit_int_to_string(tm.tm_sec, s);
+            s += 'Z';
+        }
 
     public:
 
@@ -243,32 +273,21 @@ namespace osmium {
             std::string s;
 
             if (m_timestamp != 0) {
-                struct tm tm;
-                time_t sse = seconds_since_epoch();
-#ifndef NDEBUG
-                auto result =
-#endif
-#ifndef _WIN32
-                gmtime_r(&sse, &tm);
-                assert(result != nullptr);
-#else
-                gmtime_s(&tm, &sse);
-                assert(result == 0);
-#endif
-
-                detail::add_4digit_int_to_string(tm.tm_year + 1900, s);
-                s += '-';
-                detail::add_2digit_int_to_string(tm.tm_mon + 1, s);
-                s += '-';
-                detail::add_2digit_int_to_string(tm.tm_mday, s);
-                s += 'T';
-                detail::add_2digit_int_to_string(tm.tm_hour, s);
-                s += ':';
-                detail::add_2digit_int_to_string(tm.tm_min, s);
-                s += ':';
-                detail::add_2digit_int_to_string(tm.tm_sec, s);
-                s += 'Z';
+                to_iso_str(s);
             }
+
+            return s;
+        }
+
+        /**
+         * Return the timestamp as string in ISO date/time
+         * ("yyyy-mm-ddThh:mm:ssZ") format. If the timestamp is invalid, the
+         * string "1970-01-01T00:00:00Z" will be returned.
+         */
+        std::string to_iso_all() const {
+            std::string s;
+
+            to_iso_str(s);
 
             return s;
         }

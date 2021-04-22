@@ -9,4 +9,4 @@ namespace osrm
 
 void partition(const PartitionerConfig &config) { partitioner::Partitioner().Run(config); }
 
-} // ns osrm
+} // namespace osrm

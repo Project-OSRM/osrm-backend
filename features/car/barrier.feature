@@ -46,6 +46,18 @@ Feature: Car - Barriers
             | bollard      | rising        | x     |
             | bollard      | removable     |       |
 
+    # https://github.com/Project-OSRM/osrm-backend/issues/5996
+    Scenario: Car - Kerb exception for barriers
+        Then routability should be
+            | node/barrier | node/highway  | node/kerb  | bothw |
+            | kerb         |               |            |       |
+            | kerb         | crossing      |            |  x    |
+            | kerb         | crossing      | yes        |  x    |
+            | kerb         |               | lowered    |  x    |
+            | kerb         |               | flush      |  x    |
+            | kerb         |               | raised     |       |
+            | kerb         |               | yes        |       |
+
     Scenario: Car - Height restrictions
         Then routability should be
             | node/barrier      | node/maxheight | bothw |

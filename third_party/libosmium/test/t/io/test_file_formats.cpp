@@ -3,6 +3,7 @@
 #include <osmium/io/file.hpp>
 
 #include <iterator>
+#include <stdexcept>
 
 TEST_CASE("Default file format") {
     const osmium::io::File f;
@@ -294,7 +295,7 @@ TEST_CASE("URL without format") {
 }
 
 TEST_CASE("URL without format and filename") {
-    const osmium::io::File f{"http://planet.osm.org/pbf/planet-latest.osm.pbf"};
+    const osmium::io::File f{"https://planet.osm.org/pbf/planet-latest.osm.pbf"};
     REQUIRE(osmium::io::file_format::pbf == f.format());
     REQUIRE(osmium::io::file_compression::none == f.compression());
     REQUIRE_FALSE(f.has_multiple_object_versions());

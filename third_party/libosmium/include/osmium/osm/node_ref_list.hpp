@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -149,6 +149,7 @@ namespace osmium {
          * @pre @code !empty() @endcode
          */
         bool is_closed() const noexcept {
+            assert(!empty());
             return ends_have_same_id();
         }
 
@@ -161,6 +162,7 @@ namespace osmium {
          * @pre @code !empty() @endcode
          */
         bool ends_have_same_id() const noexcept {
+            assert(!empty());
             return front().ref() == back().ref();
         }
 
@@ -174,6 +176,7 @@ namespace osmium {
          * @pre @code front().location() && back().location() @endcode
          */
         bool ends_have_same_location() const {
+            assert(!empty());
             assert(front().location() && back().location());
             return front().location() == back().location();
         }

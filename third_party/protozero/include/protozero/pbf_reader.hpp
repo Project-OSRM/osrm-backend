@@ -16,12 +16,12 @@ documentation.
  * @brief Contains the pbf_reader class.
  */
 
-#include <protozero/config.hpp>
-#include <protozero/data_view.hpp>
-#include <protozero/exception.hpp>
-#include <protozero/iterators.hpp>
-#include <protozero/types.hpp>
-#include <protozero/varint.hpp>
+#include "config.hpp"
+#include "data_view.hpp"
+#include "exception.hpp"
+#include "iterators.hpp"
+#include "types.hpp"
+#include "varint.hpp"
 
 #if PROTOZERO_BYTE_ORDER != PROTOZERO_LITTLE_ENDIAN
 # include <protozero/byteswap.hpp>
@@ -80,7 +80,7 @@ class pbf_reader {
         skip_bytes(sizeof(T));
         std::memcpy(&result, data, sizeof(T));
 #if PROTOZERO_BYTE_ORDER != PROTOZERO_LITTLE_ENDIAN
-        detail::byteswap_inplace(&result);
+        byteswap_inplace(&result);
 #endif
         return result;
     }
@@ -98,7 +98,8 @@ class pbf_reader {
 
     template <typename T>
     T get_varint() {
-        return static_cast<T>(decode_varint(&m_data, m_end));
+        const auto val = static_cast<T>(decode_varint(&m_data, m_end));
+        return val;
     }
 
     template <typename T>
@@ -112,7 +113,7 @@ class pbf_reader {
     }
 
     void skip_bytes(pbf_length_type len) {
-        if (m_data + len > m_end) {
+        if (m_end - m_data < static_cast<ptrdiff_t>(len)) {
             throw end_of_buffer_exception{};
         }
         m_data += len;
@@ -151,8 +152,8 @@ public:
      * @post There is no current field.
      */
     explicit pbf_reader(const data_view& view) noexcept
-        : m_data(view.data()),
-          m_end(view.data() + view.size()) {
+        : m_data{view.data()},
+          m_end{view.data() + view.size()} {
     }
 
     /**
@@ -166,8 +167,8 @@ public:
      * @post There is no current field.
      */
     pbf_reader(const char* data, std::size_t size) noexcept
-        : m_data(data),
-          m_end(data + size) {
+        : m_data{data},
+          m_end{data + size} {
     }
 
 #ifndef PROTOZERO_STRICT_API
@@ -183,8 +184,8 @@ public:
      * @deprecated Use one of the other constructors.
      */
     explicit pbf_reader(const std::pair<const char*, std::size_t>& data) noexcept
-        : m_data(data.first),
-          m_end(data.first + data.second) {
+        : m_data{data.first},
+          m_end{data.first + data.second} {
     }
 #endif
 
@@ -199,8 +200,8 @@ public:
      * @post There is no current field.
      */
     explicit pbf_reader(const std::string& data) noexcept
-        : m_data(data.data()),
-          m_end(data.data() + data.size()) {
+        : m_data{data.data()},
+          m_end{data.data() + data.size()} {
     }
 
     /**
@@ -242,7 +243,14 @@ public:
      * read.
      */
     operator bool() const noexcept { // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
-        return m_data < m_end;
+        return m_data != m_end;
+    }
+
+    /**
+     * Get a view of the not yet read data.
+     */
+    data_view data() const noexcept {
+        return {m_data, static_cast<std::size_t>(m_end - m_data)};
     }
 
     /**
@@ -279,7 +287,7 @@ public:
         }
 
         const auto value = get_varint<uint32_t>();
-        m_tag = pbf_tag_type(value >> 3u);
+        m_tag = pbf_tag_type(value >> 3U);
 
         // tags 0 and 19000 to 19999 are not allowed as per
         // https://developers.google.com/protocol-buffers/docs/proto#assigning-tags
@@ -287,7 +295,7 @@ public:
             throw invalid_tag_exception{};
         }
 
-        m_wire_type = pbf_wire_type(value & 0x07u);
+        m_wire_type = pbf_wire_type(value & 0x07U);
         switch (m_wire_type) {
             case pbf_wire_type::varint:
             case pbf_wire_type::fixed64:
@@ -486,9 +494,9 @@ public:
     bool get_bool() {
         protozero_assert(tag() != 0 && "call next() before accessing field value");
         protozero_assert(has_wire_type(pbf_wire_type::varint) && "not a varint");
-        const auto data = m_data;
+        const bool result = m_data[0] != 0;
         skip_varint(&m_data, m_end);
-        return data[0] != 0;
+        return result;
     }
 
     /**

@@ -1,5 +1,8 @@
 // NOLINT(llvm-header-guard)
 
+#include <array>
+#include <sstream>
+
 #define PBF_TYPE_NAME PROTOZERO_TEST_STRING(PBF_TYPE)
 #define GET_TYPE PROTOZERO_TEST_CONCAT(get_packed_, PBF_TYPE)
 #define ADD_TYPE PROTOZERO_TEST_CONCAT(add_packed_, PBF_TYPE)
@@ -92,7 +95,7 @@ TEST_CASE("read repeated packed field: " PBF_TYPE_NAME) {
             for (std::string::size_type i = 1; i < abuffer.size() - n; ++i) {
                 protozero::pbf_reader item{abuffer.data() + n, i};
                 REQUIRE(item.next());
-                REQUIRE_THROWS_AS(item.GET_TYPE(), const protozero::end_of_buffer_exception&);
+                REQUIRE_THROWS_AS(item.GET_TYPE(), protozero::end_of_buffer_exception);
             }
         }
 
@@ -105,21 +108,27 @@ TEST_CASE("write repeated packed field: " PBF_TYPE_NAME) {
     protozero::pbf_writer pw{buffer};
 
     SECTION("empty") {
-        cpp_type data[] = { 17 };
+        std::array<cpp_type, 1> data = {{ 17 }};
         pw.ADD_TYPE(1, std::begin(data), std::begin(data) /* !!!! */);
 
         REQUIRE(buffer == load_data("repeated_packed_" PBF_TYPE_NAME "/data-empty"));
     }
 
     SECTION("one") {
-        cpp_type data[] = { 17 };
+        std::array<cpp_type, 1> data = {{ 17 }};
         pw.ADD_TYPE(1, std::begin(data), std::end(data));
 
         REQUIRE(buffer == load_data("repeated_packed_" PBF_TYPE_NAME "/data-one"));
     }
 
     SECTION("many") {
-        cpp_type data[] = {
+        std::array<cpp_type,
+#if PBF_TYPE_IS_SIGNED
+                   8
+#else
+                   5
+#endif
+        > data = {{
                17
             , 200
             ,   0
@@ -130,7 +139,7 @@ TEST_CASE("write repeated packed field: " PBF_TYPE_NAME) {
             ,  -1
             ,std::numeric_limits<cpp_type>::min()
 #endif
-        };
+        }};
         pw.ADD_TYPE(1, std::begin(data), std::end(data));
 
         REQUIRE(buffer == load_data("repeated_packed_" PBF_TYPE_NAME "/data-many"));
@@ -246,9 +255,9 @@ TEST_CASE("write from different types of iterators: " PBF_TYPE_NAME) {
 
     SECTION("from uint16_t") {
 #if PBF_TYPE_IS_SIGNED
-        const  int16_t data[] = { 1, 4, 9, 16, 25 };
+        const std::array< int16_t, 5> data = {{ 1, 4, 9, 16, 25 }};
 #else
-        const uint16_t data[] = { 1, 4, 9, 16, 25 };
+        const std::array<uint16_t, 5> data = {{ 1, 4, 9, 16, 25 }};
 #endif
 
         pw.ADD_TYPE(1, std::begin(data), std::end(data));
@@ -290,7 +299,7 @@ TEST_CASE("write from different types of iterators: " PBF_TYPE_NAME) {
     REQUIRE(std::distance(it_range.begin(), it_range.end()) == 0);
     REQUIRE(it_range.size() == 0); // NOLINT(readability-container-size-empty)
 
-    REQUIRE_THROWS_AS(it_range.front(), const assert_error&);
-    REQUIRE_THROWS_AS(it_range.drop_front(), const assert_error&);
+    REQUIRE_THROWS_AS(it_range.front(), assert_error);
+    REQUIRE_THROWS_AS(it_range.drop_front(), assert_error);
 }
 

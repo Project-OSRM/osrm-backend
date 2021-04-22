@@ -36,7 +36,7 @@ std::vector<LevelID> getHighestBorderLevel(const DynamicEdgeBasedGraph &graph,
 
     return border_level;
 }
-}
+} // namespace
 
 std::vector<std::uint32_t> makePermutation(const DynamicEdgeBasedGraph &graph,
                                            const std::vector<Partition> &partitions)
@@ -66,5 +66,5 @@ std::vector<std::uint32_t> makePermutation(const DynamicEdgeBasedGraph &graph,
 
     return util::orderingToPermutation(ordering);
 }
-}
-}
+} // namespace partitioner
+} // namespace osrm

@@ -1,7 +1,6 @@
 #include "engine/internal_route_result.hpp"
 #include "engine/phantom_node.hpp"
 
-#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>

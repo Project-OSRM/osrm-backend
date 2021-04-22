@@ -42,35 +42,35 @@ namespace extractor
 
 struct ExtractorConfig final : storage::IOConfig
 {
-    ExtractorConfig() noexcept : IOConfig(
-                                     {
-                                         "",
-                                     },
-                                     {},
-                                     {".osrm",
-                                      ".osrm.restrictions",
-                                      ".osrm.names",
-                                      ".osrm.tls",
-                                      ".osrm.tld",
-                                      ".osrm.geometry",
-                                      ".osrm.nbg_nodes",
-                                      ".osrm.ebg_nodes",
-                                      ".osrm.edges",
-                                      ".osrm.ebg",
-                                      ".osrm.ramIndex",
-                                      ".osrm.fileIndex",
-                                      ".osrm.turn_duration_penalties",
-                                      ".osrm.turn_weight_penalties",
-                                      ".osrm.turn_penalties_index",
-                                      ".osrm.enw",
-                                      ".osrm.properties",
-                                      ".osrm.icd",
-                                      ".osrm.cnbg",
-                                      ".osrm.cnbg_to_ebg",
-                                      ".osrm.maneuver_overrides"}),
-                                 requested_num_threads(0),
-                                 parse_conditionals(false),
-                                 use_locations_cache(true)
+    ExtractorConfig() noexcept
+        : IOConfig(
+              {
+                  "",
+              },
+              {},
+              {".osrm",
+               ".osrm.restrictions",
+               ".osrm.names",
+               ".osrm.tls",
+               ".osrm.tld",
+               ".osrm.geometry",
+               ".osrm.nbg_nodes",
+               ".osrm.ebg_nodes",
+               ".osrm.timestamp",
+               ".osrm.edges",
+               ".osrm.ebg",
+               ".osrm.ramIndex",
+               ".osrm.fileIndex",
+               ".osrm.turn_duration_penalties",
+               ".osrm.turn_weight_penalties",
+               ".osrm.turn_penalties_index",
+               ".osrm.enw",
+               ".osrm.properties",
+               ".osrm.icd",
+               ".osrm.cnbg",
+               ".osrm.cnbg_to_ebg",
+               ".osrm.maneuver_overrides"}),
+          requested_num_threads(0), parse_conditionals(false), use_locations_cache(true)
     {
     }
 
@@ -82,6 +82,7 @@ struct ExtractorConfig final : storage::IOConfig
     boost::filesystem::path input_path;
     boost::filesystem::path profile_path;
     std::vector<boost::filesystem::path> location_dependent_data_paths;
+    std::string data_version;
 
     unsigned requested_num_threads;
     unsigned small_component_size;
@@ -92,7 +93,7 @@ struct ExtractorConfig final : storage::IOConfig
     bool parse_conditionals;
     bool use_locations_cache;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif // EXTRACTOR_CONFIG_HPP

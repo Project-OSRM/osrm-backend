@@ -60,7 +60,7 @@ struct unsafelatitude
 struct unsafelongitude
 {
 };
-}
+} // namespace tag
 
 // Internal lon/lat types - assumed to be range safe
 using FixedLatitude = Alias<std::int32_t, tag::latitude>;
@@ -265,7 +265,7 @@ inline Coordinate::Coordinate(const FloatCoordinate &other)
     : Coordinate(toFixed(other.lon), toFixed(other.lat))
 {
 }
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif /* COORDINATE_HPP_ */

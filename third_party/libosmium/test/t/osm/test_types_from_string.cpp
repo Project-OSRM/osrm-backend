@@ -3,6 +3,8 @@
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/types_from_string.hpp>
 
+#include <stdexcept>
+
 TEST_CASE("set ID from string") {
     REQUIRE(osmium::string_to_object_id("0") == 0);
     REQUIRE(osmium::string_to_object_id("17") == 17);

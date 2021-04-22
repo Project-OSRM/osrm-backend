@@ -74,7 +74,7 @@ struct ConcurrentIDMap
     }
 };
 
-} // util
-} // osrm
+} // namespace util
+} // namespace osrm
 
 #endif // CONCURRENT_ID_MAP_HPP

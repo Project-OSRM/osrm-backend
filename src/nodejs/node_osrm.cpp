@@ -149,20 +149,23 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
         {
         }
 
-        void Execute() override try
+        void Execute() override
+        try
         {
-            osrm::json::Object r;
+            osrm::engine::api::ResultT r;
+            r = osrm::util::json::Object();
             const auto status = ((*osrm).*(service))(*params, r);
-            ParseResult(status, r);
+            auto json_result = r.get<osrm::json::Object>();
+            ParseResult(status, json_result);
             if (pluginParams.renderJSONToBuffer)
             {
                 std::ostringstream buf;
-                osrm::util::json::render(buf, r);
+                osrm::util::json::render(buf, json_result);
                 result = buf.str();
             }
             else
             {
-                result = r;
+                result = json_result;
             }
         }
         catch (const std::exception &e)
@@ -228,10 +231,13 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
         {
         }
 
-        void Execute() override try
+        void Execute() override
+        try
         {
+            result = std::string();
             const auto status = ((*osrm).*(service))(*params, result);
-            ParseResult(status, result);
+            auto str_result = result.get<std::string>();
+            ParseResult(status, str_result);
         }
         catch (const std::exception &e)
         {
@@ -243,7 +249,8 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
             Nan::HandleScope scope;
 
             const constexpr auto argc = 2u;
-            v8::Local<v8::Value> argv[argc] = {Nan::Null(), render(result)};
+            auto str_result = result.get<std::string>();
+            v8::Local<v8::Value> argv[argc] = {Nan::Null(), render(str_result)};
 
             callback->Call(argc, argv);
         }
@@ -254,7 +261,7 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
         const ParamPtr params;
         const PluginParameters pluginParams;
 
-        std::string result;
+        osrm::engine::api::ResultT result;
     };
 
     auto *callback = new Nan::Callback{info[info.Length() - 1].As<v8::Function>()};
@@ -299,7 +306,10 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
 // clang-format on
 NAN_METHOD(Engine::route) //
 {
-    async(info, &argumentsToRouteParameter, &osrm::OSRM::Route, true);
+    osrm::Status (osrm::OSRM::*route_fn)(const osrm::RouteParameters &params,
+                                         osrm::engine::api::ResultT &result) const =
+        &osrm::OSRM::Route;
+    async(info, &argumentsToRouteParameter, route_fn, true);
 }
 
 // clang-format off
@@ -339,7 +349,10 @@ NAN_METHOD(Engine::route) //
 // clang-format on
 NAN_METHOD(Engine::nearest) //
 {
-    async(info, &argumentsToNearestParameter, &osrm::OSRM::Nearest, false);
+    osrm::Status (osrm::OSRM::*nearest_fn)(const osrm::NearestParameters &params,
+                                           osrm::engine::api::ResultT &result) const =
+        &osrm::OSRM::Nearest;
+    async(info, &argumentsToNearestParameter, nearest_fn, false);
 }
 
 // clang-format off
@@ -391,7 +404,10 @@ NAN_METHOD(Engine::nearest) //
 // clang-format on
 NAN_METHOD(Engine::table) //
 {
-    async(info, &argumentsToTableParameter, &osrm::OSRM::Table, true);
+    osrm::Status (osrm::OSRM::*table_fn)(const osrm::TableParameters &params,
+                                         osrm::engine::api::ResultT &result) const =
+        &osrm::OSRM::Table;
+    async(info, &argumentsToTableParameter, table_fn, true);
 }
 
 // clang-format off
@@ -422,7 +438,10 @@ NAN_METHOD(Engine::table) //
 // clang-format on
 NAN_METHOD(Engine::tile)
 {
-    asyncForTiles(info, &argumentsToTileParameters, &osrm::OSRM::Tile, {/*unused*/});
+    osrm::Status (osrm::OSRM::*tile_fn)(const osrm::TileParameters &params,
+                                        osrm::engine::api::ResultT &result) const =
+        &osrm::OSRM::Tile;
+    asyncForTiles(info, &argumentsToTileParameters, tile_fn, {/*unused*/});
 }
 
 // clang-format off
@@ -476,7 +495,10 @@ NAN_METHOD(Engine::tile)
 // clang-format on
 NAN_METHOD(Engine::match) //
 {
-    async(info, &argumentsToMatchParameter, &osrm::OSRM::Match, true);
+    osrm::Status (osrm::OSRM::*match_fn)(const osrm::MatchParameters &params,
+                                         osrm::engine::api::ResultT &result) const =
+        &osrm::OSRM::Match;
+    async(info, &argumentsToMatchParameter, match_fn, true);
 }
 
 // clang-format off
@@ -546,7 +568,10 @@ NAN_METHOD(Engine::match) //
 // clang-format on
 NAN_METHOD(Engine::trip) //
 {
-    async(info, &argumentsToTripParameter, &osrm::OSRM::Trip, true);
+    osrm::Status (osrm::OSRM::*trip_fn)(const osrm::TripParameters &params,
+                                        osrm::engine::api::ResultT &result) const =
+        &osrm::OSRM::Trip;
+    async(info, &argumentsToTripParameter, trip_fn, true);
 }
 
 /**

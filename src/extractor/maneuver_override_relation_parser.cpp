@@ -136,5 +136,5 @@ ManeuverOverrideRelationParser::TryParse(const osmium::Relation &relation) const
     }
     return maneuver_override;
 }
-}
-}
+} // namespace extractor
+} // namespace osrm

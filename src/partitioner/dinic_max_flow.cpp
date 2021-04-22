@@ -183,7 +183,6 @@ std::size_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
 
     // augment the flow along a path in the level graph
     const auto augment_flow = [&flow](const std::vector<NodeID> &path) {
-
         // add/remove flow edges from the current residual graph
         const auto augment_one = [&flow](const NodeID from, const NodeID to) {
             // check if there is flow in the opposite direction

@@ -39,16 +39,21 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     }
 
-    const std::string input_filename{argv[1]};
+    try {
+        const std::string input_filename{argv[1]};
 
-    osmium::io::Reader reader{input_filename};
+        osmium::io::Reader reader{input_filename};
 
-    CountHandler handler;
-    osmium::apply(reader, handler);
-    reader.close();
+        CountHandler handler;
+        osmium::apply(reader, handler);
+        reader.close();
 
-    std::cout << "Nodes: "     << handler.nodes     << '\n';
-    std::cout << "Ways: "      << handler.ways      << '\n';
-    std::cout << "Relations: " << handler.relations << '\n';
+        std::cout << "Nodes: "     << handler.nodes     << '\n';
+        std::cout << "Ways: "      << handler.ways      << '\n';
+        std::cout << "Relations: " << handler.relations << '\n';
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << '\n';
+        std::exit(1);
+    }
 }
 

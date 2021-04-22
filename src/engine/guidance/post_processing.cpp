@@ -706,8 +706,9 @@ void applyOverrides(const datafacade::BaseDataFacade &facade,
                             << "    direction was "
                             << osrm::guidance::instructionModifierToString(
                                    step_to_update->maneuver.instruction.direction_modifier)
-                            << " now " << osrm::guidance::instructionModifierToString(
-                                              maneuver_relation.direction)
+                            << " now "
+                            << osrm::guidance::instructionModifierToString(
+                                   maneuver_relation.direction)
                             << std::endl;
                         step_to_update->maneuver.instruction.direction_modifier =
                             maneuver_relation.direction;

@@ -91,5 +91,5 @@ bool FingerPrint::IsDataCompatible(const FingerPrint &other) const
     return IsValid() && other.major_version == major_version &&
            other.minor_version == minor_version;
 }
-}
-}
+} // namespace util
+} // namespace osrm

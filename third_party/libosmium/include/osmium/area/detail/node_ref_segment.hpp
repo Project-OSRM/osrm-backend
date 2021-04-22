@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/node_ref.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstdint>
 #include <iosfwd>
@@ -101,14 +102,10 @@ namespace osmium {
                 NodeRefSegment() noexcept = default;
 
                 NodeRefSegment(const osmium::NodeRef& nr1, const osmium::NodeRef& nr2, role_type role, const osmium::Way* way) noexcept :
-                    m_first(nr1),
-                    m_second(nr2),
+                    m_first(nr1.location() < nr2.location() ? nr1 : nr2),
+                    m_second(nr1.location() < nr2.location() ? nr2 : nr1),
                     m_way(way),
                     m_role(role) {
-                    if (nr2.location() < nr1.location()) {
-                        using std::swap;
-                        swap(m_first, m_second);
-                    }
                 }
 
                 /**
@@ -195,7 +192,7 @@ namespace osmium {
                 }
 
                 const char* role_name() const noexcept {
-                    static const char* names[] = { "unknown", "outer", "inner", "empty" };
+                    static const std::array<const char*, 4> names = {{ "unknown", "outer", "inner", "empty" }};
                     return names[int(m_role)];
                 }
 
@@ -205,7 +202,7 @@ namespace osmium {
 
                 /**
                  * The "determinant" of this segment. Used for calculating
-                 * the winding order or a ring.
+                 * the winding order of a ring.
                  */
                 int64_t det() const noexcept {
                     const vec a{start()};
@@ -348,13 +345,14 @@ namespace osmium {
                         osmium::Location location;
                     };
 
-                    seg_loc sl[4];
-                    sl[0] = {0, s1.first().location() };
-                    sl[1] = {0, s1.second().location()};
-                    sl[2] = {1, s2.first().location() };
-                    sl[3] = {1, s2.second().location()};
+                    std::array<seg_loc, 4> sl = {{
+                        {0, s1.first().location() },
+                        {0, s1.second().location()},
+                        {1, s2.first().location() },
+                        {1, s2.second().location()},
+                    }};
 
-                    std::sort(sl, sl+4, [](const seg_loc& lhs, const seg_loc& rhs) {
+                    std::sort(sl.begin(), sl.end(), [](const seg_loc& lhs, const seg_loc& rhs) {
                         return lhs.location < rhs.location;
                     });
 

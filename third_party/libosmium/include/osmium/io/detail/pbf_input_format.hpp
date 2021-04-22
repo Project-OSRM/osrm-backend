@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -62,7 +62,7 @@ namespace osmium {
 
         namespace detail {
 
-            class PBFParser : public Parser {
+            class PBFParser final : public Parser {
 
                 std::string m_input_buffer{};
 
@@ -96,21 +96,19 @@ namespace osmium {
                  * the length of the following BlobHeader.
                  */
                 uint32_t read_blob_header_size_from_file() {
-                    uint32_t size_in_network_byte_order;
+                    uint32_t size;
 
                     try {
-                        const std::string input_data{read_from_input_queue(sizeof(size_in_network_byte_order))};
-                        size_in_network_byte_order = *reinterpret_cast<const uint32_t*>(input_data.data());
+                        // size is encoded in network byte order
+                        const std::string input_data{read_from_input_queue(sizeof(size))};
+                        const char* d = input_data.data();
+                        size = (static_cast<uint32_t>(d[3])) |
+                               (static_cast<uint32_t>(d[2]) <<  8U) |
+                               (static_cast<uint32_t>(d[1]) << 16U) |
+                               (static_cast<uint32_t>(d[0]) << 24U);
                     } catch (const osmium::pbf_error&) {
                         return 0; // EOF
                     }
-
-                    #ifndef _WIN32
-                    const uint32_t size = ntohl(size_in_network_byte_order);
-                    #else
-                    uint32_t size = size_in_network_byte_order;
-                    protozero::detail::byteswap_inplace(&size);
-                    #endif
 
                     if (size > static_cast<uint32_t>(max_blob_header_size)) {
                         throw osmium::pbf_error{"invalid BlobHeader size (> max_blob_header_size)"};
@@ -123,7 +121,7 @@ namespace osmium {
                  * Decode the BlobHeader. Make sure it contains the expected
                  * type. Return the size of the following Blob.
                  */
-                size_t decode_blob_header(protozero::pbf_message<FileFormat::BlobHeader>&& pbf_blob_header, const char* expected_type) {
+                static size_t decode_blob_header(protozero::pbf_message<FileFormat::BlobHeader>&& pbf_blob_header, const char* expected_type) {
                     protozero::data_view blob_header_type;
                     size_t blob_header_datasize = 0;
 
@@ -205,9 +203,9 @@ namespace osmium {
                 PBFParser(PBFParser&&) = delete;
                 PBFParser& operator=(PBFParser&&) = delete;
 
-                ~PBFParser() noexcept final = default;
+                ~PBFParser() noexcept = default;
 
-                void run() final {
+                void run() override {
                     osmium::thread::set_thread_name("_osmium_pbf_in");
 
                     parse_header_blob();

@@ -6,6 +6,7 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/name_table.hpp"
 #include "extractor/node_data_container.hpp"
+#include "extractor/node_restriction_map.hpp"
 #include "extractor/suffix_table.hpp"
 #include "extractor/turn_lane_types.hpp"
 #include "extractor/way_restriction_map.hpp"
@@ -44,7 +45,7 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                    EntryClassesMap &entry_class_hash,
                    std::uint32_t &connectivity_checksum);
 
-} // namespace customizer
+} // namespace guidance
 } // namespace osrm
 
 #endif

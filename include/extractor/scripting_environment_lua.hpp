@@ -12,7 +12,7 @@
 #include <mutex>
 #include <string>
 
-#include <sol2/sol.hpp>
+#include <sol.hpp>
 
 namespace osrm
 {
@@ -92,7 +92,7 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
                     const ExtractionRelationContainer &relations,
                     std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
                     std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
-                    std::vector<InputConditionalTurnRestriction> &resulting_restrictions,
+                    std::vector<InputTurnRestriction> &resulting_restrictions,
                     std::vector<InputManeuverOverride> &resulting_maneuver_overrides) override;
 
     bool HasLocationDependentData() const override { return !location_dependent_data.empty(); }
@@ -110,7 +110,7 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     tbb::enumerable_thread_specific<std::unique_ptr<LuaScriptingContext>> script_contexts;
     const LocationDependentData location_dependent_data;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif /* SCRIPTING_ENVIRONMENT_LUA_HPP */

@@ -46,7 +46,7 @@ TEST_CASE("read float field") {
             for (std::string::size_type i = 1; i < abuffer.size() - n; ++i) {
                 protozero::pbf_reader item{abuffer.data() + n, i};
                 REQUIRE(item.next());
-                REQUIRE_THROWS_AS(item.get_float(), const protozero::end_of_buffer_exception&);
+                REQUIRE_THROWS_AS(item.get_float(), protozero::end_of_buffer_exception);
             }
         }
     }
@@ -57,17 +57,17 @@ TEST_CASE("write float field") {
     protozero::pbf_writer pw{buffer};
 
     SECTION("zero") {
-        pw.add_float(1, 0.0f);
+        pw.add_float(1, 0.0F);
         REQUIRE(buffer == load_data("float/data-zero"));
     }
 
     SECTION("positive") {
-        pw.add_float(1, 5.34f);
+        pw.add_float(1, 5.34F);
         REQUIRE(buffer == load_data("float/data-pos"));
     }
 
     SECTION("negative") {
-        pw.add_float(1, -1.71f);
+        pw.add_float(1, -1.71F);
         REQUIRE(buffer == load_data("float/data-neg"));
     }
 }

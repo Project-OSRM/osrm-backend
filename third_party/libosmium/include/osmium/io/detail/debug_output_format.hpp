@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -44,6 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/box.hpp>
 #include <osmium/osm/changeset.hpp>
 #include <osmium/osm/crc.hpp>
+#include <osmium/osm/crc_zlib.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/metadata_options.hpp>
@@ -59,9 +60,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/util/minmax.hpp>
 #include <osmium/visitor.hpp>
 
-#include <boost/crc.hpp>
-
-#include <cinttypes>
+#include <array>
 #include <cmath>
 #include <cstring>
 #include <iterator>
@@ -111,6 +110,8 @@ namespace osmium {
              * Writes out one buffer with OSM data in Debug format.
              */
             class DebugOutputBlock : public OutputBlock {
+
+                using crc_type = osmium::CRC_zlib;
 
                 debug_output_options m_options;
 
@@ -197,7 +198,12 @@ namespace osmium {
 
                 void write_counter(int width, int n) {
                     write_color(color_white);
+#pragma GCC diagnostic push
+#if !defined(__clang__) && defined(__GNUC__) && (__GNUC__ > 7)
+#pragma GCC diagnostic ignored "-Wformat-truncation"
+#endif
                     output_formatted("    %0*d: ", width, n++);
+#pragma GCC diagnostic pop
                     write_color(color_reset);
                 }
 
@@ -315,14 +321,14 @@ namespace osmium {
                 template <typename T>
                 void write_crc32(const T& object) {
                     write_fieldname("crc32");
-                    osmium::CRC<boost::crc_32_type> crc32;
+                    osmium::CRC<crc_type> crc32;
                     crc32.update(object);
                     output_formatted("    %x\n", crc32().checksum());
                 }
 
                 void write_crc32(const osmium::Changeset& object) {
                     write_fieldname("crc32");
-                    osmium::CRC<boost::crc_32_type> crc32;
+                    osmium::CRC<crc_type> crc32;
                     crc32.update(object);
                     output_formatted("      %x\n", crc32().checksum());
                 }
@@ -391,7 +397,7 @@ namespace osmium {
                     for (const auto& node_ref : way.nodes()) {
                         write_diff();
                         write_counter(width, n++);
-                        output_formatted("%10" PRId64, node_ref.ref());
+                        output_formatted("%10lld", static_cast<long long>(node_ref.ref())); // NOLINT(google-runtime-int)
                         if (node_ref.location().valid()) {
                             *m_out += " (";
                             node_ref.location().as_string(std::back_inserter(*m_out));
@@ -408,7 +414,7 @@ namespace osmium {
                 }
 
                 void relation(const osmium::Relation& relation) {
-                    static const char* short_typename[] = { "node", "way ", "rel " };
+                    static const std::array<const char*, 3> short_typename = {{ "node", "way ", "rel " }};
 
                     m_diff_char = m_options.format_as_diff ? relation.diff_as_char() : '\0';
 
@@ -427,7 +433,7 @@ namespace osmium {
                         write_diff();
                         write_counter(width, n++);
                         *m_out += short_typename[item_type_to_nwr_index(member.type())];
-                        output_formatted(" %10" PRId64 " ", member.ref());
+                        output_formatted(" %10lld ", static_cast<long long>(member.ref())); // NOLINT(google-runtime-int)
                         write_string(member.role());
                         *m_out += '\n';
                     }

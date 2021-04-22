@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -115,8 +115,13 @@ namespace osmium {
 
     private:
 
-        static constexpr const std::size_t initial_buffer_size = 1024 * 1024;
-        static constexpr const std::size_t removed_item_offset = std::numeric_limits<std::size_t>::max();
+        enum {
+            initial_buffer_size = 1024UL * 1024UL
+        };
+
+        enum {
+            removed_item_offset = std::numeric_limits<std::size_t>::max()
+        };
 
         osmium::memory::Buffer m_buffer;
         std::vector<std::size_t> m_index;

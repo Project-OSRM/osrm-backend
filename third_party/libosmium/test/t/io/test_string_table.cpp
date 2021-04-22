@@ -3,6 +3,9 @@
 #include <osmium/io/detail/string_table.hpp>
 #include <osmium/util/misc.hpp>
 
+#include <iterator>
+#include <string>
+
 TEST_CASE("Empty StringStore") {
     const osmium::io::detail::StringStore ss{100};
 

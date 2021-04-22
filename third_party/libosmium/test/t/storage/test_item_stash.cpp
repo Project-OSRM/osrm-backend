@@ -4,6 +4,8 @@
 #include <osmium/storage/item_stash.hpp>
 
 #include <sstream>
+#include <string>
+#include <vector>
 
 osmium::memory::Buffer generate_test_data() {
     using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)

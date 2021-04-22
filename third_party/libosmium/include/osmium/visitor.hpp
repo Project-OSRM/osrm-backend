@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <osmium/fwd.hpp>
+#include <osmium/handler.hpp>
 #include <osmium/io/reader_iterator.hpp> // IWYU pragma: keep
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm.hpp>
@@ -198,6 +199,102 @@ namespace osmium {
             }
         }
 
+        template <typename TFunc>
+        struct wrapper_handler : TFunc {
+
+            template<typename T>
+            explicit wrapper_handler(T&& func) : TFunc(std::forward<T>(func)) { // NOLINT(bugprone-forwarding-reference-overload)
+            }
+
+            // Fallback that always matches.
+            void operator()(const osmium::memory::Item& /*item*/) const noexcept {
+            }
+
+            // The function we are wrapping.
+            using TFunc::operator();
+
+            void osm_object(const osmium::OSMObject& /*osm_object*/) const noexcept {
+            }
+
+            void node(const osmium::Node& node) const {
+                operator()(node);
+            }
+
+            void node(osmium::Node& node) const {
+                operator()(node);
+            }
+
+            void way(const osmium::Way& way) const {
+                operator()(way);
+            }
+
+            void way(osmium::Way& way) const {
+                operator()(way);
+            }
+
+            void relation(const osmium::Relation& relation) const {
+                operator()(relation);
+            }
+
+            void relation(osmium::Relation& relation) const {
+                operator()(relation);
+            }
+
+            void area(const osmium::Area& area) const {
+                operator()(area);
+            }
+
+            void area(osmium::Area& area) const {
+                operator()(area);
+            }
+
+            void changeset(const osmium::Changeset& changeset) const {
+                operator()(changeset);
+            }
+
+            void changeset(osmium::Changeset& changeset) const {
+                operator()(changeset);
+            }
+
+            void tag_list(const osmium::TagList& /*tag_list*/) const noexcept {
+            }
+
+            void way_node_list(const osmium::WayNodeList& /*way_node_list*/) const noexcept {
+            }
+
+            void relation_member_list(const osmium::RelationMemberList& /*relation_member_list*/) const noexcept {
+            }
+
+            void outer_ring(const osmium::OuterRing& /*outer_ring*/) const noexcept {
+            }
+
+            void inner_ring(const osmium::InnerRing& /*inner_ring*/) const noexcept {
+            }
+
+            void changeset_discussion(const osmium::ChangesetDiscussion& /*changeset_discussion*/) const noexcept {
+            }
+
+            void flush() const noexcept {
+            }
+
+        }; // struct wrapper_handler
+
+        // Is the class T derived from osmium::handler::Handler?
+        template <typename T>
+        using is_handler = std::is_base_of<osmium::handler::Handler, typename std::remove_reference<T>::type>;
+
+        // This is already a handler, use it as it is.
+        template <typename T, typename = typename std::enable_if<is_handler<T>::value>::type>
+        T make_handler(T&& func) {
+            return std::forward<T>(func);
+        }
+
+        // This is not a handler, but a functor. Wrap a handler around it.
+        template <typename T, typename = typename std::enable_if<!is_handler<T>::value>::type>
+        wrapper_handler<typename std::decay<T>::type> make_handler(T&& func) {
+            return wrapper_handler<typename std::decay<T>::type>(std::forward<T>(func));
+        }
+
     } // namespace detail
 
     template <typename TItem, typename... THandlers>
@@ -215,11 +312,16 @@ namespace osmium {
     }
 
     template <typename TIterator, typename... THandlers>
-    inline void apply(TIterator it, TIterator end, THandlers&&... handlers) {
+    inline void apply_impl(TIterator it, TIterator end, THandlers&&... handlers) {
         for (; it != end; ++it) {
             apply_item(*it, std::forward<THandlers>(handlers)...);
         }
         apply_flush(std::forward<THandlers>(handlers)...);
+    }
+
+    template <typename TIterator, typename... THandlers>
+    inline void apply(TIterator it, TIterator end, THandlers&&... handlers) {
+        apply_impl(it, end, detail::make_handler<THandlers>(std::forward<THandlers>(handlers))...);
     }
 
     template <typename TContainer, typename... THandlers>

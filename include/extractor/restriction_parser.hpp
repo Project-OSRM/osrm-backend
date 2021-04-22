@@ -44,8 +44,7 @@ class RestrictionParser
     RestrictionParser(bool use_turn_restrictions,
                       bool parse_conditionals,
                       std::vector<std::string> &restrictions);
-    boost::optional<InputConditionalTurnRestriction>
-    TryParse(const osmium::Relation &relation) const;
+    boost::optional<InputTurnRestriction> TryParse(const osmium::Relation &relation) const;
 
   private:
     bool ShouldIgnoreRestriction(const std::string &except_tag_string) const;
@@ -54,7 +53,7 @@ class RestrictionParser
     bool parse_conditionals;
     std::vector<std::string> restrictions;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif /* RESTRICTION_PARSER_HPP */

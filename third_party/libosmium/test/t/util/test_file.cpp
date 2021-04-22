@@ -5,6 +5,9 @@
 #include <osmium/io/detail/read_write.hpp>
 #include <osmium/util/file.hpp>
 
+#include <stdexcept>
+#include <string>
+
 TEST_CASE("file_size(int) and file_offset() of known file") {
     std::string file_name{with_data_dir("t/util/known_file_size")};
     const int fd = osmium::io::detail::open_for_reading(file_name);

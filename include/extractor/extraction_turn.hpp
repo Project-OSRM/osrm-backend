@@ -33,16 +33,16 @@ struct ExtractionTurnLeg
     {
     }
 
-    const bool is_restricted;
-    const bool is_motorway;
-    const bool is_link;
-    const int number_of_lanes;
-    const int highway_turn_classification;
-    const int access_turn_classification;
-    const int speed;
-    const RoadPriorityClass::Enum priority_class;
-    const bool is_incoming;
-    const bool is_outgoing;
+    bool is_restricted;
+    bool is_motorway;
+    bool is_link;
+    int number_of_lanes;
+    int highway_turn_classification;
+    int access_turn_classification;
+    int speed;
+    RoadPriorityClass::Enum priority_class;
+    bool is_incoming;
+    bool is_outgoing;
 };
 
 struct ExtractionTurn
@@ -130,7 +130,7 @@ struct ExtractionTurn
     double weight;
     double duration;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif

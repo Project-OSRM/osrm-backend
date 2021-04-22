@@ -172,7 +172,7 @@ inline bool roadHasLowerClass(const util::NodeBasedEdgeData &from_data,
 
     return false;
 }
-}
+} // namespace
 
 template <typename IntersectionType> // works with Intersection and IntersectionView
 inline bool
@@ -213,7 +213,6 @@ IntersectionHandler::IsDistinctNarrowTurn(const EdgeID via_edge,
     // check if there are other narrow turns are not considered passing a low category or simply
     // a link of the same type as the potentially obvious turn
     auto const is_similar_turn = [&](auto const &road) {
-
         // 1. Skip the candidate road
         if (road.eid == candidate->eid)
         {
@@ -409,7 +408,6 @@ IntersectionHandler::IsDistinctWideTurn(const EdgeID via_edge,
     // check if there is any turn, that might look just as obvious, even though it might not
     // be allowed. Entry-allowed isn't considered a valid distinction criterion here
     auto const is_similar_turn = [&](auto const &road) {
-
         // 1. Skip over our candidate
         if (road.eid == candidate->eid)
             return false;
@@ -644,7 +642,7 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
     const auto all_roads_have_same_name =
         std::all_of(intersection.begin(),
                     intersection.end(),
-                    [ id = via_edge_annotation.name_id, this ](auto const &road) {
+                    [id = via_edge_annotation.name_id, this](auto const &road) {
                         auto const data_id = node_based_graph.GetEdgeData(road.eid).annotation_data;
                         auto const name_id = node_data_container.GetAnnotation(data_id).name_id;
                         return (name_id != EMPTY_NAMEID) && (name_id == id);

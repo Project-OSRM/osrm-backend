@@ -10,7 +10,8 @@
 
 #include <tbb/blocked_range.h>
 #include <tbb/pipeline.h>
-#include <tbb/task_scheduler_init.h>
+
+#include <thread>
 
 namespace osrm
 {
@@ -117,7 +118,6 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
         //
         tbb::filter_t<tbb::blocked_range<NodeID>, TurnsPipelineBufferPtr> guidance_stage(
             tbb::filter::parallel, [&](const tbb::blocked_range<NodeID> &intersection_node_range) {
-
                 auto buffer = std::make_shared<TurnsPipelineBuffer>();
                 buffer->nodes_processed = intersection_node_range.size();
 
@@ -201,9 +201,9 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                         // be fine.
                         bearing_class_by_node_based_node[intersection_node] = bearing_class_id;
 
-                        // check if we are turning off a via way
-                        const auto turning_off_via_way =
-                            way_restriction_map.IsViaWay(incoming_edge.node, intersection_node);
+                        // check if we on a restriction via edge
+                        const auto is_restriction_via_edge =
+                            way_restriction_map.IsViaWayEdge(incoming_edge.node, intersection_node);
 
                         for (const auto &outgoing_edge : outgoing_edges)
                         {
@@ -239,11 +239,11 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                                 guidance::TurnBearing(intersection[0].perceived_bearing),
                                 guidance::TurnBearing(turn->perceived_bearing)});
 
-                            // when turning off a a via-way turn restriction, we need to not only
+                            // When on the edge of a via-way turn restriction, we need to not only
                             // handle the normal edges for the way, but also add turns for every
                             // duplicated node. This process is integrated here to avoid doing the
                             // turn analysis multiple times.
-                            if (turning_off_via_way)
+                            if (is_restriction_via_edge)
                             {
                                 const auto duplicated_nodes = way_restriction_map.DuplicatedNodeIDs(
                                     incoming_edge.node, intersection_node);
@@ -261,10 +261,18 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
 
                                     if (is_way_restricted)
                                     {
-                                        auto const restriction = way_restriction_map.GetRestriction(
-                                            duplicated_node_id, node_at_end_of_turn);
+                                        auto const restrictions =
+                                            way_restriction_map.GetRestrictions(
+                                                duplicated_node_id, node_at_end_of_turn);
 
-                                        if (restriction.condition.empty())
+                                        auto has_unconditional =
+                                            std::any_of(restrictions.begin(),
+                                                        restrictions.end(),
+                                                        [](const auto &restriction) {
+                                                            return restriction->IsUnconditional();
+                                                        });
+
+                                        if (has_unconditional)
                                             continue;
 
                                         buffer->delayed_turn_data.push_back(guidance::TurnData{
@@ -301,7 +309,6 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
 
         tbb::filter_t<TurnsPipelineBufferPtr, void> guidance_output_stage(
             tbb::filter::serial_in_order, [&](auto buffer) {
-
                 guidance_progress.PrintAddition(buffer->nodes_processed);
 
                 connectivity_checksum = buffer->checksum.update_checksum(connectivity_checksum);
@@ -324,7 +331,7 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
         // to be balanced with the GRAINSIZE above - ideally, the pipeline puts as much work
         // as possible in the `intersection_handler` step so that those parallel workers don't
         // get blocked too much by the slower (io-performing) `buffer_storage`
-        tbb::parallel_pipeline(tbb::task_scheduler_init::default_num_threads() * 5,
+        tbb::parallel_pipeline(std::thread::hardware_concurrency() * 5,
                                generator_stage & guidance_stage & guidance_output_stage);
 
         // NOTE: EBG edges delayed_data and turns delayed_turn_data have the same index
