@@ -3,6 +3,7 @@
     - Misc:
       - FIXED: Upgrade to @mapbox/node-pre-gyp fix various bugs with Node 12/14 [#5991](https://github.com/Project-OSRM/osrm-backend/pull/5991)
       - FIXED: `valid` type in documentation examples [#5990](https://github.com/Project-OSRM/osrm-backend/issues/5990)
+      - FIXED: Remove redundant loading of .osrm.cell_metrics [#6019](https://github.com/Project-OSRM/osrm-backend/issues/6019)
     - Profile:
       - FIXED: Add kerb barrier exception to default car profile. [#5999](https://github.com/Project-OSRM/osrm-backend/pull/5999)
 
