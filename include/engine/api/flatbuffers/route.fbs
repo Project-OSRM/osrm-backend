@@ -9,7 +9,8 @@ table Annotation {
     distance: [uint];
     duration: [uint];
     datasources: [uint];
-    nodes: [uint];
+    nodes: [ulong];
+    ways: [long];
     weight: [uint];
     speed: [float];
     metadata: Metadata;

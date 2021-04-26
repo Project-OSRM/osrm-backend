@@ -409,6 +409,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                 NodeBasedEdgeWithOSM edge = {
                     OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
                     OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
+                    OSMWayID{static_cast<std::uint64_t>(input_way.id())},
                     0,  // weight
                     0,  // duration
                     0,  // distance
@@ -445,6 +446,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                 NodeBasedEdgeWithOSM edge = {
                     OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
                     OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
+                    OSMWayID{static_cast<std::uint64_t>(input_way.id())},
                     0,  // weight
                     0,  // duration
                     0,  // distance

@@ -215,9 +215,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 #endif
 
     LaneDescriptionMap turn_lane_map;
+    OSMWayIDMap osm_way_id_map;
     std::vector<TurnRestriction> turn_restrictions;
     std::vector<UnresolvedManeuverOverride> unresolved_maneuver_overrides;
-    std::tie(turn_lane_map, turn_restrictions, unresolved_maneuver_overrides) =
+    std::tie(turn_lane_map, osm_way_id_map, turn_restrictions, unresolved_maneuver_overrides) =
         ParseOSMData(scripting_environment, number_of_threads);
 
     // Transform the node-based graph that OSM is based on into an edge-based graph
@@ -238,6 +239,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     // Create a node-based graph from the OSRM file
     NodeBasedGraphFactory node_based_graph_factory(config.GetPath(".osrm"),
                                                    scripting_environment,
+                                                   osm_way_id_map,
                                                    turn_restrictions,
                                                    unresolved_maneuver_overrides);
 
@@ -319,6 +321,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     // output the geometry of the node-based graph, needs to be done after the last usage, since it
     // destroys internal containers
     files::writeSegmentData(config.GetPath(".osrm.geometry"),
+                            config.skip_osm_ways,
                             *node_based_graph_factory.GetCompressedEdges().ToSegmentData());
 
     util::Log() << "Saving edge-based node weights to file.";
@@ -368,10 +371,12 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     return 0;
 }
 
-std::
-    tuple<LaneDescriptionMap, std::vector<TurnRestriction>, std::vector<UnresolvedManeuverOverride>>
-    Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
-                            const unsigned number_of_threads)
+std::tuple<LaneDescriptionMap,
+           OSMWayIDMap,
+           std::vector<TurnRestriction>,
+           std::vector<UnresolvedManeuverOverride>>
+Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
+                        const unsigned number_of_threads)
 {
     TIMER_START(extracting);
 
@@ -420,6 +425,7 @@ std::
     ExtractionContainers extraction_containers;
     ExtractorCallbacks::ClassesMap classes_map;
     LaneDescriptionMap turn_lane_map;
+    OSMWayIDMap osm_way_id_map;
     auto extractor_callbacks =
         std::make_unique<ExtractorCallbacks>(extraction_containers,
                                              classes_map,
@@ -626,10 +632,42 @@ std::
     SetExcludableClasses(classes_map, excludable_classes, profile_properties);
     files::writeProfileProperties(config.GetPath(".osrm.properties").string(), profile_properties);
 
+    // Fill OSM Way ID Lookup Map to use it later
+    for (auto edge : extraction_containers.all_edges_list)
+    {
+        OSMWayIDDir way_id = edge.result.osm_way_id.__value;
+        OSMNodeID osm_source_id = edge.result.osm_source_id;
+        OSMNodeID osm_target_id = edge.result.osm_target_id;
+        if ((edge.result.source < edge.result.target && osm_source_id > osm_target_id) ||
+            (edge.result.source > edge.result.target && osm_source_id < osm_target_id))
+        {
+            // Bogus criteria?
+            way_id = -way_id;
+            std::swap(osm_source_id, osm_target_id);
+        }
+        if (edge.result.flags.forward)
+        {
+            osm_way_id_map[OSMWayIDMapKey(edge.result.source, edge.result.target)] = way_id;
+            util::Log(logDEBUG)
+                << "osm_way_id_map: " << edge.result.source << "->" << edge.result.target << " = "
+                << osm_way_id_map[OSMWayIDMapKey(edge.result.source, edge.result.target)] << " ("
+                << osm_source_id << "->" << osm_target_id << ")";
+        }
+        if (edge.result.flags.backward)
+        {
+            osm_way_id_map[OSMWayIDMapKey(edge.result.target, edge.result.source)] = -way_id;
+            util::Log(logDEBUG)
+                << "osm_way_id_map: " << edge.result.target << "->" << edge.result.source << " = "
+                << osm_way_id_map[OSMWayIDMapKey(edge.result.target, edge.result.source)] << " ("
+                << osm_target_id << "->" << osm_source_id << ")";
+        }
+    }
+
     TIMER_STOP(extracting);
     util::Log() << "extraction finished after " << TIMER_SEC(extracting) << "s";
 
     return std::make_tuple(std::move(turn_lane_map),
+                           std::move(osm_way_id_map),
                            std::move(extraction_containers.turn_restrictions),
                            std::move(extraction_containers.internal_maneuver_overrides));
 }

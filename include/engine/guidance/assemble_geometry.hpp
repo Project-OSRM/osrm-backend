@@ -100,6 +100,8 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
                 path_point.datasource_id});
             geometry.locations.push_back(std::move(coordinate));
             geometry.osm_node_ids.push_back(osm_node_id);
+            if (!facade.GetUncompressedWayIDsSkipped())
+                geometry.osm_way_ids.push_back(path_point.osm_way_id);
         }
     }
     current_distance =
@@ -160,7 +162,20 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     const auto target_geometry = facade.GetUncompressedForwardGeometry(target_geometry_id);
     geometry.osm_node_ids.push_back(
         facade.GetOSMNodeIDOfNode(target_geometry(target_segment_end_coordinate)));
-
+    if (!facade.GetUncompressedWayIDsSkipped())
+    {
+        if (reversed_target)
+        {
+            const auto target_osm_way_ids = facade.GetUncompressedReverseWayIDs(target_geometry_id);
+            geometry.osm_way_ids.push_back(target_osm_way_ids(
+                target_osm_way_ids.size() - target_node.fwd_segment_position - 1));
+        }
+        else
+        {
+            const auto target_osm_way_ids = facade.GetUncompressedForwardWayIDs(target_geometry_id);
+            geometry.osm_way_ids.push_back(target_osm_way_ids(target_node.fwd_segment_position));
+        }
+    }
     BOOST_ASSERT(geometry.segment_distances.size() == geometry.segment_offsets.size() - 1);
     BOOST_ASSERT(geometry.locations.size() > geometry.segment_distances.size());
     BOOST_ASSERT(geometry.annotations.size() == geometry.locations.size() - 1);

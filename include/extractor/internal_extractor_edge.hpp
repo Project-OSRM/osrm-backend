@@ -60,10 +60,11 @@ struct InternalExtractorEdge
 
     explicit InternalExtractorEdge(OSMNodeID source,
                                    OSMNodeID target,
+                                   OSMWayID way,
                                    WeightData weight_data,
                                    DurationData duration_data,
                                    util::Coordinate source_coordinate)
-        : result(source, target, 0, 0, 0, {}, -1, {}), weight_data(std::move(weight_data)),
+        : result(source, target, way, 0, 0, 0, {}, -1, {}), weight_data(std::move(weight_data)),
           duration_data(std::move(duration_data)), source_coordinate(std::move(source_coordinate))
     {
     }

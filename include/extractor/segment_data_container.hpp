@@ -10,10 +10,12 @@
 
 #include <boost/filesystem/path.hpp>
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/iterator_range.hpp>
 
 #include <unordered_map>
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -38,6 +40,7 @@ inline void read(storage::tar::FileReader &reader,
 template <storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
+                  const bool skip_osm_ways,
                   const detail::SegmentDataContainerImpl<Ownership> &segment_data);
 } // namespace serialization
 
@@ -56,6 +59,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     using DirectionalGeometryID = std::uint32_t;
     using SegmentOffset = std::uint32_t;
     using SegmentNodeVector = Vector<NodeID>;
+    using SegmentOSMWayVector = Vector<OSMWayIDDir>;
     using SegmentWeightVector = PackedVector<SegmentWeight, SEGMENT_WEIGHT_BITS>;
     using SegmentDurationVector = PackedVector<SegmentDuration, SEGMENT_DURATION_BITS>;
     using SegmentDatasourceVector = Vector<DatasourceID>;
@@ -64,16 +68,17 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     SegmentDataContainerImpl(Vector<std::uint32_t> index_,
                              SegmentNodeVector nodes_,
+                             SegmentOSMWayVector osm_ways_,
                              SegmentWeightVector fwd_weights_,
                              SegmentWeightVector rev_weights_,
                              SegmentDurationVector fwd_durations_,
                              SegmentDurationVector rev_durations_,
                              SegmentDatasourceVector fwd_datasources_,
                              SegmentDatasourceVector rev_datasources_)
-        : index(std::move(index_)), nodes(std::move(nodes_)), fwd_weights(std::move(fwd_weights_)),
-          rev_weights(std::move(rev_weights_)), fwd_durations(std::move(fwd_durations_)),
-          rev_durations(std::move(rev_durations_)), fwd_datasources(std::move(fwd_datasources_)),
-          rev_datasources(std::move(rev_datasources_))
+        : index(std::move(index_)), nodes(std::move(nodes_)), osm_ways(std::move(osm_ways_)),
+          fwd_weights(std::move(fwd_weights_)), rev_weights(std::move(rev_weights_)),
+          fwd_durations(std::move(fwd_durations_)), rev_durations(std::move(rev_durations_)),
+          fwd_datasources(std::move(fwd_datasources_)), rev_datasources(std::move(rev_datasources_))
     {
     }
 
@@ -88,6 +93,20 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     auto GetReverseGeometry(const DirectionalGeometryID id)
     {
         return boost::adaptors::reverse(GetForwardGeometry(id));
+    }
+
+    auto GetForwardOSMWayIDs(const DirectionalGeometryID id)
+    {
+        const auto begin = osm_ways.begin() + index[id];
+        const auto end = osm_ways.begin() + index[id + 1] - 1;
+
+        return boost::make_iterator_range(begin, end);
+    }
+
+    auto GetReverseOSMWayIDs(const DirectionalGeometryID id)
+    {
+        return boost::adaptors::reverse(
+            boost::adaptors::transform(GetForwardOSMWayIDs(id), std::negate<OSMWayIDDir>()));
     }
 
     auto GetForwardDurations(const DirectionalGeometryID id)
@@ -151,6 +170,22 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         return boost::adaptors::reverse(GetForwardGeometry(id));
     }
 
+    auto GetForwardOSMWayIDs(const DirectionalGeometryID id) const
+    {
+        if (GetOSMWaysSkipped())
+            return boost::make_iterator_range(osm_ways.cend(), osm_ways.cend());
+        const auto begin = osm_ways.cbegin() + index[id];
+        const auto end = osm_ways.cbegin() + index[id + 1] - 1;
+
+        return boost::make_iterator_range(begin, end);
+    }
+
+    auto GetReverseOSMWayIDs(const DirectionalGeometryID id) const
+    {
+        return boost::adaptors::reverse(
+            boost::adaptors::transform(GetForwardOSMWayIDs(id), std::negate<OSMWayIDDir>()));
+    }
+
     auto GetForwardDurations(const DirectionalGeometryID id) const
     {
         const auto begin = fwd_durations.cbegin() + index[id] + 1;
@@ -201,6 +236,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetNumberOfGeometries() const { return index.size() - 1; }
     auto GetNumberOfSegments() const { return fwd_weights.size(); }
+    auto GetOSMWaysSkipped() const { return osm_ways.size() == 0; }
 
     friend void
     serialization::read<Ownership>(storage::tar::FileReader &reader,
@@ -209,11 +245,13 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     friend void serialization::write<Ownership>(
         storage::tar::FileWriter &writer,
         const std::string &name,
+        const bool skip_osm_ways,
         const detail::SegmentDataContainerImpl<Ownership> &segment_data);
 
   private:
     Vector<std::uint32_t> index;
     SegmentNodeVector nodes;
+    SegmentOSMWayVector osm_ways;
     SegmentWeightVector fwd_weights;
     SegmentWeightVector rev_weights;
     SegmentDurationVector fwd_durations;

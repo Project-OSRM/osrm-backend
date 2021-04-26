@@ -2,6 +2,7 @@
 #define EXTRACTOR_CALLBACKS_HPP
 
 #include "extractor/class_data.hpp"
+#include "extractor/node_based_edge.hpp"
 #include "extractor/turn_lane_types.hpp"
 #include "util/typedefs.hpp"
 

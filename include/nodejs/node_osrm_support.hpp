@@ -762,6 +762,11 @@ inline bool parseCommonParameters(const v8::Local<v8::Object> &obj, ParamType &p
                     params->annotations_type =
                         params->annotations_type | osrm::RouteParameters::AnnotationsType::Nodes;
                 }
+                else if (annotations_str == "ways")
+                {
+                    params->annotations_type =
+                        params->annotations_type | osrm::RouteParameters::AnnotationsType::Ways;
+                }
                 else if (annotations_str == "distance")
                 {
                     params->annotations_type =

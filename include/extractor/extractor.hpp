@@ -63,6 +63,7 @@ class Extractor
     ExtractorConfig config;
 
     std::tuple<LaneDescriptionMap,
+               OSMWayIDMap,
                std::vector<TurnRestriction>,
                std::vector<UnresolvedManeuverOverride>>
     ParseOSMData(ScriptingEnvironment &scripting_environment, const unsigned number_of_threads);
