@@ -171,7 +171,7 @@ matrix:
       # we use the xcode provides clang and don't install our own
       env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE="10"
       after_success:
-        - ./scripts/travis/publish.sh
+        - ./scripts/travis/node_package.sh
 
     - os: osx
       osx_image: xcode9.2
@@ -179,7 +179,7 @@ matrix:
       # we use the xcode provides clang and don't install our own
       env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE="12"
       after_success:
-        - ./scripts/travis/publish.sh
+        - ./scripts/travis/node_package.sh
 
     - os: osx
       osx_image: xcode9.2
@@ -187,7 +187,7 @@ matrix:
       # we use the xcode provides clang and don't install our own
       env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE="14"
       after_success:
-        - ./scripts/travis/publish.sh
+        - ./scripts/travis/node_package.sh
 
     # Shared Library
     - os: linux
@@ -221,7 +221,7 @@ matrix:
       script:
         - npm run nodejs-tests
       after_success:
-        - ./scripts/travis/publish.sh
+        - ./scripts/travis/node_package.sh
 
     - os: linux
       sudo: false
@@ -245,7 +245,7 @@ matrix:
       script:
         - npm run nodejs-tests
       after_success:
-        - ./scripts/travis/publish.sh
+        - ./scripts/travis/node_package.sh
 
     - os: linux
       sudo: false
@@ -269,7 +269,7 @@ matrix:
       script:
         - npm run nodejs-tests
       after_success:
-        - ./scripts/travis/publish.sh
+        - ./scripts/travis/node_package.sh
 
     - os: linux
       sudo: false
@@ -293,7 +293,7 @@ matrix:
       script:
         - npm run nodejs-tests
       after_success:
-        - ./scripts/travis/publish.sh
+        - ./scripts/travis/node_package.sh
 
     - os: linux
       sudo: false
@@ -317,7 +317,7 @@ matrix:
       script:
         - npm run nodejs-tests
       after_success:
-        - ./scripts/travis/publish.sh
+        - ./scripts/travis/node_package.sh
 
     - os: linux
       sudo: false
@@ -341,7 +341,7 @@ matrix:
       script:
         - npm run nodejs-tests
       after_success:
-        - ./scripts/travis/publish.sh
+        - ./scripts/travis/node_package.sh
 
     - os: osx
       stage: optional
@@ -350,7 +350,7 @@ matrix:
       # we use the xcode provides clang and don't install our own
       env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE="node"
       after_success:
-        - ./scripts/travis/publish.sh
+        - ./scripts/travis/node_package.sh
 
     - os: linux
       sudo: false
@@ -374,7 +374,7 @@ matrix:
       script:
         - npm run nodejs-tests
       after_success:
-        - ./scripts/travis/publish.sh
+        - ./scripts/travis/node_package.sh
 
     - os: linux
       sudo: false
@@ -398,7 +398,7 @@ matrix:
       script:
         - npm run nodejs-tests
       after_success:
-        - ./scripts/travis/publish.sh
+        - ./scripts/travis/node_package.sh
 
     - os: osx
       osx_image: xcode9.2
@@ -406,7 +406,7 @@ matrix:
       # we use the xcode provides clang and don't install our own
       env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON NODE="--lts"
       after_success:
-        - ./scripts/travis/publish.sh
+        - ./scripts/travis/node_package.sh
 
     - os: linux
       sudo: false
@@ -430,7 +430,7 @@ matrix:
       script:
         - npm run nodejs-tests
       after_success:
-        - ./scripts/travis/publish.sh
+        - ./scripts/travis/node_package.sh
 
     - os: linux
       sudo: false
@@ -454,7 +454,7 @@ matrix:
       script:
         - npm run nodejs-tests
       after_success:
-        - ./scripts/travis/publish.sh
+        - ./scripts/travis/node_package.sh
 
   allow_failures:
     - compiler: "mason-osx-release-node-latest"
@@ -572,3 +572,14 @@ script:
   - |
   - popd
   - npm test
+
+deploy:
+  provider: releases
+  api_key:
+    secure: "bSMTxzqgbAcOEszxOvv5FIBmv+BW70IobEHvxe0ShM+ekhLKwKTb5KQRj55ZjpmSEOwqvDr3S1vuqcgXegQvOcLy3HNhxg3aWisexKsbF2oGZdKyjMnyC6jURkXGQUoUoZyCbaOxV1ThJgpcWLjt5qVSR165Az7LxvCrdBer66E="
+  skip_cleanup: true
+  file_glob: true
+  file: build/stage/**/*.tar.gz
+  on:
+    tags: true
+    condition: "$PUBLISH = 'On'"

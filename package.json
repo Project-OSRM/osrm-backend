@@ -68,8 +68,8 @@
   "binary": {
     "module_name": "node_osrm",
     "module_path": "./lib/binding/",
-    "host": "https://mapbox-node-binary.s3.amazonaws.com",
-    "remote_path": "./{name}/v{version}/{configuration}/",
-    "package_name": "{node_abi}-{platform}-{arch}.tar.gz"
+    "host": "https://github.com",
+    "remote_path": "./Project-OSRM/osrm-backend/releases/download/v{version}/",
+    "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}-{configuration}.tar.gz"
   }
 }
