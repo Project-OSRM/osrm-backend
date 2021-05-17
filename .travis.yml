@@ -576,7 +576,7 @@ script:
 deploy:
   provider: releases
   api_key:
-    secure: "bSMTxzqgbAcOEszxOvv5FIBmv+BW70IobEHvxe0ShM+ekhLKwKTb5KQRj55ZjpmSEOwqvDr3S1vuqcgXegQvOcLy3HNhxg3aWisexKsbF2oGZdKyjMnyC6jURkXGQUoUoZyCbaOxV1ThJgpcWLjt5qVSR165Az7LxvCrdBer66E="
+    secure: "Ej7tPd+XhAlBvA0SnYghYakO6QUwUI+oOtjlkPmy0UfKtIQ4bIzoIm1BDbPwrmNiCSKB7lLZYZpKz68PBRtblfqvTjhzXSzlvFk36pyywgkuNY13N3VQZo2c5CShLCy41nx4+uLkjhLfKYOALSE3OivdJJHLZEsSwx60Csx7owU="
   skip_cleanup: true
   file_glob: true
   file: build/stage/**/*.tar.gz
