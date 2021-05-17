@@ -1,4 +1,4 @@
-# Unreleased
+# 5.25.0-rc.1
   - Changes from 5.24.0
     - Build:
       - CHANGED: Node binaries now use Github Releases for hosting [#6030](https://github.com/Project-OSRM/osrm-backend/pull/6030)
