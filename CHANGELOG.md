@@ -1,5 +1,7 @@
 # Unreleased
   - Changes from 5.24.0
+    - Build:
+      - CHANGED: Node binaries now use Github Releases for hosting [#6030](https://github.com/Project-OSRM/osrm-backend/pull/6030)
     - Misc:
       - FIXED: Upgrade to @mapbox/node-pre-gyp fix various bugs with Node 12/14 [#5991](https://github.com/Project-OSRM/osrm-backend/pull/5991)
       - FIXED: `valid` type in documentation examples [#5990](https://github.com/Project-OSRM/osrm-backend/issues/5990)
