@@ -3,8 +3,6 @@ language: cpp
 git:
   depth: 10
 
-# sudo:required is needed for trusty images
-sudo: required
 dist: xenial
 
 notifications:
@@ -104,19 +102,11 @@ matrix:
 
     - os: linux
       compiler: "mason-linux-debug-asan"
-      addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_SANITIZER=ON LSAN_OPTIONS="suppressions=$TRAVIS_BUILD_DIR/scripts/travis/leaksanitizer.conf"
 
     # Release Builds
     - os: linux
       compiler: "mason-linux-release"
-      addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON RUN_CLANG_FORMAT=ON ENABLE_LTO=ON
 
     - os: linux
@@ -202,10 +192,6 @@ matrix:
     - os: linux
       sudo: false
       compiler: "node-14-mason-linux-release"
-      addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="14"
       install:
         - pushd ${OSRM_BUILD_DIR}
@@ -226,10 +212,6 @@ matrix:
     - os: linux
       sudo: false
       compiler: "node-14-mason-linux-debug"
-      addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='5.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="14"
       install:
         - pushd ${OSRM_BUILD_DIR}
@@ -250,10 +232,6 @@ matrix:
     - os: linux
       sudo: false
       compiler: "node-12-mason-linux-release"
-      addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="12"
       install:
         - pushd ${OSRM_BUILD_DIR}
@@ -274,10 +252,6 @@ matrix:
     - os: linux
       sudo: false
       compiler: "node-12-mason-linux-debug"
-      addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='5.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="12"
       install:
         - pushd ${OSRM_BUILD_DIR}
@@ -298,10 +272,6 @@ matrix:
     - os: linux
       sudo: false
       compiler: "node-10-mason-linux-release"
-      addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="10"
       install:
         - pushd ${OSRM_BUILD_DIR}
@@ -322,10 +292,6 @@ matrix:
     - os: linux
       sudo: false
       compiler: "node-10-mason-linux-debug"
-      addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='5.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="10"
       install:
         - pushd ${OSRM_BUILD_DIR}
@@ -355,10 +321,6 @@ matrix:
     - os: linux
       sudo: false
       compiler: "node-latest-mason-linux-release"
-      addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="node"
       install:
         - pushd ${OSRM_BUILD_DIR}
@@ -379,10 +341,6 @@ matrix:
     - os: linux
       sudo: false
       compiler: "node-latest-mason-linux-debug"
-      addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='5.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="node"
       install:
         - pushd ${OSRM_BUILD_DIR}
@@ -411,10 +369,6 @@ matrix:
     - os: linux
       sudo: false
       compiler: "node-lts-mason-linux-release"
-      addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='5.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="--lts"
       install:
         - pushd ${OSRM_BUILD_DIR}
@@ -435,10 +389,6 @@ matrix:
     - os: linux
       sudo: false
       compiler: "node-lts-mason-linux-debug"
-      addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-4.9-dev']
       env: CLANG_VERSION='5.0.0' BUILD_TYPE='Debug' ENABLE_MASON=ON ENABLE_LTO=ON JOBS=3 NODE="--lts"
       install:
         - pushd ${OSRM_BUILD_DIR}
