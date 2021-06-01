@@ -10,6 +10,7 @@
       - CHANGED: Pass osm_node_ids by reference in osrm::updater::Updater class. [#6298](https://github.com/Project-OSRM/osrm-backend/pull/6298)
       - FIXED: Fix bug with reading Set values from Lua scripts. [#6285](https://github.com/Project-OSRM/osrm-backend/pull/6285)
       - FIXED: Bug in bicycle profile that caused exceptions if there is a highway=bicycle in the data. [#6296](https://github.com/Project-OSRM/osrm-backend/pull/6296)
+      - FIXED: Internal refactoring of identifier types used in data facade [#6044](https://github.com/Project-OSRM/osrm-backend/pull/6044)
     - Build:
       - CHANGED: Use the latest node on CI. [#6317](https://github.com/Project-OSRM/osrm-backend/pull/6317)
       - CHANGED: Migrate Windows CI to GitHub Actions. [#6312](https://github.com/Project-OSRM/osrm-backend/pull/6312)
