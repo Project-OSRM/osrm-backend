@@ -337,7 +337,7 @@ function setup()
 end
 ```
 
-The input data must an ASCII file with rows of integers. e.g.:
+The input data must be an ASCII file with rows of integers. e.g.:
 
 ```
 0  0  0   0
@@ -366,6 +366,21 @@ end
 ```
 
 See [rasterbot.lua](../profiles/rasterbot.lua) and [rasterbotinterp.lua](../profiles/rasterbotinterp.lua) for examples.
+
+#### Example: Bicycle routing with elevation model
+If you want to make your bicycle router elevation aware, you can use the profile
+[elevation_aware_bicycle](../profiles/examples/elevation_aware_bicycle). It models travel times based on the parameters pedaling energy, air drag and gravity ([bike_formula.py](../profiles/examples/elevation_aware_bicycle/speed_by_elevation_of_bicycle/bike_formula.py))
+The resulting travel time profile, denoted as t_proper, looks as follows:
+![travel time profile of bicycles depeding on elevation](../profiles/examples/elevation_aware_bicycle/speed_by_elevation_of_bicycle/bike_slope.png "travel time profile of bicycles depeding on elevation")
+
+The following preprocessing steps are necessary to use this profile:
+
+1. Download the elevation data as ASCII tiles e.g. from [SRTM](http://srtm.csi.cgiar.org/srtmdata/)
+1. Adapt and run [generate_rastersource.py](../profiles/examples/elevation_aware_bicycle) to fuse the raw tiles and obtain `rastersource.asc`.
+1. Set the boundaries of your rastersource in `raster:load()` in  [elevation_aware_bicycle.lua](../profiles/examples/elevation_aware_bicycle/elevation_aware_bicycle.lua)
+1. [Quick start](https://github.com/Project-OSRM/osrm-backend/wiki/Running-OSRM#quickstart) OSRM,
+   but use [elevation_aware_bicycle.lua](../profiles/examples/elevation_aware_bicycle/elevation_aware_bicycle.lua)
+   and `rastersource.asc` instead of `car.lua`.
 
 ### Helper functions
 There are a few helper functions defined in the global scope that profiles can use:
