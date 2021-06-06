@@ -1,4 +1,7 @@
 # Unreleased
+- Changes from 5.25.0 
+  - Profile:
+    - ADDED: elevation aware bicycle routing profile [#6048](https://github.com/Project-OSRM/osrm-backend/pull/6048)
 
 # 5.25.0
   - Changes from 5.24.0
