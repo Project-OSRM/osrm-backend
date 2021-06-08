@@ -61,7 +61,8 @@ module.exports = function () {
                     var subTrips;
                     var trip_durations;
                     var trip_distance;
-                    if (res.statusCode === 200) {
+                    var ok = res.statusCode === 200;
+                    if (ok) {
                         if (headers.has('trips')) {
                             subTrips = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map((sl, i) => {
                                 var toAdd = [];
@@ -84,8 +85,7 @@ module.exports = function () {
                         }
                     }
 
-                    var ok = true,
-                        encodedResult = '';
+                    var encodedResult = '';
 
                     if (json.trips) row.trips.split(',').forEach((sub, si) => {
                         if (si >= subTrips.length) {

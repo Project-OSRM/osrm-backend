@@ -33,6 +33,8 @@
       - FIXED: Fixed Node docs generation check in CI. [#6058](https://github.com/Project-OSRM/osrm-backend/pull/6058)
       - CHANGED: Docker build, enabled arm64 build layer [#6172](https://github.com/Project-OSRM/osrm-backend/pull/6172)
       - CHANGED: Docker build, enabled apt-get update/install caching in separate layer for build phase [#6175](https://github.com/Project-OSRM/osrm-backend/pull/6175)
+    - Routing:
+      - ADDED: Add support for non-round-trips with a single fixed endpoint. [#6050](https://github.com/Project-OSRM/osrm-backend/pull/6050)
 
 # 5.26.0
   - Changes from 5.25.0
