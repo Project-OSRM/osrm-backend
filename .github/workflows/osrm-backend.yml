@@ -46,8 +46,7 @@ jobs:
         ./scripts/check_taginfo.py taginfo.json profiles/car.lua
         ./scripts/format.sh && ./scripts/error_on_dirty.sh
         node ./scripts/validate_changelog.js
-        # See issue 4043
-        #- npm run docs && ./scripts/error_on_dirty.sh
+        npm run docs && ./scripts/error_on_dirty.sh
 
   build-test-publish:
     needs: format-taginfo-docs

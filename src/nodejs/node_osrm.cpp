@@ -74,8 +74,12 @@ NAN_MODULE_INIT(Engine::Init)
  *        Make sure you prepared the dataset with the correct toolchain.
  * @param {Boolean} [options.shared_memory] Connects to the persistent shared memory datastore.
  *        This requires you to run `osrm-datastore` prior to creating an `OSRM` object.
+ * @param {String} [options.dataset_name] Connects to the persistent shared memory datastore defined by `--dataset_name` option when running `osrm-datastore`.
+ *        This requires you to run `osrm-datastore --dataset_name` prior to creating an `OSRM` object.
+ * @param {String} [options.memory_file] **DEPRECATED**
+ *        Old behaviour: Path to a file on disk to store the memory using mmap.  Current behaviour: setting this value is the same as setting `mmap_memory: true`.
+ * @param {Boolean} [options.mmap_memory] Map on-disk files to virtual memory addresses (mmap), rather than loading into RAM.
  * @param {String} [options.path] The path to the `.osrm` files. This is mutually exclusive with setting {options.shared_memory} to true.
- * @param {String} [options.memory_file] Path to a file to store the memory using mmap.
  * @param {Number} [options.max_locations_trip] Max. locations supported in trip query (default: unlimited).
  * @param {Number} [options.max_locations_viaroute] Max. locations supported in viaroute query (default: unlimited).
  * @param {Number} [options.max_locations_distance_table] Max. locations supported in distance table query (default: unlimited).
@@ -281,6 +285,7 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
  * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
+ * @param {Boolean} [options.generate_hints=true]  Whether or not adds a Hint to the response which can be used in subsequent requests.
  * @param {Boolean} [options.alternatives=false] Search for alternative routes.
  * @param {Number} [options.alternatives=0] Search for up to this many alternative routes.
  * *Please note that even if alternative routes are requested, a result cannot be guaranteed.*
@@ -291,6 +296,8 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
  * @param {Boolean} [options.continue_straight] Forces the route to keep going straight at waypoints and don't do a uturn even if it would be faster. Default value depends on the profile.
  * @param {Array} [options.approaches] Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
  *                  `null`/`true`/`false`
+ * @param {Array} [options.waypoints] Indices to coordinates to treat as waypoints. If not supplied, all coordinates are waypoints.  Must include first and last coordinate index.
+ * @param {String} [options.snapping] Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
  * @param {Function} callback
  *
  * @returns {Object} An array of [Waypoint](#waypoint) objects representing all waypoints in order AND an array of [`Route`](#route) objects ordered by descending recommendation rank.
@@ -326,9 +333,11 @@ NAN_METHOD(Engine::route) //
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
  * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
+ * @param {Boolean} [options.generate_hints=true]  Whether or not adds a Hint to the response which can be used in subsequent requests.
  * @param {Number} [options.number=1] Number of nearest segments that should be returned.
  * Must be an integer greater than or equal to `1`.
  * @param {Array} [options.approaches] Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
+ * @param {String} [options.snapping] Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
  * @param {Function} callback
  *
  * @returns {Object} containing `waypoints`.
@@ -357,8 +366,8 @@ NAN_METHOD(Engine::nearest) //
 
 // clang-format off
 /**
- * Computes duration and distance tables for the given locations. Allows for both symmetric and asymmetric
- * tables.
+ * Computes duration table for the given locations. Allows for both symmetric and asymmetric tables.
+ * Optionally returns distance table.
  *
  * @name table
  * @memberof OSRM
@@ -368,11 +377,16 @@ NAN_METHOD(Engine::nearest) //
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
  * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
+ * @param {Boolean} [options.generate_hints=true] Whether or not adds a Hint to the response which can be used in subsequent requests.
  * @param {Array} [options.sources] An array of `index` elements (`0 <= integer < #coordinates`) to use
  *                                  location with given index as source. Default is to use all.
  * @param {Array} [options.destinations] An array of `index` elements (`0 <= integer < #coordinates`) to use location with given index as destination. Default is to use all.
  * @param {Array} [options.approaches] Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
- * @param {Array} [options.annotations] An array of the table types to return. Values can be `duration` or `distance` or both. If no annotations parameter is added, the default is to return the `durations` table. If `annotations=distance` or `annotations=duration,distance` is requested when running a MLD router, a `NotImplemented` error will be returned.
+ * @param {Number} [options.fallback_speed] Replace `null` responses in result with as-the-crow-flies estimates based on `fallback_speed`.  Value is in metres/second.
+ * @param {String} [options.fallback_coordinate] Either `input` (default) or `snapped`.  If using a `fallback_speed`, use either the user-supplied coordinate (`input`), or the snapped coordinate (`snapped`) for calculating the as-the-crow-flies distance between two points.
+ * @param {Number} [options.scale_factor] Multiply the table duration values in the table by this number for more controlled input into a route optimization solver.
+ * @param {String} [options.snapping] Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
+ * @param {Array} [options.annotations] Return the requested table or tables in response. Can be `['duration']` (return the duration matrix, default), `[distance']` (return the distance matrix), or `['duration', distance']` (return both the duration matrix and the distance matrix).
 
  * @param {Function} callback
  *
@@ -380,10 +394,10 @@ NAN_METHOD(Engine::nearest) //
  * **`durations`**: array of arrays that stores the matrix in row-major order. `durations[i][j]` gives the travel time from the i-th waypoint to the j-th waypoint.
  *                  Values are given in seconds.
  * **`distances`**: array of arrays that stores the matrix in row-major order. `distances[i][j]` gives the travel time from the i-th waypoint to the j-th waypoint.
- *                  Values are given in meters. Note that computing the `distances` table is currently only implemented for CH. If `annotations=distance` or
- *                  `annotations=duration,distance` is requested when running a MLD router, a `NotImplemented` error will be returned.
+ *                  Values are given in meters.
  * **`sources`**: array of [`Ẁaypoint`](#waypoint) objects describing all sources in order.
  * **`destinations`**: array of [`Ẁaypoint`](#waypoint) objects describing all destinations in order.
+ * **`fallback_speed_cells`**: (optional) if `fallback_speed` is used, will be an array of arrays of `row,column` values, indicating which cells contain estimated values.
  *
  * @example
  * var osrm = new OSRM('network.osrm');
@@ -396,7 +410,7 @@ NAN_METHOD(Engine::nearest) //
  * };
  * osrm.table(options, function(err, response) {
  *   console.log(response.durations); // array of arrays, matrix in row-major order
- *   console.log(response.distances); // array of arrays, matrix in row-major order (currently only implemented for CH router)
+ *   console.log(response.distances); // array of arrays, matrix in row-major order
  *   console.log(response.sources); // array of Waypoint objects
  *   console.log(response.destinations); // array of Waypoint objects
  * });
@@ -459,23 +473,29 @@ NAN_METHOD(Engine::tile)
  * @param {Array} [options.bearings] Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
+ * @param {Boolean} [options.generate_hints=true] Whether or not adds a Hint to the response which can be used in subsequent requests.
  * @param {Boolean} [options.steps=false] Return route steps for each route.
  * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all.
  * @param {String} [options.geometries=polyline] Returned route geometry format (influences overview and per step). Can also be `geojson`.
  * @param {String} [options.overview=simplified] Add overview geometry either `full`, `simplified` according to highest zoom level it could be display on, or not at all (`false`).
  * @param {Array<Number>} [options.timestamps] Timestamp of the input location (integers, UNIX-like timestamp).
  * @param {Array} [options.radiuses] Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy. Can be `null` for default value `5` meters or `double >= 0`.
- * @param {String} [options.gaps] Allows the input track splitting based on huge timestamp gaps between points. Either `split` or `ignore` (optional, default `split`).
- * @param {Boolean} [options.tidy] Allows the input track modification to obtain better matching quality for noisy tracks (optional, default `false`).
+ * @param {String} [options.gaps=split] Allows the input track splitting based on huge timestamp gaps between points. Either `split` or `ignore`.
+ * @param {Boolean} [options.tidy=false] Allows the input track modification to obtain better matching quality for noisy tracks.
+ * @param {Array} [options.waypoints] Indices to coordinates to treat as waypoints.  If not supplied, all coordinates are waypoints.  Must include first and last coordinate index.
+ * @param {String} [options.snapping] Which edges can be snapped to, either `default`, or `any`. `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
  *
  * @param {Function} callback
  *
  * @returns {Object} containing `tracepoints` and `matchings`.
  * **`tracepoints`** Array of [`Ẁaypoint`](#waypoint) objects representing all points of the trace in order.
  *                   If the trace point was ommited by map matching because it is an outlier, the entry will be null.
- *                   Each `Waypoint` object includes two additional properties, 1) `matchings_index`: Index to the
- *                   [`Route`](#route) object in matchings the sub-trace was matched to, 2) `waypoint_index`: Index of
+ *                   Each `Waypoint` object has the following additional properties,
+ *                   1) `matchings_index`: Index to the
+ *                   [`Route`](#route) object in matchings the sub-trace was matched to,
+ *                   2) `waypoint_index`: Index of
  *                   the waypoint inside the matched route.
+ *                   3) `alternatives_count`: Number of probable alternative matchings for this trace point. A value of zero indicate that this point was matched unambiguously. Split the trace at these points for incremental map matching.
  * **`matchings`** is an array of [`Route`](#route) objects that assemble the trace. Each `Route` object has an additional `confidence` property,
  *                 which is the confidence of the matching. float value between `0` and `1`. `1` is very confident that the matching is correct.
  *
@@ -531,6 +551,7 @@ NAN_METHOD(Engine::match) //
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
  * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `double >= 0` or `null` (unlimited, default).
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
+ * @param {Boolean} [options.generate_hints=true] Whether or not adds a Hint to the response which can be used in subsequent requests.
  * @param {Boolean} [options.steps=false] Return route steps for each route.
  * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all.
  * @param {String} [options.geometries=polyline] Returned route geometry format (influences overview and per step). Can also be `geojson`.
@@ -540,6 +561,7 @@ NAN_METHOD(Engine::match) //
  * @param {String} [options.source=any] Return route starts at `any` or `first` coordinate.
  * @param {String} [options.destination=any] Return route ends at `any` or `last` coordinate.
  * @param {Array} [options.approaches] Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
+ * @param {String} [options.snapping] Which edges can be snapped to, either `default`, or `any`. `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
  *
  * @returns {Object} containing `waypoints` and `trips`.
  * **`waypoints`**: an array of [`Waypoint`](#waypoint) objects representing all waypoints in input order.
@@ -575,7 +597,34 @@ NAN_METHOD(Engine::trip) //
 }
 
 /**
- * Responses
+ * All plugins support a second additional object that is available to configure some NodeJS
+ * specific behaviours.
+ *
+ * @name Configuration
+ * @param {Object} [plugin_config] - Object literal containing parameters for the trip query.
+ * @param {String} [plugin_config.format] The format of the result object to various API calls.
+ *                                        Valid options are `object` (default), which returns a
+ * standard Javascript object, as described above, and `json_buffer`, which will return a NodeJS
+ * **[Buffer](https://nodejs.org/api/buffer.html)** object, containing a JSON string. The latter has
+ * the advantage that it can be immediately serialized to disk/sent over the network, and the
+ * generation of the string is performed outside the main NodeJS event loop.  This option is ignored
+ * by the `tile` plugin.
+ *
+ * @example
+ * var osrm = new OSRM('network.osrm');
+ * var options = {
+ *   coordinates: [
+ *     [13.36761474609375, 52.51663871100423],
+ *     [13.374481201171875, 52.506191342034576]
+ *   ]
+ * };
+ * osrm.route(options, { format: "json_buffer" }, function(err, response) {
+ *   if (err) throw err;
+ *   console.log(response.toString("utf-8"));
+ * });
+ */
+
+/**
  * @class Responses
  */
 
@@ -585,8 +634,8 @@ NAN_METHOD(Engine::trip) //
  * @name Route
  * @memberof Responses
  *
- * @param {documentation} exteral in
- * [`osrm-backend`](../http.md#route)
+ * @param {documentation} external in
+ * [`osrm-backend`](../http.md#route-object)
  *
  */
 
@@ -596,8 +645,8 @@ NAN_METHOD(Engine::trip) //
  * @name RouteLeg
  * @memberof Responses
  *
- * @param {documentation} exteral in
- * [`osrm-backend`](../http.md#routeleg)
+ * @param {documentation} external in
+ * [`osrm-backend`](../http.md#routeleg-object)
  *
  */
 
@@ -608,8 +657,8 @@ NAN_METHOD(Engine::trip) //
  * @name RouteStep
  * @memberof Responses
  *
- * @param {documentation} exteral in
- * [`osrm-backend`](https://github.com/Project-OSRM/osrm-backend/blob/master/docs/http.md#routestep)
+ * @param {documentation} external in
+ * [`osrm-backend`](../http.md#routestep-object)
  *
  */
 
@@ -618,8 +667,8 @@ NAN_METHOD(Engine::trip) //
  * @name StepManeuver
  * @memberof Responses
  *
- * @param {documentation} exteral in
- * [`osrm-backend`](https://github.com/Project-OSRM/osrm-backend/blob/master/docs/http.md#stepmaneuver)
+ * @param {documentation} external in
+ * [`osrm-backend`](../http.md#stepmaneuver-object)
  *
  */
 
@@ -629,8 +678,8 @@ NAN_METHOD(Engine::trip) //
  * @name Waypoint
  * @memberof Responses
  *
- * @param {documentation} exteral in
- * [`osrm-backend`](https://github.com/Project-OSRM/osrm-backend/blob/master/docs/http.md#waypoint)
+ * @param {documentation} external in
+ * [`osrm-backend`](../http.md#waypoint-object)
  *
  */
 
