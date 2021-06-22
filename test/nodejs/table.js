@@ -190,6 +190,8 @@ tables.forEach(function(annotation) {
 
         assert.throws(function() { osrm.route({coordinates: two_test_coordinates, generate_hints: null}, function(err, route) {}) },
             /generate_hints must be of type Boolean/);
+        assert.throws(function() { osrm.route({coordinates: two_test_coordinates, skip_waypoints: null}, function(err, route) {}) },
+            /skip_waypoints must be of type Boolean/);
     });
 
     test('table: throws on invalid arguments', function(assert) {
@@ -236,6 +238,20 @@ tables.forEach(function(annotation) {
 
             table.sources.map(assertHasNoHints);
             table.destinations.map(assertHasNoHints);
+        });
+    });
+
+    test('table: ' + annotation + ' table in Monaco without waypoints', function(assert) {
+        assert.plan(2);
+        var osrm = new OSRM(data_path);
+        var options = {
+            coordinates: two_test_coordinates,
+            skip_waypoints: true,  // false is default
+            annotations: [annotation.slice(0,-1)]
+        };
+        osrm.table(options, function(err, table) {
+            assert.strictEqual(table.sources, undefined);
+            assert.strictEqual(table.destinations, undefined);
         });
     });
 

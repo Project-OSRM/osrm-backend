@@ -1,4 +1,7 @@
 # Unreleased
+  - Changes from 5.25.0
+    - Misc:
+      - FIXED: Support `skip_waypoints` in Node bindings [#6060](https://github.com/Project-OSRM/osrm-backend/pull/6060)
 
 # 5.25.0
   - Changes from 5.24.0
