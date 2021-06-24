@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(test_match_fb_serialization)
     const auto matchings = fb->routes();
     const auto &number_of_matchings = matchings->size();
 
-    for (const auto &waypoint : *waypoints)
+    for (const auto waypoint : *waypoints)
     {
         BOOST_CHECK(waypoint_check(waypoint));
         const auto matchings_index = waypoint->matchings_index();

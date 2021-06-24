@@ -1,0 +1,588 @@
+name: osrm-backend CI
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v[1-9]+.[0-9]+.[0-9]+
+      - v[1-9]+.[0-9]+.[0-9]+-[0-9a-zA-Z]+
+      - v[1-9]+.[0-9]+-[0-9a-zA-Z]+
+  pull_request:
+    branches:
+      - master
+
+env:
+  CCACHE_TEMPDIR: /tmp/.ccache-temp
+  CCACHE_COMPRESS: 1
+  CASHER_TIME_OUT: 599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
+  CCACHE_VERSION: 3.3.1
+  CMAKE_VERSION: 3.7.2
+  ENABLE_NODE_BINDINGS: "ON"
+
+jobs:
+  format-taginfo-docs:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: 10
+    - name: Enable Node.js cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+    - name: Prepare environment
+      run: |
+        npm ci --ignore-scripts
+        export MASON=${GITHUB_WORKSPACE}/scripts/mason.sh
+        ${MASON} install clang-format 10.0.0
+        echo "$(${MASON} prefix clang-format 10.0.0)/bin" >> $GITHUB_PATH
+    - name: Run checks
+      run: |
+        ./scripts/check_taginfo.py taginfo.json profiles/car.lua
+        ./scripts/format.sh && ./scripts/error_on_dirty.sh
+        node ./scripts/validate_changelog.js
+        # See issue 4043
+        #- npm run docs && ./scripts/error_on_dirty.sh
+
+  build-test-publish:
+    needs: format-taginfo-docs
+    strategy:
+      matrix:
+        include:
+          - name: gcc-7-debug-cov
+            continue-on-error: false
+            node: 10
+            runs-on: ubuntu-18.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CCOMPILER: gcc-7
+            CUCUMBER_TIMEOUT: 20000
+            CXXCOMPILER: g++-7
+            ENABLE_COVERAGE: ON
+
+          - name: gcc-7-debug-asan
+            continue-on-error: false
+            node: 10
+            runs-on: ubuntu-18.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CCOMPILER: gcc-7
+            CUCUMBER_TIMEOUT: 20000
+            CXXCOMPILER: g++-7
+            ENABLE_SANITIZER: ON
+            TARGET_ARCH: x86_64-asan
+
+          - name: clang-5.0-debug
+            continue-on-error: false
+            node: 10
+            runs-on: ubuntu-18.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CLANG_VERSION: 5.0.0
+            CUCUMBER_TIMEOUT: 60000
+
+          - name: mason-linux-debug-asan
+            continue-on-error: false
+            node: 10
+            runs-on: ubuntu-18.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CLANG_VERSION: 5.0.0
+            ENABLE_MASON: ON
+            ENABLE_SANITIZER: ON
+
+          - name: mason-linux-release
+            continue-on-error: false
+            node: 10
+            runs-on: ubuntu-18.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CLANG_VERSION: 5.0.0
+            ENABLE_MASON: ON
+
+          - name: gcc-9-release
+            continue-on-error: false
+            node: 10
+            runs-on: ubuntu-18.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-9
+            CXXCOMPILER: g++-9
+            CXXFLAGS: -Wno-cast-function-type
+
+          - name: gcc-8-release
+            continue-on-error: false
+            node: 10
+            runs-on: ubuntu-18.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-8
+            CXXCOMPILER: g++-8
+            CXXFLAGS: -Wno-cast-function-type
+
+          - name: gcc-7-release
+            continue-on-error: false
+            node: 10
+            runs-on: ubuntu-18.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-7
+            CXXCOMPILER: g++-7
+
+          - name: gcc-7-release-i686
+            continue-on-error: false
+            node: 10
+            runs-on: ubuntu-18.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-7
+            CFLAGS: "-m32 -msse2 -mfpmath=sse"
+            CXXCOMPILER: g++-7
+            CXXFLAGS: "-m32 -msse2 -mfpmath=sse"
+            TARGET_ARCH: i686
+
+          - name: gcc-5-release
+            continue-on-error: false
+            node: 10
+            runs-on: ubuntu-18.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-5
+            CXXCOMPILER: g++-5
+
+          - name: gcc-6-release
+            continue-on-error: false
+            node: 10
+            runs-on: ubuntu-18.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-6
+            CXXCOMPILER: g++-6
+
+          - name: mason-osx-release-node-10
+            build_node_package: true
+            continue-on-error: false
+            node: 10
+            runs-on: macos-10.15
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang
+            CXXCOMPILER: clang++
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_ASSERTIONS: ON
+            ENABLE_MASON: ON
+
+          - name: mason-osx-release-node-12
+            build_node_package: true
+            continue-on-error: false
+            node: 12
+            runs-on: macos-10.15
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang
+            CXXCOMPILER: clang++
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_ASSERTIONS: ON
+            ENABLE_MASON: ON
+
+          - name: mason-osx-release-node-14
+            build_node_package: true
+            continue-on-error: false
+            node: 14
+            runs-on: macos-10.15
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang
+            CXXCOMPILER: clang++
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_ASSERTIONS: ON
+            ENABLE_MASON: ON
+
+          - name: gcc-7-release-shared
+            continue-on-error: false
+            node: 10
+            runs-on: ubuntu-18.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            BUILD_SHARED_LIBS: ON
+            CCOMPILER: gcc-7
+            CXXCOMPILER: g++-7
+
+          - name: node-14-mason-linux-release
+            build_node_package: true
+            continue-on-error: false
+            node: 14
+            runs-on: ubuntu-18.04
+            BUILD_TYPE: Release
+            CLANG_VERSION: 5.0.0
+            ENABLE_GLIBC_WORKAROUND: ON
+            ENABLE_MASON: ON
+            NODE_PACKAGE_TESTS_ONLY: ON
+
+          - name: node-14-mason-linux-debug
+            build_node_package: true
+            continue-on-error: false
+            node: 14
+            runs-on: ubuntu-18.04
+            BUILD_TYPE: Debug
+            CLANG_VERSION: 5.0.0
+            ENABLE_GLIBC_WORKAROUND: ON
+            ENABLE_MASON: ON
+            NODE_PACKAGE_TESTS_ONLY: ON
+
+          - name: node-12-mason-linux-release
+            build_node_package: true
+            continue-on-error: false
+            node: 12
+            runs-on: ubuntu-18.04
+            BUILD_TYPE: Release
+            CLANG_VERSION: 5.0.0
+            ENABLE_GLIBC_WORKAROUND: ON
+            ENABLE_MASON: ON
+            NODE_PACKAGE_TESTS_ONLY: ON
+
+          - name: node-12-mason-linux-debug
+            build_node_package: true
+            continue-on-error: false
+            node: 12
+            runs-on: ubuntu-18.04
+            BUILD_TYPE: Debug
+            CLANG_VERSION: 5.0.0
+            ENABLE_GLIBC_WORKAROUND: ON
+            ENABLE_MASON: ON
+            NODE_PACKAGE_TESTS_ONLY: ON
+
+          - name: node-10-mason-linux-release
+            build_node_package: true
+            continue-on-error: false
+            node: 10
+            runs-on: ubuntu-18.04
+            BUILD_TYPE: Release
+            CLANG_VERSION: 5.0.0
+            ENABLE_GLIBC_WORKAROUND: ON
+            ENABLE_MASON: ON
+            NODE_PACKAGE_TESTS_ONLY: ON
+
+          - name: node-10-mason-linux-debug
+            build_node_package: true
+            continue-on-error: false
+            node: 10
+            runs-on: ubuntu-18.04
+            BUILD_TYPE: Debug
+            CLANG_VERSION: 5.0.0
+            ENABLE_GLIBC_WORKAROUND: ON
+            ENABLE_MASON: ON
+            NODE_PACKAGE_TESTS_ONLY: ON
+
+          - name: mason-osx-release-node-latest
+            build_node_package: true
+            continue-on-error: true
+            # TODO: Use node 'latest' once supported: https://github.com/actions/setup-node/issues/257
+            node: 16
+            runs-on: macos-10.15
+            BUILD_TYPE: Release
+            CCOMPILER: clang
+            CXXCOMPILER: clang++
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_ASSERTIONS: ON
+            ENABLE_MASON: ON
+
+          - name: node-latest-mason-linux-release
+            build_node_package: true
+            continue-on-error: true
+            # TODO: Use node 'latest' once supported: https://github.com/actions/setup-node/issues/257
+            node: 16
+            runs-on: ubuntu-18.04
+            BUILD_TYPE: Release
+            CLANG_VERSION: 5.0.0
+            ENABLE_GLIBC_WORKAROUND: ON
+            ENABLE_MASON: ON
+            NODE_PACKAGE_TESTS_ONLY: ON
+
+          - name: node-latest-mason-linux-debug
+            build_node_package: true
+            continue-on-error: true
+            # TODO: Use node 'latest' once supported: https://github.com/actions/setup-node/issues/257
+            node: 16
+            runs-on: ubuntu-18.04
+            BUILD_TYPE: Debug
+            CLANG_VERSION: 5.0.0
+            ENABLE_GLIBC_WORKAROUND: ON
+            ENABLE_MASON: ON
+            NODE_PACKAGE_TESTS_ONLY: ON
+
+          - name: mason-osx-release-node-lts
+            build_node_package: true
+            continue-on-error: true
+            node: "lts/*"
+            runs-on: macos-10.15
+            BUILD_TYPE: Release
+            CCOMPILER: clang
+            CXXCOMPILER: clang++
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_ASSERTIONS: ON
+            ENABLE_MASON: ON
+
+          - name: node-lts-mason-linux-release
+            build_node_package: true
+            continue-on-error: true
+            node: "lts/*"
+            runs-on: ubuntu-18.04
+            BUILD_TYPE: Release
+            CLANG_VERSION: 5.0.0
+            ENABLE_GLIBC_WORKAROUND: ON
+            ENABLE_MASON: ON
+            NODE_PACKAGE_TESTS_ONLY: ON
+
+          - name: node-lts-mason-linux-debug
+            build_node_package: true
+            continue-on-error: true
+            node: "lts/*"
+            runs-on: ubuntu-18.04
+            BUILD_TYPE: Debug
+            CLANG_VERSION: 5.0.0
+            ENABLE_GLIBC_WORKAROUND: ON
+            ENABLE_MASON: ON
+            NODE_PACKAGE_TESTS_ONLY: ON
+
+
+    name: ${{ matrix.name}}
+    continue-on-error: ${{ matrix.continue-on-error }}
+    runs-on: ${{ matrix.runs-on }}
+    env:
+      BUILD_TOOLS: ${{ matrix.BUILD_TOOLS }}
+      BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
+      BUILD_SHARED_LIBS: ${{ matrix.BUILD_SHARED_LIBS }}
+      CCOMPILER: ${{ matrix.CCOMPILER }}
+      CFLAGS: ${{ matrix.CFLAGS }}
+      CLANG_VERSION: ${{ matrix.CLANG_VERSION }}
+      CUCUMBER_TIMEOUT: ${{ matrix.CUCUMBER_TIMEOUT }}
+      CXXCOMPILER: ${{ matrix.CXXCOMPILER }}
+      CXXFLAGS: ${{ matrix.CXXFLAGS }}
+      ENABLE_ASSERTIONS: ${{ matrix.ENABLE_ASSERTIONS }}
+      ENABLE_COVERAGE: ${{ matrix.ENABLE_COVERAGE }}
+      ENABLE_GLIBC_WORKAROUND: ${{ matrix.ENABLE_GLIBC_WORKAROUND }}
+      ENABLE_MASON: ${{ matrix.ENABLE_MASON }}
+      ENABLE_SANITIZER: ${{ matrix.ENABLE_SANITIZER }}
+      NODE_PACKAGE_TESTS_ONLY: ${{ matrix.NODE_PACKAGE_TESTS_ONLY }}
+      TARGET_ARCH: ${{ matrix.TARGET_ARCH }}
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Use Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node }}
+    - name: Enable Node.js cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+    - name: Enable compiler cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.ccache
+        key: ccache-${{ matrix.name }}-${{ github.sha }}
+        restore-keys: |
+          ccache-${{ matrix.name }}-
+    - name: Enable test cache
+      uses: actions/cache@v2
+      with:
+        path: ${{github.workspace}}/test/cache
+        key: test-${{ matrix.name }}-${{ github.sha }}
+        restore-keys: |
+          test-${{ matrix.name }}-
+
+    - name: Prepare environment
+      run: |
+        PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+        echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
+
+        echo "OSRM_INSTALL_DIR=${GITHUB_WORKSPACE}/install-osrm" >> $GITHUB_ENV
+        echo "OSRM_BUILD_DIR=${GITHUB_WORKSPACE}/build-osrm" >> $GITHUB_ENV
+
+        if [[ "$ENABLE_SANITIZER" == 'ON' ]]; then
+          # We can only set this after checkout once we know the workspace directory
+          echo "LSAN_OPTIONS=suppressions=${GITHUB_WORKSPACE}/scripts/ci/leaksanitizer.conf" >> $GITHUB_ENV
+        fi
+
+        if [[ "${RUNNER_OS}" == "Linux" ]]; then
+          echo "JOBS=$((`nproc` + 1))" >>  $GITHUB_ENV
+          export MASON_OS=linux
+        elif [[ "${RUNNER_OS}" == "macOS" ]]; then
+          echo "JOBS=$((`sysctl -n hw.ncpu` + 1))" >>  $GITHUB_ENV
+          sudo mdutil -i off /
+          export MASON_OS=osx
+        fi
+
+        echo "MASON=${GITHUB_WORKSPACE}/scripts/mason.sh" >> $GITHUB_ENV
+        echo "CMAKE_URL=https://mason-binaries.s3.amazonaws.com/${MASON_OS}-x86_64/cmake/${CMAKE_VERSION}.tar.gz" >> $GITHUB_ENV
+        echo "CMAKE_DIR=mason_packages/${MASON_OS}-x86_64/cmake/${CMAKE_VERSION}}" >> $GITHUB_ENV
+
+
+    - name: Install dev dependencies
+      run: |
+        # CMake
+        mkdir -p ${CMAKE_DIR}
+        wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${CMAKE_DIR}
+        echo "${CMAKE_DIR}/bin" >> $GITHUB_PATH
+
+        # TBB
+        ${MASON} install tbb 2017_U7
+        echo "LD_LIBRARY_PATH=$(${MASON} prefix tbb 2017_U7)/lib/:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+
+        # ccache
+        ${MASON} install ccache ${CCACHE_VERSION}
+        echo "$(${MASON} prefix ccache ${CCACHE_VERSION})/bin" >> $GITHUB_PATH
+
+        # clang
+        if [[ -n ${CLANG_VERSION} ]]; then
+          echo "CCOMPILER=clang" >> $GITHUB_ENV
+          echo "CXXCOMPILER=clang++" >> $GITHUB_ENV
+          ${MASON} install clang++ ${CLANG_VERSION}
+          echo "$(${MASON} prefix clang++ ${CLANG_VERSION})/bin" >> $GITHUB_PATH
+          # we only enable lto for release builds
+          # and therefore don't need to us ld.gold or llvm tools for linking
+          # for debug builds
+          if [[ ${BUILD_TYPE} == 'Release' ]]; then
+            ${MASON} install binutils 2.27
+            echo "$(${MASON} prefix binutils 2.27)/bin" >> $GITHUB_PATH
+          fi
+        fi
+
+        # Linux dev packages
+        if [ "${TARGET_ARCH}" != "i686" ] && [ "${ENABLE_MASON}" != "ON" ]; then
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+          sudo apt-get update -y
+          sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev libtbb-dev libboost-all-dev
+          if [[ -z "${CLANG_VERSION}" ]]; then
+            sudo apt-get install -y ${CXXCOMPILER}
+          fi
+          if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
+            sudo apt-get install -y lcov
+          fi
+        elif [[ $TARGET_ARCH == "i686" ]]; then
+          source ./scripts/ci/before_install.${TARGET_ARCH}.sh
+        fi
+
+    - name: Prepare build
+      run: |
+        mkdir ${OSRM_BUILD_DIR}
+        ccache --max-size=256M
+        npm ci --ignore-scripts
+        if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
+          lcov --directory . --zerocounters # clean cached files
+        fi
+        echo "CC=${CCOMPILER}" >> $GITHUB_ENV
+        echo "CXX=${CXXCOMPILER}" >> $GITHUB_ENV
+
+    - name: Build and install OSRM
+      run: |
+        echo "Using ${JOBS} jobs"
+        pushd ${OSRM_BUILD_DIR}
+        cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+                 -DENABLE_MASON=${ENABLE_MASON:-OFF} \
+                 -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF}} \
+                 -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} \
+                 -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} \
+                 -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
+                 -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
+                 -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
+                 -DENABLE_CCACHE=ON \
+                 -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
+                 -DENABLE_GLIBC_WORKAROUND=${ENABLE_GLIBC_WORKAROUND:-OFF}
+        make --jobs=${JOBS}
+
+        if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
+          make tests --jobs=${JOBS}
+          make benchmarks --jobs=${JOBS}
+          ccache -s
+          sudo make install
+          if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib" >> $GITHUB_ENV
+          fi
+          echo "PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig" >> $GITHUB_ENV
+        fi
+        popd
+    - name: Build example
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
+      run: |
+        mkdir example/build && pushd example/build
+        cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+        make --jobs=${JOBS}
+        popd
+
+    - name: Run all tests
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
+      run: |
+        make -C test/data benchmark
+
+        # macOS SIP strips the linker path. Reset this inside the running shell
+        export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
+        ./example/build/osrm-example test/data/mld/monaco.osrm
+
+        # All tests assume to be run from the build directory
+        pushd ${OSRM_BUILD_DIR}
+        ./unit_tests/library-tests
+        ./unit_tests/extractor-tests
+        ./unit_tests/contractor-tests
+        ./unit_tests/engine-tests
+        ./unit_tests/util-tests
+        ./unit_tests/server-tests
+        ./unit_tests/partitioner-tests
+        ./unit_tests/customizer-tests
+        if [ -z "${ENABLE_SANITIZER}" ] && [ "$TARGET_ARCH" != "i686" ]; then
+          npm run nodejs-tests
+        fi
+        popd
+        npm test
+    - name: Run Node package tests only
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+      run: |
+        npm run nodejs-tests
+
+    - name: Generate code coverage
+      if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
+      run: |
+        lcov --directory . --capture --output-file coverage.info # capture coverage info
+        lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter out system
+        lcov --list coverage.info #debug info
+        # Uploading report to CodeCov
+    - name: Upload code coverage
+      if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
+      uses: codecov/codecov-action@v1
+      with:
+        files: coverage.info
+        name: codecov-osrm-backend
+        fail_ci_if_error: true
+        verbose: true
+
+    - name: Build Node package
+      if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
+      run: ./scripts/ci/node_package.sh
+    - name: Publish Node package
+      if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
+      uses: ncipollo/release-action@v1
+      with:
+        allowUpdates: true
+        artifactErrorsFailBuild: true
+        artifacts: build/stage/**/*.tar.gz
+        omitBody: true
+        omitBodyDuringUpdate: true
+        omitName: true
+        omitNameDuringUpdate: true
+        replacesArtifacts: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+  ci-complete:
+    runs-on: ubuntu-18.04
+    needs: build-test-publish
+    steps:
+    - run: echo "CI complete"
