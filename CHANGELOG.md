@@ -117,7 +117,7 @@
 ](https://github.com/Project-OSRM/osrm-backend/pull/5076/)
       - CHANGED: Foot profile now blacklists barriers instead of whitelisting them [#5077
 ](https://github.com/Project-OSRM/osrm-backend/pull/5077/)
-      - CHANGED: Support maxlength and maxweight in car profile [#5101](https://github.com/Project-OSRM/osrm-backend/pull/5101]
+      - CHANGED: Support maxlength and maxweight in car profile [#5101](https://github.com/Project-OSRM/osrm-backend/pull/5101)
     - Bugfixes:
       - FIXED: collapsing of ExitRoundabout instructions [#5114](https://github.com/Project-OSRM/osrm-backend/issues/5114)
     - Misc:
