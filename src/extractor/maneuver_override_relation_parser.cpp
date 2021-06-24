@@ -1,14 +1,8 @@
 #include "extractor/maneuver_override_relation_parser.hpp"
 #include "extractor/maneuver_override.hpp"
 
-#include "util/log.hpp"
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string/regex.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/ref.hpp>
-#include <boost/regex.hpp>
 
 #include <osmium/osm.hpp>
 #include <osmium/tags/filter.hpp>

@@ -2,6 +2,8 @@
   - Changes from 5.25.0
     - API:
       - FIXED: Allow for special characters in the profile/method as part of the HTTP URL.
+    - Build:
+      - CHANGED: Replace Travis with Github Actions for CI builds [#6071](https://github.com/Project-OSRM/osrm-backend/pull/6071)
 
 # 5.25.0
   - Changes from 5.24.0

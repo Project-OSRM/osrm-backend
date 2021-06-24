@@ -525,7 +525,7 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_fb_serialization)
     const auto trips = fb->routes();
     BOOST_CHECK_EQUAL(trips->size(), 1);
 
-    for (const auto &waypoint : *waypoints)
+    for (const auto waypoint : *waypoints)
     {
         const auto longitude = waypoint->location()->longitude();
         const auto latitude = waypoint->location()->latitude();
