@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_fb_serialization)
     auto waypoints = fb->waypoints();
     BOOST_CHECK(waypoints->size() > 0); // the dataset has at least one nearest coordinate
 
-    for (const auto &waypoint : *waypoints)
+    for (const auto waypoint : *waypoints)
     {
         BOOST_CHECK(waypoint->distance() >= 0);
         BOOST_CHECK(waypoint->nodes()->first() != 0);

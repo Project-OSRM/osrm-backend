@@ -1,5 +1,7 @@
 # Unreleased
-
+  - Changes from 5.25.0
+    - Build:
+      - CHANGED: Replace Travis with Github Actions for CI builds [#6070](https://github.com/Project-OSRM/osrm-backend/pull/6070)
 # 5.25.0
   - Changes from 5.24.0
     - Build:
