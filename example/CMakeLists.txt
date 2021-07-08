@@ -26,6 +26,8 @@ if(WIN32 AND MSVC_VERSION LESS 1900)
   message(FATAL_ERROR "Building with Microsoft compiler needs Latest Visual Studio 2015 (Community or better)")
 endif()
 
+find_package(Boost 1.54 REQUIRED COMPONENTS filesystem system thread iostreams chrono date_time regex REQUIRED)
+
 link_directories(${LibOSRM_LIBRARY_DIRS})
 add_executable(osrm-example example.cpp)
 
