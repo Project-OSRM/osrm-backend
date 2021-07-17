@@ -4,6 +4,8 @@
       - FIXED: Allow for special characters in the profile/method as part of the HTTP URL. [#6090](https://github.com/Project-OSRM/osrm-backend/pull/6090)
     - Build:
       - CHANGED: Replace Travis with Github Actions for CI builds [#6071](https://github.com/Project-OSRM/osrm-backend/pull/6071)
+    - Routing:
+      - FIXED: Fix generation of inefficient MLD partitions [#6084](https://github.com/Project-OSRM/osrm-backend/pull/6084)
 
 # 5.25.0
   - Changes from 5.24.0

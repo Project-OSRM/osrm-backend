@@ -118,6 +118,10 @@ int Partitioner::Run(const PartitionerConfig &config)
             edge_based_partition_ids[backward_node] = node_based_partition_ids[v];
     }
 
+    BOOST_ASSERT(std::none_of(edge_based_partition_ids.begin(),
+                              edge_based_partition_ids.end(),
+                              [](auto x) { return x == SPECIAL_NODEID; }));
+
     std::vector<Partition> partitions;
     std::vector<std::uint32_t> level_to_num_cells;
     std::tie(partitions, level_to_num_cells) =
