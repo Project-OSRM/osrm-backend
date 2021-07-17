@@ -68,8 +68,9 @@ class OSRMDirectLoader extends OSRMBaseLoader {
         super(scope);
     }
 
-    load (inputFile, callback) {
-        this.inputFile = inputFile;
+    load (ctx, callback) {
+        this.inputFile = ctx.inputFile;
+        this.loaderArgs = ctx.loaderArgs;
         this.shutdown(() => {
             this.launch(callback);
         });
@@ -78,7 +79,7 @@ class OSRMDirectLoader extends OSRMBaseLoader {
     osrmUp (callback) {
         if (this.osrmIsRunning()) return callback(new Error("osrm-routed already running!"));
 
-        const command_arguments = util.format('%s -p %d -i %s -a %s', this.inputFile, this.scope.OSRM_PORT, this.scope.OSRM_IP, this.scope.ROUTING_ALGORITHM);
+        const command_arguments = util.format('%s -p %d -i %s -a %s %s', this.inputFile, this.scope.OSRM_PORT, this.scope.OSRM_IP, this.scope.ROUTING_ALGORITHM, this.loaderArgs);
         this.child = this.scope.runBin('osrm-routed', command_arguments, this.scope.environment, (err) => {
             if (err && err.signal !== 'SIGINT') {
                 this.child = null;
@@ -101,8 +102,9 @@ class OSRMmmapLoader extends OSRMBaseLoader {
         super(scope);
     }
 
-    load (inputFile, callback) {
-        this.inputFile = inputFile;
+    load (ctx, callback) {
+        this.inputFile = ctx.inputFile;
+        this.loaderArgs = ctx.loaderArgs;
         this.shutdown(() => {
             this.launch(callback);
         });
@@ -111,7 +113,7 @@ class OSRMmmapLoader extends OSRMBaseLoader {
     osrmUp (callback) {
         if (this.osrmIsRunning()) return callback(new Error("osrm-routed already running!"));
 
-        const command_arguments = util.format('%s -p %d -i %s -a %s --mmap', this.inputFile, this.scope.OSRM_PORT, this.scope.OSRM_IP, this.scope.ROUTING_ALGORITHM);
+        const command_arguments = util.format('%s -p %d -i %s -a %s --mmap %s', this.inputFile, this.scope.OSRM_PORT, this.scope.OSRM_IP, this.scope.ROUTING_ALGORITHM, this.loaderArgs);
         this.child = this.scope.runBin('osrm-routed', command_arguments, this.scope.environment, (err) => {
             if (err && err.signal !== 'SIGINT') {
                 this.child = null;
@@ -134,8 +136,9 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
         super(scope);
     }
 
-    load (inputFile, callback) {
-        this.inputFile = inputFile;
+    load (ctx, callback) {
+        this.inputFile = ctx.inputFile;
+        this.loaderArgs = ctx.loaderArgs;
 
         this.loadData((err) => {
             if (err) return callback(err);
@@ -148,7 +151,7 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
     }
 
     loadData (callback) {
-        const command_arguments = util.format('--dataset-name=%s %s', this.scope.DATASET_NAME, this.inputFile);
+        const command_arguments = util.format('--dataset-name=%s %s %s', this.scope.DATASET_NAME, this.inputFile, this.loaderArgs);
         this.scope.runBin('osrm-datastore', command_arguments, this.scope.environment, (err) => {
             if (err) return callback(new Error('*** osrm-datastore exited with ' + err.code + ': ' + err));
             callback();

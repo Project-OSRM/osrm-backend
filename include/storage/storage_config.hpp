@@ -31,9 +31,60 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/filesystem/path.hpp>
 
 #include "storage/io_config.hpp"
+#include "osrm/datasets.hpp"
+
+#include <set>
 
 namespace osrm::storage
 {
+
+std::istream &operator>>(std::istream &in, FeatureDataset &datasets);
+
+static std::vector<boost::filesystem::path>
+GetRequiredFiles(const std::vector<storage::FeatureDataset> &disabled_feature_dataset)
+{
+    std::set<boost::filesystem::path> required{
+        ".osrm.datasource_names",
+        ".osrm.ebg_nodes",
+        ".osrm.edges",
+        ".osrm.fileIndex",
+        ".osrm.geometry",
+        ".osrm.icd",
+        ".osrm.maneuver_overrides",
+        ".osrm.names",
+        ".osrm.nbg_nodes",
+        ".osrm.properties",
+        ".osrm.ramIndex",
+        ".osrm.timestamp",
+        ".osrm.tld",
+        ".osrm.tls",
+        ".osrm.turn_duration_penalties",
+        ".osrm.turn_weight_penalties",
+    };
+
+    for (const auto &to_disable : disabled_feature_dataset)
+    {
+        switch (to_disable)
+        {
+        case FeatureDataset::ROUTE_STEPS:
+            for (const auto &dataset : {".osrm.icd", ".osrm.tld", ".osrm.tls"})
+            {
+                required.erase(dataset);
+            }
+            break;
+        case FeatureDataset::ROUTE_GEOMETRY:
+            for (const auto &dataset :
+                 {".osrm.edges", ".osrm.icd", ".osrm.names", ".osrm.tld", ".osrm.tls"})
+            {
+                required.erase(dataset);
+            }
+            break;
+        }
+    }
+
+    return std::vector<boost::filesystem::path>(required.begin(), required.end());
+    ;
+}
 
 /**
  * Configures OSRM's file storage paths.
@@ -42,29 +93,17 @@ namespace osrm::storage
  */
 struct StorageConfig final : IOConfig
 {
-    StorageConfig(const boost::filesystem::path &base) : StorageConfig()
+
+    StorageConfig(const boost::filesystem::path &base,
+                  const std::vector<storage::FeatureDataset> &disabled_feature_datasets_ = {})
+        : StorageConfig(disabled_feature_datasets_)
     {
         IOConfig::UseDefaultOutputNames(base);
     }
 
-    StorageConfig()
+    StorageConfig(const std::vector<storage::FeatureDataset> &disabled_feature_datasets_ = {})
         : IOConfig(
-              {".osrm.ramIndex",
-               ".osrm.fileIndex",
-               ".osrm.edges",
-               ".osrm.geometry",
-               ".osrm.turn_weight_penalties",
-               ".osrm.turn_duration_penalties",
-               ".osrm.datasource_names",
-               ".osrm.ebg_nodes",
-               ".osrm.names",
-               ".osrm.nbg_nodes",
-               ".osrm.timestamp",
-               ".osrm.tls",
-               ".osrm.tld",
-               ".osrm.properties",
-               ".osrm.icd",
-               ".osrm.maneuver_overrides"},
+              GetRequiredFiles(disabled_feature_datasets_),
               {".osrm.hsgr", ".osrm.cells", ".osrm.cell_metrics", ".osrm.mldgr", ".osrm.partition"},
               {})
     {

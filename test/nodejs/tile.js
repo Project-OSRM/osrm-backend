@@ -23,3 +23,20 @@ test.test('tile interface pre-conditions', function(assert) {
     assert.throws(function() { osrm.tile(17059, 11948, 15, function(err, result) {}) }, /must be an array \[x, y, z\]/);
     assert.throws(function() { osrm.tile([17059, 11948, -15], function(err, result) {}) }, /must be unsigned/);
 });
+
+test.test('tile fails to load with geometry disabled', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    osrm.tile(tile.at, function(err, result) {
+        console.log(err)
+        assert.match(err.message, /DisabledDatasetException/);
+    });
+});
+test.test('tile ok with steps disabled', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    osrm.tile(tile.at, function(err, result) {
+        assert.ifError(err);
+        assert.equal(result.length, tile.size);
+    });
+});

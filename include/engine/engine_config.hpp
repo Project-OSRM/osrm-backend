@@ -29,9 +29,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ENGINE_CONFIG_HPP
 
 #include "storage/storage_config.hpp"
+#include "osrm/datasets.hpp"
 
 #include <boost/filesystem/path.hpp>
 
+#include <set>
 #include <string>
 
 namespace osrm::engine
@@ -89,6 +91,7 @@ struct EngineConfig final
     boost::filesystem::path memory_file;
     bool use_mmap = true;
     Algorithm algorithm = Algorithm::CH;
+    std::vector<storage::FeatureDataset> disable_feature_dataset;
     std::string verbosity;
     std::string dataset_name;
 };

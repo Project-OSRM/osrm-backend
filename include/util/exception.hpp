@@ -62,7 +62,7 @@ class exception : public std::exception
  * user supplied bad data, etc).
  */
 
-constexpr const std::array<const char *, 11> ErrorDescriptions = {{
+constexpr const std::array<const char *, 12> ErrorDescriptions = {{
     "",                                               // Dummy - ErrorCode values start at 2
     "",                                               // Dummy - ErrorCode values start at 2
     "Fingerprint did not match the expected value",   // InvalidFingerprint
@@ -75,7 +75,8 @@ constexpr const std::array<const char *, 11> ErrorDescriptions = {{
     // NOLINTNEXTLINE(bugprone-suspicious-missing-comma)
     "The dataset you are trying to load is not "              // IncompatibleDataset
     "compatible with the routing algorithm you want to use.", // ...continued...
-    "Incompatible algorithm"                                  // IncompatibleAlgorithm
+    "Incompatible algorithm",                                 // IncompatibleAlgorithm
+    "Unknown feature dataset"                                 // UnknownFeatureDataset
 }};
 
 #ifndef NDEBUG
@@ -83,6 +84,32 @@ constexpr const std::array<const char *, 11> ErrorDescriptions = {{
 static_assert(ErrorDescriptions.size() == ErrorCode::__ENDMARKER__,
               "ErrorCode list and ErrorDescription lists are different sizes");
 #endif
+
+class DisabledDatasetException : public exception
+{
+  public:
+    explicit DisabledDatasetException(const std::string &dataset_)
+        : exception(BuildMessage(dataset_)), dataset(dataset_)
+    {
+    }
+
+    const std::string &Dataset() const { return dataset; }
+
+  private:
+    // This function exists to 'anchor' the class, and stop the compiler from
+    // copying vtable and RTTI info into every object file that includes
+    // this header. (Caught by -Wweak-vtables under Clang.)
+    virtual void anchor() const override;
+    const std::string dataset;
+
+    static std::string BuildMessage(const std::string &dataset)
+    {
+        return "DisabledDatasetException: Your query tried to access the disabled dataset " +
+               dataset +
+               ". Please check your configuration: "
+               "https://github.com/Project-OSRM/osrm-backend/wiki/Disabled-Datasets";
+    }
+};
 
 class RuntimeError : public exception
 {

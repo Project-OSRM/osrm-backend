@@ -762,3 +762,65 @@ test('route: snapping parameter passed through OK', function(assert) {
         assert.equal(Math.round(route.routes[0].distance * 10), 1315); // Round it to nearest 0.1m to eliminate floating point comparison error
     });
 });
+
+test('route: throws on disabled geometry', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM({'path': monaco_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    var options = {
+        coordinates: three_test_coordinates,
+    };
+    osrm.route(options, function(err, route) {
+        console.log(err)
+        assert.match(err.message, /DisabledDatasetException/);
+    });
+});
+
+test('route: ok on disabled geometry', function (assert) {
+    assert.plan(2);
+    var osrm = new OSRM({'path': monaco_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    var options = {
+        steps: false,
+        overview: 'false',
+        annotations: false,
+        skip_waypoints: true,
+        coordinates: three_test_coordinates,
+    };
+    osrm.route(options, function(err, response) {
+        assert.ifError(err);
+        assert.equal(response.routes.length, 1);
+    });
+});
+
+test('route: throws on disabled steps', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM({'path': monaco_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+    };
+    osrm.route(options, function(err, route) {
+        console.log(err)
+        assert.match(err.message, /DisabledDatasetException/);
+    });
+});
+
+test('route: ok on disabled steps', function (assert) {
+    assert.plan(8);
+    var osrm = new OSRM({'path': monaco_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    var options = {
+        steps: false,
+        overview: 'simplified',
+        annotations: true,
+        coordinates: three_test_coordinates,
+    };
+    osrm.route(options, function(err, response) {
+        assert.ifError(err);
+        assert.ok(response.waypoints);
+        assert.ok(response.routes);
+        assert.equal(response.routes.length, 1);
+        assert.ok(response.routes[0].geometry, "the route has geometry");
+        assert.ok(response.routes[0].legs, "the route has legs");
+        assert.notok(response.routes[0].legs.every(l => { return l.steps.length > 0; }), 'every leg has steps');
+        assert.ok(response.routes[0].legs.every(l => { return l.annotation;}), 'every leg has annotations');
+    });
+});

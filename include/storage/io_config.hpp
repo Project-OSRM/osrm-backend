@@ -35,6 +35,11 @@ struct IOConfig
         return {base_path.string() + fileName};
     }
 
+    bool IsRequiredConfiguredInput(const std::string &fileName) const
+    {
+        return IsConfigured(fileName, required_input_files);
+    }
+
     boost::filesystem::path base_path;
 
   protected:

@@ -88,10 +88,11 @@ Every response object has a `code` property containing one of the strings below 
 | `InvalidService`  | Service name is invalid.                                                         |
 | `InvalidVersion`  | Version is not found.                                                            |
 | `InvalidOptions`  | Options are invalid.                                                             |
-| `InvalidQuery`    | The query string is syntactically malformed.                                    |
+| `InvalidQuery`    | The query string is syntactically malformed.                                     |
 | `InvalidValue`    | The successfully parsed query parameters are invalid.                            |
-| `NoSegment`       | One of the supplied input coordinates could not snap to the street segment.          |
+| `NoSegment`       | One of the supplied input coordinates could not snap to the street segment.      |
 | `TooBig`          | The request size violates one of the service-specific request size restrictions. |
+| `DisabledDataset` | The request tried to access a disabled dataset.                                  |
 
 - `message` is a **optional** human-readable error message. All other status types are service-dependent.
 - In case of an error the HTTP status code will be `400`. Otherwise, the HTTP status code will be `200` and `code` will be `Ok`.
@@ -130,7 +131,7 @@ In addition to the [general options](#general-options) the following options are
 |number      |`integer >= 1` (default `1`)  |Number of nearest segments that should be returned. |
 
 As `waypoints` is a single thing, returned by that service, using it with the option `skip_waypoints` set to `true` is quite useless, but still
-possible. In that case, only the `code` field will be returned. 
+possible. In that case, only the `code` field will be returned.
 
 **Response**
 
@@ -953,11 +954,11 @@ The object is used to describe the waypoint on a route.
 
 ## Flatbuffers format
 
-The default response format is `json`, but OSRM supports binary [`flatbuffers`](https://google.github.io/flatbuffers/) format, which 
+The default response format is `json`, but OSRM supports binary [`flatbuffers`](https://google.github.io/flatbuffers/) format, which
 is much faster in serialization/deserialization, comparing to `json`.
 
 The format itself is described in message descriptors, located at `include/engine/api/flatbuffers` directory. Those descriptors could
-be compiled to provide protocol parsers in Go/Javascript/Typescript/Java/Dart/C#/Python/Lobster/Lua/Rust/PHP/Kotlin. Precompiled 
+be compiled to provide protocol parsers in Go/Javascript/Typescript/Java/Dart/C#/Python/Lobster/Lua/Rust/PHP/Kotlin. Precompiled
 protocol parser for C++ is supplied with OSRM.
 
 `Flatbuffers` format provides exactly the same data, as `json` format with a slightly different layout, which was optimized to minimize
@@ -971,7 +972,7 @@ Root object is the only object, available from a 'raw' `flatbuffers` buffer. It 
 
 **Properties**
 
-- `error`: `bool` Marks response as erroneous. An erroneous response should include the `code` fieldset, all the other fields may not be present. 
+- `error`: `bool` Marks response as erroneous. An erroneous response should include the `code` fieldset, all the other fields may not be present.
 - `code`: `Error` Error description object, only present, when `error` is `true`
 - `waypoints`: `[Waypoint]` Array of `Waypoint` objects. Should present for every service call, unless `skip_waypoints` is set to `true`. Table service will put `sources` array here.
 - `routes`: `[RouteObject]` Array of `RouteObject` objects. May be empty or absent. Should present for Route/Trip/Match services call.
@@ -983,21 +984,21 @@ Contains error information.
 
 **Properties**
 
-- `code`: `string` Error code 
+- `code`: `string` Error code
 - `message`: `string` Detailed error message
 
 ### Waypoint object
 
 Almost the same as `json` Waypoint object. The following properties differ:
 
-- `location`: `Position` Same as `json` location field, but different format. 
+- `location`: `Position` Same as `json` location field, but different format.
 - `nodes`: `Uint64Pair` Same as `json` nodes field, but different format.
 
 ### RouteObject object
 
 Almost the same as `json` Route object. The following properties differ:
 
-- `polyline`: `string` Same as `json` geometry.polyline or geometry.polyline6 fields. One field for both formats. 
+- `polyline`: `string` Same as `json` geometry.polyline or geometry.polyline6 fields. One field for both formats.
 - `coordinates`: `[Position]` Same as `json` geometry.coordinates field, but different format.
 - `legs`: `[Leg]` Array of `Leg` objects.
 
@@ -1012,7 +1013,7 @@ Almost the same as `json` Leg object. The following properties differ:
 
 Almost the same as `json` Step object. The following properties differ:
 
-- `polyline`: `string` Same as `json` geometry.polyline or geometry.polyline6 fields. One field for both formats. 
+- `polyline`: `string` Same as `json` geometry.polyline or geometry.polyline6 fields. One field for both formats.
 - `coordinates`: `[Position]` Same as `json` geometry.coordinates field, but different format.
 - `maneuver`: `StepManeuver` Same as `json` maneuver field, but different format.
 
@@ -1035,7 +1036,7 @@ Almost the same as `json` Step object. The following properties differ:
 | `ExitRoundabout` | Describes a maneuver exiting a roundabout (usually preceded by a `roundabout` instruction)                                                                                                                                                                                                                                  |
 | `ExitRotary`     | Describes the maneuver exiting a rotary (large named roundabout)                                                                                                                                                                                                                                                             |
 
-- `driving_side`: `bool` Ttrue stands for the left side driving. 
+- `driving_side`: `bool` Ttrue stands for the left side driving.
 - `intersections`: `[Intersection]` Same as `json` intersections field, but different format.
 
 ### Intersection object
@@ -1049,7 +1050,7 @@ Almost the same as `json` Intersection object. The following properties differ:
 
 Almost the same as `json` Lane object. The following properties differ:
 
-- `indications`: `Turn` Array of `Turn` enum values. 
+- `indications`: `Turn` Array of `Turn` enum values.
 
 | `value`                | Description                                                                                                               |
 |------------------------|---------------------------------------------------------------------------------------------------------------------------|
@@ -1089,16 +1090,16 @@ Almost the same as `json` StepManeuver object. The following properties differ:
 | `ExitRoundabout` | Describes a maneuver exiting a roundabout (usually preceded by a `roundabout` instruction) |
 | `ExitRotary`    | Describes the maneuver exiting a rotary (large named roundabout) |
 
-- `modifier`: `Turn` Maneuver turn (enum) 
+- `modifier`: `Turn` Maneuver turn (enum)
 
 ### Annotation object
 
-Exactly the same as `json` annotation object. 
+Exactly the same as `json` annotation object.
 
 
 ### Position object
 
-A point on Earth. 
+A point on Earth.
 
 ***Properties***
 - `longitute`: `float` Point's longitude

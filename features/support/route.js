@@ -101,7 +101,8 @@ module.exports = function () {
 
     this.requestTrip = (waypoints, userParams, callback) => {
         var defaults = {
-                output: 'json'
+                output: 'json',
+                steps: 'true'
             },
             params = this.overwriteParams(defaults, userParams);
 
