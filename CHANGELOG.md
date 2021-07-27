@@ -1,4 +1,7 @@
 # Unreleased
+  - Changes from 5.25.0
+    - API:
+      - FIXED: Allow for special characters in the profile/method as part of the HTTP URL.
 
 # 5.25.0
   - Changes from 5.24.0
