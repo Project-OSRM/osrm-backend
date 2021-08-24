@@ -1,4 +1,7 @@
 # Unreleased
+- Changes from 5.25.0
+    - API:
+      - FIXED: Allow for traffic updates to use edge_speed_in_km_h in decimals.
 
 # 5.25.0
   - Changes from 5.24.0
