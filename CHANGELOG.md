@@ -1,7 +1,10 @@
 # Unreleased
   - Changes from 5.26.0
+    - API:
+      - FIXED: Fix inefficient osrm-routed connection handling [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
     - Build:
       - CHANGED: Use Github Actions for building container images [#6138](https://github.com/Project-OSRM/osrm-backend/pull/6138)
+      - CHANGED: Upgrade Boost dependency to 1.70 [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
 
 # 5.26.0
   - Changes from 5.25.0

@@ -43,12 +43,12 @@ class Server
     }
 
     explicit Server(const std::string &address, const int port, const unsigned thread_pool_size)
-        : thread_pool_size(thread_pool_size), acceptor(io_service),
-          new_connection(std::make_shared<Connection>(io_service, request_handler))
+        : thread_pool_size(thread_pool_size), acceptor(io_context),
+          new_connection(std::make_shared<Connection>(io_context, request_handler))
     {
         const auto port_string = std::to_string(port);
 
-        boost::asio::ip::tcp::resolver resolver(io_service);
+        boost::asio::ip::tcp::resolver resolver(io_context);
         boost::asio::ip::tcp::resolver::query query(address, port_string);
         boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
 
@@ -74,7 +74,7 @@ class Server
         for (unsigned i = 0; i < thread_pool_size; ++i)
         {
             std::shared_ptr<std::thread> thread = std::make_shared<std::thread>(
-                boost::bind(&boost::asio::io_service::run, &io_service));
+                boost::bind(&boost::asio::io_context::run, &io_context));
             threads.push_back(thread);
         }
         for (auto thread : threads)
@@ -83,7 +83,7 @@ class Server
         }
     }
 
-    void Stop() { io_service.stop(); }
+    void Stop() { io_context.stop(); }
 
     void RegisterServiceHandler(std::unique_ptr<ServiceHandlerInterface> service_handler_)
     {
@@ -96,7 +96,7 @@ class Server
         if (!e)
         {
             new_connection->start();
-            new_connection = std::make_shared<Connection>(io_service, request_handler);
+            new_connection = std::make_shared<Connection>(io_context, request_handler);
             acceptor.async_accept(
                 new_connection->socket(),
                 boost::bind(&Server::HandleAccept, this, boost::asio::placeholders::error));
@@ -108,7 +108,7 @@ class Server
     }
 
     unsigned thread_pool_size;
-    boost::asio::io_service io_service;
+    boost::asio::io_context io_context;
     boost::asio::ip::tcp::acceptor acceptor;
     std::shared_ptr<Connection> new_connection;
     RequestHandler request_handler;
