@@ -14,8 +14,9 @@ namespace osrm
 namespace server
 {
 
-Connection::Connection(boost::asio::io_service &io_service, RequestHandler &handler)
-    : strand(io_service), TCP_socket(io_service), timer(io_service), request_handler(handler)
+Connection::Connection(boost::asio::io_context &io_context, RequestHandler &handler)
+    : strand(boost::asio::make_strand(io_context)), TCP_socket(strand), timer(strand),
+      request_handler(handler)
 {
 }
 
@@ -24,12 +25,11 @@ boost::asio::ip::tcp::socket &Connection::socket() { return TCP_socket; }
 /// Start the first asynchronous operation for the connection.
 void Connection::start()
 {
-    TCP_socket.async_read_some(
-        boost::asio::buffer(incoming_data_buffer),
-        strand.wrap(boost::bind(&Connection::handle_read,
-                                this->shared_from_this(),
-                                boost::asio::placeholders::error,
-                                boost::asio::placeholders::bytes_transferred)));
+    TCP_socket.async_read_some(boost::asio::buffer(incoming_data_buffer),
+                               boost::bind(&Connection::handle_read,
+                                           this->shared_from_this(),
+                                           boost::asio::placeholders::error,
+                                           boost::asio::placeholders::bytes_transferred));
 
     if (keep_alive)
     {
@@ -123,9 +123,9 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
         // write result to stream
         boost::asio::async_write(TCP_socket,
                                  output_buffer,
-                                 strand.wrap(boost::bind(&Connection::handle_write,
-                                                         this->shared_from_this(),
-                                                         boost::asio::placeholders::error)));
+                                 boost::bind(&Connection::handle_write,
+                                             this->shared_from_this(),
+                                             boost::asio::placeholders::error));
     }
     else if (result == RequestParser::RequestStatus::invalid)
     { // request is not parseable
@@ -133,19 +133,18 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
 
         boost::asio::async_write(TCP_socket,
                                  current_reply.to_buffers(),
-                                 strand.wrap(boost::bind(&Connection::handle_write,
-                                                         this->shared_from_this(),
-                                                         boost::asio::placeholders::error)));
+                                 boost::bind(&Connection::handle_write,
+                                             this->shared_from_this(),
+                                             boost::asio::placeholders::error));
     }
     else
     {
         // we don't have a result yet, so continue reading
-        TCP_socket.async_read_some(
-            boost::asio::buffer(incoming_data_buffer),
-            strand.wrap(boost::bind(&Connection::handle_read,
-                                    this->shared_from_this(),
-                                    boost::asio::placeholders::error,
-                                    boost::asio::placeholders::bytes_transferred)));
+        TCP_socket.async_read_some(boost::asio::buffer(incoming_data_buffer),
+                                   boost::bind(&Connection::handle_read,
+                                               this->shared_from_this(),
+                                               boost::asio::placeholders::error,
+                                               boost::asio::placeholders::bytes_transferred));
     }
 }
 

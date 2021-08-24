@@ -36,7 +36,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 if(ENABLE_MASON)
   # versions in use
-  set(MASON_BOOST_VERSION "1.65.1")
+  set(MASON_BOOST_VERSION "1.73.0")
   set(MASON_EXPAT_VERSION "2.2.0")
   set(MASON_LUA_VERSION "5.2.4")
   set(MASON_BZIP2_VERSION "1.0.6")
@@ -521,7 +521,7 @@ if(ENABLE_MASON)
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
 else()
 
-  find_package(Boost 1.54 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+  find_package(Boost 1.70 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
   add_dependency_includes(${Boost_INCLUDE_DIRS})
 
   find_package(TBB REQUIRED)
