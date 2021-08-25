@@ -1,6 +1,7 @@
 #include "storage/serialization.hpp"
 #include "storage/shared_memory.hpp"
 #include "storage/shared_monitor.hpp"
+#include "storage/shared_datatype.hpp"
 #include "storage/storage.hpp"
 
 #include "osrm/exception.hpp"
@@ -11,13 +12,20 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+#include <boost/iostreams/tee.hpp>
+#include <boost/filesystem.hpp>
 
 #include <csignal>
 #include <cstdlib>
+#include <ctime>
+#include <iostream>
+#include <locale>
+
+#include <execinfo.h>
 
 using namespace osrm;
 
-void removeLocks() { storage::SharedMonitor<storage::SharedRegionRegister>::remove(); }
+void removeLocks(bool alsoDeleteOsrmRegion) { storage::SharedMonitor<storage::SharedRegionRegister>::remove(alsoDeleteOsrmRegion); }
 
 void deleteRegion(const storage::SharedRegionRegister::ShmKey key)
 {
@@ -29,9 +37,10 @@ void deleteRegion(const storage::SharedRegionRegister::ShmKey key)
 
 void listRegions(bool show_blocks)
 {
-    osrm::util::Log() << "name\tshm key\ttimestamp\tsize";
+    osrm::util::Log() << "name\tshm key\ttimestamp\tsize\tkey\tshmid";
     if (!storage::SharedMonitor<storage::SharedRegionRegister>::exists())
     {
+        util::Log(logWARNING) << "CTudorache sharedMonitor DOES NOT EXIST: " << (const char *)storage::SharedRegionRegister::name;
         return;
     }
     storage::SharedMonitor<storage::SharedRegionRegister> monitor;
@@ -43,8 +52,11 @@ void listRegions(bool show_blocks)
         auto id = shared_register.Find(name);
         auto region = shared_register.GetRegion(id);
         auto shm = osrm::storage::makeSharedMemory(region.shm_key);
-        osrm::util::Log() << name << "\t" << static_cast<int>(region.shm_key) << "\t"
-                          << region.timestamp << "\t" << shm->Size();
+        osrm::util::Log() << "name: " << name
+                          << ", shm_key:" << static_cast<int>(region.shm_key)
+                          << ", timestamp: " << region.timestamp
+                          << ", size: " << shm->Size()
+                          << ", shm: " << shm->ToString();
 
         if (show_blocks)
         {
@@ -87,7 +99,7 @@ void springClean()
         {
             deleteRegion(key);
         }
-        removeLocks();
+        removeLocks(true);
     }
 }
 
@@ -200,7 +212,7 @@ bool generateDataStoreOptions(const int argc,
 
     if (option_variables.count("remove-locks"))
     {
-        removeLocks();
+        removeLocks(false);
         return false;
     }
 
@@ -215,10 +227,16 @@ bool generateDataStoreOptions(const int argc,
     return true;
 }
 
-[[noreturn]] void CleanupSharedBarriers(int signum)
+void CleanupSharedBarriers(int signum)
 { // Here the lock state of named mutexes is unknown, make a hard cleanup
-    removeLocks();
-    std::_Exit(128 + signum);
+    util::Log(logERROR) << "[signal] " << signum << " (" << strsignal(signum) << ")";
+
+    removeLocks(false);
+
+    // The signal handler is installed with SA_RESETHAND,
+    // so returning from this function will trigger the signal again
+    // but it will be handled by the default handler => core dump.
+    //std::_Exit(128 + signum);
 }
 
 int main(const int argc, const char *argv[])
@@ -227,7 +245,12 @@ try
     int signals[] = {SIGTERM, SIGSEGV, SIGINT, SIGILL, SIGABRT, SIGFPE};
     for (auto sig : signals)
     {
-        std::signal(sig, CleanupSharedBarriers);
+        struct sigaction act;
+        sigemptyset(&act.sa_mask);
+        act.sa_flags = SA_RESETHAND;
+        act.sa_handler = &CleanupSharedBarriers;
+        sigaction(sig, &act, NULL);
+        //std::signal(sig, CleanupSharedBarriers);
     }
 
     util::LogPolicy::GetInstance().Unmute();
@@ -268,11 +291,61 @@ try
     }
     storage::Storage storage(std::move(config));
 
-    return storage.Run(max_wait, dataset_name, only_metric);
+    ////////////////////////////////////
+    // tmp directory for logs
+    const std::string log_dirpath = "/tmp/osrm-datastore-log";
+    if (not boost::filesystem::is_directory(log_dirpath)) {
+        boost::filesystem::create_directory(log_dirpath);
+    }
+
+    // keep last 200 logs (200 x 15 min => 50h = 2 days)
+    const unsigned LOG_COUNT_TO_KEEP = 200;
+    std::vector<std::string> log_files;
+    for (boost::filesystem::directory_iterator it(log_dirpath), end; it != end; ++it) {
+        const std::string filepath = it->path().string();
+        if (filepath.rfind(".log") != std::string::npos) {
+            log_files.push_back(it->path().string());
+        }
+    }
+    std::sort(log_files.begin(), log_files.end(), std::greater<>());
+    for (unsigned i = LOG_COUNT_TO_KEEP - 1; i < log_files.size(); ++i) {
+        std::cout << "Removing old log file: " << log_files[i] << std::endl;
+        boost::filesystem::remove(log_files[i]);
+    }
+
+    // tee log to new file
+    char log_filepath[256] = {0};
+    std::time_t now = std::time(nullptr);
+    std::strftime(log_filepath, sizeof(log_filepath), (log_dirpath + "/%Y-%m-%d_%H-%M-%S_" + dataset_name + ".log").c_str(), std::localtime(&now));
+    std::ofstream log_file;
+    log_file.open(log_filepath);
+    std::ostream tmp(std::cout.rdbuf());
+    boost::iostreams::tee_device<std::ostream, std::ofstream> log_output_device(tmp, log_file);
+    boost::iostreams::stream<boost::iostreams::tee_device<std::ostream, std::ofstream>> logger(log_output_device);
+    const auto original_cout = std::cout.rdbuf();
+    const auto original_cerr = std::cerr.rdbuf();
+    std::cout.rdbuf(logger.rdbuf());
+    std::cerr.rdbuf(logger.rdbuf());
+    std::cout << "Redirected log to file: " << log_filepath << std::endl;
+    ////////////////////////////////////
+
+    int result = storage.Run(max_wait, dataset_name, only_metric);
+
+    // restore cout/cerr after tee log to file
+    std::cout << "Closing log file: " << log_filepath << std::endl;
+    std::cout.rdbuf(original_cout);
+    std::cerr.rdbuf(original_cerr);
+    logger.close();
+    log_output_device.close();
+
+    std::cout.flush();
+    std::cerr.flush();
+    // ::sleep(5);
+    return result;
 }
 catch (const osrm::RuntimeError &e)
 {
-    util::Log(logERROR) << e.what();
+    util::Log(logERROR) << "[RuntimeError] " << e.what();
     return e.GetCode();
 }
 catch (const std::bad_alloc &e)

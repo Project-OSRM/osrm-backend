@@ -212,7 +212,14 @@ struct SharedRegion
     char name[MAX_NAME_LENGTH + 1];
     std::uint64_t timestamp;
     std::uint16_t shm_key;
+
+    std::string ToString() const {
+        std::ostringstream oss;
+        oss << "{name: " << name << ", timestamp: " << timestamp << ", shm_key: " << util::shmKeyToString(shm_key) << "}";
+        return oss.str();
+    }
 };
+inline std::ostream& operator<<(std::ostream& os, const SharedRegion& r) { return os << r.ToString(); }
 
 // Keeps a list of all shared regions in a fixed-sized struct
 // for fast access and deserialization.
@@ -285,6 +292,28 @@ struct SharedRegionRegister
     }
 
     void ReleaseKey(ShmKey key) { shm_key_in_use[key] = false; }
+
+    std::string ToString() const {
+        std::vector<SharedRegion> used_regions;
+        for (unsigned i = 0; i < regions.size(); ++i) {
+            if (not regions[i].IsEmpty()) {
+                used_regions.push_back(regions[i]);
+            }
+        }
+        std::vector<unsigned> used_keys;
+        for (unsigned i = 0; i < shm_key_in_use.size(); ++i) {
+            if (shm_key_in_use[i]) {
+                used_keys.push_back(i);
+            }
+        }
+        std::ostringstream oss;
+        oss << "{regions: #" << used_regions.size() << ":";
+        for (const SharedRegion& reg : used_regions) {
+            oss << "\n - " << reg.ToString();
+        }
+        oss << ", used_keys: " << osrm::util::ToStringArray(used_keys) << "}";
+        return oss.str();
+    }
 
     static constexpr const std::size_t MAX_SHARED_REGIONS = 512;
     static_assert(MAX_SHARED_REGIONS < std::numeric_limits<RegionID>::max(),

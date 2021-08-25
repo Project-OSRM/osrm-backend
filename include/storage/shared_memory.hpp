@@ -42,12 +42,27 @@ struct OSRMLockFile
     }
 };
 
+inline std::string ShmKeyToString(std::uint16_t id) {
+    OSRMLockFile lock_file;
+    std::ostringstream oss;
+    oss << "{path: " << lock_file(id).string() << ", id: " << id << "}";
+    return oss.str();
+}
+
 #ifndef _WIN32
 class SharedMemory
 {
   public:
     void *Ptr() const { return region.get_address(); }
     std::size_t Size() const { return region.get_size(); }
+    int Key() const { return (int)key.get_key(); }
+    int Shmid() const { return shm.get_shmid(); }
+
+    std::string ToString() const {
+        std::ostringstream oss;
+        oss << "{key: " << util::toHexString(Key()) << ", shmid: " << Shmid() << ", size: " << Size() << "}";
+        return oss.str();
+    }
 
     SharedMemory(const SharedMemory &) = delete;
     SharedMemory &operator=(const SharedMemory &) = delete;
@@ -148,7 +163,9 @@ class SharedMemory
             }
             BOOST_ASSERT(ret >= 0);
 
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
+            //std::this_thread::sleep_for(std::chrono::microseconds(100));
+            util::Log(logWARNING) << "CTudorache WaitForDetach, nattach: " << xsi_ds.shm_nattch;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         } while (xsi_ds.shm_nattch > 1);
     }
 #else
@@ -168,9 +185,11 @@ class SharedMemory
         try
         {
             boost::interprocess::xsi_shared_memory shm(boost::interprocess::open_only, key);
+            util::Log(logINFO) << "RegionExists key: " << util::toHexString(key.get_key()) << " (shmid: " << shm.get_shmid() << ") TRUE";
         }
         catch (const boost::interprocess::interprocess_exception &e)
         {
+            util::Log(logINFO) << "RegionExists key: " << util::toHexString(key.get_key()) << " FALSE, err: " << e.what() << ", code: " << e.get_error_code();
             if (e.get_error_code() != boost::interprocess::not_found_error)
             {
                 throw;
@@ -184,8 +203,9 @@ class SharedMemory
     static bool Remove(const boost::interprocess::xsi_key &key)
     {
         boost::interprocess::xsi_shared_memory xsi(boost::interprocess::open_only, key);
-        util::Log(logDEBUG) << "deallocating prev memory " << xsi.get_shmid();
-        return boost::interprocess::xsi_shared_memory::remove(xsi.get_shmid());
+        const bool success = boost::interprocess::xsi_shared_memory::remove(xsi.get_shmid());
+        util::Log(logWARNING) << "deallocating prev memory " << xsi.get_shmid() << " = " << util::toHexString(key.get_key()) << ", success: " << success << ", errno: " << errno;
+        return success;
     }
 
     boost::interprocess::xsi_key key;
@@ -287,10 +307,10 @@ class SharedMemory
 template <typename IdentifierT, typename LockFileT = OSRMLockFile>
 std::unique_ptr<SharedMemory> makeSharedMemory(const IdentifierT &id, const uint64_t size = 0)
 {
+    LockFileT lock_file;
     static_assert(sizeof(id) == sizeof(std::uint16_t), "Key type is not 16 bits");
     try
     {
-        LockFileT lock_file;
         if (!boost::filesystem::exists(lock_file(id)))
         {
             if (0 == size)
@@ -302,13 +322,20 @@ std::unique_ptr<SharedMemory> makeSharedMemory(const IdentifierT &id, const uint
                 boost::filesystem::ofstream ofs(lock_file(id));
             }
         }
-        return std::make_unique<SharedMemory>(lock_file(id), id, size);
+        util::Log(logWARNING) << "CTudorache makeSharedMemory start, id: " << (int)id <<", size: " << size << ", lock_file: " << lock_file(id) << ", exists: " << boost::filesystem::exists(lock_file(id));
+        auto shm = std::make_unique<SharedMemory>(lock_file(id), id, size);
+        util::Log(logWARNING) << "CTudorache makeSharedMemory done, id: " << (int)id <<", size: " << size << ", lock_file: " << lock_file(id) << ", exists: " << boost::filesystem::exists(lock_file(id)) << ", shm: " << shm->ToString();
+        return shm;
     }
     catch (const boost::interprocess::interprocess_exception &e)
     {
         util::Log(logERROR) << "Error while attempting to allocate shared memory: " << e.what()
-                            << ", code " << e.get_error_code();
-        throw util::exception(e.what() + SOURCE_REF);
+                            << ", code " << e.get_error_code()
+                            << ", id: " << (int)id
+                            << ", size: " << size
+                            << ", lock_file: " << lock_file(id)
+                            << ", exists: " << boost::filesystem::exists(lock_file(id));
+        throw;
     }
 }
 } // namespace storage

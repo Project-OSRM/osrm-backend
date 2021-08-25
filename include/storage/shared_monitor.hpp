@@ -40,13 +40,33 @@ template <typename Data> struct SharedMonitor
 {
     using mutex_type = bi::interprocess_mutex;
 
+// private:
+//     static SharedMonitor* g_instance;
+
+// public:
+//     static SharedMonitor& instance() {
+//         if (!g_instance) {
+//             g_instance = new SharedMonitor();
+//         }
+//         return *g_instance;
+//     }
+//     static SharedMonitor& instance(const Data &initial_data) {
+//         if (!g_instance) {
+//             g_instance = new SharedMonitor(initial_data);
+//         }
+//         return *g_instance;
+//     }
+// private:
+
     SharedMonitor(const Data &initial_data)
     {
+        util::Log(logWARNING) << "CTudorache sharedMonitor OPEN or CREATE: " << (const char*)Data::name;
         shmem = bi::shared_memory_object(bi::open_or_create, Data::name, bi::read_write);
 
         bi::offset_t size = 0;
         if (shmem.get_size(size) && size == 0)
         {
+            util::Log(logWARNING) << "CTudorache sharedMonitor NEW, name: " << shmem.get_name();
             shmem.truncate(rounded_internal_size + sizeof(Data));
             region = bi::mapped_region(shmem, bi::read_write);
             new (&internal()) InternalData;
@@ -54,7 +74,9 @@ template <typename Data> struct SharedMonitor
         }
         else
         {
+            util::Log(logWARNING) << "CTudorache sharedMonitor EXISTS, name: " << shmem.get_name() << ", size: " << size;
             region = bi::mapped_region(shmem, bi::read_write);
+            util::Log(logWARNING) << "CTudorache sharedMonitor content: " << data().ToString();
         }
     }
 
@@ -62,7 +84,9 @@ template <typename Data> struct SharedMonitor
     {
         try
         {
+            util::Log(logWARNING) << "CTudorache sharedMonitor OPEN ONLY: " << (const char*)Data::name;
             shmem = bi::shared_memory_object(bi::open_only, Data::name, bi::read_write);
+            util::Log(logWARNING) << "CTudorache sharedMonitor => FOUND";
 
             bi::offset_t size = 0;
             if (!shmem.get_size(size) || size != rounded_internal_size + sizeof(Data))
@@ -77,6 +101,7 @@ template <typename Data> struct SharedMonitor
         }
         catch (const bi::interprocess_exception &exception)
         {
+            util::Log(logERROR) << "CTudorache sharedMonitor => NOT FOUND";
             auto message = boost::format("No shared memory block '%1%' found, have you forgotten "
                                          "to run osrm-datastore?") %
                            (const char *)Data::name;
@@ -84,6 +109,7 @@ template <typename Data> struct SharedMonitor
         }
     }
 
+// public:
     Data &data() const
     {
         auto region_pointer = reinterpret_cast<char *>(region.get_address());
@@ -116,7 +142,19 @@ template <typename Data> struct SharedMonitor
     }
 #endif
 
-    static void remove() { bi::shared_memory_object::remove(Data::name); }
+    static void remove(bool alsoDeleteShmObject) { 
+        try {
+            util::Log(logWARNING) << "CTudorache sharedMonitor UNLOCK global mutex";
+            SharedMonitor monitor;
+            monitor.get_mutex().unlock();
+        } catch (...) {
+            util::Log(logWARNING) << "CTudorache sharedMonitor UNLOCK global mutex EXCEPTION";
+        }
+        if (alsoDeleteShmObject) {
+            util::Log(logWARNING) << "CTudorache sharedMonitor DELETING shared obj: " << (const char*)Data::name;
+            bi::shared_memory_object::remove(Data::name);
+        }
+    }
     static bool exists()
     {
         try
@@ -126,6 +164,7 @@ template <typename Data> struct SharedMonitor
         }
         catch (const bi::interprocess_exception &exception)
         {
+            util::Log(logWARNING) << "CTudorache sharedMonitor exists exception: " << exception.what();
             return false;
         }
         return true;
@@ -234,6 +273,10 @@ template <typename Data> struct SharedMonitor
     bi::shared_memory_object shmem;
     bi::mapped_region region;
 };
+
+// template < typename Data >
+// SharedMonitor<Data>* SharedMonitor<Data>::g_instance = nullptr;
+
 } // namespace storage
 } // namespace osrm
 

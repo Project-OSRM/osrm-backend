@@ -22,6 +22,7 @@ SharedMemoryAllocator::SharedMemoryAllocator(
     {
         util::Log(logDEBUG) << "Loading new data for region " << (int)shm_key;
         BOOST_ASSERT(storage::SharedMemory::RegionExists(shm_key));
+        util::Log(logWARNING) << "CTudorache SharedMemoryAllocator, shm_key: " << shm_key;
         auto mem = storage::makeSharedMemory(shm_key);
 
         storage::io::BufferReader reader(reinterpret_cast<char *>(mem->Ptr()), mem->Size());
