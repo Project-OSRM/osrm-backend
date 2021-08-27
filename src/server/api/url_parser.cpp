@@ -26,10 +26,10 @@ struct URLParser final : qi::grammar<Iterator, Into>
     {
         using boost::spirit::repository::qi::iter_pos;
 
-        identifier = qi::char_("a-zA-Z0-9_..--~:");
+        identifier = qi::char_("a-zA-Z0-9_.~:-");
         percent_encoding =
             qi::char_('%') > qi::uint_parser<unsigned char, 16, 2, 2>()[qi::_val = qi::_1];
-        polyline_chars = qi::char_("a-zA-Z0-9_..--[]{}@?|\\~`^") | percent_encoding;
+        polyline_chars = qi::char_("a-zA-Z0-9_[]{}@?|\\~`^") | percent_encoding;
         all_chars = polyline_chars | qi::char_("=,;:&()..");
 
         service = +identifier;
