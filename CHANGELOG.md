@@ -6,6 +6,7 @@
     - Build:
       - CHANGED: Replace Travis with Github Actions for CI builds [#6071](https://github.com/Project-OSRM/osrm-backend/pull/6071)
       - FIXED: Fixed Boost link flags in pkg-config file. [#6083](https://github.com/Project-OSRM/osrm-backend/pull/6083)
+      - CHANGED: Upgrade Ubuntu CI builds to 20.04  [#6119](https://github.com/Project-OSRM/osrm-backend/pull/6119)
     - Routing:
       - FIXED: Fix generation of inefficient MLD partitions [#6084](https://github.com/Project-OSRM/osrm-backend/pull/6084)
 
