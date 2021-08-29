@@ -2,6 +2,7 @@
   - Changes from 5.25.0
     - API:
       - FIXED: Allow for special characters in the profile/method as part of the HTTP URL. [#6090](https://github.com/Project-OSRM/osrm-backend/pull/6090)
+      - FIXED: Set osrm-routed to immediately close bad connections [#6112](https://github.com/Project-OSRM/osrm-backend/pull/6112)
     - Build:
       - CHANGED: Replace Travis with Github Actions for CI builds [#6071](https://github.com/Project-OSRM/osrm-backend/pull/6071)
       - FIXED: Fixed Boost link flags in pkg-config file. [#6083](https://github.com/Project-OSRM/osrm-backend/pull/6083)

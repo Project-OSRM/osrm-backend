@@ -101,6 +101,10 @@ class Server
                 new_connection->socket(),
                 boost::bind(&Server::HandleAccept, this, boost::asio::placeholders::error));
         }
+        else
+        {
+            util::Log(logERROR) << "HandleAccept error: " << e.message();
+        }
     }
 
     unsigned thread_pool_size;
