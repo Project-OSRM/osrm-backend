@@ -126,8 +126,10 @@ BOOST_AUTO_TEST_CASE(valid_urls)
     BOOST_CHECK_EQUAL(reference_8.prefix_length, result_8->prefix_length);
 
     // profile with special characters
-    api::ParsedURL reference_9{"route", 1, "foo-bar_baz.profile", "0,1;2,3;4,5?options=value&foo=bar", 30UL};
-    auto result_9 = api::parseURL("/route/v1/foo-bar_baz.profile/0,1;2,3;4,5?options=value&foo=bar");
+    api::ParsedURL reference_9{
+        "route", 1, "foo-bar_baz.profile", "0,1;2,3;4,5?options=value&foo=bar", 30UL};
+    auto result_9 =
+        api::parseURL("/route/v1/foo-bar_baz.profile/0,1;2,3;4,5?options=value&foo=bar");
     BOOST_CHECK(result_9);
     BOOST_CHECK_EQUAL(reference_9.service, result_9->service);
     BOOST_CHECK_EQUAL(reference_9.version, result_9->version);
