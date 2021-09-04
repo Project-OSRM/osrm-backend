@@ -2,7 +2,7 @@
 
 | Linux / macOS | Windows | Code Coverage |
 | ------------- | ------- | ------------- |
-| [![Travis](https://travis-ci.org/Project-OSRM/osrm-backend.png?branch=master)](https://travis-ci.org/Project-OSRM/osrm-backend) | [![AppVeyor](https://ci.appveyor.com/api/projects/status/4iuo3s9gxprmcjjh)](https://ci.appveyor.com/project/DennisOSRM/osrm-backend) | [![Codecov](https://codecov.io/gh/Project-OSRM/osrm-backend/branch/master/graph/badge.svg)](https://codecov.io/gh/Project-OSRM/osrm-backend) |
+| [![osrm-backend CI](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml/badge.svg?branch=master)](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml) | [![AppVeyor](https://ci.appveyor.com/api/projects/status/4iuo3s9gxprmcjjh)](https://ci.appveyor.com/project/DennisOSRM/osrm-backend) | [![Codecov](https://codecov.io/gh/Project-OSRM/osrm-backend/branch/master/graph/badge.svg)](https://codecov.io/gh/Project-OSRM/osrm-backend) |
 
 High performance routing engine written in C++14 designed to run on OpenStreetMap data.
 
@@ -65,7 +65,7 @@ The flag `-v "${PWD}:/data"` creates the directory `/data` inside the docker con
     docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-partition /data/berlin-latest.osrm
     docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-customize /data/berlin-latest.osrm
 
-Note that `berlin-latest.osrm` has a different file extension. 
+Note that `berlin-latest.osrm` has a different file extension.
 
     docker run -t -i -p 5000:5000 -v "${PWD}:/data" osrm/osrm-backend osrm-routed --algorithm mld /data/berlin-latest.osrm
 
@@ -151,7 +151,7 @@ which will check and use pre-built binaries if they're available for this releas
 
 to always force building the Node.js bindings from source.
 
-For usage details have a look [these API docs](docs/nodejs/api.md). 
+For usage details have a look [these API docs](docs/nodejs/api.md).
 
 An exemplary implementation by a 3rd party with Docker and Node.js can be found [here](https://github.com/door2door-io/osrm-express-server-demo).
 
