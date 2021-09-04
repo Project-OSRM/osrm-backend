@@ -6,7 +6,6 @@
 #include "engine/api/json_factory.hpp"
 #include "osrm/coordinate.hpp"
 
-#include <iterator>
 #include <vector>
 
 using namespace osrm;
@@ -27,7 +26,7 @@ BOOST_AUTO_TEST_CASE(test_json_linestring)
     const auto coords = geom.values["coordinates"].get<util::json::Array>().values;
     BOOST_CHECK_EQUAL(coords.size(), 3); // array of three location arrays
 
-    for (const auto each : coords)
+    for (const auto &each : coords)
     {
         const auto loc = each.get<util::json::Array>().values;
         BOOST_CHECK_EQUAL(loc.size(), 2);
@@ -53,7 +52,7 @@ BOOST_AUTO_TEST_CASE(test_json_single_point)
     const auto coords = geom.values["coordinates"].get<util::json::Array>().values;
     BOOST_CHECK_EQUAL(coords.size(), 2); // array of two location arrays
 
-    for (const auto each : coords)
+    for (const auto &each : coords)
     {
         const auto loc = each.get<util::json::Array>().values;
         BOOST_CHECK_EQUAL(loc.size(), 2);

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.2)
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR AND NOT MSVC_IDE)
   message(FATAL_ERROR "In-source builds are not allowed.
@@ -514,7 +514,7 @@ if(ENABLE_MASON)
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
   # current mason packages target -D_GLIBCXX_USE_CXX11_ABI=0
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
+  add_dependency_defines(-D_GLIBCXX_USE_CXX11_ABI=0)
 
   # note: we avoid calling find_package(Osmium ...) here to ensure that the
   # expat and bzip2 are used from mason rather than the system
@@ -802,9 +802,25 @@ set(PKGCONFIG_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include")
 list(APPEND DEPENDENCIES_INCLUDE_DIRS "${PKGCONFIG_INCLUDE_DIR}")
 list(APPEND DEPENDENCIES_INCLUDE_DIRS "${PKGCONFIG_INCLUDE_DIR}/osrm")
 JOIN("-I${DEPENDENCIES_INCLUDE_DIRS}" " -I" PKGCONFIG_OSRM_INCLUDE_FLAGS)
-JOIN("${ENGINE_LIBRARIES}" " " PKGCONFIG_OSRM_DEPENDENT_LIBRARIES)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgconfig.in libosrm.pc @ONLY)
+# Boost uses imported targets, we need to use a generator expression to extract
+# the link libraries to be written to the pkg-config file.
+foreach(engine_lib ${ENGINE_LIBRARIES})
+  if("${engine_lib}" MATCHES "^Boost.*")
+    list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "$<TARGET_LINKER_FILE:${engine_lib}>")
+  else()
+    list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "${engine_lib}")
+  endif()
+endforeach(engine_lib)
+JOIN("${PKGCONFIG_DEPENDENT_LIBRARIES}" " " PKGCONFIG_OSRM_DEPENDENT_LIBRARIES)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgconfig.in pkgconfig.configured @ONLY)
+file(GENERATE
+     OUTPUT
+     ${PROJECT_BINARY_DIR}/libosrm.pc
+     INPUT
+     ${PROJECT_BINARY_DIR}/pkgconfig.configured)
+
 install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION ${PKGCONFIG_LIBRARY_DIR}/pkgconfig)
 
 # uninstall target

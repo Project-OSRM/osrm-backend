@@ -5,10 +5,8 @@
 #include "util/log.hpp"
 
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string/regex.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/ref.hpp>
-#include <boost/regex.hpp>
 
 #include <osmium/osm.hpp>
 #include <osmium/tags/regex_filter.hpp>
@@ -244,14 +242,15 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
 
     // Be warned, this is quadratic work here, but we assume that
     // only a few exceptions are actually defined.
-    std::vector<std::string> exceptions;
-    boost::algorithm::split_regex(exceptions, except_tag_string, boost::regex("[;][ ]*"));
+    const std::regex delimiter_re("[;][ ]*");
+    std::sregex_token_iterator except_tags_begin(
+        except_tag_string.begin(), except_tag_string.end(), delimiter_re, -1);
+    std::sregex_token_iterator except_tags_end;
 
-    return std::any_of(
-        std::begin(exceptions), std::end(exceptions), [&](const std::string &current_string) {
-            return std::end(restrictions) !=
-                   std::find(std::begin(restrictions), std::end(restrictions), current_string);
-        });
+    return std::any_of(except_tags_begin, except_tags_end, [&](const std::string &current_string) {
+        return std::end(restrictions) !=
+               std::find(std::begin(restrictions), std::end(restrictions), current_string);
+    });
 }
 } // namespace extractor
 } // namespace osrm

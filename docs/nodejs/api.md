@@ -244,9 +244,16 @@ osrm.match(options, function(err, response) {
 Returns **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** containing `tracepoints` and `matchings`.
 **`tracepoints`** Array of [`Ẁaypoint`](#waypoint) objects representing all points of the trace in order.
                   If the trace point was ommited by map matching because it is an outlier, the entry will be null.
-                  Each `Waypoint` object includes two additional properties, 1) `matchings_index`: Index to the
-                  [`Route`](#route) object in matchings the sub-trace was matched to, 2) `waypoint_index`: Index of
+                  Each `Waypoint` object has the following additional properties, 
+                  
+                  1) `matchings_index`: Index to the
+                  [`Route`](#route) object in matchings the sub-trace was matched to, 
+                  
+                  2) `waypoint_index`: Index of
                   the waypoint inside the matched route.
+                  
+                  3) `alternatives_count`: Number of probable alternative matchings for this trace point. A value of zero indicate that this point was matched unambiguously. Split the trace at these points for incremental map matching.
+                  
 **`matchings`** is an array of [`Route`](#route) objects that assemble the trace. Each `Route` object has an additional `confidence` property,
                 which is the confidence of the matching. float value between `0` and `1`. `1` is very confident that the matching is correct.
 

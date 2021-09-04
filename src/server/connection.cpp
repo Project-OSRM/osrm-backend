@@ -3,13 +3,10 @@
 #include "server/request_parser.hpp"
 
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/assert.hpp>
 #include <boost/bind.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
-#include <iterator>
-#include <string>
 #include <vector>
 
 namespace osrm
@@ -48,6 +45,12 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
 {
     if (error)
     {
+        if (error != boost::asio::error::operation_aborted)
+        {
+            // Error not triggered by timer expiry, commence connection shutdown.
+            util::Log(logDEBUG) << "Connection read error: " << error.message();
+            handle_shutdown();
+        }
         return;
     }
 
@@ -73,6 +76,7 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
         current_request.endpoint = TCP_socket.remote_endpoint(ec).address();
         if (ec)
         {
+            util::Log(logDEBUG) << "Socket remote endpoint error: " << ec.message();
             handle_shutdown();
             return;
         }
@@ -165,6 +169,10 @@ void Connection::handle_write(const boost::system::error_code &error)
             handle_shutdown();
         }
     }
+    else
+    {
+        util::Log(logDEBUG) << "Connection write error: " << error.message();
+    }
 }
 
 /// Handle completion of a timeout timer..
@@ -183,6 +191,8 @@ void Connection::handle_timeout(boost::system::error_code ec)
 
 void Connection::handle_shutdown()
 {
+    // Cancel timer to ensure all resources are released immediately on shutdown.
+    timer.cancel();
     // Initiate graceful connection closure.
     boost::system::error_code ignore_error;
     TCP_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignore_error);
