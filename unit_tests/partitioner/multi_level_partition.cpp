@@ -1,6 +1,8 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "util/exception.hpp"
+#include "util/for_each_indexed.hpp"
 #include <util/integer_range.hpp>
 #include <util/msb.hpp>
 
@@ -228,6 +230,61 @@ BOOST_AUTO_TEST_CASE(large_cell_number)
             BOOST_REQUIRE_EQUAL(mlp.EndChildren(l, c), 2 * (c + 1));
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(cell_64_bits)
+{
+    // bits = ceil(log2(2458529 + 1)) + ceil(log2(258451 + 1)) +  ceil(log2(16310 + 1)) +
+    // ceil(log2(534 + 1))
+    //      = 22 + 18 + 14 + 10
+    //      = 64
+    const size_t NUM_PARTITIONS = 2458529;
+    const std::vector<size_t> level_cells = {NUM_PARTITIONS, 258451, 16310, 534};
+    std::vector<std::vector<CellID>> levels(level_cells.size(),
+                                            std::vector<CellID>(level_cells[0]));
+    std::vector<uint32_t> levels_to_num_cells(level_cells.size());
+
+    const auto set_level_cells = [&](size_t level, auto const num_cells) {
+        for (auto val : util::irange<size_t>(0ULL, NUM_PARTITIONS))
+        {
+            levels[level][val] = std::min(val, num_cells - 1);
+        }
+        levels_to_num_cells[level] = num_cells;
+    };
+    util::for_each_indexed(level_cells.cbegin(), level_cells.cend(), set_level_cells);
+
+    MultiLevelPartition mlp{levels, levels_to_num_cells};
+
+    BOOST_REQUIRE_EQUAL(mlp.GetNumberOfCells(1), level_cells[0]);
+    BOOST_REQUIRE_EQUAL(mlp.GetNumberOfCells(2), level_cells[1]);
+    BOOST_REQUIRE_EQUAL(mlp.GetNumberOfCells(3), level_cells[2]);
+    BOOST_REQUIRE_EQUAL(mlp.GetNumberOfCells(4), level_cells[3]);
+}
+
+BOOST_AUTO_TEST_CASE(cell_overflow_bits)
+{
+    // bits = ceil(log2(4194304 + 1)) + ceil(log2(262144 + 1)) +  ceil(log2(16384 + 1)) +
+    // ceil(log2(1024 + 1))
+    //      = 23 + 19 + 15 + 11
+    //      = 68
+    const size_t NUM_PARTITIONS = 4194304;
+    const std::vector<size_t> level_cells = {NUM_PARTITIONS, 262144, 16384, 1024};
+    std::vector<std::vector<CellID>> levels(level_cells.size(),
+                                            std::vector<CellID>(level_cells[0]));
+    std::vector<uint32_t> levels_to_num_cells(level_cells.size());
+
+    const auto set_level_cells = [&](size_t level, auto const num_cells) {
+        for (auto val : util::irange<size_t>(0ULL, NUM_PARTITIONS))
+        {
+            levels[level][val] = std::min(val, num_cells - 1);
+        }
+        levels_to_num_cells[level] = num_cells;
+    };
+    util::for_each_indexed(level_cells.cbegin(), level_cells.cend(), set_level_cells);
+
+    BOOST_REQUIRE_EXCEPTION(MultiLevelPartition(levels, levels_to_num_cells),
+                            util::exception,
+                            [](auto) { return true; });
 }
 
 BOOST_AUTO_TEST_SUITE_END()
