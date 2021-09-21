@@ -52,11 +52,9 @@ namespace detail
 template <storage::Ownership Ownership> class CellStorageImpl
 {
   public:
-    using ValueOffset = std::uint32_t;
-    using BoundaryOffset = std::uint32_t;
+    using ValueOffset = std::uint64_t;
+    using BoundaryOffset = std::uint64_t;
     using BoundarySize = std::uint32_t;
-    using SourceIndex = std::uint32_t;
-    using DestinationIndex = std::uint32_t;
 
     static constexpr auto INVALID_VALUE_OFFSET = std::numeric_limits<ValueOffset>::max();
     static constexpr auto INVALID_BOUNDARY_OFFSET = std::numeric_limits<BoundaryOffset>::max();
