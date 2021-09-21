@@ -70,10 +70,10 @@ module.exports = function () {
         this.OSRM_CUSTOMIZE_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-customize', this.EXE));
         this.OSRM_PARTITION_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-partition', this.EXE));
         this.OSRM_ROUTED_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-routed', this.EXE));
-        this.LIB_OSRM_EXTRACT_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm_extract'),
-        this.LIB_OSRM_CONTRACT_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm_contract'),
-        this.LIB_OSRM_CUSTOMIZE_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm_customize'),
-        this.LIB_OSRM_PARTITION_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm_partition'),
+        this.LIB_OSRM_EXTRACT_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm-extract'),
+        this.LIB_OSRM_CONTRACT_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm-contract'),
+        this.LIB_OSRM_CUSTOMIZE_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm-customize'),
+        this.LIB_OSRM_PARTITION_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm-partition'),
         this.LIB_OSRM_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm');
 
         // eslint-disable-next-line no-console
