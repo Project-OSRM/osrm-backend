@@ -186,11 +186,12 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
             auto bits = static_cast<std::uint64_t>(std::ceil(std::log2(num_cells + 1)));
             offsets[lidx++] = sum_bits;
             sum_bits += bits;
-            if (sum_bits > 64)
+            if (sum_bits > NUM_PARTITION_BITS)
             {
                 throw util::exception(
                     "Can't pack the partition information at level " + std::to_string(lidx) +
-                    " into a 64bit integer. Would require " + std::to_string(sum_bits) + " bits.");
+                    " into a " + std::to_string(NUM_PARTITION_BITS) +
+                    "bit integer. Would require " + std::to_string(sum_bits) + " bits.");
             }
         }
         // sentinel
@@ -211,11 +212,15 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
                             [&](const auto offset, const auto next_offset) {
                                 // create mask that has `bits` ones at its LSBs.
                                 // 000011
-                                BOOST_ASSERT(offset < NUM_PARTITION_BITS);
+                                BOOST_ASSERT(offset <= NUM_PARTITION_BITS);
                                 PartitionID mask = (1ULL << offset) - 1ULL;
                                 // 001111
-                                BOOST_ASSERT(next_offset < NUM_PARTITION_BITS);
-                                PartitionID next_mask = (1ULL << next_offset) - 1ULL;
+                                BOOST_ASSERT(next_offset <= NUM_PARTITION_BITS);
+                                // Check offset for shift overflow. Offsets are strictly increasing,
+                                // so we only need the check on the last mask.
+                                PartitionID next_mask = next_offset == NUM_PARTITION_BITS
+                                                            ? -1ULL
+                                                            : (1ULL << next_offset) - 1ULL;
                                 // 001100
                                 masks[lidx++] = next_mask ^ mask;
                             });

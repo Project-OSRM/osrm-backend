@@ -8,6 +8,7 @@
       - FIXED: Fixed Boost link flags in pkg-config file. [#6083](https://github.com/Project-OSRM/osrm-backend/pull/6083)
     - Routing:
       - FIXED: Fix generation of inefficient MLD partitions [#6084](https://github.com/Project-OSRM/osrm-backend/pull/6084)
+      - FIXED: Fix MLD level mask generation to support 64-bit masks. [#6123](https://github.com/Project-OSRM/osrm-backend/pull/6123)
       - FIXED: Fix metric offset overflow for large MLD partitions. This breaks the **data format** [#6124](https://github.com/Project-OSRM/osrm-backend/pull/6124)
 
 # 5.25.0
