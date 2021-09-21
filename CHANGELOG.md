@@ -1,4 +1,4 @@
-# 5.26.0-rc.1
+# 5.26.0-rc.2
   - Changes from 5.25.0
     - API:
       - FIXED: Allow for special characters in the profile/method as part of the HTTP URL. [#6090](https://github.com/Project-OSRM/osrm-backend/pull/6090)
