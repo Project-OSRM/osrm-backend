@@ -6,6 +6,7 @@
     - Build:
       - CHANGED: Replace Travis with Github Actions for CI builds [#6071](https://github.com/Project-OSRM/osrm-backend/pull/6071)
       - FIXED: Fixed Boost link flags in pkg-config file. [#6083](https://github.com/Project-OSRM/osrm-backend/pull/6083)
+      - FIXED: Fixed test cache to consider MLD executable changes. [#6129](https://github.com/Project-OSRM/osrm-backend/pull/6129)
     - Routing:
       - FIXED: Fix generation of inefficient MLD partitions [#6084](https://github.com/Project-OSRM/osrm-backend/pull/6084)
       - FIXED: Fix MLD level mask generation to support 64-bit masks. [#6123](https://github.com/Project-OSRM/osrm-backend/pull/6123)
