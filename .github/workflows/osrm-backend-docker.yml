@@ -24,7 +24,7 @@ jobs:
         with:
           push: true
           file: ./docker/Dockerfile
-          tags: ghcr.io/${{ github.repository }}/osrm-backend:${{ env.GITHUB_REF }} 
+          tags: ghcr.io/${{ github.repository }}/osrm-backend:${{ GITHUB_REF#refs/*/ }} 
 
 
             
