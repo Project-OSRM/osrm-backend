@@ -1,8 +1,8 @@
 name: build and publish container image
 on:
-  create:
+  push:
     tags:
-      - v*
+      - 'v*'
 
 jobs:
   publish:
@@ -12,6 +12,33 @@ jobs:
         uses: actions/checkout@v2
 
 
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ghcr.io/${{ github.repository }}/osrm-backend
+
+      - name: Docker meta - debug
+        id: metadebug
+        uses: docker/metadata-action@v3
+        with:
+          images: ghcr.io/${{ github.repository }}/osrm-backend          
+          flavor: |
+            latest=true
+            suffix=-debug,onlatest=true
+
+      - name: Docker meta - assertions
+        id: metaassertions
+        uses: docker/metadata-action@v3
+        with:
+          images: ghcr.io/${{ github.repository }}/osrm-backend          
+          flavor: |
+            latest=true
+            suffix=-assertions,onlatest=true
+          
+
+
+
       - name: Log in to GitHub Docker Registry
         uses: docker/login-action@v1
         with:
@@ -19,12 +46,37 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build container image
+
+
+
+      - name: Build container image - normal
         uses: docker/build-push-action@v2
         with:
           push: true
           file: ./docker/Dockerfile
-          tags: ghcr.io/${{ github.repository }}/osrm-backend:${{ GITHUB_REF#refs/*/ }} 
+          tags:  ${{ steps.meta.outputs.labels }}
+          build-args: 
+          - DOCKER_TAG:  ${{ steps.meta.outputs.labels }}
+
+
+      - name: Build container image - debug
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          file: ./docker/Dockerfile
+          tags: ${{ steps.metadebug.outputs.labels }}
+          build-args:     
+          - DOCKER_TAG: ${{ steps.metadebug.outputs.labels }}
+
+
+      - name: Build container image - assertions
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          file: ./docker/Dockerfile
+          tags: ${{ steps.metaassertions.outputs.labels }}
+          build-args:     
+          - DOCKER_TAG: ${{ steps.metaassertions.outputs.labels }}
 
 
             
