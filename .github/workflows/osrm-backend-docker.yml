@@ -55,9 +55,9 @@ jobs:
         with:
           push: true
           file: ./docker/Dockerfile
-          tags:  ${{ steps.meta.outputs.labels }}
+          tags:  ${{ steps.meta.outputs.tags  }}
           build-args: |
-            DOCKER_TAG=${{ join(steps.metaassertions.outputs.labels) }}
+            DOCKER_TAG=${{ join(steps.metaassertions.outputs.tags ) }}
 
 
       - name: Build container image - debug
@@ -65,9 +65,9 @@ jobs:
         with:
           push: true
           file: ./docker/Dockerfile
-          tags: ${{ steps.metadebug.outputs.labels }}
+          tags: ${{ steps.metadebug.outputs.tags  }}
           build-args: |
-            DOCKER_TAG=${{ join(steps.metaassertions.outputs.labels) }}
+            DOCKER_TAG=${{ join(steps.metaassertions.outputs.tags ) }}
 
 
       - name: Build container image - assertions
@@ -75,9 +75,9 @@ jobs:
         with:
           push: true
           file: ./docker/Dockerfile
-          tags: ${{ steps.metaassertions.outputs.labels }}
+          tags: ${{ steps.metaassertions.outputs.tags  }}
           build-args: |
-            DOCKER_TAG=${{ join(steps.metaassertions.outputs.labels) }}
+            DOCKER_TAG=${{ join(steps.metaassertions.outputs.tags ) }}
 
 
             
