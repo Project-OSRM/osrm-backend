@@ -59,7 +59,6 @@ jobs:
           push: true
           file: ./docker/Dockerfile
           tags: ${{ steps.metadebug.outputs.tags  }}
-          no-cache: true
           build-args: |
             DOCKER_TAG=${{ join(steps.metadebug.outputs.tags ) }}
 
@@ -70,7 +69,6 @@ jobs:
           push: true
           file: ./docker/Dockerfile
           tags: ${{ steps.metaassertions.outputs.tags  }}
-          no-cache: true
           build-args: |
             DOCKER_TAG=${{ join(steps.metaassertions.outputs.tags ) }}
 
@@ -81,7 +79,6 @@ jobs:
           push: true
           file: ./docker/Dockerfile
           tags:  ${{ steps.meta.outputs.tags  }}
-          no-cache: true
           build-args: |
             DOCKER_TAG=${{ join(steps.meta.outputs.tags ) }}            
 
