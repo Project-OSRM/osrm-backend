@@ -1,4 +1,7 @@
 # Unreleased
+  - Changes from 5.26.0
+    - Build:
+      - CHANGED: Use Github Actions for building container images [#6138](https://github.com/Project-OSRM/osrm-backend/pull/6138)
 
 # 5.26.0
   - Changes from 5.25.0
