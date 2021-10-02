@@ -531,14 +531,7 @@ jobs:
 
         # All tests assume to be run from the build directory
         pushd ${OSRM_BUILD_DIR}
-        ./unit_tests/library-tests
-        ./unit_tests/extractor-tests
-        ./unit_tests/contractor-tests
-        ./unit_tests/engine-tests
-        ./unit_tests/util-tests
-        ./unit_tests/server-tests
-        ./unit_tests/partitioner-tests
-        ./unit_tests/customizer-tests
+        for i in ./unit_tests/*-tests ; do echo Running $i ; $i ; done
         if [ -z "${ENABLE_SANITIZER}" ] && [ "$TARGET_ARCH" != "i686" ]; then
           npm run nodejs-tests
         fi
