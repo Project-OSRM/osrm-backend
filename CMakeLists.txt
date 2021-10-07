@@ -528,7 +528,7 @@ else()
     # osrm-routed requires newer boost:ascio 
     find_package(Boost 1.70 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
   else()
-    find_package(Boost 1.66 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+    find_package(Boost 1.60 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
   endif()
   add_dependency_includes(${Boost_INCLUDE_DIRS})
 
