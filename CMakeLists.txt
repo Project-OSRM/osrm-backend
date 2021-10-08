@@ -525,7 +525,7 @@ if(ENABLE_MASON)
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
 else()
   if (BUILD_ROUTED)
-    # osrm-routed requires newer boost:ascio 
+    # osrm-routed requires newer boost:asio 
     find_package(Boost 1.70 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
   else()
     find_package(Boost 1.60 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
