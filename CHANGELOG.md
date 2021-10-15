@@ -7,6 +7,8 @@
       - CHANGED: Upgrade Boost dependency to 1.70 [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
       - CHANGED: Upgrade Ubuntu CI builds to 20.04  [#6119](https://github.com/Project-OSRM/osrm-backend/pull/6119)
       - CHANGED: Make building osrm-routed optional [#6144](https://github.com/Project-OSRM/osrm-backend/pull/6144)
+    - Features
+      - ADDED: monitoring endpoint in prometheus format [#5180](https://github.com/Project-OSRM/osrm-backend/pull/5180)
 
 # 5.26.0
   - Changes from 5.25.0

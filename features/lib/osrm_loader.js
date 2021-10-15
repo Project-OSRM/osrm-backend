@@ -77,7 +77,7 @@ class OSRMDirectLoader extends OSRMBaseLoader {
     osrmUp (callback) {
         if (this.osrmIsRunning()) return callback(new Error("osrm-routed already running!"));
 
-        const command_arguments = util.format('%s -p %d -i %s -a %s', this.inputFile, this.scope.OSRM_PORT, this.scope.OSRM_IP, this.scope.ROUTING_ALGORITHM);
+        const command_arguments = util.format('%s -p %d -i %s -a %s -P %d', this.inputFile, this.scope.OSRM_PORT, this.scope.OSRM_IP, this.scope.ROUTING_ALGORITHM, this.scope.OSRM_MONITORING_PORT);
         this.child = this.scope.runBin('osrm-routed', command_arguments, this.scope.environment, (err) => {
             if (err && err.signal !== 'SIGINT') {
                 this.child = null;
@@ -110,7 +110,7 @@ class OSRMmmapLoader extends OSRMBaseLoader {
     osrmUp (callback) {
         if (this.osrmIsRunning()) return callback(new Error("osrm-routed already running!"));
 
-        const command_arguments = util.format('%s -p %d -i %s -a %s --mmap', this.inputFile, this.scope.OSRM_PORT, this.scope.OSRM_IP, this.scope.ROUTING_ALGORITHM);
+        const command_arguments = util.format('%s -p %d -i %s -a %s -P %d --mmap', this.inputFile, this.scope.OSRM_PORT, this.scope.OSRM_IP, this.scope.ROUTING_ALGORITHM, this.scope.OSRM_MONITORING_PORT);
         this.child = this.scope.runBin('osrm-routed', command_arguments, this.scope.environment, (err) => {
             if (err && err.signal !== 'SIGINT') {
                 this.child = null;
@@ -157,7 +157,7 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
     osrmUp (callback) {
         if (this.osrmIsRunning()) return callback();
 
-        const command_arguments = util.format('--dataset-name=%s -s -i %s -p %d -a %s', this.scope.DATASET_NAME, this.scope.OSRM_IP, this.scope.OSRM_PORT, this.scope.ROUTING_ALGORITHM);
+        const command_arguments = util.format('--dataset-name=%s -s -i %s -p %d -a %s -P %d', this.scope.DATASET_NAME, this.scope.OSRM_IP, this.scope.OSRM_PORT, this.scope.ROUTING_ALGORITHM, this.scope.OSRM_MONITORING_PORT);
         this.child = this.scope.runBin('osrm-routed', command_arguments, this.scope.environment, (err) => {
             if (err && err.signal !== 'SIGINT') {
                 this.child = null;

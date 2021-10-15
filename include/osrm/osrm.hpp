@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OSRM_HPP
 
 #include "engine/api/base_result.hpp"
+#include "osrm/engine_info.hpp"
 #include "osrm/osrm_fwd.hpp"
 #include "osrm/status.hpp"
 
@@ -136,6 +137,11 @@ class OSRM final
      */
     Status Tile(const TileParameters &parameters, std::string &result) const;
     Status Tile(const TileParameters &parameters, engine::api::ResultT &result) const;
+
+    /**
+     * Tile: engine state information for monitoring purposes
+     */
+    const EngineInfo &Info() const;
 
   private:
     std::unique_ptr<engine::EngineInterface> engine_;

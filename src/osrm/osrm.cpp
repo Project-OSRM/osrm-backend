@@ -135,4 +135,6 @@ Status OSRM::Tile(const engine::api::TileParameters &params, engine::api::Result
     return engine_->Tile(params, result);
 }
 
+const engine::EngineInfo &OSRM::Info() const { return engine_->GetInfo(); }
+
 } // namespace osrm

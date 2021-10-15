@@ -39,8 +39,10 @@ module.exports = function () {
         this.TIMEZONE_NAMES = this.PLATFORM_WINDOWS ? 'win' : 'iana';
 
         this.OSRM_PORT = process.env.OSRM_PORT && parseInt(process.env.OSRM_PORT) || 5000;
+        this.OSRM_MONITORING_PORT = process.env.OSRM_MONITORING_PORT && parseInt(process.env.OSRM_MONITORING_PORT) || 5001;
         this.OSRM_IP = process.env.OSRM_IP || '127.0.0.1';
         this.HOST = `http://${this.OSRM_IP}:${this.OSRM_PORT}`;
+        this.MONITORING_HOST = `http://${this.OSRM_IP}:${this.OSRM_MONITORING_PORT}`;
 
         this.OSRM_PROFILE = process.env.OSRM_PROFILE;
 

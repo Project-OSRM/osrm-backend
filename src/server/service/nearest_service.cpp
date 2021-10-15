@@ -39,6 +39,7 @@ engine::Status NearestService::RunQuery(std::size_t prefix_length,
                                         std::string &query,
                                         osrm::engine::api::ResultT &result)
 {
+    usage++;
     result = util::json::Object();
     auto &json_result = result.get<util::json::Object>();
 
