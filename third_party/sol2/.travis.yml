@@ -1,0 +1,198 @@
+# # # # sol2
+# The MIT License (MIT)
+# 
+# Copyright (c) 2013-2018 Rapptz, ThePhD, and contributors
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+# the Software, and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+sudo: required
+language: cpp
+
+git:
+  depth: 2
+
+services:
+- docker
+
+before_install:
+- sudo apt install -y git
+
+script:
+- export SOL2_DIR=${TRAVIS_BUILD_DIR}
+- sudo docker image pull thephd/sol2:gcc-${GCC_VERSION}_llvm-${LLVM_VERSION}
+- sudo docker run --rm --interactive --tty --name "sol2.test" -v "${SOL2_DIR}:/root/sol2" --env "CI=${CI}" --env "PLATFORM=${PLATFORM}" --env "LUA_VERSION=${LUA_VERSION}" --env "GCC_VERSION=${GCC_VERSION}" --env "LLVM_VERSION=${LLVM_VERSION}" thephd/sol2:gcc-${GCC_VERSION}_llvm-${LLVM_VERSION}
+- sudo docker rmi $(sudo docker image ls -q)
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - os: osx
+
+  include:
+    # GCC 4.9.x, 5.x, 6.x, 7.x
+    - env:
+      - LUA_VERSION=5.3.4
+        GCC_VERSION=7
+        PLATFORM=i686
+        CI=true
+
+    - env:
+      - LUA_VERSION=luajit-2.0.5
+        GCC_VERSION=7
+        PLATFORM=i686
+        CI=true
+
+    - env:
+      - LUA_VERSION=luajit-2.1.0-beta3
+        GCC_VERSION=7
+        PLATFORM=i686
+        CI=true
+
+    - env:
+      - LUA_VERSION=5.3.4
+        GCC_VERSION=4.9
+        PLATFORM=x64
+        CI=true
+
+    - env:
+      - LUA_VERSION=5.3.4
+        GCC_VERSION=5
+        CI=true
+        PLATFORM=x64
+
+    - env:
+      - LUA_VERSION=5.3.4
+        GCC_VERSION=6
+        PLATFORM=x64
+        CI=true
+
+    - env:
+      - LUA_VERSION=5.3.4
+        GCC_VERSION=7
+        PLATFORM=x64
+        CI=true
+
+    # LLVM 3.6.x -> 5.0.x
+    - env:
+      - LUA_VERSION=5.3.4
+        LLVM_VERSION=3.6.2
+        PLATFORM=x64
+        CI=true
+
+    - env:
+      - LUA_VERSION=5.3.4
+        LLVM_VERSION=3.7.1
+        PLATFORM=x64
+        CI=true
+
+    - env:
+      - LUA_VERSION=5.3.4
+        LLVM_VERSION=3.8.1
+        PLATFORM=x64
+        CI=true
+
+    - env:
+      - LUA_VERSION=5.3.4
+        LLVM_VERSION=3.9.1
+        PLATFORM=x64
+        CI=true
+
+    - env:
+      - LUA_VERSION=5.3.4
+        LLVM_VERSION=4.0.1
+        PLATFORM=x64
+        CI=true
+
+    - env:
+      - LUA_VERSION=5.3.4
+        LLVM_VERSION=5.0.1
+        PLATFORM=x64
+        CI=true
+
+    # Lua Versions 5.2.4, 5.1.5, and LuaJIT (as well as x86)
+    - env:
+      - LUA_VERSION=5.2.4
+        GCC_VERSION=7
+        PLATFORM=x64
+        CI=true
+        
+    - env:
+      - LUA_VERSION=5.1.5
+        GCC_VERSION=7
+        PLATFORM=x64
+        CI=true
+        
+    - env:
+      - LUA_VERSION=luajit-2.0.4
+        GCC_VERSION=7
+        PLATFORM=x64
+        CI=true
+        
+    - env:
+      - LUA_VERSION=luajit-2.0.5
+        GCC_VERSION=7
+        PLATFORM=x64
+        CI=true
+
+    - os: osx
+      osx_image: xcode9.0
+      env:
+        - LUA_VERSION=lua-5.3.4
+          LLVM_VERSION=5.0.1
+      before_install:
+        - chmod +x ./scripts/run.osx.sh
+        - chmod +x ./scripts/preparation.osx.sh
+        - ./scripts/preparation.osx.sh
+      script:
+        - ./scripts/run.osx.sh
+
+    - os: osx
+      osx_image: xcode9.1
+      env:
+        - LUA_VERSION=lua-5.3.4
+          LLVM_VERSION=5.0.1
+      before_install:
+        - chmod +x ./scripts/run.osx.sh
+        - chmod +x ./scripts/preparation.osx.sh
+        - ./scripts/preparation.osx.sh
+      script:
+        - ./scripts/run.osx.sh
+
+    - os: osx
+      osx_image: xcode9.2
+      env:
+        - LUA_VERSION=lua-5.3.4
+          LLVM_VERSION=5.0.1
+      before_install:
+        - chmod +x ./scripts/run.osx.sh
+        - chmod +x ./scripts/preparation.osx.sh
+        - ./scripts/preparation.osx.sh
+      script:
+        - ./scripts/run.osx.sh
+
+notifications:
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/b864d553270a069d26c8
+    on_success: change
+    on_failure: always
+    on_start: always
+  email:
+    on_success: change
+    on_failure: change
+    on_start: never

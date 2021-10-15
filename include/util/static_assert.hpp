@@ -20,7 +20,7 @@ template <typename It, typename Category> inline void static_assert_iter_categor
     static_assert(std::is_base_of<Category, IterCategoryType>::value, "");
 }
 
-} // ns util
-} // ns osrm
+} // namespace util
+} // namespace osrm
 
 #endif // OSRM_STATIC_ASSERT_HPP

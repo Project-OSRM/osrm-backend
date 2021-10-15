@@ -72,7 +72,7 @@ function Measure.get_max_height(raw_value, element)
   if raw_value then
     if height_non_numerical_values[raw_value] then
       if element then
-        return element:get_location_tag('maxheight') or default_maxheight
+        return tonumber(element:get_location_tag('maxheight')) or default_maxheight
       else
         return default_maxheight
       end

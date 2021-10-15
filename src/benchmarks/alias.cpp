@@ -20,7 +20,7 @@ struct interger_alias
 struct double_alias
 {
 };
-}
+} // namespace tag
 
 int main(int, char **)
 {

@@ -18,7 +18,8 @@
 
 #include <cstdlib>
 
-int main(int argc, const char *argv[]) try
+int main(int argc, const char *argv[])
+try
 {
     if (argc < 2)
     {

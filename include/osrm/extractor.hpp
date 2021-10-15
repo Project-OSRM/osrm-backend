@@ -34,7 +34,7 @@ namespace extractor
 {
 struct ExtractorConfig;
 
-} // ns contractor
+} // namespace extractor
 
 /**
  * Runs extraction process.
@@ -45,6 +45,6 @@ struct ExtractorConfig;
  */
 void extract(const extractor::ExtractorConfig &config);
 
-} // ns osrm
+} // namespace osrm
 
 #endif // OSRM_EXTRACTOR_HPP

@@ -165,7 +165,7 @@ bool swapData(Monitor &monitor,
 
     return true;
 }
-}
+} // namespace
 
 void populateLayoutFromFile(const boost::filesystem::path &path, storage::BaseDataLayout &layout)
 {
@@ -489,15 +489,6 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
         partitioner::files::readCells(config.GetPath(".osrm.cells"), storage);
     }
 
-    if (boost::filesystem::exists(config.GetPath(".osrm.cell_metrics")))
-    {
-        auto exclude_metrics = make_cell_metric_view(index, "/mld/metrics/" + metric_name);
-        std::unordered_map<std::string, std::vector<customizer::CellMetricView>> metrics = {
-            {metric_name, std::move(exclude_metrics)},
-        };
-        customizer::files::readCellMetrics(config.GetPath(".osrm.cell_metrics"), metrics);
-    }
-
     // load maneuver overrides
     {
         auto views = make_maneuver_overrides_views(index, "/common/maneuver_overrides");
@@ -596,5 +587,5 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
         }
     }
 }
-}
-}
+} // namespace storage
+} // namespace osrm

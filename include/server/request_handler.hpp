@@ -14,7 +14,7 @@ namespace http
 {
 class reply;
 struct request;
-}
+} // namespace http
 
 class RequestHandler
 {
@@ -32,7 +32,7 @@ class RequestHandler
   protected:
     std::shared_ptr<ServiceHandlerInterface> service_handler;
 };
-}
-}
+} // namespace server
+} // namespace osrm
 
 #endif // REQUEST_HANDLER_HPP

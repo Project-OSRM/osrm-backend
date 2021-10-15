@@ -221,7 +221,8 @@ bool generateDataStoreOptions(const int argc,
     std::_Exit(128 + signum);
 }
 
-int main(const int argc, const char *argv[]) try
+int main(const int argc, const char *argv[])
+try
 {
     int signals[] = {SIGTERM, SIGSEGV, SIGINT, SIGILL, SIGABRT, SIGFPE};
     for (auto sig : signals)

@@ -37,7 +37,7 @@ LaneDataVector::iterator findTag(const extractor::TurnLaneType::Mask tag, LaneDa
 
 // Returns true if any of the queried tags is contained
 bool hasTag(const extractor::TurnLaneType::Mask tag, const LaneDataVector &data);
-} // namespace lane_data_generation
+} // namespace lanes
 
 } // namespace guidance
 } // namespace osrm

@@ -20,8 +20,8 @@ struct request
     std::string connection;
     boost::asio::ip::address endpoint;
 };
-}
-}
-}
+} // namespace http
+} // namespace server
+} // namespace osrm
 
 #endif // REQUEST_HPP

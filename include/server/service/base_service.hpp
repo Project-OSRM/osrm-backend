@@ -34,8 +34,8 @@ class BaseService
     OSRM &routing_machine;
     std::atomic_uint usage;
 };
-}
-}
-}
+} // namespace service
+} // namespace server
+} // namespace osrm
 
 #endif

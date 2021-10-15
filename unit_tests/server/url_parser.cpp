@@ -15,9 +15,9 @@ std::ostream &operator<<(std::ostream &out, const osrm::server::api::ParsedURL &
 
     return out;
 }
-}
-}
-}
+} // namespace api
+} // namespace server
+} // namespace osrm
 
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test.hpp>
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(invalid_urls)
     BOOST_CHECK_EQUAL(testInvalidURL("/route/"), 7UL);
     BOOST_CHECK_EQUAL(testInvalidURL("/route/bla"), 7UL);
     BOOST_CHECK_EQUAL(testInvalidURL("/route/1/1,2;3;4"), 7UL);
-    BOOST_CHECK_EQUAL(testInvalidURL("/route/v1/pro_file/1,2;3,4"), 13UL);
+    BOOST_CHECK_EQUAL(testInvalidURL("/route/v1/pro[]file/1,2;3,4"), 13UL);
     BOOST_CHECK_EQUAL(testInvalidURL("/route/v1/profile"), 17UL);
     BOOST_CHECK_EQUAL(testInvalidURL("/route/v1/profile/"), 18UL);
 }
@@ -124,6 +124,18 @@ BOOST_AUTO_TEST_CASE(valid_urls)
     BOOST_CHECK_EQUAL(reference_8.profile, result_8->profile);
     CHECK_EQUAL_RANGE(reference_8.query, result_8->query);
     BOOST_CHECK_EQUAL(reference_8.prefix_length, result_8->prefix_length);
+
+    // profile with special characters
+    api::ParsedURL reference_9{
+        "route", 1, "foo-bar_baz.profile", "0,1;2,3;4,5?options=value&foo=bar", 30UL};
+    auto result_9 =
+        api::parseURL("/route/v1/foo-bar_baz.profile/0,1;2,3;4,5?options=value&foo=bar");
+    BOOST_CHECK(result_9);
+    BOOST_CHECK_EQUAL(reference_9.service, result_9->service);
+    BOOST_CHECK_EQUAL(reference_9.version, result_9->version);
+    BOOST_CHECK_EQUAL(reference_9.profile, result_9->profile);
+    CHECK_EQUAL_RANGE(reference_9.query, result_9->query);
+    BOOST_CHECK_EQUAL(reference_9.prefix_length, result_9->prefix_length);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

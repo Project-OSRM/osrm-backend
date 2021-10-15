@@ -61,7 +61,7 @@ class Storage
   private:
     StorageConfig config;
 };
-}
-}
+} // namespace storage
+} // namespace osrm
 
 #endif

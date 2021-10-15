@@ -141,7 +141,8 @@ return_code parseArguments(int argc,
     return return_code::ok;
 }
 
-int main(int argc, char *argv[]) try
+int main(int argc, char *argv[])
+try
 {
     util::LogPolicy::GetInstance().Unmute();
     extractor::ExtractorConfig extractor_config;

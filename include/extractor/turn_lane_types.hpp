@@ -52,7 +52,7 @@ const constexpr Mask uturn = 1u << 8u;
 const constexpr Mask merge_to_left = 1u << 9u;
 const constexpr Mask merge_to_right = 1u << 10u;
 
-} // TurnLaneType
+} // namespace TurnLaneType
 
 typedef std::vector<TurnLaneType::Mask> TurnLaneDescription;
 
@@ -100,7 +100,7 @@ inline TurnLanesIndexedArray transformTurnLaneMapIntoArrays(const LaneDescriptio
     return std::make_tuple(std::move(turn_lane_offsets), std::move(turn_lane_masks));
 }
 
-} // extractor
-} // osrm
+} // namespace extractor
+} // namespace osrm
 
 #endif /* OSRM_GUIDANCE_TURN_LANE_TYPES_HPP_ */

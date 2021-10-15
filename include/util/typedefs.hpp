@@ -48,7 +48,7 @@ struct osm_way_id
 struct duplicated_node
 {
 };
-}
+} // namespace tag
 using OSMNodeID = osrm::Alias<std::uint64_t, tag::osm_node_id>;
 static_assert(std::is_pod<OSMNodeID>(), "OSMNodeID is not a valid alias");
 using OSMWayID = osrm::Alias<std::uint64_t, tag::osm_way_id>;
@@ -103,6 +103,7 @@ static const NodeID SPECIAL_NODEID = std::numeric_limits<NodeID>::max();
 static const NodeID SPECIAL_SEGMENTID = std::numeric_limits<NodeID>::max() >> 1;
 static const NodeID SPECIAL_GEOMETRYID = std::numeric_limits<NodeID>::max() >> 1;
 static const EdgeID SPECIAL_EDGEID = std::numeric_limits<EdgeID>::max();
+static const RestrictionID SPECIAL_RESTRICTIONID = std::numeric_limits<RestrictionID>::max();
 static const NameID INVALID_NAMEID = std::numeric_limits<NameID>::max();
 static const NameID EMPTY_NAMEID = 0;
 static const unsigned INVALID_COMPONENTID = 0;

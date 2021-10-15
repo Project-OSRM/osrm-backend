@@ -1,10 +1,10 @@
 #include "catch.hpp"
 
+#include "test_crc.hpp"
+
 #include <osmium/geom/relations.hpp>
 #include <osmium/osm/box.hpp>
 #include <osmium/osm/crc.hpp>
-
-#include <boost/crc.hpp>
 
 #include <sstream>
 
@@ -64,7 +64,7 @@ TEST_CASE("Extend box with valid") {
     REQUIRE(b.contains(loc2));
     REQUIRE(b.contains(loc3));
 
-    osmium::CRC<boost::crc_32_type> crc32;
+    osmium::CRC<crc_type> crc32;
     crc32.update(b);
     REQUIRE(crc32().checksum() == 0xd381a838);
 }

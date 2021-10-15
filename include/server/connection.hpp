@@ -37,7 +37,7 @@ class RequestHandler;
 class Connection : public std::enable_shared_from_this<Connection>
 {
   public:
-    explicit Connection(boost::asio::io_service &io_service, RequestHandler &handler);
+    explicit Connection(boost::asio::io_context &io_context, RequestHandler &handler);
     Connection(const Connection &) = delete;
     Connection &operator=(const Connection &) = delete;
 
@@ -60,7 +60,7 @@ class Connection : public std::enable_shared_from_this<Connection>
     std::vector<char> compress_buffers(const std::vector<char> &uncompressed_data,
                                        const http::compression_type compression_type);
 
-    boost::asio::io_service::strand strand;
+    boost::asio::strand<boost::asio::io_context::executor_type> strand;
     boost::asio::ip::tcp::socket TCP_socket;
     boost::asio::deadline_timer timer;
     RequestHandler &request_handler;
@@ -76,7 +76,7 @@ class Connection : public std::enable_shared_from_this<Connection>
     short processed_requests = 512;
     short keepalive_timeout = 5; // In seconds
 };
-}
-}
+} // namespace server
+} // namespace osrm
 
 #endif // CONNECTION_HPP

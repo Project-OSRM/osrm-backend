@@ -130,5 +130,5 @@ void SearchEngineData<MLD>::InitializeOrClearManyToManyThreadLocalStorage(
         many_to_many_heap.reset(new ManyToManyQueryHeap(number_of_nodes, number_of_boundary_nodes));
     }
 }
-}
-}
+} // namespace engine
+} // namespace osrm

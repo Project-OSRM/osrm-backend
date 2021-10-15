@@ -22,7 +22,7 @@ static const char MAGENTA[]{"\x1b[35m"};
 // static const char GREEN[] { "\x1b[32m"};
 // static const char BLUE[] { "\x1b[34m"};
 // static const char CYAN[] { "\x1b[36m"};
-}
+} // namespace
 
 void LogPolicy::Unmute() { m_is_mute = false; }
 
@@ -150,5 +150,5 @@ UnbufferedLog::UnbufferedLog(LogLevel level_)
 {
     stream.flags(std::ios_base::unitbuf);
 }
-}
-}
+} // namespace util
+} // namespace osrm

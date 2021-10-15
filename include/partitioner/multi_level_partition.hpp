@@ -41,7 +41,7 @@ template <storage::Ownership Ownership>
 void write(storage::tar::FileWriter &writer,
            const std::string &name,
            const detail::MultiLevelPartitionImpl<Ownership> &mlp);
-}
+} // namespace serialization
 
 namespace detail
 {
@@ -164,11 +164,11 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
     // of cell ids efficiently.
     inline NodeID GetSentinelNode() const { return partition.size() - 1; }
 
-    void SetCellID(LevelID l, NodeID node, std::size_t cell_id)
+    void SetCellID(LevelID l, NodeID node, CellID cell_id)
     {
         auto lidx = LevelIDToIndex(l);
 
-        auto shifted_id = cell_id << level_data->lidx_to_offset[lidx];
+        auto shifted_id = static_cast<std::uint64_t>(cell_id) << level_data->lidx_to_offset[lidx];
         auto cleared_cell = partition[node] & ~level_data->lidx_to_mask[lidx];
         partition[node] = cleared_cell | shifted_id;
     }
@@ -186,11 +186,12 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
             auto bits = static_cast<std::uint64_t>(std::ceil(std::log2(num_cells + 1)));
             offsets[lidx++] = sum_bits;
             sum_bits += bits;
-            if (sum_bits > 64)
+            if (sum_bits > NUM_PARTITION_BITS)
             {
                 throw util::exception(
                     "Can't pack the partition information at level " + std::to_string(lidx) +
-                    " into a 64bit integer. Would require " + std::to_string(sum_bits) + " bits.");
+                    " into a " + std::to_string(NUM_PARTITION_BITS) +
+                    "bit integer. Would require " + std::to_string(sum_bits) + " bits.");
             }
         }
         // sentinel
@@ -211,11 +212,15 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
                             [&](const auto offset, const auto next_offset) {
                                 // create mask that has `bits` ones at its LSBs.
                                 // 000011
-                                BOOST_ASSERT(offset < NUM_PARTITION_BITS);
-                                PartitionID mask = (1UL << offset) - 1UL;
+                                BOOST_ASSERT(offset <= NUM_PARTITION_BITS);
+                                PartitionID mask = (1ULL << offset) - 1ULL;
                                 // 001111
-                                BOOST_ASSERT(next_offset < NUM_PARTITION_BITS);
-                                PartitionID next_mask = (1UL << next_offset) - 1UL;
+                                BOOST_ASSERT(next_offset <= NUM_PARTITION_BITS);
+                                // Check offset for shift overflow. Offsets are strictly increasing,
+                                // so we only need the check on the last mask.
+                                PartitionID next_mask = next_offset == NUM_PARTITION_BITS
+                                                            ? -1ULL
+                                                            : (1ULL << next_offset) - 1ULL;
                                 // 001100
                                 masks[lidx++] = next_mask ^ mask;
                             });
@@ -338,8 +343,8 @@ inline MultiLevelPartitionImpl<storage::Ownership::View>::MultiLevelPartitionImp
     : level_data(nullptr)
 {
 }
-}
-}
-}
+} // namespace detail
+} // namespace partitioner
+} // namespace osrm
 
 #endif

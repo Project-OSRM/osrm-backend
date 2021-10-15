@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -57,7 +57,9 @@ namespace osmium {
         using item_size_type = uint32_t;
 
         // align datastructures to this many bytes
-        constexpr const std::size_t align_bytes = 8;
+        enum : std::size_t {
+            align_bytes = 8UL
+        };
 
         inline constexpr std::size_t padded_length(std::size_t length) noexcept {
             return (length + align_bytes - 1) & ~(align_bytes - 1);
@@ -123,7 +125,7 @@ namespace osmium {
 
         protected:
 
-            explicit Item(item_size_type size = 0, item_type type = item_type()) noexcept :
+            explicit Item(item_size_type size = 0, item_type type = item_type{}) noexcept :
                 m_size(size),
                 m_type(type),
                 m_removed(false),
@@ -174,7 +176,7 @@ namespace osmium {
                 return m_removed;
             }
 
-            void set_removed(bool removed) noexcept {
+            void set_removed(const bool removed) noexcept {
                 m_removed = removed;
             }
 
@@ -187,7 +189,7 @@ namespace osmium {
                 return diff_chars[m_diff];
             }
 
-            void set_diff(diff_indicator_type diff) noexcept {
+            void set_diff(const diff_indicator_type diff) noexcept {
                 m_diff = uint16_t(diff);
             }
 

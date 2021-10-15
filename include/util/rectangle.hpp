@@ -171,7 +171,7 @@ struct RectangleInt2D
                max_lat != FixedLatitude{std::numeric_limits<std::int32_t>::min()};
     }
 };
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif

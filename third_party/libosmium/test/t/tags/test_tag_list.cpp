@@ -6,6 +6,8 @@
 #include <osmium/osm/tag.hpp>
 
 #include <map>
+#include <string>
+#include <utility>
 #include <vector>
 
 using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)

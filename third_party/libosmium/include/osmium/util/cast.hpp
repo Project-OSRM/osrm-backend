@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -32,6 +32,8 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
+
+#include <osmium/util/compatibility.hpp>
 
 #ifndef assert
 # include <cassert>
@@ -60,40 +62,40 @@ namespace osmium {
     };
 
     template <typename T, typename F, typename std::enable_if<are_real_integers<T, F>::value && std::is_same<T, F>::value, int>::type = 0>
-    inline T static_cast_with_assert(const F value) {
+    OSMIUM_DEPRECATED inline T static_cast_with_assert(const F value) {
         return value;
     }
 
     template <typename T, typename F, typename std::enable_if<are_real_integers<T, F>::value && !std::is_same<T, F>::value && (sizeof(T) > sizeof(F)), int>::type = 0>
-    inline T static_cast_with_assert(const F value) {
+    OSMIUM_DEPRECATED inline T static_cast_with_assert(const F value) {
         return static_cast<T>(value);
     }
 
     template <typename T, typename F, typename std::enable_if<are_real_integers<T, F>::value && !std::is_same<T, F>::value && std::is_signed<T>::value == std::is_signed<F>::value && (sizeof(T) == sizeof(F)), int>::type = 0>
-    inline T static_cast_with_assert(const F value) {
+    OSMIUM_DEPRECATED inline T static_cast_with_assert(const F value) {
         return static_cast<T>(value);
     }
 
     template <typename T, typename F, typename std::enable_if<are_real_integers<T, F>::value && !std::is_same<T, F>::value && (sizeof(T) < sizeof(F)) && std::is_signed<T>::value && std::is_signed<F>::value, int>::type = 0>
-    inline T static_cast_with_assert(const F value) {
+    OSMIUM_DEPRECATED inline T static_cast_with_assert(const F value) {
         assert(value >= std::numeric_limits<T>::min() && value <= std::numeric_limits<T>::max());
         return static_cast<T>(value);
     }
 
     template <typename T, typename F, typename std::enable_if<are_real_integers<T, F>::value && !std::is_same<T, F>::value && (sizeof(T) <= sizeof(F)) && std::is_unsigned<T>::value && std::is_signed<F>::value, int>::type = 0>
-    inline T static_cast_with_assert(const F value) {
+    OSMIUM_DEPRECATED inline T static_cast_with_assert(const F value) {
         assert(value >= 0 && static_cast<typename std::make_unsigned<F>::type>(value) <= std::numeric_limits<T>::max());
         return static_cast<T>(value);
     }
 
     template <typename T, typename F, typename std::enable_if<are_real_integers<T, F>::value && !std::is_same<T, F>::value && (sizeof(T) < sizeof(F)) && std::is_unsigned<T>::value && std::is_unsigned<F>::value, int>::type = 0>
-    inline T static_cast_with_assert(const F value) {
+    OSMIUM_DEPRECATED inline T static_cast_with_assert(const F value) {
         assert(value <= std::numeric_limits<T>::max());
         return static_cast<T>(value);
     }
 
     template <typename T, typename F, typename std::enable_if<are_real_integers<T, F>::value && !std::is_same<T, F>::value && (sizeof(T) <= sizeof(F)) && std::is_signed<T>::value && std::is_unsigned<F>::value, int>::type = 0>
-    inline T static_cast_with_assert(const F value) {
+    OSMIUM_DEPRECATED inline T static_cast_with_assert(const F value) {
         assert(static_cast<int64_t>(value) <= static_cast<int64_t>(std::numeric_limits<T>::max()));
         return static_cast<T>(value);
     }

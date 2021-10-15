@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -45,18 +45,20 @@ namespace osmium {
      */
     class ProgressBar {
 
-        static constexpr const std::size_t full_length = 70;
+        enum {
+            full_length = 70
+        };
 
         static const char* bar(std::size_t len = full_length) noexcept {
+            static const char* s = "======================================================================";
             assert(len <= full_length);
-            return "======================================================================"
-                   + full_length - len;
+            return s + full_length - len;
         }
 
         static const char* spc(std::size_t len = full_length) noexcept {
+            static const char* s = "                                                                     ";
             assert(len >= 1 && len <= full_length);
-            return "                                                                     "
-                   + full_length - len;
+            return s + full_length - len;
         }
 
         // The max size is the file size if there is a single file and the

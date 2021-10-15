@@ -27,8 +27,8 @@ std::ostream &operator<<(std::ostream &out, const QueryEdge &edge)
     out << "{" << edge.source << ", " << edge.target << ", " << edge.data << "}";
     return out;
 }
-}
-}
+} // namespace contractor
+} // namespace osrm
 
 BOOST_AUTO_TEST_SUITE(contracted_edge_container)
 

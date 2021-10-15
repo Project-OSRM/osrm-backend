@@ -18,7 +18,7 @@ namespace json
 {
 struct Object;
 }
-}
+} // namespace util
 namespace server
 {
 namespace api
@@ -57,7 +57,7 @@ class ServiceHandler final : public ServiceHandlerInterface
     std::atomic_uint errors;
     std::atomic_uint load;
 };
-}
-}
+} // namespace server
+} // namespace osrm
 
 #endif

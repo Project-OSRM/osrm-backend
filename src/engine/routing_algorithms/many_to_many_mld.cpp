@@ -71,38 +71,38 @@ void relaxBorderEdges(const DataFacade<mld::Algorithm> &facade,
             const auto to_distance = distance + node_distance;
 
             // New Node discovered -> Add to Heap + Node Info Storage
-            if (!query_heap.WasInserted(to))
+            const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
+            if (!toHeapNode)
             {
                 query_heap.Insert(to, to_weight, {node, false, to_duration, to_distance});
             }
             // Found a shorter Path -> Update weight and set new parent
             else if (std::tie(to_weight, to_duration, to_distance, node) <
-                     std::tie(query_heap.GetKey(to),
-                              query_heap.GetData(to).duration,
-                              query_heap.GetData(to).distance,
-                              query_heap.GetData(to).parent))
+                     std::tie(toHeapNode->weight,
+                              toHeapNode->data.duration,
+                              toHeapNode->data.distance,
+                              toHeapNode->data.parent))
             {
-                query_heap.GetData(to) = {node, false, to_duration, to_distance};
-                query_heap.DecreaseKey(to, to_weight);
+                toHeapNode->data = {node, false, to_duration, to_distance};
+                toHeapNode->weight = to_weight;
+                query_heap.DecreaseKey(*toHeapNode);
             }
         }
     }
 }
 
 template <bool DIRECTION, typename... Args>
-void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
-                        const NodeID node,
-                        const EdgeWeight weight,
-                        const EdgeDuration duration,
-                        const EdgeDistance distance,
-                        typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
-                        Args... args)
+void relaxOutgoingEdges(
+    const DataFacade<mld::Algorithm> &facade,
+    const typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap::HeapNode &heapNode,
+    typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
+    Args... args)
 {
-    BOOST_ASSERT(!facade.ExcludeNode(node));
+    BOOST_ASSERT(!facade.ExcludeNode(heapNode.node));
 
     const auto &partition = facade.GetMultiLevelPartition();
 
-    const auto level = getNodeQueryLevel(partition, node, args...);
+    const auto level = getNodeQueryLevel(partition, heapNode.node, args...);
 
     // Break outgoing edges relaxation if node at the restricted level
     if (level == INVALID_LEVEL_ID)
@@ -110,40 +110,42 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
 
     const auto &cells = facade.GetCellStorage();
     const auto &metric = facade.GetCellMetric();
-    const auto &node_data = query_heap.GetData(node);
 
-    if (level >= 1 && !node_data.from_clique_arc)
+    if (level >= 1 && !heapNode.data.from_clique_arc)
     {
-        const auto &cell = cells.GetCell(metric, level, partition.GetCell(level, node));
+        const auto &cell = cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
         if (DIRECTION == FORWARD_DIRECTION)
         { // Shortcuts in forward direction
             auto destination = cell.GetDestinationNodes().begin();
-            auto shortcut_durations = cell.GetOutDuration(node);
-            auto shortcut_distances = cell.GetOutDistance(node);
-            for (auto shortcut_weight : cell.GetOutWeight(node))
+            auto shortcut_durations = cell.GetOutDuration(heapNode.node);
+            auto shortcut_distances = cell.GetOutDistance(heapNode.node);
+            for (auto shortcut_weight : cell.GetOutWeight(heapNode.node))
             {
                 BOOST_ASSERT(destination != cell.GetDestinationNodes().end());
                 BOOST_ASSERT(!shortcut_durations.empty());
                 BOOST_ASSERT(!shortcut_distances.empty());
                 const NodeID to = *destination;
 
-                if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
+                if (shortcut_weight != INVALID_EDGE_WEIGHT && heapNode.node != to)
                 {
-                    const auto to_weight = weight + shortcut_weight;
-                    const auto to_duration = duration + shortcut_durations.front();
-                    const auto to_distance = distance + shortcut_distances.front();
-                    if (!query_heap.WasInserted(to))
+                    const auto to_weight = heapNode.weight + shortcut_weight;
+                    const auto to_duration = heapNode.data.duration + shortcut_durations.front();
+                    const auto to_distance = heapNode.data.distance + shortcut_distances.front();
+                    const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
+                    if (!toHeapNode)
                     {
-                        query_heap.Insert(to, to_weight, {node, true, to_duration, to_distance});
+                        query_heap.Insert(
+                            to, to_weight, {heapNode.node, true, to_duration, to_distance});
                     }
-                    else if (std::tie(to_weight, to_duration, to_distance, node) <
-                             std::tie(query_heap.GetKey(to),
-                                      query_heap.GetData(to).duration,
-                                      query_heap.GetData(to).distance,
-                                      query_heap.GetData(to).parent))
+                    else if (std::tie(to_weight, to_duration, to_distance, heapNode.node) <
+                             std::tie(toHeapNode->weight,
+                                      toHeapNode->data.duration,
+                                      toHeapNode->data.distance,
+                                      toHeapNode->data.parent))
                     {
-                        query_heap.GetData(to) = {node, true, to_duration, to_distance};
-                        query_heap.DecreaseKey(to, to_weight);
+                        toHeapNode->data = {heapNode.node, true, to_duration, to_distance};
+                        toHeapNode->weight = to_weight;
+                        query_heap.DecreaseKey(*toHeapNode);
                     }
                 }
                 ++destination;
@@ -156,32 +158,35 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
         else
         { // Shortcuts in backward direction
             auto source = cell.GetSourceNodes().begin();
-            auto shortcut_durations = cell.GetInDuration(node);
-            auto shortcut_distances = cell.GetInDistance(node);
-            for (auto shortcut_weight : cell.GetInWeight(node))
+            auto shortcut_durations = cell.GetInDuration(heapNode.node);
+            auto shortcut_distances = cell.GetInDistance(heapNode.node);
+            for (auto shortcut_weight : cell.GetInWeight(heapNode.node))
             {
                 BOOST_ASSERT(source != cell.GetSourceNodes().end());
                 BOOST_ASSERT(!shortcut_durations.empty());
                 BOOST_ASSERT(!shortcut_distances.empty());
                 const NodeID to = *source;
 
-                if (shortcut_weight != INVALID_EDGE_WEIGHT && node != to)
+                if (shortcut_weight != INVALID_EDGE_WEIGHT && heapNode.node != to)
                 {
-                    const auto to_weight = weight + shortcut_weight;
-                    const auto to_duration = duration + shortcut_durations.front();
-                    const auto to_distance = distance + shortcut_distances.front();
-                    if (!query_heap.WasInserted(to))
+                    const auto to_weight = heapNode.weight + shortcut_weight;
+                    const auto to_duration = heapNode.data.duration + shortcut_durations.front();
+                    const auto to_distance = heapNode.data.distance + shortcut_distances.front();
+                    const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
+                    if (!toHeapNode)
                     {
-                        query_heap.Insert(to, to_weight, {node, true, to_duration, to_distance});
+                        query_heap.Insert(
+                            to, to_weight, {heapNode.node, true, to_duration, to_distance});
                     }
-                    else if (std::tie(to_weight, to_duration, to_distance, node) <
-                             std::tie(query_heap.GetKey(to),
-                                      query_heap.GetData(to).duration,
-                                      query_heap.GetData(to).distance,
-                                      query_heap.GetData(to).parent))
+                    else if (std::tie(to_weight, to_duration, to_distance, heapNode.node) <
+                             std::tie(toHeapNode->weight,
+                                      toHeapNode->data.duration,
+                                      toHeapNode->data.distance,
+                                      toHeapNode->data.parent))
                     {
-                        query_heap.GetData(to) = {node, true, to_duration, to_distance};
-                        query_heap.DecreaseKey(to, to_weight);
+                        toHeapNode->data = {heapNode.node, true, to_duration, to_distance};
+                        toHeapNode->weight = to_weight;
+                        query_heap.DecreaseKey(*toHeapNode);
                     }
                 }
                 ++source;
@@ -193,7 +198,13 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
         }
     }
 
-    relaxBorderEdges<DIRECTION>(facade, node, weight, duration, distance, query_heap, level);
+    relaxBorderEdges<DIRECTION>(facade,
+                                heapNode.node,
+                                heapNode.weight,
+                                heapNode.data.duration,
+                                heapNode.data.distance,
+                                query_heap,
+                                level);
 }
 
 //
@@ -208,8 +219,8 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                 const std::vector<std::size_t> &phantom_indices,
                 const bool calculate_distance)
 {
-    std::vector<EdgeWeight> weights(phantom_indices.size(), INVALID_EDGE_WEIGHT);
-    std::vector<EdgeDuration> durations(phantom_indices.size(), MAXIMAL_EDGE_DURATION);
+    std::vector<EdgeWeight> weights_table(phantom_indices.size(), INVALID_EDGE_WEIGHT);
+    std::vector<EdgeDuration> durations_table(phantom_indices.size(), MAXIMAL_EDGE_DURATION);
     std::vector<EdgeDistance> distances_table(calculate_distance ? phantom_indices.size() : 0,
                                               MAXIMAL_EDGE_DISTANCE);
     std::vector<NodeID> middle_nodes_table(phantom_indices.size(), SPECIAL_NODEID);
@@ -287,10 +298,10 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                         distances_table.empty() ? nulldistance : distances_table[index];
 
                     if (std::tie(path_weight, path_duration, path_distance) <
-                        std::tie(weights[index], durations[index], current_distance))
+                        std::tie(weights_table[index], durations_table[index], current_distance))
                     {
-                        weights[index] = path_weight;
-                        durations[index] = path_duration;
+                        weights_table[index] = path_weight;
+                        durations_table[index] = path_duration;
                         current_distance = path_distance;
                         middle_nodes_table[index] = node;
                     }
@@ -368,28 +379,20 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
 
     while (!query_heap.Empty() && !target_nodes_index.empty())
     {
-        // Extract node from the heap
-        const auto node = query_heap.DeleteMin();
-        const auto weight = query_heap.GetKey(node);
-        const auto duration = query_heap.GetData(node).duration;
-        const auto distance = query_heap.GetData(node).distance;
+        // Extract node from the heap. Take a copy (no ref) because otherwise can be modified later
+        // if toHeapNode is the same
+        const auto heapNode = query_heap.DeleteMinGetHeapNode();
 
         // Update values
-        update_values(node, weight, duration, distance);
+        update_values(
+            heapNode.node, heapNode.weight, heapNode.data.duration, heapNode.data.distance);
 
         // Relax outgoing edges
-        relaxOutgoingEdges<DIRECTION>(facade,
-                                      node,
-                                      weight,
-                                      duration,
-                                      distance,
-                                      query_heap,
-                                      phantom_nodes,
-                                      phantom_index,
-                                      phantom_indices);
+        relaxOutgoingEdges<DIRECTION>(
+            facade, heapNode, query_heap, phantom_nodes, phantom_index, phantom_indices);
     }
 
-    return std::make_pair(durations, distances_table);
+    return std::make_pair(std::move(durations_table), std::move(distances_table));
 }
 
 //
@@ -408,15 +411,14 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         std::vector<NodeID> &middle_nodes_table,
                         const PhantomNode &phantom_node)
 {
-    const auto node = query_heap.DeleteMin();
-    const auto source_weight = query_heap.GetKey(node);
-    const auto source_duration = query_heap.GetData(node).duration;
-    const auto source_distance = query_heap.GetData(node).distance;
+    // Take a copy of the extracted node because otherwise could be modified later if toHeapNode is
+    // the same
+    const auto heapNode = query_heap.DeleteMinGetHeapNode();
 
     // Check if each encountered node has an entry
     const auto &bucket_list = std::equal_range(search_space_with_buckets.begin(),
                                                search_space_with_buckets.end(),
-                                               node,
+                                               heapNode.node,
                                                NodeBucket::Compare());
     for (const auto &current_bucket : boost::make_iterator_range(bucket_list))
     {
@@ -439,23 +441,21 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         auto &current_distance = distances_table.empty() ? nulldistance : distances_table[location];
 
         // Check if new weight is better
-        auto new_weight = source_weight + target_weight;
-        auto new_duration = source_duration + target_duration;
-        auto new_distance = source_distance + target_distance;
+        auto new_weight = heapNode.weight + target_weight;
+        auto new_duration = heapNode.data.duration + target_duration;
+        auto new_distance = heapNode.data.distance + target_distance;
 
-        if (new_weight >= 0 &&
-            std::tie(new_weight, new_duration, new_distance) <
-                std::tie(current_weight, current_duration, current_distance))
+        if (new_weight >= 0 && std::tie(new_weight, new_duration, new_distance) <
+                                   std::tie(current_weight, current_duration, current_distance))
         {
             current_weight = new_weight;
             current_duration = new_duration;
             current_distance = new_distance;
-            middle_nodes_table[location] = node;
+            middle_nodes_table[location] = heapNode.node;
         }
     }
 
-    relaxOutgoingEdges<DIRECTION>(
-        facade, node, source_weight, source_duration, source_distance, query_heap, phantom_node);
+    relaxOutgoingEdges<DIRECTION>(facade, heapNode, query_heap, phantom_node);
 }
 
 template <bool DIRECTION>
@@ -465,28 +465,23 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                          std::vector<NodeBucket> &search_space_with_buckets,
                          const PhantomNode &phantom_node)
 {
-    const auto node = query_heap.DeleteMin();
-    const auto target_weight = query_heap.GetKey(node);
-    const auto target_duration = query_heap.GetData(node).duration;
-    const auto target_distance = query_heap.GetData(node).distance;
-    const auto parent = query_heap.GetData(node).parent;
-    const auto from_clique_arc = query_heap.GetData(node).from_clique_arc;
+    // Take a copy of the extracted node because otherwise could be modified later if toHeapNode is
+    // the same
+    const auto heapNode = query_heap.DeleteMinGetHeapNode();
 
     // Store settled nodes in search space bucket
-    search_space_with_buckets.emplace_back(
-        node, parent, from_clique_arc, column_idx, target_weight, target_duration, target_distance);
+    search_space_with_buckets.emplace_back(heapNode.node,
+                                           heapNode.data.parent,
+                                           heapNode.data.from_clique_arc,
+                                           column_idx,
+                                           heapNode.weight,
+                                           heapNode.data.duration,
+                                           heapNode.data.distance);
 
     const auto &partition = facade.GetMultiLevelPartition();
     const auto maximal_level = partition.GetNumberOfLevels() - 1;
 
-    relaxOutgoingEdges<!DIRECTION>(facade,
-                                   node,
-                                   target_weight,
-                                   target_duration,
-                                   target_distance,
-                                   query_heap,
-                                   phantom_node,
-                                   maximal_level);
+    relaxOutgoingEdges<!DIRECTION>(facade, heapNode, query_heap, phantom_node, maximal_level);
 }
 
 template <bool DIRECTION>
@@ -606,7 +601,7 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
         }
     }
 
-    return std::make_pair(durations_table, distances_table);
+    return std::make_pair(std::move(durations_table), std::move(distances_table));
 }
 
 } // namespace mld

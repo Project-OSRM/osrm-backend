@@ -26,15 +26,15 @@ struct URLParser final : qi::grammar<Iterator, Into>
     {
         using boost::spirit::repository::qi::iter_pos;
 
-        alpha_numeral = qi::char_("a-zA-Z0-9");
+        identifier = qi::char_("a-zA-Z0-9_.~:-");
         percent_encoding =
             qi::char_('%') > qi::uint_parser<unsigned char, 16, 2, 2>()[qi::_val = qi::_1];
-        polyline_chars = qi::char_("a-zA-Z0-9_.--[]{}@?|\\~`^") | percent_encoding;
-        all_chars = polyline_chars | qi::char_("=,;:&().");
+        polyline_chars = qi::char_("a-zA-Z0-9_[]{}@?|\\~`^") | percent_encoding;
+        all_chars = polyline_chars | qi::char_("=,;:&().-");
 
-        service = +alpha_numeral;
+        service = +identifier;
         version = qi::uint_;
-        profile = +alpha_numeral;
+        profile = +identifier;
         query = +all_chars;
 
         // Example input: /route/v1/driving/7.416351,43.731205;7.420363,43.736189
@@ -54,13 +54,13 @@ struct URLParser final : qi::grammar<Iterator, Into>
     qi::rule<Iterator, std::string()> profile;
     qi::rule<Iterator, std::string()> query;
 
-    qi::rule<Iterator, char()> alpha_numeral;
+    qi::rule<Iterator, char()> identifier;
     qi::rule<Iterator, char()> all_chars;
     qi::rule<Iterator, char()> polyline_chars;
     qi::rule<Iterator, char()> percent_encoding;
 };
 
-} // anon.
+} // namespace
 
 namespace osrm
 {
@@ -93,6 +93,6 @@ boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::stri
     return boost::none;
 }
 
-} // api
-} // server
-} // osrm
+} // namespace api
+} // namespace server
+} // namespace osrm

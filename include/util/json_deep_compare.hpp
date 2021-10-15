@@ -40,8 +40,8 @@ struct Comparator
         bool is_same = lhs.value == rhs.value;
         if (!is_same)
         {
-            reason = lhs_path + " (= " + std::to_string(lhs.value) + ") != " + rhs_path + " (= " +
-                     std::to_string(rhs.value) + ")";
+            reason = lhs_path + " (= " + std::to_string(lhs.value) + ") != " + rhs_path +
+                     " (= " + std::to_string(rhs.value) + ")";
         }
         return is_same;
     }
@@ -158,8 +158,8 @@ inline bool compare(const Value &reference, const Value &result, std::string &re
     return mapbox::util::apply_visitor(
         Comparator(reason, "reference", "result"), reference, result);
 }
-}
-}
-}
+} // namespace json
+} // namespace util
+} // namespace osrm
 
 #endif

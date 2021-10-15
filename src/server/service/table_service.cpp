@@ -68,7 +68,7 @@ std::string getWrongOptionHelp(const engine::api::TableParameters &parameters)
 
     return help;
 }
-} // anon. ns
+} // namespace
 
 engine::Status TableService::RunQuery(std::size_t prefix_length,
                                       std::string &query,
@@ -108,6 +108,6 @@ engine::Status TableService::RunQuery(std::size_t prefix_length,
     }
     return BaseService::routing_machine.Table(*parameters, result);
 }
-}
-}
-}
+} // namespace service
+} // namespace server
+} // namespace osrm

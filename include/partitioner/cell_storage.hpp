@@ -45,18 +45,16 @@ template <storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
                   const detail::CellStorageImpl<Ownership> &storage);
-}
+} // namespace serialization
 
 namespace detail
 {
 template <storage::Ownership Ownership> class CellStorageImpl
 {
   public:
-    using ValueOffset = std::uint32_t;
-    using BoundaryOffset = std::uint32_t;
+    using ValueOffset = std::uint64_t;
+    using BoundaryOffset = std::uint64_t;
     using BoundarySize = std::uint32_t;
-    using SourceIndex = std::uint32_t;
-    using DestinationIndex = std::uint32_t;
 
     static constexpr auto INVALID_VALUE_OFFSET = std::numeric_limits<ValueOffset>::max();
     static constexpr auto INVALID_BOUNDARY_OFFSET = std::numeric_limits<BoundaryOffset>::max();
@@ -102,10 +100,9 @@ template <storage::Ownership Ownership> class CellStorageImpl
         {
 
             using ValueT = decltype(*std::declval<ValuePtrT>());
-            typedef boost::iterator_facade<ColumnIterator<ValueT>,
-                                           ValueT,
-                                           boost::random_access_traversal_tag>
-                base_t;
+            typedef boost::
+                iterator_facade<ColumnIterator<ValueT>, ValueT, boost::random_access_traversal_tag>
+                    base_t;
 
           public:
             typedef typename base_t::value_type value_type;
@@ -195,10 +192,10 @@ template <storage::Ownership Ownership> class CellStorageImpl
                  const NodeID *const all_sources,
                  const NodeID *const all_destinations)
             : num_source_nodes{data.num_source_nodes},
-              num_destination_nodes{data.num_destination_nodes},
-              weights{all_weights + data.value_offset},
-              durations{all_durations + data.value_offset},
-              distances{all_distances + data.value_offset},
+              num_destination_nodes{data.num_destination_nodes}, weights{all_weights +
+                                                                         data.value_offset},
+              durations{all_durations + data.value_offset}, distances{all_distances +
+                                                                      data.value_offset},
               source_boundary{all_sources + data.source_boundary_offset},
               destination_boundary{all_destinations + data.destination_boundary_offset}
         {
@@ -216,8 +213,8 @@ template <storage::Ownership Ownership> class CellStorageImpl
                  const NodeID *const all_destinations)
             : num_source_nodes{data.num_source_nodes},
               num_destination_nodes{data.num_destination_nodes}, weights{nullptr},
-              durations{nullptr}, distances{nullptr},
-              source_boundary{all_sources + data.source_boundary_offset},
+              durations{nullptr}, distances{nullptr}, source_boundary{all_sources +
+                                                                      data.source_boundary_offset},
               destination_boundary{all_destinations + data.destination_boundary_offset}
         {
             BOOST_ASSERT(num_source_nodes == 0 || all_sources != nullptr);
@@ -451,8 +448,8 @@ template <storage::Ownership Ownership> class CellStorageImpl
     Vector<CellData> cells;
     Vector<std::uint64_t> level_to_cell_offset;
 };
-}
-}
-}
+} // namespace detail
+} // namespace partitioner
+} // namespace osrm
 
 #endif // OSRM_PARTITIONER_CUSTOMIZE_CELL_STORAGE_HPP

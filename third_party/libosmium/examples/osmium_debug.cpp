@@ -37,48 +37,54 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     }
 
-    // Default is all entity types: nodes, ways, relations, and changesets
-    osmium::osm_entity_bits::type read_types = osmium::osm_entity_bits::all;
+    try {
+        // Default is all entity types: nodes, ways, relations, and changesets
+        osmium::osm_entity_bits::type read_types = osmium::osm_entity_bits::all;
 
-    // Get entity types from command line if there is a 2nd argument.
-    if (argc == 3) {
-        read_types = osmium::osm_entity_bits::nothing;
-        std::string types = argv[2];
-        if (types.find('n') != std::string::npos) {
-            read_types |= osmium::osm_entity_bits::node;
+        // Get entity types from command line if there is a 2nd argument.
+        if (argc == 3) {
+            read_types = osmium::osm_entity_bits::nothing;
+            std::string types = argv[2];
+            if (types.find('n') != std::string::npos) {
+                read_types |= osmium::osm_entity_bits::node;
+            }
+            if (types.find('w') != std::string::npos) {
+                read_types |= osmium::osm_entity_bits::way;
+            }
+            if (types.find('r') != std::string::npos) {
+                read_types |= osmium::osm_entity_bits::relation;
+            }
+            if (types.find('c') != std::string::npos) {
+                read_types |= osmium::osm_entity_bits::changeset;
+            }
         }
-        if (types.find('w') != std::string::npos) {
-            read_types |= osmium::osm_entity_bits::way;
+
+        // Initialize Reader with file name and the types of entities we want to
+        // read.
+        osmium::io::Reader reader{argv[1], read_types};
+
+        // The file header can contain metadata such as the program that generated
+        // the file and the bounding box of the data.
+        osmium::io::Header header = reader.header();
+        std::cout << "HEADER:\n  generator=" << header.get("generator") << "\n";
+
+        for (const auto& bbox : header.boxes()) {
+            std::cout << "  bbox=" << bbox << "\n";
         }
-        if (types.find('r') != std::string::npos) {
-            read_types |= osmium::osm_entity_bits::relation;
-        }
-        if (types.find('c') != std::string::npos) {
-            read_types |= osmium::osm_entity_bits::changeset;
-        }
+
+        // Initialize Dump handler.
+        osmium::handler::Dump dump{std::cout};
+
+        // Read from input and send everything to Dump handler.
+        osmium::apply(reader, dump);
+
+        // You do not have to close the Reader explicitly, but because the
+        // destructor can't throw, you will not see any errors otherwise.
+        reader.close();
+    } catch (const std::exception& e) {
+        // All exceptions used by the Osmium library derive from std::exception.
+        std::cerr << e.what() << '\n';
+        std::exit(1);
     }
-
-    // Initialize Reader with file name and the types of entities we want to
-    // read.
-    osmium::io::Reader reader{argv[1], read_types};
-
-    // The file header can contain metadata such as the program that generated
-    // the file and the bounding box of the data.
-    osmium::io::Header header = reader.header();
-    std::cout << "HEADER:\n  generator=" << header.get("generator") << "\n";
-
-    for (const auto& bbox : header.boxes()) {
-        std::cout << "  bbox=" << bbox << "\n";
-    }
-
-    // Initialize Dump handler.
-    osmium::handler::Dump dump{std::cout};
-
-    // Read from input and send everything to Dump handler.
-    osmium::apply(reader, dump);
-
-    // You do not have to close the Reader explicitly, but because the
-    // destructor can't throw, you will not see any errors otherwise.
-    reader.close();
 }
 

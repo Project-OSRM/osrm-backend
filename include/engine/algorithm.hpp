@@ -16,14 +16,14 @@ namespace ch
 struct Algorithm final
 {
 };
-}
+} // namespace ch
 // Multi-Level Dijkstra
 namespace mld
 {
 struct Algorithm final
 {
 };
-}
+} // namespace mld
 
 // Algorithm names
 template <typename AlgorithmT> const char *name();
@@ -111,8 +111,8 @@ template <> struct HasGetTileTurns<mld::Algorithm> final : std::true_type
 template <> struct HasExcludeFlags<mld::Algorithm> final : std::true_type
 {
 };
-}
-}
-}
+} // namespace routing_algorithms
+} // namespace engine
+} // namespace osrm
 
 #endif

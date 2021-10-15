@@ -5,7 +5,7 @@
 #include "extractor/intersection/intersection_edge.hpp"
 #include "extractor/intersection/intersection_view.hpp"
 #include "extractor/intersection/mergable_road_detector.hpp"
-#include "extractor/restriction_index.hpp"
+#include "extractor/node_restriction_map.hpp"
 #include "extractor/turn_lane_types.hpp"
 
 #include "util/coordinate.hpp"
@@ -70,6 +70,16 @@ IntersectionView getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
                                    const TurnLanesIndexedArray &turn_lanes_data,
                                    const IntersectionEdge &incoming_edge);
 
+IntersectionView
+getConnectedRoadsForEdgeGeometries(const util::NodeBasedDynamicGraph &graph,
+                                   const EdgeBasedNodeDataContainer &node_data_container,
+                                   const RestrictionMap &node_restriction_map,
+                                   const std::unordered_set<NodeID> &barrier_nodes,
+                                   const TurnLanesIndexedArray &turn_lanes_data,
+                                   const IntersectionEdge &incoming_edge,
+                                   const IntersectionEdgeGeometries &edge_geometries,
+                                   const std::unordered_set<EdgeID> &merged_edge_ids);
+
 // Graph Compression cannot compress every setting. For example any barrier/traffic light cannot
 // be compressed. As a result, a simple road of the form `a ----- b` might end up as having an
 // intermediate intersection, if there is a traffic light in between. If we want to look farther
@@ -79,8 +89,8 @@ IntersectionView getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
 // for getConnectedRoads.
 IntersectionEdge skipDegreeTwoNodes(const util::NodeBasedDynamicGraph &graph,
                                     IntersectionEdge road);
-}
-}
-}
+} // namespace intersection
+} // namespace extractor
+} // namespace osrm
 
 #endif

@@ -38,8 +38,8 @@ void test_rw(const Offsets &offsets, const Data &data)
 
     for (std::size_t index = 0; index < offsets.size() - 1; ++index)
     {
-        typename IndexedData::ResultType expected_result(&data[offsets[index]],
-                                                         &data[offsets[index + 1]]);
+        typename IndexedData::ResultType expected_result(data.begin() + offsets[index],
+                                                         data.begin() + offsets[index + 1]);
         BOOST_CHECK_EQUAL(expected_result, indexed_data.at(index));
     }
 }
