@@ -75,7 +75,7 @@ void SetClassNames(const std::vector<std::string> &class_names,
     if (!class_names.empty())
     {
         // add class names that were never used explicitly on a way
-        // this makes sure we can correctly validate unkown class names later
+        // this makes sure we can correctly validate unknown class names later
         for (const auto &name : class_names)
         {
             if (!isValidClassName(name))
@@ -207,7 +207,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     LaneDescriptionMap turn_lane_map;
     std::vector<TurnRestriction> turn_restrictions;
     std::vector<UnresolvedManeuverOverride> unresolved_maneuver_overrides;
-    std::tie(turn_lane_map, turn_restrictions, unresolved_maneuver_overrides) =
+    TrafficSignals traffic_signals;
+    std::tie(turn_lane_map, turn_restrictions, unresolved_maneuver_overrides, traffic_signals) =
         ParseOSMData(scripting_environment, number_of_threads);
 
     // Transform the node-based graph that OSM is based on into an edge-based graph
@@ -229,7 +230,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     NodeBasedGraphFactory node_based_graph_factory(config.GetPath(".osrm"),
                                                    scripting_environment,
                                                    turn_restrictions,
-                                                   unresolved_maneuver_overrides);
+                                                   unresolved_maneuver_overrides,
+                                                   traffic_signals);
 
     NameTable name_table;
     files::readNames(config.GetPath(".osrm.names"), name_table);
@@ -264,7 +266,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     node_based_graph_factory.GetCompressedEdges().PrintStatistics();
 
     const auto &barrier_nodes = node_based_graph_factory.GetBarriers();
-    const auto &traffic_signals = node_based_graph_factory.GetTrafficSignals();
     // stealing the annotation data from the node-based graph
     edge_based_nodes_container =
         EdgeBasedNodeDataContainer({}, std::move(node_based_graph_factory.GetAnnotationData()));
@@ -360,10 +361,12 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     return 0;
 }
 
-std::
-    tuple<LaneDescriptionMap, std::vector<TurnRestriction>, std::vector<UnresolvedManeuverOverride>>
-    Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
-                            const unsigned number_of_threads)
+std::tuple<LaneDescriptionMap,
+           std::vector<TurnRestriction>,
+           std::vector<UnresolvedManeuverOverride>,
+           TrafficSignals>
+Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
+                        const unsigned number_of_threads)
 {
     TIMER_START(extracting);
 
@@ -628,7 +631,8 @@ std::
 
     return std::make_tuple(std::move(turn_lane_map),
                            std::move(extraction_containers.turn_restrictions),
-                           std::move(extraction_containers.internal_maneuver_overrides));
+                           std::move(extraction_containers.internal_maneuver_overrides),
+                           std::move(extraction_containers.internal_traffic_signals));
 }
 
 void Extractor::FindComponents(unsigned number_of_edge_based_nodes,
@@ -699,7 +703,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     const std::vector<util::Coordinate> &coordinates,
     const CompressedEdgeContainer &compressed_edge_container,
     const std::unordered_set<NodeID> &barrier_nodes,
-    const std::unordered_set<NodeID> &traffic_signals,
+    const TrafficSignals &traffic_signals,
     const RestrictionGraph &restriction_graph,
     const std::unordered_set<EdgeID> &segregated_edges,
     const NameTable &name_table,
