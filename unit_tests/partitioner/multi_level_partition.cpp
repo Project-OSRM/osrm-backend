@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(cell_64_bits)
         }
         levels_to_num_cells[level] = num_cells;
     };
-    util::for_each_indexed(level_cells.cbegin(), level_cells.cend(), set_level_cells);
+    util::for_each_indexed(level_cells, set_level_cells);
 
     MultiLevelPartition mlp{levels, levels_to_num_cells};
 
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(cell_overflow_bits)
         }
         levels_to_num_cells[level] = num_cells;
     };
-    util::for_each_indexed(level_cells.cbegin(), level_cells.cend(), set_level_cells);
+    util::for_each_indexed(level_cells, set_level_cells);
 
     BOOST_REQUIRE_EXCEPTION(MultiLevelPartition(levels, levels_to_num_cells),
                             util::exception,
