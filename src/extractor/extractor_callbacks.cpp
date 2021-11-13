@@ -22,6 +22,24 @@
 #include <string>
 #include <vector>
 
+#ifdef _MSC_VER
+#if (_MSC_VER >= 1928)
+#ifdef _DEBUG
+namespace osrm
+{
+namespace extractor
+{
+namespace detail
+{
+const ByEdgeOrByMeterValue::ValueByEdge ByEdgeOrByMeterValue::by_edge;
+const ByEdgeOrByMeterValue::ValueByMeter ByEdgeOrByMeterValue::by_meter;
+} // namespace detail
+} // namespace extractor
+} // namespace osrm
+#endif
+#endif
+#endif
+
 namespace osrm
 {
 namespace extractor
