@@ -471,6 +471,7 @@ jobs:
           fi
         elif [[ $TARGET_ARCH == "i686" ]]; then
           source ./scripts/ci/before_install.${TARGET_ARCH}.sh
+          echo "PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig:${PKG_CONFIG_PATH}" >> $GITHUB_ENV
         fi
 
     - name: Prepare build
