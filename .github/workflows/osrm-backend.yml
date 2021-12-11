@@ -16,7 +16,7 @@ env:
   CCACHE_COMPRESS: 1
   CASHER_TIME_OUT: 599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
   CCACHE_VERSION: 3.3.1
-  CMAKE_VERSION: 3.7.2
+  CMAKE_VERSION: 3.21.2
   ENABLE_NODE_BINDINGS: "ON"
 
 jobs:
@@ -425,7 +425,7 @@ jobs:
 
         echo "MASON=${GITHUB_WORKSPACE}/scripts/mason.sh" >> $GITHUB_ENV
         echo "CMAKE_URL=https://mason-binaries.s3.amazonaws.com/${MASON_OS}-x86_64/cmake/${CMAKE_VERSION}.tar.gz" >> $GITHUB_ENV
-        echo "CMAKE_DIR=mason_packages/${MASON_OS}-x86_64/cmake/${CMAKE_VERSION}}" >> $GITHUB_ENV
+        echo "CMAKE_DIR=mason_packages/${MASON_OS}-x86_64/cmake/${CMAKE_VERSION}" >> $GITHUB_ENV
 
 
     - name: Install dev dependencies
