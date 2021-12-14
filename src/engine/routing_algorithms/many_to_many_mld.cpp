@@ -293,7 +293,7 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                     const auto path_duration = duration + target_duration;
                     const auto path_distance = distance + target_distance;
 
-                    EdgeDistance nulldistance = 0;
+                    EdgeDistance nulldistance = NULL_EDGE_DISTANCE;
                     auto &current_distance =
                         distances_table.empty() ? nulldistance : distances_table[index];
 

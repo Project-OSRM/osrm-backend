@@ -9,6 +9,8 @@ exports.three_test_coordinates = [[7.41337, 43.72956],
                                   [7.41862, 43.73216]];
 
 exports.two_test_coordinates = exports.three_test_coordinates.slice(0, 2)
+// https://www.openstreetmap.org/#map=14/43.2622/6.5835
+exports.one_test_coordinate_outside_mapboundaries = [43.2622, 6.5835];
 
 exports.test_tile = {'at': [17059, 11948, 15], 'size': 156624};
 
