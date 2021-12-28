@@ -3,7 +3,7 @@
 #include "../common/range_tools.hpp"
 #include "../common/temporary_file.hpp"
 
-#include <boost/function_output_iterator.hpp>
+#include <boost/iterator/function_output_iterator.hpp>
 #include <boost/iterator/function_input_iterator.hpp>
 #include <boost/test/unit_test.hpp>
 

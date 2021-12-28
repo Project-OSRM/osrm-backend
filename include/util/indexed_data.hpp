@@ -8,7 +8,7 @@
 #include "util/vector_view.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/function_output_iterator.hpp>
+#include <boost/iterator/function_output_iterator.hpp>
 
 #include <array>
 #include <iterator>

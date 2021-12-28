@@ -3,7 +3,7 @@
 
 #include "storage/shared_datatype.hpp"
 
-#include <boost/function_output_iterator.hpp>
+#include <boost/iterator/function_output_iterator.hpp>
 
 #include <type_traits>
 #include <unordered_map>

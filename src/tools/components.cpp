@@ -11,7 +11,7 @@
 #include "util/typedefs.hpp"
 
 #include <boost/filesystem.hpp>
-#include <boost/function_output_iterator.hpp>
+#include <boost/iterator/function_output_iterator.hpp>
 
 #include <tbb/parallel_sort.h>
 
