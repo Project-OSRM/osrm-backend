@@ -8,6 +8,8 @@
       - CHANGED: Upgrade Ubuntu CI builds to 20.04  [#6119](https://github.com/Project-OSRM/osrm-backend/pull/6119)
       - CHANGED: Make building osrm-routed optional [#6144](https://github.com/Project-OSRM/osrm-backend/pull/6144)
       - FIXED: Run all unit tests in CI [#5248](https://github.com/Project-OSRM/osrm-backend/pull/5248)
+      - FIXED: Fix installation of Mason CMake and 32 bit CI build [#6170](https://github.com/Project-OSRM/osrm-backend/pull/6170)
+      - FIXED: Fixed Node docs generation check in CI. [#6058](https://github.com/Project-OSRM/osrm-backend/pull/6058)
       - CHANGED: Docker build, enabled arm64 build layer
 
 # 5.26.0
