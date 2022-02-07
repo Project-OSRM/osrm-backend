@@ -4,14 +4,11 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/files.hpp"
-#include "extractor/node_based_edge.hpp"
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/serialization.hpp"
 
 #include "guidance/files.hpp"
-
-#include "storage/io.hpp"
 
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
@@ -20,7 +17,6 @@
 #include "util/log.hpp"
 #include "util/mmap_tar.hpp"
 #include "util/opening_hours.hpp"
-#include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 #include "util/string_util.hpp"
 #include "util/timezones.hpp"
@@ -29,10 +25,6 @@
 
 #include <boost/assert.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/geometry.hpp>
-#include <boost/geometry/index/rtree.hpp>
-#include <boost/interprocess/file_mapping.hpp>
-#include <boost/interprocess/mapped_region.hpp>
 
 #include <tbb/blocked_range.h>
 #include <tbb/concurrent_vector.h>
@@ -45,10 +37,8 @@
 #include <atomic>
 #include <bitset>
 #include <cstdint>
-#include <fstream>
 #include <iterator>
 #include <memory>
-#include <thread>
 #include <tuple>
 #include <vector>
 

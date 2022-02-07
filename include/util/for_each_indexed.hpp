@@ -20,7 +20,7 @@ void for_each_indexed(ForwardIterator first, ForwardIterator last, Function func
 }
 
 template <class ContainerT, typename Function>
-void for_each_pair(ContainerT &container, Function function)
+void for_each_indexed(ContainerT &container, Function function)
 {
     for_each_indexed(std::begin(container), std::end(container), function);
 }

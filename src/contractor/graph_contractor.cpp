@@ -671,10 +671,10 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
             });
 
         // sort all remaining nodes to the beginning of the sequence
-        const auto begin_independent_nodes =
-            stable_partition(remaining_nodes.begin(),
-                             remaining_nodes.end(),
-                             [](RemainingNodeData node_data) { return !node_data.is_independent; });
+        const auto begin_independent_nodes = std::stable_partition(
+            remaining_nodes.begin(), remaining_nodes.end(), [](RemainingNodeData node_data) {
+                return !node_data.is_independent;
+            });
         auto begin_independent_nodes_idx =
             std::distance(remaining_nodes.begin(), begin_independent_nodes);
         auto end_independent_nodes_idx = remaining_nodes.size();
