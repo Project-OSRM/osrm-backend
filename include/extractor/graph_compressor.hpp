@@ -4,7 +4,6 @@
 #include "extractor/scripting_environment.hpp"
 #include "util/typedefs.hpp"
 
-#include "extractor/maneuver_override.hpp"
 #include "util/node_based_graph.hpp"
 
 #include <memory>
@@ -18,6 +17,7 @@ namespace extractor
 
 class CompressedEdgeContainer;
 struct TurnRestriction;
+struct UnresolvedManeuverOverride;
 
 class GraphCompressor
 {

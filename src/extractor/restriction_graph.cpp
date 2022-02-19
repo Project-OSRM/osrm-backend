@@ -1,9 +1,10 @@
 #include "extractor/restriction_graph.hpp"
+#include "extractor/restriction.hpp"
+#include "extractor/turn_path.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/timing_util.hpp"
 #include <util/for_each_pair.hpp>
 
-#include <boost/assign.hpp>
 #include <boost/range/algorithm/copy.hpp>
 
 namespace osrm
@@ -211,11 +212,11 @@ void buildGraph(RestrictionGraph &rg, const std::vector<TurnRestriction> &restri
     const auto run_builder = [&](const auto &restriction) {
         builder_type builder(rg);
 
-        builder.start(restriction.From(), restriction.FirstVia());
-        if (restriction.Type() == RestrictionType::WAY_RESTRICTION)
+        builder.start(restriction.turn_path.From(), restriction.turn_path.FirstVia());
+        if (restriction.turn_path.Type() == TurnPathType::VIA_WAY_TURN_PATH)
         {
-            const auto &way_restriction = restriction.AsWayRestriction();
-            util::for_each_pair(way_restriction.via,
+            const auto &via_way_path = restriction.turn_path.AsViaWayPath();
+            util::for_each_pair(via_way_path.via,
                                 [&](NodeID from, NodeID to) { builder.next(from, to); });
         }
         builder.end(restriction);

@@ -10,24 +10,19 @@
 #include "storage/io.hpp"
 
 #include "util/assert.hpp"
-#include "util/bearing.hpp"
 #include "util/connectivity_checksum.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
-#include "util/exception.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
 #include "util/percent.hpp"
 #include "util/timing_util.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/crc.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
 #include <algorithm>
-#include <cmath>
-#include <iomanip>
 #include <limits>
 #include <sstream>
 #include <string>
@@ -451,6 +446,17 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 {
     util::Log() << "Generating edge-expanded edges ";
 
+    // Keep a set of all maneuver turns so we can identify them as
+    // we generate the edge-expansion.
+    std::unordered_set<NodeBasedTurn> unresolved_turns;
+    for (const auto &manuevers : unresolved_maneuver_overrides)
+    {
+        for (const auto &turn : manuevers.Turns())
+        {
+            unresolved_turns.insert(turn);
+        }
+    }
+
     std::size_t node_based_edge_counter = 0;
 
     SuffixTable street_name_suffix_table(scripting_environment);
@@ -514,7 +520,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             std::vector<EdgeWithData> delayed_data;    // may need this
             std::vector<Conditional> conditionals;
 
-            std::unordered_map<NodeBasedTurn, std::pair<NodeID, NodeID>> turn_to_ebn_map;
+            std::unordered_multimap<NodeBasedTurn, std::pair<NodeID, NodeID>> turn_to_ebn_map;
 
             util::ConnectivityChecksum checksum;
         };
@@ -522,7 +528,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
         m_connectivity_checksum = 0;
 
-        std::unordered_map<NodeBasedTurn, std::pair<NodeID, NodeID>> global_turn_to_ebn_map;
+        std::unordered_multimap<NodeBasedTurn, std::pair<NodeID, NodeID>> global_turn_to_ebn_map;
 
         // going over all nodes (which form the center of an intersection), we compute all possible
         // turns along these intersections.
@@ -894,24 +900,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             const auto outgoing_edge_target =
                                 m_node_based_graph.GetTarget(outgoing_edge.edge);
 
-                            // TODO: this loop is not optimized - once we have a few
-                            //       overrides available, we should index this for faster
-                            //       lookups
-                            for (auto &override : unresolved_maneuver_overrides)
+                            const auto turn_nodes = NodeBasedTurn{
+                                incoming_edge.node, intersection_node, outgoing_edge_target};
+                            const auto is_maneuver_turn = unresolved_turns.count(turn_nodes) > 0;
+
+                            if (is_maneuver_turn)
                             {
-                                for (auto &turn : override.turn_sequence)
-                                {
-                                    if (turn.from == incoming_edge.node &&
-                                        turn.via == intersection_node &&
-                                        turn.to == outgoing_edge_target)
-                                    {
-                                        const auto &ebn_from =
-                                            nbe_to_ebn_mapping[incoming_edge.edge];
-                                        const auto &ebn_to = target_id;
-                                        buffer->turn_to_ebn_map[turn] =
-                                            std::make_pair(ebn_from, ebn_to);
-                                    }
-                                }
+                                const auto &ebn_from = nbe_to_ebn_mapping[incoming_edge.edge];
+                                const auto &ebn_to = target_id;
+                                buffer->turn_to_ebn_map.insert(
+                                    {turn_nodes, std::make_pair(ebn_from, ebn_to)});
                             }
 
                             { // scope to forget edge_with_data after
@@ -1025,6 +1023,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                   m_coordinates[intersection_node],
                                                   restriction->condition}});
                                         }
+
+                                        // We also need to track maneuvers that traverse duplicate
+                                        // edges
+                                        if (is_maneuver_turn)
+                                        {
+                                            const auto &ebn_from = from_id;
+                                            const auto &ebn_to = via_target_id;
+                                            buffer->turn_to_ebn_map.insert(
+                                                {turn_nodes, std::make_pair(ebn_from, ebn_to)});
+                                        }
                                     }
                                     else
                                     {
@@ -1053,6 +1061,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                                             edge_geometries);
 
                                         buffer->delayed_data.push_back(edge_with_data);
+
+                                        // We also need to track maneuvers that traverse duplicate
+                                        // edges
+                                        if (is_maneuver_turn)
+                                        {
+                                            const auto &ebn_from = from_id;
+                                            const auto &ebn_to = via_target_id;
+                                            buffer->turn_to_ebn_map.insert(
+                                                {turn_nodes, std::make_pair(ebn_from, ebn_to)});
+                                        }
                                     }
                                 }
                             }
@@ -1107,35 +1125,64 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
         // Now, replace node-based-node ID values in the `node_sequence` with
         // the edge-based-node values we found and stored in the `turn_to_ebn_map`
-        for (auto &unresolved_override : unresolved_maneuver_overrides)
+        for (const auto &unresolved_override : unresolved_maneuver_overrides)
         {
-            StorageManeuverOverride storage_override;
-            storage_override.instruction_node = unresolved_override.instruction_node;
-            storage_override.override_type = unresolved_override.override_type;
-            storage_override.direction = unresolved_override.direction;
+            // There can be multiple edge-based-node sequences for a node-based-turn sequence
+            // due to duplicate edges in the restriction graph.
+            std::vector<std::vector<NodeID>> node_sequences;
 
-            std::vector<NodeID> node_sequence(unresolved_override.turn_sequence.size() + 1,
-                                              SPECIAL_NODEID);
+            const auto &turns = unresolved_override.Turns();
 
-            for (std::int64_t i = unresolved_override.turn_sequence.size() - 1; i >= 0; --i)
-            {
-                const auto v = global_turn_to_ebn_map.find(unresolved_override.turn_sequence[i]);
-                if (v != global_turn_to_ebn_map.end())
+            BOOST_ASSERT(!turns.empty());
+            // Populate the node sequences with the first turn values.
+            const auto first_turn_edges = global_turn_to_ebn_map.equal_range(turns[0]);
+            std::transform(
+                first_turn_edges.first,
+                first_turn_edges.second,
+                std::back_inserter(node_sequences),
+                [](const auto turn_edges) {
+                    return std::vector<NodeID>{turn_edges.second.first, turn_edges.second.second};
+                });
+
+            std::for_each(std::next(turns.begin()), turns.end(), [&](const auto &turn) {
+                std::vector<std::vector<NodeID>> next_node_sequences;
+                const auto next_turn_edges = global_turn_to_ebn_map.equal_range(turn);
+                for (auto &node_sequence : node_sequences)
                 {
-                    node_sequence[i] = v->second.first;
-                    node_sequence[i + 1] = v->second.second;
+                    const auto found_it = std::find_if(
+                        next_turn_edges.first, next_turn_edges.second, [&](const auto &turn_edges) {
+                            const auto pre_turn_edge = turn_edges.second.first;
+                            return (node_sequence.back() == pre_turn_edge);
+                        });
+
+                    if (found_it != next_turn_edges.second)
+                    {
+                        const auto post_turn_edge = found_it->second.second;
+                        node_sequence.push_back(post_turn_edge);
+                        next_node_sequences.push_back(std::move(node_sequence));
+                    }
                 }
+                node_sequences = std::move(next_node_sequences);
+            });
+
+            for (const auto &node_sequence : node_sequences)
+            {
+                StorageManeuverOverride storage_override;
+                storage_override.instruction_node = unresolved_override.instruction_node;
+                storage_override.override_type = unresolved_override.override_type;
+                storage_override.direction = unresolved_override.direction;
+
+                storage_override.node_sequence_offset_begin = maneuver_override_sequences.size();
+                storage_override.node_sequence_offset_end =
+                    maneuver_override_sequences.size() + node_sequence.size();
+
+                storage_override.start_node = node_sequence.front();
+
+                maneuver_override_sequences.insert(
+                    maneuver_override_sequences.end(), node_sequence.begin(), node_sequence.end());
+
+                storage_maneuver_overrides.push_back(storage_override);
             }
-            storage_override.node_sequence_offset_begin = maneuver_override_sequences.size();
-            storage_override.node_sequence_offset_end =
-                maneuver_override_sequences.size() + node_sequence.size();
-
-            storage_override.start_node = node_sequence.front();
-
-            maneuver_override_sequences.insert(
-                maneuver_override_sequences.end(), node_sequence.begin(), node_sequence.end());
-
-            storage_maneuver_overrides.push_back(storage_override);
         }
     }
     {
