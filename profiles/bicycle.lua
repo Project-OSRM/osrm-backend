@@ -132,7 +132,7 @@ function setup()
       road = default_speed,
       service = default_speed,
       track = 12,
-      path = 12
+      path = 13
     },
 
     pedestrian_speeds = {
@@ -173,21 +173,25 @@ function setup()
 
     surface_speeds = {
       asphalt = default_speed,
+      chipseal = default_speed,
+      concrete = default_speed,
+      concrete_lanes = default_speed,
+      wood = 10,
       ["cobblestone:flattened"] = 10,
       paving_stones = 10,
       compacted = 10,
-      cobblestone = 6,
+      cobblestone = 7,
       unpaved = 6,
-      fine_gravel = 6,
+      fine_gravel = 10,
       gravel = 6,
       pebblestone = 6,
-      ground = 6,
-      dirt = 6,
+      ground = 10,
+      dirt = 8,
       earth = 6,
       grass = 6,
       mud = 3,
       sand = 3,
-      sett = 10
+      sett = 9
     },
 
     classes = Sequence {
@@ -272,6 +276,9 @@ function handle_bicycle_tags(profile,way,result,data)
   data.maxspeed = Measure.get_max_speed(way:get_value_by_key ("maxspeed")) or 0
   data.maxspeed_forward = Measure.get_max_speed(way:get_value_by_key("maxspeed:forward")) or 0
   data.maxspeed_backward = Measure.get_max_speed(way:get_value_by_key("maxspeed:backward")) or 0
+  data.maxspeed_bicycle = Measure.get_max_speed(way:get_value_by_key ("maxspeed:bicycle")) or 0
+  data.maxspeed_bicycle_forward = Measure.get_max_speed(way:get_value_by_key ("maxspeed:bicycle:forward")) or 0
+  data.maxspeed_bicycle_backward = Measure.get_max_speed(way:get_value_by_key ("maxspeed:bicycle:backward")) or 0
   data.barrier = way:get_value_by_key("barrier")
   data.oneway = way:get_value_by_key("oneway")
   data.oneway_bicycle = way:get_value_by_key("oneway:bicycle")
@@ -295,7 +302,7 @@ function handle_bicycle_tags(profile,way,result,data)
 
 
   -- maxspeed
-  limit( result, data.maxspeed, data.maxspeed_forward, data.maxspeed_backward )
+  limit( result, data.maxspeed, data.maxspeed_forward, data.maxspeed_backward, data.maxspeed_bicycle, data.maxspeed_bicycle_forward, data.maxspeed_bicycle_backward )
 
   -- not routable if no speed assigned
   -- this avoid assertions in debug builds
@@ -594,6 +601,9 @@ function process_way(profile, way, result)
     maxspeed = nil,
     maxspeed_forward = nil,
     maxspeed_backward = nil,
+    maxspeed_bicycle = nil,
+    maxspeed_bicycle_forward = nil,
+    maxspeed_bicycle_backward = nil,
     barrier = nil,
     oneway = nil,
     oneway_bicycle = nil,
