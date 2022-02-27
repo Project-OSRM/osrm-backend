@@ -276,9 +276,6 @@ function handle_bicycle_tags(profile,way,result,data)
   data.maxspeed = Measure.get_max_speed(way:get_value_by_key ("maxspeed")) or 0
   data.maxspeed_forward = Measure.get_max_speed(way:get_value_by_key("maxspeed:forward")) or 0
   data.maxspeed_backward = Measure.get_max_speed(way:get_value_by_key("maxspeed:backward")) or 0
-  data.maxspeed_bicycle = Measure.get_max_speed(way:get_value_by_key ("maxspeed:bicycle")) or 0
-  data.maxspeed_bicycle_forward = Measure.get_max_speed(way:get_value_by_key ("maxspeed:bicycle:forward")) or 0
-  data.maxspeed_bicycle_backward = Measure.get_max_speed(way:get_value_by_key ("maxspeed:bicycle:backward")) or 0
   data.barrier = way:get_value_by_key("barrier")
   data.oneway = way:get_value_by_key("oneway")
   data.oneway_bicycle = way:get_value_by_key("oneway:bicycle")
@@ -302,7 +299,7 @@ function handle_bicycle_tags(profile,way,result,data)
 
 
   -- maxspeed
-  limit( result, data.maxspeed, data.maxspeed_forward, data.maxspeed_backward, data.maxspeed_bicycle, data.maxspeed_bicycle_forward, data.maxspeed_bicycle_backward )
+  limit( result, data.maxspeed, data.maxspeed_forward, data.maxspeed_backward )
 
   -- not routable if no speed assigned
   -- this avoid assertions in debug builds
@@ -601,9 +598,6 @@ function process_way(profile, way, result)
     maxspeed = nil,
     maxspeed_forward = nil,
     maxspeed_backward = nil,
-    maxspeed_bicycle = nil,
-    maxspeed_bicycle_forward = nil,
-    maxspeed_bicycle_backward = nil,
     barrier = nil,
     oneway = nil,
     oneway_bicycle = nil,
