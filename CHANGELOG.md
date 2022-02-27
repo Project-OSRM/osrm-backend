@@ -11,6 +11,8 @@
       - FIXED: Fix installation of Mason CMake and 32 bit CI build [#6170](https://github.com/Project-OSRM/osrm-backend/pull/6170)
       - FIXED: Fixed Node docs generation check in CI. [#6058](https://github.com/Project-OSRM/osrm-backend/pull/6058)
       - CHANGED: Docker build, enabled apt-get update/install caching in separate layer for build phase [#6175](https://github.com/Project-OSRM/osrm-backend/pull/6175)
+    - Profile:
+      - CHANGED: Bicycle surface speeds [#6212](https://github.com/Project-OSRM/osrm-backend/pull/6212)
 
 # 5.26.0
   - Changes from 5.25.0
