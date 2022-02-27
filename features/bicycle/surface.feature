@@ -9,14 +9,19 @@ Feature: Bike - Surfaces
             | highway  | surface               | bothw   |
             | cycleway |                       | 48 s    |
             | cycleway | asphalt               | 48 s    |
+            | cycleway | chipseal              | 48 s    |
+            | cycleway | concrete              | 48 s    |
+            | cycleway | concrete_lanes        | 48 s    |
             | cycleway | cobblestone:flattened | 72 s    |
             | cycleway | paving_stones         | 72 s    |
+            | cycleway | wood                  | 72 s    |
             | cycleway | compacted             | 72 s    |
-            | cycleway | cobblestone           | 120 s   |
-            | cycleway | fine_gravel           | 120 s   |
+            | cycleway | fine_gravel           | 72 s    |
+            | cycleway | ground                | 72 s    |
+            | cycleway | dirt                  | 90 s    |
+            | cycleway | cobblestone           | 102 s   |
             | cycleway | gravel                | 120 s   |
             | cycleway | pebblestone           | 120.1 s |
-            | cycleway | dirt                  | 120 s   |
             | cycleway | earth                 | 120 s   |
             | cycleway | grass                 | 120 s   |
             | cycleway | mud                   | 240 s   |
@@ -27,10 +32,10 @@ Feature: Bike - Surfaces
         Then routability should be
         | highway  | surface | bothw |
         | cycleway |         | 48 s  |
-        | path     |         | 60 s  |
+        | path     |         | 55 s  |
         | track    |         | 60 s  |
         | track    | asphalt | 60 s  |
-        | path     | asphalt | 60 s  |
+        | path     | asphalt | 55 s  |
 
     Scenario: Bicycle - Surfaces should not make unknown ways routable
         Then routability should be
