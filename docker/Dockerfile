@@ -2,14 +2,15 @@ FROM debian:bullseye-slim as builder
 ARG DOCKER_TAG
 ARG BUILD_CONCURRENCY
 RUN mkdir -p /src  && mkdir -p /opt
+
+RUN apt-get update && \
+    apt-get -y --no-install-recommends install cmake make git gcc g++ libbz2-dev libxml2-dev \
+    libzip-dev libboost1.74-all-dev lua5.2 liblua5.2-dev libtbb-dev -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
+
 COPY . /src
 WORKDIR /src
 
-RUN NPROC=${BUILD_CONCURRENCY:-$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1)} && \
-    apt-get update && \
-    apt-get -y --no-install-recommends install cmake make git gcc g++ libbz2-dev libxml2-dev \
-    libzip-dev libboost1.74-all-dev lua5.2 liblua5.2-dev libtbb-dev -o APT::Install-Suggests=0 -o APT::Install-Recommends=0 && \
-    echo "Building OSRM ${DOCKER_TAG}" && \
+RUN NPROC=${BUILD_CONCURRENCY:-$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1)} echo "Building OSRM ${DOCKER_TAG}" && \
     git show --format="%H" | head -n1 > /opt/OSRM_GITSHA && \
     echo "Building OSRM gitsha $(cat /opt/OSRM_GITSHA)" && \
     mkdir -p build && \
@@ -26,7 +27,6 @@ RUN NPROC=${BUILD_CONCURRENCY:-$(grep -c ^processor /proc/cpuinfo 2>/dev/null ||
     cp -r * /opt && \
     strip /usr/local/bin/* && \
     rm -rf /src /usr/local/lib/libosrm*
-
 
 # Multistage build to reduce image size - https://docs.docker.com/engine/userguide/eng-image/multistage-build/#use-multi-stage-builds
 # Only the content below ends up in the image, this helps remove /src from the image (which is large)
