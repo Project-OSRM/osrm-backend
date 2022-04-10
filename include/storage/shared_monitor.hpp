@@ -40,24 +40,6 @@ template <typename Data> struct SharedMonitor
 {
     using mutex_type = bi::interprocess_mutex;
 
-// private:
-//     static SharedMonitor* g_instance;
-
-// public:
-//     static SharedMonitor& instance() {
-//         if (!g_instance) {
-//             g_instance = new SharedMonitor();
-//         }
-//         return *g_instance;
-//     }
-//     static SharedMonitor& instance(const Data &initial_data) {
-//         if (!g_instance) {
-//             g_instance = new SharedMonitor(initial_data);
-//         }
-//         return *g_instance;
-//     }
-// private:
-
     SharedMonitor(const Data &initial_data)
     {
         util::Log(logWARNING) << "CTudorache sharedMonitor OPEN or CREATE: " << (const char*)Data::name;
@@ -109,7 +91,6 @@ template <typename Data> struct SharedMonitor
         }
     }
 
-// public:
     Data &data() const
     {
         auto region_pointer = reinterpret_cast<char *>(region.get_address());

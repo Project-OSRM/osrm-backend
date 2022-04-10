@@ -163,9 +163,7 @@ class SharedMemory
             }
             BOOST_ASSERT(ret >= 0);
 
-            //std::this_thread::sleep_for(std::chrono::microseconds(100));
-            util::Log(logWARNING) << "CTudorache WaitForDetach, nattach: " << xsi_ds.shm_nattch;
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
         } while (xsi_ds.shm_nattch > 1);
     }
 #else

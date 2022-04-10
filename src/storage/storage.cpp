@@ -87,12 +87,10 @@ RegionHandle setupRegion(SharedRegionRegister &shared_register,
     util::Log(logWARNING) << "CTudorache setupRegion, shm_key: " << shm_key << ", regions_size: " << regions_size << ", mem: " << memory->ToString();
 
     // Copy memory static_layout to shared memory and populate data
-    //util::Log(logWARNING) << "CTudorache setupRegion, copy data, size: " << encoded_static_layout.size();
     char *shared_memory_ptr = static_cast<char *>(memory->Ptr());
     auto data_ptr =
         std::copy_n(encoded_static_layout.data(), encoded_static_layout.size(), shared_memory_ptr);
 
-    //util::Log(logWARNING) << "CTudorache setupRegion, copy data DONE";
     return RegionHandle{std::move(memory), data_ptr, shm_key};
 }
 
@@ -101,7 +99,6 @@ bool swapData(Monitor &monitor,
               const std::map<std::string, RegionHandle> &handles,
               int max_wait)
 {
-    util::Log(logWARNING) << "CTudorache swapData, max_wait: " << max_wait << ", shared_register: " << shared_register.ToString() << ", handles: " << osrm::util::ToStringMap(handles);
     std::vector<RegionHandle> old_handles;
 
     { // Lock for write access shared region mutex

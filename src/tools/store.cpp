@@ -37,7 +37,7 @@ void deleteRegion(const storage::SharedRegionRegister::ShmKey key)
 
 void listRegions(bool show_blocks)
 {
-    osrm::util::Log() << "name\tshm key\ttimestamp\tsize\tkey\tshmid";
+    osrm::util::Log() << "name\tshm key\ttimestamp\tsize";
     if (!storage::SharedMonitor<storage::SharedRegionRegister>::exists())
     {
         util::Log(logWARNING) << "CTudorache sharedMonitor DOES NOT EXIST: " << (const char *)storage::SharedRegionRegister::name;
