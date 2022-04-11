@@ -65,7 +65,7 @@ class ExtractorCallbacks
     using MapKey = std::tuple<std::string, std::string, std::string, std::string, std::string>;
     using MapVal = unsigned;
     using StringMap = std::unordered_map<MapKey, MapVal>;
-    StringMap string_map;
+    StringMap &string_map;
     ExtractionContainers &external_memory;
     std::unordered_map<std::string, ClassData> &classes_map;
     LaneDescriptionMap &lane_description_map;
@@ -75,7 +75,8 @@ class ExtractorCallbacks
   public:
     using ClassesMap = std::unordered_map<std::string, ClassData>;
 
-    explicit ExtractorCallbacks(ExtractionContainers &extraction_containers,
+    explicit ExtractorCallbacks(StringMap &string_map,
+                                ExtractionContainers &extraction_containers,
                                 std::unordered_map<std::string, ClassData> &classes_map,
                                 LaneDescriptionMap &lane_description_map,
                                 const ProfileProperties &properties);

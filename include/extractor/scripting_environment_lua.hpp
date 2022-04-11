@@ -71,6 +71,8 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     static const constexpr int SUPPORTED_MAX_API_VERSION = 4;
 
     explicit Sol2ScriptingEnvironment(
+        const std::string &file_name);
+    explicit Sol2ScriptingEnvironment(
         const std::string &file_name,
         const std::vector<boost::filesystem::path> &location_dependent_data_paths);
     ~Sol2ScriptingEnvironment() override = default;
