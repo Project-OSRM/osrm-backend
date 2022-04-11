@@ -254,10 +254,6 @@ template <typename Data> struct SharedMonitor
     bi::shared_memory_object shmem;
     bi::mapped_region region;
 };
-
-// template < typename Data >
-// SharedMonitor<Data>* SharedMonitor<Data>::g_instance = nullptr;
-
 } // namespace storage
 } // namespace osrm
 
