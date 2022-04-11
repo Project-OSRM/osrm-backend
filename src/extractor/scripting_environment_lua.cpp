@@ -94,6 +94,12 @@ struct to_lua_object : public boost::static_visitor<sol::object>
 } // namespace
 
 Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(
+    const std::string &file_name) : Sol2ScriptingEnvironment(file_name, std::vector<boost::filesystem::path>())
+{
+    
+}
+
+Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(
     const std::string &file_name,
     const std::vector<boost::filesystem::path> &location_dependent_data_paths)
     : file_name(file_name), location_dependent_data(location_dependent_data_paths)

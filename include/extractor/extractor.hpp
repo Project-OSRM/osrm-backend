@@ -60,6 +60,9 @@ class Extractor
     int run(ScriptingEnvironment &scripting_environment);
 
   private:
+    using MapKey = std::tuple<std::string, std::string, std::string, std::string, std::string>;
+    using MapVal = unsigned;
+    using StringMap = std::unordered_map<MapKey, MapVal>;
     ExtractorConfig config;
 
     std::tuple<LaneDescriptionMap,

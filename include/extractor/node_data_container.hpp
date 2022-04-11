@@ -118,7 +118,6 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
         return annotation_data[annotation];
     }
 
-  private:
     Vector<EdgeBasedNode> nodes;
     Vector<NodeBasedEdgeAnnotation> annotation_data;
 };
