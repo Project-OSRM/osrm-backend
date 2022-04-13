@@ -55,7 +55,6 @@ struct RegionHandle
         return oss.str();
     }
 };
-inline std::ostream& operator<<(std::ostream& os, const RegionHandle& r) { return os << r.ToString(); }
 
 RegionHandle setupRegion(SharedRegionRegister &shared_register,
                          const storage::BaseDataLayout &layout)
