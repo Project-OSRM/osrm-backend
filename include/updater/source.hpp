@@ -6,6 +6,7 @@
 #include <boost/optional.hpp>
 
 #include <vector>
+#include <sstream>
 
 namespace osrm
 {
@@ -45,6 +46,11 @@ struct Segment final
     {
         return std::tie(from, to) == std::tie(rhs.from, rhs.to);
     }
+    std::string ToString() const {
+        std::ostringstream oss;
+        oss << "{from: " << from << ", to: " << to << "}";
+        return oss.str();
+    }
 };
 
 struct SpeedSource final
@@ -53,6 +59,12 @@ struct SpeedSource final
     unsigned speed;
     boost::optional<double> rate;
     std::uint8_t source;
+    std::string ToString() const {
+        std::ostringstream oss;
+        oss << "{speed: " << speed << ", source: " << (int)source << "}";
+        return oss.str();
+    }
+
 };
 
 struct Turn final
@@ -76,6 +88,11 @@ struct Turn final
     {
         return std::tie(from, via, to) == std::tie(rhs.from, rhs.via, rhs.to);
     }
+    std::string ToString() const {
+        std::ostringstream oss;
+        oss << "{from: " << from << ", via: " << via << ", to: " << to << "}";
+        return oss.str();
+    }
 };
 
 struct PenaltySource final
@@ -84,6 +101,11 @@ struct PenaltySource final
     double duration;
     double weight;
     std::uint8_t source;
+    std::string ToString() const {
+        std::ostringstream oss;
+        oss << "{duration: " << duration << ", weight: " << weight << ", source: " << source << "}";
+        return oss.str();
+    }
 };
 
 using SegmentLookupTable = LookupTable<Segment, SpeedSource>;

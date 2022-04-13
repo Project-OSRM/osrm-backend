@@ -1,10 +1,20 @@
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
+
 #include "util/log.hpp"
 #include "util/isatty.hpp"
 #include <boost/algorithm/string/predicate.hpp>
 #include <cstdio>
+#include <ctime>
+#include <chrono>
 #include <iostream>
+#include <iomanip>
 #include <mutex>
 #include <string>
+#include <iomanip>
+#include "storage/shared_memory.hpp"
+#include <boost/interprocess/xsi_shared_memory.hpp>
 
 namespace osrm
 {
@@ -68,6 +78,10 @@ Log::Log(LogLevel level_, std::ostream &ostream) : level(level_), stream(ostream
     std::lock_guard<std::mutex> lock(get_mutex());
     if (!LogPolicy::GetInstance().IsMute() && level <= LogPolicy::GetInstance().GetLevel())
     {
+        std::chrono::system_clock::time_point now_ts = std::chrono::system_clock::now();
+        std::time_t now = std::chrono::system_clock::to_time_t(now_ts);
+        const long ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now_ts).time_since_epoch().count() % 1000;
+        stream << "[" << std::put_time(std::localtime(&now), "%H:%M:%S.") << ms << "] [pid: " << syscall(SYS_gettid) << "] [tid: " << pthread_self() << "] ";
         const bool is_terminal = IsStdoutATTY();
         switch (level)
         {
@@ -143,6 +157,7 @@ Log::~Log()
             stream << std::endl;
         }
     }
+    stream.flush();
 }
 
 UnbufferedLog::UnbufferedLog(LogLevel level_)
@@ -150,5 +165,33 @@ UnbufferedLog::UnbufferedLog(LogLevel level_)
 {
     stream.flags(std::ios_base::unitbuf);
 }
+
+std::string toHexString(int a) {
+    std::ostringstream oss;
+    oss << "0x" << std::setw(8) << std::setfill('0') << std::hex << a;
+    return oss.str();
+}
+
+std::string shmKeyToString(std::uint16_t shm_key) {
+    std::ostringstream oss;
+    osrm::storage::OSRMLockFile lock_file;
+    oss << shm_key << " (";
+    try {
+        oss << "file: " << lock_file(shm_key);
+        boost::interprocess::xsi_key key(lock_file(shm_key).string().c_str(), shm_key);
+        oss << ", key: " << toHexString(key.get_key());
+        bool exists = storage::SharedMemory::RegionExists(shm_key);
+        oss << ", exists: " << exists;
+    } catch (const std::exception& e) {
+        oss << "error: " << e.what();
+        std::string path = lock_file(shm_key).string();
+        oss << ", path: " << path << ", exists: " << boost::filesystem::exists(path);
+        key_t k = ::ftok(path.c_str(), shm_key);
+        oss << ", ftok: " << k << ", errno: " << errno;
+    }
+    oss << ")";
+    return oss.str();
+}
+
 } // namespace util
 } // namespace osrm

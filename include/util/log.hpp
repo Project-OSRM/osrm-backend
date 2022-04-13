@@ -4,6 +4,7 @@
 #include <atomic>
 #include <mutex>
 #include <sstream>
+#include <map>
 
 enum LogLevel
 {
@@ -101,6 +102,42 @@ class UnbufferedLog : public Log
   public:
     UnbufferedLog(LogLevel level_ = logINFO);
 };
+
+template<typename CONTAINER>
+std::string ToStringArray(const CONTAINER& arr) {
+  std::ostringstream oss;
+  oss << "#" << arr.size() << "{";
+  bool first = true;
+  for (const auto& e : arr) {
+    if (not first) {
+      oss << ", ";
+    }
+    first = false;
+    oss << e;
+  }
+  oss << "}";
+  return oss.str();
+}
+
+template<typename K, typename V>
+std::string ToStringMap(const std::map<K, V>& m) {
+  std::ostringstream oss;
+  oss << "#" << m.size() << "{";
+  bool first = true;
+  for (const auto& p : m) {
+    if (not first) {
+      oss << ", ";
+    }
+    first = false;
+    oss << p.first << ": " << p.second;
+  }
+  oss << "}";
+  return oss.str();
+}
+
+std::string toHexString(int a);
+std::string shmKeyToString(std::uint16_t shm_key);
+
 } // namespace util
 } // namespace osrm
 

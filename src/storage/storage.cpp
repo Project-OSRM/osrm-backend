@@ -49,7 +49,13 @@ struct RegionHandle
     std::unique_ptr<SharedMemory> memory;
     char *data_ptr;
     std::uint16_t shm_key;
+    std::string ToString() const {
+        std::ostringstream oss;
+        oss << "{shm_key: " << shm_key << "}";
+        return oss.str();
+    }
 };
+inline std::ostream& operator<<(std::ostream& os, const RegionHandle& r) { return os << r.ToString(); }
 
 RegionHandle setupRegion(SharedRegionRegister &shared_register,
                          const storage::BaseDataLayout &layout)
@@ -62,7 +68,9 @@ RegionHandle setupRegion(SharedRegionRegister &shared_register,
     // to detach at the end of the function
     if (storage::SharedMemory::RegionExists(shm_key))
     {
-        util::Log(logWARNING) << "Old shared memory region " << (int)shm_key << " still exists.";
+        util::Log(logWARNING) << "Old shared memory region " << ShmKeyToString(shm_key) << " still exists. Attempting open";
+        auto shm = osrm::storage::makeSharedMemory(shm_key);
+        util::Log(logWARNING) << "Old shared memory region " << ShmKeyToString(shm_key) << " still exists: " << shm->ToString();
         util::UnbufferedLog() << "Retrying removal... ";
         storage::SharedMemory::Remove(shm_key);
         util::UnbufferedLog() << "ok.";
@@ -74,9 +82,9 @@ RegionHandle setupRegion(SharedRegionRegister &shared_register,
 
     // Allocate shared memory block
     auto regions_size = encoded_static_layout.size() + layout.GetSizeOfLayout();
-    util::Log() << "Data layout has a size of " << encoded_static_layout.size() << " bytes";
-    util::Log() << "Allocating shared memory of " << regions_size << " bytes";
+    util::Log() << "Data layout has a size of " << encoded_static_layout.size() << " bytes, Allocating shared memory of " << regions_size << " bytes";
     auto memory = makeSharedMemory(shm_key, regions_size);
+    util::Log(logWARNING) << "CTudorache setupRegion, shm_key: " << shm_key << ", regions_size: " << regions_size << ", mem: " << memory->ToString();
 
     // Copy memory static_layout to shared memory and populate data
     char *shared_memory_ptr = static_cast<char *>(memory->Ptr());
@@ -114,20 +122,41 @@ bool swapData(Monitor &monitor,
         }
         else
         {
+            util::Log(logWARNING) << "CTudorache swapData locking sharedMonitor mutex";
             lock.lock();
         }
 
         for (auto &pair : handles)
         {
             auto region_id = shared_register.Find(pair.first);
+            util::Log(logWARNING) << "CTudorache swapData name: " << pair.first
+                                  << ", old region_id: " << region_id << (region_id == SharedRegionRegister::INVALID_REGION_ID ? "(INVALID)" : "(VALID)")
+                                  << ", new shm_key: " << pair.second.shm_key;
+            if (region_id != SharedRegionRegister::INVALID_REGION_ID)
+            {
+                auto &shared_region = shared_register.GetRegion(region_id);
+                if (!storage::SharedMemory::RegionExists(shared_region.shm_key))
+                {
+                    util::Log(logERROR) << "CTudorache swapData old region shm_key does not exist: " << shared_region.ToString();
+                    shared_region.timestamp = 0;
+                    shared_register.ReleaseKey(shared_region.shm_key);
+                    OSRMLockFile lock_file;
+                    boost::filesystem::remove(lock_file(shared_region.shm_key));
+                    region_id = SharedRegionRegister::INVALID_REGION_ID;
+                }
+            }
+
             if (region_id == SharedRegionRegister::INVALID_REGION_ID)
             {
+                util::Log(logWARNING) << "CTudorache swapData register: " << pair.first << ", key: " << util::shmKeyToString(pair.second.shm_key);
                 region_id = shared_register.Register(pair.first, pair.second.shm_key);
             }
             else
             {
                 auto &shared_region = shared_register.GetRegion(region_id);
-
+                util::Log(logWARNING) << "CTudorache swapData replacing shared_region: "
+                                      << shared_region.ToString() << "(exists: " << storage::SharedMemory::RegionExists(shared_region.shm_key) <<")"
+                                      << ", with new shm_key: " << pair.second.shm_key;
                 old_handles.push_back(RegionHandle{
                     makeSharedMemory(shared_region.shm_key), nullptr, shared_region.shm_key});
 
@@ -262,6 +291,7 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
         Storage::PopulateLayoutWithRTree(*static_layout);
         std::vector<std::pair<bool, boost::filesystem::path>> files = Storage::GetStaticFiles();
         Storage::PopulateLayout(*static_layout, files);
+        util::Log(logWARNING) << "CTudorache Storage::Run setupRegion static";
         auto static_handle = setupRegion(shared_register, *static_layout);
         regions.push_back({static_handle.data_ptr, std::move(static_layout)});
         handles[dataset_name + "/static"] = std::move(static_handle);
@@ -271,6 +301,7 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
         std::make_unique<storage::ContiguousDataLayout>();
     std::vector<std::pair<bool, boost::filesystem::path>> files = Storage::GetUpdatableFiles();
     Storage::PopulateLayout(*updatable_layout, files);
+    util::Log(logWARNING) << "CTudorache Storage::Run setupRegion updatable";
     auto updatable_handle = setupRegion(shared_register, *updatable_layout);
     regions.push_back({updatable_handle.data_ptr, std::move(updatable_layout)});
     handles[dataset_name + "/updatable"] = std::move(updatable_handle);
@@ -279,12 +310,16 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
 
     if (!only_metric)
     {
+        util::Log(logWARNING) << "CTudorache Storage::Run PopulateStaticData";
         PopulateStaticData(index);
     }
+    util::Log(logWARNING) << "CTudorache Storage::Run PopulateUpdatableData";
     PopulateUpdatableData(index);
 
+    util::Log(logWARNING) << "CTudorache Storage::Run swapData";
     swapData(monitor, shared_register, handles, max_wait);
 
+    util::Log(logWARNING) << "CTudorache Storage::Run DONE. SharedRegister: " << monitor.data().ToString();
     return EXIT_SUCCESS;
 }
 
