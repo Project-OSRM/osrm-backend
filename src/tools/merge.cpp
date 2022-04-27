@@ -90,8 +90,8 @@ return_code parseArguments(int argc,
     boost::program_options::notify(option_variables);
 
     if (option_variables["profiles_to_input_maps"].empty()) {
-        std::cout << visible_options;
-        return return_code::exit;
+        util::Log(logERROR) << "The mapping from Lua profiles to OSM maps not specified!";
+        return return_code::fail;
     }
     std::vector<std::string> pairs = option_variables["profiles_to_input_maps"].as<std::vector<std::string>>();
     for (const auto &pair : pairs)
@@ -100,8 +100,8 @@ return_code parseArguments(int argc,
         boost::split(tokens, pair, boost::is_any_of(":"));
         if (tokens.size() != 2)
         {
-            std::cout << visible_options;
-            return return_code::exit;
+            util::Log(logERROR) << "The mapping " << pair << " is not of <.lua>:[<.osm.pbf>,...] format!";
+            return return_code::fail;
         }
 
         boost::filesystem::path profile_path(tokens[0]);
