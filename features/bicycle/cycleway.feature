@@ -9,16 +9,22 @@ Feature: Bike - Cycle tracks/lanes
         Then routability should be
             | highway     | cycleway     | forw | backw |
             | motorway    |              |      |       |
+            | motorway    | no           |      |       |
             | motorway    | track        | x    |       |
             | motorway    | lane         | x    |       |
             | motorway    | shared       | x    |       |
             | motorway    | share_busway | x    |       |
             | motorway    | sharrow      | x    |       |
+            | some_tag    |              |      |       |
+            | some_tag    | no           |      |       |
             | some_tag    | track        | x    | x     |
             | some_tag    | lane         | x    | x     |
             | some_tag    | shared       | x    | x     |
             | some_tag    | share_busway | x    | x     |
             | some_tag    | sharrow      | x    | x     |
+            # residential ways may not have cycleways present but they should be routable
+            | residential |              | x    | x     |
+            | residential | no           | x    | x     |
             | residential | track        | x    | x     |
             | residential | lane         | x    | x     |
             | residential | shared       | x    | x     |
