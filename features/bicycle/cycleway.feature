@@ -31,6 +31,16 @@ Feature: Bike - Cycle tracks/lanes
             | residential | share_busway | x    | x     |
             | residential | sharrow      | x    | x     |
 
+    Scenario: Bike - Bidirectional cycleways
+        Then routability should be
+            | highway  | cycleway:both | forw | backw |
+            | primary  |               | x    | x     |
+            | primary  | track         | x    | x     |
+            | primary  | opposite      | x    | x     |
+            | motorway |               |      |       |
+            | motorway | track         | x    | x     |
+            | motorway | opposite      | x    | x     |
+
     Scenario: Bike - Left/right side cycleways on implied bidirectionals
         Then routability should be
             | highway | cycleway | cycleway:left | cycleway:right | forw | backw |
@@ -103,3 +113,19 @@ Feature: Bike - Cycle tracks/lanes
             | residential | track    | yes    | 15 km/h | 4 km/h +-1 |
             | cycleway    | track    | yes    | 15 km/h | 4 km/h +-1 |
             | footway     | track    | yes    | 15 km/h | 4 km/h +-1 |
+
+    Scenario: Bike - Cycleway on twoways, modes
+        Then routability should be
+            | highway     | cycleway:both | forw    | backw   |
+            | motorway    | track         | cycling | cycling |
+            | residential | track         | cycling | cycling |
+            | cycleway    | track         | cycling | cycling |
+            | footway     | track         | cycling | cycling |
+
+    Scenario: Bike - Cycleway on twoways, speeds
+        Then routability should be
+            | highway     | cycleway:both | forw    | backw      |
+            | motorway    | track         | 15 km/h | 15 km/h    |
+            | residential | track         | 15 km/h | 15 km/h    |
+            | cycleway    | track         | 15 km/h | 15 km/h    |
+            | footway     | track         | 15 km/h | 15 km/h    |
