@@ -117,6 +117,7 @@ Feature: Bike - Cycle tracks/lanes
     Scenario: Bike - Cycleway on twoways, modes
         Then routability should be
             | highway     | cycleway:both | forw    | backw   |
+            | motorway    | no            |         |         |
             | motorway    | track         | cycling | cycling |
             | residential | track         | cycling | cycling |
             | cycleway    | track         | cycling | cycling |
@@ -125,6 +126,7 @@ Feature: Bike - Cycle tracks/lanes
     Scenario: Bike - Cycleway on twoways, speeds
         Then routability should be
             | highway     | cycleway:both | forw    | backw      |
+            | motorway    | no            |         |            |
             | motorway    | track         | 15 km/h | 15 km/h    |
             | residential | track         | 15 km/h | 15 km/h    |
             | cycleway    | track         | 15 km/h | 15 km/h    |
