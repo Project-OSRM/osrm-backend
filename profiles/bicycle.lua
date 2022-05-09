@@ -276,8 +276,8 @@ function handle_bicycle_tags(profile,way,result,data)
   data.oneway = way:get_value_by_key("oneway")
   data.oneway_bicycle = way:get_value_by_key("oneway:bicycle")
   data.cycleway = way:get_value_by_key("cycleway")
-  data.cycleway_left = way:get_value_by_key("cycleway:left")
-  data.cycleway_right = way:get_value_by_key("cycleway:right")
+  data.cycleway_left = way:get_value_by_key("cycleway:left") or way:get_value_by_key("cycleway:both")
+  data.cycleway_right = way:get_value_by_key("cycleway:right") or way:get_value_by_key("cycleway:both")
   data.duration = way:get_value_by_key("duration")
   data.service = way:get_value_by_key("service")
   data.foot = way:get_value_by_key("foot")
@@ -370,6 +370,12 @@ function speed_handler(profile,way,result,data)
 end
 
 function oneway_handler(profile,way,result,data)
+  -- explicit twoway
+  local cycleway_both = way:get_value_by_key("cycleway:both")
+  if cycleway_both and profile.cycleway_tags[cycleway_both] then
+    return
+  end
+
   -- oneway
   data.implied_oneway = data.junction == "roundabout" or data.junction == "circular" or data.highway == "motorway"
   data.reverse = false
