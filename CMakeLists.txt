@@ -164,7 +164,7 @@ add_library(UPDATER OBJECT ${UpdaterGlob})
 add_library(STORAGE OBJECT ${StorageGlob})
 add_library(ENGINE OBJECT ${EngineGlob})
 
-if (BUILD_ROUTED) 
+if (BUILD_ROUTED)
   add_library(SERVER OBJECT ${ServerGlob})
   add_executable(osrm-routed src/tools/routed.cpp $<TARGET_OBJECTS:SERVER> $<TARGET_OBJECTS:UTIL>)
 endif()
@@ -335,7 +335,7 @@ if (ENABLE_SANITIZER)
 endif()
 
 # Configuring compilers
-set(OSRM_WARNING_FLAGS "-Werror=all -Werror=extra  -Werror=uninitialized -Werror=unreachable-code -Werror=unused-variable -Werror=unreachable-code -Wno-error=cpp -Wpedantic")
+set(OSRM_WARNING_FLAGS "-Werror=all -Werror=extra  -Werror=uninitialized -Werror=unreachable-code -Werror=unused-variable -Werror=unreachable-code -Wno-error=cpp -Wpedantic -Wno-unused-but-set-variable")
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OSRM_WARNING_FLAGS} -Werror=strict-overflow=2 -Wno-error=unused-local-typedef -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fcolor-diagnostics -ftemplate-depth=1024 -Wno-unused-command-line-argument")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
@@ -523,7 +523,7 @@ if(ENABLE_MASON)
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
 else()
   if (BUILD_ROUTED)
-    # osrm-routed requires newer boost:asio 
+    # osrm-routed requires newer boost:asio
     find_package(Boost 1.70 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
   else()
     find_package(Boost 1.60 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
