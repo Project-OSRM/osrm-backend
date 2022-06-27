@@ -47,7 +47,7 @@ OSRM::OSRM(engine::EngineConfig &config)
         engine_ = std::make_unique<engine::Engine<MLD>>(config);
         break;
     default:
-        util::exception("Algorithm not implemented!");
+        throw util::exception("Algorithm not implemented!");
     }
 }
 OSRM::~OSRM() = default;

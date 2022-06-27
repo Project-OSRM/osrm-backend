@@ -22,7 +22,7 @@ namespace datafacade
 /**
  * This allocator uses file backed mmap memory block as the data location.
  */
-class MMapMemoryAllocator : public ContiguousBlockAllocator
+class MMapMemoryAllocator final : public ContiguousBlockAllocator
 {
   public:
     explicit MMapMemoryAllocator(const storage::StorageConfig &config);

@@ -884,6 +884,7 @@ void Sol2ScriptingEnvironment::ProcessElements(
         case osmium::item_type::node:
         {
             const auto &node = static_cast<const osmium::Node &>(*entity);
+            // NOLINTNEXTLINE(bugprone-use-after-move)
             result_node.clear();
             if (local_context.has_node_function &&
                 (!node.tags().empty() || local_context.properties.call_tagless_node_function))
@@ -896,6 +897,7 @@ void Sol2ScriptingEnvironment::ProcessElements(
         case osmium::item_type::way:
         {
             const osmium::Way &way = static_cast<const osmium::Way &>(*entity);
+            // NOLINTNEXTLINE(bugprone-use-after-move)
             result_way.clear();
             if (local_context.has_way_function)
             {

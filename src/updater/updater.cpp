@@ -112,6 +112,7 @@ void checkWeightsConsistency(
         if (geometry_id.forward)
         {
             auto range = segment_data.GetForwardWeights(geometry_id.id);
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             EdgeWeight weight = std::accumulate(range.begin(), range.end(), EdgeWeight{0});
             if (weight > edge.data.weight)
             {
@@ -122,6 +123,7 @@ void checkWeightsConsistency(
         else
         {
             auto range = segment_data.GetReverseWeights(geometry_id.id);
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             EdgeWeight weight = std::accumulate(range.begin(), range.end(), EdgeWeight{0});
             if (weight > edge.data.weight)
             {
@@ -689,6 +691,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                 new_weight += weight;
             }
             const auto durations = segment_data.GetForwardDurations(geometry_id.id);
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             new_duration = std::accumulate(durations.begin(), durations.end(), EdgeWeight{0});
         }
         else
@@ -704,6 +707,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                 new_weight += weight;
             }
             const auto durations = segment_data.GetReverseDurations(geometry_id.id);
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             new_duration = std::accumulate(durations.begin(), durations.end(), EdgeWeight{0});
         }
         return std::make_tuple(new_weight, new_duration);

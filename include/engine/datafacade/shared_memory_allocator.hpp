@@ -20,7 +20,7 @@ namespace datafacade
  * Many SharedMemoryDataFacade objects can be created that point to the same shared
  * memory block.
  */
-class SharedMemoryAllocator : public ContiguousBlockAllocator
+class SharedMemoryAllocator final : public ContiguousBlockAllocator
 {
   public:
     explicit SharedMemoryAllocator(
