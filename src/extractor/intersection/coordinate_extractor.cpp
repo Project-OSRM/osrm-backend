@@ -892,6 +892,7 @@ CoordinateExtractor::PrepareLengthCache(const std::vector<util::Coordinate> &coo
     segment_distances.reserve(coordinates.size());
     segment_distances.push_back(0);
     // sentinel
+    // NOLINTNEXTLINE(bugprone-unused-return-value)
     std::find_if(std::next(std::begin(coordinates)),
                  std::end(coordinates),
                  [last_coordinate = coordinates.front(),

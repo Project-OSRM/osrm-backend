@@ -467,11 +467,13 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         const auto forward_geometry = datafacade.GetUncompressedForwardGeometry(geometry_id);
 
         const auto forward_weight_offset =
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             std::accumulate(forward_weights.begin(),
                             forward_weights.begin() + data.fwd_segment_position,
                             EdgeWeight{0});
 
         const auto forward_duration_offset =
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             std::accumulate(forward_durations.begin(),
                             forward_durations.begin() + data.fwd_segment_position,
                             EdgeDuration{0});

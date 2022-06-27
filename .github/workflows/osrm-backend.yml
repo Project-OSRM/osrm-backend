@@ -85,6 +85,16 @@ jobs:
             CLANG_VERSION: 5.0.0
             CUCUMBER_TIMEOUT: 60000
 
+          - name: clang-11.0-debug-clang-tidy
+            continue-on-error: false
+            node: 12
+            runs-on: ubuntu-20.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CLANG_VERSION: 11.0.0
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_CLANG_TIDY: ON
+
           - name: mason-linux-debug-asan
             continue-on-error: false
             node: 12
@@ -365,6 +375,7 @@ jobs:
       CXXCOMPILER: ${{ matrix.CXXCOMPILER }}
       CXXFLAGS: ${{ matrix.CXXFLAGS }}
       ENABLE_ASSERTIONS: ${{ matrix.ENABLE_ASSERTIONS }}
+      ENABLE_CLANG_TIDY: ${{ matrix.ENABLE_CLANG_TIDY }} 
       ENABLE_COVERAGE: ${{ matrix.ENABLE_COVERAGE }}
       ENABLE_GLIBC_WORKAROUND: ${{ matrix.ENABLE_GLIBC_WORKAROUND }}
       ENABLE_MASON: ${{ matrix.ENABLE_MASON }}
@@ -490,7 +501,8 @@ jobs:
         pushd ${OSRM_BUILD_DIR}
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                  -DENABLE_MASON=${ENABLE_MASON:-OFF} \
-                 -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF}} \
+                 -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
+                 -DENABLE_CLANG_TIDY=${ENABLE_CLANG_TIDY:-OFF} \
                  -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} \
                  -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} \
                  -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \

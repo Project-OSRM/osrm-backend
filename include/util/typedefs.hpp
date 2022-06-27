@@ -50,8 +50,11 @@ struct duplicated_node
 };
 } // namespace tag
 using OSMNodeID = osrm::Alias<std::uint64_t, tag::osm_node_id>;
+// clang-tidy fires `bugprone-throw-keyword-missing` here for unknown reason
+// NOLINTNEXTLINE(bugprone-throw-keyword-missing)
 static_assert(std::is_pod<OSMNodeID>(), "OSMNodeID is not a valid alias");
 using OSMWayID = osrm::Alias<std::uint64_t, tag::osm_way_id>;
+// NOLINTNEXTLINE(bugprone-throw-keyword-missing)
 static_assert(std::is_pod<OSMWayID>(), "OSMWayID is not a valid alias");
 
 using DuplicatedNodeID = std::uint64_t;

@@ -55,6 +55,7 @@ template <storage::Ownership Ownership> class IntersectionBearingsContainer
                        bearing_classes.end(),
                        bearing_counts.begin(),
                        [](const auto &bearings) { return bearings.getAvailableBearings().size(); });
+        // NOLINTNEXTLINE(bugprone-fold-init-type)
         auto total_bearings = std::accumulate(bearing_counts.begin(), bearing_counts.end(), 0);
         class_id_to_ranges_table = RangeTable<16>{bearing_counts};
 
