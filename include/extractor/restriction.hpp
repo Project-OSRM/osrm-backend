@@ -186,7 +186,7 @@ struct TurnRestriction
     }
 
     // construction for WayRestrictions
-    explicit TurnRestriction(WayRestriction way_restriction, bool is_only = false)
+    explicit TurnRestriction(const WayRestriction &way_restriction, bool is_only = false)
         : node_or_way(way_restriction), is_only(is_only)
     {
     }
