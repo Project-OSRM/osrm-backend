@@ -14,6 +14,7 @@ Checks: >
     -bugprone-sizeof-expression,
     -clang-analyzer-*,
     -clang-diagnostic-deprecated-declarations,
+    -clang-diagnostic-constant-conversion,
     google-*,
     -google-build-explicit-make-pair,
     -google-build-using-namespace,
