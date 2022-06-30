@@ -9,8 +9,8 @@
 
 struct EdgeWithSomeAdditionalData
 {
-    osrm::util::NodeID source;
-    osrm::util::NodeID target;
+    NodeID source;
+    NodeID target;
     unsigned important_data;
 };
 
@@ -50,25 +50,25 @@ inline std::vector<EdgeWithSomeAdditionalData> makeGridEdges(int rows, int colum
             if (c > 0)
             {
                 auto left = get_id(r, c - 1);
-                edges.push_back({id, static_cast<osrm::util::NodeID>(left), 1});
+                edges.push_back({id, static_cast<NodeID>(left), 1});
             }
             if (c + 1 < columns)
             {
                 auto right = get_id(r, c + 1);
                 if (valid(right))
-                    edges.push_back({id, static_cast<osrm::util::NodeID>(right), 1});
+                    edges.push_back({id, static_cast<NodeID>(right), 1});
             }
             if (r > 0)
             {
                 auto top = get_id(r - 1, c);
                 if (valid(top))
-                    edges.push_back({id, static_cast<osrm::util::NodeID>(top), 1});
+                    edges.push_back({id, static_cast<NodeID>(top), 1});
             }
             if (r + 1 < rows)
             {
                 auto bottom = get_id(r + 1, c);
                 if (valid(bottom))
-                    edges.push_back({id, static_cast<osrm::util::NodeID>(bottom), 1});
+                    edges.push_back({id, static_cast<NodeID>(bottom), 1});
             }
         }
     }
