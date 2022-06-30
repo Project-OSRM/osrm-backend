@@ -17,7 +17,8 @@ struct EdgeWithSomeAdditionalData
 inline Coordinate
 makeCoordinate(int x, int y, double step_size, double offset_x = 0, double offset_y = 0)
 {
-    return {osrm::util::FloatLongitude{offset_x + x * step_size}, osrm::util::FloatLatitude{offset_y + y * step_size}};
+    return {osrm::util::FloatLongitude{offset_x + x * step_size},
+            osrm::util::FloatLatitude{offset_y + y * step_size}};
 }
 
 std::vector<osrm::util::Coordinate> inline makeGridCoordinates(
