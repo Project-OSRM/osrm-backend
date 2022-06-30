@@ -12,10 +12,12 @@
 #include "osrm/status.hpp"
 
 osrm::Status run_match_json(const osrm::OSRM &osrm,
-                            const MatchParameters &params,
-                            json::Object &json_result,
+                            const osrm::MatchParameters &params,
+                            osrm::json::Object &json_result,
                             bool use_json_only_api)
 {
+    using namespace osrm;
+
     if (use_json_only_api)
     {
         return osrm.Match(params, json_result);
