@@ -5,7 +5,7 @@
 
 #include "util/static_graph.hpp"
 
-#define CHECK_SIZE_RANGE(range, ref) BOOST_CHECK_EQUAL(range.end() - range.begin(), ref)
+#define CHECK_SIZE_RANGE(range, ref) BOOST_CHECK_EQUAL((range).end() - (range).begin(), ref)
 #define CHECK_EQUAL_RANGE(range, ref)                                                              \
     do                                                                                             \
     {                                                                                              \
