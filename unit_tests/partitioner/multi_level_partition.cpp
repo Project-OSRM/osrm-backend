@@ -8,7 +8,7 @@
 
 #include "partitioner/multi_level_partition.hpp"
 
-#define CHECK_SIZE_RANGE(range, ref) BOOST_CHECK_EQUAL(range.second - range.first, ref)
+#define CHECK_SIZE_RANGE(range, ref) BOOST_CHECK_EQUAL((range).second - (range).first, ref)
 #define CHECK_EQUAL_RANGE(range, ref)                                                              \
     do                                                                                             \
     {                                                                                              \

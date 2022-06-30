@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(incorrect_polylines)
     };
     util::Coordinate coord{util::FloatLongitude{0}, util::FloatLatitude{0}};
 
-    for (auto polyline : polylines)
+    for (const auto &polyline : polylines)
     {
         const auto result = decodePolyline(polyline);
         BOOST_CHECK(result.size() == 1);

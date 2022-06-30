@@ -77,7 +77,7 @@ class Server
                 boost::bind(&boost::asio::io_context::run, &io_context));
             threads.push_back(thread);
         }
-        for (auto thread : threads)
+        for (const auto &thread : threads)
         {
             thread->join();
         }

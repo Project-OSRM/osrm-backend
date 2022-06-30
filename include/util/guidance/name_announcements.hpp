@@ -71,12 +71,12 @@ template <typename StringView> inline auto decompose(const StringView &lhs, cons
         // we compare suffixes based on this value, it might break UTF chars, but as long as we are
         // consistent in handling, we do not create bad results
         std::string str = boost::to_lower_copy(view.to_string());
-        auto front = str.find_first_not_of(" ");
+        auto front = str.find_first_not_of(' ');
 
         if (front == std::string::npos)
             return str;
 
-        auto back = str.find_last_not_of(" ");
+        auto back = str.find_last_not_of(' ');
         return str.substr(front, back - front + 1);
     };
 

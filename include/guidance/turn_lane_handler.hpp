@@ -52,15 +52,6 @@ typedef enum TurnLaneScenario
     NUM_SCENARIOS
 } TurnLaneScenario;
 
-const constexpr char *scenario_names[] = {"Simple",
-                                          "Partition Local",
-                                          "Simple Previous",
-                                          "Partition Previous",
-                                          "Sliproad",
-                                          "Merge",
-                                          "None",
-                                          "Invalid",
-                                          "Unknown"};
 } // namespace
 
 class TurnLaneHandler
@@ -149,9 +140,6 @@ class TurnLaneHandler
                          LaneDescriptionID &lane_description_id,
                          LaneDataVector &lane_data) const;
 };
-
-static_assert(sizeof(scenario_names) / sizeof(*scenario_names) == TurnLaneScenario::NUM_SCENARIOS,
-              "Number of scenarios needs to match the number of scenario names.");
 
 } // namespace lanes
 } // namespace guidance

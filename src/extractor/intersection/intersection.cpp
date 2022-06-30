@@ -5,8 +5,6 @@
 
 #include <boost/range/adaptors.hpp>
 
-using osrm::util::angularDeviation;
-
 namespace osrm
 {
 namespace extractor

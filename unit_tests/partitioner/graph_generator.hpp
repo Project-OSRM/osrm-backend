@@ -7,8 +7,6 @@
 #include <algorithm>
 #include <vector>
 
-using namespace osrm::util;
-
 struct EdgeWithSomeAdditionalData
 {
     NodeID source;
@@ -16,16 +14,17 @@ struct EdgeWithSomeAdditionalData
     unsigned important_data;
 };
 
-inline Coordinate
+inline osrm::util::Coordinate
 makeCoordinate(int x, int y, double step_size, double offset_x = 0, double offset_y = 0)
 {
-    return {FloatLongitude{offset_x + x * step_size}, FloatLatitude{offset_y + y * step_size}};
+    return {osrm::util::FloatLongitude{offset_x + x * step_size},
+            osrm::util::FloatLatitude{offset_y + y * step_size}};
 }
 
-std::vector<Coordinate> inline makeGridCoordinates(
+std::vector<osrm::util::Coordinate> inline makeGridCoordinates(
     int rows, int columns, double step_size, double lon_base, double lat_base)
 {
-    std::vector<Coordinate> result;
+    std::vector<osrm::util::Coordinate> result;
 
     for (int r = 0; r < rows; ++r)
         for (int c = 0; c < columns; ++c)

@@ -34,7 +34,7 @@ osrm::Status run_tile(const osrm::OSRM &osrm,
 }
 
 #define CHECK_EQUAL_RANGE(R1, R2)                                                                  \
-    BOOST_CHECK_EQUAL_COLLECTIONS(R1.begin(), R1.end(), R2.begin(), R2.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS((R1).begin(), (R1).end(), (R2).begin(), (R2).end());
 
 BOOST_AUTO_TEST_SUITE(tile)
 
