@@ -14,7 +14,7 @@ struct EdgeWithSomeAdditionalData
     unsigned important_data;
 };
 
-inline Coordinate
+inline osrm::util::Coordinate
 makeCoordinate(int x, int y, double step_size, double offset_x = 0, double offset_y = 0)
 {
     return {osrm::util::FloatLongitude{offset_x + x * step_size},
