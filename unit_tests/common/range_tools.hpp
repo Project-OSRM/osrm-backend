@@ -3,7 +3,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#define REQUIRE_SIZE_RANGE(range, ref) BOOST_REQUIRE_EQUAL(range.size(), ref)
+#define REQUIRE_SIZE_RANGE(range, ref) BOOST_REQUIRE_EQUAL((range).size(), ref)
 #define CHECK_EQUAL_RANGE(range, ...)                                                              \
     do                                                                                             \
     {                                                                                              \
