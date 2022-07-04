@@ -46,7 +46,6 @@ template <storage::Ownership Ownership> class IntersectionBearingsContainer
     IntersectionBearingsContainer &operator=(IntersectionBearingsContainer &&) = default;
     IntersectionBearingsContainer &operator=(const IntersectionBearingsContainer &) = default;
 
-    // NOLINTNEXTLINE(performance-unnecessary-value-param)
     IntersectionBearingsContainer(std::vector<BearingClassID> node_to_class_id,
                                   const std::vector<util::guidance::BearingClass> &bearing_classes)
         : node_to_class_id_(std::move(node_to_class_id))
