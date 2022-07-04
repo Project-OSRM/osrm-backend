@@ -27,7 +27,7 @@ namespace partitioner
 namespace detail
 {
 template <storage::Ownership Ownership> class MultiLevelPartitionImpl;
-}
+} // namespace detail
 using MultiLevelPartition = detail::MultiLevelPartitionImpl<storage::Ownership::Container>;
 using MultiLevelPartitionView = detail::MultiLevelPartitionImpl<storage::Ownership::View>;
 

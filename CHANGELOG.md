@@ -3,6 +3,7 @@
     - API:
       - FIXED: Fix inefficient osrm-routed connection handling [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
     - Build:
+      - CHANGED: Enable even more clang-tidy checks. [#6273](https://github.com/Project-OSRM/osrm-backend/pull/6273)
       - CHANGED: Configure CMake to not build flatbuffers tests and samples. [#6274](https://github.com/Project-OSRM/osrm-backend/pull/6274)
       - CHANGED: Enable more clang-tidy checks. [#6270](https://github.com/Project-OSRM/osrm-backend/pull/6270)
       - CHANGED: Configure clang-tidy job on CI. [#6261](https://github.com/Project-OSRM/osrm-backend/pull/6261)

@@ -24,7 +24,7 @@ namespace util
 namespace detail
 {
 template <typename T, std::size_t Bits, storage::Ownership Ownership> class PackedVector;
-}
+} // namespace detail
 
 namespace serialization
 {

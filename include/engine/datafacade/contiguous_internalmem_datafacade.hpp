@@ -630,7 +630,7 @@ class ContiguousInternalMemoryDataFacade<CH>
       public ContiguousInternalMemoryAlgorithmDataFacade<CH>
 {
   public:
-    ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator,
+    ContiguousInternalMemoryDataFacade(const std::shared_ptr<ContiguousBlockAllocator> &allocator,
                                        const std::string &metric_name,
                                        const std::size_t exclude_index)
         : ContiguousInternalMemoryDataFacadeBase(allocator, metric_name, exclude_index),
@@ -752,7 +752,7 @@ class ContiguousInternalMemoryDataFacade<MLD> final
 {
   private:
   public:
-    ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator,
+    ContiguousInternalMemoryDataFacade(const std::shared_ptr<ContiguousBlockAllocator> &allocator,
                                        const std::string &metric_name,
                                        const std::size_t exclude_index)
         : ContiguousInternalMemoryDataFacadeBase(allocator, metric_name, exclude_index),

@@ -27,7 +27,7 @@ class CompressedEdgeContainer;
 namespace detail
 {
 template <storage::Ownership Ownership> class SegmentDataContainerImpl;
-}
+} // namespace detail
 
 namespace serialization
 {

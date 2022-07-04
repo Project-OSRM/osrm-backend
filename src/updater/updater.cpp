@@ -70,6 +70,7 @@ namespace
 
 template <typename T> inline bool is_aligned(const void *pointer)
 {
+    // NOLINTNEXTLINE(misc-redundant-expression)
     static_assert(sizeof(T) % alignof(T) == 0, "pointer can not be used as an array pointer");
     return reinterpret_cast<uintptr_t>(pointer) % alignof(T) == 0;
 }
