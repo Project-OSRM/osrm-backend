@@ -336,7 +336,7 @@ void annotatePath(const FacadeT &facade,
 
 template <typename Algorithm>
 double getPathDistance(const DataFacade<Algorithm> &facade,
-                       const std::vector<PathData> unpacked_path,
+                       const std::vector<PathData> &unpacked_path,
                        const PhantomNode &source_phantom,
                        const PhantomNode &target_phantom)
 {

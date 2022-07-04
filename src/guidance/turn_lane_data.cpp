@@ -64,7 +64,7 @@ bool TurnLaneData::operator<(const TurnLaneData &other) const
            std::find(tag_by_modifier, tag_by_modifier + 8, other.tag);
 }
 
-LaneDataVector laneDataFromDescription(TurnLaneDescription turn_lane_description)
+LaneDataVector laneDataFromDescription(const TurnLaneDescription &turn_lane_description)
 {
     typedef std::unordered_map<TurnLaneType::Mask, std::pair<LaneID, LaneID>> LaneMap;
     // TODO need to handle cases that have none-in between two identical values

@@ -192,7 +192,7 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
                     geometry_id,
                     annotation_data,
                     flags),
-      osm_source_id(std::move(source)), osm_target_id(std::move(target))
+      osm_source_id(source), osm_target_id(target)
 {
 }
 

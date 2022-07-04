@@ -100,8 +100,7 @@ inline auto make_ebn_data_view(const SharedDataIndex &index, const std::string &
     auto annotation_data =
         make_vector_view<extractor::NodeBasedEdgeAnnotation>(index, name + "/annotations");
 
-    return extractor::EdgeBasedNodeDataView(std::move(edge_based_node_data),
-                                            std::move(annotation_data));
+    return extractor::EdgeBasedNodeDataView(edge_based_node_data, annotation_data);
 }
 
 inline auto make_turn_data_view(const SharedDataIndex &index, const std::string &name)
@@ -119,11 +118,8 @@ inline auto make_turn_data_view(const SharedDataIndex &index, const std::string 
     const auto post_turn_bearings =
         make_vector_view<guidance::TurnBearing>(index, name + "/post_turn_bearings");
 
-    return guidance::TurnDataView(std::move(turn_instructions),
-                                  std::move(lane_data_ids),
-                                  std::move(entry_class_ids),
-                                  std::move(pre_turn_bearings),
-                                  std::move(post_turn_bearings));
+    return guidance::TurnDataView(
+        turn_instructions, lane_data_ids, entry_class_ids, pre_turn_bearings, post_turn_bearings);
 }
 
 inline auto make_segment_data_view(const SharedDataIndex &index, const std::string &name)

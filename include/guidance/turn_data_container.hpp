@@ -19,7 +19,7 @@ namespace guidance
 namespace detail
 {
 template <storage::Ownership Ownership> class TurnDataContainerImpl;
-}
+} // namespace detail
 
 namespace serialization
 {

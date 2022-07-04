@@ -15,7 +15,7 @@ namespace extractor
 namespace detail
 {
 template <storage::Ownership Ownership> class NameTableImpl;
-}
+} // namespace detail
 
 namespace serialization
 {

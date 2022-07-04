@@ -55,7 +55,7 @@ util::json::Object
 CoordinateVectorToMultiPoint::operator()(const std::vector<util::Coordinate> &input_coordinates,
                                          const boost::optional<json::Object> &properties) const
 {
-    const auto coordinates = makeJsonArray(input_coordinates);
+    auto coordinates = makeJsonArray(input_coordinates);
     return makeFeature("MultiPoint", std::move(coordinates), properties);
 }
 
@@ -64,7 +64,7 @@ util::json::Object
 CoordinateVectorToLineString::operator()(const std::vector<util::Coordinate> &input_coordinates,
                                          const boost::optional<json::Object> &properties) const
 {
-    const auto coordinates = makeJsonArray(input_coordinates);
+    auto coordinates = makeJsonArray(input_coordinates);
     return makeFeature("LineString", std::move(coordinates), properties);
 }
 

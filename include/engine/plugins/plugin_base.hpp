@@ -168,7 +168,7 @@ class BasePlugin
     std::vector<std::vector<PhantomNodeWithDistance>>
     GetPhantomNodesInRange(const datafacade::BaseDataFacade &facade,
                            const api::BaseParameters &parameters,
-                           const std::vector<double> radiuses,
+                           const std::vector<double> &radiuses,
                            bool use_all_edges = false) const
     {
         std::vector<std::vector<PhantomNodeWithDistance>> phantom_nodes(
