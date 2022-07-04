@@ -865,7 +865,7 @@ void Extractor::ProcessGuidanceTurns(
     TIMER_START(write_intersections);
     files::writeIntersections(
         config.GetPath(".osrm.icd").string(),
-        IntersectionBearingsContainer{bearing_class_by_node_based_node,
+        IntersectionBearingsContainer{std::move(bearing_class_by_node_based_node),
                                       convertIDMapToVector(bearing_class_hash.data)},
         convertIDMapToVector(entry_class_hash.data));
     TIMER_STOP(write_intersections);
