@@ -945,10 +945,6 @@ Sol2ScriptingEnvironment::GetStringListFromTable(const std::string &table_name)
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state() != nullptr);
     std::vector<std::string> strings;
-    if (!context.profile_table[table_name])
-    {
-        return strings;
-    }
     sol::table table = context.profile_table[table_name];
     if (table.valid())
     {
@@ -967,10 +963,6 @@ Sol2ScriptingEnvironment::GetStringListsFromTable(const std::string &table_name)
 
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state() != nullptr);
-    if (!context.profile_table[table_name])
-    {
-        return string_lists;
-    }
     sol::table table = context.profile_table[table_name];
     if (!table.valid())
     {
@@ -1171,14 +1163,14 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node,
     {
     case 4:
     case 3:
-        node_function(profile_table, node, result, relations);
+        node_function(profile_table, std::cref(node), result, relations);
         break;
     case 2:
-        node_function(profile_table, node, result);
+        node_function(profile_table, std::cref(node), result);
         break;
     case 1:
     case 0:
-        node_function(node, result);
+        node_function(std::cref(node), result);
         break;
     }
 }
@@ -1193,14 +1185,14 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way,
     {
     case 4:
     case 3:
-        way_function(profile_table, way, result, relations);
+        way_function(profile_table, std::cref(way), std::ref(result), std::cref(relations));
         break;
     case 2:
-        way_function(profile_table, way, result);
+        way_function(profile_table, std::cref(way), std::ref(result));
         break;
     case 1:
     case 0:
-        way_function(way, result);
+        way_function(std::cref(way), std::ref(result));
         break;
     }
 }
