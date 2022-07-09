@@ -419,10 +419,10 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
     // sampling to correctly weight longer segments in regression calculations
     const auto constexpr SAMPLE_INTERVAL = 5;
     coordinates_to_the_left = coordinate_extractor.SampleCoordinates(
-        std::move(coordinates_to_the_left), distance_to_extract, SAMPLE_INTERVAL);
+        coordinates_to_the_left, distance_to_extract, SAMPLE_INTERVAL);
 
     coordinates_to_the_right = coordinate_extractor.SampleCoordinates(
-        std::move(coordinates_to_the_right), distance_to_extract, SAMPLE_INTERVAL);
+        coordinates_to_the_right, distance_to_extract, SAMPLE_INTERVAL);
 
     /* extract the number of lanes for a road
      * restricts a vector to the last two thirds of the length

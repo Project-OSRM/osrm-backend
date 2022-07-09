@@ -16,7 +16,7 @@ namespace util
 namespace detail
 {
 extern std::atomic_uint operation;
-}
+} // namespace detail
 
 /**
  * Captures a histogram with a bin size of `IndexBinSize` every `TimeBinSize` count operations.

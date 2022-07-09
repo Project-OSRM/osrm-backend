@@ -461,9 +461,9 @@ class StaticRTree
     template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
     explicit StaticRTree(const boost::filesystem::path &on_disk_file_name,
                          const Vector<Coordinate> &coordinate_list)
-        : m_coordinate_list(coordinate_list.data(), coordinate_list.size())
+        : m_coordinate_list(coordinate_list.data(), coordinate_list.size()),
+          m_objects(mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region))
     {
-        m_objects = mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region);
     }
 
     /**

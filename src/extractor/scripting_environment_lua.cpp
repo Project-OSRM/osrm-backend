@@ -891,7 +891,7 @@ void Sol2ScriptingEnvironment::ProcessElements(
             {
                 local_context.ProcessNode(node, result_node, relations);
             }
-            resulting_nodes.push_back({node, std::move(result_node)});
+            resulting_nodes.push_back({node, result_node});
         }
         break;
         case osmium::item_type::way:
