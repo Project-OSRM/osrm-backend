@@ -15,7 +15,7 @@ using namespace osrm::extractor;
 
 TurnRestriction makeWayRestriction(NodeID from, std::vector<NodeID> via, NodeID to, bool is_only)
 {
-    WayRestriction wr{from, via, to};
+    WayRestriction wr{from, std::move(via), to};
     return TurnRestriction(wr, is_only);
 }
 
@@ -100,8 +100,8 @@ std::map<NodeID, size_t> checkNode(const RestrictionGraph &graph,
                                    std::vector<instruction> expected_instructions,
                                    std::vector<NodeID> expected_edges)
 {
-    checkInstructions(graph.GetRestrictions(node_id), expected_instructions);
-    checkEdges(graph.GetEdges(node_id), expected_edges);
+    checkInstructions(graph.GetRestrictions(node_id), std::move(expected_instructions));
+    checkEdges(graph.GetEdges(node_id), std::move(expected_edges));
     return nextEdges(graph.GetEdges(node_id));
 }
 
@@ -117,7 +117,8 @@ validateStartRestrictionNode(RestrictionGraph &graph,
     BOOST_REQUIRE_GE(node_id, graph.num_via_nodes);
     BOOST_REQUIRE_LT(node_id, graph.nodes.size());
 
-    return checkNode(graph, node_id, restriction_instructions, restriction_edges);
+    return checkNode(
+        graph, node_id, std::move(restriction_instructions), std::move(restriction_edges));
 }
 
 std::map<NodeID, size_t>
@@ -139,7 +140,8 @@ validateViaRestrictionNode(RestrictionGraph &graph,
                                                 << to);
 
     BOOST_REQUIRE_LT(via_node_idx, graph.num_via_nodes);
-    return checkNode(graph, via_node_idx, restriction_instructions, restriction_edges);
+    return checkNode(
+        graph, via_node_idx, std::move(restriction_instructions), std::move(restriction_edges));
 }
 
 BOOST_AUTO_TEST_CASE(empty_restrictions)

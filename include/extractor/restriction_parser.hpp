@@ -11,7 +11,7 @@
 namespace osmium
 {
 class Relation;
-}
+} // namespace osmium
 
 namespace osrm
 {

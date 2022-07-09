@@ -23,7 +23,7 @@ namespace util
 namespace detail
 {
 template <typename GroupBlockPolicy, storage::Ownership Ownership> struct IndexedDataImpl;
-}
+} // namespace detail
 
 namespace serialization
 {
