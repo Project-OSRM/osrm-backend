@@ -148,7 +148,7 @@ include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sol2/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/variant/include)
 
-set(BOOST_COMPONENTS date_time chrono filesystem iostreams program_options regex system thread unit_test_framework)
+set(BOOST_COMPONENTS date_time chrono filesystem iostreams program_options system thread unit_test_framework)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util/version.hpp.in
@@ -481,8 +481,6 @@ if(ENABLE_MASON)
   set(Boost_IOSTREAMS_LIBRARY ${MASON_PACKAGE_boost_libiostreams_STATIC_LIBS})
   mason_use(boost_libprogram_options VERSION ${MASON_BOOST_VERSION})
   set(Boost_PROGRAM_OPTIONS_LIBRARY ${MASON_PACKAGE_boost_libprogram_options_STATIC_LIBS})
-  mason_use(boost_libregex VERSION ${MASON_BOOST_VERSION})
-  set(Boost_REGEX_LIBRARY ${MASON_PACKAGE_boost_libregex_STATIC_LIBS})
   mason_use(boost_libtest VERSION ${MASON_BOOST_VERSION})
   set(Boost_UNIT_TEST_FRAMEWORK_LIBRARY ${MASON_PACKAGE_boost_libtest_STATIC_LIBS})
   mason_use(boost_libdate_time VERSION ${MASON_BOOST_VERSION})
@@ -623,7 +621,6 @@ set(BOOST_BASE_LIBRARIES
 
 set(BOOST_ENGINE_LIBRARIES
   ${Boost_ZLIB_LIBRARY}
-  ${Boost_REGEX_LIBRARY}
   ${BOOST_BASE_LIBRARIES})
 
 # Binaries
@@ -638,7 +635,6 @@ endif()
 
 set(EXTRACTOR_LIBRARIES
     ${BZIP2_LIBRARIES}
-    ${Boost_REGEX_LIBRARY}
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${EXPAT_LIBRARIES}
