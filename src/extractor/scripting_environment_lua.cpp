@@ -939,11 +939,13 @@ Sol2ScriptingEnvironment::GetStringListFromFunction(const std::string &function_
     return strings;
 }
 
-namespace {
+namespace 
+{
 
-// string list can be defined either as a Set(see profiles/lua/set.lua) or as a Sequence (see profiles/lua/sequence.lua)
-// `Set` is a table with keys that are actual values we are looking for and values that always `true`.
-// `Sequence` is a table with keys that are indices and values that are actual values we are looking for.
+// string list can be defined either as a Set(see profiles/lua/set.lua) or as a Sequence (see
+// profiles/lua/sequence.lua) `Set` is a table with keys that are actual values we are looking for
+// and values that always `true`. `Sequence` is a table with keys that are indices and values that
+// are actual values we are looking for.
 
 std::string GetSetOrSequenceValue(const std::pair<sol::object, sol::object> &pair)
 {
