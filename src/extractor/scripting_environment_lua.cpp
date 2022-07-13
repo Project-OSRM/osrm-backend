@@ -945,10 +945,10 @@ Sol2ScriptingEnvironment::GetStringListFromTable(const std::string &table_name)
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state() != nullptr);
     std::vector<std::string> strings;
-    sol::table table = context.profile_table[table_name];
-    if (table.valid())
+    sol::optional<sol::table> table = context.profile_table[table_name];
+    if (table && table->valid())
     {
-        for (auto &&pair : table)
+        for (auto &&pair : *table)
         {
             strings.push_back(pair.second.as<std::string>());
         }
@@ -963,13 +963,13 @@ Sol2ScriptingEnvironment::GetStringListsFromTable(const std::string &table_name)
 
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state() != nullptr);
-    sol::table table = context.profile_table[table_name];
-    if (!table.valid())
+    sol::optional<sol::table> table = context.profile_table[table_name];
+    if (!table || !table->valid())
     {
         return string_lists;
     }
 
-    for (const auto &pair : table)
+    for (const auto &pair : *table)
     {
         sol::table inner_table = pair.second;
         if (!inner_table.valid())
