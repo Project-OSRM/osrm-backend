@@ -945,7 +945,8 @@ namespace {
 // `Set` is a table with keys that are actual values we are looking for and values that always `true`.
 // `Sequence` is a table with keys that are indices and values that are actual values we are looking for.
 
-std::string GetSetOrSequenceValue(const std::pair<sol::object, sol::object>& pair) {
+std::string GetSetOrSequenceValue(const std::pair<sol::object, sol::object> &pair)
+{
     if (pair.second.is<std::string>())
     {
         return pair.second.as<std::string>();
