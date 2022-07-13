@@ -939,7 +939,7 @@ Sol2ScriptingEnvironment::GetStringListFromFunction(const std::string &function_
     return strings;
 }
 
-namespace 
+namespace
 {
 
 // string list can be defined either as a Set(see profiles/lua/set.lua) or as a Sequence (see
