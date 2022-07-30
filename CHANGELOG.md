@@ -5,6 +5,7 @@
     - Misc:
       - FIXED: Fix bug with reading Set values from Lua scripts. [#6285](https://github.com/Project-OSRM/osrm-backend/pull/6285)
     - Build:
+      - CHANGED: Migrate to C++17. Update sol2 to 3.3.0. Fix bug with reading Set values from Lua scripts. [#6279](https://github.com/Project-OSRM/osrm-backend/pull/6279)
       - CHANGED: Update macOS CI image to macos-11. [#6286](https://github.com/Project-OSRM/osrm-backend/pull/6286)
       - CHANGED: Enable even more clang-tidy checks. [#6273](https://github.com/Project-OSRM/osrm-backend/pull/6273)
       - CHANGED: Configure CMake to not build flatbuffers tests and samples. [#6274](https://github.com/Project-OSRM/osrm-backend/pull/6274)
