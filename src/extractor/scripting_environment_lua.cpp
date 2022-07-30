@@ -953,6 +953,7 @@ std::string GetSetOrSequenceValue(const std::pair<sol::object, sol::object> &pai
     {
         return pair.second.as<std::string>();
     }
+    BOOST_ASSERT(pair.first.is<std::string>());
     return pair.first.as<std::string>();
 }
 
