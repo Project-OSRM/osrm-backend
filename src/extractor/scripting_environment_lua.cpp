@@ -939,6 +939,26 @@ Sol2ScriptingEnvironment::GetStringListFromFunction(const std::string &function_
     return strings;
 }
 
+namespace
+{
+
+// string list can be defined either as a Set(see profiles/lua/set.lua) or as a Sequence (see
+// profiles/lua/sequence.lua) `Set` is a table with keys that are actual values we are looking for
+// and values that always `true`. `Sequence` is a table with keys that are indices and values that
+// are actual values we are looking for.
+
+std::string GetSetOrSequenceValue(const std::pair<sol::object, sol::object> &pair)
+{
+    if (pair.second.is<std::string>())
+    {
+        return pair.second.as<std::string>();
+    }
+    BOOST_ASSERT(pair.first.is<std::string>());
+    return pair.first.as<std::string>();
+}
+
+} // namespace
+
 std::vector<std::string>
 Sol2ScriptingEnvironment::GetStringListFromTable(const std::string &table_name)
 {
@@ -954,7 +974,7 @@ Sol2ScriptingEnvironment::GetStringListFromTable(const std::string &table_name)
     {
         for (auto &&pair : table)
         {
-            strings.push_back(pair.second.as<std::string>());
+            strings.emplace_back(GetSetOrSequenceValue(pair));
         }
     }
     return strings;
@@ -989,7 +1009,7 @@ Sol2ScriptingEnvironment::GetStringListsFromTable(const std::string &table_name)
         std::vector<std::string> inner_vector;
         for (const auto &inner_pair : inner_table)
         {
-            inner_vector.push_back(inner_pair.first.as<std::string>());
+            inner_vector.emplace_back(GetSetOrSequenceValue(inner_pair));
         }
         string_lists.push_back(std::move(inner_vector));
     }

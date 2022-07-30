@@ -2,6 +2,8 @@
   - Changes from 5.26.0
     - API:
       - FIXED: Fix inefficient osrm-routed connection handling [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
+    - Misc:
+      - FIXED: Fix bug with reading Set values from Lua scripts. [#6285](https://github.com/Project-OSRM/osrm-backend/pull/6285)
     - Build:
       - CHANGED: Update macOS CI image to macos-11. [#6286](https://github.com/Project-OSRM/osrm-backend/pull/6286)
       - CHANGED: Enable even more clang-tidy checks. [#6273](https://github.com/Project-OSRM/osrm-backend/pull/6273)
