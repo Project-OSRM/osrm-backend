@@ -64,7 +64,7 @@ jobs:
             CXXCOMPILER: g++-9
             ENABLE_COVERAGE: ON
 
-          - name: gcc-9-debug-asan
+          - name: gcc-9-debug-asan-ubsan
             continue-on-error: false
             node: 12
             runs-on: ubuntu-20.04
@@ -74,7 +74,9 @@ jobs:
             CUCUMBER_TIMEOUT: 20000
             CXXCOMPILER: g++-9
             ENABLE_SANITIZER: ON
-            TARGET_ARCH: x86_64-asan
+            TARGET_ARCH: x86_64-asan-ubsan
+            OSRM_CONNECTION_RETRIES: 10
+            OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
           - name: clang-5.0-debug
             continue-on-error: false
@@ -95,13 +97,13 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_CLANG_TIDY: ON
 
-          - name: conan-linux-debug-asan
+          - name: conan-linux-debug-asan-ubsan
             continue-on-error: false
             node: 12
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CLANG_VERSION: 5.0.0
+            CLANG_VERSION: 11.0.0
             ENABLE_CONAN: ON
             ENABLE_SANITIZER: ON
 
@@ -382,6 +384,8 @@ jobs:
       ENABLE_SANITIZER: ${{ matrix.ENABLE_SANITIZER }}
       NODE_PACKAGE_TESTS_ONLY: ${{ matrix.NODE_PACKAGE_TESTS_ONLY }}
       TARGET_ARCH: ${{ matrix.TARGET_ARCH }}
+      OSRM_CONNECTION_RETRIES: ${{ matrix.OSRM_CONNECTION_RETRIES }}
+      OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
     steps:
     - uses: actions/checkout@v2
 
@@ -429,6 +433,7 @@ jobs:
         if [[ "$ENABLE_SANITIZER" == 'ON' ]]; then
           # We can only set this after checkout once we know the workspace directory
           echo "LSAN_OPTIONS=print_suppressions=0:suppressions=${GITHUB_WORKSPACE}/scripts/ci/leaksanitizer.conf" >> $GITHUB_ENV
+          echo "UBSAN_OPTIONS=symbolize=1:halt_on_error=1:print_stacktrace=1:suppressions=${GITHUB_WORKSPACE}/scripts/ci/undefinedsanitizer.conf" >> $GITHUB_ENV
         fi
 
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
@@ -562,6 +567,12 @@ jobs:
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       run: |
         npm run nodejs-tests
+    - name: Upload test logs
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: logs
+        path: test/logs/
 
     - name: Generate code coverage
       if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
