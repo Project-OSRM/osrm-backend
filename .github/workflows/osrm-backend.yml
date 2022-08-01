@@ -97,24 +97,24 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_CLANG_TIDY: ON
 
-          - name: mason-linux-debug-asan-ubsan
+          - name: conan-linux-debug-asan-ubsan
             continue-on-error: false
             node: 12
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CLANG_VERSION: 11.0.0
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             ENABLE_SANITIZER: ON
 
-          - name: mason-linux-release
+          - name: conan-linux-release
             continue-on-error: false
             node: 12
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CLANG_VERSION: 5.0.0
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
 
           - name: gcc-11-release
             continue-on-error: false
@@ -175,7 +175,7 @@ jobs:
             CCOMPILER: gcc-7
             CXXCOMPILER: g++-7
 
-          - name: mason-osx-release-node-12
+          - name: conan-osx-release-node-12
             build_node_package: true
             continue-on-error: false
             node: 12
@@ -186,9 +186,9 @@ jobs:
             CXXCOMPILER: clang++
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
 
-          - name: mason-osx-release-node-14
+          - name: conan-osx-release-node-14
             build_node_package: true
             continue-on-error: false
             node: 14
@@ -199,9 +199,9 @@ jobs:
             CXXCOMPILER: clang++
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
 
-          - name: mason-osx-release-node-16
+          - name: conan-osx-release-node-16
             build_node_package: true
             continue-on-error: false
             node: 16
@@ -212,7 +212,7 @@ jobs:
             CXXCOMPILER: clang++
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
 
           - name: gcc-7-release-shared
             continue-on-error: false
@@ -224,7 +224,7 @@ jobs:
             CCOMPILER: gcc-7
             CXXCOMPILER: g++-7
 
-          - name: node-12-mason-linux-release
+          - name: node-12-conan-linux-release
             build_node_package: true
             continue-on-error: false
             node: 12
@@ -232,10 +232,10 @@ jobs:
             BUILD_TYPE: Release
             CLANG_VERSION: 5.0.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-12-mason-linux-debug
+          - name: node-12-conan-linux-debug
             build_node_package: true
             continue-on-error: false
             node: 12
@@ -243,10 +243,10 @@ jobs:
             BUILD_TYPE: Debug
             CLANG_VERSION: 5.0.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-14-mason-linux-release
+          - name: node-14-conan-linux-release
             build_node_package: true
             continue-on-error: false
             node: 14
@@ -254,10 +254,10 @@ jobs:
             BUILD_TYPE: Release
             CLANG_VERSION: 5.0.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-14-mason-linux-debug
+          - name: node-14-conan-linux-debug
             build_node_package: true
             continue-on-error: false
             node: 14
@@ -265,11 +265,11 @@ jobs:
             BUILD_TYPE: Debug
             CLANG_VERSION: 5.0.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
 
-          - name: node-16-mason-linux-release
+          - name: node-16-conan-linux-release
             build_node_package: true
             continue-on-error: false
             node: 16
@@ -277,10 +277,10 @@ jobs:
             BUILD_TYPE: Release
             CLANG_VERSION: 5.0.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-16-mason-linux-debug
+          - name: node-16-conan-linux-debug
             build_node_package: true
             continue-on-error: false
             node: 16
@@ -288,10 +288,10 @@ jobs:
             BUILD_TYPE: Debug
             CLANG_VERSION: 5.0.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: mason-osx-release-node-latest
+          - name: conan-osx-release-node-latest
             build_node_package: true
             continue-on-error: true
             # TODO: Use node 'latest' once supported: https://github.com/actions/setup-node/issues/257
@@ -302,9 +302,9 @@ jobs:
             CXXCOMPILER: clang++
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
 
-          - name: node-latest-mason-linux-release
+          - name: node-latest-conan-linux-release
             build_node_package: true
             continue-on-error: true
             # TODO: Use node 'latest' once supported: https://github.com/actions/setup-node/issues/257
@@ -313,10 +313,10 @@ jobs:
             BUILD_TYPE: Release
             CLANG_VERSION: 5.0.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-latest-mason-linux-debug
+          - name: node-latest-conan-linux-debug
             build_node_package: true
             continue-on-error: true
             # TODO: Use node 'latest' once supported: https://github.com/actions/setup-node/issues/257
@@ -325,10 +325,10 @@ jobs:
             BUILD_TYPE: Debug
             CLANG_VERSION: 5.0.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: mason-osx-release-node-lts
+          - name: conan-osx-release-node-lts
             build_node_package: true
             continue-on-error: true
             node: "lts/*"
@@ -338,9 +338,9 @@ jobs:
             CXXCOMPILER: clang++
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
 
-          - name: node-lts-mason-linux-release
+          - name: node-lts-conan-linux-release
             build_node_package: true
             continue-on-error: true
             node: "lts/*"
@@ -348,10 +348,10 @@ jobs:
             BUILD_TYPE: Release
             CLANG_VERSION: 5.0.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-lts-mason-linux-debug
+          - name: node-lts-conan-linux-debug
             build_node_package: true
             continue-on-error: true
             node: "lts/*"
@@ -359,7 +359,7 @@ jobs:
             BUILD_TYPE: Debug
             CLANG_VERSION: 5.0.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
 
@@ -380,7 +380,7 @@ jobs:
       ENABLE_CLANG_TIDY: ${{ matrix.ENABLE_CLANG_TIDY }} 
       ENABLE_COVERAGE: ${{ matrix.ENABLE_COVERAGE }}
       ENABLE_GLIBC_WORKAROUND: ${{ matrix.ENABLE_GLIBC_WORKAROUND }}
-      ENABLE_MASON: ${{ matrix.ENABLE_MASON }}
+      ENABLE_CONAN: ${{ matrix.ENABLE_CONAN }}
       ENABLE_SANITIZER: ${{ matrix.ENABLE_SANITIZER }}
       NODE_PACKAGE_TESTS_ONLY: ${{ matrix.NODE_PACKAGE_TESTS_ONLY }}
       TARGET_ARCH: ${{ matrix.TARGET_ARCH }}
@@ -407,6 +407,13 @@ jobs:
         key: ccache-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
           ccache-${{ matrix.name }}-
+    - name: Enable Conan cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.conan
+        key: conan-${{ matrix.name }}-${{ github.sha }}
+        restore-keys: |
+          conan-${{ matrix.name }}-
     - name: Enable test cache
       uses: actions/cache@v2
       with:
@@ -445,6 +452,8 @@ jobs:
 
     - name: Install dev dependencies
       run: |
+        python3 -m pip install conan==1.50.0
+
         # CMake
         mkdir -p ${CMAKE_DIR}
         wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${CMAKE_DIR}
@@ -474,7 +483,7 @@ jobs:
         fi
 
         # Linux dev packages
-        if [ "${TARGET_ARCH}" != "i686" ] && [ "${ENABLE_MASON}" != "ON" ]; then
+        if [ "${TARGET_ARCH}" != "i686" ] && [ "${ENABLE_CONAN}" != "ON" ]; then
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
           sudo apt-get update -y
           sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev libtbb-dev libboost-all-dev
@@ -505,7 +514,7 @@ jobs:
         echo "Using ${JOBS} jobs"
         pushd ${OSRM_BUILD_DIR}
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-                 -DENABLE_MASON=${ENABLE_MASON:-OFF} \
+                 -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
                  -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
                  -DENABLE_CLANG_TIDY=${ENABLE_CLANG_TIDY:-OFF} \
                  -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} \

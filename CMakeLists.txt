@@ -21,7 +21,7 @@ if (NOT WIN32 AND NOT DEFINED ENV{OSRM_BUILD_DIR})
   set(ENV{OSRM_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
-option(ENABLE_MASON "Use mason for dependencies" OFF)
+option(ENABLE_CONAN "Use conan for dependencies" OFF)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 option(BUILD_PACKAGE "Build OSRM package" OFF)
@@ -47,26 +47,7 @@ if (ENABLE_CLANG_TIDY)
   endif()
 endif()
 
-
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
-if(ENABLE_MASON)
-  # versions in use
-  set(MASON_BOOST_VERSION "1.73.0")
-  set(MASON_EXPAT_VERSION "2.2.0")
-  set(MASON_LUA_VERSION "5.2.4")
-  set(MASON_BZIP2_VERSION "1.0.6")
-  set(MASON_TBB_VERSION "2017_U7")
-
-  message(STATUS "Enabling mason")
-
-  find_program(CURL_FOUND curl)
-  if(NOT CURL_FOUND)
-    message(FATAL_ERROR "curl command required with -DENABLE_MASON")
-  endif()
-
-  include(mason)
-endif()
 
 # be compatible with version handling before cmake 3.x
 if (POLICY CMP0048)
@@ -220,13 +201,6 @@ if(ENABLE_GOLD_LINKER)
     endif()
 endif()
 
-# Disable LTO when mason+gcc is detected before testing for / setting any flags.
-# Mason builds libraries with Clang, mixing does not work in the context of lto.
-if(ENABLE_MASON AND CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND ENABLE_LTO)
-  set(ENABLE_LTO OFF)
-  message(WARNING "Mason and GCC's LTO not work together. Disabling LTO.")
-endif()
-
 # Explicitly set the build type to Release if no other type is specified
 # on the command line.  Without this, cmake defaults to an unoptimized,
 # non-debug build, which almost nobody wants.
@@ -327,9 +301,9 @@ if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CM
   endif()
 endif()
 
-if(UNIX AND NOT APPLE AND ENABLE_MASON AND (LTO_WORKS OR ENABLE_GOLD_LINKER))
-  message(WARNING "ENABLE_MASON and ENABLE_LTO/ENABLE_GOLD_LINKER may not work on all linux systems currently")
-  message(WARNING "For more details see: https://github.com/Project-OSRM/osrm-backend/issues/3202")
+# TODO: this was added for Mason, we are not sure if it is true after migration to Conan
+if(UNIX AND NOT APPLE AND ENABLE_CONAN AND (LTO_WORKS OR ENABLE_GOLD_LINKER))
+  message(WARNING "ENABLE_CONAN and ENABLE_LTO/ENABLE_GOLD_LINKER may not work on all linux systems currently")
 endif()
 
 set(MAYBE_COVERAGE_LIBRARIES "")
@@ -425,7 +399,6 @@ endif()
 
 # Configuring other platform dependencies
 if(APPLE)
-  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.10")
   execute_process(COMMAND xcrun --sdk macosx --show-sdk-path OUTPUT_VARIABLE CMAKE_OSX_SYSROOT OUTPUT_STRIP_TRAILING_WHITESPACE)
   exec_program(uname ARGS -v  OUTPUT_VARIABLE DARWIN_VERSION)
   string(REGEX MATCH "[0-9]+" DARWIN_VERSION ${DARWIN_VERSION})
@@ -473,72 +446,65 @@ add_subdirectory(${FLATBUFFERS_SRC_DIR}
         ${CMAKE_CURRENT_BINARY_DIR}/flatbuffers-build
         EXCLUDE_FROM_ALL)
 
-# if mason is enabled no find_package calls are made
-# to ensure that we are only compiling and linking against
-# fully portable mason packages
-if(ENABLE_MASON)
-  message(STATUS "Installing dependencies via mason")
+if(ENABLE_CONAN)
+  message(STATUS "Installing dependencies via Conan")
+
+  # Conan will generate Find*.cmake files to build directory, so we use them with the highest priority 
+  list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_BINARY_DIR})
+  list(INSERT CMAKE_PREFIX_PATH 0 ${CMAKE_BINARY_DIR})
+
+  include(${CMAKE_CURRENT_LIST_DIR}/cmake/conan.cmake)
+
+  set(CONAN_BOOST_VERSION 1.79.0)
+  set(CONAN_BZIP2_VERSION 1.0.8)
+  set(CONAN_EXPAT_VERSION 2.2.10)
+  set(CONAN_LUA_VERSION 5.4.4)
+  set(CONAN_TBB_VERSION 2020.3)
+  
+  set(CONAN_SYSTEM_INCLUDES ON)
+  conan_cmake_run(
+    REQUIRES 
+    boost/${CONAN_BOOST_VERSION}
+    bzip2/${CONAN_BZIP2_VERSION}
+    expat/${CONAN_EXPAT_VERSION}
+    lua/${CONAN_LUA_VERSION}
+    tbb/${CONAN_TBB_VERSION}
+    BASIC_SETUP 
+    BUILD missing 
+    GENERATORS cmake_find_package
+    KEEP_RPATHS
+    NO_OUTPUT_DIRS
+  )
+
+  add_dependency_includes(${CONAN_INCLUDE_DIRS_BOOST})
+  add_dependency_includes(${CONAN_INCLUDE_DIRS_BZIP2})
+  add_dependency_includes(${CONAN_INCLUDE_DIRS_EXPAT})
+  add_dependency_includes(${CONAN_INCLUDE_DIRS_LUA})
+  add_dependency_includes(${CONAN_INCLUDE_DIRS_TBB})
 
   set(Boost_USE_STATIC_LIBS ON)
-  mason_use(boost VERSION ${MASON_BOOST_VERSION} HEADER_ONLY)
-  add_dependency_includes(${MASON_PACKAGE_boost_INCLUDE_DIRS})
-  mason_use(boost_libfilesystem VERSION ${MASON_BOOST_VERSION})
-  set(Boost_FILESYSTEM_LIBRARY ${MASON_PACKAGE_boost_libfilesystem_STATIC_LIBS})
-  mason_use(boost_libiostreams VERSION ${MASON_BOOST_VERSION})
-  set(Boost_IOSTREAMS_LIBRARY ${MASON_PACKAGE_boost_libiostreams_STATIC_LIBS})
-  mason_use(boost_libprogram_options VERSION ${MASON_BOOST_VERSION})
-  set(Boost_PROGRAM_OPTIONS_LIBRARY ${MASON_PACKAGE_boost_libprogram_options_STATIC_LIBS})
-  mason_use(boost_libregex VERSION ${MASON_BOOST_VERSION})
-  set(Boost_REGEX_LIBRARY ${MASON_PACKAGE_boost_libregex_STATIC_LIBS})
-  mason_use(boost_libtest VERSION ${MASON_BOOST_VERSION})
-  set(Boost_UNIT_TEST_FRAMEWORK_LIBRARY ${MASON_PACKAGE_boost_libtest_STATIC_LIBS})
-  mason_use(boost_libdate_time VERSION ${MASON_BOOST_VERSION})
-  set(Boost_DATE_TIME_LIBRARY ${MASON_PACKAGE_boost_libdate_time_STATIC_LIBS})
-  mason_use(boost_libthread VERSION ${MASON_BOOST_VERSION})
-  set(Boost_THREAD_LIBRARY ${MASON_PACKAGE_boost_libthread_STATIC_LIBS})
-  mason_use(boost_libsystem VERSION ${MASON_BOOST_VERSION})
-  set(Boost_SYSTEM_LIBRARY ${MASON_PACKAGE_boost_libsystem_STATIC_LIBS})
+  find_package(Boost REQUIRED EXACT ${CONAN_BOOST_VERSION} COMPONENTS ${BOOST_COMPONENTS})
+  set(Boost_DATE_TIME_LIBRARY "${Boost_date_time_LIB_TARGETS}")
+  set(Boost_CHRONO_LIBRARY "${Boost_chrono_LIB_TARGETS}")
+  set(Boost_PROGRAM_OPTIONS_LIBRARY "${Boost_program_options_LIB_TARGETS}")
+  set(Boost_FILESYSTEM_LIBRARY "${Boost_filesystem_LIB_TARGETS}")
+  set(Boost_IOSTREAMS_LIBRARY "${Boost_iostreams_LIB_TARGETS}")
+  set(Boost_THREAD_LIBRARY "${Boost_thread_LIB_TARGETS}")
+  set(Boost_SYSTEM_LIBRARY "${Boost_system_LIB_TARGETS}")
+  set(Boost_ZLIB_LIBRARY "${Boost_zlib_LIB_TARGETS}")
+  set(Boost_REGEX_LIBRARY "${Boost_regex_LIB_TARGETS}")
+  set(Boost_UNIT_TEST_FRAMEWORK_LIBRARY "${Boost_unit_test_framework_LIB_TARGETS}")
+  
+  find_package(BZip2 REQUIRED EXACT ${CONAN_BZIP2_VERSION})
+  find_package(EXPAT REQUIRED EXACT ${CONAN_EXPAT_VERSION})
+  find_package(lua REQUIRED EXACT ${CONAN_LUA_VERSION})
+  set(LUA_LIBRARIES ${lua_LIBRARIES})
 
-  mason_use(expat VERSION ${MASON_EXPAT_VERSION})
-  add_dependency_includes(${MASON_PACKAGE_expat_INCLUDE_DIRS})
-  set(EXPAT_LIBRARIES ${MASON_PACKAGE_expat_STATIC_LIBS})
+  find_package(TBB REQUIRED EXACT ${CONAN_TBB_VERSION})
 
-  mason_use(lua VERSION ${MASON_LUA_VERSION})
-  add_dependency_includes(${MASON_PACKAGE_lua_INCLUDE_DIRS})
-  set(USED_LUA_LIBRARIES ${MASON_PACKAGE_lua_STATIC_LIBS})
-
-  mason_use(bzip2 VERSION ${MASON_BZIP2_VERSION})
-  add_dependency_includes(${MASON_PACKAGE_bzip2_INCLUDE_DIRS})
-  set(BZIP2_LIBRARIES ${MASON_PACKAGE_bzip2_STATIC_LIBS})
-
-  mason_use(tbb VERSION ${MASON_TBB_VERSION})
-  add_dependency_includes(${MASON_PACKAGE_tbb_INCLUDE_DIRS})
-  set(TBB_LIBRARIES ${MASON_PACKAGE_tbb_LDFLAGS})
-
-  if(NOT MASON_PACKAGE_tbb_LIBRARY_DIRS)
-    message(FATAL_ERROR "MASON_PACKAGE_tbb_LIBRARY_DIRS is empty, rpath will not work")
-  endif()
-  set(TBB_LINKER_RPATHS "")
-  foreach(libpath ${MASON_PACKAGE_tbb_LIBRARY_DIRS})
-    set(TBB_LINKER_RPATHS "${TBB_LINKER_RPATHS} -Wl,-rpath -Wl,${libpath}")
-    file(GLOB TBBGlob ${libpath}/*.*)
-    install(FILES ${TBBGlob} DESTINATION lib)
-  endforeach()
-  if(APPLE)
-    set(LINKER_FLAGS "${TBB_LINKER_RPATHS} -Wl,-rpath -Wl,@loader_path")
-  elseif(UNIX)
-    set(LINKER_FLAGS "${TBB_LINKER_RPATHS} '-Wl,-rpath,$ORIGIN' -Wl,-z,origin")
-  endif()
-
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
-  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
-
-  # current mason packages target -D_GLIBCXX_USE_CXX11_ABI=0
-  add_dependency_defines(-D_GLIBCXX_USE_CXX11_ABI=0)
 
   # note: we avoid calling find_package(Osmium ...) here to ensure that the
-  # expat and bzip2 are used from mason rather than the system
+  # expat and bzip2 are used from conan rather than the system
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
 else()
   if (BUILD_ROUTED)
@@ -566,7 +532,6 @@ else()
     message(STATUS "Using Lua ${LUA_VERSION_STRING}")
   endif()
 
-  set(USED_LUA_LIBRARIES ${LUA_LIBRARIES})
   add_dependency_includes(${LUA_INCLUDE_DIR})
 
   # add a target to generate API documentation with Doxygen
@@ -600,18 +565,10 @@ if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILE
   endif()
 endif()
 
-# even with mason builds we want to link to system zlib
+# even with conan builds we want to link to system zlib
 # to ensure that osrm binaries play well with other binaries like nodejs
 find_package(ZLIB REQUIRED)
 add_dependency_includes(${ZLIB_INCLUDE_DIRS})
-
-if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
-  add_dependency_defines(-DBOOST_TEST_DYN_LINK)
-endif()
-
-if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
-  add_dependency_defines(-DBOOST_TEST_DYN_LINK)
-endif()
 
 add_dependency_defines(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_dependency_defines(-DBOOST_RESULT_OF_USE_DECLTYPE)
@@ -649,7 +606,7 @@ set(EXTRACTOR_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${EXPAT_LIBRARIES}
-    ${USED_LUA_LIBRARIES}
+    ${LUA_LIBRARIES}
     ${OSMIUM_LIBRARIES}
     ${TBB_LIBRARIES}
     ${ZLIB_LIBRARY}
@@ -657,7 +614,7 @@ set(EXTRACTOR_LIBRARIES
 set(GUIDANCE_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
-    ${USED_LUA_LIBRARIES}
+    ${LUA_LIBRARIES}
     ${TBB_LIBRARIES}
     ${MAYBE_COVERAGE_LIBRARIES})
 set(PARTITIONER_LIBRARIES
@@ -683,7 +640,7 @@ set(UPDATER_LIBRARIES
 set(CONTRACTOR_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
-    ${USED_LUA_LIBRARIES}
+    ${LUA_LIBRARIES}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
@@ -836,8 +793,9 @@ JOIN("-I${DEPENDENCIES_INCLUDE_DIRS}" " -I" PKGCONFIG_OSRM_INCLUDE_FLAGS)
 
 # Boost uses imported targets, we need to use a generator expression to extract
 # the link libraries to be written to the pkg-config file.
+# Conan defines dependencies as CMake targets too, that's why we do the same for them.
 foreach(engine_lib ${ENGINE_LIBRARIES})
-  if("${engine_lib}" MATCHES "^Boost.*")
+  if("${engine_lib}" MATCHES "^Boost.*" OR "${engine_lib}" MATCHES "^CONAN_LIB.*")
     list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "$<TARGET_LINKER_FILE:${engine_lib}>")
   else()
     list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "${engine_lib}")
