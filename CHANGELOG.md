@@ -5,6 +5,7 @@
     - Misc:
       - FIXED: Fix bug with reading Set values from Lua scripts. [#6285](https://github.com/Project-OSRM/osrm-backend/pull/6285)
     - Build:
+      - CHANGED: Use Conan instead of Mason to install code dependencies. [#6284](https://github.com/Project-OSRM/osrm-backend/pull/6284)
       - CHANGED: Migrate to C++17. Update sol2 to 3.3.0. Fix bug with reading Set values from Lua scripts. [#6279](https://github.com/Project-OSRM/osrm-backend/pull/6279)
       - CHANGED: Update macOS CI image to macos-11. [#6286](https://github.com/Project-OSRM/osrm-backend/pull/6286)
       - CHANGED: Enable even more clang-tidy checks. [#6273](https://github.com/Project-OSRM/osrm-backend/pull/6273)
