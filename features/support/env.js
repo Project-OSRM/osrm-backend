@@ -40,6 +40,9 @@ module.exports = function () {
 
         this.OSRM_PORT = process.env.OSRM_PORT && parseInt(process.env.OSRM_PORT) || 5000;
         this.OSRM_IP = process.env.OSRM_IP || '127.0.0.1';
+        this.OSRM_CONNECTION_RETRIES = process.env.OSRM_CONNECTION_RETRIES && parseInt(process.env.OSRM_CONNECTION_RETRIES) || 10;
+        this.OSRM_CONNECTION_EXP_BACKOFF_COEF = process.env.OSRM_CONNECTION_EXP_BACKOFF_COEF && parseFloat(process.env.OSRM_CONNECTION_EXP_BACKOFF_COEF) || 1.0;
+        
         this.HOST = `http://${this.OSRM_IP}:${this.OSRM_PORT}`;
 
         this.OSRM_PROFILE = process.env.OSRM_PROFILE;
