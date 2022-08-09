@@ -496,7 +496,7 @@ if(ENABLE_CONAN)
   set(Boost_UNIT_TEST_FRAMEWORK_LIBRARY "${Boost_unit_test_framework_LIB_TARGETS}")
   
   find_package(BZip2 REQUIRED EXACT ${CONAN_BZIP2_VERSION})
-  find_package(EXPAT REQUIRED EXACT ${CONAN_EXPAT_VERSION})
+  find_package(EXPAT REQUIRED)
   find_package(lua REQUIRED EXACT ${CONAN_LUA_VERSION})
   set(LUA_LIBRARIES ${lua_LIBRARIES})
 
