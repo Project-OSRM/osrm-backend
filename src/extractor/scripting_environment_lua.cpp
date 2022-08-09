@@ -1162,11 +1162,13 @@ void Sol2ScriptingEnvironment::ProcessSegment(ExtractionSegment &segment)
             context.segment_function(context.profile_table, std::ref(segment));
             break;
         case 1:
-            context.segment_function( std::ref(segment));
+            context.segment_function(std::ref(segment));
             break;
         case 0:
-            context.segment_function(
-                std::ref(segment.source), std::ref(segment.target), segment.distance, segment.duration);
+            context.segment_function(std::ref(segment.source),
+                                     std::ref(segment.target),
+                                     segment.distance,
+                                     segment.duration);
             segment.weight = segment.duration; // back-compatibility fallback to duration
             break;
         }
