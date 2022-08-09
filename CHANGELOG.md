@@ -3,6 +3,7 @@
     - API:
       - FIXED: Fix inefficient osrm-routed connection handling [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
     - Misc:
+      - FIXED: Fix performance issues after migration to sol2 3.3.0. [#6304](https://github.com/Project-OSRM/osrm-backend/pull/6304)
       - FIXED: Fix bug with reading Set values from Lua scripts. [#6285](https://github.com/Project-OSRM/osrm-backend/pull/6285)
     - Build:
       - CHANGED: Configure Undefined Behaviour Sanitizer. [#6290](https://github.com/Project-OSRM/osrm-backend/pull/6290)
