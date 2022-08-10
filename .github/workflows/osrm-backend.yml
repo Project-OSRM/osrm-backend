@@ -47,16 +47,6 @@ jobs:
         ./scripts/format.sh && ./scripts/error_on_dirty.sh
         node ./scripts/validate_changelog.js
         npm run docs && ./scripts/error_on_dirty.sh
-  
-  docker-image:
-    needs: format-taginfo-docs
-    runs-on: ubuntu-22.04
-    steps:       
-      - name: Check out the repo
-        uses: actions/checkout@v3
-      - name: Docker build
-        run: |
-          docker build -f docker/Dockerfile . 
 
   build-test-publish:
     needs: format-taginfo-docs
