@@ -1093,7 +1093,7 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
     case 2:
         if (context.has_turn_penalty_function)
         {
-            context.turn_function(context.profile_table, turn);
+            context.turn_function(context.profile_table, std::ref(turn));
 
             // Turn weight falls back to the duration value in deciseconds
             // or uses the extracted unit-less weight value
@@ -1108,7 +1108,7 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
     case 1:
         if (context.has_turn_penalty_function)
         {
-            context.turn_function(turn);
+            context.turn_function(std::ref(turn));
 
             // Turn weight falls back to the duration value in deciseconds
             // or uses the extracted unit-less weight value
@@ -1159,14 +1159,16 @@ void Sol2ScriptingEnvironment::ProcessSegment(ExtractionSegment &segment)
         case 4:
         case 3:
         case 2:
-            context.segment_function(context.profile_table, segment);
+            context.segment_function(context.profile_table, std::ref(segment));
             break;
         case 1:
-            context.segment_function(segment);
+            context.segment_function(std::ref(segment));
             break;
         case 0:
-            context.segment_function(
-                segment.source, segment.target, segment.distance, segment.duration);
+            context.segment_function(std::ref(segment.source),
+                                     std::ref(segment.target),
+                                     segment.distance,
+                                     segment.duration);
             segment.weight = segment.duration; // back-compatibility fallback to duration
             break;
         }
@@ -1183,14 +1185,14 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node,
     {
     case 4:
     case 3:
-        node_function(profile_table, std::cref(node), result, relations);
+        node_function(profile_table, std::cref(node), std::ref(result), std::cref(relations));
         break;
     case 2:
-        node_function(profile_table, std::cref(node), result);
+        node_function(profile_table, std::cref(node), std::ref(result));
         break;
     case 1:
     case 0:
-        node_function(std::cref(node), result);
+        node_function(std::cref(node), std::ref(result));
         break;
     }
 }
