@@ -543,21 +543,6 @@ function safety_handler(profile,way,result,data)
     if result.duration > 0 then
       result.weight = result.duration / forward_penalty
     end
-
-    if data.highway == "bicycle" then
-      safety_bonus = safety_bonus + 0.2
-      if result.forward_speed > 0 then
-        -- convert from km/h to m/s
-        result.forward_rate = result.forward_speed / 3.6 * safety_bonus
-      end
-      if result.backward_speed > 0 then
-        -- convert from km/h to m/s
-        result.backward_rate = result.backward_speed / 3.6 * safety_bonus
-      end
-      if result.duration > 0 then
-        result.weight = result.duration / safety_bonus
-      end
-    end
   end
 end
 

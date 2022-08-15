@@ -1,11 +1,15 @@
 # Unreleased
   - Changes from 5.26.0
     - API:
+      - FIXED: Use Boost.Beast to parse HTTP request. [#6294](https://github.com/Project-OSRM/osrm-backend/pull/6294)
       - FIXED: Fix inefficient osrm-routed connection handling [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
     - Misc:
       - FIXED: Fix performance issue after migration to sol2 3.3.0. [#6304](https://github.com/Project-OSRM/osrm-backend/pull/6304)
+      - CHANGED: Pass osm_node_ids by reference in osrm::updater::Updater class. [#6298](https://github.com/Project-OSRM/osrm-backend/pull/6298)
       - FIXED: Fix bug with reading Set values from Lua scripts. [#6285](https://github.com/Project-OSRM/osrm-backend/pull/6285)
+      - FIXED: Bug in bicycle profile that caused exceptions if there is a highway=bicycle in the data. [#6296](https://github.com/Project-OSRM/osrm-backend/pull/6296)
     - Build:
+      - CHANGED: Remove EXACT from find_package if using Conan. [#6299](https://github.com/Project-OSRM/osrm-backend/pull/6299)
       - CHANGED: Configure Undefined Behaviour Sanitizer. [#6290](https://github.com/Project-OSRM/osrm-backend/pull/6290)
       - CHANGED: Use Conan instead of Mason to install code dependencies. [#6284](https://github.com/Project-OSRM/osrm-backend/pull/6284)
       - CHANGED: Migrate to C++17. Update sol2 to 3.3.0. [#6279](https://github.com/Project-OSRM/osrm-backend/pull/6279)

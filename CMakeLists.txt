@@ -495,12 +495,12 @@ if(ENABLE_CONAN)
   set(Boost_REGEX_LIBRARY "${Boost_regex_LIB_TARGETS}")
   set(Boost_UNIT_TEST_FRAMEWORK_LIBRARY "${Boost_unit_test_framework_LIB_TARGETS}")
   
-  find_package(BZip2 REQUIRED EXACT ${CONAN_BZIP2_VERSION})
+  find_package(BZip2 REQUIRED)
   find_package(EXPAT REQUIRED)
-  find_package(lua REQUIRED EXACT ${CONAN_LUA_VERSION})
+  find_package(lua REQUIRED)
   set(LUA_LIBRARIES ${lua_LIBRARIES})
 
-  find_package(TBB REQUIRED EXACT ${CONAN_TBB_VERSION})
+  find_package(TBB REQUIRED)
 
 
   # note: we avoid calling find_package(Osmium ...) here to ensure that the

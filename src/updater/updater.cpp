@@ -144,7 +144,7 @@ updateSegmentData(const UpdaterConfig &config,
                   const SegmentLookupTable &segment_speed_lookup,
                   extractor::SegmentDataContainer &segment_data,
                   std::vector<util::Coordinate> &coordinates,
-                  extractor::PackedOSMIDs &osm_node_ids)
+                  const extractor::PackedOSMIDs &osm_node_ids)
 {
     // vector to count used speeds for logging
     // size offset by one since index 0 is used for speeds not from external file
@@ -422,7 +422,7 @@ updateTurnPenalties(const UpdaterConfig &config,
                     const TurnLookupTable &turn_penalty_lookup,
                     std::vector<TurnPenalty> &turn_weight_penalties,
                     std::vector<TurnPenalty> &turn_duration_penalties,
-                    extractor::PackedOSMIDs osm_node_ids)
+                    const extractor::PackedOSMIDs &osm_node_ids)
 {
     const auto weight_multiplier = profile_properties.GetWeightMultiplier();
 
