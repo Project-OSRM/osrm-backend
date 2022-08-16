@@ -6,8 +6,10 @@
 
 #include <string>
 
+constexpr const std::size_t test_buffer_size = 1024UL * 10UL;
+
 TEST_CASE("create objects using builder") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
     std::string user;
 
     SECTION("complete node with tags") {
@@ -366,7 +368,7 @@ TEST_CASE("create objects using builder") {
 }
 
 TEST_CASE("no call to set_user on node") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     {
         osmium::builder::NodeBuilder builder{buffer};
@@ -378,7 +380,7 @@ TEST_CASE("no call to set_user on node") {
 }
 
 TEST_CASE("set_user with length on node") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
     std::string user = "userx";
 
     {
@@ -392,7 +394,7 @@ TEST_CASE("set_user with length on node") {
 }
 
 TEST_CASE("no call to set_user on way") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     {
         osmium::builder::WayBuilder builder{buffer};
@@ -404,7 +406,7 @@ TEST_CASE("no call to set_user on way") {
 }
 
 TEST_CASE("set_user with length on way") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
     std::string user = "userx";
 
     {
@@ -418,7 +420,7 @@ TEST_CASE("set_user with length on way") {
 }
 
 TEST_CASE("no call to set_user on changeset") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     {
         osmium::builder::ChangesetBuilder builder{buffer};
@@ -430,7 +432,7 @@ TEST_CASE("no call to set_user on changeset") {
 }
 
 TEST_CASE("set_user with length on changeset") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
     std::string user = "userx";
 
     {
@@ -444,7 +446,7 @@ TEST_CASE("set_user with length on changeset") {
 }
 
 TEST_CASE("clear_user should clear the user field but nothing else") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
     std::string user = "user";
 
     {

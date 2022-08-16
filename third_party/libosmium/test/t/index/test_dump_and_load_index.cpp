@@ -42,9 +42,9 @@ void test_index(std::function<void(TMemoryIndex&, const int)> dump_method) {
     REQUIRE(loc1 == file_index.get(id1));
     REQUIRE(loc2 == file_index.get(id2));
     REQUIRE(loc3 == file_index.get(id3));
-    REQUIRE_THROWS_AS(file_index.get(5), const osmium::not_found&);
-    REQUIRE_THROWS_AS(file_index.get(6), const osmium::not_found&);
-    REQUIRE_THROWS_AS(file_index.get(200), const osmium::not_found&);
+    REQUIRE_THROWS_AS(file_index.get(5), osmium::not_found);
+    REQUIRE_THROWS_AS(file_index.get(6), osmium::not_found);
+    REQUIRE_THROWS_AS(file_index.get(200), osmium::not_found);
 }
 
 #ifdef __linux__

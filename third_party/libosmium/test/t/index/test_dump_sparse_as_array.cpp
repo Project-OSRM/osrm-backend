@@ -49,7 +49,7 @@ void test_index() {
     REQUIRE(osmium::file_size(fd) >= max_id_in_refs * sizeof(osmium::Location));
 
     // check beyond largest ID
-    REQUIRE_THROWS_AS(dense_index.get(max_id_in_refs + 1), const osmium::not_found&);
+    REQUIRE_THROWS_AS(dense_index.get(max_id_in_refs + 1), osmium::not_found);
 
     // check if written values can be retrieved
     for (const auto& r : refs) {

@@ -34,7 +34,7 @@ public:
     MockDecompressor(MockDecompressor&&) = delete;
     MockDecompressor& operator=(MockDecompressor&&) = delete;
 
-    ~MockDecompressor() noexcept = default;
+    ~MockDecompressor() noexcept override = default;
 
     static void add_node(std::string& s, int i) {
         s += "<node id='";

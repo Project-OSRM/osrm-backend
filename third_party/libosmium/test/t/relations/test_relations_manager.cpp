@@ -76,11 +76,11 @@ struct CallbackRM : public osmium::relations::RelationsManager<CallbackRM, true,
 
     std::size_t count_nodes = 0;
 
-    bool new_relation(const osmium::Relation& /*relation*/) noexcept {
+    static bool new_relation(const osmium::Relation& /*relation*/) noexcept {
         return true;
     }
 
-    bool new_member(const osmium::Relation& /*relation*/, const osmium::RelationMember& member, std::size_t /*n*/) noexcept {
+    static bool new_member(const osmium::Relation& /*relation*/, const osmium::RelationMember& member, std::size_t /*n*/) noexcept {
         return member.type() == osmium::item_type::node;
     }
 
@@ -99,11 +99,11 @@ struct CallbackRM : public osmium::relations::RelationsManager<CallbackRM, true,
 };
 
 struct AnyRM : public osmium::relations::RelationsManager<AnyRM, true, true, true> {
-    bool new_relation(const osmium::Relation& /*relation*/) noexcept {
+    static bool new_relation(const osmium::Relation& /*relation*/) noexcept {
         return true;
     }
 
-    bool new_member(const osmium::Relation& /*relation*/, const osmium::RelationMember& /*member*/, std::size_t /*n*/) noexcept {
+    static bool new_member(const osmium::Relation& /*relation*/, const osmium::RelationMember& /*member*/, std::size_t /*n*/) noexcept {
         return true;
     }
 };

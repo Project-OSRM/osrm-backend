@@ -47,6 +47,17 @@ jobs:
         ./scripts/format.sh && ./scripts/error_on_dirty.sh
         node ./scripts/validate_changelog.js
         npm run docs && ./scripts/error_on_dirty.sh
+  
+  docker-image:
+    needs: format-taginfo-docs
+    runs-on: ubuntu-22.04
+    continue-on-error: false
+    steps:       
+      - name: Check out the repo
+        uses: actions/checkout@v3
+      - name: Docker build
+        run: |
+          docker build -f docker/Dockerfile . 
 
   build-test-publish:
     needs: format-taginfo-docs
@@ -78,13 +89,13 @@ jobs:
             OSRM_CONNECTION_RETRIES: 10
             OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
-          - name: clang-5.0-debug
+          - name: clang-6.0-debug
             continue-on-error: false
             node: 12
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CLANG_VERSION: 5.0.0
+            CLANG_VERSION: 6.0.0
             CUCUMBER_TIMEOUT: 60000
 
           - name: clang-11.0-debug-clang-tidy
@@ -113,7 +124,7 @@ jobs:
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CLANG_VERSION: 5.0.0
+            CLANG_VERSION: 6.0.0
             ENABLE_CONAN: ON
 
           - name: gcc-11-release
@@ -230,7 +241,7 @@ jobs:
             node: 12
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
-            CLANG_VERSION: 5.0.0
+            CLANG_VERSION: 6.0.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -241,7 +252,7 @@ jobs:
             node: 12
             runs-on: ubuntu-20.04
             BUILD_TYPE: Debug
-            CLANG_VERSION: 5.0.0
+            CLANG_VERSION: 6.0.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -252,7 +263,7 @@ jobs:
             node: 14
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
-            CLANG_VERSION: 5.0.0
+            CLANG_VERSION: 6.0.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -263,7 +274,7 @@ jobs:
             node: 14
             runs-on: ubuntu-20.04
             BUILD_TYPE: Debug
-            CLANG_VERSION: 5.0.0
+            CLANG_VERSION: 6.0.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -275,7 +286,7 @@ jobs:
             node: 16
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
-            CLANG_VERSION: 5.0.0
+            CLANG_VERSION: 6.0.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -286,7 +297,7 @@ jobs:
             node: 16
             runs-on: ubuntu-20.04
             BUILD_TYPE: Debug
-            CLANG_VERSION: 5.0.0
+            CLANG_VERSION: 6.0.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -311,7 +322,7 @@ jobs:
             node: 16
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
-            CLANG_VERSION: 5.0.0
+            CLANG_VERSION: 6.0.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -323,7 +334,7 @@ jobs:
             node: 16
             runs-on: ubuntu-20.04
             BUILD_TYPE: Debug
-            CLANG_VERSION: 5.0.0
+            CLANG_VERSION: 6.0.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -346,7 +357,7 @@ jobs:
             node: "lts/*"
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
-            CLANG_VERSION: 5.0.0
+            CLANG_VERSION: 6.0.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -357,7 +368,7 @@ jobs:
             node: "lts/*"
             runs-on: ubuntu-20.04
             BUILD_TYPE: Debug
-            CLANG_VERSION: 5.0.0
+            CLANG_VERSION: 6.0.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON

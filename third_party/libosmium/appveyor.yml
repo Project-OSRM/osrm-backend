@@ -4,7 +4,7 @@
 #
 #-----------------------------------------------------------------------------
 
-os: Visual Studio 2017
+image: Visual Studio 2017
 
 platform: x64
 
@@ -24,6 +24,7 @@ environment:
     autocrlf: false
   - config: MSYS2
     autocrlf: true
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
 #-----------------------------------------------------------------------------
 
@@ -57,6 +58,6 @@ build_script:
 
 # remove garbage VS messages
 # https://help.appveyor.com/discussions/problems/4569-the-target-_convertpdbfiles-listed-in-a-beforetargets-attribute-at-c-does-not-exist-in-the-project-and-will-be-ignored
-before_build:
-  - del "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets"
+#before_build:
+#  - del "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets"
 

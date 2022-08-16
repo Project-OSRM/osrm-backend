@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -112,6 +112,70 @@ namespace osmium {
             iter.print(out);
             return out;
         }
+
+        template <typename TFilter, typename TMember>
+        class CollectionFilterIterator {
+
+            TFilter m_filter;
+            CollectionIterator<TMember> m_it;
+            CollectionIterator<TMember> m_end;
+
+            void advance() {
+                while (m_it != m_end) {
+                    if (m_filter(*m_it)) {
+                        break;
+                    }
+                    ++m_it;
+                }
+            }
+
+        public:
+
+            using iterator_category = std::forward_iterator_tag;
+            using value_type        = const TMember;
+            using difference_type   = std::ptrdiff_t;
+            using pointer           = value_type*;
+            using reference         = value_type&;
+
+            CollectionFilterIterator(TFilter filter, CollectionIterator<TMember> begin, CollectionIterator<TMember> end) :
+                m_filter(std::move(filter)),
+                m_it(begin),
+                m_end(end) {
+                advance();
+            }
+
+            CollectionFilterIterator& operator++() {
+                assert(m_it != m_end);
+                ++m_it;
+                advance();
+                return *this;
+            }
+
+            CollectionFilterIterator operator++(int) const {
+                CollectionFilterIterator tmp{*this};
+                operator++();
+                return tmp;
+            }
+
+            bool operator==(const CollectionFilterIterator& rhs) const noexcept {
+                return m_it == rhs.m_it && m_end == rhs.m_end;
+            }
+
+            bool operator!=(const CollectionFilterIterator& rhs) const noexcept {
+                return !(*this == rhs);
+            }
+
+            reference operator*() const noexcept {
+                assert(m_it != m_end);
+                return *m_it;
+            }
+
+            pointer operator->() const noexcept {
+                assert(m_it != m_end);
+                return &*m_it;
+            }
+
+        }; // class CollectionFilterIterator
 
         template <typename TMember, osmium::item_type TCollectionItemType>
         class Collection : public Item {

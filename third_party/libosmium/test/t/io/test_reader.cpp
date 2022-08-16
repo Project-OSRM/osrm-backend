@@ -4,12 +4,13 @@
 
 #include <osmium/handler.hpp>
 #include <osmium/io/any_compression.hpp>
-#include <osmium/io/pbf_input.hpp>
-#include <osmium/io/xml_input.hpp>
+#include <osmium/io/any_input.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/visitor.hpp>
 
+#include <iterator>
 #include <stdexcept>
+#include <vector>
 
 struct CountHandler : public osmium::handler::Handler {
 
@@ -100,7 +101,7 @@ TEST_CASE("Reader should throw after eof") {
 
     REQUIRE(reader.eof());
 
-    REQUIRE_THROWS_AS(reader.read(), const osmium::io_error&);
+    REQUIRE_THROWS_AS(reader.read(), osmium::io_error);
 
     reader.close();
     REQUIRE(reader.eof());
@@ -115,7 +116,7 @@ TEST_CASE("Reader should not hang when apply() is called twice on reader") {
     osmium::handler::Handler handler;
 
     osmium::apply(reader, handler);
-    REQUIRE_THROWS_AS(osmium::apply(reader, handler), const osmium::io_error&);
+    REQUIRE_THROWS_AS(osmium::apply(reader, handler), osmium::io_error);
 
     reader.close();
     REQUIRE(count == count_fds());
@@ -309,7 +310,7 @@ TEST_CASE("Can call read() exactly once on Reader with entity_bits nothing") {
     osmium::memory::Buffer buffer = reader.read();
     REQUIRE_FALSE(buffer);
     REQUIRE(reader.eof());
-    REQUIRE_THROWS_AS(reader.read(), const osmium::io_error&);
+    REQUIRE_THROWS_AS(reader.read(), osmium::io_error);
 
     reader.close();
     REQUIRE(reader.eof());
@@ -337,8 +338,43 @@ TEST_CASE("Can not read after close") {
 
     reader.close();
     REQUIRE(reader.eof());
-    REQUIRE_THROWS_AS(reader.read(), const osmium::io_error&);
+    REQUIRE_THROWS_AS(reader.read(), osmium::io_error);
 
     REQUIRE(count == count_fds());
+}
+
+using object_counts = std::array<std::size_t, 3>;
+
+std::vector<object_counts> count_objects_per_buffer(const char* filename, osmium::io::buffers_type btype) {
+    osmium::io::File file{with_data_dir(filename)};
+    osmium::io::Reader reader{file, btype};
+
+    std::vector<object_counts> counts;
+    while (osmium::memory::Buffer buffer = reader.read()) {
+        const auto rn = buffer.select<osmium::Node>();
+        const auto rw = buffer.select<osmium::Way>();
+        const auto rr = buffer.select<osmium::Relation>();
+        counts.push_back(object_counts{static_cast<std::size_t>(std::distance(rn.begin(), rn.end())),
+                                       static_cast<std::size_t>(std::distance(rw.begin(), rw.end())),
+                                       static_cast<std::size_t>(std::distance(rr.begin(), rr.end()))});
+    }
+
+    return counts;
+}
+
+void check_buffer_counts(const std::string& filename, const std::vector<object_counts>& oc, osmium::io::buffers_type btype) {
+    for (const auto* suffix : {".osm", ".osm.opl", ".osm.o5m"}) {
+        const std::string fn = filename + suffix;
+        const auto counts = count_objects_per_buffer(fn.c_str(), btype);
+        REQUIRE(counts == oc);
+    }
+}
+
+TEST_CASE("Reader with single object type per buffer") {
+    check_buffer_counts("t/io/data-n5w1r3", {{5, 1, 3}}, osmium::io::buffers_type::any);
+    check_buffer_counts("t/io/data-n5w1r3", {{5, 0, 0}, {0, 1, 0}, {0, 0, 3}}, osmium::io::buffers_type::single);
+    check_buffer_counts("t/io/data-n0w1r3", {{0, 1, 0}, {0, 0, 3}}, osmium::io::buffers_type::single);
+    check_buffer_counts("t/io/data-n5w0r3", {{5, 0, 0}, {0, 0, 3}}, osmium::io::buffers_type::single);
+    check_buffer_counts("t/io/data-n5w1r0", {{5, 0, 0}, {0, 1, 0}}, osmium::io::buffers_type::single);
 }
 

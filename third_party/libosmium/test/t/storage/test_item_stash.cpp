@@ -10,7 +10,7 @@
 osmium::memory::Buffer generate_test_data() {
     using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
-    osmium::memory::Buffer buffer{1024 * 1024, osmium::memory::Buffer::auto_grow::yes};
+    osmium::memory::Buffer buffer{1024UL * 1024UL, osmium::memory::Buffer::auto_grow::yes};
 
     const osmium::object_id_type num_nodes     = 100;
     const osmium::object_id_type num_ways      =  50;
@@ -58,7 +58,7 @@ TEST_CASE("Item stash") {
     REQUIRE(stash.size() == 180);
     REQUIRE(stash.count_removed() == 0);
 
-    REQUIRE(stash.used_memory() > 1024 * 1024);
+    REQUIRE(stash.used_memory() > 1024UL * 1024UL);
 
     osmium::object_id_type id = 1;
     for (auto& handle : handles) { // must be reference because we will change it!
@@ -141,7 +141,7 @@ TEST_CASE("Fill item stash until it garbage collects") {
     const auto& node = buffer.get<osmium::Node>(0);
 
     std::vector<osmium::ItemStash::handle_type> handles;
-    std::size_t num_items = 6 * 1000 * 1000;
+    std::size_t num_items = 6UL * 1000UL * 1000UL;
     for (std::size_t i = 0; i < num_items; ++i) {
         auto handle = stash.add_item(node);
         handles.push_back(handle);
