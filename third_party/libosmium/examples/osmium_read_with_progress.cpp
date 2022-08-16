@@ -16,7 +16,6 @@
 
 */
 
-#include <cstdlib>  // for std::exit
 #include <iostream> // for std::cerr
 
 // Allow any format of input files (XML, PBF, ...)
@@ -29,7 +28,7 @@
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " OSMFILE\n";
-        std::exit(1);
+        return 1;
     }
 
     try {
@@ -56,7 +55,7 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
         std::cerr << e.what() << '\n';
-        std::exit(1);
+        return 1;
     }
 }
 

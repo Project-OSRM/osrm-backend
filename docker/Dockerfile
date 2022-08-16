@@ -10,7 +10,8 @@ RUN apt-get update && \
 COPY . /src
 WORKDIR /src
 
-RUN NPROC=${BUILD_CONCURRENCY:-$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1)} echo "Building OSRM ${DOCKER_TAG}" && \
+RUN NPROC=${BUILD_CONCURRENCY:-$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1)} && \
+    echo "Building OSRM ${DOCKER_TAG}" && \
     git show --format="%H" | head -n1 > /opt/OSRM_GITSHA && \
     echo "Building OSRM gitsha $(cat /opt/OSRM_GITSHA)" && \
     mkdir -p build && \

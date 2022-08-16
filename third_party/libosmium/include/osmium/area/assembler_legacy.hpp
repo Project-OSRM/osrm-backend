@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -336,8 +336,11 @@ namespace osmium {
                                     osmium::tags::KeyFilter::iterator way_fi_end(std::cref(filter()), way.tags().cend(), way.tags().cend());
                                     osmium::tags::KeyFilter::iterator area_fi_begin(std::cref(filter()), area_tags.cbegin(), area_tags.cend());
                                     osmium::tags::KeyFilter::iterator area_fi_end(std::cref(filter()), area_tags.cend(), area_tags.cend());
-
-                                    if (!std::equal(way_fi_begin, way_fi_end, area_fi_begin) || d != std::distance(area_fi_begin, area_fi_end)) {
+#ifdef __cpp_lib_robust_nonmodifying_seq_ops
+                                    if (!std::equal(way_fi_begin, way_fi_end, area_fi_begin, area_fi_end)) {
+#else
+                                    if (d != std::distance(area_fi_begin, area_fi_end) || !std::equal(way_fi_begin, way_fi_end, area_fi_begin)) {
+#endif
                                         ways_that_should_be_areas.push_back(&way);
                                     } else {
                                         ++stats().inner_with_same_tags;

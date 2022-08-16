@@ -10,8 +10,10 @@
 
 using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
+constexpr const std::size_t test_buffer_size = 1024UL * 10UL;
+
 TEST_CASE("Build changeset") {
-    osmium::memory::Buffer buffer{10 * 1000};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     osmium::builder::add_changeset(buffer,
         _cid(42),
@@ -90,7 +92,7 @@ TEST_CASE("Build changeset") {
 }
 
 TEST_CASE("Create changeset without helper") {
-    osmium::memory::Buffer buffer{10 * 1000};
+    osmium::memory::Buffer buffer{test_buffer_size};
     {
         osmium::builder::ChangesetBuilder builder{buffer};
 
@@ -145,7 +147,7 @@ TEST_CASE("Create changeset without helper") {
 }
 
 TEST_CASE("Change changeset") {
-    osmium::memory::Buffer buffer{10 * 1000};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     osmium::builder::add_changeset(buffer,
         _cid(42),

@@ -21,7 +21,7 @@ using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
 int main(int argc, char* argv[]) {
     if (argc != 3) {
         std::cerr << "Usage: " << argv[0] << " OSMFILE FORMAT\n";
-        std::exit(1);
+        return 1;
     }
 
     try {
@@ -39,7 +39,9 @@ int main(int argc, char* argv[]) {
         reader.close();
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
-        std::exit(1);
+        return 1;
     }
+
+    return 0;
 }
 

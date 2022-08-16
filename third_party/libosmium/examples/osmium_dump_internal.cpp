@@ -29,7 +29,6 @@
 */
 
 #include <cerrno>      // for errno
-#include <cstdlib>     // for std::exit
 #include <cstring>     // for std::strerror
 #include <iostream>    // for std::cout, std::cerr
 #include <string>      // for std::string
@@ -73,8 +72,7 @@ public:
     explicit IndexFile(const std::string& filename) :
         m_fd(::open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666)) { // NOLINT(hicpp-signed-bitwise)
         if (m_fd < 0) {
-            std::cerr << "Can't open index file '" << filename << "': " << std::strerror(errno) << "\n";
-            std::exit(2);
+            throw std::system_error{errno, std::system_category(), "Can't open index file '" + filename};
         }
 #ifdef _WIN32
         _setmode(m_fd, _O_BINARY);
@@ -102,7 +100,7 @@ public:
 int main(int argc, char* argv[]) {
     if (argc != 3) {
         std::cerr << "Usage: " << argv[0] << " OSMFILE DIR\n";
-        std::exit(2);
+        return 2;
     }
 
     try {
@@ -117,7 +115,7 @@ int main(int argc, char* argv[]) {
 #endif
         if (result == -1 && errno != EEXIST) {
             std::cerr << "Problem creating directory '" << output_dir << "': " << std::strerror(errno) << "\n";
-            std::exit(2);
+            return 2;
         }
 
         // Create the output file which will contain our serialized OSM data
@@ -125,7 +123,7 @@ int main(int argc, char* argv[]) {
         const int data_fd = ::open(data_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666); // NOLINT(hicpp-signed-bitwise)
         if (data_fd < 0) {
             std::cerr << "Can't open data file '" << data_file << "': " << std::strerror(errno) << "\n";
-            std::exit(2);
+            return 2;
         }
 
 #ifdef _WIN32
@@ -196,7 +194,7 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
         std::cerr << e.what() << '\n';
-        std::exit(1);
+        return 1;
     }
 }
 

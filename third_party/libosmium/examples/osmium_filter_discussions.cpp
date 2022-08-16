@@ -22,7 +22,6 @@
 */
 
 #include <algorithm> // for std::copy_if
-#include <cstdlib>   // for std::exit
 #include <iostream>  // for std::cout, std::cerr
 
 // We want to read OSM files in XML format
@@ -43,7 +42,7 @@
 int main(int argc, char* argv[]) {
     if (argc != 3) {
         std::cout << "Usage: " << argv[0] << " INFILE OUTFILE\n";
-        std::exit(1);
+        return 1;
     }
 
     try {
@@ -92,7 +91,7 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
         std::cerr << e.what() << '\n';
-        std::exit(1);
+        return 1;
     }
 }
 

@@ -69,6 +69,23 @@ TEST_CASE("Purge buffer with one object which gets deleted") {
     REQUIRE(std::distance(buffer.begin(), buffer.end()) == 0);
 }
 
+TEST_CASE("Purge buffer without callback") {
+    constexpr const size_t buffer_size = 10000;
+    osmium::memory::Buffer buffer{buffer_size};
+
+    {
+        osmium::builder::NodeBuilder node_builder{buffer};
+        node_builder.set_user("testuser");
+        node_builder.set_removed(true);
+    }
+    buffer.commit();
+    REQUIRE(std::distance(buffer.begin(), buffer.end()) == 1);
+
+    buffer.purge_removed();
+    REQUIRE(buffer.committed() == 0);
+    REQUIRE(std::distance(buffer.begin(), buffer.end()) == 0);
+}
+
 TEST_CASE("Purge buffer with two objects, first gets deleted") {
     constexpr const size_t buffer_size = 10000;
     osmium::memory::Buffer buffer{buffer_size};

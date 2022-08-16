@@ -18,8 +18,8 @@ TEST_CASE("Location instantiation with default parameters") {
     REQUIRE_FALSE(loc);
     REQUIRE_FALSE(loc.is_defined());
     REQUIRE(loc.is_undefined());
-    REQUIRE_THROWS_AS(loc.lon(), const osmium::invalid_location&);
-    REQUIRE_THROWS_AS(loc.lat(), const osmium::invalid_location&);
+    REQUIRE_THROWS_AS(loc.lon(), osmium::invalid_location);
+    REQUIRE_THROWS_AS(loc.lat(), osmium::invalid_location);
 }
 
 TEST_CASE("Location instantiation with double parameters") {
@@ -113,7 +113,7 @@ TEST_CASE("Location output to iterator check precision") {
 TEST_CASE("Location output to iterator undefined location") {
     char buffer[100];
     const osmium::Location loc;
-    REQUIRE_THROWS_AS(loc.as_string(buffer, ','), const osmium::invalid_location&);
+    REQUIRE_THROWS_AS(loc.as_string(buffer, ','), osmium::invalid_location);
 }
 
 TEST_CASE("Location output to string comman separator") {
@@ -140,7 +140,7 @@ TEST_CASE("Location output to string check precision") {
 TEST_CASE("Location output to string undefined location") {
     std::string s;
     const osmium::Location loc;
-    REQUIRE_THROWS_AS(loc.as_string(std::back_inserter(s), ','), const osmium::invalid_location&);
+    REQUIRE_THROWS_AS(loc.as_string(std::back_inserter(s), ','), osmium::invalid_location);
 }
 
 TEST_CASE("Location output defined") {
@@ -176,8 +176,8 @@ TEST_CASE("Location hash") {
 void C(const char* s, int32_t v, const char* r = "") {
     std::string strm{"-"};
     strm += s;
-    REQUIRE(std::atof(strm.c_str() + 1) == Approx( v / 10000000.0)); // NOLINT(cert-err34-c)
-    REQUIRE(std::atof(strm.c_str()    ) == Approx(-v / 10000000.0)); // NOLINT(cert-err34-c)
+    REQUIRE(std::atof(strm.c_str() + 1) == Approx( v / 10000000.0).scale(1.0)); // NOLINT(cert-err34-c)
+    REQUIRE(std::atof(strm.c_str()    ) == Approx(-v / 10000000.0).scale(1.0)); // NOLINT(cert-err34-c)
     const char* x = strm.c_str() + 1;
     const char** data = &x;
     REQUIRE(osmium::detail::string_to_location_coordinate(data) == v);
@@ -193,10 +193,10 @@ void F(const char* s) {
     strm += s;
     const char* x = strm.c_str();
     const char** data = &x;
-    REQUIRE_THROWS_AS(osmium::detail::string_to_location_coordinate(data), const osmium::invalid_location&);
+    REQUIRE_THROWS_AS(osmium::detail::string_to_location_coordinate(data), osmium::invalid_location);
     ++x;
     data = &x;
-    REQUIRE_THROWS_AS(osmium::detail::string_to_location_coordinate(data), const osmium::invalid_location&);
+    REQUIRE_THROWS_AS(osmium::detail::string_to_location_coordinate(data), osmium::invalid_location);
 }
 
 TEST_CASE("Parsing coordinates from strings") {
@@ -414,8 +414,8 @@ TEST_CASE("set lon/lat from string") {
 
 TEST_CASE("set lon/lat from string with trailing characters") {
     osmium::Location loc;
-    REQUIRE_THROWS_AS(loc.set_lon("1.2x"), const osmium::invalid_location&);
-    REQUIRE_THROWS_AS(loc.set_lat("3.4e1 "), const osmium::invalid_location&);
+    REQUIRE_THROWS_AS(loc.set_lon("1.2x"), osmium::invalid_location);
+    REQUIRE_THROWS_AS(loc.set_lat("3.4e1 "), osmium::invalid_location);
 }
 
 TEST_CASE("set lon/lat from string with trailing characters using partial") {

@@ -5,5 +5,5 @@ add_test(NAME examples_change_tags
 add_test(NAME examples_change_tags_compare
          COMMAND ${CMAKE_COMMAND} -E compare_files ${CMAKE_CURRENT_SOURCE_DIR}/result.osm ${CMAKE_CURRENT_BINARY_DIR}/result.osm)
 
-set_tests_properties(examples_change_tags_compare PROPERTIES DEPENDS example_change_tags)
+set_tests_properties(examples_change_tags_compare PROPERTIES DEPENDS examples_change_tags)
 

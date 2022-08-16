@@ -44,7 +44,7 @@ TEST_CASE("Timestamp can be initialized from string") {
 }
 
 TEST_CASE("Timestamp throws if initialized from bad string") {
-    REQUIRE_THROWS_AS(osmium::Timestamp("x"), const std::invalid_argument&);
+    REQUIRE_THROWS_AS(osmium::Timestamp("x"), std::invalid_argument);
 }
 
 TEST_CASE("Timestamp can be explicitly cast to time_t") {
@@ -127,27 +127,27 @@ TEST_CASE("Valid timestamps") {
 }
 
 TEST_CASE("Invalid timestamps") {
-    REQUIRE_THROWS_AS(osmium::Timestamp{""}, const std::invalid_argument&);
-    REQUIRE_THROWS_AS(osmium::Timestamp{"x"}, const std::invalid_argument&);
-    REQUIRE_THROWS_AS(osmium::Timestamp{"xxxxxxxxxxxxxxxxxxxx"}, const std::invalid_argument&);
+    REQUIRE_THROWS_AS(osmium::Timestamp{""}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"x"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"xxxxxxxxxxxxxxxxxxxx"}, std::invalid_argument);
 
-    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01x00:00:00Z"}, const std::invalid_argument&);
-    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T00:00:00x"}, const std::invalid_argument&);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01x00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T00:00:00x"}, std::invalid_argument);
 
-    REQUIRE_THROWS_AS(osmium::Timestamp{"2000x01-01T00:00:00Z"}, const std::invalid_argument&);
-    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01x01T00:00:00Z"}, const std::invalid_argument&);
-    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T00x00:00Z"}, const std::invalid_argument&);
-    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T00:00x00Z"}, const std::invalid_argument&);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000x01-01T00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01x01T00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T00x00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T00:00x00Z"}, std::invalid_argument);
 
-    REQUIRE_THROWS_AS(osmium::Timestamp{"0000-00-01T00:00:00Z"}, const std::invalid_argument&);
-    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-00-01T00:00:00Z"}, const std::invalid_argument&);
-    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-00T00:00:00Z"}, const std::invalid_argument&);
-    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T24:00:00Z"}, const std::invalid_argument&);
-    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T00:60:00Z"}, const std::invalid_argument&);
-    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T00:00:61Z"}, const std::invalid_argument&);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"0000-00-01T00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-00-01T00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-00T00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T24:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T00:60:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T00:00:61Z"}, std::invalid_argument);
 
-    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-32T00:00:00Z"}, const std::invalid_argument&);
-    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-02-30T00:00:00Z"}, const std::invalid_argument&);
-    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-03-32T00:00:00Z"}, const std::invalid_argument&);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-32T00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-02-30T00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-03-32T00:00:00Z"}, std::invalid_argument);
 }
 

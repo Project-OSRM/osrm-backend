@@ -70,7 +70,7 @@ public:
     IndexAccess(IndexAccess&&) = delete;
     IndexAccess& operator=(IndexAccess&&) = delete;
 
-    virtual ~IndexAccess() = default;
+    virtual ~IndexAccess() noexcept = default;
 
     virtual void dump() const = 0;
 
@@ -96,6 +96,14 @@ public:
     explicit IndexAccessDense(int fd) :
         IndexAccess<TValue>(fd) {
     }
+
+    IndexAccessDense(const IndexAccessDense&) = default;
+    IndexAccessDense& operator=(const IndexAccessDense&) = default;
+
+    IndexAccessDense(IndexAccessDense&&) noexcept = default;
+    IndexAccessDense& operator=(IndexAccessDense&&) noexcept = default;
+
+    ~IndexAccessDense() noexcept override = default;
 
     void dump() const override {
         index_type index{this->fd()};
@@ -135,6 +143,14 @@ public:
     explicit IndexAccessSparse(int fd) :
         IndexAccess<TValue>(fd) {
     }
+
+    IndexAccessSparse(const IndexAccessSparse&) = default;
+    IndexAccessSparse& operator=(const IndexAccessSparse&) = default;
+
+    IndexAccessSparse(IndexAccessSparse&&) noexcept = default;
+    IndexAccessSparse& operator=(IndexAccessSparse&&) noexcept = default;
+
+    ~IndexAccessSparse() noexcept override = default;
 
     void dump() const override {
         index_type index{this->fd()};
@@ -338,7 +354,7 @@ int main(int argc, char* argv[]) {
     if (fd < 0) {
         std::cerr << "Can not open file '" << options.filename()
                   << "': " << std::strerror(errno) << '\n';
-        std::exit(2);
+        return 2;
     }
 
 #ifdef _WIN32
@@ -365,7 +381,7 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
         std::cerr << e.what() << '\n';
-        std::exit(1);
+        return 1;
     }
 }
 
