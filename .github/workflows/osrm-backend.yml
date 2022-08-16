@@ -20,6 +20,27 @@ env:
   ENABLE_NODE_BINDINGS: "ON"
 
 jobs:
+  windows:
+    needs: format-taginfo-docs
+    runs-on: windows-2022
+    continue-on-error: false
+    steps:
+    - uses: actions/checkout@v3
+    - run: pip install conan==1.50.0
+    - run: conan --version
+    - run: cmake --version
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - run: node --version
+    - run: npm --version
+    - run: npm install --ignore-scripts
+    - run: npm link --ignore-scripts
+    - uses: microsoft/setup-msbuild@v1.1
+    - name: Build
+      run: |
+        .\scripts\ci\windows-build.bat
+
   format-taginfo-docs:
     runs-on: ubuntu-20.04
     steps:
