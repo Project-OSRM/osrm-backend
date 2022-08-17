@@ -9,6 +9,7 @@
       - FIXED: Fix bug with reading Set values from Lua scripts. [#6285](https://github.com/Project-OSRM/osrm-backend/pull/6285)
       - FIXED: Bug in bicycle profile that caused exceptions if there is a highway=bicycle in the data. [#6296](https://github.com/Project-OSRM/osrm-backend/pull/6296)
     - Build:
+      - ADDED: Add smoke test for Docker image. [#6313](https://github.com/Project-OSRM/osrm-backend/pull/6313)
       - CHANGED: Update libosmium to version 2.18.0. [#6303](https://github.com/Project-OSRM/osrm-backend/pull/6303)
       - CHANGED: Remove EXACT from find_package if using Conan. [#6299](https://github.com/Project-OSRM/osrm-backend/pull/6299)
       - CHANGED: Configure Undefined Behaviour Sanitizer. [#6290](https://github.com/Project-OSRM/osrm-backend/pull/6290)
