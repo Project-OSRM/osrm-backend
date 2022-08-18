@@ -474,6 +474,7 @@ if(ENABLE_CONAN)
     GENERATORS cmake_find_package
     KEEP_RPATHS
     NO_OUTPUT_DIRS
+    OPTIONS boost:filesystem_version=3 # https://stackoverflow.com/questions/73392648/error-with-boost-filesystem-version-in-cmake
   )
 
   add_dependency_includes(${CONAN_INCLUDE_DIRS_BOOST})
