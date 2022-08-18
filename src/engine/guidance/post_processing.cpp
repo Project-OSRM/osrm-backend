@@ -263,7 +263,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     BOOST_ASSERT(geometry.locations.size() >= steps.size());
     // Look for distances under 1m
     const bool zero_length_step = steps.front().distance <= 1 && steps.size() > 2;
-    const bool duplicated_coordinate = util::coordinate_calculation::haversineDistance(
+    const bool duplicated_coordinate = util::coordinate_calculation::greatCircleDistance(
                                            geometry.locations[0], geometry.locations[1]) <= 1;
     if (zero_length_step || duplicated_coordinate)
     {
@@ -406,7 +406,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         next_to_last_step.mode = new_next_to_last.mode;
         // the geometry indices of the last step are already correct;
     }
-    else if (util::coordinate_calculation::haversineDistance(
+    else if (util::coordinate_calculation::greatCircleDistance(
                  geometry.locations[geometry.locations.size() - 2],
                  geometry.locations[geometry.locations.size() - 1]) <= 1)
     {
@@ -463,7 +463,7 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
     BOOST_ASSERT(steps.size() >= 2);
     BOOST_ASSERT(leg_geometry.locations.size() >= 2);
     const constexpr double MINIMAL_RELATIVE_DISTANCE = 5., MAXIMAL_RELATIVE_DISTANCE = 300.;
-    const auto distance_to_start = util::coordinate_calculation::haversineDistance(
+    const auto distance_to_start = util::coordinate_calculation::greatCircleDistance(
         source_node.input_location, leg_geometry.locations[0]);
     const auto initial_modifier =
         distance_to_start >= MINIMAL_RELATIVE_DISTANCE &&
@@ -474,7 +474,7 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
 
     steps.front().maneuver.instruction.direction_modifier = initial_modifier;
 
-    const auto distance_from_end = util::coordinate_calculation::haversineDistance(
+    const auto distance_from_end = util::coordinate_calculation::greatCircleDistance(
         target_node.input_location, leg_geometry.locations.back());
     const auto final_modifier =
         distance_from_end >= MINIMAL_RELATIVE_DISTANCE &&

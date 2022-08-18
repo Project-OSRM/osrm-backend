@@ -90,7 +90,7 @@ void validate_feature_layer(vtzero::layer layer)
         std::count_if(layer.value_table().begin(), layer.value_table().end(), [](auto v) {
             return v.type() == vtzero::property_value_type::uint_value;
         });
-    BOOST_CHECK_EQUAL(number_of_uint_values, 78);
+    BOOST_CHECK_EQUAL(number_of_uint_values, 79);
 }
 
 void validate_turn_layer(vtzero::layer layer)
@@ -133,7 +133,7 @@ void validate_turn_layer(vtzero::layer layer)
             return v.type() == vtzero::property_value_type::float_value;
         });
 
-    BOOST_CHECK_EQUAL(number_of_float_values, 74);
+    BOOST_CHECK_EQUAL(number_of_float_values, 73);
 }
 
 void validate_node_layer(vtzero::layer layer)
@@ -322,13 +322,13 @@ void test_tile_turns(const osrm::OSRM &osrm, bool use_string_only_api)
     // Verify the expected turn angles
     std::sort(actual_turn_angles.begin(), actual_turn_angles.end());
     const std::vector<std::int64_t> expected_turn_angles = {
-        -122, -120, -117, -65, -57, -30, -28, -3, -2, 2, 3, 28, 30, 57, 65, 117, 120, 122};
+        -122, -120, -117, -65, -58, -30, -28, -2, -2, 2, 2, 28, 30, 58, 65, 117, 120, 122};
     CHECK_EQUAL_RANGE(actual_turn_angles, expected_turn_angles);
 
     // Verify the expected bearings
     std::sort(actual_turn_bearings.begin(), actual_turn_bearings.end());
     const std::vector<std::int64_t> expected_turn_bearings = {
-        49, 49, 107, 107, 169, 169, 171, 171, 229, 229, 257, 257, 286, 286, 349, 349, 352, 352};
+        49, 49, 107, 107, 169, 169, 171, 171, 229, 229, 257, 257, 286, 286, 349, 349, 351, 351};
     CHECK_EQUAL_RANGE(actual_turn_bearings, expected_turn_bearings);
 }
 

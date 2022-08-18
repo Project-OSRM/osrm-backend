@@ -122,7 +122,7 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
     // Walk over adjacent (coord, ts)-pairs, with rhs being the candidate to discard or keep
     for (std::size_t current = 0, next = 1; next < params.coordinates.size() - 1; ++current, ++next)
     {
-        auto distance_delta = util::coordinate_calculation::haversineDistance(
+        auto distance_delta = util::coordinate_calculation::greatCircleDistance(
             params.coordinates[current], params.coordinates[next]);
         running.distance_in_meters += distance_delta;
         const auto over_distance = running.distance_in_meters >= cfg.distance_in_meters;

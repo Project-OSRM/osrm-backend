@@ -9,29 +9,29 @@ Feature: Car - speeds
     Scenario: Car - speed of various way types
         Then routability should be
             | highway        | oneway | bothw   |
-            | motorway       | no     | 89 km/h |
-            | motorway_link  | no     | 44 km/h |
-            | trunk          | no     | 85 km/h |
-            | trunk_link     | no     | 39 km/h |
+            | motorway       | no     | 90 km/h |
+            | motorway_link  | no     | 45 km/h |
+            | trunk          | no     | 84 km/h |
+            | trunk_link     | no     | 40 km/h |
             | primary        | no     | 64 km/h |
-            | primary_link   | no     | 29 km/h |
-            | secondary      | no     | 55 km/h |
-            | secondary_link | no     | 24 km/h |
-            | tertiary       | no     | 39 km/h |
+            | primary_link   | no     | 30 km/h |
+            | secondary      | no     | 54 km/h |
+            | secondary_link | no     | 25 km/h |
+            | tertiary       | no     | 40 km/h |
             | tertiary_link  | no     | 20 km/h |
-            | unclassified   | no     | 24 km/h |
-            | residential    | no     | 24 km/h |
-            | living_street  | no     | 9 km/h  |
+            | unclassified   | no     | 25 km/h |
+            | residential    | no     | 25 km/h |
+            | living_street  | no     | 10 km/h  |
             | service        | no     | 15 km/h |
 
     # Alternating oneways scale rates but not speeds
     Scenario: Car - scaled speeds for oneway=alternating
         Then routability should be
             | highway        | oneway      | junction   | forw    | backw   | #              |
-            | tertiary       |             |            | 39 km/h | 39 km/h |                |
-            | tertiary       | alternating |            | 39 km/h | 39 km/h |                |
-            | motorway       |             |            | 89 km/h |         | implied oneway |
-            | motorway       | alternating |            | 89 km/h |         | implied oneway |
+            | tertiary       |             |            | 40 km/h | 40 km/h |                |
+            | tertiary       | alternating |            | 40 km/h | 40 km/h |                |
+            | motorway       |             |            | 90 km/h |         | implied oneway |
+            | motorway       | alternating |            | 90 km/h |         | implied oneway |
             | motorway       | reversible  |            |         |         | unroutable     |
             | primary        |             | roundabout | 64 km/h |         | implied oneway |
             | primary        | alternating | roundabout | 64 km/h |         | implied oneway |
@@ -42,12 +42,12 @@ Feature: Car - speeds
 
             | highway | maxspeed | forw    | backw    |
             | primary |          | 64 km/h | 64 km/h  |
-            | primary | 60       | 47 km/h | 47 km/h  |
-            | primary | 60       | 47 km/h | 47 km/h  |
-            | primary | 60       | 47 km/h | 47 km/h  |
+            | primary | 60       | 48 km/h | 48 km/h  |
+            | primary | 60       | 48 km/h | 48 km/h  |
+            | primary | 60       | 48 km/h | 48 km/h  |
 
     Scenario: Car - Side road penalties
         Then routability should be
 
             | highway | side_road | forw    | backw    | forw_rate | backw_rate |
-            | primary | yes       | 64 km/h | 64 km/h  | 14.4      | 14.4       |
+            | primary | yes       | 64 km/h | 64 km/h  | 14.5      | 14.5       |

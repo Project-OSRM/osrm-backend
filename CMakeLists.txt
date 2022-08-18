@@ -426,7 +426,7 @@ include_directories(SYSTEM ${MICROTAR_INCLUDE_DIR})
 
 set(MBXGEOM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/geometry.hpp-0.9.2/include")
 include_directories(SYSTEM ${MBXGEOM_INCLUDE_DIR})
-set(CHEAPRULER_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/cheap-ruler-cpp-2.5.4/include")
+set(CHEAPRULER_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/cheap-ruler-cpp-2778eb8/include")
 include_directories(SYSTEM ${CHEAPRULER_INCLUDE_DIR})
 
 add_library(MICROTAR OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src/microtar.c")
@@ -474,6 +474,7 @@ if(ENABLE_CONAN)
     GENERATORS cmake_find_package
     KEEP_RPATHS
     NO_OUTPUT_DIRS
+    OPTIONS boost:filesystem_version=3 # https://stackoverflow.com/questions/73392648/error-with-boost-filesystem-version-in-cmake
   )
 
   add_dependency_includes(${CONAN_INCLUDE_DIRS_BOOST})

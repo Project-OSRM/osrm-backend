@@ -422,16 +422,16 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.conan
-        key: conan-${{ matrix.name }}-${{ github.sha }}
+        key: v2-conan-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
-          conan-${{ matrix.name }}-
+          v2-conan-${{ matrix.name }}-
     - name: Enable test cache
       uses: actions/cache@v2
       with:
         path: ${{github.workspace}}/test/cache
-        key: test-${{ matrix.name }}-${{ github.sha }}
+        key: v2-test-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
-          test-${{ matrix.name }}-
+          v2-test-${{ matrix.name }}-
 
     - name: Prepare environment
       run: |

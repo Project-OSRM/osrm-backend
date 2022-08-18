@@ -90,8 +90,8 @@ Feature: Distance calculation
             | b    | a  | abc,abc | 100m     |
             | b    | c  | abc,abc | 100m     |
             | c    | b  | abc,abc | 100m     |
-            | a    | c  | abc,abc | 200m     |
-            | c    | a  | abc,abc | 200m     |
+            | a    | c  | abc,abc | 199.9m   |
+            | c    | a  | abc,abc | 199.9m   |
 
     Scenario: 1km distance
         Given a grid size of 1000 meters
@@ -134,7 +134,7 @@ Feature: Distance calculation
             | a    | c  | abcdefgh,abcdefgh | 20m      |
             | a    | d  | abcdefgh,abcdefgh | 30m      |
             | a    | e  | abcdefgh,abcdefgh | 40m      |
-            | a    | f  | abcdefgh,abcdefgh | 50m      |
+            | a    | f  | abcdefgh,abcdefgh | 50.1m    |
             | a    | g  | abcdefgh,abcdefgh | 60m +-1  |
             | a    | h  | abcdefgh,abcdefgh | 70m +-1  |
 
@@ -154,9 +154,9 @@ Feature: Distance calculation
             | from | to | route             | distance |
             | a    | b  | abcdefgh,abcdefgh | 10m      |
             | a    | c  | abcdefgh,abcdefgh | 20m      |
-            | a    | d  | abcdefgh,abcdefgh | 30m      |
-            | a    | e  | abcdefgh,abcdefgh | 40m      |
-            | a    | f  | abcdefgh,abcdefgh | 50m      |
+            | a    | d  | abcdefgh,abcdefgh | 29.9m    |
+            | a    | e  | abcdefgh,abcdefgh | 39.9m    |
+            | a    | f  | abcdefgh,abcdefgh | 49.9m    |
             | a    | g  | abcdefgh,abcdefgh | 60m +-1  |
             | a    | h  | abcdefgh,abcdefgh | 70m +-1  |
 

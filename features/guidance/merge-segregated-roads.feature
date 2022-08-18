@@ -64,7 +64,7 @@ Feature: Merge Segregated Roads
 
         When I route I should get
             | waypoints | route               | intersections                                                                                      |
-            | a,f       | road,road,road,road | true:90,false:45 true:135 false:270;true:45 true:180 false:315;true:90 false:225 true:315;true:270 |
+            | a,f       | road,road,road      | true:90,false:45 true:135 false:270;true:45 true:180 false:315,true:90 false:225 true:315;true:270 |
 
     #https://www.openstreetmap.org/#map=19/52.50003/13.33915
     @negative
@@ -193,7 +193,7 @@ Feature: Merge Segregated Roads
 
         When I route I should get
             | waypoints | route     | intersections                                                           |
-            | a,g       | road,road | true:90,false:90 true:150 false:270,true:90 false:270 true:345;true:270 |
+            | a,g       | road,road | true:90,false:90 true:165 false:270,true:90 false:270 true:345;true:270 |
 
     Scenario: Merging parallel roads with intermediate bridges
     # https://www.mapillary.com/app/?lat=52.466483333333336&lng=13.431908333333332&z=17&focus=photo&pKey=LWXnKqoGqUNLnG0lofiO0Q

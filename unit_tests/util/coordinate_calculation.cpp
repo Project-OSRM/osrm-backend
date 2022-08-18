@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(computeArea)
                                            {FloatLongitude{.01}, FloatLatitude{-.01}},
                                            {FloatLongitude{.00}, FloatLatitude{.00}}};
 
-    BOOST_CHECK_CLOSE(2 * 1112.263 * 1112.263, computeArea(rhombus), 1e-3);
+    BOOST_CHECK_CLOSE(2 * 1109.462 * 1109.462, computeArea(rhombus), 1e-3);
 
     // edge cases
     auto self_intersection = std::vector<Coordinate>{{FloatLongitude{.00}, FloatLatitude{.00}},

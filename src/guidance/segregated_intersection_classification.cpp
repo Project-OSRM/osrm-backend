@@ -56,7 +56,7 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
         double length = 0.0;
         for (size_t i = 1; i < geom.size(); ++i)
         {
-            length += util::coordinate_calculation::haversineDistance(geom[i - 1], geom[i]);
+            length += util::coordinate_calculation::greatCircleDistance(geom[i - 1], geom[i]);
         }
         return length;
     };

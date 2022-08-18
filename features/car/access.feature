@@ -185,7 +185,7 @@ Feature: Car - Restricted access
         Then routability should be
             | highway | hov        | bothw | forw_rate  | backw_rate  |
             | primary | designated | x     | 18.2       | 18.2        |
-            | primary | yes        | x     | 18.2       | 18.2        |
+            | primary | yes        | x     | 18.3       | 18.3        |
             | primary | no         | x     | 18.2       | 18.2        |
 
     # Models:
@@ -196,7 +196,7 @@ Feature: Car - Restricted access
         Then routability should be
             | highway  | hov         | hov:lanes                          | lanes | access     | oneway | forw | backw | forw_rate  |
             | motorway | designated  | designated\|designated\|designated | 3     | hov        | yes    | x    |       | 25         |
-            | motorway | lane        |                                    | 3     | designated | yes    | x    |       | 25         |
+            | motorway | lane        |                                    | 3     | designated | yes    | x    |       | 25.3       |
 
     @hov
     Scenario: Car - a way with all lanes HOV-designated is highly penalized by default (similar to hov=designated)
@@ -206,7 +206,7 @@ Feature: Car - Restricted access
             # This test is flaky because non-deterministic turn generation sometimes emits a NoTurn here that is marked as restricted. #3769
             #| primary |                        | designated             |                        |        | x    | x     | 18.2      | 18.2       |
             #| primary | designated             |                        |                        |        | x    | x     | 18.2      | 18.2       |
-            | primary | designated\|designated | designated\|designated |                        |        | x    | x     | 18.2      | 18.2       |
+            | primary | designated\|designated | designated\|designated |                        |        | x    | x     | 18.3      | 18.3       |
             | primary | designated\|no         | designated\|no         |                        |        | x    | x     | 18.2      | 18.2       |
             | primary | yes\|no                | yes\|no                |                        |        | x    | x     | 18.2      | 18.2       |
             | primary |                        |                        |                        |        | x    | x     | 18.2      | 18.2       |

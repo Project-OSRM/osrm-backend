@@ -103,7 +103,7 @@ Feature: Turn Lane Guidance
 
        When I route I should get
             | waypoints | route          | turns                                           | lanes                                                                 |
-            | a,d       | On,Hwy,Off,Off | depart,merge slight right,off ramp right,arrive | ,slight left:false slight left:true,straight:false slight right:true, |
+            | a,d       | On,Hwy,Off,Off | depart,merge slight right,off ramp right,arrive | ,slight left:true slight left:true,straight:false slight right:true,  |
 
 
     @anticipate
@@ -364,8 +364,8 @@ Feature: Turn Lane Guidance
 
           When I route I should get
                | waypoints | route            | turns                           | lanes                                                                                                                                                         |
-               | a,d       | main,left,left   | depart,end of road left,arrive  | ;left:false straight:false straight:true straight:false straight:false right:false;left:false straight:true straight:false right:false,left:true right:false, |
-               | a,e       | main,right,right | depart,end of road right,arrive | ;left:false straight:false straight:false straight:true straight:false right:false;left:false straight:false straight:true right:false,left:false right:true, |
+               | a,d       | main,left,left   | depart,end of road left,arrive  | ;left:false straight:true straight:true straight:true straight:true right:false;left:false straight:true straight:true right:false,left:true right:false,     |
+               | a,e       | main,right,right | depart,end of road right,arrive | ;left:false straight:true straight:true straight:true straight:true right:false;left:false straight:true straight:true right:false,left:false right:true,     |
 
        @anticipate
        Scenario: Anticipate Lanes for through with turn before / after
@@ -390,15 +390,15 @@ Feature: Turn Lane Guidance
                | il    |                                                              | il    |        |
 
           When I route I should get
-               | waypoints | route          | turns                                      | lanes                                                                                                                                                                                               | #           |
-               | a,f       | ab,bdehi,ef,ef | depart,turn right,turn right,arrive        | ,right:false right:false right:true right:true,left:false left:false straight:false straight:false straight:false straight:false right:true right:true,                                             |             |
-               | a,g       | ab,bdehi,eg,eg | depart,turn right,turn left,arrive         | ,right:true right:true right:false right:false,left:true left:true straight:false straight:false straight:false straight:false right:false right:false,                                             |             |
-               | a,j       | ab,bdehi,ij,ij | depart,turn right,end of road right,arrive | ,right:true right:true right:false right:false;left:false left:false straight:false straight:false straight:true straight:true right:false right:false,left:false left:false right:true right:true, |             |
-               | a,l       | ab,bdehi,il,il | depart,turn right,end of road left,arrive  | ,right:false right:false right:true right:true;left:false left:false straight:true straight:true straight:false straight:false right:false right:false,left:true left:true right:false right:false, | not perfect |
-               | c,g       | cb,bdehi,eg,eg | depart,turn left,turn left,arrive          | ,left:true left:true left:false left:false,left:true left:true straight:false straight:false straight:false straight:false right:false right:false,                                                 |             |
-               | c,f       | cb,bdehi,ef,ef | depart,turn left,turn right,arrive         | ,left:false left:false left:true left:true,left:false left:false straight:false straight:false straight:false straight:false right:true right:true,                                                 |             |
-               | c,l       | cb,bdehi,il,il | depart,turn left,end of road left,arrive   | ,left:false left:false left:true left:true;left:false left:false straight:true straight:true straight:false straight:false right:false right:false,left:true left:true right:false right:false,     |             |
-               | c,j       | cb,bdehi,ij,ij | depart,turn left,end of road right,arrive  | ,left:true left:true left:false left:false;left:false left:false straight:false straight:false straight:true straight:true right:false right:false,left:false left:false right:true right:true,     | not perfect |
+               | waypoints | route          | turns                                      | lanes                                                                                                                                                                                             | #           |
+               | a,f       | ab,bdehi,ef,ef | depart,turn right,turn right,arrive        | ,right:true right:true right:true right:true,left:false left:false straight:false straight:false straight:false straight:false right:true right:true,                                             |             |
+               | a,g       | ab,bdehi,eg,eg | depart,turn right,turn left,arrive         | ,right:true right:true right:true right:true,left:true left:true straight:false straight:false straight:false straight:false right:false right:false,                                             |             |
+               | a,j       | ab,bdehi,ij,ij | depart,turn right,end of road right,arrive | ,right:true right:true right:true right:true;left:false left:false straight:false straight:false straight:true straight:true right:false right:false,left:false left:false right:true right:true, |             |
+               | a,l       | ab,bdehi,il,il | depart,turn right,end of road left,arrive  | ,right:true right:true right:true right:true;left:false left:false straight:true straight:true straight:false straight:false right:false right:false,left:true left:true right:false right:false, | not perfect |
+               | c,g       | cb,bdehi,eg,eg | depart,turn left,turn left,arrive          | ,left:true left:true left:true left:true,left:true left:true straight:false straight:false straight:false straight:false right:false right:false,                                                 |             |
+               | c,f       | cb,bdehi,ef,ef | depart,turn left,turn right,arrive         | ,left:true left:true left:true left:true,left:false left:false straight:false straight:false straight:false straight:false right:true right:true,                                                 |             |
+               | c,l       | cb,bdehi,il,il | depart,turn left,end of road left,arrive   | ,left:true left:true left:true left:true;left:false left:false straight:true straight:true straight:false straight:false right:false right:false,left:true left:true right:false right:false,     |             |
+               | c,j       | cb,bdehi,ij,ij | depart,turn left,end of road right,arrive  | ,left:true left:true left:true left:true;left:false left:false straight:false straight:false straight:true straight:true right:false right:false,left:false left:false right:true right:true,     | not perfect |
 
        @anticipate
        Scenario: Anticipate Lanes for turns with through before and after
@@ -811,9 +811,9 @@ Feature: Turn Lane Guidance
             | hj    | 7th  |                    | no     |
 
         When I route I should get
-            | waypoints | route        | turns                    | locations | lanes                                                                                                                                                                                                                                                                                        |
-            | a,i       | road,road    | depart,arrive            | a,i       | ;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:false;none:true none:true right:false,     |
-            | a,j       | road,7th,7th | depart,turn right,arrive | a,h,j     | ;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:false none:false none:true;left:false none:false none:false none:true,none:false none:false right:true, |
+            | waypoints | route        | turns                    | locations | lanes                                                                                                                                                                                                                                                                                      |
+            | a,i       | road,road    | depart,arrive            | a,i       | ;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;none:true none:true right:false,    |
+            | a,j       | road,7th,7th | depart,turn right,arrive | a,h,j     | ;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:true none:true none:true;left:false none:false none:false none:true,none:false none:false right:true, |
 
     @anticipate
     Scenario: Oak St, Franklin St
