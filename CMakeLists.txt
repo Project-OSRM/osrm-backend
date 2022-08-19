@@ -356,7 +356,6 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-intel -wd10237 -Wall -ipo -fPIC")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   # using Visual Studio C++
-  set(BOOST_COMPONENTS ${BOOST_COMPONENTS} zlib)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj") # avoid compiler error C1128 from scripting_environment_lua.cpp
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DWIN32_LEAN_AND_MEAN") # avoid compiler error C2011 from dual #include of winsock.h and winsock2.h
   add_dependency_defines(-DBOOST_LIB_DIAGNOSTIC)
@@ -446,6 +445,11 @@ add_subdirectory(${FLATBUFFERS_SRC_DIR}
         ${CMAKE_CURRENT_BINARY_DIR}/flatbuffers-build
         EXCLUDE_FROM_ALL)
 
+# see https://stackoverflow.com/questions/70898030/boost-link-error-using-conan-find-package
+if (MSVC)
+  add_definitions(-DBOOST_ALL_NO_LIB)
+endif()
+
 if(ENABLE_CONAN)
   message(STATUS "Installing dependencies via Conan")
 
@@ -462,6 +466,16 @@ if(ENABLE_CONAN)
   set(CONAN_TBB_VERSION 2020.3)
   
   set(CONAN_SYSTEM_INCLUDES ON)
+  
+  # TODO: 
+  # if we link TBB dynamically osrm-extract.exe finishes on the first access to any TBB symbol 
+  # with exit code = -1073741515, which means that program cannot load required DLL.
+  if (MSVC)
+    set(TBB_SHARED False)
+  else()
+    set(TBB_SHARED True)
+  endif()
+
   conan_cmake_run(
     REQUIRES 
     boost/${CONAN_BOOST_VERSION}
@@ -475,6 +489,7 @@ if(ENABLE_CONAN)
     KEEP_RPATHS
     NO_OUTPUT_DIRS
     OPTIONS boost:filesystem_version=3 # https://stackoverflow.com/questions/73392648/error-with-boost-filesystem-version-in-cmake
+            tbb:shared=${TBB_SHARED}
   )
 
   add_dependency_includes(${CONAN_INCLUDE_DIRS_BOOST})
