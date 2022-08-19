@@ -18,8 +18,6 @@
 #if defined(_MSC_VER)
 // for `InterlockedCompareExchange`
 #include <windows.h>
-// defined by `windows.h`
-#undef OPTIONAL
 #endif
 
 namespace osrm
