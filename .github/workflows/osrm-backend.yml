@@ -198,7 +198,7 @@ jobs:
             CXXCOMPILER: g++-9
             CXXFLAGS: -Wno-cast-function-type
 
-          - name: gcc-9-release-i686
+          - name: gcc-9-conan-release-i686
             continue-on-error: false
             node: 12
             runs-on: ubuntu-20.04
@@ -209,7 +209,8 @@ jobs:
             CXXCOMPILER: g++-9
             CXXFLAGS: "-m32 -msse2 -mfpmath=sse"
             TARGET_ARCH: i686
-
+            ENABLE_CONAN: ON
+            
           - name: gcc-8-release
             continue-on-error: false
             node: 12
@@ -413,7 +414,6 @@ jobs:
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
     runs-on: ${{ matrix.runs-on }}
@@ -510,10 +510,6 @@ jobs:
         wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${CMAKE_DIR}
         echo "${CMAKE_DIR}/bin" >> $GITHUB_PATH
 
-        # TBB
-        ${MASON} install tbb 2017_U7
-        echo "LD_LIBRARY_PATH=$(${MASON} prefix tbb 2017_U7)/lib/:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
-
         # ccache
         ${MASON} install ccache ${CCACHE_VERSION}
         echo "$(${MASON} prefix ccache ${CCACHE_VERSION})/bin" >> $GITHUB_PATH
@@ -537,7 +533,7 @@ jobs:
         if [ "${TARGET_ARCH}" != "i686" ] && [ "${ENABLE_CONAN}" != "ON" ]; then
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
           sudo apt-get update -y
-          sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev libtbb-dev libboost-all-dev
+          sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev libboost-all-dev
           if [[ -z "${CLANG_VERSION}" ]]; then
             sudo apt-get install -y ${CXXCOMPILER}
           fi
@@ -548,6 +544,18 @@ jobs:
           source ./scripts/ci/before_install.${TARGET_ARCH}.sh
           echo "PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig:${PKG_CONFIG_PATH}" >> $GITHUB_ENV
         fi
+
+        # TBB
+        TBB_VERSION=2021.3.0
+        if [[ "${RUNNER_OS}" == "Linux" ]]; then
+          TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz"
+        elif [[ "${RUNNER_OS}" == "macOS" ]]; then
+          TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-mac.tgz"
+        fi
+        wget --tries 5 ${TBB_URL} -O onetbb.tgz
+        tar zxvf onetbb.tgz
+        sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
+        sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
 
     - name: Prepare build
       run: |
@@ -564,6 +572,7 @@ jobs:
       run: |
         echo "Using ${JOBS} jobs"
         pushd ${OSRM_BUILD_DIR}
+
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                  -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
                  -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \

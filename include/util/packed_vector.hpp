@@ -11,11 +11,14 @@
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/reverse_iterator.hpp>
 
-#include <tbb/atomic.h>
-
 #include <array>
 #include <cmath>
 #include <vector>
+
+#if defined(_MSC_VER)
+// for `InterlockedCompareExchange`
+#include <winnt.h>
+#endif
 
 namespace osrm
 {
@@ -87,6 +90,17 @@ inline WordT set_upper_value(WordT word, WordT mask, std::uint8_t offset, T valu
 {
     static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
     return (word & ~mask) | ((static_cast<WordT>(value) >> offset) & mask);
+}
+
+inline bool compare_and_swap(uint64_t *ptr, uint64_t old_value, uint64_t new_value)
+{
+#if defined(_MSC_VER)
+    return InterlockedCompareExchange(ptr, new_value, old_value) != old_value;
+#elif defined(__GNUC__)
+    return __sync_bool_compare_and_swap(ptr, old_value, new_value);
+#else
+#error "Unsupported compiler";
+#endif
 }
 
 template <typename T, std::size_t Bits, storage::Ownership Ownership> class PackedVector
@@ -527,8 +541,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
                                                        lower_mask[internal_index.element],
                                                        lower_offset[internal_index.element],
                                                        value);
-        } while (tbb::internal::as_atomic(lower_word)
-                     .compare_and_swap(new_lower_word, local_lower_word) != local_lower_word);
+        } while (!compare_and_swap(&lower_word, local_lower_word, new_lower_word));
 
         // Lock-free update of the upper word
         WordT local_upper_word, new_upper_word;
@@ -539,8 +552,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
                                                        upper_mask[internal_index.element],
                                                        upper_offset[internal_index.element],
                                                        value);
-        } while (tbb::internal::as_atomic(upper_word)
-                     .compare_and_swap(new_upper_word, local_upper_word) != local_upper_word);
+        } while (!compare_and_swap(&upper_word, local_upper_word, new_upper_word));
     }
 
     util::ViewOrVector<WordT, Ownership> vec;

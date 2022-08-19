@@ -25,13 +25,8 @@
 #include <vector>
 
 // explicit TBB scheduler init to register resources cleanup at exit
-#if TBB_VERSION_MAJOR == 2020
 #include <tbb/global_control.h>
 tbb::global_control scheduler(tbb::global_control::max_allowed_parallelism, 2);
-#else
-#include <tbb/task_scheduler_init.h>
-tbb::task_scheduler_init init(2);
-#endif
 
 BOOST_AUTO_TEST_SUITE(static_rtree)
 
