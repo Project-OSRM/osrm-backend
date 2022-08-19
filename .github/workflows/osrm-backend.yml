@@ -663,6 +663,6 @@ jobs:
 
   ci-complete:
     runs-on: ubuntu-18.04
-    needs: build-test-publish
+    needs: [build-test-publish, docker-image, windows]
     steps:
     - run: echo "CI complete"

@@ -445,8 +445,9 @@ add_subdirectory(${FLATBUFFERS_SRC_DIR}
         ${CMAKE_CURRENT_BINARY_DIR}/flatbuffers-build
         EXCLUDE_FROM_ALL)
 
+# see https://stackoverflow.com/questions/70898030/boost-link-error-using-conan-find-package
 if (MSVC)
-add_definitions(-DBOOST_ALL_NO_LIB)
+  add_definitions(-DBOOST_ALL_NO_LIB)
 endif()
 
 if(ENABLE_CONAN)
@@ -466,6 +467,9 @@ if(ENABLE_CONAN)
   
   set(CONAN_SYSTEM_INCLUDES ON)
   
+  # TODO: 
+  # if we link TBB dynamically osrm-extract.exe finishes on the first access to any TBB symbol 
+  # with exit code = -1073741515, which means that program cannot load required DLL.
   if (MSVC)
     set(TBB_SHARED False)
   else()

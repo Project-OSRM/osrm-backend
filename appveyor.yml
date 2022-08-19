@@ -1,0 +1,15 @@
+os: Visual Studio 2019
+
+# clone directory
+clone_folder: c:\projects\osrm
+
+platform: x64
+
+# no-op for the time being until someone with access to GitHub checks settings will remove integration with AppVeyor
+# https://github.com/Project-OSRM/osrm-backend/pull/6312#issuecomment-1217237055 
+build_script:
+  - EXIT 0
+
+branches:
+  only:
+    - master
