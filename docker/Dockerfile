@@ -4,7 +4,7 @@ ARG BUILD_CONCURRENCY
 RUN mkdir -p /src  && mkdir -p /opt
 
 RUN apt-get update && \
-    apt-get -y --no-install-recommends install cmake make git gcc g++ libbz2-dev libxml2-dev wget \
+    apt-get -y --no-install-recommends install ca-certificates cmake make git gcc g++ libbz2-dev libxml2-dev wget \
     libzip-dev libboost1.74-all-dev lua5.2 liblua5.2-dev -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
 
 RUN export TBB_VERSION=2021.3.0 && \
