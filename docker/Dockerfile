@@ -7,17 +7,19 @@ RUN apt-get update && \
     apt-get -y --no-install-recommends install ca-certificates cmake make git gcc g++ libbz2-dev libxml2-dev wget \
     libzip-dev libboost1.74-all-dev lua5.2 liblua5.2-dev -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
 
-RUN export TBB_VERSION=2021.3.0 && \
-    export TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz" && \
-    wget --tries 5 ${TBB_URL} -O onetbb.tgz && \
-    tar zxvf onetbb.tgz && \
-    cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/ && \
-    cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
+RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
+    git clone --branch v2021.3.0 --single-branch https://github.com/oneapi-src/oneTBB.git && \
+    cd oneTBB && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    make -j${NPROC} && \
+    make install 
 
 COPY . /src
 WORKDIR /src
 
-RUN NPROC=${BUILD_CONCURRENCY:-$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1)} && \
+RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
     echo "Building OSRM ${DOCKER_TAG}" && \
     git show --format="%H" | head -n1 > /opt/OSRM_GITSHA && \
     echo "Building OSRM gitsha $(cat /opt/OSRM_GITSHA)" && \
@@ -53,6 +55,7 @@ RUN /usr/local/bin/osrm-extract --help && \
     /usr/local/bin/osrm-contract --help && \
     /usr/local/bin/osrm-partition --help && \
     /usr/local/bin/osrm-customize --help
+
 WORKDIR /opt
 
 EXPOSE 5000
