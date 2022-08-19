@@ -467,6 +467,15 @@ if(ENABLE_CONAN)
   
   set(CONAN_SYSTEM_INCLUDES ON)
 
+  # TODO: 
+  # if we link TBB dynamically osrm-extract.exe finishes on the first access to any TBB symbol 
+  # with exit code = -1073741515, which means that program cannot load required DLL.
+  if (MSVC)
+    set(TBB_SHARED False)
+  else()
+    set(TBB_SHARED True)
+  endif()
+
   set(CONAN_ARGS       
     REQUIRES 
     boost/${CONAN_BOOST_VERSION}
@@ -480,12 +489,13 @@ if(ENABLE_CONAN)
     NO_OUTPUT_DIRS
     OPTIONS boost:filesystem_version=3 # https://stackoverflow.com/questions/73392648/error-with-boost-filesystem-version-in-cmake
             tbb:shared=${TBB_SHARED}
+    BUILD missing
   )
   # explicitly say Conan to use x86 dependencies if build for x86 platforms (https://github.com/conan-io/cmake-conan/issues/141)
   if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-    conan_cmake_run("${CONAN_ARGS} BUILD all ARCH x86")
+    conan_cmake_run("${CONAN_ARGS};ARCH;x86")
   else()
-    conan_cmake_run("${CONAN_ARGS} BUILD missing ")
+    conan_cmake_run("${CONAN_ARGS}")
   endif()
 
   add_dependency_includes(${CONAN_INCLUDE_DIRS_BOOST})
