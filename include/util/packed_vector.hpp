@@ -17,7 +17,7 @@
 
 #if defined(_MSC_VER)
 // for `InterlockedCompareExchange`
-#include <winnt.h>
+#include <windows.h>
 #endif
 
 namespace osrm

@@ -4,8 +4,15 @@ ARG BUILD_CONCURRENCY
 RUN mkdir -p /src  && mkdir -p /opt
 
 RUN apt-get update && \
-    apt-get -y --no-install-recommends install cmake make git gcc g++ libbz2-dev libxml2-dev \
-    libzip-dev libboost1.74-all-dev lua5.2 liblua5.2-dev libtbb-dev -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
+    apt-get -y --no-install-recommends install cmake make git gcc g++ libbz2-dev libxml2-dev wget \
+    libzip-dev libboost1.74-all-dev lua5.2 liblua5.2-dev -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
+
+RUN export TBB_VERSION=2021.3.0 && \
+    export TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz" && \
+    wget --tries 5 ${TBB_URL} -O onetbb.tgz && \
+    tar zxvf onetbb.tgz && \
+    cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/ && \
+    cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
 
 COPY . /src
 WORKDIR /src
@@ -37,7 +44,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends libboost-program-options1.74.0 libboost-regex1.74.0 \
         libboost-date-time1.74.0 libboost-chrono1.74.0 libboost-filesystem1.74.0 \
         libboost-iostreams1.74.0 libboost-system1.74.0 libboost-thread1.74.0 \
-        expat liblua5.2-0 libtbb2 &&\
+        expat liblua5.2-0 &&\
     rm -rf /var/lib/apt/lists/*
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt

@@ -475,7 +475,6 @@ if(ENABLE_CONAN)
     lua/${CONAN_LUA_VERSION}
     onetbb/${CONAN_TBB_VERSION}
     BASIC_SETUP 
-    BUILD missing 
     GENERATORS cmake_find_package
     KEEP_RPATHS
     NO_OUTPUT_DIRS
@@ -484,9 +483,9 @@ if(ENABLE_CONAN)
   )
   # explicitly say Conan to use x86 dependencies if build for x86 platforms (https://github.com/conan-io/cmake-conan/issues/141)
   if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-    conan_cmake_run("${CONAN_ARGS} ARCH x86")
+    conan_cmake_run("${CONAN_ARGS} BUILD all ARCH x86")
   else()
-    conan_cmake_run("${CONAN_ARGS}")
+    conan_cmake_run("${CONAN_ARGS} BUILD missing ")
   endif()
 
   add_dependency_includes(${CONAN_INCLUDE_DIRS_BOOST})
