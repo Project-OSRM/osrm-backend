@@ -462,9 +462,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.conan
-        key: v2-conan-${{ matrix.name }}-${{ github.sha }}
+        key: v3-conan-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
-          v2-conan-${{ matrix.name }}-
+          v3-conan-${{ matrix.name }}-
     - name: Enable test cache
       uses: actions/cache@v2
       with:
