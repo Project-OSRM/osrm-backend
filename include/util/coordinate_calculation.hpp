@@ -43,11 +43,6 @@ inline double radToDeg(const double radian)
 //! Takes the squared euclidean distance of the input coordinates. Does not return meters!
 std::uint64_t squaredEuclideanDistance(const Coordinate lhs, const Coordinate rhs);
 
-double fccApproximateDistance(const Coordinate first_coordinate,
-                              const Coordinate second_coordinate);
-
-double haversineDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
-
 double greatCircleDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
 
 // get the length of a full coordinate vector, using one of our basic functions to compute distances

@@ -708,6 +708,6 @@ test('route: snapping parameter passed through OK', function(assert) {
     var osrm = new OSRM(monaco_path);
     osrm.route({snapping: "any", coordinates: [[7.448205209414596,43.754001097311544],[7.447122039202185,43.75306156811368]]}, function(err, route) {
         assert.ifError(err);
-        assert.equal(Math.round(route.routes[0].distance * 10), 1314); // Round it to nearest 0.1m to eliminate floating point comparison error
+        assert.equal(Math.round(route.routes[0].distance * 10), 1315); // Round it to nearest 0.1m to eliminate floating point comparison error
     });
 });

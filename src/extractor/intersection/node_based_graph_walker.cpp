@@ -50,7 +50,7 @@ void LengthLimitedCoordinateAccumulator::update(const NodeID from_node,
     const auto length =
         util::coordinate_calculation::getLength(current_coordinates.begin(),
                                                 current_coordinates.end(),
-                                                util::coordinate_calculation::haversineDistance);
+                                                util::coordinate_calculation::greatCircleDistance);
 
     // in case we get too many coordinates, we limit them to our desired length
     if (length + accumulated_length > max_length)

@@ -221,7 +221,7 @@ Feature: Basic trip planning
 
         When I plan a trip I should get
             |  waypoints  | source | destination |roundtrip | trips  | durations         | distance               |
-            |  a,b,d,e,c  | first  | last        | false    | abedc  | 8.200000000000001 | 81.6                   |
+            |  a,b,d,e,c  | first  | last        | false    | abedc  | 8.200000000000001 | 81.4                   |
 
 
     Scenario: Testbot - Trip: FSE with waypoints (more than 10)

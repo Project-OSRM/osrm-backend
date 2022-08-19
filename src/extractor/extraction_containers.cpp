@@ -434,7 +434,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             const auto duration = edge_iterator->duration_data(distance);
 
             const auto accurate_distance =
-                util::coordinate_calculation::fccApproximateDistance(source_coord, target_coord);
+                util::coordinate_calculation::greatCircleDistance(source_coord, target_coord);
 
             ExtractionSegment segment(source_coord, target_coord, distance, weight, duration);
             scripting_environment.ProcessSegment(segment);

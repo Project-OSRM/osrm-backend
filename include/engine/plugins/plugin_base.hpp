@@ -190,7 +190,7 @@ class BasePlugin
             {
                 phantom_nodes[i].push_back(PhantomNodeWithDistance{
                     parameters.hints[i]->phantom,
-                    util::coordinate_calculation::haversineDistance(
+                    util::coordinate_calculation::greatCircleDistance(
                         parameters.coordinates[i], parameters.hints[i]->phantom.location),
                 });
                 continue;
@@ -240,7 +240,7 @@ class BasePlugin
             {
                 phantom_nodes[i].push_back(PhantomNodeWithDistance{
                     parameters.hints[i]->phantom,
-                    util::coordinate_calculation::haversineDistance(
+                    util::coordinate_calculation::greatCircleDistance(
                         parameters.coordinates[i], parameters.hints[i]->phantom.location),
                 });
                 continue;

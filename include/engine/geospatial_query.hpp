@@ -484,7 +484,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
              current < forward_geometry.begin() + data.fwd_segment_position;
              ++current)
         {
-            forward_distance_offset += util::coordinate_calculation::fccApproximateDistance(
+            forward_distance_offset += util::coordinate_calculation::greatCircleDistance(
                 datafacade.GetCoordinateOfNode(*current),
                 datafacade.GetCoordinateOfNode(*std::next(current)));
         }
@@ -494,7 +494,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 
         EdgeWeight forward_weight = forward_weights[data.fwd_segment_position];
         EdgeDuration forward_duration = forward_durations[data.fwd_segment_position];
-        EdgeDistance forward_distance = util::coordinate_calculation::fccApproximateDistance(
+        EdgeDistance forward_distance = util::coordinate_calculation::greatCircleDistance(
             datafacade.GetCoordinateOfNode(forward_geometry(data.fwd_segment_position)),
             point_on_segment);
 
@@ -514,7 +514,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
              current != std::prev(forward_geometry.end());
              ++current)
         {
-            reverse_distance_offset += util::coordinate_calculation::fccApproximateDistance(
+            reverse_distance_offset += util::coordinate_calculation::greatCircleDistance(
                 datafacade.GetCoordinateOfNode(*current),
                 datafacade.GetCoordinateOfNode(*std::next(current)));
         }
@@ -523,7 +523,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             reverse_weights[reverse_weights.size() - data.fwd_segment_position - 1];
         EdgeDuration reverse_duration =
             reverse_durations[reverse_durations.size() - data.fwd_segment_position - 1];
-        EdgeDistance reverse_distance = util::coordinate_calculation::fccApproximateDistance(
+        EdgeDistance reverse_distance = util::coordinate_calculation::greatCircleDistance(
             point_on_segment,
             datafacade.GetCoordinateOfNode(forward_geometry(data.fwd_segment_position + 1)));
 
@@ -592,8 +592,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         Coordinate wsg84_coordinate =
             util::web_mercator::toWGS84(segment.fixed_projected_coordinate);
 
-        return util::coordinate_calculation::haversineDistance(input_coordinate, wsg84_coordinate) >
-               max_distance;
+        return util::coordinate_calculation::greatCircleDistance(input_coordinate,
+                                                                 wsg84_coordinate) > max_distance;
     }
 
     std::pair<bool, bool> CheckSegmentExclude(const CandidateSegment &segment) const
