@@ -148,7 +148,7 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
                ServiceMemFn service,
                Nan::Callback *callback,
                PluginParameters pluginParams_)
-            : Base(callback), osrm{std::move(osrm_)}, service{std::move(service)},
+            : Base(callback, "osrm:async"), osrm{std::move(osrm_)}, service{std::move(service)},
               params{std::move(params_)}, pluginParams{std::move(pluginParams_)}
         {
         }
@@ -184,7 +184,7 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
             const constexpr auto argc = 2u;
             v8::Local<v8::Value> argv[argc] = {Nan::Null(), render(result)};
 
-            callback->Call(argc, argv);
+            callback->Call(argc, argv, async_resource);
         }
 
         // Keeps the OSRM object alive even after shutdown until we're done with callback
@@ -230,8 +230,9 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
                ServiceMemFn service,
                Nan::Callback *callback,
                PluginParameters pluginParams_)
-            : Base(callback), osrm{std::move(osrm_)}, service{std::move(service)},
-              params{std::move(params_)}, pluginParams{std::move(pluginParams_)}
+            : Base(callback, "osrm:asyncForTiles"), osrm{std::move(osrm_)},
+              service{std::move(service)}, params{std::move(params_)}, pluginParams{
+                                                                           std::move(pluginParams_)}
         {
         }
 
@@ -256,7 +257,7 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
             auto str_result = result.get<std::string>();
             v8::Local<v8::Value> argv[argc] = {Nan::Null(), render(str_result)};
 
-            callback->Call(argc, argv);
+            callback->Call(argc, argv, async_resource);
         }
 
         // Keeps the OSRM object alive even after shutdown until we're done with callback
