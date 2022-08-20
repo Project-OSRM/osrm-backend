@@ -46,7 +46,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Use Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: 12
     - name: Enable Node.js cache
@@ -348,8 +348,7 @@ jobs:
           - name: conan-osx-release-node-latest
             build_node_package: true
             continue-on-error: true
-            # TODO: Use node 'latest' once supported: https://github.com/actions/setup-node/issues/257
-            node: 16
+            node: latest
             runs-on: macos-11
             BUILD_TYPE: Release
             CCOMPILER: clang
@@ -361,8 +360,7 @@ jobs:
           - name: node-latest-conan-linux-release
             build_node_package: true
             continue-on-error: true
-            # TODO: Use node 'latest' once supported: https://github.com/actions/setup-node/issues/257
-            node: 16
+            node: latest
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
             CLANG_VERSION: 6.0.0
@@ -373,8 +371,7 @@ jobs:
           - name: node-latest-conan-linux-debug
             build_node_package: true
             continue-on-error: true
-            # TODO: Use node 'latest' once supported: https://github.com/actions/setup-node/issues/257
-            node: 16
+            node: latest
             runs-on: ubuntu-20.04
             BUILD_TYPE: Debug
             CLANG_VERSION: 6.0.0
@@ -444,7 +441,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Use Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node }}
     - name: Enable Node.js cache
