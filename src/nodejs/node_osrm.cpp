@@ -230,8 +230,9 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
                ServiceMemFn service,
                Nan::Callback *callback,
                PluginParameters pluginParams_)
-            : Base(callback, "osrm:asyncForTiles"), osrm{std::move(osrm_)}, service{std::move(service)},
-              params{std::move(params_)}, pluginParams{std::move(pluginParams_)}
+            : Base(callback, "osrm:asyncForTiles"), osrm{std::move(osrm_)},
+              service{std::move(service)}, params{std::move(params_)}, pluginParams{
+                                                                           std::move(pluginParams_)}
         {
         }
 
