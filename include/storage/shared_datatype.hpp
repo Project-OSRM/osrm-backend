@@ -59,7 +59,7 @@ class BaseDataLayout
   public:
     virtual ~BaseDataLayout() = default;
 
-    inline void SetBlock(const std::string &name, Block block) { blocks[name] = std::move(block); }
+    inline void SetBlock(const std::string &name, const Block &block) { blocks[name] = block; }
 
     inline std::uint64_t GetBlockEntries(const std::string &name) const
     {

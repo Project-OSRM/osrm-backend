@@ -98,7 +98,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
                 (path_point.weight_until_turn - path_point.weight_of_turn) /
                     facade.GetWeightMultiplier(),
                 path_point.datasource_id});
-            geometry.locations.push_back(std::move(coordinate));
+            geometry.locations.push_back(coordinate);
             geometry.osm_node_ids.push_back(osm_node_id);
         }
     }

@@ -341,7 +341,7 @@ Coordinate interpolateLinear(double factor, const Coordinate from, const Coordin
     FixedLatitude interpolated_lat{
         static_cast<std::int32_t>(from_lat + factor * (to_lat - from_lat))};
 
-    return {std::move(interpolated_lon), std::move(interpolated_lat)};
+    return {interpolated_lon, interpolated_lat};
 }
 
 // compute the signed area of a triangle

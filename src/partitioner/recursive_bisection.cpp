@@ -86,13 +86,13 @@ RecursiveBisection::RecursiveBisection(BisectionGraph &bisection_graph_,
         TreeNode left_node{std::move(left_graph), node.depth + 1};
 
         if (!terminal(left_node))
-            feeder.add(std::move(left_node));
+            feeder.add(left_node);
 
         BisectionGraphView right_graph{bisection_graph, center, node.graph.End()};
         TreeNode right_node{std::move(right_graph), node.depth + 1};
 
         if (!terminal(right_node))
-            feeder.add(std::move(right_node));
+            feeder.add(right_node);
     });
 
     TIMER_STOP(bisection);
