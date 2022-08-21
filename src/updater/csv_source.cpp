@@ -62,6 +62,6 @@ TurnLookupTable readTurnValues(const std::vector<std::string> &paths)
                                                qi::double_ >> -(',' >> qi::double_));
     return parser(paths);
 }
-}
-}
-}
+} // namespace csv
+} // namespace updater
+} // namespace osrm

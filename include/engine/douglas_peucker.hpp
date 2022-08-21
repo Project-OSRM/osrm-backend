@@ -57,7 +57,7 @@ const constexpr std::uint64_t DOUGLAS_PEUCKER_THRESHOLDS[19] = {
 
 const constexpr auto DOUGLAS_PEUCKER_THRESHOLDS_SIZE =
     sizeof(DOUGLAS_PEUCKER_THRESHOLDS) / sizeof(*DOUGLAS_PEUCKER_THRESHOLDS);
-} // ns detail
+} // namespace detail
 
 // These functions compute the bitvector of indicating generalized input
 // points according to the (Ramer-)Douglas-Peucker algorithm.
@@ -75,7 +75,7 @@ inline std::vector<util::Coordinate> douglasPeucker(const std::vector<util::Coor
 {
     return douglasPeucker(begin(geometry), end(geometry), zoom_level);
 }
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif /* DOUGLAS_PEUCKER_HPP_ */

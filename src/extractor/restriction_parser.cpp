@@ -4,18 +4,14 @@
 #include "util/conditional_restrictions.hpp"
 #include "util/log.hpp"
 
-#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string/regex.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/ref.hpp>
-#include <boost/regex.hpp>
 
 #include <osmium/osm.hpp>
 #include <osmium/tags/regex_filter.hpp>
 
 #include <algorithm>
-#include <iterator>
 
 namespace osrm
 {
@@ -54,7 +50,7 @@ RestrictionParser::RestrictionParser(bool use_turn_restrictions_,
  * in the corresponding profile. We use it for both namespacing restrictions, as in
  * restriction:motorcar as well as whitelisting if its in except:motorcar.
  */
-boost::optional<InputConditionalTurnRestriction>
+boost::optional<InputTurnRestriction>
 RestrictionParser::TryParse(const osmium::Relation &relation) const
 {
     // return if turn restrictions should be ignored
@@ -122,14 +118,13 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         }
     }
 
-    // we pretend every restriction is a conditional restriction. If we do not find any restriction,
-    // we can trim away the vector after parsing
-    InputConditionalTurnRestriction restriction_container;
+    InputTurnRestriction restriction_container;
     restriction_container.is_only = is_only_restriction;
 
     constexpr auto INVALID_OSM_ID = std::numeric_limits<std::uint64_t>::max();
     auto from = INVALID_OSM_ID;
-    auto via = INVALID_OSM_ID;
+    auto via_node = INVALID_OSM_ID;
+    std::vector<OSMWayID> via_ways;
     auto to = INVALID_OSM_ID;
     bool is_node_restriction = true;
 
@@ -152,7 +147,7 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
                 continue;
             }
             BOOST_ASSERT(0 == strcmp("via", role));
-            via = static_cast<std::uint64_t>(member.ref());
+            via_node = static_cast<std::uint64_t>(member.ref());
             is_node_restriction = true;
             // set via node id
             break;
@@ -170,7 +165,7 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
             }
             else if (0 == strcmp("via", role))
             {
-                via = static_cast<std::uint64_t>(member.ref());
+                via_ways.push_back({static_cast<std::uint64_t>(member.ref())});
                 is_node_restriction = false;
             }
             break;
@@ -211,17 +206,18 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         }
     }
 
-    if (from != INVALID_OSM_ID && via != INVALID_OSM_ID && to != INVALID_OSM_ID)
+    if (from != INVALID_OSM_ID && (via_node != INVALID_OSM_ID || !via_ways.empty()) &&
+        to != INVALID_OSM_ID)
     {
         if (is_node_restriction)
         {
             // template struct requires bracket for ID initialisation :(
-            restriction_container.node_or_way = InputNodeRestriction{{from}, {via}, {to}};
+            restriction_container.node_or_way = InputNodeRestriction{{from}, {via_node}, {to}};
         }
         else
         {
             // template struct requires bracket for ID initialisation :(
-            restriction_container.node_or_way = InputWayRestriction{{from}, {via}, {to}};
+            restriction_container.node_or_way = InputWayRestriction{{from}, via_ways, {to}};
         }
         return restriction_container;
     }
@@ -246,14 +242,15 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
 
     // Be warned, this is quadratic work here, but we assume that
     // only a few exceptions are actually defined.
-    std::vector<std::string> exceptions;
-    boost::algorithm::split_regex(exceptions, except_tag_string, boost::regex("[;][ ]*"));
+    const std::regex delimiter_re("[;][ ]*");
+    std::sregex_token_iterator except_tags_begin(
+        except_tag_string.begin(), except_tag_string.end(), delimiter_re, -1);
+    std::sregex_token_iterator except_tags_end;
 
-    return std::any_of(
-        std::begin(exceptions), std::end(exceptions), [&](const std::string &current_string) {
-            return std::end(restrictions) !=
-                   std::find(std::begin(restrictions), std::end(restrictions), current_string);
-        });
+    return std::any_of(except_tags_begin, except_tags_end, [&](const std::string &current_string) {
+        return std::end(restrictions) !=
+               std::find(std::begin(restrictions), std::end(restrictions), current_string);
+    });
 }
-}
-}
+} // namespace extractor
+} // namespace osrm

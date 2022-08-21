@@ -2,7 +2,7 @@
 #
 #  Configuration for YouCompleteMe Vim plugin
 #
-#  http://valloric.github.io/YouCompleteMe/
+#  https://valloric.github.io/YouCompleteMe/
 #
 #-----------------------------------------------------------------------------
 

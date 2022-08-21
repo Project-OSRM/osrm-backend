@@ -71,8 +71,8 @@ class BearingClass
 // make Bearing Class hasbable
 namespace std
 {
-inline size_t hash<::osrm::util::guidance::BearingClass>::
-operator()(const ::osrm::util::guidance::BearingClass &bearing_class) const
+inline size_t hash<::osrm::util::guidance::BearingClass>::operator()(
+    const ::osrm::util::guidance::BearingClass &bearing_class) const
 {
     return boost::hash_value(bearing_class.available_bearings);
 }

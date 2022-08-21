@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -58,7 +58,7 @@ namespace osmium {
          * level.
          */
         inline constexpr uint32_t num_tiles_in_zoom(uint32_t zoom) noexcept {
-            return 1u << zoom;
+            return 1U << zoom;
         }
 
         /**
@@ -77,8 +77,7 @@ namespace osmium {
         inline constexpr uint32_t mercx_to_tilex(uint32_t zoom, double x) noexcept {
             return static_cast<uint32_t>(detail::clamp<int32_t>(
                 static_cast<int32_t>((x + detail::max_coordinate_epsg3857) / tile_extent_in_zoom(zoom)),
-                0, num_tiles_in_zoom(zoom) -1
-            ));
+                0, num_tiles_in_zoom(zoom) - 1));
         }
 
         /**
@@ -89,14 +88,17 @@ namespace osmium {
         inline constexpr uint32_t mercy_to_tiley(uint32_t zoom, double y) noexcept {
             return static_cast<uint32_t>(detail::clamp<int32_t>(
                 static_cast<int32_t>((detail::max_coordinate_epsg3857 - y) / tile_extent_in_zoom(zoom)),
-                0, num_tiles_in_zoom(zoom) -1
-            ));
+                0, num_tiles_in_zoom(zoom) - 1));
         }
 
         /**
          * A tile in the usual Mercator projection.
          */
         struct Tile {
+
+            enum {
+                max_zoom = 30U
+            };
 
             /// x coordinate
             uint32_t x;
@@ -119,7 +121,7 @@ namespace osmium {
                 x(tx),
                 y(ty),
                 z(zoom) {
-                assert(zoom <= 30u);
+                assert(zoom <= max_zoom);
                 assert(x < num_tiles_in_zoom(zoom));
                 assert(y < num_tiles_in_zoom(zoom));
             }
@@ -134,7 +136,7 @@ namespace osmium {
              */
             explicit Tile(uint32_t zoom, const osmium::Location& location) :
                 z(zoom) {
-                assert(zoom <= 30u);
+                assert(zoom <= max_zoom);
                 assert(location.valid());
                 const auto coordinates = lonlat_to_mercator(location);
                 x = mercx_to_tilex(zoom, coordinates.x);
@@ -151,7 +153,7 @@ namespace osmium {
              */
             explicit Tile(uint32_t zoom, const osmium::geom::Coordinates& coordinates) :
                 z(zoom) {
-                assert(zoom <= 30u);
+                assert(zoom <= max_zoom);
                 x = mercx_to_tilex(zoom, coordinates.x);
                 y = mercy_to_tiley(zoom, coordinates.y);
             }
@@ -162,7 +164,7 @@ namespace osmium {
              * each be between 0 and 2^zoom-1.
              */
             bool valid() const noexcept {
-                if (z > 30) {
+                if (z > max_zoom) {
                     return false;
                 }
                 const auto max = num_tiles_in_zoom(z);

@@ -50,7 +50,7 @@ void LengthLimitedCoordinateAccumulator::update(const NodeID from_node,
     const auto length =
         util::coordinate_calculation::getLength(current_coordinates.begin(),
                                                 current_coordinates.end(),
-                                                util::coordinate_calculation::haversineDistance);
+                                                util::coordinate_calculation::greatCircleDistance);
 
     // in case we get too many coordinates, we limit them to our desired length
     if (length + accumulated_length > max_length)
@@ -70,12 +70,12 @@ SelectRoadByNameOnlyChoiceAndStraightness::SelectRoadByNameOnlyChoiceAndStraight
 {
 }
 
-boost::optional<EdgeID> SelectRoadByNameOnlyChoiceAndStraightness::
-operator()(const NodeID /*nid*/,
-           const EdgeID /*via_edge_id*/,
-           const IntersectionView &intersection,
-           const util::NodeBasedDynamicGraph &node_based_graph,
-           const EdgeBasedNodeDataContainer &node_data_container) const
+boost::optional<EdgeID> SelectRoadByNameOnlyChoiceAndStraightness::operator()(
+    const NodeID /*nid*/,
+    const EdgeID /*via_edge_id*/,
+    const IntersectionView &intersection,
+    const util::NodeBasedDynamicGraph &node_based_graph,
+    const EdgeBasedNodeDataContainer &node_data_container) const
 {
     BOOST_ASSERT(!intersection.empty());
     const auto comparator = [&](const IntersectionViewData &lhs, const IntersectionViewData &rhs) {
@@ -120,12 +120,12 @@ SelectStraightmostRoadByNameAndOnlyChoice::SelectStraightmostRoadByNameAndOnlyCh
 {
 }
 
-boost::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::
-operator()(const NodeID /*nid*/,
-           const EdgeID /*via_edge_id*/,
-           const IntersectionView &intersection,
-           const util::NodeBasedDynamicGraph &node_based_graph,
-           const EdgeBasedNodeDataContainer &node_data_container) const
+boost::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
+    const NodeID /*nid*/,
+    const EdgeID /*via_edge_id*/,
+    const IntersectionView &intersection,
+    const util::NodeBasedDynamicGraph &node_based_graph,
+    const EdgeBasedNodeDataContainer &node_data_container) const
 {
     BOOST_ASSERT(!intersection.empty());
     if (intersection.size() == 1)

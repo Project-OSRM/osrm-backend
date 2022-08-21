@@ -18,7 +18,7 @@ namespace
 {
 namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
-}
+} // namespace
 
 template <typename Iterator = std::string::iterator,
           typename Signature = void(engine::api::RouteParameters &)>
@@ -113,8 +113,8 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
     qi::symbols<char, engine::api::RouteParameters::OverviewType> overview_type;
     qi::symbols<char, engine::api::RouteParameters::AnnotationsType> annotations_type;
 };
-}
-}
-}
+} // namespace api
+} // namespace server
+} // namespace osrm
 
 #endif

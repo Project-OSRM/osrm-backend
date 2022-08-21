@@ -96,7 +96,7 @@ std::vector<OutputEdgeT> directedEdgesFromCompressed(const std::vector<InputEdge
 
     return output_edge_list;
 }
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif

@@ -48,7 +48,7 @@ struct QueryNode
                          MAX_OSM_NODEID);
     }
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif // QUERY_NODE_HPP

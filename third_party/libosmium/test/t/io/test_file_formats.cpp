@@ -3,13 +3,14 @@
 #include <osmium/io/file.hpp>
 
 #include <iterator>
+#include <stdexcept>
 
 TEST_CASE("Default file format") {
     const osmium::io::File f;
     REQUIRE(osmium::io::file_format::unknown == f.format());
     REQUIRE(osmium::io::file_compression::none == f.compression());
     REQUIRE_FALSE(f.has_multiple_object_versions());
-    REQUIRE_THROWS_AS(f.check(), const std::runtime_error&);
+    REQUIRE_THROWS_AS(f.check(), std::runtime_error);
 }
 
 TEST_CASE("File format when empty (stdin/stdout)") {
@@ -17,7 +18,7 @@ TEST_CASE("File format when empty (stdin/stdout)") {
     REQUIRE(osmium::io::file_format::unknown == f.format());
     REQUIRE(osmium::io::file_compression::none == f.compression());
     REQUIRE_FALSE(f.has_multiple_object_versions());
-    REQUIRE_THROWS_AS(f.check(), const std::runtime_error&);
+    REQUIRE_THROWS_AS(f.check(), std::runtime_error);
 }
 
 TEST_CASE("File format from dash (stdin/stdout)") {
@@ -25,7 +26,7 @@ TEST_CASE("File format from dash (stdin/stdout)") {
     REQUIRE(osmium::io::file_format::unknown == f.format());
     REQUIRE(osmium::io::file_compression::none == f.compression());
     REQUIRE_FALSE(f.has_multiple_object_versions());
-    REQUIRE_THROWS_AS(f.check(), const std::runtime_error&);
+    REQUIRE_THROWS_AS(f.check(), std::runtime_error);
 }
 
 TEST_CASE("File format from dash with osm.bz2") {
@@ -267,22 +268,22 @@ TEST_CASE("Unknown format 'foo.bar'") {
     const osmium::io::File f{"test.foo.bar"};
     REQUIRE(osmium::io::file_format::unknown == f.format());
     REQUIRE(osmium::io::file_compression::none == f.compression());
-    REQUIRE_THROWS_AS(f.check(), const std::runtime_error&);
+    REQUIRE_THROWS_AS(f.check(), std::runtime_error);
 }
 
 TEST_CASE("Unknown format 'foo'") {
     const osmium::io::File f{"test", "foo"};
-    REQUIRE_THROWS_AS(f.check(), const std::runtime_error&);
+    REQUIRE_THROWS_AS(f.check(), std::runtime_error);
 }
 
 TEST_CASE("Unknown format 'osm.foo'") {
     const osmium::io::File f{"test", "osm.foo"};
-    REQUIRE_THROWS_AS(f.check(), const std::runtime_error&);
+    REQUIRE_THROWS_AS(f.check(), std::runtime_error);
 }
 
 TEST_CASE("Unknown format 'bla=foo'") {
     const osmium::io::File f{"test", "bla=foo"};
-    REQUIRE_THROWS_AS(f.check(), const std::runtime_error&);
+    REQUIRE_THROWS_AS(f.check(), std::runtime_error);
 }
 
 TEST_CASE("URL without format") {
@@ -294,7 +295,7 @@ TEST_CASE("URL without format") {
 }
 
 TEST_CASE("URL without format and filename") {
-    const osmium::io::File f{"http://planet.osm.org/pbf/planet-latest.osm.pbf"};
+    const osmium::io::File f{"https://planet.osm.org/pbf/planet-latest.osm.pbf"};
     REQUIRE(osmium::io::file_format::pbf == f.format());
     REQUIRE(osmium::io::file_compression::none == f.compression());
     REQUIRE_FALSE(f.has_multiple_object_versions());

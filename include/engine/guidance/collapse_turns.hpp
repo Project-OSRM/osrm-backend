@@ -163,7 +163,7 @@ void combineRouteSteps(RouteStep &step_at_turn_location,
 void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_location);
 
 } /* namespace guidance */
-} /* namespace osrm */
+} // namespace engine
 } /* namespace osrm */
 
 #endif /* OSRM_ENGINE_GUIDANCE_COLLAPSE_HPP_ */

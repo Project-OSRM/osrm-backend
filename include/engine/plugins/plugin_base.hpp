@@ -131,8 +131,10 @@ class BasePlugin
                 return phantom_pair.first;
             };
 
-        const auto use_closed_phantom = [](
-            const std::pair<PhantomNode, PhantomNode> &phantom_pair) { return phantom_pair.first; };
+        const auto use_closed_phantom =
+            [](const std::pair<PhantomNode, PhantomNode> &phantom_pair) {
+                return phantom_pair.first;
+            };
 
         const bool every_phantom_is_in_tiny_cc = std::all_of(std::begin(phantom_node_pair_list),
                                                              std::end(phantom_node_pair_list),
@@ -166,7 +168,7 @@ class BasePlugin
     std::vector<std::vector<PhantomNodeWithDistance>>
     GetPhantomNodesInRange(const datafacade::BaseDataFacade &facade,
                            const api::BaseParameters &parameters,
-                           const std::vector<double> radiuses,
+                           const std::vector<double> &radiuses,
                            bool use_all_edges = false) const
     {
         std::vector<std::vector<PhantomNodeWithDistance>> phantom_nodes(
@@ -188,7 +190,7 @@ class BasePlugin
             {
                 phantom_nodes[i].push_back(PhantomNodeWithDistance{
                     parameters.hints[i]->phantom,
-                    util::coordinate_calculation::haversineDistance(
+                    util::coordinate_calculation::greatCircleDistance(
                         parameters.coordinates[i], parameters.hints[i]->phantom.location),
                 });
                 continue;
@@ -238,7 +240,7 @@ class BasePlugin
             {
                 phantom_nodes[i].push_back(PhantomNodeWithDistance{
                     parameters.hints[i]->phantom,
-                    util::coordinate_calculation::haversineDistance(
+                    util::coordinate_calculation::greatCircleDistance(
                         parameters.coordinates[i], parameters.hints[i]->phantom.location),
                 });
                 continue;
@@ -388,8 +390,8 @@ class BasePlugin
                std::to_string(missing_index);
     }
 };
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm
 
 #endif /* BASE_PLUGIN_HPP */

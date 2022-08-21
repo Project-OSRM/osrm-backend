@@ -56,7 +56,7 @@ auto makeGraph(const MultiLevelPartition &mlp, const std::vector<MockEdge> &mock
     return partitioner::MultiLevelGraph<EdgeData, osrm::storage::Ownership::Container>(
         mlp, max_id + 1, edges);
 }
-}
+} // namespace
 
 BOOST_AUTO_TEST_SUITE(cell_customization_tests)
 
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(four_levels_test)
     };
 
     auto graph = makeGraph(mlp, edges);
-    std::vector<bool> node_filter(true, graph.GetNumberOfNodes());
+    std::vector<bool> node_filter(graph.GetNumberOfNodes(), true);
 
     CellStorage storage(mlp, graph);
     auto metric = storage.MakeMetric();

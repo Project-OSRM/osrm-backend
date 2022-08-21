@@ -70,8 +70,8 @@ struct TileParameters final
         return valid_x && valid_y && valid_z;
     }
 };
-}
-}
-}
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif

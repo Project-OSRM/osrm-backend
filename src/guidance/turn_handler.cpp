@@ -68,7 +68,7 @@ InputIt findOutermostForkCandidate(const InputIt begin, const InputIt end)
         return outermost - 1;
     }
 }
-}
+} // namespace
 
 namespace osrm
 {
@@ -137,8 +137,8 @@ bool TurnHandler::canProcess(const NodeID, const EdgeID, const Intersection &) c
 // Handles and processes possible turns
 // Input parameters describe an intersection as described in
 // #IntersectionExplanation@intersection_handler.hpp
-Intersection TurnHandler::
-operator()(const NodeID, const EdgeID via_edge, Intersection intersection) const
+Intersection
+TurnHandler::operator()(const NodeID, const EdgeID via_edge, Intersection intersection) const
 {
     if (intersection.size() == 1)
         return handleOneWayTurn(std::move(intersection));
@@ -684,7 +684,7 @@ bool TurnHandler::isCompatibleByRoadClass(const Intersection &intersection, cons
 boost::optional<TurnHandler::Fork> TurnHandler::findFork(const EdgeID via_edge,
                                                          Intersection &intersection) const
 {
-    const auto fork = findForkCandidatesByGeometry(intersection);
+    auto fork = findForkCandidatesByGeometry(intersection);
     if (fork)
     {
         // makes sure that the fork is isolated from other neighbouring streets on the left and

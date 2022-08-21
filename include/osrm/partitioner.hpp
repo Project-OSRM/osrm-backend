@@ -34,7 +34,7 @@ namespace osrm
 namespace partitioner
 {
 struct PartitionerConfig;
-} // ns partition
+} // namespace partitioner
 
 /**
  * Runs recursive partitioning process.
@@ -45,6 +45,6 @@ struct PartitionerConfig;
  */
 void partition(const partitioner::PartitionerConfig &config);
 
-} // ns osrm
+} // namespace osrm
 
 #endif // OSRM_PARTITIONER_HPP

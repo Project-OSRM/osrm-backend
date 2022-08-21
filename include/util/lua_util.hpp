@@ -1,7 +1,8 @@
 #ifndef LUA_UTIL_HPP
 #define LUA_UTIL_HPP
 
-extern "C" {
+extern "C"
+{
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
@@ -27,7 +28,7 @@ inline void luaAddScriptFolderToLoadPath(lua_State *lua_state, const char *file_
     const std::string lua_code = "package.path = \"" + folder + "/?.lua;\" .. package.path";
     luaL_dostring(lua_state, lua_code.c_str());
 }
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // LUA_UTIL_HPP

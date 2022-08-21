@@ -6,8 +6,28 @@
 #
 #-----------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+
+#-----------------------------------------------------------------------------
+#
+#  Configurations
+#
+#-----------------------------------------------------------------------------
+
+set(CMAKE_CXX_FLAGS_COVERAGE
+    "-g -O0 -fno-inline-functions -fno-inline --coverage ${extra_coverage_flags_}"
+    CACHE STRING "Flags used by the compiler during coverage builds.")
+
+set(CMAKE_EXE_LINKER_FLAGS_COVERAGE
+    "--coverage"
+    CACHE STRING "Flags used by the linker during coverage builds.")
+
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;MinSizeRel;Dev;Coverage"
+    CACHE STRING
+    "List of available configuration types"
+    FORCE)
 
 
 #-----------------------------------------------------------------------------
@@ -16,15 +36,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 #
 #-----------------------------------------------------------------------------
 
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;MinSizeRel;Dev;Coverage"
-    CACHE STRING
-    "List of available configuration types"
-    FORCE)
-
 project(libosmium)
 
 set(LIBOSMIUM_VERSION_MAJOR 2)
-set(LIBOSMIUM_VERSION_MINOR 14)
+set(LIBOSMIUM_VERSION_MINOR 18)
 set(LIBOSMIUM_VERSION_PATCH 0)
 
 set(LIBOSMIUM_VERSION
@@ -62,9 +77,10 @@ option(BUILD_BENCHMARKS "compile benchmark programs" ${dev_build})
 option(BUILD_DATA_TESTS "compile data tests, please run them with ctest" ${data_test_build})
 
 option(INSTALL_GDALCPP   "also install gdalcpp headers" OFF)
-option(INSTALL_UTFCPP    "also install utfcpp headers" OFF)
 
 option(WITH_PROFILING    "add flags needed for profiling" OFF)
+
+option(WITH_PROJ         "build/test with proj" ON)
 
 
 #-----------------------------------------------------------------------------
@@ -100,14 +116,6 @@ endif()
 #if(HAS_KEEP_INLINE_FUNCTIONS)
 #    set(extra_coverage_flags_ "-fkeep-inline-functions")
 #endif()
-
-set(CMAKE_CXX_FLAGS_COVERAGE
-    "-g -O0 -fno-inline-functions -fno-inline --coverage ${extra_coverage_flags_}"
-    CACHE STRING "Flags used by the compiler during coverage builds.")
-
-set(CMAKE_EXE_LINKER_FLAGS_COVERAGE
-    "--coverage"
-    CACHE STRING "Flags used by the linker during coverage builds.")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
     if(BUILD_EXAMPLES OR BUILD_HEADERS OR BUILD_BENCHMARKS)
@@ -161,7 +169,11 @@ set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 include_directories(${OSMIUM_INCLUDE_DIR})
 
-find_package(Osmium COMPONENTS io gdal geos proj sparsehash)
+if(WITH_PROJ)
+    find_package(Osmium COMPONENTS lz4 io gdal geos proj)
+else()
+    find_package(Osmium COMPONENTS lz4 io gdal geos)
+endif()
 
 # The find_package put the directory where it found the libosmium includes
 # into OSMIUM_INCLUDE_DIRS. We remove it again, because we want to make
@@ -200,11 +212,13 @@ endif()
 #
 #-----------------------------------------------------------------------------
 if(MSVC)
-    set(USUAL_COMPILE_OPTIONS "/Ox")
+    set(DEV_COMPILE_OPTIONS "/Ox")
+    set(RWD_COMPILE_OPTIONS "/Ox /DNDEBUG")
     # do not show warnings caused by missing .pdb files for libraries
     set(USUAL_LINK_OPTIONS "/debug /ignore:4099")
 else()
-    set(USUAL_COMPILE_OPTIONS "-O3 -g")
+    set(DEV_COMPILE_OPTIONS "-O3 -g")
+    set(RWD_COMPILE_OPTIONS "-O3 -g -DNDEBUG")
     set(USUAL_LINK_OPTIONS "")
 endif()
 
@@ -212,7 +226,7 @@ if(WIN32)
     add_definitions(-DWIN32 -D_WIN32 -DMSWIN32 -DBGDWIN32)
 endif()
 
-set(CMAKE_CXX_FLAGS_DEV "${USUAL_COMPILE_OPTIONS}"
+set(CMAKE_CXX_FLAGS_DEV "${DEV_COMPILE_OPTIONS}"
     CACHE STRING "Flags used by the compiler during developer builds."
     FORCE)
 
@@ -224,7 +238,7 @@ mark_as_advanced(
     CMAKE_EXE_LINKER_FLAGS_DEV
 )
 
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${USUAL_COMPILE_OPTIONS}"
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${RWD_COMPILE_OPTIONS}"
     CACHE STRING "Flags used by the compiler during RELWITHDEBINFO builds."
     FORCE)
 
@@ -318,9 +332,6 @@ if(CPPCHECK)
         --force
         -Uassert -DPROTOZERO_STRICT_API -DPROTOZERO_USE_BUILTIN_BSWAP -UPROTOZERO_USE_VIEW)
 
-    # cpp doesn't find system includes for some reason, suppress that report
-    set(CPPCHECK_OPTIONS ${CPPCHECK_OPTIONS} --suppress=missingIncludeSystem)
-
     file(GLOB_RECURSE ALL_INCLUDES   include/osmium/*.hpp)
     file(GLOB         ALL_EXAMPLES   examples/*.cpp)
     file(GLOB         ALL_BENCHMARKS benchmarks/*.cpp)
@@ -390,14 +401,14 @@ if(BUILD_HEADERS)
     file(MAKE_DIRECTORY header_check)
 
     foreach(hpp ${ALL_HPPS})
-        if(GDAL_FOUND OR NOT ((hpp STREQUAL "osmium/area/problem_reporter_ogr.hpp") OR (hpp STREQUAL "osmium/geom/ogr.hpp")))
+        if((GDAL_FOUND AND PROJ_FOUND) OR NOT ((hpp STREQUAL "osmium/area/problem_reporter_ogr.hpp") OR (hpp STREQUAL "osmium/geom/ogr.hpp") OR (hpp STREQUAL "osmium/geom/projection.hpp")))
             string(REPLACE ".hpp" "" tmp ${hpp})
             string(REPLACE "/" "__" libname ${tmp})
 
             # Create a dummy .cpp file that includes the header file we want to
             # check.
             set(DUMMYCPP ${CMAKE_BINARY_DIR}/header_check/${libname}.cpp)
-            file(WRITE ${DUMMYCPP} "#include <${hpp}> // IWYU pragma: keep\n")
+            file(WRITE ${DUMMYCPP} "#define OSMIUM_UTIL_COMPATIBILITY_HPP\n#define OSMIUM_DEPRECATED\n#define OSMIUM_EXPORT\n#include <${hpp}> // IWYU pragma: keep\n")
 
             # There is no way in CMake to just compile but not link a C++ file,
             # so we pretend to build a library here.
@@ -416,7 +427,7 @@ endif()
 #
 #-----------------------------------------------------------------------------
 message(STATUS "Looking for clang-tidy")
-find_program(CLANG_TIDY NAMES clang-tidy clang-tidy-6.0 clang-tidy-5.0)
+find_program(CLANG_TIDY NAMES clang-tidy clang-tidy-14 clang-tidy-13 clang-tidy-12 clang-tidy-11)
 
 if(CLANG_TIDY)
     message(STATUS "Looking for clang-tidy - found ${CLANG_TIDY}")
@@ -459,6 +470,7 @@ if(CLANG_TIDY)
     add_custom_target(clang-tidy
         ${CLANG_TIDY}
         -p ${CMAKE_BINARY_DIR}
+        "-extra-arg=-Wno-#pragma-messages"
         ${CT_CHECK_FILES}
     )
 else()
@@ -478,11 +490,6 @@ install(DIRECTORY include/osmium DESTINATION include)
 
 if(INSTALL_GDALCPP)
     install(FILES include/gdalcpp.hpp DESTINATION include)
-endif()
-
-if(INSTALL_UTFCPP)
-    install(FILES include/utf8.h DESTINATION include)
-    install(DIRECTORY include/utf8 DESTINATION include)
 endif()
 
 

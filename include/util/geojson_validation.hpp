@@ -76,7 +76,15 @@ inline void validateFeature(const rapidjson::Value &feature)
     const auto coord_array = feature["geometry"].GetObject()["coordinates"].GetArray();
     if (coord_array.Empty())
         throw osrm::util::exception("Feature geometry coordinates member is empty.");
+
+    if (feature["geometry"]["type"] == "polygon" || feature["geometry"]["type"] == "Polygon")
+    {
+        if (!coord_array[0].IsArray() || !coord_array[0][0].IsArray())
+        {
+            throw osrm::util::exception("Polygon geometry missing outer ring");
+        }
+    }
 }
-}
-}
+} // namespace util
+} // namespace osrm
 #endif // OSRM_GEOJSON_VALIDATION_HPP

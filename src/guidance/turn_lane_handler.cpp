@@ -655,7 +655,6 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
                 data.from = std::min(turn_lane_data[lane].from, data.from);
                 data.to = std::max(turn_lane_data[lane].to, data.to);
             }
-
     };
 
     LaneDataVector first, second;

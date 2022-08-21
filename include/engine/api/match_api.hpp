@@ -248,8 +248,8 @@ class MatchAPI final : public RouteAPI
     const tidy::Result &tidy_result;
 };
 
-} // ns api
-} // ns engine
-} // ns osrm
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif

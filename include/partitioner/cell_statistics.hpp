@@ -48,7 +48,7 @@ void printCellStatistics(const Partition &partition, const CellStorage &storage)
                     << (2 * entries * sizeof(EdgeWeight)) << " bytes)";
     }
 }
-}
-}
+} // namespace partitioner
+} // namespace osrm
 
 #endif

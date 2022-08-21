@@ -149,7 +149,7 @@ if(DEFINED GEM_INCLUDE_DIRS)
     LIST(REMOVE_DUPLICATES GEM_INCLUDE_DIRS)
 endif()
 
-find_package_handle_standard_args(GEM
+find_package_handle_standard_args(Gem
     REQUIRED_VARS ${components_found_vars}
     FAIL_MESSAGE "Could not find all required gems")
 

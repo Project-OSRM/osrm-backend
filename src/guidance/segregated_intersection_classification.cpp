@@ -56,7 +56,7 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
         double length = 0.0;
         for (size_t i = 1; i < geom.size(); ++i)
         {
-            length += util::coordinate_calculation::haversineDistance(geom[i - 1], geom[i]);
+            length += util::coordinate_calculation::greatCircleDistance(geom[i - 1], geom[i]);
         }
         return length;
     };
@@ -109,8 +109,8 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
     };
 
     auto isSegregated = [&](NodeID node1,
-                            std::vector<EdgeInfo> v1,
-                            std::vector<EdgeInfo> v2,
+                            const std::vector<EdgeInfo> &v1,
+                            const std::vector<EdgeInfo> &v2,
                             EdgeInfo const &current,
                             double edge_length) {
         // Internal intersection edges must be short and cannot be a roundabout.

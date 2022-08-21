@@ -9,17 +9,27 @@ const classes = require('./data_classes');
 const tableDiff = require('../lib/table_diff');
 const ensureDecimal = require('../lib/utils').ensureDecimal;
 const errorReason = require('../lib/utils').errorReason;
+const CheapRuler = require('cheap-ruler');
 
 module.exports = function () {
     this.setGridSize = (meters) => {
+        this.gridSize = parseFloat(meters);
+
         // the constant is calculated (with BigDecimal as: 1.0/(DEG_TO_RAD*EARTH_RADIUS_IN_METERS
         // see ApproximateDistance() in ExtractorStructs.h
         // it's only accurate when measuring along the equator, or going exactly north-south
-        this.zoom = parseFloat(meters) * 0.8990679362704610899694577444566908445396483347536032203503E-5;
+        this.zoom = this.gridSize * 0.8990679362704610899694577444566908445396483347536032203503E-5;
     };
 
     this.setOrigin = (origin) => {
         this.origin = origin;
+        // we use C++ version of `cheap-ruler` inside OSRM in order to do distance calculations,
+        // so here we use it too to have a bit more precise assertions
+        this.ruler = new CheapRuler(this.origin[1], 'meters');
+    };
+
+    this.offsetOriginBy = (xCells, yCells) => {
+        return this.ruler.offset(this.origin, xCells * this.gridSize, yCells * this.gridSize);
     };
 
     this.buildWaysFromTable = (table, callback) => {
@@ -35,9 +45,10 @@ module.exports = function () {
             // add some nodes
 
             var makeFakeNode = (namePrefix, offset) => {
+                const coord = this.offsetOriginBy(offset + this.WAY_SPACING * ri, 0);
                 return new OSM.Node(this.makeOSMId(), this.OSM_USER, this.OSM_TIMESTAMP,
-                    this.OSM_UID, this.origin[0]+(offset + this.WAY_SPACING * ri) * this.zoom,
-                    this.origin[1], {name: util.format('%s%d', namePrefix, ri)});
+                    this.OSM_UID, coord[0],
+                    coord[1], {name: util.format('%s%d', namePrefix, ri)});
             };
 
             var nodes = ['a','b','c','d','e'].map((l, i) => makeFakeNode(l, i));
@@ -98,7 +109,7 @@ module.exports = function () {
     };
 
     this.tableCoordToLonLat = (ci, ri) => {
-        return [this.origin[0] + ci * this.zoom, this.origin[1] - ri * this.zoom].map(ensureDecimal);
+        return this.offsetOriginBy(ci, -ri).map(ensureDecimal);
     };
 
     this.addOSMNode = (name, lon, lat, id) => {

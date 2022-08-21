@@ -125,7 +125,7 @@ namespace
 {
 namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
-}
+} // namespace
 
 template <typename Iterator, typename Skipper = qi::blank_type>
 struct opening_hours_grammar : qi::grammar<Iterator, Skipper, std::vector<OpeningHours>()>
@@ -398,7 +398,7 @@ struct opening_hours_grammar : qi::grammar<Iterator, Skipper, std::vector<Openin
     qi::uint_parser<unsigned, 10, 2, 2> uint2_p;
     qi::uint_parser<unsigned, 10, 4, 4> uint4_p;
 };
-}
+} // namespace detail
 
 std::vector<OpeningHours> ParseOpeningHours(const std::string &str)
 {
@@ -431,5 +431,5 @@ bool CheckOpeningHours(const std::vector<OpeningHours> &input, const struct tm &
     return is_open;
 }
 
-} // util
-} // osrm
+} // namespace util
+} // namespace osrm

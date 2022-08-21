@@ -34,7 +34,8 @@ namespace lanes
 
 namespace
 {
-typedef enum TurnLaneScenario {
+typedef enum TurnLaneScenario
+{
     SIMPLE,             // a straightforward assignment
     PARTITION_LOCAL,    // an assignment that requires partitioning, using local turns
     SIMPLE_PREVIOUS,    // an assignemtnn using the turns specified at the previous road (e.g.
@@ -51,15 +52,6 @@ typedef enum TurnLaneScenario {
     NUM_SCENARIOS
 } TurnLaneScenario;
 
-const constexpr char *scenario_names[] = {"Simple",
-                                          "Partition Local",
-                                          "Simple Previous",
-                                          "Partition Previous",
-                                          "Sliproad",
-                                          "Merge",
-                                          "None",
-                                          "Invalid",
-                                          "Unknown"};
 } // namespace
 
 class TurnLaneHandler
@@ -148,9 +140,6 @@ class TurnLaneHandler
                          LaneDescriptionID &lane_description_id,
                          LaneDataVector &lane_data) const;
 };
-
-static_assert(sizeof(scenario_names) / sizeof(*scenario_names) == TurnLaneScenario::NUM_SCENARIOS,
-              "Number of scenarios needs to match the number of scenario names.");
 
 } // namespace lanes
 } // namespace guidance

@@ -22,7 +22,7 @@ static const char MAGENTA[]{"\x1b[35m"};
 // static const char GREEN[] { "\x1b[32m"};
 // static const char BLUE[] { "\x1b[34m"};
 // static const char CYAN[] { "\x1b[36m"};
-}
+} // namespace
 
 void LogPolicy::Unmute() { m_is_mute = false; }
 
@@ -63,7 +63,11 @@ std::string LogPolicy::GetLevels()
     return "NONE, ERROR, WARNING, INFO, DEBUG";
 }
 
-Log::Log(LogLevel level_, std::ostream &ostream) : level(level_), stream(ostream)
+Log::Log(LogLevel level_, std::ostream &ostream) : level(level_), stream(ostream) { Init(); }
+
+Log::Log(LogLevel level_) : level(level_), buffer{}, stream{buffer} { Init(); }
+
+void Log::Init()
 {
     std::lock_guard<std::mutex> lock(get_mutex());
     if (!LogPolicy::GetInstance().IsMute() && level <= LogPolicy::GetInstance().GetLevel())
@@ -90,8 +94,6 @@ Log::Log(LogLevel level_, std::ostream &ostream) : level(level_), stream(ostream
         }
     }
 }
-
-Log::Log(LogLevel level_) : Log(level_, buffer) {}
 
 std::mutex &Log::get_mutex()
 {
@@ -150,5 +152,5 @@ UnbufferedLog::UnbufferedLog(LogLevel level_)
 {
     stream.flags(std::ios_base::unitbuf);
 }
-}
-}
+} // namespace util
+} // namespace osrm

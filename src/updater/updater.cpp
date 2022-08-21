@@ -4,14 +4,11 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/files.hpp"
-#include "extractor/node_based_edge.hpp"
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/serialization.hpp"
 
 #include "guidance/files.hpp"
-
-#include "storage/io.hpp"
 
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
@@ -20,7 +17,6 @@
 #include "util/log.hpp"
 #include "util/mmap_tar.hpp"
 #include "util/opening_hours.hpp"
-#include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 #include "util/string_util.hpp"
 #include "util/timezones.hpp"
@@ -29,10 +25,6 @@
 
 #include <boost/assert.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/geometry.hpp>
-#include <boost/geometry/index/rtree.hpp>
-#include <boost/interprocess/file_mapping.hpp>
-#include <boost/interprocess/mapped_region.hpp>
 
 #include <tbb/blocked_range.h>
 #include <tbb/concurrent_vector.h>
@@ -45,10 +37,8 @@
 #include <atomic>
 #include <bitset>
 #include <cstdint>
-#include <fstream>
 #include <iterator>
 #include <memory>
-#include <thread>
 #include <tuple>
 #include <vector>
 
@@ -69,7 +59,7 @@ template <typename T1, typename T2> struct hash<std::tuple<T1, T2>>
         return hash_val(std::get<0>(t), std::get<1>(t));
     }
 };
-}
+} // namespace std
 
 namespace osrm
 {
@@ -80,6 +70,7 @@ namespace
 
 template <typename T> inline bool is_aligned(const void *pointer)
 {
+    // NOLINTNEXTLINE(misc-redundant-expression)
     static_assert(sizeof(T) % alignof(T) == 0, "pointer can not be used as an array pointer");
     return reinterpret_cast<uintptr_t>(pointer) % alignof(T) == 0;
 }
@@ -122,6 +113,7 @@ void checkWeightsConsistency(
         if (geometry_id.forward)
         {
             auto range = segment_data.GetForwardWeights(geometry_id.id);
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             EdgeWeight weight = std::accumulate(range.begin(), range.end(), EdgeWeight{0});
             if (weight > edge.data.weight)
             {
@@ -132,6 +124,7 @@ void checkWeightsConsistency(
         else
         {
             auto range = segment_data.GetReverseWeights(geometry_id.id);
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             EdgeWeight weight = std::accumulate(range.begin(), range.end(), EdgeWeight{0});
             if (weight > edge.data.weight)
             {
@@ -151,7 +144,7 @@ updateSegmentData(const UpdaterConfig &config,
                   const SegmentLookupTable &segment_speed_lookup,
                   extractor::SegmentDataContainer &segment_data,
                   std::vector<util::Coordinate> &coordinates,
-                  extractor::PackedOSMIDs &osm_node_ids)
+                  const extractor::PackedOSMIDs &osm_node_ids)
 {
     // vector to count used speeds for logging
     // size offset by one since index 0 is used for speeds not from external file
@@ -162,9 +155,10 @@ updateSegmentData(const UpdaterConfig &config,
 
     // closure to convert SpeedSource value to weight and count fallbacks to durations
     std::atomic<std::uint32_t> fallbacks_to_duration{0};
-    auto convertToWeight = [&profile_properties, &fallbacks_to_duration](
-        const SegmentWeight &existing_weight, const SpeedSource &value, double distance_in_meters) {
-
+    auto convertToWeight = [&profile_properties,
+                            &fallbacks_to_duration](const SegmentWeight &existing_weight,
+                                                    const SpeedSource &value,
+                                                    double distance_in_meters) {
         double rate = std::numeric_limits<double>::quiet_NaN();
 
         // if value.rate is not set, we fall back to duration
@@ -428,10 +422,14 @@ updateTurnPenalties(const UpdaterConfig &config,
                     const TurnLookupTable &turn_penalty_lookup,
                     std::vector<TurnPenalty> &turn_weight_penalties,
                     std::vector<TurnPenalty> &turn_duration_penalties,
-                    extractor::PackedOSMIDs osm_node_ids)
+                    const extractor::PackedOSMIDs &osm_node_ids)
 {
     const auto weight_multiplier = profile_properties.GetWeightMultiplier();
 
+    // [NOTE] turn_index_blocks could be simply loaded by `files::readTurnPenaltiesIndex()`,
+    //      however, we leave the below mmap to keep compatiblity.
+    //      Use `files::readTurnPenaltiesIndex()` instead once the compatiblity is not that
+    //      important.
     // Mapped file pointer for turn indices
     boost::iostreams::mapped_file_source turn_index_region;
     const extractor::lookup::TurnIndexBlock *turn_index_blocks;
@@ -507,7 +505,7 @@ bool IsRestrictionValid(const Timezoner &tz_handler, const extractor::Conditiona
 std::vector<std::uint64_t>
 updateConditionalTurns(std::vector<TurnPenalty> &turn_weight_penalties,
                        const std::vector<extractor::ConditionalTurnPenalty> &conditional_turns,
-                       Timezoner time_zone_handler)
+                       const Timezoner &time_zone_handler)
 {
     std::vector<std::uint64_t> updated_turns;
     if (conditional_turns.size() == 0)
@@ -523,7 +521,7 @@ updateConditionalTurns(std::vector<TurnPenalty> &turn_weight_penalties,
     }
     return updated_turns;
 }
-}
+} // namespace
 
 EdgeID
 Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
@@ -694,6 +692,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                 new_weight += weight;
             }
             const auto durations = segment_data.GetForwardDurations(geometry_id.id);
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             new_duration = std::accumulate(durations.begin(), durations.end(), EdgeWeight{0});
         }
         else
@@ -709,6 +708,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                 new_weight += weight;
             }
             const auto durations = segment_data.GetReverseDurations(geometry_id.id);
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             new_duration = std::accumulate(durations.begin(), durations.end(), EdgeWeight{0});
         }
         return std::make_tuple(new_weight, new_duration);
@@ -770,9 +770,9 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
             {
                 if (turn_weight_penalty < 0)
                 {
-                    util::Log(logWARNING) << "turn penalty " << turn_weight_penalty
-                                          << " is too negative: clamping turn weight to "
-                                          << weight_min_value;
+                    util::Log(logWARNING)
+                        << "turn penalty " << turn_weight_penalty
+                        << " is too negative: clamping turn weight to " << weight_min_value;
                     turn_weight_penalty = weight_min_value - new_weight;
                     turn_weight_penalties[edge.data.turn_id] = turn_weight_penalty;
                 }
@@ -826,5 +826,5 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     util::Log() << "Done reading edges in " << TIMER_MSEC(load_edges) << "ms.";
     return number_of_edge_based_nodes;
 }
-}
-}
+} // namespace updater
+} // namespace osrm

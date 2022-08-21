@@ -3,7 +3,13 @@
 #include <osmium/util/string_matcher.hpp>
 
 #include <sstream>
+#include <string>
 #include <type_traits>
+#include <vector>
+
+#ifdef OSMIUM_WITH_REGEX
+#include <regex>
+#endif
 
 static_assert(std::is_default_constructible<osmium::StringMatcher>::value, "StringMatcher should be default constructible");
 static_assert(std::is_copy_constructible<osmium::StringMatcher>::value, "StringMatcher should be copy constructible");

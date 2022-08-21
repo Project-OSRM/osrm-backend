@@ -25,18 +25,20 @@ namespace
 {
 namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
-}
+} // namespace
 
 template <typename T, char... Fmt> struct no_trailing_dot_policy : qi::real_policies<T>
 {
     template <typename Iterator> static bool parse_dot(Iterator &first, Iterator const &last)
     {
-        if (first == last || *first != '.')
+        auto diff = std::distance(first, last);
+        if (diff <= 0 || *first != '.')
             return false;
 
         static const constexpr char fmt[sizeof...(Fmt)] = {Fmt...};
 
-        if (first + sizeof(fmt) < last && std::equal(fmt, fmt + sizeof(fmt), first + 1u))
+        if (sizeof(fmt) < static_cast<size_t>(diff) &&
+            std::equal(fmt, fmt + sizeof(fmt), first + 1u))
             return false;
 
         ++first;
@@ -225,8 +227,8 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::symbols<char, engine::Approach> approach_type;
     qi::symbols<char, engine::api::BaseParameters::SnappingType> snapping_type;
 };
-}
-}
-}
+} // namespace api
+} // namespace server
+} // namespace osrm
 
 #endif

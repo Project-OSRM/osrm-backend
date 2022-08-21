@@ -39,17 +39,24 @@ struct CountHandler : public osmium::handler::Handler {
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " OSMFILE\n";
-        std::exit(1);
+        return 1;
     }
 
-    const std::string input_filename{argv[1]};
+    try {
+        const std::string input_filename{argv[1]};
 
-    osmium::io::Reader reader{input_filename};
+        osmium::io::Reader reader{input_filename};
 
-    CountHandler handler;
-    osmium::apply(reader, handler);
-    reader.close();
+        CountHandler handler;
+        osmium::apply(reader, handler);
+        reader.close();
 
-    std::cout << "r_all=" << handler.all << " r_counter=" << handler.counter << '\n';
+        std::cout << "r_all=" << handler.all << " r_counter=" << handler.counter << '\n';
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << '\n';
+        return 1;
+    }
+
+    return 0;
 }
 

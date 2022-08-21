@@ -23,7 +23,7 @@ namespace guidance
 {
 
 // Intersection handlers deal with all issues related to intersections.
-class TurnHandler : public IntersectionHandler
+class TurnHandler final : public IntersectionHandler
 {
   public:
     TurnHandler(const util::NodeBasedDynamicGraph &node_based_graph,

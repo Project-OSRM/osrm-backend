@@ -18,8 +18,9 @@ struct IOConfig
     IOConfig(std::vector<boost::filesystem::path> required_input_files_,
              std::vector<boost::filesystem::path> optional_input_files_,
              std::vector<boost::filesystem::path> output_files_)
-        : required_input_files(required_input_files_), optional_input_files(optional_input_files_),
-          output_files(output_files_)
+        : required_input_files(std::move(required_input_files_)),
+          optional_input_files(std::move(optional_input_files_)),
+          output_files(std::move(output_files_))
     {
     }
 
@@ -48,7 +49,7 @@ struct IOConfig
 
         std::array<std::string, 6> known_extensions{
             {".osm.bz2", ".osm.pbf", ".osm.xml", ".pbf", ".osm", ".osrm"}};
-        for (auto ext : known_extensions)
+        for (const auto &ext : known_extensions)
         {
             const auto pos = path.find(ext);
             if (pos != std::string::npos)
@@ -80,7 +81,7 @@ struct IOConfig
     std::vector<boost::filesystem::path> optional_input_files;
     std::vector<boost::filesystem::path> output_files;
 };
-}
-}
+} // namespace storage
+} // namespace osrm
 
 #endif

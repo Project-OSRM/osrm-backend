@@ -92,8 +92,8 @@ bool MotorwayHandler::canProcess(const NodeID,
     return has_motorway || from_motorway;
 }
 
-Intersection MotorwayHandler::
-operator()(const NodeID, const EdgeID via_eid, Intersection intersection) const
+Intersection
+MotorwayHandler::operator()(const NodeID, const EdgeID via_eid, Intersection intersection) const
 {
     // coming from motorway
     if (isMotorwayClass(via_eid, node_based_graph))

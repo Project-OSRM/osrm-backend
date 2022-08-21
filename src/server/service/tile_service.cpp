@@ -47,6 +47,6 @@ engine::Status TileService::RunQuery(std::size_t prefix_length,
     result = std::string();
     return BaseService::routing_machine.Tile(*parameters, result);
 }
-}
-}
-}
+} // namespace service
+} // namespace server
+} // namespace osrm

@@ -57,8 +57,9 @@ bool RoundaboutHandler::canProcess(const NodeID from_nid,
     return roundabout_type != RoundaboutType::None;
 }
 
-Intersection RoundaboutHandler::
-operator()(const NodeID from_nid, const EdgeID via_eid, Intersection intersection) const
+Intersection RoundaboutHandler::operator()(const NodeID from_nid,
+                                           const EdgeID via_eid,
+                                           Intersection intersection) const
 {
     const auto flags = getRoundaboutFlags(from_nid, via_eid, intersection);
     const auto roundabout_type = getRoundaboutType(node_based_graph.GetTarget(via_eid));
@@ -211,7 +212,9 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
     std::unordered_set<unsigned> connected_names;
 
     const auto getNextOnRoundabout = [this, &roundabout_name_ids, &connected_names](
-        const NodeID node, const bool roundabout, const bool circular) {
+                                         const NodeID node,
+                                         const bool roundabout,
+                                         const bool circular) {
         BOOST_ASSERT(roundabout != circular);
         EdgeID continue_edge = SPECIAL_EDGEID;
         for (const auto edge_id : node_based_graph.GetAdjacentEdgeRange(node))
@@ -271,7 +274,7 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
         for (const auto &compressed_edge : edge_bucket)
         {
             const auto next_coord = node_coordinates[compressed_edge.node_id];
-            length += util::coordinate_calculation::haversineDistance(last_coord, next_coord);
+            length += util::coordinate_calculation::greatCircleDistance(last_coord, next_coord);
             last_coord = next_coord;
         }
         return length;

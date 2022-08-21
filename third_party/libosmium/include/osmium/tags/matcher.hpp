@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/tag.hpp>
 #include <osmium/util/string_matcher.hpp>
 
+#include <algorithm>
 #include <type_traits>
 #include <utility>
 
@@ -48,6 +49,7 @@ namespace osmium {
 
         osmium::StringMatcher m_key_matcher;
         osmium::StringMatcher m_value_matcher;
+        bool m_has_value_matcher = false;
         bool m_result = true;
 
     public:
@@ -60,15 +62,19 @@ namespace osmium {
             m_value_matcher(osmium::StringMatcher::always_false{}) {
         }
 
+        bool has_value_matcher() const noexcept {
+            return m_has_value_matcher;
+        }
+
         /**
          * Create a TagMatcher matching the key against the specified
          * StringMatcher.
          *
          * @param key_matcher StringMatcher for matching the key.
          */
-        template <typename TKey, typename std::enable_if<
-            std::is_convertible<TKey, osmium::StringMatcher>::value, int>::type = 0>
-        explicit TagMatcher(TKey&& key_matcher) : // NOLINT(misc-forwarding-reference-overload) (false positive due to enable_if)
+        template <typename TKey, typename X = typename std::enable_if<
+            std::is_convertible<TKey, osmium::StringMatcher>::value, void>::type>
+        explicit TagMatcher(TKey&& key_matcher) :
             m_key_matcher(std::forward<TKey>(key_matcher)),
             m_value_matcher(osmium::StringMatcher::always_true{}) {
         }
@@ -87,6 +93,7 @@ namespace osmium {
         TagMatcher(TKey&& key_matcher, TValue&& value_matcher, bool invert = false) :
             m_key_matcher(std::forward<TKey>(key_matcher)),
             m_value_matcher(std::forward<TValue>(value_matcher)),
+            m_has_value_matcher(true),
             m_result(!invert) {
         }
 
@@ -115,12 +122,9 @@ namespace osmium {
          * @returns true if any of the tags in the TagList matches.
          */
         bool operator()(const osmium::TagList& tags) const noexcept {
-            for (const auto& tag : tags) {
-                if (operator()(tag)) {
-                    return true;
-                }
-            }
-            return false;
+            return std::any_of(tags.begin(), tags.end(), [this](const osmium::Tag& tag){
+                return operator()(tag);
+            });
         }
 
     }; // class TagMatcher

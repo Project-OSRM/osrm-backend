@@ -15,11 +15,11 @@ template <storage::Ownership Ownership> struct ContractedMetric
     detail::QueryGraph<Ownership> graph;
     std::vector<util::ViewOrVector<bool, Ownership>> edge_filter;
 };
-}
+} // namespace detail
 
 using ContractedMetric = detail::ContractedMetric<storage::Ownership::Container>;
 using ContractedMetricView = detail::ContractedMetric<storage::Ownership::View>;
-}
-}
+} // namespace contractor
+} // namespace osrm
 
 #endif

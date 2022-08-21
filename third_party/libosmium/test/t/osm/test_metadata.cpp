@@ -5,6 +5,8 @@
 #include <osmium/osm/metadata_options.hpp>
 #include <osmium/osm/object.hpp>
 
+#include <stdexcept>
+
 TEST_CASE("Metadata options: default") {
     const osmium::metadata_options m{};
     REQUIRE_FALSE(m.none());
@@ -90,11 +92,11 @@ TEST_CASE("Metadata options: timestamp,uid,user") {
 }
 
 TEST_CASE("Metadata options: fail") {
-    REQUIRE_THROWS_AS(osmium::metadata_options{"timestamp+foo"}, const std::invalid_argument&);
+    REQUIRE_THROWS_AS(osmium::metadata_options{"timestamp+foo"}, std::invalid_argument);
 }
 
 TEST_CASE("Metdata options: constructor using OSMObject") {
-    osmium::memory::Buffer buffer{10 * 1000};
+    osmium::memory::Buffer buffer{10UL * 1024UL};
     using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
     SECTION("only version") {

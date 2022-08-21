@@ -688,7 +688,7 @@ class RouteAPI : public BaseAPI
                     intersection.classes.begin(),
                     intersection.classes.end(),
                     classes.begin(),
-                    [&fb_result](const std::string cls) { return fb_result.CreateString(cls); });
+                    [&fb_result](const std::string &cls) { return fb_result.CreateString(cls); });
                 auto classes_vector = fb_result.CreateVector(classes);
                 auto entry_vector = fb_result.CreateVector(intersection.entry);
 
@@ -988,8 +988,8 @@ class RouteAPI : public BaseAPI
     }
 };
 
-} // ns api
-} // ns engine
-} // ns osrm
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif
