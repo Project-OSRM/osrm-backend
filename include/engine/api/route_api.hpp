@@ -825,11 +825,25 @@ class RouteAPI : public BaseAPI
                 if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
                 {
                     util::json::Array nodes;
+                    util::json::Array nodes_info;
+
                     nodes.values.reserve(leg_geometry.osm_node_ids.size());
+                    nodes_info.values.reserve(leg_geometry.osm_node_ids.size());
+
+                    for(uint64_t i=0; i<leg_geometry.node_locations.size(); i++) {
+                        util::json::Object node_info;
+                        node_info.values["latitude"] = static_cast<std::double_t >(leg_geometry.node_locations[i].lat.__value)/1000000.0;
+                        node_info.values["longitude"] = static_cast<std::double_t >(leg_geometry.node_locations[i].lon.__value)/1000000.0;
+                        node_info.values["id"] = static_cast<std::uint64_t>(leg_geometry.osm_node_ids[i]);
+                        nodes_info.values.push_back(node_info);
+                    }
+
                     for (const auto node_id : leg_geometry.osm_node_ids)
                     {
                         nodes.values.push_back(static_cast<std::uint64_t>(node_id));
                     }
+
+                    annotation.values["nodes_info"] = std::move(nodes_info);
                     annotation.values["nodes"] = std::move(nodes);
                 }
                 // Add any supporting metadata, if needed

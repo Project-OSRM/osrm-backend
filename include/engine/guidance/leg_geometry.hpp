@@ -25,6 +25,8 @@ namespace guidance
 // offsets       0      2    n-1     n
 struct LegGeometry
 {
+    std::vector<util::Coordinate> node_locations;
+
     std::vector<util::Coordinate> locations;
     // segment_offset[i] .. segment_offset[i+1] (inclusive)
     // contains the geometry of segment i
