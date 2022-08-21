@@ -17,7 +17,8 @@ bool IOConfig::IsValid() const
     bool success = true;
     for (auto &fileName : required_input_files)
     {
-        if (!fs::is_regular_file(fs::status(base_path.string() + fileName.string())))
+        if (!boost::filesystem::is_regular_file(
+                boost::filesystem::path(base_path.string() + fileName.string())))
         {
             util::Log(logWARNING) << "Missing/Broken File: " << base_path.string()
                                   << fileName.string();
