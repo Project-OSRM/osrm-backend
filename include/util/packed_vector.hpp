@@ -95,7 +95,9 @@ inline WordT set_upper_value(WordT word, WordT mask, std::uint8_t offset, T valu
 inline bool compare_and_swap(uint64_t *ptr, uint64_t old_value, uint64_t new_value)
 {
 #if defined(_MSC_VER)
-    return InterlockedCompareExchange64(ptr, new_value, old_value) == old_value;
+    return InterlockedCompareExchange64(reinterpret_cast<int64_t *>(ptr),
+                                        static_cast<int64_t>(new_value),
+                                        static_cast<int64_t>(old_value)) == old_value;
 #elif defined(__GNUC__)
     return __sync_bool_compare_and_swap(ptr, old_value, new_value);
 #else
