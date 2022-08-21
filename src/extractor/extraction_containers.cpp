@@ -434,7 +434,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             const auto duration = edge_iterator->duration_data(distance);
 
             const auto accurate_distance =
-                util::coordinate_calculation::fccApproximateDistance(source_coord, target_coord);
+                util::coordinate_calculation::greatCircleDistance(source_coord, target_coord);
 
             ExtractionSegment segment(source_coord, target_coord, distance, weight, duration);
             scripting_environment.ProcessSegment(segment);
@@ -747,7 +747,7 @@ ExtractionContainers::ReferencedWays ExtractionContainers::IdentifyManeuverOverr
 
     // Then, populate the values in that hashtable for only the ways
     // referenced
-    util::for_each_indexed(ways_list.cbegin(), ways_list.cend(), set_ids);
+    util::for_each_indexed(ways_list, set_ids);
 
     TIMER_STOP(identify_maneuver_override_ways);
     log << "ok, after " << TIMER_SEC(identify_maneuver_override_ways) << "s";
@@ -972,7 +972,7 @@ ExtractionContainers::ReferencedWays ExtractionContainers::IdentifyRestrictionWa
         }
     };
 
-    util::for_each_indexed(ways_list.cbegin(), ways_list.cend(), set_ids);
+    util::for_each_indexed(ways_list, set_ids);
     TIMER_STOP(identify_restriction_ways);
     log << "ok, after " << TIMER_SEC(identify_restriction_ways) << "s";
 

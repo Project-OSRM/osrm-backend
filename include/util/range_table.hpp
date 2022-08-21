@@ -83,19 +83,25 @@ template <unsigned BLOCK_SIZE, storage::Ownership Ownership> class RangeTable
         unsigned block_idx = 0;
         unsigned block_counter = 0;
         BlockT block;
+#ifndef BOOST_ASSERT_IS_VOID
         unsigned block_sum = 0;
+#endif
         for (const unsigned l : lengths)
         {
             // first entry of a block: encode absolute offset
             if (block_idx == 0)
             {
                 block_offsets.push_back(lengths_prefix_sum);
+#ifndef BOOST_ASSERT_IS_VOID
                 block_sum = 0;
+#endif
             }
             else
             {
                 block[block_idx - 1] = last_length;
+#ifndef BOOST_ASSERT_IS_VOID
                 block_sum += last_length;
+#endif
             }
 
             BOOST_ASSERT((block_idx == 0 && block_offsets[block_counter] == lengths_prefix_sum) ||

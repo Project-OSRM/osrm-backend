@@ -274,7 +274,7 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
         for (const auto &compressed_edge : edge_bucket)
         {
             const auto next_coord = node_coordinates[compressed_edge.node_id];
-            length += util::coordinate_calculation::haversineDistance(last_coord, next_coord);
+            length += util::coordinate_calculation::greatCircleDistance(last_coord, next_coord);
             last_coord = next_coord;
         }
         return length;

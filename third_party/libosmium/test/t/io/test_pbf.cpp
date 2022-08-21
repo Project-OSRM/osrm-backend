@@ -6,6 +6,13 @@
 #include <osmium/io/reader.hpp>
 #include <osmium/osm/object.hpp>
 
+TEST_CASE("Get supported PBF compression types") {
+    const auto types = osmium::io::supported_pbf_compression_types();
+    REQUIRE(types.size() >= 2);
+    REQUIRE(types[0] == "none");
+    REQUIRE(types[1] == "zlib");
+}
+
 /**
  * Osmosis writes PBF with changeset=-1 if its input file did not contain the changeset field.
  * The default value of the version field is -1 in the OSM.PBF format.

@@ -14,7 +14,7 @@ using namespace osrm::util;
 constexpr unsigned BLOCK_SIZE = 16;
 typedef RangeTable<BLOCK_SIZE, osrm::storage::Ownership::Container> TestRangeTable;
 
-void ConstructionTest(std::vector<unsigned> lengths, std::vector<unsigned> offsets)
+void ConstructionTest(const std::vector<unsigned> &lengths, const std::vector<unsigned> &offsets)
 {
     BOOST_CHECK_EQUAL(lengths.size(), offsets.size() - 1);
 

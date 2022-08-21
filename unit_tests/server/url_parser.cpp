@@ -23,7 +23,7 @@ std::ostream &operator<<(std::ostream &out, const osrm::server::api::ParsedURL &
 #include <boost/test/unit_test.hpp>
 
 #define CHECK_EQUAL_RANGE(R1, R2)                                                                  \
-    BOOST_CHECK_EQUAL_COLLECTIONS(R1.begin(), R1.end(), R2.begin(), R2.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS((R1).begin(), (R1).end(), (R2).begin(), (R2).end());
 
 BOOST_AUTO_TEST_SUITE(api_url_parser)
 

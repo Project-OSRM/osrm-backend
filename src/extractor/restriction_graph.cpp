@@ -215,8 +215,7 @@ void buildGraph(RestrictionGraph &rg, const std::vector<TurnRestriction> &restri
         if (restriction.Type() == RestrictionType::WAY_RESTRICTION)
         {
             const auto &way_restriction = restriction.AsWayRestriction();
-            util::for_each_pair(way_restriction.via.begin(),
-                                way_restriction.via.end(),
+            util::for_each_pair(way_restriction.via,
                                 [&](NodeID from, NodeID to) { builder.next(from, to); });
         }
         builder.end(restriction);

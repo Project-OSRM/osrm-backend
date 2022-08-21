@@ -160,8 +160,8 @@ Feature: Ramp Guidance
 
        When I route I should get
             | waypoints | route    | turns                          |
-            | a,d       | ab,bd,bd | depart,on ramp right,arrive |
-            | a,c       | ab,bc,bc | depart,turn left,arrive        |
+            | a,d       | ab,bd,bd | depart,on ramp right,arrive    |
+            | a,c       | ab,bc    | depart,arrive                  |
 
     Scenario: Fork Slight Ramp
         Given the node map
@@ -179,8 +179,8 @@ Feature: Ramp Guidance
 
        When I route I should get
             | waypoints | route    | turns                                 |
-            | a,d       | ab,bd,bd | depart,on ramp slight right,arrive |
-            | a,c       | ab,bc,bc | depart,turn slight left,arrive        |
+            | a,d       | ab,bd,bd | depart,on ramp slight right,arrive    |
+            | a,c       | ab,bc    | depart,arrive                         |
 
     Scenario: Fork Slight Ramp on Through Street
         Given the node map

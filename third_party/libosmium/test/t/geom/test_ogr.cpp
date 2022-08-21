@@ -16,7 +16,7 @@ TEST_CASE("OGR point geometry") {
 
 TEST_CASE("OGR empty point geometry") {
     osmium::geom::OGRFactory<> factory;
-    REQUIRE_THROWS_AS(factory.create_point(osmium::Location()), const osmium::invalid_location&);
+    REQUIRE_THROWS_AS(factory.create_point(osmium::Location()), osmium::invalid_location);
 }
 
 TEST_CASE("OGR linestring geometry") {

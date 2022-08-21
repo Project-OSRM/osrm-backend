@@ -83,4 +83,4 @@ Feature: Car - weights
             | waypoints | bearings | route     | distance | weights   | times          |
             | a,b       | 90 90    | abc,abc   | 200m     | 200,0     | 11.1s,0s       |
             | b,c       | 90 90    | abc,abc   | 200m     | 200,0     | 11.1s,0s       |
-            | a,d       | 90 180   | abc,bd,bd | 399.9m   | 200,200,0 | 13.2s,11.1s,0s |
+            | a,d       | 90 180   | abc,bd,bd | 400m     | 200,200,0 | 13.2s,11.1s,0s |

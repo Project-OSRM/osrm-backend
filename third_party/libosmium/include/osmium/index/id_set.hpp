@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -67,7 +67,7 @@ namespace osmium {
             IdSet(IdSet&&) noexcept = default;
             IdSet& operator=(IdSet&&) noexcept = default;
 
-            virtual ~IdSet() = default;
+            virtual ~IdSet() noexcept = default;
 
             /**
              * Add the given Id to the set.
@@ -253,9 +253,10 @@ namespace osmium {
             IdSetDense() = default;
 
             IdSetDense(const IdSetDense& other) :
-                IdSet<T>(other) {
+                IdSet<T>(other),
+                m_size(other.m_size) {
                 m_data.reserve(other.m_data.size());
-                for (const auto& ptr: other.m_data) {
+                for (const auto& ptr : other.m_data) {
                     if (ptr) {
                         m_data.emplace_back(new unsigned char[chunk_size]);
                         ::memcpy(m_data.back().get(), ptr.get(), chunk_size);
@@ -263,7 +264,6 @@ namespace osmium {
                         m_data.emplace_back();
                     }
                 }
-                m_size = other.m_size;
             }
 
             IdSetDense& operator=(IdSetDense other) {
@@ -382,6 +382,16 @@ namespace osmium {
             std::vector<T> m_data;
 
         public:
+
+            IdSetSmall() = default;
+
+            IdSetSmall(const IdSetSmall&) = default;
+            IdSetSmall& operator=(const IdSetSmall&) = default;
+
+            IdSetSmall(IdSetSmall&&) noexcept = default;
+            IdSetSmall& operator=(IdSetSmall&&) noexcept = default;
+
+            ~IdSetSmall() noexcept override = default;
 
             /**
              * Add the given Id to the set.

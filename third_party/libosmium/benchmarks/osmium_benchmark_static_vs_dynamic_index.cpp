@@ -41,7 +41,7 @@ using dynamic_location_handler_type = osmium::handler::NodeLocationsForWays<dyna
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " OSMFILE\n";
-        std::exit(1);
+        return 1;
     }
 
     try {
@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
 
         const auto& map_factory = osmium::index::MapFactory<osmium::unsigned_object_id_type, osmium::Location>::instance();
 
-        const auto buffer_size = buffer.committed() / (1024 * 1024); // buffer size in MBytes
+        const auto buffer_size = buffer.committed() / (1024UL * 1024UL); // buffer size in MBytes
         const int runs = std::max(10, static_cast<int>(5000ULL / buffer_size));
 
         std::cout << "input: filename=" << input_filename << " buffer_size=" << buffer_size << "MBytes\n";
@@ -143,7 +143,9 @@ int main(int argc, char* argv[]) {
         std::cout << " max=" << diff_max << "ms (" << percent_max << "%)\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
-        std::exit(1);
+        return 1;
     }
+
+    return 0;
 }
 

@@ -114,9 +114,12 @@ module.exports = function() {
         let dependencies = [
             this.OSRM_EXTRACT_PATH,
             this.OSRM_CONTRACT_PATH,
+            this.OSRM_CUSTOMIZE_PATH,
+            this.OSRM_PARTITION_PATH,
             this.LIB_OSRM_EXTRACT_PATH,
-            this.LIB_OSRM_GUIDANCE_PATH,
-            this.LIB_OSRM_CONTRACT_PATH
+            this.LIB_OSRM_CONTRACT_PATH,
+            this.LIB_OSRM_CUSTOMIZE_PATH,
+            this.LIB_OSRM_PARTITION_PATH
         ];
 
         var addLuaFiles = (directory, callback) => {

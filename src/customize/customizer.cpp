@@ -108,8 +108,9 @@ std::vector<CellMetric> customizeFilteredMetrics(const partitioner::MultiLevelEd
                                                  const std::vector<std::vector<bool>> &node_filters)
 {
     std::vector<CellMetric> metrics;
+    metrics.reserve(node_filters.size());
 
-    for (auto filter : node_filters)
+    for (const auto &filter : node_filters)
     {
         auto metric = storage.MakeMetric();
         customizer.Customize(graph, storage, filter, metric);

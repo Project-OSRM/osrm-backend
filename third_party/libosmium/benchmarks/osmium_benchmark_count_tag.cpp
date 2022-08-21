@@ -39,7 +39,7 @@ struct CountHandler : public osmium::handler::Handler {
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " OSMFILE\n";
-        std::exit(1);
+        return 1;
     }
 
     try {
@@ -54,7 +54,9 @@ int main(int argc, char* argv[]) {
         std::cout << "r_all=" << handler.all << " r_counter=" << handler.counter << '\n';
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
-        std::exit(1);
+        return 1;
     }
+
+    return 0;
 }
 

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -117,8 +117,7 @@ namespace osmium {
                     .add_field("nodes", OFTInteger, 8)
                     .add_field("id1", OFTReal, 12, 1)
                     .add_field("id2", OFTReal, 12, 1)
-                    .add_field("problem", OFTString, 30)
-                ;
+                    .add_field("problem", OFTString, 30);
 
                 m_layer_lerror
                     .add_field("obj_type", OFTString, 1)
@@ -126,15 +125,13 @@ namespace osmium {
                     .add_field("nodes", OFTInteger, 8)
                     .add_field("id1", OFTReal, 12, 1)
                     .add_field("id2", OFTReal, 12, 1)
-                    .add_field("problem", OFTString, 30)
-                ;
+                    .add_field("problem", OFTString, 30);
 
                 m_layer_ways
                     .add_field("obj_type", OFTString, 1)
                     .add_field("obj_id", OFTInteger, 10)
                     .add_field("way_id", OFTInteger, 10)
-                    .add_field("nodes", OFTInteger, 8)
-                ;
+                    .add_field("nodes", OFTInteger, 8);
             }
 
             void report_duplicate_node(osmium::object_id_type node_id1, osmium::object_id_type node_id2, osmium::Location location) override {

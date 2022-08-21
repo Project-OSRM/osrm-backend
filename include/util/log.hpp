@@ -85,6 +85,9 @@ class Log
         return *this;
     }
 
+  private:
+    void Init();
+
   protected:
     const LogLevel level;
     std::ostringstream buffer;

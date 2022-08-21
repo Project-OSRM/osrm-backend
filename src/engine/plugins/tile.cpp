@@ -464,7 +464,7 @@ void encodeVectorTile(const DataFacadeBase &facade,
                     const auto b = facade.GetCoordinateOfNode(edge.v);
                     // Calculate the length in meters
                     const double length =
-                        osrm::util::coordinate_calculation::haversineDistance(a, b);
+                        osrm::util::coordinate_calculation::greatCircleDistance(a, b);
 
                     const auto forward_weight_range =
                         facade.GetUncompressedForwardWeights(geometry_id);

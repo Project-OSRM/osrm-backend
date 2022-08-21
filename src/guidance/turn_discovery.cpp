@@ -51,7 +51,7 @@ bool findPreviousIntersection(const NodeID node_v,
     const auto via_edge_length =
         util::coordinate_calculation::getLength(coordinates_along_via_edge.begin(),
                                                 coordinates_along_via_edge.end(),
-                                                &util::coordinate_calculation::haversineDistance);
+                                                &util::coordinate_calculation::greatCircleDistance);
 
     // we check if via-edge is too short. In this case the previous turn cannot influence the turn
     // at via_edge and the intersection at NODE_W

@@ -41,9 +41,6 @@ TEST_CASE("Add strings to StringStore") {
     REQUIRE(s1 == *it++);
     REQUIRE(s2 == *it++);
     REQUIRE(it == ss.end());
-
-    ss.clear();
-    REQUIRE(ss.begin() == ss.end());
 }
 
 TEST_CASE("Add zero-length string and longer strings to StringStore") {
@@ -61,9 +58,8 @@ TEST_CASE("Add zero-length string and longer strings to StringStore") {
 }
 
 TEST_CASE("Add many strings to StringStore") {
-    osmium::io::detail::StringStore ss{100};
-
     for (const char* teststring : {"", "a", "abc", "abcd", "abcde"}) {
+        osmium::io::detail::StringStore ss{100};
         int i = 0;
         for (; i < 200; ++i) {
             ss.add(teststring);
@@ -76,8 +72,6 @@ TEST_CASE("Add many strings to StringStore") {
 
         REQUIRE(i == 0);
         REQUIRE(ss.get_chunk_count() > 1);
-        ss.clear();
-        REQUIRE(ss.get_chunk_count() == 1);
     }
 }
 
@@ -104,9 +98,6 @@ TEST_CASE("Add strings to StringTable") {
     REQUIRE(std::string{"bar"} == *it++);
     REQUIRE(std::string{"baz"} == *it++);
     REQUIRE(it == st.end());
-
-    st.clear();
-    REQUIRE(st.size() == 1);
 }
 
 TEST_CASE("Add empty string to StringTable") {

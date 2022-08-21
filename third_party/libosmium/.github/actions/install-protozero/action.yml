@@ -1,0 +1,9 @@
+name: Install Protozero from git
+
+runs:
+  using: composite
+  steps:
+    - name: Install from git
+      run: git clone --quiet --depth 1 https://github.com/mapbox/protozero.git ../protozero
+      shell: bash
+

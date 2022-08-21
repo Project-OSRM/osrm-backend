@@ -59,7 +59,7 @@ Feature: Car - Handle traffic lights
 
         When I route I should get
             | from | to | route   | geometry       |
-            | a    | c  | abc,abc | _ibE_ibE?gJ?gJ |
+            | a    | c  | abc,abc | _ibE_ibE?gJ?eJ |
 
     @traffic
     Scenario: Traffic update on the edge with a traffic signal
@@ -89,5 +89,5 @@ Feature: Car - Handle traffic lights
 
         When I route I should get
           | from | to | route   | speed   | weights | time  | distances | a:datasources | a:nodes | a:speed | a:duration |  a:weight |
-          | a    | c  | abc,abc | 59 km/h | 24.2,0  | 24.2s | 399.9m,0m |           1:0 |  1:2:3  |   18:18 |  11.1:11.1 | 11.1:11.1 |
-          | c    | a  | abc,abc | 59 km/h | 24.2,0  | 24.2s | 399.9m,0m |           0:1 |  3:2:1  |   18:18 |  11.1:11.1 | 11.1:11.1 |
+          | a    | c  | abc,abc | 60 km/h | 24.2,0  | 24.2s | 400m,0m   |           1:0 |  1:2:3  |   18:18 |  11.1:11.1 | 11.1:11.1 |
+          | c    | a  | abc,abc | 60 km/h | 24.2,0  | 24.2s | 400m,0m   |           0:1 |  3:2:1  |   18:18 |  11.1:11.1 | 11.1:11.1 |

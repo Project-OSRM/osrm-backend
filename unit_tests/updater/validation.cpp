@@ -65,22 +65,6 @@ BOOST_AUTO_TEST_CASE(timezone_validation_test)
     doc.Parse(nonobj_props);
     BOOST_CHECK_THROW(util::validateFeature(doc), util::exception);
 
-    char missing_tzid[] = "{ \"type\" : \"Feature\","
-                          "\"properties\" : { }, \"geometry\" : { \"type\": \"polygon\", "
-                          "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
-                          "48.88277], [8.57757, 49.07206], [8.28369, "
-                          "49.07206], [8.28369, 48.88277]]] }}";
-    doc.Parse(missing_tzid);
-    BOOST_CHECK_THROW(util::validateFeature(doc), util::exception);
-
-    char tzid_err[] = "{ \"type\" : \"Feature\","
-                      "\"properties\" : { \"TZID\" : []}, \"geometry\" : { \"type\": \"polygon\", "
-                      "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
-                      "48.88277], [8.57757, 49.07206], [8.28369, "
-                      "49.07206], [8.28369, 48.88277]]] }}";
-    doc.Parse(tzid_err);
-    BOOST_CHECK_THROW(util::validateFeature(doc), util::exception);
-
     char missing_geom[] = "{ \"type\" : \"Feature\","
                           "\"properties\" : { \"TZID\" : \"Europe/Berlin\"}, \"geometries\" : { "
                           "\"type\": \"polygon\", "

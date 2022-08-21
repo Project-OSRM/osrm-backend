@@ -225,7 +225,7 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
             left_accumulator,
             selector);
     }
-    const auto distance_to_triangle = util::coordinate_calculation::haversineDistance(
+    const auto distance_to_triangle = util::coordinate_calculation::greatCircleDistance(
         node_coordinates[intersection_node],
         node_coordinates[node_based_graph.GetTarget(left_accumulator.via_edge_id)]);
 
@@ -274,9 +274,10 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
     // the width we can bridge at the intersection
     const auto assumed_road_width = (num_lanes(lhs) + num_lanes(rhs)) * ASSUMED_LANE_WIDTH;
     const constexpr auto MAXIMAL_ALLOWED_TRAFFIC_ISLAND_WIDTH = 10;
-    const auto distance_between_triangle_corners = util::coordinate_calculation::haversineDistance(
-        node_coordinates[node_based_graph.GetTarget(left_accumulator.via_edge_id)],
-        node_coordinates[node_based_graph.GetTarget(right_accumulator.via_edge_id)]);
+    const auto distance_between_triangle_corners =
+        util::coordinate_calculation::greatCircleDistance(
+            node_coordinates[node_based_graph.GetTarget(left_accumulator.via_edge_id)],
+            node_coordinates[node_based_graph.GetTarget(right_accumulator.via_edge_id)]);
     if (distance_between_triangle_corners >
         (assumed_road_width + MAXIMAL_ALLOWED_TRAFFIC_ISLAND_WIDTH))
         return false;
@@ -419,10 +420,10 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
     // sampling to correctly weight longer segments in regression calculations
     const auto constexpr SAMPLE_INTERVAL = 5;
     coordinates_to_the_left = coordinate_extractor.SampleCoordinates(
-        std::move(coordinates_to_the_left), distance_to_extract, SAMPLE_INTERVAL);
+        coordinates_to_the_left, distance_to_extract, SAMPLE_INTERVAL);
 
     coordinates_to_the_right = coordinate_extractor.SampleCoordinates(
-        std::move(coordinates_to_the_right), distance_to_extract, SAMPLE_INTERVAL);
+        coordinates_to_the_right, distance_to_extract, SAMPLE_INTERVAL);
 
     /* extract the number of lanes for a road
      * restricts a vector to the last two thirds of the length
@@ -540,7 +541,7 @@ bool MergableRoadDetector::IsTrafficIsland(const NodeID intersection_node,
     if (!degree_three_connect_in && !degree_three_connect_out)
         return false;
 
-    const auto distance_between_candidates = util::coordinate_calculation::haversineDistance(
+    const auto distance_between_candidates = util::coordinate_calculation::greatCircleDistance(
         node_coordinates[intersection_node], node_coordinates[left_candidate]);
 
     const auto both_split_join = degree_three_connect_in && degree_three_connect_out;

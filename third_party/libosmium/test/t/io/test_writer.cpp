@@ -77,13 +77,13 @@ TEST_CASE("Writer: Successful writes writing buffer") {
 
     REQUIRE(count == count_fds());
 
-    REQUIRE_THROWS_AS(writer(osmium::memory::Buffer{}), const osmium::io_error&);
+    REQUIRE_THROWS_AS(writer(osmium::memory::Buffer{}), osmium::io_error);
 
     osmium::io::Reader reader_check{filename};
     const osmium::memory::Buffer buffer_check = reader_check.read();
     REQUIRE(buffer_check);
     REQUIRE(buffer_check.committed() > 0);
-    REQUIRE(buffer_check.select<osmium::OSMObject>().size() == num);
+    REQUIRE(buffer_check.select<osmium::OSMObject>().size() == static_cast<std::size_t>(num));
     REQUIRE(buffer_check.select<osmium::OSMObject>().cbegin()->id() == 1);
 }
 
@@ -109,7 +109,7 @@ TEST_CASE("Writer: Successful writes writing items") {
     const osmium::memory::Buffer buffer_check = reader_check.read();
     REQUIRE(buffer_check);
     REQUIRE(buffer_check.committed() > 0);
-    REQUIRE(buffer_check.select<osmium::OSMObject>().size() == num);
+    REQUIRE(buffer_check.select<osmium::OSMObject>().size() == static_cast<std::size_t>(num));
     REQUIRE(buffer_check.select<osmium::OSMObject>().cbegin()->id() == 1);
 }
 
@@ -134,7 +134,7 @@ TEST_CASE("Writer: Successful writes using output iterator") {
     const osmium::memory::Buffer buffer_check = reader_check.read();
     REQUIRE(buffer_check);
     REQUIRE(buffer_check.committed() > 0);
-    REQUIRE(buffer_check.select<osmium::OSMObject>().size() == num);
+    REQUIRE(buffer_check.select<osmium::OSMObject>().size() == static_cast<std::size_t>(num));
     REQUIRE(buffer_check.select<osmium::OSMObject>().cbegin()->id() == 1);
 }
 

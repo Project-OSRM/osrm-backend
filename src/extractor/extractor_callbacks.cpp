@@ -22,6 +22,24 @@
 #include <string>
 #include <vector>
 
+#ifdef _MSC_VER
+#if (_MSC_VER >= 1928)
+#ifdef _DEBUG
+namespace osrm
+{
+namespace extractor
+{
+namespace detail
+{
+const ByEdgeOrByMeterValue::ValueByEdge ByEdgeOrByMeterValue::by_edge;
+const ByEdgeOrByMeterValue::ValueByMeter ByEdgeOrByMeterValue::by_meter;
+} // namespace detail
+} // namespace extractor
+} // namespace osrm
+#endif
+#endif
+#endif
+
 namespace osrm
 {
 namespace extractor
@@ -403,9 +421,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                                                   parsed_way.forward_travel_mode,
                                                                   parsed_way.is_left_hand_driving});
         util::for_each_pair(
-            nodes.cbegin(),
-            nodes.cend(),
-            [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
+            nodes, [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
                 NodeBasedEdgeWithOSM edge = {
                     OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
                     OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
@@ -439,9 +455,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                                                   parsed_way.backward_travel_mode,
                                                                   parsed_way.is_left_hand_driving});
         util::for_each_pair(
-            nodes.cbegin(),
-            nodes.cend(),
-            [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
+            nodes, [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
                 NodeBasedEdgeWithOSM edge = {
                     OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
                     OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},

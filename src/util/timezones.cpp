@@ -110,13 +110,22 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
         // time zone geojson specific checks
         const auto &feature = features_array[i].GetObject();
         const auto &properties = feature["properties"].GetObject();
-        if (!properties.HasMember("tzid"))
+        std::string tzid_key = "tzid";
+        if (properties.HasMember("tzid"))
+        {
+            if (!properties["tzid"].IsString())
+                throw osrm::util::exception("Feature has non-string 'tzid' value.");
+            tzid_key = "tzid";
+        }
+        else if (properties.HasMember("TZID"))
+        {
+            if (!properties["TZID"].IsString())
+                throw osrm::util::exception("Feature has non-string 'TZID' value.");
+            tzid_key = "TZID";
+        }
+        else
         {
             throw osrm::util::exception("Feature is missing 'tzid' member in properties.");
-        }
-        else if (!properties["tzid"].IsString())
-        {
-            throw osrm::util::exception("Feature has non-string 'tzid' value.");
         }
 
         // Case-sensitive check of type https://tools.ietf.org/html/rfc7946#section-1.4
@@ -137,7 +146,7 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
                                   local_times.size());
 
             // Get time zone name and emplace polygon and local time for the UTC input
-            const auto &tzname = properties["tzid"].GetString();
+            const auto &tzname = properties[tzid_key.c_str()].GetString();
             local_times.push_back(local_time_t{polygon, get_local_time_in_tz(tzname)});
         }
         else

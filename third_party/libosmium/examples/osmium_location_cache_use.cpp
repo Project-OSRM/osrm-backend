@@ -25,7 +25,6 @@
 */
 
 #include <cerrno>      // for errno
-#include <cstdlib>     // for std::exit
 #include <cstring>     // for strerror
 #include <fcntl.h>     // for open
 #include <iostream>    // for std::cout, std::cerr
@@ -63,7 +62,9 @@ using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
 // ID and all nodes IDs and locations in those ways.
 struct MyHandler : public osmium::handler::Handler {
 
-    void way(const osmium::Way& way) {
+    // The callback functions can be either static or not depending on whether
+    // you need to access any member variables of the handler.
+    static void way(const osmium::Way& way) {
         std::cout << "way " << way.id() << "\n";
         for (const auto& nr : way.nodes()) {
             std::cout << "  node " << nr.ref() << " " << nr.location() << "\n";
@@ -75,7 +76,7 @@ struct MyHandler : public osmium::handler::Handler {
 int main(int argc, char* argv[]) {
     if (argc != 3) {
         std::cerr << "Usage: " << argv[0] << " OSM_FILE CACHE_FILE\n";
-        std::exit(1);
+        return 1;
     }
 
     try {
@@ -108,7 +109,7 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
         std::cerr << e.what() << '\n';
-        std::exit(1);
+        return 1;
     }
 }
 

@@ -21,11 +21,17 @@ static std::string S_(const char* s) {
     return std::string{s};
 }
 
+// From C++20 we need to handle unicode literals differently
+#ifdef __cpp_char8_t
+static std::string S_(const char8_t* s) {
+    return std::string{reinterpret_cast<const char*>(s)};
+}
+#endif
+
 static std::string filename(const char* test_id, const char* suffix = "osm") {
     const char* testdir = getenv("TESTDIR");
     if (!testdir) {
-        std::cerr << "You have to set TESTDIR environment variable before running testdata-xml\n";
-        std::exit(2);
+        throw std::runtime_error{"You have to set TESTDIR environment variable before running testdata-xml"};
     }
 
     std::string f;
@@ -69,13 +75,12 @@ static std::string read_gz_file(const char* test_id, const char* suffix) {
     assert(fd >= 0);
 
     osmium::io::GzipDecompressor gzip_decompressor{fd};
-    const std::string input = gzip_decompressor.read();
+    std::string input = gzip_decompressor.read();
     gzip_decompressor.close();
 
     return input;
 }
 
-// cppcheck-suppress passedByValue
 static header_buffer_type parse_xml(std::string input) {
     osmium::thread::Pool pool;
     osmium::io::detail::future_string_queue_type input_queue;
@@ -86,13 +91,19 @@ static header_buffer_type parse_xml(std::string input) {
     osmium::io::detail::add_to_queue(input_queue, std::move(input));
     osmium::io::detail::add_to_queue(input_queue, std::string{});
 
+    std::atomic<std::size_t> offset{0};
+
     osmium::io::detail::parser_arguments args = {
         pool,
+        -1,
         input_queue,
         output_queue,
         header_promise,
+        &offset,
         osmium::osm_entity_bits::all,
-        osmium::io::read_meta::yes
+        osmium::io::read_meta::yes,
+        osmium::io::buffers_type::any,
+        false
     };
     osmium::io::detail::XMLParser parser{args};
     parser.parse();
@@ -119,7 +130,7 @@ static header_buffer_type read_xml(const char* test_id) {
 
 template <typename TException>
 void test_fail(const char* xml_file_name, const char* errmsg) {
-    REQUIRE_THROWS_AS(read_xml(xml_file_name), const TException&);
+    REQUIRE_THROWS_AS(read_xml(xml_file_name), TException);
     REQUIRE_THROWS_WITH(read_xml(xml_file_name), errmsg);
 
     REQUIRE_THROWS_AS([&](){
@@ -127,7 +138,7 @@ void test_fail(const char* xml_file_name, const char* errmsg) {
         const osmium::io::Header header{reader.header()};
         osmium::memory::Buffer buffer = reader.read();
         reader.close();
-    }(), const TException&);
+    }(), TException);
 }
 
 // =============================================
@@ -282,7 +293,7 @@ TEST_CASE("Reading OSM XML 120: Using Reader") {
 // =============================================
 
 TEST_CASE("Reading OSM XML 121: Direct") {
-    REQUIRE_THROWS_AS(read_gz_file("121-truncated_gzip_file", "osm.gz"), const osmium::gzip_error&);
+    REQUIRE_THROWS_AS(read_gz_file("121-truncated_gzip_file", "osm.gz"), osmium::gzip_error);
 }
 
 TEST_CASE("Reading OSM XML 121: Using Reader") {
@@ -357,28 +368,25 @@ TEST_CASE("Reading OSM XML 140: Using Reader") {
 
         REQUIRE(S_(uc) == t["unicode_xml"]);
 
-// workaround for missing support for u8 string literals on Windows
-#if !defined(_MSC_VER)
         switch (count) {
             case 1:
-                REQUIRE(S_(uc) == u8"a");
+                REQUIRE(S_(uc) == S_(u8"a"));
                 break;
             case 2:
-                REQUIRE(S_(uc) == u8"\u00e4");
+                REQUIRE(S_(uc) == S_(u8"\u00e4"));
                 break;
             case 3:
-                REQUIRE(S_(uc) == u8"\u30dc");
+                REQUIRE(S_(uc) == S_(u8"\u30dc"));
                 break;
             case 4:
-                REQUIRE(S_(uc) == u8"\U0001d11e");
+                REQUIRE(S_(uc) == S_(u8"\U0001d11e"));
                 break;
             case 5:
-                REQUIRE(S_(uc) == u8"\U0001f6eb");
+                REQUIRE(S_(uc) == S_(u8"\U0001f6eb"));
                 break;
             default:
                 REQUIRE(false); // should not be here
         }
-#endif
     }
     REQUIRE(count == 5);
 }

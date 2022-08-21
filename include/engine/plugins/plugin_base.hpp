@@ -168,7 +168,7 @@ class BasePlugin
     std::vector<std::vector<PhantomNodeWithDistance>>
     GetPhantomNodesInRange(const datafacade::BaseDataFacade &facade,
                            const api::BaseParameters &parameters,
-                           const std::vector<double> radiuses,
+                           const std::vector<double> &radiuses,
                            bool use_all_edges = false) const
     {
         std::vector<std::vector<PhantomNodeWithDistance>> phantom_nodes(
@@ -190,7 +190,7 @@ class BasePlugin
             {
                 phantom_nodes[i].push_back(PhantomNodeWithDistance{
                     parameters.hints[i]->phantom,
-                    util::coordinate_calculation::haversineDistance(
+                    util::coordinate_calculation::greatCircleDistance(
                         parameters.coordinates[i], parameters.hints[i]->phantom.location),
                 });
                 continue;
@@ -240,7 +240,7 @@ class BasePlugin
             {
                 phantom_nodes[i].push_back(PhantomNodeWithDistance{
                     parameters.hints[i]->phantom,
-                    util::coordinate_calculation::haversineDistance(
+                    util::coordinate_calculation::greatCircleDistance(
                         parameters.coordinates[i], parameters.hints[i]->phantom.location),
                 });
                 continue;

@@ -74,7 +74,7 @@ TEST_CASE("Test Writer with MockOutputFormat") {
             osmium::io::Writer writer("test-writer-mock-fail-on-construction.osm", header, osmium::io::overwrite::allow);
             writer(std::move(buffer));
             writer.close();
-        }(), const std::logic_error&);
+        }(), std::logic_error);
 
     }
 
@@ -86,7 +86,7 @@ TEST_CASE("Test Writer with MockOutputFormat") {
             osmium::io::Writer writer("test-writer-mock-fail-on-construction.osm", header, osmium::io::overwrite::allow);
             writer(std::move(buffer));
             writer.close();
-        }(), const std::logic_error&);
+        }(), std::logic_error);
 
     }
 
@@ -98,7 +98,7 @@ TEST_CASE("Test Writer with MockOutputFormat") {
             osmium::io::Writer writer("test-writer-mock-fail-on-construction.osm", header, osmium::io::overwrite::allow);
             writer(std::move(buffer));
             writer.close();
-        }(), const std::logic_error&);
+        }(), std::logic_error);
 
     }
 
