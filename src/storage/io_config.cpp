@@ -10,10 +10,11 @@ namespace osrm
 {
 namespace storage
 {
+
+namespace fs = boost::filesystem;
+
 bool IOConfig::IsValid() const
 {
-    namespace fs = boost::filesystem;
-
     bool success = true;
     for (auto &fileName : required_input_files)
     {
