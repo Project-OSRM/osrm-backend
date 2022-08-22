@@ -130,7 +130,7 @@ tables.forEach(function(annotation) {
     });
 
     test('table: ' + annotation + ' throws on invalid arguments', function(assert) {
-        assert.plan(17);
+        assert.plan(18);
         var osrm = new OSRM(data_path);
         var options = {annotations: [annotation.slice(0,-1)]};
         assert.throws(function() { osrm.table(options); },
