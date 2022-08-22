@@ -21,7 +21,7 @@ Feature: Basic trip planning
 
         When I plan a trip I should get
             | waypoints   | trips  | code           |
-            | a           | aa     | InvalidOptions |
+            | a           |        | InvalidOptions |
 
     Scenario: Testbot - Trip: Roundtrip between same waypoint
         Given the node map
