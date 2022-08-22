@@ -10,10 +10,11 @@ namespace osrm
 {
 namespace storage
 {
+
+namespace fs = boost::filesystem;
+
 bool IOConfig::IsValid() const
 {
-    namespace fs = boost::filesystem;
-
     bool success = true;
     for (auto &fileName : required_input_files)
     {
@@ -25,6 +26,19 @@ bool IOConfig::IsValid() const
         }
     }
     return success;
+}
+
+std::vector<std::string> IOConfig::GetMissingFiles() const
+{
+    std::vector<std::string> missingFiles;
+    for (auto &fileName : required_input_files)
+    {
+        if (!fs::is_regular_file(fs::path(base_path.string() + fileName.string())))
+        {
+            missingFiles.push_back(base_path.string() + fileName.string());
+        }
+    }
+    return missingFiles;
 }
 } // namespace storage
 } // namespace osrm
