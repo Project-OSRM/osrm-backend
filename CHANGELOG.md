@@ -36,6 +36,7 @@
       - CHANGED: Docker build, enabled arm64 build layer [#6172](https://github.com/Project-OSRM/osrm-backend/pull/6172)
       - CHANGED: Docker build, enabled apt-get update/install caching in separate layer for build phase [#6175](https://github.com/Project-OSRM/osrm-backend/pull/6175)
     - Routing:
+      - FIXED: Completed support for no_entry and no_exit turn restrictions. [#5988](https://github.com/Project-OSRM/osrm-backend/pull/5988)
       - ADDED: Add support for non-round-trips with a single fixed endpoint. [#6050](https://github.com/Project-OSRM/osrm-backend/pull/6050)
 
 # 5.26.0
