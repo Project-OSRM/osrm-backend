@@ -43,6 +43,10 @@ module.exports = function () {
                         got.message = json.message;
                     }
 
+                    if (headers.has('data_version')) {
+                        got.data_version = json.data_version || '';
+                    }
+
                     if (headers.has('geometry')) {
                         if (this.queryParams['geometries'] === 'polyline') {
                             got.geometry = polyline.decode(json.trips[0].geometry).toString();

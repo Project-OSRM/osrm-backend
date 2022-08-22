@@ -47,11 +47,31 @@ Feature: Snap start/end point to the nearest way
             | adb   |
 
         When I route I should get
-            | from | to | route   |
-            | 1    | b  | adb,adb |
-            | 2    | b  | adb,adb |
-            | 6    | b  | aub,aub |
-            | 7    | b  | aub,aub |
+            | from | to | route   | data_version |
+            | 1    | b  | adb,adb |              |
+            | 2    | b  | adb,adb |              |
+            | 6    | b  | aub,aub |              |
+            | 7    | b  | aub,aub |              |
+
+    Scenario: Data_version check on nearest
+        Given the node map
+            """
+            4 5 6 7
+            3 a   u
+            2
+            1 d   b
+            """
+
+        And the extract extra arguments "--data_version cucumber_data_version"
+
+        And the ways
+            | nodes |
+            | aub   |
+            | adb   |
+
+        When I route I should get
+            | from | to | route   | data_version          |
+            | 1    | b  | adb,adb | cucumber_data_version |
 
     Scenario: Snap to edge right under start/end point
         Given the node map
