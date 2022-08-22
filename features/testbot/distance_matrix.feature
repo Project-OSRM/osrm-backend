@@ -725,6 +725,6 @@ Feature: Basic Distance Matrix
         When I request a travel distance matrix I should get
             |   |   1    | 2      | 3      |   
             | 1 |   0    | 1000.1 | 1400.1 |
-            | 2 | 1000.7 | 0      | 400    |
+            | 2 | 1000.1 | 0      | 400    |
             | 3 | 1400.1 | 400    | 0      |
 
