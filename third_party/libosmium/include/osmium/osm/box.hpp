@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -60,7 +60,7 @@ namespace osmium {
         constexpr Box() noexcept = default;
 
         /**
-         * Create box from minimum and maximum coordinates.
+         * Create box from minimum and maximum coordinates in WGS84.
          *
          * @pre @code minx <= maxx && miny <= maxy @endcode
          */
@@ -84,8 +84,7 @@ namespace osmium {
             m_top_right(top_right) {
             assert(
                 (!!bottom_left && !!top_right) ||
-                (bottom_left.x() <= top_right.x() && bottom_left.y() <= top_right.y())
-            );
+                (bottom_left.x() <= top_right.x() && bottom_left.y() <= top_right.y()));
         }
 
         /**
@@ -177,6 +176,46 @@ namespace osmium {
         }
 
         /**
+         * Get left boundary.
+         *
+         * @pre @code valid() == true @encode
+         */
+        double left() const noexcept {
+            assert(valid());
+            return m_bottom_left.lon_without_check();
+        }
+
+        /**
+         * Get right boundary.
+         *
+         * @pre @code valid() == true @encode
+         */
+        double right() const noexcept {
+            assert(valid());
+            return m_top_right.lon_without_check();
+        }
+
+        /**
+         * Get top boundary.
+         *
+         * @pre @code valid() == true @encode
+         */
+        double top() const noexcept {
+            assert(valid());
+            return m_top_right.lat_without_check();
+        }
+
+        /**
+         * Get bottom boundary.
+         *
+         * @pre @code valid() == true @encode
+         */
+        double bottom() const noexcept {
+            assert(valid());
+            return m_bottom_left.lat_without_check();
+        }
+
+        /**
          * Check whether the location is inside the box.
          *
          * @pre Location must be defined.
@@ -223,15 +262,11 @@ namespace osmium {
     template <typename TChar, typename TTraits>
     inline std::basic_ostream<TChar, TTraits>& operator<<(std::basic_ostream<TChar, TTraits>& out, const osmium::Box& box) {
         if (box) {
-            out << '('
-                << box.bottom_left().lon()
-                << ','
-                << box.bottom_left().lat()
-                << ','
-                << box.top_right().lon()
-                << ','
-                << box.top_right().lat()
-                << ')';
+            out << '(';
+            box.bottom_left().as_string_without_check(std::ostream_iterator<char>(out));
+            out << ',';
+            box.top_right().as_string_without_check(std::ostream_iterator<char>(out));
+            out << ')';
         } else {
             out << "(undefined)";
         }

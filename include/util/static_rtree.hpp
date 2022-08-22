@@ -64,7 +64,7 @@ inline void
 write(storage::tar::FileWriter &writer,
       const std::string &name,
       const util::StaticRTree<EdgeDataT, Ownership, BRANCHING_FACTOR, LEAF_PAGE_SIZE> &rtree);
-}
+} // namespace serialization
 
 /***
  * Static RTree for serving nearest neighbour queries
@@ -461,9 +461,9 @@ class StaticRTree
     template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
     explicit StaticRTree(const boost::filesystem::path &on_disk_file_name,
                          const Vector<Coordinate> &coordinate_list)
-        : m_coordinate_list(coordinate_list.data(), coordinate_list.size())
+        : m_coordinate_list(coordinate_list.data(), coordinate_list.size()),
+          m_objects(mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region))
     {
-        m_objects = mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region);
     }
 
     /**
@@ -559,11 +559,12 @@ class StaticRTree
     std::vector<EdgeDataT> Nearest(const Coordinate input_coordinate,
                                    const std::size_t max_results) const
     {
-        return Nearest(input_coordinate,
-                       [](const CandidateSegment &) { return std::make_pair(true, true); },
-                       [max_results](const std::size_t num_results, const CandidateSegment &) {
-                           return num_results >= max_results;
-                       });
+        return Nearest(
+            input_coordinate,
+            [](const CandidateSegment &) { return std::make_pair(true, true); },
+            [max_results](const std::size_t num_results, const CandidateSegment &) {
+                return num_results >= max_results;
+            });
     }
 
     // Override filter and terminator for the desired behaviour.
@@ -773,7 +774,7 @@ class StaticRTree
 //[2] "Nearest Neighbor Queries", N. Roussopulos et al; 1995; DOI: 10.1145/223784.223794
 //[3] "Distance Browsing in Spatial Databases"; G. Hjaltason, H. Samet; 1999; ACM Trans. DB Sys
 // Vol.24 No.2, pp.265-318
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // STATIC_RTREE_HPP

@@ -20,15 +20,15 @@ documentation.
 #define PROTOZERO_VERSION_MAJOR 1
 
 /// The minor version number
-#define PROTOZERO_VERSION_MINOR 6
+#define PROTOZERO_VERSION_MINOR 7
 
 /// The patch number
-#define PROTOZERO_VERSION_PATCH 2
+#define PROTOZERO_VERSION_PATCH 0
 
 /// The complete version number
 #define PROTOZERO_VERSION_CODE (PROTOZERO_VERSION_MAJOR * 10000 + PROTOZERO_VERSION_MINOR * 100 + PROTOZERO_VERSION_PATCH)
 
 /// Version number as string
-#define PROTOZERO_VERSION_STRING "1.6.2"
+#define PROTOZERO_VERSION_STRING "1.7.0"
 
 #endif // PROTOZERO_VERSION_HPP

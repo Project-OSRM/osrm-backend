@@ -17,7 +17,6 @@
 
 */
 
-#include <cstdlib>   // for std::exit
 #include <cstring>   // for std::strcmp
 #include <exception> // for std::exception
 #include <iostream>  // for std::cout, std::cerr
@@ -53,18 +52,18 @@ void print_help() {
 
 void print_usage(const char* prgname) {
     std::cerr << "Usage: " << prgname << " [OPTIONS] [INFILE [OUTFILE]]\n";
-    std::exit(0);
 }
 
 int main(int argc, char* argv[]) {
     if (argc == 1) {
         print_usage(argv[0]);
+        return 0;
     }
 
     if (argc > 1 && (!std::strcmp(argv[1], "-h") ||
                      !std::strcmp(argv[1], "--help"))) {
         print_help();
-        std::exit(0);
+        return 0;
     }
 
     // Input and output format are empty by default. Later this will mean that
@@ -83,6 +82,7 @@ int main(int argc, char* argv[]) {
                 input_format = argv[i];
             } else {
                 print_usage(argv[0]);
+                return 1;
             }
         } else if (!std::strncmp(argv[i], "--from-format=", 14)) {
             input_format = argv[i] + 14;
@@ -92,6 +92,7 @@ int main(int argc, char* argv[]) {
                 output_format = argv[i];
             } else {
                 print_usage(argv[0]);
+                return 1;
             }
         } else if (!std::strncmp(argv[i], "--to-format=", 12)) {
             output_format = argv[i] + 12;
@@ -101,6 +102,7 @@ int main(int argc, char* argv[]) {
             output_file_name = argv[i];
         } else {
             print_usage(argv[0]);
+            return 1;
         }
     }
 
@@ -135,7 +137,7 @@ int main(int argc, char* argv[]) {
         // a time. This is much easier and faster than copying each object
         // in the file. Buffers are moved around, so there is no cost for
         // copying in memory.
-        while (osmium::memory::Buffer buffer = reader.read()) {
+        while (osmium::memory::Buffer buffer = reader.read()) { // NOLINT(bugprone-use-after-move) Bug in clang-tidy https://bugs.llvm.org/show_bug.cgi?id=36516
             writer(std::move(buffer));
         }
 
@@ -147,8 +149,8 @@ int main(int argc, char* argv[]) {
         reader.close();
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
-        std::cerr << e.what() << "\n";
-        std::exit(1);
+        std::cerr << e.what() << '\n';
+        return 1;
     }
 }
 

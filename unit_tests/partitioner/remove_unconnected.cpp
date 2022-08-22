@@ -5,7 +5,7 @@
 
 #include "util/static_graph.hpp"
 
-#define CHECK_SIZE_RANGE(range, ref) BOOST_CHECK_EQUAL(range.end() - range.begin(), ref)
+#define CHECK_SIZE_RANGE(range, ref) BOOST_CHECK_EQUAL((range).end() - (range).begin(), ref)
 #define CHECK_EQUAL_RANGE(range, ref)                                                              \
     do                                                                                             \
     {                                                                                              \
@@ -44,7 +44,7 @@ auto makeGraph(const std::vector<MockEdge> &mock_edges)
     std::sort(edges.begin(), edges.end());
     return util::StaticGraph<EdgeData>(max_id + 1, edges);
 }
-}
+} // namespace
 
 BOOST_AUTO_TEST_SUITE(remove_unconnected_tests)
 

@@ -50,7 +50,8 @@ We may introduce forward-compatible changes: query parameters and response prope
 7. Push tags and commits: `git push; git push --tags`
 8. On https://github.com/Project-OSRM/osrm-backend/releases press `Draft a new release`,
    write the release tag `vx.y.z` in the `Tag version` field, write the changelog entries in the `Describe this release` field
-   and press `Publish release`.
+   and press `Publish release`. Note that Travis deployments will create a release when publishing node binaries, so the release
+   may already exist. In which case the description should be updated with the changelog entries.
 9. If not a release-candidate: Write a mailing-list post to osrm-talk@openstreetmap.org to announce the release
 10. Wait until the travis build has been completed and check if the node binaries were published by doing:
     `rm -rf node_modules && npm install` locally.

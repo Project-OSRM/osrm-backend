@@ -19,18 +19,18 @@ elif [[ ${OS} = "Darwin" ]] ; then
 fi
 
 # Discover clang-format
-if type clang-format-3.8 2> /dev/null ; then
-    CLANG_FORMAT=clang-format-3.8
+if type clang-format-10.0.0 2> /dev/null ; then
+    CLANG_FORMAT=clang-format-10.0.0
 elif type clang-format 2> /dev/null ; then
     # Clang format found, but need to check version
     CLANG_FORMAT=clang-format
     V=$(clang-format --version)
-    if [[ $V != *3.8* ]] ; then
-        echo "clang-format is not 3.8 (returned ${V})"
+    if [[ $V != *10.0* ]] ; then
+        echo "clang-format is not 10.0 (returned ${V})"
         #exit 1
     fi
 else
-    echo "No appropriate clang-format found (expected clang-format-3.8, or clang-format)"
+    echo "No appropriate clang-format found (expected clang-format-10.0.0, or clang-format)"
     exit 1
 fi
 

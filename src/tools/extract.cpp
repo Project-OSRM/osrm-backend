@@ -4,14 +4,13 @@
 #include "util/log.hpp"
 #include "util/version.hpp"
 
-#include <tbb/task_scheduler_init.h>
-
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 #include <cstdlib>
 #include <exception>
 #include <new>
+#include <thread>
 
 #include "util/meminfo.hpp"
 
@@ -49,7 +48,7 @@ return_code parseArguments(int argc,
         "Data version. Leave blank to avoid. osmosis - to get timestamp from file")(
         "threads,t",
         boost::program_options::value<unsigned int>(&extractor_config.requested_num_threads)
-            ->default_value(tbb::task_scheduler_init::default_num_threads()),
+            ->default_value(std::thread::hardware_concurrency()),
         "Number of threads to use")(
         "small-component-size",
         boost::program_options::value<unsigned int>(&extractor_config.small_component_size)
@@ -142,7 +141,8 @@ return_code parseArguments(int argc,
     return return_code::ok;
 }
 
-int main(int argc, char *argv[]) try
+int main(int argc, char *argv[])
+try
 {
     util::LogPolicy::GetInstance().Unmute();
     extractor::ExtractorConfig extractor_config;
@@ -186,28 +186,24 @@ int main(int argc, char *argv[]) try
 
     osrm::extract(extractor_config);
 
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
 
     return EXIT_SUCCESS;
 }
 catch (const osrm::RuntimeError &e)
 {
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
     util::Log(logERROR) << e.what();
     return e.GetCode();
 }
 catch (const std::system_error &e)
 {
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
     util::Log(logERROR) << e.what();
     return e.code().value();
 }
 catch (const std::bad_alloc &e)
 {
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
     util::Log(logERROR) << "[exception] " << e.what();
     util::Log(logERROR) << "Please provide more memory or consider using a larger swapfile";

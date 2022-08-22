@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version="0.6" generator="testdata" upload="false">
+    <node id="10" version="1" timestamp="2014-01-01T00:00:00Z" uid="1" user="test" changeset="1" lat="1.0" lon="1.0"/>
+    <node id="11" version="1" timestamp="2014-01-01T00:00:00Z" uid="1" user="test" changeset="1" lat="1.0" lon="1.1"/>
+    <node id="12" version="1" timestamp="2014-01-01T00:00:00Z" uid="1" user="test" changeset="1" lat="1.0" lon="1.2"/>
+    <node id="13" version="1" timestamp="2014-01-01T00:00:00Z" uid="1" user="test" changeset="1" lat="1.0" lon="1.3"/>
+    <node id="14" version="1" timestamp="2014-01-01T00:00:00Z" uid="1" user="test" changeset="1" lat="1.0" lon="1.4">
+      <tag k="amenity" v="bench" />
+    </node>
+    <way id="20" version="1" timestamp="2014-01-01T00:00:00Z" uid="1" user="test" changeset="1">
+        <tag k="public_transport" v="platform"/>
+        <nd ref="10"/>
+        <nd ref="11"/>
+    </way>
+    <way id="21" version="1" timestamp="2014-01-01T00:00:00Z" uid="1" user="test" changeset="1">
+        <tag k="public_transport" v="platform"/>
+        <nd ref="13"/>
+        <nd ref="12"/>
+    </way>
+    <relation id="31" version="1" timestamp="2014-01-01T00:00:00Z" uid="1" user="test" changeset="1">
+        <tag k="type" v="public_transport"/>
+        <tag k="public_transport" v="stop_area"/>
+        <member type="way" ref="20" role="platform"/>
+        <member type="way" ref="21" role="platform"/>
+        <member type="node" ref="14" role=""/>
+        <member type="relation" ref="30" role="building"/>
+        <member type="node" ref="15" role=""/>
+        <member type="relation" ref="32" role="building"/>
+        <member type="relation" ref="33" role="building"/>
+        <member type="way" ref="22" role="platform"/>
+    </relation>
+    <relation id="32" version="1" timestamp="2014-01-01T00:00:00Z" uid="1" user="test" changeset="1">
+        <tag k="type" v="multipolygon"/>
+        <tag k="public_transport" v="platform"/>
+        <member type="way" ref="23" role="outer"/>
+        <member type="way" ref="24" role="inner"/>
+    </relation>
+</osm>

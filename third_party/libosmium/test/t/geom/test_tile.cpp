@@ -4,6 +4,7 @@
 
 #include <osmium/geom/tile.hpp>
 
+#include <cmath>
 #include <sstream>
 
 TEST_CASE("Helper functions") {
@@ -41,7 +42,7 @@ TEST_CASE("Tile from x180.0 y90.0 at zoom 4") {
 
     osmium::geom::Tile t{4, l};
 
-    REQUIRE(t.x == (1u << 4u) - 1);
+    REQUIRE(t.x == (1U << 4U) - 1);
     REQUIRE(t.y == 0);
     REQUIRE(t.z == 4);
     REQUIRE(t.valid());
@@ -52,7 +53,7 @@ TEST_CASE("Tile from x0.0 y0.0 at zoom 4") {
 
     osmium::geom::Tile t{4, l};
 
-    const auto n = 1u << (4u - 1u);
+    const auto n = 1U << (4U - 1U);
     REQUIRE(t.x == n);
     REQUIRE(t.y == n);
     REQUIRE(t.z == 4);
@@ -60,12 +61,12 @@ TEST_CASE("Tile from x0.0 y0.0 at zoom 4") {
 }
 
 TEST_CASE("Tile from max values at zoom 4") {
-    osmium::geom::Tile t{4u, 15u, 15u};
+    osmium::geom::Tile t{4U, 15U, 15U};
     REQUIRE(t.valid());
 }
 
 TEST_CASE("Tile from max values at zoom 30") {
-    osmium::geom::Tile t{30u, (1u << 30u) - 1, (1u << 30u) - 1};
+    osmium::geom::Tile t{30U, (1U << 30U) - 1, (1U << 30U) - 1};
     REQUIRE(t.valid());
 }
 
@@ -98,21 +99,35 @@ TEST_CASE("Tile order") {
 }
 
 TEST_CASE("Check a random list of tiles") {
-    std::istringstream input_data(s);
+    std::istringstream input_data{s};
+
+    int n = 0;
     while (input_data) {
-        double lon, lat;
-        uint32_t x, y, zoom;
+        double lon = NAN;
+        double lat = NAN;
+        uint32_t x = 0;
+        uint32_t y = 0;
+        uint32_t zoom = 0;
+
         input_data >> lon;
         input_data >> lat;
         input_data >> x;
         input_data >> y;
         input_data >> zoom;
 
+        if (std::isnan(lon)) {
+            break;
+        }
+
         osmium::Location l{lon, lat};
         osmium::geom::Tile t{zoom, l};
         REQUIRE(t.x == x);
         REQUIRE(t.y == y);
+
+        ++n;
     }
+
+    REQUIRE(n == 472);
 }
 
 TEST_CASE("Invalid tiles") {

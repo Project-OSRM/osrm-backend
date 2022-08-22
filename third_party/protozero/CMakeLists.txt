@@ -13,8 +13,8 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project(protozero)
 
 set(PROTOZERO_VERSION_MAJOR 1)
-set(PROTOZERO_VERSION_MINOR 6)
-set(PROTOZERO_VERSION_PATCH 2)
+set(PROTOZERO_VERSION_MINOR 7)
+set(PROTOZERO_VERSION_PATCH 0)
 
 set(PROTOZERO_VERSION
     "${PROTOZERO_VERSION_MAJOR}.${PROTOZERO_VERSION_MINOR}.${PROTOZERO_VERSION_PATCH}")
@@ -26,7 +26,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(WERROR "Add -Werror flag to build (turns warnings into errors)" ON)
 
 if(MSVC)
-    add_definitions(-std=c++11 /W3)
+    add_definitions(/W3)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
 else()
     add_definitions(-std=c++11 -Wall -Wextra -pedantic -Wsign-compare -Wunused-parameter -Wno-float-equal -Wno-covered-switch-default)
@@ -58,7 +58,7 @@ find_package(Protobuf)
 #
 #-----------------------------------------------------------------------------
 message(STATUS "Looking for clang-tidy")
-find_program(CLANG_TIDY NAMES clang-tidy clang-tidy-6.0 clang-tidy-5.0)
+find_program(CLANG_TIDY NAMES clang-tidy clang-tidy-10 clang-tidy-9 clang-tidy-8 clang-tidy-7 clang-tidy-6.0 clang-tidy-5.0)
 
 if(CLANG_TIDY)
     message(STATUS "Looking for clang-tidy - found ${CLANG_TIDY}")
@@ -66,7 +66,8 @@ if(CLANG_TIDY)
         ${CLANG_TIDY}
         -p ${CMAKE_BINARY_DIR}
         ${CMAKE_SOURCE_DIR}/test/*.cpp
-        ${CMAKE_SOURCE_DIR}/test/t/*/*.cpp
+        ${CMAKE_SOURCE_DIR}/test/t/*/reader_test_cases.cpp
+        ${CMAKE_SOURCE_DIR}/test/t/*/writer_test_cases.cpp
         ${CMAKE_SOURCE_DIR}/test/unit/*.cpp
         ${CMAKE_SOURCE_DIR}/tools/*.cpp
     )

@@ -1,20 +1,34 @@
-#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "coordinates.hpp"
 #include "fixture.hpp"
 
 #include "osrm/trip_parameters.hpp"
+#include <engine/api/flatbuffers/fbresult_generated.h>
 
 #include "osrm/coordinate.hpp"
-#include "osrm/engine_config.hpp"
 #include "osrm/json_container.hpp"
 #include "osrm/osrm.hpp"
 #include "osrm/status.hpp"
 
+osrm::Status run_trip_json(const osrm::OSRM &osrm,
+                           const osrm::TripParameters &params,
+                           osrm::json::Object &json_result,
+                           bool use_json_only_api)
+{
+    if (use_json_only_api)
+    {
+        return osrm.Trip(params, json_result);
+    }
+    osrm::engine::api::ResultT result = osrm::json::Object();
+    auto rc = osrm.Trip(params, result);
+    json_result = result.get<osrm::json::Object>();
+    return rc;
+}
+
 BOOST_AUTO_TEST_SUITE(trip)
 
-BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_small_component)
+void test_roundtrip_response_for_locations_in_small_component(bool use_json_only_api)
 {
     using namespace osrm;
 
@@ -26,17 +40,17 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_small_component)
     params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
 
-    json::Object result;
-    const auto rc = osrm.Trip(params, result);
+    json::Object json_result;
+    const auto rc = run_trip_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
-    const auto &trips = result.values.at("trips").get<json::Array>().values;
+    const auto &trips = json_result.values.at("trips").get<json::Array>().values;
     BOOST_CHECK_EQUAL(trips.size(), 1);
 
     for (const auto &waypoint : waypoints)
@@ -55,8 +69,49 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_small_component)
         BOOST_CHECK(pos >= 0 && pos < waypoints.size());
     }
 }
+BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_small_component_old_api)
+{
+    test_roundtrip_response_for_locations_in_small_component(true);
+}
+BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_small_component_new_api)
+{
+    test_roundtrip_response_for_locations_in_small_component(false);
+}
 
-BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_big_component)
+void test_roundtrip_response_for_locations_in_small_component_skip_waypoints(bool use_json_only_api)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+    const auto locations = get_locations_in_small_component();
+
+    TripParameters params;
+    params.skip_waypoints = true;
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+
+    json::Object json_result;
+    const auto rc = run_trip_json(osrm, params, json_result, use_json_only_api);
+    BOOST_CHECK(rc == Status::Ok);
+
+    const auto code = json_result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    BOOST_CHECK(json_result.values.find("waypoints") == json_result.values.end());
+}
+BOOST_AUTO_TEST_CASE(
+    test_roundtrip_response_for_locations_in_small_component_skip_waypoints_old_api)
+{
+    test_roundtrip_response_for_locations_in_small_component_skip_waypoints(true);
+}
+BOOST_AUTO_TEST_CASE(
+    test_roundtrip_response_for_locations_in_small_component_skip_waypoints_new_api)
+{
+    test_roundtrip_response_for_locations_in_small_component_skip_waypoints(false);
+}
+
+void test_roundtrip_response_for_locations_in_big_component(bool use_json_only_api)
 {
     using namespace osrm;
 
@@ -68,17 +123,17 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_big_component)
     params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
 
-    json::Object result;
-    const auto rc = osrm.Trip(params, result);
+    json::Object json_result;
+    const auto rc = run_trip_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
-    const auto &trips = result.values.at("trips").get<json::Array>().values;
+    const auto &trips = json_result.values.at("trips").get<json::Array>().values;
     BOOST_CHECK_EQUAL(trips.size(), 1);
 
     for (const auto &waypoint : waypoints)
@@ -97,8 +152,16 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_big_component)
         BOOST_CHECK(pos >= 0 && pos < waypoints.size());
     }
 }
+BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_big_component_old_api)
+{
+    test_roundtrip_response_for_locations_in_big_component(true);
+}
+BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_big_component_new_api)
+{
+    test_roundtrip_response_for_locations_in_big_component(false);
+}
 
-BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_across_components)
+void test_roundtrip_response_for_locations_across_components(bool use_json_only_api)
 {
     using namespace osrm;
 
@@ -112,17 +175,17 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_across_components)
     params.coordinates.push_back(small.at(1));
     params.coordinates.push_back(big.at(1));
 
-    json::Object result;
-    const auto rc = osrm.Trip(params, result);
+    json::Object json_result;
+    const auto rc = run_trip_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
-    const auto &trips = result.values.at("trips").get<json::Array>().values;
+    const auto &trips = json_result.values.at("trips").get<json::Array>().values;
     BOOST_CHECK_EQUAL(trips.size(), 1);
     // ^ First snapping, then SCC decomposition (see plugins/trip.cpp). Therefore only a single
     // trip.
@@ -143,8 +206,16 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_across_components)
         BOOST_CHECK(pos >= 0 && pos < waypoints.size());
     }
 }
+BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_across_components_old_api)
+{
+    test_roundtrip_response_for_locations_across_components(true);
+}
+BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_across_components_new_api)
+{
+    test_roundtrip_response_for_locations_across_components(false);
+}
 
-BOOST_AUTO_TEST_CASE(test_tfse_1)
+void test_tfse_1(bool use_json_only_api)
 {
     using namespace osrm;
 
@@ -160,17 +231,17 @@ BOOST_AUTO_TEST_CASE(test_tfse_1)
     params.destination = TripParameters::DestinationType::Last;
     params.roundtrip = false;
 
-    json::Object result;
-    const auto rc = osrm.Trip(params, result);
+    json::Object json_result;
+    const auto rc = run_trip_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
-    const auto &trips = result.values.at("trips").get<json::Array>().values;
+    const auto &trips = json_result.values.at("trips").get<json::Array>().values;
     BOOST_CHECK_EQUAL(trips.size(), 1);
 
     for (const auto &waypoint : waypoints)
@@ -189,8 +260,10 @@ BOOST_AUTO_TEST_CASE(test_tfse_1)
         BOOST_CHECK(pos >= 0 && pos < waypoints.size());
     }
 }
+BOOST_AUTO_TEST_CASE(test_tfse_1_old_api) { test_tfse_1(true); }
+BOOST_AUTO_TEST_CASE(test_tfse_1_new_api) { test_tfse_1(false); }
 
-BOOST_AUTO_TEST_CASE(test_tfse_2)
+void test_tfse_2(bool use_json_only_api)
 {
     using namespace osrm;
 
@@ -206,17 +279,17 @@ BOOST_AUTO_TEST_CASE(test_tfse_2)
     params.destination = TripParameters::DestinationType::Last;
     params.roundtrip = false;
 
-    json::Object result;
-    const auto rc = osrm.Trip(params, result);
+    json::Object json_result;
+    const auto rc = run_trip_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
-    const auto &trips = result.values.at("trips").get<json::Array>().values;
+    const auto &trips = json_result.values.at("trips").get<json::Array>().values;
     BOOST_CHECK_EQUAL(trips.size(), 1);
 
     for (const auto &waypoint : waypoints)
@@ -235,6 +308,8 @@ BOOST_AUTO_TEST_CASE(test_tfse_2)
         BOOST_CHECK(pos >= 0 && pos < waypoints.size());
     }
 }
+BOOST_AUTO_TEST_CASE(test_tfse_2_old_api) { test_tfse_2(true); }
+BOOST_AUTO_TEST_CASE(test_tfse_2_new_api) { test_tfse_2(false); }
 
 void ResetParams(const Locations &locations, osrm::TripParameters &params)
 {
@@ -243,25 +318,29 @@ void ResetParams(const Locations &locations, osrm::TripParameters &params)
     params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
 }
-void CheckNotImplemented(const osrm::OSRM &osrm, osrm::TripParameters &params)
+void CheckNotImplemented(const osrm::OSRM &osrm,
+                         osrm::TripParameters &params,
+                         bool use_json_only_api)
 {
-    osrm::json::Object result;
-    auto rc = osrm.Trip(params, result);
+    using namespace osrm;
+    json::Object json_result;
+    const auto rc = run_trip_json(osrm, params, json_result, use_json_only_api);
     BOOST_REQUIRE(rc == osrm::Status::Error);
-    auto code = result.values.at("code").get<osrm::json::String>().value;
+    auto code = json_result.values.at("code").get<osrm::json::String>().value;
     BOOST_CHECK_EQUAL(code, "NotImplemented");
 }
 
-void CheckOk(const osrm::OSRM &osrm, osrm::TripParameters &params)
+void CheckOk(const osrm::OSRM &osrm, osrm::TripParameters &params, bool use_json_only_api)
 {
-    osrm::json::Object result;
-    auto rc = osrm.Trip(params, result);
+    using namespace osrm;
+    json::Object json_result;
+    const auto rc = run_trip_json(osrm, params, json_result, use_json_only_api);
     BOOST_REQUIRE(rc == osrm::Status::Ok);
-    auto code = result.values.at("code").get<osrm::json::String>().value;
+    auto code = json_result.values.at("code").get<osrm::json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 }
 
-BOOST_AUTO_TEST_CASE(test_tfse_illegal_parameters)
+void test_tfse_illegal_parameters(bool use_json_only_api)
 {
     using namespace osrm;
 
@@ -272,47 +351,49 @@ BOOST_AUTO_TEST_CASE(test_tfse_illegal_parameters)
     // one parameter set
     ResetParams(locations, params);
     params.roundtrip = false;
-    CheckNotImplemented(osrm, params);
+    CheckNotImplemented(osrm, params, use_json_only_api);
 
     // two parameter set
     ResetParams(locations, params);
     params.source = TripParameters::SourceType::Any;
     params.roundtrip = false;
-    CheckNotImplemented(osrm, params);
+    CheckNotImplemented(osrm, params, use_json_only_api);
 
     ResetParams(locations, params);
     params.source = TripParameters::SourceType::First;
     params.roundtrip = false;
-    CheckNotImplemented(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     ResetParams(locations, params);
     params.destination = TripParameters::DestinationType::Any;
     params.roundtrip = false;
-    CheckNotImplemented(osrm, params);
+    CheckNotImplemented(osrm, params, use_json_only_api);
 
     ResetParams(locations, params);
     params.destination = TripParameters::DestinationType::Last;
     params.roundtrip = false;
-    CheckNotImplemented(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     // three parameters set
     params.source = TripParameters::SourceType::Any;
     params.destination = TripParameters::DestinationType::Any;
     params.roundtrip = false;
-    CheckNotImplemented(osrm, params);
+    CheckNotImplemented(osrm, params, use_json_only_api);
 
     params.source = TripParameters::SourceType::Any;
     params.destination = TripParameters::DestinationType::Last;
     params.roundtrip = false;
-    CheckNotImplemented(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     params.source = TripParameters::SourceType::First;
     params.destination = TripParameters::DestinationType::Any;
     params.roundtrip = false;
-    CheckNotImplemented(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 }
+BOOST_AUTO_TEST_CASE(test_tfse_illegal_parameters_old_api) { test_tfse_illegal_parameters(true); }
+BOOST_AUTO_TEST_CASE(test_tfse_illegal_parameters_new_api) { test_tfse_illegal_parameters(false); }
 
-BOOST_AUTO_TEST_CASE(test_tfse_legal_parameters)
+void test_tfse_legal_parameters(bool use_json_only_api)
 {
     using namespace osrm;
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
@@ -322,95 +403,165 @@ BOOST_AUTO_TEST_CASE(test_tfse_legal_parameters)
 
     // no parameter set
     ResetParams(locations, params);
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     // one parameter set
     ResetParams(locations, params);
     params.roundtrip = true;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     ResetParams(locations, params);
     params.source = TripParameters::SourceType::First;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     ResetParams(locations, params);
     params.source = TripParameters::SourceType::Any;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     ResetParams(locations, params);
     params.destination = TripParameters::DestinationType::Any;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     ResetParams(locations, params);
     params.destination = TripParameters::DestinationType::Last;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     // two parameter set
     ResetParams(locations, params);
     params.destination = TripParameters::DestinationType::Last;
     params.roundtrip = true;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     ResetParams(locations, params);
     params.source = TripParameters::SourceType::First;
     params.roundtrip = true;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     ResetParams(locations, params);
     params.source = TripParameters::SourceType::First;
     params.destination = TripParameters::DestinationType::Any;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     ResetParams(locations, params);
     params.source = TripParameters::SourceType::Any;
     params.destination = TripParameters::DestinationType::Last;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     ResetParams(locations, params);
     params.source = TripParameters::SourceType::First;
     params.destination = TripParameters::DestinationType::Last;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     ResetParams(locations, params);
     params.source = TripParameters::SourceType::Any;
     params.roundtrip = true;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     ResetParams(locations, params);
     params.destination = TripParameters::DestinationType::Any;
     params.roundtrip = true;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     ResetParams(locations, params);
     params.source = TripParameters::SourceType::Any;
     params.destination = TripParameters::DestinationType::Any;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     // three parameter set
     params.source = TripParameters::SourceType::Any;
     params.destination = TripParameters::DestinationType::Any;
     params.roundtrip = true;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     params.source = TripParameters::SourceType::First;
     params.destination = TripParameters::DestinationType::Last;
     params.roundtrip = false;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     params.source = TripParameters::SourceType::Any;
     params.destination = TripParameters::DestinationType::Last;
     params.roundtrip = true;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     params.source = TripParameters::SourceType::First;
     params.destination = TripParameters::DestinationType::Any;
     params.roundtrip = true;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
 
     params.source = TripParameters::SourceType::First;
     params.destination = TripParameters::DestinationType::Last;
     params.roundtrip = true;
-    CheckOk(osrm, params);
+    CheckOk(osrm, params, use_json_only_api);
+}
+BOOST_AUTO_TEST_CASE(test_tfse_legal_parameters_old_api) { test_tfse_legal_parameters(true); }
+BOOST_AUTO_TEST_CASE(test_tfse_legal_parameters_new_api) { test_tfse_legal_parameters(false); }
+
+BOOST_AUTO_TEST_CASE(test_roundtrip_response_fb_serialization)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+    const auto locations = get_locations_in_small_component();
+
+    TripParameters params;
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+
+    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    const auto rc = osrm.Trip(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+
+    BOOST_CHECK(!fb->error());
+
+    BOOST_CHECK(fb->waypoints() != nullptr);
+    const auto waypoints = fb->waypoints();
+    BOOST_CHECK(waypoints->size() == params.coordinates.size());
+
+    BOOST_CHECK(fb->routes() != nullptr);
+    const auto trips = fb->routes();
+    BOOST_CHECK_EQUAL(trips->size(), 1);
+
+    for (const auto waypoint : *waypoints)
+    {
+        const auto longitude = waypoint->location()->longitude();
+        const auto latitude = waypoint->location()->latitude();
+        BOOST_CHECK(longitude >= -180. && longitude <= 180.);
+        BOOST_CHECK(latitude >= -90. && latitude <= 90.);
+
+        const auto trip = waypoint->trips_index();
+        const auto pos = waypoint->waypoint_index();
+        BOOST_CHECK(trip < trips->size());
+        BOOST_CHECK(pos < waypoints->size());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_roundtrip_response_fb_serialization_skip_waypoints)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+    const auto locations = get_locations_in_small_component();
+
+    TripParameters params;
+    params.skip_waypoints = true;
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+
+    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    const auto rc = osrm.Trip(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+
+    BOOST_CHECK(!fb->error());
+
+    BOOST_CHECK(fb->waypoints() == nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

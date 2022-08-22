@@ -26,8 +26,8 @@ Feature: Distance calculation
             | cd    |
 
         When I route I should get
-            | from | to | route | distance       |
-            | c    | d  | cd,cd | 6028844m ~4.5% |
+            | from | to | route | distance         |
+            | c    | d  | cd,cd | 6310675.7m ~4.5% |
 
     Scenario: Approximated Longitudinal distances at latitude 80
         Given the node locations
@@ -54,8 +54,8 @@ Feature: Distance calculation
             | ab    |
 
         When I route I should get
-            | from | to | route | distance       |
-            | a    | b  | ab,ab | 8905559m ~0.1% |
+            | from | to | route | distance         |
+            | a    | b  | ab,ab | 8882574.6m ~0.1% |
 
     Scenario: Approximated Latitudinal distances at longitude 45
         Given the node locations
@@ -68,8 +68,8 @@ Feature: Distance calculation
             | ab    |
 
         When I route I should get
-            | from | to | route | distance       |
-            | a    | b  | ab,ab | 8905559m ~0.1% |
+            | from | to | route | distance         |
+            | a    | b  | ab,ab | 8882574.6m ~0.1% |
 
     Scenario: Approximated Latitudinal distances at longitude 80
         Given the node locations
@@ -83,4 +83,4 @@ Feature: Distance calculation
 
         When I route I should get
             | from | to | route | distance       |
-            | a    | b  | ab,ab | 8905559m ~0.1% |
+            | a    | b  | ab,ab | 8882574.6m ~0.1% |

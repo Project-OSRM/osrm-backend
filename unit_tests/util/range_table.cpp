@@ -1,7 +1,6 @@
 #include "util/range_table.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <numeric>
@@ -15,7 +14,7 @@ using namespace osrm::util;
 constexpr unsigned BLOCK_SIZE = 16;
 typedef RangeTable<BLOCK_SIZE, osrm::storage::Ownership::Container> TestRangeTable;
 
-void ConstructionTest(std::vector<unsigned> lengths, std::vector<unsigned> offsets)
+void ConstructionTest(const std::vector<unsigned> &lengths, const std::vector<unsigned> &offsets)
 {
     BOOST_CHECK_EQUAL(lengths.size(), offsets.size() - 1);
 

@@ -10,6 +10,8 @@
 #include "engine/engine_config.hpp"
 #include "engine/status.hpp"
 
+#include <boost/algorithm/string/join.hpp>
+
 #include <memory>
 
 namespace osrm
@@ -25,8 +27,11 @@ OSRM::OSRM(engine::EngineConfig &config)
     // First, check that necessary core data is available
     if (!config.use_shared_memory && !config.storage_config.IsValid())
     {
-        throw util::exception("Required files are missing, cannot continue.  Have all the "
-                              "pre-processing steps been run?");
+        const auto &missingFiles = config.storage_config.GetMissingFiles();
+        throw util::exception("Required files are missing, cannot continue. Have all the "
+                              "pre-processing steps been run? "
+                              "Missing files: " +
+                              boost::algorithm::join(missingFiles, ", "));
     }
 
     // Now, check that the algorithm requested can be used with the data
@@ -47,7 +52,7 @@ OSRM::OSRM(engine::EngineConfig &config)
         engine_ = std::make_unique<engine::Engine<MLD>>(config);
         break;
     default:
-        util::exception("Algorithm not implemented!");
+        throw util::exception("Algorithm not implemented!");
     }
 }
 OSRM::~OSRM() = default;
@@ -56,36 +61,83 @@ OSRM &OSRM::operator=(OSRM &&) noexcept = default;
 
 // Forward to implementation
 
-engine::Status OSRM::Route(const engine::api::RouteParameters &params,
-                           util::json::Object &result) const
+Status OSRM::Route(const engine::api::RouteParameters &params, json::Object &json_result) const
+{
+    osrm::engine::api::ResultT result = json::Object();
+    auto status = engine_->Route(params, result);
+    json_result = std::move(result.get<json::Object>());
+    return status;
+}
+
+Status OSRM::Route(const RouteParameters &params, engine::api::ResultT &result) const
 {
     return engine_->Route(params, result);
 }
 
-engine::Status OSRM::Table(const engine::api::TableParameters &params, json::Object &result) const
+Status OSRM::Table(const engine::api::TableParameters &params, json::Object &json_result) const
+{
+    osrm::engine::api::ResultT result = json::Object();
+    auto status = engine_->Table(params, result);
+    json_result = std::move(result.get<json::Object>());
+    return status;
+}
+
+Status OSRM::Table(const TableParameters &params, engine::api::ResultT &result) const
 {
     return engine_->Table(params, result);
 }
 
-engine::Status OSRM::Nearest(const engine::api::NearestParameters &params,
-                             json::Object &result) const
+Status OSRM::Nearest(const engine::api::NearestParameters &params, json::Object &json_result) const
+{
+    osrm::engine::api::ResultT result = json::Object();
+    auto status = engine_->Nearest(params, result);
+    json_result = std::move(result.get<json::Object>());
+    return status;
+}
+
+Status OSRM::Nearest(const NearestParameters &params, engine::api::ResultT &result) const
 {
     return engine_->Nearest(params, result);
 }
 
-engine::Status OSRM::Trip(const engine::api::TripParameters &params, json::Object &result) const
+Status OSRM::Trip(const engine::api::TripParameters &params, json::Object &json_result) const
+{
+    osrm::engine::api::ResultT result = json::Object();
+    auto status = engine_->Trip(params, result);
+    json_result = std::move(result.get<json::Object>());
+    return status;
+}
+
+engine::Status OSRM::Trip(const engine::api::TripParameters &params,
+                          engine::api::ResultT &result) const
 {
     return engine_->Trip(params, result);
 }
 
-engine::Status OSRM::Match(const engine::api::MatchParameters &params, json::Object &result) const
+Status OSRM::Match(const engine::api::MatchParameters &params, json::Object &json_result) const
+{
+    osrm::engine::api::ResultT result = json::Object();
+    auto status = engine_->Match(params, result);
+    json_result = std::move(result.get<json::Object>());
+    return status;
+}
+
+Status OSRM::Match(const MatchParameters &params, engine::api::ResultT &result) const
 {
     return engine_->Match(params, result);
 }
 
-engine::Status OSRM::Tile(const engine::api::TileParameters &params, std::string &result) const
+Status OSRM::Tile(const engine::api::TileParameters &params, std::string &str_result) const
+{
+    osrm::engine::api::ResultT result = std::string();
+    auto status = engine_->Tile(params, result);
+    str_result = std::move(result.get<std::string>());
+    return status;
+}
+
+Status OSRM::Tile(const engine::api::TileParameters &params, engine::api::ResultT &result) const
 {
     return engine_->Tile(params, result);
 }
 
-} // ns osrm
+} // namespace osrm

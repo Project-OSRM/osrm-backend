@@ -19,8 +19,6 @@
 #include <utility>
 #include <vector>
 
-namespace TurnType = osrm::guidance::TurnType;
-namespace DirectionModifier = osrm::guidance::DirectionModifier;
 using TurnInstruction = osrm::guidance::TurnInstruction;
 
 namespace osrm
@@ -33,18 +31,6 @@ namespace json
 {
 namespace detail
 {
-
-// Check whether to include a modifier in the result of the API
-inline bool isValidModifier(const guidance::StepManeuver maneuver)
-{
-    return (maneuver.waypoint_type == guidance::WaypointType::None ||
-            maneuver.instruction.direction_modifier != DirectionModifier::UTurn);
-}
-
-inline bool hasValidLanes(const guidance::IntermediateIntersection &intersection)
-{
-    return intersection.lanes.lanes_in_turn > 0;
-}
 
 inline util::json::Array toJSON(const extractor::TurnLaneType::Mask lane_type)
 {
@@ -206,8 +192,8 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
         }
     }
 
-    route_step.values["mode"] = extractor::travelModeToString(std::move(step.mode));
-    route_step.values["maneuver"] = makeStepManeuver(std::move(step.maneuver));
+    route_step.values["mode"] = extractor::travelModeToString(step.mode);
+    route_step.values["maneuver"] = makeStepManeuver(step.maneuver);
     route_step.values["geometry"] = std::move(geometry);
     route_step.values["driving_side"] = step.is_left_hand_driving ? "left" : "right";
 
@@ -255,7 +241,7 @@ util::json::Object makeWaypoint(const util::Coordinate &location,
                                 std::string name,
                                 const Hint &hint)
 {
-    auto waypoint = makeWaypoint(location, distance, name);
+    auto waypoint = makeWaypoint(location, distance, std::move(name));
     waypoint.values["hint"] = hint.ToBase64();
     return waypoint;
 }

@@ -22,7 +22,7 @@ namespace datafacade
 /**
  * This allocator uses file backed mmap memory block as the data location.
  */
-class MMapMemoryAllocator : public ContiguousBlockAllocator
+class MMapMemoryAllocator final : public ContiguousBlockAllocator
 {
   public:
     explicit MMapMemoryAllocator(const storage::StorageConfig &config);
@@ -33,7 +33,7 @@ class MMapMemoryAllocator : public ContiguousBlockAllocator
 
   private:
     storage::SharedDataIndex index;
-    std::vector<boost::iostreams::mapped_file> mapped_memory_files;
+    std::vector<boost::iostreams::mapped_file_source> mapped_memory_files;
     std::string rtree_filename;
 };
 

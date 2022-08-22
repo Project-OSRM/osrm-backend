@@ -20,7 +20,7 @@ namespace datafacade
  * This class holds a unique_ptr to the memory block, so it
  * is auto-freed upon destruction.
  */
-class ProcessMemoryAllocator : public ContiguousBlockAllocator
+class ProcessMemoryAllocator final : public ContiguousBlockAllocator
 {
   public:
     explicit ProcessMemoryAllocator(const storage::StorageConfig &config);

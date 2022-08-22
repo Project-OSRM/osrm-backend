@@ -26,7 +26,7 @@ inline void maybeSetString(std::string &str, const char *value)
         str = std::string(value);
     }
 }
-}
+} // namespace detail
 
 /**
  * This struct is the direct result of the call to ```way_function```
@@ -130,7 +130,7 @@ struct ExtractionWay
     std::uint8_t highway_turn_classification : 4;
     std::uint8_t access_turn_classification : 4;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif // EXTRACTION_WAY_HPP

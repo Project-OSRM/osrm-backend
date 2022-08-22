@@ -9,7 +9,7 @@ If your PR is still work in progress please attach the relevant label.
 
  - [ ] CHANGELOG.md entry ([How to write a changelog entry](http://keepachangelog.com/en/1.0.0/#how))
  - [ ] update relevant [Wiki pages](https://github.com/Project-OSRM/osrm-backend/wiki)
- - [ ] add tests (see [testing documentation](https://github.com/Project-OSRM/osrm-backend/blob/master/docs/testing.md)
+ - [ ] add tests (see [testing documentation](https://github.com/Project-OSRM/osrm-backend/blob/master/docs/testing.md))
  - [ ] review
  - [ ] adjust for comments
  - [ ] cherry pick to release branch

@@ -16,7 +16,7 @@ namespace util
 namespace detail
 {
 extern std::atomic_uint operation;
-}
+} // namespace detail
 
 /**
  * Captures a histogram with a bin size of `IndexBinSize` every `TimeBinSize` count operations.
@@ -88,7 +88,7 @@ template <std::size_t TimeBinSize = 1000, std::size_t IndexBinSize = 1000> class
     std::vector<std::uint32_t> frame_offsets;
     std::vector<std::uint32_t> frame_counters;
 };
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif

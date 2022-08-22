@@ -7,7 +7,6 @@
 
 #include "../unit_tests/mocks/mock_scripting_environment.hpp"
 
-#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <iostream>
@@ -69,7 +68,6 @@ BOOST_AUTO_TEST_CASE(long_road_test)
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
     std::vector<TurnRestriction> restrictions;
-    std::vector<ConditionalTurnRestriction> conditional_restrictions;
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
@@ -93,7 +91,6 @@ BOOST_AUTO_TEST_CASE(long_road_test)
                         traffic_lights,
                         scripting_environment,
                         restrictions,
-                        conditional_restrictions,
                         maneuver_overrides,
                         graph,
                         annotations,
@@ -117,7 +114,6 @@ BOOST_AUTO_TEST_CASE(loop_test)
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
     std::vector<TurnRestriction> restrictions;
-    std::vector<ConditionalTurnRestriction> conditional_restrictions;
     CompressedEdgeContainer container;
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     test::MockScriptingEnvironment scripting_environment;
@@ -155,7 +151,6 @@ BOOST_AUTO_TEST_CASE(loop_test)
                         traffic_lights,
                         scripting_environment,
                         restrictions,
-                        conditional_restrictions,
                         maneuver_overrides,
                         graph,
                         annotations,
@@ -183,7 +178,6 @@ BOOST_AUTO_TEST_CASE(t_intersection)
     std::unordered_set<NodeID> traffic_lights;
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     std::vector<TurnRestriction> restrictions;
-    std::vector<ConditionalTurnRestriction> conditional_restrictions;
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
     std::vector<UnresolvedManeuverOverride> maneuver_overrides;
@@ -206,7 +200,6 @@ BOOST_AUTO_TEST_CASE(t_intersection)
                         traffic_lights,
                         scripting_environment,
                         restrictions,
-                        conditional_restrictions,
                         maneuver_overrides,
                         graph,
                         annotations,
@@ -228,7 +221,6 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
     std::unordered_set<NodeID> traffic_lights;
     std::vector<NodeBasedEdgeAnnotation> annotations(2);
     std::vector<TurnRestriction> restrictions;
-    std::vector<ConditionalTurnRestriction> conditional_restrictions;
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
     std::vector<UnresolvedManeuverOverride> maneuver_overrides;
@@ -247,7 +239,6 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
                         traffic_lights,
                         scripting_environment,
                         restrictions,
-                        conditional_restrictions,
                         maneuver_overrides,
                         graph,
                         annotations,
@@ -268,7 +259,6 @@ BOOST_AUTO_TEST_CASE(direction_changes)
     std::unordered_set<NodeID> traffic_lights;
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     std::vector<TurnRestriction> restrictions;
-    std::vector<ConditionalTurnRestriction> conditional_restrictions;
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
     std::vector<UnresolvedManeuverOverride> maneuver_overrides;
@@ -283,7 +273,6 @@ BOOST_AUTO_TEST_CASE(direction_changes)
                         traffic_lights,
                         scripting_environment,
                         restrictions,
-                        conditional_restrictions,
                         maneuver_overrides,
                         graph,
                         annotations,

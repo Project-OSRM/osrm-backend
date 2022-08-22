@@ -31,7 +31,7 @@ TablePlugin::TablePlugin(const int max_locations_distance_table)
 
 Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                   const api::TableParameters &params,
-                                  util::json::Object &result) const
+                                  osrm::engine::api::ResultT &result) const
 {
     if (!algorithms.HasManyToManySearch())
     {
@@ -75,10 +75,8 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     if (phantom_nodes.size() != params.coordinates.size())
     {
-        return Error("NoSegment",
-                     std::string("Could not find a matching segment for coordinate ") +
-                         std::to_string(phantom_nodes.size()),
-                     result);
+        return Error(
+            "NoSegment", MissingPhantomErrorMessage(phantom_nodes, params.coordinates), result);
     }
 
     auto snapped_phantoms = SnapPhantomNodes(phantom_nodes);
@@ -118,9 +116,9 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                     auto distance_estimate =
                         params.fallback_coordinate_type ==
                                 api::TableParameters::FallbackCoordinateType::Input
-                            ? util::coordinate_calculation::fccApproximateDistance(
+                            ? util::coordinate_calculation::greatCircleDistance(
                                   source.input_location, destination.input_location)
-                            : util::coordinate_calculation::fccApproximateDistance(
+                            : util::coordinate_calculation::greatCircleDistance(
                                   source.location, destination.location);
 
                     result_tables_pair.first[table_index] =
@@ -158,6 +156,6 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     return Status::Ok;
 }
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm

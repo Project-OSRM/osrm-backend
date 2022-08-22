@@ -1,0 +1,19 @@
+include "position.fbs";
+namespace osrm.engine.api.fbresult;
+
+struct Uint64Pair {
+    first: uint64;
+    second: uint64;
+}
+
+table Waypoint {
+    hint: string;
+    distance: float;
+    name: string;
+    location: Position;
+    nodes: Uint64Pair; //Used only by 'Nearest' service
+    matchings_index: uint; //Used only by 'Match' service
+    waypoint_index: uint; //Used by 'Match' and 'Trip' services
+    alternatives_count: uint; //Used only by 'Match' service
+    trips_index: uint; //Used only by 'Trip' service
+}

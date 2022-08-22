@@ -40,10 +40,10 @@ class TripPlugin final : public BasePlugin
 
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::TripParameters &parameters,
-                         util::json::Object &json_result) const;
+                         osrm::engine::api::ResultT &json_result) const;
 };
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm
 
 #endif // TRIP_HPP

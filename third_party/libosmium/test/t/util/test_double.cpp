@@ -2,6 +2,8 @@
 
 #include <osmium/util/double.hpp>
 
+#include <string>
+
 TEST_CASE("Check double2string function") {
     std::string s1;
     osmium::double2string(s1, 1.123, 7);

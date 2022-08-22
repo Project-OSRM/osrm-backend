@@ -125,7 +125,7 @@ inline std::size_t URIDecode(const std::string &input, std::string &output)
 }
 
 inline std::size_t URIDecodeInPlace(std::string &URI) { return URIDecode(URI, URI); }
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // STRING_UTIL_HPP

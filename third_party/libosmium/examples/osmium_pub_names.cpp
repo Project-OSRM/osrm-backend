@@ -18,7 +18,6 @@
 
 */
 
-#include <cstdlib>  // for std::exit
 #include <cstring>  // for std::strncmp
 #include <iostream> // for std::cout, std::cerr
 
@@ -33,7 +32,7 @@
 
 class NamesHandler : public osmium::handler::Handler {
 
-    void output_pubs(const osmium::OSMObject& object) {
+    static void output_pubs(const osmium::OSMObject& object) {
         const osmium::TagList& tags = object.tags();
         if (tags.has_tag("amenity", "pub")) {
 
@@ -57,13 +56,17 @@ class NamesHandler : public osmium::handler::Handler {
 
 public:
 
+    // The callback functions can be either static or not depending on whether
+    // you need to access any member variables of the handler.
     // Nodes can be tagged amenity=pub.
-    void node(const osmium::Node& node) {
+    static void node(const osmium::Node& node) {
         output_pubs(node);
     }
 
+    // The callback functions can be either static or not depending on whether
+    // you need to access any member variables of the handler.
     // Ways can be tagged amenity=pub, too (typically buildings).
-    void way(const osmium::Way& way) {
+    static void way(const osmium::Way& way) {
         output_pubs(way);
     }
 
@@ -72,18 +75,24 @@ public:
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " OSMFILE\n";
-        std::exit(1);
+        return 1;
     }
 
-    // Construct the handler defined above
-    NamesHandler names_handler;
+    try {
+        // Construct the handler defined above
+        NamesHandler names_handler;
 
-    // Initialize the reader with the filename from the command line and
-    // tell it to only read nodes and ways. We are ignoring multipolygon
-    // relations in this simple example.
-    osmium::io::Reader reader{argv[1], osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
+        // Initialize the reader with the filename from the command line and
+        // tell it to only read nodes and ways. We are ignoring multipolygon
+        // relations in this simple example.
+        osmium::io::Reader reader{argv[1], osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
 
-    // Apply input data to our own handler
-    osmium::apply(reader, names_handler);
+        // Apply input data to our own handler
+        osmium::apply(reader, names_handler);
+    } catch (const std::exception& e) {
+        // All exceptions used by the Osmium library derive from std::exception.
+        std::cerr << e.what() << '\n';
+        return 1;
+    }
 }
 

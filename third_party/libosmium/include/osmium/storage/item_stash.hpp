@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -115,8 +115,13 @@ namespace osmium {
 
     private:
 
-        static constexpr const std::size_t initial_buffer_size = 1024 * 1024;
-        static constexpr const std::size_t removed_item_offset = std::numeric_limits<std::size_t>::max();
+        enum {
+            initial_buffer_size = 1024UL * 1024UL
+        };
+
+        enum {
+            removed_item_offset = std::numeric_limits<std::size_t>::max()
+        };
 
         osmium::memory::Buffer m_buffer;
         std::vector<std::size_t> m_index;
@@ -176,16 +181,16 @@ namespace osmium {
         // buffer grow (*3). The checks (*1) and (*2) make sure there is
         // minimum and maximum for the number of removed objects.
         bool should_gc() const noexcept {
-            if (m_count_removed < 10 * 1000) { // *1
+            if (m_count_removed < 10UL * 1000UL) { // *1
                 return false;
             }
-            if (m_count_removed >  5 * 1000 * 1000) { // *2
+            if (m_count_removed > 5UL * 1000UL * 1000UL) { // *2
                 return true;
             }
-            if (m_count_removed * 5 < m_count_items) { // *3
+            if (m_count_removed * 5UL < m_count_items) { // *3
                 return false;
             }
-            return m_buffer.capacity() - m_buffer.committed() < 10 * 1024; // *4
+            return m_buffer.capacity() - m_buffer.committed() < 10UL * 1024UL; // *4
         }
 
     public:

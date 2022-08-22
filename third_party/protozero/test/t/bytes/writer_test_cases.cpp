@@ -1,19 +1,20 @@
 
-#include <test.hpp>
+#include <buffer.hpp>
 
 #include "t/bytes/bytes_testcase.pb.h"
 
-TEST_CASE("write bytes field and check with libprotobuf") {
+TEMPLATE_TEST_CASE("write bytes field and check with libprotobuf", "",
+    buffer_test_string, buffer_test_vector, buffer_test_array, buffer_test_external) {
 
-    std::string buffer;
-    protozero::pbf_writer pw{buffer};
+    TestType buffer;
+    typename TestType::writer_type pw{buffer.buffer()};
 
     TestBytes::Test msg;
 
     SECTION("empty") {
         pw.add_string(1, "");
 
-        msg.ParseFromString(buffer);
+        msg.ParseFromArray(buffer.data(), buffer.size());
 
         REQUIRE(msg.s().empty());
     }
@@ -21,7 +22,7 @@ TEST_CASE("write bytes field and check with libprotobuf") {
     SECTION("one") {
         pw.add_string(1, "x");
 
-        msg.ParseFromString(buffer);
+        msg.ParseFromArray(buffer.data(), buffer.size());
 
         REQUIRE(msg.s() == "x");
     }
@@ -29,7 +30,7 @@ TEST_CASE("write bytes field and check with libprotobuf") {
     SECTION("string") {
         pw.add_string(1, "foobar");
 
-        msg.ParseFromString(buffer);
+        msg.ParseFromArray(buffer.data(), buffer.size());
 
         REQUIRE(msg.s() == "foobar");
     }
@@ -42,7 +43,7 @@ TEST_CASE("write bytes field and check with libprotobuf") {
 
         pw.add_string(1, data);
 
-        msg.ParseFromString(buffer);
+        msg.ParseFromArray(buffer.data(), buffer.size());
 
         REQUIRE(msg.s().size() == 3);
         REQUIRE(msg.s()[1] == char(2));

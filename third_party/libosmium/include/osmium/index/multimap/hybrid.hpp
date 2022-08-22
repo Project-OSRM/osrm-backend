@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -62,10 +62,10 @@ namespace osmium {
 
             public:
 
-                 HybridIterator(typename main_map_type::iterator begin_main,
-                                typename main_map_type::iterator end_main,
-                                typename extra_map_type::iterator begin_extra,
-                                typename extra_map_type::iterator end_extra) :
+                HybridIterator(typename main_map_type::iterator begin_main,
+                               typename main_map_type::iterator end_main,
+                               typename extra_map_type::iterator begin_extra,
+                               typename extra_map_type::iterator end_extra) :
                     m_begin_main(begin_main),
                     m_end_main(end_main),
                     m_begin_extra(begin_extra),
@@ -87,7 +87,7 @@ namespace osmium {
                 }
 
                 HybridIterator<TId, TValue> operator++(int) {
-                    auto tmp(*this);
+                    const auto tmp{*this};
                     operator++();
                     return tmp;
                 }
@@ -100,15 +100,14 @@ namespace osmium {
                 }
 
                 bool operator!=(const HybridIterator& rhs) const {
-                    return ! operator==(rhs);
+                    return !operator==(rhs);
                 }
 
                 const element_type& operator*() {
                     if (m_begin_main == m_end_main) {
                         return *m_begin_extra;
-                    } else {
-                        return *m_begin_main;
                     }
+                    return *m_begin_main;
                 }
 
                 const element_type* operator->() {
@@ -159,10 +158,10 @@ namespace osmium {
                 }
 
                 std::pair<iterator, iterator> get_all(const TId id) {
-                    auto result_main = m_main.get_all(id);
-                    auto result_extra = m_extra.get_all(id);
-                    return std::make_pair(iterator(result_main.first, result_main.second, result_extra.first, result_extra.second),
-                                          iterator(result_main.second, result_main.second, result_extra.second, result_extra.second));
+                    const auto result_main = m_main.get_all(id);
+                    const auto result_extra = m_extra.get_all(id);
+                    return std::make_pair(iterator{result_main.first, result_main.second, result_extra.first, result_extra.second},
+                                          iterator{result_main.second, result_main.second, result_extra.second, result_extra.second});
                 }
 
                 void remove(const TId id, const TValue value) {

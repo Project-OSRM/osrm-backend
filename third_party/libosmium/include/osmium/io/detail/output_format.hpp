@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -81,9 +81,9 @@ namespace osmium {
                     }
 
                     char temp[20];
-                    char *t = temp;
+                    char* t = temp;
                     do {
-                        *t++ = char(value % 10) + '0';
+                        *t++ = static_cast<char>(value % 10) + '0'; // NOLINT(bugprone-narrowing-conversions, cppcoreguidelines-narrowing-conversions)
                         value /= 10;
                     } while (value > 0);
 
@@ -91,7 +91,7 @@ namespace osmium {
                     m_out->resize(old_size + (t - temp));
                     char* data = &(*m_out)[old_size];
                     do {
-                        *data++ += *--t;
+                        *data++ = *--t;
                     } while (t != temp);
                 }
 
@@ -179,7 +179,7 @@ namespace osmium {
                 }
 
                 bool register_output_format(const osmium::io::file_format format, create_output_type&& create_function) {
-                    callbacks(format) = std::forward<create_output_type>(create_function);
+                    callbacks(format) = std::move(create_function);
                     return true;
                 }
 
@@ -190,16 +190,16 @@ namespace osmium {
                     }
 
                     throw unsupported_file_format_error{
-                                std::string{"Can not open file '"} +
-                                file.filename() +
-                                "' with type '" +
-                                as_string(file.format()) +
-                                "'. No support for writing this format in this program."};
+                        std::string{"Can not open file '"} +
+                        file.filename() +
+                        "' with type '" +
+                        as_string(file.format()) +
+                        "'. No support for writing this format in this program."};
                 }
 
             }; // class OutputFormatFactory
 
-            class BlackholeOutputFormat : public osmium::io::detail::OutputFormat {
+            class BlackholeOutputFormat final : public osmium::io::detail::OutputFormat {
 
             public:
 
@@ -213,9 +213,9 @@ namespace osmium {
                 BlackholeOutputFormat(BlackholeOutputFormat&&) = delete;
                 BlackholeOutputFormat& operator=(BlackholeOutputFormat&&) = delete;
 
-                ~BlackholeOutputFormat() noexcept final = default;
+                ~BlackholeOutputFormat() noexcept override = default;
 
-                void write_buffer(osmium::memory::Buffer&& /*buffer*/) final {
+                void write_buffer(osmium::memory::Buffer&& /*buffer*/) override {
                 }
 
             }; // class BlackholeOutputFormat

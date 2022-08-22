@@ -9,15 +9,12 @@ namespace osrm
 {
 namespace guidance
 {
-namespace
-{
-const double bearing_scale = 360.0 / 256.0;
-}
 
 #pragma pack(push, 1)
 class TurnBearing
 {
   public:
+    static constexpr double bearing_scale = 360.0 / 256.0;
     // discretizes a bearing into distinct units of 1.4 degrees
     TurnBearing(const double value = 0) : bearing(value / bearing_scale)
     {

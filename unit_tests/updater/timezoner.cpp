@@ -53,5 +53,19 @@ BOOST_AUTO_TEST_CASE(timezoner_test)
         "48.88277], [8.57757, 49.07206], [8.28369, "
         "49.07206], [8.28369, 48.88277]]] }} ]}";
     BOOST_CHECK_THROW(Timezoner tz(missing_featc, now), util::exception);
+
+    char missing_tzid[] = "{ \"type\" : \"Feature\","
+                          "\"properties\" : { }, \"geometry\" : { \"type\": \"polygon\", "
+                          "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
+                          "48.88277], [8.57757, 49.07206], [8.28369, "
+                          "49.07206], [8.28369, 48.88277]]] }}";
+    BOOST_CHECK_THROW(Timezoner tz(missing_tzid, now), util::exception);
+
+    char tzid_err[] = "{ \"type\" : \"Feature\","
+                      "\"properties\" : { \"TZID\" : []}, \"geometry\" : { \"type\": \"polygon\", "
+                      "\"coordinates\": [[[8.28369,48.88277], [8.57757, "
+                      "48.88277], [8.57757, 49.07206], [8.28369, "
+                      "49.07206], [8.28369, 48.88277]]] }}";
+    BOOST_CHECK_THROW(Timezoner tz(tzid_err, now), util::exception);
 }
 BOOST_AUTO_TEST_SUITE_END()

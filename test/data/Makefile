@@ -1,6 +1,4 @@
 DATA_NAME:=monaco
-DATA_URL:=https://s3.amazonaws.com/mapbox/osrm/testing/$(DATA_NAME).osm.pbf
-DATA_POLY_URL:=https://s3.amazonaws.com/mapbox/osrm/testing/$(DATA_NAME).poly
 OSRM_BUILD_DIR?=../../build
 PROFILE_ROOT:=../../profiles
 SCRIPT_ROOT:=../../scripts
@@ -21,12 +19,6 @@ data: ch/$(DATA_NAME).osrm.hsgr corech/$(DATA_NAME).osrm.hsgr mld/$(DATA_NAME).o
 clean:
 	-rm -r $(DATA_NAME).*
 	-rm -r ch corech mld
-
-$(DATA_NAME).osm.pbf:
-	wget $(DATA_URL) -O $(DATA_NAME).osm.pbf
-
-$(DATA_NAME).poly:
-	wget $(DATA_POLY_URL) -O $(DATA_NAME).poly
 
 ch/$(DATA_NAME).osrm: $(DATA_NAME).osrm
 	mkdir -p ch

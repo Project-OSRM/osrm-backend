@@ -51,8 +51,8 @@ struct Parameters
     // Alternative paths are still reasonable around the via node candidate (local optimality).
     // At least optimal around 10% sub-paths around the via node candidate.
     double kAtLeastOptimalAroundViaBy = 0.1;
-    // Alternative paths similarity requirement (sharing) based on calles.
-    // At least 15% different than the shortest path.
+    // Alternative paths similarity requirement (sharing) based on cells.
+    // At least 5% different than the shortest path.
     double kCellsAtMostSameBy = 0.95;
 };
 
@@ -137,7 +137,7 @@ Parameters parametersFromRequest(const PhantomNodes &phantom_node_pair)
 {
     Parameters parameters;
 
-    const auto distance = util::coordinate_calculation::haversineDistance(
+    const auto distance = util::coordinate_calculation::greatCircleDistance(
         phantom_node_pair.source_phantom.location, phantom_node_pair.target_phantom.location);
 
     // 10km
@@ -663,6 +663,10 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
     Heap &reverse_heap = *search_engine_data.reverse_heap_1;
 
     insertNodesInHeaps(forward_heap, reverse_heap, phantom_node_pair);
+    if (forward_heap.Empty() || reverse_heap.Empty())
+    {
+        return {};
+    }
 
     // The single via node in the shortest paths s,via and via,t sub-paths and
     // the weight for the shortest path s,t we return and compare alternatives to.

@@ -94,7 +94,7 @@ struct EngineConfig final
     std::string verbosity;
     std::string dataset_name;
 };
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif // SERVER_CONFIG_HPP

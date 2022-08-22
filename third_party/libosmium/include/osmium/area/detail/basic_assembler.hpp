@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -51,6 +51,7 @@ DEALINGS IN THE SOFTWARE.
 #include <cassert>
 #include <cstdint>
 #include <cstdlib>
+#include <exception>
 #include <iostream>
 #include <iterator>
 #include <list>
@@ -103,9 +104,19 @@ namespace osmium {
              */
             class BasicAssembler {
 
+                static constexpr const std::size_t max_split_locations = 100ULL;
+
+                // Maximum recursion depth, stops complex multipolygons from
+                // breaking everything.
+                enum : unsigned {
+                    max_depth = 20U
+                };
+
                 struct slocation {
 
-                    static constexpr const uint32_t invalid_item = 1u << 30u;
+                    enum {
+                        invalid_item = 1U << 30U
+                    };
 
                     uint32_t item : 31;
                     uint32_t reverse : 1;
@@ -185,7 +196,7 @@ namespace osmium {
                                 ++m_stats.wrong_role;
                                 if (debug()) {
                                     std::cerr << "      Segment " << *segment << " from way " << segment->way()->id() << " has role '" << segment->role_name()
-                                            << "', but should have role '" << (ring.is_outer() ? "outer" : "inner") << "'\n";
+                                              << "', but should have role '" << (ring.is_outer() ? "outer" : "inner") << "'\n";
                                 }
                                 if (m_config.problem_reporter) {
                                     if (ring.is_outer()) {
@@ -269,7 +280,7 @@ namespace osmium {
 
                 using rings_stack = std::vector<rings_stack_element>;
 
-                void remove_duplicates(rings_stack& outer_rings) {
+                static void remove_duplicates(rings_stack& outer_rings) {
                     while (true) {
                         const auto it = std::adjacent_find(outer_rings.begin(), outer_rings.end());
                         if (it == outer_rings.end()) {
@@ -315,7 +326,7 @@ namespace osmium {
                             const int64_t ay = a.y();
                             const int64_t by = b.y();
                             const int64_t ly = end_location.y();
-                            const auto z = (bx - ax)*(ly - ay) - (by - ay)*(lx - ax);
+                            const auto z = (bx - ax) * (ly - ay) - (by - ay) * (lx - ax);
                             if (debug()) {
                                 std::cerr << "      Segment z=" << z << '\n';
                             }
@@ -342,7 +353,7 @@ namespace osmium {
                             const int64_t ay = a.y();
                             const int64_t by = b.y();
                             const int64_t ly = location.y();
-                            const auto z = (bx - ax)*(ly - ay) - (by - ay)*(lx - ax);
+                            const auto z = (bx - ax) * (ly - ay) - (by - ay) * (lx - ax);
 
                             if (z >= 0) {
                                 nesting += segment->is_reverse() ? -1 : 1;
@@ -350,7 +361,8 @@ namespace osmium {
                                     std::cerr << "        Segment is below (nesting=" << nesting << ")\n";
                                 }
                                 if (segment->ring()->is_outer()) {
-                                    const double y = ay + (by - ay) * (lx - ax) / double(bx - ax);
+                                    const double y = static_cast<double>(ay) +
+                                                     static_cast<double>((by - ay) * (lx - ax)) / static_cast<double>(bx - ax);
                                     if (debug()) {
                                         std::cerr << "        Segment belongs to outer ring (y=" << y << " ring=" << *segment->ring() << ")\n";
                                     }
@@ -373,7 +385,7 @@ namespace osmium {
                     }
                     assert(!outer_rings.empty());
 
-                    std::sort(outer_rings.rbegin(), outer_rings.rend());
+                    std::stable_sort(outer_rings.rbegin(), outer_rings.rend());
                     if (debug()) {
                         for (const auto& o : outer_rings) {
                             std::cerr << "        y=" << o.y() << " " << o.ring() << "\n";
@@ -396,7 +408,7 @@ namespace osmium {
                     return std::find(m_split_locations.cbegin(), m_split_locations.cend(), location) != m_split_locations.cend();
                 }
 
-                uint32_t add_new_ring(slocation& node) {
+                uint32_t add_new_ring(const slocation& node) {
                     NodeRefSegment* segment = &m_segment_list[node.item];
                     assert(!segment->is_done());
 
@@ -454,7 +466,7 @@ namespace osmium {
                     return nodes;
                 }
 
-                uint32_t add_new_ring_complex(slocation& node) {
+                uint32_t add_new_ring_complex(const slocation& node) {
                     NodeRefSegment* segment = &m_segment_list[node.item];
                     assert(!segment->is_done());
 
@@ -500,7 +512,12 @@ namespace osmium {
                 void create_locations_list() {
                     m_locations.reserve(m_segment_list.size() * 2);
 
-                    for (uint32_t n = 0; n < m_segment_list.size(); ++n) {
+                    // static_cast is okay here: The 32bit limit is way past
+                    // anything that makes sense here and even if there are
+                    // 2^32 segments here, it would simply not go through
+                    // all of them not building the multipolygon correctly.
+                    assert(m_segment_list.size() < std::numeric_limits<uint32_t>::max());
+                    for (uint32_t n = 0; n < static_cast<uint32_t>(m_segment_list.size()); ++n) {
                         m_locations.emplace_back(n, false);
                         m_locations.emplace_back(n, true);
                     }
@@ -536,7 +553,7 @@ namespace osmium {
                         return;
                     }
 
-                    std::sort(rings.begin(), rings.end(), [](ProtoRing* a, ProtoRing* b) {
+                    std::stable_sort(rings.begin(), rings.end(), [](ProtoRing* a, ProtoRing* b) {
                         return a->min_segment() < b->min_segment();
                     });
 
@@ -576,7 +593,7 @@ namespace osmium {
                             }
                             ++m_stats.open_rings;
                         } else {
-                            if (loc == previous_location && (m_split_locations.empty() || m_split_locations.back() != previous_location )) {
+                            if (loc == previous_location && (m_split_locations.empty() || m_split_locations.back() != previous_location)) {
                                 m_split_locations.push_back(previous_location);
                             }
                             ++it;
@@ -602,7 +619,7 @@ namespace osmium {
                     }
                 }
 
-                std::vector<location_to_ring_map> create_location_to_ring_map(open_ring_its_type& open_ring_its) {
+                std::vector<location_to_ring_map> create_location_to_ring_map(open_ring_its_type& open_ring_its) const {
                     std::vector<location_to_ring_map> xrings;
                     xrings.reserve(open_ring_its.size() * 2);
 
@@ -614,7 +631,7 @@ namespace osmium {
                         xrings.emplace_back((*it)->get_node_ref_stop().location(), it, false);
                     }
 
-                    std::sort(xrings.begin(), xrings.end());
+                    std::stable_sort(xrings.begin(), xrings.end());
 
                     return xrings;
                 }
@@ -679,7 +696,7 @@ namespace osmium {
                 }
 
                 bool there_are_open_rings() const noexcept {
-                    return std::any_of(m_rings.cbegin(), m_rings.cend(), [](const ProtoRing& ring){
+                    return std::any_of(m_rings.cbegin(), m_rings.cend(), [](const ProtoRing& ring) {
                         return !ring.closed();
                     });
                 }
@@ -703,7 +720,15 @@ namespace osmium {
 
                 };
 
-                void find_candidates(std::vector<candidate>& candidates, std::unordered_set<osmium::Location>& loc_done, const std::vector<location_to_ring_map>& xrings, candidate& cand) {
+                struct exceeded_max_depth : public std::exception {};
+
+                using location_set = std::vector<osmium::Location>;
+
+                void find_candidates(std::vector<candidate>& candidates, location_set& loc_done, const std::vector<location_to_ring_map>& xrings, const candidate& cand, unsigned depth = 0) {
+                    if (depth > max_depth) {
+                        throw exceeded_max_depth{};
+                    }
+
                     if (debug()) {
                         std::cerr << "      find_candidates sum=" << cand.sum << " start=" << cand.start_location << " stop=" << cand.stop_location << "\n";
                         for (const auto& ring : cand.rings) {
@@ -741,14 +766,32 @@ namespace osmium {
                                 if (debug()) {
                                     std::cerr << "          found candidate\n";
                                 }
-                                candidates.push_back(c);
-                            } else if (loc_done.count(c.stop_location) == 0) {
-                                if (debug()) {
-                                    std::cerr << "          recurse...\n";
+
+                                if (candidates.empty()) {
+                                    candidates.push_back(c);
+                                } else if (candidates.size() == 1) {
+                                    // add new candidate to vector, keep sorted
+                                    if (std::abs(c.sum) < std::abs(candidates.front().sum)) {
+                                        candidates.insert(candidates.begin(), c);
+                                    } else {
+                                        candidates.push_back(c);
+                                    }
+                                } else {
+                                    // add new candidate if it has either smallest or largest area
+                                    if (std::abs(c.sum) < std::abs(candidates.front().sum)) {
+                                        candidates.front() = c;
+                                    } else if (std::abs(c.sum) > std::abs(candidates.back().sum)) {
+                                        candidates.back() = c;
+                                    }
                                 }
-                                loc_done.insert(c.stop_location);
-                                find_candidates(candidates, loc_done, xrings, c);
-                                loc_done.erase(c.stop_location);
+                            } else if (std::find(loc_done.cbegin(), loc_done.cend(), c.stop_location) == loc_done.cend()) {
+                                if (debug()) {
+                                    std::cerr << "          recurse... (depth=" << depth << " candidates.size=" << candidates.size() << " loc_done.size=" << loc_done.size() << ")\n";
+                                }
+                                loc_done.push_back(c.stop_location);
+                                find_candidates(candidates, loc_done, xrings, c, depth + 1);
+                                assert(!loc_done.empty() && loc_done.back() == c.stop_location);
+                                loc_done.pop_back();
                                 if (debug()) {
                                     std::cerr << "          ...back\n";
                                 }
@@ -790,16 +833,23 @@ namespace osmium {
                         ring.reset();
                     }
 
-                    candidate cand{*ring_min, false};
+                    const candidate cand{*ring_min, false};
 
                     // Locations we have visited while finding candidates, used
                     // to detect loops.
-                    std::unordered_set<osmium::Location> loc_done;
+                    location_set loc_done;
 
-                    loc_done.insert(cand.stop_location);
+                    loc_done.push_back(cand.stop_location);
 
                     std::vector<candidate> candidates;
-                    find_candidates(candidates, loc_done, xrings, cand);
+                    try {
+                        find_candidates(candidates, loc_done, xrings, cand);
+                    } catch (const exceeded_max_depth&) {
+                        if (m_config.debug_level > 0) {
+                            std::cerr << "    Exceeded max depth (" << static_cast<unsigned>(max_depth) << ")\n";
+                        }
+                        return false;
+                    }
 
                     if (candidates.empty()) {
                         if (debug()) {
@@ -819,35 +869,29 @@ namespace osmium {
 
                     if (debug()) {
                         std::cerr << "    Found candidates:\n";
-                        for (const auto& cand : candidates) {
-                            std::cerr << "      sum=" << cand.sum << "\n";
-                            for (const auto& ring : cand.rings) {
+                        for (const auto& c : candidates) {
+                            std::cerr << "      sum=" << c.sum << "\n";
+                            for (const auto& ring : c.rings) {
                                 std::cerr << "        " << ring.first.ring() << (ring.second ? " reverse" : "") << "\n";
                             }
                         }
                     }
 
                     // Find the candidate with the smallest/largest area
-                    const auto chosen_cand = ring_min_is_outer ?
-                        std::min_element(candidates.cbegin(), candidates.cend(), [](const candidate& lhs, const candidate& rhs) {
-                            return std::abs(lhs.sum) < std::abs(rhs.sum);
-                        }) :
-                        std::max_element(candidates.cbegin(), candidates.cend(), [](const candidate& lhs, const candidate& rhs) {
-                            return std::abs(lhs.sum) < std::abs(rhs.sum);
-                        });
+                    const auto chosen_cand = ring_min_is_outer ? candidates.front() : candidates.back();
 
                     if (debug()) {
-                        std::cerr << "    Decided on: sum=" << chosen_cand->sum << "\n";
-                        for (const auto& ring : chosen_cand->rings) {
+                        std::cerr << "    Decided on: sum=" << chosen_cand.sum << "\n";
+                        for (const auto& ring : chosen_cand.rings) {
                             std::cerr << "        " << ring.first.ring() << (ring.second ? " reverse" : "") << "\n";
                         }
                     }
 
                     // Join all (open) rings in the candidate to get one closed ring.
-                    assert(chosen_cand->rings.size() > 1);
-                    const auto& first_ring = chosen_cand->rings.front().first;
+                    assert(chosen_cand.rings.size() > 1);
+                    const auto& first_ring = chosen_cand.rings.front().first;
                     const ProtoRing& remaining_ring = first_ring.ring();
-                    for (auto it = std::next(chosen_cand->rings.begin()); it != chosen_cand->rings.end(); ++it) {
+                    for (auto it = std::next(chosen_cand.rings.begin()); it != chosen_cand.rings.end(); ++it) {
                         merge_two_rings(open_ring_its, first_ring, it->first);
                     }
 
@@ -863,11 +907,11 @@ namespace osmium {
                     auto count_remaining = m_segment_list.size();
                     for (const osmium::Location& location : m_split_locations) {
                         const auto locs = make_range(std::equal_range(m_locations.begin(),
-                                                                    m_locations.end(),
-                                                                    slocation{},
-                                                                    [this, &location](const slocation& lhs, const slocation& rhs) {
-                            return lhs.location(m_segment_list, location) < rhs.location(m_segment_list, location);
-                        }));
+                                                                      m_locations.end(),
+                                                                      slocation{},
+                                                                      [this, &location](const slocation& lhs, const slocation& rhs) {
+                                                                          return lhs.location(m_segment_list, location) < rhs.location(m_segment_list, location);
+                                                                      }));
                         for (auto& loc : locs) {
                             if (!m_segment_list[loc.item].is_done()) {
                                 count_remaining -= add_new_ring_complex(loc);
@@ -1066,28 +1110,38 @@ namespace osmium {
                     // whether there were any split locations or not. If there
                     // are no splits, we use the faster "simple algorithm", if
                     // there are, we use the slower "complex algorithm".
-                    osmium::Timer timer_simple_case;
-                    osmium::Timer timer_complex_case;
+                    osmium::Timer timer;
                     if (m_split_locations.empty()) {
                         if (debug()) {
                             std::cerr << "  No split locations -> using simple algorithm\n";
                         }
                         ++m_stats.area_simple_case;
 
-                        timer_simple_case.start();
+                        timer.start();
                         create_rings_simple_case();
-                        timer_simple_case.stop();
+                        timer.stop();
+                    } else if (m_split_locations.size() > max_split_locations) {
+                        if (m_config.debug_level > 0) {
+                            std::cerr << "  Ignoring polygon with "
+                                      << m_split_locations.size()
+                                      << " split locations (>"
+                                      << max_split_locations
+                                      << ")\n";
+                        }
+                        return false;
                     } else {
-                        if (debug()) {
-                            std::cerr << "  Found split locations -> using complex algorithm\n";
+                        if (m_config.debug_level > 0) {
+                            std::cerr << "  Found "
+                                      << m_split_locations.size()
+                                      << " split locations -> using complex algorithm\n";
                         }
                         ++m_stats.area_touching_rings_case;
 
-                        timer_complex_case.start();
+                        timer.start();
                         if (!create_rings_complex_case()) {
                             return false;
                         }
-                        timer_complex_case.stop();
+                        timer.stop();
                     }
 
                     // If the assembler was so configured, now check whether the
@@ -1098,7 +1152,7 @@ namespace osmium {
                         timer_roles.stop();
                     }
 
-                    m_stats.outer_rings = std::count_if(m_rings.cbegin(), m_rings.cend(), [](const ProtoRing& ring){
+                    m_stats.outer_rings = std::count_if(m_rings.cbegin(), m_rings.cend(), [](const ProtoRing& ring) {
                         return ring.is_outer();
                     });
                     m_stats.inner_rings = m_rings.size() - m_stats.outer_rings;
@@ -1112,11 +1166,9 @@ namespace osmium {
                                                 ' ' << timer_split.elapsed_microseconds();
 
                     if (m_split_locations.empty()) {
-                        std::cout << ' ' << timer_simple_case.elapsed_microseconds() <<
-                                    " 0";
+                        std::cout << ' ' << timer.elapsed_microseconds() << " 0";
                     } else {
-                        std::cout << " 0" <<
-                                    ' ' << timer_complex_case.elapsed_microseconds();
+                        std::cout << " 0" << ' ' << timer.elapsed_microseconds();
                     }
 
                     std::cout <<

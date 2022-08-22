@@ -16,13 +16,13 @@ namespace
 static const char COL_RESET[]{"\x1b[0m"};
 static const char RED[]{"\x1b[31m"};
 static const char YELLOW[]{"\x1b[33m"};
-#ifndef NDEBUG
+#ifdef ENABLE_DEBUG_LOGGING
 static const char MAGENTA[]{"\x1b[35m"};
 #endif
 // static const char GREEN[] { "\x1b[32m"};
 // static const char BLUE[] { "\x1b[34m"};
 // static const char CYAN[] { "\x1b[36m"};
-}
+} // namespace
 
 void LogPolicy::Unmute() { m_is_mute = false; }
 
@@ -63,7 +63,11 @@ std::string LogPolicy::GetLevels()
     return "NONE, ERROR, WARNING, INFO, DEBUG";
 }
 
-Log::Log(LogLevel level_, std::ostream &ostream) : level(level_), stream(ostream)
+Log::Log(LogLevel level_, std::ostream &ostream) : level(level_), stream(ostream) { Init(); }
+
+Log::Log(LogLevel level_) : level(level_), buffer{}, stream{buffer} { Init(); }
+
+void Log::Init()
 {
     std::lock_guard<std::mutex> lock(get_mutex());
     if (!LogPolicy::GetInstance().IsMute() && level <= LogPolicy::GetInstance().GetLevel())
@@ -80,7 +84,7 @@ Log::Log(LogLevel level_, std::ostream &ostream) : level(level_), stream(ostream
             stream << (is_terminal ? RED : "") << "[error] ";
             break;
         case logDEBUG:
-#ifndef NDEBUG
+#ifdef ENABLE_DEBUG_LOGGING
             stream << (is_terminal ? MAGENTA : "") << "[debug] ";
 #endif
             break;
@@ -90,8 +94,6 @@ Log::Log(LogLevel level_, std::ostream &ostream) : level(level_), stream(ostream
         }
     }
 }
-
-Log::Log(LogLevel level_) : Log(level_, buffer) {}
 
 std::mutex &Log::get_mutex()
 {
@@ -126,7 +128,7 @@ Log::~Log()
                 std::cerr << std::endl;
                 break;
             case logDEBUG:
-#ifdef NDEBUG
+#ifndef ENABLE_DEBUG_LOGGING
                 break;
 #endif
             case logINFO:
@@ -150,5 +152,5 @@ UnbufferedLog::UnbufferedLog(LogLevel level_)
 {
     stream.flags(std::ios_base::unitbuf);
 }
-}
-}
+} // namespace util
+} // namespace osrm

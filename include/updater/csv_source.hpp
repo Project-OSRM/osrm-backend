@@ -11,8 +11,8 @@ namespace csv
 {
 SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths);
 TurnLookupTable readTurnValues(const std::vector<std::string> &paths);
-}
-}
-}
+} // namespace csv
+} // namespace updater
+} // namespace osrm
 
 #endif

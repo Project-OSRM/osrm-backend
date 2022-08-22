@@ -70,7 +70,7 @@ public:
     IndexAccess(IndexAccess&&) = delete;
     IndexAccess& operator=(IndexAccess&&) = delete;
 
-    virtual ~IndexAccess() = default;
+    virtual ~IndexAccess() noexcept = default;
 
     virtual void dump() const = 0;
 
@@ -96,6 +96,14 @@ public:
     explicit IndexAccessDense(int fd) :
         IndexAccess<TValue>(fd) {
     }
+
+    IndexAccessDense(const IndexAccessDense&) = default;
+    IndexAccessDense& operator=(const IndexAccessDense&) = default;
+
+    IndexAccessDense(IndexAccessDense&&) noexcept = default;
+    IndexAccessDense& operator=(IndexAccessDense&&) noexcept = default;
+
+    ~IndexAccessDense() noexcept override = default;
 
     void dump() const override {
         index_type index{this->fd()};
@@ -135,6 +143,14 @@ public:
     explicit IndexAccessSparse(int fd) :
         IndexAccess<TValue>(fd) {
     }
+
+    IndexAccessSparse(const IndexAccessSparse&) = default;
+    IndexAccessSparse& operator=(const IndexAccessSparse&) = default;
+
+    IndexAccessSparse(IndexAccessSparse&&) noexcept = default;
+    IndexAccessSparse& operator=(IndexAccessSparse&&) noexcept = default;
+
+    ~IndexAccessSparse() noexcept override = default;
 
     void dump() const override {
         index_type index{this->fd()};
@@ -182,7 +198,7 @@ class Options {
     bool m_array_format = false;
     bool m_list_format = false;
 
-    void print_help() {
+    static void print_help() {
         std::cout << "Usage: osmium_index_lookup [OPTIONS]\n\n"
                   << "-h, --help        Print this help message\n"
                   << "-a, --array=FILE  Read given index file in array format\n"
@@ -193,7 +209,7 @@ class Options {
         ;
     }
 
-    void print_usage(const char* prgname) {
+    static void print_usage(const char* prgname) {
         std::cout << "Usage: " << prgname << " [OPTIONS]\n\n";
         std::exit(0);
     }
@@ -338,7 +354,7 @@ int main(int argc, char* argv[]) {
     if (fd < 0) {
         std::cerr << "Can not open file '" << options.filename()
                   << "': " << std::strerror(errno) << '\n';
-        std::exit(2);
+        return 2;
     }
 
 #ifdef _WIN32
@@ -363,8 +379,9 @@ int main(int argc, char* argv[]) {
         const auto index = create<std::size_t>(options.dense_format(), fd);
         return run(*index, options);
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << '\n';
-        std::exit(1);
+        // All exceptions used by the Osmium library derive from std::exception.
+        std::cerr << e.what() << '\n';
+        return 1;
     }
 }
 

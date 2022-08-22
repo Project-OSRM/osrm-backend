@@ -45,8 +45,8 @@ void runStatistics(std::vector<double> &timings_vector, Statistics &stats)
         timings_vector.begin(), timings_vector.end(), timings_vector.begin(), 0.0);
     stats.dev = std::sqrt(primary_sq_sum / timings_vector.size() - (stats.mean * stats.mean));
 }
-}
-}
+} // namespace tools
+} // namespace osrm
 
 boost::filesystem::path test_path;
 

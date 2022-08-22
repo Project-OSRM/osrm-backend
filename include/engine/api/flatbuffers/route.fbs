@@ -1,0 +1,110 @@
+include "waypoint.fbs";
+namespace osrm.engine.api.fbresult;
+
+table Metadata {
+    datasource_names: [string];
+}
+
+table Annotation {
+    distance: [uint];
+    duration: [uint];
+    datasources: [uint];
+    nodes: [uint];
+    weight: [uint];
+    speed: [float];
+    metadata: Metadata;
+}
+
+enum ManeuverType: byte {
+    Turn,
+    NewName,
+    Depart,
+    Arrive,
+    Merge,
+    OnRamp,
+    OffRamp,
+    Fork,
+    EndOfRoad,
+    Continue,
+    Roundabout,
+    Rotary,
+    RoundaboutTurn,
+    Notification,
+    ExitRoundabout,
+    ExitRotary
+}
+
+enum Turn: byte {
+    None,
+    UTurn,
+    SharpRight,
+    Right,
+    SlightRight,
+    Straight,
+    SlightLeft,
+    Left,
+    SharpLeft
+}
+
+table StepManeuver {
+    location: Position;
+    bearing_before: ushort;
+    bearing_after: ushort;
+    type: ManeuverType;
+    modifier: Turn;
+    exit: ubyte;
+}
+
+table Lane {
+    indications: [Turn];
+    valid: bool;
+}
+
+table Intersection {
+    location: Position;
+    bearings: [short];
+    classes: [string];
+    entry: [bool];
+    in_bearing: uint;
+    out_bearing: uint;
+    lanes: [Lane];
+}
+
+table Step {
+    distance: float;
+    duration: float;
+    polyline: string;
+    coordinates: [Position];
+    weight: float;
+    name: string;
+    ref: string;
+    pronunciation: string;
+    destinations: string;
+    exits: string;
+    mode: string;
+    maneuver: StepManeuver;
+    intersections: [Intersection];
+    rotary_name: string;
+    rotary_pronunciation: string;
+    driving_side: bool; //Where true stands for the left side.
+}
+
+table Leg {
+    distance: double;
+    duration: double;
+    weight: double;
+    summary: string;
+    annotations: Annotation;
+    steps: [Step];
+}
+
+table RouteObject {
+    distance: float;
+    duration: float;
+    weight: float;
+    weight_name: string;
+    confidence: float; //Used only by 'Match' service
+    polyline: string;
+    coordinates: [Position];
+    legs: [Leg];
+}

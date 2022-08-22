@@ -17,10 +17,6 @@
 #include <cstdint>
 #include <tuple>
 
-#if USE_STXXL_LIBRARY
-#include <stxxl/vector>
-#endif
-
 namespace osrm
 {
 namespace storage
@@ -108,7 +104,7 @@ void writeBoolVector(tar::FileWriter &writer, const std::string &name, const Vec
         boost::make_function_input_iterator(encode_function, boost::infinite()),
         number_of_blocks);
 }
-}
+} // namespace detail
 
 /* All vector formats here use the same on-disk format.
  * This is important because we want to be able to write from a vector
@@ -133,24 +129,6 @@ inline void write(storage::tar::FileWriter &writer,
     writer.WriteElementCount64(name, vec.size());
     writer.WriteStreaming<T>(name, vec.begin(), vec.size());
 }
-
-#if USE_STXXL_LIBRARY
-template <typename T>
-inline void read(storage::tar::FileReader &reader, const std::string &name, stxxl::vector<T> &vec)
-{
-    auto size = reader.ReadElementCount64(name);
-    vec.reserve(size);
-    reader.ReadStreaming<T>(name, std::back_inserter(vec), size);
-}
-
-template <typename T>
-inline void
-write(storage::tar::FileWriter &writer, const std::string &name, const stxxl::vector<T> &vec)
-{
-    writer.WriteElementCount64(name, vec.size());
-    writer.WriteStreaming<T>(name, vec.begin(), vec.size());
-}
-#endif
 
 template <typename T> void read(io::BufferReader &reader, std::vector<T> &data)
 {
@@ -290,8 +268,8 @@ inline void write(io::BufferWriter &writer, const BaseDataLayout &layout)
 {
     write(writer, layout.blocks);
 }
-}
-}
-}
+} // namespace serialization
+} // namespace storage
+} // namespace osrm
 
 #endif

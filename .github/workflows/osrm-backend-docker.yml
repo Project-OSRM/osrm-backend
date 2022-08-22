@@ -1,0 +1,84 @@
+name: build and publish container image
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:       
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ghcr.io/${{ github.repository }}
+
+      - name: Docker meta - debug
+        id: metadebug
+        uses: docker/metadata-action@v3
+        with:
+          images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=true
+            suffix=-debug,onlatest=true
+
+      - name: Docker meta - assertions
+        id: metaassertions
+        uses: docker/metadata-action@v3
+        with:
+          images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=true
+            suffix=-assertions,onlatest=true        
+
+      - name: Log in to GitHub Docker Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build container image - debug
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          platforms: linux/amd64,linux/arm64
+          file: ./docker/Dockerfile
+          tags: ${{ steps.metadebug.outputs.tags  }}
+          build-args: |
+            DOCKER_TAG=${{ join(steps.metadebug.outputs.tags ) }}
+
+
+      - name: Build container image - assertions
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          platforms: linux/amd64,linux/arm64
+          file: ./docker/Dockerfile
+          tags: ${{ steps.metaassertions.outputs.tags  }}
+          build-args: |
+            DOCKER_TAG=${{ join(steps.metaassertions.outputs.tags ) }}
+
+      # build and publish "normal" image as last to get it listed on top
+      - name: Build container image - normal
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          platforms: linux/amd64,linux/arm64
+          file: ./docker/Dockerfile
+          tags:  ${{ steps.meta.outputs.tags  }}
+          build-args: |
+            DOCKER_TAG=${{ join(steps.meta.outputs.tags ) }}            
+
+
+            

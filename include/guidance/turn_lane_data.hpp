@@ -28,7 +28,7 @@ typedef std::vector<TurnLaneData> LaneDataVector;
 
 // convertes a string given in the OSM format into a TurnLaneData vector
 OSRM_ATTR_WARN_UNUSED
-LaneDataVector laneDataFromDescription(extractor::TurnLaneDescription turn_lane_description);
+LaneDataVector laneDataFromDescription(const extractor::TurnLaneDescription &turn_lane_description);
 
 // Locate A Tag in a lane data vector (if multiple tags are set, the first one found is returned)
 LaneDataVector::const_iterator findTag(const extractor::TurnLaneType::Mask tag,
@@ -37,7 +37,7 @@ LaneDataVector::iterator findTag(const extractor::TurnLaneType::Mask tag, LaneDa
 
 // Returns true if any of the queried tags is contained
 bool hasTag(const extractor::TurnLaneType::Mask tag, const LaneDataVector &data);
-} // namespace lane_data_generation
+} // namespace lanes
 
 } // namespace guidance
 } // namespace osrm

@@ -8,5 +8,5 @@ namespace detail
 {
 std::atomic_uint operation = {0};
 }
-}
-}
+} // namespace util
+} // namespace osrm

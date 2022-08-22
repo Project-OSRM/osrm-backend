@@ -38,15 +38,10 @@ inline double radToDeg(const double radian)
     using namespace boost::math::constants;
     return radian * (180.0 * (1. / pi<double>()));
 }
-}
+} // namespace detail
 
 //! Takes the squared euclidean distance of the input coordinates. Does not return meters!
 std::uint64_t squaredEuclideanDistance(const Coordinate lhs, const Coordinate rhs);
-
-double fccApproximateDistance(const Coordinate first_coordinate,
-                              const Coordinate second_coordinate);
-
-double haversineDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
 
 double greatCircleDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
 
@@ -224,7 +219,7 @@ double findClosestDistance(const iterator_type lhs_begin,
     double current_min = std::numeric_limits<double>::max();
 
     const auto compute_minimum_distance_in_rhs = [&current_min, rhs_begin, rhs_end](
-        const Coordinate coordinate) {
+                                                     const Coordinate coordinate) {
         current_min = std::min(current_min, findClosestDistance(coordinate, rhs_begin, rhs_end));
         return false;
     };
@@ -320,10 +315,9 @@ std::pair<Coordinate, Coordinate> leastSquareRegression(const iterator_type begi
                         end,
                         0.,
                         [&](const auto sum_so_far, const auto current_coordinate) {
-                            return sum_so_far +
-                                   (extract_lon(current_coordinate) - mean_lon) *
-                                       (extract_lat(current_coordinate) - mean_lat) /
-                                       (sample_variance_lon * sample_variance_lat);
+                            return sum_so_far + (extract_lon(current_coordinate) - mean_lon) *
+                                                    (extract_lat(current_coordinate) - mean_lat) /
+                                                    (sample_variance_lon * sample_variance_lat);
                         }) /
         (number_of_coordinates - 1);
 
@@ -383,8 +377,8 @@ bool areParallel(const iterator_type lhs_begin,
 
 double computeArea(const std::vector<Coordinate> &polygon);
 
-} // ns coordinate_calculation
-} // ns util
-} // ns osrm
+} // namespace coordinate_calculation
+} // namespace util
+} // namespace osrm
 
 #endif // COORDINATE_CALCULATION

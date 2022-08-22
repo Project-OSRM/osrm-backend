@@ -47,7 +47,7 @@ class exception : public std::exception
   public:
     explicit exception(const char *message) : message(message) {}
     explicit exception(std::string message) : message(std::move(message)) {}
-    explicit exception(boost::format message) : message(message.str()) {}
+    explicit exception(const boost::format &message) : message(message.str()) {}
     const char *what() const noexcept override { return message.c_str(); }
 
   private:
@@ -65,18 +65,19 @@ class exception : public std::exception
  */
 
 constexpr const std::array<const char *, 11> ErrorDescriptions = {{
-    "",                                                      // Dummy - ErrorCode values start at 2
-    "",                                                      // Dummy - ErrorCode values start at 2
-    "Fingerprint did not match the expected value",          // InvalidFingerprint
-    "File is incompatible with this version of OSRM",        // IncompatibleFileVersion
-    "Problem opening file",                                  // FileOpenError
-    "Problem reading from file",                             // FileReadError
-    "Problem writing to file",                               // FileWriteError
-    "I/O error occurred",                                    // FileIOError
-    "Unexpected end of file",                                // UnexpectedEndOfFile
-    "The dataset you are trying to load is not "             // IncompatibleDataset
-    "compatible with the routing algorithm you want to use." // ...continued...
-    "Incompatible algorithm"                                 // IncompatibleAlgorithm
+    "",                                               // Dummy - ErrorCode values start at 2
+    "",                                               // Dummy - ErrorCode values start at 2
+    "Fingerprint did not match the expected value",   // InvalidFingerprint
+    "File is incompatible with this version of OSRM", // IncompatibleFileVersion
+    "Problem opening file",                           // FileOpenError
+    "Problem reading from file",                      // FileReadError
+    "Problem writing to file",                        // FileWriteError
+    "I/O error occurred",                             // FileIOError
+    "Unexpected end of file",                         // UnexpectedEndOfFile
+    // NOLINTNEXTLINE(bugprone-suspicious-missing-comma)
+    "The dataset you are trying to load is not "              // IncompatibleDataset
+    "compatible with the routing algorithm you want to use.", // ...continued...
+    "Incompatible algorithm"                                  // IncompatibleAlgorithm
 }};
 
 #ifndef NDEBUG
@@ -123,7 +124,7 @@ class RuntimeError : public exception
         return result;
     }
 };
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif /* OSRM_EXCEPTION_HPP */

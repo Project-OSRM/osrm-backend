@@ -25,7 +25,7 @@ void __throw_out_of_range_fmt(const char *err, ...)
     // Safe and over-simplified version. Ignore the format and print it as-is.
     __throw_out_of_range(err);
 }
-}
+} // namespace std
 #endif // _ENABLE_GLIBC_WORKAROUND
 
 #endif // GLIBC_WORKAROUND

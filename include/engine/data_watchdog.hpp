@@ -56,11 +56,14 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
             static_region = *static_shared_region;
             updatable_region = *updatable_shared_region;
 
-            facade_factory =
-                DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
-                    std::make_shared<datafacade::SharedMemoryAllocator>(
-                        std::vector<storage::SharedRegionRegister::ShmKey>{
-                            static_region.shm_key, updatable_region.shm_key}));
+            {
+                boost::unique_lock<boost::shared_mutex> swap_lock(factory_mutex);
+                facade_factory =
+                    DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
+                        std::make_shared<datafacade::SharedMemoryAllocator>(
+                            std::vector<storage::SharedRegionRegister::ShmKey>{
+                                static_region.shm_key, updatable_region.shm_key}));
+            }
         }
 
         watcher = std::thread(&DataWatchdogImpl::Run, this);
@@ -75,10 +78,14 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
 
     std::shared_ptr<const Facade> Get(const api::BaseParameters &params) const
     {
+        // make sure facade_factory stays stable while we call Get()
+        boost::shared_lock<boost::shared_mutex> swap_lock(factory_mutex);
         return facade_factory.Get(params);
     }
     std::shared_ptr<const Facade> Get(const api::TileParameters &params) const
     {
+        // make sure facade_factory stays stable while we call Get()
+        boost::shared_lock<boost::shared_mutex> swap_lock(factory_mutex);
         return facade_factory.Get(params);
     }
 
@@ -111,16 +118,20 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
                         << (int)updatable_region.shm_key << " with timestamps "
                         << static_region.timestamp << " and " << updatable_region.timestamp;
 
-            facade_factory =
-                DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
-                    std::make_shared<datafacade::SharedMemoryAllocator>(
-                        std::vector<storage::SharedRegionRegister::ShmKey>{
-                            static_region.shm_key, updatable_region.shm_key}));
+            {
+                boost::unique_lock<boost::shared_mutex> swap_lock(factory_mutex);
+                facade_factory =
+                    DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
+                        std::make_shared<datafacade::SharedMemoryAllocator>(
+                            std::vector<storage::SharedRegionRegister::ShmKey>{
+                                static_region.shm_key, updatable_region.shm_key}));
+            }
         }
 
         util::Log() << "DataWatchdog thread stopped";
     }
 
+    mutable boost::shared_mutex factory_mutex;
     const std::string dataset_name;
     storage::SharedMonitor<storage::SharedRegionRegister> barrier;
     std::thread watcher;
@@ -131,14 +142,14 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
     storage::SharedRegion *updatable_shared_region;
     DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT> facade_factory;
 };
-}
+} // namespace detail
 
 // This class monitors the shared memory region that contains the pointers to
 // the data and layout regions that should be used. This region is updated
 // once a new dataset arrives.
 template <typename AlgorithmT, template <typename A> class FacadeT>
 using DataWatchdog = detail::DataWatchdogImpl<AlgorithmT, FacadeT<AlgorithmT>>;
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif

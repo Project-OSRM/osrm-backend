@@ -23,7 +23,7 @@ Feature: Basic trip planning
             | waypoints   | trips  | code           |
             | a           | aa     | InvalidOptions |
 
-    Scenario: Testbot - Trip: Roundtrip with one waypoint
+    Scenario: Testbot - Trip: Roundtrip between same waypoint
         Given the node map
             """
             a b
@@ -107,36 +107,37 @@ Feature: Basic trip planning
             | waypoints               | trips         |
             | a,b,c,d,e,f,g,h,i,j,k,l | alkjihgfedcba |
 
-    Scenario: Testbot - Trip: Roundtrip FS waypoints (more than 10)
-        Given the node map
-            """
-            a b c d
-            l     e
-            k     f
-            j i h g
-            """
-
-        And the ways
-            | nodes |
-            | ab    |
-            | bc    |
-            | de    |
-            | ef    |
-            | fg    |
-            | gh    |
-            | hi    |
-            | ij    |
-            | jk    |
-            | kl    |
-            | la    |
-
-        When I plan a trip I should get
-            | waypoints               | source | trips         |
-            | a,b,c,d,e,f,g,h,i,j,k,l | first  | alkjihgfedcba |
-
-    Scenario: Testbot - Trip: Roundtrip FE waypoints (more than 10)
+    Scenario: Testbot - Trip: FS waypoints (less than 10)
         Given the query options
-            | source | last  |
+            | source | first  |
+        Given the node map
+            """
+            a b c d
+            l     e
+
+            j i   g
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | de    |
+            | eg    |
+            | gi    |
+            | ij    |
+            | jl    |
+            | la    |
+
+        When I plan a trip I should get
+            | waypoints               | trips         | roundtrip | durations |
+            | a,b,c,d,e,g,i,j,l       | abcdegijla    | true      | 22        |
+            | a,b,c,d,e,g,i,j,l       | abcljiged     | false     | 13        |
+
+
+    Scenario: Testbot - Trip: FS waypoints (more than 10)
+        Given the query options
+            | source | first  |
         Given the node map
             """
             a b c d
@@ -160,8 +161,67 @@ Feature: Basic trip planning
             | la    |
 
         When I plan a trip I should get
-            | waypoints               | trips         |
-            | a,b,c,d,e,f,g,h,i,j,k,l | lkjihgfedcbal |
+            | waypoints               | trips         | roundtrip | durations |
+            | a,b,c,d,e,f,g,h,i,j,k,l | alkjihgfedcba | true      | 22        |
+            | a,b,c,d,e,f,g,h,i,j,k,l | acblkjihgfed  | false     | 13        |
+
+
+    Scenario: Testbot - Trip: FE waypoints (less than 10)
+        Given the query options
+            | destination | last  |
+        Given the node map
+            """
+            a b c d
+            l     e
+
+            j i   g
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | de    |
+            | eg    |
+            | gi    |
+            | ij    |
+            | jl    |
+            | la    |
+
+        When I plan a trip I should get
+            | waypoints             | trips        | roundtrip | durations |
+            | a,b,c,d,e,g,i,j,l     | labcdegijl   | true      | 22        |
+            | a,b,c,d,e,g,i,j,l     | degijabcl    | false     | 14        |
+
+    Scenario: Testbot - Trip: FE waypoints (more than 10)
+        Given the query options
+            | destination | last  |
+        Given the node map
+            """
+            a b c d
+            l     e
+            k     f
+            j i h g
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | de    |
+            | ef    |
+            | fg    |
+            | gh    |
+            | hi    |
+            | ij    |
+            | jk    |
+            | kl    |
+            | la    |
+
+        When I plan a trip I should get
+            | waypoints               | trips         | roundtrip | durations |
+            | a,b,c,d,e,f,g,h,i,j,k,l | lkjihgfedcbal | true      | 22        |
+            | a,b,c,d,e,f,g,h,i,j,k,l | cbakjihgfedl  | false     | 19        |
 
     Scenario: Testbot - Trip: Unroutable roundtrip with waypoints (less than 10)
         Given the node map
@@ -259,7 +319,7 @@ Feature: Basic trip planning
 
         When I plan a trip I should get
             |  waypoints  | source | destination |roundtrip | trips  | durations         | distance               |
-            |  a,b,d,e,c  | first  | last        | false    | abedc  | 8.200000000000001 | 81.6                   |
+            |  a,b,d,e,c  | first  | last        | false    | abedc  | 8.200000000000001 | 81.4                   |
 
 
     Scenario: Testbot - Trip: FSE with waypoints (more than 10)
@@ -312,7 +372,7 @@ Feature: Basic trip planning
             |  a,b,d,e,c  | first  | last        | true      | abedca  |
 
 
-    Scenario: Testbot - Trip: midway points in isoldated roads should return no trips
+    Scenario: Testbot - Trip: midway points in isolated roads should return no trips
         Given the node map
             """
             a 1 b
