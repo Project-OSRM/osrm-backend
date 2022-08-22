@@ -4,6 +4,8 @@
       - CHANGED: Add `data_version` field to responses of all services. [#5387](https://github.com/Project-OSRM/osrm-backend/pull/5387)
       - FIXED: Use Boost.Beast to parse HTTP request. [#6294](https://github.com/Project-OSRM/osrm-backend/pull/6294)
       - FIXED: Fix inefficient osrm-routed connection handling [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
+    - NodeJS:
+      - FIXED: Support `skip_waypoints` in Node bindings [#6060](https://github.com/Project-OSRM/osrm-backend/pull/6060)
     - Misc:
       - CHANGED: missing files list is included in exception message. [#5360](https://github.com/Project-OSRM/osrm-backend/pull/5360)
       - CHANGED: Do not use deprecated Callback::Call overload in Node bindings. [#6318](https://github.com/Project-OSRM/osrm-backend/pull/6318)
