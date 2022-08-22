@@ -367,7 +367,7 @@ class RouteAPI : public BaseAPI
             // To maintain support for uses of the old default constructors, we check
             // if annotations property was set manually after default construction
             auto requested_annotations = parameters.annotations_type;
-            if ((parameters.annotations == true) &&
+            if (parameters.annotations &&
                 (parameters.annotations_type == RouteParameters::AnnotationsType::None))
             {
                 requested_annotations = RouteParameters::AnnotationsType::All;
@@ -497,10 +497,10 @@ class RouteAPI : public BaseAPI
         std::vector<uint32_t> nodes;
         if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
         {
-            nodes.reserve(leg_geometry.osm_node_ids.size());
-            for (const auto node_id : leg_geometry.osm_node_ids)
+            nodes.reserve(leg_geometry.node_ids.size());
+            for (const auto node_id : leg_geometry.node_ids)
             {
-                nodes.emplace_back(static_cast<uint64_t>(node_id));
+                nodes.emplace_back(static_cast<uint64_t>(facade.GetOSMNodeIDOfNode(node_id)));
             }
         }
         auto nodes_vector = fb_result.CreateVector(nodes);
@@ -515,7 +515,7 @@ class RouteAPI : public BaseAPI
             {
                 const auto name = facade.GetDatasourceName(i);
                 // Length of 0 indicates the first empty name, so we can stop here
-                if (name.size() == 0)
+                if (name.empty())
                     break;
                 names.emplace_back(
                     fb_result.CreateString(std::string(facade.GetDatasourceName(i))));
@@ -763,7 +763,7 @@ class RouteAPI : public BaseAPI
         // To maintain support for uses of the old default constructors, we check
         // if annotations property was set manually after default construction
         auto requested_annotations = parameters.annotations_type;
-        if ((parameters.annotations == true) &&
+        if (parameters.annotations &&
             (parameters.annotations_type == RouteParameters::AnnotationsType::None))
         {
             requested_annotations = RouteParameters::AnnotationsType::All;
@@ -825,10 +825,11 @@ class RouteAPI : public BaseAPI
                 if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
                 {
                     util::json::Array nodes;
-                    nodes.values.reserve(leg_geometry.osm_node_ids.size());
-                    for (const auto node_id : leg_geometry.osm_node_ids)
+                    nodes.values.reserve(leg_geometry.node_ids.size());
+                    for (const auto node_id : leg_geometry.node_ids)
                     {
-                        nodes.values.push_back(static_cast<std::uint64_t>(node_id));
+                        nodes.values.push_back(
+                            static_cast<std::uint64_t>(facade.GetOSMNodeIDOfNode(node_id)));
                     }
                     annotation.values["nodes"] = std::move(nodes);
                 }
@@ -842,7 +843,7 @@ class RouteAPI : public BaseAPI
                     {
                         const auto name = facade.GetDatasourceName(i);
                         // Length of 0 indicates the first empty name, so we can stop here
-                        if (name.size() == 0)
+                        if (name.empty())
                             break;
                         datasource_names.values.push_back(std::string(facade.GetDatasourceName(i)));
                     }
@@ -888,81 +889,92 @@ class RouteAPI : public BaseAPI
             const bool reversed_source = source_traversed_in_reverse[idx];
             const bool reversed_target = target_traversed_in_reverse[idx];
 
-            auto leg_geometry = guidance::assembleGeometry(BaseAPI::facade,
-                                                           path_data,
-                                                           phantoms.source_phantom,
-                                                           phantoms.target_phantom,
-                                                           reversed_source,
-                                                           reversed_target);
             auto leg = guidance::assembleLeg(facade,
                                              path_data,
-                                             leg_geometry,
                                              phantoms.source_phantom,
                                              phantoms.target_phantom,
-                                             reversed_target,
-                                             parameters.steps);
+                                             reversed_target);
 
-            util::Log(logDEBUG) << "Assembling steps " << std::endl;
-            if (parameters.steps)
+            guidance::LegGeometry leg_geometry;
+
+            // Generate additional geometry data if request includes turn-by-turn steps,
+            // overview geometry or route geometry annotations.
+            // Note that overview geometry and route geometry annotations can return different
+            // results depending on whether turn-by-turn steps are also requested.
+            if (parameters.steps || parameters.annotations ||
+                parameters.overview != RouteParameters::OverviewType::False)
             {
-                auto steps = guidance::assembleSteps(BaseAPI::facade,
-                                                     path_data,
-                                                     leg_geometry,
-                                                     phantoms.source_phantom,
-                                                     phantoms.target_phantom,
-                                                     reversed_source,
-                                                     reversed_target);
 
-                // Apply maneuver overrides before any other post
-                // processing is performed
-                guidance::applyOverrides(BaseAPI::facade, steps, leg_geometry);
+                leg_geometry = guidance::assembleGeometry(BaseAPI::facade,
+                                                          path_data,
+                                                          phantoms.source_phantom,
+                                                          phantoms.target_phantom,
+                                                          reversed_source,
+                                                          reversed_target);
 
-                // Collapse segregated steps before others
-                steps = guidance::collapseSegregatedTurnInstructions(std::move(steps));
+                util::Log(logDEBUG) << "Assembling steps " << std::endl;
+                if (parameters.steps)
+                {
+                    leg.summary = guidance::assembleSummary(
+                        facade, path_data, phantoms.target_phantom, reversed_target);
 
-                /* Perform step-based post-processing.
-                 *
-                 * Using post-processing on basis of route-steps for a single leg at a time
-                 * comes at the cost that we cannot count the correct exit for roundabouts.
-                 * We can only emit the exit nr/intersections up to/starting at a part of the leg.
-                 * If a roundabout is not terminated in a leg, we will end up with a
-                 *enter-roundabout
-                 * and exit-roundabout-nr where the exit nr is out of sync with the previous enter.
-                 *
-                 *         | S |
-                 *         *   *
-                 *  ----*        * ----
-                 *                  T
-                 *  ----*        * ----
-                 *       V *   *
-                 *         |   |
-                 *         |   |
-                 *
-                 * Coming from S via V to T, we end up with the legs S->V and V->T. V-T will say to
-                 *take
-                 * the second exit, even though counting from S it would be the third.
-                 * For S, we only emit `roundabout` without an exit number, showing that we enter a
-                 *roundabout
-                 * to find a via point.
-                 * The same exit will be emitted, though, if we should start routing at S, making
-                 * the overall response consistent.
-                 *
-                 * ⚠ CAUTION: order of post-processing steps is important
-                 *    - handleRoundabouts must be called before collapseTurnInstructions that
-                 *      expects post-processed roundabouts
-                 */
+                    auto steps = guidance::assembleSteps(BaseAPI::facade,
+                                                         path_data,
+                                                         leg_geometry,
+                                                         phantoms.source_phantom,
+                                                         phantoms.target_phantom,
+                                                         reversed_source,
+                                                         reversed_target);
 
-                guidance::trimShortSegments(steps, leg_geometry);
-                leg.steps = guidance::handleRoundabouts(std::move(steps));
-                leg.steps = guidance::collapseTurnInstructions(std::move(leg.steps));
-                leg.steps = guidance::anticipateLaneChange(std::move(leg.steps));
-                leg.steps = guidance::buildIntersections(std::move(leg.steps));
-                leg.steps = guidance::suppressShortNameSegments(std::move(leg.steps));
-                leg.steps = guidance::assignRelativeLocations(std::move(leg.steps),
-                                                              leg_geometry,
-                                                              phantoms.source_phantom,
-                                                              phantoms.target_phantom);
-                leg_geometry = guidance::resyncGeometry(std::move(leg_geometry), leg.steps);
+                    // Apply maneuver overrides before any other post
+                    // processing is performed
+                    guidance::applyOverrides(BaseAPI::facade, steps, leg_geometry);
+
+                    // Collapse segregated steps before others
+                    steps = guidance::collapseSegregatedTurnInstructions(std::move(steps));
+
+                    /* Perform step-based post-processing.
+                     *
+                     * Using post-processing on basis of route-steps for a single leg at a time
+                     * comes at the cost that we cannot count the correct exit for roundabouts.
+                     * We can only emit the exit nr/intersections up to/starting at a part of the
+                     *leg. If a roundabout is not terminated in a leg, we will end up with a
+                     *enter-roundabout
+                     * and exit-roundabout-nr where the exit nr is out of sync with the previous
+                     *enter.
+                     *
+                     *         | S |
+                     *         *   *
+                     *  ----*        * ----
+                     *                  T
+                     *  ----*        * ----
+                     *       V *   *
+                     *         |   |
+                     *         |   |
+                     *
+                     * Coming from S via V to T, we end up with the legs S->V and V->T. V-T will say
+                     *to take the second exit, even though counting from S it would be the third.
+                     * For S, we only emit `roundabout` without an exit number, showing that we
+                     *enter a roundabout to find a via point. The same exit will be emitted, though,
+                     *if we should start routing at S, making the overall response consistent.
+                     *
+                     * ⚠ CAUTION: order of post-processing steps is important
+                     *    - handleRoundabouts must be called before collapseTurnInstructions that
+                     *      expects post-processed roundabouts
+                     */
+
+                    guidance::trimShortSegments(steps, leg_geometry);
+                    leg.steps = guidance::handleRoundabouts(std::move(steps));
+                    leg.steps = guidance::collapseTurnInstructions(std::move(leg.steps));
+                    leg.steps = guidance::anticipateLaneChange(std::move(leg.steps));
+                    leg.steps = guidance::buildIntersections(std::move(leg.steps));
+                    leg.steps = guidance::suppressShortNameSegments(std::move(leg.steps));
+                    leg.steps = guidance::assignRelativeLocations(std::move(leg.steps),
+                                                                  leg_geometry,
+                                                                  phantoms.source_phantom,
+                                                                  phantoms.target_phantom);
+                    leg_geometry = guidance::resyncGeometry(std::move(leg_geometry), leg.steps);
+                }
             }
 
             leg_geometries.push_back(std::move(leg_geometry));

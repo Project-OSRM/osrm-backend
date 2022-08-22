@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
                           {FloatLongitude{-73.981495}, FloatLatitude{40.768275}}};
     geometry.segment_offsets = {0, 2};
     geometry.segment_distances = {1.9076601161280742};
-    geometry.osm_node_ids = {OSMNodeID{0}, OSMNodeID{1}, OSMNodeID{2}};
+    geometry.node_ids = {NodeID{0}, NodeID{1}, NodeID{2}};
     geometry.annotations = {{1.9076601161280742, 0.2, 0.2, 0}, {0, 0, 0, 0}};
 
     trimShortSegments(steps, geometry);
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
     BOOST_CHECK_EQUAL(geometry.segment_offsets.back(), 1);
     BOOST_CHECK_EQUAL(geometry.annotations.size(), 1);
     BOOST_CHECK_EQUAL(geometry.locations.size(), 2);
-    BOOST_CHECK_EQUAL(geometry.osm_node_ids.size(), 2);
+    BOOST_CHECK_EQUAL(geometry.node_ids.size(), 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
