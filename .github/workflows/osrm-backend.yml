@@ -469,9 +469,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{github.workspace}}/test/cache
-        key: v2-test-${{ matrix.name }}-${{ github.sha }}
+        key: v3-test-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
-          v2-test-${{ matrix.name }}-
+          v3-test-${{ matrix.name }}-
 
     - name: Prepare environment
       run: |
