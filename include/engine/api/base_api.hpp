@@ -56,8 +56,8 @@ class BaseAPI
             // TODO: check forward/reverse
             return json::makeWaypoint(
                 phantom.location,
-                util::coordinate_calculation::fccApproximateDistance(phantom.location,
-                                                                     phantom.input_location),
+                util::coordinate_calculation::greatCircleDistance(phantom.location,
+                                                                  phantom.input_location),
                 facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id)).to_string(),
                 Hint{phantom, facade.GetCheckSum()});
         }
@@ -66,8 +66,8 @@ class BaseAPI
             // TODO: check forward/reverse
             return json::makeWaypoint(
                 phantom.location,
-                util::coordinate_calculation::fccApproximateDistance(phantom.location,
-                                                                     phantom.input_location),
+                util::coordinate_calculation::greatCircleDistance(phantom.location,
+                                                                  phantom.input_location),
                 facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id))
                     .to_string());
         }
@@ -114,7 +114,7 @@ class BaseAPI
 
         auto waypoint = std::make_unique<fbresult::WaypointBuilder>(*builder);
         waypoint->add_location(&location);
-        waypoint->add_distance(util::coordinate_calculation::fccApproximateDistance(
+        waypoint->add_distance(util::coordinate_calculation::greatCircleDistance(
             phantom.location, phantom.input_location));
         waypoint->add_name(name_string);
         if (parameters.generate_hints)

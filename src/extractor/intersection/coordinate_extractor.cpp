@@ -146,12 +146,12 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
         // do the best of what we can.
         coordinates =
             TrimCoordinatesToLength(std::move(coordinates), LOOKAHEAD_DISTANCE_WITHOUT_LANES);
-        if (coordinates.size() > 2 && util::coordinate_calculation::haversineDistance(
+        if (coordinates.size() > 2 && util::coordinate_calculation::greatCircleDistance(
                                           turn_coordinate, coordinates[1]) < ASSUMED_LANE_WIDTH)
         {
             const auto initial_distance =
-                util::coordinate_calculation::haversineDistance(turn_coordinate, coordinates[1]);
-            const auto total_distance = util::coordinate_calculation::haversineDistance(
+                util::coordinate_calculation::greatCircleDistance(turn_coordinate, coordinates[1]);
+            const auto total_distance = util::coordinate_calculation::greatCircleDistance(
                 turn_coordinate, coordinates.back());
 
             if (initial_distance > ASSUMED_LANE_WIDTH && total_distance > initial_distance)
@@ -169,7 +169,7 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
     }
 
     const auto first_distance =
-        util::coordinate_calculation::haversineDistance(coordinates[0], coordinates[1]);
+        util::coordinate_calculation::greatCircleDistance(coordinates[0], coordinates[1]);
 
     // the lane count might not always be set. We need to assume a positive number, though. Here we
     // select the number of lanes to operate on
@@ -369,7 +369,7 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
             std::move(coordinates), 3 * skipping_inaccuracies_distance, segment_distances);
         BOOST_ASSERT(coordinates.size() >= 2);
         segment_distances.resize(coordinates.size());
-        segment_distances.back() = util::coordinate_calculation::haversineDistance(
+        segment_distances.back() = util::coordinate_calculation::greatCircleDistance(
             *(coordinates.end() - 2), coordinates.back());
         const auto vector_head = coordinates.back();
         coordinates = TrimCoordinatesToLength(
@@ -476,7 +476,7 @@ util::Coordinate CoordinateExtractor::ExtractCoordinateAtLength(
         [distance, &accumulated_distance, last_coordinate = coordinates.front()](
             const util::Coordinate coordinate) mutable {
             const double segment_distance =
-                util::coordinate_calculation::haversineDistance(last_coordinate, coordinate);
+                util::coordinate_calculation::greatCircleDistance(last_coordinate, coordinate);
             const auto result = (accumulated_distance + segment_distance) >= distance;
             if (!result)
             {
@@ -497,7 +497,7 @@ util::Coordinate CoordinateExtractor::ExtractCoordinateAtLength(
     const auto interpolation_factor =
         ComputeInterpolationFactor(distance - accumulated_distance,
                                    0,
-                                   util::coordinate_calculation::haversineDistance(
+                                   util::coordinate_calculation::greatCircleDistance(
                                        *std::prev(coordinate_after), *coordinate_after));
 
     return util::coordinate_calculation::interpolateLinear(
@@ -533,7 +533,7 @@ util::Coordinate CoordinateExtractor::GetCoordinateCloseToTurn(const NodeID from
         const auto far_enough_away =
             [start_coordinate, compressedGeometryToCoordinate](
                 const CompressedEdgeContainer::OnewayCompressedEdge &compressed_edge) {
-                return util::coordinate_calculation::haversineDistance(
+                return util::coordinate_calculation::greatCircleDistance(
                            compressedGeometryToCoordinate(compressed_edge), start_coordinate) > 1;
             };
 
@@ -627,7 +627,7 @@ CoordinateExtractor::GetMaxDeviation(std::vector<util::Coordinate>::const_iterat
                                  .second;
         // and calculate the distance between the intermediate coordinate and the coordinate
         // on the osrm-way
-        return util::coordinate_calculation::haversineDistance(coord_between, coordinate);
+        return util::coordinate_calculation::greatCircleDistance(coord_between, coordinate);
     };
 
     // note: we don't accumulate here but rather compute the maximum. The functor passed here is not
@@ -671,7 +671,7 @@ bool CoordinateExtractor::IsCurve(const std::vector<util::Coordinate> &coordinat
         auto coord_between =
             util::coordinate_calculation::projectPointOnSegment(line_start, line_end, point).second;
         // and calculate the distance between the intermediate coordinate and the coordinate
-        return util::coordinate_calculation::haversineDistance(coord_between, point);
+        return util::coordinate_calculation::greatCircleDistance(coord_between, point);
     };
 
     // a curve needs to be on one side of the coordinate array
@@ -899,7 +899,7 @@ CoordinateExtractor::PrepareLengthCache(const std::vector<util::Coordinate> &coo
                   limit,
                   &segment_distances,
                   accumulated_distance = 0.](const util::Coordinate current_coordinate) mutable {
-                     const auto distance = util::coordinate_calculation::haversineDistance(
+                     const auto distance = util::coordinate_calculation::greatCircleDistance(
                          last_coordinate, current_coordinate);
                      accumulated_distance += distance;
                      last_coordinate = current_coordinate;
@@ -924,8 +924,8 @@ CoordinateExtractor::TrimCoordinatesToLength(std::vector<util::Coordinate> coord
         [&coordinate_index, &distance_to_current_coordinate, &coordinates]() {
             const auto new_distance =
                 distance_to_current_coordinate +
-                util::coordinate_calculation::haversineDistance(coordinates[coordinate_index - 1],
-                                                                coordinates[coordinate_index]);
+                util::coordinate_calculation::greatCircleDistance(coordinates[coordinate_index - 1],
+                                                                  coordinates[coordinate_index]);
             return new_distance;
         };
 
@@ -941,8 +941,8 @@ CoordinateExtractor::TrimCoordinatesToLength(std::vector<util::Coordinate> coord
             coordinates.erase(coordinates.begin() + length_cache.size(), coordinates.end());
 
         const auto distance_between_last_coordinates =
-            util::coordinate_calculation::haversineDistance(*(coordinates.end() - 2),
-                                                            *(coordinates.end() - 1));
+            util::coordinate_calculation::greatCircleDistance(*(coordinates.end() - 2),
+                                                              *(coordinates.end() - 1));
 
         if (distance_between_last_coordinates > 0)
         {
@@ -991,7 +991,7 @@ CoordinateExtractor::GetCorrectedCoordinate(const util::Coordinate fixpoint,
 {
     // if the coordinates are close together, we were not able to look far ahead, so
     // we can use the end-coordinate
-    if (util::coordinate_calculation::haversineDistance(vector_base, vector_head) <
+    if (util::coordinate_calculation::greatCircleDistance(vector_base, vector_head) <
         DESIRED_COORDINATE_DIFFERENCE)
     {
         return vector_head;
@@ -1054,7 +1054,7 @@ CoordinateExtractor::SampleCoordinates(const std::vector<util::Coordinate> &coor
         if (total_length > max_sample_length)
             return true;
 
-        const auto distance_between = util::coordinate_calculation::haversineDistance(
+        const auto distance_between = util::coordinate_calculation::greatCircleDistance(
             previous_coordinate, current_coordinate);
 
         if (carry_length + distance_between >= rate)
@@ -1123,7 +1123,7 @@ CoordinateExtractor::TrimCoordinatesByLengthFront(std::vector<util::Coordinate> 
     for (std::size_t next_index = 1; next_index < coordinates.size(); ++next_index)
     {
         const double next_distance =
-            distance_to_index + util::coordinate_calculation::haversineDistance(
+            distance_to_index + util::coordinate_calculation::greatCircleDistance(
                                     coordinates[index], coordinates[next_index]);
         if (next_distance >= desired_length)
         {

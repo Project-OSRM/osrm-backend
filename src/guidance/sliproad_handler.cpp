@@ -452,8 +452,8 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
             // Only check for curvature and ~90 degree when it makes sense to do so.
             const constexpr auto MIN_LENGTH = 3.;
 
-            const auto length = haversineDistance(node_coordinates[intersection_node_id],
-                                                  node_coordinates[main_road_intersection->node]);
+            const auto length = greatCircleDistance(node_coordinates[intersection_node_id],
+                                                    node_coordinates[main_road_intersection->node]);
 
             const double minimal_crossroad_angle_of_intersection = 40.;
 
@@ -740,8 +740,8 @@ bool SliproadHandler::isValidSliproadArea(const double max_area,
     const auto second = node_coordinates[b];
     const auto third = node_coordinates[c];
 
-    const auto length = haversineDistance(first, second);
-    const auto heigth = haversineDistance(second, third);
+    const auto length = greatCircleDistance(first, second);
+    const auto heigth = greatCircleDistance(second, third);
 
     const auto area = (length * heigth) / 2.;
 

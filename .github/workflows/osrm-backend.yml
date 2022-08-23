@@ -46,7 +46,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Use Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: 12
     - name: Enable Node.js cache
@@ -68,12 +68,12 @@ jobs:
         ./scripts/format.sh && ./scripts/error_on_dirty.sh
         node ./scripts/validate_changelog.js
         npm run docs && ./scripts/error_on_dirty.sh
-  
+
   docker-image:
     needs: format-taginfo-docs
     runs-on: ubuntu-22.04
     continue-on-error: false
-    steps:       
+    steps:
       - name: Check out the repo
         uses: actions/checkout@v3
       - name: Enable osm.pbf cache
@@ -85,7 +85,7 @@ jobs:
             v1-berlin-osm-pbf
       - name: Docker build
         run: |
-          docker build -t osrm-backend-local -f docker/Dockerfile . 
+          docker build -t osrm-backend-local -f docker/Dockerfile .
       - name: Test Docker image
         run: |
           if [ ! -f "${PWD}/berlin-latest.osm.pbf" ]; then
@@ -348,8 +348,7 @@ jobs:
           - name: conan-osx-release-node-latest
             build_node_package: true
             continue-on-error: true
-            # TODO: Use node 'latest' once supported: https://github.com/actions/setup-node/issues/257
-            node: 16
+            node: latest
             runs-on: macos-11
             BUILD_TYPE: Release
             CCOMPILER: clang
@@ -361,8 +360,7 @@ jobs:
           - name: node-latest-conan-linux-release
             build_node_package: true
             continue-on-error: true
-            # TODO: Use node 'latest' once supported: https://github.com/actions/setup-node/issues/257
-            node: 16
+            node: latest
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
             CLANG_VERSION: 6.0.0
@@ -373,8 +371,7 @@ jobs:
           - name: node-latest-conan-linux-debug
             build_node_package: true
             continue-on-error: true
-            # TODO: Use node 'latest' once supported: https://github.com/actions/setup-node/issues/257
-            node: 16
+            node: latest
             runs-on: ubuntu-20.04
             BUILD_TYPE: Debug
             CLANG_VERSION: 6.0.0
@@ -431,7 +428,7 @@ jobs:
       CXXCOMPILER: ${{ matrix.CXXCOMPILER }}
       CXXFLAGS: ${{ matrix.CXXFLAGS }}
       ENABLE_ASSERTIONS: ${{ matrix.ENABLE_ASSERTIONS }}
-      ENABLE_CLANG_TIDY: ${{ matrix.ENABLE_CLANG_TIDY }} 
+      ENABLE_CLANG_TIDY: ${{ matrix.ENABLE_CLANG_TIDY }}
       ENABLE_COVERAGE: ${{ matrix.ENABLE_COVERAGE }}
       ENABLE_GLIBC_WORKAROUND: ${{ matrix.ENABLE_GLIBC_WORKAROUND }}
       ENABLE_CONAN: ${{ matrix.ENABLE_CONAN }}
@@ -444,7 +441,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Use Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node }}
     - name: Enable Node.js cache
@@ -472,9 +469,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{github.workspace}}/test/cache
-        key: test-${{ matrix.name }}-${{ github.sha }}
+        key: v3-test-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
-          test-${{ matrix.name }}-
+          v3-test-${{ matrix.name }}-
 
     - name: Prepare environment
       run: |
@@ -662,7 +659,7 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
 
   ci-complete:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     needs: [build-test-publish, docker-image, windows]
     steps:
     - run: echo "CI complete"

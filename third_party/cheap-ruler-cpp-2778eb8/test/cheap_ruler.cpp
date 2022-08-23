@@ -1,5 +1,6 @@
 #include <mapbox/cheap_ruler.hpp>
 #include <gtest/gtest.h>
+#include <random>
 
 #include "fixtures/lines.hpp"
 #include "fixtures/turf.hpp"
@@ -60,6 +61,13 @@ TEST_F(CheapRulerTest, destination) {
 }
 
 TEST_F(CheapRulerTest, lineDistance) {
+    {
+        cr::line_string emptyLine {};
+        auto expected = 0.0;
+        auto actual = ruler.lineDistance(emptyLine);
+        assertErr(expected, actual, 0.0);
+    }
+
     for (unsigned i = 0; i < lines.size(); ++i) {
         auto expected = turf_lineDistance[i];
         auto actual = ruler.lineDistance(lines[i]);
@@ -88,6 +96,16 @@ TEST_F(CheapRulerTest, area) {
 }
 
 TEST_F(CheapRulerTest, along) {
+    {
+        cr::point emptyPoint {};
+        cr::line_string emptyLine {};
+        auto expected = emptyPoint;
+        auto actual = ruler.along(emptyLine, 0.0);
+
+        assertErr(expected.x, actual.x, 0.0);
+        assertErr(expected.y, actual.y, 0.0);
+    }
+
     for (unsigned i = 0; i < lines.size(); ++i) {
         auto expected = turf_along[i];
         auto actual = ruler.along(lines[i], turf_along_dist[i]);
@@ -110,12 +128,21 @@ TEST_F(CheapRulerTest, pointOnLine) {
     cr::line_string line = {{ -77.031669, 38.878605 }, { -77.029609, 38.881946 }};
     auto result = ruler.pointOnLine(line, { -77.034076, 38.882017 });
 
-    ASSERT_EQ(std::get<0>(result), cr::point(-77.03052697027461, 38.880457194811896)); // point
+    assertErr(std::get<0>(result).x, -77.03052689033436, 1e-6);
+    assertErr(std::get<0>(result).y, 38.880457324462576, 1e-6);
     ASSERT_EQ(std::get<1>(result), 0u); // index
-    ASSERT_EQ(std::get<2>(result), 0.5543833618360235); // t
+    assertErr(std::get<2>(result), 0.5544221677861756, 1e-6); // t
 
     ASSERT_EQ(std::get<2>(ruler.pointOnLine(line, { -80., 38. })), 0.) << "t is not less than 0";
     ASSERT_EQ(std::get<2>(ruler.pointOnLine(line, { -75., 38. })), 1.) << "t is not bigger than 1";
+}
+
+TEST_F(CheapRulerTest, pointToSegmentDistance) {
+    cr::point p{ -77.034076, 38.882017 };
+    cr::point p0{ -77.031669, 38.878605 };
+    cr::point p1{ -77.029609, 38.881946 };
+    const auto distance = ruler.pointToSegmentDistance(p, p0, p1);
+    assertErr(0.37461484020420416, distance, 1e-6);
 }
 
 TEST_F(CheapRulerTest, lineSlice) {
@@ -127,11 +154,19 @@ TEST_F(CheapRulerTest, lineSlice) {
         auto expected = turf_lineSlice[i];
         auto actual = ruler.lineDistance(ruler.lineSlice(start, stop, line));
 
-        assertErr(expected, actual, 1e-5);
+        /// @todo Should update turf_lineSlice and revert maxError back.
+        assertErr(expected, actual, 1e-4);
     }
 }
 
 TEST_F(CheapRulerTest, lineSliceAlong) {
+    {
+        cr::line_string emptyLine {};
+        auto expected = ruler.lineDistance(emptyLine);
+        auto actual = ruler.lineDistance(ruler.lineSliceAlong(0.0, 0.0, emptyLine));
+        assertErr(expected, actual, 0.0);
+    }
+
     for (unsigned i = 0; i < lines.size(); ++i) {
         if (i == 46) {
             // skip due to Turf bug https://github.com/Turfjs/turf/issues/351
@@ -143,7 +178,8 @@ TEST_F(CheapRulerTest, lineSliceAlong) {
         auto expected = turf_lineSlice[i];
         auto actual = ruler.lineDistance(ruler.lineSliceAlong(dist * 0.3, dist * 0.7, line));
 
-        assertErr(expected, actual, 1e-5);
+        /// @todo Should update turf_lineSlice and revert maxError back.
+        assertErr(expected, actual, 1e-4);
     }
 }
 
@@ -154,7 +190,7 @@ TEST_F(CheapRulerTest, lineSliceReverse) {
     auto stop = ruler.along(line, dist * 0.3);
     auto actual = ruler.lineDistance(ruler.lineSlice(start, stop, line));
 
-    ASSERT_EQ(actual, 0.018676802802910702);
+    assertErr(0.018676476689649835, actual, 1e-6);
 }
 
 TEST_F(CheapRulerTest, bufferPoint) {
@@ -173,7 +209,10 @@ TEST_F(CheapRulerTest, bufferBBox) {
     cr::box bbox({ 30, 38 }, { 40, 39 });
     cr::box bbox2 = ruler.bufferBBox(bbox, 1);
 
-    ASSERT_EQ(bbox2, cr::box({ 29.989319515875376, 37.99098271225711 }, { 40.01068048412462, 39.00901728774289 }));
+    assertErr(bbox2.min.x,  29.989319515875376, 1e-6);
+    assertErr(bbox2.min.y,  37.99098271225711, 1e-6);
+    assertErr(bbox2.max.x,  40.01068048412462, 1e-6);
+    assertErr(bbox2.max.y,  39.00901728774289, 1e-6);
 }
 
 TEST_F(CheapRulerTest, insideBBox) {
@@ -191,6 +230,43 @@ TEST_F(CheapRulerTest, fromTile) {
     cr::point p2(30.51, 50.51);
 
     assertErr(ruler1.distance(p1, p2), ruler2.distance(p1, p2), 2e-5);
+}
+
+TEST_F(CheapRulerTest, longitudeWrap) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::bernoulli_distribution d(0.5); // true with prob 0.5
+
+    auto r = cr::CheapRuler(50.5);
+    cr::polygon poly(1);
+    auto& ring = poly[0];
+    cr::line_string line;
+    cr::point origin(0, 50.5);  // Greenwich
+    auto rad = 1000.0;
+    // construct a regular dodecagon
+    for (int i = -180; i <= 180; i += 30) {
+      auto p = r.destination(origin, rad, i);
+      // shift randomly east/west to the international date line
+      p.x += d(gen) ? 180 : -180;
+      ring.push_back(p);
+      line.push_back(p);
+    }
+    auto p = r.lineDistance(line);
+    auto a = r.area(poly);
+    // cheap_ruler does planar calculations, so the perimeter and area of a
+    // planar regular dodecagon with circumradius rad are used in these checks.
+    // For the record, the results for rad = 1000 km are:
+    //        perimeter    area
+    // planar 6211.657082  3000000
+    // WGS84  6187.959236  2996317.6328
+    // error  0.38%        0.12%
+    assertErr(12 * rad / sqrt(2 + sqrt(3.0)), p, 1e-12);
+    assertErr(3 * rad * rad, a, 1e-12);
+    for (int j = 1; j < (int)line.size(); ++j) {
+      auto azi = r.bearing(line[j-1], line[j]);
+      // offset expect and actual by 1 to make err criterion absolute
+      assertErr(1, std::remainder(270 - 15 + 30*j - azi, 360) + 1, 1e-12);
+      }
 }
 
 int main(int argc, char **argv) {

@@ -19,8 +19,8 @@ BOOST_AUTO_TEST_CASE(unchanged_collapse_route_result)
     PhantomNode target;
     source.forward_segment_id = {1, true};
     target.forward_segment_id = {6, true};
-    PathData pathy{0, 2, 17, false, 2, 3, 4, 5, 0, {}, 4, 2, {}, 2, {1.0}, {1.0}, false};
-    PathData kathy{0, 1, 16, false, 1, 2, 3, 4, 1, {}, 3, 1, {}, 1, {2.0}, {3.0}, false};
+    PathData pathy{0, 2, 2, 3, 4, 5, 2, boost::none};
+    PathData kathy{0, 1, 1, 2, 3, 4, 1, boost::none};
     InternalRouteResult one_leg_result;
     one_leg_result.unpacked_path_segments = {{pathy, kathy}};
     one_leg_result.segment_end_coordinates = {PhantomNodes{source, target}};
@@ -37,13 +37,11 @@ BOOST_AUTO_TEST_CASE(unchanged_collapse_route_result)
 
 BOOST_AUTO_TEST_CASE(two_legs_to_one_leg)
 {
-    // from_edge_based_node, turn_via_node, name_id, is_segregated, weight_until_turn,
-    // weight_of_turn,
-    // duration_until_turn, duration_of_turn, turn_instruction, lane_data, travel_mode, classes,
-    // entry_class, datasource_id, pre_turn_bearing, post_turn_bearing, left_hand
-    PathData pathy{0, 2, 17, false, 2, 3, 4, 5, 0, {}, 4, 2, {}, 2, {1.0}, {1.0}, false};
-    PathData kathy{0, 1, 16, false, 1, 2, 3, 4, 1, {}, 3, 1, {}, 1, {2.0}, {3.0}, false};
-    PathData cathy{0, 3, 16, false, 1, 2, 3, 4, 1, {}, 3, 1, {}, 1, {2.0}, {3.0}, false};
+    // from_edge_based_node, turn_via_node, weight_until_turn, weight_of_turn,
+    // duration_until_turn, duration_of_turn, datasource_id, turn_edge
+    PathData pathy{0, 2, 2, 3, 4, 5, 2, boost::none};
+    PathData kathy{0, 1, 1, 2, 3, 4, 1, boost::none};
+    PathData cathy{0, 3, 1, 2, 3, 4, 1, boost::none};
     PhantomNode node_1;
     PhantomNode node_2;
     PhantomNode node_3;
@@ -73,11 +71,11 @@ BOOST_AUTO_TEST_CASE(two_legs_to_one_leg)
 
 BOOST_AUTO_TEST_CASE(three_legs_to_two_legs)
 {
-    PathData pathy{0, 2, 17, false, 2, 3, 4, 5, 0, {}, 4, 2, {}, 2, {1.0}, {1.0}, false};
-    PathData kathy{0, 1, 16, false, 1, 2, 3, 4, 1, {}, 3, 1, {}, 1, {2.0}, {3.0}, false};
-    PathData qathy{0, 5, 16, false, 1, 2, 3, 4, 1, {}, 3, 1, {}, 1, {2.0}, {3.0}, false};
-    PathData cathy{0, 3, 16, false, 1, 2, 3, 4, 1, {}, 3, 1, {}, 1, {2.0}, {3.0}, false};
-    PathData mathy{0, 4, 18, false, 8, 9, 13, 4, 2, {}, 4, 2, {}, 2, {3.0}, {1.0}, false};
+    PathData pathy{0, 2, 2, 3, 4, 5, 2, boost::none};
+    PathData kathy{0, 1, 1, 2, 3, 4, 1, boost::none};
+    PathData qathy{0, 5, 1, 2, 3, 4, 1, boost::none};
+    PathData cathy{0, 3, 1, 2, 3, 4, 1, boost::none};
+    PathData mathy{0, 4, 8, 9, 13, 4, 2, boost::none};
     PhantomNode node_1;
     PhantomNode node_2;
     PhantomNode node_3;
@@ -117,9 +115,9 @@ BOOST_AUTO_TEST_CASE(three_legs_to_two_legs)
 
 BOOST_AUTO_TEST_CASE(two_legs_to_two_legs)
 {
-    PathData pathy{0, 2, 17, false, 2, 3, 4, 5, 0, {}, 4, 2, {}, 2, {1.0}, {1.0}, false};
-    PathData kathy{0, 1, 16, false, 1, 2, 3, 4, 1, {}, 3, 1, {}, 1, {2.0}, {3.0}, false};
-    PathData cathy{0, 3, 16, false, 1, 2, 3, 4, 1, {}, 3, 1, {}, 1, {2.0}, {3.0}, false};
+    PathData pathy{0, 2, 2, 3, 4, 5, 2, boost::none};
+    PathData kathy{0, 1, 1, 2, 3, 4, 1, boost::none};
+    PathData cathy{0, 3, 1, 2, 3, 4, 1, boost::none};
     PhantomNode node_1;
     PhantomNode node_2;
     PhantomNode node_3;

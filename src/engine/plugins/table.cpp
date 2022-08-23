@@ -116,9 +116,9 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                     auto distance_estimate =
                         params.fallback_coordinate_type ==
                                 api::TableParameters::FallbackCoordinateType::Input
-                            ? util::coordinate_calculation::fccApproximateDistance(
+                            ? util::coordinate_calculation::greatCircleDistance(
                                   source.input_location, destination.input_location)
-                            : util::coordinate_calculation::fccApproximateDistance(
+                            : util::coordinate_calculation::greatCircleDistance(
                                   source.location, destination.location);
 
                     result_tables_pair.first[table_index] =

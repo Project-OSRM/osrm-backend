@@ -75,10 +75,14 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const datafacade::BaseDa
 
     std::vector<NamedSegment> segments(route_data.size());
     std::uint32_t index = 0;
-    std::transform(
-        route_data.begin(), route_data.end(), segments.begin(), [&index](const PathData &point) {
-            return NamedSegment{point.duration_until_turn, index++, point.name_id};
-        });
+    std::transform(route_data.begin(),
+                   route_data.end(),
+                   segments.begin(),
+                   [&index, &facade](const PathData &point) {
+                       return NamedSegment{point.duration_until_turn,
+                                           index++,
+                                           facade.GetNameIndex(point.from_edge_based_node)};
+                   });
     const auto target_duration =
         target_traversed_in_reverse ? target_node.reverse_duration : target_node.forward_duration;
     const auto target_node_id = target_traversed_in_reverse ? target_node.reverse_segment_id.id
@@ -124,21 +128,59 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const datafacade::BaseDa
 }
 } // namespace detail
 
+inline std::string assembleSummary(const datafacade::BaseDataFacade &facade,
+                                   const std::vector<PathData> &route_data,
+                                   const PhantomNode &target_node,
+                                   const bool target_traversed_in_reverse)
+{
+    auto summary_array = detail::summarizeRoute<detail::MAX_USED_SEGMENTS>(
+        facade, route_data, target_node, target_traversed_in_reverse);
+
+    BOOST_ASSERT(detail::MAX_USED_SEGMENTS > 0);
+    BOOST_ASSERT(summary_array.begin() != summary_array.end());
+
+    // transform a name_id into a string containing either the name, or -if the name is empty-
+    // the reference.
+    const auto name_id_to_string = [&](const NameID name_id) {
+        const auto name = facade.GetNameForID(name_id);
+        if (!name.empty())
+            return name.to_string();
+        else
+        {
+            const auto ref = facade.GetRefForID(name_id);
+            return ref.to_string();
+        }
+    };
+
+    const auto not_empty = [&](const std::string &name) { return !name.empty(); };
+
+    const auto summary_names = summary_array | boost::adaptors::transformed(name_id_to_string) |
+                               boost::adaptors::filtered(not_empty);
+    return boost::algorithm::join(summary_names, ", ");
+}
+
 inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
                             const std::vector<PathData> &route_data,
-                            const LegGeometry &leg_geometry,
                             const PhantomNode &source_node,
                             const PhantomNode &target_node,
-                            const bool target_traversed_in_reverse,
-                            const bool needs_summary)
+                            const bool target_traversed_in_reverse)
 {
+    auto distance = 0.;
+    auto prev_coordinate = source_node.location;
+    for (const auto &path_point : route_data)
+    {
+        auto coordinate = facade.GetCoordinateOfNode(path_point.turn_via_node);
+        distance += util::coordinate_calculation::greatCircleDistance(prev_coordinate, coordinate);
+        prev_coordinate = coordinate;
+    }
+    distance +=
+        util::coordinate_calculation::greatCircleDistance(prev_coordinate, target_node.location);
+
     const auto target_duration =
         (target_traversed_in_reverse ? target_node.reverse_duration : target_node.forward_duration);
     const auto target_weight =
         (target_traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight);
 
-    auto distance = std::accumulate(
-        leg_geometry.segment_distances.begin(), leg_geometry.segment_distances.end(), 0.);
     auto duration = std::accumulate(
         route_data.begin(), route_data.end(), 0, [](const double sum, const PathData &data) {
             return sum + data.duration_until_turn;
@@ -182,39 +224,10 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
         duration = std::max(0, duration);
     }
 
-    std::string summary;
-    if (needs_summary)
-    {
-        auto summary_array = detail::summarizeRoute<detail::MAX_USED_SEGMENTS>(
-            facade, route_data, target_node, target_traversed_in_reverse);
-
-        BOOST_ASSERT(detail::MAX_USED_SEGMENTS > 0);
-        BOOST_ASSERT(summary_array.begin() != summary_array.end());
-
-        // transform a name_id into a string containing either the name, or -if the name is empty-
-        // the reference.
-        const auto name_id_to_string = [&](const NameID name_id) {
-            const auto name = facade.GetNameForID(name_id);
-            if (!name.empty())
-                return name.to_string();
-            else
-            {
-                const auto ref = facade.GetRefForID(name_id);
-                return ref.to_string();
-            }
-        };
-
-        const auto not_empty = [&](const std::string &name) { return !name.empty(); };
-
-        const auto summary_names = summary_array | boost::adaptors::transformed(name_id_to_string) |
-                                   boost::adaptors::filtered(not_empty);
-        summary = boost::algorithm::join(summary_names, ", ");
-    }
-
     return RouteLeg{std::round(distance * 10.) / 10.,
                     duration / 10.,
                     weight / facade.GetWeightMultiplier(),
-                    summary,
+                    "",
                     {}};
 }
 

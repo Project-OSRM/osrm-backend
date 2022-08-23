@@ -45,7 +45,7 @@ Feature: Bicycle - Exclude flags
 
         When I match I should get
             | trace | matchings | duration |
-            | abcf  | abcf      | 301.2    |
+            | abcf  | abcf      | 301      |
 
         When I request a travel time matrix I should get
             |   | a          | f        |

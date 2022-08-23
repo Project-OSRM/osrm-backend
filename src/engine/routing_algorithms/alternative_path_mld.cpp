@@ -137,7 +137,7 @@ Parameters parametersFromRequest(const PhantomNodes &phantom_node_pair)
 {
     Parameters parameters;
 
-    const auto distance = util::coordinate_calculation::haversineDistance(
+    const auto distance = util::coordinate_calculation::greatCircleDistance(
         phantom_node_pair.source_phantom.location, phantom_node_pair.target_phantom.location);
 
     // 10km

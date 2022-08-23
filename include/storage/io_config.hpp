@@ -25,6 +25,7 @@ struct IOConfig
     }
 
     bool IsValid() const;
+    std::vector<std::string> GetMissingFiles() const;
     boost::filesystem::path GetPath(const std::string &fileName) const
     {
         if (!IsConfigured(fileName, required_input_files) &&

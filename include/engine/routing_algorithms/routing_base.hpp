@@ -176,11 +176,6 @@ void annotatePath(const FacadeT &facade,
         const auto &edge_data = facade.GetEdgeData(*edge);
         const auto turn_id = edge_data.turn_id; // edge-based graph edge index
         const auto node_id = *node_from;        // edge-based graph node index
-        const auto name_index = facade.GetNameIndex(node_id);
-        const bool is_segregated = facade.IsSegregated(node_id);
-        const auto turn_instruction = facade.GetTurnInstructionForEdgeID(turn_id);
-        const extractor::TravelMode travel_mode = facade.GetTravelMode(node_id);
-        const auto classes = facade.GetClassData(node_id);
 
         const auto geometry_index = facade.GetGeometryIndex(node_id);
         get_segment_geometry(geometry_index);
@@ -206,45 +201,29 @@ void annotatePath(const FacadeT &facade,
         }
         const std::size_t end_index = weight_vector.size();
 
-        bool is_left_hand_driving = facade.IsLeftHandDriving(node_id);
-
         BOOST_ASSERT(start_index < end_index);
         for (std::size_t segment_idx = start_index; segment_idx < end_index; ++segment_idx)
         {
             unpacked_path.push_back(
-                PathData{*node_from,
+                PathData{node_id,
                          id_vector[segment_idx + 1],
-                         name_index,
-                         is_segregated,
                          static_cast<EdgeWeight>(weight_vector[segment_idx]),
                          0,
                          static_cast<EdgeDuration>(duration_vector[segment_idx]),
                          0,
-                         guidance::TurnInstruction::NO_TURN(),
-                         {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
-                         travel_mode,
-                         classes,
-                         EMPTY_ENTRY_CLASS,
                          datasource_vector[segment_idx],
-                         osrm::guidance::TurnBearing(0),
-                         osrm::guidance::TurnBearing(0),
-                         is_left_hand_driving});
+                         boost::none});
         }
         BOOST_ASSERT(unpacked_path.size() > 0);
-        if (facade.HasLaneData(turn_id))
-            unpacked_path.back().lane_data = facade.GetLaneData(turn_id);
 
         const auto turn_duration = facade.GetDurationPenaltyForEdgeID(turn_id);
         const auto turn_weight = facade.GetWeightPenaltyForEdgeID(turn_id);
 
-        unpacked_path.back().entry_class = facade.GetEntryClass(turn_id);
-        unpacked_path.back().turn_instruction = turn_instruction;
         unpacked_path.back().duration_until_turn += turn_duration;
         unpacked_path.back().duration_of_turn = turn_duration;
         unpacked_path.back().weight_until_turn += turn_weight;
         unpacked_path.back().weight_of_turn = turn_weight;
-        unpacked_path.back().pre_turn_bearing = facade.PreTurnBearing(turn_id);
-        unpacked_path.back().post_turn_bearing = facade.PostTurnBearing(turn_id);
+        unpacked_path.back().turn_edge = turn_id;
     }
 
     std::size_t start_index = 0, end_index = 0;
@@ -280,33 +259,22 @@ void annotatePath(const FacadeT &facade,
     // t: fwd_segment 3
     // -> (U, v), (v, w), (w, x)
     // note that (x, t) is _not_ included but needs to be added later.
-    bool is_target_left_hand_driving = facade.IsLeftHandDriving(target_node_id);
     for (std::size_t segment_idx = start_index; segment_idx != end_index;
          (start_index < end_index ? ++segment_idx : --segment_idx))
     {
         BOOST_ASSERT(segment_idx < static_cast<std::size_t>(id_vector.size() - 1));
-        BOOST_ASSERT(facade.GetTravelMode(target_node_id) > 0);
         unpacked_path.push_back(
             PathData{target_node_id,
                      id_vector[start_index < end_index ? segment_idx + 1 : segment_idx - 1],
-                     facade.GetNameIndex(target_node_id),
-                     facade.IsSegregated(target_node_id),
                      static_cast<EdgeWeight>(weight_vector[segment_idx]),
                      0,
                      static_cast<EdgeDuration>(duration_vector[segment_idx]),
                      0,
-                     guidance::TurnInstruction::NO_TURN(),
-                     {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
-                     facade.GetTravelMode(target_node_id),
-                     facade.GetClassData(target_node_id),
-                     EMPTY_ENTRY_CLASS,
                      datasource_vector[segment_idx],
-                     guidance::TurnBearing(0),
-                     guidance::TurnBearing(0),
-                     is_target_left_hand_driving});
+                     boost::none});
     }
 
-    if (unpacked_path.size() > 0)
+    if (!unpacked_path.empty())
     {
         const auto source_weight = start_traversed_in_reverse
                                        ? phantom_node_pair.source_phantom.reverse_weight
@@ -428,7 +396,7 @@ template <typename FacadeT> EdgeDistance computeEdgeDistance(const FacadeT &faca
     auto geometry_range = facade.GetUncompressedForwardGeometry(geometry_index.id);
     for (auto current = geometry_range.begin(); current < geometry_range.end() - 1; ++current)
     {
-        total_distance += util::coordinate_calculation::fccApproximateDistance(
+        total_distance += util::coordinate_calculation::greatCircleDistance(
             facade.GetCoordinateOfNode(*current), facade.GetCoordinateOfNode(*std::next(current)));
     }
 

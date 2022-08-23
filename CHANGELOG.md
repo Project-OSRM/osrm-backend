@@ -1,15 +1,23 @@
 # Unreleased
   - Changes from 5.26.0
     - API:
+      - CHANGED: Add `data_version` field to responses of all services. [#5387](https://github.com/Project-OSRM/osrm-backend/pull/5387)
       - FIXED: Use Boost.Beast to parse HTTP request. [#6294](https://github.com/Project-OSRM/osrm-backend/pull/6294)
       - FIXED: Fix inefficient osrm-routed connection handling [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
+    - NodeJS:
+      - FIXED: Support `skip_waypoints` in Node bindings [#6060](https://github.com/Project-OSRM/osrm-backend/pull/6060)
     - Misc:
+      - CHANGED: missing files list is included in exception message. [#5360](https://github.com/Project-OSRM/osrm-backend/pull/5360)
+      - CHANGED: Do not use deprecated Callback::Call overload in Node bindings. [#6318](https://github.com/Project-OSRM/osrm-backend/pull/6318)
+      - FIXED: Fix distance calculation consistency. [#6315](https://github.com/Project-OSRM/osrm-backend/pull/6315)
       - FIXED: Fix performance issue after migration to sol2 3.3.0. [#6304](https://github.com/Project-OSRM/osrm-backend/pull/6304)
       - CHANGED: Pass osm_node_ids by reference in osrm::updater::Updater class. [#6298](https://github.com/Project-OSRM/osrm-backend/pull/6298)
       - FIXED: Fix bug with reading Set values from Lua scripts. [#6285](https://github.com/Project-OSRM/osrm-backend/pull/6285)
       - FIXED: Bug in bicycle profile that caused exceptions if there is a highway=bicycle in the data. [#6296](https://github.com/Project-OSRM/osrm-backend/pull/6296)
+      - FIXED: Internal refactoring of identifier types used in data facade [#6044](https://github.com/Project-OSRM/osrm-backend/pull/6044)
     - Build:
       - CHANGED: Enable performance-move-const-arg clang-tidy check. [#6319](https://github.com/Project-OSRM/osrm-backend/pull/6319)
+      - CHANGED: Use the latest node on CI. [#6317](https://github.com/Project-OSRM/osrm-backend/pull/6317)
       - CHANGED: Migrate Windows CI to GitHub Actions. [#6312](https://github.com/Project-OSRM/osrm-backend/pull/6312)
       - ADDED: Add smoke test for Docker image. [#6313](https://github.com/Project-OSRM/osrm-backend/pull/6313)
       - CHANGED: Update libosmium to version 2.18.0. [#6303](https://github.com/Project-OSRM/osrm-backend/pull/6303)
@@ -31,6 +39,11 @@
       - FIXED: Fixed Node docs generation check in CI. [#6058](https://github.com/Project-OSRM/osrm-backend/pull/6058)
       - CHANGED: Docker build, enabled arm64 build layer [#6172](https://github.com/Project-OSRM/osrm-backend/pull/6172)
       - CHANGED: Docker build, enabled apt-get update/install caching in separate layer for build phase [#6175](https://github.com/Project-OSRM/osrm-backend/pull/6175)
+      - FIXED: Bump CI complete meta job to ubuntu-20.04 [#6323](https://github.com/Project-OSRM/osrm-backend/pull/6323)
+    - Routing:
+      - CHANGED: Lazily generate optional route path data [#6045](https://github.com/Project-OSRM/osrm-backend/pull/6045)
+      - FIXED: Completed support for no_entry and no_exit turn restrictions. [#5988](https://github.com/Project-OSRM/osrm-backend/pull/5988)
+      - ADDED: Add support for non-round-trips with a single fixed endpoint. [#6050](https://github.com/Project-OSRM/osrm-backend/pull/6050)
 
 # 5.26.0
   - Changes from 5.25.0
