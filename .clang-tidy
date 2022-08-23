@@ -49,7 +49,6 @@ Checks: >
     -misc-unused-parameters,
     performance-*,
     -performance-noexcept-move-constructor,
-    -performance-move-const-arg,
     -performance-no-int-to-ptr,
     readability-*,
     -readability-avoid-const-params-in-decls,

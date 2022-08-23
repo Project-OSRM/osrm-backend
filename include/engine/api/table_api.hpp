@@ -226,6 +226,11 @@ class TableAPI final : public BaseAPI
         }
 
         response.values["code"] = "Ok";
+        auto data_timestamp = facade.GetTimestamp();
+        if (!data_timestamp.empty())
+        {
+            response.values["data_version"] = data_timestamp;
+        }
     }
 
   protected:

@@ -362,7 +362,7 @@ void test_tfse_illegal_parameters(bool use_json_only_api)
     ResetParams(locations, params);
     params.source = TripParameters::SourceType::First;
     params.roundtrip = false;
-    CheckNotImplemented(osrm, params, use_json_only_api);
+    CheckOk(osrm, params, use_json_only_api);
 
     ResetParams(locations, params);
     params.destination = TripParameters::DestinationType::Any;
@@ -372,7 +372,7 @@ void test_tfse_illegal_parameters(bool use_json_only_api)
     ResetParams(locations, params);
     params.destination = TripParameters::DestinationType::Last;
     params.roundtrip = false;
-    CheckNotImplemented(osrm, params, use_json_only_api);
+    CheckOk(osrm, params, use_json_only_api);
 
     // three parameters set
     params.source = TripParameters::SourceType::Any;
@@ -383,12 +383,12 @@ void test_tfse_illegal_parameters(bool use_json_only_api)
     params.source = TripParameters::SourceType::Any;
     params.destination = TripParameters::DestinationType::Last;
     params.roundtrip = false;
-    CheckNotImplemented(osrm, params, use_json_only_api);
+    CheckOk(osrm, params, use_json_only_api);
 
     params.source = TripParameters::SourceType::First;
     params.destination = TripParameters::DestinationType::Any;
     params.roundtrip = false;
-    CheckNotImplemented(osrm, params, use_json_only_api);
+    CheckOk(osrm, params, use_json_only_api);
 }
 BOOST_AUTO_TEST_CASE(test_tfse_illegal_parameters_old_api) { test_tfse_illegal_parameters(true); }
 BOOST_AUTO_TEST_CASE(test_tfse_illegal_parameters_new_api) { test_tfse_illegal_parameters(false); }

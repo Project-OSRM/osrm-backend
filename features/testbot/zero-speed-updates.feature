@@ -187,5 +187,5 @@ Feature: Check zero speed updates
 
         When I plan a trip I should get
             | waypoints | trips | code    |
-            | a,b,c,d   | abcda | NoTrips |
-            | d,b,c,a   | dbcad | NoTrips |
+            | a,b,c,d   |       | NoTrips |
+            | d,b,c,a   |       | NoTrips |

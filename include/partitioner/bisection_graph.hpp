@@ -24,9 +24,10 @@ namespace partitioner
 // located at for use in the inertial flow sorting by slope.
 struct BisectionNode
 {
-    BisectionNode(util::Coordinate coordinate_ = {util::FloatLongitude{0}, util::FloatLatitude{0}},
+    BisectionNode(const util::Coordinate &coordinate_ = {util::FloatLongitude{0},
+                                                         util::FloatLatitude{0}},
                   const NodeID original_id_ = SPECIAL_NODEID)
-        : coordinate(std::move(coordinate_)), original_id(original_id_)
+        : coordinate(coordinate_), original_id(original_id_)
     {
     }
 

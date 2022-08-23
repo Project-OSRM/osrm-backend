@@ -279,8 +279,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
                                      geometry.locations.begin() + offset);
             geometry.annotations.erase(geometry.annotations.begin(),
                                        geometry.annotations.begin() + offset);
-            geometry.osm_node_ids.erase(geometry.osm_node_ids.begin(),
-                                        geometry.osm_node_ids.begin() + offset);
+            geometry.node_ids.erase(geometry.node_ids.begin(), geometry.node_ids.begin() + offset);
         }
 
         auto const first_bearing = steps.front().maneuver.bearing_after;
@@ -377,7 +376,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         // remove all the last coordinates from the geometry
         geometry.locations.resize(geometry.segment_offsets.back() + 1);
         geometry.annotations.resize(geometry.segment_offsets.back());
-        geometry.osm_node_ids.resize(geometry.segment_offsets.back() + 1);
+        geometry.node_ids.resize(geometry.segment_offsets.back() + 1);
 
         BOOST_ASSERT(geometry.segment_distances.back() <= 1);
         geometry.segment_distances.pop_back();
@@ -414,7 +413,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         // This can happen if the last coordinate snaps to a node in the unpacked geometry
         geometry.locations.pop_back();
         geometry.annotations.pop_back();
-        geometry.osm_node_ids.pop_back();
+        geometry.node_ids.pop_back();
         geometry.segment_offsets.back()--;
         // since the last geometry includes the location of arrival, the arrival instruction
         // geometry overlaps with the previous segment
@@ -436,7 +435,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     }
 
     BOOST_ASSERT(geometry.segment_offsets.back() + 1 == geometry.locations.size());
-    BOOST_ASSERT(geometry.segment_offsets.back() + 1 == geometry.osm_node_ids.size());
+    BOOST_ASSERT(geometry.segment_offsets.back() + 1 == geometry.node_ids.size());
     BOOST_ASSERT(geometry.segment_offsets.back() == geometry.annotations.size());
 
     BOOST_ASSERT(steps.back().geometry_end == geometry.locations.size());
@@ -541,7 +540,7 @@ std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps)
         {
 
             // End of road is a turn that helps to identify the location of a turn. If the turn does
-            // not pass by any oter intersections, the end-of-road characteristic does not improve
+            // not pass by any other intersections, the end-of-road characteristic does not improve
             // the instructions.
             // Here we reduce the verbosity of our output by reducing end-of-road emissions in cases
             // where no intersections have been passed in between.

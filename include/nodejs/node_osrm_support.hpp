@@ -675,6 +675,22 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
         params->generate_hints = Nan::To<bool>(generate_hints).FromJust();
     }
 
+    if (Nan::Has(obj, Nan::New("skip_waypoints").ToLocalChecked()).FromJust())
+    {
+        v8::Local<v8::Value> skip_waypoints =
+            Nan::Get(obj, Nan::New("skip_waypoints").ToLocalChecked()).ToLocalChecked();
+        if (skip_waypoints.IsEmpty())
+            return false;
+
+        if (!skip_waypoints->IsBoolean())
+        {
+            Nan::ThrowError("skip_waypoints must be of type Boolean");
+            return false;
+        }
+
+        params->skip_waypoints = Nan::To<bool>(skip_waypoints).FromJust();
+    }
+
     if (Nan::Has(obj, Nan::New("exclude").ToLocalChecked()).FromJust())
     {
         v8::Local<v8::Value> exclude =

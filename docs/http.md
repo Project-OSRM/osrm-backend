@@ -507,8 +507,8 @@ Right now, the following combinations are possible:
 | true | any | last | **yes** |
 | true | any | any | **yes** |
 | false | first | last | **yes** |
-| false | first | any | no |
-| false | any | last | no |
+| false | first | any | **yes** |
+| false | any | last | **yes** |
 | false | any | any | no |
 
 #### Example Requests

@@ -15,6 +15,7 @@
 #include "util/integer_range.hpp"
 #include "util/typedefs.hpp"
 
+#include <boost/optional.hpp>
 #include <vector>
 
 namespace osrm
@@ -28,43 +29,22 @@ struct PathData
     NodeID from_edge_based_node;
     // the internal OSRM id of the OSM node id that is the via node of the turn
     NodeID turn_via_node;
-    // name of the street that leads to the turn
-    unsigned name_id;
-    // segregated edge-based node that leads to the turn
-    bool is_segregated;
     // weight that is traveled on the segment until the turn is reached
     // including the turn weight, if one exists
     EdgeWeight weight_until_turn;
-    // If this segment immediately preceeds a turn, then duration_of_turn
+    // If this segment immediately precedes a turn, then duration_of_turn
     // will contain the weight of the turn.  Otherwise it will be 0.
     EdgeWeight weight_of_turn;
     // duration that is traveled on the segment until the turn is reached,
-    // including a turn if the segment preceeds one.
+    // including a turn if the segment precedes one.
     EdgeWeight duration_until_turn;
-    // If this segment immediately preceeds a turn, then duration_of_turn
+    // If this segment immediately precedes a turn, then duration_of_turn
     // will contain the duration of the turn.  Otherwise it will be 0.
     EdgeWeight duration_of_turn;
-    // instruction to execute at the turn
-    osrm::guidance::TurnInstruction turn_instruction;
-    // turn lane data
-    util::guidance::LaneTupleIdPair lane_data;
-    // travel mode of the street that leads to the turn
-    extractor::TravelMode travel_mode : 4;
-    // user defined classed of the street that leads to the turn
-    extractor::ClassData classes;
-    // entry class of the turn, indicating possibility of turns
-    util::guidance::EntryClass entry_class;
-
     // Source of the speed value on this road segment
     DatasourceID datasource_id;
-
-    // bearing (as seen from the intersection) pre-turn
-    osrm::guidance::TurnBearing pre_turn_bearing;
-    // bearing (as seen from the intersection) post-turn
-    osrm::guidance::TurnBearing post_turn_bearing;
-
-    // Driving side of the turn
-    bool is_left_hand_driving;
+    // If segment precedes a turn, ID of the turn itself
+    boost::optional<EdgeID> turn_edge;
 };
 
 struct InternalRouteResult
