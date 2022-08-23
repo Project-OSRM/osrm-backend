@@ -23,7 +23,7 @@ inline auto contractFullGraph(ContractorGraph contractor_graph,
     auto edges = toEdges<QueryEdge>(std::move(contractor_graph));
     std::vector<bool> edge_filter(edges.size(), true);
 
-    return GraphAndFilter{QueryGraph{num_nodes, std::move(edges)}, {std::move(edge_filter)}};
+    return GraphAndFilter{QueryGraph{num_nodes, edges}, {std::move(edge_filter)}};
 }
 
 inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
@@ -91,7 +91,7 @@ inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
         edge_container.Merge(toEdges<QueryEdge>(std::move(filtered_core_graph)));
     }
 
-    return GraphAndFilter{QueryGraph{num_nodes, std::move(edge_container.edges)},
+    return GraphAndFilter{QueryGraph{num_nodes, edge_container.edges},
                           edge_container.MakeEdgeFilters()};
 }
 } // namespace contractor

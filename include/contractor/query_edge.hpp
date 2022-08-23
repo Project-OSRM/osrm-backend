@@ -58,8 +58,8 @@ struct QueryEdge
 
     QueryEdge() : source(SPECIAL_NODEID), target(SPECIAL_NODEID) {}
 
-    QueryEdge(NodeID source, NodeID target, EdgeData data)
-        : source(source), target(target), data(std::move(data))
+    QueryEdge(NodeID source, NodeID target, const EdgeData &data)
+        : source(source), target(target), data(data)
     {
     }
 

@@ -276,7 +276,7 @@ void ExtractionContainers::PrepareNodes()
                 continue;
             }
             BOOST_ASSERT(node_iter->node_id == *ref_iter);
-            *used_nodes_iter = std::move(*ref_iter);
+            *used_nodes_iter = *ref_iter;
             used_nodes_iter++;
             node_iter++;
             ref_iter++;

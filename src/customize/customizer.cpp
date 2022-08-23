@@ -96,8 +96,7 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
     auto tidied = partitioner::prepareEdgesForUsageInGraph<
         typename partitioner::MultiLevelEdgeBasedGraph::InputEdge>(std::move(directed));
 
-    auto edge_based_graph =
-        partitioner::MultiLevelEdgeBasedGraph(mlp, num_nodes, std::move(tidied));
+    auto edge_based_graph = partitioner::MultiLevelEdgeBasedGraph(mlp, num_nodes, tidied);
 
     return edge_based_graph;
 }

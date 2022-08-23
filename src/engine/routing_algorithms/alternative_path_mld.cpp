@@ -851,7 +851,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     const auto extract_packed_path_from_heaps = [&](WeightedViaNode via) {
         auto packed_path = retrievePackedPathFromHeap(forward_heap, reverse_heap, via.node);
 
-        return WeightedViaNodePackedPath{std::move(via), std::move(packed_path)};
+        return WeightedViaNodePackedPath{via, std::move(packed_path)};
     };
 
     std::vector<WeightedViaNodePackedPath> weighted_packed_paths;
