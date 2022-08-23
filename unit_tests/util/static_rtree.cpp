@@ -24,10 +24,6 @@
 #include <utility>
 #include <vector>
 
-// explicit TBB scheduler init to register resources cleanup at exit
-#include <tbb/global_control.h>
-tbb::global_control scheduler(tbb::global_control::max_allowed_parallelism, 2);
-
 BOOST_AUTO_TEST_SUITE(static_rtree)
 
 using namespace osrm;

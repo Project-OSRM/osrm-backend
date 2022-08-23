@@ -7,9 +7,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-// make sure not to leak in recursive bisection
-#include <tbb/global_control.h>
-tbb::global_control scheduler(tbb::global_control::max_allowed_parallelism, 2);
 
 using namespace osrm::partitioner;
 using namespace osrm::util;
