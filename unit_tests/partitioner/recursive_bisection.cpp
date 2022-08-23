@@ -7,7 +7,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-
 using namespace osrm::partitioner;
 using namespace osrm::util;
 
