@@ -312,7 +312,7 @@ std::vector<std::pair<bool, boost::filesystem::path>> Storage::GetStaticFiles()
     {
         if (file.first == IS_REQUIRED && !boost::filesystem::exists(file.second))
         {
-            throw util::exception("Could not find required filed: " + std::get<1>(file).string());
+            throw util::exception("Could not find required file(s): " + std::get<1>(file).string());
         }
     }
 
@@ -337,7 +337,7 @@ std::vector<std::pair<bool, boost::filesystem::path>> Storage::GetUpdatableFiles
     {
         if (file.first == IS_REQUIRED && !boost::filesystem::exists(file.second))
         {
-            throw util::exception("Could not find required filed: " + std::get<1>(file).string());
+            throw util::exception("Could not find required file(s): " + std::get<1>(file).string());
         }
     }
 
