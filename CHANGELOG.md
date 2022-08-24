@@ -7,6 +7,7 @@
     - NodeJS:
       - FIXED: Support `skip_waypoints` in Node bindings [#6060](https://github.com/Project-OSRM/osrm-backend/pull/6060)
     - Misc:
+      - ADDED: Support floats for speed value in traffic updates CSV. [#6327](https://github.com/Project-OSRM/osrm-backend/pull/6327)
       - CHANGED: missing files list is included in exception message. [#5360](https://github.com/Project-OSRM/osrm-backend/pull/5360)
       - CHANGED: Do not use deprecated Callback::Call overload in Node bindings. [#6318](https://github.com/Project-OSRM/osrm-backend/pull/6318)
       - FIXED: Fix distance calculation consistency. [#6315](https://github.com/Project-OSRM/osrm-backend/pull/6315)
