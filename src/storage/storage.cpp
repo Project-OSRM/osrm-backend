@@ -290,27 +290,27 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
 
 std::vector<std::pair<bool, boost::filesystem::path>> Storage::GetStaticFiles()
 {
-    constexpr bool REQUIRED = true;
-    constexpr bool OPTIONAL = false;
+    constexpr bool IS_REQUIRED = true;
+    constexpr bool IS_OPTIONAL = false;
 
     std::vector<std::pair<bool, boost::filesystem::path>> files = {
-        {OPTIONAL, config.GetPath(".osrm.cells")},
-        {OPTIONAL, config.GetPath(".osrm.partition")},
-        {REQUIRED, config.GetPath(".osrm.icd")},
-        {REQUIRED, config.GetPath(".osrm.properties")},
-        {REQUIRED, config.GetPath(".osrm.nbg_nodes")},
-        {REQUIRED, config.GetPath(".osrm.ebg_nodes")},
-        {REQUIRED, config.GetPath(".osrm.tls")},
-        {REQUIRED, config.GetPath(".osrm.tld")},
-        {REQUIRED, config.GetPath(".osrm.timestamp")},
-        {REQUIRED, config.GetPath(".osrm.maneuver_overrides")},
-        {REQUIRED, config.GetPath(".osrm.edges")},
-        {REQUIRED, config.GetPath(".osrm.names")},
-        {REQUIRED, config.GetPath(".osrm.ramIndex")}};
+        {IS_OPTIONAL, config.GetPath(".osrm.cells")},
+        {IS_OPTIONAL, config.GetPath(".osrm.partition")},
+        {IS_REQUIRED, config.GetPath(".osrm.icd")},
+        {IS_REQUIRED, config.GetPath(".osrm.properties")},
+        {IS_REQUIRED, config.GetPath(".osrm.nbg_nodes")},
+        {IS_REQUIRED, config.GetPath(".osrm.ebg_nodes")},
+        {IS_REQUIRED, config.GetPath(".osrm.tls")},
+        {IS_REQUIRED, config.GetPath(".osrm.tld")},
+        {IS_REQUIRED, config.GetPath(".osrm.timestamp")},
+        {IS_REQUIRED, config.GetPath(".osrm.maneuver_overrides")},
+        {IS_REQUIRED, config.GetPath(".osrm.edges")},
+        {IS_REQUIRED, config.GetPath(".osrm.names")},
+        {IS_REQUIRED, config.GetPath(".osrm.ramIndex")}};
 
     for (const auto &file : files)
     {
-        if (file.first == REQUIRED && !boost::filesystem::exists(file.second))
+        if (file.first == IS_REQUIRED && !boost::filesystem::exists(file.second))
         {
             throw util::exception("Could not find required filed: " + std::get<1>(file).string());
         }
@@ -321,21 +321,21 @@ std::vector<std::pair<bool, boost::filesystem::path>> Storage::GetStaticFiles()
 
 std::vector<std::pair<bool, boost::filesystem::path>> Storage::GetUpdatableFiles()
 {
-    constexpr bool REQUIRED = true;
-    constexpr bool OPTIONAL = false;
+    constexpr bool IS_REQUIRED = true;
+    constexpr bool IS_OPTIONAL = false;
 
     std::vector<std::pair<bool, boost::filesystem::path>> files = {
-        {OPTIONAL, config.GetPath(".osrm.mldgr")},
-        {OPTIONAL, config.GetPath(".osrm.cell_metrics")},
-        {OPTIONAL, config.GetPath(".osrm.hsgr")},
-        {REQUIRED, config.GetPath(".osrm.datasource_names")},
-        {REQUIRED, config.GetPath(".osrm.geometry")},
-        {REQUIRED, config.GetPath(".osrm.turn_weight_penalties")},
-        {REQUIRED, config.GetPath(".osrm.turn_duration_penalties")}};
+        {IS_OPTIONAL, config.GetPath(".osrm.mldgr")},
+        {IS_OPTIONAL, config.GetPath(".osrm.cell_metrics")},
+        {IS_OPTIONAL, config.GetPath(".osrm.hsgr")},
+        {IS_REQUIRED, config.GetPath(".osrm.datasource_names")},
+        {IS_REQUIRED, config.GetPath(".osrm.geometry")},
+        {IS_REQUIRED, config.GetPath(".osrm.turn_weight_penalties")},
+        {IS_REQUIRED, config.GetPath(".osrm.turn_duration_penalties")}};
 
     for (const auto &file : files)
     {
-        if (file.first == REQUIRED && !boost::filesystem::exists(file.second))
+        if (file.first == IS_REQUIRED && !boost::filesystem::exists(file.second))
         {
             throw util::exception("Could not find required filed: " + std::get<1>(file).string());
         }

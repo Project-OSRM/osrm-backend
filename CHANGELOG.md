@@ -16,6 +16,7 @@
       - FIXED: Bug in bicycle profile that caused exceptions if there is a highway=bicycle in the data. [#6296](https://github.com/Project-OSRM/osrm-backend/pull/6296)
       - FIXED: Internal refactoring of identifier types used in data facade [#6044](https://github.com/Project-OSRM/osrm-backend/pull/6044)
     - Build:
+      - CHANGED: Migrate to modern TBB version. [#6300](https://github.com/Project-OSRM/osrm-backend/pull/6300)
       - CHANGED: Enable performance-move-const-arg clang-tidy check. [#6319](https://github.com/Project-OSRM/osrm-backend/pull/6319)
       - CHANGED: Use the latest node on CI. [#6317](https://github.com/Project-OSRM/osrm-backend/pull/6317)
       - CHANGED: Migrate Windows CI to GitHub Actions. [#6312](https://github.com/Project-OSRM/osrm-backend/pull/6312)
