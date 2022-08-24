@@ -13,11 +13,11 @@
 #include "extractor/name_table.hpp"
 #include "extractor/node_based_graph_factory.hpp"
 #include "extractor/node_restriction_map.hpp"
-#include "extractor/restriction_filter.hpp"
 #include "extractor/restriction_graph.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
 #include "extractor/tarjan_scc.hpp"
+#include "extractor/turn_path_filter.hpp"
 #include "extractor/way_restriction_map.hpp"
 
 #include "guidance/files.hpp"
@@ -279,7 +279,9 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     edge_based_nodes_container =
         EdgeBasedNodeDataContainer({}, std::move(node_based_graph_factory.GetAnnotationData()));
 
-    turn_restrictions = removeInvalidRestrictions(std::move(turn_restrictions), node_based_graph);
+    turn_restrictions = removeInvalidTurnPaths(std::move(turn_restrictions), node_based_graph);
+    unresolved_maneuver_overrides =
+        removeInvalidTurnPaths(std::move(unresolved_maneuver_overrides), node_based_graph);
     auto restriction_graph = constructRestrictionGraph(turn_restrictions);
 
     const auto number_of_node_based_nodes = node_based_graph.GetNumberOfNodes();

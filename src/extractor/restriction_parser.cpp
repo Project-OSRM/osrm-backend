@@ -232,7 +232,7 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
             return {};
         }
         // Internally restrictions are represented with one 'from' and one 'to' way.
-        // Therefore we need to convert a multi from/to restriction into multiple restrictions.
+        // Therefore, we need to convert a multi from/to restriction into multiple restrictions.
         for (const auto &from : from_ways)
         {
             for (const auto &to : to_ways)
@@ -243,12 +243,12 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
                 if (is_node_restriction)
                 {
                     // template struct requires bracket for ID initialisation :(
-                    restriction.node_or_way = InputNodeRestriction{{from}, {via_node}, {to}};
+                    restriction.turn_path.node_or_way = InputViaNodePath{{from}, {via_node}, {to}};
                 }
                 else
                 {
                     // template struct requires bracket for ID initialisation :(
-                    restriction.node_or_way = InputWayRestriction{{from}, via_ways, {to}};
+                    restriction.turn_path.node_or_way = InputViaWayPath{{from}, via_ways, {to}};
                 }
                 restriction_containers.push_back(std::move(restriction));
             }

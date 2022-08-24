@@ -15,14 +15,14 @@ using namespace osrm::extractor;
 
 TurnRestriction makeWayRestriction(NodeID from, std::vector<NodeID> via, NodeID to, bool is_only)
 {
-    WayRestriction wr{from, std::move(via), to};
-    return TurnRestriction(wr, is_only);
+    ViaWayPath vwp{from, std::move(via), to};
+    return TurnRestriction({vwp}, is_only);
 }
 
 TurnRestriction makeNodeRestriction(NodeID from, NodeID via, NodeID to, bool is_only)
 {
-    NodeRestriction nr{from, via, to};
-    return TurnRestriction(nr, is_only);
+    ViaNodePath vnp{from, via, to};
+    return TurnRestriction({vnp}, is_only);
 }
 
 struct instruction
@@ -52,7 +52,7 @@ void checkInstructions(RestrictionGraph::RestrictionRange restrictions,
                    restrictions.end(),
                    std::back_inserter(actual_instructions),
                    [](const auto &restriction) {
-                       return instruction{restriction->To(), bool(restriction->is_only)};
+                       return instruction{restriction->turn_path.To(), bool(restriction->is_only)};
                    });
     std::sort(actual_instructions.begin(),
               actual_instructions.end(),

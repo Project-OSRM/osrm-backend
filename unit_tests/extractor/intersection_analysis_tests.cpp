@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
     std::vector<NodeBasedEdgeAnnotation> annotations{
         {EMPTY_NAMEID, 0, INAVLID_CLASS_DATA, TRAVEL_MODE_DRIVING, false},
         {EMPTY_NAMEID, 1, INAVLID_CLASS_DATA, TRAVEL_MODE_DRIVING, false}};
-    std::vector<TurnRestriction> restrictions{TurnRestriction{NodeRestriction{0, 2, 1}, false}};
+    std::vector<TurnRestriction> restrictions{TurnRestriction{{ViaNodePath{0, 2, 1}}, false}};
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
     std::vector<UnresolvedManeuverOverride> maneuver_overrides;
