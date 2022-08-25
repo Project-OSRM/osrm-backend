@@ -34,7 +34,6 @@ endforeach(binary)
 # For mason-enabled builds we copy over tbb's shared objects for packaging.
 # TODO: consider using statically linked tbb library (for node_osrm only!)
 if (ENABLE_CONAN)
-  message(FATAL_ERROR "DFVRSDFGDFG ${CONAN_LIB_DIRS_ONETBB}")
   foreach(libpath ${CONAN_LIB_DIRS_ONETBB})
     file(GLOB TBBGlob ${libpath}/*.*)
     foreach(filepath ${TBBGlob})
