@@ -7,6 +7,7 @@
 #include "engine/guidance/route_step.hpp"
 #include "engine/internal_route_result.hpp"
 #include "util/typedefs.hpp"
+#include "util/coordinate_calculation.hpp"
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/filtered.hpp>

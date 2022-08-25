@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <string>
-
+#include <boost/assert.hpp>
 #include "extractor/intersection/constants.hpp"
 
 namespace osrm

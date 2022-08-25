@@ -10,7 +10,7 @@
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
-#include "guidance/coordinate_extractor.hpp"
+#include "extractor/intersection/coordinate_extractor.hpp"
 #include "guidance/intersection.hpp"
 #include "util/coordinate.hpp"
 #include "util/geojson_debug_policy_toolkit.hpp"
