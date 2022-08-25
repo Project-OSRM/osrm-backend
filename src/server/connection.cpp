@@ -27,13 +27,13 @@ http::compression_type select_compression(const boost::beast::http::fields &fiel
 {
     const auto header_value = fields[boost::beast::http::field::accept_encoding];
     /* giving gzip precedence over deflate */
-    if (boost::icontains(header_value, "deflate"))
-    {
-        return http::deflate_rfc1951;
-    }
     if (boost::icontains(header_value, "gzip"))
     {
         return http::gzip_rfc1952;
+    }
+    if (boost::icontains(header_value, "deflate"))
+    {
+        return http::deflate_rfc1951;
     }
     return http::no_compression;
 }
