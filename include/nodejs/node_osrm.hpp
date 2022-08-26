@@ -5,7 +5,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-#include "D:\\a\\osrm-backend\\osrm-backend\\node_modules\\nan\\nan.h"
+#include "../../node_modules/nan/nan.h"
 #pragma GCC diagnostic pop
 
 #include <memory>
