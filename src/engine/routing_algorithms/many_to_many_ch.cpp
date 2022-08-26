@@ -120,7 +120,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
 
         auto &current_weight = weights_table[row_index * number_of_targets + column_index];
 
-        EdgeDistance nulldistance = 0;
+        EdgeDistance nulldistance = NULL_EDGE_DISTANCE;
 
         auto &current_duration = durations_table[row_index * number_of_targets + column_index];
         auto &current_distance =
