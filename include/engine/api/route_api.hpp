@@ -28,6 +28,7 @@
 #include "util/json_util.hpp"
 
 #include <iterator>
+#include <map>
 #include <vector>
 
 namespace osrm
