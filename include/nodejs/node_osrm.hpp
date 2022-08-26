@@ -5,7 +5,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-#include <nan.h>
+#include "nan.h"
 #pragma GCC diagnostic pop
 
 #include <memory>
