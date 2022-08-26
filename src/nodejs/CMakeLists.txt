@@ -11,6 +11,8 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/node_modules/node-cmake")
 include(NodeJS)
 nodejs_init()
 
+include_directories(BEFORE SYSTEM "${PROJECT_SOURCE_DIR}/node_modules/nan")
+
 message(STATUS "Configuring node_osrm bindings for NodeJs ${NODEJS_VERSION}")
 
 add_nodejs_module(node_osrm node_osrm.cpp)
