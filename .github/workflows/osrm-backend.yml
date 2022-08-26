@@ -36,6 +36,7 @@ jobs:
     - run: npm --version
     - run: npm ci --ignore-scripts
     - run: node -e "require('nan')"
+    - run: ls node_modules/nan
     - uses: microsoft/setup-msbuild@v1.1
     - name: Build
       run: |
