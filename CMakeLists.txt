@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.2)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/node_modules/nan/")
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR AND NOT MSVC_IDE)
   message(FATAL_ERROR "In-source builds are not allowed.
@@ -62,6 +61,13 @@ if (POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()
 project(OSRM C CXX)
+
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/node_modules/nan/")
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/node_modules/node-cmake")
+
+include(NodeJS)
+nodejs_init()
+
 
 include(JSONParser)
 file(READ "package.json" packagejsonraw)
