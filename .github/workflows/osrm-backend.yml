@@ -34,8 +34,8 @@ jobs:
         node-version: 16
     - run: node --version
     - run: npm --version
-    - run: npm install --ignore-scripts
-    - run: npm link --ignore-scripts
+    - run: npm ci --ignore-scripts
+    - run: node -e "require('nan')"
     - uses: microsoft/setup-msbuild@v1.1
     - name: Build
       run: |
