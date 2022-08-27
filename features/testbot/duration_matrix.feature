@@ -491,18 +491,18 @@ Feature: Basic Duration Matrix
 
         When I route I should get
           | from | to | route | distance | time | weight |
-          | a    | c  | ac,ac | 200m     | 5s   |      5 |
+          | a    | c  | ac,ac | 200m     | 1s   |      1 |
 
         When I request a travel time matrix I should get
-          |   | a | b | c |  d |
-          | a | 0 | 1 | 5 | 10 |
+          |   | a | b | c | d |
+          | a | 0 | 1 | 1 | 6 |
 
         When I request a travel time matrix I should get
           |   |  a |
           | a |  0 |
           | b |  1 |
-          | c | 15 |
-          | d | 10 |
+          | c |  1 |
+          | d |  6 |
 
     Scenario: Testbot - OneToMany vs ManyToOne
         Given the node map

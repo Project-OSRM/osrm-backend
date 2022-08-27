@@ -47,8 +47,8 @@ class RouteAPI : public BaseAPI
 
     void
     MakeResponse(const InternalManyRoutesResult &raw_routes,
-                 const std::vector<PhantomNodes>
-                     &all_start_end_points, // all used coordinates, ignoring waypoints= parameter
+                 const std::vector<PhantomNodeCandidates>
+                     &waypoint_candidates, // all used coordinates, ignoring waypoints= parameter
                  osrm::engine::api::ResultT &response) const
     {
         BOOST_ASSERT(!raw_routes.routes.empty());
@@ -56,19 +56,19 @@ class RouteAPI : public BaseAPI
         if (response.is<flatbuffers::FlatBufferBuilder>())
         {
             auto &fb_result = response.get<flatbuffers::FlatBufferBuilder>();
-            MakeResponse(raw_routes, all_start_end_points, fb_result);
+            MakeResponse(raw_routes, waypoint_candidates, fb_result);
         }
         else
         {
             auto &json_result = response.get<util::json::Object>();
-            MakeResponse(raw_routes, all_start_end_points, json_result);
+            MakeResponse(raw_routes, waypoint_candidates, json_result);
         }
     }
 
     void
     MakeResponse(const InternalManyRoutesResult &raw_routes,
-                 const std::vector<PhantomNodes>
-                     &all_start_end_points, // all used coordinates, ignoring waypoints= parameter
+                 const std::vector<PhantomNodeCandidates>
+                     &waypoint_candidates, // all used coordinates, ignoring waypoints= parameter
                  flatbuffers::FlatBufferBuilder &fb_result) const
     {
 
@@ -80,8 +80,8 @@ class RouteAPI : public BaseAPI
         }
 
         auto response =
-            MakeFBResponse(raw_routes, fb_result, [this, &all_start_end_points, &fb_result]() {
-                return BaseAPI::MakeWaypoints(&fb_result, all_start_end_points);
+            MakeFBResponse(raw_routes, fb_result, [this, &waypoint_candidates, &fb_result]() {
+                return BaseAPI::MakeWaypoints(&fb_result, waypoint_candidates);
             });
 
         if (!data_timestamp.empty())
@@ -93,8 +93,8 @@ class RouteAPI : public BaseAPI
 
     void
     MakeResponse(const InternalManyRoutesResult &raw_routes,
-                 const std::vector<PhantomNodes>
-                     &all_start_end_points, // all used coordinates, ignoring waypoints= parameter
+                 const std::vector<PhantomNodeCandidates>
+                     &waypoint_candidates, // all used coordinates, ignoring waypoints= parameter
                  util::json::Object &response) const
     {
         util::json::Array jsRoutes;
@@ -104,7 +104,7 @@ class RouteAPI : public BaseAPI
             if (!route.is_valid())
                 continue;
 
-            jsRoutes.values.push_back(MakeRoute(route.segment_end_coordinates,
+            jsRoutes.values.push_back(MakeRoute(route.leg_endpoints,
                                                 route.unpacked_path_segments,
                                                 route.source_traversed_in_reverse,
                                                 route.target_traversed_in_reverse));
@@ -112,7 +112,7 @@ class RouteAPI : public BaseAPI
 
         if (!parameters.skip_waypoints)
         {
-            response.values["waypoints"] = BaseAPI::MakeWaypoints(all_start_end_points);
+            response.values["waypoints"] = BaseAPI::MakeWaypoints(waypoint_candidates);
         }
         response.values["routes"] = std::move(jsRoutes);
         response.values["code"] = "Ok";
@@ -138,7 +138,7 @@ class RouteAPI : public BaseAPI
                 continue;
 
             routes.push_back(MakeRoute(fb_result,
-                                       raw_route.segment_end_coordinates,
+                                       raw_route.leg_endpoints,
                                        raw_route.unpacked_path_segments,
                                        raw_route.source_traversed_in_reverse,
                                        raw_route.target_traversed_in_reverse));
@@ -328,12 +328,12 @@ class RouteAPI : public BaseAPI
 
     flatbuffers::Offset<fbresult::RouteObject>
     MakeRoute(flatbuffers::FlatBufferBuilder &fb_result,
-              const std::vector<PhantomNodes> &segment_end_coordinates,
+              const std::vector<PhantomEndpoints> &leg_endpoints,
               const std::vector<std::vector<PathData>> &unpacked_path_segments,
               const std::vector<bool> &source_traversed_in_reverse,
               const std::vector<bool> &target_traversed_in_reverse) const
     {
-        auto legs_info = MakeLegs(segment_end_coordinates,
+        auto legs_info = MakeLegs(leg_endpoints,
                                   unpacked_path_segments,
                                   source_traversed_in_reverse,
                                   target_traversed_in_reverse);
@@ -705,12 +705,12 @@ class RouteAPI : public BaseAPI
         return fb_result.CreateVector(intersections);
     }
 
-    util::json::Object MakeRoute(const std::vector<PhantomNodes> &segment_end_coordinates,
+    util::json::Object MakeRoute(const std::vector<PhantomEndpoints> &leg_endpoints,
                                  const std::vector<std::vector<PathData>> &unpacked_path_segments,
                                  const std::vector<bool> &source_traversed_in_reverse,
                                  const std::vector<bool> &target_traversed_in_reverse) const
     {
-        auto legs_info = MakeLegs(segment_end_coordinates,
+        auto legs_info = MakeLegs(leg_endpoints,
                                   unpacked_path_segments,
                                   source_traversed_in_reverse,
                                   target_traversed_in_reverse);
@@ -868,7 +868,7 @@ class RouteAPI : public BaseAPI
     const RouteParameters &parameters;
 
     std::pair<std::vector<guidance::RouteLeg>, std::vector<guidance::LegGeometry>>
-    MakeLegs(const std::vector<PhantomNodes> &segment_end_coordinates,
+    MakeLegs(const std::vector<PhantomEndpoints> &leg_endpoints,
              const std::vector<std::vector<PathData>> &unpacked_path_segments,
              const std::vector<bool> &source_traversed_in_reverse,
              const std::vector<bool> &target_traversed_in_reverse) const
@@ -877,13 +877,13 @@ class RouteAPI : public BaseAPI
             std::make_pair(std::vector<guidance::RouteLeg>(), std::vector<guidance::LegGeometry>());
         auto &legs = result.first;
         auto &leg_geometries = result.second;
-        auto number_of_legs = segment_end_coordinates.size();
+        auto number_of_legs = leg_endpoints.size();
         legs.reserve(number_of_legs);
         leg_geometries.reserve(number_of_legs);
 
         for (auto idx : util::irange<std::size_t>(0UL, number_of_legs))
         {
-            const auto &phantoms = segment_end_coordinates[idx];
+            const auto &phantoms = leg_endpoints[idx];
             const auto &path_data = unpacked_path_segments[idx];
 
             const bool reversed_source = source_traversed_in_reverse[idx];

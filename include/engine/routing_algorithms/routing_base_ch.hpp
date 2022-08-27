@@ -120,8 +120,8 @@ void routingStep(const DataFacade<Algorithm> &facade,
                  NodeID &middle_node_id,
                  EdgeWeight &upper_bound,
                  EdgeWeight min_edge_offset,
-                 const bool force_loop_forward,
-                 const bool force_loop_reverse)
+                 const std::vector<NodeID> &force_loop_forward_nodes,
+                 const std::vector<NodeID> &force_loop_reverse_nodes)
 {
     auto heapNode = forward_heap.DeleteMinGetHeapNode();
     const auto reverseHeapNode = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
@@ -131,9 +131,8 @@ void routingStep(const DataFacade<Algorithm> &facade,
         const EdgeWeight new_weight = reverseHeapNode->weight + heapNode.weight;
         if (new_weight < upper_bound)
         {
-            // if loops are forced, they are so at the source
-            if ((force_loop_forward && heapNode.data.parent == heapNode.node) ||
-                (force_loop_reverse && reverseHeapNode->data.parent == heapNode.node) ||
+            if (force_loop(force_loop_forward_nodes, heapNode) ||
+                force_loop(force_loop_reverse_nodes, heapNode) ||
                 // in this case we are looking at a bi-directional way where the source
                 // and target phantom are on the same edge based node
                 new_weight < 0)
@@ -398,7 +397,7 @@ template <typename RandomIter, typename FacadeT>
 void unpackPath(const FacadeT &facade,
                 RandomIter packed_path_begin,
                 RandomIter packed_path_end,
-                const PhantomNodes &phantom_nodes,
+                const PhantomEndpoints &route_endpoints,
                 std::vector<PathData> &unpacked_path)
 {
     const auto nodes_number = std::distance(packed_path_begin, packed_path_end);
@@ -422,7 +421,7 @@ void unpackPath(const FacadeT &facade,
                    });
     }
 
-    annotatePath(facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
+    annotatePath(facade, route_endpoints, unpacked_nodes, unpacked_edges, unpacked_path);
 }
 
 /**
@@ -467,12 +466,35 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
             const DataFacade<Algorithm> &facade,
             SearchEngineData<Algorithm>::QueryHeap &forward_heap,
             SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-            std::int32_t &weight,
+            EdgeWeight &weight,
             std::vector<NodeID> &packed_leg,
-            const bool force_loop_forward,
-            const bool force_loop_reverse,
-            const PhantomNodes &phantom_nodes,
-            const int duration_upper_bound = INVALID_EDGE_WEIGHT);
+            const std::vector<NodeID> &force_loop_forward_node,
+            const std::vector<NodeID> &force_loop_reverse_node,
+            const EdgeWeight duration_upper_bound = INVALID_EDGE_WEIGHT);
+
+template <typename PhantomEndpointT>
+void search(SearchEngineData<Algorithm> &engine_working_data,
+            const DataFacade<Algorithm> &facade,
+            SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+            SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+            EdgeWeight &weight,
+            std::vector<NodeID> &packed_leg,
+            const std::vector<NodeID> &force_loop_forward_node,
+            const std::vector<NodeID> &force_loop_reverse_node,
+            const PhantomEndpointT & /*endpoints*/,
+            const EdgeWeight duration_upper_bound = INVALID_EDGE_WEIGHT)
+{
+    // Avoid templating the CH search implementations.
+    return search(engine_working_data,
+                  facade,
+                  forward_heap,
+                  reverse_heap,
+                  weight,
+                  packed_leg,
+                  force_loop_forward_node,
+                  force_loop_reverse_node,
+                  duration_upper_bound);
+}
 
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,

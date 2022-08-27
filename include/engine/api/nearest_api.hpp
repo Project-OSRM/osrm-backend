@@ -71,7 +71,7 @@ class NearestAPI final : public BaseAPI
                     auto node_values = MakeNodes(phantom_node);
                     fbresult::Uint64Pair nodes{node_values.first, node_values.second};
 
-                    auto waypoint = MakeWaypoint(&fb_result, phantom_node);
+                    auto waypoint = MakeWaypoint(&fb_result, {phantom_node});
                     waypoint->add_nodes(&nodes);
                     return waypoint->Finish();
                 });
@@ -100,7 +100,7 @@ class NearestAPI final : public BaseAPI
                            waypoints.values.begin(),
                            [this](const PhantomNodeWithDistance &phantom_with_distance) {
                                auto &phantom_node = phantom_with_distance.phantom_node;
-                               auto waypoint = MakeWaypoint(phantom_node);
+                               auto waypoint = MakeWaypoint({phantom_node});
 
                                util::json::Array nodes;
 

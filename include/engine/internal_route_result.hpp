@@ -50,7 +50,7 @@ struct PathData
 struct InternalRouteResult
 {
     std::vector<std::vector<PathData>> unpacked_path_segments;
-    std::vector<PhantomNodes> segment_end_coordinates;
+    std::vector<PhantomEndpoints> leg_endpoints;
     std::vector<bool> source_traversed_in_reverse;
     std::vector<bool> target_traversed_in_reverse;
     EdgeWeight shortest_path_weight = INVALID_EDGE_WEIGHT;
@@ -96,7 +96,7 @@ inline InternalRouteResult CollapseInternalRouteResult(const InternalRouteResult
     if (leggy_result.unpacked_path_segments.size() == 1)
         return leggy_result;
 
-    BOOST_ASSERT(leggy_result.segment_end_coordinates.size() > 1);
+    BOOST_ASSERT(leggy_result.leg_endpoints.size() > 1);
 
     InternalRouteResult collapsed;
     collapsed.shortest_path_weight = leggy_result.shortest_path_weight;
@@ -107,7 +107,7 @@ inline InternalRouteResult CollapseInternalRouteResult(const InternalRouteResult
             // start another leg vector
             collapsed.unpacked_path_segments.push_back(leggy_result.unpacked_path_segments[i]);
             // save new phantom node pair
-            collapsed.segment_end_coordinates.push_back(leggy_result.segment_end_coordinates[i]);
+            collapsed.leg_endpoints.push_back(leggy_result.leg_endpoints[i]);
             // save data about phantom nodes
             collapsed.source_traversed_in_reverse.push_back(
                 leggy_result.source_traversed_in_reverse[i]);
@@ -119,9 +119,9 @@ inline InternalRouteResult CollapseInternalRouteResult(const InternalRouteResult
         {
             BOOST_ASSERT(!collapsed.unpacked_path_segments.empty());
             auto &last_segment = collapsed.unpacked_path_segments.back();
-            BOOST_ASSERT(!collapsed.segment_end_coordinates.empty());
-            collapsed.segment_end_coordinates.back().target_phantom =
-                leggy_result.segment_end_coordinates[i].target_phantom;
+            BOOST_ASSERT(!collapsed.leg_endpoints.empty());
+            collapsed.leg_endpoints.back().target_phantom =
+                leggy_result.leg_endpoints[i].target_phantom;
             collapsed.target_traversed_in_reverse.back() =
                 leggy_result.target_traversed_in_reverse[i];
             // copy path segments into current leg
@@ -138,19 +138,18 @@ inline InternalRouteResult CollapseInternalRouteResult(const InternalRouteResult
                 last_segment[old_size].weight_until_turn +=
 
                     leggy_result.source_traversed_in_reverse[i]
-                        ? leggy_result.segment_end_coordinates[i].source_phantom.reverse_weight
-                        : leggy_result.segment_end_coordinates[i].source_phantom.forward_weight;
+                        ? leggy_result.leg_endpoints[i].source_phantom.reverse_weight
+                        : leggy_result.leg_endpoints[i].source_phantom.forward_weight;
 
                 last_segment[old_size].duration_until_turn +=
                     leggy_result.source_traversed_in_reverse[i]
-                        ? leggy_result.segment_end_coordinates[i].source_phantom.reverse_duration
-                        : leggy_result.segment_end_coordinates[i].source_phantom.forward_duration;
+                        ? leggy_result.leg_endpoints[i].source_phantom.reverse_duration
+                        : leggy_result.leg_endpoints[i].source_phantom.forward_duration;
             }
         }
     }
 
-    BOOST_ASSERT(collapsed.segment_end_coordinates.size() ==
-                 collapsed.unpacked_path_segments.size());
+    BOOST_ASSERT(collapsed.leg_endpoints.size() == collapsed.unpacked_path_segments.size());
     return collapsed;
 }
 } // namespace engine

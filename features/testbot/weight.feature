@@ -281,7 +281,7 @@ Feature: Weight tests
 
         When I route I should get
             | waypoints | route | distance | weights      | times          |
-            | a,c       | ,     | 40m +-.1 | 5.12,0       | 290s,0s        |
+            | a,c       | ,     | 40m +-.1 | 2.22,0       | 200s,0s        |
             | a,e       | ,,    | 60m +-.1 | 5.12,1.11,0  | 290s,100s,0s   |
             | e,a       | ,,    | 60m +-.1 | 2.21,2.22,0  | 10s,200s,0s    |
             | e,d       | ,,    | 40m +-.1 | 4.01,1.11,0  | 190s,100s,0s   |

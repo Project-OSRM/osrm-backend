@@ -239,10 +239,10 @@ makeWaypoint(const util::Coordinate &location, const double &distance, std::stri
 util::json::Object makeWaypoint(const util::Coordinate &location,
                                 const double &distance,
                                 std::string name,
-                                const Hint &hint)
+                                const Hint &location_hints)
 {
     auto waypoint = makeWaypoint(location, distance, std::move(name));
-    waypoint.values["hint"] = hint.ToBase64();
+    waypoint.values["hint"] = location_hints.ToBase64();
     return waypoint;
 }
 

@@ -51,14 +51,14 @@ namespace api
  * Holds member attributes:
  *  - coordinates: for specifying location(s) to services
  *  - hints: hint for the service to derive the position(s) in the road network more efficiently,
- *           optional per coordinate
+ *           optional per coordinate. Multiple hints can be provided for a coordinate.
  *  - radiuses: limits the search for segments in the road network to given radius(es) in meter,
  *              optional per coordinate
  *  - bearings: limits the search for segments in the road network to given bearing(s) in degree
  *              towards true north in clockwise direction, optional per coordinate
  *  - approaches: force the phantom node to start towards the node with the road country side.
  *
- * \see OSRM, Coordinate, Hint, Bearing, RouteParame, RouteParameters, TableParameters,
+ * \see OSRM, Coordinate, Hint, Bearing, RouteParameters, TableParameters,
  *      NearestParameters, TripParameters, MatchParameters and TileParameters
  */
 struct BaseParameters

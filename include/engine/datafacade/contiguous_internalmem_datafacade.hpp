@@ -323,127 +323,41 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
-                               const float max_distance,
+                               const double max_distance,
+                               const boost::optional<Bearing> bearing,
                                const Approach approach,
                                const bool use_all_edges) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
-        return m_geospatial_query->NearestPhantomNodesInRange(
-            input_coordinate, max_distance, approach, use_all_edges);
-    }
-
-    std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
-                               const float max_distance,
-                               const int bearing,
-                               const int bearing_range,
-                               const Approach approach,
-                               const bool use_all_edges) const override final
-    {
-        BOOST_ASSERT(m_geospatial_query.get());
-
-        return m_geospatial_query->NearestPhantomNodesInRange(
-            input_coordinate, max_distance, bearing, bearing_range, approach, use_all_edges);
+        return m_geospatial_query->NearestPhantomNodes(
+            input_coordinate, approach, boost::none, max_distance, bearing, use_all_edges);
     }
 
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results,
-                        const Approach approach) const override final
-    {
-        BOOST_ASSERT(m_geospatial_query.get());
-
-        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, approach);
-    }
-
-    std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results,
-                        const double max_distance,
+                        const size_t max_results,
+                        const boost::optional<double> max_distance,
+                        const boost::optional<Bearing> bearing,
                         const Approach approach) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(
-            input_coordinate, max_results, max_distance, approach);
+            input_coordinate, approach, max_results, max_distance, bearing, boost::none);
     }
 
-    std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results,
-                        const int bearing,
-                        const int bearing_range,
-                        const Approach approach) const override final
+    PhantomCandidateAlternatives
+    NearestCandidatesWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                     const boost::optional<double> max_distance,
+                                                     const boost::optional<Bearing> bearing,
+                                                     const Approach approach,
+                                                     const bool use_all_edges) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
-        return m_geospatial_query->NearestPhantomNodes(
-            input_coordinate, max_results, bearing, bearing_range, approach);
-    }
-
-    std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results,
-                        const double max_distance,
-                        const int bearing,
-                        const int bearing_range,
-                        const Approach approach) const override final
-    {
-        BOOST_ASSERT(m_geospatial_query.get());
-
-        return m_geospatial_query->NearestPhantomNodes(
-            input_coordinate, max_results, max_distance, bearing, bearing_range, approach);
-    }
-
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const Approach approach,
-                                                      const bool use_all_edges) const override final
-    {
-        BOOST_ASSERT(m_geospatial_query.get());
-
-        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
-            input_coordinate, approach, use_all_edges);
-    }
-
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const double max_distance,
-                                                      const Approach approach,
-                                                      const bool use_all_edges) const override final
-    {
-        BOOST_ASSERT(m_geospatial_query.get());
-
-        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
-            input_coordinate, max_distance, approach, use_all_edges);
-    }
-
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const double max_distance,
-                                                      const int bearing,
-                                                      const int bearing_range,
-                                                      const Approach approach,
-                                                      const bool use_all_edges) const override final
-    {
-        BOOST_ASSERT(m_geospatial_query.get());
-
-        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
-            input_coordinate, max_distance, bearing, bearing_range, approach, use_all_edges);
-    }
-
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const int bearing,
-                                                      const int bearing_range,
-                                                      const Approach approach,
-                                                      const bool use_all_edges) const override final
-    {
-        BOOST_ASSERT(m_geospatial_query.get());
-
-        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
-            input_coordinate, bearing, bearing_range, approach, use_all_edges);
+        return m_geospatial_query->NearestCandidatesWithAlternativeFromBigComponent(
+            input_coordinate, approach, max_distance, bearing, use_all_edges);
     }
 
     std::uint32_t GetCheckSum() const override final { return m_check_sum; }
