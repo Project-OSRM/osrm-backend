@@ -239,7 +239,7 @@ curl 'http://router.project-osrm.org/route/v1/driving/13.388860,52.517037;13.397
 
 ### Table service
 
-Computes the duration of the fastest route between all pairs of supplied coordinates. Returns the duration or distances or both between the coordinate pairs. Note that the distances are not the shortest distance between two coordinates, but rather the distances of the fastest routes. Duration is in seconds and distances are in meters.
+Computes the duration of the fastest route between all pairs of supplied coordinates. Returns durations or distances or both between the coordinate pairs. Note that the distances are not the shortest distance between two coordinates, but rather the distances of the fastest routes. Durations are in seconds and distances are in meters.
 
 ```endpoint
 GET /table/v1/{profile}/{coordinates}?{sources}=[{elem}...];&{destinations}=[{elem}...]&annotations={duration|distance|duration,distance}
