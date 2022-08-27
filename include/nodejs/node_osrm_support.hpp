@@ -102,10 +102,9 @@ inline void ParseResult(const osrm::Status &result_status,
 {
     auto fbs_result = osrm::engine::api::fbresult::GetFBResult(fbs_builder.GetBufferPointer());
 
-    BOOST_ASSERT(fbs_result->code());
-
     if (result_status == osrm::Status::Error)
     {
+        BOOST_ASSERT(fbs_result->code());
         throw std::logic_error(fbs_result->code()->message()->c_str());
     }
 }
@@ -934,7 +933,8 @@ inline PluginParameters argumentsToPluginParameters(
 {
     if (args.Length() < 3 || !args[1]->IsObject())
     {
-        return {};
+        // output to buffer by default for Flatbuffers
+        return {output_format == osrm::engine::api::BaseParameters::OutputFormatType::FLATBUFFERS};
     }
     v8::Local<v8::Object> obj = Nan::To<v8::Object>(args[1]).ToLocalChecked();
     if (Nan::Has(obj, Nan::New("format").ToLocalChecked()).FromJust())
@@ -960,6 +960,7 @@ inline PluginParameters argumentsToPluginParameters(
             if (output_format == osrm::engine::api::BaseParameters::OutputFormatType::FLATBUFFERS)
             {
                 Nan::ThrowError("Flatbuffers result can only output to buffer.");
+                return {true};
             }
             return {false};
         }
@@ -973,12 +974,9 @@ inline PluginParameters argumentsToPluginParameters(
             return {};
         }
     }
+
     // output to buffer by default for Flatbuffers
-    if (output_format == osrm::engine::api::BaseParameters::OutputFormatType::FLATBUFFERS)
-    {
-        return {true};
-    }
-    return {};
+    return {output_format == osrm::engine::api::BaseParameters::OutputFormatType::FLATBUFFERS};
 }
 
 inline route_parameters_ptr
