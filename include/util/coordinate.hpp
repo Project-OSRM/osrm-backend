@@ -203,16 +203,6 @@ struct Coordinate
 
     Coordinate(const FixedLongitude lon_, const FixedLatitude lat_) : lon(lon_), lat(lat_) {}
 
-    template <class T> Coordinate(const T &coordinate) : lon(coordinate.lon), lat(coordinate.lat)
-    {
-        static_assert(!std::is_same<T, Coordinate>::value,
-                      "This constructor should not be used for Coordinates");
-        static_assert(std::is_same<decltype(lon), decltype(coordinate.lon)>::value,
-                      "coordinate types incompatible");
-        static_assert(std::is_same<decltype(lat), decltype(coordinate.lat)>::value,
-                      "coordinate types incompatible");
-    }
-
     bool IsValid() const;
     friend bool operator==(const Coordinate lhs, const Coordinate rhs);
     friend bool operator!=(const Coordinate lhs, const Coordinate rhs);
