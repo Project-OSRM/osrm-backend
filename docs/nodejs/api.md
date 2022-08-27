@@ -334,13 +334,15 @@ specific behaviours.
 
 -   `plugin_config` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)?** Object literal containing parameters for the trip query.
     -   `plugin_config.format` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** The format of the result object to various API calls.
-                                               Valid options are `object` (default if `options.format` is `json`), which returns a
-        standard Javascript object, as described above, and `buffer`(default if `options.format` is `flatbuffers`), which will return a NodeJS
-        **[Buffer](https://nodejs.org/api/buffer.html)** object, containing a JSON string or Flatbuffers object. The latter has
-        the advantage that it can be immediately serialized to disk/sent over the network, and the
-        generation of the string is performed outside the main NodeJS event loop.  This option is ignored
-        by the `tile` plugin. Also note that `options.format` set to `flatbuffers` cannot be used with `plugin_config.format` set to `object`.
-        `json_buffer` is deprecated alias for `buffer`.
+                                               Valid options are `object` (default if `options.format` is
+        `json`), which returns a standard Javascript object, as described above, and `buffer`(default if
+        `options.format` is `flatbuffers`), which will return a NodeJS
+        **[Buffer](https://nodejs.org/api/buffer.html)** object, containing a JSON string or Flatbuffers
+        object. The latter has the advantage that it can be immediately serialized to disk/sent over the
+        network, and the generation of the string is performed outside the main NodeJS event loop.  This
+        option is ignored by the `tile` plugin. Also note that `options.format` set to `flatbuffers`
+        cannot be used with `plugin_config.format` set to `object`. `json_buffer` is deprecated alias for
+        `buffer`.
 
 **Examples**
 
