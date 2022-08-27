@@ -102,7 +102,7 @@ inline void ParseResult(const osrm::Status &result_status,
 {
     auto fbs_result = osrm::engine::api::fbresult::GetFBResult(fbs_builder.GetBufferPointer());
 
-    BOOST_ASSERT(fb->code());
+    BOOST_ASSERT(fbs_result->code());
 
     if (result_status == osrm::Status::Error)
     {
