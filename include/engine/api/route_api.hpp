@@ -852,17 +852,6 @@ class RouteAPI : public BaseAPI
                         annotation.values["osmnodes"] = osm_nodes;
                     }
                 }
-                if (requested_annotations & RouteParameters::AnnotationsType::OSMNodes)
-                {
-                    util::json::Array nodes;
-                    nodes.values.reserve(leg_geometry.node_ids.size());
-                    for (const auto node_id : leg_geometry.node_ids)
-                    {
-                        nodes.values.push_back(std::to_string(
-                            static_cast<std::uint64_t>(facade.GetOSMNodeIDOfNode(node_id))));
-                    }
-                    annotation.values["nodes"] = std::move(nodes);
-                }
                 // Add any supporting metadata, if needed
                 if (requested_annotations & RouteParameters::AnnotationsType::Datasources)
                 {
