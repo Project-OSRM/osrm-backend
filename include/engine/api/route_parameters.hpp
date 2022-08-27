@@ -70,13 +70,14 @@ struct RouteParameters : public BaseParameters
     enum class AnnotationsType
     {
         None = 0,
-        Duration = 0x01,
-        Nodes = 0x02,
-        Distance = 0x04,
-        Weight = 0x08,
-        Datasources = 0x10,
-        Speed = 0x20,
-        All = Duration | Nodes | Distance | Weight | Datasources | Speed
+        Duration = 1 << 1,
+        Nodes = 1 << 2,
+        Distance = 1 << 3,
+        Weight = 1 << 4,
+        Datasources = 1 << 5,
+        Speed = 1 << 6,
+        OSMNodes = 1 << 7,
+        All = Duration | Nodes | Distance | Weight | Datasources | Speed | OSMNodes
     };
 
     RouteParameters() = default;

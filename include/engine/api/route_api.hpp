@@ -28,6 +28,7 @@
 #include "util/json_util.hpp"
 
 #include <iterator>
+#include <string>
 #include <vector>
 
 namespace osrm
@@ -822,14 +823,43 @@ class RouteAPI : public BaseAPI
                             return anno.datasource;
                         });
                 }
-                if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
+                if (requested_annotations & RouteParameters::AnnotationsType::Nodes ||
+                    requested_annotations & RouteParameters::AnnotationsType::OSMNodes)
+                {
+                    util::json::Array nodes;
+                    util::json::Array osm_nodes;
+
+                    nodes.values.reserve(leg_geometry.node_ids.size());
+                    for (const auto node_id : leg_geometry.node_ids)
+                    {
+                        const auto osm_node_id =
+                            static_cast<std::uint64_t>(facade.GetOSMNodeIDOfNode(node_id));
+                        if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
+                        {
+                            nodes.values.emplace_back(osm_node_id);
+                        }
+                        if (requested_annotations & RouteParameters::AnnotationsType::OSMNodes)
+                        {
+                            osm_nodes.values.emplace_back(osm_node_id);
+                        }
+                    }
+                    if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
+                    {
+                        annotation.values["nodes"] = nodes;
+                    }
+                    if (requested_annotations & RouteParameters::AnnotationsType::OSMNodes)
+                    {
+                        annotation.values["osmnodes"] = osm_nodes;
+                    }
+                }
+                if (requested_annotations & RouteParameters::AnnotationsType::OSMNodes)
                 {
                     util::json::Array nodes;
                     nodes.values.reserve(leg_geometry.node_ids.size());
                     for (const auto node_id : leg_geometry.node_ids)
                     {
-                        nodes.values.push_back(
-                            static_cast<std::uint64_t>(facade.GetOSMNodeIDOfNode(node_id)));
+                        nodes.values.push_back(std::to_string(
+                            static_cast<std::uint64_t>(facade.GetOSMNodeIDOfNode(node_id))));
                     }
                     annotation.values["nodes"] = std::move(nodes);
                 }
