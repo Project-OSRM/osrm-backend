@@ -286,6 +286,7 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
  * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
+ * @param {Array} [options.exclude] List of classes to avoid, order does not matter.
  * @param {Boolean} [options.generate_hints=true]  Whether or not adds a Hint to the response which can be used in subsequent requests.
  * @param {Boolean} [options.alternatives=false] Search for alternative routes.
  * @param {Number} [options.alternatives=0] Search for up to this many alternative routes.
@@ -299,6 +300,7 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
  *                  `null`/`true`/`false`
  * @param {Array} [options.waypoints] Indices to coordinates to treat as waypoints. If not supplied, all coordinates are waypoints.  Must include first and last coordinate index.
  * @param {String} [options.snapping] Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
+ * @param {Boolean} [options.skip_waypoints=false] Removes waypoints from the response. Waypoints are still calculated, but not serialized. Could be useful in case you are interested in some other part of response and do not want to transfer waste data.
  * @param {Function} callback
  *
  * @returns {Object} An array of [Waypoint](#waypoint) objects representing all waypoints in order AND an array of [`Route`](#route) objects ordered by descending recommendation rank.

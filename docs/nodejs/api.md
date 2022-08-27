@@ -51,6 +51,7 @@ Returns the fastest route between two or more coordinates while visiting the way
                                           Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
     -   `options.radiuses` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
     -   `options.hints` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Hints for the coordinate snapping. Array of base64 encoded strings.
+    -   `options.exclude` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** List of classes to avoid, order does not matter.
     -   `options.generate_hints` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Whether or not adds a Hint to the response which can be used in subsequent requests. (optional, default `true`)
     -   `options.alternatives` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Search for alternative routes. (optional, default `false`)
     -   `options.alternatives` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** Search for up to this many alternative routes.
@@ -64,6 +65,7 @@ Returns the fastest route between two or more coordinates while visiting the way
                          `null`/`true`/`false`
     -   `options.waypoints` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Indices to coordinates to treat as waypoints. If not supplied, all coordinates are waypoints.  Must include first and last coordinate index.
     -   `options.snapping` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
+    -   `options.skip_waypoints` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Removes waypoints from the response. Waypoints are still calculated, but not serialized. Could be useful in case you are interested in some other part of response and do not want to transfer waste data. (optional, default `false`)
 -   `callback` **[Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)** 
 
 **Examples**
