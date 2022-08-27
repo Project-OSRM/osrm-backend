@@ -10,6 +10,7 @@
 
 #include <exception>
 #include <sstream>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
@@ -128,8 +129,7 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
     auto params = argsToParams(info, requires_multiple_coordinates);
     if (!params)
         return;
-
-    auto pluginParams = argumentsToPluginParameters(info);
+    auto pluginParams = argumentsToPluginParameters(info, params->format);
 
     BOOST_ASSERT(params->IsValid());
 
@@ -156,20 +156,41 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
         void Execute() override
         try
         {
-            osrm::engine::api::ResultT r;
-            r = osrm::util::json::Object();
-            const auto status = ((*osrm).*(service))(*params, r);
-            auto json_result = r.get<osrm::json::Object>();
-            ParseResult(status, json_result);
-            if (pluginParams.renderJSONToBuffer)
+            switch (
+                params->format.value_or(osrm::engine::api::BaseParameters::OutputFormatType::JSON))
             {
-                std::ostringstream buf;
-                osrm::util::json::render(buf, json_result);
-                result = buf.str();
+            case osrm::engine::api::BaseParameters::OutputFormatType::JSON:
+            {
+                osrm::engine::api::ResultT r;
+                r = osrm::util::json::Object();
+                const auto status = ((*osrm).*(service))(*params, r);
+                auto json_result = r.get<osrm::json::Object>();
+                ParseResult(status, json_result);
+                if (pluginParams.renderToBuffer)
+                {
+                    std::ostringstream buf;
+                    osrm::util::json::render(buf, json_result);
+                    result = buf.str();
+                }
+                else
+                {
+                    result = json_result;
+                }
             }
-            else
+            break;
+            case osrm::engine::api::BaseParameters::OutputFormatType::FLATBUFFERS:
             {
-                result = json_result;
+                osrm::engine::api::ResultT r = flatbuffers::FlatBufferBuilder();
+                const auto status = ((*osrm).*(service))(*params, r);
+                const auto &fbs_result = r.get<flatbuffers::FlatBufferBuilder>();
+                ParseResult(status, fbs_result);
+                BOOST_ASSERT(pluginParams.renderToBuffer);
+                std::string result_str(
+                    reinterpret_cast<const char *>(fbs_result.GetBufferPointer()),
+                    fbs_result.GetSize());
+                result = std::move(result_str);
+            }
+            break;
             }
         }
         catch (const std::exception &e)

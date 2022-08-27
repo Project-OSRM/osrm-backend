@@ -956,7 +956,7 @@ Object used to describe waypoint on a route.
 Default response format is `json`, but OSRM supports binary [`flatbuffers`](https://google.github.io/flatbuffers/) format, which 
 is much faster in serialization/deserialization, comparing to `json`.
 
-The format itself is described in message descriptors, located at `include/engine/api/flatbuffers directory`. Those descriptors could
+The format itself is described in message descriptors, located at `include/engine/api/flatbuffers` directory. Those descriptors could
 be compiled to provide protocol parsers in Go/Javascript/Typescript/Java/Dart/C#/Python/Lobster/Lua/Rust/PHP/Kotlin. Precompiled 
 protocol parser for C++ is supplied with OSRM.
 

@@ -2,8 +2,7 @@
 #define OSRM_BINDINGS_NODE_SUPPORT_HPP
 
 #include "nodejs/json_v8_renderer.hpp"
-#include "util/json_renderer.hpp"
-
+#include "engine/api/flatbuffers/fbresult_generated.h"
 #include "osrm/approach.hpp"
 #include "osrm/bearing.hpp"
 #include "osrm/coordinate.hpp"
@@ -18,6 +17,7 @@
 #include "osrm/table_parameters.hpp"
 #include "osrm/tile_parameters.hpp"
 #include "osrm/trip_parameters.hpp"
+#include "util/json_renderer.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
@@ -26,6 +26,7 @@
 #include <iostream>
 #include <iterator>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -46,7 +47,7 @@ using table_parameters_ptr = std::unique_ptr<osrm::TableParameters>;
 
 struct PluginParameters
 {
-    bool renderJSONToBuffer = false;
+    bool renderToBuffer = false;
 };
 
 using ObjectOrString = typename mapbox::util::variant<osrm::json::Object, std::string>;
@@ -96,6 +97,18 @@ inline void ParseResult(const osrm::Status &result_status, osrm::json::Object &r
 }
 
 inline void ParseResult(const osrm::Status & /*result_status*/, const std::string & /*unused*/) {}
+inline void ParseResult(const osrm::Status &result_status,
+                        const flatbuffers::FlatBufferBuilder &fbs_builder)
+{
+    auto fbs_result = osrm::engine::api::fbresult::GetFBResult(fbs_builder.GetBufferPointer());
+
+    BOOST_ASSERT(fb->code());
+
+    if (result_status == osrm::Status::Error)
+    {
+        throw std::logic_error(fbs_result->code()->message()->c_str());
+    }
+}
 
 inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo<v8::Value> &args)
 {
@@ -725,6 +738,36 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
         }
     }
 
+    if (Nan::Has(obj, Nan::New("format").ToLocalChecked()).FromJust())
+    {
+        v8::Local<v8::Value> format =
+            Nan::Get(obj, Nan::New("format").ToLocalChecked()).ToLocalChecked();
+        if (format.IsEmpty())
+        {
+            return false;
+        }
+
+        if (!format->IsString())
+        {
+            Nan::ThrowError("format must be a string: \"json\" or \"flatbuffers\"");
+            return false;
+        }
+
+        std::string format_str = *Nan::Utf8String(format);
+        if (format_str == "json")
+        {
+            params->format = osrm::engine::api::BaseParameters::OutputFormatType::JSON;
+        }
+        else if (format_str == "flatbuffers")
+        {
+            params->format = osrm::engine::api::BaseParameters::OutputFormatType::FLATBUFFERS;
+        }
+        else
+        {
+            Nan::ThrowError("format must be a string: \"json\" or \"flatbuffers\"");
+            return false;
+        }
+    }
     return true;
 }
 
@@ -885,8 +928,9 @@ inline bool parseCommonParameters(const v8::Local<v8::Object> &obj, ParamType &p
     return true;
 }
 
-inline PluginParameters
-argumentsToPluginParameters(const Nan::FunctionCallbackInfo<v8::Value> &args)
+inline PluginParameters argumentsToPluginParameters(
+    const Nan::FunctionCallbackInfo<v8::Value> &args,
+    const boost::optional<osrm::engine::api::BaseParameters::OutputFormatType> &output_format = {})
 {
     if (args.Length() < 3 || !args[1]->IsObject())
     {
@@ -895,7 +939,6 @@ argumentsToPluginParameters(const Nan::FunctionCallbackInfo<v8::Value> &args)
     v8::Local<v8::Object> obj = Nan::To<v8::Object>(args[1]).ToLocalChecked();
     if (Nan::Has(obj, Nan::New("format").ToLocalChecked()).FromJust())
     {
-
         v8::Local<v8::Value> format =
             Nan::Get(obj, Nan::New("format").ToLocalChecked()).ToLocalChecked();
         if (format.IsEmpty())
@@ -905,7 +948,7 @@ argumentsToPluginParameters(const Nan::FunctionCallbackInfo<v8::Value> &args)
 
         if (!format->IsString())
         {
-            Nan::ThrowError("format must be a string: \"object\" or \"json_buffer\"");
+            Nan::ThrowError("format must be a string: \"object\" or \"buffer\"");
             return {};
         }
 
@@ -914,19 +957,27 @@ argumentsToPluginParameters(const Nan::FunctionCallbackInfo<v8::Value> &args)
 
         if (format_str == "object")
         {
+            if (output_format == osrm::engine::api::BaseParameters::OutputFormatType::FLATBUFFERS)
+            {
+                Nan::ThrowError("Flatbuffers result can only output to buffer.");
+            }
             return {false};
         }
-        else if (format_str == "json_buffer")
+        else if (format_str == "buffer" || format_str == "json_buffer")
         {
             return {true};
         }
         else
         {
-            Nan::ThrowError("format must be a string: \"object\" or \"json_buffer\"");
+            Nan::ThrowError("format must be a string: \"object\" or \"buffer\"");
             return {};
         }
     }
-
+    // output to buffer by default for Flatbuffers
+    if (output_format == osrm::engine::api::BaseParameters::OutputFormatType::FLATBUFFERS)
+    {
+        return {true};
+    }
     return {};
 }
 
