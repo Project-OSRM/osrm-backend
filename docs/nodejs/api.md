@@ -63,8 +63,8 @@ Returns the fastest route between two or more coordinates while visiting the way
     -   `options.approaches` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
                          `null`/`true`/`false`
     -   `options.waypoints` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Indices to coordinates to treat as waypoints. If not supplied, all coordinates are waypoints.  Must include first and last coordinate index.
-    -   `options.snapping` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
     -   `options.format` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which output format to use, either `json`, or [`flatbuffers`](https://github.com/Project-OSRM/osrm-backend/tree/master/include/engine/api/flatbuffers).
+    -   `options.snapping` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
 -   `callback` **[Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)** 
 
 **Examples**
@@ -98,9 +98,9 @@ Note: `coordinates` in the general options only supports a single `{longitude},{
     -   `options.number` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** Number of nearest segments that should be returned.
         Must be an integer greater than or equal to `1`. (optional, default `1`)
     -   `options.approaches` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
-    -   `options.snapping` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
     -   `options.format` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which output format to use, either `json`, or [`flatbuffers`](https://github.com/Project-OSRM/osrm-backend/tree/master/include/engine/api/flatbuffers).
-    -   `callback` **[Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)** 
+    -   `options.snapping` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
+-   `callback` **[Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)** 
 
 **Examples**
 
@@ -142,9 +142,8 @@ Optionally returns distance table.
     -   `options.fallback_coordinate` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Either `input` (default) or `snapped`.  If using a `fallback_speed`, use either the user-supplied coordinate (`input`), or the snapped coordinate (`snapped`) for calculating the as-the-crow-flies distance between two points.
     -   `options.scale_factor` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Multiply the table duration values in the table by this number for more controlled input into a route optimization solver.
     -   `options.snapping` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
-    -   `options.format` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which output format to use, either `json`, or [`flatbuffers`](https://github.com/Project-OSRM/osrm-backend/tree/master/include/engine/api/flatbuffers).
     -   `options.annotations` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Return the requested table or tables in response. Can be `['duration']` (return the duration matrix, default), `[distance']` (return the distance matrix), or `['duration', distance']` (return both the duration matrix and the distance matrix).
-    -   `callback` **[Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)** 
+-   `callback` **[Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)** 
 
 **Examples**
 
@@ -228,8 +227,7 @@ if they can not be matched successfully.
     -   `options.tidy` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Allows the input track modification to obtain better matching quality for noisy tracks. (optional, default `false`)
     -   `options.waypoints` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Indices to coordinates to treat as waypoints.  If not supplied, all coordinates are waypoints.  Must include first and last coordinate index.
     -   `options.snapping` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which edges can be snapped to, either `default`, or `any`. `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
-    -   `options.format` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which output format to use, either `json`, or [`flatbuffers`](https://github.com/Project-OSRM/osrm-backend/tree/master/include/engine/api/flatbuffers).
-    -   `callback` **[Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)** 
+-   `callback` **[Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)** 
 
 **Examples**
 
@@ -298,8 +296,7 @@ Right now, the following combinations are possible:
     -   `options.destination` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** Return route ends at `any` or `last` coordinate. (optional, default `any`)
     -   `options.approaches` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
     -   `options.snapping` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which edges can be snapped to, either `default`, or `any`. `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
-    -   `options.format` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which output format to use, either `json`, or [`flatbuffers`](https://github.com/Project-OSRM/osrm-backend/tree/master/include/engine/api/flatbuffers).
-    -   `callback` **[Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)** 
+-   `callback` **[Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)** 
 
 **Examples**
 
@@ -355,7 +352,7 @@ var options = {
     [13.374481201171875, 52.506191342034576]
   ]
 };
-osrm.route(options, { format: "json_buffer" }, function(err, response) {
+osrm.route(options, { format: "buffer" }, function(err, response) {
   if (err) throw err;
   console.log(response.toString("utf-8"));
 });
