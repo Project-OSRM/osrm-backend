@@ -8,6 +8,7 @@
     - NodeJS:
       - FIXED: Support `skip_waypoints` in Node bindings [#6060](https://github.com/Project-OSRM/osrm-backend/pull/6060)
     - Misc:
+      - CHANGED: Optimize RestrictionParser performance. [#6344](https://github.com/Project-OSRM/osrm-backend/pull/6344)
       - CHANGED: Remove redundant nullptr check. [#6326](https://github.com/Project-OSRM/osrm-backend/pull/6326)
       - CHANGED: missing files list is included in exception message. [#5360](https://github.com/Project-OSRM/osrm-backend/pull/5360)
       - CHANGED: Do not use deprecated Callback::Call overload in Node bindings. [#6318](https://github.com/Project-OSRM/osrm-backend/pull/6318)
