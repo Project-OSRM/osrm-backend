@@ -5,10 +5,10 @@
 
 #include <boost/optional/optional.hpp>
 
-#include <string>
-#include <set>
-#include <vector>
 #include <osmium/tags/filter.hpp>
+#include <set>
+#include <string>
+#include <vector>
 
 namespace osmium
 {

@@ -109,7 +109,8 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         {
             is_only_restriction = true;
         }
-        else if (boost::algorithm::starts_with(value, "no_") && !boost::algorithm::ends_with(value, "_on_red"))
+        else if (boost::algorithm::starts_with(value, "no_") &&
+                 !boost::algorithm::ends_with(value, "_on_red"))
         {
             is_only_restriction = false;
             if (boost::algorithm::starts_with(value, "no_exit"))
@@ -126,7 +127,8 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
             return {};
         }
 
-        if (parse_conditionals) {
+        if (parse_conditionals)
+        {
             // Parse condition and add independent value/condition pairs
             const auto &parsed = osrm::util::ParseConditionalRestrictions(value);
 
@@ -158,7 +160,7 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         const bool is_from_role = strcmp("from", role) == 0;
         const bool is_to_role = strcmp("to", role) == 0;
         const bool is_via_role = strcmp("via", role) == 0;
-        
+
         if (!is_from_role && !is_to_role && !is_via_role)
         {
             continue;
@@ -263,12 +265,17 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
 
     // split `except_tag_string` by semicolon and check if any of items is in `restrictions`
     std::string current_string;
-    for (size_t index = 0; index < except_tag_string.size(); index++) {
+    for (size_t index = 0; index < except_tag_string.size(); index++)
+    {
         const auto ch = except_tag_string[index];
-        if (ch != ';') {
+        if (ch != ';')
+        {
             current_string += ch;
-        } else {
-            if (restrictions.find(current_string) != restrictions.end()) {
+        }
+        else
+        {
+            if (restrictions.find(current_string) != restrictions.end())
+            {
                 return true;
             }
             current_string.clear();
