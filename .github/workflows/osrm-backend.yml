@@ -522,6 +522,7 @@ jobs:
         echo "CCOMPILER=clang" >> $GITHUB_ENV
         echo "CXXCOMPILER=clang++" >> $GITHUB_ENV
         sudo apt-get update -y && sudo apt-get install clang++-6
+        which clang-6
         sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-6 100
         sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-6 100
 
