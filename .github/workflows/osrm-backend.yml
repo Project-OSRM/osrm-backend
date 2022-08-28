@@ -153,24 +153,26 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_CLANG_TIDY: ON
 
-          # - name: conan-linux-debug-asan-ubsan
-          #   continue-on-error: false
-          #   node: 12
-          #   runs-on: ubuntu-20.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CLANG_VERSION: 11.0.0
-          #   ENABLE_CONAN: ON
-          #   ENABLE_SANITIZER: ON
+          - name: conan-linux-debug-asan-ubsan
+            continue-on-error: false
+            node: 12
+            runs-on: ubuntu-20.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-11
+            CXXCOMPILER: clang++-11
+            ENABLE_CONAN: ON
+            ENABLE_SANITIZER: ON
 
-          # - name: conan-linux-release
-          #   continue-on-error: false
-          #   node: 12
-          #   runs-on: ubuntu-20.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CLANG_VERSION: 6.0.0
-          #   ENABLE_CONAN: ON
+          - name: conan-linux-release
+            continue-on-error: false
+            node: 12
+            runs-on: ubuntu-20.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-6
+            CXXCOMPILER: clang++-6
+            ENABLE_CONAN: ON
 
           # - name: gcc-11-release
           #   continue-on-error: false
@@ -517,22 +519,19 @@ jobs:
         echo "$(${MASON} prefix ccache ${CCACHE_VERSION})/bin" >> $GITHUB_PATH
 
         # clang
-       # if [[ -n ${CLANG_VERSION} ]]; then
-          echo "CCOMPILER=clang" >> $GITHUB_ENV
-          echo "CXXCOMPILER=clang++" >> $GITHUB_ENV
-          sudo apt-get update -y && sudo apt-get install clang++-6
-          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-6 100
-          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-6 100
+        echo "CCOMPILER=clang" >> $GITHUB_ENV
+        echo "CXXCOMPILER=clang++" >> $GITHUB_ENV
+        sudo apt-get update -y && sudo apt-get install clang++-6
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-6 100
+        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-6 100
 
-          # we only enable lto for release builds
-          # and therefore don't need to us ld.gold or llvm tools for linking
-          # for debug builds
-          if [[ ${BUILD_TYPE} == 'Release' ]]; then
-            ${MASON} install binutils 2.27
-            echo "$(${MASON} prefix binutils 2.27)/bin" >> $GITHUB_PATH
-          fi
-       # fi
-
+        # we only enable lto for release builds
+        # and therefore don't need to us ld.gold or llvm tools for linking
+        # for debug builds
+        if [[ ${BUILD_TYPE} == 'Release' ]]; then
+          ${MASON} install binutils 2.27
+          echo "$(${MASON} prefix binutils 2.27)/bin" >> $GITHUB_PATH
+        fi
         # Linux dev packages
         if [ "${TARGET_ARCH}" != "i686" ] && [ "${ENABLE_CONAN}" != "ON" ]; then
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
