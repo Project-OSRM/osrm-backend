@@ -138,8 +138,7 @@ jobs:
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: clang-6
-            CXXCOMPILER: clang++-6
+            CLANG_VERSION: 6.0
             CUCUMBER_TIMEOUT: 60000
 
           - name: clang-11.0-debug-clang-tidy
@@ -148,8 +147,7 @@ jobs:
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: clang-11
-            CXXCOMPILER: clang++-11
+            CLANG_VERSION: 11.0
             CUCUMBER_TIMEOUT: 60000
             ENABLE_CLANG_TIDY: ON
 
@@ -159,8 +157,7 @@ jobs:
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-11
-            CXXCOMPILER: clang++-11
+            CLANG_VERSION: 11.0
             ENABLE_CONAN: ON
             ENABLE_SANITIZER: ON
 
@@ -170,8 +167,7 @@ jobs:
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-6
-            CXXCOMPILER: clang++-6
+            CLANG_VERSION: 6.0
             ENABLE_CONAN: ON
 
           # - name: gcc-11-release
@@ -519,19 +515,21 @@ jobs:
         echo "$(${MASON} prefix ccache ${CCACHE_VERSION})/bin" >> $GITHUB_PATH
 
         # clang
-        echo "CCOMPILER=clang" >> $GITHUB_ENV
-        echo "CXXCOMPILER=clang++" >> $GITHUB_ENV
-        sudo apt-get update -y && sudo apt-get install clang++-6
-        
-        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-6.0 10000000
-        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-6.0 10000000
+        if [[ -n ${CLANG_VERSION} ]]; then
+          echo "CCOMPILER=clang" >> $GITHUB_ENV
+          echo "CXXCOMPILER=clang++" >> $GITHUB_ENV
+          sudo apt-get update -y && sudo apt-get install clang++-${CLANG_VERSION}
+          
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${CLANG_VERSION} 10000000
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${CLANG_VERSION} 10000000
 
-        # we only enable lto for release builds
-        # and therefore don't need to us ld.gold or llvm tools for linking
-        # for debug builds
-        if [[ ${BUILD_TYPE} == 'Release' ]]; then
-          ${MASON} install binutils 2.27
-          echo "$(${MASON} prefix binutils 2.27)/bin" >> $GITHUB_PATH
+          # we only enable lto for release builds
+          # and therefore don't need to us ld.gold or llvm tools for linking
+          # for debug builds
+          if [[ ${BUILD_TYPE} == 'Release' ]]; then
+            ${MASON} install binutils 2.27
+            echo "$(${MASON} prefix binutils 2.27)/bin" >> $GITHUB_PATH
+          fi
         fi
         # Linux dev packages
         if [ "${TARGET_ARCH}" != "i686" ] && [ "${ENABLE_CONAN}" != "ON" ]; then
