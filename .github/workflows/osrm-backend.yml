@@ -518,8 +518,8 @@ jobs:
         if [[ -n ${CLANG_VERSION} ]]; then
           echo "CCOMPILER=clang" >> $GITHUB_ENV
           echo "CXXCOMPILER=clang++" >> $GITHUB_ENV
-          sudo apt-get update -y && sudo apt-get install clang++-${CLANG_VERSION}
-          
+          sudo apt-get update -y && sudo apt-get install "clang++-${CLANG_VERSION}"
+          echo "XXX /usr/bin/clang++-${CLANG_VERSION}"
           sudo update-alternatives --install /usr/bin/clang++ clang++ "/usr/bin/clang++-${CLANG_VERSION}" 10000000
           sudo update-alternatives --install /usr/bin/clang clang "/usr/bin/clang-${CLANG_VERSION}" 10000000
 
