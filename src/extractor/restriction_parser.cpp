@@ -101,7 +101,7 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
 
     for (; fi_begin != fi_end; ++fi_begin)
     {
-        const std::string value(fi_begin->value());
+        auto value = fi_begin->value();
 
         // documented OSM restriction tags start either with only_* or no_*;
         // check and return on these values, and ignore no_*_on_red or unrecognized values
