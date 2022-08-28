@@ -517,12 +517,12 @@ jobs:
         echo "$(${MASON} prefix ccache ${CCACHE_VERSION})/bin" >> $GITHUB_PATH
 
         # clang
-        if [[ -n ${CLANG_VERSION} ]]; then
+       # if [[ -n ${CLANG_VERSION} ]]; then
           echo "CCOMPILER=clang" >> $GITHUB_ENV
           echo "CXXCOMPILER=clang++" >> $GITHUB_ENV
-          sudo apt-get update -y && sudo apt-get install clang++-${CLANG_VERSION}
-          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${CLANG_VERSION} 100
-          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${CLANG_VERSION} 100
+          sudo apt-get update -y && sudo apt-get install clang++-6
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-6 100
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-6 100
 
           # we only enable lto for release builds
           # and therefore don't need to us ld.gold or llvm tools for linking
@@ -531,7 +531,7 @@ jobs:
             ${MASON} install binutils 2.27
             echo "$(${MASON} prefix binutils 2.27)/bin" >> $GITHUB_PATH
           fi
-        fi
+       # fi
 
         # Linux dev packages
         if [ "${TARGET_ARCH}" != "i686" ] && [ "${ENABLE_CONAN}" != "ON" ]; then
