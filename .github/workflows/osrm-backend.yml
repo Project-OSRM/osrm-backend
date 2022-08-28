@@ -564,8 +564,8 @@ jobs:
     - name: Check clang version
       run: |
         if [[ -n ${CLANG_VERSION} ]]; then
-          clang --version | grep ${CLANG_VERSION}
-          clang++ --version | grep ${CLANG_VERSION}
+          clang --version | grep "${CLANG_VERSION}"
+          clang++ --version | grep "${CLANG_VERSION}"
         fi
 
     - name: Prepare build
