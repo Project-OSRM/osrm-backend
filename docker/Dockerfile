@@ -5,7 +5,7 @@ RUN mkdir -p /src  && mkdir -p /opt
 
 RUN apt-get update && \
     apt-get -y --no-install-recommends install ca-certificates cmake make git gcc g++ libbz2-dev libxml2-dev wget \
-    libzip-dev libboost1.74-all-dev lua5.2 liblua5.2-dev -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
+    libzip-dev libboost1.74-all-dev lua5.4 liblua5.4-dev -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
 
 RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
     ldconfig /usr/local/lib && \
@@ -51,7 +51,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends libboost-program-options1.74.0 libboost-regex1.74.0 \
         libboost-date-time1.74.0 libboost-chrono1.74.0 libboost-filesystem1.74.0 \
         libboost-iostreams1.74.0 libboost-system1.74.0 libboost-thread1.74.0 \
-        expat liblua5.2-0 && \
+        expat liblua5.4-0 && \
     rm -rf /var/lib/apt/lists/* && \
 # add /usr/local/lib to ldconfig to allow loading libraries from there
     ldconfig /usr/local/lib
