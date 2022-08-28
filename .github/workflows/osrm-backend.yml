@@ -518,8 +518,10 @@ jobs:
         if [[ -n ${CLANG_VERSION} ]]; then
           echo "CCOMPILER=clang" >> $GITHUB_ENV
           echo "CXXCOMPILER=clang++" >> $GITHUB_ENV
-          ${MASON} install clang++ ${CLANG_VERSION}
-          echo "$(${MASON} prefix clang++ ${CLANG_VERSION})/bin" >> $GITHUB_PATH
+          sudo apt-get update -y && sudo apt-get install clang++-${CLANG_VERSION}
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${CLANG_VERSION} 100
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${CLANG_VERSION} 100
+
           # we only enable lto for release builds
           # and therefore don't need to us ld.gold or llvm tools for linking
           # for debug builds
@@ -556,6 +558,10 @@ jobs:
         tar zxvf onetbb.tgz
         sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
         sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
+    - name: Test clang
+      run: |
+        clang --version
+        clang++ --version
 
     - name: Prepare build
       run: |
