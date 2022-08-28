@@ -520,6 +520,7 @@ jobs:
           echo "CXXCOMPILER=clang++" >> $GITHUB_ENV
           sudo apt-get update -y && sudo apt-get install "clang++-${CLANG_VERSION}"
           echo "XXX /usr/bin/clang++-${CLANG_VERSION}.0"
+          ls /usr/bin/
           sudo update-alternatives --install /usr/bin/clang++ clang++ "/usr/bin/clang++-${CLANG_VERSION}.0" 10000000
           sudo update-alternatives --install /usr/bin/clang clang "/usr/bin/clang-${CLANG_VERSION}.0" 10000000
 
