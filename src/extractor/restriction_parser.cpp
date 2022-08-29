@@ -266,7 +266,7 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
 
     // split `except_tag_string` by semicolon and check if any of items is in `restrictions`
     std::string current_string;
-    for (size_t index = 0; index < except_tag_string.size(); index++)
+    for (auto index : util::irange<size_t>(0, except_tag_string.size())
     {
         const auto ch = except_tag_string[index];
         if (ch != ';')
