@@ -4,6 +4,24 @@ var data_path = require('./constants').data_path;
 var mld_data_path = require('./constants').mld_data_path;
 var three_test_coordinates = require('./constants').three_test_coordinates;
 var two_test_coordinates = require('./constants').two_test_coordinates;
+const flatbuffers = require('../../features/support/flatbuffers').flatbuffers;
+const FBResult = require('../../features/support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
+
+
+test('match: match in Monaco with flatbuffers format', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM(data_path);
+    var options = {
+        coordinates: three_test_coordinates,
+        timestamps: [1424684612, 1424684616, 1424684620],
+        format: 'flatbuffers'
+    };
+    osrm.match(options, function(err, response) {
+        assert.ifError(err);
+        const fb = FBResult.getRootAsFBResult(new flatbuffers.ByteBuffer(response));
+        assert.equal(fb.routesLength(), 1);
+    });
+});
 
 test('match: match in Monaco', function(assert) {
     assert.plan(5);
