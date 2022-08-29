@@ -107,30 +107,30 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: gcc-9-debug-cov
-            continue-on-error: false
-            node: 12
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Debug
-            CCOMPILER: gcc-9
-            CUCUMBER_TIMEOUT: 20000
-            CXXCOMPILER: g++-9
-            ENABLE_COVERAGE: ON
+          # - name: gcc-9-debug-cov
+          #   continue-on-error: false
+          #   node: 12
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Debug
+          #   CCOMPILER: gcc-9
+          #   CUCUMBER_TIMEOUT: 20000
+          #   CXXCOMPILER: g++-9
+          #   ENABLE_COVERAGE: ON
 
-          - name: gcc-9-debug-asan-ubsan
-            continue-on-error: false
-            node: 12
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Debug
-            CCOMPILER: gcc-9
-            CUCUMBER_TIMEOUT: 20000
-            CXXCOMPILER: g++-9
-            ENABLE_SANITIZER: ON
-            TARGET_ARCH: x86_64-asan-ubsan
-            OSRM_CONNECTION_RETRIES: 10
-            OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
+          # - name: gcc-9-debug-asan-ubsan
+          #   continue-on-error: false
+          #   node: 12
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Debug
+          #   CCOMPILER: gcc-9
+          #   CUCUMBER_TIMEOUT: 20000
+          #   CXXCOMPILER: g++-9
+          #   ENABLE_SANITIZER: ON
+          #   TARGET_ARCH: x86_64-asan-ubsan
+          #   OSRM_CONNECTION_RETRIES: 10
+          #   OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
           - name: clang-6.0-debug
             continue-on-error: false
@@ -138,7 +138,8 @@ jobs:
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CLANG_VERSION: 6
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             CUCUMBER_TIMEOUT: 60000
 
           - name: clang-11.0-debug-clang-tidy
@@ -147,272 +148,273 @@ jobs:
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CLANG_VERSION: 11
+            CCOMPILER: clang-11
+            CXXCOMPILER: clang++-11
             CUCUMBER_TIMEOUT: 60000
             ENABLE_CLANG_TIDY: ON
 
-          - name: conan-linux-debug-asan-ubsan
-            continue-on-error: false
-            node: 12
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CLANG_VERSION: 11
-            ENABLE_CONAN: ON
-            ENABLE_SANITIZER: ON
+          # - name: conan-linux-debug-asan-ubsan
+          #   continue-on-error: false
+          #   node: 12
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CLANG_VERSION: 11
+          #   ENABLE_CONAN: ON
+          #   ENABLE_SANITIZER: ON
 
-          - name: conan-linux-release
-            continue-on-error: false
-            node: 12
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CLANG_VERSION: 6
-            ENABLE_CONAN: ON
+          # - name: conan-linux-release
+          #   continue-on-error: false
+          #   node: 12
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CLANG_VERSION: 6
+          #   ENABLE_CONAN: ON
 
-          - name: gcc-11-release
-            continue-on-error: false
-            node: 12
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-11
-            CXXCOMPILER: g++-11
+          # - name: gcc-11-release
+          #   continue-on-error: false
+          #   node: 12
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-11
+          #   CXXCOMPILER: g++-11
 
-          - name: gcc-10-release
-            continue-on-error: false
-            node: 12
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-10
-            CXXCOMPILER: g++-10
+          # - name: gcc-10-release
+          #   continue-on-error: false
+          #   node: 12
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-10
+          #   CXXCOMPILER: g++-10
 
-          - name: gcc-9-release
-            continue-on-error: false
-            node: 12
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-9
-            CXXCOMPILER: g++-9
-            CXXFLAGS: -Wno-cast-function-type
+          # - name: gcc-9-release
+          #   continue-on-error: false
+          #   node: 12
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-9
+          #   CXXCOMPILER: g++-9
+          #   CXXFLAGS: -Wno-cast-function-type
 
-          - name: gcc-9-conan-release-i686
-            continue-on-error: false
-            node: 12
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-9
-            CFLAGS: "-m32 -msse2 -mfpmath=sse"
-            CXXCOMPILER: g++-9
-            CXXFLAGS: "-m32 -msse2 -mfpmath=sse"
-            TARGET_ARCH: i686
-            ENABLE_CONAN: ON
+          # - name: gcc-9-conan-release-i686
+          #   continue-on-error: false
+          #   node: 12
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-9
+          #   CFLAGS: "-m32 -msse2 -mfpmath=sse"
+          #   CXXCOMPILER: g++-9
+          #   CXXFLAGS: "-m32 -msse2 -mfpmath=sse"
+          #   TARGET_ARCH: i686
+          #   ENABLE_CONAN: ON
             
-          - name: gcc-8-release
-            continue-on-error: false
-            node: 12
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-8
-            CXXCOMPILER: g++-8
-            CXXFLAGS: -Wno-cast-function-type
+          # - name: gcc-8-release
+          #   continue-on-error: false
+          #   node: 12
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-8
+          #   CXXCOMPILER: g++-8
+          #   CXXFLAGS: -Wno-cast-function-type
 
-          - name: gcc-7-release
-            continue-on-error: false
-            node: 12
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-7
-            CXXCOMPILER: g++-7
+          # - name: gcc-7-release
+          #   continue-on-error: false
+          #   node: 12
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-7
+          #   CXXCOMPILER: g++-7
 
-          - name: conan-osx-release-node-12
-            build_node_package: true
-            continue-on-error: false
-            node: 12
-            runs-on: macos-11
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_ASSERTIONS: ON
-            ENABLE_CONAN: ON
+          # - name: conan-osx-release-node-12
+          #   build_node_package: true
+          #   continue-on-error: false
+          #   node: 12
+          #   runs-on: macos-11
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang
+          #   CXXCOMPILER: clang++
+          #   CUCUMBER_TIMEOUT: 60000
+          #   ENABLE_ASSERTIONS: ON
+          #   ENABLE_CONAN: ON
 
-          - name: conan-osx-release-node-14
-            build_node_package: true
-            continue-on-error: false
-            node: 14
-            runs-on: macos-11
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_ASSERTIONS: ON
-            ENABLE_CONAN: ON
+          # - name: conan-osx-release-node-14
+          #   build_node_package: true
+          #   continue-on-error: false
+          #   node: 14
+          #   runs-on: macos-11
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang
+          #   CXXCOMPILER: clang++
+          #   CUCUMBER_TIMEOUT: 60000
+          #   ENABLE_ASSERTIONS: ON
+          #   ENABLE_CONAN: ON
 
-          - name: conan-osx-release-node-16
-            build_node_package: true
-            continue-on-error: false
-            node: 16
-            runs-on: macos-11
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_ASSERTIONS: ON
-            ENABLE_CONAN: ON
+          # - name: conan-osx-release-node-16
+          #   build_node_package: true
+          #   continue-on-error: false
+          #   node: 16
+          #   runs-on: macos-11
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang
+          #   CXXCOMPILER: clang++
+          #   CUCUMBER_TIMEOUT: 60000
+          #   ENABLE_ASSERTIONS: ON
+          #   ENABLE_CONAN: ON
 
-          - name: gcc-7-release-shared
-            continue-on-error: false
-            node: 12
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            BUILD_SHARED_LIBS: ON
-            CCOMPILER: gcc-7
-            CXXCOMPILER: g++-7
+          # - name: gcc-7-release-shared
+          #   continue-on-error: false
+          #   node: 12
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   BUILD_SHARED_LIBS: ON
+          #   CCOMPILER: gcc-7
+          #   CXXCOMPILER: g++-7
 
-          - name: node-12-conan-linux-release
-            build_node_package: true
-            continue-on-error: false
-            node: 12
-            runs-on: ubuntu-20.04
-            BUILD_TYPE: Release
-            CLANG_VERSION: 6
-            ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
+          # - name: node-12-conan-linux-release
+          #   build_node_package: true
+          #   continue-on-error: false
+          #   node: 12
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TYPE: Release
+          #   CLANG_VERSION: 6
+          #   ENABLE_GLIBC_WORKAROUND: ON
+          #   ENABLE_CONAN: ON
+          #   NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-12-conan-linux-debug
-            build_node_package: true
-            continue-on-error: false
-            node: 12
-            runs-on: ubuntu-20.04
-            BUILD_TYPE: Debug
-            CLANG_VERSION: 6
-            ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
+          # - name: node-12-conan-linux-debug
+          #   build_node_package: true
+          #   continue-on-error: false
+          #   node: 12
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TYPE: Debug
+          #   CLANG_VERSION: 6
+          #   ENABLE_GLIBC_WORKAROUND: ON
+          #   ENABLE_CONAN: ON
+          #   NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-14-conan-linux-release
-            build_node_package: true
-            continue-on-error: false
-            node: 14
-            runs-on: ubuntu-20.04
-            BUILD_TYPE: Release
-            CLANG_VERSION: 6
-            ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
+          # - name: node-14-conan-linux-release
+          #   build_node_package: true
+          #   continue-on-error: false
+          #   node: 14
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TYPE: Release
+          #   CLANG_VERSION: 6
+          #   ENABLE_GLIBC_WORKAROUND: ON
+          #   ENABLE_CONAN: ON
+          #   NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-14-conan-linux-debug
-            build_node_package: true
-            continue-on-error: false
-            node: 14
-            runs-on: ubuntu-20.04
-            BUILD_TYPE: Debug
-            CLANG_VERSION: 6
-            ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
+          # - name: node-14-conan-linux-debug
+          #   build_node_package: true
+          #   continue-on-error: false
+          #   node: 14
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TYPE: Debug
+          #   CLANG_VERSION: 6
+          #   ENABLE_GLIBC_WORKAROUND: ON
+          #   ENABLE_CONAN: ON
+          #   NODE_PACKAGE_TESTS_ONLY: ON
 
 
-          - name: node-16-conan-linux-release
-            build_node_package: true
-            continue-on-error: false
-            node: 16
-            runs-on: ubuntu-20.04
-            BUILD_TYPE: Release
-            CLANG_VERSION: 6
-            ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
+          # - name: node-16-conan-linux-release
+          #   build_node_package: true
+          #   continue-on-error: false
+          #   node: 16
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TYPE: Release
+          #   CLANG_VERSION: 6
+          #   ENABLE_GLIBC_WORKAROUND: ON
+          #   ENABLE_CONAN: ON
+          #   NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-16-conan-linux-debug
-            build_node_package: true
-            continue-on-error: false
-            node: 16
-            runs-on: ubuntu-20.04
-            BUILD_TYPE: Debug
-            CLANG_VERSION: 6
-            ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
+          # - name: node-16-conan-linux-debug
+          #   build_node_package: true
+          #   continue-on-error: false
+          #   node: 16
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TYPE: Debug
+          #   CLANG_VERSION: 6
+          #   ENABLE_GLIBC_WORKAROUND: ON
+          #   ENABLE_CONAN: ON
+          #   NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: conan-osx-release-node-latest
-            build_node_package: true
-            continue-on-error: true
-            node: latest
-            runs-on: macos-11
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_ASSERTIONS: ON
-            ENABLE_CONAN: ON
+          # - name: conan-osx-release-node-latest
+          #   build_node_package: true
+          #   continue-on-error: true
+          #   node: latest
+          #   runs-on: macos-11
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang
+          #   CXXCOMPILER: clang++
+          #   CUCUMBER_TIMEOUT: 60000
+          #   ENABLE_ASSERTIONS: ON
+          #   ENABLE_CONAN: ON
 
-          - name: node-latest-conan-linux-release
-            build_node_package: true
-            continue-on-error: true
-            node: latest
-            runs-on: ubuntu-20.04
-            BUILD_TYPE: Release
-            CLANG_VERSION: 6
-            ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
+          # - name: node-latest-conan-linux-release
+          #   build_node_package: true
+          #   continue-on-error: true
+          #   node: latest
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TYPE: Release
+          #   CLANG_VERSION: 6
+          #   ENABLE_GLIBC_WORKAROUND: ON
+          #   ENABLE_CONAN: ON
+          #   NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-latest-conan-linux-debug
-            build_node_package: true
-            continue-on-error: true
-            node: latest
-            runs-on: ubuntu-20.04
-            BUILD_TYPE: Debug
-            CLANG_VERSION: 6
-            ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
+          # - name: node-latest-conan-linux-debug
+          #   build_node_package: true
+          #   continue-on-error: true
+          #   node: latest
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TYPE: Debug
+          #   CLANG_VERSION: 6
+          #   ENABLE_GLIBC_WORKAROUND: ON
+          #   ENABLE_CONAN: ON
+          #   NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: conan-osx-release-node-lts
-            build_node_package: true
-            continue-on-error: true
-            node: "lts/*"
-            runs-on: macos-11
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_ASSERTIONS: ON
-            ENABLE_CONAN: ON
+          # - name: conan-osx-release-node-lts
+          #   build_node_package: true
+          #   continue-on-error: true
+          #   node: "lts/*"
+          #   runs-on: macos-11
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang
+          #   CXXCOMPILER: clang++
+          #   CUCUMBER_TIMEOUT: 60000
+          #   ENABLE_ASSERTIONS: ON
+          #   ENABLE_CONAN: ON
 
-          - name: node-lts-conan-linux-release
-            build_node_package: true
-            continue-on-error: true
-            node: "lts/*"
-            runs-on: ubuntu-20.04
-            BUILD_TYPE: Release
-            CLANG_VERSION: 6
-            ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
+          # - name: node-lts-conan-linux-release
+          #   build_node_package: true
+          #   continue-on-error: true
+          #   node: "lts/*"
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TYPE: Release
+          #   CLANG_VERSION: 6
+          #   ENABLE_GLIBC_WORKAROUND: ON
+          #   ENABLE_CONAN: ON
+          #   NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-lts-conan-linux-debug
-            build_node_package: true
-            continue-on-error: true
-            node: "lts/*"
-            runs-on: ubuntu-20.04
-            BUILD_TYPE: Debug
-            CLANG_VERSION: 6
-            ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
+          # - name: node-lts-conan-linux-debug
+          #   build_node_package: true
+          #   continue-on-error: true
+          #   node: "lts/*"
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TYPE: Debug
+          #   CLANG_VERSION: 6
+          #   ENABLE_GLIBC_WORKAROUND: ON
+          #   ENABLE_CONAN: ON
+          #   NODE_PACKAGE_TESTS_ONLY: ON
 
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
@@ -515,25 +517,15 @@ jobs:
         echo "$(${MASON} prefix ccache ${CCACHE_VERSION})/bin" >> $GITHUB_PATH
 
         # clang
-        if [[ -n ${CLANG_VERSION} ]]; then
-          echo "CCOMPILER=clang" >> $GITHUB_ENV
-          echo "CXXCOMPILER=clang++" >> $GITHUB_ENV
-          sudo apt-get update -y && sudo apt-get install "clang++-${CLANG_VERSION}"
-          if [[ "${CLANG_VERSION}" = "6" ]]; then
-            sudo update-alternatives --install /usr/bin/clang++ clang++ "/usr/bin/clang++-${CLANG_VERSION}.0" 10000000
-            sudo update-alternatives --install /usr/bin/clang clang "/usr/bin/clang-${CLANG_VERSION}.0" 10000000
-          else
-            sudo update-alternatives --install /usr/bin/clang++ clang++ "/usr/bin/clang++-${CLANG_VERSION}" 10000000
-            sudo update-alternatives --install /usr/bin/clang clang "/usr/bin/clang-${CLANG_VERSION}" 10000000
-          fi
-          # we only enable lto for release builds
-          # and therefore don't need to us ld.gold or llvm tools for linking
-          # for debug builds
-          if [[ ${BUILD_TYPE} == 'Release' ]]; then
-            ${MASON} install binutils 2.27
-            echo "$(${MASON} prefix binutils 2.27)/bin" >> $GITHUB_PATH
-          fi
+        sudo apt-get update -y && sudo apt-get install "clang++-6"
+        # we only enable lto for release builds
+        # and therefore don't need to us ld.gold or llvm tools for linking
+        # for debug builds
+        if [[ ${BUILD_TYPE} == 'Release' ]]; then
+          ${MASON} install binutils 2.27
+          echo "$(${MASON} prefix binutils 2.27)/bin" >> $GITHUB_PATH
         fi
+      
         # Linux dev packages
         if [ "${TARGET_ARCH}" != "i686" ] && [ "${ENABLE_CONAN}" != "ON" ]; then
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
