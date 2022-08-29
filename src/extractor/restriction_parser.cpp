@@ -2,6 +2,7 @@
 #include "extractor/profile_properties.hpp"
 
 #include "util/conditional_restrictions.hpp"
+#include "util/integer_range.hpp"
 #include "util/log.hpp"
 
 #include <boost/algorithm/string/predicate.hpp>
