@@ -35,11 +35,19 @@ test('route: routes Monaco and can return result in flatbuffers if output format
     });
 });
 
-test('route: throws error if required output in object in flatbuffers format', function(assert) {
+test('route: throws error if required output is object in flatbuffers format', function(assert) {
     assert.plan(1);
     var osrm = new OSRM(monaco_path);
     assert.throws(function() {
         osrm.route({coordinates: two_test_coordinates, format: 'flatbuffers'}, {format: 'object'}, function(err, result) {});
+    });
+});
+
+test('route: throws error if required output is json_buffer in flatbuffers format', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    assert.throws(function() {
+        osrm.route({coordinates: two_test_coordinates, format: 'flatbuffers'}, {format: 'json_buffer'}, function(err, result) {});
     });
 });
 
