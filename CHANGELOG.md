@@ -1,6 +1,7 @@
 # Unreleased
   - Changes from 5.26.0
     - API:
+      - ADDED: Add Flatbuffers support to NodeJS bindings. [#6338](https://github.com/Project-OSRM/osrm-backend/pull/6338)
       - CHANGED: Add `data_version` field to responses of all services. [#5387](https://github.com/Project-OSRM/osrm-backend/pull/5387)
       - FIXED: Use Boost.Beast to parse HTTP request. [#6294](https://github.com/Project-OSRM/osrm-backend/pull/6294)
       - FIXED: Fix inefficient osrm-routed connection handling [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)

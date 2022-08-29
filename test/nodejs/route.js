@@ -5,6 +5,51 @@ var monaco_mld_path = require('./constants').mld_data_path;
 var monaco_corech_path = require('./constants').corech_data_path;
 var three_test_coordinates = require('./constants').three_test_coordinates;
 var two_test_coordinates = require('./constants').two_test_coordinates;
+const flatbuffers = require('../../features/support/flatbuffers').flatbuffers;
+const FBResult = require('../../features/support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
+
+test('route: routes Monaco and can return result in flatbuffers', function(assert) {
+    assert.plan(5);
+    var osrm = new OSRM(monaco_path);
+    osrm.route({coordinates: two_test_coordinates, format: 'flatbuffers'}, function(err, result) {
+        assert.ifError(err);
+        assert.ok(result instanceof Buffer);
+        const fb = FBResult.getRootAsFBResult(new flatbuffers.ByteBuffer(result));
+        assert.equals(fb.waypointsLength(), 2);
+        assert.equals(fb.routesLength(), 1);
+        assert.ok(fb.routes(0).polyline);
+    });
+});
+
+test('route: routes Monaco and can return result in flatbuffers if output format is passed explicitly', function(assert) {
+    assert.plan(5);
+    var osrm = new OSRM(monaco_path);
+    osrm.route({coordinates: two_test_coordinates, format: 'flatbuffers'}, {output: 'buffer'}, function(err, result) {
+        assert.ifError(err);
+        assert.ok(result instanceof Buffer);
+        var buf = new flatbuffers.ByteBuffer(result);
+        const fb = FBResult.getRootAsFBResult(buf);
+        assert.equals(fb.waypointsLength(), 2);
+        assert.equals(fb.routesLength(), 1);
+        assert.ok(fb.routes(0).polyline);
+    });
+});
+
+test('route: throws error if required output is object in flatbuffers format', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    assert.throws(function() {
+        osrm.route({coordinates: two_test_coordinates, format: 'flatbuffers'}, {format: 'object'}, function(err, result) {});
+    });
+});
+
+test('route: throws error if required output is json_buffer in flatbuffers format', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    assert.throws(function() {
+        osrm.route({coordinates: two_test_coordinates, format: 'flatbuffers'}, {format: 'json_buffer'}, function(err, result) {});
+    });
+});
 
 
 test('route: routes Monaco', function(assert) {

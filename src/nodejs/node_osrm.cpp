@@ -10,6 +10,7 @@
 
 #include <exception>
 #include <sstream>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
@@ -128,8 +129,7 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
     auto params = argsToParams(info, requires_multiple_coordinates);
     if (!params)
         return;
-
-    auto pluginParams = argumentsToPluginParameters(info);
+    auto pluginParams = argumentsToPluginParameters(info, params->format);
 
     BOOST_ASSERT(params->IsValid());
 
@@ -156,20 +156,41 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
         void Execute() override
         try
         {
-            osrm::engine::api::ResultT r;
-            r = osrm::util::json::Object();
-            const auto status = ((*osrm).*(service))(*params, r);
-            auto json_result = r.get<osrm::json::Object>();
-            ParseResult(status, json_result);
-            if (pluginParams.renderJSONToBuffer)
+            switch (
+                params->format.value_or(osrm::engine::api::BaseParameters::OutputFormatType::JSON))
             {
-                std::ostringstream buf;
-                osrm::util::json::render(buf, json_result);
-                result = buf.str();
+            case osrm::engine::api::BaseParameters::OutputFormatType::JSON:
+            {
+                osrm::engine::api::ResultT r;
+                r = osrm::util::json::Object();
+                const auto status = ((*osrm).*(service))(*params, r);
+                auto &json_result = r.get<osrm::json::Object>();
+                ParseResult(status, json_result);
+                if (pluginParams.renderToBuffer)
+                {
+                    std::ostringstream buf;
+                    osrm::util::json::render(buf, json_result);
+                    result = buf.str();
+                }
+                else
+                {
+                    result = json_result;
+                }
             }
-            else
+            break;
+            case osrm::engine::api::BaseParameters::OutputFormatType::FLATBUFFERS:
             {
-                result = json_result;
+                osrm::engine::api::ResultT r = flatbuffers::FlatBufferBuilder();
+                const auto status = ((*osrm).*(service))(*params, r);
+                const auto &fbs_result = r.get<flatbuffers::FlatBufferBuilder>();
+                ParseResult(status, fbs_result);
+                BOOST_ASSERT(pluginParams.renderToBuffer);
+                std::string result_str(
+                    reinterpret_cast<const char *>(fbs_result.GetBufferPointer()),
+                    fbs_result.GetSize());
+                result = std::move(result_str);
+            }
+            break;
             }
         }
         catch (const std::exception &e)
@@ -299,6 +320,7 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
  * @param {Array} [options.approaches] Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
  *                  `null`/`true`/`false`
  * @param {Array} [options.waypoints] Indices to coordinates to treat as waypoints. If not supplied, all coordinates are waypoints.  Must include first and last coordinate index.
+ * @param {String} [options.format] Which output format to use, either `json`, or [`flatbuffers`](https://github.com/Project-OSRM/osrm-backend/tree/master/include/engine/api/flatbuffers).
  * @param {String} [options.snapping] Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
  * @param {Boolean} [options.skip_waypoints=false] Removes waypoints from the response. Waypoints are still calculated, but not serialized. Could be useful in case you are interested in some other part of response and do not want to transfer waste data.
  * @param {Function} callback
@@ -340,6 +362,7 @@ NAN_METHOD(Engine::route) //
  * @param {Number} [options.number=1] Number of nearest segments that should be returned.
  * Must be an integer greater than or equal to `1`.
  * @param {Array} [options.approaches] Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
+ * @param {String} [options.format] Which output format to use, either `json`, or [`flatbuffers`](https://github.com/Project-OSRM/osrm-backend/tree/master/include/engine/api/flatbuffers).
  * @param {String} [options.snapping] Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
  * @param {Function} callback
  *
@@ -606,12 +629,15 @@ NAN_METHOD(Engine::trip) //
  * @name Configuration
  * @param {Object} [plugin_config] - Object literal containing parameters for the trip query.
  * @param {String} [plugin_config.format] The format of the result object to various API calls.
- *                                        Valid options are `object` (default), which returns a
- * standard Javascript object, as described above, and `json_buffer`, which will return a NodeJS
- * **[Buffer](https://nodejs.org/api/buffer.html)** object, containing a JSON string. The latter has
- * the advantage that it can be immediately serialized to disk/sent over the network, and the
- * generation of the string is performed outside the main NodeJS event loop.  This option is ignored
- * by the `tile` plugin.
+ *                                        Valid options are `object` (default if `options.format` is
+ * `json`), which returns a standard Javascript object, as described above, and `buffer`(default if
+ * `options.format` is `flatbuffers`), which will return a NodeJS
+ * **[Buffer](https://nodejs.org/api/buffer.html)** object, containing a JSON string or Flatbuffers
+ * object. The latter has the advantage that it can be immediately serialized to disk/sent over the
+ * network, and the generation of the string is performed outside the main NodeJS event loop.  This
+ * option is ignored by the `tile` plugin. Also note that `options.format` set to `flatbuffers`
+ * cannot be used with `plugin_config.format` set to `object`. `json_buffer` is deprecated alias for
+ * `buffer`.
  *
  * @example
  * var osrm = new OSRM('network.osrm');
@@ -621,7 +647,7 @@ NAN_METHOD(Engine::trip) //
  *     [13.374481201171875, 52.506191342034576]
  *   ]
  * };
- * osrm.route(options, { format: "json_buffer" }, function(err, response) {
+ * osrm.route(options, { format: "buffer" }, function(err, response) {
  *   if (err) throw err;
  *   console.log(response.toString("utf-8"));
  * });

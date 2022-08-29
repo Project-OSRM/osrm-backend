@@ -4,6 +4,24 @@ var data_path = require('./constants').data_path;
 var mld_data_path = require('./constants').mld_data_path;
 var three_test_coordinates = require('./constants').three_test_coordinates;
 var two_test_coordinates = require('./constants').two_test_coordinates;
+const flatbuffers = require('../../features/support/flatbuffers').flatbuffers;
+const FBResult = require('../../features/support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
+
+test('table: flatbuffer format', function(assert) {
+    assert.plan(3);
+    var osrm = new OSRM(data_path);
+    var options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+        format: 'flatbuffers'
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table instanceof Buffer);
+        const fb = FBResult.getRootAsFBResult(new flatbuffers.ByteBuffer(table));
+        assert.ok(fb.table());
+        
+    });
+});
 
 test('table: test annotations paramater combination', function(assert) {
     assert.plan(12);
