@@ -5,6 +5,7 @@ api_version = 4
 Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
+Relations = require("lib/relations")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
 Measure = require("lib/measure")
@@ -33,6 +34,7 @@ function setup()
     turn_penalty              = 6,
     turn_bias                 = 1.4,
     use_public_transport      = true,
+    route_preference          = 1.1,
 
     allowed_start_modes = Set {
       mode.cycling,
@@ -209,7 +211,9 @@ function setup()
     avoid = Set {
       'impassable',
       'construction'
-    }
+    },
+
+    relation_types = Sequence { 'route' },
   }
 end
 
@@ -447,6 +451,16 @@ function cycleway_handler(profile,way,result,data)
   end
 end
 
+function bicycle_relation_handler(profile,way,result,data,relations)
+  -- prefer ways on route=bicycle by factor of profile.route_preference
+  if profile.properties.weight_name == 'cyclability' and result.forward_rate and Relations.filter_relations(relations, way, "route", "bicycle", "route", "forward") == "bicycle" then
+    result.forward_rate = result.forward_rate * profile.route_preference
+  end
+  if profile.properties.weight_name == 'cyclability' and result.backward_rate and Relations.filter_relations(relations, way, "route", "bicycle", "route", "backward") == "bicycle" then
+    result.backward_rate = result.backward_rate * profile.route_preference
+  end
+end
+
 function bike_push_handler(profile,way,result,data)
   -- pushing bikes - if no other mode found
   if result.forward_mode == mode.inaccessible or result.backward_mode == mode.inaccessible or
@@ -548,7 +562,7 @@ end
 
 
 
-function process_way(profile, way, result)
+function process_way(profile, way, result, relations)
   -- the initial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways
   -- have to be checked.
@@ -616,6 +630,9 @@ function process_way(profile, way, result)
     -- compute speed taking into account way type, maxspeed tags, etc.
     WayHandlers.surface,
 
+    -- handle preference of bicyle route relations
+    bicycle_relation_handler,
+
     -- handle turn lanes and road classification, used for guidance
     WayHandlers.classification,
 
@@ -635,7 +652,7 @@ function process_way(profile, way, result)
     WayHandlers.weights
   }
 
-  WayHandlers.run(profile, way, result, data, handlers)
+  WayHandlers.run(profile, way, result, data, handlers, relations)
 end
 
 function process_turn(profile, turn)

@@ -258,4 +258,18 @@ function Relations.process_way_refs(way, relations, result)
   end
 end
 
+function Relations.filter_relations(relations, way, key, value, ret, forward)
+  -- if any of way's relation have key=value, return tag ret; else return nil
+  -- todo: check backward and forward
+  if not forward then forward = 'forward'; end -- ignored at the moment
+  local rel_id_list = relations:get_relations(way)
+  for i, rel_id in ipairs(rel_id_list) do
+    local rel = relations:relation(rel_id);
+    local p = rel:get_value_by_key(key);
+    if value == '*' and p then return rel:get_value_by_key(ret); end
+    if p == value then return rel:get_value_by_key(ret); end
+  end
+  return nil;
+end
+
 return Relations
