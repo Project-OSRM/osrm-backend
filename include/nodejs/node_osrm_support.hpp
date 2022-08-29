@@ -970,7 +970,9 @@ inline PluginParameters argumentsToPluginParameters(
         }
         else if (format_str == "json_buffer")
         {
-            if (output_format && output_format != osrm::engine::api::BaseParameters::OutputFormatType::JSON) {
+            if (output_format &&
+                output_format != osrm::engine::api::BaseParameters::OutputFormatType::JSON)
+            {
                 Nan::ThrowError("Deprecated `json_buffer` can only be used with JSON format");
             }
             return {true};
