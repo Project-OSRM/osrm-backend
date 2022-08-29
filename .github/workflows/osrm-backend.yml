@@ -529,7 +529,7 @@ jobs:
         echo "$(${MASON} prefix ccache ${CCACHE_VERSION})/bin" >> $GITHUB_PATH
 
         # clang
-        if [[ "${CCOMPILER}" = "clang-6.0"]]; then
+        if [[ "${CCOMPILER}" = "clang-6.0" ]]; then
           sudo apt-get update -y && sudo apt-get install clang++-6
         fo
         # we only enable lto for release builds
