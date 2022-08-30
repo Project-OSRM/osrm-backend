@@ -35,10 +35,14 @@ TEST_CASE("delta decode int") {
     osmium::DeltaDecode<int> x;
 
     REQUIRE(x.update(17) == 17);
+    REQUIRE(x.value() == 17);
     REQUIRE(x.update(10) == 27);
+    REQUIRE(x.value() == 27);
     REQUIRE(x.update(-40) == -13);
+    REQUIRE(x.value() == -13);
     x.clear();
     REQUIRE(x.update(17) == 17);
+    REQUIRE(x.value() == 17);
 }
 
 TEST_CASE("delta decode int with int32") {

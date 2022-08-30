@@ -791,10 +791,10 @@ Feature: Basic Roundabout
         # the turn angles here are quite strange, so we do get uturns for exiting
         When I route I should get
             | from | to | route       | turns                                                 | distance |
-            | e    | f  | ed,af,af,af | depart,roundabout-exit-1,exit roundabout left,arrive  | 80.1m    |
-            | f    | e  | af,ed,ed,ed | depart,roundabout-exit-1,exit roundabout uturn,arrive | 120.1m   |
-            | k    | l  | kg,hl,hl,hl | depart,roundabout-exit-1,exit roundabout right,arrive | 80.1m    |
-            | l    | k  | hl,kg,kg,kg | depart,roundabout-exit-1,exit roundabout uturn,arrive | 120.1m   |
+            | e    | f  | ed,af,af,af | depart,roundabout-exit-1,exit roundabout left,arrive  | 80m      |
+            | f    | e  | af,ed,ed,ed | depart,roundabout-exit-1,exit roundabout uturn,arrive | 120m     |
+            | k    | l  | kg,hl,hl,hl | depart,roundabout-exit-1,exit roundabout right,arrive | 80m      |
+            | l    | k  | hl,kg,kg,kg | depart,roundabout-exit-1,exit roundabout uturn,arrive | 120m     |
 
     @4030 @4075
     Scenario: Service roundabout with service exits
@@ -846,5 +846,5 @@ Feature: Basic Roundabout
 
         When I route I should get
             | from | to | route                      | turns                                                   | distance |
-            | e    | k  | ebds,ufghl,ufghl,jhik,jhik | depart,rstur-exit-2,exit rotary right,turn right,arrive | 189.1m   |
+            | e    | k  | ebds,ufghl,ufghl,jhik,jhik | depart,rstur-exit-2,exit rotary right,turn right,arrive | 189.2m   |
             | 1    | k  | ebds,ufghl,ufghl,jhik,jhik | depart,rstur-exit-2,exit rotary right,turn right,arrive | 159.1m   |

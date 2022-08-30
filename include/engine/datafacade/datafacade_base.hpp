@@ -35,6 +35,7 @@
 #include <boost/range/any_range.hpp>
 #include <cstddef>
 
+#include <engine/bearing.hpp>
 #include <string>
 #include <utility>
 #include <vector>
@@ -77,46 +78,51 @@ class BaseDataFacade
     virtual std::string GetTimestamp() const = 0;
 
     // node and edge information access
-    virtual util::Coordinate GetCoordinateOfNode(const NodeID id) const = 0;
+    virtual util::Coordinate GetCoordinateOfNode(const NodeID node_based_node_id) const = 0;
 
-    virtual OSMNodeID GetOSMNodeIDOfNode(const NodeID id) const = 0;
+    virtual OSMNodeID GetOSMNodeIDOfNode(const NodeID node_based_node_id) const = 0;
 
-    virtual GeometryID GetGeometryIndex(const NodeID id) const = 0;
+    virtual GeometryID GetGeometryIndex(const NodeID edge_based_node_id) const = 0;
 
-    virtual ComponentID GetComponentID(const NodeID id) const = 0;
+    virtual ComponentID GetComponentID(const NodeID edge_based_node_id) const = 0;
 
-    virtual NodeForwardRange GetUncompressedForwardGeometry(const EdgeID id) const = 0;
-    virtual NodeReverseRange GetUncompressedReverseGeometry(const EdgeID id) const = 0;
+    virtual NodeForwardRange GetUncompressedForwardGeometry(const PackedGeometryID id) const = 0;
+    virtual NodeReverseRange GetUncompressedReverseGeometry(const PackedGeometryID id) const = 0;
 
-    virtual TurnPenalty GetWeightPenaltyForEdgeID(const EdgeID id) const = 0;
+    virtual TurnPenalty GetWeightPenaltyForEdgeID(const EdgeID edge_based_edge_id) const = 0;
 
-    virtual TurnPenalty GetDurationPenaltyForEdgeID(const EdgeID id) const = 0;
+    virtual TurnPenalty GetDurationPenaltyForEdgeID(const EdgeID edge_based_edge_id) const = 0;
 
     // Gets the weight values for each segment in an uncompressed geometry.
     // Should always be 1 shorter than GetUncompressedGeometry
-    virtual WeightForwardRange GetUncompressedForwardWeights(const EdgeID id) const = 0;
-    virtual WeightReverseRange GetUncompressedReverseWeights(const EdgeID id) const = 0;
+    virtual WeightForwardRange GetUncompressedForwardWeights(const PackedGeometryID id) const = 0;
+    virtual WeightReverseRange GetUncompressedReverseWeights(const PackedGeometryID id) const = 0;
 
     // Gets the duration values for each segment in an uncompressed geometry.
     // Should always be 1 shorter than GetUncompressedGeometry
-    virtual DurationForwardRange GetUncompressedForwardDurations(const EdgeID id) const = 0;
-    virtual DurationReverseRange GetUncompressedReverseDurations(const EdgeID id) const = 0;
+    virtual DurationForwardRange
+    GetUncompressedForwardDurations(const PackedGeometryID id) const = 0;
+    virtual DurationReverseRange
+    GetUncompressedReverseDurations(const PackedGeometryID id) const = 0;
 
     // Returns the data source ids that were used to supply the edge
     // weights.  Will return an empty array when only the base profile is used.
-    virtual DatasourceForwardRange GetUncompressedForwardDatasources(const EdgeID id) const = 0;
-    virtual DatasourceReverseRange GetUncompressedReverseDatasources(const EdgeID id) const = 0;
+    virtual DatasourceForwardRange
+    GetUncompressedForwardDatasources(const PackedGeometryID id) const = 0;
+    virtual DatasourceReverseRange
+    GetUncompressedReverseDatasources(const PackedGeometryID id) const = 0;
 
     // Gets the name of a datasource
     virtual StringView GetDatasourceName(const DatasourceID id) const = 0;
 
-    virtual osrm::guidance::TurnInstruction GetTurnInstructionForEdgeID(const EdgeID id) const = 0;
+    virtual osrm::guidance::TurnInstruction
+    GetTurnInstructionForEdgeID(const EdgeID edge_based_edge_id) const = 0;
 
-    virtual extractor::TravelMode GetTravelMode(const NodeID id) const = 0;
+    virtual extractor::TravelMode GetTravelMode(const NodeID edge_based_node_id) const = 0;
 
-    virtual extractor::ClassData GetClassData(const NodeID id) const = 0;
+    virtual extractor::ClassData GetClassData(const NodeID edge_based_node_id) const = 0;
 
-    virtual bool ExcludeNode(const NodeID id) const = 0;
+    virtual bool ExcludeNode(const NodeID edge_based_node_id) const = 0;
 
     virtual std::vector<std::string> GetClasses(const extractor::ClassData class_data) const = 0;
 
@@ -125,69 +131,31 @@ class BaseDataFacade
 
     virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
-                               const float max_distance,
-                               const int bearing,
-                               const int bearing_range,
-                               const Approach approach,
-                               const bool use_all_edges) const = 0;
-    virtual std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
-                               const float max_distance,
+                               const double max_distance,
+                               const boost::optional<Bearing> bearing,
                                const Approach approach,
                                const bool use_all_edges) const = 0;
 
     virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results,
-                        const double max_distance,
-                        const int bearing,
-                        const int bearing_range,
-                        const Approach approach) const = 0;
-    virtual std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results,
-                        const int bearing,
-                        const int bearing_range,
-                        const Approach approach) const = 0;
-    virtual std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results,
-                        const Approach approach) const = 0;
-    virtual std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results,
-                        const double max_distance,
+                        const size_t max_results,
+                        const boost::optional<double> max_distance,
+                        const boost::optional<Bearing> bearing,
                         const Approach approach) const = 0;
 
-    virtual std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const Approach approach,
-                                                      const bool use_all_edges) const = 0;
-    virtual std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const double max_distance,
-                                                      const Approach approach,
-                                                      const bool use_all_edges) const = 0;
-    virtual std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const double max_distance,
-                                                      const int bearing,
-                                                      const int bearing_range,
-                                                      const Approach approach,
-                                                      const bool use_all_edges) const = 0;
-    virtual std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const int bearing,
-                                                      const int bearing_range,
-                                                      const Approach approach,
-                                                      const bool use_all_edges = false) const = 0;
+    virtual PhantomCandidateAlternatives
+    NearestCandidatesWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                     const boost::optional<double> max_distance,
+                                                     const boost::optional<Bearing> bearing,
+                                                     const Approach approach,
+                                                     const bool use_all_edges) const = 0;
 
-    virtual bool HasLaneData(const EdgeID id) const = 0;
-    virtual util::guidance::LaneTupleIdPair GetLaneData(const EdgeID id) const = 0;
+    virtual bool HasLaneData(const EdgeID edge_based_edge_id) const = 0;
+    virtual util::guidance::LaneTupleIdPair GetLaneData(const EdgeID edge_based_edge_id) const = 0;
     virtual extractor::TurnLaneDescription
     GetTurnDescription(const LaneDescriptionID lane_description_id) const = 0;
 
-    virtual NameID GetNameIndex(const NodeID id) const = 0;
+    virtual NameID GetNameIndex(const NodeID edge_based_node_id) const = 0;
 
     virtual StringView GetNameForID(const NameID id) const = 0;
 
@@ -209,16 +177,16 @@ class BaseDataFacade
 
     virtual double GetWeightMultiplier() const = 0;
 
-    virtual osrm::guidance::TurnBearing PreTurnBearing(const EdgeID eid) const = 0;
-    virtual osrm::guidance::TurnBearing PostTurnBearing(const EdgeID eid) const = 0;
+    virtual osrm::guidance::TurnBearing PreTurnBearing(const EdgeID edge_based_edge_id) const = 0;
+    virtual osrm::guidance::TurnBearing PostTurnBearing(const EdgeID edge_based_edge_id) const = 0;
 
-    virtual util::guidance::BearingClass GetBearingClass(const NodeID node) const = 0;
+    virtual util::guidance::BearingClass GetBearingClass(const NodeID node_based_node_id) const = 0;
 
-    virtual util::guidance::EntryClass GetEntryClass(const EdgeID turn_id) const = 0;
+    virtual util::guidance::EntryClass GetEntryClass(const EdgeID edge_based_edge_id) const = 0;
 
-    virtual bool IsLeftHandDriving(const NodeID id) const = 0;
+    virtual bool IsLeftHandDriving(const NodeID edge_based_node_id) const = 0;
 
-    virtual bool IsSegregated(const NodeID) const = 0;
+    virtual bool IsSegregated(const NodeID edge_based_node_id) const = 0;
 
     virtual std::vector<extractor::ManeuverOverride>
     GetOverridesThatStartAt(const NodeID edge_based_node_id) const = 0;

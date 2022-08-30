@@ -18,7 +18,6 @@
 */
 
 #include <cstdint>  // for std::uint64_t
-#include <cstdlib>  // for std::exit
 #include <iostream> // for std::cout, std::cerr
 
 // Allow any format of input files (XML, PBF, ...)
@@ -63,7 +62,7 @@ struct CountHandler : public osmium::handler::Handler {
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " OSMFILE\n";
-        std::exit(1);
+        return 1;
     }
 
     try {
@@ -88,14 +87,14 @@ int main(int argc, char* argv[]) {
         // Because of the huge amount of OSM data, some Osmium-based programs
         // (though not this one) can use huge amounts of data. So checking actual
         // memore usage is often useful and can be done easily with this class.
-        // (Currently only works on Linux, not OSX and Windows.)
+        // (Currently only works on Linux, not macOS and Windows.)
         osmium::MemoryUsage memory;
 
         std::cout << "\nMemory used: " << memory.peak() << " MBytes\n";
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
         std::cerr << e.what() << '\n';
-        std::exit(1);
+        return 1;
     }
 }
 

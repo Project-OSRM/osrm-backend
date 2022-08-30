@@ -110,99 +110,33 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
 
     std::vector<engine::PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate /*input_coordinate*/,
-                               const float /*max_distance*/,
-                               const int /*bearing*/,
-                               const int /*bearing_range*/,
+                               const double /*max_distance*/,
+                               const boost::optional<engine::Bearing> /*bearing*/,
                                const engine::Approach /*approach*/,
                                const bool /*use_all_edges*/) const override
     {
         return {};
-    }
-
-    std::vector<engine::PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::Coordinate /*input_coordinate*/,
-                               const float /*max_distance*/,
-                               const engine::Approach /*approach*/,
-                               const bool /*use_all_edges*/) const override
-    {
-        return {};
-    }
+    };
 
     std::vector<engine::PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
-                        const unsigned /*max_results*/,
-                        const double /*max_distance*/,
-                        const int /*bearing*/,
-                        const int /*bearing_range*/,
+                        const size_t /*max_results*/,
+                        const boost::optional<double> /*max_distance*/,
+                        const boost::optional<engine::Bearing> /*bearing*/,
                         const engine::Approach /*approach*/) const override
     {
         return {};
-    }
+    };
 
-    std::vector<engine::PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
-                        const unsigned /*max_results*/,
-                        const int /*bearing*/,
-                        const int /*bearing_range*/,
-                        const engine::Approach /*approach*/) const override
+    engine::PhantomCandidateAlternatives NearestCandidatesWithAlternativeFromBigComponent(
+        const util::Coordinate /*input_coordinate*/,
+        const boost::optional<double> /*max_distance*/,
+        const boost::optional<engine::Bearing> /*bearing*/,
+        const engine::Approach /*approach*/,
+        const bool /*use_all_edges*/) const override
     {
         return {};
-    }
-
-    std::vector<engine::PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
-                        const unsigned /*max_results*/,
-                        const engine::Approach /*approach*/) const override
-    {
-        return {};
-    }
-
-    std::vector<engine::PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
-                        const unsigned /*max_results*/,
-                        const double /*max_distance*/,
-                        const engine::Approach /*approach*/) const override
-    {
-        return {};
-    }
-
-    std::pair<engine::PhantomNode, engine::PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
-                                                      const engine::Approach /*approach*/,
-                                                      const bool /* use_all_edges */) const override
-    {
-        return {};
-    }
-
-    std::pair<engine::PhantomNode, engine::PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
-                                                      const double /*max_distance*/,
-                                                      const engine::Approach /*approach*/,
-                                                      const bool /* use_all_edges */) const override
-    {
-        return {};
-    }
-
-    std::pair<engine::PhantomNode, engine::PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
-                                                      const double /*max_distance*/,
-                                                      const int /*bearing*/,
-                                                      const int /*bearing_range*/,
-                                                      const engine::Approach /*approach*/,
-                                                      const bool /* use_all_edges */) const override
-    {
-        return {};
-    }
-
-    std::pair<engine::PhantomNode, engine::PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
-                                                      const int /*bearing*/,
-                                                      const int /*bearing_range*/,
-                                                      const engine::Approach /*approach*/,
-                                                      const bool /* use_all_edges */) const override
-    {
-        return {};
-    }
+    };
 
     std::uint32_t GetCheckSum() const override { return 0; }
 

@@ -12,20 +12,14 @@ Prepare directories for dependencies, build and target file location.Target dire
 
 ### Bzip2
 
-1. Download either from Wolt OSRM mirror or original distribution and unpack.
-    * https://project-osrm.wolt.com/deps/bzip2-1.0.8.tar.gz
-    * https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz
-
+1. Download from https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz
 2. Start 'x64 Native Tools Command Prompt for VS2019' and change directory to unpacked source tree.
 3. Issue `nmake /f makefile.msc`
 4. Copy bzlib.h to $target\include and libbz2.lib to $target\lib
 
 ### ZLib
 
-1. Download either from Wolt OSRM mirror or original distribution and unpack.
-    * https://project-osrm.wolt.com/deps/zlib-1.2.11.tar.gz
-    * https://www.zlib.net/zlib-1.2.11.tar.gz
-
+1. Download https://www.zlib.net/zlib-1.2.11.tar.gz
 2. Start 'x64 Native Tools Command Prompt for VS2019' and change directory to unpacked source tree.
 3. Switch to `contrib\vstudio\vc14`
 4. If needed, open `zlibvc.sln` with Visual Studio and retarget to your version of compiler and SDK.
@@ -34,10 +28,8 @@ Prepare directories for dependencies, build and target file location.Target dire
 
 ### ICU
 
-1. Download either from Wolt OSRM mirror or original distribution and unpack.
-    * https://wolt-project.wolt.com/deps/icu4c-66_1-src.zip
+1. Download and unpack.
     * https://github.com/unicode-org/icu/releases/download/release-66-1/icu4c-66_1-src.zip
-    * https://wolt-project.wolt.com/deps/icu4c-66_1-data.zip
     * https://github.com/unicode-org/icu/releases/download/release-66-1/icu4c-66_1-data.zip
 2. Do retarget if neededby openinig .\source\allinone\allinone.sln and editing projects
 3. Start 'x64 Native Tools Command Prompt for VS2019' and change directory to unpacked source tree.
@@ -48,10 +40,7 @@ Prepare directories for dependencies, build and target file location.Target dire
 
 ### Boost
 
-1. Download either from Wolt OSRM mirror or original distribution and unpack.
-    * https://project-osrm.wolt.com/deps/boost_1_73_0.zip
-    * https://dl.bintray.com/boostorg/release/1.73.0/source/boost_1_73_0.zip
-
+1. Download and unpack https://dl.bintray.com/boostorg/release/1.73.0/source/boost_1_73_0.zip
 2. Start 'x64 Native Tools Command Prompt for VS2019' and change directory to unpacked source tree.
 3. Build b2:
     bootstrap.bat --with-toolset=msvc-14.2
@@ -61,9 +50,7 @@ Prepare directories for dependencies, build and target file location.Target dire
 
 ### Expat
 
-1. Download either from Wolt OSRM mirror or original distribution and unpack.
-    * https://project-osrm.wolt.com/deps/libexpat-2_2_9.zip
-    * https://github.com/libexpat/libexpat/archive/R_2_2_9.zip
+1. Download and unpack https://github.com/libexpat/libexpat/archive/R_2_2_9.zip
 2. Start 'x64 Native Tools Command Prompt for VS2019' and change directory to unpacked source tree.
 3. Configure build my calling cmake:
     mkdir expat\build
@@ -74,9 +61,7 @@ Prepare directories for dependencies, build and target file location.Target dire
 
 ### LUA
 
-1. Download either from Wolt OSRM mirror or original distribution and unpack.
-    * https://project-osrm.wolt.com/deps/lua-5.3.5.tar.gz
-    * https://www.lua.org/ftp/lua-5.3.5.tar.gz
+1. Download and unpack https://www.lua.org/ftp/lua-5.3.5.tar.gz
 2. Start 'x64 Native Tools Command Prompt for VS2019' and change directory to unpacked source tree.
 3. Lua doesn't have native MSVC support, so you have to compile it by hand:
     cd src
@@ -88,9 +73,7 @@ Prepare directories for dependencies, build and target file location.Target dire
 
 ### TBB
 
-1. Download either from Wolt OSRM mirror or original distribution and unpack.
-    * https://project-osrm.wolt.com/deps/oneTBB-v2020.2.zip
-    * https://github.com/oneapi-src/oneTBB/archive/v2020.2.zip
+1. Download and unpack https://github.com/oneapi-src/oneTBB/archive/v2020.2.zip
 2. Retarget by opening build\vs2013\makefile.sln
 3. Start 'x64 Native Tools Command Prompt for VS2019' and change directory to unpacked source tree.
 4. Switch to build\vs2013 and build: `msbuild makefle.sln /nologo /p:Configuration=Release /p:Platform=x64`

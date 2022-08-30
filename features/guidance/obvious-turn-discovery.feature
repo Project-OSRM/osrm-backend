@@ -277,7 +277,7 @@ Feature: Simple Turns
     When I route I should get
         | from | to | route       | turns                        |
         | a    | c  | menz,rem    | depart,arrive                |
-        | d    | c  | rem,rem,rem | depart,continue left,arrive  |
+        | d    | c  | rem,rem     | depart,arrive                |
         | c    | d  | rem,rem,rem | depart,continue right,arrive |
         | c    | a  | rem,menz    | depart,arrive                |
 

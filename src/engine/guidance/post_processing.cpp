@@ -263,7 +263,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     BOOST_ASSERT(geometry.locations.size() >= steps.size());
     // Look for distances under 1m
     const bool zero_length_step = steps.front().distance <= 1 && steps.size() > 2;
-    const bool duplicated_coordinate = util::coordinate_calculation::haversineDistance(
+    const bool duplicated_coordinate = util::coordinate_calculation::greatCircleDistance(
                                            geometry.locations[0], geometry.locations[1]) <= 1;
     if (zero_length_step || duplicated_coordinate)
     {
@@ -279,8 +279,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
                                      geometry.locations.begin() + offset);
             geometry.annotations.erase(geometry.annotations.begin(),
                                        geometry.annotations.begin() + offset);
-            geometry.osm_node_ids.erase(geometry.osm_node_ids.begin(),
-                                        geometry.osm_node_ids.begin() + offset);
+            geometry.node_ids.erase(geometry.node_ids.begin(), geometry.node_ids.begin() + offset);
         }
 
         auto const first_bearing = steps.front().maneuver.bearing_after;
@@ -377,7 +376,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         // remove all the last coordinates from the geometry
         geometry.locations.resize(geometry.segment_offsets.back() + 1);
         geometry.annotations.resize(geometry.segment_offsets.back());
-        geometry.osm_node_ids.resize(geometry.segment_offsets.back() + 1);
+        geometry.node_ids.resize(geometry.segment_offsets.back() + 1);
 
         BOOST_ASSERT(geometry.segment_distances.back() <= 1);
         geometry.segment_distances.pop_back();
@@ -406,7 +405,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         next_to_last_step.mode = new_next_to_last.mode;
         // the geometry indices of the last step are already correct;
     }
-    else if (util::coordinate_calculation::haversineDistance(
+    else if (util::coordinate_calculation::greatCircleDistance(
                  geometry.locations[geometry.locations.size() - 2],
                  geometry.locations[geometry.locations.size() - 1]) <= 1)
     {
@@ -414,7 +413,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         // This can happen if the last coordinate snaps to a node in the unpacked geometry
         geometry.locations.pop_back();
         geometry.annotations.pop_back();
-        geometry.osm_node_ids.pop_back();
+        geometry.node_ids.pop_back();
         geometry.segment_offsets.back()--;
         // since the last geometry includes the location of arrival, the arrival instruction
         // geometry overlaps with the previous segment
@@ -436,7 +435,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     }
 
     BOOST_ASSERT(geometry.segment_offsets.back() + 1 == geometry.locations.size());
-    BOOST_ASSERT(geometry.segment_offsets.back() + 1 == geometry.osm_node_ids.size());
+    BOOST_ASSERT(geometry.segment_offsets.back() + 1 == geometry.node_ids.size());
     BOOST_ASSERT(geometry.segment_offsets.back() == geometry.annotations.size());
 
     BOOST_ASSERT(steps.back().geometry_end == geometry.locations.size());
@@ -463,7 +462,7 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
     BOOST_ASSERT(steps.size() >= 2);
     BOOST_ASSERT(leg_geometry.locations.size() >= 2);
     const constexpr double MINIMAL_RELATIVE_DISTANCE = 5., MAXIMAL_RELATIVE_DISTANCE = 300.;
-    const auto distance_to_start = util::coordinate_calculation::haversineDistance(
+    const auto distance_to_start = util::coordinate_calculation::greatCircleDistance(
         source_node.input_location, leg_geometry.locations[0]);
     const auto initial_modifier =
         distance_to_start >= MINIMAL_RELATIVE_DISTANCE &&
@@ -474,7 +473,7 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
 
     steps.front().maneuver.instruction.direction_modifier = initial_modifier;
 
-    const auto distance_from_end = util::coordinate_calculation::haversineDistance(
+    const auto distance_from_end = util::coordinate_calculation::greatCircleDistance(
         target_node.input_location, leg_geometry.locations.back());
     const auto final_modifier =
         distance_from_end >= MINIMAL_RELATIVE_DISTANCE &&
@@ -541,7 +540,7 @@ std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps)
         {
 
             // End of road is a turn that helps to identify the location of a turn. If the turn does
-            // not pass by any oter intersections, the end-of-road characteristic does not improve
+            // not pass by any other intersections, the end-of-road characteristic does not improve
             // the instructions.
             // Here we reduce the verbosity of our output by reducing end-of-road emissions in cases
             // where no intersections have been passed in between.

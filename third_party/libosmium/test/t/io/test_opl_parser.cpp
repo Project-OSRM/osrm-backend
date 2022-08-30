@@ -14,6 +14,17 @@
 
 namespace oid = osmium::io::detail;
 
+// From C++20 we need to handle unicode literals differently
+#ifdef __cpp_char8_t
+static const char* u8cast(const char8_t *s) noexcept {
+    return reinterpret_cast<const char*>(s);
+}
+#else
+static const char* u8cast(const char *s) noexcept {
+    return s;
+}
+#endif
+
 TEST_CASE("Parse OPL: base exception") {
     const osmium::opl_error e{"foo"};
     REQUIRE(e.data == nullptr);
@@ -38,13 +49,13 @@ TEST_CASE("Parse OPL: space") {
     const std::string d{"a b \t c"};
 
     const char* s = d.data();
-    REQUIRE_THROWS_AS(oid::opl_parse_space(&s), const osmium::opl_error&);
+    REQUIRE_THROWS_AS(oid::opl_parse_space(&s), osmium::opl_error);
 
     s = d.data() + 1;
     oid::opl_parse_space(&s);
     REQUIRE(*s == 'b');
 
-    REQUIRE_THROWS_AS(oid::opl_parse_space(&s), const osmium::opl_error&);
+    REQUIRE_THROWS_AS(oid::opl_parse_space(&s), osmium::opl_error);
 
     ++s;
     oid::opl_parse_space(&s);
@@ -104,7 +115,7 @@ TEST_CASE("Parse OPL: parse escaped") {
         const char* e = s + std::strlen(s);
         oid::opl_parse_escaped(&s, result);
         REQUIRE(result.size() == 1);
-        REQUIRE(result[0] == '\0');
+        REQUIRE(result[0] == '%');
         REQUIRE(s == e);
     }
 
@@ -144,7 +155,7 @@ TEST_CASE("Parse OPL: parse escaped") {
         result.append("_");
         const char* s3 = "1f6eb%";
         oid::opl_parse_escaped(&s3, result);
-        REQUIRE(result == u8"\u30dc_\U0001d11e_\U0001f6eb");
+        REQUIRE(result == u8cast(u8"\u30dc_\U0001d11e_\U0001f6eb"));
     }
 
     SECTION("Data after %") {
@@ -260,6 +271,12 @@ TEST_CASE("Parse OPL: integer") {
     REQUIRE(test_parse_int("-1x") == -1);
     REQUIRE(test_parse_int("1234567890123x") == 1234567890123);
     REQUIRE(test_parse_int("-1234567890123x") == -1234567890123);
+    REQUIRE(test_parse_int("999999999999999999x") == 999999999999999999);
+    REQUIRE(test_parse_int("-999999999999999999x") == -999999999999999999);
+    REQUIRE(test_parse_int("1000000000000000000x") == 1000000000000000000);
+    REQUIRE(test_parse_int("9223372036854775807x") == 9223372036854775807);
+    REQUIRE(test_parse_int("-9223372036854775807x") == -9223372036854775807);
+    REQUIRE(test_parse_int("-9223372036854775808x") == -9223372036854775807 - 1);
 
     REQUIRE_THROWS_WITH(test_parse_int(""),
                         "OPL error: expected integer");
@@ -273,7 +290,25 @@ TEST_CASE("Parse OPL: integer") {
     REQUIRE_THROWS_WITH(test_parse_int("x"),
                         "OPL error: expected integer");
 
-    REQUIRE_THROWS_WITH(test_parse_int("99999999999999999999999x"),
+    REQUIRE_THROWS_WITH(test_parse_int("9223372036854775808x"),
+                        "OPL error: integer too long");
+
+    REQUIRE_THROWS_WITH(test_parse_int("9223372036854775809x"),
+                        "OPL error: integer too long");
+
+    REQUIRE_THROWS_WITH(test_parse_int("9223372036854775810x"),
+                        "OPL error: integer too long");
+
+    REQUIRE_THROWS_WITH(test_parse_int("-9223372036854775809x"),
+                        "OPL error: integer too long");
+
+    REQUIRE_THROWS_WITH(test_parse_int("-9223372036854775810x"),
+                        "OPL error: integer too long");
+
+    REQUIRE_THROWS_WITH(test_parse_int("999999999999999999999x"),
+                        "OPL error: integer too long");
+
+    REQUIRE_THROWS_WITH(test_parse_int("-999999999999999999999x"),
                         "OPL error: integer too long");
 }
 
@@ -458,12 +493,12 @@ TEST_CASE("Parse OPL: nodes") {
         REQUIRE(buffer.written() > 0);
         const auto& wnl = buffer.get<osmium::WayNodeList>(0);
         REQUIRE(wnl.size() == 2);
-        auto it = wnl.begin();
+        const auto* it = wnl.cbegin();
         REQUIRE(it->ref() == 123);
         ++it;
         REQUIRE(it->ref() == 456);
         ++it;
-        REQUIRE(it == wnl.end());
+        REQUIRE(it == wnl.cend());
     }
 
     SECTION("Trailing comma") {
@@ -472,12 +507,12 @@ TEST_CASE("Parse OPL: nodes") {
         REQUIRE(buffer.written() > 0);
         const auto& wnl = buffer.get<osmium::WayNodeList>(0);
         REQUIRE(wnl.size() == 2);
-        auto it = wnl.begin();
+        const auto* it = wnl.cbegin();
         REQUIRE(it->ref() == 123);
         ++it;
         REQUIRE(it->ref() == 456);
         ++it;
-        REQUIRE(it == wnl.end());
+        REQUIRE(it == wnl.cend());
     }
 
     SECTION("Way nodes with coordinates") {
@@ -486,7 +521,7 @@ TEST_CASE("Parse OPL: nodes") {
         REQUIRE(buffer.written() > 0);
         const auto& wnl = buffer.get<osmium::WayNodeList>(0);
         REQUIRE(wnl.size() == 2);
-        auto it = wnl.begin();
+        const auto* it = wnl.cbegin();
         REQUIRE(it->ref() == 123);
         const osmium::Location loc1{1.2, 3.4};
         REQUIRE(it->location() == loc1);
@@ -495,7 +530,7 @@ TEST_CASE("Parse OPL: nodes") {
         const osmium::Location loc2{33.0, 0.1};
         REQUIRE(it->location() == loc2);
         ++it;
-        REQUIRE(it == wnl.end());
+        REQUIRE(it == wnl.cend());
     }
 
 }
@@ -888,7 +923,6 @@ TEST_CASE("Parse line") {
     osmium::memory::Buffer buffer{1024};
 
     SECTION("Empty line") {
-        const char* s = "";
         REQUIRE_FALSE(oid::opl_parse_line(0, "", buffer));
         REQUIRE(buffer.written() == 0);
     }
@@ -1059,8 +1093,7 @@ TEST_CASE("Duplicate attributes") {
         REQUIRE_NOTHROW(osmium::opl_parse(line.c_str(), buffer));
         line += " ";
         line += attr;
-        REQUIRE_THROWS_AS(osmium::opl_parse(line.c_str(), buffer),
-                          const osmium::opl_error &);
+        REQUIRE_THROWS_AS(osmium::opl_parse(line.c_str(), buffer), osmium::opl_error);
     }
 
     for (const char *attr : {"v1", "dV", "c2", "t2020-01-01T00:00:01Z", "i3", "utest", "Ta=b", "Nn1"}) {
@@ -1068,8 +1101,7 @@ TEST_CASE("Duplicate attributes") {
         REQUIRE_NOTHROW(osmium::opl_parse(line.c_str(), buffer));
         line += " ";
         line += attr;
-        REQUIRE_THROWS_AS(osmium::opl_parse(line.c_str(), buffer),
-                          const osmium::opl_error &);
+        REQUIRE_THROWS_AS(osmium::opl_parse(line.c_str(), buffer), osmium::opl_error);
     }
 
     for (const char *attr : {"v1", "dV", "c2", "t2020-01-01T00:00:01Z", "i3", "utest", "Ta=b", "Mn1@foo"}) {
@@ -1077,8 +1109,7 @@ TEST_CASE("Duplicate attributes") {
         REQUIRE_NOTHROW(osmium::opl_parse(line.c_str(), buffer));
         line += " ";
         line += attr;
-        REQUIRE_THROWS_AS(osmium::opl_parse(line.c_str(), buffer),
-                          const osmium::opl_error &);
+        REQUIRE_THROWS_AS(osmium::opl_parse(line.c_str(), buffer), osmium::opl_error);
     }
 
     for (const char *attr : {"k1", "s2020-01-01T00:00:01Z", "e2020-01-01T00:00:02Z", "d1", "i3", "utest", "Ta=b", "x1", "y2", "X3", "Y4"}) {
@@ -1086,8 +1117,7 @@ TEST_CASE("Duplicate attributes") {
         REQUIRE_NOTHROW(osmium::opl_parse(line.c_str(), buffer));
         line += " ";
         line += attr;
-        REQUIRE_THROWS_AS(osmium::opl_parse(line.c_str(), buffer),
-                          const osmium::opl_error &);
+        REQUIRE_THROWS_AS(osmium::opl_parse(line.c_str(), buffer), osmium::opl_error);
     }
 }
 

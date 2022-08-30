@@ -9,7 +9,7 @@ namespace osrm
 namespace extractor
 {
 class NodeBasedGraphFactory;
-}
+} // namespace extractor
 
 namespace guidance
 {

@@ -33,11 +33,11 @@ TEST_CASE("Projection 4326 from init string") {
 }
 
 TEST_CASE("Creating projection from unknown init string") {
-    REQUIRE_THROWS_AS(osmium::geom::Projection{"abc"}, const osmium::projection_error&);
+    REQUIRE_THROWS_AS(osmium::geom::Projection{"abc"}, osmium::projection_error);
 }
 
 TEST_CASE("Creating projection from unknown EPSG code") {
-    REQUIRE_THROWS_AS(osmium::geom::Projection{9999999}, const osmium::projection_error&);
+    REQUIRE_THROWS_AS(osmium::geom::Projection{9999999}, osmium::projection_error);
 }
 
 TEST_CASE("Projection 3857") {

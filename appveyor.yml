@@ -1,15 +1,3 @@
-environment:
-  matrix:
-  - configuration: Release
-#  - configuration: Debug
-
-install:
-  - ps: Install-Product node 6
-
-# scripts that are called at very beginning, before repo cloning
-init:
-  - git config --global core.autocrlf input
-
 os: Visual Studio 2019
 
 # clone directory
@@ -17,20 +5,11 @@ clone_folder: c:\projects\osrm
 
 platform: x64
 
+# no-op for the time being until someone with access to GitHub checks settings will remove integration with AppVeyor
+# https://github.com/Project-OSRM/osrm-backend/pull/6312#issuecomment-1217237055 
 build_script:
-  - CALL appveyor-build.bat
-
-before_test:
-  - node --version
-  - npm --version
-  - npm install --ignore-scripts
-  - npm link --ignore-scripts
-  - SET PATH=%CD%\osrm-deps\lib;%PATH%
-  - SET OSRM_BUILD_DIR=build\%Configuration%
-# TODO tests fail with "JavaScript heap out of memory", need a better host?
-#  - npm test
+  - EXIT 0
 
 branches:
   only:
     - master
-

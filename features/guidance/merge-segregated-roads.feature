@@ -64,7 +64,7 @@ Feature: Merge Segregated Roads
 
         When I route I should get
             | waypoints | route               | intersections                                                                                      |
-            | a,f       | road,road,road,road | true:90,false:45 true:135 false:270;true:45 true:180 false:315;true:90 false:225 true:315;true:270 |
+            | a,f       | road,road,road      | true:90,false:45 true:135 false:270;true:45 true:180 false:315,true:90 false:225 true:315;true:270 |
 
     #https://www.openstreetmap.org/#map=19/52.50003/13.33915
     @negative
@@ -193,7 +193,7 @@ Feature: Merge Segregated Roads
 
         When I route I should get
             | waypoints | route     | intersections                                                           |
-            | a,g       | road,road | true:90,false:90 true:150 false:270,true:90 false:270 true:345;true:270 |
+            | a,g       | road,road | true:90,false:90 true:165 false:270,true:90 false:270 true:345;true:270 |
 
     Scenario: Merging parallel roads with intermediate bridges
     # https://www.mapillary.com/app/?lat=52.466483333333336&lng=13.431908333333332&z=17&focus=photo&pKey=LWXnKqoGqUNLnG0lofiO0Q
@@ -332,10 +332,11 @@ Feature: Merge Segregated Roads
               |
              .b.
             c   h
+            1   |
+            |   4
             |   |
-            |   |
-            1   2
-            |   |
+            2   |
+            |   3
             d   g
              'e'
               |
@@ -354,13 +355,13 @@ Feature: Merge Segregated Roads
             | hb    | road   | yes    |
 
         When I route I should get
-            | waypoints | turns         | route       | intersections									  |
+            | waypoints | turns         | route       | intersections                                     |
             | a,f       | depart,arrive | road,road   | true:180,false:0 true:180,false:0 true:180;true:0 |
-            | c,f       | depart,arrive | bridge,road | true:180,false:0 true:180;true:0				  |
             | 1,f       | depart,arrive | bridge,road | true:180,false:0 true:180;true:0                  |
+            | 2,f       | depart,arrive | bridge,road | true:180,false:0 true:180;true:0                  |
             | f,a       | depart,arrive | road,road   | true:0,true:0 false:180,true:0 false:180;true:180 |
-            | g,a       | depart,arrive | bridge,road | true:0,true:0 false:180;true:180                  |
-            | 2,a       | depart,arrive | bridge,road | true:0,true:0 false:180;true:180                  |
+            | 3,a       | depart,arrive | bridge,road | true:0,true:0 false:180;true:180                  |
+            | 4,a       | depart,arrive | bridge,road | true:0,true:0 false:180;true:180                  |
 
     @negative
     Scenario: Traffic Circle

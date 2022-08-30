@@ -22,6 +22,24 @@
 #include <string>
 #include <vector>
 
+#ifdef _MSC_VER
+#if (_MSC_VER >= 1928)
+#ifdef _DEBUG
+namespace osrm
+{
+namespace extractor
+{
+namespace detail
+{
+const ByEdgeOrByMeterValue::ValueByEdge ByEdgeOrByMeterValue::by_edge;
+const ByEdgeOrByMeterValue::ValueByMeter ByEdgeOrByMeterValue::by_meter;
+} // namespace detail
+} // namespace extractor
+} // namespace osrm
+#endif
+#endif
+#endif
+
 namespace osrm
 {
 namespace extractor
@@ -362,7 +380,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                             parsed_way.pronunciation,
                             parsed_way.exits};
             auto v = MapVal{name_id};
-            string_map.emplace(std::move(k), std::move(v));
+            string_map.emplace(std::move(k), v);
         }
         else
         {
@@ -403,9 +421,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                                                   parsed_way.forward_travel_mode,
                                                                   parsed_way.is_left_hand_driving});
         util::for_each_pair(
-            nodes.cbegin(),
-            nodes.cend(),
-            [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
+            nodes, [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
                 NodeBasedEdgeWithOSM edge = {
                     OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
                     OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
@@ -425,8 +441,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                      parsed_way.highway_turn_classification,
                      parsed_way.access_turn_classification}};
 
-                external_memory.all_edges_list.push_back(InternalExtractorEdge(
-                    std::move(edge), forward_weight_data, forward_duration_data, {}));
+                external_memory.all_edges_list.push_back(
+                    InternalExtractorEdge(edge, forward_weight_data, forward_duration_data, {}));
             });
     }
 
@@ -439,9 +455,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                                                   parsed_way.backward_travel_mode,
                                                                   parsed_way.is_left_hand_driving});
         util::for_each_pair(
-            nodes.cbegin(),
-            nodes.cend(),
-            [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
+            nodes, [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
                 NodeBasedEdgeWithOSM edge = {
                     OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
                     OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
@@ -461,8 +475,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                      parsed_way.highway_turn_classification,
                      parsed_way.access_turn_classification}};
 
-                external_memory.all_edges_list.push_back(InternalExtractorEdge(
-                    std::move(edge), backward_weight_data, backward_duration_data, {}));
+                external_memory.all_edges_list.push_back(
+                    InternalExtractorEdge(edge, backward_weight_data, backward_duration_data, {}));
             });
     }
 

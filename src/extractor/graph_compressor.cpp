@@ -3,8 +3,7 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/extraction_turn.hpp"
 #include "extractor/restriction.hpp"
-#include "extractor/restriction_compressor.hpp"
-#include "guidance/intersection.hpp"
+#include "extractor/turn_path_compressor.hpp"
 
 #include "util/dynamic_graph.hpp"
 #include "util/node_based_graph.hpp"
@@ -32,28 +31,34 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
     const unsigned original_number_of_nodes = graph.GetNumberOfNodes();
     const unsigned original_number_of_edges = graph.GetNumberOfEdges();
 
-    RestrictionCompressor restriction_compressor(turn_restrictions, maneuver_overrides);
+    TurnPathCompressor turn_path_compressor(turn_restrictions, maneuver_overrides);
 
     // Some degree two nodes are not compressed if they act as entry/exit points into a
     // restriction path.
-    std::unordered_set<NodeID> restriction_via_nodes;
+    std::unordered_set<NodeID> incompressible_via_nodes;
 
     const auto remember_via_nodes = [&](const auto &restriction) {
-        if (restriction.Type() == RestrictionType::NODE_RESTRICTION)
+        if (restriction.turn_path.Type() == TurnPathType::VIA_NODE_TURN_PATH)
         {
-            restriction_via_nodes.insert(restriction.AsNodeRestriction().via);
+            incompressible_via_nodes.insert(restriction.turn_path.AsViaNodePath().via);
         }
         else
         {
-            BOOST_ASSERT(restriction.Type() == RestrictionType::WAY_RESTRICTION);
-            const auto &way_restriction = restriction.AsWayRestriction();
+            BOOST_ASSERT(restriction.turn_path.Type() == TurnPathType::VIA_WAY_TURN_PATH);
+            const auto &way_restriction = restriction.turn_path.AsViaWayPath();
             // We do not compress the first and last via nodes so that we know how to enter/exit
             // a restriction path and apply the restrictions correctly.
-            restriction_via_nodes.insert(way_restriction.via.front());
-            restriction_via_nodes.insert(way_restriction.via.back());
+            incompressible_via_nodes.insert(way_restriction.via.front());
+            incompressible_via_nodes.insert(way_restriction.via.back());
         }
     };
     std::for_each(turn_restrictions.begin(), turn_restrictions.end(), remember_via_nodes);
+    for (const auto &maneuver : maneuver_overrides)
+    {
+        // Only incompressible is where the instruction occurs.
+        incompressible_via_nodes.insert(maneuver.instruction_node);
+    }
+
     {
         const auto weight_multiplier =
             scripting_environment.GetProfileProperties().GetWeightMultiplier();
@@ -77,7 +82,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
             }
 
             // check if v is an entry/exit via node for a turn restriction
-            if (restriction_via_nodes.count(node_v) > 0)
+            if (incompressible_via_nodes.count(node_v) > 0)
             {
                 continue;
             }
@@ -303,8 +308,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 graph.DeleteEdge(node_v, forward_e2);
                 graph.DeleteEdge(node_v, reverse_e2);
 
-                // update any involved turn restrictions
-                restriction_compressor.Compress(node_u, node_v, node_w);
+                // update any involved turn relations
+                turn_path_compressor.Compress(node_u, node_v, node_w);
 
                 // store compressed geometry in container
                 geometry_compressor.CompressEdge(forward_e1,

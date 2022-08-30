@@ -21,11 +21,7 @@
 
 #include <boost/assert.hpp>
 
-#if TBB_VERSION_MAJOR == 2020
 #include <tbb/global_control.h>
-#else
-#include <tbb/task_scheduler_init.h>
-#endif
 
 namespace osrm
 {
@@ -96,8 +92,7 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
     auto tidied = partitioner::prepareEdgesForUsageInGraph<
         typename partitioner::MultiLevelEdgeBasedGraph::InputEdge>(std::move(directed));
 
-    auto edge_based_graph =
-        partitioner::MultiLevelEdgeBasedGraph(mlp, num_nodes, std::move(tidied));
+    auto edge_based_graph = partitioner::MultiLevelEdgeBasedGraph(mlp, num_nodes, tidied);
 
     return edge_based_graph;
 }
@@ -108,8 +103,9 @@ std::vector<CellMetric> customizeFilteredMetrics(const partitioner::MultiLevelEd
                                                  const std::vector<std::vector<bool>> &node_filters)
 {
     std::vector<CellMetric> metrics;
+    metrics.reserve(node_filters.size());
 
-    for (auto filter : node_filters)
+    for (const auto &filter : node_filters)
     {
         auto metric = storage.MakeMetric();
         customizer.Customize(graph, storage, filter, metric);
@@ -122,13 +118,8 @@ std::vector<CellMetric> customizeFilteredMetrics(const partitioner::MultiLevelEd
 
 int Customizer::Run(const CustomizationConfig &config)
 {
-#if TBB_VERSION_MAJOR == 2020
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
-#else
-    tbb::task_scheduler_init init(config.requested_num_threads);
-    BOOST_ASSERT(init.is_active());
-#endif
 
     TIMER_START(loading_data);
 

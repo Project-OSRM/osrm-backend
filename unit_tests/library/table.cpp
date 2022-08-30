@@ -332,14 +332,14 @@ BOOST_AUTO_TEST_CASE(test_table_serialiaze_fb)
     // check destinations array of waypoint objects
     const auto &destinations_array = fb->table()->destinations();
     BOOST_CHECK_EQUAL(destinations_array->size(), params.destinations.size());
-    for (const auto &destination : *destinations_array)
+    for (const auto destination : *destinations_array)
     {
         BOOST_CHECK(waypoint_check(destination));
     }
     // check sources array of waypoint objects
     const auto &sources_array = fb->waypoints();
     BOOST_CHECK_EQUAL(sources_array->size(), params.sources.size());
-    for (const auto &source : *sources_array)
+    for (const auto source : *sources_array)
     {
         BOOST_CHECK(waypoint_check(source));
     }

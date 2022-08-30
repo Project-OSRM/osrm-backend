@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -32,6 +32,8 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
+
+#include <osmium/util/compatibility.hpp>
 
 #include <cassert>
 #include <cstdint> // IWYU pragma: keep
@@ -192,10 +194,10 @@ namespace osmium {
      * probably means the buffer contains different kinds of objects than were
      * expected or that there is some kind of data corruption.
      */
-    struct unknown_type : public std::runtime_error {
+    struct OSMIUM_EXPORT unknown_type : public std::runtime_error {
 
         unknown_type() :
-            std::runtime_error("unknown item type") {
+            std::runtime_error{"unknown item type"} {
         }
 
     }; // struct unknown_type

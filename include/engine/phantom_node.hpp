@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_ENGINE_PHANTOM_NODES_H
 #define OSRM_ENGINE_PHANTOM_NODES_H
 
+#include <vector>
+
 #include "extractor/travel_mode.hpp"
 
 #include "util/bearing.hpp"
@@ -223,7 +225,8 @@ struct PhantomNode
 
 static_assert(sizeof(PhantomNode) == 80, "PhantomNode has more padding then expected");
 
-using PhantomNodePair = std::pair<PhantomNode, PhantomNode>;
+using PhantomNodeCandidates = std::vector<PhantomNode>;
+using PhantomCandidateAlternatives = std::pair<PhantomNodeCandidates, PhantomNodeCandidates>;
 
 struct PhantomNodeWithDistance
 {
@@ -231,11 +234,44 @@ struct PhantomNodeWithDistance
     double distance;
 };
 
-struct PhantomNodes
+struct PhantomEndpointCandidates
+{
+    const PhantomNodeCandidates &source_phantoms;
+    const PhantomNodeCandidates &target_phantoms;
+};
+
+struct PhantomCandidatesToTarget
+{
+    const PhantomNodeCandidates &source_phantoms;
+    const PhantomNode &target_phantom;
+};
+
+inline util::Coordinate candidatesSnappedLocation(const PhantomNodeCandidates &candidates)
+{
+    BOOST_ASSERT(!candidates.empty());
+    return candidates.front().location;
+}
+
+inline util::Coordinate candidatesInputLocation(const PhantomNodeCandidates &candidates)
+{
+    BOOST_ASSERT(!candidates.empty());
+    return candidates.front().input_location;
+}
+
+inline bool candidatesHaveComponent(const PhantomNodeCandidates &candidates, uint32_t component_id)
+{
+    return std::any_of(
+        candidates.begin(), candidates.end(), [component_id](const PhantomNode &node) {
+            return node.component.id == component_id;
+        });
+}
+
+struct PhantomEndpoints
 {
     PhantomNode source_phantom;
     PhantomNode target_phantom;
 };
+
 } // namespace engine
 } // namespace osrm
 

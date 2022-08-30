@@ -133,12 +133,13 @@ double getLongerByFactorBasedOnDuration(const EdgeWeight duration)
     return a + b / (duration - d) + c / std::pow(duration - d, 3);
 }
 
-Parameters parametersFromRequest(const PhantomNodes &phantom_node_pair)
+Parameters parametersFromRequest(const PhantomEndpointCandidates &endpoint_candidates)
 {
     Parameters parameters;
 
-    const auto distance = util::coordinate_calculation::haversineDistance(
-        phantom_node_pair.source_phantom.location, phantom_node_pair.target_phantom.location);
+    const auto distance = util::coordinate_calculation::greatCircleDistance(
+        candidatesSnappedLocation(endpoint_candidates.source_phantoms),
+        candidatesSnappedLocation(endpoint_candidates.target_phantoms));
 
     // 10km
     if (distance < 10000.)
@@ -547,7 +548,7 @@ void unpackPackedPaths(InputIt first,
                        OutIt out,
                        SearchEngineData<Algorithm> &search_engine_data,
                        const Facade &facade,
-                       const PhantomNodes &phantom_node_pair)
+                       const PhantomEndpointCandidates &endpoint_candidates)
 {
     util::static_assert_iter_category<InputIt, std::input_iterator_tag>();
     util::static_assert_iter_category<OutIt, std::output_iterator_tag>();
@@ -600,7 +601,7 @@ void unpackPackedPaths(InputIt first,
             }
             else
             { // an overlay graph edge
-                LevelID level = getNodeQueryLevel(partition, source, phantom_node_pair); // XXX
+                LevelID level = getNodeQueryLevel(partition, source, endpoint_candidates); // XXX
                 CellID parent_cell_id = partition.GetCell(level, source);
                 BOOST_ASSERT(parent_cell_id == partition.GetCell(level, target));
 
@@ -624,8 +625,8 @@ void unpackPackedPaths(InputIt first,
                                                                                 facade,
                                                                                 forward_heap,
                                                                                 reverse_heap,
-                                                                                DO_NOT_FORCE_LOOPS,
-                                                                                DO_NOT_FORCE_LOOPS,
+                                                                                {},
+                                                                                {},
                                                                                 INVALID_EDGE_WEIGHT,
                                                                                 sublevel,
                                                                                 parent_cell_id);
@@ -656,13 +657,13 @@ void unpackPackedPaths(InputIt first,
 inline std::vector<WeightedViaNode>
 makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
                   const Facade &facade,
-                  const PhantomNodes &phantom_node_pair,
+                  const PhantomEndpointCandidates &endpoint_candidates,
                   const Parameters &parameters)
 {
     Heap &forward_heap = *search_engine_data.forward_heap_1;
     Heap &reverse_heap = *search_engine_data.reverse_heap_1;
 
-    insertNodesInHeaps(forward_heap, reverse_heap, phantom_node_pair);
+    insertNodesInHeaps(forward_heap, reverse_heap, endpoint_candidates);
     if (forward_heap.Empty() || reverse_heap.Empty())
     {
         return {};
@@ -712,9 +713,9 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
                                            reverse_heap,
                                            overlap_via,
                                            overlap_weight,
-                                           DO_NOT_FORCE_LOOPS,
-                                           DO_NOT_FORCE_LOOPS,
-                                           phantom_node_pair);
+                                           {},
+                                           {},
+                                           endpoint_candidates);
 
             if (!forward_heap.Empty())
                 forward_heap_min = forward_heap.MinKey();
@@ -738,9 +739,9 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
                                            forward_heap,
                                            overlap_via,
                                            overlap_weight,
-                                           DO_NOT_FORCE_LOOPS,
-                                           DO_NOT_FORCE_LOOPS,
-                                           phantom_node_pair);
+                                           {},
+                                           {},
+                                           endpoint_candidates);
 
             if (!reverse_heap.Empty())
                 reverse_heap_min = reverse_heap.MinKey();
@@ -776,10 +777,10 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
 // https://github.com/Project-OSRM/osrm-backend/issues/3905
 InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &search_engine_data,
                                                const Facade &facade,
-                                               const PhantomNodes &phantom_node_pair,
+                                               const PhantomEndpointCandidates &endpoint_candidates,
                                                unsigned number_of_alternatives)
 {
-    Parameters parameters = parametersFromRequest(phantom_node_pair);
+    Parameters parameters = parametersFromRequest(endpoint_candidates);
 
     const auto max_number_of_alternatives = number_of_alternatives;
     const auto max_number_of_alternatives_to_unpack =
@@ -798,7 +799,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
 
     // Do forward and backward search, save search space overlap as via candidates.
     auto candidate_vias =
-        makeCandidateVias(search_engine_data, facade, phantom_node_pair, parameters);
+        makeCandidateVias(search_engine_data, facade, endpoint_candidates, parameters);
 
     const auto by_weight = [](const auto &lhs, const auto &rhs) { return lhs.weight < rhs.weight; };
     auto shortest_path_via_it =
@@ -813,8 +814,6 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     if (!has_shortest_path)
     {
         InternalRouteResult invalid;
-        invalid.shortest_path_weight = INVALID_EDGE_WEIGHT;
-        invalid.segment_end_coordinates = {phantom_node_pair};
         return invalid;
     }
 
@@ -851,7 +850,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     const auto extract_packed_path_from_heaps = [&](WeightedViaNode via) {
         auto packed_path = retrievePackedPathFromHeap(forward_heap, reverse_heap, via.node);
 
-        return WeightedViaNodePackedPath{std::move(via), std::move(packed_path)};
+        return WeightedViaNodePackedPath{via, std::move(packed_path)};
     };
 
     std::vector<WeightedViaNodePackedPath> weighted_packed_paths;
@@ -900,7 +899,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
                       std::back_inserter(unpacked_paths),
                       search_engine_data,
                       facade,
-                      phantom_node_pair);
+                      endpoint_candidates);
 
     //
     // Filter and rank a second time. This time instead of being fast and doing
@@ -927,7 +926,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     routes.reserve(number_of_unpacked_paths);
 
     const auto unpacked_path_to_route = [&](const WeightedViaNodeUnpackedPath &path) {
-        return extractRoute(facade, path.via.weight, phantom_node_pair, path.nodes, path.edges);
+        return extractRoute(facade, path.via.weight, endpoint_candidates, path.nodes, path.edges);
     };
 
     std::transform(unpacked_paths_first,

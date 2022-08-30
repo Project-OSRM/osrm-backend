@@ -18,7 +18,7 @@ namespace guidance
 {
 
 // Intersection handlers deal with all issues related to intersections.
-class MotorwayHandler : public IntersectionHandler
+class MotorwayHandler final : public IntersectionHandler
 {
   public:
     MotorwayHandler(const util::NodeBasedDynamicGraph &node_based_graph,

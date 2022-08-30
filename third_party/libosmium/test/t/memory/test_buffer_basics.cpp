@@ -75,7 +75,7 @@ TEST_CASE("Reserve space in a non-growing buffer") {
 
     REQUIRE(buffer.reserve_space(20) != nullptr);
     REQUIRE(buffer.written() == 20);
-    REQUIRE_THROWS_AS(buffer.reserve_space(1000), const osmium::buffer_is_full&);
+    REQUIRE_THROWS_AS(buffer.reserve_space(1000), osmium::buffer_is_full);
 }
 
 TEST_CASE("Reserve space in a growing buffer") {
@@ -123,9 +123,9 @@ TEST_CASE("Create buffer from existing data with bad alignment fails") {
         osmium::memory::Buffer buffer{data.data(), 32, 128};
     };
 
-    REQUIRE_THROWS_AS(l1(), const std::invalid_argument&);
-    REQUIRE_THROWS_AS(l2(), const std::invalid_argument&);
-    REQUIRE_THROWS_AS(l3(), const std::invalid_argument&);
-    REQUIRE_THROWS_AS(l4(), const std::invalid_argument&);
+    REQUIRE_THROWS_AS(l1(), std::invalid_argument);
+    REQUIRE_THROWS_AS(l2(), std::invalid_argument);
+    REQUIRE_THROWS_AS(l3(), std::invalid_argument);
+    REQUIRE_THROWS_AS(l4(), std::invalid_argument);
 }
 

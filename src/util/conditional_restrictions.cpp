@@ -31,7 +31,6 @@ namespace detail
 
 namespace
 {
-namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
 } // namespace
 

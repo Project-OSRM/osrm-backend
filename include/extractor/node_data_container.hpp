@@ -24,7 +24,7 @@ class EdgeBasedGraphFactory;
 namespace detail
 {
 template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl;
-}
+} // namespace detail
 
 namespace serialization
 {

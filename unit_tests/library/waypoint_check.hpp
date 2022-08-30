@@ -6,10 +6,10 @@
 #include "osrm/json_container.hpp"
 #include "util/exception.hpp"
 
-using namespace osrm;
-
-inline bool waypoint_check(json::Value waypoint)
+inline bool waypoint_check(osrm::json::Value waypoint)
 {
+    using namespace osrm;
+
     if (!waypoint.is<mapbox::util::recursive_wrapper<util::json::Object>>())
     {
         throw util::exception("Must pass in a waypoint object");
@@ -24,6 +24,8 @@ inline bool waypoint_check(json::Value waypoint)
 
 inline bool waypoint_check(const osrm::engine::api::fbresult::Waypoint *const waypoint)
 {
+    using namespace osrm;
+
     util::FloatLongitude lon{waypoint->location()->longitude()};
     util::FloatLatitude lat{waypoint->location()->latitude()};
     util::Coordinate location_coordinate(lon, lat);

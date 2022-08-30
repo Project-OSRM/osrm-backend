@@ -4,7 +4,6 @@
 #include <boost/assert.hpp>
 #include <boost/unordered_map.hpp>
 
-#include "extractor/restriction_filter.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
@@ -12,6 +11,8 @@ namespace osrm
 {
 namespace extractor
 {
+
+struct TurnRestriction;
 
 namespace restriction_graph_details
 {

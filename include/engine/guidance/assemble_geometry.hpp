@@ -57,8 +57,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     const auto source_geometry_id = facade.GetGeometryIndex(source_node_id).id;
     const auto source_geometry = facade.GetUncompressedForwardGeometry(source_geometry_id);
 
-    geometry.osm_node_ids.push_back(
-        facade.GetOSMNodeIDOfNode(source_geometry(source_segment_start_coordinate)));
+    geometry.node_ids.push_back(source_geometry(source_segment_start_coordinate));
 
     auto cumulative_distance = 0.;
     auto current_distance = 0.;
@@ -67,11 +66,14 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     {
         auto coordinate = facade.GetCoordinateOfNode(path_point.turn_via_node);
         current_distance =
-            util::coordinate_calculation::haversineDistance(prev_coordinate, coordinate);
+            util::coordinate_calculation::greatCircleDistance(prev_coordinate, coordinate);
         cumulative_distance += current_distance;
 
         // all changes to this check have to be matched with assemble_steps
-        if (path_point.turn_instruction.type != osrm::guidance::TurnType::NoTurn)
+        auto turn_instruction = path_point.turn_edge
+                                    ? facade.GetTurnInstructionForEdgeID(*path_point.turn_edge)
+                                    : osrm::guidance::TurnInstruction::NO_TURN();
+        if (turn_instruction.type != osrm::guidance::TurnType::NoTurn)
         {
             geometry.segment_distances.push_back(cumulative_distance);
             geometry.segment_offsets.push_back(geometry.locations.size());
@@ -79,11 +81,10 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         }
 
         prev_coordinate = coordinate;
+        const auto node_id = path_point.turn_via_node;
 
-        const auto osm_node_id = facade.GetOSMNodeIDOfNode(path_point.turn_via_node);
-
-        if (osm_node_id != geometry.osm_node_ids.back() ||
-            path_point.turn_instruction.type != osrm::guidance::TurnType::NoTurn)
+        if (node_id != geometry.node_ids.back() ||
+            turn_instruction.type != osrm::guidance::TurnType::NoTurn)
         {
             geometry.annotations.emplace_back(LegGeometry::Annotation{
                 current_distance,
@@ -98,12 +99,12 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
                 (path_point.weight_until_turn - path_point.weight_of_turn) /
                     facade.GetWeightMultiplier(),
                 path_point.datasource_id});
-            geometry.locations.push_back(std::move(coordinate));
-            geometry.osm_node_ids.push_back(osm_node_id);
+            geometry.locations.push_back(coordinate);
+            geometry.node_ids.push_back(node_id);
         }
     }
     current_distance =
-        util::coordinate_calculation::haversineDistance(prev_coordinate, target_node.location);
+        util::coordinate_calculation::greatCircleDistance(prev_coordinate, target_node.location);
     cumulative_distance += current_distance;
     // segment leading to the target node
     geometry.segment_distances.push_back(cumulative_distance);
@@ -158,8 +159,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     const auto target_segment_end_coordinate =
         target_node.fwd_segment_position + (reversed_target ? 0 : 1);
     const auto target_geometry = facade.GetUncompressedForwardGeometry(target_geometry_id);
-    geometry.osm_node_ids.push_back(
-        facade.GetOSMNodeIDOfNode(target_geometry(target_segment_end_coordinate)));
+    geometry.node_ids.push_back(target_geometry(target_segment_end_coordinate));
 
     BOOST_ASSERT(geometry.segment_distances.size() == geometry.segment_offsets.size() - 1);
     BOOST_ASSERT(geometry.locations.size() > geometry.segment_distances.size());

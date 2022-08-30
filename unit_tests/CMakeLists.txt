@@ -114,10 +114,12 @@ add_executable(library-partition-tests
     EXCLUDE_FROM_ALL
     ${LibraryPartitionTestsSources})
 
-add_executable(server-tests
+if (BUILD_ROUTED)
+  add_executable(server-tests
 	EXCLUDE_FROM_ALL
 	${ServerTestsSources}
 	$<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:SERVER>)
+endif()
 
 add_executable(util-tests
 	EXCLUDE_FROM_ALL
@@ -170,7 +172,9 @@ target_link_libraries(library-extract-tests osrm_extract osrm_guidance ${Boost_U
 target_link_libraries(library-contract-tests osrm_contract ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-customize-tests osrm_customize ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-partition-tests osrm_partition ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-target_link_libraries(server-tests osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+if (BUILD_ROUTED)
+  target_link_libraries(server-tests osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+endif()
 target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(contractor-tests osrm_contract ${CONTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(storage-tests osrm_store ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})

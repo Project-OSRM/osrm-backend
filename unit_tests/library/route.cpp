@@ -263,7 +263,7 @@ void test_route_same_coordinates(bool use_json_only_api)
                     const auto &entries = intersection_object.at("entry").get<json::Array>().values;
                     BOOST_CHECK(bearings.size() == entries.size());
 
-                    for (const auto bearing : bearings)
+                    for (const auto &bearing : bearings)
                         BOOST_CHECK(0. <= bearing.get<json::Number>().value &&
                                     bearing.get<json::Number>().value <= 360.);
 
@@ -619,7 +619,7 @@ BOOST_AUTO_TEST_CASE(test_route_serialize_fb)
     const auto waypoints = fb->waypoints();
     BOOST_CHECK(waypoints->size() == params.coordinates.size());
 
-    for (const auto &waypoint : *waypoints)
+    for (const auto waypoint : *waypoints)
     {
         const auto longitude = waypoint->location()->longitude();
         const auto latitude = waypoint->location()->latitude();
@@ -633,7 +633,7 @@ BOOST_AUTO_TEST_CASE(test_route_serialize_fb)
     const auto routes = fb->routes();
     BOOST_REQUIRE_GT(routes->size(), 0);
 
-    for (const auto &route : *routes)
+    for (const auto route : *routes)
     {
         BOOST_CHECK_EQUAL(route->distance(), 0);
         BOOST_CHECK_EQUAL(route->duration(), 0);
@@ -641,7 +641,7 @@ BOOST_AUTO_TEST_CASE(test_route_serialize_fb)
         const auto &legs = route->legs();
         BOOST_CHECK(legs->size() > 0);
 
-        for (const auto &leg : *legs)
+        for (const auto leg : *legs)
         {
             BOOST_CHECK_EQUAL(leg->distance(), 0);
 
@@ -720,7 +720,7 @@ BOOST_AUTO_TEST_CASE(test_route_serialize_fb_skip_waypoints)
     const auto routes = fb->routes();
     BOOST_REQUIRE_GT(routes->size(), 0);
 
-    for (const auto &route : *routes)
+    for (const auto route : *routes)
     {
         BOOST_CHECK_EQUAL(route->distance(), 0);
         BOOST_CHECK_EQUAL(route->duration(), 0);

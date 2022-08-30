@@ -1,14 +1,8 @@
 #include "extractor/maneuver_override_relation_parser.hpp"
 #include "extractor/maneuver_override.hpp"
 
-#include "util/log.hpp"
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string/regex.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/ref.hpp>
-#include <boost/regex.hpp>
 
 #include <osmium/osm.hpp>
 #include <osmium/tags/filter.hpp>
@@ -125,9 +119,15 @@ ManeuverOverrideRelationParser::TryParse(const osmium::Relation &relation) const
 
     if (valid_relation)
     {
-        maneuver_override.via_ways.push_back(from);
-        std::copy(via_ways.begin(), via_ways.end(), std::back_inserter(maneuver_override.via_ways));
-        maneuver_override.via_ways.push_back(to);
+        if (via_ways.empty())
+        {
+            maneuver_override.turn_path.node_or_way = InputViaNodePath{{from}, {via_node}, {to}};
+        }
+        else
+        {
+            maneuver_override.turn_path.node_or_way =
+                InputViaWayPath{{from}, std::move(via_ways), {to}};
+        }
         maneuver_override.via_node = via_node;
     }
     else

@@ -76,7 +76,7 @@ class MatchAPI final : public RouteAPI
         routes.values.reserve(number_of_routes);
         for (auto index : util::irange<std::size_t>(0UL, sub_matchings.size()))
         {
-            auto route = MakeRoute(sub_routes[index].segment_end_coordinates,
+            auto route = MakeRoute(sub_routes[index].leg_endpoints,
                                    sub_routes[index].unpacked_path_segments,
                                    sub_routes[index].source_traversed_in_reverse,
                                    sub_routes[index].target_traversed_in_reverse);
@@ -89,6 +89,11 @@ class MatchAPI final : public RouteAPI
         }
         response.values["matchings"] = std::move(routes);
         response.values["code"] = "Ok";
+        auto data_timestamp = facade.GetTimestamp();
+        if (!data_timestamp.empty())
+        {
+            response.values["data_version"] = data_timestamp;
+        }
     }
 
   protected:
@@ -141,7 +146,7 @@ class MatchAPI final : public RouteAPI
             }
             const auto &phantom =
                 sub_matchings[matching_index.sub_matching_index].nodes[matching_index.point_index];
-            auto waypoint = BaseAPI::MakeWaypoint(&fb_result, phantom);
+            auto waypoint = BaseAPI::MakeWaypoint(&fb_result, {phantom});
             waypoint->add_matchings_index(matching_index.sub_matching_index);
             waypoint->add_alternatives_count(sub_matchings[matching_index.sub_matching_index]
                                                  .alternatives_count[matching_index.point_index]);
@@ -195,7 +200,7 @@ class MatchAPI final : public RouteAPI
             }
             const auto &phantom =
                 sub_matchings[matching_index.sub_matching_index].nodes[matching_index.point_index];
-            auto waypoint = BaseAPI::MakeWaypoint(phantom);
+            auto waypoint = BaseAPI::MakeWaypoint({phantom});
             waypoint.values["matchings_index"] = matching_index.sub_matching_index;
             waypoint.values["waypoint_index"] = matching_index.point_index;
             waypoint.values["alternatives_count"] =
