@@ -9,6 +9,7 @@
     - NodeJS:
       - FIXED: Support `skip_waypoints` in Node bindings [#6060](https://github.com/Project-OSRM/osrm-backend/pull/6060)
     - Misc:
+      - ADDED: Support floats for speed value in traffic updates CSV. [#6327](https://github.com/Project-OSRM/osrm-backend/pull/6327)
       - CHANGED: Use Lua 5.4 in Docker image. [#6346](https://github.com/Project-OSRM/osrm-backend/pull/6346)
       - CHANGED: Remove redundant nullptr check. [#6326](https://github.com/Project-OSRM/osrm-backend/pull/6326)
       - CHANGED: missing files list is included in exception message. [#5360](https://github.com/Project-OSRM/osrm-backend/pull/5360)

@@ -26,7 +26,7 @@ jobs:
     continue-on-error: false
     steps:
     - uses: actions/checkout@v3
-    - run: pip install conan==1.50.0
+    - run: pip install conan==1.51.3
     - run: conan --version
     - run: cmake --version
     - uses: actions/setup-node@v3
