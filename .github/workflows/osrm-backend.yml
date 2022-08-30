@@ -516,7 +516,7 @@ jobs:
 
     - name: Install dev dependencies
       run: |
-        python3 -m pip install conan==1.50.0
+        python3 -m pip install conan==1.51.3
 
         # CMake
         mkdir -p ${CMAKE_DIR}
