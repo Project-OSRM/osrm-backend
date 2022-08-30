@@ -43,6 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "util/guidance/turn_lanes.hpp"
 
 #include "restriction_graph.hpp"
+#include "traffic_signals.hpp"
 #include "util/typedefs.hpp"
 
 namespace osrm
@@ -64,7 +65,8 @@ class Extractor
 
     std::tuple<LaneDescriptionMap,
                std::vector<TurnRestriction>,
-               std::vector<UnresolvedManeuverOverride>>
+               std::vector<UnresolvedManeuverOverride>,
+               TrafficSignals>
     ParseOSMData(ScriptingEnvironment &scripting_environment, const unsigned number_of_threads);
 
     EdgeID BuildEdgeExpandedGraph(
@@ -73,7 +75,7 @@ class Extractor
         const std::vector<util::Coordinate> &coordinates,
         const CompressedEdgeContainer &compressed_edge_container,
         const std::unordered_set<NodeID> &barrier_nodes,
-        const std::unordered_set<NodeID> &traffic_lights,
+        const TrafficSignals &traffic_signals,
         const RestrictionGraph &restriction_graph,
         const std::unordered_set<EdgeID> &segregated_edges,
         const NameTable &name_table,

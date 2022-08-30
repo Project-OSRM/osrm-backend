@@ -6,6 +6,7 @@ Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 Relations = require("lib/relations")
+TrafficSignal = require("lib/traffic_signal")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
 Utils = require("lib/utils")
@@ -360,10 +361,7 @@ function process_node(profile, node, result, relations)
   end
 
   -- check if node is a traffic light
-  local tag = node:get_value_by_key("highway")
-  if "traffic_signals" == tag then
-    result.traffic_lights = true
-  end
+  result.traffic_lights = TrafficSignal.get_value(node)
 end
 
 function process_way(profile, way, result, relations)

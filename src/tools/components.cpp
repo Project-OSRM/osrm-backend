@@ -44,7 +44,7 @@ std::size_t loadGraph(const std::string &path,
     auto nop = boost::make_function_output_iterator([](auto) {});
 
     extractor::files::readRawNBGraph(
-        path, nop, nop, coordinate_list, osm_node_ids, edge_list, annotation_data);
+        path, nop, coordinate_list, osm_node_ids, edge_list, annotation_data);
 
     // Building a node-based graph
     for (const auto &input_edge : edge_list)

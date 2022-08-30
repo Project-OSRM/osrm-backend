@@ -5,6 +5,7 @@ api_version = 4
 Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
+TrafficSignal = require("lib/traffic_signal")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
 Measure = require("lib/measure")
@@ -235,10 +236,7 @@ function process_node(profile, node, result)
   end
 
   -- check if node is a traffic light
-  local tag = node:get_value_by_key("highway")
-  if tag and "traffic_signals" == tag then
-    result.traffic_lights = true
-  end
+  result.traffic_lights = TrafficSignal.get_value(node)
 end
 
 function handle_bicycle_tags(profile,way,result,data)

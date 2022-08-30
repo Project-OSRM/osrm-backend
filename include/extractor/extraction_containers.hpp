@@ -8,8 +8,11 @@
 #include "extractor/scripting_environment.hpp"
 
 #include "storage/tar_fwd.hpp"
+#include "traffic_lights.hpp"
+#include "traffic_signals.hpp"
 
 #include <unordered_map>
+#include <unordered_set>
 
 namespace osrm
 {
@@ -25,15 +28,19 @@ namespace extractor
 class ExtractionContainers
 {
     using ReferencedWays = std::unordered_map<OSMWayID, NodesOfWay>;
+    using ReferencedTrafficSignals =
+        std::pair<std::unordered_set<OSMNodeID>, std::unordered_multimap<OSMNodeID, OSMNodeID>>;
     // The relationship between way and nodes is lost during node preparation.
-    // We identify the ways and nodes relevant to restrictions/overrides prior to
+    // We identify the ways and nodes relevant to restrictions/overrides/signals prior to
     // node processing so that they can be referenced in the preparation phase.
     ReferencedWays IdentifyRestrictionWays();
     ReferencedWays IdentifyManeuverOverrideWays();
+    ReferencedTrafficSignals IdentifyTrafficSignals();
 
     void PrepareNodes();
     void PrepareManeuverOverrides(const ReferencedWays &maneuver_override_ways);
     void PrepareRestrictions(const ReferencedWays &restriction_ways);
+    void PrepareTrafficSignals(const ReferencedTrafficSignals &referenced_traffic_signals);
     void PrepareEdges(ScriptingEnvironment &scripting_environment);
 
     void WriteNodes(storage::tar::FileWriter &file_out) const;
@@ -50,9 +57,9 @@ class ExtractionContainers
     using NameOffsets = std::vector<size_t>;
     using WayIDVector = std::vector<OSMWayID>;
     using WayNodeIDOffsets = std::vector<size_t>;
+    using InputTrafficSignal = std::pair<OSMNodeID, TrafficLightClass::Direction>;
 
     std::vector<OSMNodeID> barrier_nodes;
-    std::vector<OSMNodeID> traffic_signals;
     NodeIDVector used_node_id_list;
     NodeVector all_nodes_list;
     EdgeVector all_edges_list;
@@ -64,6 +71,9 @@ class ExtractionContainers
     WayNodeIDOffsets way_node_id_offsets;
 
     unsigned max_internal_node_id;
+
+    std::vector<InputTrafficSignal> external_traffic_signals;
+    TrafficSignals internal_traffic_signals;
 
     // List of restrictions (conditional and unconditional) before we transform them into the
     // output types. Input containers reference OSMNodeIDs. We can only transform them to the
