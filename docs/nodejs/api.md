@@ -51,6 +51,7 @@ Returns the fastest route between two or more coordinates while visiting the way
                                           Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
     -   `options.radiuses` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
     -   `options.hints` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Hints for the coordinate snapping. Array of base64 encoded strings.
+    -   `options.exclude` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** List of classes to avoid, order does not matter.
     -   `options.generate_hints` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Whether or not adds a Hint to the response which can be used in subsequent requests. (optional, default `true`)
     -   `options.alternatives` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Search for alternative routes. (optional, default `false`)
     -   `options.alternatives` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** Search for up to this many alternative routes.
@@ -63,7 +64,9 @@ Returns the fastest route between two or more coordinates while visiting the way
     -   `options.approaches` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
                          `null`/`true`/`false`
     -   `options.waypoints` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Indices to coordinates to treat as waypoints. If not supplied, all coordinates are waypoints.  Must include first and last coordinate index.
+    -   `options.format` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which output format to use, either `json`, or [`flatbuffers`](https://github.com/Project-OSRM/osrm-backend/tree/master/include/engine/api/flatbuffers).
     -   `options.snapping` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
+    -   `options.skip_waypoints` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Removes waypoints from the response. Waypoints are still calculated, but not serialized. Could be useful in case you are interested in some other part of response and do not want to transfer waste data. (optional, default `false`)
 -   `callback` **[Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)** 
 
 **Examples**
@@ -97,6 +100,7 @@ Note: `coordinates` in the general options only supports a single `{longitude},{
     -   `options.number` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** Number of nearest segments that should be returned.
         Must be an integer greater than or equal to `1`. (optional, default `1`)
     -   `options.approaches` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
+    -   `options.format` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which output format to use, either `json`, or [`flatbuffers`](https://github.com/Project-OSRM/osrm-backend/tree/master/include/engine/api/flatbuffers).
     -   `options.snapping` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
 -   `callback` **[Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)** 
 
@@ -332,12 +336,15 @@ specific behaviours.
 
 -   `plugin_config` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)?** Object literal containing parameters for the trip query.
     -   `plugin_config.format` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** The format of the result object to various API calls.
-                                               Valid options are `object` (default), which returns a
-        standard Javascript object, as described above, and `json_buffer`, which will return a NodeJS
-        **[Buffer](https://nodejs.org/api/buffer.html)** object, containing a JSON string. The latter has
-        the advantage that it can be immediately serialized to disk/sent over the network, and the
-        generation of the string is performed outside the main NodeJS event loop.  This option is ignored
-        by the `tile` plugin.
+                                               Valid options are `object` (default if `options.format` is
+        `json`), which returns a standard Javascript object, as described above, and `buffer`(default if
+        `options.format` is `flatbuffers`), which will return a NodeJS
+        **[Buffer](https://nodejs.org/api/buffer.html)** object, containing a JSON string or Flatbuffers
+        object. The latter has the advantage that it can be immediately serialized to disk/sent over the
+        network, and the generation of the string is performed outside the main NodeJS event loop.  This
+        option is ignored by the `tile` plugin. Also note that `options.format` set to `flatbuffers`
+        cannot be used with `plugin_config.format` set to `object`. `json_buffer` is deprecated alias for
+        `buffer`.
 
 **Examples**
 
@@ -349,7 +356,7 @@ var options = {
     [13.374481201171875, 52.506191342034576]
   ]
 };
-osrm.route(options, { format: "json_buffer" }, function(err, response) {
+osrm.route(options, { format: "buffer" }, function(err, response) {
   if (err) throw err;
   console.log(response.toString("utf-8"));
 });

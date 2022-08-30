@@ -589,12 +589,12 @@ Feature: Basic Distance Matrix
 
         When I request a travel distance matrix I should get
             |   | a      | b     | c      | d      | e      | f      |
-            | a | 0      | 100   | 300    | 650    | 1934.5 | 1534.6 |
-            | b | 760.6  | 0     | 200    | 550.1  | 1834.6 | 1434.6 |
-            | c | 560.6  | 660.5 | 0      | 350    | 1634.6 | 1234.6 |
-            | d | 1484.6 | 1584.5| 1784.5 | 0      | 1284.5 | 884.6  |
-            | e | 200    | 300   | 500    | 710.6  | 0      | 1595.2 |
-            | f | 600    | 699.9 | 899.9  | 1110.5 | 399.9  | 0      |
+            | a | 0      | 100   | 300    | 650    | 660.5  | 1534.6 |
+            | b | 760.6  | 0     | 200    | 550.1  | 560.6  | 1434.6 |
+            | c | 560.6  | 660.5 | 0      | 350    | 360.5  | 1234.6 |
+            | d | 1484.6 | 1584.5| 1645.1 | 0      | 1284.5 | 884.6  |
+            | e | 200    | 300   | 360.5  | 710.6  | 0      | 1595.2 |
+            | f | 600    | 699.9 | 760.5  | 884.6  | 399.9  | 0      |
 
 
     Scenario: Testbot - Filling in noroutes with estimates (defaults to input coordinate location)
@@ -720,11 +720,10 @@ Feature: Basic Distance Matrix
             | 1    | 2  | abcdef,fghij,fghij | 1000.1m    |
             | 1    | 3  | abcdef,fghij,fghij | 1400.1m    |
             | 2    | 3  | fghij,fghij        | 400m       |
-            
+
 
         When I request a travel distance matrix I should get
-            |   |   1    | 2      | 3      |   
+            |   |   1    | 2      | 3      |
             | 1 |   0    | 1000.1 | 1400.1 |
             | 2 | 1000.1 | 0      | 400    |
             | 3 | 1400.1 | 400    | 0      |
-

@@ -4,21 +4,16 @@
 #include "engine/api/match_api.hpp"
 #include "engine/api/match_parameters.hpp"
 #include "engine/api/match_parameters_tidy.hpp"
-#include "engine/map_matching/bayes_classifier.hpp"
 #include "engine/map_matching/sub_matching.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/integer_range.hpp"
-#include "util/json_util.hpp"
-#include "util/string_util.hpp"
 
 #include <cstdlib>
 
 #include <algorithm>
 #include <functional>
-#include <iterator>
 #include <memory>
 #include <set>
-#include <string>
 #include <vector>
 
 namespace osrm
@@ -28,7 +23,7 @@ namespace engine
 namespace plugins
 {
 
-// Filters PhantomNodes to obtain a set of viable candiates
+// Filters PhantomNodes to obtain a set of viable candidates
 void filterCandidates(const std::vector<util::Coordinate> &coordinates,
                       MatchPlugin::CandidateLists &candidates_lists)
 {
@@ -272,20 +267,26 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
         // FIXME we only run this to obtain the geometry
         // The clean way would be to get this directly from the map matching plugin
-        PhantomNodes current_phantom_node_pair;
         for (unsigned i = 0; i < sub_matchings[index].nodes.size() - 1; ++i)
         {
-            current_phantom_node_pair.source_phantom = sub_matchings[index].nodes[i];
-            current_phantom_node_pair.target_phantom = sub_matchings[index].nodes[i + 1];
-            BOOST_ASSERT(current_phantom_node_pair.source_phantom.IsValid());
-            BOOST_ASSERT(current_phantom_node_pair.target_phantom.IsValid());
-            sub_routes[index].segment_end_coordinates.emplace_back(current_phantom_node_pair);
+            PhantomEndpoints current_endpoints{sub_matchings[index].nodes[i],
+                                               sub_matchings[index].nodes[i + 1]};
+            BOOST_ASSERT(current_endpoints.source_phantom.IsValid());
+            BOOST_ASSERT(current_endpoints.target_phantom.IsValid());
+            sub_routes[index].leg_endpoints.push_back(current_endpoints);
         }
+
+        std::vector<PhantomNodeCandidates> waypoint_candidates;
+        waypoint_candidates.reserve(sub_matchings[index].nodes.size());
+        std::transform(sub_matchings[index].nodes.begin(),
+                       sub_matchings[index].nodes.end(),
+                       std::back_inserter(waypoint_candidates),
+                       [](const auto &phantom) { return PhantomNodeCandidates{phantom}; });
+
         // force uturns to be on
         // we split the phantom nodes anyway and only have bi-directional phantom nodes for
         // possible uturns
-        sub_routes[index] =
-            algorithms.ShortestPathSearch(sub_routes[index].segment_end_coordinates, {false});
+        sub_routes[index] = algorithms.ShortestPathSearch(waypoint_candidates, {false});
         BOOST_ASSERT(sub_routes[index].shortest_path_weight != INVALID_EDGE_WEIGHT);
         if (collapse_legs)
         {

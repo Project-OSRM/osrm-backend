@@ -411,7 +411,7 @@ Feature: Car - Turn restrictions
                     y
             i j f b x a e g h
 
-                  c   d
+                  c1   d
             """
 
         And the ways
@@ -438,7 +438,7 @@ Feature: Car - Turn restrictions
         When I route I should get
             | from | to | route                               |
             | e    | f  | ae,xa,bx,fb,fb                      |
-            | c    | f  | dc,da,ae,ge,hg,hg,ge,ae,xa,bx,fb,fb |
+            | 1    | f  | dc,da,ae,ge,hg,hg,ge,ae,xa,bx,fb,fb |
             | d    | f  | da,ae,ge,hg,hg,ge,ae,xa,bx,fb,fb    |
 
     @except

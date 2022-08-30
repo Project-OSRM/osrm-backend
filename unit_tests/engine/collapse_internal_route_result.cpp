@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(unchanged_collapse_route_result)
     PathData kathy{0, 1, 1, 2, 3, 4, 1, boost::none};
     InternalRouteResult one_leg_result;
     one_leg_result.unpacked_path_segments = {{pathy, kathy}};
-    one_leg_result.segment_end_coordinates = {PhantomNodes{source, target}};
+    one_leg_result.leg_endpoints = {PhantomEndpoints{source, target}};
     one_leg_result.source_traversed_in_reverse = {true};
     one_leg_result.target_traversed_in_reverse = {true};
     one_leg_result.shortest_path_weight = 50;
@@ -50,18 +50,17 @@ BOOST_AUTO_TEST_CASE(two_legs_to_one_leg)
     node_3.forward_segment_id = {12, true};
     InternalRouteResult two_leg_result;
     two_leg_result.unpacked_path_segments = {{pathy, kathy}, {kathy, cathy}};
-    two_leg_result.segment_end_coordinates = {PhantomNodes{node_1, node_2},
-                                              PhantomNodes{node_2, node_3}};
+    two_leg_result.leg_endpoints = {PhantomEndpoints{node_1, node_2},
+                                    PhantomEndpoints{node_2, node_3}};
     two_leg_result.source_traversed_in_reverse = {true, false};
     two_leg_result.target_traversed_in_reverse = {true, false};
     two_leg_result.shortest_path_weight = 80;
 
     auto collapsed = CollapseInternalRouteResult(two_leg_result, {true, false, true, true});
     BOOST_CHECK_EQUAL(collapsed.unpacked_path_segments.size(), 1);
-    BOOST_CHECK_EQUAL(collapsed.segment_end_coordinates.size(), 1);
-    BOOST_CHECK_EQUAL(collapsed.segment_end_coordinates[0].target_phantom.forward_segment_id.id,
-                      12);
-    BOOST_CHECK_EQUAL(collapsed.segment_end_coordinates[0].source_phantom.forward_segment_id.id, 1);
+    BOOST_CHECK_EQUAL(collapsed.leg_endpoints.size(), 1);
+    BOOST_CHECK_EQUAL(collapsed.leg_endpoints[0].target_phantom.forward_segment_id.id, 12);
+    BOOST_CHECK_EQUAL(collapsed.leg_endpoints[0].source_phantom.forward_segment_id.id, 1);
     BOOST_CHECK_EQUAL(collapsed.unpacked_path_segments[0].size(), 4);
     BOOST_CHECK_EQUAL(collapsed.unpacked_path_segments[0][0].turn_via_node, 2);
     BOOST_CHECK_EQUAL(collapsed.unpacked_path_segments[0][1].turn_via_node, 1);
@@ -88,20 +87,20 @@ BOOST_AUTO_TEST_CASE(three_legs_to_two_legs)
     three_leg_result.unpacked_path_segments = {std::vector<PathData>{pathy, kathy},
                                                std::vector<PathData>{kathy, qathy, cathy},
                                                std::vector<PathData>{cathy, mathy}};
-    three_leg_result.segment_end_coordinates = {
-        PhantomNodes{node_1, node_2}, PhantomNodes{node_2, node_3}, PhantomNodes{node_3, node_4}};
+    three_leg_result.leg_endpoints = {PhantomEndpoints{node_1, node_2},
+                                      PhantomEndpoints{node_2, node_3},
+                                      PhantomEndpoints{node_3, node_4}};
     three_leg_result.source_traversed_in_reverse = {true, false, true},
     three_leg_result.target_traversed_in_reverse = {true, false, true},
     three_leg_result.shortest_path_weight = 140;
 
     auto collapsed = CollapseInternalRouteResult(three_leg_result, {true, true, false, true});
     BOOST_CHECK_EQUAL(collapsed.unpacked_path_segments.size(), 2);
-    BOOST_CHECK_EQUAL(collapsed.segment_end_coordinates.size(), 2);
-    BOOST_CHECK_EQUAL(collapsed.segment_end_coordinates[0].source_phantom.forward_segment_id.id, 1);
-    BOOST_CHECK_EQUAL(collapsed.segment_end_coordinates[0].target_phantom.forward_segment_id.id, 6);
-    BOOST_CHECK_EQUAL(collapsed.segment_end_coordinates[1].source_phantom.forward_segment_id.id, 6);
-    BOOST_CHECK_EQUAL(collapsed.segment_end_coordinates[1].target_phantom.forward_segment_id.id,
-                      18);
+    BOOST_CHECK_EQUAL(collapsed.leg_endpoints.size(), 2);
+    BOOST_CHECK_EQUAL(collapsed.leg_endpoints[0].source_phantom.forward_segment_id.id, 1);
+    BOOST_CHECK_EQUAL(collapsed.leg_endpoints[0].target_phantom.forward_segment_id.id, 6);
+    BOOST_CHECK_EQUAL(collapsed.leg_endpoints[1].source_phantom.forward_segment_id.id, 6);
+    BOOST_CHECK_EQUAL(collapsed.leg_endpoints[1].target_phantom.forward_segment_id.id, 18);
     BOOST_CHECK_EQUAL(collapsed.unpacked_path_segments[0].size(), 2);
     BOOST_CHECK_EQUAL(collapsed.unpacked_path_segments[1].size(), 5);
     BOOST_CHECK_EQUAL(collapsed.unpacked_path_segments[0][0].turn_via_node, 2);
@@ -126,20 +125,19 @@ BOOST_AUTO_TEST_CASE(two_legs_to_two_legs)
     node_3.forward_segment_id = {12, true};
     InternalRouteResult two_leg_result;
     two_leg_result.unpacked_path_segments = {{pathy, kathy}, {kathy, cathy}};
-    two_leg_result.segment_end_coordinates = {PhantomNodes{node_1, node_2},
-                                              PhantomNodes{node_2, node_3}};
+    two_leg_result.leg_endpoints = {PhantomEndpoints{node_1, node_2},
+                                    PhantomEndpoints{node_2, node_3}};
     two_leg_result.source_traversed_in_reverse = {true, false};
     two_leg_result.target_traversed_in_reverse = {true, false};
     two_leg_result.shortest_path_weight = 80;
 
     auto collapsed = CollapseInternalRouteResult(two_leg_result, {true, true, true});
     BOOST_CHECK_EQUAL(collapsed.unpacked_path_segments.size(), 2);
-    BOOST_CHECK_EQUAL(collapsed.segment_end_coordinates.size(), 2);
-    BOOST_CHECK_EQUAL(collapsed.segment_end_coordinates[0].source_phantom.forward_segment_id.id, 1);
-    BOOST_CHECK_EQUAL(collapsed.segment_end_coordinates[0].target_phantom.forward_segment_id.id, 6);
-    BOOST_CHECK_EQUAL(collapsed.segment_end_coordinates[1].source_phantom.forward_segment_id.id, 6);
-    BOOST_CHECK_EQUAL(collapsed.segment_end_coordinates[1].target_phantom.forward_segment_id.id,
-                      12);
+    BOOST_CHECK_EQUAL(collapsed.leg_endpoints.size(), 2);
+    BOOST_CHECK_EQUAL(collapsed.leg_endpoints[0].source_phantom.forward_segment_id.id, 1);
+    BOOST_CHECK_EQUAL(collapsed.leg_endpoints[0].target_phantom.forward_segment_id.id, 6);
+    BOOST_CHECK_EQUAL(collapsed.leg_endpoints[1].source_phantom.forward_segment_id.id, 6);
+    BOOST_CHECK_EQUAL(collapsed.leg_endpoints[1].target_phantom.forward_segment_id.id, 12);
     BOOST_CHECK_EQUAL(collapsed.unpacked_path_segments[0].size(), 2);
     BOOST_CHECK_EQUAL(collapsed.unpacked_path_segments[1].size(), 2);
     BOOST_CHECK_EQUAL(collapsed.unpacked_path_segments[0][0].turn_via_node, 2);
