@@ -44,13 +44,13 @@ RestrictionParser::RestrictionParser(bool use_turn_restrictions_,
 
     using namespace std::string_literals;
 
-    filter.add_rule(true, "restriction"s);
+    filter.add(true, "restriction"s);
     if (parse_conditionals)
     {
-        filter.add_rule(true, "restriction:conditional"s);
+        filter.add(true, "restriction:conditional"s);
         for (const auto &namespaced : restrictions_)
         {
-            filter.add_rule(true, "restriction:" + namespaced + ":conditional");
+            filter.add(true, "restriction:" + namespaced + ":conditional");
         }
     }
 
@@ -58,7 +58,7 @@ RestrictionParser::RestrictionParser(bool use_turn_restrictions_,
     // Include restriction:{mode}:conditional if flagged
     for (const auto &namespaced : restrictions_)
     {
-        filter.add_rule(true, "restriction:" + namespaced);
+        filter.add(true, "restriction:" + namespaced);
     }
 }
 
@@ -81,8 +81,8 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
 
     const osmium::TagList &tag_list = relation.tags();
 
-    osmium::TagsFilter::iterator fi_begin(filter, tag_list.begin(), tag_list.end());
-    osmium::TagsFilter::iterator fi_end(filter, tag_list.end(), tag_list.end());
+    osmium::tags::KeyFilter::iterator fi_begin(filter, tag_list.begin(), tag_list.end());
+    osmium::tags::KeyFilter::iterator fi_end(filter, tag_list.end(), tag_list.end());
 
     // if it's not a restriction, continue;
     if (fi_begin == fi_end)

@@ -26,7 +26,7 @@ jobs:
     continue-on-error: false
     steps:
     - uses: actions/checkout@v3
-    - run: pip install conan==1.50.0
+    - run: pip install conan==1.51.3
     - run: conan --version
     - run: cmake --version
     - uses: actions/setup-node@v3
@@ -138,7 +138,8 @@ jobs:
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CLANG_VERSION: 6.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             CUCUMBER_TIMEOUT: 60000
 
           - name: clang-11.0-debug-clang-tidy
@@ -147,7 +148,8 @@ jobs:
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CLANG_VERSION: 11.0.0
+            CCOMPILER: clang-11
+            CXXCOMPILER: clang++-11
             CUCUMBER_TIMEOUT: 60000
             ENABLE_CLANG_TIDY: ON
 
@@ -157,7 +159,8 @@ jobs:
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CLANG_VERSION: 11.0.0
+            CCOMPILER: clang-11
+            CXXCOMPILER: clang++-11
             ENABLE_CONAN: ON
             ENABLE_SANITIZER: ON
 
@@ -167,7 +170,8 @@ jobs:
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CLANG_VERSION: 6.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_CONAN: ON
 
           - name: gcc-11-release
@@ -285,7 +289,8 @@ jobs:
             node: 12
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
-            CLANG_VERSION: 6.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -296,7 +301,8 @@ jobs:
             node: 12
             runs-on: ubuntu-20.04
             BUILD_TYPE: Debug
-            CLANG_VERSION: 6.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -307,7 +313,8 @@ jobs:
             node: 14
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
-            CLANG_VERSION: 6.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -318,7 +325,8 @@ jobs:
             node: 14
             runs-on: ubuntu-20.04
             BUILD_TYPE: Debug
-            CLANG_VERSION: 6.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -330,7 +338,8 @@ jobs:
             node: 16
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
-            CLANG_VERSION: 6.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -341,7 +350,8 @@ jobs:
             node: 16
             runs-on: ubuntu-20.04
             BUILD_TYPE: Debug
-            CLANG_VERSION: 6.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -364,7 +374,8 @@ jobs:
             node: latest
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
-            CLANG_VERSION: 6.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -375,7 +386,8 @@ jobs:
             node: latest
             runs-on: ubuntu-20.04
             BUILD_TYPE: Debug
-            CLANG_VERSION: 6.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -398,7 +410,8 @@ jobs:
             node: "lts/*"
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
-            CLANG_VERSION: 6.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -409,7 +422,8 @@ jobs:
             node: "lts/*"
             runs-on: ubuntu-20.04
             BUILD_TYPE: Debug
-            CLANG_VERSION: 6.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
@@ -423,7 +437,6 @@ jobs:
       BUILD_SHARED_LIBS: ${{ matrix.BUILD_SHARED_LIBS }}
       CCOMPILER: ${{ matrix.CCOMPILER }}
       CFLAGS: ${{ matrix.CFLAGS }}
-      CLANG_VERSION: ${{ matrix.CLANG_VERSION }}
       CUCUMBER_TIMEOUT: ${{ matrix.CUCUMBER_TIMEOUT }}
       CXXCOMPILER: ${{ matrix.CXXCOMPILER }}
       CXXFLAGS: ${{ matrix.CXXFLAGS }}
@@ -515,26 +528,23 @@ jobs:
         echo "$(${MASON} prefix ccache ${CCACHE_VERSION})/bin" >> $GITHUB_PATH
 
         # clang
-        if [[ -n ${CLANG_VERSION} ]]; then
-          echo "CCOMPILER=clang" >> $GITHUB_ENV
-          echo "CXXCOMPILER=clang++" >> $GITHUB_ENV
-          ${MASON} install clang++ ${CLANG_VERSION}
-          echo "$(${MASON} prefix clang++ ${CLANG_VERSION})/bin" >> $GITHUB_PATH
-          # we only enable lto for release builds
-          # and therefore don't need to us ld.gold or llvm tools for linking
-          # for debug builds
-          if [[ ${BUILD_TYPE} == 'Release' ]]; then
-            ${MASON} install binutils 2.27
-            echo "$(${MASON} prefix binutils 2.27)/bin" >> $GITHUB_PATH
-          fi
+        if [[ "${CCOMPILER}" == "clang-6.0" ]]; then
+          sudo apt-get update -y && sudo apt-get install clang++-6
         fi
-
+        # we only enable lto for release builds
+        # and therefore don't need to us ld.gold or llvm tools for linking
+        # for debug builds
+        if [[ "${CCOMPILER}" == clang-* ]] && [[ ${BUILD_TYPE} == 'Release' ]]; then
+          ${MASON} install binutils 2.27
+          echo "$(${MASON} prefix binutils 2.27)/bin" >> $GITHUB_PATH
+        fi
+      
         # Linux dev packages
         if [ "${TARGET_ARCH}" != "i686" ] && [ "${ENABLE_CONAN}" != "ON" ]; then
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
           sudo apt-get update -y
           sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev libboost-all-dev
-          if [[ -z "${CLANG_VERSION}" ]]; then
+          if [[ "${CCOMPILER}" != clang-* ]]; then
             sudo apt-get install -y ${CXXCOMPILER}
           fi
           if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then

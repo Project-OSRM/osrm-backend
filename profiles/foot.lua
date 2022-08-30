@@ -157,6 +157,7 @@ function process_node(profile, node, result)
   -- check if node is a traffic light
   local tag = node:get_value_by_key("highway")
   if "traffic_signals" == tag then
+    -- Direction should only apply to vehicles
     result.traffic_lights = true
   end
 end

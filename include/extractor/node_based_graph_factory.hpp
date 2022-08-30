@@ -8,6 +8,7 @@
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/scripting_environment.hpp"
 
+#include "traffic_signals.hpp"
 #include "util/coordinate.hpp"
 #include "util/node_based_graph.hpp"
 
@@ -40,11 +41,11 @@ class NodeBasedGraphFactory
     NodeBasedGraphFactory(const boost::filesystem::path &input_file,
                           ScriptingEnvironment &scripting_environment,
                           std::vector<TurnRestriction> &turn_restrictions,
-                          std::vector<UnresolvedManeuverOverride> &maneuver_overrides);
+                          std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
+                          const TrafficSignals &traffic_signals);
 
     auto const &GetGraph() const { return compressed_output_graph; }
     auto const &GetBarriers() const { return barriers; }
-    auto const &GetTrafficSignals() const { return traffic_signals; }
     auto const &GetCompressedEdges() const { return compressed_edge_container; }
     auto const &GetCoordinates() const { return coordinates; }
     auto const &GetAnnotationData() const { return annotation_data; }
@@ -68,7 +69,8 @@ class NodeBasedGraphFactory
     // edges into a single representative form
     void Compress(ScriptingEnvironment &scripting_environment,
                   std::vector<TurnRestriction> &turn_restrictions,
-                  std::vector<UnresolvedManeuverOverride> &maneuver_overrides);
+                  std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
+                  const TrafficSignals &traffic_signals);
 
     // Most ways are bidirectional, making the geometry in forward and backward direction the same,
     // except for reversal. We make use of this fact by keeping only one representation of the
@@ -89,7 +91,6 @@ class NodeBasedGraphFactory
 
     // General Information about the graph, not used outside of extractor
     std::unordered_set<NodeID> barriers;
-    std::unordered_set<NodeID> traffic_signals;
 
     std::vector<util::Coordinate> coordinates;
 
