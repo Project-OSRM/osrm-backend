@@ -42,12 +42,10 @@ RestrictionParser::RestrictionParser(bool use_turn_restrictions_,
         }
     }
 
-    using namespace std::string_literals;
-
-    filter.add(true, "restriction"s);
+    filter.add(true, "restriction");
     if (parse_conditionals)
     {
-        filter.add(true, "restriction:conditional"s);
+        filter.add(true, "restriction:conditional");
         for (const auto &namespaced : restrictions_)
         {
             filter.add(true, "restriction:" + namespaced + ":conditional");
