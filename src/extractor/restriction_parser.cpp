@@ -12,7 +12,6 @@
 #include <osmium/osm.hpp>
 
 #include <algorithm>
-#include <osmium/tags/tags_filter.hpp>
 
 namespace osrm
 {
