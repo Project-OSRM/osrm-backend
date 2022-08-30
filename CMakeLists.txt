@@ -505,7 +505,7 @@ if(ENABLE_CONAN)
   add_dependency_includes(${CONAN_INCLUDE_DIRS_TBB})
 
   set(Boost_USE_STATIC_LIBS ON)
-  find_package(Boost REQUIRED EXACT ${CONAN_BOOST_VERSION} COMPONENTS ${BOOST_COMPONENTS})
+  find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
   set(Boost_DATE_TIME_LIBRARY "${Boost_date_time_LIB_TARGETS}")
   set(Boost_CHRONO_LIBRARY "${Boost_chrono_LIB_TARGETS}")
   set(Boost_PROGRAM_OPTIONS_LIBRARY "${Boost_program_options_LIB_TARGETS}")
