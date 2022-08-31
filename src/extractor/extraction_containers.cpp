@@ -806,9 +806,9 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
     }
 }
 
-void ExtractionContainers::WriteEdges(storage::tar::FileWriter &writer) const
+void ExtractionContainers::WriteEdges(storage::tar::FileWriter &writer)
 {
-    std::vector<NodeBasedEdge> normal_edges;
+    // std::vector<NodeBasedEdge> normal_edges;
     normal_edges.reserve(all_edges_list.size());
     {
         util::UnbufferedLog log;
@@ -854,7 +854,7 @@ void ExtractionContainers::WriteMetadata(storage::tar::FileWriter &writer) const
     log << " -- Metadata contains << " << all_edges_annotation_data_list.size() << " entries.";
 }
 
-void ExtractionContainers::WriteNodes(storage::tar::FileWriter &writer) const
+void ExtractionContainers::WriteNodes(storage::tar::FileWriter &writer)
 {
     {
         util::UnbufferedLog log;
@@ -900,17 +900,16 @@ void ExtractionContainers::WriteNodes(storage::tar::FileWriter &writer) const
         util::UnbufferedLog log;
         log << "Writing barrier nodes     ... ";
         TIMER_START(write_nodes);
-        std::vector<NodeID> internal_barrier_nodes;
         for (const auto osm_id : barrier_nodes)
         {
             const auto node_id = mapExternalToInternalNodeID(
                 used_node_id_list.begin(), used_node_id_list.end(), osm_id);
             if (node_id != SPECIAL_NODEID)
             {
-                internal_barrier_nodes.push_back(node_id);
+                internal_barrier_nodes.emplace(node_id);
             }
         }
-        storage::serialization::write(writer, "/extractor/barriers", internal_barrier_nodes);
+        // storage::serialization::write(writer, "/extractor/barriers", internal_barrier_nodes);
         log << "ok, after " << TIMER_SEC(write_nodes) << "s";
     }
 

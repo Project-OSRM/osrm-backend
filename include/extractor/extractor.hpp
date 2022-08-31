@@ -66,7 +66,12 @@ class Extractor
     std::tuple<LaneDescriptionMap,
                std::vector<TurnRestriction>,
                std::vector<UnresolvedManeuverOverride>,
-               TrafficSignals>
+               TrafficSignals,
+               std::unordered_set<NodeID>,
+               std::vector<util::Coordinate>,
+               extractor::PackedOSMIDs,
+               std::vector<NodeBasedEdge>,
+               std::vector<NodeBasedEdgeAnnotation>>
     ParseOSMData(ScriptingEnvironment &scripting_environment, const unsigned number_of_threads);
 
     EdgeID BuildEdgeExpandedGraph(

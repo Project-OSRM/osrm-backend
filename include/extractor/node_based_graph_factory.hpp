@@ -38,11 +38,15 @@ class NodeBasedGraphFactory
     // node-based graph to represent the OSM network. This includes geometry compression, annotation
     // data optimisation and many other aspects. After this step, the edge-based graph factory can
     // turn the graph into the routing graph to be used with the navigation algorithms.
-    NodeBasedGraphFactory(const boost::filesystem::path &input_file,
-                          ScriptingEnvironment &scripting_environment,
+    NodeBasedGraphFactory(ScriptingEnvironment &scripting_environment,
                           std::vector<TurnRestriction> &turn_restrictions,
                           std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
-                          const TrafficSignals &traffic_signals);
+                          const TrafficSignals &traffic_signals,
+                          std::unordered_set<NodeID> barriers,
+                          std::vector<util::Coordinate> coordinates,
+                          extractor::PackedOSMIDs osm_node_ids,
+                          const std::vector<NodeBasedEdge> &edge_list,
+                          std::vector<NodeBasedEdgeAnnotation> annotation_data);
 
     auto const &GetGraph() const { return compressed_output_graph; }
     auto const &GetBarriers() const { return barriers; }
@@ -60,9 +64,8 @@ class NodeBasedGraphFactory
     void ReleaseOsmNodes();
 
   private:
-    // Get the information from the *.osrm file (direct product of the extractor callback/extraction
-    // containers) and prepare the graph creation process
-    void LoadDataFromFile(const boost::filesystem::path &input_file);
+    // Build and validate compressed output graph
+    void BuildCompressedOutputGraph(const std::vector<NodeBasedEdge> &edge_list);
 
     // Compress the node-based graph into a compact representation of itself. This removes storing a
     // single edge for every part of the geometry and might also combine meta-data for multiple

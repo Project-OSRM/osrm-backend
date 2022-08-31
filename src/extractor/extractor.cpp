@@ -208,8 +208,21 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     std::vector<TurnRestriction> turn_restrictions;
     std::vector<UnresolvedManeuverOverride> unresolved_maneuver_overrides;
     TrafficSignals traffic_signals;
-    std::tie(turn_lane_map, turn_restrictions, unresolved_maneuver_overrides, traffic_signals) =
-        ParseOSMData(scripting_environment, number_of_threads);
+    std::unordered_set<NodeID> barriers;
+    std::vector<util::Coordinate> osm_coordinates;
+    extractor::PackedOSMIDs osm_node_ids;
+    std::vector<NodeBasedEdge> edge_list;
+    std::vector<NodeBasedEdgeAnnotation> annotation_data;
+
+    std::tie(turn_lane_map,
+             turn_restrictions,
+             unresolved_maneuver_overrides,
+             traffic_signals,
+             barriers,
+             osm_coordinates,
+             osm_node_ids,
+             edge_list,
+             annotation_data) = ParseOSMData(scripting_environment, number_of_threads);
 
     // Transform the node-based graph that OSM is based on into an edge-based graph
     // that is better for routing.  Every edge becomes a node, and every valid
@@ -227,11 +240,15 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     std::uint32_t ebg_connectivity_checksum = 0;
 
     // Create a node-based graph from the OSRM file
-    NodeBasedGraphFactory node_based_graph_factory(config.GetPath(".osrm"),
-                                                   scripting_environment,
+    NodeBasedGraphFactory node_based_graph_factory(scripting_environment,
                                                    turn_restrictions,
                                                    unresolved_maneuver_overrides,
-                                                   traffic_signals);
+                                                   traffic_signals,
+                                                   std::move(barriers),
+                                                   std::move(osm_coordinates),
+                                                   std::move(osm_node_ids),
+                                                   edge_list,
+                                                   std::move(annotation_data));
 
     NameTable name_table;
     files::readNames(config.GetPath(".osrm.names"), name_table);
@@ -364,7 +381,12 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 std::tuple<LaneDescriptionMap,
            std::vector<TurnRestriction>,
            std::vector<UnresolvedManeuverOverride>,
-           TrafficSignals>
+           TrafficSignals,
+           std::unordered_set<NodeID>,
+           std::vector<util::Coordinate>,
+           extractor::PackedOSMIDs,
+           std::vector<NodeBasedEdge>,
+           std::vector<NodeBasedEdgeAnnotation>>
 Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                         const unsigned number_of_threads)
 {
@@ -629,10 +651,31 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     TIMER_STOP(extracting);
     util::Log() << "extraction finished after " << TIMER_SEC(extracting) << "s";
 
+    std::unordered_set<NodeID> barriers;
+    std::vector<util::Coordinate> osm_coordinates;
+    extractor::PackedOSMIDs osm_node_ids;
+    std::vector<NodeBasedEdge> edge_list;
+    std::vector<NodeBasedEdgeAnnotation> annotation_data;
+
+    osm_coordinates.resize(extraction_containers.all_nodes_list.size());
+    osm_node_ids.reserve(extraction_containers.all_nodes_list.size());
+    for (size_t index = 0; index < extraction_containers.all_nodes_list.size(); ++index)
+    {
+        const auto &current_node = extraction_containers.all_nodes_list[index];
+        osm_coordinates[index].lon = current_node.lon;
+        osm_coordinates[index].lat = current_node.lat;
+        osm_node_ids.push_back(current_node.node_id);
+    }
+
     return std::make_tuple(std::move(turn_lane_map),
                            std::move(extraction_containers.turn_restrictions),
                            std::move(extraction_containers.internal_maneuver_overrides),
-                           std::move(extraction_containers.internal_traffic_signals));
+                           std::move(extraction_containers.internal_traffic_signals),
+                           std::move(extraction_containers.internal_barrier_nodes),
+                           std::move(osm_coordinates),
+                           std::move(osm_node_ids),
+                           std::move(extraction_containers.normal_edges),
+                           std::move(extraction_containers.all_edges_annotation_data_list));
 }
 
 void Extractor::FindComponents(unsigned number_of_edge_based_nodes,

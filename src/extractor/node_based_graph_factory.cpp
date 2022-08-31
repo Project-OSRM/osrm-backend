@@ -16,32 +16,30 @@ namespace extractor
 {
 
 NodeBasedGraphFactory::NodeBasedGraphFactory(
-    const boost::filesystem::path &input_file,
     ScriptingEnvironment &scripting_environment,
     std::vector<TurnRestriction> &turn_restrictions,
     std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
-    const TrafficSignals &traffic_signals)
+    const TrafficSignals &traffic_signals,
+    std::unordered_set<NodeID> barriers,
+    std::vector<util::Coordinate> coordinates,
+    extractor::PackedOSMIDs osm_node_ids,
+    const std::vector<NodeBasedEdge> &edge_list,
+    std::vector<NodeBasedEdgeAnnotation> annotation_data)
+    : annotation_data(std::move(annotation_data)), barriers(std::move(barriers)),
+      coordinates(std::move(coordinates)), osm_node_ids(std::move(osm_node_ids))
 {
-    LoadDataFromFile(input_file);
+    BuildCompressedOutputGraph(edge_list);
     Compress(scripting_environment, turn_restrictions, maneuver_overrides, traffic_signals);
     CompressGeometry();
     CompressAnnotationData();
 }
 
-// load the data serialised during the extraction run
-void NodeBasedGraphFactory::LoadDataFromFile(const boost::filesystem::path &input_file)
+void NodeBasedGraphFactory::BuildCompressedOutputGraph(const std::vector<NodeBasedEdge> &edge_list)
 {
-    auto barriers_iter = inserter(barriers, end(barriers));
-    std::vector<NodeBasedEdge> edge_list;
-
-    files::readRawNBGraph(
-        input_file, barriers_iter, coordinates, osm_node_ids, edge_list, annotation_data);
-
     const auto number_of_node_based_nodes = coordinates.size();
     if (edge_list.empty())
     {
-        throw util::exception("Node-based-graph (" + input_file.string() + ") contains no edges." +
-                              SOURCE_REF);
+        throw util::exception("Node-based-graph contains no edges." + SOURCE_REF);
     }
 
     // at this point, the data isn't compressed, but since we update the graph in-place, we assign
