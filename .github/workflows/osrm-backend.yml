@@ -475,9 +475,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.conan
-        key: v3-conan-${{ matrix.name }}-${{ github.sha }}
+        key: v4-conan-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
-          v3-conan-${{ matrix.name }}-
+          v4-conan-${{ matrix.name }}-
     - name: Enable test cache
       uses: actions/cache@v2
       with:
@@ -516,7 +516,7 @@ jobs:
 
     - name: Install dev dependencies
       run: |
-        python3 -m pip install conan==1.50.0
+        python3 -m pip install conan==1.51.3
 
         # CMake
         mkdir -p ${CMAKE_DIR}
