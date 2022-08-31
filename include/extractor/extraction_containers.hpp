@@ -43,8 +43,6 @@ class ExtractionContainers
     void PrepareTrafficSignals(const ReferencedTrafficSignals &referenced_traffic_signals);
     void PrepareEdges(ScriptingEnvironment &scripting_environment);
 
-    void WriteNodes(storage::tar::FileWriter &file_out);
-    void WriteEdges(storage::tar::FileWriter &file_out);
     void WriteCharData(const std::string &file_name);
 
   public:
@@ -91,7 +89,6 @@ class ExtractionContainers
     ExtractionContainers();
 
     void PrepareData(ScriptingEnvironment &scripting_environment,
-                     const std::string &osrm_path,
                      const std::string &names_data_path);
 };
 } // namespace extractor

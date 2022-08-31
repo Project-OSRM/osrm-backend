@@ -407,21 +407,14 @@ ExtractionContainers::ExtractionContainers()
  *
  */
 void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environment,
-                                       const std::string &osrm_path,
                                        const std::string &name_file_name)
 {
-    storage::tar::FileWriter writer(osrm_path, storage::tar::FileWriter::GenerateFingerprint);
-
     const auto restriction_ways = IdentifyRestrictionWays();
     const auto maneuver_override_ways = IdentifyManeuverOverrideWays();
     const auto traffic_signals = IdentifyTrafficSignals();
 
     PrepareNodes();
-    WriteNodes(writer);
     PrepareEdges(scripting_environment);
-    all_nodes_list.clear(); // free all_nodes_list before allocation of normal_edges
-    all_nodes_list.shrink_to_fit();
-    WriteEdges(writer);
 
     PrepareTrafficSignals(traffic_signals);
     PrepareManeuverOverrides(maneuver_override_ways);
@@ -518,6 +511,59 @@ void ExtractionContainers::PrepareNodes()
         TIMER_STOP(id_map);
         log << "ok, after " << TIMER_SEC(id_map) << "s";
     }
+    {
+        util::UnbufferedLog log;
+        log << "Confirming/Writing used nodes     ... ";
+        TIMER_START(write_nodes);
+        // identify all used nodes by a merging step of two sorted lists
+        auto node_iterator = all_nodes_list.begin();
+        auto node_id_iterator = used_node_id_list.begin();
+        const auto all_nodes_list_end = all_nodes_list.end();
+
+        for (size_t index = 0; index < used_node_id_list.size(); ++index)
+        {
+            BOOST_ASSERT(node_id_iterator != used_node_id_list.end());
+            BOOST_ASSERT(node_iterator != all_nodes_list_end);
+            BOOST_ASSERT(*node_id_iterator >= node_iterator->node_id);
+            while (*node_id_iterator > node_iterator->node_id &&
+                   node_iterator != all_nodes_list_end)
+            {
+                ++node_iterator;
+            }
+            if (node_iterator == all_nodes_list_end || *node_id_iterator < node_iterator->node_id)
+            {
+                throw util::exception(
+                    "Invalid OSM data: Referenced non-existing node with ID " +
+                    std::to_string(static_cast<std::uint64_t>(*node_id_iterator)));
+            }
+            BOOST_ASSERT(*node_id_iterator == node_iterator->node_id);
+
+            ++node_id_iterator;
+
+            internal_nodes.emplace_back(*node_iterator++);
+        }
+
+        TIMER_STOP(write_nodes);
+        log << "ok, after " << TIMER_SEC(write_nodes) << "s";
+    }
+
+    {
+        util::UnbufferedLog log;
+        log << "Writing barrier nodes     ... ";
+        TIMER_START(write_nodes);
+        for (const auto osm_id : barrier_nodes)
+        {
+            const auto node_id = mapExternalToInternalNodeID(
+                used_node_id_list.begin(), used_node_id_list.end(), osm_id);
+            if (node_id != SPECIAL_NODEID)
+            {
+                internal_barrier_nodes.emplace(node_id);
+            }
+        }
+        log << "ok, after " << TIMER_SEC(write_nodes) << "s";
+    }
+
+    util::Log() << "Processed " << max_internal_node_id << " nodes";
 }
 
 void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environment)
@@ -803,11 +849,10 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             all_edges_list[j].result.target = SPECIAL_NODEID;
         }
     }
-}
 
-void ExtractionContainers::WriteEdges(storage::tar::FileWriter &writer)
-{
-    // std::vector<NodeBasedEdge> normal_edges;
+    all_nodes_list.clear(); // free all_nodes_list before allocation of normal_edges
+    all_nodes_list.shrink_to_fit();
+
     normal_edges.reserve(all_edges_list.size());
     {
         util::UnbufferedLog log;
@@ -832,76 +877,10 @@ void ExtractionContainers::WriteEdges(storage::tar::FileWriter &writer)
             throw util::exception("There are too many edges, OSRM only supports 2^32" + SOURCE_REF);
         }
 
-        storage::serialization::write(writer, "/extractor/edges", normal_edges);
-
         TIMER_STOP(write_edges);
         log << "ok, after " << TIMER_SEC(write_edges) << "s";
         log << " -- Processed " << normal_edges.size() << " edges";
     }
-}
-
-void ExtractionContainers::WriteNodes(storage::tar::FileWriter &writer)
-{
-    {
-        util::UnbufferedLog log;
-        log << "Confirming/Writing used nodes     ... ";
-        TIMER_START(write_nodes);
-        // identify all used nodes by a merging step of two sorted lists
-        auto node_iterator = all_nodes_list.begin();
-        auto node_id_iterator = used_node_id_list.begin();
-        const auto all_nodes_list_end = all_nodes_list.end();
-
-        const std::function<QueryNode()> encode_function = [&]() -> QueryNode {
-            BOOST_ASSERT(node_id_iterator != used_node_id_list.end());
-            BOOST_ASSERT(node_iterator != all_nodes_list_end);
-            BOOST_ASSERT(*node_id_iterator >= node_iterator->node_id);
-            while (*node_id_iterator > node_iterator->node_id &&
-                   node_iterator != all_nodes_list_end)
-            {
-                ++node_iterator;
-            }
-            if (node_iterator == all_nodes_list_end || *node_id_iterator < node_iterator->node_id)
-            {
-                throw util::exception(
-                    "Invalid OSM data: Referenced non-existing node with ID " +
-                    std::to_string(static_cast<std::uint64_t>(*node_id_iterator)));
-            }
-            BOOST_ASSERT(*node_id_iterator == node_iterator->node_id);
-
-            ++node_id_iterator;
-            auto result = *node_iterator++;
-
-            internal_nodes.push_back(result);
-            return result;
-        };
-
-        writer.WriteElementCount64("/extractor/nodes", used_node_id_list.size());
-        writer.WriteStreaming<QueryNode>(
-            "/extractor/nodes",
-            boost::make_function_input_iterator(encode_function, boost::infinite()),
-            used_node_id_list.size());
-
-        TIMER_STOP(write_nodes);
-        log << "ok, after " << TIMER_SEC(write_nodes) << "s";
-    }
-
-    {
-        util::UnbufferedLog log;
-        log << "Writing barrier nodes     ... ";
-        TIMER_START(write_nodes);
-        for (const auto osm_id : barrier_nodes)
-        {
-            const auto node_id = mapExternalToInternalNodeID(
-                used_node_id_list.begin(), used_node_id_list.end(), osm_id);
-            if (node_id != SPECIAL_NODEID)
-            {
-                internal_barrier_nodes.emplace(node_id);
-            }
-        }
-        log << "ok, after " << TIMER_SEC(write_nodes) << "s";
-    }
-
-    util::Log() << "Processed " << max_internal_node_id << " nodes";
 }
 
 ExtractionContainers::ReferencedWays ExtractionContainers::IdentifyManeuverOverrideWays()

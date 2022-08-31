@@ -639,7 +639,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     }
 
     extraction_containers.PrepareData(scripting_environment,
-                                      config.GetPath(".osrm").string(),
                                       config.GetPath(".osrm.names").string());
 
     auto profile_properties = scripting_environment.GetProfileProperties();
@@ -665,6 +664,16 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         osm_coordinates[index].lon = current_node.lon;
         osm_coordinates[index].lat = current_node.lat;
         osm_node_ids.push_back(current_node.node_id);
+    }
+
+    if (config.dump_nbg_graph)
+    {
+        storage::tar::FileWriter writer(config.GetPath(".osrm").string(),
+                                        storage::tar::FileWriter::GenerateFingerprint);
+        storage::serialization::write(
+            writer, "/extractor/nodes", extraction_containers.internal_nodes);
+        storage::serialization::write(
+            writer, "/extractor/edges", extraction_containers.normal_edges);
     }
 
     return std::make_tuple(std::move(turn_lane_map),
