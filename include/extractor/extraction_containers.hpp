@@ -87,6 +87,7 @@ class ExtractionContainers
     std::vector<InputManeuverOverride> external_maneuver_overrides_list;
     std::vector<UnresolvedManeuverOverride> internal_maneuver_overrides;
     std::unordered_set<NodeID> internal_barrier_nodes;
+    NodeVector internal_nodes;
 
     ExtractionContainers();
 

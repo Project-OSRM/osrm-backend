@@ -666,7 +666,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         osm_coordinates[index].lat = current_node.lat;
         osm_node_ids.push_back(current_node.node_id);
     }
-    
+
     return std::make_tuple(std::move(turn_lane_map),
                            std::move(extraction_containers.turn_restrictions),
                            std::move(extraction_containers.internal_maneuver_overrides),
