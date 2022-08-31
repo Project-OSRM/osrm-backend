@@ -11,7 +11,6 @@
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
 
-using osrm::guidance::getTurnDirection;
 using osrm::util::angularDeviation;
 
 namespace

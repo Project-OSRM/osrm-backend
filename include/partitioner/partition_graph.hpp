@@ -125,13 +125,13 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
 
     NodeID GetID(const NodeT &node) const
     {
-        BOOST_ASSERT(&node >= &nodes[0] && &node <= &nodes.back());
-        return (&node - &nodes[0]);
+        BOOST_ASSERT(&node >= nodes.data() && &node <= &nodes.back());
+        return (&node - nodes.data());
     }
     EdgeID GetID(const EdgeT &edge) const
     {
-        BOOST_ASSERT(&edge >= &edges[0] && &edge <= &edges.back());
-        return (&edge - &edges[0]);
+        BOOST_ASSERT(&edge >= edges.data() && &edge <= &edges.back());
+        return (&edge - edges.data());
     }
 
     NodeIterator Begin() { return nodes.begin(); }
@@ -142,7 +142,7 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
     // removes the edges from the graph that return true for the filter, returns new end
     template <typename FilterT> auto RemoveEdges(NodeT &node, FilterT filter)
     {
-        BOOST_ASSERT(&node >= &nodes[0] && &node <= &nodes.back());
+        BOOST_ASSERT(&node >= nodes.data() && &node <= &nodes.back());
         // required since we are not on std++17 yet, otherwise we are missing an argument_type
         const auto negate_filter = [&](const EdgeT &edge) { return !filter(edge); };
         const auto center = std::stable_partition(BeginEdges(node), EndEdges(node), negate_filter);

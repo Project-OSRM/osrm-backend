@@ -7,13 +7,11 @@
 #include "util/log.hpp"
 
 #include "util/bearing.hpp"
-#include "util/coordinate_calculation.hpp"
 
 #include <algorithm>
 #include <cstddef>
 
 using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
-using osrm::guidance::getTurnDirection;
 using osrm::util::angularDeviation;
 
 namespace osrm

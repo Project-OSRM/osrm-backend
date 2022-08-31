@@ -19,6 +19,8 @@ namespace engine
 class RoutingAlgorithmsInterface
 {
   public:
+    virtual ~RoutingAlgorithmsInterface() = default;
+
     virtual InternalManyRoutesResult
     AlternativePathSearch(const PhantomEndpointCandidates &endpoint_candidates,
                           unsigned number_of_alternatives) const = 0;

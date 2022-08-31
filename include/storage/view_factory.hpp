@@ -36,9 +36,6 @@
 #include "util/vector_view.hpp"
 
 #include "util/filtered_graph.hpp"
-#include "util/packed_vector.hpp"
-#include "util/vector_view.hpp"
-
 namespace osrm
 {
 namespace storage
