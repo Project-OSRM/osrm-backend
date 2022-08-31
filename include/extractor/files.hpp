@@ -444,13 +444,11 @@ inline void readConditionalRestrictions(const boost::filesystem::path &path,
 }
 
 // reads .osrm file which is a temporary file of osrm-extract
-template <typename BarrierOutIter, typename PackedOSMIDsT>
+template <typename PackedOSMIDsT>
 void readRawNBGraph(const boost::filesystem::path &path,
-                    BarrierOutIter barriers,
                     std::vector<util::Coordinate> &coordinates,
                     PackedOSMIDsT &osm_node_ids,
-                    std::vector<extractor::NodeBasedEdge> &edge_list,
-                    std::vector<extractor::NodeBasedEdgeAnnotation> &annotations)
+                    std::vector<extractor::NodeBasedEdge> &edge_list)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
@@ -468,10 +466,7 @@ void readRawNBGraph(const boost::filesystem::path &path,
     reader.ReadStreaming<extractor::QueryNode>("/extractor/nodes",
                                                boost::make_function_output_iterator(decode));
 
-    reader.ReadStreaming<NodeID>("/extractor/barriers", barriers);
-
     storage::serialization::read(reader, "/extractor/edges", edge_list);
-    storage::serialization::read(reader, "/extractor/annotations", annotations);
 }
 
 template <typename NameTableT>

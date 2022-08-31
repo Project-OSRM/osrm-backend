@@ -422,7 +422,6 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
     all_nodes_list.clear(); // free all_nodes_list before allocation of normal_edges
     all_nodes_list.shrink_to_fit();
     WriteEdges(writer);
-    WriteMetadata(writer);
 
     PrepareTrafficSignals(traffic_signals);
     PrepareManeuverOverrides(maneuver_override_ways);
@@ -841,19 +840,6 @@ void ExtractionContainers::WriteEdges(storage::tar::FileWriter &writer)
     }
 }
 
-void ExtractionContainers::WriteMetadata(storage::tar::FileWriter &writer) const
-{
-    util::UnbufferedLog log;
-    log << "Writing way meta-data     ... " << std::flush;
-    TIMER_START(write_meta_data);
-
-    storage::serialization::write(writer, "/extractor/annotations", all_edges_annotation_data_list);
-
-    TIMER_STOP(write_meta_data);
-    log << "ok, after " << TIMER_SEC(write_meta_data) << "s";
-    log << " -- Metadata contains << " << all_edges_annotation_data_list.size() << " entries.";
-}
-
 void ExtractionContainers::WriteNodes(storage::tar::FileWriter &writer)
 {
     {
@@ -912,9 +898,6 @@ void ExtractionContainers::WriteNodes(storage::tar::FileWriter &writer)
                 internal_barrier_nodes.emplace(node_id);
             }
         }
-        std::vector<NodeID> barrier_nodes_vector(internal_barrier_nodes.begin(),
-                                                 internal_barrier_nodes.end());
-        storage::serialization::write(writer, "/extractor/barriers", barrier_nodes_vector);
         log << "ok, after " << TIMER_SEC(write_nodes) << "s";
     }
 

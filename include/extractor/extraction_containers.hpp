@@ -45,7 +45,6 @@ class ExtractionContainers
 
     void WriteNodes(storage::tar::FileWriter &file_out);
     void WriteEdges(storage::tar::FileWriter &file_out);
-    void WriteMetadata(storage::tar::FileWriter &file_out) const;
     void WriteCharData(const std::string &file_name);
 
   public:
