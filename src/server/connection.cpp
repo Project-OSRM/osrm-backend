@@ -239,7 +239,7 @@ std::vector<char> Connection::compress_buffers(const std::vector<char> &uncompre
     boost::iostreams::filtering_ostream gzip_stream;
     gzip_stream.push(boost::iostreams::gzip_compressor(compression_parameters));
     gzip_stream.push(boost::iostreams::back_inserter(compressed_data));
-    gzip_stream.write(&uncompressed_data[0], uncompressed_data.size());
+    gzip_stream.write(uncompressed_data.data(), uncompressed_data.size());
     boost::iostreams::close(gzip_stream);
 
     return compressed_data;

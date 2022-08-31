@@ -11,8 +11,6 @@
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 
-using osrm::util::angularDeviation;
-
 namespace osrm
 {
 namespace extractor

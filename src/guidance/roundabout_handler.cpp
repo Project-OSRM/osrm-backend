@@ -15,8 +15,6 @@
 
 #include <boost/assert.hpp>
 
-using osrm::guidance::getTurnDirection;
-
 namespace osrm
 {
 namespace guidance

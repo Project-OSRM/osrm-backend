@@ -145,11 +145,11 @@ jobs:
           - name: clang-11.0-debug-clang-tidy
             continue-on-error: false
             node: 12
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: clang-11
-            CXXCOMPILER: clang++-11
+            CCOMPILER: clang-14
+            CXXCOMPILER: clang++-14
             CUCUMBER_TIMEOUT: 60000
             ENABLE_CLANG_TIDY: ON
 

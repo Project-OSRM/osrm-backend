@@ -6,8 +6,6 @@
 #include "util/coordinate_calculation.hpp"
 #include <set>
 
-using osrm::guidance::getTurnDirection;
-
 namespace osrm
 {
 namespace guidance

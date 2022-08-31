@@ -31,6 +31,8 @@ template <> class AlgorithmDataFacade<CH>
     using EdgeData = contractor::QueryEdge::EdgeData;
     using EdgeRange = util::filtered_range<EdgeID, util::vector_view<bool>>;
 
+    virtual ~AlgorithmDataFacade() = default;
+
     // search graph access
     virtual unsigned GetNumberOfNodes() const = 0;
 
@@ -65,6 +67,8 @@ template <> class AlgorithmDataFacade<MLD>
   public:
     using EdgeData = customizer::EdgeBasedGraphEdgeData;
     using EdgeRange = util::range<EdgeID>;
+
+    virtual ~AlgorithmDataFacade() = default;
 
     // search graph access
     virtual unsigned GetNumberOfNodes() const = 0;
