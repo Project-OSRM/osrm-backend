@@ -883,7 +883,10 @@ void ExtractionContainers::WriteNodes(storage::tar::FileWriter &writer)
             BOOST_ASSERT(*node_id_iterator == node_iterator->node_id);
 
             ++node_id_iterator;
-            return *node_iterator++;
+            auto result = *node_iterator++;
+
+            internal_nodes.push_back(result);
+            return result;
         };
 
         writer.WriteElementCount64("/extractor/nodes", used_node_id_list.size());
@@ -909,7 +912,9 @@ void ExtractionContainers::WriteNodes(storage::tar::FileWriter &writer)
                 internal_barrier_nodes.emplace(node_id);
             }
         }
-        // storage::serialization::write(writer, "/extractor/barriers", internal_barrier_nodes);
+        std::vector<NodeID> barrier_nodes_vector(internal_barrier_nodes.begin(),
+                                                 internal_barrier_nodes.end());
+        storage::serialization::write(writer, "/extractor/barriers", barrier_nodes_vector);
         log << "ok, after " << TIMER_SEC(write_nodes) << "s";
     }
 

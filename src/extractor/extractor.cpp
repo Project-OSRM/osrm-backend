@@ -657,16 +657,16 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     std::vector<NodeBasedEdge> edge_list;
     std::vector<NodeBasedEdgeAnnotation> annotation_data;
 
-    osm_coordinates.resize(extraction_containers.all_nodes_list.size());
-    osm_node_ids.reserve(extraction_containers.all_nodes_list.size());
-    for (size_t index = 0; index < extraction_containers.all_nodes_list.size(); ++index)
+    osm_coordinates.resize(extraction_containers.internal_nodes.size());
+    osm_node_ids.reserve(extraction_containers.internal_nodes.size());
+    for (size_t index = 0; index < extraction_containers.internal_nodes.size(); ++index)
     {
-        const auto &current_node = extraction_containers.all_nodes_list[index];
+        const auto &current_node = extraction_containers.internal_nodes[index];
         osm_coordinates[index].lon = current_node.lon;
         osm_coordinates[index].lat = current_node.lat;
         osm_node_ids.push_back(current_node.node_id);
     }
-
+    
     return std::make_tuple(std::move(turn_lane_map),
                            std::move(extraction_containers.turn_restrictions),
                            std::move(extraction_containers.internal_maneuver_overrides),
