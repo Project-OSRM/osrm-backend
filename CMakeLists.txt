@@ -327,9 +327,9 @@ if (ENABLE_SANITIZER)
 endif()
 
 # Configuring compilers
-set(OSRM_WARNING_FLAGS "-Wno-used-but-marked-unused -Wno-cast-function-type -Wno-non-virtual-dtor -Wno-undefined-reinterpret-cast -Wno-suggest-destructor-override -Wno-inconsistent-missing-destructor-override -Wno-undefined-func-template -Wno-unused-member-function -Wno-covered-switch-default -Wno-documentation -Wno-unused-template -Wno-global-constructors -Wno-exit-time-destructors -Wno-double-promotion -Wno-float-conversion -Wno-weak-template-vtables -Wno-weak-vtables -Wno-undef -Wno-float-equal -Wimplicit-float-conversion -Wno-shadow -Wno-switch-enum -Wno-shorten-64-to-32 -Wno-extra-semi -Wno-atomic-implicit-seq-cst -Wno-sign-conversion -Wno-suggest-override -Wno-implicit-int-conversion -Wno-missing-prototypes -Wno-missing-noreturn -Wno-disabled-macro-expansion -Wno-padded -Wno-shadow-field -Wno-newline-eof -Wno-old-style-cast -Wno-zero-as-null-pointer-constant -Wno-shadow-field-in-constructor -Wno-c++98-compat -Wno-c++98-compat-pedantic -Werror -Wunused -Werror=all -Werror=extra  -Werror=uninitialized -Werror=unreachable-code -Werror=unused-variable -Werror=unreachable-code -Wno-error=cpp -Wpedantic")
+include(cmake/warnings.cmake)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OSRM_WARNING_FLAGS} -Werror=strict-overflow=2 -Wno-error=unused-local-typedef -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fcolor-diagnostics -ftemplate-depth=1024 -Wno-unused-command-line-argument")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fcolor-diagnostics -ftemplate-depth=1024")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set(COLOR_FLAG "-fdiagnostics-color=auto")
   check_cxx_compiler_flag("-fdiagnostics-color=auto" HAS_COLOR_FLAG)
@@ -337,7 +337,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     set(COLOR_FLAG "")
   endif()
   # using GCC
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OSRM_WARNING_FLAGS} -Werror=strict-overflow=1 -Wno-error=maybe-uninitialized -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 ${COLOR_FLAG} -fPIC -ftemplate-depth=1024")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 ${COLOR_FLAG} -fPIC -ftemplate-depth=1024")
 
   if(WIN32) # using mingw
     add_dependency_defines(-DWIN32)
@@ -430,6 +430,7 @@ include_directories(SYSTEM ${CHEAPRULER_INCLUDE_DIR})
 
 add_library(MICROTAR OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src/microtar.c")
 set_property(TARGET MICROTAR PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_no_warning(MICROTAR unused-variable)
 
 set(PROTOZERO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/protozero/include")
 include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
