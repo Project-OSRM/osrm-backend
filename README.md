@@ -62,12 +62,12 @@ Pre-process the extract with the car profile and start a routing engine HTTP ser
 
 The flag `-v "${PWD}:/data"` creates the directory `/data` inside the docker container and makes the current working directory `"${PWD}"` available there. The file `/data/berlin-latest.osm.pbf` inside the container is referring to `"${PWD}/berlin-latest.osm.pbf"` on the host.
 
-    docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-partition /data/berlin-latest.osrm
-    docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-customize /data/berlin-latest.osrm
+    docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-partition /data/berlin-latest
+    docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-customize /data/berlin-latest
 
-Note that `berlin-latest.osrm` has a different file extension. 
+Note that `berlin-latest` has no file extension. 
 
-    docker run -t -i -p 5000:5000 -v "${PWD}:/data" osrm/osrm-backend osrm-routed --algorithm mld /data/berlin-latest.osrm
+    docker run -t -i -p 5000:5000 -v "${PWD}:/data" osrm/osrm-backend osrm-routed --algorithm mld /data/berlin-latest
 
 Make requests against the HTTP server
 

@@ -356,7 +356,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::Log() << "Expansion: " << nodes_per_second << " nodes/sec and " << edges_per_second
                 << " edges/sec";
     util::Log() << "To prepare the data for routing, run: "
-                << "./osrm-contract " << config.GetPath(".osrm");
+                << "./osrm-contract " << config.base_path;
 
     return 0;
 }
