@@ -56,6 +56,8 @@
       - ADDED: Support snapping to multiple ways at an input location. [#5953](https://github.com/Project-OSRM/osrm-backend/pull/5953)
       - FIXED: Fix snapping target locations to ways used in turn restrictions. [#6339](https://github.com/Project-OSRM/osrm-backend/pull/6339)
       - ADDED: Support OSM traffic signal directions. [#6153](https://github.com/Project-OSRM/osrm-backend/pull/6153)
+    - Tools:
+      - CHANGED: Do not generate intermediate .osrm file in osrm-extract. [#6354](https://github.com/Project-OSRM/osrm-backend/pull/6354)
 
 # 5.26.0
   - Changes from 5.25.0
