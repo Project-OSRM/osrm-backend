@@ -23,8 +23,7 @@ namespace
 // Boost.Assert only declares the following two functions and let's us define them here.
 namespace boost
 {
-void
-assertion_failed(char const *expr, char const *function, char const *file, long line)
+void assertion_failed(char const *expr, char const *function, char const *file, long line)
 {
     ::assertion_failed_msg_helper(expr, "", function, file, line);
 }
