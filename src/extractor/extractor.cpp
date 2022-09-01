@@ -204,25 +204,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
 
-    LaneDescriptionMap turn_lane_map;
-    std::vector<TurnRestriction> turn_restrictions;
-    std::vector<UnresolvedManeuverOverride> unresolved_maneuver_overrides;
-    TrafficSignals traffic_signals;
-    std::unordered_set<NodeID> barriers;
-    std::vector<util::Coordinate> osm_coordinates;
-    extractor::PackedOSMIDs osm_node_ids;
-    std::vector<NodeBasedEdge> edge_list;
-    std::vector<NodeBasedEdgeAnnotation> annotation_data;
-
-    std::tie(turn_lane_map,
-             turn_restrictions,
-             unresolved_maneuver_overrides,
-             traffic_signals,
-             barriers,
-             osm_coordinates,
-             osm_node_ids,
-             edge_list,
-             annotation_data) = ParseOSMData(scripting_environment, number_of_threads);
+    auto parsed_osm_data = ParseOSMData(scripting_environment, number_of_threads);
 
     // Transform the node-based graph that OSM is based on into an edge-based graph
     // that is better for routing.  Every edge becomes a node, and every valid
@@ -241,14 +223,14 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     // Create a node-based graph from the OSRM file
     NodeBasedGraphFactory node_based_graph_factory(scripting_environment,
-                                                   turn_restrictions,
-                                                   unresolved_maneuver_overrides,
-                                                   traffic_signals,
-                                                   std::move(barriers),
-                                                   std::move(osm_coordinates),
-                                                   std::move(osm_node_ids),
-                                                   edge_list,
-                                                   std::move(annotation_data));
+                                                   parsed_osm_data.turn_restrictions,
+                                                   parsed_osm_data.unresolved_maneuver_overrides,
+                                                   parsed_osm_data.traffic_signals,
+                                                   std::move(parsed_osm_data.barriers),
+                                                   std::move(parsed_osm_data.osm_coordinates),
+                                                   std::move(parsed_osm_data.osm_node_ids),
+                                                   parsed_osm_data.edge_list,
+                                                   std::move(parsed_osm_data.annotation_data));
 
     NameTable name_table;
     files::readNames(config.GetPath(".osrm.names"), name_table);
@@ -287,10 +269,11 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     edge_based_nodes_container =
         EdgeBasedNodeDataContainer({}, std::move(node_based_graph_factory.GetAnnotationData()));
 
-    turn_restrictions = removeInvalidTurnPaths(std::move(turn_restrictions), node_based_graph);
-    unresolved_maneuver_overrides =
-        removeInvalidTurnPaths(std::move(unresolved_maneuver_overrides), node_based_graph);
-    auto restriction_graph = constructRestrictionGraph(turn_restrictions);
+    parsed_osm_data.turn_restrictions =
+        removeInvalidTurnPaths(std::move(parsed_osm_data.turn_restrictions), node_based_graph);
+    parsed_osm_data.unresolved_maneuver_overrides = removeInvalidTurnPaths(
+        std::move(parsed_osm_data.unresolved_maneuver_overrides), node_based_graph);
+    auto restriction_graph = constructRestrictionGraph(parsed_osm_data.turn_restrictions);
 
     const auto number_of_node_based_nodes = node_based_graph.GetNumberOfNodes();
 
@@ -299,12 +282,12 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                coordinates,
                                node_based_graph_factory.GetCompressedEdges(),
                                barrier_nodes,
-                               traffic_signals,
+                               parsed_osm_data.traffic_signals,
                                restriction_graph,
                                segregated_edges,
                                name_table,
-                               unresolved_maneuver_overrides,
-                               turn_lane_map,
+                               parsed_osm_data.unresolved_maneuver_overrides,
+                               parsed_osm_data.turn_lane_map,
                                scripting_environment,
                                edge_based_nodes_container,
                                edge_based_node_segments,
@@ -321,7 +304,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                          barrier_nodes,
                          restriction_graph,
                          name_table,
-                         std::move(turn_lane_map),
+                         std::move(parsed_osm_data.turn_lane_map),
                          scripting_environment);
 
     TIMER_STOP(expansion);
@@ -378,17 +361,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     return 0;
 }
 
-std::tuple<LaneDescriptionMap,
-           std::vector<TurnRestriction>,
-           std::vector<UnresolvedManeuverOverride>,
-           TrafficSignals,
-           std::unordered_set<NodeID>,
-           std::vector<util::Coordinate>,
-           extractor::PackedOSMIDs,
-           std::vector<NodeBasedEdge>,
-           std::vector<NodeBasedEdgeAnnotation>>
-Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
-                        const unsigned number_of_threads)
+Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
+                                                 const unsigned number_of_threads)
 {
     TIMER_START(extracting);
 
@@ -650,11 +624,8 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     TIMER_STOP(extracting);
     util::Log() << "extraction finished after " << TIMER_SEC(extracting) << "s";
 
-    std::unordered_set<NodeID> barriers;
     std::vector<util::Coordinate> osm_coordinates;
     extractor::PackedOSMIDs osm_node_ids;
-    std::vector<NodeBasedEdge> edge_list;
-    std::vector<NodeBasedEdgeAnnotation> annotation_data;
 
     osm_coordinates.resize(extraction_containers.internal_nodes.size());
     osm_node_ids.reserve(extraction_containers.internal_nodes.size());
@@ -676,15 +647,15 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
             writer, "/extractor/edges", extraction_containers.normal_edges);
     }
 
-    return std::make_tuple(std::move(turn_lane_map),
-                           std::move(extraction_containers.turn_restrictions),
-                           std::move(extraction_containers.internal_maneuver_overrides),
-                           std::move(extraction_containers.internal_traffic_signals),
-                           std::move(extraction_containers.internal_barrier_nodes),
-                           std::move(osm_coordinates),
-                           std::move(osm_node_ids),
-                           std::move(extraction_containers.normal_edges),
-                           std::move(extraction_containers.all_edges_annotation_data_list));
+    return ParsedOSMData{std::move(turn_lane_map),
+                         std::move(extraction_containers.turn_restrictions),
+                         std::move(extraction_containers.internal_maneuver_overrides),
+                         std::move(extraction_containers.internal_traffic_signals),
+                         std::move(extraction_containers.internal_barrier_nodes),
+                         std::move(osm_coordinates),
+                         std::move(osm_node_ids),
+                         std::move(extraction_containers.normal_edges),
+                         std::move(extraction_containers.all_edges_annotation_data_list)};
 }
 
 void Extractor::FindComponents(unsigned number_of_edge_based_nodes,

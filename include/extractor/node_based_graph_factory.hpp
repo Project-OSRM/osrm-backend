@@ -42,11 +42,11 @@ class NodeBasedGraphFactory
                           std::vector<TurnRestriction> &turn_restrictions,
                           std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
                           const TrafficSignals &traffic_signals,
-                          std::unordered_set<NodeID> barriers,
-                          std::vector<util::Coordinate> coordinates,
-                          extractor::PackedOSMIDs osm_node_ids,
+                          std::unordered_set<NodeID> &&barriers,
+                          std::vector<util::Coordinate> &&coordinates,
+                          extractor::PackedOSMIDs &&osm_node_ids,
                           const std::vector<NodeBasedEdge> &edge_list,
-                          std::vector<NodeBasedEdgeAnnotation> annotation_data);
+                          std::vector<NodeBasedEdgeAnnotation> &&annotation_data);
 
     auto const &GetGraph() const { return compressed_output_graph; }
     auto const &GetBarriers() const { return barriers; }

@@ -20,11 +20,11 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
     std::vector<TurnRestriction> &turn_restrictions,
     std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
     const TrafficSignals &traffic_signals,
-    std::unordered_set<NodeID> barriers,
-    std::vector<util::Coordinate> coordinates,
-    extractor::PackedOSMIDs osm_node_ids,
+    std::unordered_set<NodeID> &&barriers,
+    std::vector<util::Coordinate> &&coordinates,
+    extractor::PackedOSMIDs &&osm_node_ids,
     const std::vector<NodeBasedEdge> &edge_list,
-    std::vector<NodeBasedEdgeAnnotation> annotation_data)
+    std::vector<NodeBasedEdgeAnnotation> &&annotation_data)
     : annotation_data(std::move(annotation_data)), barriers(std::move(barriers)),
       coordinates(std::move(coordinates)), osm_node_ids(std::move(osm_node_ids))
 {
