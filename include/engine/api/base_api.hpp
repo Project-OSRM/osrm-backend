@@ -124,8 +124,8 @@ class BaseAPI
         const auto &snapped_location = candidatesSnappedLocation(candidates);
         const auto &input_location = candidatesInputLocation(candidates);
         auto location =
-            fbresult::Position(static_cast<double>(util::toFloating(snapped_location.lon)),
-                               static_cast<double>(util::toFloating(snapped_location.lat)));
+            fbresult::Position(static_cast<float>(static_cast<double>(util::toFloating(snapped_location.lon))),
+                               static_cast<float>(static_cast<double>(util::toFloating(snapped_location.lat))));
 
         const auto toName = [this](const auto &phantom) {
             return facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id))
@@ -157,7 +157,7 @@ class BaseAPI
         auto waypoint = std::make_unique<fbresult::WaypointBuilder>(*builder);
         waypoint->add_location(&location);
         waypoint->add_distance(
-            util::coordinate_calculation::greatCircleDistance(snapped_location, input_location));
+            static_cast<float>(util::coordinate_calculation::greatCircleDistance(snapped_location, input_location)));
         waypoint->add_name(name_string);
         if (parameters.generate_hints)
         {

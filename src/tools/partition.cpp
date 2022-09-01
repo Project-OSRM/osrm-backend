@@ -249,7 +249,6 @@ catch (const osrm::RuntimeError &e)
 {
     util::DumpMemoryStats();
     util::Log(logERROR) << e.what();
-    return EXIT_FAILURE;
     return e.GetCode();
 }
 catch (const std::bad_alloc &e)

@@ -63,8 +63,6 @@ template <typename NodeID, typename Key> class ArrayStorage
   public:
     explicit ArrayStorage(std::size_t size) : positions(size, 0) {}
 
-    ~ArrayStorage() {}
-
     Key &operator[](NodeID node) { return positions[node]; }
 
     Key peek_index(const NodeID node) const { return positions[node]; }
