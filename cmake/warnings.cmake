@@ -48,7 +48,6 @@ endmacro ()
 
 add_warning(all)
 add_warning(extra)
-add_warning(pedantic)
 add_warning(error) # treat all warnings as errors
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_warning(strict-overflow=2)
@@ -68,6 +67,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     no_warning(padded)
     no_warning(missing-noreturn)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    add_warning(pedantic)
     # Add compiler options only to c++ compiler
     function(add_cxx_compile_options option)
         add_compile_options("$<$<STREQUAL:$<TARGET_PROPERTY:LINKER_LANGUAGE>,CXX>:${option}>")
