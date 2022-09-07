@@ -62,14 +62,6 @@ if (POLICY CMP0074)
 endif()
 project(OSRM C CXX)
 
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/node_modules/nan/")
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/node_modules/node-cmake")
-
-include(NodeJS)
-nodejs_init()
-
-message(STATUS "NodeJS include dirs: ${NODEJS_INCLUDE_DIRS}")
-
 include(JSONParser)
 file(READ "package.json" packagejsonraw)
 sbeParseJson(packagejson packagejsonraw)
@@ -880,23 +872,3 @@ if (ENABLE_FUZZING)
 
   add_subdirectory(fuzz)
 endif ()
-
-
-# add headers sanity check target that includes all headers independently
-# make sure we have all deps for the nodejs sub project's includes (nan, node)
-if (ENABLE_NODE_BINDINGS)
-  set(check_headers_dir "${PROJECT_BINARY_DIR}/check-headers")
-  file(GLOB_RECURSE headers_to_check
-    ${PROJECT_BINARY_DIR}/*.hpp
-    ${PROJECT_SOURCE_DIR}/include/*.hpp)
-  foreach(header ${headers_to_check})
-    get_filename_component(filename ${header} NAME_WE)
-    set(filename "${check_headers_dir}/${filename}.cpp")
-    if (NOT EXISTS ${filename})
-      file(WRITE ${filename} "#include \"${header}\"\n")
-    endif()
-    list(APPEND sources ${filename})
-  endforeach()
-  add_library(check-headers STATIC EXCLUDE_FROM_ALL ${sources})
-  set_target_properties(check-headers PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${check_headers_dir})
-endif()
