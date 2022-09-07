@@ -431,6 +431,7 @@ include_directories(SYSTEM ${CHEAPRULER_INCLUDE_DIR})
 add_library(MICROTAR OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src/microtar.c")
 set_property(TARGET MICROTAR PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_no_warning(MICROTAR unused-variable)
+target_no_warning(MICROTAR format)
 
 set(PROTOZERO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/protozero/include")
 include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
