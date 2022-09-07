@@ -5,9 +5,6 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-#if defined(__clang__)
-#pragma GCC diagnostic ignored "-Wsuggest-destructor-override"
-#endif // defined(__clang__)
 #include <nan.h>
 #pragma GCC diagnostic pop
 
