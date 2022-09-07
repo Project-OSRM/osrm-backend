@@ -7,10 +7,10 @@ Feature: Car - Destination only, no passing through
     Scenario: Car - Destination only street
         Given the node map
             """
-            a       e
-              b c d
+            a         e
+              b1 c 2d
 
-            x       y
+            x         y
             """
 
         And the ways
@@ -23,21 +23,21 @@ Feature: Car - Destination only, no passing through
         When I route I should get
             | from | to | route      |
             | a    | b  | ab,ab      |
-            | a    | c  | ab,bcd     |
-            | a    | d  | ab,bcd,bcd |
+            | a    | c  | ab,bcd,bcd |
+            | a    | 2  | ab,bcd,bcd |
             | a    | e  | axye,axye  |
             | e    | d  | de,de      |
-            | e    | c  | de,bcd     |
-            | e    | b  | de,bcd,bcd |
+            | e    | c  | de,bcd,bcd |
+            | e    | 1  | de,bcd,bcd |
             | e    | a  | axye,axye  |
 
     Scenario: Car - Destination only street
         Given the node map
             """
-            a       e
-              b c d
+            a         e
+              b1 c 2d
 
-            x       y
+            x         y
             """
 
         And the ways
@@ -51,12 +51,12 @@ Feature: Car - Destination only, no passing through
         When I route I should get
             | from | to | route       |
             | a    | b  | ab,ab       |
-            | a    | c  | ab,bc       |
-            | a    | d  | ab,cd       |
+            | a    | c  | ab,bc,bc    |
+            | a    | 2  | ab,bc,cd    |
             | a    | e  | axye,axye   |
             | e    | d  | de,de       |
-            | e    | c  | de,cd       |
-            | e    | b  | de,bc       |
+            | e    | c  | de,cd,cd    |
+            | e    | 1  | de,cd,bc    |
             | e    | a  | axye,axye   |
 
     Scenario: Car - Routing inside a destination only area
@@ -117,6 +117,7 @@ Feature: Car - Destination only, no passing through
                    +    \
                    +    |
                    d    |
+                   1    |
                     \___e
             """
 
@@ -129,7 +130,7 @@ Feature: Car - Destination only, no passing through
         When I route I should get
             | from | to | route         |
             | e    | a  | acbe,acbe     |
-            | d    | a  | de,acbe,acbe  |
+            | 1    | a  | de,acbe,acbe  |
             | c    | d  | cd,cd         |
 
     Scenario: Car - Routing through a parking lot tagged access=destination,service

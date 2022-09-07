@@ -285,11 +285,41 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             return get_location_tag(context, node.location(), key);
         });
 
-    context.state.new_usertype<ExtractionNode>("ResultNode",
-                                               "traffic_lights",
-                                               &ExtractionNode::traffic_lights,
-                                               "barrier",
-                                               &ExtractionNode::barrier);
+    context.state.new_enum("traffic_lights",
+                           "none",
+                           extractor::TrafficLightClass::NONE,
+                           "direction_all",
+                           extractor::TrafficLightClass::DIRECTION_ALL,
+                           "direction_forward",
+                           extractor::TrafficLightClass::DIRECTION_FORWARD,
+                           "direction_reverse",
+                           extractor::TrafficLightClass::DIRECTION_REVERSE);
+
+    context.state.new_usertype<ExtractionNode>(
+        "ResultNode",
+        "traffic_lights",
+        sol::property([](const ExtractionNode &node) { return node.traffic_lights; },
+                      [](ExtractionNode &node, const sol::object &obj) {
+                          if (obj.is<bool>())
+                          {
+                              // The old approach of assigning a boolean traffic light
+                              // state to the node is converted to the class enum
+                              // TODO: Make a breaking API change and remove this option.
+                              bool val = obj.as<bool>();
+                              node.traffic_lights = (val) ? TrafficLightClass::DIRECTION_ALL
+                                                          : TrafficLightClass::NONE;
+                              return;
+                          }
+
+                          BOOST_ASSERT(obj.is<TrafficLightClass::Direction>());
+                          {
+                              TrafficLightClass::Direction val =
+                                  obj.as<TrafficLightClass::Direction>();
+                              node.traffic_lights = val;
+                          }
+                      }),
+        "barrier",
+        &ExtractionNode::barrier);
 
     context.state.new_usertype<RoadClassification>(
         "RoadClassification",

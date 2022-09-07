@@ -31,8 +31,8 @@ endforeach(binary)
 
 # For mason-enabled builds we copy over tbb's shared objects for packaging.
 # TODO: consider using statically linked tbb library (for node_osrm only!)
-if (ENABLE_MASON)
-  foreach(libpath ${MASON_PACKAGE_tbb_LIBRARY_DIRS})
+if (ENABLE_CONAN)
+  foreach(libpath ${CONAN_LIB_DIRS_ONETBB})
     file(GLOB TBBGlob ${libpath}/*.*)
     foreach(filepath ${TBBGlob})
       get_filename_component(filename ${filepath} NAME)

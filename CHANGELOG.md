@@ -1,12 +1,17 @@
 # Unreleased
   - Changes from 5.26.0
     - API:
+      - ADDED: Add Flatbuffers support to NodeJS bindings. [#6338](https://github.com/Project-OSRM/osrm-backend/pull/6338)
       - CHANGED: Add `data_version` field to responses of all services. [#5387](https://github.com/Project-OSRM/osrm-backend/pull/5387)
       - FIXED: Use Boost.Beast to parse HTTP request. [#6294](https://github.com/Project-OSRM/osrm-backend/pull/6294)
       - FIXED: Fix inefficient osrm-routed connection handling [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
+      - FIXED: Fix HTTP compression precedence [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
     - NodeJS:
       - FIXED: Support `skip_waypoints` in Node bindings [#6060](https://github.com/Project-OSRM/osrm-backend/pull/6060)
     - Misc:
+      - CHANGED: Optimize RestrictionParser performance. [#6344](https://github.com/Project-OSRM/osrm-backend/pull/6344)
+      - ADDED: Support floats for speed value in traffic updates CSV. [#6327](https://github.com/Project-OSRM/osrm-backend/pull/6327)
+      - CHANGED: Use Lua 5.4 in Docker image. [#6346](https://github.com/Project-OSRM/osrm-backend/pull/6346)
       - CHANGED: Remove redundant nullptr check. [#6326](https://github.com/Project-OSRM/osrm-backend/pull/6326)
       - CHANGED: missing files list is included in exception message. [#5360](https://github.com/Project-OSRM/osrm-backend/pull/5360)
       - CHANGED: Do not use deprecated Callback::Call overload in Node bindings. [#6318](https://github.com/Project-OSRM/osrm-backend/pull/6318)
@@ -17,6 +22,8 @@
       - FIXED: Bug in bicycle profile that caused exceptions if there is a highway=bicycle in the data. [#6296](https://github.com/Project-OSRM/osrm-backend/pull/6296)
       - FIXED: Internal refactoring of identifier types used in data facade [#6044](https://github.com/Project-OSRM/osrm-backend/pull/6044)
     - Build:
+      - CHANGED: Use apt-get to install Clang on CI. [#6345](https://github.com/Project-OSRM/osrm-backend/pull/6345)
+      - CHANGED: Fix TBB in case of Conan + NodeJS build. [#6333](https://github.com/Project-OSRM/osrm-backend/pull/6333)
       - CHANGED: Migrate to modern TBB version. [#6300](https://github.com/Project-OSRM/osrm-backend/pull/6300)
       - CHANGED: Enable performance-move-const-arg clang-tidy check. [#6319](https://github.com/Project-OSRM/osrm-backend/pull/6319)
       - CHANGED: Use the latest node on CI. [#6317](https://github.com/Project-OSRM/osrm-backend/pull/6317)
@@ -47,6 +54,9 @@
       - FIXED: Completed support for no_entry and no_exit turn restrictions. [#5988](https://github.com/Project-OSRM/osrm-backend/pull/5988)
       - ADDED: Add support for non-round-trips with a single fixed endpoint. [#6050](https://github.com/Project-OSRM/osrm-backend/pull/6050)
       - FIXED: Improvements to maneuver override processing [#6125](https://github.com/Project-OSRM/osrm-backend/pull/6125)
+      - ADDED: Support snapping to multiple ways at an input location. [#5953](https://github.com/Project-OSRM/osrm-backend/pull/5953)
+      - FIXED: Fix snapping target locations to ways used in turn restrictions. [#6339](https://github.com/Project-OSRM/osrm-backend/pull/6339)
+      - ADDED: Support OSM traffic signal directions. [#6153](https://github.com/Project-OSRM/osrm-backend/pull/6153)
 
 # 5.26.0
   - Changes from 5.25.0

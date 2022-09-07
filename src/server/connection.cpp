@@ -27,13 +27,13 @@ http::compression_type select_compression(const boost::beast::http::fields &fiel
 {
     const auto header_value = fields[boost::beast::http::field::accept_encoding];
     /* giving gzip precedence over deflate */
-    if (boost::icontains(header_value, "deflate"))
-    {
-        return http::deflate_rfc1951;
-    }
     if (boost::icontains(header_value, "gzip"))
     {
         return http::gzip_rfc1952;
+    }
+    if (boost::icontains(header_value, "deflate"))
+    {
+        return http::deflate_rfc1951;
     }
     return http::no_compression;
 }
@@ -239,7 +239,7 @@ std::vector<char> Connection::compress_buffers(const std::vector<char> &uncompre
     boost::iostreams::filtering_ostream gzip_stream;
     gzip_stream.push(boost::iostreams::gzip_compressor(compression_parameters));
     gzip_stream.push(boost::iostreams::back_inserter(compressed_data));
-    gzip_stream.write(&uncompressed_data[0], uncompressed_data.size());
+    gzip_stream.write(uncompressed_data.data(), uncompressed_data.size());
     boost::iostreams::close(gzip_stream);
 
     return compressed_data;

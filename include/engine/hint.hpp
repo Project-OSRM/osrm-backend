@@ -47,8 +47,9 @@ namespace datafacade
 class BaseDataFacade;
 }
 
-// Is returned as a temporary identifier for snapped coodinates
-struct Hint
+// SegmentHint represents an individual segment position that could be used
+// as the waypoint for a given input location
+struct SegmentHint
 {
     PhantomNode phantom;
     std::uint32_t data_checksum;
@@ -57,16 +58,31 @@ struct Hint
                  const datafacade::BaseDataFacade &facade) const;
 
     std::string ToBase64() const;
-    static Hint FromBase64(const std::string &base64Hint);
+    static SegmentHint FromBase64(const std::string &base64Hint);
 
-    friend bool operator==(const Hint &, const Hint &);
-    friend std::ostream &operator<<(std::ostream &, const Hint &);
+    friend bool operator==(const SegmentHint &, const SegmentHint &);
+    friend bool operator!=(const SegmentHint &, const SegmentHint &);
+    friend std::ostream &operator<<(std::ostream &, const SegmentHint &);
 };
 
-static_assert(sizeof(Hint) == 80 + 4, "Hint is bigger than expected");
-constexpr std::size_t ENCODED_HINT_SIZE = 112;
-static_assert(ENCODED_HINT_SIZE / 4 * 3 >= sizeof(Hint),
-              "ENCODED_HINT_SIZE does not match size of Hint");
+// Hint represents the suggested segment positions that could be used
+// as the waypoint for a given input location
+struct Hint
+{
+    std::vector<SegmentHint> segment_hints;
+
+    bool IsValid(const util::Coordinate new_input_coordinates,
+                 const datafacade::BaseDataFacade &facade) const;
+
+    std::string ToBase64() const;
+    static Hint FromBase64(const std::string &base64Hint);
+};
+
+static_assert(sizeof(SegmentHint) == 80 + 4, "Hint is bigger than expected");
+constexpr std::size_t ENCODED_SEGMENT_HINT_SIZE = 112;
+static_assert(ENCODED_SEGMENT_HINT_SIZE / 4 * 3 >= sizeof(SegmentHint),
+              "ENCODED_SEGMENT_HINT_SIZE does not match size of SegmentHint");
+
 } // namespace engine
 } // namespace osrm
 

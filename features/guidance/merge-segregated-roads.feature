@@ -332,10 +332,11 @@ Feature: Merge Segregated Roads
               |
              .b.
             c   h
+            1   |
+            |   4
             |   |
-            |   |
-            1   2
-            |   |
+            2   |
+            |   3
             d   g
              'e'
               |
@@ -354,13 +355,13 @@ Feature: Merge Segregated Roads
             | hb    | road   | yes    |
 
         When I route I should get
-            | waypoints | turns         | route       | intersections									  |
+            | waypoints | turns         | route       | intersections                                     |
             | a,f       | depart,arrive | road,road   | true:180,false:0 true:180,false:0 true:180;true:0 |
-            | c,f       | depart,arrive | bridge,road | true:180,false:0 true:180;true:0				  |
             | 1,f       | depart,arrive | bridge,road | true:180,false:0 true:180;true:0                  |
+            | 2,f       | depart,arrive | bridge,road | true:180,false:0 true:180;true:0                  |
             | f,a       | depart,arrive | road,road   | true:0,true:0 false:180,true:0 false:180;true:180 |
-            | g,a       | depart,arrive | bridge,road | true:0,true:0 false:180;true:180                  |
-            | 2,a       | depart,arrive | bridge,road | true:0,true:0 false:180;true:180                  |
+            | 3,a       | depart,arrive | bridge,road | true:0,true:0 false:180;true:180                  |
+            | 4,a       | depart,arrive | bridge,road | true:0,true:0 false:180;true:180                  |
 
     @negative
     Scenario: Traffic Circle

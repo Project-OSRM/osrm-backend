@@ -281,7 +281,7 @@ Feature: Weight tests
 
         When I route I should get
             | waypoints | route | distance | weights      | times          |
-            | a,c       | ,     | 40m +-.1 | 5.12,0       | 290s,0s        |
+            | a,c       | ,     | 40m +-.1 | 2.22,0       | 200s,0s        |
             | a,e       | ,,    | 60m +-.1 | 5.12,1.11,0  | 290s,100s,0s   |
             | e,a       | ,,    | 60m +-.1 | 2.21,2.22,0  | 10s,200s,0s    |
             | e,d       | ,,    | 40m +-.1 | 4.01,1.11,0  | 190s,100s,0s   |
@@ -329,7 +329,7 @@ Feature: Weight tests
             | ce    |
         And the speed file
             """
-            1,2,36,42
+            1,2,36.999,42
             2,1,36,42
             """
         And the turn penalty file
@@ -341,8 +341,8 @@ Feature: Weight tests
 
         When I route I should get
             | waypoints | route | distance | weights   | times        |
-            | a,d       | ,     | 60m      | 20.5,0    | 24s,0s       |
-            | a,e       | ,,    | 60m      | 27.2,10,0 | 38.5s,11s,0s |
+            | a,d       | ,     | 60m      | 20.5,0    | 23.9s,0s       |
+            | a,e       | ,,    | 60m      | 27.2,10,0 | 38.4s,11s,0s |
             | d,e       | ,,    | 40m      | 10,10,0   | 11s,11s,0s   |
 
     @traffic @speed

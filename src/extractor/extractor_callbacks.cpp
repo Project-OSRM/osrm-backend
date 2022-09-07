@@ -78,9 +78,9 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
     {
         external_memory.barrier_nodes.push_back(id);
     }
-    if (result_node.traffic_lights)
+    if (result_node.traffic_lights != TrafficLightClass::NONE)
     {
-        external_memory.traffic_signals.push_back(id);
+        external_memory.external_traffic_signals.push_back({id, result_node.traffic_lights});
     }
 }
 

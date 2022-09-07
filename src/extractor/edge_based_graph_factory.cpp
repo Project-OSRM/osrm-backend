@@ -59,7 +59,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     EdgeBasedNodeDataContainer &node_data_container,
     const CompressedEdgeContainer &compressed_edge_container,
     const std::unordered_set<NodeID> &barrier_nodes,
-    const std::unordered_set<NodeID> &traffic_lights,
+    const TrafficSignals &traffic_signals,
     const std::vector<util::Coordinate> &coordinates,
     const NameTable &name_table,
     const std::unordered_set<EdgeID> &segregated_edges,
@@ -67,7 +67,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     : m_edge_based_node_container(node_data_container), m_connectivity_checksum(0),
       m_number_of_edge_based_nodes(0), m_coordinates(coordinates),
       m_node_based_graph(node_based_graph), m_barrier_nodes(barrier_nodes),
-      m_traffic_lights(traffic_lights), m_compressed_edge_container(compressed_edge_container),
+      m_traffic_signals(traffic_signals), m_compressed_edge_container(compressed_edge_container),
       name_table(name_table), segregated_edges(segregated_edges),
       lane_description_map(lane_description_map)
 {
@@ -414,6 +414,48 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
             // the only consumer of this mapping).
             mapping.push_back(NBGToEBG{node_u, node_v, edge_based_node_id, SPECIAL_NODEID});
 
+            // We also want to include duplicate via edges in the list of segments that
+            // an input location can snap to. Without this, it would be possible to not find
+            // certain routes that end on a via-way, because they are only routable via the
+            // duplicated edge.
+            const auto &forward_geometry = m_compressed_edge_container.GetBucketReference(eid);
+            const auto segment_count = forward_geometry.size();
+
+            NodeID current_edge_source_coordinate_id = node_u;
+            const EdgeData &forward_data = m_node_based_graph.GetEdgeData(eid);
+
+            const auto edge_id_to_segment_id = [](const NodeID edge_based_node_id) {
+                if (edge_based_node_id == SPECIAL_NODEID)
+                {
+                    return SegmentID{SPECIAL_SEGMENTID, false};
+                }
+
+                return SegmentID{edge_based_node_id, true};
+            };
+
+            // Add segments of edge-based nodes
+            for (const auto i : util::irange(std::size_t{0}, segment_count))
+            {
+                const NodeID current_edge_target_coordinate_id = forward_geometry[i].node_id;
+
+                // don't add node-segments for penalties
+                if (current_edge_target_coordinate_id == current_edge_source_coordinate_id)
+                    continue;
+
+                BOOST_ASSERT(current_edge_target_coordinate_id !=
+                             current_edge_source_coordinate_id);
+
+                // build edges
+                m_edge_based_node_segments.emplace_back(edge_id_to_segment_id(edge_based_node_id),
+                                                        SegmentID{SPECIAL_SEGMENTID, false},
+                                                        current_edge_source_coordinate_id,
+                                                        current_edge_target_coordinate_id,
+                                                        i,
+                                                        forward_data.flags.startpoint);
+
+                current_edge_source_coordinate_id = current_edge_target_coordinate_id;
+            }
+
             edge_based_node_id++;
             progress.PrintStatus(progress_counter++);
         }
@@ -581,8 +623,26 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             BOOST_ASSERT(!edge_data1.reversed);
             BOOST_ASSERT(!edge_data2.reversed);
 
+            // We write out the mapping between the edge-expanded edges and the original nodes.
+            // Since each edge represents a possible maneuver, external programs can use this to
+            // quickly perform updates to edge weights in order to penalize certain turns.
+
+            // If this edge is 'trivial' -- where the compressed edge corresponds exactly to an
+            // original OSM segment -- we can pull the turn's preceding node ID directly with
+            // `node_along_road_entering`;
+            // otherwise, we need to look up the node immediately preceding the turn from the
+            // compressed edge container.
+            const bool isTrivial = m_compressed_edge_container.IsTrivial(node_based_edge_from);
+
+            const auto &from_node =
+                isTrivial ? node_along_road_entering
+                          : m_compressed_edge_container.GetLastEdgeSourceID(node_based_edge_from);
+
             // compute weight and duration penalties
-            const auto is_traffic_light = m_traffic_lights.count(intersection_node);
+            // In theory we shouldn't get a directed traffic light on a turn, as it indicates that
+            // the traffic signal direction was potentially ambiguously annotated on the junction
+            // node But we'll check anyway.
+            const auto is_traffic_light = m_traffic_signals.HasSignal(from_node, intersection_node);
             const auto is_uturn =
                 guidance::getTurnDirection(turn_angle) == guidance::DirectionModifier::UTurn;
 
@@ -648,20 +708,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                              true,
                                              false};
 
-            // We write out the mapping between the edge-expanded edges and the original nodes.
-            // Since each edge represents a possible maneuver, external programs can use this to
-            // quickly perform updates to edge weights in order to penalize certain turns.
-
-            // If this edge is 'trivial' -- where the compressed edge corresponds exactly to an
-            // original OSM segment -- we can pull the turn's preceding node ID directly with
-            // `node_along_road_entering`;
-            // otherwise, we need to look up the node immediately preceding the turn from the
-            // compressed edge container.
-            const bool isTrivial = m_compressed_edge_container.IsTrivial(node_based_edge_from);
-
-            const auto &from_node =
-                isTrivial ? node_along_road_entering
-                          : m_compressed_edge_container.GetLastEdgeSourceID(node_based_edge_from);
             const auto &to_node =
                 m_compressed_edge_container.GetFirstEdgeTargetID(node_based_edge_to);
 

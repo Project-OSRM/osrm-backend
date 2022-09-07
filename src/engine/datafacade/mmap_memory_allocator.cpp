@@ -39,7 +39,7 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
         // prior to C++17 (which we're not using), those return a `const char *`,
         // which isn't compatible with the `char *` that AllocatedRegion expects
         // for it's memory_ptr
-        allocated_regions.push_back({&(rtree_filename[0]), std::move(fake_layout)});
+        allocated_regions.push_back({rtree_filename.data(), std::move(fake_layout)});
     }
 
     auto files = storage.GetStaticFiles();

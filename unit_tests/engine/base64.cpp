@@ -44,16 +44,16 @@ BOOST_AUTO_TEST_CASE(hint_encoding_decoding_roundtrip)
     const PhantomNode phantom;
     const osrm::test::MockDataFacade<osrm::engine::routing_algorithms::ch::Algorithm> facade{};
 
-    const Hint hint{phantom, facade.GetCheckSum()};
+    const SegmentHint seg_hint{phantom, facade.GetCheckSum()};
 
-    const auto base64 = hint.ToBase64();
+    const auto base64 = seg_hint.ToBase64();
 
     BOOST_CHECK(0 == std::count(begin(base64), end(base64), '+'));
     BOOST_CHECK(0 == std::count(begin(base64), end(base64), '/'));
 
-    const auto decoded = Hint::FromBase64(base64);
+    const auto decoded = SegmentHint::FromBase64(base64);
 
-    BOOST_CHECK_EQUAL(hint, decoded);
+    BOOST_CHECK_EQUAL(seg_hint, decoded);
 }
 
 BOOST_AUTO_TEST_CASE(hint_encoding_decoding_roundtrip_bytewise)
@@ -65,12 +65,12 @@ BOOST_AUTO_TEST_CASE(hint_encoding_decoding_roundtrip_bytewise)
     const PhantomNode phantom;
     const osrm::test::MockDataFacade<osrm::engine::routing_algorithms::ch::Algorithm> facade{};
 
-    const Hint hint{phantom, facade.GetCheckSum()};
+    const SegmentHint seg_hint{phantom, facade.GetCheckSum()};
 
-    const auto decoded = Hint::FromBase64(hint.ToBase64());
+    const auto decoded = SegmentHint::FromBase64(seg_hint.ToBase64());
 
-    BOOST_CHECK(std::equal(reinterpret_cast<const unsigned char *>(&hint),
-                           reinterpret_cast<const unsigned char *>(&hint) + sizeof(Hint),
+    BOOST_CHECK(std::equal(reinterpret_cast<const unsigned char *>(&seg_hint),
+                           reinterpret_cast<const unsigned char *>(&seg_hint) + sizeof(Hint),
                            reinterpret_cast<const unsigned char *>(&decoded)));
 }
 

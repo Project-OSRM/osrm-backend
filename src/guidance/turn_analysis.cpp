@@ -10,8 +10,6 @@
 #include <unordered_set>
 #include <utility>
 
-using osrm::guidance::getTurnDirection;
-
 namespace osrm
 {
 namespace guidance
