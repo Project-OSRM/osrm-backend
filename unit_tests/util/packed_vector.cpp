@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(insert_and_retrieve_packed_test)
 
     std::mt19937 rng;
     rng.seed(1337);
-    std::uniform_int_distribution<std::mt19937::result_type> dist(0, max_id);
+    std::uniform_int_distribution<std::mt19937::result_type> dist(0, static_cast<unsigned int>(max_id));
 
     for (std::size_t i = 0; i < num_test_cases; i++)
     {
