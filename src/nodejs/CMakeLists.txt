@@ -6,6 +6,8 @@ message(STATUS "Building node_osrm")
 
 set(BINDING_DIR "${PROJECT_SOURCE_DIR}/lib/binding")
 
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/node_modules/node-cmake")
+
 include(NodeJS)
 nodejs_init()
 
