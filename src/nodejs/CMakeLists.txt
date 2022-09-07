@@ -17,6 +17,8 @@ add_nodejs_module(node_osrm node_osrm.cpp)
 set_target_properties(node_osrm PROPERTIES CXX_STANDARD 14)
 # TODO: we disable clang-tidy for this target, because it causes errors in third-party NodeJs related headers
 set_target_properties(node_osrm PROPERTIES CXX_CLANG_TIDY "")
+# TODO: we turn off "warnings as errors" for this target, because it causes errors in third-party NodeJs related headers
+target_no_warning(node_osrm error)
 
 target_link_libraries(node_osrm osrm)
 
