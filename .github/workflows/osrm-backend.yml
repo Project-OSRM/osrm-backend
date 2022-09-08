@@ -44,7 +44,8 @@ jobs:
     - run: ls -R test
     - name: Run node tests
       run: |
-        OSRM_DATA_PATH=./test/data npm run nodejs-tests
+        export OSRM_DATA_PATH=./test/data
+        npm run nodejs-tests
         npm test
 
   # format-taginfo-docs:
