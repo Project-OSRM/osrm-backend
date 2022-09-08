@@ -42,6 +42,7 @@ jobs:
       run: |
         .\scripts\ci\windows-build.bat
     - run: ls -R test
+    - run: ls -R build
     - name: Run node tests
       run: |
         npm run nodejs-tests
