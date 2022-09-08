@@ -8,8 +8,8 @@ which node
 node -v
 
 #if [[ ${PUBLISH} == 'On' ]]; then
-    echo "PUBLISH is set to '${PUBLISH}', publishing!"
-    NPM_FLAGS=''
+    #echo "PUBLISH is set to '${PUBLISH}', publishing!"
+     NPM_FLAGS=''
     if [[ ${BUILD_TYPE} == "Debug" ]]; then
         NPM_FLAGS='--debug'
     fi
