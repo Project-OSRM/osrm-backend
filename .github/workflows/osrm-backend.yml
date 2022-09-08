@@ -48,6 +48,8 @@ jobs:
         set OSRM_BUILD_DIR=.\build\Release
         npm run nodejs-tests
         npm test
+    - name: Build Node package
+      run: ./scripts/ci/node_package.sh
 
   # format-taginfo-docs:
   #   runs-on: ubuntu-20.04
@@ -658,9 +660,9 @@ jobs:
   #       fail_ci_if_error: true
   #       verbose: true
 
-  #   - name: Build Node package
-  #     if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
-  #     run: ./scripts/ci/node_package.sh
+    # - name: Build Node package
+    #   if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
+    #   run: ./scripts/ci/node_package.sh
   #   - name: Publish Node package
   #     if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
   #     uses: ncipollo/release-action@v1
