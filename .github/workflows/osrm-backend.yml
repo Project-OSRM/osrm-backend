@@ -45,6 +45,7 @@ jobs:
     - run: ls -R build
     - name: Run node tests
       run: |
+        set OSRM_BUILD_DIR=.\build\Release
         npm run nodejs-tests
         npm test
 

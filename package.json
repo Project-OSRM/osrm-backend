@@ -23,7 +23,7 @@
     "clean": "rm -rf test/cache",
     "docs": "./scripts/build_api_docs.sh",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh",
-    "nodejs-tests": "test/nodejs/index.js | faucet"
+    "nodejs-tests": "node test/nodejs/index.js | faucet"
   },
   "repository": {
     "type": "git",
