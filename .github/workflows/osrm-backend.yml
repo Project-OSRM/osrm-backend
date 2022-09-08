@@ -46,10 +46,8 @@ jobs:
     - run: ls -R lib/binding
     - name: Run node tests
       run: |
-        set OSRM_BUILD_DIR=./build/Release
         ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
         npm run nodejs-tests
-        npm test
     - name: Build Node package
       run: ./scripts/ci/node_package.sh
 

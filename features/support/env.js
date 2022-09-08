@@ -22,7 +22,6 @@ module.exports = function () {
         this.PROFILES_PATH = path.resolve(this.ROOT_PATH, 'profiles');
         this.FIXTURES_PATH = path.resolve(this.ROOT_PATH, 'unit_tests/fixtures');
         this.BIN_PATH = process.env.OSRM_BUILD_DIR && process.env.OSRM_BUILD_DIR || path.resolve(this.ROOT_PATH, 'build');
-        console.log(`this.BIN_PATH = ${this.BIN_PATH}`);
         this.DATASET_NAME = 'cucumber';
         this.PLATFORM_WINDOWS = process.platform.match(/^win.*/);
         this.DEFAULT_ENVIRONMENT = process.env;
