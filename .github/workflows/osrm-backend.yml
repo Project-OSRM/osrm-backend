@@ -52,7 +52,7 @@ jobs:
       run: |
         ./node_modules/.bin/node-pre-gyp reveal
     - name: Build Node package
-      run: ./scripts/ci/node_package.sh
+      run: bash ./scripts/ci/node_package.sh
     - name: Publish Node package
       if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
       uses: ncipollo/release-action@v1
