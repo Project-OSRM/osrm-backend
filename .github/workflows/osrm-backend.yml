@@ -50,6 +50,19 @@ jobs:
         npm run nodejs-tests
     - name: Build Node package
       run: ./scripts/ci/node_package.sh
+    - name: Publish Node package
+      if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
+      uses: ncipollo/release-action@v1
+      with:
+        allowUpdates: true
+        artifactErrorsFailBuild: true
+        artifacts: build/stage/**/*.tar.gz
+        omitBody: true
+        omitBodyDuringUpdate: true
+        omitName: true
+        omitNameDuringUpdate: true
+        replacesArtifacts: true
+        token: ${{ secrets.GITHUB_TOKEN }}
 
   # format-taginfo-docs:
   #   runs-on: ubuntu-20.04
@@ -663,19 +676,19 @@ jobs:
     # - name: Build Node package
     #   if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
     #   run: ./scripts/ci/node_package.sh
-  #   - name: Publish Node package
-  #     if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
-  #     uses: ncipollo/release-action@v1
-  #     with:
-  #       allowUpdates: true
-  #       artifactErrorsFailBuild: true
-  #       artifacts: build/stage/**/*.tar.gz
-  #       omitBody: true
-  #       omitBodyDuringUpdate: true
-  #       omitName: true
-  #       omitNameDuringUpdate: true
-  #       replacesArtifacts: true
-  #       token: ${{ secrets.GITHUB_TOKEN }}
+    # - name: Publish Node package
+    #   if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
+    #   uses: ncipollo/release-action@v1
+    #   with:
+    #     allowUpdates: true
+    #     artifactErrorsFailBuild: true
+    #     artifacts: build/stage/**/*.tar.gz
+    #     omitBody: true
+    #     omitBodyDuringUpdate: true
+    #     omitName: true
+    #     omitNameDuringUpdate: true
+    #     replacesArtifacts: true
+    #     token: ${{ secrets.GITHUB_TOKEN }}
 
   # ci-complete:
   #   runs-on: ubuntu-22.04
