@@ -53,9 +53,10 @@ jobs:
         ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
         node test/nodejs/index.js | faucet
     - name: Build Node package
+      if: ${{ env.PUBLISH == 'On' }}
       run: bash ./scripts/ci/node_package.sh
     - name: Publish Node package
-      if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
+      if: ${{ env.PUBLISH == 'On' }}
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true
