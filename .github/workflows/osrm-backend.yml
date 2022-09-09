@@ -36,6 +36,8 @@ jobs:
         node-version: 16
     - run: node --version
     - run: npm --version
+    - run: bash env.sh
+    - run: bash -c "echo \"$GITHUB_ENV\""
     - run: npm ci --ignore-scripts
     - run: node -e "require('nan')"
     - run: ls node_modules/nan
@@ -503,8 +505,8 @@ jobs:
 
   #   - name: Prepare environment
   #     run: |
-  #       PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
-  #       echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
+        # PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+        # echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
 
   #       echo "OSRM_INSTALL_DIR=${GITHUB_WORKSPACE}/install-osrm" >> $GITHUB_ENV
   #       echo "OSRM_BUILD_DIR=${GITHUB_WORKSPACE}/build-osrm" >> $GITHUB_ENV
