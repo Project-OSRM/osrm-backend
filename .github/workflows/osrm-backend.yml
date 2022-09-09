@@ -36,7 +36,11 @@ jobs:
         node-version: 16
     - run: node --version
     - run: npm --version
-    - run: bash env.sh
+    - name: Prepare environment
+      shell: bash
+      run: |
+        PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+        echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
     - run: bash -c "echo \"$GITHUB_ENV\""
     - run: npm ci --ignore-scripts
     - run: node -e "require('nan')"
@@ -52,9 +56,6 @@ jobs:
       run: |
         ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
         npm run nodejs-tests
-    - name: Build Node package
-      run: |
-        ./node_modules/.bin/node-pre-gyp reveal
     - name: Build Node package
       run: bash ./scripts/ci/node_package.sh
     - name: Publish Node package

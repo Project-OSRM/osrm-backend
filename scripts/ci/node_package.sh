@@ -6,7 +6,6 @@ set -o pipefail
 echo "node version is:"
 which node
 node -v
-PUBLISH=On
 
 if [[ ${PUBLISH} == 'On' ]]; then
     echo "PUBLISH is set to '${PUBLISH}', publishing!"
