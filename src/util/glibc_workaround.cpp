@@ -8,7 +8,7 @@
 // just an issue of your code using it, ughhh
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Werror"
+#pragma GCC diagnostic ignored "-W#warnings"
 // Note: only necessary on Linux
 #ifdef __linux__
 #define _ENABLE_GLIBC_WORKAROUND
