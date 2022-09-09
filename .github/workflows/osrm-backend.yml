@@ -24,6 +24,8 @@ jobs:
    # needs: format-taginfo-docs
     runs-on: windows-2022
     continue-on-error: false
+    env:
+      BUILD_TYPE: Release
     steps:
     - uses: actions/checkout@v3
     - run: pip install conan==1.51.3

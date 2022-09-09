@@ -7,7 +7,7 @@ echo "node version is:"
 which node
 node -v
 PUBLISH=On
-BUILD_TYPE=Release
+
 if [[ ${PUBLISH} == 'On' ]]; then
     echo "PUBLISH is set to '${PUBLISH}', publishing!"
     NPM_FLAGS=''
