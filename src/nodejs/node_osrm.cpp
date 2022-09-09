@@ -146,8 +146,9 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
                ServiceMemFn service,
                Nan::Callback *callback,
                PluginParameters pluginParams_)
-            : Nan::AsyncWorker(callback, "osrm:async"), osrm{std::move(osrm_)}, service{std::move(service)},
-              params{std::move(params_)}, pluginParams{std::move(pluginParams_)}
+            : Nan::AsyncWorker(callback, "osrm:async"), osrm{std::move(osrm_)},
+              service{std::move(service)}, params{std::move(params_)}, pluginParams{
+                                                                           std::move(pluginParams_)}
         {
         }
 
