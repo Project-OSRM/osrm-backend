@@ -8,6 +8,7 @@
 // just an issue of your code using it, ughhh
 
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #pragma GCC diagnostic ignored "-W#warnings"
 // Note: only necessary on Linux
 #ifdef __linux__
