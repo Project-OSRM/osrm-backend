@@ -48,9 +48,10 @@ jobs:
       run: |
         .\scripts\ci\windows-build.bat
     - name: Run node tests
+      shell: bash
       run: |
         ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
-        npm run nodejs-tests
+        node test/nodejs/index.js | faucet
     - name: Build Node package
       run: bash ./scripts/ci/node_package.sh
     - name: Publish Node package
@@ -511,6 +512,7 @@ jobs:
         key: v3-test-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
           v3-test-${{ matrix.name }}-
+      
     - name: Prepare environment
       run: |
         PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
@@ -522,6 +524,7 @@ jobs:
           echo "LSAN_OPTIONS=print_suppressions=0:suppressions=${GITHUB_WORKSPACE}/scripts/ci/leaksanitizer.conf" >> $GITHUB_ENV
           echo "UBSAN_OPTIONS=symbolize=1:halt_on_error=1:print_stacktrace=1:suppressions=${GITHUB_WORKSPACE}/scripts/ci/undefinedsanitizer.conf" >> $GITHUB_ENV
         fi
+
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
           echo "JOBS=$((`nproc` + 1))" >>  $GITHUB_ENV
           export MASON_OS=linux
@@ -531,18 +534,22 @@ jobs:
           export MASON_OS=osx
         fi
         echo "MASON=${GITHUB_WORKSPACE}/scripts/mason.sh" >> $GITHUB_ENV
+
         echo "CMAKE_URL=https://mason-binaries.s3.amazonaws.com/${MASON_OS}-x86_64/cmake/${CMAKE_VERSION}.tar.gz" >> $GITHUB_ENV
         echo "CMAKE_DIR=mason_packages/${MASON_OS}-x86_64/cmake/${CMAKE_VERSION}" >> $GITHUB_ENV
     - name: Install dev dependencies
       run: |
         python3 -m pip install conan==1.51.3
+
         # CMake
         mkdir -p ${CMAKE_DIR}
         wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${CMAKE_DIR}
         echo "${CMAKE_DIR}/bin" >> $GITHUB_PATH
+
         # ccache
         ${MASON} install ccache ${CCACHE_VERSION}
         echo "$(${MASON} prefix ccache ${CCACHE_VERSION})/bin" >> $GITHUB_PATH
+
         # clang
         if [[ "${CCOMPILER}" == "clang-6.0" ]]; then
           sudo apt-get update -y && sudo apt-get install clang++-6
@@ -570,6 +577,7 @@ jobs:
           source ./scripts/ci/before_install.${TARGET_ARCH}.sh
           echo "PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig:${PKG_CONFIG_PATH}" >> $GITHUB_ENV
         fi
+
         # TBB
         TBB_VERSION=2021.3.0
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
@@ -581,6 +589,7 @@ jobs:
         tar zxvf onetbb.tgz
         sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
         sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
+
     - name: Prepare build
       run: |
         mkdir ${OSRM_BUILD_DIR}
@@ -591,10 +600,12 @@ jobs:
         fi
         echo "CC=${CCOMPILER}" >> $GITHUB_ENV
         echo "CXX=${CXXCOMPILER}" >> $GITHUB_ENV
+
     - name: Build and install OSRM
       run: |
         echo "Using ${JOBS} jobs"
         pushd ${OSRM_BUILD_DIR}
+        
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                  -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
                  -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
@@ -608,6 +619,7 @@ jobs:
                  -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
                  -DENABLE_GLIBC_WORKAROUND=${ENABLE_GLIBC_WORKAROUND:-OFF}
         make --jobs=${JOBS}
+
         if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
           make tests --jobs=${JOBS}
           make benchmarks --jobs=${JOBS}
@@ -626,13 +638,16 @@ jobs:
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
         make --jobs=${JOBS}
         popd
+
     - name: Run all tests
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
       run: |
         make -C test/data benchmark
+
         # macOS SIP strips the linker path. Reset this inside the running shell
         export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
         ./example/build/osrm-example test/data/mld/monaco.osrm
+
         # All tests assume to be run from the build directory
         pushd ${OSRM_BUILD_DIR}
         for i in ./unit_tests/*-tests ; do echo Running $i ; $i ; done
