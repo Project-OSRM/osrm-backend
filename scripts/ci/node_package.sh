@@ -6,10 +6,11 @@ set -o pipefail
 echo "node version is:"
 which node
 node -v
-
-#if [[ ${PUBLISH} == 'On' ]]; then
-    #echo "PUBLISH is set to '${PUBLISH}', publishing!"
-     NPM_FLAGS=''
+PUBLISH=On
+BUILD_TYPE=Release
+if [[ ${PUBLISH} == 'On' ]]; then
+    echo "PUBLISH is set to '${PUBLISH}', publishing!"
+    NPM_FLAGS=''
     if [[ ${BUILD_TYPE} == "Debug" ]]; then
         NPM_FLAGS='--debug'
     fi
@@ -32,6 +33,6 @@ node -v
     fi
 
     ./node_modules/.bin/node-pre-gyp package testpackage $NPM_FLAGS
-# else
-#     echo "PUBLISH is set to '${PUBLISH}', skipping."
-# fi
+else
+    echo "PUBLISH is set to '${PUBLISH}', skipping."
+fi
