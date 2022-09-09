@@ -7,13 +7,13 @@
 // This is needed because libstdc++ itself uses this API - its not
 // just an issue of your code using it, ughhh
 
-// // Note: only necessary on Linux
-// #ifdef __linux__
-// #define _ENABLE_GLIBC_WORKAROUND
-// #warning building with workaround
-// #else
-// #warning not building with workaround
-// #endif
+// Note: only necessary on Linux
+#ifdef __linux__
+#define _ENABLE_GLIBC_WORKAROUND
+#warning building with workaround
+#else
+#warning not building with workaround
+#endif
 
 #ifdef _ENABLE_GLIBC_WORKAROUND
 namespace std
