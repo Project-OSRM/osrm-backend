@@ -7,6 +7,8 @@
 // This is needed because libstdc++ itself uses this API - its not
 // just an issue of your code using it, ughhh
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Werror"
 // Note: only necessary on Linux
 #ifdef __linux__
 #define _ENABLE_GLIBC_WORKAROUND
@@ -14,6 +16,7 @@
 #else
 #warning not building with workaround
 #endif
+#pragma GCC diagnostic pop
 
 #ifdef _ENABLE_GLIBC_WORKAROUND
 namespace std
