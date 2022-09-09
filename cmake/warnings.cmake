@@ -70,6 +70,7 @@ endif()
     no_warning(shorten-64-to-32)
     no_warning(padded)
     no_warning(missing-noreturn)
+    no_warning(c++17-extensions)
 #elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     # add_warning(pedantic)
     # # Add compiler options only to c++ compiler
