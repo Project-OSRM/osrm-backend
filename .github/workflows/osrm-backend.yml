@@ -234,7 +234,7 @@ jobs:
             CCOMPILER: gcc-7
             CXXCOMPILER: g++-7
 
-          - name: conan-osx-release-node-12
+          - name: conan-macos-x64-release-node-12
             build_node_package: true
             continue-on-error: false
             node: 12
@@ -247,7 +247,7 @@ jobs:
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
 
-          - name: conan-osx-release-node-14
+          - name: conan-macos-x64-release-node-14
             build_node_package: true
             continue-on-error: false
             node: 14
@@ -260,7 +260,7 @@ jobs:
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
 
-          - name: conan-osx-release-node-16
+          - name: conan-macos-x64-release-node-16
             build_node_package: true
             continue-on-error: false
             node: 16
@@ -272,6 +272,20 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
+
+          - name: conan-macos-arm64-release-node-16
+            build_node_package: true
+            continue-on-error: false
+            node: 16
+            runs-on: macos-11
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang
+            CXXCOMPILER: clang++
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_ASSERTIONS: ON
+            ENABLE_CONAN: ON
+            ENABLE_APPLE_SILICON: ON
 
           - name: gcc-7-release-shared
             continue-on-error: false
@@ -356,7 +370,7 @@ jobs:
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: conan-osx-release-node-latest
+          - name: conan-macos-x64-release-node-latest
             build_node_package: true
             continue-on-error: true
             node: latest
@@ -367,6 +381,19 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
+
+          - name: conan-macos-arm64-release-node-latest
+            build_node_package: true
+            continue-on-error: true
+            node: latest
+            runs-on: macos-11
+            BUILD_TYPE: Release
+            CCOMPILER: clang
+            CXXCOMPILER: clang++
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_ASSERTIONS: ON
+            ENABLE_CONAN: ON
+            ENABLE_APPLE_SILICON: ON
 
           - name: node-latest-conan-linux-release
             build_node_package: true
@@ -392,7 +419,7 @@ jobs:
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: conan-osx-release-node-lts
+          - name: conan-macos-x64-release-node-lts
             build_node_package: true
             continue-on-error: true
             node: "lts/*"
@@ -403,6 +430,19 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
+          
+          - name: conan-macos-arm64-release-node-lts
+            build_node_package: true
+            continue-on-error: true
+            node: "lts/*"
+            runs-on: macos-11
+            BUILD_TYPE: Release
+            CCOMPILER: clang
+            CXXCOMPILER: clang++
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_ASSERTIONS: ON
+            ENABLE_CONAN: ON
+            ENABLE_APPLE_SILICON: ON
 
           - name: node-lts-conan-linux-release
             build_node_package: true
@@ -447,6 +487,7 @@ jobs:
       ENABLE_CONAN: ${{ matrix.ENABLE_CONAN }}
       ENABLE_SANITIZER: ${{ matrix.ENABLE_SANITIZER }}
       NODE_PACKAGE_TESTS_ONLY: ${{ matrix.NODE_PACKAGE_TESTS_ONLY }}
+      ENABLE_APPLE_SILICON: ${{ matrix.ENABLE_APPLE_SILICON }}
       TARGET_ARCH: ${{ matrix.TARGET_ARCH }}
       OSRM_CONNECTION_RETRIES: ${{ matrix.OSRM_CONNECTION_RETRIES }}
       OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
@@ -475,9 +516,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.conan
-        key: v4-conan-${{ matrix.name }}-${{ github.sha }}
+        key: v6-conan-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
-          v4-conan-${{ matrix.name }}-
+          v6-conan-${{ matrix.name }}-
     - name: Enable test cache
       uses: actions/cache@v2
       with:
@@ -583,6 +624,16 @@ jobs:
         echo "Using ${JOBS} jobs"
         pushd ${OSRM_BUILD_DIR}
 
+        # handle Apple Silicon cross compilation
+        if [[ "${ENABLE_APPLE_SILICON}" == "ON" ]]; then
+          ARCH=arm64
+          TARGET="${ARCH}-apple-darwin"
+          CFLAGS="$CFLAGS --target=$TARGET"
+          CXXFLAGS="$CXXFLAGS --target=$TARGET"
+          APPLE_SILICON_FLAGS=(-DCMAKE_C_COMPILER_TARGET="$TARGET" -DCMAKE_CXX_COMPILER_TARGET="$TARGET" -DCMAKE_SYSTEM_PROCESSOR="${ARCH}" -DCMAKE_SYSTEM_NAME="Darwin" -DCMAKE_C_FLAGS="$CFLAGS" -DCMAKE_CXX_FLAGS="$CXXFLAGS")
+        else
+          APPLE_SILICON_FLAGS=()
+        fi
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                  -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
                  -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
@@ -594,10 +645,11 @@ jobs:
                  -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
                  -DENABLE_CCACHE=ON \
                  -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
-                 -DENABLE_GLIBC_WORKAROUND=${ENABLE_GLIBC_WORKAROUND:-OFF}
+                 -DENABLE_GLIBC_WORKAROUND=${ENABLE_GLIBC_WORKAROUND:-OFF} \
+                 "${APPLE_SILICON_FLAGS[@]}"
         make --jobs=${JOBS}
 
-        if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
+        if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" && "${ENABLE_APPLE_SILICON}" != "ON" ]]; then
           make tests --jobs=${JOBS}
           make benchmarks --jobs=${JOBS}
           ccache -s
@@ -609,7 +661,7 @@ jobs:
         fi
         popd
     - name: Build example
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
       run: |
         mkdir example/build && pushd example/build
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
@@ -617,7 +669,7 @@ jobs:
         popd
 
     - name: Run all tests
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
       run: |
         make -C test/data benchmark
 
@@ -634,7 +686,7 @@ jobs:
         popd
         npm test
     - name: Run Node package tests only
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
       run: |
         npm run nodejs-tests
     - name: Upload test logs
@@ -659,9 +711,17 @@ jobs:
         name: codecov-osrm-backend
         fail_ci_if_error: true
         verbose: true
-
+    - name: Check Apple Silicon binary
+      if: ${{  matrix.ENABLE_APPLE_SILICON == 'ON' }}
+      run: |
+        ARCH=$(file ./lib/binding/node_osrm.node | awk '{printf $NF}')
+        if [[ "$ARCH" != "arm64" ]]; then
+          file ./lib/binding/node_osrm.node
+          >&2 echo "Wrong architecture!"
+          exit 1
+        fi
     - name: Build Node package
-      if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
+      if: ${{ matrix.build_node_package }}
       run: ./scripts/ci/node_package.sh
     - name: Publish Node package
       if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
