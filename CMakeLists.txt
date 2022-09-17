@@ -61,6 +61,15 @@ if (POLICY CMP0074)
 endif()
 project(OSRM C CXX)
 
+# add @loader_path/$ORIGIN to rpath to make binaries relocatable
+if (APPLE)
+  set(CMAKE_BUILD_RPATH "@loader_path")
+else()
+  set(CMAKE_BUILD_RPATH "\$ORIGIN")
+  # https://stackoverflow.com/questions/6324131/rpath-origin-not-having-desired-effect
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,origin")
+endif()
+
 include(JSONParser)
 file(READ "package.json" packagejsonraw)
 sbeParseJson(packagejson packagejsonraw)
@@ -185,7 +194,7 @@ if(ENABLE_GOLD_LINKER)
     execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
     if("${LD_VERSION}" MATCHES "GNU gold")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
-        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
         set(OSRM_LDFLAGS "${OSRM_LDFLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
         message(STATUS "Using GNU gold as linker.")
 
@@ -489,11 +498,15 @@ if(ENABLE_CONAN)
     NO_OUTPUT_DIRS
     OPTIONS boost:filesystem_version=3 # https://stackoverflow.com/questions/73392648/error-with-boost-filesystem-version-in-cmake
             onetbb:shared=${TBB_SHARED}
+            boost:without_stacktrace=True # Apple Silicon cross-compilation fails without it
     BUILD missing
   )
   # explicitly say Conan to use x86 dependencies if build for x86 platforms (https://github.com/conan-io/cmake-conan/issues/141)
   if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     conan_cmake_run("${CONAN_ARGS};ARCH;x86")
+  # cross-compilation for Apple Silicon
+  elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64" AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
+    conan_cmake_run("${CONAN_ARGS};ARCH;armv8")
   else()
     conan_cmake_run("${CONAN_ARGS}")
   endif()
