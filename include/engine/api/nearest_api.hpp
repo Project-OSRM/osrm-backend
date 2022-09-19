@@ -7,6 +7,7 @@
 
 #include "engine/api/json_factory.hpp"
 #include "engine/phantom_node.hpp"
+#include "util/json_container.hpp"
 
 #include <boost/assert.hpp>
 
@@ -109,6 +110,11 @@ class NearestAPI final : public BaseAPI
                                nodes.values.push_back(node_values.first);
                                nodes.values.push_back(node_values.second);
                                waypoint.values["nodes"] = std::move(nodes);
+
+                               util::json::Array osm_nodes;
+                               osm_nodes.values.emplace_back(std::to_string(node_values.first));
+                               osm_nodes.values.emplace_back(std::to_string(node_values.second));
+                               waypoint.values["osm_nodes"] = std::move(osm_nodes);
 
                                return waypoint;
                            });

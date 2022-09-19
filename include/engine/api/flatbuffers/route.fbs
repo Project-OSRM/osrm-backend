@@ -10,6 +10,8 @@ table Annotation {
     duration: [uint];
     datasources: [uint];
     nodes: [uint];
+    osm_nodes: [ulong];
+    
     weight: [uint];
     speed: [float];
     metadata: Metadata;
