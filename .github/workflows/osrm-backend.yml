@@ -51,7 +51,7 @@ jobs:
       shell: bash
       run: |
         ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
-        node test/nodejs/index.js | faucet
+        node test/nodejs/index.js
     - name: Build Node package
       shell: bash
       run: ./scripts/ci/node_package.sh
