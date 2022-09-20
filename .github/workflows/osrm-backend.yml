@@ -24,6 +24,9 @@ jobs:
     needs: format-taginfo-docs
     runs-on: windows-2022
     continue-on-error: false
+    env:
+      BUILD_TYPE: Release
+      ENABLE_APPLE_SILICON: "OFF"
     steps:
     - uses: actions/checkout@v3
     - run: pip install conan==1.51.3
@@ -34,12 +37,38 @@ jobs:
         node-version: 16
     - run: node --version
     - run: npm --version
+    - name: Prepare environment
+      shell: bash
+      run: |
+        PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+        echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
     - run: npm install --ignore-scripts
     - run: npm link --ignore-scripts
     - uses: microsoft/setup-msbuild@v1.1
     - name: Build
       run: |
         .\scripts\ci\windows-build.bat
+    - name: Run node tests
+      shell: bash
+      run: |
+        ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
+        node test/nodejs/index.js
+    - name: Build Node package
+      shell: bash
+      run: ./scripts/ci/node_package.sh
+    - name: Publish Node package
+      if: ${{ env.PUBLISH == 'On' }}
+      uses: ncipollo/release-action@v1
+      with:
+        allowUpdates: true
+        artifactErrorsFailBuild: true
+        artifacts: build/stage/**/*.tar.gz
+        omitBody: true
+        omitBodyDuringUpdate: true
+        omitName: true
+        omitNameDuringUpdate: true
+        replacesArtifacts: true
+        token: ${{ secrets.GITHUB_TOKEN }}
 
   format-taginfo-docs:
     runs-on: ubuntu-20.04
@@ -526,15 +555,13 @@ jobs:
         key: v3-test-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
           v3-test-${{ matrix.name }}-
-
+      
     - name: Prepare environment
       run: |
         PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
         echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
-
         echo "OSRM_INSTALL_DIR=${GITHUB_WORKSPACE}/install-osrm" >> $GITHUB_ENV
         echo "OSRM_BUILD_DIR=${GITHUB_WORKSPACE}/build-osrm" >> $GITHUB_ENV
-
         if [[ "$ENABLE_SANITIZER" == 'ON' ]]; then
           # We can only set this after checkout once we know the workspace directory
           echo "LSAN_OPTIONS=print_suppressions=0:suppressions=${GITHUB_WORKSPACE}/scripts/ci/leaksanitizer.conf" >> $GITHUB_ENV
@@ -549,12 +576,10 @@ jobs:
           sudo mdutil -i off /
           export MASON_OS=osx
         fi
-
         echo "MASON=${GITHUB_WORKSPACE}/scripts/mason.sh" >> $GITHUB_ENV
+
         echo "CMAKE_URL=https://mason-binaries.s3.amazonaws.com/${MASON_OS}-x86_64/cmake/${CMAKE_VERSION}.tar.gz" >> $GITHUB_ENV
         echo "CMAKE_DIR=mason_packages/${MASON_OS}-x86_64/cmake/${CMAKE_VERSION}" >> $GITHUB_ENV
-
-
     - name: Install dev dependencies
       run: |
         python3 -m pip install conan==1.51.3
@@ -634,6 +659,7 @@ jobs:
         else
           APPLE_SILICON_FLAGS=()
         fi
+
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                  -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
                  -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
