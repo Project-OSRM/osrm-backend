@@ -10,6 +10,7 @@
 #include "util/log.hpp"
 #include "util/version.hpp"
 
+#include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/seek.hpp>
@@ -60,29 +61,27 @@ class FileReader
 
     std::size_t GetSize()
     {
-        const boost::filesystem::ifstream::pos_type position = input_stream.tellg();
-        input_stream.seekg(0, std::ios::end);
-        const boost::filesystem::ifstream::pos_type file_size = input_stream.tellg();
-
-        if (file_size == boost::filesystem::ifstream::pos_type(-1))
+        const boost::filesystem::path path(filepath);
+        try
         {
-            throw util::RuntimeError("Unable to determine file size for " +
-                                         std::string(filepath.string()),
-                                     ErrorCode::FileIOError,
-                                     SOURCE_REF,
-                                     std::strerror(errno));
+            return std::size_t(boost::filesystem::file_size(path)) -
+                   ((fingerprint == FingerprintFlag::VerifyFingerprint) ? sizeof(util::FingerPrint)
+                                                                        : 0);
         }
-
-        // restore the current position
-        input_stream.seekg(position, std::ios::beg);
-
-        if (fingerprint == FingerprintFlag::VerifyFingerprint)
+        catch (const boost::filesystem::filesystem_error &ex)
         {
-            return std::size_t(file_size) - sizeof(util::FingerPrint);
+            std::cout << ex.what() << std::endl;
+            throw;
         }
-        else
+    }
+
+    /* Read one line */
+    template <typename T> void ReadLine(T *dest, const std::size_t count)
+    {
+        if (0 < count)
         {
-            return file_size;
+            memset(dest, 0, count * sizeof(T));
+            input_stream.getline(reinterpret_cast<char *>(dest), count * sizeof(T));
         }
     }
 
@@ -389,8 +388,8 @@ class BufferWriter
   private:
     std::ostringstream output_stream;
 };
-} // ns io
-} // ns storage
-} // ns osrm
+} // namespace io
+} // namespace storage
+} // namespace osrm
 
 #endif

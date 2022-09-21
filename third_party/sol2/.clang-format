@@ -1,0 +1,110 @@
+# # # # sol2
+# The MIT License (MIT)
+# 
+# Copyright (c) 2013-2018 Rapptz, ThePhD, and contributors
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+# the Software, and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---
+BasedOnStyle: WebKit
+IndentWidth: 5
+TabWidth: 5
+ContinuationIndentWidth: 5
+UseTab: Always
+
+# Namespaces
+NamespaceIndentation: All
+CompactNamespaces: true
+FixNamespaceComments: true
+
+# Overall Alignment
+ColumnLimit: 0
+AlignAfterOpenBracket: DontAlign # uses ContinuationIndentWidth for this instead
+AccessModifierOffset: -5 # do not push public: or private: around
+#AlignConsecutiveAssignments: true # affects more than what's expected: do not use
+#AlignConsecutiveDeclarations: true # affects more than what's expected: do not use
+
+# Type Alignment
+DerivePointerAlignment: false
+PointerAlignment: Left
+AlwaysBreakTemplateDeclarations: true
+AlwaysBreakBeforeMultilineStrings: true
+
+# Comments
+AlignTrailingComments: true
+ReflowComments: true
+
+# Macros
+AlignEscapedNewlines: Left
+#IndentPPDirectives: None
+
+# Functions
+AllowShortFunctionsOnASingleLine: None
+AlwaysBreakAfterReturnType: None
+BreakConstructorInitializers: BeforeComma
+ConstructorInitializerIndentWidth: 0
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+BinPackArguments: true
+BinPackParameters: true
+
+# Classes
+BreakBeforeInheritanceComma: false
+
+# Braces
+Cpp11BracedListStyle: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterEnum: false
+  AfterStruct: false
+  AfterControlStatement: false
+  AfterClass: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  BeforeElse: true
+  BeforeCatch: true
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: true
+
+# Control Statements
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+IndentCaseLabels: false
+
+# Spaces
+SpaceAfterCStyleCast: false
+SpacesInCStyleCastParentheses: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesInAngles: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+MaxEmptyLinesToKeep: 3
+
+# OCD
+SortUsingDeclarations: true
+SortIncludes: false
+
+---
+Language: Cpp
+Standard: Cpp11

@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -389,9 +389,9 @@ namespace osmium {
          *                  osmium::StringMatcher::always_false, always_true,
          *                  equal, prefix, substring, regex or list.
          */
-        template <typename TMatcher, typename std::enable_if<
-            std::is_base_of<matcher, TMatcher>::value, int>::type = 0>
-        StringMatcher(TMatcher&& matcher) : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions, misc-forwarding-reference-overload)
+        template <typename TMatcher, typename X = typename std::enable_if<
+            std::is_base_of<matcher, TMatcher>::value, void>::type>
+        StringMatcher(TMatcher&& matcher) : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
             m_matcher(std::forward<TMatcher>(matcher)) {
         }
 

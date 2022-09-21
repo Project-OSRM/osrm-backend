@@ -38,29 +38,30 @@ std::vector<RouteStep> suppressShortNameSegments(std::vector<RouteStep> steps)
 
     // suppresses name segments that announce already known names or announce a name that will be
     // only available for a very short time
-    const auto reduce_verbosity_if_possible = [suppress, can_be_extended_to](
-        RouteStepIterator &current_turn_itr, RouteStepIterator &previous_turn_itr) {
-        if (haveSameName(*previous_turn_itr, *current_turn_itr))
-            suppress(*previous_turn_itr, *current_turn_itr);
-        else
-        {
-            // remember the location of the name change so we can advance the previous turn
-            const auto location_of_name_change = current_turn_itr;
-            auto distance = current_turn_itr->distance;
-            // sum up all distances that can be relevant to the name change
-            while (can_be_extended_to(*(current_turn_itr + 1)) &&
-                   distance < NAME_SEGMENT_CUTOFF_LENGTH)
-            {
-                ++current_turn_itr;
-                distance += current_turn_itr->distance;
-            }
-
-            if (distance < NAME_SEGMENT_CUTOFF_LENGTH)
+    const auto reduce_verbosity_if_possible =
+        [suppress, can_be_extended_to](RouteStepIterator &current_turn_itr,
+                                       RouteStepIterator &previous_turn_itr) {
+            if (haveSameName(*previous_turn_itr, *current_turn_itr))
                 suppress(*previous_turn_itr, *current_turn_itr);
             else
-                previous_turn_itr = location_of_name_change;
-        }
-    };
+            {
+                // remember the location of the name change so we can advance the previous turn
+                const auto location_of_name_change = current_turn_itr;
+                auto distance = current_turn_itr->distance;
+                // sum up all distances that can be relevant to the name change
+                while (can_be_extended_to(*(current_turn_itr + 1)) &&
+                       distance < NAME_SEGMENT_CUTOFF_LENGTH)
+                {
+                    ++current_turn_itr;
+                    distance += current_turn_itr->distance;
+                }
+
+                if (distance < NAME_SEGMENT_CUTOFF_LENGTH)
+                    suppress(*previous_turn_itr, *current_turn_itr);
+                else
+                    previous_turn_itr = location_of_name_change;
+            }
+        };
 
     BOOST_ASSERT(!hasTurnType(steps.back()) && hasWaypointType(steps.back()));
     for (auto previous_turn_itr = steps.begin(), current_turn_itr = std::next(previous_turn_itr);

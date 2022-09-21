@@ -18,9 +18,9 @@ namespace offline
 struct Algorithm final
 {
 };
-}
+} // namespace offline
 
-} // routing_algorithms
+} // namespace routing_algorithms
 
 // Define engine data for offline data facade
 template <> struct SearchEngineData<routing_algorithms::offline::Algorithm>
@@ -284,7 +284,8 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
 
     std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
-                                                      const Approach /*approach*/) const override
+                                                      const Approach /*approach*/,
+                                                      const bool /* use_all_edges */) const override
     {
         return {};
     }
@@ -292,7 +293,8 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
                                                       const double /*max_distance*/,
-                                                      const Approach /*approach*/) const override
+                                                      const Approach /*approach*/,
+                                                      const bool /* use_all_edges */) const override
     {
         return {};
     }
@@ -302,7 +304,8 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
                                                       const double /*max_distance*/,
                                                       const int /*bearing*/,
                                                       const int /*bearing_range*/,
-                                                      const Approach /*approach*/) const override
+                                                      const Approach /*approach*/,
+                                                      const bool /* use_all_edges */) const override
     {
         return {};
     }
@@ -311,7 +314,8 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
                                                       const int /*bearing*/,
                                                       const int /*bearing_range*/,
-                                                      const Approach /*approach*/) const override
+                                                      const Approach /*approach*/,
+                                                      const bool /* use_all_edges */) const override
     {
         return {};
     }
@@ -341,6 +345,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     StringView GetDestinationsForID(const NameID /*id*/) const override { return StringView{}; }
     StringView GetExitsForID(const NameID /*id*/) const override { return StringView{}; }
     bool GetContinueStraightDefault() const override { return false; }
+    std::string GetTimestamp() const override { return ""; }
     double GetMapMatchingMaxSpeed() const override { return 0; }
     const char *GetWeightName() const override { return ""; }
     unsigned GetWeightPrecision() const override { return 0; }
@@ -381,7 +386,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     }
 };
 
-} // datafacade
+} // namespace datafacade
 
 // Fallback to MLD algorithm: requires from data facade MLD specific members
 namespace routing_algorithms
@@ -422,11 +427,11 @@ void unpackPath(const FacadeT &facade,
     mld::unpackPath(facade, packed_path_begin, packed_path_end, phantom_nodes, unpacked_path);
 }
 
-} // offline
-} // routing_algorithms
+} // namespace offline
+} // namespace routing_algorithms
 
-} // engine
-} // osrm
+} // namespace engine
+} // namespace osrm
 
 BOOST_AUTO_TEST_SUITE(offline_facade)
 

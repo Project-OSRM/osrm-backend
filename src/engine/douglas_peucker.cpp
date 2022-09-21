@@ -119,5 +119,5 @@ std::vector<util::Coordinate> douglasPeucker(std::vector<util::Coordinate>::cons
 
     return simplified_geometry;
 }
-} // ns engine
-} // ns osrm
+} // namespace engine
+} // namespace osrm

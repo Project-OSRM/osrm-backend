@@ -1,0 +1,6 @@
+includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
+
+Name: Sol2
+Description: C++ <-> Lua API wrapper
+Version: @sol2_VERSION@
+Cflags: -I${includedir}

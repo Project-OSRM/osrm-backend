@@ -75,6 +75,10 @@ module.exports = function () {
                             got.message = json.message || '';
                         }
 
+                        if (headers.has('data_version')) {
+                            got.data_version = json.data_version || '';
+                        }
+
                         if (headers.has('#')) {
                             // comment column
                             got['#'] = row['#'];
@@ -150,6 +154,13 @@ module.exports = function () {
 
                         if (headers.has('locations')){
                             got.locations = (locations || '').trim();
+                        }
+                        if (headers.has('waypoints_count')) {
+                            if ('waypoints' in json) {
+                                got.waypoints_count = json.waypoints.length;
+                            } else{
+                                got.waypoints_count = 0;
+                            }
                         }
                         /*
                         if (headers.has('approaches')){

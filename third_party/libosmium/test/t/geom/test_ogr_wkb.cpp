@@ -17,7 +17,7 @@ std::string to_wkb(const OGRGeometry* geometry) {
     std::string buffer;
     buffer.resize(geometry->WkbSize());
 
-    geometry->exportToWkb(wkbNDR, const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(buffer.data())));
+    geometry->exportToWkb(wkbNDR, reinterpret_cast<unsigned char*>(&*buffer.begin()));
 
     return buffer;
 }
@@ -26,7 +26,7 @@ TEST_CASE("compare WKB point against GDAL/OGR") {
     osmium::geom::WKBFactory<> wkb_factory{osmium::geom::wkb_type::wkb};
     osmium::geom::OGRFactory<> ogr_factory;
 
-    osmium::Location loc{3.2, 4.2};
+    const osmium::Location loc{3.2, 4.2};
     const std::string wkb{wkb_factory.create_point(loc)};
     const std::unique_ptr<OGRPoint> geometry = ogr_factory.create_point(loc);
     REQUIRE(to_wkb(geometry.get()) == wkb);

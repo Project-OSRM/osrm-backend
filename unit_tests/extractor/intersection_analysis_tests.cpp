@@ -5,7 +5,6 @@
 #include "../common/range_tools.hpp"
 #include "../unit_tests/mocks/mock_scripting_environment.hpp"
 
-#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(intersection_analysis_tests)
@@ -25,7 +24,6 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
         {EMPTY_NAMEID, 0, INAVLID_CLASS_DATA, TRAVEL_MODE_DRIVING, false},
         {EMPTY_NAMEID, 1, INAVLID_CLASS_DATA, TRAVEL_MODE_DRIVING, false}};
     std::vector<TurnRestriction> restrictions{TurnRestriction{NodeRestriction{0, 2, 1}, false}};
-    std::vector<ConditionalTurnRestriction> conditional_restrictions;
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
     std::vector<UnresolvedManeuverOverride> maneuver_overrides;
@@ -91,7 +89,6 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
                                traffic_lights,
                                scripting_environment,
                                restrictions,
-                               conditional_restrictions,
                                maneuver_overrides,
                                graph,
                                annotations,
@@ -102,7 +99,8 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
 
     EdgeBasedNodeDataContainer node_data_container(
         std::vector<EdgeBasedNode>(graph.GetNumberOfEdges()), annotations);
-    RestrictionMap restriction_map(restrictions, IndexNodeByFromAndVia());
+    RestrictionGraph restriction_graph = constructRestrictionGraph(restrictions);
+    RestrictionMap restriction_map(restriction_graph);
 
     const auto connectivity_matrix = [&](NodeID node) {
         std::vector<bool> result;
@@ -133,7 +131,7 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
                       1, 0, 0, 1, // from node 1 to nodes 0 and 4
                       1, 1, 0, 1  // from node 3 to nodes 0, 1 and 4
                       // clang-format on
-                      );
+    );
     REQUIRE_SIZE_RANGE(connectivity_matrix(3), 0); // no incoming edges, empty matrix
     CHECK_EQUAL_RANGE(connectivity_matrix(4), 0);  // from node 2 not allowed U-turn
     CHECK_EQUAL_RANGE(connectivity_matrix(5),
@@ -141,14 +139,14 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
                       0, 1, // from node 0 to node 6
                       0, 1, // from node 6 a U-turn to node 6
                       // clang-format on
-                      );
+    );
 
     CHECK_EQUAL_RANGE(connectivity_matrix(6),
                       // clang-format off
                       1, 0, // from node 5 a U-turn to node 5
                       0, 1, // from node 7 a U-turn to node 7
                       // clang-format on
-                      );
+    );
 }
 
 BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
@@ -157,7 +155,6 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
     std::unordered_set<NodeID> traffic_lights;
     std::vector<NodeBasedEdgeAnnotation> annotations;
     std::vector<TurnRestriction> restrictions;
-    std::vector<ConditionalTurnRestriction> conditional_restrictions;
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
     std::vector<UnresolvedManeuverOverride> maneuver_overrides;
@@ -215,7 +212,6 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
                                traffic_lights,
                                scripting_environment,
                                restrictions,
-                               conditional_restrictions,
                                maneuver_overrides,
                                graph,
                                annotations,
@@ -226,7 +222,9 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
 
     EdgeBasedNodeDataContainer node_data_container(
         std::vector<EdgeBasedNode>(graph.GetNumberOfEdges()), annotations);
-    RestrictionMap restriction_map(restrictions, IndexNodeByFromAndVia());
+
+    RestrictionGraph restriction_graph = constructRestrictionGraph(restrictions);
+    RestrictionMap restriction_map(restriction_graph);
 
     const auto connectivity_matrix = [&](NodeID node) {
         std::vector<bool> result;
@@ -255,7 +253,7 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
                       0, 1, 0, 1, 0, 0, // from node 3 to nodes 2 and 4
                       0, 1, 0, 1, 0, 1  // from node 5 to nodes 2, 4 and 6
                       // clang-format on
-                      );
+    );
 }
 
 BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
@@ -264,7 +262,6 @@ BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
     std::unordered_set<NodeID> traffic_lights{2};
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     std::vector<TurnRestriction> restrictions;
-    std::vector<ConditionalTurnRestriction> conditional_restrictions;
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
     std::vector<UnresolvedManeuverOverride> maneuver_overrides;
@@ -307,7 +304,6 @@ BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
                                traffic_lights,
                                scripting_environment,
                                restrictions,
-                               conditional_restrictions,
                                maneuver_overrides,
                                graph,
                                annotations,

@@ -40,7 +40,6 @@ class NodeBasedGraphFactory
     NodeBasedGraphFactory(const boost::filesystem::path &input_file,
                           ScriptingEnvironment &scripting_environment,
                           std::vector<TurnRestriction> &turn_restrictions,
-                          std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
                           std::vector<UnresolvedManeuverOverride> &maneuver_overrides);
 
     auto const &GetGraph() const { return compressed_output_graph; }
@@ -69,7 +68,6 @@ class NodeBasedGraphFactory
     // edges into a single representative form
     void Compress(ScriptingEnvironment &scripting_environment,
                   std::vector<TurnRestriction> &turn_restrictions,
-                  std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
                   std::vector<UnresolvedManeuverOverride> &maneuver_overrides);
 
     // Most ways are bidirectional, making the geometry in forward and backward direction the same,

@@ -36,6 +36,6 @@ template <typename T1, typename T2> struct hash<std::pair<T1, T2>>
         return hash_val(pair.first, pair.second);
     }
 };
-}
+} // namespace std
 
 #endif // STD_HASH_HPP

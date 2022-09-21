@@ -99,8 +99,8 @@ class BaseDataLayout
         }
     }
 
-    virtual inline void *GetBlockPtr(void *base_ptr, const std::string &name) const = 0;
-    virtual inline std::uint64_t GetSizeOfLayout() const = 0;
+    virtual void *GetBlockPtr(void *base_ptr, const std::string &name) const = 0;
+    virtual std::uint64_t GetSizeOfLayout() const = 0;
 
   protected:
     const Block &GetBlock(const std::string &name) const

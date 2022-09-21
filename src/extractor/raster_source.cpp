@@ -92,15 +92,15 @@ int RasterContainer::LoadRasterSource(const std::string &path_string,
     const auto _ymin = static_cast<std::int32_t>(util::toFixed(util::FloatLatitude{ymin}));
     const auto _ymax = static_cast<std::int32_t>(util::toFixed(util::FloatLatitude{ymax}));
 
-    const auto itr = LoadedSourcePaths.find(path_string);
-    if (itr != LoadedSourcePaths.end())
+    const auto itr = RasterCache::getInstance().getLoadedSourcePaths().find(path_string);
+    if (itr != RasterCache::getInstance().getLoadedSourcePaths().end())
     {
         util::Log() << "[source loader] Already loaded source '" << path_string << "' at source_id "
                     << itr->second;
         return itr->second;
     }
 
-    int source_id = static_cast<int>(LoadedSources.size());
+    int source_id = static_cast<int>(RasterCache::getInstance().getLoadedSources().size());
 
     util::Log() << "[source loader] Loading from " << path_string << "  ... ";
     TIMER_START(loading_source);
@@ -116,8 +116,8 @@ int RasterContainer::LoadRasterSource(const std::string &path_string,
 
     RasterSource source{std::move(rasterData), ncols, nrows, _xmin, _xmax, _ymin, _ymax};
     TIMER_STOP(loading_source);
-    LoadedSourcePaths.emplace(path_string, source_id);
-    LoadedSources.push_back(std::move(source));
+    RasterCache::getInstance().getLoadedSourcePaths().emplace(path_string, source_id);
+    RasterCache::getInstance().getLoadedSources().push_back(std::move(source));
 
     util::Log() << "[source loader] ok, after " << TIMER_SEC(loading_source) << "s";
 
@@ -127,10 +127,11 @@ int RasterContainer::LoadRasterSource(const std::string &path_string,
 // External function for looking up nearest data point from a specified source
 RasterDatum RasterContainer::GetRasterDataFromSource(unsigned int source_id, double lon, double lat)
 {
-    if (LoadedSources.size() < source_id + 1)
+    if (RasterCache::getInstance().getLoadedSources().size() < source_id + 1)
     {
         throw util::exception("Attempted to access source " + std::to_string(source_id) +
-                              ", but there are only " + std::to_string(LoadedSources.size()) +
+                              ", but there are only " +
+                              std::to_string(RasterCache::getInstance().getLoadedSources().size()) +
                               " loaded" + SOURCE_REF);
     }
 
@@ -139,7 +140,7 @@ RasterDatum RasterContainer::GetRasterDataFromSource(unsigned int source_id, dou
     BOOST_ASSERT(lon < 180);
     BOOST_ASSERT(lon > -180);
 
-    const auto &found = LoadedSources[source_id];
+    const auto &found = RasterCache::getInstance().getLoadedSources()[source_id];
     return found.GetRasterData(static_cast<std::int32_t>(util::toFixed(util::FloatLongitude{lon})),
                                static_cast<std::int32_t>(util::toFixed(util::FloatLatitude{lat})));
 }
@@ -148,10 +149,11 @@ RasterDatum RasterContainer::GetRasterDataFromSource(unsigned int source_id, dou
 RasterDatum
 RasterContainer::GetRasterInterpolateFromSource(unsigned int source_id, double lon, double lat)
 {
-    if (LoadedSources.size() < source_id + 1)
+    if (RasterCache::getInstance().getLoadedSources().size() < source_id + 1)
     {
         throw util::exception("Attempted to access source " + std::to_string(source_id) +
-                              ", but there are only " + std::to_string(LoadedSources.size()) +
+                              ", but there are only " +
+                              std::to_string(RasterCache::getInstance().getLoadedSources().size()) +
                               " loaded" + SOURCE_REF);
     }
 
@@ -160,10 +162,12 @@ RasterContainer::GetRasterInterpolateFromSource(unsigned int source_id, double l
     BOOST_ASSERT(lon < 180);
     BOOST_ASSERT(lon > -180);
 
-    const auto &found = LoadedSources[source_id];
+    const auto &found = RasterCache::getInstance().getLoadedSources()[source_id];
     return found.GetRasterInterpolate(
         static_cast<std::int32_t>(util::toFixed(util::FloatLongitude{lon})),
         static_cast<std::int32_t>(util::toFixed(util::FloatLatitude{lat})));
 }
-}
-}
+
+RasterCache *RasterCache::g_instance = NULL;
+} // namespace extractor
+} // namespace osrm

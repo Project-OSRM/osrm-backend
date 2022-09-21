@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -44,8 +44,13 @@ DEALINGS IN THE SOFTWARE.
 namespace osmium {
 
     /**
-     * A TagsFilter is a list of rules (defined using TagMatchers) to check
-     * tags against. The first rule that matches sets the result.
+     * A TagsFilterBase is a list of rules (defined using TagMatchers) to
+     * check tags against. The first rule that matches sets the result.
+     *
+     * Usually you want to use the TagsFilter class, which is simply a
+     * specialization with TResult=bool. But TResult can be any class that
+     * has a default constructor and a conversion to bool. The class should
+     * be small, because it is copied around in some places.
      *
      * Here is an example matching any "highway" tag except "highway=motorway":
      * @code
@@ -59,14 +64,15 @@ namespace osmium {
      *
      * Use this instead of the old osmium::tags::Filter.
      */
-    class TagsFilter {
+    template <typename TResult>
+    class TagsFilterBase {
 
-        std::vector<std::pair<bool, TagMatcher>> m_rules;
-        bool m_default_result;
+        std::vector<std::pair<TResult, TagMatcher>> m_rules;
+        TResult m_default_result;
 
     public:
 
-        using iterator = boost::filter_iterator<TagsFilter, osmium::TagList::const_iterator>;
+        using iterator = boost::filter_iterator<TagsFilterBase, osmium::TagList::const_iterator>;
 
         /**
          * Constructor.
@@ -74,7 +80,7 @@ namespace osmium {
          * @param default_result The result the matching function will return
          *                       if none of the rules matched.
          */
-        explicit TagsFilter(bool default_result = false) :
+        explicit TagsFilterBase(const TResult default_result = TResult{}) :
             m_default_result(default_result) {
         }
 
@@ -82,7 +88,7 @@ namespace osmium {
          * Set the default result, the result the matching function will
          * return if none of the rules matched.
          */
-        void set_default_result(bool default_result) noexcept {
+        void set_default_result(const TResult default_result) noexcept {
             m_default_result = default_result;
         }
 
@@ -93,7 +99,7 @@ namespace osmium {
          * @param matcher The TagMatcher for checking tags.
          * @returns A reference to this filter for chaining.
          */
-        TagsFilter& add_rule(bool result, const TagMatcher& matcher) {
+        TagsFilterBase& add_rule(const TResult result, const TagMatcher& matcher) {
             m_rules.emplace_back(result, matcher);
             return *this;
         }
@@ -107,7 +113,7 @@ namespace osmium {
          * @returns A reference to this filter for chaining.
          */
         template <typename... TArgs>
-        TagsFilter& add_rule(bool result, TArgs&&... args) {
+        TagsFilterBase& add_rule(const TResult result, TArgs&&... args) {
             m_rules.emplace_back(result, osmium::TagMatcher{std::forward<TArgs>(args)...});
             return *this;
         }
@@ -119,7 +125,7 @@ namespace osmium {
          * @returns The result of the matching rule, or, if none of the rules
          *          matched, the default result.
          */
-        bool operator()(const osmium::Tag& tag) const noexcept {
+        TResult operator()(const osmium::Tag& tag) const noexcept {
             for (const auto& rule : m_rules) {
                 if (rule.second(tag)) {
                     return rule.first;
@@ -133,7 +139,7 @@ namespace osmium {
          *
          * Complexity: Constant.
          */
-        size_t count() const noexcept {
+        std::size_t count() const noexcept {
             return m_rules.size();
         }
 
@@ -146,7 +152,9 @@ namespace osmium {
             return m_rules.empty();
         }
 
-    }; // class TagsFilter
+    }; // class TagsFilterBase
+
+    using TagsFilter = TagsFilterBase<bool>;
 
 } // namespace osmium
 

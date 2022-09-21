@@ -37,8 +37,11 @@ struct Engine final : public Nan::ObjectWrap
     std::shared_ptr<osrm::OSRM> this_;
 };
 
-} // ns node_osrm
+} // namespace node_osrm
 
-NODE_MODULE(osrm, node_osrm::Engine::Init)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+NAN_MODULE_WORKER_ENABLED(osrm, node_osrm::Engine::Init)
+#pragma GCC diagnostic pop
 
 #endif

@@ -67,8 +67,9 @@ bool SliproadHandler::canProcess(const NodeID /*nid*/,
 // ^ a nid
 //    ^ ab source_edge_id
 //       ^ b intersection
-Intersection SliproadHandler::
-operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection intersection) const
+Intersection SliproadHandler::operator()(const NodeID /*nid*/,
+                                         const EdgeID source_edge_id,
+                                         Intersection intersection) const
 {
     BOOST_ASSERT(intersection.size() > 2);
 
@@ -506,7 +507,6 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
                                                              candidate_data.name_id,    //
                                                              name_table,                //
                                                              street_name_suffix_table); //
-
             };
 
             const auto candidate_road_name_mismatch = std::all_of(begin(target_road_name_ids), //

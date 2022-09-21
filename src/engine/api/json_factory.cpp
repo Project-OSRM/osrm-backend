@@ -20,7 +20,6 @@
 #include <vector>
 
 namespace TurnType = osrm::guidance::TurnType;
-namespace DirectionModifier = osrm::guidance::DirectionModifier;
 using TurnInstruction = osrm::guidance::TurnInstruction;
 
 namespace osrm
@@ -33,18 +32,6 @@ namespace json
 {
 namespace detail
 {
-
-// Check whether to include a modifier in the result of the API
-inline bool isValidModifier(const guidance::StepManeuver maneuver)
-{
-    return (maneuver.waypoint_type == guidance::WaypointType::None ||
-            maneuver.instruction.direction_modifier != DirectionModifier::UTurn);
-}
-
-inline bool hasValidLanes(const guidance::IntermediateIntersection &intersection)
-{
-    return intersection.lanes.lanes_in_turn > 0;
-}
 
 inline util::json::Array toJSON(const extractor::TurnLaneType::Mask lane_type)
 {

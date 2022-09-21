@@ -68,7 +68,7 @@ TEST_CASE("use_pool_threads_for_pbf_parsing") {
 
 TEST_CASE("get_max_queue_size") {
     osmium::detail::env = nullptr;
-    REQUIRE(osmium::config::get_max_queue_size("NAME", 0) == 0);
+    REQUIRE(osmium::config::get_max_queue_size("NAME", 0) == 2);
     REQUIRE(osmium::detail::name == "OSMIUM_MAX_NAME_QUEUE_SIZE");
 
     REQUIRE(osmium::config::get_max_queue_size("NAME", 7) == 7);

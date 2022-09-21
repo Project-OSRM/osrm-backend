@@ -5,6 +5,8 @@
 #include <osmium/osm/metadata_options.hpp>
 #include <osmium/osm/object.hpp>
 
+#include <stdexcept>
+
 TEST_CASE("Metadata options: default") {
     const osmium::metadata_options m{};
     REQUIRE_FALSE(m.none());

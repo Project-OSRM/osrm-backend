@@ -4,25 +4,28 @@
 #
 #-----------------------------------------------------------------------------
 
-environment:
-  matrix:
-  - config: MSYS2
-    autocrlf: true
-  - config: Debug
-    autocrlf: true
-  - config: Release
-    autocrlf: true
-  - config: Debug
-    autocrlf: false
-  - config: Release
-    autocrlf: false
+os: Visual Studio 2017
+
+platform: x64
 
 clone_depth: 1
 
-# Operating system (build VM template)
-os: Visual Studio 2015
+#-----------------------------------------------------------------------------
 
-platform: x64
+environment:
+  matrix:
+  - config: Debug
+    autocrlf: true
+  - config: Release
+    autocrlf: true
+  - config: Debug
+    autocrlf: false
+  - config: Release
+    autocrlf: false
+  - config: MSYS2
+    autocrlf: true
+
+#-----------------------------------------------------------------------------
 
 # scripts that are called at very beginning, before repo cloning
 init:

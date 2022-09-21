@@ -82,7 +82,7 @@ template <typename Iterator> struct iso_8601_grammar : qi::grammar<Iterator, uns
     qi::uint_parser<unsigned, 10, 1, 2> uint_p;
     qi::uint_parser<unsigned, 10, 2, 2> uint2_p;
 };
-}
+} // namespace detail
 
 inline bool durationIsValid(const std::string &s)
 {
@@ -127,14 +127,16 @@ inline std::string canonicalizeStringList(std::string strlist, const std::string
 
     // collapse spaces; this is needed in case we expand "; X" => ";  X" above
     // but also makes sense to do irregardless of the fact - canonicalizing strings.
-    const auto spaces = [](auto lhs, auto rhs) { return ::isspace(lhs) && ::isspace(rhs); };
+    const auto spaces = [](unsigned char lhs, unsigned char rhs) {
+        return ::isspace(lhs) && ::isspace(rhs);
+    };
     auto it = std::unique(begin(strlist), end(strlist), spaces);
     strlist.erase(it, end(strlist));
 
     return strlist;
 }
 
-} // extractor
-} // osrm
+} // namespace extractor
+} // namespace osrm
 
 #endif // EXTRACTION_HELPER_FUNCTIONS_HPP

@@ -272,6 +272,6 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
     return intersection;
 }
 
-} // namespace lane_matching
+} // namespace lanes
 } // namespace guidance
 } // namespace osrm

@@ -111,3 +111,28 @@ Feature: Locating Nearest node on a Way - basic projection onto way
             | 7  | b   |
             | 8  | a   |
             | 9  | b   |
+
+    Scenario: Nearest - easy-west way with flatbuffers
+        Given the node map
+            """
+            0 1 2 3 4
+              a x b
+            5 6 7 8 9
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+
+        When I request nearest with flatbuffers I should get
+            | in | out |
+            | 0  | a   |
+            | 1  | a   |
+            | 2  | x   |
+            | 3  | b   |
+            | 4  | b   |
+            | 5  | a   |
+            | 6  | a   |
+            | 7  | x   |
+            | 8  | b   |
+            | 9  | b   |

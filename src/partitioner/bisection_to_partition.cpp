@@ -109,7 +109,7 @@ void partitionLevel(const std::vector<BisectionID> &node_to_bisection_id,
         }
     }
 }
-}
+} // namespace
 
 // Implements a greedy algorithm that split cells using the bisection until a target cell size is
 // reached
@@ -140,5 +140,5 @@ bisectionToPartition(const std::vector<BisectionID> &node_to_bisection_id,
 
     return std::make_tuple(std::move(partitions), std::move(num_cells));
 }
-}
-}
+} // namespace partitioner
+} // namespace osrm

@@ -33,7 +33,7 @@
 
 class NamesHandler : public osmium::handler::Handler {
 
-    void output_pubs(const osmium::OSMObject& object) {
+    static void output_pubs(const osmium::OSMObject& object) {
         const osmium::TagList& tags = object.tags();
         if (tags.has_tag("amenity", "pub")) {
 
@@ -75,15 +75,21 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     }
 
-    // Construct the handler defined above
-    NamesHandler names_handler;
+    try {
+        // Construct the handler defined above
+        NamesHandler names_handler;
 
-    // Initialize the reader with the filename from the command line and
-    // tell it to only read nodes and ways. We are ignoring multipolygon
-    // relations in this simple example.
-    osmium::io::Reader reader{argv[1], osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
+        // Initialize the reader with the filename from the command line and
+        // tell it to only read nodes and ways. We are ignoring multipolygon
+        // relations in this simple example.
+        osmium::io::Reader reader{argv[1], osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
 
-    // Apply input data to our own handler
-    osmium::apply(reader, names_handler);
+        // Apply input data to our own handler
+        osmium::apply(reader, names_handler);
+    } catch (const std::exception& e) {
+        // All exceptions used by the Osmium library derive from std::exception.
+        std::cerr << e.what() << '\n';
+        std::exit(1);
+    }
 }
 

@@ -20,5 +20,5 @@ namespace guidance
 // - square/circle intersections
 std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFactory &factory,
                                                const extractor::NameTable &names);
-}
-}
+} // namespace guidance
+} // namespace osrm

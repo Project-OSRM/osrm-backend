@@ -73,7 +73,7 @@ struct ContractorConfig final : storage::IOConfig
     //(e.g. 0.8 contracts 80 percent of the hierarchy, leaving a core of 20%)
     double core_factor;
 };
-}
-}
+} // namespace contractor
+} // namespace osrm
 
 #endif // EXTRACTOR_OPTIONS_HPP

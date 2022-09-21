@@ -4,16 +4,21 @@
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/foreach.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_int.hpp>
+
 #include <storage/io.hpp>
 
 #include <iterator>
+#include <string>
 #include <unordered_map>
+using namespace std;
 
 namespace osrm
 {
@@ -42,38 +47,32 @@ class RasterGrid
     {
         xdim = _xdim;
         ydim = _ydim;
-        _data.reserve(ydim * xdim);
+        _data.resize(ydim * xdim);
+        BOOST_ASSERT(ydim * xdim <= _data.capacity());
 
+        // Construct FileReader
         storage::io::FileReader file_reader(filepath, storage::io::FileReader::HasNoFingerprint);
-
         std::string buffer;
-        buffer.resize(file_reader.GetSize());
+        buffer.resize(xdim * 11); // INT32_MAX = 2147483647 = 10 chars + 1 white space = 11
+        BOOST_ASSERT(xdim * 11 <= buffer.size());
 
-        BOOST_ASSERT(buffer.size() > 1);
-
-        file_reader.ReadInto(&buffer[0], buffer.size());
-
-        boost::algorithm::trim(buffer);
-
-        auto itr = buffer.begin();
-        auto end = buffer.end();
-
-        bool r = false;
-        try
+        for (unsigned int y = 0; y < ydim; y++)
         {
-            r = boost::spirit::qi::parse(
-                itr, end, +boost::spirit::qi::int_ % +boost::spirit::qi::space, _data);
-        }
-        catch (std::exception const &ex)
-        {
-            throw util::exception("Failed to read from raster source " + filepath.string() + ": " +
-                                  ex.what() + SOURCE_REF);
-        }
+            // read one line from file.
+            file_reader.ReadLine(&buffer[0], xdim * 11);
+            boost::algorithm::trim(buffer);
 
-        if (!r || itr != end)
-        {
-            throw util::exception("Failed to parse raster source: " + filepath.string() +
-                                  SOURCE_REF);
+            std::vector<std::string> result;
+            boost::split(
+                result, buffer, boost::is_any_of(" \r\n\0"), boost::algorithm::token_compress_on);
+            unsigned int x = 0;
+            for (const auto &s : result)
+            {
+                if (x < xdim)
+                    _data[(y * xdim) + x] = atoi(s.c_str());
+                ++x;
+            }
+            BOOST_ASSERT(x == xdim);
         }
     }
 
@@ -143,10 +142,39 @@ class RasterContainer
     RasterDatum GetRasterInterpolateFromSource(unsigned int source_id, double lon, double lat);
 
   private:
+};
+
+// << singletone >> RasterCache
+// The instance of RasterContainer is created for every threads osrm-extract uses.
+// To avoid multiple load of same file on each RasterContainer,
+// The LoadedSources and LoadedSourcePaths are separated to RasterCache class
+// and handled as the singletone pattern to avoid duplicate creation.
+class RasterCache
+{
+  public:
+    // class method to get the instance
+    static RasterCache &getInstance()
+    {
+        if (NULL == g_instance)
+        {
+            g_instance = new RasterCache();
+        }
+        return *g_instance;
+    }
+    // get reference of cache
+    std::vector<RasterSource> &getLoadedSources() { return LoadedSources; }
+    std::unordered_map<std::string, int> &getLoadedSourcePaths() { return LoadedSourcePaths; }
+
+  private:
+    // constructor
+    RasterCache() = default;
+    // member
     std::vector<RasterSource> LoadedSources;
     std::unordered_map<std::string, int> LoadedSourcePaths;
+    // the instance
+    static RasterCache *g_instance;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif /* RASTER_SOURCE_HPP */

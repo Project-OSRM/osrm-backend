@@ -22,7 +22,7 @@ namespace
 {
 namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
-}
+} // namespace
 
 template <typename Iterator = std::string::iterator,
           typename Signature = void(engine::api::TileParameters &)>
@@ -40,8 +40,8 @@ struct TileParametersGrammar final : boost::spirit::qi::grammar<Iterator, Signat
   private:
     qi::rule<Iterator, Signature> root_rule;
 };
-}
-}
-}
+} // namespace api
+} // namespace server
+} // namespace osrm
 
 #endif

@@ -73,7 +73,7 @@ struct UpdaterConfig final : storage::IOConfig
     std::vector<std::string> turn_penalty_lookup_paths;
     std::string tz_file_path;
 };
-}
-}
+} // namespace updater
+} // namespace osrm
 
 #endif // EXTRACTOR_OPTIONS_HPP

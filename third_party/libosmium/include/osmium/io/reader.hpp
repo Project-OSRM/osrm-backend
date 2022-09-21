@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -72,13 +72,11 @@ namespace osmium {
         namespace detail {
 
             inline std::size_t get_input_queue_size() noexcept {
-                const std::size_t n = osmium::config::get_max_queue_size("INPUT", 20);
-                return n > 2 ? n : 2;
+                return osmium::config::get_max_queue_size("INPUT", 20);
             }
 
             inline std::size_t get_osmdata_queue_size() noexcept {
-                const std::size_t n = osmium::config::get_max_queue_size("OSMDATA", 20);
-                return n > 2 ? n : 2;
+                return osmium::config::get_max_queue_size("OSMDATA", 20);
             }
 
         } // namespace detail
@@ -90,6 +88,11 @@ namespace osmium {
          * Buffer.
          */
         class Reader {
+
+            // The Reader::read() function reads from a queue of buffers which
+            // can contain nested buffers. These nested buffers will be in
+            // here, because read() can only return a single unnested buffer.
+            osmium::memory::Buffer m_back_buffers{};
 
             osmium::io::File m_file;
 
@@ -371,6 +374,17 @@ namespace osmium {
             osmium::memory::Buffer read() {
                 osmium::memory::Buffer buffer;
 
+                // If there are buffers on the stack, return those first.
+                if (m_back_buffers) {
+                    if (m_back_buffers.has_nested_buffers()) {
+                        buffer = std::move(*m_back_buffers.get_last_nested());
+                    } else {
+                        buffer = std::move(m_back_buffers);
+                        m_back_buffers = osmium::memory::Buffer{};
+                    }
+                    return buffer;
+                }
+
                 if (m_status != status::okay) {
                     throw io_error{"Can not read from reader when in status 'closed', 'eof', or 'error'"};
                 }
@@ -391,6 +405,10 @@ namespace osmium {
                             m_status = status::eof;
                             m_read_thread_manager.close();
                             return buffer;
+                        }
+                        if (buffer.has_nested_buffers()) {
+                            m_back_buffers = std::move(buffer);
+                            buffer = std::move(*m_back_buffers.get_last_nested());
                         }
                         if (buffer.committed() > 0) {
                             return buffer;

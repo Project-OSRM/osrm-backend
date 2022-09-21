@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -67,7 +67,9 @@ namespace osmium {
                  * Special value used for member_num to mark the element as
                  * removed.
                  */
-                static const size_t removed_value = std::numeric_limits<std::size_t>::max();
+                enum {
+                    removed_value = std::numeric_limits<std::size_t>::max()
+                };
 
                 /**
                  * Object ID of this relation member. Can be a node, way,

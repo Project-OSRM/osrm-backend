@@ -46,7 +46,7 @@ TEST_CASE("Anonymous mapping: moving a memory mapping should work") {
     osmium::MemoryMapping mapping2{std::move(mapping1)};
     REQUIRE(!!mapping2);
     REQUIRE(!mapping1); // NOLINT(bugprone-use-after-move,misc-use-after-move) okay here, we are checking our own code
-    mapping1.unmap();
+    mapping1.unmap(); // NOLINT(clang-analyzer-cplusplus.Move) okay here, we are checking our own code
 
     const auto* addr2 = mapping2.get_addr<int>();
     REQUIRE(*addr2 == 42);
@@ -271,7 +271,7 @@ TEST_CASE("Typed anonymous mapping: moving a memory mapping should work") {
     osmium::TypedMemoryMapping<uint32_t> mapping2{std::move(mapping1)};
     REQUIRE(!!mapping2);
     REQUIRE(!mapping1); // NOLINT(bugprone-use-after-move,misc-use-after-move) okay here, we are checking our own code
-    mapping1.unmap();
+    mapping1.unmap(); // NOLINT(clang-analyzer-cplusplus.Move) okay here, we are checking our own code
 
     const auto addr2 = mapping2.begin();
     REQUIRE(*addr2 == 42);

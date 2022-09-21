@@ -1,13 +1,21 @@
 ---
-Checks: '*,-android-cloexec-*,-cert-dcl21-cpp,-cert-err58-cpp,-cppcoreguidelines-owning-memory,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-vararg,-fuchsia-*,-google-runtime-references,-hicpp-invalid-access-moved,-hicpp-no-array-decay,-hicpp-no-assembler,-hicpp-vararg,-misc-macro-parentheses,-misc-unused-parameters,-modernize-make-unique,-modernize-raw-string-literal,-readability-avoid-const-params-in-decls,-readability-implicit-bool-cast,-readability-implicit-bool-conversion'
+Checks: '*,-android-cloexec-*,-bugprone-branch-clone,-bugprone-macro-parentheses,-cert-dcl21-cpp,-cert-err58-cpp,-clang-analyzer-optin.cplusplus.VirtualCall,-cppcoreguidelines-avoid-c-arrays,-cppcoreguidelines-avoid-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-non-private-member-variables-in-classes,-cppcoreguidelines-owning-memory,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-vararg,-fuchsia-*,-google-runtime-references,-hicpp-avoid-c-arrays,-hicpp-invalid-access-moved,-hicpp-no-array-decay,-hicpp-no-assembler,-hicpp-vararg,-misc-macro-parentheses,-misc-non-private-member-variables-in-classes,-misc-unused-parameters,-modernize-avoid-c-arrays,-modernize-make-unique,-modernize-raw-string-literal,-modernize-use-trailing-return-type,-readability-avoid-const-params-in-decls,-readability-implicit-bool-cast,-readability-implicit-bool-conversion,-readability-magic-numbers'
 #
 #  For a list of check options, see:
-#  http://clang.llvm.org/extra/clang-tidy/checks/list.html
+#  https://clang.llvm.org/extra/clang-tidy/checks/list.html
 #
 #  Disabled checks:
 #
 #  android-cloexec-*
 #    O_CLOEXEC isn't available on Windows making this non-portable.
+#
+#  bugprone-branch-clone
+#    Nice idea but collides but with switch statements we'll need to use
+#    fall-throughs to fix this, which is also bad.
+#
+#  bugprone-macro-parentheses
+#    False positive in the only place where it reports something and
+#    disabling locally doesn't work.
 #
 #  cert-dcl21-cpp
 #    It is unclear whether this is still a good recommendation in modern C++.
@@ -15,6 +23,22 @@ Checks: '*,-android-cloexec-*,-cert-dcl21-cpp,-cert-err58-cpp,-cppcoreguidelines
 #  cert-err58-cpp
 #    Used in several singelton factory functions. I don't know of a better
 #    way to do this and it is rather unlikely that this will be a problem.
+#
+#  clang-analyzer-optin.cplusplus.VirtualCall
+#    Disable a warning we get from the Catch test framework.
+#
+#  cppcoreguidelines-avoid-c-arrays
+#    Alias for modernize-avoid-c-arrays.
+#
+#  cppcoreguidelines-avoid-magic-numbers
+#    Generally good advice, but there are too many places where this is
+#    useful, for instance in tests.
+#
+#  cppcoreguidelines-macro-usage
+#    There are cases where we actually need macros.
+#
+#  cppcoreguidelines-non-private-member-variables-in-classes
+#    Alias for misc-non-private-member-variables-in-classes
 #
 #  cppcoreguidelines-owning-memory
 #    Don't want to add dependency on gsl library.
@@ -48,6 +72,9 @@ Checks: '*,-android-cloexec-*,-cert-dcl21-cpp,-cert-err58-cpp,-cppcoreguidelines
 #    This is just a matter of preference, and we can't change the interfaces
 #    now anyways.
 #
+#  hicpp-avoid-c-arrays
+#    Alias for modernize-avoid-c-arrays.
+#
 #  hicpp-invalid-access-moved
 #    Creates false positives.
 #
@@ -61,12 +88,20 @@ Checks: '*,-android-cloexec-*,-cert-dcl21-cpp,-cert-err58-cpp,-cppcoreguidelines
 #    Too strict, sometimes calling vararg functions is necessary.
 #
 #  misc-macro-parentheses
-#    False positive in the only place where it reports something and
-#    disabling locally doesn't work.
+#    Old name for bugprone-macro-parentheses.
+#
+#  misc-non-private-member-variables-in-classes
+#    Reports this also for structs, which doesn't make any sense. There is
+#    an option "IgnoreClassesWithAllMemberVariablesBeingPublic" which should
+#    disable this, but it didn't work for me.
 #
 #  misc-unused-parameters
 #    Can't be fixed, because then Doxygen will complain. (In file
 #    include/osmium/area/problem_reporter.hpp).
+#
+#  modernize-avoid-c-arrays
+#    Makes sense for some array, but especially for char arrays using
+#    std::array isn't a good solution.
 #
 #  modernize-make-unique
 #    This is a C++11 library and C++ doesn't have std::make_unique.
@@ -74,6 +109,9 @@ Checks: '*,-android-cloexec-*,-cert-dcl21-cpp,-cert-err58-cpp,-cppcoreguidelines
 #  modernize-raw-string-literal
 #    Readability isn't that much better, arguably worse because of the new
 #    syntax.
+#
+#  modernize-use-trailing-return-type
+#    I am not quite that modern.
 #
 #  readability-avoid-const-params-in-decls
 #    This is header only library, so the declaration and implementation are
@@ -84,6 +122,9 @@ Checks: '*,-android-cloexec-*,-cert-dcl21-cpp,-cert-err58-cpp,-cppcoreguidelines
 #
 #  readability-implicit-bool-conversion
 #    I don't think this makes the code more readable.
+#
+#  readability-magic-numbers
+#    Alias for cppcoreguidelines-avoid-magic-numbers.
 #
 #WarningsAsErrors: '*'
 HeaderFilterRegex: '\/include\/osmium\/.*'

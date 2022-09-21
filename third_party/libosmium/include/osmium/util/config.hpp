@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -80,17 +80,27 @@ namespace osmium {
             return true;
         }
 
-        inline std::size_t get_max_queue_size(const char* queue_name, std::size_t default_value) noexcept {
+        inline std::size_t get_max_queue_size(const char* queue_name, const std::size_t default_value) noexcept {
             assert(queue_name);
             std::string name{"OSMIUM_MAX_"};
             name += queue_name;
             name += "_QUEUE_SIZE";
-            auto env = osmium::detail::getenv_wrapper(name.c_str());
+            const auto env = osmium::detail::getenv_wrapper(name.c_str());
+
+            std::size_t value = default_value;
+
             if (env) {
-                const auto value = osmium::detail::str_to_int<std::size_t>(env);
-                return value == 0 ? default_value : value;
+                const auto new_value = osmium::detail::str_to_int<std::size_t>(env);
+                if (new_value != 0) {
+                    value = new_value;
+                }
             }
-            return default_value;
+
+            if (value < 2) {
+                value = 2;
+            }
+
+            return value;
         }
 
     } // namespace config

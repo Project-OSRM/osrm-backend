@@ -11,8 +11,6 @@
 #include "mocks/mock_datafacade.hpp"
 
 #include <boost/functional/hash.hpp>
-#include <boost/test/auto_unit_test.hpp>
-#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <cmath>
@@ -26,10 +24,14 @@
 #include <utility>
 #include <vector>
 
-#include <tbb/task_scheduler_init.h>
-
 // explicit TBB scheduler init to register resources cleanup at exit
+#if TBB_VERSION_MAJOR == 2020
+#include <tbb/global_control.h>
+tbb::global_control scheduler(tbb::global_control::max_allowed_parallelism, 2);
+#else
+#include <tbb/task_scheduler_init.h>
 tbb::task_scheduler_init init(2);
+#endif
 
 BOOST_AUTO_TEST_SUITE(static_rtree)
 

@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -118,7 +118,7 @@ namespace osmium {
 
                 virtual ~Map() noexcept = default;
 
-                virtual void reserve(const size_t /*size*/) {
+                virtual void reserve(const std::size_t /*size*/) {
                     // default implementation is empty
                 }
 
@@ -151,7 +151,7 @@ namespace osmium {
                  * accurate. You can not use this to find out how much memory the
                  * storage uses. Use used_memory() for that.
                  */
-                virtual size_t size() const = 0;
+                virtual std::size_t size() const = 0;
 
                 /**
                  * Get the memory used for this storage in bytes. Note that this
@@ -160,7 +160,7 @@ namespace osmium {
                  * the main memory used, for storage classes storing data on disk
                  * this is the memory used on disk.
                  */
-                virtual size_t used_memory() const = 0;
+                virtual std::size_t used_memory() const = 0;
 
                 /**
                  * Clear memory used for this storage. After this you can not
@@ -210,8 +210,6 @@ namespace osmium {
 
             MapFactory() = default;
 
-            ~MapFactory() = default;
-
         public:
 
             MapFactory(const MapFactory&) = delete;
@@ -219,6 +217,8 @@ namespace osmium {
 
             MapFactory(MapFactory&&) = delete;
             MapFactory& operator=(MapFactory&&) = delete;
+
+            ~MapFactory() = default;
 
             static MapFactory<id_type, value_type>& instance() {
                 static MapFactory<id_type, value_type> factory;

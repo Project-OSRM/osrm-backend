@@ -49,7 +49,7 @@ struct ByEdgeOrByMeterValue
     using value_type = float;
     value_type value;
 };
-}
+} // namespace detail
 
 struct InternalExtractorEdge
 {
@@ -85,35 +85,8 @@ struct InternalExtractorEdge
     DurationData duration_data;
     // coordinate of the source node
     util::Coordinate source_coordinate;
-
-    // necessary static util functions for stxxl's sorting
-    static InternalExtractorEdge min_osm_value()
-    {
-        return InternalExtractorEdge(
-            MIN_OSM_NODEID, MIN_OSM_NODEID, WeightData(), DurationData(), util::Coordinate());
-    }
-    static InternalExtractorEdge max_osm_value()
-    {
-        return InternalExtractorEdge(
-            MAX_OSM_NODEID, MAX_OSM_NODEID, WeightData(), DurationData(), util::Coordinate());
-    }
-
-    static InternalExtractorEdge min_internal_value()
-    {
-        auto v = min_osm_value();
-        v.result.source = 0;
-        v.result.target = 0;
-        return v;
-    }
-    static InternalExtractorEdge max_internal_value()
-    {
-        auto v = max_osm_value();
-        v.result.source = std::numeric_limits<NodeID>::max();
-        v.result.target = std::numeric_limits<NodeID>::max();
-        return v;
-    }
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif // INTERNAL_EXTRACTOR_EDGE_HPP

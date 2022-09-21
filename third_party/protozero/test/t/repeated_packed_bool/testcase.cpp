@@ -1,8 +1,9 @@
 
 #include <testcase.hpp>
+
 #include "testcase.pb.h"
 
-int main(int c, char *argv[]) {
+int main() {
     TestRepeatedPackedBool::Test msg;
 
     write_to_file(msg, "data-empty.pbf");

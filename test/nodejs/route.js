@@ -606,3 +606,108 @@ test('route: route in Monaco without motorways', function(assert) {
     });
 });
 
+
+test('route: throws on invalid waypoints values needs at least two', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [0]
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { }); },
+        'At least two waypoints must be provided');
+});
+
+test('route: throws on invalid waypoints values, needs first and last coordinate indices', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [1, 2]
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { console.log(err); }); },
+        'First and last waypoints values must correspond to first and last coordinate indices');
+});
+
+test('route: throws on invalid waypoints values, order matters', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [2, 0]
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { console.log(err); }); },
+        'First and last waypoints values must correspond to first and last coordinate indices');
+});
+
+test('route: throws on invalid waypoints values, waypoints must correspond with a coordinate index', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [0, 3, 2]
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { console.log(err); }); },
+        'Waypoints must correspond with the index of an input coordinate');
+});
+
+test('route: throws on invalid waypoints values, waypoints must be an array', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: "string"
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { console.log(err); }); },
+        'Waypoints must be an array of integers corresponding to the input coordinates.');
+});
+
+test('route: throws on invalid waypoints values, waypoints must be an array of integers', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [0,1,"string"]
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { console.log(err); }); },
+        'Waypoint values must be an array of integers');
+});
+
+test('route: throws on invalid waypoints values, waypoints must be an array of integers in increasing order', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates.concat(three_test_coordinates),
+        waypoints: [0,2,1,5]
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { console.error(`response: ${response}`); console.error(`error: ${err}`); }); },
+        /Waypoints must be supplied in increasing order/);
+});
+
+test('route: throws on invalid snapping values', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates.concat(three_test_coordinates),
+        snapping: "zing"
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { console.error(`response: ${response}`); console.error(`error: ${err}`); }); },
+        /'snapping' param must be one of \[default, any\]/);
+});
+
+test('route: snapping parameter passed through OK', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM(monaco_path);
+    osrm.route({snapping: "any", coordinates: [[7.448205209414596,43.754001097311544],[7.447122039202185,43.75306156811368]]}, function(err, route) {
+        assert.ifError(err);
+        assert.equal(Math.round(route.routes[0].distance * 10), 1314); // Round it to nearest 0.1m to eliminate floating point comparison error
+    });
+});

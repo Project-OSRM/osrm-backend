@@ -2,6 +2,8 @@
 #define BASE_PLUGIN_HPP
 
 #include "engine/api/base_parameters.hpp"
+#include "engine/api/base_result.hpp"
+#include "engine/api/flatbuffers/fbresult_generated.h"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/phantom_node.hpp"
 #include "engine/routing_algorithms.hpp"
@@ -39,7 +41,7 @@ class BasePlugin
 
     bool CheckAlgorithms(const api::BaseParameters &params,
                          const RoutingAlgorithmsInterface &algorithms,
-                         util::json::Object &result) const
+                         osrm::engine::api::ResultT &result) const
     {
         if (algorithms.IsValid())
         {
@@ -62,12 +64,38 @@ class BasePlugin
         return false;
     }
 
+    struct ErrorRenderer
+    {
+        std::string code;
+        std::string message;
+
+        ErrorRenderer(std::string code, std::string message)
+            : code(std::move(code)), message(std::move(message)){};
+
+        void operator()(util::json::Object &json_result)
+        {
+            json_result.values["code"] = code;
+            json_result.values["message"] = message;
+        };
+        void operator()(flatbuffers::FlatBufferBuilder &fb_result)
+        {
+            auto error = api::fbresult::CreateErrorDirect(fb_result, code.c_str(), message.c_str());
+            api::fbresult::FBResultBuilder response(fb_result);
+            response.add_error(true);
+            response.add_code(error);
+            fb_result.Finish(response.Finish());
+        };
+        void operator()(std::string &str_result)
+        {
+            str_result = str(boost::format("code=%1% message=%2%") % code % message);
+        };
+    };
+
     Status Error(const std::string &code,
                  const std::string &message,
-                 util::json::Object &json_result) const
+                 osrm::engine::api::ResultT &result) const
     {
-        json_result.values["code"] = code;
-        json_result.values["message"] = message;
+        mapbox::util::apply_visitor(ErrorRenderer(code, message), result);
         return Status::Error;
     }
 
@@ -103,8 +131,10 @@ class BasePlugin
                 return phantom_pair.first;
             };
 
-        const auto use_closed_phantom = [](
-            const std::pair<PhantomNode, PhantomNode> &phantom_pair) { return phantom_pair.first; };
+        const auto use_closed_phantom =
+            [](const std::pair<PhantomNode, PhantomNode> &phantom_pair) {
+                return phantom_pair.first;
+            };
 
         const bool every_phantom_is_in_tiny_cc = std::all_of(std::begin(phantom_node_pair_list),
                                                              std::end(phantom_node_pair_list),
@@ -270,6 +300,7 @@ class BasePlugin
         const bool use_bearings = !parameters.bearings.empty();
         const bool use_radiuses = !parameters.radiuses.empty();
         const bool use_approaches = !parameters.approaches.empty();
+        const bool use_all_edges = parameters.snapping == api::BaseParameters::SnappingType::Any;
 
         BOOST_ASSERT(parameters.IsValid());
         for (const auto i : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
@@ -296,7 +327,8 @@ class BasePlugin
                             *parameters.radiuses[i],
                             parameters.bearings[i]->bearing,
                             parameters.bearings[i]->range,
-                            approach);
+                            approach,
+                            use_all_edges);
                 }
                 else
                 {
@@ -305,7 +337,8 @@ class BasePlugin
                             parameters.coordinates[i],
                             parameters.bearings[i]->bearing,
                             parameters.bearings[i]->range,
-                            approach);
+                            approach,
+                            use_all_edges);
                 }
             }
             else
@@ -314,13 +347,16 @@ class BasePlugin
                 {
                     phantom_node_pairs[i] =
                         facade.NearestPhantomNodeWithAlternativeFromBigComponent(
-                            parameters.coordinates[i], *parameters.radiuses[i], approach);
+                            parameters.coordinates[i],
+                            *parameters.radiuses[i],
+                            approach,
+                            use_all_edges);
                 }
                 else
                 {
                     phantom_node_pairs[i] =
                         facade.NearestPhantomNodeWithAlternativeFromBigComponent(
-                            parameters.coordinates[i], approach);
+                            parameters.coordinates[i], approach, use_all_edges);
                 }
             }
 
@@ -337,9 +373,25 @@ class BasePlugin
         }
         return phantom_node_pairs;
     }
+
+    std::string MissingPhantomErrorMessage(const std::vector<PhantomNodePair> &phantom_nodes,
+                                           const std::vector<util::Coordinate> &coordinates) const
+    {
+        BOOST_ASSERT(phantom_nodes.size() < coordinates.size());
+        auto mismatch = std::mismatch(phantom_nodes.begin(),
+                                      phantom_nodes.end(),
+                                      coordinates.begin(),
+                                      coordinates.end(),
+                                      [](const auto &phantom_node, const auto &coordinate) {
+                                          return phantom_node.first.input_location == coordinate;
+                                      });
+        std::size_t missing_index = std::distance(phantom_nodes.begin(), mismatch.first);
+        return std::string("Could not find a matching segment for coordinate ") +
+               std::to_string(missing_index);
+    }
 };
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm
 
 #endif /* BASE_PLUGIN_HPP */

@@ -32,14 +32,14 @@ class MatchPlugin : public BasePlugin
 
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::MatchParameters &parameters,
-                         util::json::Object &json_result) const;
+                         osrm::engine::api::ResultT &json_result) const;
 
   private:
     const int max_locations_map_matching;
     const double max_radius_map_matching;
 };
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm
 
 #endif // MATCH_HPP

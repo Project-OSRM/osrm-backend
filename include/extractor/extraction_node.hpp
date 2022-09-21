@@ -13,7 +13,7 @@ struct ExtractionNode
     bool traffic_lights;
     bool barrier;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif // EXTRACTION_NODE_HPP

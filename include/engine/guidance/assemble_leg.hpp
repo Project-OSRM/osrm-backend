@@ -122,7 +122,7 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const datafacade::BaseDa
                    [](const NamedSegment &segment) { return segment.name_id; });
     return summary;
 }
-}
+} // namespace detail
 
 inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
                             const std::vector<PathData> &route_data,

@@ -1,0 +1,15 @@
+[style]
+based_on_style = pep8
+use_tabs = true
+indent_width = 5
+
+spaces_before_comment = 1
+spaces_around_power_operator = true
+space_between_ending_comma_and_closing_bracket = true
+
+continuation_align_style = SPACE
+split_before_first_argument = false
+split_complex_comprehension = true
+dedent_closing_brackets = false
+coalesce_brackets = true
+align_closing_bracket_with_visual_indent = false

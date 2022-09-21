@@ -19,10 +19,6 @@
 #include <utility>
 #include <vector>
 
-#if USE_STXXL_LIBRARY
-#include <stxxl/vector>
-#endif
-
 namespace osrm
 {
 namespace util
@@ -253,16 +249,10 @@ template <typename DataT> void swap(vector_view<DataT> &lhs, vector_view<DataT> 
     std::swap(lhs.m_size, rhs.m_size);
 }
 
-#if USE_STXXL_LIBRARY
-template <typename T> using ExternalVector = stxxl::vector<T>;
-#else
-template <typename T> using ExternalVector = std::vector<T>;
-#endif
-
 template <typename DataT, storage::Ownership Ownership>
 using InternalOrExternalVector =
     typename std::conditional<Ownership == storage::Ownership::External,
-                              ExternalVector<DataT>,
+                              std::vector<DataT>,
                               std::vector<DataT>>::type;
 
 template <typename DataT, storage::Ownership Ownership>
@@ -278,7 +268,7 @@ struct is_view_or_vector
                                  std::is_same<util::vector_view<ValueT>, VectorT>::value>
 {
 };
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // SHARED_MEMORY_VECTOR_WRAPPER_HPP

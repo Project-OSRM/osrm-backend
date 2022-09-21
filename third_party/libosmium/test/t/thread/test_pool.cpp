@@ -1,11 +1,8 @@
 #include "catch.hpp"
 
 #include <osmium/thread/pool.hpp>
-#include <osmium/util/compatibility.hpp>
 
-#include <chrono>
 #include <stdexcept>
-#include <thread>
 
 struct test_job_with_result {
     int operator()() const {
@@ -14,7 +11,7 @@ struct test_job_with_result {
 };
 
 struct test_job_throw {
-    OSMIUM_NORETURN void operator()() const {
+    [[noreturn]] void operator()() const {
         throw std::runtime_error{"exception in pool thread"};
     }
 };
@@ -68,51 +65,42 @@ TEST_CASE("if outlier positive number of threads requested, threads configured")
     REQUIRE(pool.num_threads() > 0);
 }
 
-TEST_CASE("thread") {
-
+TEST_CASE("can get access to default thread pool") {
     auto& pool = osmium::thread::Pool::default_instance();
-
-    SECTION("can get access to thread pool") {
-        REQUIRE(pool.queue_empty());
-    }
-
-    SECTION("can send job to thread pool") {
-        auto future = pool.submit(test_job_with_result{});
-
-        REQUIRE(future.get() == 42);
-    }
-
-    SECTION("can throw from job in thread pool") {
-        auto future = pool.submit(test_job_throw{});
-
-        REQUIRE_THROWS_AS(future.get(), const std::runtime_error&);
-    }
-
+    REQUIRE(pool.queue_empty());
 }
 
-TEST_CASE("thread (user-provided pool)") {
+TEST_CASE("can send job to default thread pool") {
+    auto& pool = osmium::thread::Pool::default_instance();
+    auto future = pool.submit(test_job_with_result{});
+    REQUIRE(future.get() == 42);
+}
 
+TEST_CASE("can throw from job in default thread pool") {
+    auto& pool = osmium::thread::Pool::default_instance();
+    auto future = pool.submit(test_job_throw{});
+    REQUIRE_THROWS_AS(future.get(), const std::runtime_error&);
+}
+
+TEST_CASE("can get access to user provided thread pool") {
     osmium::thread::Pool pool{7};
+    REQUIRE(pool.queue_empty());
+}
 
-    SECTION("can get access to thread pool") {
-        REQUIRE(pool.queue_empty());
-    }
+TEST_CASE("can access user-provided number of threads from pool") {
+    osmium::thread::Pool pool{7};
+    REQUIRE(pool.num_threads() == 7);
+}
 
-    SECTION("can access user-provided number of threads") {
-        REQUIRE(pool.num_threads() == 7);
-    }
+TEST_CASE("can send job to user provided thread pool") {
+    osmium::thread::Pool pool{7};
+    auto future = pool.submit(test_job_with_result{});
+    REQUIRE(future.get() == 42);
+}
 
-    SECTION("can send job to thread pool") {
-        auto future = pool.submit(test_job_with_result{});
-
-        REQUIRE(future.get() == 42);
-    }
-
-    SECTION("can throw from job in thread pool") {
-        auto future = pool.submit(test_job_throw{});
-
-        REQUIRE_THROWS_AS(future.get(), const std::runtime_error&);
-    }
-
+TEST_CASE("can throw from job in user provided thread pool") {
+    osmium::thread::Pool pool{7};
+    auto future = pool.submit(test_job_throw{});
+    REQUIRE_THROWS_AS(future.get(), const std::runtime_error&);
 }
 

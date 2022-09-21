@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -43,9 +43,10 @@ DEALINGS IN THE SOFTWARE.
 namespace osmium {
 
     /**
-     * Describes which metadata fields are available in an OSMObject. This is most often used to
-     * describe which metadata fields are available in the objects of an OSM file or which
-     * metadata information should be written to an OSM file.
+     * Describes which metadata fields are available in an OSMObject. This is
+     * most often used to describe which metadata fields are available in the
+     * objects of an OSM file or which metadata information should be written
+     * to an OSM file.
      */
     class metadata_options {
 
@@ -73,7 +74,7 @@ namespace osmium {
             }
 
             const auto attrs = osmium::split_string(attributes, '+', true);
-            int opts = 0;
+            unsigned int opts = 0;
             for (const auto& attr : attrs) {
                 if (attr == "version") {
                     opts |= options::md_version;

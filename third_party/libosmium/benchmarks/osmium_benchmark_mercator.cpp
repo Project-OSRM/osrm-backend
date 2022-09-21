@@ -31,12 +31,17 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     }
 
-    const std::string input_filename{argv[1]};
+    try {
+        const std::string input_filename{argv[1]};
 
-    osmium::io::Reader reader{input_filename};
+        osmium::io::Reader reader{input_filename};
 
-    GeomHandler handler;
-    osmium::apply(reader, handler);
-    reader.close();
+        GeomHandler handler;
+        osmium::apply(reader, handler);
+        reader.close();
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << '\n';
+        std::exit(1);
+    }
 }
 
