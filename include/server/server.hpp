@@ -107,11 +107,11 @@ class Server
         }
     }
 
+    RequestHandler request_handler;
     unsigned thread_pool_size;
     boost::asio::io_context io_context;
     boost::asio::ip::tcp::acceptor acceptor;
     std::shared_ptr<Connection> new_connection;
-    RequestHandler request_handler;
 };
 } // namespace server
 } // namespace osrm

@@ -66,7 +66,7 @@ struct UpdaterConfig final : storage::IOConfig
         IOConfig::UseDefaultOutputNames(base);
     }
 
-    double log_edge_updates_factor;
+    double log_edge_updates_factor = 0.0;
     std::time_t valid_now;
 
     std::vector<std::string> segment_speed_lookup_paths;

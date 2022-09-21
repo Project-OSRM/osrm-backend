@@ -372,7 +372,7 @@ bool areParallel(const iterator_type lhs_begin,
     const auto slope_rhs = get_slope(null_island, rotated_difference_rhs);
     // the left hand side has a slope of `0` after the rotation. We can check the slope of the right
     // hand side to ensure we only considering slight slopes
-    return std::abs(slope_rhs) < 0.20; // twenty percent incline at the most
+    return std::fabs(slope_rhs) < 0.20; // twenty percent incline at the most
 }
 
 double computeArea(const std::vector<Coordinate> &polygon);

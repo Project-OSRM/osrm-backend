@@ -28,7 +28,7 @@ struct TurnRestriction
     // The turn sequence that the restriction applies to.
     TurnPath turn_path;
     // Indicates if the restriction turn *must* or *must not* be taken.
-    bool is_only;
+    bool is_only = false;
     // We represent conditional and unconditional restrictions with the same structure.
     // Unconditional restrictions will have empty conditions.
     std::vector<util::OpeningHours> condition;
