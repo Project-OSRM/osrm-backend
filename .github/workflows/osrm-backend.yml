@@ -607,7 +607,7 @@ jobs:
       
         # Linux dev packages
         if [ "${TARGET_ARCH}" != "i686" ] && [ "${ENABLE_CONAN}" != "ON" ]; then
-          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+          #sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
           sudo apt-get update -y
           sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev libboost-all-dev
           if [[ "${CCOMPILER}" != clang-* ]]; then
