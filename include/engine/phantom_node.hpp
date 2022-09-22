@@ -54,6 +54,7 @@ struct PhantomNode
           forward_distance_offset(0), reverse_distance_offset(0),
           forward_duration(MAXIMAL_EDGE_DURATION), reverse_duration(MAXIMAL_EDGE_DURATION),
           forward_duration_offset(0), reverse_duration_offset(0),
+          component({INVALID_COMPONENTID, 0}),
           fwd_segment_position(0), is_valid_forward_source{false}, is_valid_forward_target{false},
           is_valid_reverse_source{false}, is_valid_reverse_target{false}, bearing(0)
 
