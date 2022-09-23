@@ -456,6 +456,11 @@ add_subdirectory(${FLATBUFFERS_SRC_DIR}
         ${CMAKE_CURRENT_BINARY_DIR}/flatbuffers-build
         EXCLUDE_FROM_ALL)
 
+set(FMT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt-9.1.0/include")
+add_compile_definitions(FMT_HEADER_ONLY)
+include_directories(SYSTEM ${FMT_INCLUDE_DIR})
+        
+
 # see https://stackoverflow.com/questions/70898030/boost-link-error-using-conan-find-package
 if (MSVC)
   add_definitions(-DBOOST_ALL_NO_LIB)

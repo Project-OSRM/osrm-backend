@@ -5,6 +5,7 @@
 #include <iostream>
 #include <mutex>
 #include <string>
+#include <fmt/chrono.h>
 
 namespace osrm
 {
@@ -73,23 +74,28 @@ void Log::Init()
     if (!LogPolicy::GetInstance().IsMute() && level <= LogPolicy::GetInstance().GetLevel())
     {
         const bool is_terminal = IsStdoutATTY();
+
+        auto format = [is_terminal](const char* level, const char* color) {
+            return fmt::format("{}[{}] {} ", is_terminal ? color : "", level, std::chrono::system_clock::now());
+        };
+
         switch (level)
         {
         case logNONE:
             break;
         case logWARNING:
-            stream << (is_terminal ? YELLOW : "") << "[warn] ";
+            stream << format("warn", YELLOW);
             break;
         case logERROR:
-            stream << (is_terminal ? RED : "") << "[error] ";
+            stream << format("error", RED);
             break;
         case logDEBUG:
 #ifdef ENABLE_DEBUG_LOGGING
-            stream << (is_terminal ? MAGENTA : "") << "[debug] ";
+            stream << format("debug", MAGENTA);
 #endif
             break;
         default: // logINFO:
-            stream << "[info] ";
+            stream << format("info", "");
             break;
         }
     }
