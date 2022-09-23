@@ -195,7 +195,7 @@ inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const boost::filesystem::path &p
     auto directed = splitBidirectionalEdges(edges);
     auto tidied = prepareEdgesForUsageInGraph<DynamicEdgeBasedGraphEdge>(std::move(directed));
 
-    return DynamicEdgeBasedGraph(number_of_edge_based_nodes, std::move(tidied), checksum);
+    return DynamicEdgeBasedGraph(number_of_edge_based_nodes, tidied, checksum);
 }
 
 } // namespace partitioner

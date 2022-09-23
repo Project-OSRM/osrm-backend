@@ -88,7 +88,7 @@ DinicMaxFlow::MinCut DinicMaxFlow::operator()(const BisectionGraphView &view,
             // heuristic)
             for (auto s : source_nodes)
                 levels[s] = 0;
-            const auto cut = MakeCut(view, levels, flow_value);
+            auto cut = MakeCut(view, levels, flow_value);
             return cut;
         }
     } while (true);

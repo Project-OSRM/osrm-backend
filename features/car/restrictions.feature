@@ -411,7 +411,7 @@ Feature: Car - Turn restrictions
                     y
             i j f b x a e g h
 
-                  c   d
+                  c1   d
             """
 
         And the ways
@@ -438,7 +438,7 @@ Feature: Car - Turn restrictions
         When I route I should get
             | from | to | route                               |
             | e    | f  | ae,xa,bx,fb,fb                      |
-            | c    | f  | dc,da,ae,ge,hg,hg,ge,ae,xa,bx,fb,fb |
+            | 1    | f  | dc,da,ae,ge,hg,hg,ge,ae,xa,bx,fb,fb |
             | d    | f  | da,ae,ge,hg,hg,ge,ae,xa,bx,fb,fb    |
 
     @except
@@ -1008,3 +1008,123 @@ Feature: Car - Turn restrictions
             | from | to | route        |
             | d    | x  | bd,abc,xa,xa |
             | d    | z  | bd,abc,cz,cz |
+
+
+    Scenario: Multiple restricted entrances
+        Given the node map
+            """
+                 b
+                 |
+            a----e----c
+                 |
+                 d
+            """
+
+        And the ways
+            | nodes |
+            | ae    |
+            | be    |
+            | ce    |
+            | de    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction  |
+            | restriction | ae,be    | ed     | e        | no_entry     |
+
+        When I route I should get
+            | from | to | route          |
+            | a    | d  | ae,ce,ce,de,de |
+            | b    | d  | be,ce,ce,de,de |
+            | c    | d  | ce,de,de       |
+
+
+    Scenario: Multiple restricted exits
+        Given the node map
+            """
+                 b
+                 |
+            a----e----c
+                 |
+                 d
+            """
+
+        And the ways
+            | nodes |
+            | ae    |
+            | be    |
+            | ce    |
+            | de    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction  |
+            | restriction | ae       | ce,de  | e        | no_exit      |
+
+        When I route I should get
+            | from | to | route          |
+            | a    | b  | ae,be,be       |
+            | a    | c  | ae,be,be,ce,ce |
+            | a    | d  | ae,be,be,de,de |
+
+
+    Scenario: Invalid restricted entrances/exits
+        Given the node map
+            """
+                 b
+                 |
+            a----e----c
+                 |
+                 d
+            """
+
+        And the ways
+            | nodes |
+            | ae    |
+            | be    |
+            | ce    |
+            | de    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction  |
+            | restriction | ae       | ce,de  | e        | no_entry     |
+            | restriction | ae,be    | ed     | e        | no_exit      |
+
+        When I route I should get
+            | from | to | route     |
+            | a    | b  | ae,be,be  |
+            | a    | c  | ae,ce,ce  |
+            | a    | d  | ae,de,de  |
+            | b    | d  | be,de,de  |
+            | c    | d  | ce,de,de  |
+
+
+    Scenario: Invalid multi from/to restrictions
+        Given the node map
+            """
+                 b
+                 |
+            a----e----c
+                 |
+                 d
+            """
+
+        And the ways
+            | nodes |
+            | ae    |
+            | be    |
+            | ce    |
+            | de    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction      |
+            | restriction | ae,de    | ce,de  | e        | no_right_turn    |
+            | restriction | ae,be    | ce,de  | e        | no_straight_on   |
+            | restriction | ae,be    | be,ce  | e        | only_left_turn   |
+            | restriction | ae,be    | ce,de  | e        | only_straight_on |
+
+        When I route I should get
+            | from | to | route     |
+            | a    | b  | ae,be,be  |
+            | a    | c  | ae,ce,ce  |
+            | a    | d  | ae,de,de  |
+            | b    | d  | be,de,de  |
+            | c    | d  | ce,de,de  |

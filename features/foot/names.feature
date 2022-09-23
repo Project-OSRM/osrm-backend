@@ -20,3 +20,20 @@ Feature: Foot - Street names in instructions
         When I route I should get
             | from | to | route    | ref    |
             | a    | c  | My Way,, | ,A7,A7 |
+
+
+    Scenario: Foot - Combines named roads with suffix changes
+        Given the node map
+            """
+            a b c d
+            """
+
+        And the ways
+            | nodes | name           |
+            | ab    | High Street W  |
+            | bc    | High Street E  |
+            | cd    | Market Street  |
+
+        When I route I should get
+            | from | to | route                                     |
+            | a    | d  | High Street W,Market Street,Market Street |

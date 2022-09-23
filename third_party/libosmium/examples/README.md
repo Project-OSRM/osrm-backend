@@ -29,6 +29,7 @@ them.
 
 * `osmium_area_test`
 * `osmium_create_pois`
+* `osmium_tags_filter`
 
 ## Even more advanced examples
 

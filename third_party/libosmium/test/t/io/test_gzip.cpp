@@ -8,13 +8,13 @@
 #include <string>
 
 TEST_CASE("Invalid file descriptor of gzip-compressed file") {
-    REQUIRE_THROWS_AS(osmium::io::GzipDecompressor{-1}, const osmium::gzip_error&);
+    REQUIRE_THROWS_AS(osmium::io::GzipDecompressor{-1}, osmium::gzip_error);
 }
 
 TEST_CASE("Non-open file descriptor of gzip-compressed file") {
     // 12345 is just a random file descriptor that should not be open
     osmium::io::GzipDecompressor decomp{12345};
-    REQUIRE_THROWS_AS(decomp.read(), const osmium::gzip_error&);
+    REQUIRE_THROWS_AS(decomp.read(), osmium::gzip_error);
 }
 
 TEST_CASE("Empty gzip-compressed file") {
@@ -89,18 +89,18 @@ TEST_CASE("Corrupted gzip-compressed file") {
 
     osmium::io::GzipDecompressor decomp{fd};
     decomp.read();
-    REQUIRE_THROWS_AS(decomp.close(), const osmium::gzip_error&);
+    REQUIRE_THROWS_AS(decomp.close(), osmium::gzip_error);
 
     REQUIRE(count == count_fds());
 }
 
 TEST_CASE("Compressor: Invalid file descriptor for gzip-compressed file") {
-    REQUIRE_THROWS_AS(osmium::io::GzipCompressor(-1, osmium::io::fsync::yes), const std::system_error&);
+    REQUIRE_THROWS_AS(osmium::io::GzipCompressor(-1, osmium::io::fsync::yes), std::system_error);
 }
 
 TEST_CASE("Compressor: Non-open file descriptor for gzip-compressed file") {
     // 12345 is just a random file descriptor that should not be open
-    REQUIRE_THROWS_AS(osmium::io::GzipCompressor(12345, osmium::io::fsync::yes), const std::system_error&);
+    REQUIRE_THROWS_AS(osmium::io::GzipCompressor(12345, osmium::io::fsync::yes), std::system_error);
 }
 
 TEST_CASE("Write gzip-compressed file with explicit close") {

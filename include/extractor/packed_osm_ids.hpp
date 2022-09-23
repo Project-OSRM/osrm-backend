@@ -12,7 +12,7 @@ namespace detail
 {
 template <storage::Ownership Ownership>
 using PackedOSMIDs = util::detail::PackedVector<OSMNodeID, 34, Ownership>;
-}
+} // namespace detail
 
 using PackedOSMIDsView = detail::PackedOSMIDs<storage::Ownership::View>;
 using PackedOSMIDs = detail::PackedOSMIDs<storage::Ownership::Container>;

@@ -231,7 +231,7 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
 
   protected:
     Vector<EdgeOffset> node_to_edge_offset;
-    std::uint32_t connectivity_checksum;
+    std::uint32_t connectivity_checksum = 0;
 };
 
 using MultiLevelEdgeBasedGraph =

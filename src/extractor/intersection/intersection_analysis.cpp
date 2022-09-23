@@ -237,7 +237,7 @@ getIntersectionOutgoingGeometries(const util::NodeBasedDynamicGraph &graph,
             util::coordinate_calculation::bearing(geometry[0], representative_coordinate);
 
         const auto edge_length = util::coordinate_calculation::getLength(
-            geometry.begin(), geometry.end(), util::coordinate_calculation::haversineDistance);
+            geometry.begin(), geometry.end(), util::coordinate_calculation::greatCircleDistance);
 
         edge_geometries.push_back({outgoing_edge, initial_bearing, perceived_bearing, edge_length});
     }

@@ -230,3 +230,100 @@ Feature: Maneuver tag support
             | waypoints | route                 | turns                                        |
             | z,t       | NY Ave,395,395        | depart,on ramp left,arrive                   |
             | z,b       | NY Ave,,4th St,4th St | depart,on ramp left,fork slight right,arrive |
+
+    Scenario: Gracefully handles maneuvers that are redundant for the profile
+        Given the node map
+            """
+            a--b---c---d----f
+                   |
+                   |
+                   e
+            """
+        And the ways
+            | nodes | name     | oneway | highway      |
+            | abc   | A Street | no     | primary      |
+            | ce    | B Street | no     | construction |
+            | cdf   | A Street | no     | primary      |
+
+        And the relations
+            | type     | way:from | node:via | way:to | maneuver | direction   |
+            | maneuver | abc      | c        | cdf    | turn     | slight_left |
+
+        When I route I should get
+            | waypoints | route             | turns         |
+            | a,f       | A Street,A Street | depart,arrive |
+
+    Scenario: Handles uncompressed nodes in maneuver path
+        Given the node map
+            """
+            a--b---c---f
+               |   |
+               |   |
+               g   d---h
+                   |
+                   |
+           i-------e-------j
+            """
+        And the ways
+            | nodes | name     | oneway |
+            | abc   | A Street | no     |
+            | cf    | B Street | no     |
+            | cde   | C Street | no     |
+            | bg    | D Street | no     |
+            | dh    | E Street | no     |
+            | ei    | F Street | no     |
+            | ej    | G Street | no     |
+
+        And the relations
+            | type     | way:from | node:via | way:via | way:to | maneuver | direction   |
+            | maneuver | abc      | e        | cde     | ei     | turn     | sharp_right |
+
+        When I route I should get
+            | waypoints | route                               | turns                                     |
+            | a,i       | A Street,C Street,F Street,F Street | depart,turn right,turn sharp right,arrive |
+
+
+    Scenario: Can be used with turn restrictions
+        Given the node map
+            """
+               a---b---c
+                   |
+                   |
+                   d
+                   |
+                   e---f
+                   |
+                   |
+            h------g---i
+            """
+        And the ways
+            | nodes | name     | oneway |
+            | ab    | A Street | no     |
+            | bc    | B Street | no     |
+            | bde   | C Street | no     |
+            | ef    | D Street | no     |
+            | eg    | E Street | no     |
+            | hg    | F Street | no     |
+            | gi    | G Street | no     |
+
+        And the relations
+            | type     | way:from | node:via | way:to | maneuver | direction    | #                                      |
+            | maneuver | ab       | b        | bde    | turn     | sharp_right  | ending on a turn restriction via way   |
+            | maneuver | bde      | e        | ef     | turn     | sharp_left   | starting on a turn restriction via way |
+
+        And the relations
+            | type     | way:from | node:via | way:via | way:to | maneuver | direction    | #                   |
+            | maneuver | cb       | g        | bde,eg  | gi     | turn     | slight_left  | turn restricted     |
+            | maneuver | cb       | g        | bde,eg  | hg     | turn     | slight_right | not turn restricted |
+
+        And the relations
+            | type        | way:from | way:via  | way:to | restriction   |
+            | restriction | ab       | bde,eg   | hg     | no_right_turn |
+            | restriction | bc       | bde,eg   | gi     | no_left_turn  |
+
+        When I route I should get
+            | waypoints | route                                        | turns                                                |
+            | a,e       | A Street,C Street,C Street                   | depart,turn sharp right,arrive                       |
+            | b,f       | C Street,D Street,D Street                   | depart,turn sharp left,arrive                        |
+            | c,h       | B Street,E Street,F Street,F Street          | depart,turn left,turn slight right,arrive            |
+            | c,i       | B Street,A Street,E Street,G Street,G Street | depart,turn uturn,turn right,end of road left,arrive |

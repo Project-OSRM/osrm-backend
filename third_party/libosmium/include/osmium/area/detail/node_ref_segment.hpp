@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -192,7 +192,7 @@ namespace osmium {
                 }
 
                 const char* role_name() const noexcept {
-                    static const std::array<const char*, 4> names = {{ "unknown", "outer", "inner", "empty" }};
+                    static const std::array<const char*, 4> names = {{"unknown", "outer", "inner", "empty"}};
                     return names[int(m_role)];
                 }
 
@@ -219,7 +219,7 @@ namespace osmium {
             }
 
             inline bool operator!=(const NodeRefSegment& lhs, const NodeRefSegment& rhs) noexcept {
-                return ! (lhs == rhs);
+                return !(lhs == rhs);
             }
 
             /**
@@ -346,9 +346,9 @@ namespace osmium {
                     };
 
                     std::array<seg_loc, 4> sl = {{
-                        {0, s1.first().location() },
+                        {0, s1.first().location()},
                         {0, s1.second().location()},
-                        {1, s2.first().location() },
+                        {1, s2.first().location()},
                         {1, s2.second().location()},
                     }};
 

@@ -1,8 +1,46 @@
 # Unreleased
   - Changes from 5.26.0
     - API:
+      - ADDED: Add Flatbuffers support to NodeJS bindings. [#6338](https://github.com/Project-OSRM/osrm-backend/pull/6338)
+      - CHANGED: Add `data_version` field to responses of all services. [#5387](https://github.com/Project-OSRM/osrm-backend/pull/5387)
+      - FIXED: Use Boost.Beast to parse HTTP request. [#6294](https://github.com/Project-OSRM/osrm-backend/pull/6294)
       - FIXED: Fix inefficient osrm-routed connection handling [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
+      - FIXED: Fix HTTP compression precedence [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
+    - NodeJS:
+      - FIXED: Support `skip_waypoints` in Node bindings [#6060](https://github.com/Project-OSRM/osrm-backend/pull/6060)
+    - Misc:
+      - CHANGED: Optimize RestrictionParser performance. [#6344](https://github.com/Project-OSRM/osrm-backend/pull/6344)
+      - ADDED: Support floats for speed value in traffic updates CSV. [#6327](https://github.com/Project-OSRM/osrm-backend/pull/6327)
+      - CHANGED: Use Lua 5.4 in Docker image. [#6346](https://github.com/Project-OSRM/osrm-backend/pull/6346)
+      - CHANGED: Remove redundant nullptr check. [#6326](https://github.com/Project-OSRM/osrm-backend/pull/6326)
+      - CHANGED: missing files list is included in exception message. [#5360](https://github.com/Project-OSRM/osrm-backend/pull/5360)
+      - CHANGED: Do not use deprecated Callback::Call overload in Node bindings. [#6318](https://github.com/Project-OSRM/osrm-backend/pull/6318)
+      - FIXED: Fix distance calculation consistency. [#6315](https://github.com/Project-OSRM/osrm-backend/pull/6315)
+      - FIXED: Fix performance issue after migration to sol2 3.3.0. [#6304](https://github.com/Project-OSRM/osrm-backend/pull/6304)
+      - CHANGED: Pass osm_node_ids by reference in osrm::updater::Updater class. [#6298](https://github.com/Project-OSRM/osrm-backend/pull/6298)
+      - FIXED: Fix bug with reading Set values from Lua scripts. [#6285](https://github.com/Project-OSRM/osrm-backend/pull/6285)
+      - FIXED: Bug in bicycle profile that caused exceptions if there is a highway=bicycle in the data. [#6296](https://github.com/Project-OSRM/osrm-backend/pull/6296)
+      - FIXED: Internal refactoring of identifier types used in data facade [#6044](https://github.com/Project-OSRM/osrm-backend/pull/6044)
     - Build:
+      - ADDED: Build Node bindings on Windows. [#6334](https://github.com/Project-OSRM/osrm-backend/pull/6334)
+      - ADDED: Configure cross-compilation for Apple Silicon. [#6360](https://github.com/Project-OSRM/osrm-backend/pull/6360)
+      - CHANGED: Use apt-get to install Clang on CI. [#6345](https://github.com/Project-OSRM/osrm-backend/pull/6345)
+      - CHANGED: Fix TBB in case of Conan + NodeJS build. [#6333](https://github.com/Project-OSRM/osrm-backend/pull/6333)
+      - CHANGED: Migrate to modern TBB version. [#6300](https://github.com/Project-OSRM/osrm-backend/pull/6300)
+      - CHANGED: Enable performance-move-const-arg clang-tidy check. [#6319](https://github.com/Project-OSRM/osrm-backend/pull/6319)
+      - CHANGED: Use the latest node on CI. [#6317](https://github.com/Project-OSRM/osrm-backend/pull/6317)
+      - CHANGED: Migrate Windows CI to GitHub Actions. [#6312](https://github.com/Project-OSRM/osrm-backend/pull/6312)
+      - ADDED: Add smoke test for Docker image. [#6313](https://github.com/Project-OSRM/osrm-backend/pull/6313)
+      - CHANGED: Update libosmium to version 2.18.0. [#6303](https://github.com/Project-OSRM/osrm-backend/pull/6303)
+      - CHANGED: Remove EXACT from find_package if using Conan. [#6299](https://github.com/Project-OSRM/osrm-backend/pull/6299)
+      - CHANGED: Configure Undefined Behaviour Sanitizer. [#6290](https://github.com/Project-OSRM/osrm-backend/pull/6290)
+      - CHANGED: Use Conan instead of Mason to install code dependencies. [#6284](https://github.com/Project-OSRM/osrm-backend/pull/6284)
+      - CHANGED: Migrate to C++17. Update sol2 to 3.3.0. [#6279](https://github.com/Project-OSRM/osrm-backend/pull/6279)
+      - CHANGED: Update macOS CI image to macos-11. [#6286](https://github.com/Project-OSRM/osrm-backend/pull/6286)
+      - CHANGED: Enable even more clang-tidy checks. [#6273](https://github.com/Project-OSRM/osrm-backend/pull/6273)
+      - CHANGED: Configure CMake to not build flatbuffers tests and samples. [#6274](https://github.com/Project-OSRM/osrm-backend/pull/6274)
+      - CHANGED: Enable more clang-tidy checks. [#6270](https://github.com/Project-OSRM/osrm-backend/pull/6270)
+      - CHANGED: Configure clang-tidy job on CI. [#6261](https://github.com/Project-OSRM/osrm-backend/pull/6261)
       - CHANGED: Use Github Actions for building container images [#6138](https://github.com/Project-OSRM/osrm-backend/pull/6138)
       - CHANGED: Upgrade Boost dependency to 1.70 [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
       - CHANGED: Upgrade Ubuntu CI builds to 20.04  [#6119](https://github.com/Project-OSRM/osrm-backend/pull/6119)
@@ -10,9 +48,20 @@
       - FIXED: Run all unit tests in CI [#5248](https://github.com/Project-OSRM/osrm-backend/pull/5248)
       - FIXED: Fix installation of Mason CMake and 32 bit CI build [#6170](https://github.com/Project-OSRM/osrm-backend/pull/6170)
       - FIXED: Fixed Node docs generation check in CI. [#6058](https://github.com/Project-OSRM/osrm-backend/pull/6058)
+      - CHANGED: Docker build, enabled arm64 build layer [#6172](https://github.com/Project-OSRM/osrm-backend/pull/6172)
       - CHANGED: Docker build, enabled apt-get update/install caching in separate layer for build phase [#6175](https://github.com/Project-OSRM/osrm-backend/pull/6175)
+      - FIXED: Bump CI complete meta job to ubuntu-20.04 [#6323](https://github.com/Project-OSRM/osrm-backend/pull/6323)
+    - Routing:
+      - CHANGED: Lazily generate optional route path data [#6045](https://github.com/Project-OSRM/osrm-backend/pull/6045)
+      - FIXED: Completed support for no_entry and no_exit turn restrictions. [#5988](https://github.com/Project-OSRM/osrm-backend/pull/5988)
+      - ADDED: Add support for non-round-trips with a single fixed endpoint. [#6050](https://github.com/Project-OSRM/osrm-backend/pull/6050)
+      - FIXED: Improvements to maneuver override processing [#6125](https://github.com/Project-OSRM/osrm-backend/pull/6125)
+      - ADDED: Support snapping to multiple ways at an input location. [#5953](https://github.com/Project-OSRM/osrm-backend/pull/5953)
+      - FIXED: Fix snapping target locations to ways used in turn restrictions. [#6339](https://github.com/Project-OSRM/osrm-backend/pull/6339)
+      - ADDED: Support OSM traffic signal directions. [#6153](https://github.com/Project-OSRM/osrm-backend/pull/6153)
     - Profile:
       - CHANGED: Bicycle surface speeds [#6212](https://github.com/Project-OSRM/osrm-backend/pull/6212)
+
 
 # 5.26.0
   - Changes from 5.25.0

@@ -135,7 +135,8 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
 
 inline NodeBasedEdgeClassification::NodeBasedEdgeClassification()
     : forward(false), backward(false), is_split(false), roundabout(false), circular(false),
-      startpoint(false), restricted(false)
+      startpoint(false), restricted(false), highway_turn_classification(0),
+      access_turn_classification(0)
 {
 }
 
@@ -192,7 +193,7 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
                     geometry_id,
                     annotation_data,
                     flags),
-      osm_source_id(std::move(source)), osm_target_id(std::move(target))
+      osm_source_id(source), osm_target_id(target)
 {
 }
 

@@ -12,7 +12,7 @@ enum class Ownership
     View,
     External
 };
-}
+} // namespace storage
 } // namespace osrm
 
 #endif // SHARED_MEMORY_OWNERSHIP_HPP

@@ -20,6 +20,6 @@ Feature: osrm-extract with a profile containing raster source
         And the data has been saved to disk
         When I run "osrm-extract {osm_file} -p {profile_file}"
         Then stdout should contain "source loader"
-        Then stdout should contain "slope: 0.0899"
-        Then stdout should contain "slope: -0.0899"
+        Then stdout should contain "slope: 0.0904"
+        Then stdout should contain "slope: -0.0904"
         And it should exit successfully

@@ -41,7 +41,7 @@ TEST_CASE("Build relation") {
     REQUIRE(3 == relation.members().size());
 
     int n=1;
-    for (auto& member : relation.members()) {
+    for (const auto& member : relation.members()) {
         REQUIRE(osmium::item_type::way == member.type());
         REQUIRE(n == member.ref());
         switch (n) {

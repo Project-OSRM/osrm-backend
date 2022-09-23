@@ -19,11 +19,11 @@ using Graph = util::NodeBasedDynamicGraph;
 BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
 {
     std::unordered_set<NodeID> barrier_nodes{6};
-    std::unordered_set<NodeID> traffic_lights;
+    TrafficSignals traffic_lights;
     std::vector<NodeBasedEdgeAnnotation> annotations{
         {EMPTY_NAMEID, 0, INAVLID_CLASS_DATA, TRAVEL_MODE_DRIVING, false},
         {EMPTY_NAMEID, 1, INAVLID_CLASS_DATA, TRAVEL_MODE_DRIVING, false}};
-    std::vector<TurnRestriction> restrictions{TurnRestriction{NodeRestriction{0, 2, 1}, false}};
+    std::vector<TurnRestriction> restrictions{TurnRestriction{{ViaNodePath{0, 2, 1}}, false}};
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
     std::vector<UnresolvedManeuverOverride> maneuver_overrides;
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
 BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
 {
     std::unordered_set<NodeID> barrier_nodes;
-    std::unordered_set<NodeID> traffic_lights;
+    TrafficSignals traffic_lights;
     std::vector<NodeBasedEdgeAnnotation> annotations;
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
 BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
 {
     std::unordered_set<NodeID> barrier_nodes{1};
-    std::unordered_set<NodeID> traffic_lights{2};
+    TrafficSignals traffic_lights = {{2}, {}};
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;

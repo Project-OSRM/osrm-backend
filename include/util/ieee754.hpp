@@ -27,6 +27,7 @@ THE SOFTWARE.
 
 #include <assert.h>
 #include <math.h>
+#include <memory.h>
 
 #if defined(_MSC_VER)
 #include "rapidjson/msinttypes/stdint.h"

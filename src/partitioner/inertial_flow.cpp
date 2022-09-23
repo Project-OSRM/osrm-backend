@@ -38,8 +38,8 @@ makeSpatialOrder(const BisectionGraphView &view, const double ratio, const doubl
 {
     struct NodeWithCoordinate
     {
-        NodeWithCoordinate(NodeID nid_, util::Coordinate coordinate_)
-            : nid{nid_}, coordinate{std::move(coordinate_)}
+        NodeWithCoordinate(NodeID nid_, const util::Coordinate &coordinate_)
+            : nid{nid_}, coordinate{coordinate_}
         {
         }
 

@@ -65,7 +65,7 @@ Feature: Car - Surfaces
         Then routability should be
             | highway  | oneway | surface         | forw        | backw       |
             | motorway | no     |                 | 90 km/h     | 90 km/h     |
-            | motorway | no     | asphalt         | 90 km/h     | 90 km/h +-1 |
+            | motorway | no     | asphalt         | 91 km/h     | 90 km/h +-1 |
             | motorway | no     | concrete        | 90 km/h +-1 | 90 km/h +-1 |
             | motorway | no     | concrete:plates | 90 km/h +-1 | 90 km/h +-1 |
             | motorway | no     | concrete:lanes  | 90 km/h +-1 | 90 km/h +-1 |

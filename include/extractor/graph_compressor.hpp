@@ -4,7 +4,7 @@
 #include "extractor/scripting_environment.hpp"
 #include "util/typedefs.hpp"
 
-#include "extractor/maneuver_override.hpp"
+#include "traffic_signals.hpp"
 #include "util/node_based_graph.hpp"
 
 #include <memory>
@@ -18,6 +18,7 @@ namespace extractor
 
 class CompressedEdgeContainer;
 struct TurnRestriction;
+struct UnresolvedManeuverOverride;
 
 class GraphCompressor
 {
@@ -25,7 +26,7 @@ class GraphCompressor
 
   public:
     void Compress(const std::unordered_set<NodeID> &barrier_nodes,
-                  const std::unordered_set<NodeID> &traffic_lights,
+                  const TrafficSignals &traffic_signals,
                   ScriptingEnvironment &scripting_environment,
                   std::vector<TurnRestriction> &turn_restrictions,
                   std::vector<UnresolvedManeuverOverride> &maneuver_overrides,

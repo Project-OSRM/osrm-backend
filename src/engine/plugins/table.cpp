@@ -2,17 +2,11 @@
 
 #include "engine/api/table_api.hpp"
 #include "engine/api/table_parameters.hpp"
-#include "engine/routing_algorithms/many_to_many.hpp"
-#include "engine/search_engine_data.hpp"
 #include "util/coordinate_calculation.hpp"
-#include "util/json_container.hpp"
 #include "util/string_util.hpp"
 
 #include <cstdlib>
 
-#include <algorithm>
-#include <memory>
-#include <string>
 #include <vector>
 
 #include <boost/assert.hpp>
@@ -47,7 +41,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error("InvalidOptions", "Coordinates are invalid", result);
     }
 
-    if (params.bearings.size() > 0 && params.coordinates.size() != params.bearings.size())
+    if (!params.bearings.empty() && params.coordinates.size() != params.bearings.size())
     {
         return Error(
             "InvalidOptions", "Number of bearings does not match number of coordinates", result);
@@ -79,7 +73,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             "NoSegment", MissingPhantomErrorMessage(phantom_nodes, params.coordinates), result);
     }
 
-    auto snapped_phantoms = SnapPhantomNodes(phantom_nodes);
+    auto snapped_phantoms = SnapPhantomNodes(std::move(phantom_nodes));
 
     bool request_distance = params.annotations & api::TableParameters::AnnotationsType::Distance;
     bool request_duration = params.annotations & api::TableParameters::AnnotationsType::Duration;
@@ -116,10 +110,12 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                     auto distance_estimate =
                         params.fallback_coordinate_type ==
                                 api::TableParameters::FallbackCoordinateType::Input
-                            ? util::coordinate_calculation::fccApproximateDistance(
-                                  source.input_location, destination.input_location)
-                            : util::coordinate_calculation::fccApproximateDistance(
-                                  source.location, destination.location);
+                            ? util::coordinate_calculation::greatCircleDistance(
+                                  candidatesInputLocation(source),
+                                  candidatesInputLocation(destination))
+                            : util::coordinate_calculation::greatCircleDistance(
+                                  candidatesSnappedLocation(source),
+                                  candidatesSnappedLocation(destination));
 
                     result_tables_pair.first[table_index] =
                         distance_estimate / (double)params.fallback_speed;

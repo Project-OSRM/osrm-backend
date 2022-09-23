@@ -7,13 +7,11 @@
 #include "util/log.hpp"
 
 #include "util/bearing.hpp"
-#include "util/coordinate_calculation.hpp"
 
 #include <algorithm>
 #include <cstddef>
 
 using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
-using osrm::guidance::getTurnDirection;
 using osrm::util::angularDeviation;
 
 namespace osrm
@@ -183,7 +181,7 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
                     // duration/weight of the traversal. We can only approximate the distance here
                     // or actually follow the full road. When 2399 lands, we can exchange here for a
                     // precalculated distance value.
-                    const auto distance = util::coordinate_calculation::haversineDistance(
+                    const auto distance = util::coordinate_calculation::greatCircleDistance(
                         node_coordinates[node_based_graph.GetTarget(via_edge)],
                         node_coordinates[node_based_graph.GetTarget(road.eid)]);
 

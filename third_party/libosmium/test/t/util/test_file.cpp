@@ -28,25 +28,25 @@ TEST_CASE("file_size(const char*) of known file") {
 }
 
 TEST_CASE("file_size() with illegal fd should throw") {
-    REQUIRE_THROWS_AS(osmium::file_size(-1), const std::system_error&);
+    REQUIRE_THROWS_AS(osmium::file_size(-1), std::system_error);
 }
 
 TEST_CASE("file_size() with unused fd should throw") {
     // its unlikely that fd 1000 is open...
-    REQUIRE_THROWS_AS(osmium::file_size(1000), const std::system_error&);
+    REQUIRE_THROWS_AS(osmium::file_size(1000), std::system_error);
 }
 
 TEST_CASE("file_size() of unknown file should throw") {
-    REQUIRE_THROWS_AS(osmium::file_size("unknown file"), const std::system_error&);
+    REQUIRE_THROWS_AS(osmium::file_size("unknown file"), std::system_error);
 }
 
 TEST_CASE("resize_file() with illegal fd should throw") {
-    REQUIRE_THROWS_AS(osmium::resize_file(-1, 10), const std::system_error&);
+    REQUIRE_THROWS_AS(osmium::resize_file(-1, 10), std::system_error);
 }
 
 TEST_CASE("resize_file() with unused fd should throw") {
     // its unlikely that fd 1000 is open...
-    REQUIRE_THROWS_AS(osmium::resize_file(1000, 10), const std::system_error&);
+    REQUIRE_THROWS_AS(osmium::resize_file(1000, 10), std::system_error);
 }
 
 TEST_CASE("get_pagesize()") {

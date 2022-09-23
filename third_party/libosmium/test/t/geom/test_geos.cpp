@@ -43,7 +43,7 @@ TEST_CASE("GEOS geometry factory - create point with externally created GEOS fac
 TEST_CASE("GEOS geometry factory - can not create from invalid location") {
     osmium::geom::GEOSFactory<> factory;
 
-    REQUIRE_THROWS_AS(factory.create_point(osmium::Location{}), const osmium::invalid_location&);
+    REQUIRE_THROWS_AS(factory.create_point(osmium::Location{}), osmium::invalid_location);
 }
 
 TEST_CASE("GEOS geometry factory - create linestring") {

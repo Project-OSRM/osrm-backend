@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_ENGINE_PHANTOM_NODES_H
 #define OSRM_ENGINE_PHANTOM_NODES_H
 
+#include <vector>
+
 #include "extractor/travel_mode.hpp"
 
 #include "util/bearing.hpp"
@@ -52,6 +54,7 @@ struct PhantomNode
           forward_distance_offset(0), reverse_distance_offset(0),
           forward_duration(MAXIMAL_EDGE_DURATION), reverse_duration(MAXIMAL_EDGE_DURATION),
           forward_duration_offset(0), reverse_duration_offset(0),
+          component({INVALID_COMPONENTID, 0}),
           fwd_segment_position(0), is_valid_forward_source{false}, is_valid_forward_target{false},
           is_valid_reverse_source{false}, is_valid_reverse_target{false}, bearing(0)
 
@@ -223,7 +226,8 @@ struct PhantomNode
 
 static_assert(sizeof(PhantomNode) == 80, "PhantomNode has more padding then expected");
 
-using PhantomNodePair = std::pair<PhantomNode, PhantomNode>;
+using PhantomNodeCandidates = std::vector<PhantomNode>;
+using PhantomCandidateAlternatives = std::pair<PhantomNodeCandidates, PhantomNodeCandidates>;
 
 struct PhantomNodeWithDistance
 {
@@ -231,11 +235,44 @@ struct PhantomNodeWithDistance
     double distance;
 };
 
-struct PhantomNodes
+struct PhantomEndpointCandidates
+{
+    const PhantomNodeCandidates &source_phantoms;
+    const PhantomNodeCandidates &target_phantoms;
+};
+
+struct PhantomCandidatesToTarget
+{
+    const PhantomNodeCandidates &source_phantoms;
+    const PhantomNode &target_phantom;
+};
+
+inline util::Coordinate candidatesSnappedLocation(const PhantomNodeCandidates &candidates)
+{
+    BOOST_ASSERT(!candidates.empty());
+    return candidates.front().location;
+}
+
+inline util::Coordinate candidatesInputLocation(const PhantomNodeCandidates &candidates)
+{
+    BOOST_ASSERT(!candidates.empty());
+    return candidates.front().input_location;
+}
+
+inline bool candidatesHaveComponent(const PhantomNodeCandidates &candidates, uint32_t component_id)
+{
+    return std::any_of(
+        candidates.begin(), candidates.end(), [component_id](const PhantomNode &node) {
+            return node.component.id == component_id;
+        });
+}
+
+struct PhantomEndpoints
 {
     PhantomNode source_phantom;
     PhantomNode target_phantom;
 };
+
 } // namespace engine
 } // namespace osrm
 

@@ -11,7 +11,6 @@
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
 
-using osrm::guidance::getTurnDirection;
 using osrm::util::angularDeviation;
 
 namespace
@@ -684,7 +683,7 @@ bool TurnHandler::isCompatibleByRoadClass(const Intersection &intersection, cons
 boost::optional<TurnHandler::Fork> TurnHandler::findFork(const EdgeID via_edge,
                                                          Intersection &intersection) const
 {
-    const auto fork = findForkCandidatesByGeometry(intersection);
+    auto fork = findForkCandidatesByGeometry(intersection);
     if (fork)
     {
         // makes sure that the fork is isolated from other neighbouring streets on the left and

@@ -20,12 +20,62 @@ env:
   ENABLE_NODE_BINDINGS: "ON"
 
 jobs:
+  windows:
+    needs: format-taginfo-docs
+    runs-on: windows-2022
+    continue-on-error: false
+    env:
+      BUILD_TYPE: Release
+      ENABLE_APPLE_SILICON: "OFF"
+    steps:
+    - uses: actions/checkout@v3
+    - run: pip install conan==1.51.3
+    - run: conan --version
+    - run: cmake --version
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - run: node --version
+    - run: npm --version
+    - name: Prepare environment
+      shell: bash
+      run: |
+        PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+        echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
+    - run: npm install --ignore-scripts
+    - run: npm link --ignore-scripts
+    - uses: microsoft/setup-msbuild@v1.1
+    - name: Build
+      run: |
+        .\scripts\ci\windows-build.bat
+    - name: Run node tests
+      shell: bash
+      run: |
+        ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
+        node test/nodejs/index.js
+    - name: Build Node package
+      shell: bash
+      run: ./scripts/ci/node_package.sh
+    - name: Publish Node package
+      if: ${{ env.PUBLISH == 'On' }}
+      uses: ncipollo/release-action@v1
+      with:
+        allowUpdates: true
+        artifactErrorsFailBuild: true
+        artifacts: build/stage/**/*.tar.gz
+        omitBody: true
+        omitBodyDuringUpdate: true
+        omitName: true
+        omitNameDuringUpdate: true
+        replacesArtifacts: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+
   format-taginfo-docs:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - name: Use Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: 12
     - name: Enable Node.js cache
@@ -48,6 +98,39 @@ jobs:
         node ./scripts/validate_changelog.js
         npm run docs && ./scripts/error_on_dirty.sh
 
+  docker-image:
+    needs: format-taginfo-docs
+    runs-on: ubuntu-22.04
+    continue-on-error: false
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+      - name: Enable osm.pbf cache
+        uses: actions/cache@v2
+        with:
+          path: berlin-latest.osm.pbf
+          key: v1-berlin-osm-pbf
+          restore-keys: |
+            v1-berlin-osm-pbf
+      - name: Docker build
+        run: |
+          docker build -t osrm-backend-local -f docker/Dockerfile .
+      - name: Test Docker image
+        run: |
+          if [ ! -f "${PWD}/berlin-latest.osm.pbf" ]; then
+            wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
+          fi
+          TAG=osrm-backend-local
+          # when `--memory-swap` value equals `--memory` it means container won't use swap
+          # see https://docs.docker.com/config/containers/resource_constraints/#--memory-swap-details
+          MEMORY_ARGS="--memory=1g --memory-swap=1g"
+          docker run $MEMORY_ARGS -t -v "${PWD}:/data" "${TAG}" osrm-extract -p /opt/car.lua /data/berlin-latest.osm.pbf
+          docker run $MEMORY_ARGS -t -v "${PWD}:/data" "${TAG}" osrm-partition /data/berlin-latest.osrm
+          docker run $MEMORY_ARGS -t -v "${PWD}:/data" "${TAG}" osrm-customize /data/berlin-latest.osrm
+          docker run $MEMORY_ARGS --name=osrm-container -t -p 5000:5000 -v "${PWD}:/data" "${TAG}" osrm-routed --algorithm mld /data/berlin-latest.osrm &
+          curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
+          docker stop osrm-container
+
   build-test-publish:
     needs: format-taginfo-docs
     strategy:
@@ -64,7 +147,7 @@ jobs:
             CXXCOMPILER: g++-9
             ENABLE_COVERAGE: ON
 
-          - name: gcc-9-debug-asan
+          - name: gcc-9-debug-asan-ubsan
             continue-on-error: false
             node: 12
             runs-on: ubuntu-20.04
@@ -74,35 +157,51 @@ jobs:
             CUCUMBER_TIMEOUT: 20000
             CXXCOMPILER: g++-9
             ENABLE_SANITIZER: ON
-            TARGET_ARCH: x86_64-asan
+            TARGET_ARCH: x86_64-asan-ubsan
+            OSRM_CONNECTION_RETRIES: 10
+            OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
-          - name: clang-5.0-debug
+          - name: clang-6.0-debug
             continue-on-error: false
             node: 12
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CLANG_VERSION: 5.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             CUCUMBER_TIMEOUT: 60000
 
-          - name: mason-linux-debug-asan
+          - name: clang-11.0-debug-clang-tidy
+            continue-on-error: false
+            node: 12
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-14
+            CXXCOMPILER: clang++-14
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_CLANG_TIDY: ON
+
+          - name: conan-linux-debug-asan-ubsan
             continue-on-error: false
             node: 12
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CLANG_VERSION: 5.0.0
-            ENABLE_MASON: ON
+            CCOMPILER: clang-11
+            CXXCOMPILER: clang++-11
+            ENABLE_CONAN: ON
             ENABLE_SANITIZER: ON
 
-          - name: mason-linux-release
+          - name: conan-linux-release
             continue-on-error: false
             node: 12
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CLANG_VERSION: 5.0.0
-            ENABLE_MASON: ON
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
+            ENABLE_CONAN: ON
 
           - name: gcc-11-release
             continue-on-error: false
@@ -132,7 +231,7 @@ jobs:
             CXXCOMPILER: g++-9
             CXXFLAGS: -Wno-cast-function-type
 
-          - name: gcc-9-release-i686
+          - name: gcc-9-conan-release-i686
             continue-on-error: false
             node: 12
             runs-on: ubuntu-20.04
@@ -143,7 +242,8 @@ jobs:
             CXXCOMPILER: g++-9
             CXXFLAGS: "-m32 -msse2 -mfpmath=sse"
             TARGET_ARCH: i686
-
+            ENABLE_CONAN: ON
+            
           - name: gcc-8-release
             continue-on-error: false
             node: 12
@@ -163,44 +263,58 @@ jobs:
             CCOMPILER: gcc-7
             CXXCOMPILER: g++-7
 
-          - name: mason-osx-release-node-12
+          - name: conan-macos-x64-release-node-12
             build_node_package: true
             continue-on-error: false
             node: 12
-            runs-on: macos-10.15
+            runs-on: macos-11
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
 
-          - name: mason-osx-release-node-14
+          - name: conan-macos-x64-release-node-14
             build_node_package: true
             continue-on-error: false
             node: 14
-            runs-on: macos-10.15
+            runs-on: macos-11
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
 
-          - name: mason-osx-release-node-16
+          - name: conan-macos-x64-release-node-16
             build_node_package: true
             continue-on-error: false
             node: 16
-            runs-on: macos-10.15
+            runs-on: macos-11
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
+
+          - name: conan-macos-arm64-release-node-16
+            build_node_package: true
+            continue-on-error: false
+            node: 16
+            runs-on: macos-11
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang
+            CXXCOMPILER: clang++
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_ASSERTIONS: ON
+            ENABLE_CONAN: ON
+            ENABLE_APPLE_SILICON: ON
 
           - name: gcc-7-release-shared
             continue-on-error: false
@@ -212,144 +326,176 @@ jobs:
             CCOMPILER: gcc-7
             CXXCOMPILER: g++-7
 
-          - name: node-12-mason-linux-release
+          - name: node-12-conan-linux-release
             build_node_package: true
             continue-on-error: false
             node: 12
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
-            CLANG_VERSION: 5.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-12-mason-linux-debug
+          - name: node-12-conan-linux-debug
             build_node_package: true
             continue-on-error: false
             node: 12
             runs-on: ubuntu-20.04
             BUILD_TYPE: Debug
-            CLANG_VERSION: 5.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-14-mason-linux-release
+          - name: node-14-conan-linux-release
             build_node_package: true
             continue-on-error: false
             node: 14
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
-            CLANG_VERSION: 5.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-14-mason-linux-debug
+          - name: node-14-conan-linux-debug
             build_node_package: true
             continue-on-error: false
             node: 14
             runs-on: ubuntu-20.04
             BUILD_TYPE: Debug
-            CLANG_VERSION: 5.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
 
-          - name: node-16-mason-linux-release
+          - name: node-16-conan-linux-release
             build_node_package: true
             continue-on-error: false
             node: 16
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
-            CLANG_VERSION: 5.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-16-mason-linux-debug
+          - name: node-16-conan-linux-debug
             build_node_package: true
             continue-on-error: false
             node: 16
             runs-on: ubuntu-20.04
             BUILD_TYPE: Debug
-            CLANG_VERSION: 5.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: mason-osx-release-node-latest
+          - name: conan-macos-x64-release-node-latest
             build_node_package: true
             continue-on-error: true
-            # TODO: Use node 'latest' once supported: https://github.com/actions/setup-node/issues/257
-            node: 16
-            runs-on: macos-10.15
+            node: latest
+            runs-on: macos-11
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
 
-          - name: node-latest-mason-linux-release
+          - name: conan-macos-arm64-release-node-latest
             build_node_package: true
             continue-on-error: true
-            # TODO: Use node 'latest' once supported: https://github.com/actions/setup-node/issues/257
-            node: 16
-            runs-on: ubuntu-20.04
-            BUILD_TYPE: Release
-            CLANG_VERSION: 5.0.0
-            ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
-
-          - name: node-latest-mason-linux-debug
-            build_node_package: true
-            continue-on-error: true
-            # TODO: Use node 'latest' once supported: https://github.com/actions/setup-node/issues/257
-            node: 16
-            runs-on: ubuntu-20.04
-            BUILD_TYPE: Debug
-            CLANG_VERSION: 5.0.0
-            ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
-
-          - name: mason-osx-release-node-lts
-            build_node_package: true
-            continue-on-error: true
-            node: "lts/*"
-            runs-on: macos-10.15
+            node: latest
+            runs-on: macos-11
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
+            ENABLE_APPLE_SILICON: ON
 
-          - name: node-lts-mason-linux-release
+          - name: node-latest-conan-linux-release
+            build_node_package: true
+            continue-on-error: true
+            node: latest
+            runs-on: ubuntu-20.04
+            BUILD_TYPE: Release
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
+            ENABLE_GLIBC_WORKAROUND: ON
+            ENABLE_CONAN: ON
+            NODE_PACKAGE_TESTS_ONLY: ON
+
+          - name: node-latest-conan-linux-debug
+            build_node_package: true
+            continue-on-error: true
+            node: latest
+            runs-on: ubuntu-20.04
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
+            ENABLE_GLIBC_WORKAROUND: ON
+            ENABLE_CONAN: ON
+            NODE_PACKAGE_TESTS_ONLY: ON
+
+          - name: conan-macos-x64-release-node-lts
+            build_node_package: true
+            continue-on-error: true
+            node: "lts/*"
+            runs-on: macos-11
+            BUILD_TYPE: Release
+            CCOMPILER: clang
+            CXXCOMPILER: clang++
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_ASSERTIONS: ON
+            ENABLE_CONAN: ON
+          
+          - name: conan-macos-arm64-release-node-lts
+            build_node_package: true
+            continue-on-error: true
+            node: "lts/*"
+            runs-on: macos-11
+            BUILD_TYPE: Release
+            CCOMPILER: clang
+            CXXCOMPILER: clang++
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_ASSERTIONS: ON
+            ENABLE_CONAN: ON
+            ENABLE_APPLE_SILICON: ON
+
+          - name: node-lts-conan-linux-release
             build_node_package: true
             continue-on-error: true
             node: "lts/*"
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
-            CLANG_VERSION: 5.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-lts-mason-linux-debug
+          - name: node-lts-conan-linux-debug
             build_node_package: true
             continue-on-error: true
             node: "lts/*"
             runs-on: ubuntu-20.04
             BUILD_TYPE: Debug
-            CLANG_VERSION: 5.0.0
+            CCOMPILER: clang-6.0
+            CXXCOMPILER: clang++-6.0
             ENABLE_GLIBC_WORKAROUND: ON
-            ENABLE_MASON: ON
+            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
-
 
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
@@ -360,22 +506,25 @@ jobs:
       BUILD_SHARED_LIBS: ${{ matrix.BUILD_SHARED_LIBS }}
       CCOMPILER: ${{ matrix.CCOMPILER }}
       CFLAGS: ${{ matrix.CFLAGS }}
-      CLANG_VERSION: ${{ matrix.CLANG_VERSION }}
       CUCUMBER_TIMEOUT: ${{ matrix.CUCUMBER_TIMEOUT }}
       CXXCOMPILER: ${{ matrix.CXXCOMPILER }}
       CXXFLAGS: ${{ matrix.CXXFLAGS }}
       ENABLE_ASSERTIONS: ${{ matrix.ENABLE_ASSERTIONS }}
+      ENABLE_CLANG_TIDY: ${{ matrix.ENABLE_CLANG_TIDY }}
       ENABLE_COVERAGE: ${{ matrix.ENABLE_COVERAGE }}
       ENABLE_GLIBC_WORKAROUND: ${{ matrix.ENABLE_GLIBC_WORKAROUND }}
-      ENABLE_MASON: ${{ matrix.ENABLE_MASON }}
+      ENABLE_CONAN: ${{ matrix.ENABLE_CONAN }}
       ENABLE_SANITIZER: ${{ matrix.ENABLE_SANITIZER }}
       NODE_PACKAGE_TESTS_ONLY: ${{ matrix.NODE_PACKAGE_TESTS_ONLY }}
+      ENABLE_APPLE_SILICON: ${{ matrix.ENABLE_APPLE_SILICON }}
       TARGET_ARCH: ${{ matrix.TARGET_ARCH }}
+      OSRM_CONNECTION_RETRIES: ${{ matrix.OSRM_CONNECTION_RETRIES }}
+      OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
     steps:
     - uses: actions/checkout@v2
 
     - name: Use Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node }}
     - name: Enable Node.js cache
@@ -392,25 +541,31 @@ jobs:
         key: ccache-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
           ccache-${{ matrix.name }}-
+    - name: Enable Conan cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.conan
+        key: v6-conan-${{ matrix.name }}-${{ github.sha }}
+        restore-keys: |
+          v6-conan-${{ matrix.name }}-
     - name: Enable test cache
       uses: actions/cache@v2
       with:
         path: ${{github.workspace}}/test/cache
-        key: test-${{ matrix.name }}-${{ github.sha }}
+        key: v3-test-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
-          test-${{ matrix.name }}-
-
+          v3-test-${{ matrix.name }}-
+      
     - name: Prepare environment
       run: |
         PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
         echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
-
         echo "OSRM_INSTALL_DIR=${GITHUB_WORKSPACE}/install-osrm" >> $GITHUB_ENV
         echo "OSRM_BUILD_DIR=${GITHUB_WORKSPACE}/build-osrm" >> $GITHUB_ENV
-
         if [[ "$ENABLE_SANITIZER" == 'ON' ]]; then
           # We can only set this after checkout once we know the workspace directory
           echo "LSAN_OPTIONS=print_suppressions=0:suppressions=${GITHUB_WORKSPACE}/scripts/ci/leaksanitizer.conf" >> $GITHUB_ENV
+          echo "UBSAN_OPTIONS=symbolize=1:halt_on_error=1:print_stacktrace=1:suppressions=${GITHUB_WORKSPACE}/scripts/ci/undefinedsanitizer.conf" >> $GITHUB_ENV
         fi
 
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
@@ -421,48 +576,40 @@ jobs:
           sudo mdutil -i off /
           export MASON_OS=osx
         fi
-
         echo "MASON=${GITHUB_WORKSPACE}/scripts/mason.sh" >> $GITHUB_ENV
+
         echo "CMAKE_URL=https://mason-binaries.s3.amazonaws.com/${MASON_OS}-x86_64/cmake/${CMAKE_VERSION}.tar.gz" >> $GITHUB_ENV
         echo "CMAKE_DIR=mason_packages/${MASON_OS}-x86_64/cmake/${CMAKE_VERSION}" >> $GITHUB_ENV
-
-
     - name: Install dev dependencies
       run: |
+        python3 -m pip install conan==1.51.3
+
         # CMake
         mkdir -p ${CMAKE_DIR}
         wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${CMAKE_DIR}
         echo "${CMAKE_DIR}/bin" >> $GITHUB_PATH
-
-        # TBB
-        ${MASON} install tbb 2017_U7
-        echo "LD_LIBRARY_PATH=$(${MASON} prefix tbb 2017_U7)/lib/:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
 
         # ccache
         ${MASON} install ccache ${CCACHE_VERSION}
         echo "$(${MASON} prefix ccache ${CCACHE_VERSION})/bin" >> $GITHUB_PATH
 
         # clang
-        if [[ -n ${CLANG_VERSION} ]]; then
-          echo "CCOMPILER=clang" >> $GITHUB_ENV
-          echo "CXXCOMPILER=clang++" >> $GITHUB_ENV
-          ${MASON} install clang++ ${CLANG_VERSION}
-          echo "$(${MASON} prefix clang++ ${CLANG_VERSION})/bin" >> $GITHUB_PATH
-          # we only enable lto for release builds
-          # and therefore don't need to us ld.gold or llvm tools for linking
-          # for debug builds
-          if [[ ${BUILD_TYPE} == 'Release' ]]; then
-            ${MASON} install binutils 2.27
-            echo "$(${MASON} prefix binutils 2.27)/bin" >> $GITHUB_PATH
-          fi
+        if [[ "${CCOMPILER}" == "clang-6.0" ]]; then
+          sudo apt-get update -y && sudo apt-get install clang++-6
         fi
-
+        # we only enable lto for release builds
+        # and therefore don't need to us ld.gold or llvm tools for linking
+        # for debug builds
+        if [[ "${CCOMPILER}" == clang-* ]] && [[ ${BUILD_TYPE} == 'Release' ]]; then
+          ${MASON} install binutils 2.27
+          echo "$(${MASON} prefix binutils 2.27)/bin" >> $GITHUB_PATH
+        fi
+      
         # Linux dev packages
-        if [ "${TARGET_ARCH}" != "i686" ] && [ "${ENABLE_MASON}" != "ON" ]; then
-          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+        if [ "${TARGET_ARCH}" != "i686" ] && [ "${ENABLE_CONAN}" != "ON" ]; then
           sudo apt-get update -y
-          sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev libtbb-dev libboost-all-dev
-          if [[ -z "${CLANG_VERSION}" ]]; then
+          sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev libboost-all-dev
+          if [[ "${CCOMPILER}" != clang-* ]]; then
             sudo apt-get install -y ${CXXCOMPILER}
           fi
           if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
@@ -472,6 +619,18 @@ jobs:
           source ./scripts/ci/before_install.${TARGET_ARCH}.sh
           echo "PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig:${PKG_CONFIG_PATH}" >> $GITHUB_ENV
         fi
+
+        # TBB
+        TBB_VERSION=2021.3.0
+        if [[ "${RUNNER_OS}" == "Linux" ]]; then
+          TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz"
+        elif [[ "${RUNNER_OS}" == "macOS" ]]; then
+          TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-mac.tgz"
+        fi
+        wget --tries 5 ${TBB_URL} -O onetbb.tgz
+        tar zxvf onetbb.tgz
+        sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
+        sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
 
     - name: Prepare build
       run: |
@@ -488,9 +647,22 @@ jobs:
       run: |
         echo "Using ${JOBS} jobs"
         pushd ${OSRM_BUILD_DIR}
+
+        # handle Apple Silicon cross compilation
+        if [[ "${ENABLE_APPLE_SILICON}" == "ON" ]]; then
+          ARCH=arm64
+          TARGET="${ARCH}-apple-darwin"
+          CFLAGS="$CFLAGS --target=$TARGET"
+          CXXFLAGS="$CXXFLAGS --target=$TARGET"
+          APPLE_SILICON_FLAGS=(-DCMAKE_C_COMPILER_TARGET="$TARGET" -DCMAKE_CXX_COMPILER_TARGET="$TARGET" -DCMAKE_SYSTEM_PROCESSOR="${ARCH}" -DCMAKE_SYSTEM_NAME="Darwin" -DCMAKE_C_FLAGS="$CFLAGS" -DCMAKE_CXX_FLAGS="$CXXFLAGS")
+        else
+          APPLE_SILICON_FLAGS=()
+        fi
+
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-                 -DENABLE_MASON=${ENABLE_MASON:-OFF} \
-                 -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF}} \
+                 -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
+                 -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
+                 -DENABLE_CLANG_TIDY=${ENABLE_CLANG_TIDY:-OFF} \
                  -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} \
                  -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} \
                  -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
@@ -498,10 +670,11 @@ jobs:
                  -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
                  -DENABLE_CCACHE=ON \
                  -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
-                 -DENABLE_GLIBC_WORKAROUND=${ENABLE_GLIBC_WORKAROUND:-OFF}
+                 -DENABLE_GLIBC_WORKAROUND=${ENABLE_GLIBC_WORKAROUND:-OFF} \
+                 "${APPLE_SILICON_FLAGS[@]}"
         make --jobs=${JOBS}
 
-        if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
+        if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" && "${ENABLE_APPLE_SILICON}" != "ON" ]]; then
           make tests --jobs=${JOBS}
           make benchmarks --jobs=${JOBS}
           ccache -s
@@ -513,7 +686,7 @@ jobs:
         fi
         popd
     - name: Build example
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
       run: |
         mkdir example/build && pushd example/build
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
@@ -521,7 +694,7 @@ jobs:
         popd
 
     - name: Run all tests
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
       run: |
         make -C test/data benchmark
 
@@ -538,9 +711,15 @@ jobs:
         popd
         npm test
     - name: Run Node package tests only
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
       run: |
         npm run nodejs-tests
+    - name: Upload test logs
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: logs
+        path: test/logs/
 
     - name: Generate code coverage
       if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
@@ -557,9 +736,17 @@ jobs:
         name: codecov-osrm-backend
         fail_ci_if_error: true
         verbose: true
-
+    - name: Check Apple Silicon binary
+      if: ${{  matrix.ENABLE_APPLE_SILICON == 'ON' }}
+      run: |
+        ARCH=$(file ./lib/binding/node_osrm.node | awk '{printf $NF}')
+        if [[ "$ARCH" != "arm64" ]]; then
+          file ./lib/binding/node_osrm.node
+          >&2 echo "Wrong architecture!"
+          exit 1
+        fi
     - name: Build Node package
-      if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
+      if: ${{ matrix.build_node_package }}
       run: ./scripts/ci/node_package.sh
     - name: Publish Node package
       if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
@@ -576,7 +763,7 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
 
   ci-complete:
-    runs-on: ubuntu-18.04
-    needs: build-test-publish
+    runs-on: ubuntu-22.04
+    needs: [build-test-publish, docker-image, windows]
     steps:
     - run: echo "CI complete"

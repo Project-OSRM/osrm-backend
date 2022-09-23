@@ -4,7 +4,18 @@ var data_path = require('./constants').data_path;
 var mld_data_path = require('./constants').mld_data_path;
 var three_test_coordinates = require('./constants').three_test_coordinates;
 var two_test_coordinates = require('./constants').two_test_coordinates;
+const flatbuffers = require('../../features/support/flatbuffers').flatbuffers;
+const FBResult = require('../../features/support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
 
+test('trip: trip in Monaco with flatbuffers format', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM(data_path);
+    osrm.trip({coordinates: two_test_coordinates, format: 'flatbuffers'}, function(err, trip) {
+        assert.ifError(err);
+        const fb = FBResult.getRootAsFBResult(new flatbuffers.ByteBuffer(trip));
+        assert.equal(fb.routesLength(), 1);
+    });
+});
 
 test('trip: trip in Monaco', function(assert) {
     assert.plan(2);
@@ -262,33 +273,19 @@ test('trip: routes Monaco with null hints', function(assert) {
 });
 
 test('trip: service combinations that are not implemented', function(assert) {
-    assert.plan(3);
+    assert.plan(1);
     var osrm = new OSRM(data_path);
 
-    // fixed start, non-roundtrip
+    // no fixed start, no fixed end, non-roundtrip
     var options = {
         coordinates: two_test_coordinates,
-        source: 'first',
+        source: 'any',
+        destination: 'any',
         roundtrip: false
     };
     osrm.trip(options, function(err, second) {
         assert.equal('NotImplemented', err.message);
     });
-
-    // fixed start, fixed end, non-roundtrip
-    options.source = 'any';
-    options.destination = 'any';
-    osrm.trip(options, function(err, second) {
-        assert.equal('NotImplemented', err.message);
-    });
-
-    // fixed end, non-roundtrip
-    delete options.source;
-    options.destination = 'last';
-    osrm.trip(options, function(err, second) {
-        assert.equal('NotImplemented', err.message);
-    });
-
 });
 
 test('trip: fixed start and end combinations', function(assert) {
@@ -302,16 +299,17 @@ test('trip: fixed start and end combinations', function(assert) {
         geometries: 'geojson'
     };
 
-    // fixed start and end, non-roundtrip
-    osrm.trip(options, function(err, fseTrip) {
-        assert.ifError(err);
-        assert.equal(1, fseTrip.trips.length);
-        var coordinates = fseTrip.trips[0].geometry.coordinates;
-        assert.notEqual(JSON.stringify(coordinates[0]), JSON.stringify(coordinates[coordinates.length - 1]));
-    });
+    // variations of non roundtrip
+    var nonRoundtripChecks = function(options) {
+        osrm.trip(options, function(err, fseTrip) {
+            assert.ifError(err);
+            assert.equal(1, fseTrip.trips.length);
+            var coordinates = fseTrip.trips[0].geometry.coordinates;
+            assert.notEqual(JSON.stringify(coordinates[0]), JSON.stringify(coordinates[coordinates.length - 1]));
+        });
+    };
 
     // variations of roundtrip
-
     var roundtripChecks = function(options) {
         osrm.trip(options, function(err, trip) {
             assert.ifError(err);
@@ -319,7 +317,20 @@ test('trip: fixed start and end combinations', function(assert) {
             var coordinates = trip.trips[0].geometry.coordinates;
             assert.equal(JSON.stringify(coordinates[0]), JSON.stringify(coordinates[coordinates.length - 1]));
         });
-    }
+    };
+
+    // fixed start and end, non-roundtrip
+    nonRoundtripChecks(options);
+
+    // fixed start, non-roundtrip
+    delete options.destination;
+    options.source = 'first';
+    nonRoundtripChecks(options);
+
+    // fixed end, non-roundtrip
+    delete options.source;
+    options.destination = 'last';
+    nonRoundtripChecks(options);
 
     // roundtrip, source and destination not specified
     roundtripChecks({coordinates: options.coordinates, geometries: options.geometries});
@@ -327,6 +338,7 @@ test('trip: fixed start and end combinations', function(assert) {
     // roundtrip, fixed destination
     options.roundtrip = true;
     delete options.source;
+    options.destination = 'last';
     roundtripChecks(options);
 
     //roundtrip, fixed source

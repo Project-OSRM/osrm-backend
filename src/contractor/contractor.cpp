@@ -35,12 +35,7 @@
 #include <vector>
 
 #include <boost/assert.hpp>
-
-#if TBB_VERSION_MAJOR == 2020
 #include <tbb/global_control.h>
-#else
-#include <tbb/task_scheduler_init.h>
-#endif
 
 namespace osrm
 {
@@ -49,13 +44,8 @@ namespace contractor
 
 int Contractor::Run()
 {
-#if TBB_VERSION_MAJOR == 2020
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
-#else
-    tbb::task_scheduler_init init(config.requested_num_threads);
-    BOOST_ASSERT(init.is_active());
-#endif
 
     if (config.core_factor != 1.0)
     {
@@ -115,7 +105,7 @@ int Contractor::Run()
     std::tie(query_graph, edge_filters) = contractExcludableGraph(
         toContractorGraph(number_of_edge_based_nodes, std::move(edge_based_edge_list)),
         std::move(node_weights),
-        std::move(node_filters));
+        node_filters);
     TIMER_STOP(contraction);
     util::Log() << "Contracted graph has " << query_graph.GetNumberOfEdges() << " edges.";
     util::Log() << "Contraction took " << TIMER_SEC(contraction) << " sec";

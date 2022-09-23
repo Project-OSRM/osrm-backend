@@ -46,10 +46,10 @@ Feature: Car - Handle ferry routes
 
         When I route I should get
             | from | to | route           | modes                         | speed   | time    |
-            | a    | g  | abc,cde,efg,efg | driving,ferry,driving,driving | 12 km/h | 173.4s  |
-            | b    | f  | abc,cde,efg,efg | driving,ferry,driving,driving | 9 km/h  | 162.4s  |
-            | c    | e  | cde,cde         | ferry,ferry                   | 5 km/h  | 151.4s  |
-            | e    | c  | cde,cde         | ferry,ferry                   | 5 km/h  | 151.4s  |
+            | a    | g  | abc,cde,efg,efg | driving,ferry,driving,driving | 12 km/h | 173.5s  |
+            | b    | f  | abc,cde,efg,efg | driving,ferry,driving,driving | 9 km/h  | 162.5s  |
+            | c    | e  | cde,cde         | ferry,ferry                   | 5 km/h  | 151.5s  |
+            | e    | c  | cde,cde         | ferry,ferry                   | 5 km/h  | 151.5s  |
 
     Scenario: Car - Properly handle simple durations
         Given the node map
@@ -117,4 +117,4 @@ Feature: Car - Handle ferry routes
         # Note that matching *should* work across unsnappable ferries
         When I match I should get
           | trace | geometry             | duration |
-          | abcdef| 1,1,1.000899,1,1.000899,1,1.002697,1,1.002697,1,1.003596,1,1.003596,1,1.005394,1,1.005394,1,1.006293,1 | 610.9      |
+          | abcdef| 1,1,1.000898,1,1.000898,1,1.002695,1,1.002695,1,1.003594,1,1.003594,1,1.005391,1,1.005391,1,1.006289,1 | 611      |

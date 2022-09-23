@@ -236,11 +236,7 @@ template <typename ElementT> class DeallocatingVector
         // Delete[]'ing ptr's to all Buckets
         for (auto bucket : bucket_list)
         {
-            if (nullptr != bucket)
-            {
-                delete[] bucket;
-                bucket = nullptr;
-            }
+            delete[] bucket;
         }
         bucket_list.clear();
         bucket_list.shrink_to_fit();

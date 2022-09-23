@@ -53,8 +53,8 @@ Feature: Car - Allowed start/end modes
 
         When I request a travel time matrix I should get
             |   | 2    | c    |
-            | 1 | 59.1 | 35.1 |
-            | b | 35.1 | 11.1 |
+            | 1 | 59.1 | 35.2 |
+            | b | 35   | 11.1 |
 
         When I route I should get
             | from | to | route    |
@@ -121,5 +121,5 @@ Feature: Car - Allowed start/end modes
 
         When I request a travel time matrix I should get
             |   | 2    | c    |
-            | 1 | 59.1 | 35.1 |
-            | b | 35.1 | 11.1 |
+            | 1 | 59.1 | 35.2 |
+            | b | 35   | 11.1 |

@@ -70,6 +70,7 @@ namespace
 
 template <typename T> inline bool is_aligned(const void *pointer)
 {
+    // NOLINTNEXTLINE(misc-redundant-expression)
     static_assert(sizeof(T) % alignof(T) == 0, "pointer can not be used as an array pointer");
     return reinterpret_cast<uintptr_t>(pointer) % alignof(T) == 0;
 }
@@ -112,6 +113,7 @@ void checkWeightsConsistency(
         if (geometry_id.forward)
         {
             auto range = segment_data.GetForwardWeights(geometry_id.id);
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             EdgeWeight weight = std::accumulate(range.begin(), range.end(), EdgeWeight{0});
             if (weight > edge.data.weight)
             {
@@ -122,6 +124,7 @@ void checkWeightsConsistency(
         else
         {
             auto range = segment_data.GetReverseWeights(geometry_id.id);
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             EdgeWeight weight = std::accumulate(range.begin(), range.end(), EdgeWeight{0});
             if (weight > edge.data.weight)
             {
@@ -141,7 +144,7 @@ updateSegmentData(const UpdaterConfig &config,
                   const SegmentLookupTable &segment_speed_lookup,
                   extractor::SegmentDataContainer &segment_data,
                   std::vector<util::Coordinate> &coordinates,
-                  extractor::PackedOSMIDs &osm_node_ids)
+                  const extractor::PackedOSMIDs &osm_node_ids)
 {
     // vector to count used speeds for logging
     // size offset by one since index 0 is used for speeds not from external file
@@ -419,7 +422,7 @@ updateTurnPenalties(const UpdaterConfig &config,
                     const TurnLookupTable &turn_penalty_lookup,
                     std::vector<TurnPenalty> &turn_weight_penalties,
                     std::vector<TurnPenalty> &turn_duration_penalties,
-                    extractor::PackedOSMIDs osm_node_ids)
+                    const extractor::PackedOSMIDs &osm_node_ids)
 {
     const auto weight_multiplier = profile_properties.GetWeightMultiplier();
 
@@ -502,7 +505,7 @@ bool IsRestrictionValid(const Timezoner &tz_handler, const extractor::Conditiona
 std::vector<std::uint64_t>
 updateConditionalTurns(std::vector<TurnPenalty> &turn_weight_penalties,
                        const std::vector<extractor::ConditionalTurnPenalty> &conditional_turns,
-                       Timezoner time_zone_handler)
+                       const Timezoner &time_zone_handler)
 {
     std::vector<std::uint64_t> updated_turns;
     if (conditional_turns.size() == 0)
@@ -689,6 +692,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                 new_weight += weight;
             }
             const auto durations = segment_data.GetForwardDurations(geometry_id.id);
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             new_duration = std::accumulate(durations.begin(), durations.end(), EdgeWeight{0});
         }
         else
@@ -704,6 +708,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                 new_weight += weight;
             }
             const auto durations = segment_data.GetReverseDurations(geometry_id.id);
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             new_duration = std::accumulate(durations.begin(), durations.end(), EdgeWeight{0});
         }
         return std::make_tuple(new_weight, new_duration);

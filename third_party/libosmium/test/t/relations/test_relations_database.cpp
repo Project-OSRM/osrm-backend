@@ -9,7 +9,7 @@
 
 osmium::memory::Buffer fill_buffer() {
     using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
-    osmium::memory::Buffer buffer{1024 * 1024, osmium::memory::Buffer::auto_grow::yes};
+    osmium::memory::Buffer buffer{1024UL * 1024UL, osmium::memory::Buffer::auto_grow::yes};
 
     osmium::builder::add_relation(buffer,
         _id(1),
@@ -53,7 +53,7 @@ TEST_CASE("Fill relation database") {
     int n = 0;
     rdb.for_each_relation([&](const osmium::relations::RelationHandle& rel_handle) {
         ++n;
-        REQUIRE(rel_handle->members().size() == (*rel_handle).id());
+        REQUIRE(rel_handle->members().size() == static_cast<std::size_t>(rel_handle->id()));
     });
     REQUIRE(n == 3);
 }

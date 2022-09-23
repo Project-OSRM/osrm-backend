@@ -19,10 +19,11 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
     const boost::filesystem::path &input_file,
     ScriptingEnvironment &scripting_environment,
     std::vector<TurnRestriction> &turn_restrictions,
-    std::vector<UnresolvedManeuverOverride> &maneuver_overrides)
+    std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
+    const TrafficSignals &traffic_signals)
 {
     LoadDataFromFile(input_file);
-    Compress(scripting_environment, turn_restrictions, maneuver_overrides);
+    Compress(scripting_environment, turn_restrictions, maneuver_overrides, traffic_signals);
     CompressGeometry();
     CompressAnnotationData();
 }
@@ -31,16 +32,10 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
 void NodeBasedGraphFactory::LoadDataFromFile(const boost::filesystem::path &input_file)
 {
     auto barriers_iter = inserter(barriers, end(barriers));
-    auto traffic_signals_iter = inserter(traffic_signals, end(traffic_signals));
     std::vector<NodeBasedEdge> edge_list;
 
-    files::readRawNBGraph(input_file,
-                          barriers_iter,
-                          traffic_signals_iter,
-                          coordinates,
-                          osm_node_ids,
-                          edge_list,
-                          annotation_data);
+    files::readRawNBGraph(
+        input_file, barriers_iter, coordinates, osm_node_ids, edge_list, annotation_data);
 
     const auto number_of_node_based_nodes = coordinates.size();
     if (edge_list.empty())
@@ -80,7 +75,8 @@ void NodeBasedGraphFactory::LoadDataFromFile(const boost::filesystem::path &inpu
 
 void NodeBasedGraphFactory::Compress(ScriptingEnvironment &scripting_environment,
                                      std::vector<TurnRestriction> &turn_restrictions,
-                                     std::vector<UnresolvedManeuverOverride> &maneuver_overrides)
+                                     std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
+                                     const TrafficSignals &traffic_signals)
 {
     GraphCompressor graph_compressor;
     graph_compressor.Compress(barriers,

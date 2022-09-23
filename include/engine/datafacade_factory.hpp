@@ -65,7 +65,7 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
 
         for (const auto &exclude_prefix : exclude_prefixes)
         {
-            auto index_begin = exclude_prefix.find_last_of("/");
+            auto index_begin = exclude_prefix.find_last_of('/');
             BOOST_ASSERT_MSG(index_begin != std::string::npos,
                              "The exclude prefix needs to be a valid data path.");
             std::size_t index =

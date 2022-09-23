@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -32,8 +32,6 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
-
-#include <osmium/util/compatibility.hpp>
 
 namespace osmium {
 
@@ -133,16 +131,6 @@ namespace osmium {
             explicit AssemblerConfig(ProblemReporter* pr, bool d = false) :
                 problem_reporter(pr),
                 debug_level(d) {
-            }
-
-            /**
-             * Enable or disable debug output to stderr. This is for Osmium
-             * developers only.
-             *
-             * @deprecated Set debug_level directly.
-             */
-            OSMIUM_DEPRECATED void enable_debug_output(bool d = true) {
-                debug_level = d;
             }
 
         }; // struct AssemblerConfig

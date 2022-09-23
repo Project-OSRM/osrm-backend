@@ -301,7 +301,7 @@ struct DistanceToNextIntersectionAccumulator
         using namespace util::coordinate_calculation;
 
         const auto coords = extractor.GetForwardCoordinatesAlongRoad(start, onto);
-        distance += getLength(coords.begin(), coords.end(), &haversineDistance);
+        distance += getLength(coords.begin(), coords.end(), &greatCircleDistance);
     }
 
     const extractor::intersection::CoordinateExtractor &extractor;

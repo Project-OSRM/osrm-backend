@@ -4,6 +4,7 @@
 
 #include <osmium/geom/tile.hpp>
 
+#include <cmath>
 #include <sstream>
 
 TEST_CASE("Helper functions") {
@@ -98,13 +99,15 @@ TEST_CASE("Tile order") {
 }
 
 TEST_CASE("Check a random list of tiles") {
-    std::istringstream input_data(s);
+    std::istringstream input_data{s};
+
+    int n = 0;
     while (input_data) {
-        double lon;
-        double lat;
-        uint32_t x;
-        uint32_t y;
-        uint32_t zoom;
+        double lon = NAN;
+        double lat = NAN;
+        uint32_t x = 0;
+        uint32_t y = 0;
+        uint32_t zoom = 0;
 
         input_data >> lon;
         input_data >> lat;
@@ -112,11 +115,19 @@ TEST_CASE("Check a random list of tiles") {
         input_data >> y;
         input_data >> zoom;
 
+        if (std::isnan(lon)) {
+            break;
+        }
+
         osmium::Location l{lon, lat};
         osmium::geom::Tile t{zoom, l};
         REQUIRE(t.x == x);
         REQUIRE(t.y == y);
+
+        ++n;
     }
+
+    REQUIRE(n == 472);
 }
 
 TEST_CASE("Invalid tiles") {

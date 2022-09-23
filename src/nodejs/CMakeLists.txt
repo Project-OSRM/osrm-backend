@@ -14,7 +14,10 @@ nodejs_init()
 message(STATUS "Configuring node_osrm bindings for NodeJs ${NODEJS_VERSION}")
 
 add_nodejs_module(node_osrm node_osrm.cpp)
-set_target_properties(node_osrm PROPERTIES CXX_STANDARD 14)
+set_target_properties(node_osrm PROPERTIES CXX_STANDARD 17)
+# TODO: we disable clang-tidy for this target, because it causes errors in third-party NodeJs related headers
+set_target_properties(node_osrm PROPERTIES CXX_CLANG_TIDY "")
+
 target_link_libraries(node_osrm osrm)
 
 # node_osrm artifacts in ${BINDING_DIR} to depend targets on
@@ -30,8 +33,8 @@ endforeach(binary)
 
 # For mason-enabled builds we copy over tbb's shared objects for packaging.
 # TODO: consider using statically linked tbb library (for node_osrm only!)
-if (ENABLE_MASON)
-  foreach(libpath ${MASON_PACKAGE_tbb_LIBRARY_DIRS})
+if (ENABLE_CONAN)
+  foreach(libpath ${CONAN_LIB_DIRS_ONETBB})
     file(GLOB TBBGlob ${libpath}/*.*)
     foreach(filepath ${TBBGlob})
       get_filename_component(filename ${filepath} NAME)

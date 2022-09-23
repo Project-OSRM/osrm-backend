@@ -119,9 +119,15 @@ ManeuverOverrideRelationParser::TryParse(const osmium::Relation &relation) const
 
     if (valid_relation)
     {
-        maneuver_override.via_ways.push_back(from);
-        std::copy(via_ways.begin(), via_ways.end(), std::back_inserter(maneuver_override.via_ways));
-        maneuver_override.via_ways.push_back(to);
+        if (via_ways.empty())
+        {
+            maneuver_override.turn_path.node_or_way = InputViaNodePath{{from}, {via_node}, {to}};
+        }
+        else
+        {
+            maneuver_override.turn_path.node_or_way =
+                InputViaWayPath{{from}, std::move(via_ways), {to}};
+        }
         maneuver_override.via_node = via_node;
     }
     else

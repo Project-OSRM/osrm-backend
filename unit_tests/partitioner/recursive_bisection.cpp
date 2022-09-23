@@ -7,15 +7,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-// make sure not to leak in recursive bisection
-#if TBB_VERSION_MAJOR == 2020
-#include <tbb/global_control.h>
-tbb::global_control scheduler(tbb::global_control::max_allowed_parallelism, 2);
-#else
-#include <tbb/task_scheduler_init.h>
-tbb::task_scheduler_init init(2);
-#endif
-
 using namespace osrm::partitioner;
 using namespace osrm::util;
 
@@ -72,7 +63,7 @@ BOOST_AUTO_TEST_CASE(dividing_four_grid_cells)
 
     RecursiveBisection bisection(graph, 120, 1.1, 0.25, 10, 1);
 
-    const auto result = bisection.BisectionIDs();
+    const auto &result = bisection.BisectionIDs();
     // all same IDs withing a group
     for (int i = 0; i < 4; ++i)
         for (int j = 0; j < rows * cols; ++j)

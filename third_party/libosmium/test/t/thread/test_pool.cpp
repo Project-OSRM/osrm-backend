@@ -79,7 +79,7 @@ TEST_CASE("can send job to default thread pool") {
 TEST_CASE("can throw from job in default thread pool") {
     auto& pool = osmium::thread::Pool::default_instance();
     auto future = pool.submit(test_job_throw{});
-    REQUIRE_THROWS_AS(future.get(), const std::runtime_error&);
+    REQUIRE_THROWS_AS(future.get(), std::runtime_error);
 }
 
 TEST_CASE("can get access to user provided thread pool") {
@@ -101,6 +101,6 @@ TEST_CASE("can send job to user provided thread pool") {
 TEST_CASE("can throw from job in user provided thread pool") {
     osmium::thread::Pool pool{7};
     auto future = pool.submit(test_job_throw{});
-    REQUIRE_THROWS_AS(future.get(), const std::runtime_error&);
+    REQUIRE_THROWS_AS(future.get(), std::runtime_error);
 }
 

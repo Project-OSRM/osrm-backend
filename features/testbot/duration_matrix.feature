@@ -446,15 +446,15 @@ Feature: Basic Duration Matrix
             | ca    | yes    |
 
         When I request a travel time matrix I should get
-          |   |   1 |   2 |   3 |   4 |    5 |   6 |   7 |   8 |
-          | 1 |   0 |  11 |   3 |   2 |    6 |   5 | 8.9 | 7.9 |
-          | 2 |   1 |   0 |   4 |   3 |    7 |   6 | 9.9 | 8.9 |
-          | 3 |   9 |   8 |   0 |  11 |    3 |   2 | 5.9 | 4.9 |
-          | 4 |  10 |   9 |   1 |   0 |    4 |   3 | 6.9 | 5.9 |
-          | 5 |   6 |   5 |   9 |   8 |    0 |  11 | 2.9 | 1.9 |
-          | 6 |   7 |   6 |  10 |   9 |    1 |   0 | 3.9 | 2.9 |
-          | 7 | 3.1 | 2.1 | 6.1 | 5.1 |  9.1 | 8.1 |   0 |  11 |
-          | 8 | 4.1 | 3.1 | 7.1 | 6.1 | 10.1 | 9.1 |   1 | 0   |
+          |   | 1    | 2    | 3    | 4    | 5    | 6    | 7    | 8    |
+          | 1 | 0    | 10.9 | 3    | 1.9  | 6    | 4.9  | 9    | 7.9  |
+          | 2 | 1.1  | 0    | 4.1  | 3    | 7.1  | 6    | 10.1 | 9    |
+          | 3 | 9    | 7.9  | 0    | 10.9 | 3    | 1.9  | 6    | 4.9  |
+          | 4 | 10.1 | 9    | 1.1  | 0    | 4.1  | 3    | 7.1  | 6    |
+          | 5 | 6    | 4.9  | 9    | 7.9  | 0    | 10.9 | 3    | 1.9  |
+          | 6 | 7.1  | 6    | 10.1 | 9    | 1.1  | 0    | 4.1  | 3    |
+          | 7 | 3    | 1.9  | 6    | 4.9  | 9    | 7.9  | 0    | 10.9 |
+          | 8 | 4.1  | 3    | 7.1  | 6    | 10.1 | 9    | 1.1  | 0    |
 
 
     Scenario: Testbot - Travel time matrix with ties
@@ -491,18 +491,18 @@ Feature: Basic Duration Matrix
 
         When I route I should get
           | from | to | route | distance | time | weight |
-          | a    | c  | ac,ac | 200m     | 5s   |      5 |
+          | a    | c  | ac,ac | 200m     | 1s   |      1 |
 
         When I request a travel time matrix I should get
-          |   | a | b | c |  d |
-          | a | 0 | 1 | 5 | 10 |
+          |   | a | b | c | d |
+          | a | 0 | 1 | 1 | 6 |
 
         When I request a travel time matrix I should get
           |   |  a |
           | a |  0 |
           | b |  1 |
-          | c | 15 |
-          | d | 10 |
+          | c |  1 |
+          | d |  6 |
 
     Scenario: Testbot - OneToMany vs ManyToOne
         Given the node map
@@ -543,22 +543,22 @@ Feature: Basic Duration Matrix
             | fhigf |
 
         When I request a travel time matrix I should get
-            |   | a  | b  | f  | 1  |
-            | a | 0  | 30 | 18 | 30 |
-            | b | 30 | 0  | 12 | 24 |
-            | f | 18 | 12 | 0  | 30 |
-            | 1 | 30 | 24 | 30 | 0  |
+            |   | a    | b  | f    | 1  |
+            | a | 0    | 30 | 17.9 | 30 |
+            | b | 30   | 0  | 12   | 24 |
+            | f | 17.9 | 12 | 0    | 30 |
+            | 1 | 30   | 24 | 30   | 0  |
 
         When I request a travel time matrix I should get
-            |   | a  | b  | f  | 1  |
-            | a | 0  | 30 | 18 | 30 |
+            |   | a  | b  | f    | 1  |
+            | a | 0  | 30 | 17.9 | 30 |
 
         When I request a travel time matrix I should get
-            |   | a  |
-            | a | 0  |
-            | b | 30 |
-            | f | 18 |
-            | 1 | 30 |
+            |   | a    |
+            | a | 0    |
+            | b | 30   |
+            | f | 17.9 |
+            | 1 | 30   |
 
         When I request a travel time matrix I should get estimates for
             |   | a | b | f | 1 |
@@ -596,22 +596,22 @@ Feature: Basic Duration Matrix
             | fhigf |
 
         When I request a travel time matrix I should get
-            |   | a  | b  | f  | 1  |
-            | a | 0  | 30 | 18 | 30 |
-            | b | 30 | 0  | 12 | 24 |
-            | f | 18 | 12 | 0  | 30 |
-            | 1 | 30 | 24 | 30 | 0  |
+            |   | a    | b  | f    | 1  |
+            | a | 0    | 30 | 17.9 | 30 |
+            | b | 30   | 0  | 12   | 24 |
+            | f | 17.9 | 12 | 0    | 30 |
+            | 1 | 30   | 24 | 30   | 0  |
 
         When I request a travel time matrix I should get
-            |   | a  | b  | f  | 1  |
-            | a | 0  | 30 | 18 | 30 |
+            |   | a  | b  | f    | 1  |
+            | a | 0  | 30 | 17.9 | 30 |
 
         When I request a travel time matrix I should get
-            |   | a  |
-            | a | 0  |
-            | b | 30 |
-            | f | 18 |
-            | 1 | 30 |
+            |   | a    |
+            | a | 0    |
+            | b | 30   |
+            | f | 17.9 |
+            | 1 | 30   |
 
         When I request a travel time matrix I should get estimates for
             |   | a | b | f | 1 |
@@ -650,22 +650,22 @@ Feature: Basic Duration Matrix
             | fhigf |
 
         When I request a travel time matrix I should get
-            |   | a  | b  | f  | 1  |
-            | a | 0  | 30 | 18 | 24 |
-            | b | 30 | 0  | 12 | 18 |
-            | f | 18 | 12 | 0  | 30 |
-            | 1 | 24 | 18 | 30 | 0  |
+            |   | a    | b    | f    | 1    |
+            | a | 0    | 30   | 17.9 | 23.9 |
+            | b | 30   | 0    | 12   | 17.9 |
+            | f | 17.9 | 12   | 0    | 30   |
+            | 1 | 23.9 | 17.9 | 30   | 0    |
 
         When I request a travel time matrix I should get
-            |   | a  | b  | f  | 1  |
-            | a | 0  | 30 | 18 | 24 |
+            |   | a  | b  | f    | 1    |
+            | a | 0  | 30 | 17.9 | 23.9 |
 
         When I request a travel time matrix I should get
-            |   | a  |
-            | a | 0  |
-            | b | 30 |
-            | f | 18 |
-            | 1 | 24 |
+            |   | a    |
+            | a | 0    |
+            | b | 30   |
+            | f | 17.9 |
+            | 1 | 23.9 |
 
         When I request a travel time matrix I should get estimates for
             |   | a | b | f | 1 |
@@ -719,22 +719,22 @@ Feature: Basic Duration Matrix
             | fhigf |
 
         When I request a travel time matrix I should get
-            |   | a  | b  | f  | 1  |
-            | a | 0  | 60 | 36 | 48 |
-            | b | 60 | 0  | 24 | 36 |
-            | f | 36 | 24 | 0  | 60 |
-            | 1 | 48 | 36 | 60 | 0  |
+            |   | a    | b    | f    | 1    |
+            | a | 0    | 60   | 35.8 | 47.8 |
+            | b | 60   | 0    | 24   | 35.8 |
+            | f | 35.8 | 24   | 0    | 60   |
+            | 1 | 47.8 | 35.8 | 60   | 0    |
 
         When I request a travel time matrix I should get
-            |   | a  | b  | f  | 1  |
-            | a | 0  | 60 | 36 | 48 |
+            |   | a  | b  | f    | 1    |
+            | a | 0  | 60 | 35.8 | 47.8 |
 
         When I request a travel time matrix I should get
-            |   | a  |
-            | a | 0  |
-            | b | 60 |
-            | f | 36 |
-            | 1 | 48 |
+            |   | a    |
+            | a | 0    |
+            | b | 60   |
+            | f | 35.8 |
+            | 1 | 47.8 |
 
         When I request a travel time matrix I should get estimates for
             |   | a | b | f | 1 |

@@ -9,7 +9,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <iostream>
 #include <unordered_set>
 #include <vector>
 
@@ -66,7 +65,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
     GraphCompressor compressor;
 
     std::unordered_set<NodeID> barrier_nodes;
-    std::unordered_set<NodeID> traffic_lights;
+    TrafficSignals traffic_lights;
     std::vector<TurnRestriction> restrictions;
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     CompressedEdgeContainer container;
@@ -112,7 +111,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
     GraphCompressor compressor;
 
     std::unordered_set<NodeID> barrier_nodes;
-    std::unordered_set<NodeID> traffic_lights;
+    TrafficSignals traffic_lights;
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
@@ -175,7 +174,7 @@ BOOST_AUTO_TEST_CASE(t_intersection)
     GraphCompressor compressor;
 
     std::unordered_set<NodeID> barrier_nodes;
-    std::unordered_set<NodeID> traffic_lights;
+    TrafficSignals traffic_lights;
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
@@ -218,7 +217,7 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
     GraphCompressor compressor;
 
     std::unordered_set<NodeID> barrier_nodes;
-    std::unordered_set<NodeID> traffic_lights;
+    TrafficSignals traffic_lights;
     std::vector<NodeBasedEdgeAnnotation> annotations(2);
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
@@ -256,7 +255,7 @@ BOOST_AUTO_TEST_CASE(direction_changes)
     GraphCompressor compressor;
 
     std::unordered_set<NodeID> barrier_nodes;
-    std::unordered_set<NodeID> traffic_lights;
+    TrafficSignals traffic_lights;
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;

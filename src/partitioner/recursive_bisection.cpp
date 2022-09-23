@@ -7,7 +7,7 @@
 #include "util/log.hpp"
 #include "util/timing_util.hpp"
 
-#include <tbb/parallel_do.h>
+#include <tbb/parallel_for_each.h>
 
 #include <algorithm>
 #include <climits> // for CHAR_BIT
@@ -64,12 +64,12 @@ RecursiveBisection::RecursiveBisection(BisectionGraph &bisection_graph_,
         return TreeNode{std::move(graph), internal_state.SCCDepth()};
     });
 
-    using Feeder = tbb::parallel_do_feeder<TreeNode>;
+    using Feeder = tbb::feeder<TreeNode>;
 
     TIMER_START(bisection);
 
     // Bisect graph into two parts. Get partition point and recurse left and right in parallel.
-    tbb::parallel_do(begin(forest), end(forest), [&](const TreeNode &node, Feeder &feeder) {
+    tbb::parallel_for_each(begin(forest), end(forest), [&](const TreeNode &node, Feeder &feeder) {
         const auto cut =
             computeInertialFlowCut(node.graph, num_optimizing_cuts, balance, boundary_factor);
         const auto center = internal_state.ApplyBisection(
@@ -86,13 +86,13 @@ RecursiveBisection::RecursiveBisection(BisectionGraph &bisection_graph_,
         TreeNode left_node{std::move(left_graph), node.depth + 1};
 
         if (!terminal(left_node))
-            feeder.add(std::move(left_node));
+            feeder.add(left_node);
 
         BisectionGraphView right_graph{bisection_graph, center, node.graph.End()};
         TreeNode right_node{std::move(right_graph), node.depth + 1};
 
         if (!terminal(right_node))
-            feeder.add(std::move(right_node));
+            feeder.add(right_node);
     });
 
     TIMER_STOP(bisection);

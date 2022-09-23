@@ -32,6 +32,8 @@ namespace api
 class TableAPI final : public BaseAPI
 {
   public:
+    virtual ~TableAPI() = default;
+
     struct TableCellRef
     {
         TableCellRef(const std::size_t &row, const std::size_t &column) : row{row}, column{column}
@@ -48,25 +50,25 @@ class TableAPI final : public BaseAPI
 
     virtual void
     MakeResponse(const std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>> &tables,
-                 const std::vector<PhantomNode> &phantoms,
+                 const std::vector<PhantomNodeCandidates> &candidates,
                  const std::vector<TableCellRef> &fallback_speed_cells,
                  osrm::engine::api::ResultT &response) const
     {
         if (response.is<flatbuffers::FlatBufferBuilder>())
         {
             auto &fb_result = response.get<flatbuffers::FlatBufferBuilder>();
-            MakeResponse(tables, phantoms, fallback_speed_cells, fb_result);
+            MakeResponse(tables, candidates, fallback_speed_cells, fb_result);
         }
         else
         {
             auto &json_result = response.get<util::json::Object>();
-            MakeResponse(tables, phantoms, fallback_speed_cells, json_result);
+            MakeResponse(tables, candidates, fallback_speed_cells, json_result);
         }
     }
 
     virtual void
     MakeResponse(const std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>> &tables,
-                 const std::vector<PhantomNode> &phantoms,
+                 const std::vector<PhantomNodeCandidates> &candidates,
                  const std::vector<TableCellRef> &fallback_speed_cells,
                  flatbuffers::FlatBufferBuilder &fb_result) const
     {
@@ -86,15 +88,15 @@ class TableAPI final : public BaseAPI
         {
             if (!parameters.skip_waypoints)
             {
-                sources = MakeWaypoints(fb_result, phantoms);
+                sources = MakeWaypoints(fb_result, candidates);
             }
-            number_of_sources = phantoms.size();
+            number_of_sources = candidates.size();
         }
         else
         {
             if (!parameters.skip_waypoints)
             {
-                sources = MakeWaypoints(fb_result, phantoms, parameters.sources);
+                sources = MakeWaypoints(fb_result, candidates, parameters.sources);
             }
         }
 
@@ -104,15 +106,15 @@ class TableAPI final : public BaseAPI
         {
             if (!parameters.skip_waypoints)
             {
-                destinations = MakeWaypoints(fb_result, phantoms);
+                destinations = MakeWaypoints(fb_result, candidates);
             }
-            number_of_destinations = phantoms.size();
+            number_of_destinations = candidates.size();
         }
         else
         {
             if (!parameters.skip_waypoints)
             {
-                destinations = MakeWaypoints(fb_result, phantoms, parameters.destinations);
+                destinations = MakeWaypoints(fb_result, candidates, parameters.destinations);
             }
         }
 
@@ -168,7 +170,7 @@ class TableAPI final : public BaseAPI
 
     virtual void
     MakeResponse(const std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>> &tables,
-                 const std::vector<PhantomNode> &phantoms,
+                 const std::vector<PhantomNodeCandidates> &candidates,
                  const std::vector<TableCellRef> &fallback_speed_cells,
                  util::json::Object &response) const
     {
@@ -180,15 +182,15 @@ class TableAPI final : public BaseAPI
         {
             if (!parameters.skip_waypoints)
             {
-                response.values["sources"] = MakeWaypoints(phantoms);
+                response.values["sources"] = MakeWaypoints(candidates);
             }
-            number_of_sources = phantoms.size();
+            number_of_sources = candidates.size();
         }
         else
         {
             if (!parameters.skip_waypoints)
             {
-                response.values["sources"] = MakeWaypoints(phantoms, parameters.sources);
+                response.values["sources"] = MakeWaypoints(candidates, parameters.sources);
             }
         }
 
@@ -196,15 +198,16 @@ class TableAPI final : public BaseAPI
         {
             if (!parameters.skip_waypoints)
             {
-                response.values["destinations"] = MakeWaypoints(phantoms);
+                response.values["destinations"] = MakeWaypoints(candidates);
             }
-            number_of_destinations = phantoms.size();
+            number_of_destinations = candidates.size();
         }
         else
         {
             if (!parameters.skip_waypoints)
             {
-                response.values["destinations"] = MakeWaypoints(phantoms, parameters.destinations);
+                response.values["destinations"] =
+                    MakeWaypoints(candidates, parameters.destinations);
             }
         }
 
@@ -226,37 +229,44 @@ class TableAPI final : public BaseAPI
         }
 
         response.values["code"] = "Ok";
+        auto data_timestamp = facade.GetTimestamp();
+        if (!data_timestamp.empty())
+        {
+            response.values["data_version"] = data_timestamp;
+        }
     }
 
   protected:
     virtual flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
     MakeWaypoints(flatbuffers::FlatBufferBuilder &builder,
-                  const std::vector<PhantomNode> &phantoms) const
+                  const std::vector<PhantomNodeCandidates> &candidates) const
     {
         std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
-        waypoints.reserve(phantoms.size());
-        BOOST_ASSERT(phantoms.size() == parameters.coordinates.size());
+        waypoints.reserve(candidates.size());
+        BOOST_ASSERT(candidates.size() == parameters.coordinates.size());
 
-        boost::range::transform(
-            phantoms, std::back_inserter(waypoints), [this, &builder](const PhantomNode &phantom) {
-                return BaseAPI::MakeWaypoint(&builder, phantom)->Finish();
-            });
+        boost::range::transform(candidates,
+                                std::back_inserter(waypoints),
+                                [this, &builder](const PhantomNodeCandidates &candidates) {
+                                    return BaseAPI::MakeWaypoint(&builder, candidates)->Finish();
+                                });
         return builder.CreateVector(waypoints);
     }
 
     virtual flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
     MakeWaypoints(flatbuffers::FlatBufferBuilder &builder,
-                  const std::vector<PhantomNode> &phantoms,
+                  const std::vector<PhantomNodeCandidates> &candidates,
                   const std::vector<std::size_t> &indices) const
     {
         std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
         waypoints.reserve(indices.size());
-        boost::range::transform(indices,
-                                std::back_inserter(waypoints),
-                                [this, &builder, phantoms](const std::size_t idx) {
-                                    BOOST_ASSERT(idx < phantoms.size());
-                                    return BaseAPI::MakeWaypoint(&builder, phantoms[idx])->Finish();
-                                });
+        boost::range::transform(
+            indices,
+            std::back_inserter(waypoints),
+            [this, &builder, &candidates](const std::size_t idx) {
+                BOOST_ASSERT(idx < candidates.size());
+                return BaseAPI::MakeWaypoint(&builder, candidates[idx])->Finish();
+            });
         return builder.CreateVector(waypoints);
     }
 
@@ -308,29 +318,31 @@ class TableAPI final : public BaseAPI
         return builder.CreateVector(fb_table);
     }
 
-    virtual util::json::Array MakeWaypoints(const std::vector<PhantomNode> &phantoms) const
+    virtual util::json::Array
+    MakeWaypoints(const std::vector<PhantomNodeCandidates> &candidates) const
     {
         util::json::Array json_waypoints;
-        json_waypoints.values.reserve(phantoms.size());
-        BOOST_ASSERT(phantoms.size() == parameters.coordinates.size());
+        json_waypoints.values.reserve(candidates.size());
+        BOOST_ASSERT(candidates.size() == parameters.coordinates.size());
 
-        boost::range::transform(
-            phantoms,
-            std::back_inserter(json_waypoints.values),
-            [this](const PhantomNode &phantom) { return BaseAPI::MakeWaypoint(phantom); });
+        boost::range::transform(candidates,
+                                std::back_inserter(json_waypoints.values),
+                                [this](const PhantomNodeCandidates &candidates) {
+                                    return BaseAPI::MakeWaypoint(candidates);
+                                });
         return json_waypoints;
     }
 
-    virtual util::json::Array MakeWaypoints(const std::vector<PhantomNode> &phantoms,
+    virtual util::json::Array MakeWaypoints(const std::vector<PhantomNodeCandidates> &candidates,
                                             const std::vector<std::size_t> &indices) const
     {
         util::json::Array json_waypoints;
         json_waypoints.values.reserve(indices.size());
         boost::range::transform(indices,
                                 std::back_inserter(json_waypoints.values),
-                                [this, phantoms](const std::size_t idx) {
-                                    BOOST_ASSERT(idx < phantoms.size());
-                                    return BaseAPI::MakeWaypoint(phantoms[idx]);
+                                [this, &candidates](const std::size_t idx) {
+                                    BOOST_ASSERT(idx < candidates.size());
+                                    return BaseAPI::MakeWaypoint(candidates[idx]);
                                 });
         return json_waypoints;
     }

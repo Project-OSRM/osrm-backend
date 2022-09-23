@@ -214,7 +214,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
             const auto &current_timestamps_list = candidates_list[t];
             const auto &current_coordinate = trace_coordinates[t];
 
-            const auto haversine_distance = util::coordinate_calculation::haversineDistance(
+            const auto haversine_distance = util::coordinate_calculation::greatCircleDistance(
                 prev_coordinate, current_coordinate);
             // assumes minumum of 4 m/s
             const EdgeWeight weight_upper_bound =
@@ -424,7 +424,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
             reconstructed_indices,
             [&trace_distance, &trace_coordinates](const std::pair<std::size_t, std::size_t> &prev,
                                                   const std::pair<std::size_t, std::size_t> &curr) {
-                trace_distance += util::coordinate_calculation::haversineDistance(
+                trace_distance += util::coordinate_calculation::greatCircleDistance(
                     trace_coordinates[prev.first], trace_coordinates[curr.first]);
             });
 

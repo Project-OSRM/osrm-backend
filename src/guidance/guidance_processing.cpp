@@ -9,7 +9,7 @@
 #include "util/percent.hpp"
 
 #include <tbb/blocked_range.h>
-#include <tbb/pipeline.h>
+#include <tbb/parallel_pipeline.h>
 
 #include <thread>
 
@@ -97,8 +97,8 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
         const constexpr unsigned GRAINSIZE = 100;
 
         // First part of the pipeline generates iterator ranges of IDs in sets of GRAINSIZE
-        tbb::filter_t<void, tbb::blocked_range<NodeID>> generator_stage(
-            tbb::filter::serial_in_order, [&](tbb::flow_control &fc) {
+        tbb::filter<void, tbb::blocked_range<NodeID>> generator_stage(
+            tbb::filter_mode::serial_in_order, [&](tbb::flow_control &fc) {
                 if (current_node < node_count)
                 {
                     auto next_node = std::min(current_node + GRAINSIZE, node_count);
@@ -116,8 +116,9 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
         //
         // Guidance stage
         //
-        tbb::filter_t<tbb::blocked_range<NodeID>, TurnsPipelineBufferPtr> guidance_stage(
-            tbb::filter::parallel, [&](const tbb::blocked_range<NodeID> &intersection_node_range) {
+        tbb::filter<tbb::blocked_range<NodeID>, TurnsPipelineBufferPtr> guidance_stage(
+            tbb::filter_mode::parallel,
+            [&](const tbb::blocked_range<NodeID> &intersection_node_range) {
                 auto buffer = std::make_shared<TurnsPipelineBuffer>();
                 buffer->nodes_processed = intersection_node_range.size();
 
@@ -307,8 +308,8 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
         util::Percent guidance_progress(log, node_count);
         std::vector<guidance::TurnData> delayed_turn_data;
 
-        tbb::filter_t<TurnsPipelineBufferPtr, void> guidance_output_stage(
-            tbb::filter::serial_in_order, [&](auto buffer) {
+        tbb::filter<TurnsPipelineBufferPtr, void> guidance_output_stage(
+            tbb::filter_mode::serial_in_order, [&](auto buffer) {
                 guidance_progress.PrintAddition(buffer->nodes_processed);
 
                 connectivity_checksum = buffer->checksum.update_checksum(connectivity_checksum);

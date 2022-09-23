@@ -32,7 +32,7 @@ struct LegGeometry
     // length of the segment in meters
     std::vector<double> segment_distances;
     // original OSM node IDs for each coordinate
-    std::vector<OSMNodeID> osm_node_ids;
+    std::vector<NodeID> node_ids;
 
     // Per-coordinate metadata
     struct Annotation

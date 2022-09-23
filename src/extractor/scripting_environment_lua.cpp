@@ -285,11 +285,41 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             return get_location_tag(context, node.location(), key);
         });
 
-    context.state.new_usertype<ExtractionNode>("ResultNode",
-                                               "traffic_lights",
-                                               &ExtractionNode::traffic_lights,
-                                               "barrier",
-                                               &ExtractionNode::barrier);
+    context.state.new_enum("traffic_lights",
+                           "none",
+                           extractor::TrafficLightClass::NONE,
+                           "direction_all",
+                           extractor::TrafficLightClass::DIRECTION_ALL,
+                           "direction_forward",
+                           extractor::TrafficLightClass::DIRECTION_FORWARD,
+                           "direction_reverse",
+                           extractor::TrafficLightClass::DIRECTION_REVERSE);
+
+    context.state.new_usertype<ExtractionNode>(
+        "ResultNode",
+        "traffic_lights",
+        sol::property([](const ExtractionNode &node) { return node.traffic_lights; },
+                      [](ExtractionNode &node, const sol::object &obj) {
+                          if (obj.is<bool>())
+                          {
+                              // The old approach of assigning a boolean traffic light
+                              // state to the node is converted to the class enum
+                              // TODO: Make a breaking API change and remove this option.
+                              bool val = obj.as<bool>();
+                              node.traffic_lights = (val) ? TrafficLightClass::DIRECTION_ALL
+                                                          : TrafficLightClass::NONE;
+                              return;
+                          }
+
+                          BOOST_ASSERT(obj.is<TrafficLightClass::Direction>());
+                          {
+                              TrafficLightClass::Direction val =
+                                  obj.as<TrafficLightClass::Direction>();
+                              node.traffic_lights = val;
+                          }
+                      }),
+        "barrier",
+        &ExtractionNode::barrier);
 
     context.state.new_usertype<RoadClassification>(
         "RoadClassification",
@@ -884,18 +914,20 @@ void Sol2ScriptingEnvironment::ProcessElements(
         case osmium::item_type::node:
         {
             const auto &node = static_cast<const osmium::Node &>(*entity);
+            // NOLINTNEXTLINE(bugprone-use-after-move)
             result_node.clear();
             if (local_context.has_node_function &&
                 (!node.tags().empty() || local_context.properties.call_tagless_node_function))
             {
                 local_context.ProcessNode(node, result_node, relations);
             }
-            resulting_nodes.push_back({node, std::move(result_node)});
+            resulting_nodes.push_back({node, result_node});
         }
         break;
         case osmium::item_type::way:
         {
             const osmium::Way &way = static_cast<const osmium::Way &>(*entity);
+            // NOLINTNEXTLINE(bugprone-use-after-move)
             result_way.clear();
             if (local_context.has_way_function)
             {
@@ -907,13 +939,15 @@ void Sol2ScriptingEnvironment::ProcessElements(
         case osmium::item_type::relation:
         {
             const auto &relation = static_cast<const osmium::Relation &>(*entity);
-            if (auto result_res = restriction_parser.TryParse(relation))
+            auto results = restriction_parser.TryParse(relation);
+            if (!results.empty())
             {
-                resulting_restrictions.push_back(*result_res);
+                std::move(
+                    results.begin(), results.end(), std::back_inserter(resulting_restrictions));
             }
             else if (auto result_res = maneuver_override_parser.TryParse(relation))
             {
-                resulting_maneuver_overrides.push_back(*result_res);
+                resulting_maneuver_overrides.push_back(std::move(*result_res));
             }
         }
         break;
@@ -937,22 +971,38 @@ Sol2ScriptingEnvironment::GetStringListFromFunction(const std::string &function_
     return strings;
 }
 
+namespace
+{
+
+// string list can be defined either as a Set(see profiles/lua/set.lua) or as a Sequence (see
+// profiles/lua/sequence.lua) `Set` is a table with keys that are actual values we are looking for
+// and values that always `true`. `Sequence` is a table with keys that are indices and values that
+// are actual values we are looking for.
+
+std::string GetSetOrSequenceValue(const std::pair<sol::object, sol::object> &pair)
+{
+    if (pair.second.is<std::string>())
+    {
+        return pair.second.as<std::string>();
+    }
+    BOOST_ASSERT(pair.first.is<std::string>());
+    return pair.first.as<std::string>();
+}
+
+} // namespace
+
 std::vector<std::string>
 Sol2ScriptingEnvironment::GetStringListFromTable(const std::string &table_name)
 {
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state() != nullptr);
     std::vector<std::string> strings;
-    if (!context.profile_table[table_name])
+    sol::optional<sol::table> table = context.profile_table[table_name];
+    if (table && table->valid())
     {
-        return strings;
-    }
-    sol::table table = context.profile_table[table_name];
-    if (table.valid())
-    {
-        for (auto &&pair : table)
+        for (auto &&pair : *table)
         {
-            strings.push_back(pair.second.as<std::string>());
+            strings.emplace_back(GetSetOrSequenceValue(pair));
         }
     }
     return strings;
@@ -965,17 +1015,13 @@ Sol2ScriptingEnvironment::GetStringListsFromTable(const std::string &table_name)
 
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state() != nullptr);
-    if (!context.profile_table[table_name])
-    {
-        return string_lists;
-    }
-    sol::table table = context.profile_table[table_name];
-    if (!table.valid())
+    sol::optional<sol::table> table = context.profile_table[table_name];
+    if (!table || !table->valid())
     {
         return string_lists;
     }
 
-    for (const auto &pair : table)
+    for (const auto &pair : *table)
     {
         sol::table inner_table = pair.second;
         if (!inner_table.valid())
@@ -987,7 +1033,7 @@ Sol2ScriptingEnvironment::GetStringListsFromTable(const std::string &table_name)
         std::vector<std::string> inner_vector;
         for (const auto &inner_pair : inner_table)
         {
-            inner_vector.push_back(inner_pair.first.as<std::string>());
+            inner_vector.emplace_back(GetSetOrSequenceValue(inner_pair));
         }
         string_lists.push_back(std::move(inner_vector));
     }
@@ -1079,7 +1125,7 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
     case 2:
         if (context.has_turn_penalty_function)
         {
-            context.turn_function(context.profile_table, turn);
+            context.turn_function(context.profile_table, std::ref(turn));
 
             // Turn weight falls back to the duration value in deciseconds
             // or uses the extracted unit-less weight value
@@ -1094,7 +1140,7 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
     case 1:
         if (context.has_turn_penalty_function)
         {
-            context.turn_function(turn);
+            context.turn_function(std::ref(turn));
 
             // Turn weight falls back to the duration value in deciseconds
             // or uses the extracted unit-less weight value
@@ -1145,14 +1191,16 @@ void Sol2ScriptingEnvironment::ProcessSegment(ExtractionSegment &segment)
         case 4:
         case 3:
         case 2:
-            context.segment_function(context.profile_table, segment);
+            context.segment_function(context.profile_table, std::ref(segment));
             break;
         case 1:
-            context.segment_function(segment);
+            context.segment_function(std::ref(segment));
             break;
         case 0:
-            context.segment_function(
-                segment.source, segment.target, segment.distance, segment.duration);
+            context.segment_function(std::ref(segment.source),
+                                     std::ref(segment.target),
+                                     segment.distance,
+                                     segment.duration);
             segment.weight = segment.duration; // back-compatibility fallback to duration
             break;
         }
@@ -1169,14 +1217,14 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node,
     {
     case 4:
     case 3:
-        node_function(profile_table, node, result, relations);
+        node_function(profile_table, std::cref(node), std::ref(result), std::cref(relations));
         break;
     case 2:
-        node_function(profile_table, node, result);
+        node_function(profile_table, std::cref(node), std::ref(result));
         break;
     case 1:
     case 0:
-        node_function(node, result);
+        node_function(std::cref(node), std::ref(result));
         break;
     }
 }
@@ -1191,14 +1239,14 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way,
     {
     case 4:
     case 3:
-        way_function(profile_table, way, result, relations);
+        way_function(profile_table, std::cref(way), std::ref(result), std::cref(relations));
         break;
     case 2:
-        way_function(profile_table, way, result);
+        way_function(profile_table, std::cref(way), std::ref(result));
         break;
     case 1:
     case 0:
-        way_function(way, result);
+        way_function(std::cref(way), std::ref(result));
         break;
     }
 }

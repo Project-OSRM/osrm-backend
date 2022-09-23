@@ -12,7 +12,7 @@
 #include <mutex>
 #include <string>
 
-#include <sol.hpp>
+#include <sol/sol.hpp>
 
 namespace osrm
 {
@@ -38,17 +38,17 @@ struct LuaScriptingContext final
     RasterContainer raster_sources;
     sol::state state;
 
-    bool has_turn_penalty_function;
-    bool has_node_function;
-    bool has_way_function;
-    bool has_segment_function;
+    bool has_turn_penalty_function = false;
+    bool has_node_function = false;
+    bool has_way_function = false;
+    bool has_segment_function = false;
 
     sol::function turn_function;
     sol::function way_function;
     sol::function node_function;
     sol::function segment_function;
 
-    int api_version;
+    int api_version = 4;
     sol::table profile_table;
 
     // Reference to immutable location dependent data and locations memo
