@@ -77,7 +77,7 @@ void Log::Init()
 
         auto format = [is_terminal](const char *level, const char *color) {
             return fmt::format(
-                "{}[{}] {} ", is_terminal ? color : "", level, std::chrono::system_clock::now());
+                "{}[{}] [{}] ", is_terminal ? color : "", std::chrono::system_clock::now(), level);
         };
 
         switch (level)
