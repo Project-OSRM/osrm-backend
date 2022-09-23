@@ -2,10 +2,10 @@
 #include "util/isatty.hpp"
 #include <boost/algorithm/string/predicate.hpp>
 #include <cstdio>
+#include <fmt/chrono.h>
 #include <iostream>
 #include <mutex>
 #include <string>
-#include <fmt/chrono.h>
 
 namespace osrm
 {
@@ -75,8 +75,9 @@ void Log::Init()
     {
         const bool is_terminal = IsStdoutATTY();
 
-        auto format = [is_terminal](const char* level, const char* color) {
-            return fmt::format("{}[{}] {} ", is_terminal ? color : "", level, std::chrono::system_clock::now());
+        auto format = [is_terminal](const char *level, const char *color) {
+            return fmt::format(
+                "{}[{}] {} ", is_terminal ? color : "", level, std::chrono::system_clock::now());
         };
 
         switch (level)
