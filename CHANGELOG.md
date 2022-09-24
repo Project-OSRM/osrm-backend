@@ -59,6 +59,7 @@
       - ADDED: Support snapping to multiple ways at an input location. [#5953](https://github.com/Project-OSRM/osrm-backend/pull/5953)
       - FIXED: Fix snapping target locations to ways used in turn restrictions. [#6339](https://github.com/Project-OSRM/osrm-backend/pull/6339)
       - ADDED: Support OSM traffic signal directions. [#6153](https://github.com/Project-OSRM/osrm-backend/pull/6153)
+      - FIXED: Ensure u-turn exists in intersection view. [#6376](https://github.com/Project-OSRM/osrm-backend/pull/6376)
     - Profile:
       - CHANGED: Bicycle surface speeds [#6212](https://github.com/Project-OSRM/osrm-backend/pull/6212)
 
