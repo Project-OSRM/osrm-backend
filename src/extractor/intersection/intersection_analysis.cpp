@@ -617,12 +617,13 @@ IntersectionView convertToIntersectionView(const util::NodeBasedDynamicGraph &gr
     std::vector<IntersectionViewDataWithAngle> pre_intersection_view;
     IntersectionViewData uturn{{SPECIAL_EDGEID, 0., 0., 0.}, false, 0.};
     std::size_t allowed_uturns_number = 0;
+
+    const auto is_uturn = [](const auto angle) {
+        return std::fabs(angle) < std::numeric_limits<double>::epsilon();
+    };
+
     for (const auto &outgoing_edge : outgoing_edges)
     {
-        const auto is_uturn = [](const auto angle) {
-            return std::fabs(angle) < std::numeric_limits<double>::epsilon();
-        };
-
         const auto edge_it = findEdge(edge_geometries, outgoing_edge.edge);
         const auto is_merged = merged_edges.count(outgoing_edge.edge) != 0;
         const auto is_turn_allowed = intersection::isTurnAllowed(graph,
@@ -678,6 +679,7 @@ IntersectionView convertToIntersectionView(const util::NodeBasedDynamicGraph &gr
     BOOST_ASSERT(uturn.eid != SPECIAL_EDGEID);
     if (uturn.entry_allowed || allowed_uturns_number == 0)
     { // Add the true U-turn if it is allowed or no other U-turns found
+        BOOST_ASSERT(uturn.angle == 0.);
         pre_intersection_view.insert(pre_intersection_view.begin(), {uturn, 0});
     }
 
@@ -704,6 +706,22 @@ IntersectionView convertToIntersectionView(const util::NodeBasedDynamicGraph &gr
             next->first.angle =
                 util::restrictAngleToValidRange(curr->first.angle + angle_adjustment);
         }
+    }
+
+    auto no_uturn = std::none_of(pre_intersection_view.begin(),
+                                 pre_intersection_view.end(),
+                                 [&is_uturn](const IntersectionViewDataWithAngle &road) {
+                                     return is_uturn(road.first.angle);
+                                 });
+    // After all of this, if we now don't have a u-turn, let's add one to the intersection.
+    // This is a hack to fix the triggered assertion ( see:
+    // https://github.com/Project-OSRM/osrm-backend/issues/6218 ). Ideally we would fix this more
+    // robustly, but this will require overhauling all of the intersection logic.
+    if (no_uturn)
+    {
+        BOOST_ASSERT(!uturn.entry_allowed && allowed_uturns_number > 0);
+        BOOST_ASSERT(uturn.angle == 0.);
+        pre_intersection_view.insert(pre_intersection_view.begin(), {uturn, 0});
     }
 
     // Copy intersection view data
