@@ -715,7 +715,7 @@ jobs:
       run: |
         pushd ${OSRM_BUILD_DIR}
         make --jobs=${JOBS} benchmarks
-        ls -R
+        # ls -R .
         ./src/benchmarks/match-bench ../test/data/monaco.osrm
         #  for i in ./src/benchmark/*-bench ; do echo Running $i ; $i ; done
         popd
