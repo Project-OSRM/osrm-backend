@@ -77,8 +77,11 @@ void Log::Init()
 
         auto format = [is_terminal](const char *level, const char *color) {
             const auto timestamp = std::chrono::system_clock::now();
-            return fmt::format(
-                "{}[{:%FT%H:%M:}{:%S}] [{}] ", is_terminal ? color : "", timestamp, timestamp.time_since_epoch(), level);
+            return fmt::format("{}[{:%FT%H:%M:}{:%S}] [{}] ",
+                               is_terminal ? color : "",
+                               timestamp,
+                               timestamp.time_since_epoch(),
+                               level);
         };
 
         switch (level)
