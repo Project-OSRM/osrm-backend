@@ -29,9 +29,6 @@
 #include <boost/filesystem/operations.hpp>
 #include <tbb/global_control.h>
 
-#include "util/geojson_debug_logger.hpp"
-#include "util/geojson_debug_policies.hpp"
-#include "util/json_container.hpp"
 #include "util/timing_util.hpp"
 
 namespace osrm

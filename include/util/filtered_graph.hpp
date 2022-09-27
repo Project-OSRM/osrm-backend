@@ -126,8 +126,8 @@ class FilteredGraphImpl<util::StaticGraph<EdgeDataT, Ownership>, Ownership>
 
     FilteredGraphImpl() = default;
 
-    FilteredGraphImpl(Graph graph, Vector<bool> edge_filter_)
-        : graph(std::move(graph)), edge_filter(std::move(edge_filter_))
+    FilteredGraphImpl(Graph graph_, Vector<bool> edge_filter_)
+        : graph(std::move(graph_)), edge_filter(std::move(edge_filter_))
     {
         BOOST_ASSERT(edge_filter.empty() || edge_filter.size() == graph.GetNumberOfEdges());
     }

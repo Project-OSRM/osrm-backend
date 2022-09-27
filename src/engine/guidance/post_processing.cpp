@@ -15,8 +15,6 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/range/iterator_range.hpp>
 
-#include "engine/guidance/collapsing_utility.hpp"
-
 #include <algorithm>
 #include <cmath>
 #include <cstddef>

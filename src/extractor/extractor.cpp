@@ -641,10 +641,8 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
     {
         storage::tar::FileWriter writer(config.GetPath(".osrm").string(),
                                         storage::tar::FileWriter::GenerateFingerprint);
-        storage::serialization::write(
-            writer, "/extractor/nodes", extraction_containers.used_nodes);
-        storage::serialization::write(
-            writer, "/extractor/edges", extraction_containers.used_edges);
+        storage::serialization::write(writer, "/extractor/nodes", extraction_containers.used_nodes);
+        storage::serialization::write(writer, "/extractor/edges", extraction_containers.used_edges);
     }
 
     return ParsedOSMData{std::move(turn_lane_map),

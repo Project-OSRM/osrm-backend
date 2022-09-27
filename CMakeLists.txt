@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.2)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
+
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR AND NOT MSVC_IDE)
   message(FATAL_ERROR "In-source builds are not allowed.
 Please create a directory and run cmake from there, passing the path to this source directory as the last argument.
@@ -60,6 +61,15 @@ if (POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()
 project(OSRM C CXX)
+
+# add @loader_path/$ORIGIN to rpath to make binaries relocatable
+if (APPLE)
+  set(CMAKE_BUILD_RPATH "@loader_path")
+else()
+  set(CMAKE_BUILD_RPATH "\$ORIGIN")
+  # https://stackoverflow.com/questions/6324131/rpath-origin-not-having-desired-effect
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,origin")
+endif()
 
 include(JSONParser)
 file(READ "package.json" packagejsonraw)
@@ -185,7 +195,7 @@ if(ENABLE_GOLD_LINKER)
     execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
     if("${LD_VERSION}" MATCHES "GNU gold")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
-        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
         set(OSRM_LDFLAGS "${OSRM_LDFLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
         message(STATUS "Using GNU gold as linker.")
 
@@ -459,11 +469,11 @@ if(ENABLE_CONAN)
 
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/conan.cmake)
 
-  set(CONAN_BOOST_VERSION 1.79.0)
-  set(CONAN_BZIP2_VERSION 1.0.8)
-  set(CONAN_EXPAT_VERSION 2.2.10)
-  set(CONAN_LUA_VERSION 5.4.4)
-  set(CONAN_TBB_VERSION 2021.3.0)
+  set(CONAN_BOOST_VERSION "1.79.0#96e4902111a2e343a8ba0aa95391bb58")
+  set(CONAN_BZIP2_VERSION "1.0.8#d1b2d5816f25865acf978501dff1f897")
+  set(CONAN_EXPAT_VERSION "2.2.10#916908d4a570ad839edd25322c3268cd")
+  set(CONAN_LUA_VERSION "5.4.4#3ec62efc37cd0a5d80b9e5cb35277360")
+  set(CONAN_TBB_VERSION "2021.3.0#507ec17cbd51a84167e143b20d170eea")
   
   set(CONAN_SYSTEM_INCLUDES ON)
 
@@ -478,22 +488,26 @@ if(ENABLE_CONAN)
 
   set(CONAN_ARGS       
     REQUIRES 
-    boost/${CONAN_BOOST_VERSION}
-    bzip2/${CONAN_BZIP2_VERSION}
-    expat/${CONAN_EXPAT_VERSION}
-    lua/${CONAN_LUA_VERSION}
-    onetbb/${CONAN_TBB_VERSION}
+    "boost/${CONAN_BOOST_VERSION}"
+    "bzip2/${CONAN_BZIP2_VERSION}"
+    "expat/${CONAN_EXPAT_VERSION}"
+    "lua/${CONAN_LUA_VERSION}"
+    "onetbb/${CONAN_TBB_VERSION}"
     BASIC_SETUP 
     GENERATORS cmake_find_package
     KEEP_RPATHS
     NO_OUTPUT_DIRS
     OPTIONS boost:filesystem_version=3 # https://stackoverflow.com/questions/73392648/error-with-boost-filesystem-version-in-cmake
             onetbb:shared=${TBB_SHARED}
+            boost:without_stacktrace=True # Apple Silicon cross-compilation fails without it
     BUILD missing
   )
   # explicitly say Conan to use x86 dependencies if build for x86 platforms (https://github.com/conan-io/cmake-conan/issues/141)
   if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     conan_cmake_run("${CONAN_ARGS};ARCH;x86")
+  # cross-compilation for Apple Silicon
+  elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64" AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
+    conan_cmake_run("${CONAN_ARGS};ARCH;armv8")
   else()
     conan_cmake_run("${CONAN_ARGS}")
   endif()
@@ -505,7 +519,7 @@ if(ENABLE_CONAN)
   add_dependency_includes(${CONAN_INCLUDE_DIRS_TBB})
 
   set(Boost_USE_STATIC_LIBS ON)
-  find_package(Boost REQUIRED EXACT ${CONAN_BOOST_VERSION} COMPONENTS ${BOOST_COMPONENTS})
+  find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
   set(Boost_DATE_TIME_LIBRARY "${Boost_date_time_LIB_TARGETS}")
   set(Boost_CHRONO_LIBRARY "${Boost_chrono_LIB_TARGETS}")
   set(Boost_PROGRAM_OPTIONS_LIBRARY "${Boost_program_options_LIB_TARGETS}")
@@ -870,22 +884,23 @@ if (ENABLE_FUZZING)
   add_subdirectory(fuzz)
 endif ()
 
+# add headers sanity check target that includes all headers independently	
+set(check_headers_dir "${PROJECT_BINARY_DIR}/check-headers")	
+file(GLOB_RECURSE headers_to_check	
+  ${PROJECT_BINARY_DIR}/*.hpp	
+  ${PROJECT_SOURCE_DIR}/include/*.hpp)	
+foreach(header ${headers_to_check})	
+  if ("${header}" MATCHES ".*/include/nodejs/.*")
+    # we do not check NodeJS bindings headers
+    continue()
+  endif()
+  get_filename_component(filename ${header} NAME_WE)	
+  set(filename "${check_headers_dir}/${filename}.cpp")	
+  if (NOT EXISTS ${filename})	
+    file(WRITE ${filename} "#include \"${header}\"\n")	
+  endif()	
+  list(APPEND sources ${filename})	
+endforeach()	
+add_library(check-headers STATIC EXCLUDE_FROM_ALL ${sources})	
+set_target_properties(check-headers PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${check_headers_dir})	
 
-# add headers sanity check target that includes all headers independently
-# make sure we have all deps for the nodejs sub project's includes (nan, node)
-if (ENABLE_NODE_BINDINGS)
-  set(check_headers_dir "${PROJECT_BINARY_DIR}/check-headers")
-  file(GLOB_RECURSE headers_to_check
-    ${PROJECT_BINARY_DIR}/*.hpp
-    ${PROJECT_SOURCE_DIR}/include/*.hpp)
-  foreach(header ${headers_to_check})
-    get_filename_component(filename ${header} NAME_WE)
-    set(filename "${check_headers_dir}/${filename}.cpp")
-    if (NOT EXISTS ${filename})
-      file(WRITE ${filename} "#include \"${header}\"\n")
-    endif()
-    list(APPEND sources ${filename})
-  endforeach()
-  add_library(check-headers STATIC EXCLUDE_FROM_ALL ${sources})
-  set_target_properties(check-headers PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${check_headers_dir})
-endif()

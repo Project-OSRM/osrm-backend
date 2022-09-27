@@ -58,7 +58,7 @@ class RasterGrid
         for (unsigned int y = 0; y < ydim; y++)
         {
             // read one line from file.
-            file_reader.ReadLine(&buffer[0], xdim * 11);
+            file_reader.ReadLine(buffer.data(), xdim * 11);
             boost::algorithm::trim(buffer);
 
             std::vector<std::string> result;

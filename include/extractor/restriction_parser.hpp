@@ -5,6 +5,8 @@
 
 #include <boost/optional/optional.hpp>
 
+#include <osmium/tags/filter.hpp>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -43,7 +45,7 @@ class RestrictionParser
   public:
     RestrictionParser(bool use_turn_restrictions,
                       bool parse_conditionals,
-                      std::vector<std::string> &restrictions);
+                      const std::vector<std::string> &restrictions);
     std::vector<InputTurnRestriction> TryParse(const osmium::Relation &relation) const;
 
   private:
@@ -51,7 +53,8 @@ class RestrictionParser
 
     bool use_turn_restrictions;
     bool parse_conditionals;
-    std::vector<std::string> restrictions;
+    std::set<std::string> restrictions;
+    osmium::tags::KeyFilter filter;
 };
 } // namespace extractor
 } // namespace osrm

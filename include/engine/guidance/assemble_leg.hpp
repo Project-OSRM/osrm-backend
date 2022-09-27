@@ -6,6 +6,7 @@
 #include "engine/guidance/route_leg.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/internal_route_result.hpp"
+#include "util/coordinate_calculation.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/algorithm/string/join.hpp>

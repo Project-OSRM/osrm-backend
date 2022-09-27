@@ -2,6 +2,7 @@
 #include "extractor/profile_properties.hpp"
 
 #include "util/conditional_restrictions.hpp"
+#include "util/integer_range.hpp"
 #include "util/log.hpp"
 
 #include <boost/algorithm/string/predicate.hpp>
@@ -9,7 +10,6 @@
 #include <boost/ref.hpp>
 
 #include <osmium/osm.hpp>
-#include <osmium/tags/regex_filter.hpp>
 
 #include <algorithm>
 
@@ -20,9 +20,9 @@ namespace extractor
 
 RestrictionParser::RestrictionParser(bool use_turn_restrictions_,
                                      bool parse_conditionals_,
-                                     std::vector<std::string> &restrictions_)
+                                     const std::vector<std::string> &restrictions_)
     : use_turn_restrictions(use_turn_restrictions_), parse_conditionals(parse_conditionals_),
-      restrictions(restrictions_)
+      restrictions(restrictions_.begin(), restrictions_.end()), filter(false)
 {
     if (use_turn_restrictions)
     {
@@ -40,11 +40,28 @@ RestrictionParser::RestrictionParser(bool use_turn_restrictions_,
             util::Log() << "Found no turn restriction tags";
         }
     }
+
+    filter.add(true, "restriction");
+    if (parse_conditionals)
+    {
+        filter.add(true, "restriction:conditional");
+        for (const auto &namespaced : restrictions_)
+        {
+            filter.add(true, "restriction:" + namespaced + ":conditional");
+        }
+    }
+
+    // Not only use restriction= but also e.g. restriction:motorcar=
+    // Include restriction:{mode}:conditional if flagged
+    for (const auto &namespaced : restrictions_)
+    {
+        filter.add(true, "restriction:" + namespaced);
+    }
 }
 
 /**
  * Tries to parse a relation as a turn restriction. This can fail for a number of
- * reasons. The return type is a boost::optional<T>.
+ * reasons. The return type is a std::vector<T>.
  *
  * Some restrictions can also be ignored: See the ```get_restrictions``` function
  * in the corresponding profile. We use it for both namespacing restrictions, as in
@@ -59,31 +76,13 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         return {};
     }
 
-    osmium::tags::KeyFilter filter(false);
-    filter.add(true, "restriction");
-    if (parse_conditionals)
-    {
-        filter.add(true, "restriction:conditional");
-        for (const auto &namespaced : restrictions)
-        {
-            filter.add(true, "restriction:" + namespaced + ":conditional");
-        }
-    }
-
-    // Not only use restriction= but also e.g. restriction:motorcar=
-    // Include restriction:{mode}:conditional if flagged
-    for (const auto &namespaced : restrictions)
-    {
-        filter.add(true, "restriction:" + namespaced);
-    }
-
     const osmium::TagList &tag_list = relation.tags();
 
     osmium::tags::KeyFilter::iterator fi_begin(filter, tag_list.begin(), tag_list.end());
     osmium::tags::KeyFilter::iterator fi_end(filter, tag_list.end(), tag_list.end());
 
     // if it's not a restriction, continue;
-    if (std::distance(fi_begin, fi_end) == 0)
+    if (fi_begin == fi_end)
     {
         return {};
     }
@@ -99,18 +98,20 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
     bool is_multi_from = false;
     bool is_multi_to = false;
 
+    std::vector<util::OpeningHours> condition;
+
     for (; fi_begin != fi_end; ++fi_begin)
     {
-        const std::string key(fi_begin->key());
-        const std::string value(fi_begin->value());
+        auto value = fi_begin->value();
 
         // documented OSM restriction tags start either with only_* or no_*;
         // check and return on these values, and ignore no_*_on_red or unrecognized values
-        if (value.find("only_") == 0)
+        if (boost::algorithm::starts_with(value, "only_"))
         {
             is_only_restriction = true;
         }
-        else if (value.find("no_") == 0 && !boost::algorithm::ends_with(value, "_on_red"))
+        else if (boost::algorithm::starts_with(value, "no_") &&
+                 !boost::algorithm::ends_with(value, "_on_red"))
         {
             is_only_restriction = false;
             if (boost::algorithm::starts_with(value, "no_exit"))
@@ -126,76 +127,9 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         {
             return {};
         }
-    }
 
-    constexpr auto INVALID_OSM_ID = std::numeric_limits<std::uint64_t>::max();
-    std::vector<OSMWayID> from_ways;
-    auto via_node = INVALID_OSM_ID;
-    std::vector<OSMWayID> via_ways;
-    std::vector<OSMWayID> to_ways;
-    bool is_node_restriction = true;
-
-    for (const auto &member : relation.members())
-    {
-        const char *role = member.role();
-        if (strcmp("from", role) != 0 && strcmp("to", role) != 0 && strcmp("via", role) != 0)
+        if (parse_conditionals)
         {
-            continue;
-        }
-
-        switch (member.type())
-        {
-        case osmium::item_type::node:
-        {
-
-            // Make sure nodes appear only in the role if a via node
-            if (0 == strcmp("from", role) || 0 == strcmp("to", role))
-            {
-                continue;
-            }
-            BOOST_ASSERT(0 == strcmp("via", role));
-            via_node = static_cast<std::uint64_t>(member.ref());
-            is_node_restriction = true;
-            // set via node id
-            break;
-        }
-        case osmium::item_type::way:
-            BOOST_ASSERT(0 == strcmp("from", role) || 0 == strcmp("to", role) ||
-                         0 == strcmp("via", role));
-            if (0 == strcmp("from", role))
-            {
-                from_ways.push_back({static_cast<std::uint64_t>(member.ref())});
-            }
-            else if (0 == strcmp("to", role))
-            {
-                to_ways.push_back({static_cast<std::uint64_t>(member.ref())});
-            }
-            else if (0 == strcmp("via", role))
-            {
-                via_ways.push_back({static_cast<std::uint64_t>(member.ref())});
-                is_node_restriction = false;
-            }
-            break;
-        case osmium::item_type::relation:
-            // not yet supported, but who knows what the future holds...
-            break;
-        default:
-            // shouldn't ever happen
-            break;
-        }
-    }
-
-    std::vector<util::OpeningHours> condition;
-    // parse conditional tags
-    if (parse_conditionals)
-    {
-        osmium::tags::KeyFilter::iterator fi_begin(filter, tag_list.begin(), tag_list.end());
-        osmium::tags::KeyFilter::iterator fi_end(filter, tag_list.end(), tag_list.end());
-        for (; fi_begin != fi_end; ++fi_begin)
-        {
-            const std::string key(fi_begin->key());
-            const std::string value(fi_begin->value());
-
             // Parse condition and add independent value/condition pairs
             const auto &parsed = osrm::util::ParseConditionalRestrictions(value);
 
@@ -211,6 +145,66 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
 
                 condition = std::move(hours);
             }
+        }
+    }
+
+    constexpr auto INVALID_OSM_ID = std::numeric_limits<std::uint64_t>::max();
+    std::vector<OSMWayID> from_ways;
+    auto via_node = INVALID_OSM_ID;
+    std::vector<OSMWayID> via_ways;
+    std::vector<OSMWayID> to_ways;
+    bool is_node_restriction = true;
+
+    for (const auto &member : relation.members())
+    {
+        const char *role = member.role();
+        const bool is_from_role = strcmp("from", role) == 0;
+        const bool is_to_role = strcmp("to", role) == 0;
+        const bool is_via_role = strcmp("via", role) == 0;
+
+        if (!is_from_role && !is_to_role && !is_via_role)
+        {
+            continue;
+        }
+
+        switch (member.type())
+        {
+        case osmium::item_type::node:
+        {
+
+            // Make sure nodes appear only in the role if a via node
+            if (is_from_role || is_to_role)
+            {
+                continue;
+            }
+            BOOST_ASSERT(is_via_role);
+            via_node = static_cast<std::uint64_t>(member.ref());
+            is_node_restriction = true;
+            // set via node id
+            break;
+        }
+        case osmium::item_type::way:
+            BOOST_ASSERT(is_from_role || is_to_role || is_via_role);
+            if (is_from_role)
+            {
+                from_ways.push_back({static_cast<std::uint64_t>(member.ref())});
+            }
+            else if (is_to_role)
+            {
+                to_ways.push_back({static_cast<std::uint64_t>(member.ref())});
+            }
+            else if (is_via_role)
+            {
+                via_ways.push_back({static_cast<std::uint64_t>(member.ref())});
+                is_node_restriction = false;
+            }
+            break;
+        case osmium::item_type::relation:
+            // not yet supported, but who knows what the future holds...
+            break;
+        default:
+            // shouldn't ever happen
+            break;
         }
     }
 
@@ -270,17 +264,25 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
         return false;
     }
 
-    // Be warned, this is quadratic work here, but we assume that
-    // only a few exceptions are actually defined.
-    const std::regex delimiter_re("[;][ ]*");
-    std::sregex_token_iterator except_tags_begin(
-        except_tag_string.begin(), except_tag_string.end(), delimiter_re, -1);
-    std::sregex_token_iterator except_tags_end;
-
-    return std::any_of(except_tags_begin, except_tags_end, [&](const std::string &current_string) {
-        return std::end(restrictions) !=
-               std::find(std::begin(restrictions), std::end(restrictions), current_string);
-    });
+    // split `except_tag_string` by semicolon and check if any of items is in `restrictions`
+    std::string current_string;
+    for (auto index : util::irange<size_t>(0, except_tag_string.size()))
+    {
+        const auto ch = except_tag_string[index];
+        if (ch != ';')
+        {
+            current_string += ch;
+        }
+        else
+        {
+            if (restrictions.find(current_string) != restrictions.end())
+            {
+                return true;
+            }
+            current_string.clear();
+        }
+    }
+    return restrictions.find(current_string) != restrictions.end();
 }
 } // namespace extractor
 } // namespace osrm

@@ -13,3 +13,6 @@
 
 # Declare files that will always have LF line endings on checkout.
 *.sh text eol=lf
+
+# https://eslint.org/docs/latest/rules/linebreak-style#using-this-rule-with-version-control-systems
+*.js text eol=lf
