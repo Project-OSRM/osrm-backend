@@ -714,7 +714,7 @@ jobs:
       if: ${{ matrix.ENABLE_BENCHMARKS == 'ON' }}
       run: |
         pushd ${OSRM_BUILD_DIR}
-        make --jobs=${JOBS} benchmark
+        make --jobs=${JOBS} benchmarks
         for i in ./src/benchmark/*-bench ; do echo Running $i ; $i ; done
         popd
     - name: Run Node package tests only
