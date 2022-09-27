@@ -3,8 +3,8 @@
 ## OSRM
 
 The `OSRM` method is the main constructor for creating an OSRM instance.
-An OSRM instance requires a `.osrm` dataset, which is prepared by the OSRM toolchain.
-You can create such a `.osrm` file by running the OSRM binaries we ship in `node_modules/osrm/lib/binding/` and default
+An OSRM instance requires a `.osrm.*` dataset(`.osrm.*` because it contains several files), which is prepared by the OSRM toolchain.
+You can create such a `.osrm.*` dataset by running the OSRM binaries we ship in `node_modules/osrm/lib/binding/` and default
 profiles (e.g. for setting speeds and determining road types to route on) in `node_modules/osrm/profiles/`:
 
     node_modules/osrm/lib/binding/osrm-extract data.osm.pbf -p node_modules/osrm/profiles/car.lua
@@ -12,7 +12,7 @@ profiles (e.g. for setting speeds and determining road types to route on) in `no
 
 Consult the [osrm-backend](https://github.com/Project-OSRM/osrm-backend) documentation for further details.
 
-Once you have a complete `network.osrm` file, you can calculate routes in javascript with this object.
+Once you have a complete `network.osrm.*` dataset, you can calculate routes in javascript with this object.
 
 ```javascript
 var osrm = new OSRM('network.osrm');
