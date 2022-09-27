@@ -211,6 +211,7 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: gcc-11
             CXXCOMPILER: g++-11
+            ENABLE_BENCHMARKS: ON
 
           - name: gcc-10-release
             continue-on-error: false
@@ -692,7 +693,6 @@ jobs:
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
         make --jobs=${JOBS}
         popd
-
     - name: Run all tests
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
       run: |
@@ -710,6 +710,12 @@ jobs:
         fi
         popd
         npm test
+    - name: Run benchmarks
+      if: ${{ matrix.ENABLE_BENCHMARKS == 'ON' }}
+      run: |
+        pushd ${OSRM_BUILD_DIR}
+        for i in ./src/benchmark/*-bench ; do echo Running $i ; $i ; done
+        popd
     - name: Run Node package tests only
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
       run: |
