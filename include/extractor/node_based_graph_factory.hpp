@@ -34,7 +34,7 @@ namespace extractor
 class NodeBasedGraphFactory
 {
   public:
-    // The node-based graph factory loads the *.osrm file and transforms the data within into the
+    // The node-based graph factory transforms the graph data into the
     // node-based graph to represent the OSM network. This includes geometry compression, annotation
     // data optimisation and many other aspects. After this step, the edge-based graph factory can
     // turn the graph into the routing graph to be used with the navigation algorithms.

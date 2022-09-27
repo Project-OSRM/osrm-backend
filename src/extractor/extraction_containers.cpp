@@ -542,7 +542,7 @@ void ExtractionContainers::PrepareNodes()
 
             ++node_id_iterator;
 
-            internal_nodes.emplace_back(*node_iterator++);
+            used_nodes.emplace_back(*node_iterator++);
         }
 
         TIMER_STOP(write_nodes);
@@ -559,7 +559,7 @@ void ExtractionContainers::PrepareNodes()
                 used_node_id_list.begin(), used_node_id_list.end(), osm_id);
             if (node_id != SPECIAL_NODEID)
             {
-                internal_barrier_nodes.emplace(node_id);
+                used_barrier_nodes.emplace(node_id);
             }
         }
         log << "ok, after " << TIMER_SEC(write_nodes) << "s";
@@ -852,10 +852,10 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         }
     }
 
-    all_nodes_list.clear(); // free all_nodes_list before allocation of normal_edges
+    all_nodes_list.clear(); // free all_nodes_list before allocation of used_edges
     all_nodes_list.shrink_to_fit();
 
-    normal_edges.reserve(all_edges_list.size());
+    used_edges.reserve(all_edges_list.size());
     {
         util::UnbufferedLog log;
         log << "Writing used edges       ... " << std::flush;
@@ -871,17 +871,17 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
 
             // IMPORTANT: here, we're using slicing to only write the data from the base
             // class of NodeBasedEdgeWithOSM
-            normal_edges.push_back(edge.result);
+            used_edges.push_back(edge.result);
         }
 
-        if (normal_edges.size() > std::numeric_limits<uint32_t>::max())
+        if (used_edges.size() > std::numeric_limits<uint32_t>::max())
         {
             throw util::exception("There are too many edges, OSRM only supports 2^32" + SOURCE_REF);
         }
 
         TIMER_STOP(write_edges);
         log << "ok, after " << TIMER_SEC(write_edges) << "s";
-        log << " -- Processed " << normal_edges.size() << " edges";
+        log << " -- Processed " << used_edges.size() << " edges";
     }
 }
 

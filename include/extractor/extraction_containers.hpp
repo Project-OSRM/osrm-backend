@@ -72,7 +72,7 @@ class ExtractionContainers
     std::vector<InputTrafficSignal> external_traffic_signals;
     TrafficSignals internal_traffic_signals;
 
-    std::vector<NodeBasedEdge> normal_edges;
+    std::vector<NodeBasedEdge> used_edges;
 
     // List of restrictions (conditional and unconditional) before we transform them into the
     // output types. Input containers reference OSMNodeIDs. We can only transform them to the
@@ -83,8 +83,8 @@ class ExtractionContainers
 
     std::vector<InputManeuverOverride> external_maneuver_overrides_list;
     std::vector<UnresolvedManeuverOverride> internal_maneuver_overrides;
-    std::unordered_set<NodeID> internal_barrier_nodes;
-    NodeVector internal_nodes;
+    std::unordered_set<NodeID> used_barrier_nodes;
+    NodeVector used_nodes;
 
     ExtractionContainers();
 

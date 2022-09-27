@@ -627,11 +627,11 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
     std::vector<util::Coordinate> osm_coordinates;
     extractor::PackedOSMIDs osm_node_ids;
 
-    osm_coordinates.resize(extraction_containers.internal_nodes.size());
-    osm_node_ids.reserve(extraction_containers.internal_nodes.size());
-    for (size_t index = 0; index < extraction_containers.internal_nodes.size(); ++index)
+    osm_coordinates.resize(extraction_containers.used_nodes.size());
+    osm_node_ids.reserve(extraction_containers.used_nodes.size());
+    for (size_t index = 0; index < extraction_containers.used_nodes.size(); ++index)
     {
-        const auto &current_node = extraction_containers.internal_nodes[index];
+        const auto &current_node = extraction_containers.used_nodes[index];
         osm_coordinates[index].lon = current_node.lon;
         osm_coordinates[index].lat = current_node.lat;
         osm_node_ids.push_back(current_node.node_id);
@@ -642,19 +642,19 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
         storage::tar::FileWriter writer(config.GetPath(".osrm").string(),
                                         storage::tar::FileWriter::GenerateFingerprint);
         storage::serialization::write(
-            writer, "/extractor/nodes", extraction_containers.internal_nodes);
+            writer, "/extractor/nodes", extraction_containers.used_nodes);
         storage::serialization::write(
-            writer, "/extractor/edges", extraction_containers.normal_edges);
+            writer, "/extractor/edges", extraction_containers.used_edges);
     }
 
     return ParsedOSMData{std::move(turn_lane_map),
                          std::move(extraction_containers.turn_restrictions),
                          std::move(extraction_containers.internal_maneuver_overrides),
                          std::move(extraction_containers.internal_traffic_signals),
-                         std::move(extraction_containers.internal_barrier_nodes),
+                         std::move(extraction_containers.used_barrier_nodes),
                          std::move(osm_coordinates),
                          std::move(osm_node_ids),
-                         std::move(extraction_containers.normal_edges),
+                         std::move(extraction_containers.used_edges),
                          std::move(extraction_containers.all_edges_annotation_data_list)};
 }
 
