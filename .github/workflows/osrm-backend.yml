@@ -717,7 +717,7 @@ jobs:
         make --jobs=${JOBS} benchmarks
         ls -R
         ./src/benchmarks/match-bench ../test/data/monaco.osrm
-      #  for i in ./src/benchmark/*-bench ; do echo Running $i ; $i ; done
+        #  for i in ./src/benchmark/*-bench ; do echo Running $i ; $i ; done
         popd
     - name: Run Node package tests only
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
