@@ -360,12 +360,14 @@ double getPathDistance(const DataFacade<Algorithm> &facade,
     {
         const auto current_coordinate = facade.GetCoordinateOfNode(p.turn_via_node);
 
-        distance += util::coordinate_calculation::greatCircleDistance(prev_coordinate, current_coordinate);
+        distance +=
+            util::coordinate_calculation::greatCircleDistance(prev_coordinate, current_coordinate);
 
         prev_coordinate = current_coordinate;
     }
 
-    distance += util::coordinate_calculation::greatCircleDistance(prev_coordinate, target_phantom.location);
+    distance +=
+        util::coordinate_calculation::greatCircleDistance(prev_coordinate, target_phantom.location);
 
     return distance;
 }
