@@ -9,6 +9,7 @@
     - NodeJS:
       - FIXED: Support `skip_waypoints` in Node bindings [#6060](https://github.com/Project-OSRM/osrm-backend/pull/6060)
     - Misc:
+      - CHANGED: Improve performance of map matching via getPathDistance optimization. [#6378](https://github.com/Project-OSRM/osrm-backend/pull/6378)
       - CHANGED: Optimize RestrictionParser performance. [#6344](https://github.com/Project-OSRM/osrm-backend/pull/6344)
       - ADDED: Support floats for speed value in traffic updates CSV. [#6327](https://github.com/Project-OSRM/osrm-backend/pull/6327)
       - CHANGED: Use Lua 5.4 in Docker image. [#6346](https://github.com/Project-OSRM/osrm-backend/pull/6346)
