@@ -715,9 +715,10 @@ jobs:
       run: |
         pushd ${OSRM_BUILD_DIR}
         make --jobs=${JOBS} benchmarks
-        # ls -R ../test/data/
+        ./src/benchmarks/alias-bench 
         ./src/benchmarks/match-bench ../test/data/ch/monaco.osrm
-        #  for i in ./src/benchmark/*-bench ; do echo Running $i ; $i ; done
+        #./src/benchmarks/packedvector-bench
+        ./src/benchmarks/rtree-bench ../test/data/monaco.osrm.ramIndex ../test/data/monaco.osrm.fileIndex ../test/data/monaco.osrm.nbg_nodes
         popd
     - name: Run Node package tests only
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
