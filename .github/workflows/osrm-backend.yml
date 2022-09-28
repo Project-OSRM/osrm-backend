@@ -715,8 +715,8 @@ jobs:
       run: |
         pushd ${OSRM_BUILD_DIR}
         make --jobs=${JOBS} benchmarks
-        # ls -R .
-        ./src/benchmarks/match-bench ../test/data/monaco.osrm
+        ls -R ../test/data/
+        ./src/benchmarks/match-bench ../test/data/ch/monaco.osrm
         #  for i in ./src/benchmark/*-bench ; do echo Running $i ; $i ; done
         popd
     - name: Run Node package tests only
