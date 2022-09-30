@@ -19,6 +19,7 @@ BOOST_AUTO_TEST_CASE(json_escaping)
     BOOST_CHECK_EQUAL(output, "\\b\\\\");
 
     input = "Aleja \"Solidarnosci\"";
+    output.clear();
     EscapeJSONString(input, output);
     BOOST_CHECK_EQUAL(SizeOfEscapedJSONString(input), 22);
     BOOST_CHECK_EQUAL(output, "Aleja \\\"Solidarnosci\\\"");
