@@ -122,16 +122,30 @@ template <> void Renderer<std::vector<char>>::write(const char *str)
 {
     out.insert(out.end(), str, str + strlen(str));
 }
+template <> void Renderer<std::vector<char>>::write(char ch) { out.push_back(ch); }
+
 
 template <> void Renderer<std::ostream>::write(const std::string &str) { out << str; }
 
 template <> void Renderer<std::ostream>::write(const char *str) { out << str; }
 
-template <> void Renderer<std::vector<char>>::write(char ch) { out.push_back(ch); }
-
 template <> void Renderer<std::ostream>::write(char ch) { out << ch; }
 
+
+template <> void Renderer<std::string>::write(const std::string &str) { out += str; }
+
+template <> void Renderer<std::string>::write(const char *str) { out += str; }
+
+template <> void Renderer<std::string>::write(char ch) { out += ch; }
+
+
 inline void render(std::ostream &out, const Object &object)
+{
+    Value value = object;
+    mapbox::util::apply_visitor(Renderer(out), value);
+}
+
+inline void render(std::string &out, const Object &object)
 {
     Value value = object;
     mapbox::util::apply_visitor(Renderer(out), value);

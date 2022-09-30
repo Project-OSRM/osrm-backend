@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 // #ifdef _WIN32
 // #pragma optimize("", off)
@@ -130,17 +131,28 @@ int main(int, char **)
     }
     json::Object obj{{{"arr", arr}}};
 
+    TIMER_START(string);
+    std::string out_str;
+    json::render(out_str, obj);
+    TIMER_STOP(string);
+    std::cout << "String: " << TIMER_MSEC(string) << "ms" << std::endl;
+
     TIMER_START(stringstream);
     std::stringstream ss;
     json::render(ss, obj);
-    std::string s{ss.str()};
+    std::string out_ss_str{ss.str()};
     TIMER_STOP(stringstream);
-    std::cout << "String: " << TIMER_MSEC(stringstream) << "ms" << std::endl;
+
+    std::cout << "Stringstream: " << TIMER_MSEC(stringstream) << "ms" << std::endl;
     TIMER_START(vector);
-    std::vector<char> vec;
-    json::render(vec, obj);
+    std::vector<char> out_vec;
+    json::render(out_vec, obj);
     TIMER_STOP(vector);
     std::cout << "Vector: " << TIMER_MSEC(vector) << "ms" << std::endl;
+
+    if (std::string{out_vec.begin(), out_vec.end()} != out_str || out_str != out_ss_str) {
+        throw std::logic_error("Vector and string are not equal");
+    }
     // (void)s;
     // std::cerr << ss << "\n";
     return EXIT_SUCCESS;
