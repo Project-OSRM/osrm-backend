@@ -291,7 +291,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang-6.0
             CXXCOMPILER: clang++-6.0
-            ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -303,7 +302,6 @@ jobs:
             BUILD_TYPE: Debug
             CCOMPILER: clang-6.0
             CXXCOMPILER: clang++-6.0
-            ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -315,7 +313,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang-6.0
             CXXCOMPILER: clang++-6.0
-            ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -327,7 +324,6 @@ jobs:
             BUILD_TYPE: Debug
             CCOMPILER: clang-6.0
             CXXCOMPILER: clang++-6.0
-            ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -340,7 +336,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang-6.0
             CXXCOMPILER: clang++-6.0
-            ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -352,7 +347,6 @@ jobs:
             BUILD_TYPE: Debug
             CCOMPILER: clang-6.0
             CXXCOMPILER: clang++-6.0
-            ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -376,7 +370,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang-6.0
             CXXCOMPILER: clang++-6.0
-            ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -388,7 +381,6 @@ jobs:
             BUILD_TYPE: Debug
             CCOMPILER: clang-6.0
             CXXCOMPILER: clang++-6.0
-            ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -412,7 +404,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang-6.0
             CXXCOMPILER: clang++-6.0
-            ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -424,7 +415,6 @@ jobs:
             BUILD_TYPE: Debug
             CCOMPILER: clang-6.0
             CXXCOMPILER: clang++-6.0
-            ENABLE_GLIBC_WORKAROUND: ON
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -443,7 +433,6 @@ jobs:
       ENABLE_ASSERTIONS: ${{ matrix.ENABLE_ASSERTIONS }}
       ENABLE_CLANG_TIDY: ${{ matrix.ENABLE_CLANG_TIDY }}
       ENABLE_COVERAGE: ${{ matrix.ENABLE_COVERAGE }}
-      ENABLE_GLIBC_WORKAROUND: ${{ matrix.ENABLE_GLIBC_WORKAROUND }}
       ENABLE_CONAN: ${{ matrix.ENABLE_CONAN }}
       ENABLE_SANITIZER: ${{ matrix.ENABLE_SANITIZER }}
       NODE_PACKAGE_TESTS_ONLY: ${{ matrix.NODE_PACKAGE_TESTS_ONLY }}
@@ -593,8 +582,7 @@ jobs:
                  -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
                  -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
                  -DENABLE_CCACHE=ON \
-                 -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
-                 -DENABLE_GLIBC_WORKAROUND=${ENABLE_GLIBC_WORKAROUND:-OFF}
+                 -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
         make --jobs=${JOBS}
 
         if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
