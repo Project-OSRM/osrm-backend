@@ -187,8 +187,13 @@ inline void render(std::ostream &out, const Object &object)
 
 inline void render(std::vector<char> &out, const Object &object)
 {
+    std::ostringstream ss;
+
     Value value = object;
-    mapbox::util::apply_visitor(ArrayRenderer(out), value);
+    mapbox::util::apply_visitor(Renderer(ss), value);
+
+    auto s = ss.str();
+    out = {s.begin(), s.end()};
 }
 
 } // namespace json
