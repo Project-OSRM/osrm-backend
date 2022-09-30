@@ -9,6 +9,7 @@
     - NodeJS:
       - FIXED: Support `skip_waypoints` in Node bindings [#6060](https://github.com/Project-OSRM/osrm-backend/pull/6060)
     - Misc:
+      - CHANGED: Improve performance of map matching via getPathDistance optimization. [#6378](https://github.com/Project-OSRM/osrm-backend/pull/6378)
       - CHANGED: Optimize RestrictionParser performance. [#6344](https://github.com/Project-OSRM/osrm-backend/pull/6344)
       - ADDED: Support floats for speed value in traffic updates CSV. [#6327](https://github.com/Project-OSRM/osrm-backend/pull/6327)
       - CHANGED: Use Lua 5.4 in Docker image. [#6346](https://github.com/Project-OSRM/osrm-backend/pull/6346)
@@ -22,6 +23,8 @@
       - FIXED: Bug in bicycle profile that caused exceptions if there is a highway=bicycle in the data. [#6296](https://github.com/Project-OSRM/osrm-backend/pull/6296)
       - FIXED: Internal refactoring of identifier types used in data facade [#6044](https://github.com/Project-OSRM/osrm-backend/pull/6044)
     - Build:
+      - ADDED: Build Node bindings on Windows. [#6334](https://github.com/Project-OSRM/osrm-backend/pull/6334)
+      - ADDED: Configure cross-compilation for Apple Silicon. [#6360](https://github.com/Project-OSRM/osrm-backend/pull/6360)
       - CHANGED: Use apt-get to install Clang on CI. [#6345](https://github.com/Project-OSRM/osrm-backend/pull/6345)
       - CHANGED: Fix TBB in case of Conan + NodeJS build. [#6333](https://github.com/Project-OSRM/osrm-backend/pull/6333)
       - CHANGED: Migrate to modern TBB version. [#6300](https://github.com/Project-OSRM/osrm-backend/pull/6300)
@@ -57,6 +60,10 @@
       - ADDED: Support snapping to multiple ways at an input location. [#5953](https://github.com/Project-OSRM/osrm-backend/pull/5953)
       - FIXED: Fix snapping target locations to ways used in turn restrictions. [#6339](https://github.com/Project-OSRM/osrm-backend/pull/6339)
       - ADDED: Support OSM traffic signal directions. [#6153](https://github.com/Project-OSRM/osrm-backend/pull/6153)
+      - FIXED: Ensure u-turn exists in intersection view. [#6376](https://github.com/Project-OSRM/osrm-backend/pull/6376)
+    - Profile:
+      - CHANGED: Bicycle surface speeds [#6212](https://github.com/Project-OSRM/osrm-backend/pull/6212)
+
 
 # 5.26.0
   - Changes from 5.25.0

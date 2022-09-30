@@ -211,7 +211,7 @@ struct SharedRegion
 
     char name[MAX_NAME_LENGTH + 1];
     std::uint64_t timestamp;
-    std::uint16_t shm_key;
+    std::uint16_t shm_key = 0;
 };
 
 // Keeps a list of all shared regions in a fixed-sized struct
