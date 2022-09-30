@@ -39,12 +39,8 @@ std::size_t loadGraph(const std::string &path,
                       std::vector<TarjanEdge> &graph_edge_list)
 {
     std::vector<extractor::NodeBasedEdge> edge_list;
-    std::vector<extractor::NodeBasedEdgeAnnotation> annotation_data;
 
-    auto nop = boost::make_function_output_iterator([](auto) {});
-
-    extractor::files::readRawNBGraph(
-        path, nop, coordinate_list, osm_node_ids, edge_list, annotation_data);
+    extractor::files::readRawNBGraph(path, coordinate_list, osm_node_ids, edge_list);
 
     // Building a node-based graph
     for (const auto &input_edge : edge_list)

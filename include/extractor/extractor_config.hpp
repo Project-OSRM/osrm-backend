@@ -48,7 +48,7 @@ struct ExtractorConfig final : storage::IOConfig
                   "",
               },
               {},
-              {".osrm",
+              {".osrm.nbg",
                ".osrm.restrictions",
                ".osrm.names",
                ".osrm.tls",
@@ -89,6 +89,7 @@ struct ExtractorConfig final : storage::IOConfig
     bool use_metadata = false;
     bool parse_conditionals = false;
     bool use_locations_cache = true;
+    bool dump_nbg_graph = false;
 };
 } // namespace extractor
 } // namespace osrm

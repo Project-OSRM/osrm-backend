@@ -64,7 +64,8 @@
       - FIXED: Ensure u-turn exists in intersection view. [#6376](https://github.com/Project-OSRM/osrm-backend/pull/6376)
     - Profile:
       - CHANGED: Bicycle surface speeds [#6212](https://github.com/Project-OSRM/osrm-backend/pull/6212)
-
+    - Tools:
+      - CHANGED: Do not generate intermediate .osrm file in osrm-extract. [#6354](https://github.com/Project-OSRM/osrm-backend/pull/6354)
 
 # 5.26.0
   - Changes from 5.25.0

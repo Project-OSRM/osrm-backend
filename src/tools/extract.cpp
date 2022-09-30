@@ -74,7 +74,12 @@ return_code parseArguments(int argc,
         boost::program_options::bool_switch(&extractor_config.use_locations_cache)
             ->implicit_value(false)
             ->default_value(true),
-        "Use internal nodes locations cache for location-dependent data lookups");
+        "Use internal nodes locations cache for location-dependent data lookups")(
+        "dump-nbg-graph",
+        boost::program_options::bool_switch(&extractor_config.dump_nbg_graph)
+            ->implicit_value(true)
+            ->default_value(false),
+        "Dump raw node-based graph to *.osrm file for debug purposes.");
 
     bool dummy;
     // hidden options, will be allowed on command line, but will not be
