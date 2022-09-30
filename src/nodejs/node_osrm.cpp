@@ -167,13 +167,13 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
                 ParseResult(status, json_result);
                 if (pluginParams.renderToBuffer)
                 {
-                    std::ostringstream buf;
-                    osrm::util::json::render(buf, json_result);
-                    result = buf.str();
+                    std::string json_string;
+                    osrm::util::json::render(json_string, json_result);
+                    result = std::move(json_string);
                 }
                 else
                 {
-                    result = json_result;
+                    result = std::move(json_result);
                 }
             }
             break;
