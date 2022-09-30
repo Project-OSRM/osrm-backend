@@ -9,6 +9,8 @@
     - NodeJS:
       - FIXED: Support `skip_waypoints` in Node bindings [#6060](https://github.com/Project-OSRM/osrm-backend/pull/6060)
     - Misc:
+      - ADDED: Add timestamps for logs. [#6375](https://github.com/Project-OSRM/osrm-backend/pull/6375)
+      - CHANGED: Improve performance of map matching via getPathDistance optimization. [#6378](https://github.com/Project-OSRM/osrm-backend/pull/6378)
       - CHANGED: Optimize RestrictionParser performance. [#6344](https://github.com/Project-OSRM/osrm-backend/pull/6344)
       - ADDED: Support floats for speed value in traffic updates CSV. [#6327](https://github.com/Project-OSRM/osrm-backend/pull/6327)
       - CHANGED: Use Lua 5.4 in Docker image. [#6346](https://github.com/Project-OSRM/osrm-backend/pull/6346)
@@ -62,7 +64,8 @@
       - FIXED: Ensure u-turn exists in intersection view. [#6376](https://github.com/Project-OSRM/osrm-backend/pull/6376)
     - Profile:
       - CHANGED: Bicycle surface speeds [#6212](https://github.com/Project-OSRM/osrm-backend/pull/6212)
-
+    - Tools:
+      - CHANGED: Do not generate intermediate .osrm file in osrm-extract. [#6354](https://github.com/Project-OSRM/osrm-backend/pull/6354)
 
 # 5.26.0
   - Changes from 5.25.0

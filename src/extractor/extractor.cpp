@@ -204,12 +204,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
 
-    LaneDescriptionMap turn_lane_map;
-    std::vector<TurnRestriction> turn_restrictions;
-    std::vector<UnresolvedManeuverOverride> unresolved_maneuver_overrides;
-    TrafficSignals traffic_signals;
-    std::tie(turn_lane_map, turn_restrictions, unresolved_maneuver_overrides, traffic_signals) =
-        ParseOSMData(scripting_environment, number_of_threads);
+    auto parsed_osm_data = ParseOSMData(scripting_environment, number_of_threads);
 
     // Transform the node-based graph that OSM is based on into an edge-based graph
     // that is better for routing.  Every edge becomes a node, and every valid
@@ -227,11 +222,15 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     std::uint32_t ebg_connectivity_checksum = 0;
 
     // Create a node-based graph from the OSRM file
-    NodeBasedGraphFactory node_based_graph_factory(config.GetPath(".osrm"),
-                                                   scripting_environment,
-                                                   turn_restrictions,
-                                                   unresolved_maneuver_overrides,
-                                                   traffic_signals);
+    NodeBasedGraphFactory node_based_graph_factory(scripting_environment,
+                                                   parsed_osm_data.turn_restrictions,
+                                                   parsed_osm_data.unresolved_maneuver_overrides,
+                                                   parsed_osm_data.traffic_signals,
+                                                   std::move(parsed_osm_data.barriers),
+                                                   std::move(parsed_osm_data.osm_coordinates),
+                                                   std::move(parsed_osm_data.osm_node_ids),
+                                                   parsed_osm_data.edge_list,
+                                                   std::move(parsed_osm_data.annotation_data));
 
     NameTable name_table;
     files::readNames(config.GetPath(".osrm.names"), name_table);
@@ -270,10 +269,11 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     edge_based_nodes_container =
         EdgeBasedNodeDataContainer({}, std::move(node_based_graph_factory.GetAnnotationData()));
 
-    turn_restrictions = removeInvalidTurnPaths(std::move(turn_restrictions), node_based_graph);
-    unresolved_maneuver_overrides =
-        removeInvalidTurnPaths(std::move(unresolved_maneuver_overrides), node_based_graph);
-    auto restriction_graph = constructRestrictionGraph(turn_restrictions);
+    parsed_osm_data.turn_restrictions =
+        removeInvalidTurnPaths(std::move(parsed_osm_data.turn_restrictions), node_based_graph);
+    parsed_osm_data.unresolved_maneuver_overrides = removeInvalidTurnPaths(
+        std::move(parsed_osm_data.unresolved_maneuver_overrides), node_based_graph);
+    auto restriction_graph = constructRestrictionGraph(parsed_osm_data.turn_restrictions);
 
     const auto number_of_node_based_nodes = node_based_graph.GetNumberOfNodes();
 
@@ -282,12 +282,12 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                coordinates,
                                node_based_graph_factory.GetCompressedEdges(),
                                barrier_nodes,
-                               traffic_signals,
+                               parsed_osm_data.traffic_signals,
                                restriction_graph,
                                segregated_edges,
                                name_table,
-                               unresolved_maneuver_overrides,
-                               turn_lane_map,
+                               parsed_osm_data.unresolved_maneuver_overrides,
+                               parsed_osm_data.turn_lane_map,
                                scripting_environment,
                                edge_based_nodes_container,
                                edge_based_node_segments,
@@ -304,7 +304,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                          barrier_nodes,
                          restriction_graph,
                          name_table,
-                         std::move(turn_lane_map),
+                         std::move(parsed_osm_data.turn_lane_map),
                          scripting_environment);
 
     TIMER_STOP(expansion);
@@ -356,17 +356,13 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::Log() << "Expansion: " << nodes_per_second << " nodes/sec and " << edges_per_second
                 << " edges/sec";
     util::Log() << "To prepare the data for routing, run: "
-                << "./osrm-contract " << config.GetPath(".osrm");
+                << "./osrm-contract " << config.base_path;
 
     return 0;
 }
 
-std::tuple<LaneDescriptionMap,
-           std::vector<TurnRestriction>,
-           std::vector<UnresolvedManeuverOverride>,
-           TrafficSignals>
-Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
-                        const unsigned number_of_threads)
+Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
+                                                 const unsigned number_of_threads)
 {
     TIMER_START(extracting);
 
@@ -617,7 +613,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     }
 
     extraction_containers.PrepareData(scripting_environment,
-                                      config.GetPath(".osrm").string(),
                                       config.GetPath(".osrm.names").string());
 
     auto profile_properties = scripting_environment.GetProfileProperties();
@@ -629,10 +624,36 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     TIMER_STOP(extracting);
     util::Log() << "extraction finished after " << TIMER_SEC(extracting) << "s";
 
-    return std::make_tuple(std::move(turn_lane_map),
-                           std::move(extraction_containers.turn_restrictions),
-                           std::move(extraction_containers.internal_maneuver_overrides),
-                           std::move(extraction_containers.internal_traffic_signals));
+    std::vector<util::Coordinate> osm_coordinates;
+    extractor::PackedOSMIDs osm_node_ids;
+
+    osm_coordinates.resize(extraction_containers.used_nodes.size());
+    osm_node_ids.reserve(extraction_containers.used_nodes.size());
+    for (size_t index = 0; index < extraction_containers.used_nodes.size(); ++index)
+    {
+        const auto &current_node = extraction_containers.used_nodes[index];
+        osm_coordinates[index].lon = current_node.lon;
+        osm_coordinates[index].lat = current_node.lat;
+        osm_node_ids.push_back(current_node.node_id);
+    }
+
+    if (config.dump_nbg_graph)
+    {
+        storage::tar::FileWriter writer(config.GetPath(".osrm.nbg").string(),
+                                        storage::tar::FileWriter::GenerateFingerprint);
+        storage::serialization::write(writer, "/extractor/nodes", extraction_containers.used_nodes);
+        storage::serialization::write(writer, "/extractor/edges", extraction_containers.used_edges);
+    }
+
+    return ParsedOSMData{std::move(turn_lane_map),
+                         std::move(extraction_containers.turn_restrictions),
+                         std::move(extraction_containers.internal_maneuver_overrides),
+                         std::move(extraction_containers.internal_traffic_signals),
+                         std::move(extraction_containers.used_barrier_nodes),
+                         std::move(osm_coordinates),
+                         std::move(osm_node_ids),
+                         std::move(extraction_containers.used_edges),
+                         std::move(extraction_containers.all_edges_annotation_data_list)};
 }
 
 void Extractor::FindComponents(unsigned number_of_edge_based_nodes,

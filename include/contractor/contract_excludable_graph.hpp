@@ -56,7 +56,7 @@ inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
         // By not contracting all contractable nodes we avoid creating
         // a very dense core. This increases the overall graph sizes a little bit
         // but increases the final CH quality and contraction speed.
-        constexpr float BASE_CORE = 0.9;
+        constexpr float BASE_CORE = 0.9f;
         is_shared_core =
             contractGraph(contractor_graph, std::move(always_allowed), node_weights, BASE_CORE);
 

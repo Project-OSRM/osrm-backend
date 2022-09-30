@@ -43,9 +43,6 @@ class ExtractionContainers
     void PrepareTrafficSignals(const ReferencedTrafficSignals &referenced_traffic_signals);
     void PrepareEdges(ScriptingEnvironment &scripting_environment);
 
-    void WriteNodes(storage::tar::FileWriter &file_out) const;
-    void WriteEdges(storage::tar::FileWriter &file_out) const;
-    void WriteMetadata(storage::tar::FileWriter &file_out) const;
     void WriteCharData(const std::string &file_name);
 
   public:
@@ -75,6 +72,8 @@ class ExtractionContainers
     std::vector<InputTrafficSignal> external_traffic_signals;
     TrafficSignals internal_traffic_signals;
 
+    std::vector<NodeBasedEdge> used_edges;
+
     // List of restrictions (conditional and unconditional) before we transform them into the
     // output types. Input containers reference OSMNodeIDs. We can only transform them to the
     // correct internal IDs after we've read everything. Without a multi-parse approach,
@@ -84,11 +83,12 @@ class ExtractionContainers
 
     std::vector<InputManeuverOverride> external_maneuver_overrides_list;
     std::vector<UnresolvedManeuverOverride> internal_maneuver_overrides;
+    std::unordered_set<NodeID> used_barrier_nodes;
+    NodeVector used_nodes;
 
     ExtractionContainers();
 
     void PrepareData(ScriptingEnvironment &scripting_environment,
-                     const std::string &osrm_path,
                      const std::string &names_data_path);
 };
 } // namespace extractor

@@ -49,14 +49,16 @@ template <typename WordT, typename T>
 inline T get_lower_half_value(WordT word,
                               WordT mask,
                               std::uint8_t offset,
-                              typename std::enable_if_t<std::is_integral<T>::value> * = 0)
+                              typename std::enable_if_t<std::is_integral<T>::value> * = nullptr)
 {
     return static_cast<T>((word & mask) >> offset);
 }
 
 template <typename WordT, typename T>
-inline T
-get_lower_half_value(WordT word, WordT mask, std::uint8_t offset, typename T::value_type * = 0)
+inline T get_lower_half_value(WordT word,
+                              WordT mask,
+                              std::uint8_t offset,
+                              typename T::value_type * = nullptr)
 {
     return T{static_cast<typename T::value_type>((word & mask) >> offset)};
 }
@@ -65,14 +67,16 @@ template <typename WordT, typename T>
 inline T get_upper_half_value(WordT word,
                               WordT mask,
                               std::uint8_t offset,
-                              typename std::enable_if_t<std::is_integral<T>::value> * = 0)
+                              typename std::enable_if_t<std::is_integral<T>::value> * = nullptr)
 {
     return static_cast<T>((word & mask) << offset);
 }
 
 template <typename WordT, typename T>
-inline T
-get_upper_half_value(WordT word, WordT mask, std::uint8_t offset, typename T::value_type * = 0)
+inline T get_upper_half_value(WordT word,
+                              WordT mask,
+                              std::uint8_t offset,
+                              typename T::value_type * = nullptr)
 {
     static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
     return T{static_cast<typename T::value_type>((word & mask) << offset)};

@@ -61,13 +61,24 @@ class Extractor
     int run(ScriptingEnvironment &scripting_environment);
 
   private:
+    struct ParsedOSMData
+    {
+        LaneDescriptionMap turn_lane_map;
+        std::vector<TurnRestriction> turn_restrictions;
+        std::vector<UnresolvedManeuverOverride> unresolved_maneuver_overrides;
+        TrafficSignals traffic_signals;
+        std::unordered_set<NodeID> barriers;
+        std::vector<util::Coordinate> osm_coordinates;
+        extractor::PackedOSMIDs osm_node_ids;
+        std::vector<NodeBasedEdge> edge_list;
+        std::vector<NodeBasedEdgeAnnotation> annotation_data;
+    };
+
+  private:
     ExtractorConfig config;
 
-    std::tuple<LaneDescriptionMap,
-               std::vector<TurnRestriction>,
-               std::vector<UnresolvedManeuverOverride>,
-               TrafficSignals>
-    ParseOSMData(ScriptingEnvironment &scripting_environment, const unsigned number_of_threads);
+    ParsedOSMData ParseOSMData(ScriptingEnvironment &scripting_environment,
+                               const unsigned number_of_threads);
 
     EdgeID BuildEdgeExpandedGraph(
         // input data

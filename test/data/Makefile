@@ -22,15 +22,15 @@ clean:
 
 ch/$(DATA_NAME).osrm: $(DATA_NAME).osrm
 	mkdir -p ch
-	cp $(DATA_NAME).osrm $(DATA_NAME).osrm.* ch/
+	cp $(DATA_NAME).osrm.* ch/
 
 corech/$(DATA_NAME).osrm: $(DATA_NAME).osrm
 	mkdir -p corech
-	cp $(DATA_NAME).osrm $(DATA_NAME).osrm.* corech/
+	cp $(DATA_NAME).osrm.* corech/
 
 mld/$(DATA_NAME).osrm: $(DATA_NAME).osrm
 	mkdir -p mld
-	cp $(DATA_NAME).osrm $(DATA_NAME).osrm.* mld/
+	cp $(DATA_NAME).osrm.* mld/
 
 $(DATA_NAME).osrm: $(DATA_NAME).osm.pbf $(DATA_NAME).poly $(PROFILE) $(OSRM_EXTRACT)
 	@echo "Verifiyng data file integrity..."

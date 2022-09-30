@@ -313,8 +313,8 @@ class StaticGraph
     }
 
   protected:
-    NodeIterator number_of_nodes;
-    EdgeIterator number_of_edges;
+    NodeIterator number_of_nodes = 0;
+    EdgeIterator number_of_edges = 0;
 
     Vector<NodeArrayEntry> node_array;
     Vector<EdgeArrayEntry> edge_array;

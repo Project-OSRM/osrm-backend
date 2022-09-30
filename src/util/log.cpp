@@ -2,6 +2,7 @@
 #include "util/isatty.hpp"
 #include <boost/algorithm/string/predicate.hpp>
 #include <cstdio>
+#include <fmt/chrono.h>
 #include <iostream>
 #include <mutex>
 #include <string>
@@ -73,23 +74,33 @@ void Log::Init()
     if (!LogPolicy::GetInstance().IsMute() && level <= LogPolicy::GetInstance().GetLevel())
     {
         const bool is_terminal = IsStdoutATTY();
+
+        auto format = [is_terminal](const char *level, const char *color) {
+            const auto timestamp = std::chrono::system_clock::now();
+            return fmt::format("{}[{:%FT%H:%M:}{:%S}] [{}] ",
+                               is_terminal ? color : "",
+                               timestamp,
+                               timestamp.time_since_epoch(),
+                               level);
+        };
+
         switch (level)
         {
         case logNONE:
             break;
         case logWARNING:
-            stream << (is_terminal ? YELLOW : "") << "[warn] ";
+            stream << format("warn", YELLOW);
             break;
         case logERROR:
-            stream << (is_terminal ? RED : "") << "[error] ";
+            stream << format("error", RED);
             break;
         case logDEBUG:
 #ifdef ENABLE_DEBUG_LOGGING
-            stream << (is_terminal ? MAGENTA : "") << "[debug] ";
+            stream << format("debug", MAGENTA);
 #endif
             break;
         default: // logINFO:
-            stream << "[info] ";
+            stream << format("info", "");
             break;
         }
     }
