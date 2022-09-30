@@ -106,5 +106,8 @@ int main(int, char **)
     TIMER_STOP(vector);
     std::cout << "Vector: " << TIMER_MSEC(vector) << "ms" << std::endl;
 
+    if (std::string{out_vec.begin(), out_vec.end()} != out_str || out_str != out_ss_str) {
+        throw std::logic_error("Vector/stringstream/string results are not equal");
+    }
     return EXIT_SUCCESS;
 }
