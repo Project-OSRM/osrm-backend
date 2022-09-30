@@ -8,50 +8,6 @@
 #include <sstream>
 #include <stdexcept>
 
-// #ifdef _WIN32
-// #pragma optimize("", off)
-// template <class T> void dont_optimize_away(T &&datum) { T local = datum; }
-// #pragma optimize("", on)
-// #else
-// template <class T> void dont_optimize_away(T &&datum) { asm volatile("" : "+r"(datum)); }
-// #endif
-
-// template <std::size_t num_rounds, std::size_t num_entries, typename VectorT>
-// auto measure_random_access()
-// {
-//     std::vector<std::size_t> indices(num_entries);
-//     std::iota(indices.begin(), indices.end(), 0);
-//     std::mt19937 g(1337);
-//     std::shuffle(indices.begin(), indices.end(), g);
-
-//     VectorT vector(num_entries);
-
-//     TIMER_START(write);
-//     for (auto round : util::irange<std::size_t>(0, num_rounds))
-//     {
-//         for (auto idx : util::irange<std::size_t>(0, num_entries))
-//         {
-//             vector[indices[idx]] = idx + round;
-//         }
-//     }
-//     TIMER_STOP(write);
-
-//     TIMER_START(read);
-//     auto sum = 0;
-//     for (auto round : util::irange<std::size_t>(0, num_rounds))
-//     {
-//         sum = round;
-//         for (auto idx : util::irange<std::size_t>(0, num_entries))
-//         {
-//             sum += vector[indices[idx]];
-//         }
-//         dont_optimize_away(sum);
-//     }
-//     TIMER_STOP(read);
-
-//     return Measurement{TIMER_MSEC(write), TIMER_MSEC(read)};
-// }
-
 int main(int, char **)
 {
     using namespace osrm;
@@ -150,10 +106,5 @@ int main(int, char **)
     TIMER_STOP(vector);
     std::cout << "Vector: " << TIMER_MSEC(vector) << "ms" << std::endl;
 
-    if (std::string{out_vec.begin(), out_vec.end()} != out_str || out_str != out_ss_str) {
-        throw std::logic_error("Vector and string are not equal");
-    }
-    // (void)s;
-    // std::cerr << ss << "\n";
     return EXIT_SUCCESS;
 }

@@ -82,7 +82,7 @@ inline size_t SizeOfEscapedJSONString(const std::string &string)
     return size;
 }
 
-inline void EscapeJSONString(const std::string &input, std::string& output)
+inline void EscapeJSONString(const std::string &input, std::string &output)
 {
     for (const char letter : input)
     {

@@ -35,10 +35,13 @@ template <typename Out> struct Renderer
     {
         write('"');
         auto size = SizeOfEscapedJSONString(string.value);
-        if (size == string.value.size()) {
+        if (size == string.value.size())
+        {
             // we don't need to escape anything
             write(string.value);
-        } else {
+        }
+        else
+        {
             std::string escaped;
             escaped.reserve(size);
             EscapeJSONString(string.value, escaped);
@@ -134,13 +137,11 @@ template <> void Renderer<std::vector<char>>::write(const char *str)
 }
 template <> void Renderer<std::vector<char>>::write(char ch) { out.push_back(ch); }
 
-
 template <> void Renderer<std::ostream>::write(const std::string &str) { out << str; }
 
 template <> void Renderer<std::ostream>::write(const char *str) { out << str; }
 
 template <> void Renderer<std::ostream>::write(char ch) { out << ch; }
-
 
 template <> void Renderer<std::string>::write(const std::string &str) { out += str; }
 
@@ -148,23 +149,22 @@ template <> void Renderer<std::string>::write(const char *str) { out += str; }
 
 template <> void Renderer<std::string>::write(char ch) { out += ch; }
 
-
 inline void render(std::ostream &out, const Object &object)
 {
-    Value value = object;
-    mapbox::util::apply_visitor(Renderer(out), value);
+    Renderer renderer(out);
+    renderer(object);
 }
 
 inline void render(std::string &out, const Object &object)
 {
-    Value value = object;
-    mapbox::util::apply_visitor(Renderer(out), value);
+    Renderer renderer(out);
+    renderer(object);
 }
 
 inline void render(std::vector<char> &out, const Object &object)
 {
-    Value value = object;
-    mapbox::util::apply_visitor(Renderer(out), value);
+    Renderer renderer(out);
+    renderer(object);
 }
 
 } // namespace json
