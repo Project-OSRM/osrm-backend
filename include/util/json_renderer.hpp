@@ -34,10 +34,11 @@ template <typename Out> struct Renderer
     void operator()(const String &string)
     {
         write('"');
+        // here we assume that vast majority of strings don't need to be escaped,
+        // so we check it first and escape only if needed
         auto size = SizeOfEscapedJSONString(string.value);
         if (size == string.value.size())
         {
-            // we don't need to escape anything
             write(string.value);
         }
         else
