@@ -75,7 +75,7 @@ template <typename Data> struct SharedMonitor
 
             region = bi::mapped_region(shmem, bi::read_write);
         }
-        catch (const bi::interprocess_exception &exception)
+        catch (const bi::interprocess_exception &)
         {
             auto message = boost::format("No shared memory block '%1%' found, have you forgotten "
                                          "to run osrm-datastore?") %
@@ -124,7 +124,7 @@ template <typename Data> struct SharedMonitor
             bi::shared_memory_object shmem_open =
                 bi::shared_memory_object(bi::open_only, Data::name, bi::read_only);
         }
-        catch (const bi::interprocess_exception &exception)
+        catch (const bi::interprocess_exception &)
         {
             return false;
         }
