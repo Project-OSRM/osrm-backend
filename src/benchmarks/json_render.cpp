@@ -1,8 +1,8 @@
 
+#include "osrm/json_container.hpp"
 #include "util/json_container.hpp"
 #include "util/json_renderer.hpp"
 #include "util/timing_util.hpp"
-#include "osrm/json_container.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -55,9 +55,9 @@ int main(int, char **)
 {
     using namespace osrm;
 
-        const auto location = json::Array{{{7.437070}, {43.749248}}};
+    const auto location = json::Array{{{7.437070}, {43.749248}}};
 
- json::Object reference{
+    json::Object reference{
         {{"code", "Ok"},
          {"waypoints",
           json::Array{{json::Object{{{"name", "Boulevard du Larvotto"},
@@ -123,19 +123,25 @@ int main(int, char **)
                                                        {"in", 0}}}}}}
 
                                    }}}}}}}}}}}}}}}}};
-json::Array arr;
-for (size_t index = 0; index < 256; ++index) {
-    arr.values.push_back(reference);
-}
-json::Object obj{{{"arr", arr}}};
-std::string ss;
-TIMER_START(create_object);
+    json::Array arr;
+    for (size_t index = 0; index < 4096; ++index)
+    {
+        arr.values.push_back(reference);
+    }
+    json::Object obj{{{"arr", arr}}};
+
+    TIMER_START(stringstream);
+    std::stringstream ss;
     json::render(ss, obj);
-    //std::string s{ss.begin(), ss.end()};
-TIMER_STOP(create_object);
-std::cout << TIMER_MSEC(create_object) << "ms"
-              << std::endl;
-             // (void)s;
-             // std::cerr << ss << "\n";
+    std::string s{ss.str()};
+    TIMER_STOP(stringstream);
+    std::cout << "String: " << TIMER_MSEC(stringstream) << "ms" << std::endl;
+    TIMER_START(vector);
+    std::vector<char> vec;
+    json::render(vec, obj);
+    TIMER_STOP(vector);
+    std::cout << "Vector: " << TIMER_MSEC(vector) << "ms" << std::endl;
+    // (void)s;
+    // std::cerr << ss << "\n";
     return EXIT_SUCCESS;
 }

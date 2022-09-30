@@ -27,18 +27,18 @@ namespace
 constexpr int MAX_FLOAT_STRING_LENGTH = 256;
 }
 
-struct Renderer
+template <typename Out> struct Renderer
 {
-    explicit Renderer(std::ostream &_out) : out(_out) {}
+    explicit Renderer(Out &_out) : out(_out) {}
 
-    void operator()(const String &string) const
+    void operator()(const String &string)
     {
-        out << "\"";
-        out << escape_JSON(string.value);
-        out << "\"";
+        write('"');
+        write(escape_JSON(string.value));
+        write('"');
     }
 
-    void operator()(const Number &number) const
+    void operator()(const Number &number)
     {
         char buffer[MAX_FLOAT_STRING_LENGTH] = {'\0'};
         ieee754::dtoa_milo(number.value, buffer);
@@ -64,120 +64,72 @@ struct Renderer
             }
             ++pos;
         }
-        out << buffer;
+        write(buffer);
     }
 
-    void operator()(const Object &object) const
+    void operator()(const Object &object)
     {
-        out << "{";
+        write('{');
         for (auto it = object.values.begin(), end = object.values.end(); it != end;)
         {
-            out << "\"" << it->first << "\":";
+            write('\"');
+            write(it->first);
+            write("\"");
             mapbox::util::apply_visitor(Renderer(out), it->second);
             if (++it != end)
             {
-                out << ",";
+                write(',');
             }
         }
-        out << "}";
+        write('}');
     }
 
-    void operator()(const Array &array) const
+    void operator()(const Array &array)
     {
-        out << "[";
+        write('[');
         for (auto it = array.values.cbegin(), end = array.values.cend(); it != end;)
         {
             mapbox::util::apply_visitor(Renderer(out), *it);
             if (++it != end)
             {
-                out << ",";
+                write(',');
             }
         }
-        out << "]";
+        write(']');
     }
 
-    void operator()(const True &) const { out << "true"; }
+    void operator()(const True &) { write("true"); }
 
-    void operator()(const False &) const { out << "false"; }
+    void operator()(const False &) { write("false"); }
 
-    void operator()(const Null &) const { out << "null"; }
+    void operator()(const Null &) { write("null"); }
 
   private:
-    std::ostream &out;
+    void write(const std::string &str);
+    void write(const char *str);
+    void write(char ch);
+
+  private:
+    Out &out;
 };
 
-struct ArrayRenderer
+template <> void Renderer<std::vector<char>>::write(const std::string &str)
 {
-    explicit ArrayRenderer(std::vector<char> &_out) : out(_out) {}
+    out.insert(out.end(), str.begin(), str.end());
+}
 
-    void operator()(const String &string) const
-    {
-        out.push_back('\"');
-        const auto string_to_insert = escape_JSON(string.value);
-        out.insert(std::end(out), std::begin(string_to_insert), std::end(string_to_insert));
-        out.push_back('\"');
-    }
+template <> void Renderer<std::vector<char>>::write(const char *str)
+{
+    out.insert(out.end(), str, str + strlen(str));
+}
 
-    void operator()(const Number &number) const
-    {
-        const std::string number_string = cast::to_string_with_precision(number.value);
-        out.insert(out.end(), number_string.begin(), number_string.end());
-    }
+template <> void Renderer<std::ostream>::write(const std::string &str) { out << str; }
 
-    void operator()(const Object &object) const
-    {
-        out.push_back('{');
-        for (auto it = object.values.begin(), end = object.values.end(); it != end;)
-        {
-            out.push_back('\"');
-            out.insert(out.end(), it->first.begin(), it->first.end());
-            out.push_back('\"');
-            out.push_back(':');
+template <> void Renderer<std::ostream>::write(const char *str) { out << str; }
 
-            mapbox::util::apply_visitor(ArrayRenderer(out), it->second);
-            if (++it != end)
-            {
-                out.push_back(',');
-            }
-        }
-        out.push_back('}');
-    }
+template <> void Renderer<std::vector<char>>::write(char ch) { out.push_back(ch); }
 
-    void operator()(const Array &array) const
-    {
-        out.push_back('[');
-        for (auto it = array.values.cbegin(), end = array.values.cend(); it != end;)
-        {
-            mapbox::util::apply_visitor(ArrayRenderer(out), *it);
-            if (++it != end)
-            {
-                out.push_back(',');
-            }
-        }
-        out.push_back(']');
-    }
-
-    void operator()(const True &) const
-    {
-        const std::string temp("true");
-        out.insert(out.end(), temp.begin(), temp.end());
-    }
-
-    void operator()(const False &) const
-    {
-        const std::string temp("false");
-        out.insert(out.end(), temp.begin(), temp.end());
-    }
-
-    void operator()(const Null &) const
-    {
-        const std::string temp("null");
-        out.insert(out.end(), temp.begin(), temp.end());
-    }
-
-  private:
-    std::vector<char> &out;
-};
+template <> void Renderer<std::ostream>::write(char ch) { out << ch; }
 
 inline void render(std::ostream &out, const Object &object)
 {
@@ -188,7 +140,7 @@ inline void render(std::ostream &out, const Object &object)
 inline void render(std::vector<char> &out, const Object &object)
 {
     Value value = object;
-    mapbox::util::apply_visitor(ArrayRenderer(out), value);
+    mapbox::util::apply_visitor(Renderer(out), value);
 }
 
 } // namespace json
