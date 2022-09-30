@@ -34,7 +34,17 @@ template <typename Out> struct Renderer
     void operator()(const String &string)
     {
         write('"');
-        write(escape_JSON(string.value));
+        auto size = SizeOfEscapedJSONString(string.value);
+        if (size == string.value.size()) {
+            // we don't need to escape anything
+            write(string.value);
+        } else {
+            std::string escaped;
+            escaped.reserve(size);
+            EscapeJSONString(string.value, escaped);
+
+            write(escaped);
+        }
         write('"');
     }
 
