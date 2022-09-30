@@ -136,6 +136,7 @@ template <> void Renderer<std::vector<char>>::write(const char *str)
 {
     out.insert(out.end(), str, str + strlen(str));
 }
+
 template <> void Renderer<std::vector<char>>::write(char ch) { out.push_back(ch); }
 
 template <> void Renderer<std::ostream>::write(const std::string &str) { out << str; }
