@@ -48,7 +48,7 @@ struct ExtractorConfig final : storage::IOConfig
                   "",
               },
               {},
-              {".osrm",
+              {".osrm.nbg",
                ".osrm.restrictions",
                ".osrm.names",
                ".osrm.tls",

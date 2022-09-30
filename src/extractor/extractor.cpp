@@ -639,7 +639,7 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
 
     if (config.dump_nbg_graph)
     {
-        storage::tar::FileWriter writer(config.GetPath(".osrm").string(),
+        storage::tar::FileWriter writer(config.GetPath(".osrm.nbg").string(),
                                         storage::tar::FileWriter::GenerateFingerprint);
         storage::serialization::write(writer, "/extractor/nodes", extraction_containers.used_nodes);
         storage::serialization::write(writer, "/extractor/edges", extraction_containers.used_edges);
