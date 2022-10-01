@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+#include <fmt/compile.h>
+
 namespace osrm
 {
 namespace util
@@ -55,7 +57,7 @@ template <typename Out> struct Renderer
     void operator()(const Number &number)
     {
         char buffer[MAX_FLOAT_STRING_LENGTH] = {'\0'};
-        ieee754::dtoa_milo(number.value, buffer);
+        fmt::format_to(buffer, FMT_COMPILE("{}"), number.value);
 
         // Trucate to 10 decimal places
         int pos = 0;
