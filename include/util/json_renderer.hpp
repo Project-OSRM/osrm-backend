@@ -4,7 +4,6 @@
 #ifndef JSON_RENDERER_HPP
 #define JSON_RENDERER_HPP
 
-#include "util/ieee754.hpp"
 #include "util/string_util.hpp"
 
 #include "osrm/json_container.hpp"
