@@ -20,4 +20,12 @@ BOOST_AUTO_TEST_CASE(number_truncating)
     BOOST_CHECK_EQUAL(str, "42.999599959");
 }
 
+BOOST_AUTO_TEST_CASE(integer)
+{
+    std::string str;
+    json::Renderer<std::string> renderer(str);
+    renderer(json::Number{42.0});
+    BOOST_CHECK_EQUAL(str, "42");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
