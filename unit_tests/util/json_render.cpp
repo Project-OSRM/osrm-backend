@@ -7,24 +7,23 @@
 
 BOOST_AUTO_TEST_SUITE(json_renderer)
 
-using namespace osrm;
-using namespace osrm::util;
+using namespace osrm::util::json;
 
 BOOST_AUTO_TEST_CASE(number_truncating)
 {
     std::string str;
-    json::Renderer<std::string> renderer(str);
+    Renderer<std::string> renderer(str);
 
     // this number would have more than 10 decimals if not truncated
-    renderer(json::Number{42.9995999594999399299});
+    renderer(Number{42.9995999594999399299});
     BOOST_CHECK_EQUAL(str, "42.999599959");
 }
 
 BOOST_AUTO_TEST_CASE(integer)
 {
     std::string str;
-    json::Renderer<std::string> renderer(str);
-    renderer(json::Number{42.0});
+    Renderer<std::string> renderer(str);
+    renderer(Number{42.0});
     BOOST_CHECK_EQUAL(str, "42");
 }
 
