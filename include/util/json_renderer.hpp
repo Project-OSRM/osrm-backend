@@ -73,7 +73,7 @@ template <typename Out> struct Renderer
         {
             write('\"');
             write(it->first);
-            write("\":");
+            write<>("\":");
             mapbox::util::apply_visitor(Renderer(out), it->second);
             if (++it != end)
             {
