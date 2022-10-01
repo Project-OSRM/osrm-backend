@@ -9,7 +9,6 @@
 #include "osrm/json_container.hpp"
 
 #include <algorithm>
-#include <fmt/format.h>
 #include <iterator>
 #include <ostream>
 #include <string>
