@@ -10,6 +10,8 @@
 
 #include "osrm/json_container.hpp"
 
+#include <algorithm>
+#include <fmt/format.h>
 #include <iterator>
 #include <ostream>
 #include <string>
@@ -23,11 +25,6 @@ namespace util
 {
 namespace json
 {
-
-namespace
-{
-constexpr int MAX_FLOAT_STRING_LENGTH = 256;
-}
 
 template <typename Out> struct Renderer
 {
@@ -56,31 +53,19 @@ template <typename Out> struct Renderer
 
     void operator()(const Number &number)
     {
-        char buffer[MAX_FLOAT_STRING_LENGTH] = {'\0'};
-        fmt::format_to(buffer, FMT_COMPILE("{}"), number.value);
+        // `fmt::memory_buffer` stores first 500 bytes in the object itself(i.e. on stack in this
+        // case) and then grows using heap if needed
+        fmt::memory_buffer buffer;
+        fmt::format_to(std::back_inserter(buffer), FMT_COMPILE("{}"), number.value);
 
-        // Trucate to 10 decimal places
-        int pos = 0;
-        int decimalpos = 0;
-        while (decimalpos == 0 && pos < MAX_FLOAT_STRING_LENGTH && buffer[pos] != 0)
+        // Truncate to 10 decimal places
+        size_t decimalpos = std::find(buffer.begin(), buffer.end(), '.') - buffer.begin();
+        if (buffer.size() > (decimalpos + 10))
         {
-            if (buffer[pos] == '.')
-            {
-                decimalpos = pos;
-                break;
-            }
-            ++pos;
+            buffer.resize(decimalpos + 10);
         }
-        while (pos < MAX_FLOAT_STRING_LENGTH && buffer[pos] != 0)
-        {
-            if (pos - decimalpos == 10)
-            {
-                buffer[pos] = '\0';
-                break;
-            }
-            ++pos;
-        }
-        write(buffer);
+
+        write(buffer.data(), buffer.size());
     }
 
     void operator()(const Object &object)
@@ -114,16 +99,21 @@ template <typename Out> struct Renderer
         write(']');
     }
 
-    void operator()(const True &) { write("true"); }
+    void operator()(const True &) { write<>("true"); }
 
-    void operator()(const False &) { write("false"); }
+    void operator()(const False &) { write<>("false"); }
 
-    void operator()(const Null &) { write("null"); }
+    void operator()(const Null &) { write<>("null"); }
 
   private:
     void write(const std::string &str);
-    void write(const char *str);
+    void write(const char *str, size_t size);
     void write(char ch);
+
+    template <size_t StrLength> void write(const char (&str)[StrLength])
+    {
+        write(str, StrLength - 1);
+    }
 
   private:
     Out &out;
@@ -134,22 +124,28 @@ template <> void Renderer<std::vector<char>>::write(const std::string &str)
     out.insert(out.end(), str.begin(), str.end());
 }
 
-template <> void Renderer<std::vector<char>>::write(const char *str)
+template <> void Renderer<std::vector<char>>::write(const char *str, size_t size)
 {
-    out.insert(out.end(), str, str + strlen(str));
+    out.insert(out.end(), str, str + size);
 }
 
 template <> void Renderer<std::vector<char>>::write(char ch) { out.push_back(ch); }
 
 template <> void Renderer<std::ostream>::write(const std::string &str) { out << str; }
 
-template <> void Renderer<std::ostream>::write(const char *str) { out << str; }
+template <> void Renderer<std::ostream>::write(const char *str, size_t size)
+{
+    out.write(str, size);
+}
 
 template <> void Renderer<std::ostream>::write(char ch) { out << ch; }
 
 template <> void Renderer<std::string>::write(const std::string &str) { out += str; }
 
-template <> void Renderer<std::string>::write(const char *str) { out += str; }
+template <> void Renderer<std::string>::write(const char *str, size_t size)
+{
+    out.append(str, size);
+}
 
 template <> void Renderer<std::string>::write(char ch) { out += ch; }
 
