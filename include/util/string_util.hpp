@@ -58,9 +58,8 @@ template <int length, int precision> char *printInt(char *buffer, int value)
     return buffer;
 }
 
-inline size_t SizeOfEscapedJSONString(const std::string &string)
+inline bool RequiresJSONStringEscaping(const std::string &string)
 {
-    size_t size = 0;
     for (const char letter : string)
     {
         switch (letter)
@@ -73,13 +72,12 @@ inline size_t SizeOfEscapedJSONString(const std::string &string)
         case '\n':
         case '\r':
         case '\t':
-            size += 2;
-            break;
+            return true;
         default:
-            size += 1;
+            continue;
         }
     }
-    return size;
+    return false;
 }
 
 inline void EscapeJSONString(const std::string &input, std::string &output)

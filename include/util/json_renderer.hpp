@@ -32,18 +32,19 @@ template <typename Out> struct Renderer
         write('"');
         // here we assume that vast majority of strings don't need to be escaped,
         // so we check it first and escape only if needed
-        auto size = SizeOfEscapedJSONString(string.value);
-        if (size == string.value.size())
-        {
-            write(string.value);
-        }
-        else
+        if (RequiresJSONStringEscaping(string.value))
         {
             std::string escaped;
-            escaped.reserve(size);
+            // just a guess that 16 bytes for escaped characters will be enough to avoid
+            // reallocations
+            escaped.reserve(string.value.size() + 16);
             EscapeJSONString(string.value, escaped);
 
             write(escaped);
+        }
+        else
+        {
+            write(string.value);
         }
         write('"');
     }
