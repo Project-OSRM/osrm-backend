@@ -23,6 +23,7 @@
       - FIXED: Fix bug with reading Set values from Lua scripts. [#6285](https://github.com/Project-OSRM/osrm-backend/pull/6285)
       - FIXED: Bug in bicycle profile that caused exceptions if there is a highway=bicycle in the data. [#6296](https://github.com/Project-OSRM/osrm-backend/pull/6296)
       - FIXED: Internal refactoring of identifier types used in data facade [#6044](https://github.com/Project-OSRM/osrm-backend/pull/6044)
+      - CHANGED: Update docs to reflect recent build and dependency changes [#6383](https://github.com/Project-OSRM/osrm-backend/issues/6383)
     - Build:
       - ADDED: Build Node bindings on Windows. [#6334](https://github.com/Project-OSRM/osrm-backend/pull/6334)
       - ADDED: Configure cross-compilation for Apple Silicon. [#6360](https://github.com/Project-OSRM/osrm-backend/pull/6360)

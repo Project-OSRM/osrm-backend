@@ -50,7 +50,7 @@ If you want to use the CH pipeline instead replace `osrm-partition` and `osrm-cu
 
 ### Using Docker
 
-We base our Docker images ([backend](https://hub.docker.com/r/osrm/osrm-backend/), [frontend](https://hub.docker.com/r/osrm/osrm-frontend/)) on Debian and make sure they are as lightweight as possible.
+We base our Docker images ([backend](https://github.com/Project-OSRM/osrm-backend/pkgs/container/osrm-backend), [frontend](https://hub.docker.com/r/osrm/osrm-frontend/)) on Debian and make sure they are as lightweight as possible. Older backend versions can be found on [Docker Hub](https://hub.docker.com/r/osrm/osrm-backend/).
 
 Download OpenStreetMap extracts for example from [Geofabrik](http://download.geofabrik.de/)
 
@@ -65,7 +65,7 @@ The flag `-v "${PWD}:/data"` creates the directory `/data` inside the docker con
     docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-partition /data/berlin-latest.osrm
     docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-customize /data/berlin-latest.osrm
 
-Note there is no `berlin-latest.osrm` file, but multiple `berlin-latest.osrm.*` files, i.e. `berlin-latest.osrm` is not file path, but "base" path referring to set of files and there is an option to omit this `.osrm` suffix completely(e.g. `osrm-partition /data/berlin-latest`). 
+Note there is no `berlin-latest.osrm` file, but multiple `berlin-latest.osrm.*` files, i.e. `berlin-latest.osrm` is not file path, but "base" path referring to set of files and there is an option to omit this `.osrm` suffix completely(e.g. `osrm-partition /data/berlin-latest`).
 
     docker run -t -i -p 5000:5000 -v "${PWD}:/data" osrm/osrm-backend osrm-routed --algorithm mld /data/berlin-latest.osrm
 
@@ -84,7 +84,7 @@ In case Docker complains about not being able to connect to the Docker daemon ma
 
 After adding yourself to the `docker` group make sure to log out and back in again with your terminal.
 
-We support the following images on Docker Cloud:
+We support the following images in the Container Registry:
 
 Name | Description
 -----|------
@@ -96,7 +96,7 @@ Name | Description
 
 ### Building from Source
 
-The following targets Ubuntu 16.04.
+The following targets Ubuntu 22.04.
 For instructions how to build on different distributions, macOS or Windows see our [Wiki](https://github.com/Project-OSRM/osrm-backend/wiki).
 
 Install dependencies
@@ -132,13 +132,13 @@ curl "https://router.project-osrm.org/route/v1/driving/13.388860,52.517037;13.38
 The Node.js bindings provide read-only access to the routing engine.
 We provide API documentation and examples [here](docs/nodejs/api.md).
 
-You will need a modern `libstdc++` toolchain (`>= GLIBCXX_3.4.20`) for binary compatibility if you want to use the pre-built binaries.
+You will need a modern `libstdc++` toolchain (`>= GLIBCXX_3.4.26`) for binary compatibility if you want to use the pre-built binaries.
 For older Ubuntu systems you can upgrade your standard library for example with:
 
 ```
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 sudo apt-get update -y
-sudo apt-get install -y libstdc++-5-dev
+sudo apt-get install -y libstdc++-9-dev
 ```
 
 You can install the Node.js bindings via `npm install osrm` or from this repository either via
@@ -151,7 +151,7 @@ which will check and use pre-built binaries if they're available for this releas
 
 to always force building the Node.js bindings from source.
 
-For usage details have a look [these API docs](docs/nodejs/api.md). 
+For usage details have a look [these API docs](docs/nodejs/api.md).
 
 An exemplary implementation by a 3rd party with Docker and Node.js can be found [here](https://github.com/door2door-io/osrm-express-server-demo).
 
