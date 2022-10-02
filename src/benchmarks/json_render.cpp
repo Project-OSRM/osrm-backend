@@ -4,88 +4,102 @@
 #include "util/json_renderer.hpp"
 #include "util/timing_util.hpp"
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
+#include <rapidjson/document.h>
 #include <sstream>
 #include <stdexcept>
 
-int main(int, char **)
+using namespace osrm;
+
+namespace
 {
-    using namespace osrm;
 
-    const auto location = json::Array{{{7.437070}, {43.749248}}};
-
-    json::Object reference{
-        {{"code", "Ok"},
-         {"waypoints",
-          json::Array{{json::Object{{{"name", "Boulevard du Larvotto"},
-                                     {"location", location},
-                                     {"distance", round(0.137249 * 1000000)},
-                                     {"hint", ""}}},
-                       json::Object{{{"name", "Boulevard du Larvotto"},
-                                     {"location", location},
-                                     {"distance", round(0.137249 * 1000000)},
-                                     {"hint", ""}}}}}},
-         {"routes",
-          json::Array{{json::Object{
-              {{"distance", 0.},
-               {"duration", 0.},
-               {"weight", 0.},
-               {"weight_name", "routability"},
-               {"geometry", "yw_jGupkl@??"},
-               {"legs",
-                json::Array{{json::Object{
-                    {{"distance", 0.},
-                     {"duration", 0.},
-                     {"weight", 0.},
-                     {"summary", "Boulevard du Larvotto"},
-                     {"steps",
-                      json::Array{{{json::Object{{{"duration", 0.},
-                                                  {"distance", 0.},
-                                                  {"weight", 0.},
-                                                  {"geometry", "yw_jGupkl@??"},
-                                                  {"name", "Boulevard du Larvotto"},
-                                                  {"mode", "driving"},
-                                                  {"driving_side", "right"},
-                                                  {"maneuver",
-                                                   json::Object{{
-                                                       {"location", location},
-                                                       {"bearing_before", 0},
-                                                       {"bearing_after", 238},
-                                                       {"type", "depart"},
-                                                   }}},
-                                                  {"intersections",
-                                                   json::Array{{json::Object{
-                                                       {{"location", location},
-                                                        {"bearings", json::Array{{238}}},
-                                                        {"entry", json::Array{{json::True()}}},
-                                                        {"out", 0}}}}}}}}},
-
-                                   json::Object{{{"duration", 0.},
-                                                 {"distance", 0.},
-                                                 {"weight", 0.},
-                                                 {"geometry", "yw_jGupkl@"},
-                                                 {"name", "Boulevard du Larvotto"},
-                                                 {"mode", "driving"},
-                                                 {"driving_side", "right"},
-                                                 {"maneuver",
-                                                  json::Object{{{"location", location},
-                                                                {"bearing_before", 238},
-                                                                {"bearing_after", 0},
-                                                                {"type", "arrive"}}}},
-                                                 {"intersections",
-                                                  json::Array{{json::Object{
-                                                      {{"location", location},
-                                                       {"bearings", json::Array{{58}}},
-                                                       {"entry", json::Array{{json::True()}}},
-                                                       {"in", 0}}}}}}
-
-                                   }}}}}}}}}}}}}}}}};
-    json::Array arr;
-    for (size_t index = 0; index < 4096; ++index)
+void convert(const rapidjson::Value &value, json::Value &result)
+{
+    if (value.IsString())
     {
-        arr.values.push_back(reference);
+        result = json::String{value.GetString()};
     }
-    json::Object obj{{{"arr", arr}}};
+    else if (value.IsNumber())
+    {
+        result = json::Number{value.GetDouble()};
+    }
+    else if (value.IsObject())
+    {
+        json::Object object;
+        for (auto itr = value.MemberBegin(); itr != value.MemberEnd(); ++itr)
+        {
+            json::Value member;
+            convert(itr->value, member);
+            object.values.emplace(itr->name.GetString(), std::move(member));
+        }
+        result = std::move(object);
+    }
+    else if (value.IsArray())
+    {
+        json::Array array;
+        for (auto itr = value.Begin(); itr != value.End(); ++itr)
+        {
+            json::Value member;
+            convert(*itr, member);
+            array.values.push_back(std::move(member));
+        }
+        result = std::move(array);
+    }
+    else if (value.IsBool())
+    {
+        if (value.GetBool())
+        {
+            result = json::True{};
+        }
+        else
+        {
+            result = json::False{};
+        }
+    }
+    else if (value.IsNull())
+    {
+        result = json::Null{};
+    }
+    else
+    {
+        throw std::runtime_error("unknown type");
+    }
+}
+
+json::Object load(const char *filename)
+{
+    // load file to std string
+    std::ifstream file(filename);
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string json = buffer.str();
+
+    // load rapidjson document
+    rapidjson::Document document;
+    document.Parse(json.c_str());
+    if (document.HasParseError())
+    {
+        throw std::runtime_error("Failed to parse JSON");
+    }
+
+    json::Value result;
+    convert(document, result);
+    return result.get<json::Object>();
+}
+
+} // namespace
+
+int main(int argc, char **argv)
+{
+    if (argc < 2)
+    {
+        std::cerr << "Usage: " << argv[0] << " file.json\n";
+        return EXIT_FAILURE;
+    }
+
+    const auto obj = load(argv[1]);
 
     TIMER_START(string);
     std::string out_str;
