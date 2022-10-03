@@ -60,8 +60,8 @@ struct V8Renderer
 
 inline void renderToV8(v8::Local<v8::Value> &out, const osrm::json::Object &object)
 {
-    osrm::json::Value value = object;
-    mapbox::util::apply_visitor(V8Renderer(out), value);
+    V8Renderer renderer(out);
+    renderer(object);
 }
 } // namespace node_osrm
 

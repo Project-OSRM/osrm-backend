@@ -9,6 +9,7 @@
     - NodeJS:
       - FIXED: Support `skip_waypoints` in Node bindings [#6060](https://github.com/Project-OSRM/osrm-backend/pull/6060)
     - Misc:
+      - CHANGED: Improve performance of JSON rendering. Fix undefined behaviour in JSON numbers formatting. [#6380](https://github.com/Project-OSRM/osrm-backend/pull/6380)
       - ADDED: Add timestamps for logs. [#6375](https://github.com/Project-OSRM/osrm-backend/pull/6375)
       - CHANGED: Improve performance of map matching via getPathDistance optimization. [#6378](https://github.com/Project-OSRM/osrm-backend/pull/6378)
       - CHANGED: Optimize RestrictionParser performance. [#6344](https://github.com/Project-OSRM/osrm-backend/pull/6344)
