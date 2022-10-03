@@ -329,7 +329,7 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
                                           intersection)
                             .first;
 
-            // check if we were successfull in trimming
+            // check if we were successful in trimming
             if (lane_data.size() == possible_entries &&
                 isSimpleIntersection(lane_data, intersection))
                 return TurnLaneScenario::PARTITION_LOCAL;
@@ -556,7 +556,7 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
      * into two parts, one for the first and one for the second intersection.
      */
 
-    // Try and maitch lanes to available turns. For Turns that are not directly matchable, check
+    // Try and match lanes to available turns. For Turns that are not directly matchable, check
     // whether we can match them at the upcoming intersection.
 
     const auto straightmost = intersection.findClosestTurn(STRAIGHT_ANGLE);
@@ -675,10 +675,11 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
             first.push_back(turn_lane_data[lane]);
     }
 
-    if (straightmost_tag_index == turn_lane_data.size() &&
+    std::size_t num_next_intersection_turns = getNumberOfTurns(next_intersection);
+    if (straightmost_tag_index == turn_lane_data.size() && num_next_intersection_turns > 0 &&
         static_cast<std::size_t>(
             std::count(matched_at_second.begin(), matched_at_second.end(), true)) ==
-            getNumberOfTurns(next_intersection))
+            num_next_intersection_turns)
     {
         TurnLaneData data = {TurnLaneType::straight, 255, 0};
         augmentEntry(data);

@@ -87,11 +87,11 @@ template <typename Integer, typename Filter> class filtered_range
 
 // convenience function to construct an integer range with type deduction
 template <typename Integer, typename Filter>
-filtered_range<Integer, Filter>
-filtered_irange(const Integer first,
-                const Integer last,
-                const Filter &filter,
-                typename std::enable_if<std::is_integral<Integer>::value>::type * = 0) noexcept
+filtered_range<Integer, Filter> filtered_irange(
+    const Integer first,
+    const Integer last,
+    const Filter &filter,
+    typename std::enable_if<std::is_integral<Integer>::value>::type * = nullptr) noexcept
 {
     return filtered_range<Integer, Filter>(first, last, filter);
 }

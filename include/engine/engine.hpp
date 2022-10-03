@@ -83,7 +83,7 @@ template <typename Algorithm> class Engine final : public EngineInterface
 
     Engine(const Engine &) = delete;
     Engine &operator=(const Engine &) = delete;
-    virtual ~Engine() = default;
+    virtual ~Engine() override = default;
 
     Status Route(const api::RouteParameters &params, api::ResultT &result) const override final
     {

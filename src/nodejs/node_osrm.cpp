@@ -55,8 +55,8 @@ NAN_MODULE_INIT(Engine::Init)
 // clang-format off
 /**
  * The `OSRM` method is the main constructor for creating an OSRM instance.
- * An OSRM instance requires a `.osrm` dataset, which is prepared by the OSRM toolchain.
- * You can create such a `.osrm` file by running the OSRM binaries we ship in `node_modules/osrm/lib/binding/` and default
+ * An OSRM instance requires a `.osrm.*` dataset(`.osrm.*` because it contains several files), which is prepared by the OSRM toolchain.
+ * You can create such a `.osrm.*` dataset by running the OSRM binaries we ship in `node_modules/osrm/lib/binding/` and default
  * profiles (e.g. for setting speeds and determining road types to route on) in `node_modules/osrm/profiles/`:
  *
  *     node_modules/osrm/lib/binding/osrm-extract data.osm.pbf -p node_modules/osrm/profiles/car.lua
@@ -64,7 +64,7 @@ NAN_MODULE_INIT(Engine::Init)
  *
  * Consult the [osrm-backend](https://github.com/Project-OSRM/osrm-backend) documentation for further details.
  *
- * Once you have a complete `network.osrm` file, you can calculate routes in javascript with this object.
+ * Once you have a complete `network.osrm.*` dataset, you can calculate routes in javascript with this object.
  *
  * ```javascript
  * var osrm = new OSRM('network.osrm');
@@ -141,15 +141,14 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
 
     struct Worker final : Nan::AsyncWorker
     {
-        using Base = Nan::AsyncWorker;
-
         Worker(std::shared_ptr<osrm::OSRM> osrm_,
                ParamPtr params_,
                ServiceMemFn service,
                Nan::Callback *callback,
                PluginParameters pluginParams_)
-            : Base(callback, "osrm:async"), osrm{std::move(osrm_)}, service{std::move(service)},
-              params{std::move(params_)}, pluginParams{std::move(pluginParams_)}
+            : Nan::AsyncWorker(callback, "osrm:async"), osrm{std::move(osrm_)},
+              service{std::move(service)}, params{std::move(params_)}, pluginParams{
+                                                                           std::move(pluginParams_)}
         {
         }
 
@@ -168,13 +167,13 @@ inline void async(const Nan::FunctionCallbackInfo<v8::Value> &info,
                 ParseResult(status, json_result);
                 if (pluginParams.renderToBuffer)
                 {
-                    std::ostringstream buf;
-                    osrm::util::json::render(buf, json_result);
-                    result = buf.str();
+                    std::string json_string;
+                    osrm::util::json::render(json_string, json_result);
+                    result = std::move(json_string);
                 }
                 else
                 {
-                    result = json_result;
+                    result = std::move(json_result);
                 }
             }
             break;
@@ -244,14 +243,12 @@ inline void asyncForTiles(const Nan::FunctionCallbackInfo<v8::Value> &info,
 
     struct Worker final : Nan::AsyncWorker
     {
-        using Base = Nan::AsyncWorker;
-
         Worker(std::shared_ptr<osrm::OSRM> osrm_,
                ParamPtr params_,
                ServiceMemFn service,
                Nan::Callback *callback,
                PluginParameters pluginParams_)
-            : Base(callback, "osrm:asyncForTiles"), osrm{std::move(osrm_)},
+            : Nan::AsyncWorker(callback, "osrm:asyncForTiles"), osrm{std::move(osrm_)},
               service{std::move(service)}, params{std::move(params_)}, pluginParams{
                                                                            std::move(pluginParams_)}
         {

@@ -72,7 +72,7 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
     {
     }
 
-    virtual ~RoutingAlgorithms() = default;
+    virtual ~RoutingAlgorithms() override = default;
 
     InternalManyRoutesResult
     AlternativePathSearch(const PhantomEndpointCandidates &endpoint_candidates,

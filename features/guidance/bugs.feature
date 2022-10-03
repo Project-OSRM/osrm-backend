@@ -67,3 +67,37 @@ Feature: Features related to bugs
         When I route I should get
             | waypoints | route | intersections  |
             | a,c       | Pear to Merrit,Merritt to Apricot,Merritt to Apricot | true:0;true:0 false:180;true:180  |
+
+
+    # https://github.com/Project-OSRM/osrm-backend/issues/6373
+    Scenario: Segregated intersection with no second intersection turns
+        Given the node map
+            """
+                a  b
+                |  |
+             c--d--e--f
+                |  |
+             g--h--i--j
+
+            """
+
+        And the ways
+            | nodes | oneway | lanes | turn:lanes                         |
+            | dc    | yes    |  4    |                                    |
+            | ed    | yes    |  4    |                                    |
+            | fe    | yes    |  3    |                                    |
+            | gh    | yes    |  4    | left\|left\|through\|through;right |
+            | hi    | yes    |  2    |                                    |
+            | ij    | yes    |  3    |                                    |
+            | ie    | yes    |  4    |                                    |
+            | eb    | yes    |  2    |                                    |
+            | ad    | yes    |  4    | reverse\|right\|right\|right       |
+            | dh    | yes    |       |                                    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction  |
+            | restriction | dh       | hi     | h        | no_left_turn |
+
+        And the data has been saved to disk
+        When I try to run "osrm-extract {osm_file} --profile {profile_file}"
+        Then it should exit successfully

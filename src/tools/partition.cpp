@@ -119,7 +119,7 @@ return_code parseArguments(int argc,
     hidden_options.add_options()(
         "input,i",
         boost::program_options::value<boost::filesystem::path>(&config.base_path),
-        "Input file in .osrm format");
+        "Input base file path");
 
     // positional option
     boost::program_options::positional_options_description positional_options;
@@ -249,7 +249,6 @@ catch (const osrm::RuntimeError &e)
 {
     util::DumpMemoryStats();
     util::Log(logERROR) << e.what();
-    return EXIT_FAILURE;
     return e.GetCode();
 }
 catch (const std::bad_alloc &e)

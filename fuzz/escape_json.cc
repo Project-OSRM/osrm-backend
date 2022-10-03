@@ -5,13 +5,14 @@
 #include <iterator>
 #include <string>
 
-using osrm::util::escape_JSON;
+using osrm::util::EscapeJSONString;
 
 extern "C" int LLVMFuzzerTestOneInput(const unsigned char *data, unsigned long size)
 {
     const std::string in(reinterpret_cast<const char *>(data), size);
 
-    const auto escaped = escape_JSON(in);
+    std::string escaped;
+    EscapeJSONString(in, escaped);
     escape(escaped.data());
 
     return 0;

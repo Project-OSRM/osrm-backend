@@ -12,13 +12,19 @@ using namespace osrm::util;
 BOOST_AUTO_TEST_CASE(json_escaping)
 {
     std::string input{"\b\\"};
-    std::string output{escape_JSON(input)};
+    std::string output;
+    EscapeJSONString(input, output);
 
+    BOOST_CHECK(RequiresJSONStringEscaping(input));
     BOOST_CHECK_EQUAL(output, "\\b\\\\");
 
     input = "Aleja \"Solidarnosci\"";
-    output = escape_JSON(input);
+    output.clear();
+    EscapeJSONString(input, output);
+    BOOST_CHECK(RequiresJSONStringEscaping(input));
     BOOST_CHECK_EQUAL(output, "Aleja \\\"Solidarnosci\\\"");
+
+    BOOST_CHECK(!RequiresJSONStringEscaping("Aleja Solidarnosci"));
 }
 
 BOOST_AUTO_TEST_CASE(print_int)

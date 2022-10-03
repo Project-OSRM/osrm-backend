@@ -4,16 +4,17 @@
 #ifndef JSON_RENDERER_HPP
 #define JSON_RENDERER_HPP
 
-#include "util/cast.hpp"
-#include "util/ieee754.hpp"
 #include "util/string_util.hpp"
 
 #include "osrm/json_container.hpp"
 
+#include <algorithm>
 #include <iterator>
 #include <ostream>
 #include <string>
 #include <vector>
+
+#include <fmt/compile.h>
 
 namespace osrm
 {
@@ -22,173 +23,146 @@ namespace util
 namespace json
 {
 
-namespace
+template <typename Out> struct Renderer
 {
-constexpr int MAX_FLOAT_STRING_LENGTH = 256;
-}
+    explicit Renderer(Out &_out) : out(_out) {}
 
-struct Renderer
-{
-    explicit Renderer(std::ostream &_out) : out(_out) {}
-
-    void operator()(const String &string) const
+    void operator()(const String &string)
     {
-        out << "\"";
-        out << escape_JSON(string.value);
-        out << "\"";
+        write('"');
+        // here we assume that vast majority of strings don't need to be escaped,
+        // so we check it first and escape only if needed
+        if (RequiresJSONStringEscaping(string.value))
+        {
+            std::string escaped;
+            // just a guess that 16 bytes for escaped characters will be enough to avoid
+            // reallocations
+            escaped.reserve(string.value.size() + 16);
+            EscapeJSONString(string.value, escaped);
+
+            write(escaped);
+        }
+        else
+        {
+            write(string.value);
+        }
+        write('"');
     }
 
-    void operator()(const Number &number) const
+    void operator()(const Number &number)
     {
-        char buffer[MAX_FLOAT_STRING_LENGTH] = {'\0'};
-        ieee754::dtoa_milo(number.value, buffer);
+        // `fmt::memory_buffer` stores first 500 bytes in the object itself(i.e. on stack in this
+        // case) and then grows using heap if needed
+        fmt::memory_buffer buffer;
+        fmt::format_to(std::back_inserter(buffer), FMT_COMPILE("{}"), number.value);
 
-        // Trucate to 10 decimal places
-        int pos = 0;
-        int decimalpos = 0;
-        while (decimalpos == 0 && pos < MAX_FLOAT_STRING_LENGTH && buffer[pos] != 0)
+        // Truncate to 10 decimal places
+        size_t decimalpos = std::find(buffer.begin(), buffer.end(), '.') - buffer.begin();
+        if (buffer.size() > (decimalpos + 10))
         {
-            if (buffer[pos] == '.')
-            {
-                decimalpos = pos;
-                break;
-            }
-            ++pos;
+            buffer.resize(decimalpos + 10);
         }
-        while (pos < MAX_FLOAT_STRING_LENGTH && buffer[pos] != 0)
-        {
-            if (pos - decimalpos == 10)
-            {
-                buffer[pos] = '\0';
-                break;
-            }
-            ++pos;
-        }
-        out << buffer;
+
+        write(buffer.data(), buffer.size());
     }
 
-    void operator()(const Object &object) const
+    void operator()(const Object &object)
     {
-        out << "{";
+        write('{');
         for (auto it = object.values.begin(), end = object.values.end(); it != end;)
         {
-            out << "\"" << it->first << "\":";
+            write('\"');
+            write(it->first);
+            write<>("\":");
             mapbox::util::apply_visitor(Renderer(out), it->second);
             if (++it != end)
             {
-                out << ",";
+                write(',');
             }
         }
-        out << "}";
+        write('}');
     }
 
-    void operator()(const Array &array) const
+    void operator()(const Array &array)
     {
-        out << "[";
+        write('[');
         for (auto it = array.values.cbegin(), end = array.values.cend(); it != end;)
         {
             mapbox::util::apply_visitor(Renderer(out), *it);
             if (++it != end)
             {
-                out << ",";
+                write(',');
             }
         }
-        out << "]";
+        write(']');
     }
 
-    void operator()(const True &) const { out << "true"; }
+    void operator()(const True &) { write<>("true"); }
 
-    void operator()(const False &) const { out << "false"; }
+    void operator()(const False &) { write<>("false"); }
 
-    void operator()(const Null &) const { out << "null"; }
+    void operator()(const Null &) { write<>("null"); }
 
   private:
-    std::ostream &out;
+    void write(const std::string &str);
+    void write(const char *str, size_t size);
+    void write(char ch);
+
+    template <size_t StrLength> void write(const char (&str)[StrLength])
+    {
+        write(str, StrLength - 1);
+    }
+
+  private:
+    Out &out;
 };
 
-struct ArrayRenderer
+template <> void Renderer<std::vector<char>>::write(const std::string &str)
 {
-    explicit ArrayRenderer(std::vector<char> &_out) : out(_out) {}
+    out.insert(out.end(), str.begin(), str.end());
+}
 
-    void operator()(const String &string) const
-    {
-        out.push_back('\"');
-        const auto string_to_insert = escape_JSON(string.value);
-        out.insert(std::end(out), std::begin(string_to_insert), std::end(string_to_insert));
-        out.push_back('\"');
-    }
+template <> void Renderer<std::vector<char>>::write(const char *str, size_t size)
+{
+    out.insert(out.end(), str, str + size);
+}
 
-    void operator()(const Number &number) const
-    {
-        const std::string number_string = cast::to_string_with_precision(number.value);
-        out.insert(out.end(), number_string.begin(), number_string.end());
-    }
+template <> void Renderer<std::vector<char>>::write(char ch) { out.push_back(ch); }
 
-    void operator()(const Object &object) const
-    {
-        out.push_back('{');
-        for (auto it = object.values.begin(), end = object.values.end(); it != end;)
-        {
-            out.push_back('\"');
-            out.insert(out.end(), it->first.begin(), it->first.end());
-            out.push_back('\"');
-            out.push_back(':');
+template <> void Renderer<std::ostream>::write(const std::string &str) { out << str; }
 
-            mapbox::util::apply_visitor(ArrayRenderer(out), it->second);
-            if (++it != end)
-            {
-                out.push_back(',');
-            }
-        }
-        out.push_back('}');
-    }
+template <> void Renderer<std::ostream>::write(const char *str, size_t size)
+{
+    out.write(str, size);
+}
 
-    void operator()(const Array &array) const
-    {
-        out.push_back('[');
-        for (auto it = array.values.cbegin(), end = array.values.cend(); it != end;)
-        {
-            mapbox::util::apply_visitor(ArrayRenderer(out), *it);
-            if (++it != end)
-            {
-                out.push_back(',');
-            }
-        }
-        out.push_back(']');
-    }
+template <> void Renderer<std::ostream>::write(char ch) { out << ch; }
 
-    void operator()(const True &) const
-    {
-        const std::string temp("true");
-        out.insert(out.end(), temp.begin(), temp.end());
-    }
+template <> void Renderer<std::string>::write(const std::string &str) { out += str; }
 
-    void operator()(const False &) const
-    {
-        const std::string temp("false");
-        out.insert(out.end(), temp.begin(), temp.end());
-    }
+template <> void Renderer<std::string>::write(const char *str, size_t size)
+{
+    out.append(str, size);
+}
 
-    void operator()(const Null &) const
-    {
-        const std::string temp("null");
-        out.insert(out.end(), temp.begin(), temp.end());
-    }
-
-  private:
-    std::vector<char> &out;
-};
+template <> void Renderer<std::string>::write(char ch) { out += ch; }
 
 inline void render(std::ostream &out, const Object &object)
 {
-    Value value = object;
-    mapbox::util::apply_visitor(Renderer(out), value);
+    Renderer renderer(out);
+    renderer(object);
+}
+
+inline void render(std::string &out, const Object &object)
+{
+    Renderer renderer(out);
+    renderer(object);
 }
 
 inline void render(std::vector<char> &out, const Object &object)
 {
-    Value value = object;
-    mapbox::util::apply_visitor(ArrayRenderer(out), value);
+    Renderer renderer(out);
+    renderer(object);
 }
 
 } // namespace json

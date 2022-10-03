@@ -106,7 +106,7 @@ class RuntimeError : public exception
     // This function exists to 'anchor' the class, and stop the compiler from
     // copying vtable and RTTI info into every object file that includes
     // this header. (Caught by -Wweak-vtables under Clang.)
-    virtual void anchor() const;
+    virtual void anchor() const override;
     const ErrorCode code;
 
     static std::string BuildMessage(const std::string &message,
