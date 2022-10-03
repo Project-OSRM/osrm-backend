@@ -89,11 +89,9 @@ jobs:
       run: |
         npm ci --ignore-scripts
         wget https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-208096c1/clang-format-10_linux-amd64 -O /usr/local/bin/clang-format-10.0.0
-        sha512sum /usr/local/bin/clang-format-10.0.0
         echo "8c5c5499d53eb004c81027046098895ba019ff6d020c09f1d49f017d32e0430aaf04a3dcef949528c097d45f0fe1a2d92019a760077e2a347b1fe5f244e05e97  /usr/local/bin/clang-format-10.0.0" | sha512sum --check --status
         chmod +x /usr/local/bin/clang-format-10.0.0
         clang-format-10.0.0 --version
-      #  sudo apt-get update -y && sudo apt-get install clang-format-10
     - name: Run checks
       run: |
         ./scripts/check_taginfo.py taginfo.json profiles/car.lua
