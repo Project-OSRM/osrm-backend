@@ -494,7 +494,7 @@ if(ENABLE_CONAN)
     "lua/${CONAN_LUA_VERSION}"
     "onetbb/${CONAN_TBB_VERSION}"
     BASIC_SETUP 
-    GENERATORS cmake_find_package
+    GENERATORS cmake_find_package json
     KEEP_RPATHS
     NO_OUTPUT_DIRS
     OPTIONS boost:filesystem_version=3 # https://stackoverflow.com/questions/73392648/error-with-boost-filesystem-version-in-cmake
