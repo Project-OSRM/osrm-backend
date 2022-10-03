@@ -88,9 +88,7 @@ jobs:
     - name: Prepare environment
       run: |
         npm ci --ignore-scripts
-        export MASON=${GITHUB_WORKSPACE}/scripts/mason.sh
-        ${MASON} install clang-format 10.0.0
-        echo "$(${MASON} prefix clang-format 10.0.0)/bin" >> $GITHUB_PATH
+        sudo apt-get update -y && sudo apt-get install clang-format-10
     - name: Run checks
       run: |
         ./scripts/check_taginfo.py taginfo.json profiles/car.lua
@@ -574,7 +572,8 @@ jobs:
 
         # ccache
         sudo apt-get update -y && sudo apt-get install ccache
-
+        ccache --version
+        
         # clang
         if [[ "${CCOMPILER}" == "clang-6.0" ]]; then
           sudo apt-get update -y && sudo apt-get install clang++-6
