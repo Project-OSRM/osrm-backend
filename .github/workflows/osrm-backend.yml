@@ -88,9 +88,9 @@ jobs:
     - name: Prepare environment
       run: |
         npm ci --ignore-scripts
-        export MASON=${GITHUB_WORKSPACE}/scripts/mason.sh
-        ${MASON} install clang-format 10.0.0
-        echo "$(${MASON} prefix clang-format 10.0.0)/bin" >> $GITHUB_PATH
+        which clang-format
+        ls /usr/bin
+        clang-format-14 --version
     - name: Run checks
       run: |
         ./scripts/check_taginfo.py taginfo.json profiles/car.lua
