@@ -580,7 +580,12 @@ jobs:
         python3 -m pip install conan==1.51.3
 
         # ccache
-        sudo apt-get update -y && sudo apt-get install ccache
+        if [[ "${RUNNER_OS}" == "Linux" ]]; then
+          sudo apt-get update -y && sudo apt-get install ccache
+        elif [[ "${RUNNER_OS}" == "macOS" ]]; then
+          brew install ccache
+        fi
+
         ccache --version
         
         # clang
