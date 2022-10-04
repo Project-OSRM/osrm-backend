@@ -500,7 +500,7 @@ if(ENABLE_CONAN)
     "lua/${CONAN_LUA_VERSION}"
     "onetbb/${CONAN_TBB_VERSION}"
     BASIC_SETUP 
-    GENERATORS cmake_find_package
+    GENERATORS cmake_find_package json  # json generator generates a conanbuildinfo.json in the build folder so (non-CMake) projects can easily parse OSRM's dependencies
     KEEP_RPATHS
     NO_OUTPUT_DIRS
     OPTIONS boost:filesystem_version=3 # https://stackoverflow.com/questions/73392648/error-with-boost-filesystem-version-in-cmake
