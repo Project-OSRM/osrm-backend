@@ -141,7 +141,7 @@ sudo apt-get update -y
 sudo apt-get install -y libstdc++-9-dev
 ```
 
-You can install the Node.js bindings via `npm install osrm` or from this repository either via
+You can install the Node.js bindings via `npm install @project-osrm/osrm` or from this repository either via
 
     npm install
 
@@ -150,6 +150,17 @@ which will check and use pre-built binaries if they're available for this releas
     npm install --build-from-source
 
 to always force building the Node.js bindings from source.
+
+#### Unscoped packages
+
+Prior to v5.27.0, the `osrm` Node package was unscoped. If you are upgrading from an old package, you will need to do the following:
+
+```
+npm uninstall osrm --save
+npm install @project-osrm/osrm --save
+```
+
+#### Package docs
 
 For usage details have a look [these API docs](docs/nodejs/api.md).
 
