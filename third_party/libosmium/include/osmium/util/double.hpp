@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -41,9 +41,7 @@ DEALINGS IN THE SOFTWARE.
 
 namespace osmium {
 
-    namespace util {
-
-        constexpr const int max_double_length = 20; // should fit any double
+    inline namespace util {
 
         /**
          * Write double to iterator, removing superfluous '0' characters at
@@ -57,6 +55,10 @@ namespace osmium {
         template <typename T>
         inline T double2string(T iterator, double value, int precision) {
             assert(precision <= 17);
+
+            enum {
+                max_double_length = 20 // should fit decimal representation of any double
+            };
 
             char buffer[max_double_length];
 

@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,17 +33,32 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <algorithm>
 #include <cstring>
 #include <iosfwd>
+#include <regex>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include <regex>
+#ifdef __has_include
+# if __has_include(<variant>)
+#  include <variant>
+#  ifdef __cpp_lib_variant
+#   define OSMIUM_USE_STD_VARIANT
+#  endif
+# endif
+#endif
+
+#ifndef OSMIUM_USE_STD_VARIANT
+# include <boost/variant.hpp>
+#endif
+
 
 // std::regex isn't implemented properly in glibc++ (before the version
 // delivered with GCC 4.9) and libc++ before the version 3.6, so the use is
 // disabled by these checks. Checks for GLIBC were based on
-// http://stackoverflow.com/questions/12530406/is-gcc-4-8-or-earlier-buggy-about-regular-expressions
+// https://stackoverflow.com/questions/12530406/is-gcc-4-8-or-earlier-buggy-about-regular-expressions
 // Checks for libc++ are simply based on compiler defines. This is probably
 // not optimal but seems to work for now.
 #if defined(__GLIBCXX__)
@@ -62,8 +77,6 @@ DEALINGS IN THE SOFTWARE.
 #  pragma message("Disabling regex functionality")
 # endif
 #endif
-
-#include <boost/variant.hpp>
 
 namespace osmium {
 
@@ -85,7 +98,7 @@ namespace osmium {
 
         public:
 
-            bool match(const char* /*test_string*/) const noexcept {
+            static bool match(const char* /*test_string*/) noexcept {
                 return false;
             }
 
@@ -103,7 +116,7 @@ namespace osmium {
 
         public:
 
-            bool match(const char* /*test_string*/) const noexcept {
+            static bool match(const char* /*test_string*/) noexcept {
                 return true;
             }
 
@@ -123,8 +136,8 @@ namespace osmium {
 
         public:
 
-            explicit equal(const std::string& str) :
-                m_str(str) {
+            explicit equal(std::string str) :
+                m_str(std::move(str)) {
             }
 
             explicit equal(const char* str) :
@@ -151,8 +164,8 @@ namespace osmium {
 
         public:
 
-            explicit prefix(const std::string& str) :
-                m_str(str) {
+            explicit prefix(std::string str) :
+                m_str(std::move(str)) {
             }
 
             explicit prefix(const char* str) :
@@ -179,8 +192,8 @@ namespace osmium {
 
         public:
 
-            explicit substring(const std::string& str) :
-                m_str(str) {
+            explicit substring(std::string str) :
+                m_str(std::move(str)) {
             }
 
             explicit substring(const char* str) :
@@ -208,8 +221,8 @@ namespace osmium {
 
         public:
 
-            explicit regex(const std::regex& regex) :
-                m_regex(regex) {
+            explicit regex(std::regex regex) :
+                m_regex(std::move(regex)) {
             }
 
             bool match(const char* test_string) const noexcept {
@@ -233,16 +246,14 @@ namespace osmium {
 
         public:
 
-            explicit list() :
-                m_strings() {
-            }
+            explicit list() = default;
 
-            explicit list(const std::vector<std::string>& strings) :
-                m_strings(strings) {
+            explicit list(std::vector<std::string> strings) :
+                m_strings(std::move(strings)) {
             }
 
             list& add_string(const char* str) {
-                m_strings.push_back(str);
+                m_strings.emplace_back(str);
                 return *this;
             }
 
@@ -252,13 +263,10 @@ namespace osmium {
             }
 
             bool match(const char* test_string) const noexcept {
-                for (const auto& s : m_strings) {
-                    if (!std::strcmp(s.c_str(), test_string)) {
-                        return true;
-                    }
-                }
-                return false;
-
+                return std::any_of(m_strings.cbegin(), m_strings.cend(),
+                                   [&test_string](const std::string& s){
+                    return s == test_string;
+                });
             }
 
             template <typename TChar, typename TTraits>
@@ -274,25 +282,35 @@ namespace osmium {
 
     private:
 
-        using matcher_type = boost::variant<always_false,
-                                            always_true,
-                                            equal,
-                                            prefix,
-                                            substring,
-#ifdef OSMIUM_WITH_REGEX
-                                            regex,
+        using matcher_type =
+#ifdef OSMIUM_USE_STD_VARIANT
+            std::variant
+#else
+            boost::variant
 #endif
-                                            list>;
+                <always_false,
+                 always_true,
+                 equal,
+                 prefix,
+                 substring,
+#ifdef OSMIUM_WITH_REGEX
+                 regex,
+#endif
+                 list>;
 
         matcher_type m_matcher;
 
-        class match_visitor : public boost::static_visitor<bool> {
+        class match_visitor
+#ifndef OSMIUM_USE_STD_VARIANT
+        : public boost::static_visitor<bool>
+#endif
+        {
 
             const char* m_str;
 
         public:
 
-            match_visitor(const char* str) noexcept :
+            explicit match_visitor(const char* str) noexcept :
                 m_str(str) {
             }
 
@@ -304,13 +322,17 @@ namespace osmium {
         }; // class match_visitor
 
         template <typename TChar, typename TTraits>
-        class print_visitor : public boost::static_visitor<void> {
+        class print_visitor
+#ifndef OSMIUM_USE_STD_VARIANT
+        : public boost::static_visitor<void>
+#endif
+        {
 
             std::basic_ostream<TChar, TTraits>* m_out;
 
         public:
 
-            print_visitor(std::basic_ostream<TChar, TTraits>& out) :
+            explicit print_visitor(std::basic_ostream<TChar, TTraits>& out) :
                 m_out(&out) {
             }
 
@@ -338,7 +360,8 @@ namespace osmium {
          * or
          * @code StringMatcher{StringMatcher::always_false}; @endcode
          */
-        StringMatcher(bool result) :
+        // cppcheck-suppress noExplicitConstructor
+        StringMatcher(bool result) : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
             m_matcher(always_false{}) {
             if (result) {
                 m_matcher = always_true{};
@@ -350,7 +373,8 @@ namespace osmium {
          * Shortcut for
          * @code StringMatcher{StringMatcher::equal{str}}; @endcode
          */
-        StringMatcher(const char* str) :
+        // cppcheck-suppress noExplicitConstructor
+        StringMatcher(const char* str) : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
             m_matcher(equal{str}) {
         }
 
@@ -359,7 +383,8 @@ namespace osmium {
          * Shortcut for
          * @code StringMatcher{StringMatcher::equal{str}}; @endcode
          */
-        StringMatcher(const std::string& str) :
+        // cppcheck-suppress noExplicitConstructor
+        StringMatcher(const std::string& str) : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
             m_matcher(equal{str}) {
         }
 
@@ -369,7 +394,8 @@ namespace osmium {
          * Shortcut for
          * @code StringMatcher{StringMatcher::regex{aregex}}; @endcode
          */
-        StringMatcher(const std::regex& aregex) :
+        // cppcheck-suppress noExplicitConstructor
+        StringMatcher(const std::regex& aregex) : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
             m_matcher(regex{aregex}) {
         }
 #endif
@@ -380,7 +406,8 @@ namespace osmium {
          * Shortcut for
          * @code StringMatcher{StringMatcher::list{strings}}; @endcode
          */
-        StringMatcher(const std::vector<std::string>& strings) :
+        // cppcheck-suppress noExplicitConstructor
+        StringMatcher(const std::vector<std::string>& strings) : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
             m_matcher(list{strings}) {
         }
 
@@ -391,9 +418,10 @@ namespace osmium {
          *                  osmium::StringMatcher::always_false, always_true,
          *                  equal, prefix, substring, regex or list.
          */
-        template <typename TMatcher, typename std::enable_if<
-            std::is_base_of<matcher, TMatcher>::value, int>::type = 0>
-        StringMatcher(TMatcher&& matcher) :
+        // cppcheck-suppress noExplicitConstructor
+        template <typename TMatcher, typename X = typename std::enable_if<
+            std::is_base_of<matcher, TMatcher>::value, void>::type>
+        StringMatcher(TMatcher&& matcher) : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
             m_matcher(std::forward<TMatcher>(matcher)) {
         }
 
@@ -401,7 +429,11 @@ namespace osmium {
          * Match the specified string.
          */
         bool operator()(const char* str) const noexcept {
+#ifdef OSMIUM_USE_STD_VARIANT
+            return std::visit(match_visitor{str}, m_matcher);
+#else
             return boost::apply_visitor(match_visitor{str}, m_matcher);
+#endif
         }
 
         /**
@@ -413,7 +445,11 @@ namespace osmium {
 
         template <typename TChar, typename TTraits>
         void print(std::basic_ostream<TChar, TTraits>& out) const {
+#ifdef OSMIUM_USE_STD_VARIANT
+            std::visit(print_visitor<TChar, TTraits>{out}, m_matcher);
+#else
             boost::apply_visitor(print_visitor<TChar, TTraits>{out}, m_matcher);
+#endif
         }
 
     }; // class StringMatcher
@@ -425,5 +461,7 @@ namespace osmium {
     }
 
 } // namespace osmium
+
+#undef OSMIUM_USE_STD_VARIANT
 
 #endif // OSMIUM_UTIL_STRING_MATCHER_HPP

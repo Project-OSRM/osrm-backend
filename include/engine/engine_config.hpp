@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2016, Project OSRM contributors
+Copyright (c) 2017, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -57,16 +57,14 @@ namespace engine
  *
  * You can chose between three algorithms:
  *  - Algorithm::CH
- *    Contraction Hierarchies, extremely fast queries but slow pre-processing. The default right
+ *      Contraction Hierarchies, extremely fast queries but slow pre-processing. The default right
  * now.
  *  - Algorithm::CoreCH
- *    Contractoin Hierachies with partial contraction for faster pre-processing but slower queries.
+ *      Deprecated, to be removed in v6.0
+ *      Contraction Hierachies with partial contraction for faster pre-processing but slower
+ * queries.
  *  - Algorithm::MLD
- *    Multi Level Dijkstra which is experimental and moderately fast in both pre-processing and
- * query.
- *
- * Algorithm::CH is specified we will automatically upgrade to CoreCH if we find the data for it.
- * If Algorithm::CoreCH is specified and we don't find the speedup data, we fail hard.
+ *      Multi Level Dijkstra, moderately fast in both pre-processing and query.
  *
  * \see OSRM, StorageConfig
  */
@@ -76,8 +74,8 @@ struct EngineConfig final
 
     enum class Algorithm
     {
-        CH,     // will upgrade to CoreCH if it finds core data
-        CoreCH, // will fail hard if there is no core data
+        CH,
+        CoreCH, // Deprecated, will be removed in v6.0
         MLD
     };
 
@@ -86,12 +84,17 @@ struct EngineConfig final
     int max_locations_viaroute = -1;
     int max_locations_distance_table = -1;
     int max_locations_map_matching = -1;
+    double max_radius_map_matching = -1.0;
     int max_results_nearest = -1;
     int max_alternatives = 3; // set an arbitrary upper bound; can be adjusted by user
     bool use_shared_memory = true;
+    boost::filesystem::path memory_file;
+    bool use_mmap = true;
     Algorithm algorithm = Algorithm::CH;
+    std::string verbosity;
+    std::string dataset_name;
 };
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif // SERVER_CONFIG_HPP

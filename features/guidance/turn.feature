@@ -899,9 +899,9 @@ Feature: Simple Turns
             """
 
         And the ways
-            | nodes | highway     | name |
-            | abc   | primary     | road |
-            | bd    | residential | in   |
+            | nodes | highway     | name | lanes |
+            | abc   | primary     | road |     3 |
+            | bd    | residential | in   |     1 |
 
         When I route I should get
             | waypoints | turns                   | route        |
@@ -964,14 +964,16 @@ Feature: Simple Turns
         Given the node map
             """
                   g
-
-                  f     y
-            i
-            j k a   b   x
-                  e   c
-                    d
-
+                  |
+               _--f-----y
+            i-'   |
+            j-k-a]|[b---x
+                  e  'c
+                  |'d'
+                  |
                   h
+                  |
+                  q
             """
 
         And the nodes
@@ -981,16 +983,16 @@ Feature: Simple Turns
         And the ways
             | nodes | name                           | highway     | oneway |
             | yf    | yf                             | trunk_link  | yes    |
-            | gfeh  | Centreville Road               | primary     |        |
+            | gfehq | Centreville Road               | primary     |        |
             | fi    | fi                             | trunk_link  | yes    |
             | ij    | Bloomingdale Road              | residential |        |
-            | jkabx | Blue Star Memorial Hwy         | trunk       |        |
+            | jkabx | Blue Star Memorial Hwy         | trunk       | yes    |
             | bcde  | bcde                           | trunk_link  | yes    |
             | kh    | kh                             | trunk_link  | yes    |
 
         When I route I should get
             | waypoints | turns                                        | route                                                         |
-            | a,h       | depart,off ramp right,turn sharp left,arrive | Blue Star Memorial Hwy,bcde,Centreville Road,Centreville Road |
+            | a,q       | depart,off ramp right,turn sharp left,arrive | Blue Star Memorial Hwy,bcde,Centreville Road,Centreville Road |
 
     @todo
     # https://www.openstreetmap.org/#map=20/52.51609/13.41080
@@ -1349,3 +1351,115 @@ Feature: Simple Turns
        When I route I should get
             | waypoints | route    | turns                   |
             | a,d       | ab,dc,dc | depart,turn left,arrive |
+
+
+    # https://www.openstreetmap.org/node/1332083066
+    Scenario: Turns ordering must respect initial bearings
+        Given the node map
+            """
+            a . be .
+                  \ c.
+                 d/    .f . g
+            """
+
+        And the ways
+            | nodes | highway | oneway |
+            | ab    | primary | yes    |
+            | bcd   | primary | yes    |
+            | befg  | primary | yes    |
+
+       When I route I should get
+            | waypoints | route        | turns                           |
+            | a,d       | ab,bcd,bcd   | depart,fork slight right,arrive |
+            | a,g       | ab,befg,befg | depart,fork slight left,arrive  |
+
+	@routing @car
+    Scenario: No turn instruction when turning from unnamed onto unnamed
+        Given the node map
+            """
+            a
+            |
+            |
+            |
+            |
+            b----------------c
+            |
+            |
+            |
+            |
+            |
+            |
+            d
+            """
+
+        And the ways
+            | nodes | highway     | name | ref   |
+            | ab    | trunk_link  |      |       |
+            | db    | secondary   |      | L 460 |
+            | bc    | secondary   |      |       |
+
+        When I route I should get
+            | from | to | route | ref          | turns                    |
+            | d    | c  | ,,    | L 460,,      | depart,turn right,arrive |
+            | c    | d  | ,,    | ,L 460,L 460 | depart,turn left,arrive  |
+
+    # https://www.openstreetmap.org/#map=18/52.25130/10.42545
+    Scenario: Turn for roads with no name, ref changes
+        Given the node map
+            """
+              d
+              .
+              .
+            e c . . f
+              .
+              .
+              b
+              .
+              .
+              a
+            """
+
+        And the ways
+            | nodes | highway     | ref  | name          |
+            | abc   | tertiary    | K 57 |               |
+            | cd    | tertiary    | K 56 |               |
+            | cf    | tertiary    | K 56 |               |
+            | ce    | residential |      | Heinrichshöhe |
+
+       When I route I should get
+            | waypoints | route     | turns                    |
+            | a,f       | ,,        | depart,turn right,arrive |
+
+    # https://www.openstreetmap.org/#map=18/52.24071/10.29066
+    Scenario: Turn for roads with no name, ref changes
+        Given the node map
+            """
+                     x
+                     .
+                     .
+                     d
+                    . .
+                   .   .
+                  .     .
+            e. . t . c . p. .f
+                  .     .
+                   .   .
+                    . .
+                     b
+                     .
+                     .
+                     a
+            """
+
+        And the ways
+            | nodes | highway     | ref  | name          | oneway |
+            | abp   | tertiary    | K 23 |               | yes    |
+            | pdx   | tertiary    | K 23 |               | yes    |
+            | xdt   | tertiary    | K 23 |               | yes    |
+            | tba   | tertiary    | K 23 |               | yes    |
+            | etcpf | primary     | B 1  |               | no     |
+
+       When I route I should get
+            | waypoints | route | turns                   |
+            | e,x       | ,,    | depart,turn left,arrive |
+            | f,a       | ,,    | depart,turn left,arrive |

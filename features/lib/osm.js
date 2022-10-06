@@ -61,8 +61,13 @@ class DB {
             });
 
             w.nodes.forEach((k) => {
-                way.ele('nd')
+
+                let nd = way.ele('nd')
                     .att('ref', k.id);
+                if (w.add_locations) {
+                    nd.att('lon', k.lon);
+                    nd.att('lat', k.lat);
+                }
             });
 
             for (var k in w.tags) {
@@ -81,11 +86,12 @@ class DB {
             });
 
             r.members.forEach((m) => {
-                relation.ele('member', {
+                var d = {
                     type: m.type,
-                    ref: m.id,
-                    role: m.role
-                });
+                    ref: m.id
+                };
+                if (m.role) d.role = m.role;
+                relation.ele('member', d);
             });
 
             for (var k in r.tags) {
@@ -120,13 +126,14 @@ class Node {
 }
 
 class Way {
-    constructor (id, OSM_USER, OSM_TIMESTAMP, OSM_UID) {
+    constructor (id, OSM_USER, OSM_TIMESTAMP, OSM_UID, add_locations) {
         this.id = id;
         this.OSM_USER = OSM_USER;
         this.OSM_TIMESTAMP = OSM_TIMESTAMP;
         this.OSM_UID = OSM_UID;
         this.tags = {};
         this.nodes = [];
+        this.add_locations = add_locations;
     }
 
     addNode (node) {

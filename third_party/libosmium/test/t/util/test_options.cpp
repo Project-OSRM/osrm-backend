@@ -3,11 +3,13 @@
 #include <osmium/util/options.hpp>
 
 TEST_CASE("Set a single option value from string") {
-    osmium::util::Options o;
+    osmium::Options o;
+
+    REQUIRE(o.empty());
 
     o.set("foo", "bar");
     REQUIRE("bar" == o.get("foo"));
-    REQUIRE("" == o.get("empty"));
+    REQUIRE(o.get("empty").empty());
     REQUIRE("default" == o.get("empty", "default"));
 
     REQUIRE_FALSE(o.is_true("foo"));
@@ -17,16 +19,17 @@ TEST_CASE("Set a single option value from string") {
     REQUIRE(o.is_not_false("empty"));
 
     REQUIRE(1 == o.size());
+    REQUIRE_FALSE(o.empty());
 }
 
 TEST_CASE("Set option values from booleans") {
-    osmium::util::Options o;
+    osmium::Options o;
 
     o.set("t", true);
     o.set("f", false);
     REQUIRE("true" == o.get("t"));
     REQUIRE("false" == o.get("f"));
-    REQUIRE("" == o.get("empty"));
+    REQUIRE(o.get("empty").empty());
 
     REQUIRE(o.is_true("t"));
     REQUIRE_FALSE(o.is_true("f"));
@@ -38,7 +41,7 @@ TEST_CASE("Set option values from booleans") {
 }
 
 TEST_CASE("Set option value from string with equal sign") {
-    osmium::util::Options o;
+    osmium::Options o;
 
     o.set("foo=bar");
     REQUIRE("bar" == o.get("foo"));
@@ -46,7 +49,7 @@ TEST_CASE("Set option value from string with equal sign") {
 }
 
 TEST_CASE("Set option value from string without equal sign") {
-    osmium::util::Options o;
+    osmium::Options o;
 
     o.set("foo");
     REQUIRE("true" == o.get("foo"));
@@ -58,7 +61,7 @@ TEST_CASE("Set option value from string without equal sign") {
 }
 
 TEST_CASE("Options with initializer list") {
-    osmium::util::Options o{{ "foo", "true" }, { "bar", "17" }};
+    osmium::Options o{{ "foo", "true" }, { "bar", "17" }};
 
     REQUIRE(o.get("foo") == "true");
     REQUIRE(o.get("bar") == "17");
@@ -79,7 +82,7 @@ TEST_CASE("Options with initializer list") {
 }
 
 TEST_CASE("Iterating over options") {
-    /*not const*/ osmium::util::Options o{{ "foo", "true" }, { "bar", "17" }};
+    /*not const*/ osmium::Options o{{ "foo", "true" }, { "bar", "17" }};
 
     auto it = o.begin();
     REQUIRE(it->first == "bar");
@@ -92,7 +95,7 @@ TEST_CASE("Iterating over options") {
 }
 
 TEST_CASE("Const iterating over options") {
-    const osmium::util::Options o{{ "foo", "true" }, { "bar", "17" }};
+    const osmium::Options o{{ "foo", "true" }, { "bar", "17" }};
 
     SECTION("begin/end") {
         auto it = o.begin();

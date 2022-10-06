@@ -125,7 +125,7 @@ struct RangebasedCRC32
   private:
     IteratorbasedCRC32 crc32;
 };
-}
-}
+} // namespace contractor
+} // namespace osrm
 
 #endif /* ITERATOR_BASED_CRC32_H */

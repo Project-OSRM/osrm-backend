@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,17 +33,16 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstdint>
-#include <cstdlib>
-#include <iterator>
-
 #include <osmium/memory/collection.hpp> // IWYU pragma: keep
 #include <osmium/memory/item.hpp>
 #include <osmium/osm/entity.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/object.hpp>
 #include <osmium/osm/types.hpp>
-#include <osmium/util/compatibility.hpp>
+
+#include <cstdint>
+#include <cstdlib>
+#include <iterator>
 
 namespace osmium {
 
@@ -63,12 +62,6 @@ namespace osmium {
         uint16_t         m_flags;
         string_size_type m_role_size = 0;
 
-        RelationMember(const RelationMember&) = delete;
-        RelationMember(RelationMember&&) = delete;
-
-        RelationMember& operator=(const RelationMember&) = delete;
-        RelationMember& operator=(RelationMember&&) = delete;
-
         unsigned char* endpos() {
             return data() + osmium::memory::padded_length(sizeof(RelationMember) + m_role_size);
         }
@@ -87,7 +80,7 @@ namespace osmium {
             return endpos();
         }
 
-        unsigned const char* next() const {
+        const unsigned char* next() const {
             if (full_member()) {
                 return endpos() + reinterpret_cast<const osmium::memory::Item*>(endpos())->byte_size();
             }
@@ -102,20 +95,22 @@ namespace osmium {
 
         static constexpr item_type collection_type = item_type::relation_member_list;
 
-        RelationMember(const object_id_type ref = 0, const item_type type = item_type(), const bool full = false) noexcept :
+        explicit RelationMember(const object_id_type ref = 0, const item_type type = item_type(), const bool full = false) noexcept :
             m_ref(ref),
             m_type(type),
             m_flags(full ? 1 : 0) {
         }
 
+        RelationMember(const RelationMember&) = delete;
+        RelationMember& operator=(const RelationMember&) = delete;
+
+        RelationMember(RelationMember&&) = delete;
+        RelationMember& operator=(RelationMember&&) = delete;
+
+        ~RelationMember() noexcept = default;
+
         object_id_type ref() const noexcept {
             return m_ref;
-        }
-
-        /// @deprecated Use set_ref() instead.
-        OSMIUM_DEPRECATED RelationMember& ref(object_id_type ref) noexcept {
-            m_ref = ref;
-            return *this;
         }
 
         unsigned_object_id_type positive_ref() const noexcept {
@@ -158,9 +153,7 @@ namespace osmium {
                    t == osmium::item_type::relation_member_list_with_full_members;
         }
 
-        RelationMemberList() :
-            osmium::memory::Collection<RelationMember, osmium::item_type::relation_member_list>() {
-        }
+        RelationMemberList() noexcept = default;
 
     }; // class RelationMemberList
 

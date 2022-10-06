@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,13 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
-#include <cstddef>
-#include <utility>
-
 #include <osmium/index/index.hpp>
 #include <osmium/index/multimap.hpp>
 #include <osmium/io/detail/read_write.hpp>
+
+#include <algorithm>
+#include <cstddef>
+#include <utility>
 
 namespace osmium {
 
@@ -47,7 +47,7 @@ namespace osmium {
 
         namespace multimap {
 
-            template <typename TId, typename TValue, template<typename...> class TVector>
+            template <typename TId, typename TValue, template <typename...> class TVector>
             class VectorBasedSparseMultimap : public Multimap<TId, TValue> {
 
             public:
@@ -61,7 +61,7 @@ namespace osmium {
 
                 vector_type m_vector;
 
-                static bool is_removed(element_type& element) {
+                static bool is_removed(const element_type& element) {
                     return element.second == osmium::index::empty_value<TValue>();
                 }
 
@@ -75,7 +75,13 @@ namespace osmium {
                     m_vector(fd) {
                 }
 
-                ~VectorBasedSparseMultimap() noexcept final = default;
+                VectorBasedSparseMultimap(const VectorBasedSparseMultimap&) = default;
+                VectorBasedSparseMultimap& operator=(const VectorBasedSparseMultimap&) = default;
+
+                VectorBasedSparseMultimap(VectorBasedSparseMultimap&&) noexcept = default;
+                VectorBasedSparseMultimap& operator=(VectorBasedSparseMultimap&&) noexcept = default;
+
+                ~VectorBasedSparseMultimap() noexcept override = default;
 
                 void set(const TId id, const TValue value) final {
                     m_vector.push_back(element_type(id, value));
@@ -86,20 +92,18 @@ namespace osmium {
                 }
 
                 std::pair<iterator, iterator> get_all(const TId id) {
-                    const element_type element {
+                    const element_type element{
                         id,
-                        osmium::index::empty_value<TValue>()
-                    };
+                        osmium::index::empty_value<TValue>()};
                     return std::equal_range(m_vector.begin(), m_vector.end(), element, [](const element_type& a, const element_type& b) {
                         return a.first < b.first;
                     });
                 }
 
                 std::pair<const_iterator, const_iterator> get_all(const TId id) const {
-                    const element_type element {
+                    const element_type element{
                         id,
-                        osmium::index::empty_value<TValue>()
-                    };
+                        osmium::index::empty_value<TValue>()};
                     return std::equal_range(m_vector.cbegin(), m_vector.cend(), element, [](const element_type& a, const element_type& b) {
                         return a.first < b.first;
                     });
@@ -143,8 +147,7 @@ namespace osmium {
                 void erase_removed() {
                     m_vector.erase(
                         std::remove_if(m_vector.begin(), m_vector.end(), is_removed),
-                        m_vector.end()
-                    );
+                        m_vector.end());
                 }
 
                 void dump_as_list(const int fd) final {

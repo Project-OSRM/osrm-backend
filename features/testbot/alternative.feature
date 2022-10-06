@@ -4,6 +4,14 @@ Feature: Alternative route
     Background:
         Given the profile "testbot"
         And a grid size of 200 meters
+        # Force data preparation to single-threaded to ensure consistent
+        # results for alternative generation during tests (alternative
+        # finding is highly sensitive to graph shape, which is in turn
+        # affected by parallelism during generation)
+        And the contract extra arguments "--threads 1"
+        And the extract extra arguments "--threads 1"
+        And the customize extra arguments "--threads 1"
+        And the partition extra arguments "--threads 1"
 
         And the node map
             """
@@ -11,6 +19,9 @@ Feature: Alternative route
             a   k     z
               g h i j
             """
+
+        # enforce multiple cells for filterUnpackedPathsBySharing check
+        And the partition extra arguments "--small-component-size 1 --max-cell-sizes 2,4,8,16"
 
         And the ways
             | nodes |

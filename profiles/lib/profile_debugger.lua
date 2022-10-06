@@ -10,7 +10,7 @@ local pprint = require('lib/pprint')
 
 -- globals that are normally set from C++
 
--- should match values defined in include/extractor/guidance/road_classification.hpp
+-- should match values defined in include/extractor/road_classification.hpp
 road_priority_class = {
   motorway = 0,
   trunk = 2,
@@ -52,7 +52,7 @@ end
 function canonicalizeStringList(str)
   return str
 end
- 
+
  
  
 -- debug helper
@@ -123,10 +123,13 @@ function Debug.process_way(way,result)
   result.forward_classes = {}
   result.backward_classes = {}
   
-  -- intercept tag function normally provided via C++
+  -- intercept tag functions normally provided via C++
   function way:get_value_by_key(k)
     Debug.register_tag_fetch(k)
     return self[k]
+  end
+  function way:get_location_tag(k)
+    return nil
   end
   
   -- reset tag counts

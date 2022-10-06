@@ -1,7 +1,7 @@
 #ifndef OSRM_ENGINE_GUIDANCE_POSTPROCESSING_TOOLKIT_HPP_
 #define OSRM_ENGINE_GUIDANCE_POSTPROCESSING_TOOLKIT_HPP_
 
-#include "extractor/guidance/turn_instruction.hpp"
+#include "guidance/turn_instruction.hpp"
 #include "engine/guidance/route_step.hpp"
 
 #include <iterator>

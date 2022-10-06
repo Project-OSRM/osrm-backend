@@ -17,9 +17,8 @@
 
 */
 
-#include <cstdlib>   // for std::exit
+#include <cstring>   // for std::strcmp
 #include <exception> // for std::exception
-#include <getopt.h>  // for getopt_long
 #include <iostream>  // for std::cout, std::cerr
 #include <string>    // for std::string
 
@@ -51,13 +50,21 @@ void print_help() {
               << "  -t, --to-format=FORMAT    Output format\n";
 }
 
+void print_usage(const char* prgname) {
+    std::cerr << "Usage: " << prgname << " [OPTIONS] [INFILE [OUTFILE]]\n";
+}
+
 int main(int argc, char* argv[]) {
-    static struct option long_options[] = {
-        {"help",              no_argument, nullptr, 'h'},
-        {"from-format", required_argument, nullptr, 'f'},
-        {"to-format",   required_argument, nullptr, 't'},
-        {nullptr, 0, nullptr, 0}
-    };
+    if (argc == 1) {
+        print_usage(argv[0]);
+        return 0;
+    }
+
+    if (argc > 1 && (!std::strcmp(argv[1], "-h") ||
+                     !std::strcmp(argv[1], "--help"))) {
+        print_help();
+        return 0;
+    }
 
     // Input and output format are empty by default. Later this will mean that
     // the format should be taken from the input and output file suffix,
@@ -65,44 +72,38 @@ int main(int argc, char* argv[]) {
     std::string input_format;
     std::string output_format;
 
-    // Read options from command line.
-    while (true) {
-        const int c = getopt_long(argc, argv, "dhf:t:", long_options, nullptr);
-        if (c == -1) {
-            break;
-        }
-
-        switch (c) {
-            case 'h':
-                print_help();
-                std::exit(0);
-            case 'f':
-                input_format = optarg;
-                break;
-            case 't':
-                output_format = optarg;
-                break;
-            default:
-                std::exit(1);
-        }
-    }
-
-    const int remaining_args = argc - optind;
-    if (remaining_args == 0 || remaining_args > 2) {
-        std::cerr << "Usage: " << argv[0] << " [OPTIONS] [INFILE [OUTFILE]]\n";
-        std::exit(1);
-    }
-
-    // Get input file name from command line.
     std::string input_file_name;
-    if (remaining_args >= 1) {
-        input_file_name = argv[optind];
-    }
-
-    // Get output file name from command line.
     std::string output_file_name;
-    if (remaining_args == 2) {
-        output_file_name = argv[optind+1];
+
+    for (int i = 1; i < argc; ++i) {
+        if (!std::strcmp(argv[i], "-f") || !std::strcmp(argv[i], "--from-format")) {
+            ++i;
+            if (i < argc) {
+                input_format = argv[i];
+            } else {
+                print_usage(argv[0]);
+                return 1;
+            }
+        } else if (!std::strncmp(argv[i], "--from-format=", 14)) {
+            input_format = argv[i] + 14;
+        } else if (!std::strcmp(argv[i], "-t") || !std::strcmp(argv[i], "--to-format")) {
+            ++i;
+            if (i < argc) {
+                output_format = argv[i];
+            } else {
+                print_usage(argv[0]);
+                return 1;
+            }
+        } else if (!std::strncmp(argv[i], "--to-format=", 12)) {
+            output_format = argv[i] + 12;
+        } else if (input_file_name.empty()) {
+            input_file_name = argv[i];
+        } else if (output_file_name.empty()) {
+            output_file_name = argv[i];
+        } else {
+            print_usage(argv[0]);
+            return 1;
+        }
     }
 
     // This declares the input and output files using either the suffix of
@@ -136,7 +137,7 @@ int main(int argc, char* argv[]) {
         // a time. This is much easier and faster than copying each object
         // in the file. Buffers are moved around, so there is no cost for
         // copying in memory.
-        while (osmium::memory::Buffer buffer = reader.read()) {
+        while (osmium::memory::Buffer buffer = reader.read()) { // NOLINT(bugprone-use-after-move) Bug in clang-tidy https://bugs.llvm.org/show_bug.cgi?id=36516
             writer(std::move(buffer));
         }
 
@@ -148,8 +149,8 @@ int main(int argc, char* argv[]) {
         reader.close();
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
-        std::cerr << e.what() << "\n";
-        std::exit(1);
+        std::cerr << e.what() << '\n';
+        return 1;
     }
 }
 

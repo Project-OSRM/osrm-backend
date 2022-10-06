@@ -4,8 +4,9 @@
 -- Primary road:  36km/h = 36000m/3600s = 100m/10s
 -- Secondary road:  18km/h = 18000m/3600s = 100m/20s
 -- Tertiary road:  12km/h = 12000m/3600s = 100m/30s
+TrafficSignal = require("lib/traffic_signal")
 
-api_version = 2
+api_version = 4
 
 function setup()
   return {
@@ -14,7 +15,7 @@ function setup()
       max_speed_for_map_matching    = 30/3.6, --km -> m/s
       weight_name                   = 'duration',
       process_call_tagless_node     = false,
-      uturn_penalty                 = 20,
+      u_turn_penalty                 = 20,
       traffic_light_penalty         = 7,     -- seconds
       use_turn_restrictions         = true
     },
@@ -32,18 +33,15 @@ function setup()
       primary = 36,
       secondary = 18,
       tertiary = 12,
-      steps = 6,
+      steps = 6
     }
   }
 end
 
 function process_node (profile, node, result)
-  local traffic_signal = node:get_value_by_key("highway")
-
-  if traffic_signal and traffic_signal == "traffic_signals" then
-    result.traffic_lights = true
-    -- TODO: a way to set the penalty value
-  end
+  -- check if node is a traffic light
+  result.traffic_lights = TrafficSignal.get_value(node)
+  -- TODO: a way to set the penalty value
 end
 
 function process_way (profile, way, result)
@@ -128,9 +126,9 @@ function process_way (profile, way, result)
 end
 
 function process_turn (profile, turn)
-  if turn.direction_modifier == direction_modifier.uturn then
-    turn.duration = profile.properties.uturn_penalty
-    turn.weight = profile.properties.uturn_penalty
+  if turn.is_u_turn then
+    turn.duration = turn.duration + profile.properties.u_turn_penalty
+    turn.weight = turn.weight + profile.properties.u_turn_penalty
   end
   if turn.has_traffic_light then
      turn.duration = turn.duration + profile.properties.traffic_light_penalty

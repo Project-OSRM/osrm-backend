@@ -1,0 +1,30 @@
+# EditorConfig is awesome: http://EditorConfig.org
+#
+# NOTE: Keep settings in sync with the master .clang-format file
+#
+# top-most EditorConfig file
+root = true
+
+# CMake configuration files
+[{CMakeLists.txt,CMakeSettings.json,*.cmake}]
+indent_size = 2
+indent_style = space
+trim_trailing_whitespace = true
+
+# CI configuration files
+[{.travis.yml,appveyor.yml}]
+indent_size = 2
+indent_style = space
+trim_trailing_whitespace = true
+
+# Unix shell scripts
+[*.sh]
+end_of_line = lf
+indent_style = space
+trim_trailing_whitespace = true
+
+# Windows shell scripts
+[*.bat]
+end_of_line = crlf
+indent_style = space
+trim_trailing_whitespace = true

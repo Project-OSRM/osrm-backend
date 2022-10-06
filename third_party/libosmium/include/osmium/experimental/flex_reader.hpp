@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,10 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <string>
-#include <utility>
-#include <vector>
-
 #include <osmium/area/assembler.hpp>
 #include <osmium/area/multipolygon_collector.hpp>
 #include <osmium/handler/node_locations_for_ways.hpp> // IWYU pragma: keep
@@ -46,6 +42,10 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm/entity_bits.hpp>
 #include <osmium/visitor.hpp>
+
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace osmium {
 
@@ -73,7 +73,6 @@ namespace osmium {
                 m_entities((entities & ~osmium::osm_entity_bits::area) | (m_with_areas ? osmium::osm_entity_bits::node | osmium::osm_entity_bits::way : osmium::osm_entity_bits::nothing)),
                 m_location_handler(location_handler),
                 m_reader(file, m_entities),
-                m_assembler_config(),
                 m_collector(m_assembler_config)
             {
                 m_location_handler.ignore_errors();

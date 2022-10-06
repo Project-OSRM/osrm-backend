@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -49,7 +49,16 @@ namespace osmium {
 
             struct impl_base {
 
-                virtual ~impl_base() = default;
+                impl_base() noexcept = default;
+
+                impl_base(const impl_base&) noexcept = default;
+                impl_base& operator=(const impl_base&) noexcept = default;
+
+                impl_base(impl_base&&) noexcept = default;
+                impl_base& operator=(impl_base&&) noexcept = default;
+
+                virtual ~impl_base() noexcept = default;
+
                 virtual bool call() {
                     return true;
                 }
@@ -64,7 +73,7 @@ namespace osmium {
                 F m_functor;
 
                 explicit impl_type(F&& functor) :
-                    m_functor(std::forward<F>(functor)) {
+                    m_functor(std::move(functor)) {
                 }
 
                 bool call() override {
@@ -78,16 +87,17 @@ namespace osmium {
 
             // Constructor must not be "explicit" for wrapper
             // to work seemlessly.
-            template <typename TFunction>
+            template <typename TFunction, typename X = typename std::enable_if<
+                !std::is_same<TFunction, function_wrapper>::value, void>::type>
             // cppcheck-suppress noExplicitConstructor
-            function_wrapper(TFunction&& f) :
+            function_wrapper(TFunction&& f) : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
                 impl(new impl_type<TFunction>(std::forward<TFunction>(f))) {
             }
 
             // The integer parameter is only used to signal that we want
             // the special function wrapper that makes the worker thread
             // shut down.
-            explicit function_wrapper(int) :
+            explicit function_wrapper(int /*dummy*/) :
                 impl(new impl_base()) {
             }
 
@@ -97,17 +107,17 @@ namespace osmium {
 
             function_wrapper() = default;
 
-            function_wrapper(function_wrapper&& other) :
+            function_wrapper(const function_wrapper&) = delete;
+            function_wrapper& operator=(const function_wrapper&) = delete;
+
+            function_wrapper(function_wrapper&& other) noexcept :
                 impl(std::move(other.impl)) {
             }
 
-            function_wrapper& operator=(function_wrapper&& other) {
+            function_wrapper& operator=(function_wrapper&& other) noexcept {
                 impl = std::move(other.impl);
                 return *this;
             }
-
-            function_wrapper(const function_wrapper&) = delete;
-            function_wrapper& operator=(const function_wrapper&) = delete;
 
             ~function_wrapper() = default;
 

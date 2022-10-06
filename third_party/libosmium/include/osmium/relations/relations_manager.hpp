@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,15 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
-#include <cassert>
-#include <cstddef>
-#include <cstdint>
-#include <cstring>
-#include <stdexcept>
-#include <type_traits>
-#include <vector>
-
 #include <osmium/handler.hpp>
 #include <osmium/handler/check_order.hpp>
 #include <osmium/memory/buffer.hpp>
@@ -56,6 +47,15 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/storage/item_stash.hpp>
 #include <osmium/tags/taglist.hpp>
 #include <osmium/tags/tags_filter.hpp>
+
+#include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <stdexcept>
+#include <type_traits>
+#include <vector>
 
 namespace osmium {
 
@@ -75,7 +75,7 @@ namespace osmium {
 
             // All relations and members we are interested in will be kept
             // in here.
-            osmium::ItemStash m_stash;
+            osmium::ItemStash m_stash{};
 
             /// Database of all relations we are interested in.
             relations::RelationsDatabase m_relations_db;
@@ -86,17 +86,15 @@ namespace osmium {
             relations::MembersDatabase<osmium::Relation> m_member_relations_db;
 
             /// Output buffer.
-            osmium::memory::CallbackBuffer m_output;
+            osmium::memory::CallbackBuffer m_output{};
 
         public:
 
             RelationsManagerBase() :
-                m_stash(),
                 m_relations_db(m_stash),
                 m_member_nodes_db(m_stash, m_relations_db),
                 m_member_ways_db(m_stash, m_relations_db),
-                m_member_relations_db(m_stash, m_relations_db),
-                m_output() {
+                m_member_relations_db(m_stash, m_relations_db) {
             }
 
             /// Access the internal RelationsDatabase.
@@ -140,7 +138,7 @@ namespace osmium {
              *
              * @param type osmium::item_type::node, way, or relation.
              */
-            relations::MembersDatabaseCommon& member_database(osmium::item_type type) {
+            relations::MembersDatabaseCommon& member_database(osmium::item_type type) noexcept {
                 switch (type) {
                     case osmium::item_type::node:
                         return m_member_nodes_db;
@@ -151,7 +149,9 @@ namespace osmium {
                     default:
                         break;
                 }
-                throw std::logic_error{"Should not be here."};
+
+                assert(false && "Should not be here");
+                return m_member_nodes_db;
             }
 
             /**
@@ -160,7 +160,7 @@ namespace osmium {
              *
              * @param type osmium::item_type::node, way, or relation.
              */
-            const relations::MembersDatabaseCommon& member_database(osmium::item_type type) const {
+            const relations::MembersDatabaseCommon& member_database(osmium::item_type type) const noexcept {
                 switch (type) {
                     case osmium::item_type::node:
                         return m_member_nodes_db;
@@ -171,7 +171,9 @@ namespace osmium {
                     default:
                         break;
                 }
-                throw std::logic_error{"Should not be here."};
+
+                assert(false && "Should not be here");
+                return m_member_nodes_db;
             }
 
             /**
@@ -507,7 +509,7 @@ namespace osmium {
                     const bool added = member_nodes_database().add(node, [this](RelationHandle& rel_handle) {
                         handle_complete_relation(rel_handle);
                     });
-                    if (! added) {
+                    if (!added) {
                         derived().node_not_in_any_relation(node);
                     }
                     derived().after_node(node);
@@ -522,7 +524,7 @@ namespace osmium {
                     const bool added = member_ways_database().add(way, [this](RelationHandle& rel_handle) {
                         handle_complete_relation(rel_handle);
                     });
-                    if (! added) {
+                    if (!added) {
                         derived().way_not_in_any_relation(way);
                     }
                     derived().after_way(way);
@@ -537,7 +539,7 @@ namespace osmium {
                     const bool added = member_relations_database().add(relation, [this](RelationHandle& rel_handle) {
                         handle_complete_relation(rel_handle);
                     });
-                    if (! added) {
+                    if (!added) {
                         derived().relation_not_in_any_relation(relation);
                     }
                     derived().after_relation(relation);

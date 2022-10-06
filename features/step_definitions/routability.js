@@ -1,6 +1,6 @@
-var util = require('util');
-var d3 = require('d3-queue');
-var classes = require('../support/data_classes');
+const util = require('util');
+const d3 = require('d3-queue');
+const classes = require('../support/data_classes');
 
 module.exports = function () {
     this.Then(/^routability should be$/, (table, callback) => {
@@ -69,7 +69,7 @@ module.exports = function () {
                                 outputRow[direction] = result[direction].status ?
                                     'x' : '';
                                 break;
-                            case /^[\d\.]+ s/.test(want):
+                            case /^[\d.]+ s/.test(want):
                                 // the result here can come back as a non-number value like
                                 // `diff`, but we only want to apply the unit when it comes
                                 // back as a number, for tableDiff's literal comparison
@@ -115,8 +115,11 @@ module.exports = function () {
         var result = {};
 
         var testDirection = (dir, callback) => {
-            var a = new classes.Location(this.origin[0] + (1+this.WAY_SPACING*i) * this.zoom, this.origin[1]),
-                b = new classes.Location(this.origin[0] + (3+this.WAY_SPACING*i) * this.zoom, this.origin[1]),
+            const coordA = this.offsetOriginBy(1+this.WAY_SPACING*i, 0);
+            const coordB = this.offsetOriginBy(3+this.WAY_SPACING*i, 0);
+
+            var a = new classes.Location(coordA[0], coordA[1]),
+                b = new classes.Location(coordB[0], coordB[1]),
                 r = {};
 
             r.which = dir;

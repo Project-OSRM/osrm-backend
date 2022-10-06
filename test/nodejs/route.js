@@ -5,6 +5,51 @@ var monaco_mld_path = require('./constants').mld_data_path;
 var monaco_corech_path = require('./constants').corech_data_path;
 var three_test_coordinates = require('./constants').three_test_coordinates;
 var two_test_coordinates = require('./constants').two_test_coordinates;
+const flatbuffers = require('../../features/support/flatbuffers').flatbuffers;
+const FBResult = require('../../features/support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
+
+test('route: routes Monaco and can return result in flatbuffers', function(assert) {
+    assert.plan(5);
+    var osrm = new OSRM(monaco_path);
+    osrm.route({coordinates: two_test_coordinates, format: 'flatbuffers'}, function(err, result) {
+        assert.ifError(err);
+        assert.ok(result instanceof Buffer);
+        const fb = FBResult.getRootAsFBResult(new flatbuffers.ByteBuffer(result));
+        assert.equals(fb.waypointsLength(), 2);
+        assert.equals(fb.routesLength(), 1);
+        assert.ok(fb.routes(0).polyline);
+    });
+});
+
+test('route: routes Monaco and can return result in flatbuffers if output format is passed explicitly', function(assert) {
+    assert.plan(5);
+    var osrm = new OSRM(monaco_path);
+    osrm.route({coordinates: two_test_coordinates, format: 'flatbuffers'}, {output: 'buffer'}, function(err, result) {
+        assert.ifError(err);
+        assert.ok(result instanceof Buffer);
+        var buf = new flatbuffers.ByteBuffer(result);
+        const fb = FBResult.getRootAsFBResult(buf);
+        assert.equals(fb.waypointsLength(), 2);
+        assert.equals(fb.routesLength(), 1);
+        assert.ok(fb.routes(0).polyline);
+    });
+});
+
+test('route: throws error if required output is object in flatbuffers format', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    assert.throws(function() {
+        osrm.route({coordinates: two_test_coordinates, format: 'flatbuffers'}, {format: 'object'}, function(err, result) {});
+    });
+});
+
+test('route: throws error if required output is json_buffer in flatbuffers format', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    assert.throws(function() {
+        osrm.route({coordinates: two_test_coordinates, format: 'flatbuffers'}, {format: 'json_buffer'}, function(err, result) {});
+    });
+});
 
 
 test('route: routes Monaco', function(assert) {
@@ -43,8 +88,22 @@ test('route: routes Monaco on CoreCH', function(assert) {
     });
 });
 
+test('route: routes Monaco and returns a JSON buffer', function(assert) {
+    assert.plan(6);
+    var osrm = new OSRM({path: monaco_corech_path, algorithm: 'CoreCH'});
+    osrm.route({coordinates: [[13.43864,52.51993],[13.415852,52.513191]]}, { format: 'json_buffer'}, function(err, result) {
+        assert.ifError(err);
+        assert.ok(result instanceof Buffer);
+        const route = JSON.parse(result);
+        assert.ok(route.waypoints);
+        assert.ok(route.routes);
+        assert.ok(route.routes.length);
+        assert.ok(route.routes[0].geometry);
+    });
+});
+
 test('route: throws with too few or invalid args', function(assert) {
-    assert.plan(3);
+    assert.plan(4);
     var osrm = new OSRM(monaco_path);
     assert.throws(function() { osrm.route({coordinates: two_test_coordinates}) },
         /Two arguments required/);
@@ -52,6 +111,8 @@ test('route: throws with too few or invalid args', function(assert) {
         /First arg must be an object/);
     assert.throws(function() { osrm.route({coordinates: two_test_coordinates}, true)},
         /last argument must be a callback function/);
+    assert.throws(function() { osrm.route({coordinates: two_test_coordinates}, { format: 'invalid' }, function(err, route) {})},
+        /format must be a string:/);
 });
 
 test('route: provides no alternatives by default, but when requested it may (not guaranteed)', function(assert) {
@@ -590,3 +651,108 @@ test('route: route in Monaco without motorways', function(assert) {
     });
 });
 
+
+test('route: throws on invalid waypoints values needs at least two', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [0]
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { }); },
+        'At least two waypoints must be provided');
+});
+
+test('route: throws on invalid waypoints values, needs first and last coordinate indices', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [1, 2]
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { console.log(err); }); },
+        'First and last waypoints values must correspond to first and last coordinate indices');
+});
+
+test('route: throws on invalid waypoints values, order matters', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [2, 0]
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { console.log(err); }); },
+        'First and last waypoints values must correspond to first and last coordinate indices');
+});
+
+test('route: throws on invalid waypoints values, waypoints must correspond with a coordinate index', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [0, 3, 2]
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { console.log(err); }); },
+        'Waypoints must correspond with the index of an input coordinate');
+});
+
+test('route: throws on invalid waypoints values, waypoints must be an array', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: "string"
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { console.log(err); }); },
+        'Waypoints must be an array of integers corresponding to the input coordinates.');
+});
+
+test('route: throws on invalid waypoints values, waypoints must be an array of integers', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+        waypoints: [0,1,"string"]
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { console.log(err); }); },
+        'Waypoint values must be an array of integers');
+});
+
+test('route: throws on invalid waypoints values, waypoints must be an array of integers in increasing order', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates.concat(three_test_coordinates),
+        waypoints: [0,2,1,5]
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { console.error(`response: ${response}`); console.error(`error: ${err}`); }); },
+        /Waypoints must be supplied in increasing order/);
+});
+
+test('route: throws on invalid snapping values', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates.concat(three_test_coordinates),
+        snapping: "zing"
+    };
+    assert.throws(function () { osrm.route(options, function (err, response) { console.error(`response: ${response}`); console.error(`error: ${err}`); }); },
+        /'snapping' param must be one of \[default, any\]/);
+});
+
+test('route: snapping parameter passed through OK', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM(monaco_path);
+    osrm.route({snapping: "any", coordinates: [[7.448205209414596,43.754001097311544],[7.447122039202185,43.75306156811368]]}, function(err, route) {
+        assert.ifError(err);
+        assert.equal(Math.round(route.routes[0].distance * 10), 1315); // Round it to nearest 0.1m to eliminate floating point comparison error
+    });
+});

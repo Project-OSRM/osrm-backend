@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/osm/object.hpp>
+#include <osmium/osm/relation.hpp>
+#include <osmium/osm/types.hpp>
+#include <osmium/relations/relations_database.hpp>
+#include <osmium/storage/item_stash.hpp>
+#include <osmium/util/iterator.hpp>
+
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -40,13 +47,6 @@ DEALINGS IN THE SOFTWARE.
 #include <tuple>
 #include <type_traits>
 #include <vector>
-
-#include <osmium/osm/object.hpp>
-#include <osmium/osm/relation.hpp>
-#include <osmium/osm/types.hpp>
-#include <osmium/relations/relations_database.hpp>
-#include <osmium/storage/item_stash.hpp>
-#include <osmium/util/iterator.hpp>
 
 namespace osmium {
 
@@ -67,7 +67,9 @@ namespace osmium {
                  * Special value used for member_num to mark the element as
                  * removed.
                  */
-                static const size_t removed_value = std::numeric_limits<std::size_t>::max();
+                enum {
+                    removed_value = std::numeric_limits<std::size_t>::max()
+                };
 
                 /**
                  * Object ID of this relation member. Can be a node, way,
@@ -133,7 +135,7 @@ namespace osmium {
                 }
             };
 
-            std::vector<element> m_elements;
+            std::vector<element> m_elements{};
 
         protected:
 
@@ -171,7 +173,6 @@ namespace osmium {
             }
 
             MembersDatabaseCommon(osmium::ItemStash& stash, osmium::relations::RelationsDatabase& relations_db) :
-                m_elements(),
                 m_stash(stash),
                 m_relations_db(relations_db) {
             }
@@ -204,11 +205,11 @@ namespace osmium {
              */
             struct counts {
                 /// The number of members tracked and not found yet.
-                std::size_t tracked   = 0;
+                std::size_t tracked = 0;
                 /// The number of members tracked and found already.
                 std::size_t available = 0;
                 /// The number of members that were tracked, found and then removed because of a completed relation.
-                std::size_t removed   = 0;
+                std::size_t removed = 0;
             };
 
             /**

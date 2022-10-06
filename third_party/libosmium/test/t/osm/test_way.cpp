@@ -1,13 +1,15 @@
 #include "catch.hpp"
 
-#include <boost/crc.hpp>
+#include "test_crc.hpp"
 
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/osm/crc.hpp>
 #include <osmium/osm/way.hpp>
 
-using namespace osmium::builder::attr;
+#include <string>
+
+using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
 TEST_CASE("Build way") {
     osmium::memory::Buffer buffer{10000};
@@ -25,14 +27,14 @@ TEST_CASE("Build way") {
         _nodes({1, 3, 2})
     );
 
-    const osmium::Way& way = buffer.get<osmium::Way>(0);
+    auto& way = buffer.get<osmium::Way>(0);
 
     REQUIRE(osmium::item_type::way == way.type());
     REQUIRE(way.type_is_in(osmium::osm_entity_bits::way));
     REQUIRE(way.type_is_in(osmium::osm_entity_bits::node | osmium::osm_entity_bits::way));
     REQUIRE(17 == way.id());
     REQUIRE(3 == way.version());
-    REQUIRE(true == way.visible());
+    REQUIRE(way.visible());
     REQUIRE(333 == way.changeset());
     REQUIRE(21 == way.uid());
     REQUIRE(std::string("foo") == way.user());
@@ -44,9 +46,13 @@ TEST_CASE("Build way") {
     REQUIRE(2 == way.nodes()[2].ref());
     REQUIRE_FALSE(way.is_closed());
 
-    osmium::CRC<boost::crc_32_type> crc32;
+    osmium::CRC<crc_type> crc32;
     crc32.update(way);
     REQUIRE(crc32().checksum() == 0x65f6ba91);
+
+    way.remove_tags();
+    REQUIRE(way.tags().empty());
+    REQUIRE(3 == way.nodes().size());
 }
 
 TEST_CASE("build closed way") {

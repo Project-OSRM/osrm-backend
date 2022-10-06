@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,20 +33,37 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <string>
+#include <osmium/io/error.hpp>
+
+#include <protozero/version.hpp>
+
+#if PROTOZERO_VERSION_CODE >= 10600
+# include <protozero/data_view.hpp>
+#else
+# include <protozero/types.hpp>
+#endif
 
 #include <zlib.h>
 
-#include <protozero/types.hpp>
-
-#include <osmium/io/error.hpp>
-#include <osmium/util/cast.hpp>
+#include <cassert>
+#include <limits>
+#include <string>
 
 namespace osmium {
 
     namespace io {
 
         namespace detail {
+
+            constexpr inline int zlib_default_compression_level() noexcept {
+                return Z_DEFAULT_COMPRESSION;
+            }
+
+            inline void zlib_check_compression_level(int value) {
+                if (value < 0 || value > 9) {
+                    throw std::invalid_argument{"The 'pbf_compression_level' for zlib compression must be between 0 and 9."};
+                }
+            }
 
             /**
              * Compress data using zlib.
@@ -55,19 +72,21 @@ namespace osmium {
              * what fits in an unsigned long, on Windows this is usually 32bit.
              *
              * @param input Data to compress.
+             * @param compression_level Compression level.
              * @returns Compressed data.
              */
-            inline std::string zlib_compress(const std::string& input) {
-                unsigned long output_size = ::compressBound(osmium::static_cast_with_assert<unsigned long>(input.size()));
+            inline std::string zlib_compress(const std::string& input, int compression_level = Z_DEFAULT_COMPRESSION) {
+                assert(input.size() < std::numeric_limits<unsigned long>::max());
+                unsigned long output_size = ::compressBound(static_cast<unsigned long>(input.size())); // NOLINT(google-runtime-int)
 
                 std::string output(output_size, '\0');
 
-                const auto result = ::compress(
-                    reinterpret_cast<unsigned char*>(const_cast<char *>(output.data())),
+                const auto result = ::compress2(
+                    reinterpret_cast<unsigned char*>(&*output.begin()),
                     &output_size,
                     reinterpret_cast<const unsigned char*>(input.data()),
-                    osmium::static_cast_with_assert<unsigned long>(input.size())
-                );
+                    static_cast<unsigned long>(input.size()), // NOLINT(google-runtime-int)
+                    compression_level);
 
                 if (result != Z_OK) {
                     throw io_error{std::string{"failed to compress data: "} + zError(result)};
@@ -89,15 +108,14 @@ namespace osmium {
              * @param output Uncompressed result data.
              * @returns Pointer and size to incompressed data.
              */
-            inline protozero::data_view zlib_uncompress_string(const char* input, unsigned long input_size, unsigned long raw_size, std::string& output) {
+            inline protozero::data_view zlib_uncompress_string(const char* input, unsigned long input_size, unsigned long raw_size, std::string& output) { // NOLINT(google-runtime-int)
                 output.resize(raw_size);
 
                 const auto result = ::uncompress(
                     reinterpret_cast<unsigned char*>(&*output.begin()),
                     &raw_size,
                     reinterpret_cast<const unsigned char*>(input),
-                    input_size
-                );
+                    input_size);
 
                 if (result != Z_OK) {
                     throw io_error{std::string{"failed to uncompress data: "} + zError(result)};

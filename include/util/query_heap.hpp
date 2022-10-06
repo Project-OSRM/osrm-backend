@@ -3,6 +3,7 @@
 
 #include <boost/assert.hpp>
 #include <boost/heap/d_ary_heap.hpp>
+#include <boost/optional.hpp>
 
 #include <algorithm>
 #include <limits>
@@ -61,8 +62,6 @@ template <typename NodeID, typename Key> class ArrayStorage
 {
   public:
     explicit ArrayStorage(std::size_t size) : positions(size, 0) {}
-
-    ~ArrayStorage() {}
 
     Key &operator[](NodeID node) { return positions[node]; }
 
@@ -128,16 +127,96 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
 
 template <typename NodeID,
           typename Key,
+          template <typename N, typename K> class BaseIndexStorage = UnorderedMapStorage,
+          template <typename N, typename K> class OverlayIndexStorage = ArrayStorage>
+class TwoLevelStorage
+{
+  public:
+    explicit TwoLevelStorage(std::size_t number_of_nodes, std::size_t number_of_overlay_nodes)
+        : number_of_overlay_nodes(number_of_overlay_nodes), base(number_of_nodes),
+          overlay(number_of_overlay_nodes)
+    {
+    }
+
+    Key &operator[](const NodeID node)
+    {
+        if (node < number_of_overlay_nodes)
+        {
+            return overlay[node];
+        }
+        else
+        {
+            return base[node];
+        }
+    }
+
+    Key peek_index(const NodeID node) const
+    {
+        if (node < number_of_overlay_nodes)
+        {
+            return overlay.peek_index(node);
+        }
+        else
+        {
+            return base.peek_index(node);
+        }
+    }
+
+    Key const &operator[](const NodeID node) const
+    {
+        if (node < number_of_overlay_nodes)
+        {
+            return overlay[node];
+        }
+        else
+        {
+            return base[node];
+        }
+    }
+
+    void Clear()
+    {
+        base.Clear();
+        overlay.Clear();
+    }
+
+  private:
+    const std::size_t number_of_overlay_nodes;
+    BaseIndexStorage<NodeID, Key> base;
+    OverlayIndexStorage<NodeID, Key> overlay;
+};
+
+template <typename NodeID,
+          typename Key,
           typename Weight,
           typename Data,
           typename IndexStorage = ArrayStorage<NodeID, NodeID>>
 class QueryHeap
 {
+  private:
+    using HeapData = std::pair<Weight, Key>;
+    using HeapContainer = boost::heap::d_ary_heap<HeapData,
+                                                  boost::heap::arity<4>,
+                                                  boost::heap::mutable_<true>,
+                                                  boost::heap::compare<std::greater<HeapData>>>;
+    using HeapHandle = typename HeapContainer::handle_type;
+
   public:
     using WeightType = Weight;
     using DataType = Data;
 
-    explicit QueryHeap(std::size_t maxID) : node_index(maxID) { Clear(); }
+    struct HeapNode
+    {
+        HeapHandle handle;
+        NodeID node;
+        Weight weight;
+        Data data;
+    };
+
+    template <typename... StorageArgs> explicit QueryHeap(StorageArgs... args) : node_index(args...)
+    {
+        Clear();
+    }
 
     void Clear()
     {
@@ -162,12 +241,21 @@ class QueryHeap
     Data &GetData(NodeID node)
     {
         const auto index = node_index.peek_index(node);
+        BOOST_ASSERT((int)index >= 0 && (int)index < (int)inserted_nodes.size());
         return inserted_nodes[index].data;
+    }
+
+    HeapNode &getHeapNode(NodeID node)
+    {
+        const auto index = node_index.peek_index(node);
+        BOOST_ASSERT((int)index >= 0 && (int)index < (int)inserted_nodes.size());
+        return inserted_nodes[index];
     }
 
     Data const &GetData(NodeID node) const
     {
         const auto index = node_index.peek_index(node);
+        BOOST_ASSERT((int)index >= 0 && (int)index < (int)inserted_nodes.size());
         return inserted_nodes[index].data;
     }
 
@@ -203,6 +291,28 @@ class QueryHeap
         return inserted_nodes[index].node == node;
     }
 
+    boost::optional<HeapNode &> GetHeapNodeIfWasInserted(const NodeID node)
+    {
+        const auto index = node_index.peek_index(node);
+        if (index >= static_cast<decltype(index)>(inserted_nodes.size()) ||
+            inserted_nodes[index].node != node)
+        {
+            return {};
+        }
+        return inserted_nodes[index];
+    }
+
+    boost::optional<const HeapNode &> GetHeapNodeIfWasInserted(const NodeID node) const
+    {
+        const auto index = node_index.peek_index(node);
+        if (index >= static_cast<decltype(index)>(inserted_nodes.size()) ||
+            inserted_nodes[index].node != node)
+        {
+            return {};
+        }
+        return inserted_nodes[index];
+    }
+
     NodeID Min() const
     {
         BOOST_ASSERT(!heap.empty());
@@ -224,6 +334,15 @@ class QueryHeap
         return inserted_nodes[removedIndex].node;
     }
 
+    HeapNode &DeleteMinGetHeapNode()
+    {
+        BOOST_ASSERT(!heap.empty());
+        const Key removedIndex = heap.top().second;
+        heap.pop();
+        inserted_nodes[removedIndex].handle = heap.s_handle_from_iterator(heap.end());
+        return inserted_nodes[removedIndex];
+    }
+
     void DeleteAll()
     {
         auto const none_handle = heap.s_handle_from_iterator(heap.end());
@@ -242,27 +361,18 @@ class QueryHeap
         heap.increase(reference.handle, std::make_pair(weight, index));
     }
 
-  private:
-    using HeapData = std::pair<Weight, Key>;
-    using HeapContainer = boost::heap::d_ary_heap<HeapData,
-                                                  boost::heap::arity<4>,
-                                                  boost::heap::mutable_<true>,
-                                                  boost::heap::compare<std::greater<HeapData>>>;
-    using HeapHandle = typename HeapContainer::handle_type;
-
-    struct HeapNode
+    void DecreaseKey(const HeapNode &heapNode)
     {
-        HeapHandle handle;
-        NodeID node;
-        Weight weight;
-        Data data;
-    };
+        BOOST_ASSERT(!WasRemoved(heapNode.node));
+        heap.increase(heapNode.handle, std::make_pair(heapNode.weight, (*heapNode.handle).second));
+    }
 
+  private:
     std::vector<HeapNode> inserted_nodes;
     HeapContainer heap;
     IndexStorage node_index;
 };
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // OSRM_UTIL_QUERY_HEAP_HPP

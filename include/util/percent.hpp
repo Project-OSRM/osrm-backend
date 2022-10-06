@@ -83,11 +83,11 @@ class Percent
             // When not on a TTY, print newlines after each progress indicator so
             // so that progress is visible to line-buffered logging systems
             if (!IsStdoutATTY())
-                log << "" << std::endl;
+                log << std::endl;
         }
     }
 };
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // PERCENT_HPP

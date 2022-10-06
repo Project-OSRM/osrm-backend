@@ -17,7 +17,7 @@ namespace detail
 std::string encode(std::vector<int> &numbers);
 std::int32_t decode_polyline_integer(std::string::const_iterator &first,
                                      std::string::const_iterator last);
-}
+} // namespace detail
 using CoordVectorForwardIter = std::vector<util::Coordinate>::const_iterator;
 // Encodes geometry into polyline format.
 // See: https://developers.google.com/maps/documentation/utilities/polylinealgorithm
@@ -80,7 +80,7 @@ std::vector<util::Coordinate> decodePolyline(const std::string &polyline)
     }
     return coordinates;
 }
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif /* POLYLINECOMPRESSOR_H_ */

@@ -3,7 +3,6 @@
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/iterator_range.hpp>
-#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
@@ -43,8 +42,11 @@ BOOST_AUTO_TEST_CASE(rw_short)
 BOOST_AUTO_TEST_CASE(rw_bool)
 {
     std::size_t num_elements = 1000;
-    std::unique_ptr<char[]> data = std::make_unique<char[]>(num_elements / sizeof(std::uint32_t));
-    util::vector_view<bool> view(reinterpret_cast<std::uint32_t *>(data.get()), num_elements);
+    auto data = std::make_unique<typename vector_view<bool>::Word[]>(
+        (num_elements + sizeof(typename vector_view<bool>::Word) - 1) /
+        sizeof(typename vector_view<bool>::Word));
+    util::vector_view<bool> view(reinterpret_cast<typename vector_view<bool>::Word *>(data.get()),
+                                 num_elements);
     std::vector<bool> reference;
 
     std::mt19937 rng;

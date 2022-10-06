@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE customizer tests
+#define BOOST_TEST_MODULE updater tests
 
 #include <boost/test/unit_test.hpp>
 

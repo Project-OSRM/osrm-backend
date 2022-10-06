@@ -18,7 +18,8 @@
 
 #include <cstdlib>
 
-int main(int argc, const char *argv[]) try
+int main(int argc, const char *argv[])
+try
 {
     if (argc < 2)
     {
@@ -214,9 +215,11 @@ int main(int argc, const char *argv[]) try
     auto NUM = 100;
     for (int i = 0; i < NUM; ++i)
     {
-        json::Object result;
+        engine::api::ResultT result = json::Object();
         const auto rc = osrm.Match(params, result);
-        if (rc != Status::Ok || result.values.at("matchings").get<json::Array>().values.size() != 1)
+        auto &json_result = result.get<json::Object>();
+        if (rc != Status::Ok ||
+            json_result.values.at("matchings").get<json::Array>().values.size() != 1)
         {
             return EXIT_FAILURE;
         }

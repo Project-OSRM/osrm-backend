@@ -2,16 +2,15 @@
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"
-#include "extractor/guidance/road_classification.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction.hpp"
+#include "extractor/road_classification.hpp"
 
 #include "util/for_each_pair.hpp"
 #include "util/guidance/turn_lanes.hpp"
 #include "util/log.hpp"
 
-#include <boost/numeric/conversion/cast.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/tokenizer.hpp>
 
@@ -19,23 +18,35 @@
 
 #include "osrm/coordinate.hpp"
 
-#include <cstring>
-#include <iterator>
 #include <limits>
 #include <string>
 #include <vector>
+
+#ifdef _MSC_VER
+#if (_MSC_VER >= 1928)
+#ifdef _DEBUG
+namespace osrm
+{
+namespace extractor
+{
+namespace detail
+{
+const ByEdgeOrByMeterValue::ValueByEdge ByEdgeOrByMeterValue::by_edge;
+const ByEdgeOrByMeterValue::ValueByMeter ByEdgeOrByMeterValue::by_meter;
+} // namespace detail
+} // namespace extractor
+} // namespace osrm
+#endif
+#endif
+#endif
 
 namespace osrm
 {
 namespace extractor
 {
-
-using TurnLaneDescription = guidance::TurnLaneDescription;
-namespace TurnLaneType = guidance::TurnLaneType;
-
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers_,
                                        std::unordered_map<std::string, ClassData> &classes_map,
-                                       guidance::LaneDescriptionMap &lane_description_map,
+                                       LaneDescriptionMap &lane_description_map,
                                        const ProfileProperties &properties)
     : external_memory(extraction_containers_), classes_map(classes_map),
       lane_description_map(lane_description_map),
@@ -67,16 +78,20 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
     {
         external_memory.barrier_nodes.push_back(id);
     }
-    if (result_node.traffic_lights)
+    if (result_node.traffic_lights != TrafficLightClass::NONE)
     {
-        external_memory.traffic_signals.push_back(id);
+        external_memory.external_traffic_signals.push_back({id, result_node.traffic_lights});
     }
 }
 
-void ExtractorCallbacks::ProcessRestriction(const InputConditionalTurnRestriction &restriction)
+void ExtractorCallbacks::ProcessRestriction(const InputTurnRestriction &restriction)
 {
     external_memory.restrictions_list.push_back(restriction);
-    // util::Log() << restriction.toString();
+}
+
+void ExtractorCallbacks::ProcessManeuverOverride(const InputManeuverOverride &override)
+{
+    external_memory.external_maneuver_overrides_list.push_back(override);
 }
 
 /**
@@ -90,18 +105,19 @@ void ExtractorCallbacks::ProcessRestriction(const InputConditionalTurnRestrictio
  */
 void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const ExtractionWay &parsed_way)
 {
-    if ((parsed_way.forward_travel_mode == TRAVEL_MODE_INACCESSIBLE ||
+    if ((parsed_way.forward_travel_mode == extractor::TRAVEL_MODE_INACCESSIBLE ||
          parsed_way.forward_speed <= 0) &&
-        (parsed_way.backward_travel_mode == TRAVEL_MODE_INACCESSIBLE ||
+        (parsed_way.backward_travel_mode == extractor::TRAVEL_MODE_INACCESSIBLE ||
          parsed_way.backward_speed <= 0) &&
         parsed_way.duration <= 0)
     { // Only true if the way is assigned a valid speed/duration
         return;
     }
 
-    if (!fallback_to_duration && (parsed_way.forward_travel_mode == TRAVEL_MODE_INACCESSIBLE ||
-                                  parsed_way.forward_rate <= 0) &&
-        (parsed_way.backward_travel_mode == TRAVEL_MODE_INACCESSIBLE ||
+    if (!fallback_to_duration &&
+        (parsed_way.forward_travel_mode == extractor::TRAVEL_MODE_INACCESSIBLE ||
+         parsed_way.forward_rate <= 0) &&
+        (parsed_way.backward_travel_mode == extractor::TRAVEL_MODE_INACCESSIBLE ||
          parsed_way.backward_rate <= 0) &&
         parsed_way.weight <= 0)
     { // Only true if the way is assigned a valid rate/weight and there is no duration fallback
@@ -145,7 +161,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         }
     };
 
-    if (parsed_way.forward_travel_mode != TRAVEL_MODE_INACCESSIBLE)
+    if (parsed_way.forward_travel_mode != extractor::TRAVEL_MODE_INACCESSIBLE)
     {
         BOOST_ASSERT(parsed_way.duration > 0 || parsed_way.forward_speed > 0);
         forward_duration_data =
@@ -162,7 +178,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                 toValueByEdgeOrByMeter(parsed_way.weight, parsed_way.forward_rate);
         }
     }
-    if (parsed_way.backward_travel_mode != TRAVEL_MODE_INACCESSIBLE)
+    if (parsed_way.backward_travel_mode != extractor::TRAVEL_MODE_INACCESSIBLE)
     {
         BOOST_ASSERT(parsed_way.duration > 0 || parsed_way.backward_speed > 0);
         backward_duration_data =
@@ -186,7 +202,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         {
             if (classes_map.size() > MAX_CLASS_INDEX)
             {
-                throw util::exception("Maximum number of classes if " +
+                throw util::exception("Maximum number of classes is " +
                                       std::to_string(MAX_CLASS_INDEX + 1));
             }
             ClassData class_mask = getClassData(classes_map.size());
@@ -259,9 +275,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         for (auto iter = tokens.begin(); iter != tokens.end(); ++iter)
         {
             tokenizer inner_tokens(*iter, inner_sep);
-            guidance::TurnLaneType::Mask lane_mask = inner_tokens.begin() == inner_tokens.end()
-                                                         ? TurnLaneType::none
-                                                         : TurnLaneType::empty;
+            TurnLaneType::Mask lane_mask = inner_tokens.begin() == inner_tokens.end()
+                                               ? TurnLaneType::none
+                                               : TurnLaneType::empty;
             for (auto token_itr = inner_tokens.begin(); token_itr != inner_tokens.end();
                  ++token_itr)
             {
@@ -287,85 +303,105 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         return lane_description;
     };
 
-    // convert the lane description into an ID and, if necessary, remember the description in the
-    // description_map
-    const auto requestId = [&](const std::string &lane_string) {
-        if (lane_string.empty())
-            return INVALID_LANE_DESCRIPTIONID;
-        TurnLaneDescription lane_description = laneStringToDescription(std::move(lane_string));
-
-        return lane_description_map.ConcurrentFindOrAdd(lane_description);
-    };
+    // If we could parse turn lanes but could not parse number of lanes,
+    // count the turn lanes and use them for the way's number of lanes.
+    auto road_classification = parsed_way.road_classification;
+    std::uint8_t road_deduced_num_lanes = 0;
 
     // Deduplicates street names, refs, destinations, pronunciation, exits.
     // In case we do not already store the key, inserts (key, id) tuple and return id.
     // Otherwise fetches the id based on the name and returns it without insertion.
-    const auto turn_lane_id_forward = requestId(parsed_way.turn_lanes_forward);
-    const auto turn_lane_id_backward = requestId(parsed_way.turn_lanes_backward);
+    auto turn_lane_id_forward = INVALID_LANE_DESCRIPTIONID;
+    auto turn_lane_id_backward = INVALID_LANE_DESCRIPTIONID;
 
-    const auto road_classification = parsed_way.road_classification;
+    // RoadClassification represents a the class for unidirectional ways,
+    // therefore we need to add up deduced forward and backward lane counts.
 
-    // Get the unique identifier for the street name, destination, and ref
-    const auto name_iterator = string_map.find(MapKey(parsed_way.name,
-                                                      parsed_way.destinations,
-                                                      parsed_way.ref,
-                                                      parsed_way.pronunciation,
-                                                      parsed_way.exits));
-    NameID name_id = EMPTY_NAMEID;
-    if (string_map.end() == name_iterator)
+    if (!parsed_way.turn_lanes_forward.empty())
     {
-        // name_offsets has a sentinel element with the total name data size
-        // take the sentinels index as the name id of the new name data pack
-        // (name [name_id], destination [+1], pronunciation [+2], ref [+3], exits [+4])
-        name_id = external_memory.name_offsets.size() - 1;
-
-        std::copy(parsed_way.name.begin(),
-                  parsed_way.name.end(),
-                  std::back_inserter(external_memory.name_char_data));
-        external_memory.name_offsets.push_back(external_memory.name_char_data.size());
-
-        std::copy(parsed_way.destinations.begin(),
-                  parsed_way.destinations.end(),
-                  std::back_inserter(external_memory.name_char_data));
-        external_memory.name_offsets.push_back(external_memory.name_char_data.size());
-
-        std::copy(parsed_way.pronunciation.begin(),
-                  parsed_way.pronunciation.end(),
-                  std::back_inserter(external_memory.name_char_data));
-        external_memory.name_offsets.push_back(external_memory.name_char_data.size());
-
-        std::copy(parsed_way.ref.begin(),
-                  parsed_way.ref.end(),
-                  std::back_inserter(external_memory.name_char_data));
-        external_memory.name_offsets.push_back(external_memory.name_char_data.size());
-
-        std::copy(parsed_way.exits.begin(),
-                  parsed_way.exits.end(),
-                  std::back_inserter(external_memory.name_char_data));
-        external_memory.name_offsets.push_back(external_memory.name_char_data.size());
-
-        auto k = MapKey{parsed_way.name,
-                        parsed_way.destinations,
-                        parsed_way.ref,
-                        parsed_way.pronunciation,
-                        parsed_way.exits};
-        auto v = MapVal{name_id};
-        string_map.emplace(std::move(k), std::move(v));
+        auto desc = laneStringToDescription(parsed_way.turn_lanes_forward);
+        turn_lane_id_forward = lane_description_map.ConcurrentFindOrAdd(desc);
+        road_deduced_num_lanes += desc.size();
     }
-    else
+
+    if (!parsed_way.turn_lanes_backward.empty())
     {
-        name_id = name_iterator->second;
+        auto desc = laneStringToDescription(parsed_way.turn_lanes_backward);
+        turn_lane_id_backward = lane_description_map.ConcurrentFindOrAdd(desc);
+        road_deduced_num_lanes += desc.size();
     }
+
+    road_classification.SetNumberOfLanes(std::max(road_deduced_num_lanes, // len(turn:lanes)
+                                                  road_classification.GetNumberOfLanes()));
+
+    const auto GetNameID = [this, &parsed_way](bool is_forward) -> NameID {
+        const std::string &ref = is_forward ? parsed_way.forward_ref : parsed_way.backward_ref;
+        // Get the unique identifier for the street name, destination, and ref
+        const auto name_iterator = string_map.find(MapKey(parsed_way.name,
+                                                          parsed_way.destinations,
+                                                          ref,
+                                                          parsed_way.pronunciation,
+                                                          parsed_way.exits));
+
+        NameID name_id = EMPTY_NAMEID;
+        if (string_map.end() == name_iterator)
+        {
+            // name_offsets has a sentinel element with the total name data size
+            // take the sentinels index as the name id of the new name data pack
+            // (name [name_id], destination [+1], pronunciation [+2], ref [+3], exits [+4])
+            name_id = external_memory.name_offsets.size() - 1;
+
+            std::copy(parsed_way.name.begin(),
+                      parsed_way.name.end(),
+                      std::back_inserter(external_memory.name_char_data));
+            external_memory.name_offsets.push_back(external_memory.name_char_data.size());
+
+            std::copy(parsed_way.destinations.begin(),
+                      parsed_way.destinations.end(),
+                      std::back_inserter(external_memory.name_char_data));
+            external_memory.name_offsets.push_back(external_memory.name_char_data.size());
+
+            std::copy(parsed_way.pronunciation.begin(),
+                      parsed_way.pronunciation.end(),
+                      std::back_inserter(external_memory.name_char_data));
+            external_memory.name_offsets.push_back(external_memory.name_char_data.size());
+
+            std::copy(ref.begin(), ref.end(), std::back_inserter(external_memory.name_char_data));
+            external_memory.name_offsets.push_back(external_memory.name_char_data.size());
+
+            std::copy(parsed_way.exits.begin(),
+                      parsed_way.exits.end(),
+                      std::back_inserter(external_memory.name_char_data));
+            external_memory.name_offsets.push_back(external_memory.name_char_data.size());
+
+            auto k = MapKey{parsed_way.name,
+                            parsed_way.destinations,
+                            ref,
+                            parsed_way.pronunciation,
+                            parsed_way.exits};
+            auto v = MapVal{name_id};
+            string_map.emplace(std::move(k), v);
+        }
+        else
+        {
+            name_id = name_iterator->second;
+        }
+
+        return name_id;
+    };
+
+    const NameID forward_name_id = GetNameID(true);
+    const NameID backward_name_id = GetNameID(false);
 
     const bool in_forward_direction =
         (parsed_way.forward_speed > 0 || parsed_way.forward_rate > 0 || parsed_way.duration > 0 ||
          parsed_way.weight > 0) &&
-        (parsed_way.forward_travel_mode != TRAVEL_MODE_INACCESSIBLE);
+        (parsed_way.forward_travel_mode != extractor::TRAVEL_MODE_INACCESSIBLE);
 
     const bool in_backward_direction =
         (parsed_way.backward_speed > 0 || parsed_way.backward_rate > 0 || parsed_way.duration > 0 ||
          parsed_way.weight > 0) &&
-        (parsed_way.backward_travel_mode != TRAVEL_MODE_INACCESSIBLE);
+        (parsed_way.backward_travel_mode != extractor::TRAVEL_MODE_INACCESSIBLE);
 
     // split an edge into two edges if forwards/backwards behavior differ
     const bool split_edge =
@@ -373,59 +409,74 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         (force_split_edges || (parsed_way.forward_rate != parsed_way.backward_rate) ||
          (parsed_way.forward_speed != parsed_way.backward_speed) ||
          (parsed_way.forward_travel_mode != parsed_way.backward_travel_mode) ||
-         (turn_lane_id_forward != turn_lane_id_backward) || (forward_classes != backward_classes));
+         (turn_lane_id_forward != turn_lane_id_backward) || (forward_classes != backward_classes) ||
+         (parsed_way.forward_ref != parsed_way.backward_ref));
 
     if (in_forward_direction)
     { // add (forward) segments or (forward,backward) for non-split edges in backward direction
+        const auto annotation_data_id = external_memory.all_edges_annotation_data_list.size();
+        external_memory.all_edges_annotation_data_list.push_back({forward_name_id,
+                                                                  turn_lane_id_forward,
+                                                                  forward_classes,
+                                                                  parsed_way.forward_travel_mode,
+                                                                  parsed_way.is_left_hand_driving});
         util::for_each_pair(
-            nodes.cbegin(),
-            nodes.cend(),
-            [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
+            nodes, [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
+                NodeBasedEdgeWithOSM edge = {
+                    OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
+                    OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
+                    0,  // weight
+                    0,  // duration
+                    0,  // distance
+                    {}, // geometry id
+                    static_cast<AnnotationID>(annotation_data_id),
+                    {true,
+                     in_backward_direction && !split_edge,
+                     split_edge,
+                     parsed_way.roundabout,
+                     parsed_way.circular,
+                     parsed_way.is_startpoint,
+                     parsed_way.forward_restricted,
+                     road_classification,
+                     parsed_way.highway_turn_classification,
+                     parsed_way.access_turn_classification}};
+
                 external_memory.all_edges_list.push_back(
-                    InternalExtractorEdge(OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
-                                          OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
-                                          name_id,
-                                          forward_weight_data,
-                                          forward_duration_data,
-                                          true,
-                                          in_backward_direction && !split_edge,
-                                          parsed_way.roundabout,
-                                          parsed_way.circular,
-                                          parsed_way.is_startpoint,
-                                          parsed_way.forward_restricted,
-                                          split_edge,
-                                          parsed_way.forward_travel_mode,
-                                          forward_classes,
-                                          turn_lane_id_forward,
-                                          road_classification,
-                                          {}));
+                    InternalExtractorEdge(edge, forward_weight_data, forward_duration_data, {}));
             });
     }
 
     if (in_backward_direction && (!in_forward_direction || split_edge))
     { // add (backward) segments for split edges or not in forward direction
+        const auto annotation_data_id = external_memory.all_edges_annotation_data_list.size();
+        external_memory.all_edges_annotation_data_list.push_back({backward_name_id,
+                                                                  turn_lane_id_backward,
+                                                                  backward_classes,
+                                                                  parsed_way.backward_travel_mode,
+                                                                  parsed_way.is_left_hand_driving});
         util::for_each_pair(
-            nodes.cbegin(),
-            nodes.cend(),
-            [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
+            nodes, [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
+                NodeBasedEdgeWithOSM edge = {
+                    OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
+                    OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
+                    0,  // weight
+                    0,  // duration
+                    0,  // distance
+                    {}, // geometry id
+                    static_cast<AnnotationID>(annotation_data_id),
+                    {false,
+                     true,
+                     split_edge,
+                     parsed_way.roundabout,
+                     parsed_way.circular,
+                     parsed_way.is_startpoint,
+                     parsed_way.backward_restricted,
+                     road_classification,
+                     parsed_way.highway_turn_classification,
+                     parsed_way.access_turn_classification}};
+
                 external_memory.all_edges_list.push_back(
-                    InternalExtractorEdge(OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
-                                          OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
-                                          name_id,
-                                          backward_weight_data,
-                                          backward_duration_data,
-                                          false,
-                                          true,
-                                          parsed_way.roundabout,
-                                          parsed_way.circular,
-                                          parsed_way.is_startpoint,
-                                          parsed_way.backward_restricted,
-                                          split_edge,
-                                          parsed_way.backward_travel_mode,
-                                          backward_classes,
-                                          turn_lane_id_backward,
-                                          road_classification,
-                                          {}));
+                    InternalExtractorEdge(edge, backward_weight_data, backward_duration_data, {}));
             });
     }
 
@@ -436,12 +487,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                        return OSMNodeID{static_cast<std::uint64_t>(ref.ref())};
                    });
 
-    external_memory.way_start_end_id_list.push_back(
-        {OSMWayID{static_cast<std::uint32_t>(input_way.id())},
-         OSMNodeID{static_cast<std::uint64_t>(nodes[0].ref())},
-         OSMNodeID{static_cast<std::uint64_t>(nodes[1].ref())},
-         OSMNodeID{static_cast<std::uint64_t>(nodes[nodes.size() - 2].ref())},
-         OSMNodeID{static_cast<std::uint64_t>(nodes.back().ref())}});
+    auto way_id = OSMWayID{static_cast<std::uint64_t>(input_way.id())};
+    external_memory.ways_list.push_back(way_id);
+    external_memory.way_node_id_offsets.push_back(external_memory.used_node_id_list.size());
 }
 
 } // namespace extractor

@@ -19,6 +19,8 @@ with open(taginfo_path) as f:
 
 valid_strings = [t["key"] for t in taginfo["tags"]]
 valid_strings += [t["value"] for t in taginfo["tags"] if "value" in t]
+valid_strings += [t["value"].lower() for t in taginfo["tags"] if "value" in t] # lower is for max speed
+valid_strings = set(valid_strings)
 
 string_regxp = re.compile("\"([\d\w\_:]+)\"")
 

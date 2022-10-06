@@ -199,14 +199,26 @@ module.exports = function () {
 
         var merged = {};
         instructions.legs.map(l => {
-            Object.keys(l.annotation).forEach(a => {
+            Object.keys(l.annotation).filter(a => !a.match(/metadata/)).forEach(a => {
                 if (!merged[a]) merged[a] = [];
                 merged[a].push(l.annotation[a].join(':'));
             });
+            if (l.annotation.metadata) {
+                merged.metadata = {};
+                Object.keys(l.annotation.metadata).forEach(a => {
+                    if (!merged.metadata[a]) merged.metadata[a] = [];
+                    merged.metadata[a].push(l.annotation.metadata[a].join(':'));
+                });
+            }
         });
-        Object.keys(merged).map(a => {
+        Object.keys(merged).filter(k => !k.match(/metadata/)).map(a => {
             merged[a] = merged[a].join(',');
         });
+        if (merged.metadata) {
+            Object.keys(merged.metadata).map(a => {
+                merged.metadata[a] = merged.metadata[a].join(',');
+            });
+        }
         return merged;
     };
 
@@ -265,6 +277,10 @@ module.exports = function () {
 
     this.modeList = (instructions) => {
         return this.extractInstructionList(instructions, s => s.mode);
+    };
+
+    this.drivingSideList = (instructions) => {
+        return this.extractInstructionList(instructions, s => s.driving_side);
     };
 
     this.classesList = (instructions) => {

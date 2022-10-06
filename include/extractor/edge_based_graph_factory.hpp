@@ -8,28 +8,22 @@
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_node_segment.hpp"
 #include "extractor/extraction_turn.hpp"
-#include "extractor/guidance/turn_analysis.hpp"
-#include "extractor/guidance/turn_instruction.hpp"
-#include "extractor/guidance/turn_lane_types.hpp"
+#include "extractor/maneuver_override.hpp"
+#include "extractor/name_table.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
-#include "extractor/original_edge_data.hpp"
-#include "extractor/packed_osm_ids.hpp"
-#include "extractor/profile_properties.hpp"
+#include "extractor/node_restriction_map.hpp"
 #include "extractor/query_node.hpp"
-#include "extractor/restriction_index.hpp"
+#include "extractor/turn_lane_types.hpp"
 #include "extractor/way_restriction_map.hpp"
 
 #include "util/concurrent_id_map.hpp"
 #include "util/deallocating_vector.hpp"
-#include "util/guidance/bearing_class.hpp"
-#include "util/guidance/entry_class.hpp"
-#include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
-#include "util/packed_vector.hpp"
 #include "util/typedefs.hpp"
 
 #include "storage/io.hpp"
+#include "traffic_signals.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -61,7 +55,7 @@ struct TurnIndexBlock
 #pragma pack(pop)
 static_assert(std::is_trivial<TurnIndexBlock>::value, "TurnIndexBlock is not trivial");
 static_assert(sizeof(TurnIndexBlock) == 12, "TurnIndexBlock is not packed correctly");
-} // ns lookup
+} // namespace lookup
 
 struct NodeBasedGraphToEdgeBasedGraphMappingWriter; // fwd. decl
 
@@ -71,53 +65,37 @@ class EdgeBasedGraphFactory
     EdgeBasedGraphFactory(const EdgeBasedGraphFactory &) = delete;
     EdgeBasedGraphFactory &operator=(const EdgeBasedGraphFactory &) = delete;
 
-    explicit EdgeBasedGraphFactory(std::shared_ptr<util::NodeBasedDynamicGraph> node_based_graph,
-                                   CompressedEdgeContainer &compressed_edge_container,
+    explicit EdgeBasedGraphFactory(const util::NodeBasedDynamicGraph &node_based_graph,
+                                   EdgeBasedNodeDataContainer &node_data_container,
+                                   const CompressedEdgeContainer &compressed_edge_container,
                                    const std::unordered_set<NodeID> &barrier_nodes,
-                                   const std::unordered_set<NodeID> &traffic_lights,
+                                   const TrafficSignals &traffic_signals,
                                    const std::vector<util::Coordinate> &coordinates,
-                                   const extractor::PackedOSMIDs &osm_node_ids,
-                                   ProfileProperties profile_properties,
-                                   const util::NameTable &name_table,
-                                   guidance::LaneDescriptionMap &lane_description_map);
+                                   const NameTable &name_table,
+                                   const std::unordered_set<EdgeID> &segregated_edges,
+                                   const LaneDescriptionMap &lane_description_map);
 
     void Run(ScriptingEnvironment &scripting_environment,
-             const std::string &turn_data_filename,
-             const std::string &turn_lane_data_filename,
              const std::string &turn_weight_penalties_filename,
              const std::string &turn_duration_penalties_filename,
              const std::string &turn_penalties_index_filename,
              const std::string &cnbg_ebg_mapping_path,
              const std::string &conditional_penalties_filename,
+             const std::string &maneuver_overrides_filename,
              const RestrictionMap &node_restriction_map,
              const ConditionalRestrictionMap &conditional_restriction_map,
-             const WayRestrictionMap &way_restriction_map);
+             const WayRestrictionMap &way_restriction_map,
+             const std::vector<UnresolvedManeuverOverride> &maneuver_overrides);
 
     // The following get access functions destroy the content in the factory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
-    void GetEdgeBasedNodes(EdgeBasedNodeDataContainer &data_container);
     void GetEdgeBasedNodeSegments(std::vector<EdgeBasedNodeSegment> &nodes);
-    void GetStartPointMarkers(std::vector<bool> &node_is_startpoint);
     void GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights);
-
-    // These access functions don't destroy the content
-    const std::vector<BearingClassID> &GetBearingClassIds() const;
-    std::vector<BearingClassID> &GetBearingClassIds();
-    std::vector<util::guidance::BearingClass> GetBearingClasses() const;
-    std::vector<util::guidance::EntryClass> GetEntryClasses() const;
+    void GetEdgeBasedNodeDurations(std::vector<EdgeWeight> &output_node_durations);
+    void GetEdgeBasedNodeDistances(std::vector<EdgeDistance> &output_node_distances);
+    std::uint32_t GetConnectivityChecksum() const;
 
     std::uint64_t GetNumberOfEdgeBasedNodes() const;
-
-    // Basic analysis of a turn (u --(e1)-- v --(e2)-- w)
-    // with known angle.
-    // Handles special cases like u-turns and roundabouts
-    // For basic turns, the turn based on the angle-classification is returned
-    guidance::TurnInstruction AnalyzeTurn(const NodeID u,
-                                          const EdgeID e1,
-                                          const NodeID v,
-                                          const EdgeID e2,
-                                          const NodeID w,
-                                          const double angle) const;
 
   private:
     using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
@@ -134,18 +112,17 @@ class EdgeBasedGraphFactory
     std::vector<ConditionalTurnPenalty>
     IndexConditionals(std::vector<Conditional> &&conditionals) const;
 
-    //! maps index from m_edge_based_node_list to ture/false if the node is an entry point to the
-    //! graph
-    std::vector<bool> m_edge_based_node_is_startpoint;
-
     //! node weights that indicate the length of the segment (node based) represented by the
     //! edge-based node
     std::vector<EdgeWeight> m_edge_based_node_weights;
+    std::vector<EdgeDuration> m_edge_based_node_durations;
+    std::vector<EdgeDistance> m_edge_based_node_distances;
 
     //! list of edge based nodes (compressed segments)
     std::vector<EdgeBasedNodeSegment> m_edge_based_node_segments;
-    EdgeBasedNodeDataContainer m_edge_based_node_container;
+    EdgeBasedNodeDataContainer &m_edge_based_node_container;
     util::DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
+    std::uint32_t m_connectivity_checksum;
 
     // The number of edge-based nodes is mostly made up out of the edges in the node-based graph.
     // Any edge in the node-based graph represents a node in the edge-based graph. In addition, we
@@ -155,19 +132,21 @@ class EdgeBasedGraphFactory
     std::uint64_t m_number_of_edge_based_nodes;
 
     const std::vector<util::Coordinate> &m_coordinates;
-    const extractor::PackedOSMIDs &m_osm_node_ids;
-    std::shared_ptr<util::NodeBasedDynamicGraph> m_node_based_graph;
+    const util::NodeBasedDynamicGraph &m_node_based_graph;
 
     const std::unordered_set<NodeID> &m_barrier_nodes;
-    const std::unordered_set<NodeID> &m_traffic_lights;
-    CompressedEdgeContainer &m_compressed_edge_container;
+    const TrafficSignals &m_traffic_signals;
+    const CompressedEdgeContainer &m_compressed_edge_container;
 
-    ProfileProperties profile_properties;
+    const NameTable &name_table;
+    const std::unordered_set<EdgeID> &segregated_edges;
+    const LaneDescriptionMap &lane_description_map;
 
-    const util::NameTable &name_table;
-    guidance::LaneDescriptionMap &lane_description_map;
-
-    unsigned RenumberEdges();
+    // In the edge based graph, any traversable (non reversed) edge of the node-based graph forms a
+    // node of the edge-based graph. To be able to name these nodes, we loop over the node-based
+    // graph and create a mapping from edges (node-based) to nodes (edge-based). The mapping is
+    // essentially a prefix-sum over all previous non-reversed edges of the node-based graph.
+    unsigned LabelEdgeBasedNodes();
 
     // During the generation of the edge-expanded nodes, we need to also generate duplicates that
     // represent state during via-way restrictions (see
@@ -177,26 +156,22 @@ class EdgeBasedGraphFactory
 
     // Edge-expanded edges are generate for all valid turns. The validity can be checked via the
     // restriction maps
-    void GenerateEdgeExpandedEdges(ScriptingEnvironment &scripting_environment,
-                                   const std::string &original_edge_data_filename,
-                                   const std::string &turn_lane_data_filename,
-                                   const std::string &turn_weight_penalties_filename,
-                                   const std::string &turn_duration_penalties_filename,
-                                   const std::string &turn_penalties_index_filename,
-                                   const std::string &conditional_turn_penalties_filename,
-                                   const RestrictionMap &node_restriction_map,
-                                   const ConditionalRestrictionMap &conditional_restriction_map,
-                                   const WayRestrictionMap &way_restriction_map);
+    void
+    GenerateEdgeExpandedEdges(ScriptingEnvironment &scripting_environment,
+                              const std::string &turn_weight_penalties_filename,
+                              const std::string &turn_duration_penalties_filename,
+                              const std::string &turn_penalties_index_filename,
+                              const std::string &conditional_turn_penalties_filename,
+                              const std::string &maneuver_overrides_filename,
+                              const RestrictionMap &node_restriction_map,
+                              const ConditionalRestrictionMap &conditional_restriction_map,
+                              const WayRestrictionMap &way_restriction_map,
+                              const std::vector<UnresolvedManeuverOverride> &maneuver_overrides);
 
     NBGToEBG InsertEdgeBasedNode(const NodeID u, const NodeID v);
 
-    std::size_t restricted_turns_counter;
-    std::size_t skipped_uturns_counter;
-    std::size_t skipped_barrier_turns_counter;
-
-    util::ConcurrentIDMap<util::guidance::BearingClass, BearingClassID> bearing_class_hash;
-    std::vector<BearingClassID> bearing_class_by_node_based_node;
-    util::ConcurrentIDMap<util::guidance::EntryClass, EntryClassID> entry_class_hash;
+    // mapping of node-based edges to edge-based nodes
+    std::vector<NodeID> nbe_to_ebn_mapping;
 };
 } // namespace extractor
 } // namespace osrm

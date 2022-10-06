@@ -1,4 +1,397 @@
-# UNRELEASED
+# Unreleased
+  - Changes from 5.26.0
+    - API:
+      - ADDED: Add Flatbuffers support to NodeJS bindings. [#6338](https://github.com/Project-OSRM/osrm-backend/pull/6338)
+      - CHANGED: Add `data_version` field to responses of all services. [#5387](https://github.com/Project-OSRM/osrm-backend/pull/5387)
+      - FIXED: Use Boost.Beast to parse HTTP request. [#6294](https://github.com/Project-OSRM/osrm-backend/pull/6294)
+      - FIXED: Fix inefficient osrm-routed connection handling [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
+      - FIXED: Fix HTTP compression precedence [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
+    - NodeJS:
+      - FIXED: Support `skip_waypoints` in Node bindings [#6060](https://github.com/Project-OSRM/osrm-backend/pull/6060)
+    - Misc:
+      - ADDED: Add timestamps for logs. [#6375](https://github.com/Project-OSRM/osrm-backend/pull/6375)
+      - CHANGED: Improve performance of map matching via getPathDistance optimization. [#6378](https://github.com/Project-OSRM/osrm-backend/pull/6378)
+      - CHANGED: Optimize RestrictionParser performance. [#6344](https://github.com/Project-OSRM/osrm-backend/pull/6344)
+      - ADDED: Support floats for speed value in traffic updates CSV. [#6327](https://github.com/Project-OSRM/osrm-backend/pull/6327)
+      - CHANGED: Use Lua 5.4 in Docker image. [#6346](https://github.com/Project-OSRM/osrm-backend/pull/6346)
+      - CHANGED: Remove redundant nullptr check. [#6326](https://github.com/Project-OSRM/osrm-backend/pull/6326)
+      - CHANGED: missing files list is included in exception message. [#5360](https://github.com/Project-OSRM/osrm-backend/pull/5360)
+      - CHANGED: Do not use deprecated Callback::Call overload in Node bindings. [#6318](https://github.com/Project-OSRM/osrm-backend/pull/6318)
+      - FIXED: Fix distance calculation consistency. [#6315](https://github.com/Project-OSRM/osrm-backend/pull/6315)
+      - FIXED: Fix performance issue after migration to sol2 3.3.0. [#6304](https://github.com/Project-OSRM/osrm-backend/pull/6304)
+      - CHANGED: Pass osm_node_ids by reference in osrm::updater::Updater class. [#6298](https://github.com/Project-OSRM/osrm-backend/pull/6298)
+      - FIXED: Fix bug with reading Set values from Lua scripts. [#6285](https://github.com/Project-OSRM/osrm-backend/pull/6285)
+      - FIXED: Bug in bicycle profile that caused exceptions if there is a highway=bicycle in the data. [#6296](https://github.com/Project-OSRM/osrm-backend/pull/6296)
+      - FIXED: Internal refactoring of identifier types used in data facade [#6044](https://github.com/Project-OSRM/osrm-backend/pull/6044)
+    - Build:
+      - ADDED: Build Node bindings on Windows. [#6334](https://github.com/Project-OSRM/osrm-backend/pull/6334)
+      - ADDED: Configure cross-compilation for Apple Silicon. [#6360](https://github.com/Project-OSRM/osrm-backend/pull/6360)
+      - CHANGED: Use apt-get to install Clang on CI. [#6345](https://github.com/Project-OSRM/osrm-backend/pull/6345)
+      - CHANGED: Fix TBB in case of Conan + NodeJS build. [#6333](https://github.com/Project-OSRM/osrm-backend/pull/6333)
+      - CHANGED: Migrate to modern TBB version. [#6300](https://github.com/Project-OSRM/osrm-backend/pull/6300)
+      - CHANGED: Enable performance-move-const-arg clang-tidy check. [#6319](https://github.com/Project-OSRM/osrm-backend/pull/6319)
+      - CHANGED: Use the latest node on CI. [#6317](https://github.com/Project-OSRM/osrm-backend/pull/6317)
+      - CHANGED: Migrate Windows CI to GitHub Actions. [#6312](https://github.com/Project-OSRM/osrm-backend/pull/6312)
+      - ADDED: Add smoke test for Docker image. [#6313](https://github.com/Project-OSRM/osrm-backend/pull/6313)
+      - CHANGED: Update libosmium to version 2.18.0. [#6303](https://github.com/Project-OSRM/osrm-backend/pull/6303)
+      - CHANGED: Remove EXACT from find_package if using Conan. [#6299](https://github.com/Project-OSRM/osrm-backend/pull/6299)
+      - CHANGED: Configure Undefined Behaviour Sanitizer. [#6290](https://github.com/Project-OSRM/osrm-backend/pull/6290)
+      - CHANGED: Use Conan instead of Mason to install code dependencies. [#6284](https://github.com/Project-OSRM/osrm-backend/pull/6284)
+      - CHANGED: Migrate to C++17. Update sol2 to 3.3.0. [#6279](https://github.com/Project-OSRM/osrm-backend/pull/6279)
+      - CHANGED: Update macOS CI image to macos-11. [#6286](https://github.com/Project-OSRM/osrm-backend/pull/6286)
+      - CHANGED: Enable even more clang-tidy checks. [#6273](https://github.com/Project-OSRM/osrm-backend/pull/6273)
+      - CHANGED: Configure CMake to not build flatbuffers tests and samples. [#6274](https://github.com/Project-OSRM/osrm-backend/pull/6274)
+      - CHANGED: Enable more clang-tidy checks. [#6270](https://github.com/Project-OSRM/osrm-backend/pull/6270)
+      - CHANGED: Configure clang-tidy job on CI. [#6261](https://github.com/Project-OSRM/osrm-backend/pull/6261)
+      - CHANGED: Use Github Actions for building container images [#6138](https://github.com/Project-OSRM/osrm-backend/pull/6138)
+      - CHANGED: Upgrade Boost dependency to 1.70 [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
+      - CHANGED: Upgrade Ubuntu CI builds to 20.04  [#6119](https://github.com/Project-OSRM/osrm-backend/pull/6119)
+      - CHANGED: Make building osrm-routed optional [#6144](https://github.com/Project-OSRM/osrm-backend/pull/6144)
+      - FIXED: Run all unit tests in CI [#5248](https://github.com/Project-OSRM/osrm-backend/pull/5248)
+      - FIXED: Fix installation of Mason CMake and 32 bit CI build [#6170](https://github.com/Project-OSRM/osrm-backend/pull/6170)
+      - FIXED: Fixed Node docs generation check in CI. [#6058](https://github.com/Project-OSRM/osrm-backend/pull/6058)
+      - CHANGED: Docker build, enabled arm64 build layer [#6172](https://github.com/Project-OSRM/osrm-backend/pull/6172)
+      - CHANGED: Docker build, enabled apt-get update/install caching in separate layer for build phase [#6175](https://github.com/Project-OSRM/osrm-backend/pull/6175)
+      - FIXED: Bump CI complete meta job to ubuntu-20.04 [#6323](https://github.com/Project-OSRM/osrm-backend/pull/6323)
+    - Routing:
+      - CHANGED: Lazily generate optional route path data [#6045](https://github.com/Project-OSRM/osrm-backend/pull/6045)
+      - FIXED: Completed support for no_entry and no_exit turn restrictions. [#5988](https://github.com/Project-OSRM/osrm-backend/pull/5988)
+      - ADDED: Add support for non-round-trips with a single fixed endpoint. [#6050](https://github.com/Project-OSRM/osrm-backend/pull/6050)
+      - FIXED: Improvements to maneuver override processing [#6125](https://github.com/Project-OSRM/osrm-backend/pull/6125)
+      - ADDED: Support snapping to multiple ways at an input location. [#5953](https://github.com/Project-OSRM/osrm-backend/pull/5953)
+      - FIXED: Fix snapping target locations to ways used in turn restrictions. [#6339](https://github.com/Project-OSRM/osrm-backend/pull/6339)
+      - ADDED: Support OSM traffic signal directions. [#6153](https://github.com/Project-OSRM/osrm-backend/pull/6153)
+      - FIXED: Ensure u-turn exists in intersection view. [#6376](https://github.com/Project-OSRM/osrm-backend/pull/6376)
+    - Profile:
+      - CHANGED: Bicycle surface speeds [#6212](https://github.com/Project-OSRM/osrm-backend/pull/6212)
+    - Tools:
+      - CHANGED: Do not generate intermediate .osrm file in osrm-extract. [#6354](https://github.com/Project-OSRM/osrm-backend/pull/6354)
+
+# 5.26.0
+  - Changes from 5.25.0
+    - API:
+      - FIXED: Allow for special characters in the profile/method as part of the HTTP URL. [#6090](https://github.com/Project-OSRM/osrm-backend/pull/6090)
+      - FIXED: Set osrm-routed to immediately close bad connections [#6112](https://github.com/Project-OSRM/osrm-backend/pull/6112)
+    - Build:
+      - CHANGED: Replace Travis with Github Actions for CI builds [#6071](https://github.com/Project-OSRM/osrm-backend/pull/6071)
+      - FIXED: Fixed Boost link flags in pkg-config file. [#6083](https://github.com/Project-OSRM/osrm-backend/pull/6083)
+      - FIXED: Fixed test cache to consider MLD executable changes. [#6129](https://github.com/Project-OSRM/osrm-backend/pull/6129)
+    - Routing:
+      - FIXED: Fix generation of inefficient MLD partitions [#6084](https://github.com/Project-OSRM/osrm-backend/pull/6084)
+      - FIXED: Fix MLD level mask generation to support 64-bit masks. [#6123](https://github.com/Project-OSRM/osrm-backend/pull/6123)
+      - FIXED: Fix metric offset overflow for large MLD partitions. This breaks the **data format** [#6124](https://github.com/Project-OSRM/osrm-backend/pull/6124)
+
+# 5.25.0
+  - Changes from 5.24.0
+    - Build:
+      - CHANGED: Node binaries now use Github Releases for hosting [#6030](https://github.com/Project-OSRM/osrm-backend/pull/6030)
+    - Misc:
+      - FIXED: Upgrade to @mapbox/node-pre-gyp fix various bugs with Node 12/14 [#5991](https://github.com/Project-OSRM/osrm-backend/pull/5991)
+      - FIXED: `valid` type in documentation examples [#5990](https://github.com/Project-OSRM/osrm-backend/issues/5990)
+      - FIXED: Remove redundant loading of .osrm.cell_metrics [#6019](https://github.com/Project-OSRM/osrm-backend/issues/6019)
+      - CHANGED: Increase PackedOSMIDs size to 34 bits. This breaks the **data format** [#6020](https://github.com/Project-OSRM/osrm-backend/issues/6020)
+    - Profile:
+      - FIXED: Add kerb barrier exception to default car profile. [#5999](https://github.com/Project-OSRM/osrm-backend/pull/5999)
+
+# 5.24.0
+  - Changes from 5.23.0
+    - Features
+      - ADDED: Added support for multiple via-way restrictions. [#5907](https://github.com/Project-OSRM/osrm-backend/pull/5907)
+      - ADDED: Add node bindings support for Node 12, 14, and publish binaries [#5918](https://github.com/Project-OSRM/osrm-backend/pull/5918)
+      - REMOVED: we no longer publish Node 8 binary modules (they are still buildable from source) [#5918](https://github.com/Project-OSRM/osrm-backend/pull/5918)
+    - Routing:
+      - FIXED: Avoid copying ManyToMany table results [#5923](https://github.com/Project-OSRM/osrm-backend/pull/5923)
+      - FIXED: Reduce copying in API parameter constructors [#5925](https://github.com/Project-OSRM/osrm-backend/pull/5925)
+    - Misc:
+      - CHANGED: Cleanup NodeJS dependencies [#5945](https://github.com/Project-OSRM/osrm-backend/pull/5945)
+      - CHANGED: Unify `.osrm.turn_penalites_index` dump processing same with `.osrm.turn_weight_penalties` and `.osrm.turn_duration_penalties` [#5868](https://github.com/Project-OSRM/osrm-backend/pull/5868)
+      - FIXED: Properly validate source/destination validation in NodeJS table service [#5595](https://github.com/Project-OSRM/osrm-backend/pull/5595/files)
+      - FIXED: turn.roads_on_the_left not containing incoming roads and turn.roads_on_the_right not containing outgoing roads on two-way roads [#5128](https://github.com/Project-OSRM/osrm-backend/issues/5128)
+    - Profile:
+      - ADDED: Profile debug script which fetches a way from OSM then outputs the result of the profile. [#5908](https://github.com/Project-OSRM/osrm-backend/pull/5908)
+    - Infrastructure
+      - CHANGED: Bundled protozero updated to v1.7.0. [#5858](https://github.com/Project-OSRM/osrm-backend/pull/5858)
+    - Windows:
+      - FIXED: Fix bit-shift overflow in MLD partition step. [#5878](https://github.com/Project-OSRM/osrm-backend/pull/5878)
+      - FIXED: Fix vector bool permutation in graph contraction step [#5882](https://github.com/Project-OSRM/osrm-backend/pull/5882)
+    - API:
+      - FIXED: Undo libosrm API break by adding old interface as method overload [#5861](https://github.com/Project-OSRM/osrm-backend/pull/5861)
+      - FIXED: Fixed validation of sources/destinations when accessed via node bindings [#5595](https://github.com/Project-OSRM/osrm-backend/pull/5595)
+
+# 5.23.0
+  - Changes from 5.22.0
+    - Build:
+      - FIXED: pessimistic calls to std::move [#5560](https://github.com/Project-OSRM/osrm-backend/pull/5561)
+    - Features:
+      - ADDED: new API parameter - `snapping=any|default` to allow snapping to previously unsnappable edges [#5361](https://github.com/Project-OSRM/osrm-backend/pull/5361)
+      - ADDED: keepalive support to the osrm-routed HTTP server [#5518](https://github.com/Project-OSRM/osrm-backend/pull/5518)
+      - ADDED: flatbuffers output format support [#5513](https://github.com/Project-OSRM/osrm-backend/pull/5513)
+      - ADDED: Global 'skip_waypoints' option [#5556](https://github.com/Project-OSRM/osrm-backend/pull/5556)
+      - FIXED: Install the libosrm_guidance library correctly [#5604](https://github.com/Project-OSRM/osrm-backend/pull/5604)
+      - FIXED: Http Handler can now deal witch optional whitespace between header-key and -value [#5606](https://github.com/Project-OSRM/osrm-backend/issues/5606)
+    - Routing:
+      - CHANGED: allow routing past `barrier=arch` [#5352](https://github.com/Project-OSRM/osrm-backend/pull/5352)
+      - CHANGED: default car weight was reduced to 2000 kg. [#5371](https://github.com/Project-OSRM/osrm-backend/pull/5371)
+      - CHANGED: default car height was reduced to 2 meters. [#5389](https://github.com/Project-OSRM/osrm-backend/pull/5389)
+      - FIXED: treat `bicycle=use_sidepath` as no access on the tagged way. [#5622](https://github.com/Project-OSRM/osrm-backend/pull/5622)
+      - FIXED: fix table result when source and destination on same one-way segment. [#5828](https://github.com/Project-OSRM/osrm-backend/pull/5828)
+      - FIXED: fix occasional segfault when swapping data with osrm-datastore and using `exclude=` [#5844](https://github.com/Project-OSRM/osrm-backend/pull/5844)
+      - FIXED: fix crash in MLD alternative search if source or target are invalid [#5851](https://github.com/Project-OSRM/osrm-backend/pull/5851)
+    - Misc:
+      - CHANGED: Reduce memory usage for raster source handling. [#5572](https://github.com/Project-OSRM/osrm-backend/pull/5572)
+      - CHANGED: Add cmake option `ENABLE_DEBUG_LOGGING` to control whether output debug logging. [#3427](https://github.com/Project-OSRM/osrm-backend/issues/3427)
+      - CHANGED: updated extent of Hong Kong as left hand drive country. [#5535](https://github.com/Project-OSRM/osrm-backend/issues/5535)
+      - FIXED: corrected error message when failing to snap input coordinates [#5846](https://github.com/Project-OSRM/osrm-backend/pull/5846)
+    - Infrastructure
+      - REMOVED: STXXL support removed as STXXL became abandonware. [#5760](https://github.com/Project-OSRM/osrm-backend/pull/5760)
+
+# 5.22.0
+  - Changes from 5.21.0
+    - Build:
+      - ADDED: optionally build Node `lts` and `latest` bindings [#5347](https://github.com/Project-OSRM/osrm-backend/pull/5347)
+    - Features:
+      - ADDED: new waypoints parameter to the `route` plugin, enabling silent waypoints [#5345](https://github.com/Project-OSRM/osrm-backend/pull/5345)
+      - ADDED: data timestamp information in the response (saved in new file `.osrm.timestamp`). [#5115](https://github.com/Project-OSRM/osrm-backend/issues/5115)
+
+# 5.21.0
+  - Changes from 5.20.0
+    - Features:
+      - ADDED: all waypoints in responses now contain a distance property between the original coordinate and the snapped location. [#5255](https://github.com/Project-OSRM/osrm-backend/pull/5255)
+      - ADDED: if `fallback_speed` is used, a new structure `fallback_speed_cells` will describe which cells contain estimated values [#5259](https://github.com/Project-OSRM/osrm-backend/pull/5259)
+      - REMOVED: we no longer publish Node 4 or 6 binary modules (they are still buildable from source) [#5314](https://github.com/Project-OSRM/osrm-backend/pull/5314)
+    - Table:
+      - ADDED: new parameter `scale_factor` which will scale the cell `duration` values by this factor. [#5298](https://github.com/Project-OSRM/osrm-backend/pull/5298)
+      - FIXED: only trigger `scale_factor` code to scan matrix when necessary. [#5303](https://github.com/Project-OSRM/osrm-backend/pull/5303)
+      - FIXED: fix bug in reverse offset calculation that sometimes lead to negative (and other incorrect) values in distance table results [#5315](https://github.com/Project-OSRM/osrm-backend/pull/5315)
+    - Docker:
+      - FIXED: use consistent boost version between build and runtime [#5311](https://github.com/Project-OSRM/osrm-backend/pull/5311)
+      - FIXED: don't override default permissions on /opt [#5311](https://github.com/Project-OSRM/osrm-backend/pull/5311)
+    - Matching:
+      - CHANGED: matching will now consider edges marked with is_startpoint=false, allowing matching over ferries and other previously non-matchable edge types. [#5297](https://github.com/Project-OSRM/osrm-backend/pull/5297)
+    - Profile:
+      - ADDED: Parse `source:maxspeed` and `maxspeed:type` tags to apply maxspeeds and add belgian flanders rural speed limit. [#5217](https://github.com/Project-OSRM/osrm-backend/pull/5217)
+      - CHANGED: Refactor maxspeed parsing to use common library. [#5144](https://github.com/Project-OSRM/osrm-backend/pull/5144)
+
+# 5.20.0
+  - Changes from 5.19.0:
+    - Table:
+      - CHANGED: switch to pre-calculated distances for table responses for large speedup and 10% memory increase. [#5251](https://github.com/Project-OSRM/osrm-backend/pull/5251)
+      - ADDED: new parameter `fallback_speed` which will fill `null` cells with estimated value [#5257](https://github.com/Project-OSRM/osrm-backend/pull/5257)
+      - CHANGED: Remove API check for matrix sources/destination length to be less than or equal to coordinates length. [#5298](https://github.com/Project-OSRM/osrm-backend/pull/5289)
+      - FIXED: Fix crashing bug when using fallback_speed parameter with more sources than destinations. [#5291](https://github.com/Project-OSRM/osrm-backend/pull/5291)
+    - Features:
+      - ADDED: direct mmapping of datafiles is now supported via the `--mmap` switch. [#5242](https://github.com/Project-OSRM/osrm-backend/pull/5242)
+      - REMOVED: the previous `--memory_file` switch is now deprecated and will fallback to `--mmap` [#5242](https://github.com/Project-OSRM/osrm-backend/pull/5242)
+      - ADDED: Now publishing Node 10.x LTS binary modules [#5246](https://github.com/Project-OSRM/osrm-backend/pull/5246)
+    - Windows:
+      - FIXED: Windows builds again. [#5249](https://github.com/Project-OSRM/osrm-backend/pull/5249)
+    - Docker:
+      - CHANGED: switch from Alpine Linux to Debian Buster base images [#5281](https://github.com/Project-OSRM/osrm-backend/pull/5281)
+
+# 5.19.0
+  - Changes from 5.18.0:
+    - Optimizations:
+      - CHANGED: Use Grisu2 for serializing floating point numbers. [#5188](https://github.com/Project-OSRM/osrm-backend/pull/5188)
+      - ADDED: Node bindings can return pre-rendered JSON buffer. [#5189](https://github.com/Project-OSRM/osrm-backend/pull/5189)
+    - Profiles:
+      - CHANGED: Bicycle profile now blacklists barriers instead of whitelisting them [#5076
+](https://github.com/Project-OSRM/osrm-backend/pull/5076/)
+      - CHANGED: Foot profile now blacklists barriers instead of whitelisting them [#5077
+](https://github.com/Project-OSRM/osrm-backend/pull/5077/)
+      - CHANGED: Support maxlength and maxweight in car profile [#5101](https://github.com/Project-OSRM/osrm-backend/pull/5101)
+    - Bugfixes:
+      - FIXED: collapsing of ExitRoundabout instructions [#5114](https://github.com/Project-OSRM/osrm-backend/issues/5114)
+    - Misc:
+      - CHANGED: Support up to 512 named shared memory regions [#5185](https://github.com/Project-OSRM/osrm-backend/pull/5185)
+
+# 5.18.0
+  - Changes from 5.17.0:
+    - Features:
+      - ADDED: `table` plugin now optionally returns `distance` matrix as part of response [#4990](https://github.com/Project-OSRM/osrm-backend/pull/4990)
+      - ADDED: New optional parameter `annotations` for `table` that accepts `distance`, `duration`, or both `distance,duration` as values [#4990](https://github.com/Project-OSRM/osrm-backend/pull/4990)
+    - Infrastructure:
+      - ADDED: Updated libosmium and added protozero and vtzero libraries [#5037](https://github.com/Project-OSRM/osrm-backend/pull/5037)
+      - CHANGED: Use vtzero library in tile plugin [#4686](https://github.com/Project-OSRM/osrm-backend/pull/4686)
+    - Profile:
+      - ADDED: Bicycle profile now returns classes for ferry and tunnel routes. [#5054](https://github.com/Project-OSRM/osrm-backend/pull/5054)
+      - ADDED: Bicycle profile allows to exclude ferry routes (default to not enabled) [#5054](https://github.com/Project-OSRM/osrm-backend/pull/5054)
+
+# 5.17.1
+  - Changes from 5.17.0:
+    - Bugfixes:
+      - FIXED: Do not combine a segregated edge with a roundabout [#5039](https://github.com/Project-OSRM/osrm-backend/issues/5039)
+
+# 5.17.0
+  - Changes from 5.16.0:
+    - Bugfixes:
+      - FIXED: deduplication of route steps when waypoints are used [#4909](https://github.com/Project-OSRM/osrm-backend/issues/4909)
+      - FIXED: Use smaller range for U-turn angles in map-matching [#4920](https://github.com/Project-OSRM/osrm-backend/pull/4920)
+      - FIXED: Remove the last short annotation segment in `trimShortSegments` [#4946](https://github.com/Project-OSRM/osrm-backend/pull/4946)
+      - FIXED: Properly calculate annotations for speeds, durations and distances when waypoints are used with mapmatching [#4949](https://github.com/Project-OSRM/osrm-backend/pull/4949)
+      - FIXED: Don't apply unimplemented SH and PH conditions in OpeningHours and add inversed date ranges [#4992](https://github.com/Project-OSRM/osrm-backend/issues/4992)
+      - FIXED: integer overflow in `DynamicGraph::Renumber` [#5021](https://github.com/Project-OSRM/osrm-backend/pull/5021)
+    - Profile:
+      - CHANGED: Handle oneways in get_forward_backward_by_key [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
+      - FIXED: Do not route against oneway road if there is a cycleway in the wrong direction; also review bike profile [#4943](https://github.com/Project-OSRM/osrm-backend/issues/4943)
+      - CHANGED: Make cyclability weighting of the bike profile prefer safer routes more strongly [#5015](https://github.com/Project-OSRM/osrm-backend/issues/5015)
+    - Guidance:
+      - CHANGED: Don't use obviousness for links bifurcations [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
+      - FIXED: Adjust Straight direction modifiers of side roads in driveway handler [#4929](https://github.com/Project-OSRM/osrm-backend/pull/4929)
+      - CHANGED: Added post process logic to collapse segregated turn instructions [#4925](https://github.com/Project-OSRM/osrm-backend/pull/4925)
+      - ADDED: Maneuver relation now supports `straight` as a direction [#4995](https://github.com/Project-OSRM/osrm-backend/pull/4995)
+      - FIXED: Support spelling maneuver relation with British spelling [#4950](https://github.com/Project-OSRM/osrm-backend/issues/4950)
+    - Tools:
+      - ADDED: `osrm-routed` accepts a new property `--memory_file` to store memory in a file on disk. [#4881](https://github.com/Project-OSRM/osrm-backend/pull/4881)
+      - ADDED: `osrm-datastore` accepts a new parameter `--dataset-name` to select the name of the dataset. [#4982](https://github.com/Project-OSRM/osrm-backend/pull/4982)
+      - ADDED: `osrm-datastore` accepts a new parameter `--list` to list all datasets loaded into memory. [#4982](https://github.com/Project-OSRM/osrm-backend/pull/4982)
+      - ADDED: `osrm-datastore` accepts a new parameter `--only-metric` to only reload the data that can be updated by a weight update (reduces memory for traffic updates). [#5002](https://github.com/Project-OSRM/osrm-backend/pull/5002)
+      - ADDED: `osrm-routed` accepts a new parameter `--dataset-name` to select the shared-memory dataset to use. [#4982](https://github.com/Project-OSRM/osrm-backend/pull/4982)
+    - NodeJS:
+      - ADDED: `OSRM` object accepts a new option `memory_file` that stores the memory in a file on disk. [#4881](https://github.com/Project-OSRM/osrm-backend/pull/4881)
+      - ADDED: `OSRM` object accepts a new option `dataset_name` to select the shared-memory dataset. [#4982](https://github.com/Project-OSRM/osrm-backend/pull/4982)
+    - Internals
+      - CHANGED: Updated segregated intersection identification [#4845](https://github.com/Project-OSRM/osrm-backend/pull/4845) [#4968](https://github.com/Project-OSRM/osrm-backend/pull/4968)
+      - REMOVED: Remove `.timestamp` file since it was unused [#4960](https://github.com/Project-OSRM/osrm-backend/pull/4960)
+    - Documentation:
+      - ADDED: Add documentation about OSM node ids in nearest service response [#4436](https://github.com/Project-OSRM/osrm-backend/pull/4436)
+    - Performance
+      - FIXED: Speed up response time when lots of legs exist and geojson is used with `steps=true` [#4936](https://github.com/Project-OSRM/osrm-backend/pull/4936)
+      - FIXED: Return iterators instead of vectors in datafacade_base functions [#4969](https://github.com/Project-OSRM/osrm-backend/issues/4969)
+    - Misc:
+      - ADDED: expose name for datasource annotations as metadata [#4973](https://github.com/Project-OSRM/osrm-backend/pull/4973)
+
+# 5.16.0
+  - Changes from 5.15.2:
+    - Guidance
+      - ADDED #4676: Support for maneuver override relation, allowing data-driven overrides for turn-by-turn instructions [#4676](https://github.com/Project-OSRM/osrm-backend/pull/4676)
+      - CHANGED #4830: Announce reference change if names are empty
+      - CHANGED #4835: MAXIMAL_ALLOWED_SEPARATION_WIDTH increased to 12 meters
+      - CHANGED #4842: Lower priority links from a motorway now are used as motorway links [#4842](https://github.com/Project-OSRM/osrm-backend/pull/4842)
+      - CHANGED #4895: Use ramp bifurcations as fork intersections [#4895](https://github.com/Project-OSRM/osrm-backend/issues/4895)
+      - CHANGED #4893: Handle motorway forks with links as normal motorway intersections[#4893](https://github.com/Project-OSRM/osrm-backend/issues/4893)
+      - FIXED #4905: Check required tags of `maneuver` relations [#4905](https://github.com/Project-OSRM/osrm-backend/pull/4905)
+    - Profile:
+      - FIXED: `highway=service` will now be used for restricted access, `access=private` is still disabled for snapping.
+      - ADDED #4775: Exposes more information to the turn function, now being able to set turn weights with highway and access information of the turn as well as other roads at the intersection [#4775](https://github.com/Project-OSRM/osrm-backend/issues/4775)
+      - FIXED #4763: Add support for non-numerical units in car profile for maxheight [#4763](https://github.com/Project-OSRM/osrm-backend/issues/4763)
+      - ADDED #4872: Handling of `barrier=height_restrictor` nodes [#4872](https://github.com/Project-OSRM/osrm-backend/pull/4872)
+
+# 5.15.2
+  - Changes from 5.15.1:
+    - Features:
+        - ADDED: Exposed the waypoints parameter in the node bindings interface
+    - Bugfixes:
+        - FIXED: Segfault causing bug in leg collapsing map matching when traversing edges in reverse
+
+# 5.15.1
+  - Changes from 5.15.0:
+    - Bugfixes:
+      - FIXED: Segfault in map matching when RouteLeg collapsing code is run on a match with multiple submatches
+    - Guidance:
+      - Set type of trivial intersections where classes change to Suppressed instead of NoTurn
+
+# 5.15.0
+  - Changes from 5.14.3:
+    - Bugfixes:
+      - FIXED #4704: Fixed regression in bearings reordering introduced in 5.13 [#4704](https://github.com/Project-OSRM/osrm-backend/issues/4704)
+      - FIXED #4781: Fixed overflow exceptions in percent-encoding parsing
+      - FIXED #4770: Fixed exclude flags for single toll road scenario
+      - FIXED #4283: Fix overflow on zero duration segments
+      - FIXED #4804: Ignore no_*_on_red turn restrictions
+    - Guidance:
+      - CHANGED #4706: Guidance refactoring step to decouple intersection connectivity analysis and turn instructions generation [#4706](https://github.com/Project-OSRM/osrm-backend/pull/4706)
+      - CHANGED #3491: Refactor `isThroughStreet`/Intersection options
+    - Profile:
+      - ADDED: `tunnel` as a new class in car profile so that sections of the route with tunnel tags will be marked as such
+
+# 5.14.3
+  - Changes from 5.14.2:
+    - Features:
+      - Added a `waypoints` parameter to the match service plugin that accepts indices to input coordinates and treats only those points as waypoints in the response format.
+    - Bugfixes:
+      - FIXED #4754: U-Turn penalties are applied to straight turns.
+      - FIXED #4756: Removed too restrictive road name check in the sliproad handler
+      - FIXED #4731: Use correct weights for edge-based graph duplicated via nodes.
+    - Profile:
+      - CHANGED: added Belarus speed limits
+      - CHANGED: set default urban speed in Ukraine to 50kmh
+
+# 5.14.2
+  - Changes from 5.14.1:
+    - Bugfixes:
+      - FIXED #4727: Erroring when a old .core file is present.
+      - FIXED #4642: Update checks for EMPTY_NAMEID to check for empty name strings
+      - FIXED #4738: Fix potential segmentation fault
+    - Node.js Bindings:
+      - ADDED: Exposed new `max_radiuses_map_matching` option from `EngingConfig` options
+    - Tools:
+      - ADDED: New osrm-routed `max_radiuses_map_matching` command line flag to optionally set a maximum radius for map matching
+
+# 5.14.1
+  - Changes from 5.14.0
+    - Bugfixes:
+      - FIXED: don't use removed alternative candidates in `filterPackedPathsByCellSharing`
+
+# 5.14.0
+  - Changes from 5.13
+    - API:
+      - ADDED: new RouteStep property `driving_side` that has either "left" or "right" for that step
+    - Misc:
+      - ADDED: Bundles a rough (please improve!) driving-side GeoJSON file for use with `osrm-extract --location-dependent-data data/driving_side.geojson`
+      - CHANGED: Conditional turn parsing is disabled by default now
+      - ADDED: Adds a tool to analyze turn instruction generation in a dataset.  Useful for tracking turn-by-turn heuristic changes over time.
+      - CHANGED: Internal refactoring of guidance code as a first step towards a re-runnable guidance pipeline
+      - ADDED: Now publishing Node 8.x LTS binary modules
+    - Profile:
+      - CHANGED: Remove dependency on turn types and turn modifier in the process_turn function in the `car.lua` profile. Guidance instruction types are not used to influence turn penalty anymore so this will break backward compatibility between profile version 3 and 4.
+    - Guidance:
+      - ADDED: New internal flag on "segregated intersections" - in the future, will should allow collapsing of instructions across complex intersection geometry where humans only perceive a single maneuver
+      - CHANGED: Decrease roundabout turn radius threshold from 25m to 15m - adds some "exit the roundabout" instructions for moderately sized roundabouts that were being missed previously
+    - Docker:
+      - CHANGED: switch to alpine 3.6, and use a multistage build to reduce image size
+    - Build:
+      - FIX: use LUA_LIBRARY_DIRS to propertly detect Lua on all platforms
+    - Docs:
+      - FIX: clarify description of roundabout exit instructions
+    - Bugfixes:
+      - FIXED: Fix bug where merge instructions got the wrong direction modifier ([PR #4670](https://github.com/Project-OSRM/osrm-backend/pull/4670))
+      - FIXED: Properly use the `profile.properties.left_hand_driving` property, there was a typo that meant it had no effect
+      - FIXED: undefined behaviour when alternative candidate via node is same as source node ([#4691](https://github.com/Project-OSRM/osrm-backend/issues/4691))
+      - FIXED: ensure libosrm.pc is pushed to the correct location for pkgconfig to find it on all platforms
+      - FIXED: don't consider empty names + empty refs as a valid name for u-turns
+
+# 5.13.0
+  - Changes from 5.12:
+    - Profile:
+      - Append cardinal directions from route relations to ref fields to improve instructions; off by default see `profile.cardinal_directions`
+      - Support of `distance` weight in foot and bicycle profiles
+      - Support of relations processing
+      - Added `way:get_location_tag(key)` method to get location-dependent tags https://github.com/Project-OSRM/osrm-backend/wiki/Using-location-dependent-data-in-profiles
+      - Added `forward_ref` and `backward_ref` support
+      - Left-side driving mode is specified by a local Boolean flag `is_left_hand_driving` in `ExtractionWay` and `ExtractionTurn`
+      - Support literal values for maxspeeds in NO, PL and ZA
+    - Infrastructure:
+      - Lua 5.1 support is removed due to lack of support in sol2 https://github.com/ThePhD/sol2/issues/302
+      - Fixed pkg-config version of OSRM
+      - Removed `.osrm.core` file since CoreCH is deprecated now.
+    - Tools:
+      - Because of boost/program_options#32 with boost 1.65+ we needed to change the behavior of the following flags to not accept `={true|false}` anymore:
+        - `--use-locations-cache=false` becomes `--disable-location-cache`
+        - `--parse-conditional-restrictions=true` becomes `--parse-conditional-restrictions`
+        - The deprecated options `--use-level-cache` and `--generate-edge-lookup`
+    - Bugfixes:
+      - Fixed #4348: Some cases of sliproads pre-processing were broken
+      - Fixed #4331: Correctly compute left/right modifiers of forks in case the fork is curved.
+      - Fixed #4472: Correctly count the number of lanes using the delimter in `turn:lanes` tag.
+      - Fixed #4214: Multiple runs of `osrm-partition` lead to crash.
+      - Fixed #4348: Fix assorted problems around slip roads.
+      - Fixed #4420: A bug that would result in unnecessary instructions, due to problems in suffix/prefix detection
+    - Algorithm
+      - Deprecate CoreCH functionality. Usage of CoreCH specific options will fall back to using CH with core_factor of 1.0
+      - MLD uses a unidirectional Dijkstra for 1-to-N and N-to-1 matrices which yields speedup.
+
+# 5.12.0
+  - Changes from 5.11:
     - Guidance
       - now announcing turning onto oneways at the end of a road (e.g. onto dual carriageways)
       - Adds new instruction types at the exit of roundabouts and rotaries `exit roundabout` and `exit rotary`.
@@ -61,7 +454,7 @@
     - Bugfixes
       - Properly save/retrieve datasource annotations for road segments ([#4346](https://github.com/Project-OSRM/osrm-backend/issues/4346)
       - Fix conditional restriction grammer parsing so it works for single-day-of-week restrictions ([#4357](https://github.com/Project-OSRM/osrm-backend/pull/4357))
-    - Algorithm)
+    - Algorithm
       - BREAKING: the file format requires re-processing due to the changes on via-ways
       - Added support for via-way restrictions
 

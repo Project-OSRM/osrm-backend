@@ -1,0 +1,178 @@
+#-----------------------------------------------------------------------------
+#
+#  Configuration for continuous integration service at travis-ci.org
+#
+#-----------------------------------------------------------------------------
+
+language: generic
+
+sudo: false
+
+dist: trusty
+
+#-----------------------------------------------------------------------------
+
+# Save common build configurations as shortcuts, so we can reference them later.
+addons_shortcuts:
+  addons_clang35: &clang35
+    apt:
+      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-3.5' ]
+      packages: [ 'libboost1.55-dev', 'clang-3.5' ]
+  addons_clang38: &clang38
+    apt:
+      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-3.8' ]
+      packages: [ 'libboost1.55-dev', 'clang-3.8' ]
+  addons_clang39: &clang39
+    apt:
+      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-3.9' ]
+      packages: [ 'libboost1.55-dev', 'clang-3.9' ]
+  addons_clang40: &clang40
+    apt:
+      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-4.0' ]
+      packages: [ 'libboost1.55-dev', 'clang-4.0' ]
+  addons_clang50: &clang50
+    apt:
+      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-5.0' ]
+      packages: [ 'libboost1.55-dev', 'clang-5.0', 'clang-tidy-5.0' ]
+  addons_clang60: &clang60
+    apt:
+      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-6.0' ]
+      packages: [ 'libboost1.55-dev', 'clang-6.0', 'clang-tidy-6.0' ]
+  addons_gcc48: &gcc48
+    apt:
+      sources: [ 'ubuntu-toolchain-r-test' ]
+      packages: [ 'libboost1.55-dev', 'g++-4.8', 'gcc-4.8' ]
+  addons_gcc49: &gcc49
+    apt:
+      sources: [ 'ubuntu-toolchain-r-test' ]
+      packages: [ 'libboost1.55-dev', 'g++-4.9', 'gcc-4.9' ]
+  addons_gcc5: &gcc5
+    apt:
+      sources: [ 'ubuntu-toolchain-r-test' ]
+      packages: [ 'libboost1.55-dev', 'g++-5', 'gcc-5' ]
+  addons_gcc6: &gcc6
+    apt:
+      sources: [ 'ubuntu-toolchain-r-test' ]
+      packages: [ 'libboost1.55-dev', 'g++-6', 'gcc-6' ]
+
+#-----------------------------------------------------------------------------
+
+matrix:
+  include:
+    - os: linux
+      compiler: "clang-3.5"
+      env: BUILD='Debug' CC=clang-3.5 CXX=clang++-3.5
+      addons: *clang35
+    - os: linux
+      compiler: "clang-3.8"
+      env: BUILD='Debug' CC=clang-3.8 CXX=clang++-3.8
+      addons: *clang38
+    - os: linux
+      compiler: "clang-3.9"
+      env: BUILD='Debug' CC=clang-3.9 CXX=clang++-3.9
+      addons: *clang39
+    - os: linux
+      compiler: "clang-4.0"
+      env: BUILD='Debug' CC=clang-4.0 CXX=clang++-4.0
+      addons: *clang40
+    - os: linux
+      compiler: "clang-5.0"
+      env: BUILD='Debug' CC=clang-5.0 CXX=clang++-5.0
+           CLANG_TIDY=clang-tidy-5.0
+      addons: *clang50
+    - os: linux
+      compiler: "clang-5.0"
+      env: BUILD='Release' CC=clang-5.0 CXX=clang++-5.0
+      addons: *clang50
+    - os: linux
+      compiler: "clang-5.0"
+      env: BUILD='Debug' CC=clang-5.0 CXX=clang++-5.0
+           CXXFLAGS="-fsanitize=address,undefined,integer -fno-sanitize-recover=all -fno-omit-frame-pointer"
+           LDFLAGS="-fsanitize=address,undefined,integer"
+      # LSAN doesn't work on container-based system
+      sudo: required
+      addons: *clang50
+    - os: linux
+      compiler: "clang-6.0"
+      env: BUILD='Debug' CC=clang-6.0 CXX=clang++-6.0
+      addons: *clang60
+    - os: linux
+      compiler: "gcc-4.8"
+      env: BUILD='Debug' CC=gcc-4.8 CXX=g++-4.8
+      addons: *gcc48
+    - os: linux
+      compiler: "gcc-4.9"
+      env: BUILD='Debug' CC=gcc-4.9 CXX=g++-4.9
+           COVERAGE=gcov-4.9
+           CXXFLAGS="--coverage" LDFLAGS="--coverage"
+      addons: *gcc49
+    - os: linux
+      compiler: "gcc-5"
+      env: BUILD='Debug' CC=gcc-5 CXX=g++-5
+           CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
+      addons: *gcc5
+    - os: linux
+      compiler: "gcc-5"
+      env: BUILD='Debug' CC=gcc-5 CXX=g++-5
+           CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=1"
+      addons: *gcc5
+    - os: linux
+      compiler: "gcc-6"
+      env: BUILD='Debug' CC=gcc-6 CXX=g++-6
+      addons: *gcc6
+    - os: linux
+      compiler: "gcc-6"
+      env: BUILD='Debug' CC=gcc-6 CXX=g++-6
+           PROTOZERO_DATA_VIEW=std::experimental::string_view
+      addons: *gcc6
+    - os: linux
+      compiler: "gcc-6"
+      env: BUILD='Release' CC=gcc-6 CXX=g++-6
+      addons: *gcc6
+    - os: osx
+      osx_image: xcode6.4
+      compiler: clang
+      env: BUILD='Debug'
+    - os: osx
+      osx_image: xcode7.3
+      compiler: clang
+      env: BUILD='Debug'
+    - os: osx
+      osx_image: xcode8.3
+      compiler: clang
+      env: BUILD='Debug'
+    - os: osx
+      osx_image: xcode9.1
+      compiler: clang
+      env: BUILD='Debug'
+    - os: osx
+      osx_image: xcode9.1
+      compiler: clang
+      env: BUILD='Release'
+
+#-----------------------------------------------------------------------------
+
+install:
+  - git submodule update --init
+  - (cd ..; git clone --depth=1 https://github.com/mapbox/protozero)
+
+script:
+  - mkdir build
+  - cd build
+  - cmake .. -LA -DCMAKE_BUILD_TYPE=${BUILD} -DPROTOZERO_DATA_VIEW=$PROTOZERO_DATA_VIEW -DCLANG_TIDY=$(which ${CLANG_TIDY})
+  - make VERBOSE=1
+  - ctest --output-on-failure
+  - if [ -n "${CLANG_TIDY}" ]; then make clang-tidy; fi
+  - |
+    if [ -n "${COVERAGE}" ]; then
+      which ${COVERAGE}
+      curl -S -f https://codecov.io/bash -o codecov
+      chmod +x codecov
+      ${COVERAGE} -p $(find test -name 'test_*.o')
+      ./codecov -Z -c -X gcov -F unit_tests
+      ${COVERAGE} -p $(find test -name 'fixture_tests.cpp.o')
+      ./codecov -Z -c -X gcov -F fixture_tests
+    fi
+
+
+#-----------------------------------------------------------------------------

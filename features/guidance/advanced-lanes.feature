@@ -47,7 +47,7 @@ Feature: Turn Lane Guidance
                           e
             a . . b . . . c g
                     `     .
-                       `  .
+                      `   .
                         ` d
                           f
             """

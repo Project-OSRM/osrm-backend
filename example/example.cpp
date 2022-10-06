@@ -30,8 +30,16 @@ int main(int argc, const char *argv[])
 
     // Configure based on a .osrm base path, and no datasets in shared mem from osrm-datastore
     EngineConfig config;
+
     config.storage_config = {argv[1]};
     config.use_shared_memory = false;
+
+    // We support two routing speed up techniques:
+    // - Contraction Hierarchies (CH): requires extract+contract pre-processing
+    // - Multi-Level Dijkstra (MLD): requires extract+partition+customize pre-processing
+    //
+    // config.algorithm = EngineConfig::Algorithm::CH;
+    config.algorithm = EngineConfig::Algorithm::MLD;
 
     // Routing machine with several services (such as Route, Table, Nearest, Trip, Match)
     const OSRM osrm{config};
@@ -44,14 +52,15 @@ int main(int argc, const char *argv[])
     params.coordinates.push_back({util::FloatLongitude{7.419505}, util::FloatLatitude{43.736825}});
 
     // Response is in JSON format
-    json::Object result;
+    engine::api::ResultT result = json::Object();
 
     // Execute routing request, this does the heavy lifting
     const auto status = osrm.Route(params, result);
 
+    auto &json_result = result.get<json::Object>();
     if (status == Status::Ok)
     {
-        auto &routes = result.values["routes"].get<json::Array>();
+        auto &routes = json_result.values["routes"].get<json::Array>();
 
         // Let's just use the first route
         auto &route = routes.values.at(0).get<json::Object>();
@@ -71,8 +80,8 @@ int main(int argc, const char *argv[])
     }
     else if (status == Status::Error)
     {
-        const auto code = result.values["code"].get<json::String>().value;
-        const auto message = result.values["message"].get<json::String>().value;
+        const auto code = json_result.values["code"].get<json::String>().value;
+        const auto message = json_result.values["message"].get<json::String>().value;
 
         std::cout << "Code: " << code << "\n";
         std::cout << "Message: " << code << "\n";

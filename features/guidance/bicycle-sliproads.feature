@@ -22,11 +22,11 @@ Feature: Bike - Mode flag
             | c    | traffic_signals |
 
         And the ways
-            | nodes | highway   | name   | oneway:bicycle |
-            | abcd  | cycleway  | street |                |
-            | eb    | path      |        | yes            |
-            | icef  | tertiary  | road   |                |
-            | geh   | secondary | street |                |
+            | nodes | highway   | name   | oneway:bicycle | maxspeed:forward  |
+            | abcd  | cycleway  | street |                | 4 km/h |
+            | eb    | path      |        | yes            |  |
+            | icef  | tertiary  | road   |                | 4 km/h |
+            | geh   | secondary | street |                |  |
 
         When I route I should get
             | waypoints | route             | turns                               |

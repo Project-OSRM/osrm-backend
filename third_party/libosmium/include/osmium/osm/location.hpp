@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -64,7 +64,9 @@ namespace osmium {
 
     namespace detail {
 
-        constexpr const int coordinate_precision = 10000000;
+        enum {
+            coordinate_precision = 10000000
+        };
 
         // Convert string with a floating point number into integer suitable
         // for use as coordinate in a Location.
@@ -93,7 +95,7 @@ namespace osmium {
                     result = *str - '0';
                     ++str;
                 } else {
-                    goto error;
+                    throw invalid_location{std::string{"wrong format for coordinate: '"} + full + "'"};
                 }
 
                 // optional additional digits before decimal point
@@ -104,13 +106,13 @@ namespace osmium {
                 }
 
                 if (max_digits == 0) {
-                    goto error;
+                    throw invalid_location{std::string{"wrong format for coordinate: '"} + full + "'"};
                 }
             } else {
                 // need at least one digit after decimal dot if there was no
                 // digit before decimal dot
                 if (*(str + 1) < '0' || *(str + 1) > '9') {
-                    goto error;
+                    throw invalid_location{std::string{"wrong format for coordinate: '"} + full + "'"};
                 }
             }
 
@@ -131,7 +133,7 @@ namespace osmium {
                 }
 
                 if (max_digits == 0) {
-                    goto error;
+                    throw invalid_location{std::string{"wrong format for coordinate: '"} + full + "'"};
                 }
             }
 
@@ -153,7 +155,7 @@ namespace osmium {
                     eresult = *str - '0';
                     ++str;
                 } else {
-                    goto error;
+                    throw invalid_location{std::string{"wrong format for coordinate: '"} + full + "'"};
                 }
 
                 // optional additional digits in exponent
@@ -165,7 +167,7 @@ namespace osmium {
                 }
 
                 if (max_digits == 0) {
-                    goto error;
+                    throw invalid_location{std::string{"wrong format for coordinate: '"} + full + "'"};
                 }
 
                 scale += eresult * esign;
@@ -185,15 +187,11 @@ namespace osmium {
 
             if (result > std::numeric_limits<int32_t>::max() ||
                 result < std::numeric_limits<int32_t>::min()) {
-                goto error;
+                throw invalid_location{std::string{"wrong format for coordinate: '"} + full + "'"};
             }
 
             *data = str;
             return static_cast<int32_t>(result);
-
-        error:
-
-            throw invalid_location{std::string{"wrong format for coordinate: '"} + full + "'"};
         }
 
         // Convert integer as used by location for coordinates into a string.
@@ -216,11 +214,11 @@ namespace osmium {
             char temp[10];
             char* t = temp;
             do {
-                *t++ = char(v % 10) + '0';
+                *t++ = static_cast<char>(v % 10) + '0'; // NOLINT(bugprone-narrowing-conversions, cppcoreguidelines-narrowing-conversions)
                 v /= 10;
             } while (v != 0);
 
-            while (t-temp < 7) {
+            while (t - temp < 7) {
                 *t++ = '0';
             }
 
@@ -272,23 +270,29 @@ namespace osmium {
      */
     class Location {
 
-        int32_t m_x;
-        int32_t m_y;
+        int32_t m_x; // NOLINT(modernize-use-default-member-init)
+        int32_t m_y; // NOLINT(modernize-use-default-member-init)
+
+        constexpr static double precision() noexcept {
+            return static_cast<double>(detail::coordinate_precision);
+        }
 
     public:
 
         // this value is used for a coordinate to mark it as undefined
         // MSVC doesn't declare std::numeric_limits<int32_t>::max() as
         // constexpr, so we hard code this for the time being.
-        // static constexpr int32_t undefined_coordinate = std::numeric_limits<int32_t>::max();
-        static constexpr int32_t undefined_coordinate = 2147483647;
+        // undefined_coordinate = std::numeric_limits<int32_t>::max();
+        enum {
+            undefined_coordinate = 2147483647
+        };
 
         static int32_t double_to_fix(const double c) noexcept {
-            return static_cast<int32_t>(std::round(c * detail::coordinate_precision));
+            return static_cast<int32_t>(std::round(c * precision()));
         }
 
         static constexpr double fix_to_double(const int32_t c) noexcept {
-            return static_cast<double>(c) / detail::coordinate_precision;
+            return static_cast<double>(c) / precision();
         }
 
         /**
@@ -320,18 +324,13 @@ namespace osmium {
         }
 
         /**
-         * Create Location with given longitude and latitude.
+         * Create Location with given longitude and latitude in WGS84
+         * coordinates.
          */
         Location(const double lon, const double lat) :
             m_x(double_to_fix(lon)),
             m_y(double_to_fix(lat)) {
         }
-
-        Location(const Location&) = default;
-        Location(Location&&) = default;
-        Location& operator=(const Location&) = default;
-        Location& operator=(Location&&) = default;
-        ~Location() = default;
 
         /**
          * Check whether the coordinates of this location
@@ -351,10 +350,10 @@ namespace osmium {
          * See also is_defined() and is_undefined().
          */
         constexpr bool valid() const noexcept {
-            return m_x >= -180 * detail::coordinate_precision
-                && m_x <=  180 * detail::coordinate_precision
-                && m_y >=  -90 * detail::coordinate_precision
-                && m_y <=   90 * detail::coordinate_precision;
+            return m_x >= -180 * precision()
+                && m_x <=  180 * precision()
+                && m_y >=  -90 * precision()
+                && m_y <=   90 * precision();
         }
 
         /**
@@ -408,7 +407,7 @@ namespace osmium {
         /**
          * Get longitude without checking the validity.
          */
-        double lon_without_check() const {
+        double lon_without_check() const noexcept {
             return fix_to_double(m_x);
         }
 
@@ -427,7 +426,7 @@ namespace osmium {
         /**
          * Get latitude without checking the validity.
          */
-        double lat_without_check() const {
+        double lat_without_check() const noexcept {
             return fix_to_double(m_y);
         }
 
@@ -443,19 +442,21 @@ namespace osmium {
 
         Location& set_lon(const char* str) {
             const char** data = &str;
-            m_x = detail::string_to_location_coordinate(data);
+            const auto value = detail::string_to_location_coordinate(data);
             if (**data != '\0') {
                 throw invalid_location{std::string{"characters after coordinate: '"} + *data + "'"};
             }
+            m_x = value;
             return *this;
         }
 
         Location& set_lat(const char* str) {
             const char** data = &str;
-            m_y = detail::string_to_location_coordinate(data);
+            const auto value = detail::string_to_location_coordinate(data);
             if (**data != '\0') {
                 throw invalid_location{std::string{"characters after coordinate: '"} + *data + "'"};
             }
+            m_y = value;
             return *this;
         }
 
@@ -494,7 +495,7 @@ namespace osmium {
     }
 
     inline constexpr bool operator!=(const Location& lhs, const Location& rhs) noexcept {
-        return ! (lhs == rhs);
+        return !(lhs == rhs);
     }
 
     /**
@@ -511,11 +512,11 @@ namespace osmium {
     }
 
     inline constexpr bool operator<=(const Location& lhs, const Location& rhs) noexcept {
-        return ! (rhs < lhs);
+        return !(rhs < lhs);
     }
 
     inline constexpr bool operator>=(const Location& lhs, const Location& rhs) noexcept {
-        return ! (lhs < rhs);
+        return !(lhs < rhs);
     }
 
     /**
@@ -537,14 +538,14 @@ namespace osmium {
 
         template <int N>
         inline size_t hash(const osmium::Location& location) noexcept {
-            return location.x() ^ location.y();
+            return static_cast<uint32_t>(location.x()) ^ static_cast<uint32_t>(location.y());
         }
 
         template <>
         inline size_t hash<8>(const osmium::Location& location) noexcept {
             uint64_t h = location.x();
-            h <<= 32;
-            return static_cast<size_t>(h ^ location.y());
+            h <<= 32U;
+            return static_cast<size_t>(h ^ static_cast<uint64_t>(location.y()));
         }
 
     } // namespace detail

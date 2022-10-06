@@ -8,7 +8,7 @@ var OSM = require('../lib/osm');
 
 module.exports = function () {
     this.Given(/^the profile "([^"]*)"$/, (profile, callback) => {
-        this.profile = profile;
+        this.profile = this.OSRM_PROFILE || profile;
         this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
         callback();
     });
@@ -129,13 +129,13 @@ module.exports = function () {
         q.awaitAll(callback);
     });
 
-    this.Given(/^the ways$/, (table, callback) => {
+    this.Given(/^the ways( with locations)?$/, (add_locations, table, callback) => {
         if (this.osm_str) throw new Error('*** Map data already defined - did you pass an input file in this scenario?');
 
         let q = d3.queue();
 
         let addWay = (row, cb) => {
-            let way = new OSM.Way(this.makeOSMId(), this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID);
+            let way = new OSM.Way(this.makeOSMId(), this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID, !!add_locations);
 
             let nodes = row.nodes;
             if (this.nameWayHash.nodes) throw new Error(util.format('*** duplicate way %s', nodes));
@@ -185,40 +185,59 @@ module.exports = function () {
 
         let q = d3.queue();
 
-        let addRelation = (row, cb) => {
+        let addRelation = (headers, row, cb) => {
             let relation = new OSM.Relation(this.makeOSMId(), this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID);
 
-            for (let key in row) {
-                let isNode = key.match(/^node:(.*)/),
-                    isWay = key.match(/^way:(.*)/),
+
+            var name = null;
+            for (let index in row) {
+
+                var key = headers[index];
+                var value = row[index];
+                let isNode = key.match(/^node:?(.*)/),
+                    isWay = key.match(/^way:?(.*)/),
+                    isRelation = key.match(/^relation:?(.*)/),
                     isColonSeparated = key.match(/^(.*):(.*)/);
                 if (isNode) {
-                    row[key].split(',').map(function(v) { return v.trim(); }).forEach((nodeName) => {
+                    value.split(',').map(function(v) { return v.trim(); }).forEach((nodeName) => {
                         if (nodeName.length !== 1) throw new Error(util.format('*** invalid relation node member "%s"', nodeName));
                         let node = this.findNodeByName(nodeName);
                         if (!node) throw new Error(util.format('*** unknown relation node member "%s"', nodeName));
                         relation.addMember('node', node.id, isNode[1]);
                     });
                 } else if (isWay) {
-                    row[key].split(',').map(function(v) { return v.trim(); }).forEach((wayName) => {
+                    value.split(',').map(function(v) { return v.trim(); }).forEach((wayName) => {
                         let way = this.findWayByName(wayName);
                         if (!way) throw new Error(util.format('*** unknown relation way member "%s"', wayName));
                         relation.addMember('way', way.id, isWay[1]);
                     });
+                } else if (isRelation) {
+                    value.split(',').map(function(v) { return v.trim(); }).forEach((relName) => {
+                        let otherrelation = this.findRelationByName(relName);
+                        if (!otherrelation) throw new Error(util.format('*** unknown relation relation member "%s"', relName));
+                        relation.addMember('relation', otherrelation.id, isRelation[1]);
+                    });
                 } else if (isColonSeparated && isColonSeparated[1] !== 'restriction') {
                     throw new Error(util.format('*** unknown relation member type "%s:%s", must be either "node" or "way"', isColonSeparated[1], isColonSeparated[2]));
                 } else {
-                    relation.addTag(key, row[key]);
+                    relation.addTag(key, value);
+                    if (key.match(/name/)) name = value;
                 }
             }
             relation.uid = this.OSM_UID;
+
+
+            if (name) {
+                this.nameRelationHash[name] = relation;
+            }
 
             this.OSMDB.addRelation(relation);
 
             cb();
         };
 
-        table.hashes().forEach((row) => q.defer(addRelation, row));
+        var headers = table.raw()[0];
+        table.rows().forEach((row) => q.defer(addRelation, headers, row));
 
         q.awaitAll(callback);
     });
@@ -276,7 +295,7 @@ module.exports = function () {
         this.reprocess(callback);
     });
 
-    this.Given(/^osrm\-routed is stopped$/, (callback) => {
+    this.Given(/^osrm-routed is stopped$/, (callback) => {
         this.OSRMLoader.shutdown(callback);
     });
 

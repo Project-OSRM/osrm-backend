@@ -23,7 +23,7 @@ namespace util
      std::chrono::duration_cast<std::chrono::microseconds>(_X##_stop - _X##_start).count())
 #define TIMER_MIN(_X)                                                                              \
     std::chrono::duration_cast<std::chrono::minutes>(_X##_stop - _X##_start).count()
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // TIMING_UTIL_HPP

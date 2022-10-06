@@ -35,20 +35,46 @@ Feature: Collapse
             | waypoints | route                | turns                        | locations |
             | a,l       | first,second,second  | depart,turn right,arrive     | a,b,l     |
             | a,d       | first,first          | depart,arrive                | a,d       |
-            | a,j       | first,second,second  | depart,turn left,arrive      | a,c,j     |
-            | a,h       | first,first,first    | depart,continue uturn,arrive | a,c,h     |
+            | a,j       | first,second,second  | depart,turn left,arrive      | a,b,j     |
+            | a,h       | first,first,first    | depart,continue uturn,arrive | a,b,h     |
             | e,j       | first,second,second  | depart,turn right,arrive     | e,f,j     |
             | e,h       | first,first          | depart,arrive                | e,h       |
-            | e,l       | first,second,second  | depart,turn left,arrive      | e,g,l     |
-            | e,d       | first,first,first    | depart,continue uturn,arrive | e,g,d     |
+            | e,l       | first,second,second  | depart,turn left,arrive      | e,f,l     |
+            | e,d       | first,first,first    | depart,continue uturn,arrive | e,f,d     |
             | k,h       | second,first,first   | depart,turn right,arrive     | k,g,h     |
             | k,l       | second,second        | depart,arrive                | k,l       |
-            | k,d       | second,first,first   | depart,turn left,arrive      | k,b,d     |
-            | k,j       | second,second,second | depart,continue uturn,arrive | k,b,j     |
+            | k,d       | second,first,first   | depart,turn left,arrive      | k,g,d     |
+            | k,j       | second,second,second | depart,continue uturn,arrive | k,g,j     |
             | i,d       | second,first,first   | depart,turn right,arrive     | i,c,d     |
             | i,j       | second,second        | depart,arrive                | i,j       |
-            | i,h       | second,first,first   | depart,turn left,arrive      | i,f,h     |
-            | i,l       | second,second,second | depart,continue uturn,arrive | i,f,l     |
+            | i,h       | second,first,first   | depart,turn left,arrive      | i,c,h     |
+            | i,l       | second,second,second | depart,continue uturn,arrive | i,c,l     |
+
+   	Scenario: Segregated Intersection, Cross Belonging to Single Street
+        Given the node map
+            """
+                  g
+
+            c     b   a
+            d     e   f
+
+                  h   i
+            """
+
+        And the ways
+            | nodes | highway | name   | oneway |
+            | ab    | primary | first  | yes    |
+            | bc    | primary | first  | yes    |
+            | de    | primary | first  | yes    |
+            | ef    | primary | first  | yes    |
+            | gb    | primary | second | no     |
+            | be    | primary | second | no     |
+            | eh    | primary | second | yes    |
+            | ei    | primary | third  | yes    |
+
+        When I route I should get
+            | waypoints | route                      | turns                                      | locations |
+            | a,i       | first,third,third   | depart,turn sharp left,arrive   | a,b,i   |
 
     Scenario: Segregated Intersection, Cross Belonging to Correct Street
         Given the node map
@@ -80,20 +106,20 @@ Feature: Collapse
             | waypoints | route                | turns                        | locations |
             | a,l       | first,second,second  | depart,turn right,arrive     | a,b,l     |
             | a,d       | first,first          | depart,arrive                | a,d       |
-            | a,j       | first,second,second  | depart,turn left,arrive      | a,c,j     |
-            | a,h       | first,first,first    | depart,continue uturn,arrive | a,c,h     |
+            | a,j       | first,second,second  | depart,turn left,arrive      | a,b,j     |
+            | a,h       | first,first,first    | depart,continue uturn,arrive | a,b,h     |
             | e,j       | first,second,second  | depart,turn right,arrive     | e,f,j     |
             | e,h       | first,first          | depart,arrive                | e,h       |
-            | e,l       | first,second,second  | depart,turn left,arrive      | e,g,l     |
-            | e,d       | first,first,first    | depart,continue uturn,arrive | e,g,d     |
+            | e,l       | first,second,second  | depart,turn left,arrive      | e,f,l     |
+            | e,d       | first,first,first    | depart,continue uturn,arrive | e,f,d     |
             | k,h       | second,first,first   | depart,turn right,arrive     | k,g,h     |
             | k,l       | second,second        | depart,arrive                | k,l       |
-            | k,d       | second,first,first   | depart,turn left,arrive      | k,b,d     |
-            | k,j       | second,second,second | depart,continue uturn,arrive | k,b,j     |
+            | k,d       | second,first,first   | depart,turn left,arrive      | k,g,d     |
+            | k,j       | second,second,second | depart,continue uturn,arrive | k,g,j     |
             | i,d       | second,first,first   | depart,turn right,arrive     | i,c,d     |
             | i,j       | second,second        | depart,arrive                | i,j       |
-            | i,h       | second,first,first   | depart,turn left,arrive      | i,f,h     |
-            | i,l       | second,second,second | depart,continue uturn,arrive | i,f,l     |
+            | i,h       | second,first,first   | depart,turn left,arrive      | i,c,h     |
+            | i,l       | second,second,second | depart,continue uturn,arrive | i,c,l     |
 
     Scenario: Segregated Intersection, Cross Belonging to Mixed Streets
         Given the node map
@@ -125,20 +151,20 @@ Feature: Collapse
             | waypoints | route                | turns                        | locations |
             | a,l       | first,second,second  | depart,turn right,arrive     | a,b,l     |
             | a,d       | first,first          | depart,arrive                | a,d       |
-            | a,j       | first,second,second  | depart,turn left,arrive      | a,c,j     |
-            | a,h       | first,first,first    | depart,continue uturn,arrive | a,c,h     |
+            | a,j       | first,second,second  | depart,turn left,arrive      | a,b,j     |
+            | a,h       | first,first,first    | depart,continue uturn,arrive | a,b,h     |
             | e,j       | first,second,second  | depart,turn right,arrive     | e,f,j     |
             | e,h       | first,first          | depart,arrive                | e,h       |
-            | e,l       | first,second,second  | depart,turn left,arrive      | e,g,l     |
-            | e,d       | first,first,first    | depart,continue uturn,arrive | e,g,d     |
+            | e,l       | first,second,second  | depart,turn left,arrive      | e,f,l     |
+            | e,d       | first,first,first    | depart,continue uturn,arrive | e,f,d     |
             | k,h       | second,first,first   | depart,turn right,arrive     | k,g,h     |
             | k,l       | second,second        | depart,arrive                | k,l       |
-            | k,d       | second,first,first   | depart,turn left,arrive      | k,b,d     |
-            | k,j       | second,second,second | depart,continue uturn,arrive | k,b,j     |
+            | k,d       | second,first,first   | depart,turn left,arrive      | k,g,d     |
+            | k,j       | second,second,second | depart,continue uturn,arrive | k,g,j     |
             | i,d       | second,first,first   | depart,turn right,arrive     | i,c,d     |
             | i,j       | second,second        | depart,arrive                | i,j       |
-            | i,h       | second,first,first   | depart,turn left,arrive      | i,f,h     |
-            | i,l       | second,second,second | depart,continue uturn,arrive | i,f,l     |
+            | i,h       | second,first,first   | depart,turn left,arrive      | i,c,h     |
+            | i,l       | second,second,second | depart,continue uturn,arrive | i,c,l     |
 
     Scenario: Partly Segregated Intersection, Two Segregated Roads
         Given the node map
@@ -183,11 +209,11 @@ Feature: Collapse
             | d,c       | first,first,first    | depart,continue uturn,arrive | d,e,c     |
             | g,c       | second,first,first   | depart,turn right,arrive     | g,b,c     |
             | g,j       | second,second        | depart,arrive                | g,j       |
-            | g,f       | second,first,first   | depart,turn left,arrive      | g,e,f     |
+            | g,f       | second,first,first   | depart,turn left,arrive      | g,b,f     |
             | g,h       | second,second,second | depart,continue uturn,arrive | g,b,h     |
             | i,f       | second,first,first   | depart,turn right,arrive     | i,e,f     |
             | i,h       | second,second        | depart,arrive                | i,h       |
-            | i,c       | second,first,first   | depart,turn left,arrive      | i,b,c     |
+            | i,c       | second,first,first   | depart,turn left,arrive      | i,e,c     |
             | i,j       | second,second,second | depart,continue uturn,arrive | i,e,j     |
 
     Scenario: Partly Segregated Intersection, Two Segregated Roads, Intersection belongs to Second
@@ -237,11 +263,11 @@ Feature: Collapse
             | d,c       | first,first,first    | depart,continue uturn,arrive | d,e,c     |
             | g,c       | second,first,first   | depart,turn right,arrive     | g,b,c     |
             | g,j       | second,second        | depart,arrive                | g,j       |
-            | g,f       | second,first,first   | depart,turn left,arrive      | g,e,f     |
+            | g,f       | second,first,first   | depart,turn left,arrive      | g,b,f     |
             | g,h       | second,second,second | depart,continue uturn,arrive | g,b,h     |
             | i,f       | second,first,first   | depart,turn right,arrive     | i,e,f     |
             | i,h       | second,second        | depart,arrive                | i,h       |
-            | i,c       | second,first,first   | depart,turn left,arrive      | i,b,c     |
+            | i,c       | second,first,first   | depart,turn left,arrive      | i,e,c     |
             | i,j       | second,second,second | depart,continue uturn,arrive | i,e,j     |
 
     Scenario: Segregated Intersection, Cross Belonging to Mixed Streets - Slight Angles
@@ -274,20 +300,20 @@ Feature: Collapse
             | waypoints | route                | turns                        | locations |
             | a,l       | first,second,second  | depart,turn right,arrive     | a,b,l     |
             | a,d       | first,first          | depart,arrive                | a,d       |
-            | a,j       | first,second,second  | depart,turn left,arrive      | a,c,j     |
-            | a,h       | first,first,first    | depart,continue uturn,arrive | a,c,h     |
+            | a,j       | first,second,second  | depart,turn left,arrive      | a,b,j     |
+            | a,h       | first,first,first    | depart,continue uturn,arrive | a,b,h     |
             | e,j       | first,second,second  | depart,turn right,arrive     | e,f,j     |
             | e,h       | first,first          | depart,arrive                | e,h       |
-            | e,l       | first,second,second  | depart,turn left,arrive      | e,g,l     |
-            | e,d       | first,first,first    | depart,continue uturn,arrive | e,g,d     |
+            | e,l       | first,second,second  | depart,turn left,arrive      | e,f,l     |
+            | e,d       | first,first,first    | depart,continue uturn,arrive | e,f,d     |
             | k,h       | second,first,first   | depart,turn right,arrive     | k,g,h     |
             | k,l       | second,second        | depart,arrive                | k,l       |
-            | k,d       | second,first,first   | depart,turn left,arrive      | k,b,d     |
-            | k,j       | second,second,second | depart,continue uturn,arrive | k,b,j     |
+            | k,d       | second,first,first   | depart,turn left,arrive      | k,g,d     |
+            | k,j       | second,second,second | depart,continue uturn,arrive | k,g,j     |
             | i,d       | second,first,first   | depart,turn right,arrive     | i,c,d     |
             | i,j       | second,second        | depart,arrive                | i,j       |
-            | i,h       | second,first,first   | depart,turn left,arrive      | i,f,h     |
-            | i,l       | second,second,second | depart,continue uturn,arrive | i,f,l     |
+            | i,h       | second,first,first   | depart,turn left,arrive      | i,c,h     |
+            | i,l       | second,second,second | depart,continue uturn,arrive | i,c,l     |
 
     Scenario: Segregated Intersection, Cross Belonging to Mixed Streets - Slight Angles (2)
         Given the node map
@@ -319,28 +345,29 @@ Feature: Collapse
             | waypoints | route                | turns                        | locations |
             | a,l       | first,second,second  | depart,turn right,arrive     | a,b,l     |
             | a,d       | first,first          | depart,arrive                | a,d       |
-            | a,j       | first,second,second  | depart,turn left,arrive      | a,c,j     |
-            | a,h       | first,first,first    | depart,continue uturn,arrive | a,c,h     |
+            | a,j       | first,second,second  | depart,turn left,arrive      | a,b,j     |
+            | a,h       | first,first,first    | depart,continue uturn,arrive | a,b,h     |
             | e,j       | first,second,second  | depart,turn right,arrive     | e,f,j     |
             | e,h       | first,first          | depart,arrive                | e,h       |
-            | e,l       | first,second,second  | depart,turn left,arrive      | e,g,l     |
-            | e,d       | first,first,first    | depart,continue uturn,arrive | e,g,d     |
+            | e,l       | first,second,second  | depart,turn left,arrive      | e,f,l     |
+            | e,d       | first,first,first    | depart,continue uturn,arrive | e,f,d     |
             | k,h       | second,first,first   | depart,turn right,arrive     | k,g,h     |
             | k,l       | second,second        | depart,arrive                | k,l       |
-            | k,d       | second,first,first   | depart,turn left,arrive      | k,b,d     |
-            | k,j       | second,second,second | depart,continue uturn,arrive | k,b,j     |
+            | k,d       | second,first,first   | depart,turn left,arrive      | k,g,d     |
+            | k,j       | second,second,second | depart,continue uturn,arrive | k,g,j     |
             | i,d       | second,first,first   | depart,turn right,arrive     | i,c,d     |
             | i,j       | second,second        | depart,arrive                | i,j       |
-            | i,h       | second,first,first   | depart,turn left,arrive      | i,f,h     |
-            | i,l       | second,second,second | depart,continue uturn,arrive | i,f,l     |
+            | i,h       | second,first,first   | depart,turn left,arrive      | i,c,h     |
+            | i,l       | second,second,second | depart,continue uturn,arrive | i,c,l     |
 
     Scenario: Entering a segregated road
         Given the node map
             """
-              a f       g
-              | |   . '
-              b-e '
-              / /
+                    h
+              a f   |   g
+              | |   i '
+              b-e ' |
+              / /   j
              / /
             c d
             """
@@ -350,7 +377,8 @@ Feature: Collapse
             | abc   | primary | first  | yes    |
             | def   | primary | first  | yes    |
             | be    | primary | first  | no     |
-            | ge    | primary | second | no     |
+            | gie   | primary | second | no     |
+            | hij   | primary | maple  | no     |
 
         When I route I should get
             | waypoints | route               | turns                          | locations |
@@ -359,7 +387,7 @@ Feature: Collapse
             | a,g       | first,second,second | depart,turn left,arrive        | a,b,g     |
             | d,g       | first,second,second | depart,turn right,arrive       | d,e,g     |
             | g,f       | second,first,first  | depart,turn right,arrive       | g,e,f     |
-            | g,c       | second,first,first  | depart,turn left,arrive        | g,e,c     |
+            | g,c       | second,first,first  | depart,end of road left,arrive | g,e,c     |
 
     Scenario: Do not collapse turning roads
         Given the node map
@@ -577,7 +605,7 @@ Feature: Collapse
 
         When I route I should get
             | waypoints | route        | turns                           | locations |
-            | i,h       | in,road,road | depart,turn left,arrive         | i,f,h     |
+            | i,h       | in,road,road | depart,turn slight left,arrive  | i,c,h     |
             | a,d       | road,road    | depart,arrive                   | a,d       |
             | a,j       | road,out,out | depart,turn slight right,arrive | a,b,j     |
 
@@ -984,7 +1012,7 @@ Feature: Collapse
             | f,j       | hohe,hohe             | depart,arrive               | f,j       |
             | a,t       | hohe,a100,a100        | depart,on ramp right,arrive | a,b,t     |
             | f,e       |                       |                             |           |
-            | q,j       | a100,hohe,hohe        | depart,turn right,arrive    | q,p,j     |
+            | q,j       | a100,hohe,hohe        | depart,turn right,arrive    | q,i,j     |
             | q,e       | a100,hohebruecke,hohe | depart,turn left,arrive     | q,p,e     |
 
     Scenario: Forking before a turn (forky)
@@ -1074,3 +1102,27 @@ Feature: Collapse
         When I route I should get
             | waypoints | bearings | route          | turns                                             | locations |
             | 1,2       | 90 270   | ab,bd,bd,ab,ab | depart,turn left,continue uturn,turn right,arrive | _,b,d,b,_ |
+
+
+    # https://www.openstreetmap.org/#map=18/37.74844/-122.40275
+    Scenario: Don't use destinations as names
+        Given the node map
+            """
+            f - - - - e - - - - d
+                      |
+                      |
+                      |
+                      |
+                      |
+            a - - - - b - - - - c
+            """
+
+        And the ways
+            | nodes | highway       | name  | oneway | destination:ref |
+            | abc   | residential   | road  | yes    |                 |
+            | def   | motorway_link |       | yes    | US 101          |
+            | be    | residential   | cross | no     |                 |
+
+        When I route I should get
+            | waypoints | route        | turns                                |
+            | a,f       | road,cross,, | depart,turn left,on ramp left,arrive |

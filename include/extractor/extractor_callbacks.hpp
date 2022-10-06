@@ -2,7 +2,7 @@
 #define EXTRACTOR_CALLBACKS_HPP
 
 #include "extractor/class_data.hpp"
-#include "extractor/guidance/turn_lane_types.hpp"
+#include "extractor/turn_lane_types.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/functional/hash.hpp>
@@ -15,15 +15,16 @@ namespace osmium
 {
 class Node;
 class Way;
-}
+class Relation;
+} // namespace osmium
 
 namespace std
 {
 template <> struct hash<std::tuple<std::string, std::string, std::string, std::string, std::string>>
 {
     std::size_t operator()(
-        const std::tuple<std::string, std::string, std::string, std::string, std::string> &mk) const
-        noexcept
+        const std::tuple<std::string, std::string, std::string, std::string, std::string> &mk)
+        const noexcept
     {
         std::size_t seed = 0;
         boost::hash_combine(seed, std::get<0>(mk));
@@ -34,7 +35,7 @@ template <> struct hash<std::tuple<std::string, std::string, std::string, std::s
         return seed;
     }
 };
-}
+} // namespace std
 
 namespace osrm
 {
@@ -44,8 +45,10 @@ namespace extractor
 class ExtractionContainers;
 struct ExtractionNode;
 struct ExtractionWay;
+struct ExtractionRelation;
 struct ProfileProperties;
-struct InputConditionalTurnRestriction;
+struct InputTurnRestriction;
+struct InputManeuverOverride;
 
 /**
  * This class is used by the extractor with the results of the
@@ -61,10 +64,11 @@ class ExtractorCallbacks
     // actually maps to name ids
     using MapKey = std::tuple<std::string, std::string, std::string, std::string, std::string>;
     using MapVal = unsigned;
-    std::unordered_map<MapKey, MapVal> string_map;
+    using StringMap = std::unordered_map<MapKey, MapVal>;
+    StringMap string_map;
     ExtractionContainers &external_memory;
     std::unordered_map<std::string, ClassData> &classes_map;
-    guidance::LaneDescriptionMap &lane_description_map;
+    LaneDescriptionMap &lane_description_map;
     bool fallback_to_duration;
     bool force_split_edges;
 
@@ -73,7 +77,7 @@ class ExtractorCallbacks
 
     explicit ExtractorCallbacks(ExtractionContainers &extraction_containers,
                                 std::unordered_map<std::string, ClassData> &classes_map,
-                                guidance::LaneDescriptionMap &lane_description_map,
+                                LaneDescriptionMap &lane_description_map,
                                 const ProfileProperties &properties);
 
     ExtractorCallbacks(const ExtractorCallbacks &) = delete;
@@ -83,12 +87,15 @@ class ExtractorCallbacks
     void ProcessNode(const osmium::Node &current_node, const ExtractionNode &result_node);
 
     // warning: caller needs to take care of synchronization!
-    void ProcessRestriction(const InputConditionalTurnRestriction &restriction);
+    void ProcessRestriction(const InputTurnRestriction &restriction);
 
     // warning: caller needs to take care of synchronization!
     void ProcessWay(const osmium::Way &current_way, const ExtractionWay &result_way);
+
+    // warning: caller needs to take care of synchronization!
+    void ProcessManeuverOverride(const InputManeuverOverride &override);
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif /* EXTRACTOR_CALLBACKS_HPP */

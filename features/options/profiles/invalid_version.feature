@@ -24,7 +24,7 @@ Feature: Invalid profile API versions
     Scenario: Profile API version too high
         Given the profile file
           """
-          api_version = 3
+          api_version = 5
           """
         And the node map
           """

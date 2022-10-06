@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,17 +33,17 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/thread/function_wrapper.hpp>
+#include <osmium/thread/queue.hpp>
+#include <osmium/thread/util.hpp>
+#include <osmium/util/config.hpp>
+
 #include <cstddef>
 #include <future>
 #include <thread>
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#include <osmium/thread/function_wrapper.hpp>
-#include <osmium/thread/queue.hpp>
-#include <osmium/thread/util.hpp>
-#include <osmium/util/config.hpp>
 
 namespace osmium {
 
@@ -56,7 +56,9 @@ namespace osmium {
 
             // Maximum number of allowed pool threads (just to keep the user
             // from setting something silly).
-            constexpr const int max_pool_threads = 32;
+            enum {
+                max_pool_threads = 32
+            };
 
             inline int get_pool_size(int num_threads, int user_setting, unsigned hardware_concurrency) {
                 if (num_threads == 0) {
@@ -77,8 +79,7 @@ namespace osmium {
             }
 
             inline std::size_t get_work_queue_size() noexcept {
-                const std::size_t n = osmium::config::get_max_queue_size("WORK", 10);
-                return n > 2 ? n : 2;
+                return osmium::config::get_max_queue_size("WORK", 10);
             }
 
         } // namespace detail
@@ -102,6 +103,12 @@ namespace osmium {
                     m_threads(threads) {
                 }
 
+                thread_joiner(const thread_joiner&) = delete;
+                thread_joiner& operator=(const thread_joiner&) = delete;
+
+                thread_joiner(thread_joiner&&) = delete;
+                thread_joiner& operator=(thread_joiner&&) = delete;
+
                 ~thread_joiner() {
                     for (auto& thread : m_threads) {
                         if (thread.joinable()) {
@@ -113,7 +120,7 @@ namespace osmium {
             }; // class thread_joiner
 
             osmium::thread::Queue<function_wrapper> m_work_queue;
-            std::vector<std::thread> m_threads;
+            std::vector<std::thread> m_threads{};
             thread_joiner m_joiner;
             int m_num_threads;
 
@@ -132,8 +139,13 @@ namespace osmium {
 
         public:
 
-            static constexpr int default_num_threads = 0;
-            static constexpr int default_queue_size = 0;
+            enum {
+                default_num_threads = 0
+            };
+
+            enum {
+                default_queue_size = 0U
+            };
 
             /**
              * Create thread pool with the given number of threads. If
@@ -152,13 +164,12 @@ namespace osmium {
              */
             explicit Pool(int num_threads = default_num_threads, std::size_t max_queue_size = default_queue_size) :
                 m_work_queue(max_queue_size > 0 ? max_queue_size : detail::get_work_queue_size(), "work"),
-                m_threads(),
                 m_joiner(m_threads),
                 m_num_threads(detail::get_pool_size(num_threads, osmium::config::get_pool_threads(), std::thread::hardware_concurrency())) {
 
                 try {
                     for (int i = 0; i < m_num_threads; ++i) {
-                        m_threads.push_back(std::thread(&Pool::worker_thread, this));
+                        m_threads.emplace_back(&Pool::worker_thread, this);
                     }
                 } catch (...) {
                     shutdown_all_workers();
@@ -166,6 +177,12 @@ namespace osmium {
                 }
             }
 
+            /**
+             * Return a statically created "default pool". This is initialized
+             * the first time you use it.
+             *
+             * Do not use this if your program will fork.
+             */
             static Pool& default_instance() {
                 static Pool pool{};
                 return pool;
@@ -177,6 +194,12 @@ namespace osmium {
                     m_work_queue.push(function_wrapper{0});
                 }
             }
+
+            Pool(const Pool&) = delete;
+            Pool& operator=(const Pool&) = delete;
+
+            Pool(Pool&&) = delete;
+            Pool& operator=(Pool&&) = delete;
 
             ~Pool() {
                 shutdown_all_workers();
@@ -194,12 +217,21 @@ namespace osmium {
                 return m_work_queue.empty();
             }
 
+#if defined(__cpp_lib_is_invocable) && __cpp_lib_is_invocable >= 201703
+            // std::result_of is deprecated in C++17 and removed in C++20,
+            // so we use std::invoke_result_t.
             template <typename TFunction>
-            std::future<typename std::result_of<TFunction()>::type> submit(TFunction&& func) {
-                using result_type = typename std::result_of<TFunction()>::type;
+            using submit_func_result_type = std::invoke_result_t<TFunction>;
+#else
+            // For C++11 and C++14
+            template <typename TFunction>
+            using submit_func_result_type = typename std::result_of<TFunction()>::type;
+#endif
 
-                std::packaged_task<result_type()> task{std::forward<TFunction>(func)};
-                std::future<result_type> future_result{task.get_future()};
+            template <typename TFunction>
+            std::future<submit_func_result_type<TFunction>> submit(TFunction&& func) {
+                std::packaged_task<submit_func_result_type<TFunction>()> task{std::forward<TFunction>(func)};
+                std::future<submit_func_result_type<TFunction>> future_result{task.get_future()};
                 m_work_queue.push(std::move(task));
 
                 return future_result;

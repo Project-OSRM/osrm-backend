@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,15 +33,14 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <type_traits>
 #include <utility>
 
-#include <osmium/util/cast.hpp>
-
 namespace osmium {
 
-    namespace util {
+    inline namespace util {
 
         /**
          * Helper class for delta encoding.
@@ -54,6 +53,11 @@ namespace osmium {
 
             static_assert(std::is_integral<TDelta>::value && std::is_signed<TDelta>::value,
                           "DeltaEncode delta type must be some signed integer");
+
+            // Not a perfect check, because of signed vs. unsigned, but
+            // might find some problems.
+            static_assert(sizeof(TDelta) >= sizeof(TValue),
+                          "Delta type size should be larger or equal to value type size");
 
             TValue m_value;
 
@@ -77,8 +81,11 @@ namespace osmium {
             TDelta update(TValue new_value) noexcept {
                 using std::swap;
                 swap(m_value, new_value);
-                return static_cast_with_assert<TDelta>(m_value) -
-                       static_cast_with_assert<TDelta>(new_value);
+                // Checking the static_cast here doesn't help much, because
+                // the substraction can still lead to an overflow. This is
+                // dependend on the input data being "reasonable". XXX
+                return static_cast<TDelta>(m_value) -
+                       static_cast<TDelta>(new_value);
             }
 
         }; // class DeltaEncode
@@ -111,8 +118,16 @@ namespace osmium {
             }
 
             TValue update(TDelta delta) noexcept {
-                m_value = static_cast_with_assert<TValue>(
-                              static_cast_with_assert<TDelta>(m_value) + delta);
+                // Do not check for overflow. With real data this should not
+                // happen and if somebody is trying to trick us they can only
+                // create values this way they would also be able to generate
+                // without having an overflow.
+                m_value = static_cast<TValue>(
+                              static_cast<TDelta>(m_value) + delta);
+                return m_value;
+            }
+
+            TValue value() const noexcept {
                 return m_value;
             }
 

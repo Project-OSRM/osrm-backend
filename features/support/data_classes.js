@@ -12,12 +12,17 @@ module.exports = {
 
     FuzzyMatch: class {
         match (got, want) {
+            // don't fail if bearings input and extected string is empty and actual result is undefined
+            if (want === '' && (got === '' || got === undefined))
+                return true;
+
             var matchPercent = want.match(/(.*)\s+~(.+)%$/),
-                matchAbs = want.match(/(.*)\s+\+\-(.+)$/),
+                matchAbs = want.match(/(.*)\s+\+-(.+)$/),
                 matchRe = want.match(/^\/(.*)\/$/),
                 // we use this for matching before/after bearing
-                matchBearingListAbs = want.match(/^((\d+)->(\d+))(,(\d+)->(\d+))*\s+\+\-(.+)$/),
-                matchIntersectionListAbs = want.match(/^(((((true|false):\d+)\s{0,1})+,{0,1})+;{0,1})+\s+\+\-(.+)$/);
+                matchBearingListAbs = want.match(/^((\d+)->(\d+))(,(\d+)->(\d+))*\s+\+-(.+)$/),
+                matchIntersectionListAbs = want.match(/^(((((true|false):\d+)\s{0,1})+,{0,1})+;{0,1})+\s+\+-(.+)$/),
+                matchRangeNumbers = want.match(/\d+\+-\d+/);
 
             function inRange(margin, got, want) {
                 var fromR = parseFloat(want) - margin,
@@ -26,12 +31,12 @@ module.exports = {
             }
             function parseIntersectionString(str) {
                 return str.split(';')
-                          .map((turn_intersections) => turn_intersections
-                                                       .split(',')
-                                                       .map((intersection) => intersection
-                                                                               .split(' ')
-                                                                               .map((entry_bearing_pair) => entry_bearing_pair
-                                                                                                            .split(':'))));
+                    .map((turn_intersections) => turn_intersections
+                        .split(',')
+                        .map((intersection) => intersection
+                            .split(' ')
+                            .map((entry_bearing_pair) => entry_bearing_pair
+                                .split(':'))));
             }
 
             if (got === want) {
@@ -101,6 +106,11 @@ module.exports = {
                 return inRange(margin, got, matchAbs[1]);
             } else if (matchRe) {               // regex: /a,b,.*/
                 return got.match(matchRe[1]);
+            } else if (matchRangeNumbers) {
+                let real_want_and_margin = want.split('+-'),
+                    margin = parseFloat(real_want_and_margin[1].trim()),
+                    real_want = parseFloat(real_want_and_margin[0].trim());
+                return inRange(margin, got, real_want);
             } else {
                 return false;
             }

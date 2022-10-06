@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,11 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstddef>
-#include <initializer_list>
-#include <iomanip>
-#include <utility>
-
 #include <osmium/fwd.hpp>
 #include <osmium/handler.hpp>
 #include <osmium/handler/check_order.hpp>
@@ -47,6 +42,11 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/entity_bits.hpp>
 #include <osmium/util/progress_bar.hpp>
 #include <osmium/visitor.hpp>
+
+#include <cstddef>
+#include <initializer_list>
+#include <iomanip>
+#include <utility>
 
 namespace osmium {
 
@@ -118,14 +118,12 @@ namespace osmium {
          *                 to.
          */
         template <typename ...TManager>
-        void read_relations(const osmium::io::File& file, TManager&& ...managers) {
+        void read_relations(const osmium::io::File& file, TManager& ...managers) {
             static_assert(sizeof...(TManager) > 0, "Need at least one manager as parameter.");
             osmium::io::Reader reader{file, osmium::osm_entity_bits::relation};
-            osmium::apply(reader, std::forward<TManager>(managers)...);
+            osmium::apply(reader, managers...);
             reader.close();
-            (void)std::initializer_list<int>{
-                (std::forward<TManager>(managers).prepare_for_lookup(), 0)...
-            };
+            (void)std::initializer_list<int>{(managers.prepare_for_lookup(), 0)...};
         }
 
         /**
@@ -145,17 +143,15 @@ namespace osmium {
          *                 to.
          */
         template <typename ...TManager>
-        void read_relations(osmium::ProgressBar& progress_bar, const osmium::io::File& file, TManager&& ...managers) {
+        void read_relations(osmium::ProgressBar& progress_bar, const osmium::io::File& file, TManager& ...managers) {
             static_assert(sizeof...(TManager) > 0, "Need at least one manager as parameter.");
             osmium::io::Reader reader{file, osmium::osm_entity_bits::relation};
             while (auto buffer = reader.read()) {
                 progress_bar.update(reader.offset());
-                osmium::apply(buffer, std::forward<TManager>(managers)...);
+                osmium::apply(buffer, managers...);
             }
             reader.close();
-            (void)std::initializer_list<int>{
-                (std::forward<TManager>(managers).prepare_for_lookup(), 0)...
-            };
+            (void)std::initializer_list<int>{(managers.prepare_for_lookup(), 0)...};
             progress_bar.file_done(file.size());
         }
 
@@ -174,7 +170,7 @@ namespace osmium {
          * stream.
          *
          * @tparam TStream Output stream type (like std::cout, std::cerr, or
-         *                 osmium::util::VerboseOutput).
+         *                 osmium::VerboseOutput).
          * @param stream Reference to stream where the output should go.
          * @param mu Memory usage data as returned by the used_memory()
          *                  functions of various relations managers.

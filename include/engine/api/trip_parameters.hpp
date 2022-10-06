@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2016, Project OSRM contributors
+Copyright (c) 2017, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -65,8 +65,8 @@ struct TripParameters : public RouteParameters
                    DestinationType destination_,
                    bool roundtrip_,
                    Args &&... args_)
-        : RouteParameters{std::forward<Args>(args_)...}, source{source_}, destination{destination_},
-          roundtrip{roundtrip_}
+        : RouteParameters{std::forward<Args>(args_)...}, source{source_},
+          destination{destination_}, roundtrip{roundtrip_}
     {
     }
 
@@ -76,8 +76,8 @@ struct TripParameters : public RouteParameters
 
     bool IsValid() const { return RouteParameters::IsValid(); }
 };
-}
-}
-}
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif

@@ -2,7 +2,7 @@
 # Change Log
 
 All notable changes to this project will be documented in this file.
-This project adheres to [Semantic Versioning](http://semver.org/).
+This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [unreleased] -
 
@@ -11,6 +11,520 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 ### Fixed
+
+
+## [2.18.0] - 2022-02-07
+
+### Changed
+
+* Use `system_error` instead of `runtime_error` where it fits better.
+* Remove `OSMIUM_NORETURN` macro. This hasn't been used in a while.
+
+### Removed deprecated parts of the code
+
+Several parts of libosmium have been marked deprecated, many of them for a very
+long time. These are now removed:
+
+* Sparsehash index class `osmium::index::map::SparseMemTable` as well as the
+  complete file `osmium/index/map/sparse_mem_table.hpp`.
+* Callback functionality of the `osmium::memory::Buffer` class. The
+  `set_full_callback()` will not be available any more. See the source
+  for replacement options.
+* Various `osmium::builder::build_*` functions in
+  `osmium/builder/builder_helper.hpp`. Use `osmium::builder::add_*`
+  functions instead. Removes `builder_helper.hpp`.
+* `osmium::builder::Builder::add_item(const osmium::memory::Item* item)`.
+  Use the function of the same name taking a reference instead.
+* `osmium::builder::OSMObject/ChangesetBuilder::add_user()`. Use
+  `set_user()` instead.
+* `osmium::builder::ChangesetBuilder::bounds()` returning a modifiable
+  reference. Use `set_bounds()` instead.
+* Several functions around `osmium::io::OutputIterator`.
+* `osmium::Area::inner_ring_cbegin/cend()`, use `inner_rings()` instead.
+* `osmium::RelationMember::ref()`, use `set_ref()` instead.
+* Implicit conversion from `osmium::Timestamp` to `std::time_t`. Use
+  `seconds_since_epoch()` instead.
+* `osmium::string_to_user_id()`, use `string_to_uid` instead.
+* `osmium::static_cast_with_assert()` helper functions as well as the
+  complete include file `osmium/util/cast.hpp`.
+* Some constructors of `osmium::util::MemoryMapping` and
+  `osmium::util::TypedMemoryMapping`. Use other constructor instead.
+
+
+## [2.17.3] - 2022-01-19
+
+### Fixed
+
+* Removed possible deadlock when shutting down active Reader.
+
+
+## [2.17.2] - 2021-12-16
+
+### Changed
+
+* Libosmium now supports being compiled in C++17 and C++20 mode. The minimum
+  version required is still C++11, but if you use libosmium in an C++17 or
+  C++20 application this should work properly.
+* Switch from catch version 1 to catch2 as test framework.
+* When `std::variant` is available (C++17 and above), libosmium will use that
+  instead of `boost::variant` reducing the dependencies a little bit.
+* Removed various workaround that were needed for older MSVC compilers.
+* Remove use of `boost::filter_iterator` and `boost::indirect_iterator`. The
+  removes the dependency on Boost Iterator.
+* Examples now mostly use the somewhat cleaner `return` instead of
+  `std::exit()` to return an exit code from `main`.
+* As always: Various small code cleanups.
+
+### Fixed
+
+* When ordering OSM objects (mostly use in the `CheckOrder` handler), the
+  smallest id possible (`INTMIN`) wasn't sorted correctly.
+* Threading problem when reading files.
+* Possible dereference of invalid iterator in legacy area assembler. This
+  only affects the legacy area assembler that takes old-style multipolygons
+  into account, so modern code that is not working with history data is not
+  affected.
+* Fixed read from an empty queue when reading a file which could block
+  libosmium forever when an error was encountered while reading a file.
+
+### Deprecated
+
+Several parts of libosmium have been marked deprecated, many of them for a very
+long time. These will not be part of the next version of libosmium:
+
+* Sparsehash index class `osmium::index::map::SparseMemTable` as well as the
+  complete file `osmium/index/map/sparse_mem_table.hpp`.
+* Callback functionality of the `osmium::memory::Buffer` class. The
+  `set_full_callback()` will not be available any more. See the source
+  for replacement options.
+* Various `osmium::builder::build_*` functions in
+  `osmium/builder/builder_helper.hpp`. Use `osmium::builder::add_*`
+  functions instead. Removes `builder_helper.hpp`.
+* `osmium::builder::Builder::add_item(const osmium::memory::Item* item)`.
+  Use the function of the same name taking a reference instead.
+* `osmium::builder::OSMObject/ChangesetBuilder::add_user()`. Use
+  `set_user()` instead.
+* `osmium::builder::ChangesetBuilder::bounds()` returning a modifiable
+  reference. Use `set_bounds()` instead.
+* Several functions around `osmium::io::OutputIterator`.
+* `osmium::Area::inner_ring_cbegin/cend()`, use `inner_rings()` instead.
+* `osmium::RelationMember::ref()`, use `set_ref()` instead.
+* Implicit conversion from `osmium::Timestamp` to `std::time_t`. Use
+  `seconds_since_epoch()` instead.
+* `osmium::string_to_user_id()`, use `string_to_uid` instead.
+* `osmium::static_cast_with_assert()` helper functions as well as the
+  complete include file `osmium/util/cast.hpp`.
+* Some constructors of `osmium::util::MemoryMapping` and
+  `osmium::util::TypedMemoryMapping`. Use other constructor instead.
+
+
+## [2.17.1] - 2021-10-05
+
+### Added
+
+* Add `osmium_tags_filter` example showing use of tags filter.
+* Add `Writer::set_header()` function to set header after constructing.
+
+### Changed
+
+* Various improvements in PBF file reading make it slightly faster and less
+  CPU intensive.
+* Since 2.17.0 Osmium will, when reading files, tell the kernel using
+  `fadvise` that it can remove pages from the buffer cache that are not
+  needed any more. This is usually beneficial, because the memory can be used
+  for something else. But if you are reading the same OSM file multiple times
+  at the same time or in short succession, it might be better to keep those
+  buffer pages. In that case you can set the environment variable
+  `OSMIUM_CLEAN_PAGE_CACHE_AFTER_READ` to `no` and Osmium will not call
+  `fadvise`. Set it to `yes` or anything else (or not set it at all) to get
+  the default behaviour.
+* If the macro `OSMIUM_DEFINE_EXPORT` is defined, all exception classes used
+  by Osmium will get "tagged as exported" using `__declspec(dllexport)` when
+  using MSVC or `__attribute__ ((visibility("default")))` on other compilers.
+  This is needed in PyOsmium.
+
+### Fixed
+
+* Fix integer parser. IDs in OPL files can now be anything between -2^63 and
+  2^63-1.
+
+
+## [2.17.0] - 2021-04-26
+
+### Added
+
+* Add "ids" output format. New IDS output format that is similar to
+  the OPL format, but only the entity type and id is written out.
+* Add convenience functions `left()`, `right()`, `top()`, `bottom()` to
+  access `osmium::Box` boundaries.
+* Add polygon output to WKB factory.
+* Add functions to access storage from `node_locations_for_ways`
+  handler.
+* Add flag `osmium::io::buffers_type` for telling the `Reader` class whether
+  you want buffers read to only contain a single type of OSM entity.
+* Add convenient named `nodes()`, `ways()`, and `relations()` accessor
+  functions to `nwr_array` class.
+* Add `DeltaDecode::value()` accessor function.
+* Add variant of the `Buffer::purge_removed()` function which doesn't take
+  a callback parameter.
+
+### Changed
+
+* Different varint decoding for faster PBF decoding. This makes PBF
+  decoding about 15% faster.
+* Several code optimmizations in (PBF) writer code that speed up
+  writing of OSM files considerably while using less CPU and spreading
+  the load on multiple CPUs.
+* Use memset/memcpy instead of `std::fill_n` and `std::copy` in object
+  builder for some slight speedups.
+* Ignore metadata setting on reader for history/change files. History
+  and change files must be read with metadata, because otherwise the
+  information is lost whether an object is visible or deleted. So
+  ignore this setting in that case.
+* On Linux: Use fadvise() to tell kernel about our reading patterns:
+  1. Tell kernel that we are reading OSM files sequentially. This
+     should improve pre-fetching of data blocks.
+  2. Tell kernel that we are done with block so they can be released.
+     This means we don't hog the buffer cache for something that
+     will, in all likelyhood, not be needed any more.
+* Use assert() instead of exception in "can not happen" situation in
+  the relations manager code.
+* Various code cleanups.
+
+### Fixed
+
+* Test failure with `add_tag_list` on some systems.
+* Test framework fix for aarch64 architecture.
+* Remove undefined behaviour in bzip2 compression code.
+* Rename some local variables to not shadow member functions.
+* Wrap `osmium::util::MemoryMapping::unmap()` in try/catch on Windows
+  also because we call this from a noexcept function.
+* Removed superfluous `std::forward`s and fixed code that called
+  `std::forward` multiple times on the same object.
+* Fix in OPL parser which could lead to invalid data being generated.
+* Fixed three bugs in O5M parser which could lead to an infinit loop
+  or segmentation faults.
+
+## [2.16.0] - 2021-01-08
+
+### Added
+
+* The PBF reader and writer now understand PBF blobs compressed with the LZ4
+  compression algorithm in addition to the usual ZLIB compression (or no
+  compression at all). LZ4 is much faster to compress and uncompress. Use
+  by setting the `pbf_compression` output file format option to `lz4`. You
+  have to define `OSMIUM_WITH_LZ4` to enable this before including any
+  libosmium includes.
+* The function `osmium::io::supported_pbf_compression_types` can now be used
+  to get a list of all PBF compression types supported.
+* The output file option `pbf_compression_level` can now be set to an integer.
+  The range depends on the compression type used, 0-9 for zlib compression
+  and 1-65537 for lz4 compression.
+* Adds `ptr_begin()`/`ptr_end()` functions to `ObjectPointerCollection` for
+  accessing the pointers instead of the underlying objects.
+
+### Changed
+
+* The `osmium::io::Writer::close()` function now returns the number of bytes
+  written to an OSM file if it is available (and 0 otherwise).
+* Use stable sort when sorting `ObjectPointerCollection`.
+
+### Fixed
+
+* Various small fixes and cleanups.
+
+
+## [2.15.6] - 2020-06-27
+
+### Added
+
+* Add `IdSetSmall::merge_sorted` function.
+
+### Changed
+
+* Little optimization for IdSetSmall: Don't add the same id twice in a row.
+
+### Fixed
+
+* Do not build areas with "recursion depth > 20". This happens when there
+  are complex multipolygon with many rings touching in single points. This
+  is a quick fix that hopefully keeps us going until we find a better
+  solution.
+
+## [2.15.5] - 2020-04-21
+
+### Added
+
+* Additional constructor for `builder::attr::member_type(_string)` taking
+  char type making it even easier to generate test data.
+* Allow single C string or `std::string` as argument for `builder::attr::_tag`.
+  Must contain key and value separated by the equal sign.
+* New `builder::attr::_t()` function to set tags from comma-separated string.
+* New `nwr_array` iterator.
+* Support for the PROJ library has now been declared deprecated. The old
+  PROJ API (up to version PROJ 6) is currently still available, but will
+  be removed in a future version. Support for the new PROJ API will not be
+  in libosmium. See https://github.com/osmcode/osmium-proj for some code
+  that might help you if you need this.
+
+### Changed
+
+* Check how much space is available in file system before resizing memory
+  mapped file (not on Windows). This means we can, at least in some cases,
+  show an error message instead of crashing the program.
+
+### Fixed
+
+* Parsing coordinates in PBF files did not work correctly if an lat/lon
+  offset was specified (which almost never happens).
+* Make OPL parser more strict: Attributes can only be specified once.
+* Do not close stdout after writing OSM file to it.
+
+## [2.15.4] - 2019-11-28
+
+### Added
+
+* Add osmium::Options::empty() for consistency with STL containers.
+
+### Fixed
+
+* Massive reduction of memory consumption in area assembly code. For some
+  very complex polygons memory usage can drop from multiple gigabytes to just
+  megabytes.
+
+## [2.15.3] - 2019-09-16
+
+### Added
+
+* New header option "sorting" when reading and writing PBFs. If the header
+  option "sorting" is set to `Type_then_ID`, the optional header property
+  `Sort.Type_then_ID` is set on writing to PBF files. When reading PBF files
+  with this header property, the "sorting" header option is set accordingly.
+
+### Fixed
+
+* Do not propagate C++ exception through C code. We are using the Expat
+  XML parser, a C library. It calls callbacks in our code. When those
+  callbacks throw, the exception was propagated through the C code. This
+  did work in the tests, but that behaviour isn't guaranteed (C++
+  standard says it is implementation defined). This fixes it by catching
+  the exception and rethrowing it later.
+
+## [2.15.2] - 2019-08-16
+
+### Added
+
+* Instead of handler classes, the `apply` function can now also take
+  lambdas (or objects from classes implementing `operator()`).
+* Add swap, copy constructor and assignment operator to IdSetDense.
+
+### Changed
+
+* Enable use of the old proj API in proj version 6. This is a stopgap
+  solution until we find a better one.
+* Better error messages when there is an error parsing a timestamp.
+* Cleaned up a lot of code based on clang-tidy warnings.
+* Ignore <bbox> or <bounds> subelement of <way> or <relation>. <bounds>
+  elements are created by Overpass API as subelements of ways or relations
+  when the "out bb" format is used. <bbox> subelements turn up in files
+  downloaded from http://download.openstreetmap.fr/replication . Libosmium
+  used to throw an error  like "Unknown element in <way>: bbox". With this
+  commit, these subelements are ignored, ie. there is no error any more,
+  but the data is not read.
+* Add swap, copy constructor and assignment operator to IdSetDense.
+* Update included catch.hpp to 1.12.2.
+* Retire use of `OSMIUM_NORETURN` macro. Use `[[noreturn]]` instead.
+
+### Fixed
+
+* Do not build areas with more than 100 locations where rings touch.
+  Places where rings touch are unusual for normal multipolygons and the
+  algorithm in libosmium that assembles multipolygons does not handle
+  them well. If there are too many touching points it becomes very slow.
+  This is not a problem for almost all multipolygons. As I am writing
+  this there are only three relations in the OSM database with more than
+  100 touching points, all of them rather weird boundaries in the US.
+  With this commit libosmium will simply ignore those areas to keep the
+  processing speed within reasonable bounds.
+
+
+## [2.15.1] - 2019-02-26
+
+### Added
+
+* More tests.
+* CMake config: also find clang-tidy-7.
+
+### Changed
+
+* Example and benchmark programs now don't crash with exceptions any more
+  but report them properly.
+
+### Fixed
+
+* Compile with NDEBUG in RelWithDebInfo mode.
+* Correctly throw exception in `multimap::dump_as_list()`.
+* Integer truncation on 32 bit systems in `MemoryUsage`.
+* Exception specification on some functions.
+* Forwarding references that might have hidden copy/move constructors.
+
+
+## [2.15.0] - 2018-12-07
+
+### Added
+
+* Function `dump_as_array()` to dump sparse array indexes.
+* Set the `xml_josm_upload` header option when reading XML files.
+* New function `OSMObject::remove_tags()` marks tags on OSM objects as
+  removed.
+* More tests.
+
+### Changed
+
+* When reading OSM files Libosmium now has less memory overhead, especially
+  when reading PBF files. This works by using more, but smaller buffers.
+* The `TagsFilter` class is now based on the `TagsFilterBase` template
+  class which allows setting the result type. This allows the filter to
+  return more data depending on the rule that matched.
+* Use enums for many constants instead of (static) const(expr) variables.
+* Make `chunk_bits` in `IdSetDense` configurable.
+* Hardcode `%lld` format instead of using `<cinttypes>` PRI macro.
+* Update included gdalcpp to version 1.2.0.
+
+### Fixed
+
+* The gzip/bzip2 compression code was overhauled and is better tested now.
+  This fixes some bugs on Windows.
+
+
+## [2.14.2] - 2018-07-23
+
+### Fixed
+
+* PBF reader and writer depended on byte order of system architecture.
+* Removed an unreliable test that didn't work on some architectures.
+
+
+## [2.14.1] - 2018-07-23
+
+### Changed
+
+* Libosmium now needs the newest Protozero version 1.6.3.
+* Removes dependency on the utfcpp library for conversions between Unicode
+  code points and UTF-8. We have our own functions for this now. This also
+  gives us more control on where errors are thrown in this code.
+* Add support for using the CRC32 implementation from the zlib library in
+  addition to the one from Boost. It is significantly faster and means we
+  have one less dependency, because zlib is needed anyway in almost all
+  programs using Osmium due to its use in the PBF format. Set macro
+  `OSMIUM_TEST_CRC_USE_BOOST` before compiling the tests, if you want to
+  run the tests with the boost library code, otherwise it will use the
+  zlib code. Note that to use this you have to change your software slightly,
+  see the documentation of the `CRC_zlib` class for details.
+* Add a `clear_user()` function to OSMObject and Changeset which allows
+  removing the user name of an entity without re-creating it in a new buffer.
+* In Osmium the 0 value of the Timestamp is used to denote the "invalid"
+  Timestamp, and its output using the `to_iso()` function is the empty
+  string. But this is the wrong output for OSM XML files, where a
+  timestamp that's not set should still be output as
+  1970-01-01T00:00:00Z. This version introduces a new `to_is_all()`
+  function which will do this and uses that function in the XML writer.
+* Use `protozero::byteswap_inplace` instead of `htonl`/`ntohl`. Makes the
+  code simpler and also works on Windows.
+* Marked `MultipolygonCollector` class as deprecated. Use the
+  `MultipolygonManager` class introduced in 2.13.0 instead.
+* Lots of code cleanups especially around `assert`s. Libosmium checks out
+  clean with `clang-tidy` now. Some documentation updates.
+
+### Fixed
+
+* Fix compilation error when `fileno()` is a macro (as in OpenBSD 6.3).
+* Make `Box` output consistent with the output of a single `Location`
+  and avoids problems with some locales.
+
+
+## [2.14.0] - 2018-03-31
+
+### Added
+
+* Add `ReaderWithProgressBar` class. This wraps an `osmium::io::Reader` and an
+  `osmium::ProgressBar` into a nice little package allowing easier use in the
+  common case.
+* Add polygon implementation for WKT and GeoJSON geometry factories. (Thanks
+  to Horace Williams.)
+* Various tests.
+
+### Changed
+
+* Add git submodule with `osm-testdata` repository. Before this the repository
+  had to be installed externally. Now a submodule update can be used to get the
+  correct version of the osm-testdata repository.
+* The XML file reader was rewritten to be more strict. Cases where it could
+  be tricked into failing badly were removed. There are now more tests for the
+  XML parser.
+* Replaced `strftime` by our own implementation. Uses a specialized
+  implementation for our use case instead the more general `strftime`.
+  Benchmarked this to be faster.
+* Changed the way IDs are parsed from strings. No asserts are used any more but
+  checks are done and an exception is thrown when IDs are out of range. This
+  also changes the way negative values are handled. The value `-1` is now
+  always accepted for all IDs and returned as `0`. This deprecates the
+  `string_to_user_id()` function, use `string_to_uid()` instead which returns a
+  different type.
+* It was always a bit confusing that some of the util classes and functions are
+  directly in the `osmium` namespace and some are in `osmium::util`. The
+  `osmium::util` namespace is now declared `inline`. which allows all util
+  classes and functions to be addressed directly in the `osmium` namespace
+  while keeping backwards compatibility.
+* An error is now thrown when the deprecated `pbf_add_metadata` file format
+  option is used. Use `add_metadata` instead.
+* Extended the `add_metadata` file format option. In addition to allowing the
+  values `true`, `yes`, `false`, and `no`, the new values `all` and `none`
+  are now recognized. The option can also be set to a list of attributes
+  separated by the `+` sign. Attributes are `version`, `timestamp`,
+  `changeset`, `uid`, and `user`. All output formats have been updated to
+  only output the specified attributes. This is based on the new
+  `osmium::metadata_options` class which stores information about what metadata
+  an `OSMObject` has or should have. (Thanks to Michael Reichert.)
+* The `<` (less than) operator on `OSMObject`s now ignores the case when
+  one or both of the timestamps on the objects are not set at all. This
+  allows better handling of OSM data files with reduced metadata.
+* Allow `version = -1` and `changeset = -1` in PBF input. This value is
+  sometimes used by other programs to denote "no value". Osmium uses the `0`
+  for this.
+* The example programs using the `getopt_long` function have been rewritten to
+  work without it. This makes using libosmium on Windows easier, where this
+  function is not available.
+* Removed the embedded protozero from repository. Like other dependencies you
+  have to install protozero first. If you check out the protozero repository
+  in the same directory where you checked out libosmium, libosmium's CMake
+  will find it.
+* Various code cleanups, fixing of include order, etc.
+* Remove need for `winsock2` library in Windows by using code from Protozero.
+  (Thanks alex85k.)
+* Add MSYS2 build to Appveyor and fixed some Windows compile issues. (Thanks
+  to alex85k.)
+* Use array instead of map to store input/output format creators.
+* Update included `catch.hpp` to version 1.12.1.
+
+### Fixed
+
+* Remove check for lost ways in multipolygon assembler. This rules out too many
+  valid multipolygons, more specifically more complex ones with touching inner
+  rings.
+* Use different macro magic for registering index maps. This allows the maps
+  to be used for several types at the same time.
+* Lots of code was rewritten to fix warnings reported by `clang-tidy` making
+  libosmium more robust.
+* Make ADL work for `begin()`/`end()` of `InputIterator<Reader>`.
+* Various fixes to make the code more robust, including an undefined behaviour
+  in the debug output format and a buffer overflow in the o5m parser.
+* Range checks in o5m parser throw exceptions now instead of triggering
+  assertions.
+* Better checking that PBF data is in range.
+* Check `read` and `write` system calls for `EINTR`.
+* Use tag and type from protozero to make PBF parser more robust.
+* Test `testdata-multipolygon` on Windows was using the wrong executable name.
 
 
 ## [2.13.1] - 2017-08-25
@@ -739,7 +1253,23 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   Doxygen (up to version 1.8.8). This version contains a workaround to fix
   this.
 
-[unreleased]: https://github.com/osmcode/libosmium/compare/v2.13.1...HEAD
+[unreleased]: https://github.com/osmcode/libosmium/compare/v2.18.0...HEAD
+[2.18.0]: https://github.com/osmcode/libosmium/compare/v2.17.3...v2.18.0
+[2.17.3]: https://github.com/osmcode/libosmium/compare/v2.17.2...v2.17.3
+[2.17.2]: https://github.com/osmcode/libosmium/compare/v2.17.1...v2.17.2
+[2.17.1]: https://github.com/osmcode/libosmium/compare/v2.17.0...v2.17.1
+[2.17.0]: https://github.com/osmcode/libosmium/compare/v2.16.0...v2.17.0
+[2.16.0]: https://github.com/osmcode/libosmium/compare/v2.15.6...v2.16.0
+[2.15.6]: https://github.com/osmcode/libosmium/compare/v2.15.5...v2.15.6
+[2.15.5]: https://github.com/osmcode/libosmium/compare/v2.15.4...v2.15.5
+[2.15.4]: https://github.com/osmcode/libosmium/compare/v2.15.3...v2.15.4
+[2.15.3]: https://github.com/osmcode/libosmium/compare/v2.15.2...v2.15.3
+[2.15.2]: https://github.com/osmcode/libosmium/compare/v2.15.1...v2.15.2
+[2.15.1]: https://github.com/osmcode/libosmium/compare/v2.15.0...v2.15.1
+[2.15.0]: https://github.com/osmcode/libosmium/compare/v2.14.2...v2.15.0
+[2.14.2]: https://github.com/osmcode/libosmium/compare/v2.14.1...v2.14.2
+[2.14.1]: https://github.com/osmcode/libosmium/compare/v2.14.0...v2.14.1
+[2.14.0]: https://github.com/osmcode/libosmium/compare/v2.13.1...v2.14.0
 [2.13.1]: https://github.com/osmcode/libosmium/compare/v2.13.0...v2.13.1
 [2.13.0]: https://github.com/osmcode/libosmium/compare/v2.12.2...v2.13.0
 [2.12.2]: https://github.com/osmcode/libosmium/compare/v2.12.1...v2.12.2

@@ -144,18 +144,6 @@ inline double restrictAngleToValidRange(const double angle)
         return angle;
 }
 
-// finds the angle between two angles, based on the minum difference between the two
-inline double angleBetween(const double lhs, const double rhs)
-{
-    const auto difference = std::abs(lhs - rhs);
-    const auto is_clockwise_difference = difference <= 180;
-    const auto angle_between_candidate = .5 * (lhs + rhs);
-    if (is_clockwise_difference)
-        return angle_between_candidate;
-    else
-        return restrictAngleToValidRange(angle_between_candidate + 180);
-}
-
 } // namespace util
 } // namespace osrm
 

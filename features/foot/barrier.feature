@@ -10,6 +10,7 @@ Feature: Barriers
             |                | x     |
             | bollard        | x     |
             | gate           | x     |
+            | lift_gate      | x     |
             | cycle_barrier  | x     |
             | cattle_grid    | x     |
             | border_control | x     |
@@ -18,7 +19,7 @@ Feature: Barriers
             | entrance       | x     |
             | wall           |       |
             | fence          |       |
-            | some_tag       |       |
+            | some_tag       | x     |
             | block          | x     |
 
     Scenario: Foot - Access tag trumphs barriers

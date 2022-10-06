@@ -1,7 +1,7 @@
 #ifndef OSRM_ENGINE_DATAFACADE_CONTIGUOUS_BLOCK_ALLOCATOR_HPP_
 #define OSRM_ENGINE_DATAFACADE_CONTIGUOUS_BLOCK_ALLOCATOR_HPP_
 
-#include "storage/shared_datatype.hpp"
+#include "storage/shared_data_index.hpp"
 
 namespace osrm
 {
@@ -16,8 +16,7 @@ class ContiguousBlockAllocator
     virtual ~ContiguousBlockAllocator() = default;
 
     // interface to give access to the datafacades
-    virtual storage::DataLayout &GetLayout() = 0;
-    virtual char *GetMemory() = 0;
+    virtual const storage::SharedDataIndex &GetIndex() = 0;
 };
 
 } // namespace datafacade

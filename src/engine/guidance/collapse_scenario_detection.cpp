@@ -1,5 +1,5 @@
 #include "engine/guidance/collapse_scenario_detection.hpp"
-#include "extractor/guidance/constants.hpp"
+#include "guidance/constants.hpp"
 #include "util/bearing.hpp"
 
 #include <numeric>
@@ -12,24 +12,10 @@ namespace engine
 {
 namespace guidance
 {
+using namespace osrm::guidance;
 
 namespace
 {
-
-// check bearings for u-turns.
-// since bearings are wrapped around at 0 (we only support 0,360), we need to do some minor math to
-// check if bearings `a` and `b` go in opposite directions. In general we accept some minor
-// deviations for u-turns.
-bool bearingsAreReversed(const double bearing_in, const double bearing_out)
-{
-    // Nearly perfectly reversed angles have a difference close to 180 degrees (straight)
-    const double left_turn_angle = [&]() {
-        if (0 <= bearing_out && bearing_out <= bearing_in)
-            return bearing_in - bearing_out;
-        return bearing_in + 360 - bearing_out;
-    }();
-    return util::angularDeviation(left_turn_angle, 180) <= 35;
-}
 
 // to collapse steps, we focus on short segments that don't interact with other roads. To collapse
 // two instructions into one, we need to look at to instrutions immediately after each other.
@@ -41,15 +27,14 @@ bool noIntermediaryIntersections(const RouteStep &step)
 }
 
 // Link roads, as far as we are concerned, are short unnamed segments between to named segments.
-bool isLinkroad(const RouteStep &pre_link_step,
+bool isLinkRoad(const RouteStep &pre_link_step,
                 const RouteStep &link_step,
                 const RouteStep &post_link_step)
 {
     const constexpr double MAX_LINK_ROAD_LENGTH = 2 * MAX_COLLAPSE_DISTANCE;
     const auto is_short = link_step.distance <= MAX_LINK_ROAD_LENGTH;
-    const auto unnamed = link_step.name_id == EMPTY_NAMEID;
-    const auto between_named =
-        (pre_link_step.name_id != EMPTY_NAMEID) && (post_link_step.name_id != EMPTY_NAMEID);
+    const auto unnamed = link_step.name.empty();
+    const auto between_named = !pre_link_step.name.empty() && !post_link_step.name.empty();
 
     return is_short && unnamed && between_named && noIntermediaryIntersections(link_step);
 }
@@ -196,9 +181,10 @@ bool isUTurn(const RouteStepIterator step_prior_to_intersection,
     const auto only_allowed_turn = (numberOfAllowedTurns(*step_leaving_intersection) == 1) &&
                                    noIntermediaryIntersections(*step_entering_intersection);
 
-    return collapsable || isLinkroad(*step_prior_to_intersection,
-                                     *step_entering_intersection,
-                                     *step_leaving_intersection) ||
+    return collapsable ||
+           isLinkRoad(*step_prior_to_intersection,
+                      *step_entering_intersection,
+                      *step_leaving_intersection) ||
            only_allowed_turn;
 }
 
@@ -306,7 +292,12 @@ bool suppressedStraightBetweenTurns(const RouteStepIterator step_entering_inters
          hasTurnType(*step_leaving_intersection, TurnType::Continue) ||
          hasTurnType(*step_leaving_intersection, TurnType::OnRamp));
 
-    return both_short_enough && similar_length && correct_types;
+    const auto total_angle =
+        totalTurnAngle(*step_entering_intersection, *step_leaving_intersection);
+    const auto total_angle_is_not_uturn =
+        (total_angle > NARROW_TURN_ANGLE) && (total_angle < 360 - NARROW_TURN_ANGLE);
+
+    return both_short_enough && similar_length && correct_types && total_angle_is_not_uturn;
 }
 
 bool maneuverSucceededByNameChange(const RouteStepIterator step_entering_intersection,

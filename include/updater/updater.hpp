@@ -17,17 +17,27 @@ class Updater
   public:
     Updater(UpdaterConfig config_) : config(std::move(config_)) {}
 
-    using NumNodesAndEdges = std::tuple<EdgeID, std::vector<extractor::EdgeBasedEdge>>;
-    NumNodesAndEdges LoadAndUpdateEdgeExpandedGraph() const;
-
     EdgeID
     LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
-                                   std::vector<EdgeWeight> &node_weights) const;
+                                   std::vector<EdgeWeight> &node_weights,
+                                   std::uint32_t &connectivity_checksum) const;
+
+    EdgeID LoadAndUpdateEdgeExpandedGraph(
+        std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
+        std::vector<EdgeWeight> &node_weights,
+        std::vector<EdgeDuration> &node_durations, // TODO: remove when optional
+        std::uint32_t &connectivity_checksum) const;
+    EdgeID LoadAndUpdateEdgeExpandedGraph(
+        std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
+        std::vector<EdgeWeight> &node_weights,
+        std::vector<EdgeDuration> &node_durations, // TODO: remove when optional
+        std::vector<EdgeDistance> &node_distances, // TODO: remove when optional
+        std::uint32_t &connectivity_checksum) const;
 
   private:
     UpdaterConfig config;
 };
-}
-}
+} // namespace updater
+} // namespace osrm
 
 #endif

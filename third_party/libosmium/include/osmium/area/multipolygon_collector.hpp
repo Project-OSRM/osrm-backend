@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,11 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
-#include <cstddef>
-#include <cstring>
-#include <vector>
-
 #include <osmium/area/stats.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm/item_type.hpp>
@@ -47,6 +42,11 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/tag.hpp>
 #include <osmium/osm/way.hpp>
 #include <osmium/relations/collector.hpp>
+
+#include <algorithm>
+#include <cstddef>
+#include <cstring>
+#include <vector>
 
 namespace osmium {
 
@@ -70,6 +70,8 @@ namespace osmium {
          *
          * @tparam TAssembler Multipolygon Assembler class.
          * @pre The Ids of all objects must be unique in the input data.
+         *
+         * @deprecated Use MultipolygonManager instead.
          */
         template <typename TAssembler>
         class MultipolygonCollector : public osmium::relations::Collector<MultipolygonCollector<TAssembler>, false, true, false> {
@@ -83,8 +85,13 @@ namespace osmium {
 
             area_stats m_stats;
 
-            static constexpr size_t initial_output_buffer_size = 1024 * 1024;
-            static constexpr size_t max_buffer_size_for_flush = 100 * 1024;
+            enum {
+                initial_output_buffer_size = 1024UL * 1024UL
+            };
+
+            enum {
+                max_buffer_size_for_flush = 100UL * 1024UL
+            };
 
             void flush_output_buffer() {
                 if (this->callback()) {
@@ -165,7 +172,7 @@ namespace osmium {
                 }
             }
 
-            void complete_relation(osmium::relations::RelationMeta& relation_meta) {
+            void complete_relation(const osmium::relations::RelationMeta& relation_meta) {
                 const osmium::Relation& relation = this->get_relation(relation_meta);
                 const osmium::memory::Buffer& buffer = this->members_buffer();
 

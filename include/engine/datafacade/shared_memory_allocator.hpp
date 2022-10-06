@@ -3,7 +3,7 @@
 
 #include "engine/datafacade/contiguous_block_allocator.hpp"
 
-#include "storage/shared_datatype.hpp"
+#include "storage/shared_data_index.hpp"
 #include "storage/shared_memory.hpp"
 
 #include <memory>
@@ -16,22 +16,23 @@ namespace datafacade
 {
 
 /**
-* This allocator uses an IPC shared memory block as the data location.
-* Many SharedMemoryDataFacade objects can be created that point to the same shared
-* memory block.
-*/
-class SharedMemoryAllocator : public ContiguousBlockAllocator
+ * This allocator uses an IPC shared memory block as the data location.
+ * Many SharedMemoryDataFacade objects can be created that point to the same shared
+ * memory block.
+ */
+class SharedMemoryAllocator final : public ContiguousBlockAllocator
 {
   public:
-    explicit SharedMemoryAllocator(storage::SharedDataType data_region);
+    explicit SharedMemoryAllocator(
+        const std::vector<storage::SharedRegionRegister::ShmKey> &shm_keys);
     ~SharedMemoryAllocator() override final;
 
     // interface to give access to the datafacades
-    storage::DataLayout &GetLayout() override final;
-    char *GetMemory() override final;
+    const storage::SharedDataIndex &GetIndex() override final;
 
   private:
-    std::unique_ptr<storage::SharedMemory> m_large_memory;
+    storage::SharedDataIndex index;
+    std::vector<std::unique_ptr<storage::SharedMemory>> memory_regions;
 };
 
 } // namespace datafacade

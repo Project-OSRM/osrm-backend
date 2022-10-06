@@ -5,8 +5,8 @@
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 
-#include "storage/io_fwd.hpp"
 #include "storage/shared_memory_ownership.hpp"
+#include "storage/tar_fwd.hpp"
 
 #include <boost/filesystem/path.hpp>
 #include <boost/range/adaptor/reversed.hpp>
@@ -27,17 +27,19 @@ class CompressedEdgeContainer;
 namespace detail
 {
 template <storage::Ownership Ownership> class SegmentDataContainerImpl;
-}
+} // namespace detail
 
 namespace serialization
 {
 template <storage::Ownership Ownership>
-inline void read(storage::io::FileReader &reader,
+inline void read(storage::tar::FileReader &reader,
+                 const std::string &name,
                  detail::SegmentDataContainerImpl<Ownership> &segment_data);
 template <storage::Ownership Ownership>
-inline void write(storage::io::FileWriter &writer,
+inline void write(storage::tar::FileWriter &writer,
+                  const std::string &name,
                   const detail::SegmentDataContainerImpl<Ownership> &segment_data);
-}
+} // namespace serialization
 
 namespace detail
 {
@@ -53,14 +55,15 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     // FIXME We should change the indexing to Edge-Based-Node id
     using DirectionalGeometryID = std::uint32_t;
     using SegmentOffset = std::uint32_t;
+    using SegmentNodeVector = Vector<NodeID>;
     using SegmentWeightVector = PackedVector<SegmentWeight, SEGMENT_WEIGHT_BITS>;
-    using SegmentDurationVector = PackedVector<SegmentDuration, SEGMENT_DURAITON_BITS>;
+    using SegmentDurationVector = PackedVector<SegmentDuration, SEGMENT_DURATION_BITS>;
     using SegmentDatasourceVector = Vector<DatasourceID>;
 
     SegmentDataContainerImpl() = default;
 
     SegmentDataContainerImpl(Vector<std::uint32_t> index_,
-                             Vector<NodeID> nodes_,
+                             SegmentNodeVector nodes_,
                              SegmentWeightVector fwd_weights_,
                              SegmentWeightVector rev_weights_,
                              SegmentDurationVector fwd_durations_,
@@ -200,15 +203,17 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     auto GetNumberOfSegments() const { return fwd_weights.size(); }
 
     friend void
-    serialization::read<Ownership>(storage::io::FileReader &reader,
+    serialization::read<Ownership>(storage::tar::FileReader &reader,
+                                   const std::string &name,
                                    detail::SegmentDataContainerImpl<Ownership> &segment_data);
     friend void serialization::write<Ownership>(
-        storage::io::FileWriter &writer,
+        storage::tar::FileWriter &writer,
+        const std::string &name,
         const detail::SegmentDataContainerImpl<Ownership> &segment_data);
 
   private:
     Vector<std::uint32_t> index;
-    Vector<NodeID> nodes;
+    SegmentNodeVector nodes;
     SegmentWeightVector fwd_weights;
     SegmentWeightVector rev_weights;
     SegmentDurationVector fwd_durations;
@@ -216,11 +221,11 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     SegmentDatasourceVector fwd_datasources;
     SegmentDatasourceVector rev_datasources;
 };
-}
+} // namespace detail
 
 using SegmentDataView = detail::SegmentDataContainerImpl<storage::Ownership::View>;
 using SegmentDataContainer = detail::SegmentDataContainerImpl<storage::Ownership::Container>;
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif

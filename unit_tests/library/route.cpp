@@ -1,10 +1,12 @@
-#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
+
+#include <cmath>
 
 #include "coordinates.hpp"
 #include "equal_json.hpp"
 #include "fixture.hpp"
 
+#include "engine/api/flatbuffers/fbresult_generated.h"
 #include "osrm/coordinate.hpp"
 #include "osrm/engine_config.hpp"
 #include "osrm/exception.hpp"
@@ -13,9 +15,24 @@
 #include "osrm/route_parameters.hpp"
 #include "osrm/status.hpp"
 
+osrm::Status run_route_json(const osrm::OSRM &osrm,
+                            const osrm::RouteParameters &params,
+                            osrm::json::Object &json_result,
+                            bool use_json_only_api)
+{
+    if (use_json_only_api)
+    {
+        return osrm.Route(params, json_result);
+    }
+    osrm::engine::api::ResultT result = osrm::json::Object();
+    auto rc = osrm.Route(params, result);
+    json_result = result.get<osrm::json::Object>();
+    return rc;
+}
+
 BOOST_AUTO_TEST_SUITE(route)
 
-BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
+void test_route_same_coordinates_fixture(bool use_json_only_api)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
@@ -26,24 +43,34 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    json::Object result;
-    const auto rc = osrm.Route(params, result);
+    json::Object json_result;
+    const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
     // unset snapping dependent hint
-    for (auto &itr : result.values["waypoints"].get<json::Array>().values)
+    for (auto &itr : json_result.values["waypoints"].get<json::Array>().values)
+    {
+        // Hint values aren't stable, so blank it out
         itr.get<json::Object>().values["hint"] = "";
+
+        // Round value to 6 decimal places for double comparison later
+        itr.get<json::Object>().values["distance"] =
+            round(itr.get<json::Object>().values["distance"].get<json::Number>().value * 1000000);
+    }
 
     const auto location = json::Array{{{7.437070}, {43.749248}}};
 
     json::Object reference{
         {{"code", "Ok"},
          {"waypoints",
-          json::Array{
-              {json::Object{
-                   {{"name", "Boulevard du Larvotto"}, {"location", location}, {"hint", ""}}},
-               json::Object{
-                   {{"name", "Boulevard du Larvotto"}, {"location", location}, {"hint", ""}}}}}},
+          json::Array{{json::Object{{{"name", "Boulevard du Larvotto"},
+                                     {"location", location},
+                                     {"distance", round(0.137249 * 1000000)},
+                                     {"hint", ""}}},
+                       json::Object{{{"name", "Boulevard du Larvotto"},
+                                     {"location", location},
+                                     {"distance", round(0.137249 * 1000000)},
+                                     {"hint", ""}}}}}},
          {"routes",
           json::Array{{json::Object{
               {{"distance", 0.},
@@ -64,17 +91,18 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
                                                   {"geometry", "yw_jGupkl@??"},
                                                   {"name", "Boulevard du Larvotto"},
                                                   {"mode", "driving"},
+                                                  {"driving_side", "right"},
                                                   {"maneuver",
                                                    json::Object{{
                                                        {"location", location},
                                                        {"bearing_before", 0},
-                                                       {"bearing_after", 58},
+                                                       {"bearing_after", 238},
                                                        {"type", "depart"},
                                                    }}},
                                                   {"intersections",
                                                    json::Array{{json::Object{
                                                        {{"location", location},
-                                                        {"bearings", json::Array{{58}}},
+                                                        {"bearings", json::Array{{238}}},
                                                         {"entry", json::Array{{json::True()}}},
                                                         {"out", 0}}}}}}}}},
 
@@ -84,24 +112,33 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
                                                  {"geometry", "yw_jGupkl@"},
                                                  {"name", "Boulevard du Larvotto"},
                                                  {"mode", "driving"},
+                                                 {"driving_side", "right"},
                                                  {"maneuver",
                                                   json::Object{{{"location", location},
-                                                                {"bearing_before", 58},
+                                                                {"bearing_before", 238},
                                                                 {"bearing_after", 0},
                                                                 {"type", "arrive"}}}},
                                                  {"intersections",
                                                   json::Array{{json::Object{
                                                       {{"location", location},
-                                                       {"bearings", json::Array{{238}}},
+                                                       {"bearings", json::Array{{58}}},
                                                        {"entry", json::Array{{json::True()}}},
                                                        {"in", 0}}}}}}
 
                                    }}}}}}}}}}}}}}}}};
 
-    CHECK_EQUAL_JSON(reference, result);
+    CHECK_EQUAL_JSON(reference, json_result);
+}
+BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture_old_api)
+{
+    test_route_same_coordinates_fixture(true);
+}
+BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture_new_api)
+{
+    test_route_same_coordinates_fixture(false);
 }
 
-BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
+void test_route_same_coordinates(bool use_json_only_api)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
@@ -113,14 +150,14 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    json::Object result;
-    const auto rc = osrm.Route(params, result);
+    json::Object json_result;
+    const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK(waypoints.size() == params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
@@ -141,7 +178,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
         BOOST_CHECK(!hint.empty());
     }
 
-    const auto &routes = result.values.at("routes").get<json::Array>().values;
+    const auto &routes = json_result.values.at("routes").get<json::Array>().values;
     BOOST_REQUIRE_GT(routes.size(), 0);
 
     for (const auto &route : routes)
@@ -226,7 +263,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
                     const auto &entries = intersection_object.at("entry").get<json::Array>().values;
                     BOOST_CHECK(bearings.size() == entries.size());
 
-                    for (const auto bearing : bearings)
+                    for (const auto &bearing : bearings)
                         BOOST_CHECK(0. <= bearing.get<json::Number>().value &&
                                     bearing.get<json::Number>().value <= 360.);
 
@@ -252,8 +289,64 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
         }
     }
 }
+BOOST_AUTO_TEST_CASE(test_route_same_coordinates_old_api) { test_route_same_coordinates(true); }
+BOOST_AUTO_TEST_CASE(test_route_same_coordinates_new_api) { test_route_same_coordinates(false); }
 
-BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_small_component)
+void test_route_same_coordinates_no_waypoints(bool use_json_only_api)
+{
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    using namespace osrm;
+
+    RouteParameters params;
+    params.skip_waypoints = true;
+    params.steps = true;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+
+    json::Object json_result;
+    const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
+    BOOST_CHECK(rc == Status::Ok);
+
+    const auto code = json_result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    BOOST_CHECK(json_result.values.find("waypoints") == json_result.values.end());
+
+    const auto &routes = json_result.values.at("routes").get<json::Array>().values;
+    BOOST_REQUIRE_GT(routes.size(), 0);
+
+    for (const auto &route : routes)
+    {
+        const auto &route_object = route.get<json::Object>();
+
+        const auto distance = route_object.values.at("distance").get<json::Number>().value;
+        BOOST_CHECK_EQUAL(distance, 0);
+
+        const auto duration = route_object.values.at("duration").get<json::Number>().value;
+        BOOST_CHECK_EQUAL(duration, 0);
+
+        // geometries=polyline by default
+        const auto geometry = route_object.values.at("geometry").get<json::String>().value;
+        BOOST_CHECK(!geometry.empty());
+
+        const auto &legs = route_object.values.at("legs").get<json::Array>().values;
+        BOOST_CHECK(!legs.empty());
+
+        // The rest of legs contents is verified by test_route_same_coordinates
+    }
+}
+BOOST_AUTO_TEST_CASE(test_route_same_coordinates_no_waypoints_old_api)
+{
+    test_route_same_coordinates_no_waypoints(true);
+}
+BOOST_AUTO_TEST_CASE(test_route_same_coordinates_no_waypoints_new_api)
+{
+    test_route_same_coordinates_no_waypoints(false);
+}
+
+void test_route_response_for_locations_in_small_component(bool use_json_only_api)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
@@ -266,14 +359,14 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_small_component)
     params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
 
-    json::Object result;
-    const auto rc = osrm.Route(params, result);
+    json::Object json_result;
+    const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
@@ -287,8 +380,16 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_small_component)
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
     }
 }
+BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_small_component_old_api)
+{
+    test_route_response_for_locations_in_small_component(true);
+}
+BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_small_component_new_api)
+{
+    test_route_response_for_locations_in_small_component(false);
+}
 
-BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_big_component)
+void test_route_response_for_locations_in_big_component(bool use_json_only_api)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
@@ -301,14 +402,14 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_big_component)
     params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
 
-    json::Object result;
-    const auto rc = osrm.Route(params, result);
+    json::Object json_result;
+    const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
@@ -322,8 +423,16 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_big_component)
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
     }
 }
+BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_big_component_old_api)
+{
+    test_route_response_for_locations_in_big_component(true);
+}
+BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_big_component_new_api)
+{
+    test_route_response_for_locations_in_big_component(false);
+}
 
-BOOST_AUTO_TEST_CASE(test_route_response_for_locations_across_components)
+void test_route_response_for_locations_across_components(bool use_json_only_api)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
@@ -338,14 +447,14 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_across_components)
     params.coordinates.push_back(small_component.at(1));
     params.coordinates.push_back(big_component.at(1));
 
-    json::Object result;
-    const auto rc = osrm.Route(params, result);
+    json::Object json_result;
+    const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
@@ -359,8 +468,16 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_across_components)
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
     }
 }
+BOOST_AUTO_TEST_CASE(test_route_response_for_locations_across_components_old_api)
+{
+    test_route_response_for_locations_across_components(true);
+}
+BOOST_AUTO_TEST_CASE(test_route_response_for_locations_across_components_new_api)
+{
+    test_route_response_for_locations_across_components(false);
+}
 
-BOOST_AUTO_TEST_CASE(test_route_user_disables_generating_hints)
+void test_route_user_disables_generating_hints(bool use_json_only_api)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
@@ -372,15 +489,23 @@ BOOST_AUTO_TEST_CASE(test_route_user_disables_generating_hints)
     params.coordinates.push_back(get_dummy_location());
     params.generate_hints = false;
 
-    json::Object result;
-    const auto rc = osrm.Route(params, result);
+    json::Object json_result;
+    const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    for (auto waypoint : result.values["waypoints"].get<json::Array>().values)
+    for (auto waypoint : json_result.values["waypoints"].get<json::Array>().values)
         BOOST_CHECK_EQUAL(waypoint.get<json::Object>().values.count("hint"), 0);
 }
+BOOST_AUTO_TEST_CASE(test_route_user_disables_generating_hints_old_api)
+{
+    test_route_user_disables_generating_hints(true);
+}
+BOOST_AUTO_TEST_CASE(test_route_user_disables_generating_hints_new_api)
+{
+    test_route_user_disables_generating_hints(false);
+}
 
-BOOST_AUTO_TEST_CASE(speed_annotation_matches_duration_and_distance)
+void speed_annotation_matches_duration_and_distance(bool use_json_only_api)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
@@ -393,11 +518,11 @@ BOOST_AUTO_TEST_CASE(speed_annotation_matches_duration_and_distance)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    json::Object result;
-    const auto rc = osrm.Route(params, result);
+    json::Object json_result;
+    const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto &routes = result.values["routes"].get<json::Array>().values;
+    const auto &routes = json_result.values["routes"].get<json::Array>().values;
     const auto &legs = routes[0].get<json::Object>().values.at("legs").get<json::Array>().values;
     const auto &annotation =
         legs[0].get<json::Object>().values.at("annotation").get<json::Object>();
@@ -405,16 +530,32 @@ BOOST_AUTO_TEST_CASE(speed_annotation_matches_duration_and_distance)
     const auto &durations = annotation.values.at("duration").get<json::Array>().values;
     const auto &distances = annotation.values.at("distance").get<json::Array>().values;
     int length = speeds.size();
+
+    BOOST_CHECK_EQUAL(length, 1);
     for (int i = 0; i < length; i++)
     {
         auto speed = speeds[i].get<json::Number>().value;
         auto duration = durations[i].get<json::Number>().value;
         auto distance = distances[i].get<json::Number>().value;
-        BOOST_CHECK_EQUAL(speed, std::round(distance / duration * 10.) / 10.);
+        auto calc = std::round(distance / duration * 10.) / 10.;
+        BOOST_CHECK_EQUAL(speed, std::isnan(calc) ? 0 : calc);
+
+        // Because we route from/to the same location, all annotations should be 0;
+        BOOST_CHECK_EQUAL(speed, 0);
+        BOOST_CHECK_EQUAL(distance, 0);
+        BOOST_CHECK_EQUAL(duration, 0);
     }
 }
+BOOST_AUTO_TEST_CASE(speed_annotation_matches_duration_and_distance_old_api)
+{
+    speed_annotation_matches_duration_and_distance(true);
+}
+BOOST_AUTO_TEST_CASE(speed_annotation_matches_duration_and_distance_new_api)
+{
+    speed_annotation_matches_duration_and_distance(false);
+}
 
-BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property)
+void test_manual_setting_of_annotations_property(bool use_json_only_api)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
@@ -425,14 +566,14 @@ BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
-    json::Object result;
-    const auto rc = osrm.Route(params, result);
+    json::Object json_result;
+    const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = result.values.at("code").get<json::String>().value;
+    const auto code = json_result.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    auto annotations = result.values["routes"]
+    auto annotations = json_result.values["routes"]
                            .get<json::Array>()
                            .values[0]
                            .get<json::Object>()
@@ -443,7 +584,152 @@ BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property)
                            .values["annotation"]
                            .get<json::Object>()
                            .values;
-    BOOST_CHECK_EQUAL(annotations.size(), 5);
+    BOOST_CHECK_EQUAL(annotations.size(), 6);
+}
+BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property_old_api)
+{
+    test_manual_setting_of_annotations_property(true);
+}
+BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property_new_api)
+{
+    test_manual_setting_of_annotations_property(false);
+}
+
+BOOST_AUTO_TEST_CASE(test_route_serialize_fb)
+{
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    using namespace osrm;
+
+    RouteParameters params;
+    params.steps = true;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+
+    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    const auto rc = osrm.Route(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    BOOST_CHECK(!fb->error());
+
+    BOOST_CHECK(fb->waypoints() != nullptr);
+    const auto waypoints = fb->waypoints();
+    BOOST_CHECK(waypoints->size() == params.coordinates.size());
+
+    for (const auto waypoint : *waypoints)
+    {
+        const auto longitude = waypoint->location()->longitude();
+        const auto latitude = waypoint->location()->latitude();
+        BOOST_CHECK(longitude >= -180. && longitude <= 180.);
+        BOOST_CHECK(latitude >= -90. && latitude <= 90.);
+
+        BOOST_CHECK(!waypoint->hint()->str().empty());
+    }
+
+    BOOST_CHECK(fb->routes() != nullptr);
+    const auto routes = fb->routes();
+    BOOST_REQUIRE_GT(routes->size(), 0);
+
+    for (const auto route : *routes)
+    {
+        BOOST_CHECK_EQUAL(route->distance(), 0);
+        BOOST_CHECK_EQUAL(route->duration(), 0);
+
+        const auto &legs = route->legs();
+        BOOST_CHECK(legs->size() > 0);
+
+        for (const auto leg : *legs)
+        {
+            BOOST_CHECK_EQUAL(leg->distance(), 0);
+
+            BOOST_CHECK_EQUAL(leg->duration(), 0);
+
+            BOOST_CHECK(leg->steps() != nullptr);
+            const auto steps = leg->steps();
+            BOOST_CHECK(steps->size() > 0);
+
+            std::size_t step_count = 0;
+
+            for (const auto step : *steps)
+            {
+                BOOST_CHECK_EQUAL(step->distance(), 0);
+
+                BOOST_CHECK_EQUAL(step->duration(), 0);
+
+                BOOST_CHECK(step->maneuver() != nullptr);
+
+                BOOST_CHECK(step->intersections() != nullptr);
+                const auto intersections = step->intersections();
+
+                for (auto intersection : *intersections)
+                {
+                    const auto longitude = intersection->location()->longitude();
+                    const auto latitude = intersection->location()->latitude();
+                    BOOST_CHECK(longitude >= -180. && longitude <= 180.);
+                    BOOST_CHECK(latitude >= -90. && latitude <= 90.);
+
+                    BOOST_CHECK(intersection->bearings() != nullptr);
+                    const auto bearings = intersection->bearings();
+                    BOOST_CHECK(bearings->size() > 0);
+
+                    for (const auto bearing : *bearings)
+                        BOOST_CHECK(0. <= bearing && bearing <= 360.);
+
+                    if (step_count > 0)
+                    {
+                        BOOST_CHECK(intersection->in_bearing() < bearings->size());
+                    }
+                    if (step_count + 1 < steps->size())
+                    {
+                        BOOST_CHECK(intersection->out_bearing() < bearings->size());
+                    }
+                }
+                ++step_count;
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_route_serialize_fb_skip_waypoints)
+{
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    using namespace osrm;
+
+    RouteParameters params;
+    params.skip_waypoints = true;
+    params.steps = true;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+
+    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    const auto rc = osrm.Route(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    BOOST_CHECK(!fb->error());
+
+    BOOST_CHECK(fb->waypoints() == nullptr);
+
+    BOOST_CHECK(fb->routes() != nullptr);
+    const auto routes = fb->routes();
+    BOOST_REQUIRE_GT(routes->size(), 0);
+
+    for (const auto route : *routes)
+    {
+        BOOST_CHECK_EQUAL(route->distance(), 0);
+        BOOST_CHECK_EQUAL(route->duration(), 0);
+
+        const auto &legs = route->legs();
+        BOOST_CHECK(legs->size() > 0);
+
+        // Rest of the content is verified by test_route_serialize_fb
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

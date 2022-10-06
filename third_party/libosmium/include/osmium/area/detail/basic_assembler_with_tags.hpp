@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,13 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstring>
-
 #include <osmium/area/assembler_config.hpp>
 #include <osmium/area/detail/basic_assembler.hpp>
 #include <osmium/area/stats.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/osm/tag.hpp>
+
+#include <cstring>
 
 namespace osmium {
 
@@ -56,19 +56,19 @@ namespace osmium {
                         return false;
                     }
                     return stats().duplicate_nodes ||
-                        stats().duplicate_segments ||
-                        stats().intersections ||
-                        stats().open_rings ||
-                        stats().short_ways ||
-                        stats().touching_rings ||
-                        stats().ways_in_multiple_rings ||
-                        stats().wrong_role;
+                           stats().duplicate_segments ||
+                           stats().intersections ||
+                           stats().open_rings ||
+                           stats().short_ways ||
+                           stats().touching_rings ||
+                           stats().ways_in_multiple_rings ||
+                           stats().wrong_role;
                 }
 
                 static void copy_tags_without_type(osmium::builder::AreaBuilder& builder, const osmium::TagList& tags) {
                     osmium::builder::TagListBuilder tl_builder{builder};
                     for (const osmium::Tag& tag : tags) {
-                        if (std::strcmp(tag.key(), "type")) {
+                        if (std::strcmp(tag.key(), "type") != 0) {
                             tl_builder.add_tag(tag.key(), tag.value());
                         }
                     }

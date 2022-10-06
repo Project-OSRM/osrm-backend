@@ -1,5 +1,4 @@
 
-#include <cmath>
 #include <cstring>
 #include <stdexcept>
 
@@ -13,7 +12,7 @@ public:
         osmium::handler::Handler() {
     }
 
-    void node(const osmium::Node& node) {
+    void node(const osmium::Node& node) const {
         constexpr const double epsilon = 0.00000001;
         if (node.id() == 100000) {
             REQUIRE(node.version() == 1);
@@ -21,8 +20,8 @@ public:
             REQUIRE(node.uid() == 1);
             REQUIRE(!std::strcmp(node.user(), "test"));
             REQUIRE(node.changeset() == 1);
-            REQUIRE(std::abs(node.location().lon() - 1.02) < epsilon);
-            REQUIRE(std::abs(node.location().lat() - 1.02) < epsilon);
+            REQUIRE(node.location().lon() == Approx(1.02).epsilon(epsilon));
+            REQUIRE(node.location().lat() == Approx(1.02).epsilon(epsilon));
         } else {
             throw std::runtime_error{"Unknown ID"};
         }
@@ -31,16 +30,12 @@ public:
 }; // class TestHandler100
 
 TEST_CASE("100") {
+    osmium::io::Reader reader{dirname + "/1/100/data.osm"};
 
-    SECTION("test 100") {
-        osmium::io::Reader reader{dirname + "/1/100/data.osm"};
+    CheckBasicsHandler check_basics_handler{100, 1, 0, 0};
+    CheckWKTHandler check_wkt_handler{dirname, 100};
+    TestHandler100 test_handler;
 
-        CheckBasicsHandler check_basics_handler{100, 1, 0, 0};
-        CheckWKTHandler check_wkt_handler{dirname, 100};
-        TestHandler100 test_handler;
-
-        osmium::apply(reader, check_basics_handler, check_wkt_handler, test_handler);
-    }
-
+    osmium::apply(reader, check_basics_handler, check_wkt_handler, test_handler);
 }
 

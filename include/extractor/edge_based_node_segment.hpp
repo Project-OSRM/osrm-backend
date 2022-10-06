@@ -20,9 +20,12 @@ namespace extractor
 struct EdgeBasedNodeSegment
 {
     EdgeBasedNodeSegment()
-        : forward_segment_id{SPECIAL_SEGMENTID, false},
-          reverse_segment_id{SPECIAL_SEGMENTID, false}, u(SPECIAL_NODEID), v(SPECIAL_NODEID),
-          fwd_segment_position(std::numeric_limits<unsigned short>::max())
+        : forward_segment_id{SPECIAL_SEGMENTID, false}, reverse_segment_id{SPECIAL_SEGMENTID,
+                                                                           false},
+          u(SPECIAL_NODEID), v(SPECIAL_NODEID),
+          fwd_segment_position(std::numeric_limits<unsigned short>::max() >>
+                               1), // >> 1 because we've only got 15 bits
+          is_startpoint(false)
     {
     }
 
@@ -30,9 +33,10 @@ struct EdgeBasedNodeSegment
                                   const SegmentID reverse_segment_id_,
                                   NodeID u,
                                   NodeID v,
-                                  unsigned short fwd_segment_position)
+                                  unsigned short fwd_segment_position,
+                                  bool is_startpoint_)
         : forward_segment_id(forward_segment_id_), reverse_segment_id(reverse_segment_id_), u(u),
-          v(v), fwd_segment_position(fwd_segment_position)
+          v(v), fwd_segment_position(fwd_segment_position), is_startpoint(is_startpoint_)
     {
         BOOST_ASSERT(forward_segment_id.enabled || reverse_segment_id.enabled);
     }
@@ -41,9 +45,10 @@ struct EdgeBasedNodeSegment
     SegmentID reverse_segment_id; // edge-based graph node ID in reverse direction (v->u if exists)
     NodeID u;                     // node-based graph node ID of the start node
     NodeID v;                     // node-based graph node ID of the target node
-    unsigned short fwd_segment_position; // segment id in a compressed geometry
+    unsigned short fwd_segment_position : 15; // segment id in a compressed geometry
+    bool is_startpoint : 1;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif // OSRM_EXTRACT_EDGE_BASED_NODE_SEGMENT_HPP

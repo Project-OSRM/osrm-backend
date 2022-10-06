@@ -8,6 +8,7 @@ local get_turn_lanes = require("lib/guidance").get_turn_lanes
 local set_classification = require("lib/guidance").set_classification
 local get_destination = require("lib/destination").get_destination
 local Tags = require('lib/tags')
+local Measure = require("lib/measure")
 
 WayHandlers = {}
 
@@ -79,6 +80,13 @@ function WayHandlers.startpoint(profile,way,result,data)
   else
     result.is_startpoint = result.forward_mode == profile.default_mode or
                            result.backward_mode == profile.default_mode
+  end
+  -- highway=service and access tags check
+  local is_service = data.highway == "service"
+  if is_service then
+    if profile.service_access_tag_blacklist[data.forward_access] then
+      result.is_startpoint = false
+    end
   end
 end
 
@@ -213,12 +221,29 @@ function WayHandlers.hov(profile,way,result,data)
   end
 end
 
+
+-- set highway and access classification by user preference
+function WayHandlers.way_classification_for_turn(profile,way,result,data)
+  local highway = way:get_value_by_key("highway")
+  local access = way:get_value_by_key("access")
+
+  if highway and profile.highway_turn_classification[highway] then
+    assert(profile.highway_turn_classification[highway] < 16, "highway_turn_classification must be smaller than 16")
+    result.highway_turn_classification = profile.highway_turn_classification[highway]
+  end
+  if access and profile.access_turn_classification[access] then
+    assert(profile.access_turn_classification[access] < 16, "access_turn_classification must be smaller than 16")
+    result.access_turn_classification = profile.access_turn_classification[access]
+  end
+end
+
+
 -- check accessibility by traversing our access tag hierarchy
 function WayHandlers.access(profile,way,result,data)
   data.forward_access, data.backward_access =
     Tags.get_forward_backward_by_set(way,data,profile.access_tags_hierarchy)
 
-  -- only allow a subset of roads that are marked as restricted
+  -- only allow a subset of roads to be treated as restricted
   if profile.restricted_highway_whitelist[data.highway] then
       if profile.restricted_access_tag_list[data.forward_access] then
           result.forward_restricted = true
@@ -229,6 +254,7 @@ function WayHandlers.access(profile,way,result,data)
       end
   end
 
+  -- blacklist access tags that aren't marked as restricted
   if profile.access_tag_blacklist[data.forward_access] and not result.forward_restricted then
     result.forward_mode = mode.inaccessible
   end
@@ -280,31 +306,46 @@ end
 
 -- add class information
 function WayHandlers.classes(profile,way,result,data)
+    if not profile.classes then
+        return
+    end
+
+    local allowed_classes = Set {}
+    for k, v in pairs(profile.classes) do
+        allowed_classes[v] = true
+    end
+
     local forward_toll, backward_toll = Tags.get_forward_backward_by_key(way, data, "toll")
     local forward_route, backward_route = Tags.get_forward_backward_by_key(way, data, "route")
+    local tunnel = way:get_value_by_key("tunnel")
 
-    if forward_toll == "yes" then
+    if allowed_classes["tunnel"] and tunnel and tunnel ~= "no" then
+      result.forward_classes["tunnel"] = true
+      result.backward_classes["tunnel"] = true
+    end
+
+    if allowed_classes["toll"] and forward_toll == "yes" then
         result.forward_classes["toll"] = true
     end
-    if backward_toll == "yes" then
+    if allowed_classes["toll"] and backward_toll == "yes" then
         result.backward_classes["toll"] = true
     end
 
-    if forward_route == "ferry" then
+    if allowed_classes["ferry"] and forward_route == "ferry" then
         result.forward_classes["ferry"] = true
     end
-    if backward_route == "ferry" then
+    if allowed_classes["ferry"] and backward_route == "ferry" then
         result.backward_classes["ferry"] = true
     end
 
-    if result.forward_restricted then
+    if allowed_classes["restricted"] and result.forward_restricted then
         result.forward_classes["restricted"] = true
     end
-    if result.backward_restricted then
+    if allowed_classes["restricted"] and result.backward_restricted then
         result.backward_classes["restricted"] = true
     end
 
-    if data.highway == "motorway" or data.highway == "motorway_link" then
+    if allowed_classes["motorway"] and (data.highway == "motorway" or data.highway == "motorway_link") then
         result.forward_classes["motorway"] = true
         result.backward_classes["motorway"] = true
     end
@@ -391,7 +432,7 @@ end
 
 -- maxspeed and advisory maxspeed
 function WayHandlers.maxspeed(profile,way,result,data)
-  local keys = Sequence { 'maxspeed:advisory', 'maxspeed' }
+  local keys = Sequence {  'maxspeed:advisory', 'maxspeed', 'source:maxspeed', 'maxspeed:type' }
   local forward, backward = Tags.get_forward_backward_by_set(way,data,keys)
   forward = WayHandlers.parse_maxspeed(forward,profile)
   backward = WayHandlers.parse_maxspeed(backward,profile)
@@ -409,12 +450,9 @@ function WayHandlers.parse_maxspeed(source,profile)
   if not source then
     return 0
   end
-  local n = tonumber(source:match("%d*"))
-  if n then
-    if string.match(source, "mph") or string.match(source, "mp/h") then
-      n = (n*1609)/1000
-    end
-  else
+
+  local n = Measure.get_max_speed(source)
+  if not n then
     -- parse maxspeed like FR:urban
     source = string.lower(source)
     n = profile.maxspeed_table[source]
@@ -427,6 +465,79 @@ function WayHandlers.parse_maxspeed(source,profile)
     end
   end
   return n
+end
+
+-- handle maxheight tags
+function WayHandlers.handle_height(profile,way,result,data)
+  local keys = Sequence { 'maxheight:physical', 'maxheight' }
+  local forward, backward = Tags.get_forward_backward_by_set(way,data,keys)
+  forward = Measure.get_max_height(forward,way)
+  backward = Measure.get_max_height(backward,way)
+
+  if forward and forward < profile.vehicle_height then
+    result.forward_mode = mode.inaccessible
+  end
+
+  if backward and backward < profile.vehicle_height then
+    result.backward_mode = mode.inaccessible
+  end
+end
+
+-- handle maxwidth tags
+function WayHandlers.handle_width(profile,way,result,data)
+  local keys = Sequence { 'maxwidth:physical', 'maxwidth', 'width', 'est_width' }
+  local forward, backward = Tags.get_forward_backward_by_set(way,data,keys)
+  local narrow = way:get_value_by_key('narrow')
+
+  if ((forward and forward == 'narrow') or (narrow and narrow == 'yes')) and profile.vehicle_width > 2.2 then
+    result.forward_mode = mode.inaccessible
+  elseif forward then
+    forward = Measure.get_max_width(forward)
+    if forward and forward <= profile.vehicle_width then
+      result.forward_mode = mode.inaccessible
+    end
+  end
+
+  if ((backward and backward == 'narrow') or (narrow and narrow == 'yes')) and profile.vehicle_width > 2.2 then
+    result.backward_mode = mode.inaccessible
+  elseif backward then
+    backward = Measure.get_max_width(backward)
+    if backward and backward <= profile.vehicle_width then
+      result.backward_mode = mode.inaccessible
+    end
+  end
+end
+
+-- handle maxweight tags
+function WayHandlers.handle_weight(profile,way,result,data)
+  local keys = Sequence { 'maxweight' }
+  local forward, backward = Tags.get_forward_backward_by_set(way,data,keys)
+  forward = Measure.get_max_weight(forward)
+  backward = Measure.get_max_weight(backward)
+
+  if forward and forward < profile.vehicle_weight then
+    result.forward_mode = mode.inaccessible
+  end
+
+  if backward and backward < profile.vehicle_weight then
+    result.backward_mode = mode.inaccessible
+  end
+end
+
+-- handle maxlength tags
+function WayHandlers.handle_length(profile,way,result,data)
+  local keys = Sequence { 'maxlength' }
+  local forward, backward = Tags.get_forward_backward_by_set(way,data,keys)
+  forward = Measure.get_max_length(forward)
+  backward = Measure.get_max_length(backward)
+
+  if forward and forward < profile.vehicle_length then
+    result.forward_mode = mode.inaccessible
+  end
+
+  if backward and backward < profile.vehicle_length then
+    result.backward_mode = mode.inaccessible
+  end
 end
 
 -- handle oneways tags
@@ -487,6 +598,15 @@ function WayHandlers.weights(profile,way,result,data)
     if (result.backward_mode ~= mode.inaccessible and result.backward_speed > 0) then
        result.backward_rate = 1
     end
+  end
+end
+
+
+-- handle general avoid rules
+
+function WayHandlers.avoid_ways(profile,way,result,data)
+  if profile.avoid[data.highway] then
+    return false
   end
 end
 
@@ -552,6 +672,22 @@ function WayHandlers.blocked_ways(profile,way,result,data)
   end
 end
 
+function WayHandlers.driving_side(profile, way, result, data)
+   local driving_side = way:get_value_by_key('driving_side')
+   if driving_side == nil then
+      driving_side = way:get_location_tag('driving_side')
+   end
+
+   if driving_side == 'left' then
+      result.is_left_hand_driving = true
+   elseif driving_side == 'right' then
+      result.is_left_hand_driving = false
+   else
+      result.is_left_hand_driving = profile.properties.left_hand_driving
+   end
+end
+
+
 -- Call a sequence of handlers, aborting in case a handler returns false. Example:
 --
 -- handlers = Sequence {
@@ -566,13 +702,13 @@ end
 -- WayHandlers.run(handlers,way,result,data,profile)
 --
 -- Each method in the list will be called on the WayHandlers object.
--- All handlers must accept the parameteres (profile,way,result,data) and return false
+-- All handlers must accept the parameteres (profile, way, result, data, relations) and return false
 -- if the handler chain should be aborted.
 -- To ensure the correct order of method calls, use a Sequence of handler names.
 
-function WayHandlers.run(profile,way,result,data,handlers)
+function WayHandlers.run(profile, way, result, data, handlers, relations)
   for i,handler in ipairs(handlers) do
-    if handler(profile,way,result,data) == false then
+    if handler(profile, way, result, data, relations) == false then
       return false
     end
   end

@@ -15,7 +15,7 @@ enum compression_type
     deflate_rfc1951
 };
 }
-}
-}
+} // namespace server
+} // namespace osrm
 
 #endif // COMPRESSION_TYPE_HPP

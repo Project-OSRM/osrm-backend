@@ -1,0 +1,11 @@
+
+option optimize_for = LITE_RUNTIME;
+
+package TestRepeatedPackedSFixed64;
+
+message Test {
+
+    repeated sfixed64 i = 1 [packed=true];
+
+}
+

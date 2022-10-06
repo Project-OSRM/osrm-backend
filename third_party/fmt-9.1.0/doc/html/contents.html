@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Contents &mdash; fmt 9.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/breathe.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '9.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        LINK_SUFFIX: '.html',
+        SOURCELINK_SUFFIX: '.txt',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX:  '.txt'
+      };
+    </script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+<meta name="description" content="Small, safe and fast formatting library">
+<meta name="keywords" content="C++, formatting, printf, string, library">
+<meta name="author" content="Victor Zverovich">
+<link rel="stylesheet" href="_static/fmt.css">
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-20116650-4"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-20116650-4');
+</script>
+
+  </head>
+  <body role="document">
+<nav class="navbar navbar-inverse">
+  <div class="tb-container">
+    <div class="row">
+      <div class="navbar-content">
+        
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed"
+                  data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="index.html">{fmt}</a>
+        </div>
+
+        
+        <div class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                 role="button" aria-expanded="false">9.1.0
+                <span class="caret"></span></a>
+              <ul class="dropdown-menu" role="menu">
+                
+                <li><a href="https://fmt.dev/9.1.0">9.1.0</a></li>
+                
+                <li><a href="https://fmt.dev/9.0.0">9.0.0</a></li>
+                
+                <li><a href="https://fmt.dev/8.1.1">8.1.1</a></li>
+                
+              </ul>
+            </li>
+            
+              
+              <li class="active"><a href="contents.html">Contents
+                <span class="sr-only">(current)</span></a></li>
+              
+            
+              
+              <li><a href="usage.html">Usage</a></li>
+              
+            
+              
+              <li><a href="api.html">API</a></li>
+              
+            
+              
+              <li><a href="syntax.html">Syntax</a></li>
+              
+            
+          </ul>
+          
+            
+<form class="navbar-form navbar-right" role="search" action="search.html"
+      method="get">
+  <div class="form-group">
+    <input type="text" name="q" class="form-control"
+           placeholder="Search" >
+  </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+  
+</form>
+          
+        </div> 
+      </div> 
+    </div> 
+  </div> 
+</nav>
+
+
+
+<div class="tb-container">
+  <div class="row">
+    
+
+    <div class="content">
+      
+  <section id="contents">
+<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#building-the-library">Building the Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#installing-the-library">Installing the Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#usage-with-cmake">Usage with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#usage-with-build2">Usage with build2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#building-the-documentation">Building the Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#conda">Conda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#vcpkg">Vcpkg</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#lhelper">LHelper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#android-ndk">Android NDK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#homebrew">Homebrew</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#core-api">Core API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#format-api">Format API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#range-and-tuple-formatting">Range and Tuple Formatting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#date-and-time-formatting">Date and Time Formatting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#standard-library-types-formatting">Standard Library Types Formatting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#format-string-compilation">Format String Compilation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#terminal-color-and-text-style">Terminal Color and Text Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#system-apis">System APIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#std-ostream-support"><code class="docutils literal notranslate"><span class="pre">std::ostream</span></code> Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#printf-formatting"><code class="docutils literal notranslate"><span class="pre">printf</span></code> Formatting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#wchar-t-support"><code class="docutils literal notranslate"><span class="pre">wchar_t</span></code> Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#compatibility-with-c-20-std-format">Compatibility with C++20 <code class="docutils literal notranslate"><span class="pre">std::format</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="syntax.html">Format String Syntax</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="syntax.html#format-specification-mini-language">Format Specification Mini-Language</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syntax.html#chrono-format-specifications">Chrono Format Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syntax.html#range-format-specifications">Range Format Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syntax.html#format-examples">Format Examples</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012-present, Victor Zverovich.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.3.0.
+    </div>
+
+<script src="_static/bootstrap.min.js"></script>
+
+  </body>
+</html>

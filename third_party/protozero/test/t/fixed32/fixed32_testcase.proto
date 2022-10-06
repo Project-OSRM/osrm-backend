@@ -1,0 +1,12 @@
+syntax = "proto2";
+
+option optimize_for = LITE_RUNTIME;
+
+package TestFixed32;
+
+message Test {
+
+    required fixed32 i = 1;
+
+}
+

@@ -22,16 +22,12 @@ module.exports = function () {
         this.PROFILES_PATH = path.resolve(this.ROOT_PATH, 'profiles');
         this.FIXTURES_PATH = path.resolve(this.ROOT_PATH, 'unit_tests/fixtures');
         this.BIN_PATH = process.env.OSRM_BUILD_DIR && process.env.OSRM_BUILD_DIR || path.resolve(this.ROOT_PATH, 'build');
-        var stxxl_config = path.resolve(this.ROOT_PATH, 'test/.stxxl');
-        if (!fs.existsSync(stxxl_config)) {
-            return callback(new Error('*** '+stxxl_config+ 'does not exist'));
-        }
-
+        this.DATASET_NAME = 'cucumber';
         this.PLATFORM_WINDOWS = process.platform.match(/^win.*/);
-        this.DEFAULT_ENVIRONMENT = Object.assign({STXXLCFG: stxxl_config}, process.env);
+        this.DEFAULT_ENVIRONMENT = process.env;
         this.DEFAULT_PROFILE = 'bicycle';
         this.DEFAULT_INPUT_FORMAT = 'osm';
-        this.DEFAULT_LOAD_METHOD = 'datastore';
+        this.DEFAULT_LOAD_METHOD = process.argv[process.argv.indexOf('-m') +1].match('mmap') ? 'mmap' : 'datastore';
         this.DEFAULT_ORIGIN = [1,1];
         this.OSM_USER = 'osrm';
         this.OSM_UID = 1;
@@ -43,7 +39,13 @@ module.exports = function () {
         this.TIMEZONE_NAMES = this.PLATFORM_WINDOWS ? 'win' : 'iana';
 
         this.OSRM_PORT = process.env.OSRM_PORT && parseInt(process.env.OSRM_PORT) || 5000;
-        this.HOST = 'http://127.0.0.1:' + this.OSRM_PORT;
+        this.OSRM_IP = process.env.OSRM_IP || '127.0.0.1';
+        this.OSRM_CONNECTION_RETRIES = process.env.OSRM_CONNECTION_RETRIES && parseInt(process.env.OSRM_CONNECTION_RETRIES) || 10;
+        this.OSRM_CONNECTION_EXP_BACKOFF_COEF = process.env.OSRM_CONNECTION_EXP_BACKOFF_COEF && parseFloat(process.env.OSRM_CONNECTION_EXP_BACKOFF_COEF) || 1.0;
+        
+        this.HOST = `http://${this.OSRM_IP}:${this.OSRM_PORT}`;
+
+        this.OSRM_PROFILE = process.env.OSRM_PROFILE;
 
         if (this.PLATFORM_WINDOWS) {
             this.TERMSIGNAL = 9;
@@ -68,14 +70,18 @@ module.exports = function () {
 
         this.OSRM_EXTRACT_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-extract', this.EXE));
         this.OSRM_CONTRACT_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-contract', this.EXE));
+        this.OSRM_CUSTOMIZE_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-customize', this.EXE));
+        this.OSRM_PARTITION_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-partition', this.EXE));
         this.OSRM_ROUTED_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-routed', this.EXE));
         this.LIB_OSRM_EXTRACT_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm_extract'),
         this.LIB_OSRM_CONTRACT_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm_contract'),
+        this.LIB_OSRM_CUSTOMIZE_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm_customize'),
+        this.LIB_OSRM_PARTITION_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm_partition'),
         this.LIB_OSRM_PATH = util.format('%s/' + this.LIB, this.BIN_PATH, 'osrm');
 
         // eslint-disable-next-line no-console
         console.info(util.format('Node Version', process.version));
-        if (parseInt(process.version.match(/v(\d)/)[1]) < 4) throw new Error('*** Please upgrade to Node 4.+ to run OSRM cucumber tests');
+        if (parseInt(process.version.match(/v(\d+)/)[1]) < 4) throw new Error('*** Please upgrade to Node 4.+ to run OSRM cucumber tests');
 
         fs.exists(this.TEST_PATH, (exists) => {
             if (exists)
@@ -90,7 +96,7 @@ module.exports = function () {
     };
 
     this.verifyOSRMIsNotRunning = (callback) => {
-        tryConnect(this.OSRM_PORT, (err) => {
+        tryConnect(this.OSRM_IP, this.OSRM_PORT, (err) => {
             if (!err) return callback(new Error('*** osrm-routed is already running.'));
             else callback();
         });
@@ -111,7 +117,7 @@ module.exports = function () {
         };
 
         var q = d3.queue();
-        [this.OSRM_EXTRACT_PATH, this.OSRM_CONTRACT_PATH, this.OSRM_ROUTED_PATH].forEach(bin => { q.defer(verify, bin); });
+        [this.OSRM_EXTRACT_PATH, this.OSRM_CONTRACT_PATH, this.OSRM_CUSTOMIZE_PATH, this.OSRM_PARTITION_PATH, this.OSRM_ROUTED_PATH].forEach(bin => { q.defer(verify, bin); });
         q.awaitAll(callback);
     };
 

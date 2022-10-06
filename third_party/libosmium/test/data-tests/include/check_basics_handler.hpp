@@ -34,13 +34,13 @@ class CheckBasicsHandler : public osmium::handler::Handler {
     void id_check(osmium::object_id_type id, osmium::object_id_type min, osmium::object_id_type max) {
         if (id < m_id_range + min || id > m_id_range + max) {
             std::cerr << "  id " << id << " out of range for this test case\n";
-            exit(1);
+            std::exit(1);
         }
 
         auto r = m_ids.insert(id);
         if (!r.second) {
             std::cerr << "  id " << id << " contained twice in data.osm\n";
-            exit(1);
+            std::exit(1);
         }
     }
 
@@ -59,15 +59,15 @@ public:
     ~CheckBasicsHandler() {
         if (m_num_nodes != 0) {
             std::cerr << "  wrong number of nodes in data.osm\n";
-            exit(1);
+            std::exit(1);
         }
         if (m_num_ways != 0) {
             std::cerr << "  wrong number of ways in data.osm\n";
-            exit(1);
+            std::exit(1);
         }
         if (m_num_relations != 0) {
             std::cerr << "  wrong number of relations in data.osm\n";
-            exit(1);
+            std::exit(1);
         }
     }
 

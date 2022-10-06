@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2016, Project OSRM contributors
+Copyright (c) 2017, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -33,12 +33,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace osrm
 {
 using util::Coordinate;
-using util::toFixed;
-using util::toFloating;
 using util::FixedLatitude;
 using util::FixedLongitude;
 using util::FloatLatitude;
 using util::FloatLongitude;
-}
+using util::toFixed;
+using util::toFloating;
+} // namespace osrm
 
 #endif

@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -42,15 +42,22 @@ DEALINGS IN THE SOFTWARE.
  * @attention If you include this file, you'll need to link with `libproj`.
  */
 
-#include <memory>
-#include <string>
-
-#include <proj_api.h>
-
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/geom/mercator_projection.hpp>
 #include <osmium/geom/util.hpp>
 #include <osmium/osm/location.hpp>
+#include <osmium/util/compatibility.hpp>
+
+#ifdef ACCEPT_USE_OF_DEPRECATED_PROJ_API_H
+# include <proj_api.h>
+#else
+# define ACCEPT_USE_OF_DEPRECATED_PROJ_API_H
+# include <proj_api.h>
+# undef ACCEPT_USE_OF_DEPRECATED_PROJ_API_H
+#endif
+
+#include <memory>
+#include <string>
 
 namespace osmium {
 
@@ -58,8 +65,10 @@ namespace osmium {
 
         /**
          * C++ wrapper for a Coordinate Reference System of the proj library.
+         *
+         * @deprecated Only supports the old PROJ API.
          */
-        class CRS {
+        class OSMIUM_DEPRECATED CRS {
 
             struct ProjCRSDeleter {
                 void operator()(void* crs) {
@@ -110,9 +119,10 @@ namespace osmium {
          * Coordinates have to be in radians and are produced in radians.
          *
          * @throws osmium::projection_error if the projection fails
+         *
+         * @deprecated Only supports the old PROJ API.
          */
-        // cppcheck-suppress passedByValue (because c is small and we want to change it)
-        inline Coordinates transform(const CRS& src, const CRS& dest, Coordinates c) {
+        inline OSMIUM_DEPRECATED Coordinates transform(const CRS& src, const CRS& dest, Coordinates c) {
             const int result = pj_transform(src.get(), dest.get(), 1, 1, &c.x, &c.y, nullptr);
             if (result != 0) {
                 throw osmium::projection_error{std::string{"projection failed: "} + pj_strerrno(result)};
@@ -130,8 +140,10 @@ namespace osmium {
          * implementation of the Mercator projection is used, otherwise this
          * falls back to using the proj.4 library. Note that this "magic" does
          * not work if you use any of the constructors taking a string.
+         *
+         * @deprecated Only supports the old PROJ API.
          */
-        class Projection {
+        class OSMIUM_DEPRECATED Projection {
 
             int m_epsg;
             std::string m_proj_string;
@@ -140,9 +152,9 @@ namespace osmium {
 
         public:
 
-            explicit Projection(const std::string& proj_string) :
+            explicit Projection(std::string proj_string) :
                 m_epsg(-1),
-                m_proj_string(proj_string),
+                m_proj_string(std::move(proj_string)),
                 m_crs_user(proj_string) {
             }
 
@@ -158,10 +170,18 @@ namespace osmium {
                 m_crs_user(epsg) {
             }
 
+            /**
+             * Do coordinate transformation.
+             *
+             * @pre Location must be in valid range (depends on projection
+             *      used).
+             */
             Coordinates operator()(osmium::Location location) const {
                 if (m_epsg == 4326) {
                     return Coordinates{location.lon(), location.lat()};
-                } else if (m_epsg == 3857) {
+                }
+
+                if (m_epsg == 3857) {
                     return Coordinates{detail::lon_to_x(location.lon()),
                                        detail::lat_to_y(location.lat())};
                 }

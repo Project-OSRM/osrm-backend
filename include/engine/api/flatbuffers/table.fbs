@@ -1,0 +1,11 @@
+include "waypoint.fbs";
+namespace osrm.engine.api.fbresult;
+
+table Table {
+    durations: [float];
+    rows: ushort;
+    cols: ushort;
+    distances: [float];
+    destinations: [Waypoint];
+    fallback_speed_cells: [uint];
+}

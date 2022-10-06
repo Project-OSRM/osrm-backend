@@ -33,10 +33,10 @@ class ViaRoutePlugin final : public BasePlugin
 
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::RouteParameters &route_parameters,
-                         util::json::Object &json_result) const;
+                         osrm::engine::api::ResultT &json_result) const;
 };
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm
 
 #endif // VIA_ROUTE_HPP

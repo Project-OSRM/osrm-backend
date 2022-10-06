@@ -11,7 +11,7 @@ Feature: Annotations
             """
 
         And the query options
-          | annotations | duration,speed,weight |
+          | annotations | duration,speed,weight,nodes |
 
         And the ways
             | nodes | highway     |
@@ -22,10 +22,10 @@ Feature: Annotations
             | lm    | residential |
 
         When I route I should get
-            | from | to | route    | a:speed     | a:weight |
-            | h    | j  | hk,jk,jk | 6.7:6.7     | 15:15    |
-            | i    | m  | il,lm,lm | 6.7:6.7     | 15:15    |
-            | j    | m  | jk,lm    | 6.7:6.7:6.7 | 15:15:15 |
+            | from | to | route    | a:speed     | a:weight | a:nodes |
+            | h    | j  | hk,jk,jk | 6.7:6.7     | 15:15    | 1:4:3   |
+            | i    | m  | il,lm,lm | 6.7:6.7     | 15:15    | 2:5:6   |
+            | j    | m  | jk,lm    | 6.7:6.7:6.7 | 15:15:15 | 3:4:5:6 |
 
 
     Scenario: There should be different forward/reverse datasources
@@ -59,3 +59,60 @@ Feature: Annotations
           | from | to | route               | a:datasources   | a:speed                 |
           | a    | i  | abcdefghi,abcdefghi | 1:0:1:0:1:0:0:0 | 50:10:50:10:50:10:10:10 |
           | i    | a  | abcdefghi,abcdefghi | 0:1:0:0:0:0:0:1 | 10:50:10:10:10:10:10:50 |
+
+    Scenario: datasource name annotations
+        Given the profile "testbot"
+
+        And the node map
+            """
+            a b c
+            """
+
+        And the ways
+            | nodes |
+            | abc   |
+
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+
+        And the speed file
+        """
+        1,2,180,1
+        2,1,180,1
+        """
+
+        And the query options
+            | annotations | datasources |
+
+        # Note - the source names here are specific to how the tests are constructed,
+        #        so if this test is moved around (changes line number) or support code
+        #        changes how the filenames are generated, this test will need to be updated
+        When I route I should get
+            | from | to | route   | am:datasource_names                               |
+            | a    | c  | abc,abc | lua profile:63_datasource_name_annotations_speeds |
+            | c    | a  | abc,abc | lua profile:63_datasource_name_annotations_speeds |
+
+
+    Scenario: Speed annotations should handle zero segments
+        Given the profile "testbot"
+
+        Given the node map
+        """
+        a -- b --- c
+                   |
+                   d
+        """
+
+        And the ways
+          | nodes |
+          | abc   |
+          | cd    |
+
+        # This test relies on the snapping to the EBN cd to introduce a zero segment after the turn
+        And the query options
+          | annotations | speed,distance,duration,nodes |
+          | bearings    | 90,5;180,5                    |
+
+        When I route I should get
+            | from | to | route    | a:speed | a:distance            | a:duration | a:nodes |
+            | a    | c  | abc,abc  | 10:10   | 249.987619:299.962882 | 25:30      | 1:2:3   |

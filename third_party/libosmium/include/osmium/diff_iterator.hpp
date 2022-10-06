@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,13 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/osm/diff_object.hpp>
+
 #include <cassert>
 #include <cstddef>
 #include <iterator>
 #include <type_traits>
 #include <utility>
-
-#include <osmium/osm/diff_object.hpp>
 
 namespace osmium {
 
@@ -49,6 +49,9 @@ namespace osmium {
      * An input iterator wrapping any iterator over OSMObjects. When
      * dereferenced it will yield DiffObject objects pointing to the
      * underlying OSMObjects.
+     *
+     * Note that this class uses a mutable member variable internally.
+     * It can not be used safely in multiple threads!
      */
     template <typename TBasicIterator>
     class DiffIterator {
@@ -69,11 +72,11 @@ namespace osmium {
             const bool use_curr_for_prev =                    m_prev->type() != m_curr->type() || m_prev->id() != m_curr->id();
             const bool use_curr_for_next = m_next == m_end || m_next->type() != m_curr->type() || m_next->id() != m_curr->id();
 
-            m_diff = std::move(osmium::DiffObject{
+            m_diff = osmium::DiffObject{
                 *(use_curr_for_prev ? m_curr : m_prev),
                 *m_curr,
                 *(use_curr_for_next ? m_curr : m_next)
-            });
+            };
         }
 
     public:
@@ -88,8 +91,7 @@ namespace osmium {
             m_prev(begin),
             m_curr(begin),
             m_next(begin == end ? begin : ++begin),
-            m_end(std::move(end)),
-            m_diff() {
+            m_end(std::move(end)) {
         }
 
         DiffIterator& operator++() {

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2016, Project OSRM contributors
+Copyright (c) 2017, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -44,22 +44,20 @@ namespace updater
 struct UpdaterConfig final : storage::IOConfig
 {
     UpdaterConfig()
-        : IOConfig(
-              {
-                  ".osrm.ebg",
-                  ".osrm.turn_weight_penalties",
-                  ".osrm.turn_duration_penalties",
-                  ".osrm.turn_penalties_index",
-                  ".osrm.nbg_nodes",
-                  ".osrm.ebg_nodes",
-                  ".osrm.edges",
-                  ".osrm.geometry",
-                  ".osrm.fileIndex",
-                  ".osrm.properties",
-                  ".osrm.restrictions",
-              },
-              {},
-              {".osrm.datasource_names"})
+        : IOConfig({".osrm.ebg",
+                    ".osrm.turn_weight_penalties",
+                    ".osrm.turn_duration_penalties",
+                    ".osrm.turn_penalties_index",
+                    ".osrm.nbg_nodes",
+                    ".osrm.ebg_nodes",
+                    ".osrm.geometry",
+                    ".osrm.fileIndex",
+                    ".osrm.properties",
+                    ".osrm.restrictions",
+                    ".osrm.enw"},
+                   {},
+                   {".osrm.datasource_names"}),
+          valid_now(0)
     {
     }
 
@@ -68,14 +66,14 @@ struct UpdaterConfig final : storage::IOConfig
         IOConfig::UseDefaultOutputNames(base);
     }
 
-    double log_edge_updates_factor;
+    double log_edge_updates_factor = 0.0;
     std::time_t valid_now;
 
     std::vector<std::string> segment_speed_lookup_paths;
     std::vector<std::string> turn_penalty_lookup_paths;
     std::string tz_file_path;
 };
-}
-}
+} // namespace updater
+} // namespace osrm
 
 #endif // EXTRACTOR_OPTIONS_HPP

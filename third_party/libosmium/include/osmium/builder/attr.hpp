@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,16 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstddef>
-#include <cstdint>
-#include <ctime>
-#include <initializer_list>
-#include <iterator>
-#include <string>
-#include <tuple>
-#include <type_traits>
-#include <utility>
-
 #include <osmium/builder/builder.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/memory/buffer.hpp>
@@ -55,6 +45,17 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/relation.hpp>
 #include <osmium/osm/timestamp.hpp>
 #include <osmium/osm/types.hpp>
+#include <osmium/util/string.hpp>
+
+#include <cstddef>
+#include <cstdint>
+#include <ctime>
+#include <initializer_list>
+#include <iterator>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <utility>
 
 namespace osmium {
 
@@ -94,13 +95,13 @@ namespace osmium {
             };
 #else
             // True if Predicate matches for none of the types Ts
-            template <template<typename> class Predicate, typename... Ts>
+            template <template <typename> class Predicate, typename... Ts>
             struct static_none_of : std::is_same<std::tuple<std::false_type, typename Predicate<Ts>::type...>,
                                                  std::tuple<typename Predicate<Ts>::type..., std::false_type>>
             {};
 
             // True if Predicate matches for all of the types Ts
-            template <template<typename> class Predicate, typename... Ts>
+            template <template <typename> class Predicate, typename... Ts>
             struct static_all_of : std::is_same<std::tuple<std::true_type, typename Predicate<Ts>::type...>,
                                                 std::tuple<typename Predicate<Ts>::type..., std::true_type>>
             {};
@@ -226,8 +227,8 @@ namespace osmium {
             OSMIUM_ATTRIBUTE(node_handler, _location, osmium::Location)
                 constexpr explicit _location(const osmium::Location& value) noexcept :
                     type_wrapper(value) {}
-                explicit _location(double lat, double lon) :
-                    type_wrapper(osmium::Location{lat, lon}) {}
+                explicit _location(double lon, double lat) :
+                    type_wrapper(osmium::Location{lon, lat}) {}
             };
 
             OSMIUM_ATTRIBUTE(entity_handler, _user, const char*)
@@ -252,6 +253,10 @@ namespace osmium {
                     m_type(type),
                     m_ref(ref),
                     m_role(role) {
+                }
+
+                member_type(char type, osmium::object_id_type ref, const char* role = "") noexcept :
+                    member_type(osmium::char_to_item_type(type), ref, role) {
                 }
 
                 constexpr osmium::item_type type() const noexcept {
@@ -280,6 +285,10 @@ namespace osmium {
                     m_type(type),
                     m_ref(ref),
                     m_role(std::move(role)) {
+                }
+
+                member_type_string(char type, osmium::object_id_type ref, std::string&& role) noexcept :
+                    member_type_string(osmium::char_to_item_type(type), ref, std::move(role)) {
                 }
 
                 osmium::item_type type() const noexcept {
@@ -360,21 +369,34 @@ namespace osmium {
                     type_wrapper(std::make_pair(key, val)) {}
                 explicit _tag(const std::string& key, const std::string& val) :
                     type_wrapper(std::make_pair(key.c_str(), val.c_str())) {}
+                explicit _tag(const char* const key_value) :
+                    type_wrapper(pair_of_cstrings{key_value, nullptr}) {}
+                explicit _tag(const std::string& key_value) :
+                    type_wrapper(pair_of_cstrings{key_value.c_str(), nullptr}) {}
+            };
+
+            OSMIUM_ATTRIBUTE(tags_handler, _t, const char*)
+                explicit _t(const char *tags) :
+                    type_wrapper(tags) {}
             };
 
             template <typename TTagIterator>
             inline constexpr detail::tags_from_iterator_pair<TTagIterator> _tags(TTagIterator first, TTagIterator last) {
-                return detail::tags_from_iterator_pair<TTagIterator>(first, last);
+                return {first, last};
             }
 
             template <typename TContainer>
             inline detail::tags_from_iterator_pair<typename TContainer::const_iterator> _tags(const TContainer& container) {
-                return detail::tags_from_iterator_pair<typename TContainer::const_iterator>(std::begin(container), std::end(container));
+                using std::begin;
+                using std::end;
+                return {begin(container), end(container)};
             }
 
             using tag_ilist = std::initializer_list<std::pair<const char*, const char*>>;
             inline detail::tags_from_iterator_pair<tag_ilist::const_iterator> _tags(const tag_ilist& container) {
-                return detail::tags_from_iterator_pair<tag_ilist::const_iterator>(std::begin(container), std::end(container));
+                using std::begin;
+                using std::end;
+                return {begin(container), end(container)};
             }
 
 
@@ -388,22 +410,28 @@ namespace osmium {
 
             template <typename TIdIterator>
             inline constexpr detail::nodes_from_iterator_pair<TIdIterator> _nodes(TIdIterator first, TIdIterator last) {
-                return detail::nodes_from_iterator_pair<TIdIterator>(first, last);
+                return {first, last};
             }
 
             template <typename TContainer>
             inline detail::nodes_from_iterator_pair<typename TContainer::const_iterator> _nodes(const TContainer& container) {
-                return detail::nodes_from_iterator_pair<typename TContainer::const_iterator>(std::begin(container), std::end(container));
+                using std::begin;
+                using std::end;
+                return {begin(container), end(container)};
             }
 
             using object_id_ilist = std::initializer_list<osmium::object_id_type>;
             inline detail::nodes_from_iterator_pair<object_id_ilist::const_iterator> _nodes(const object_id_ilist& container) {
-                return detail::nodes_from_iterator_pair<object_id_ilist::const_iterator>(std::begin(container), std::end(container));
+                using std::begin;
+                using std::end;
+                return {begin(container), end(container)};
             }
 
             using node_ref_ilist = std::initializer_list<osmium::NodeRef>;
             inline detail::nodes_from_iterator_pair<node_ref_ilist::const_iterator> _nodes(const node_ref_ilist& container) {
-                return detail::nodes_from_iterator_pair<node_ref_ilist::const_iterator>(std::begin(container), std::end(container));
+                using std::begin;
+                using std::end;
+                return {begin(container), end(container)};
             }
 
 
@@ -422,17 +450,21 @@ namespace osmium {
 
             template <typename TMemberIterator>
             inline constexpr detail::members_from_iterator_pair<TMemberIterator> _members(TMemberIterator first, TMemberIterator last) {
-                return detail::members_from_iterator_pair<TMemberIterator>(first, last);
+                return {first, last};
             }
 
             template <typename TContainer>
             inline detail::members_from_iterator_pair<typename TContainer::const_iterator> _members(const TContainer& container) {
-                return detail::members_from_iterator_pair<typename TContainer::const_iterator>(std::begin(container), std::end(container));
+                using std::begin;
+                using std::end;
+                return {begin(container), end(container)};
             }
 
             using member_ilist = std::initializer_list<member_type>;
             inline detail::members_from_iterator_pair<member_ilist::const_iterator> _members(const member_ilist& container) {
-                return detail::members_from_iterator_pair<member_ilist::const_iterator>(std::begin(container), std::end(container));
+                using std::begin;
+                using std::end;
+                return {begin(container), end(container)};
             }
 
 
@@ -450,58 +482,74 @@ namespace osmium {
 
             template <typename TCommentIterator>
             inline constexpr detail::comments_from_iterator_pair<TCommentIterator> _comments(TCommentIterator first, TCommentIterator last) {
-                return detail::comments_from_iterator_pair<TCommentIterator>(first, last);
+                return {first, last};
             }
 
             template <typename TContainer>
             inline detail::comments_from_iterator_pair<typename TContainer::const_iterator> _comments(const TContainer& container) {
-                return detail::comments_from_iterator_pair<typename TContainer::const_iterator>(std::begin(container), std::end(container));
+                using std::begin;
+                using std::end;
+                return {begin(container), end(container)};
             }
 
             using comment_ilist = std::initializer_list<comment_type>;
             inline detail::comments_from_iterator_pair<comment_ilist::const_iterator> _comments(const comment_ilist& container) {
-                return detail::comments_from_iterator_pair<comment_ilist::const_iterator>(std::begin(container), std::end(container));
+                using std::begin;
+                using std::end;
+                return {begin(container), end(container)};
             }
 
 
             template <typename TIdIterator>
             inline constexpr detail::outer_ring_from_iterator_pair<TIdIterator> _outer_ring(TIdIterator first, TIdIterator last) {
-                return detail::outer_ring_from_iterator_pair<TIdIterator>(first, last);
+                return {first, last};
             }
 
             template <typename TContainer>
             inline detail::outer_ring_from_iterator_pair<typename TContainer::const_iterator> _outer_ring(const TContainer& container) {
-                return detail::outer_ring_from_iterator_pair<typename TContainer::const_iterator>(std::begin(container), std::end(container));
+                using std::begin;
+                using std::end;
+                return {begin(container), end(container)};
             }
 
             using object_id_ilist = std::initializer_list<osmium::object_id_type>;
             inline detail::outer_ring_from_iterator_pair<object_id_ilist::const_iterator> _outer_ring(const object_id_ilist& container) {
-                return detail::outer_ring_from_iterator_pair<object_id_ilist::const_iterator>(std::begin(container), std::end(container));
+                using std::begin;
+                using std::end;
+                return {begin(container), end(container)};
             }
 
             using node_ref_ilist = std::initializer_list<osmium::NodeRef>;
             inline detail::outer_ring_from_iterator_pair<node_ref_ilist::const_iterator> _outer_ring(const node_ref_ilist& container) {
-                return detail::outer_ring_from_iterator_pair<node_ref_ilist::const_iterator>(std::begin(container), std::end(container));
+                using std::begin;
+                using std::end;
+                return {begin(container), end(container)};
             }
 
             template <typename TIdIterator>
             inline constexpr detail::inner_ring_from_iterator_pair<TIdIterator> _inner_ring(TIdIterator first, TIdIterator last) {
-                return detail::inner_ring_from_iterator_pair<TIdIterator>(first, last);
+                return {first, last};
             }
 
             template <typename TContainer>
             inline detail::inner_ring_from_iterator_pair<typename TContainer::const_iterator> _inner_ring(const TContainer& container) {
-                return detail::inner_ring_from_iterator_pair<typename TContainer::const_iterator>(std::begin(container), std::end(container));
+                using std::begin;
+                using std::end;
+                return {begin(container), end(container)};
             }
 
             using object_id_ilist = std::initializer_list<osmium::object_id_type>;
             inline detail::inner_ring_from_iterator_pair<object_id_ilist::const_iterator> _inner_ring(const object_id_ilist& container) {
-                return detail::inner_ring_from_iterator_pair<object_id_ilist::const_iterator>(std::begin(container), std::end(container));
+                using std::begin;
+                using std::end;
+                return {begin(container), end(container)};
             }
 
             using node_ref_ilist = std::initializer_list<osmium::NodeRef>;
             inline detail::inner_ring_from_iterator_pair<node_ref_ilist::const_iterator> _inner_ring(const node_ref_ilist& container) {
-                return detail::inner_ring_from_iterator_pair<node_ref_ilist::const_iterator>(std::begin(container), std::end(container));
+                using std::begin;
+                using std::end;
+                return {begin(container), end(container)};
             }
 
 
@@ -516,7 +564,7 @@ namespace osmium {
             struct changeset_handler : public entity_handler {
 
                 template <typename TDummy>
-                static void set_value(osmium::Changeset&, const TDummy&) noexcept {
+                static void set_value(osmium::Changeset& /*changeset*/, const TDummy& /*dummy*/) noexcept {
                 }
 
                 static void set_value(osmium::Changeset& changeset, attr::_cid id) noexcept {
@@ -548,7 +596,7 @@ namespace osmium {
             struct object_handler : public entity_handler {
 
                 template <typename TDummy>
-                static void set_value(osmium::OSMObject&, const TDummy&) noexcept {
+                static void set_value(osmium::OSMObject& /*object*/, const TDummy& /*dummy*/) noexcept {
                 }
 
                 static void set_value(osmium::OSMObject& object, attr::_id id) noexcept {
@@ -601,7 +649,7 @@ namespace osmium {
             // ==============================================================
 
             template <typename... TArgs>
-            inline constexpr const char* get_user(const attr::_user& user, const TArgs&...) noexcept {
+            inline constexpr const char* get_user(const attr::_user& user, const TArgs&... /*args*/) noexcept {
                 return user.value;
             }
 
@@ -611,7 +659,7 @@ namespace osmium {
 
             template <typename TFirst, typename... TRest>
             inline constexpr typename std::enable_if<!std::is_same<attr::_user, TFirst>::value, const char*>::type
-            get_user(const TFirst&, const TRest&... args) noexcept {
+            get_user(const TFirst& /*first*/, const TRest&... args) noexcept {
                 return get_user(args...);
             }
 
@@ -625,11 +673,23 @@ namespace osmium {
             struct tags_handler {
 
                 template <typename TDummy>
-                static void set_value(TagListBuilder&, const TDummy&) noexcept {
+                static void set_value(TagListBuilder& /*tlb*/, const TDummy& /*dummy*/) noexcept {
                 }
 
                 static void set_value(TagListBuilder& builder, const attr::_tag& tag) {
-                    builder.add_tag(tag.value);
+                    if (tag.value.second != nullptr) {
+                        builder.add_tag(tag.value);
+                        return;
+                    }
+                    const char* key = tag.value.first;
+                    const char* const equal_sign = std::strchr(key, '=');
+                    if (!equal_sign) {
+                        builder.add_tag(key, "");
+                        return;
+                    }
+                    const char* value = equal_sign + 1;
+                    builder.add_tag(key, equal_sign - key,
+                                    value, std::strlen(value));
                 }
 
                 template <typename TIterator>
@@ -639,12 +699,27 @@ namespace osmium {
                     }
                 }
 
+                static void set_value(TagListBuilder& builder, const attr::_t& tags) {
+                    const auto taglist = osmium::split_string(tags.value, ',', true);
+                    for (const auto& tag : taglist) {
+                        const std::size_t pos = tag.find_first_of('=');
+                        if (pos == std::string::npos) {
+                            builder.add_tag(tag, "");
+                        } else {
+                            const char* value = tag.c_str() + pos + 1;
+                            builder.add_tag(tag.c_str(), pos,
+                                            value, tag.size() - pos - 1);
+                        }
+
+                    }
+                }
+
             }; // struct tags_handler
 
             struct nodes_handler {
 
                 template <typename TDummy>
-                static void set_value(WayNodeListBuilder&, const TDummy&) noexcept {
+                static void set_value(WayNodeListBuilder& /*wnlb*/, const TDummy& /*dummy*/) noexcept {
                 }
 
                 static void set_value(WayNodeListBuilder& builder, const attr::_node& node_ref) {
@@ -663,7 +738,7 @@ namespace osmium {
             struct members_handler {
 
                 template <typename TDummy>
-                static void set_value(RelationMemberListBuilder&, const TDummy&) noexcept {
+                static void set_value(RelationMemberListBuilder& /*rmlb*/, const TDummy& /*dummy*/) noexcept {
                 }
 
                 static void set_value(RelationMemberListBuilder& builder, const attr::_member& member) {
@@ -682,7 +757,7 @@ namespace osmium {
             struct discussion_handler {
 
                 template <typename TDummy>
-                static void set_value(ChangesetDiscussionBuilder&, const TDummy&) noexcept {
+                static void set_value(ChangesetDiscussionBuilder& /*cdb*/, const TDummy& /*dummy*/) noexcept {
                 }
 
                 static void set_value(ChangesetDiscussionBuilder& builder, const attr::_comment& comment) {
@@ -703,7 +778,7 @@ namespace osmium {
             struct ring_handler {
 
                 template <typename TDummy>
-                static void set_value(AreaBuilder&, const TDummy&) noexcept {
+                static void set_value(AreaBuilder& /*ab*/, const TDummy& /*dummy*/) noexcept {
                 }
 
                 template <typename TIterator>
@@ -728,13 +803,13 @@ namespace osmium {
 
             template <typename TBuilder, typename THandler, typename... TArgs>
             inline typename std::enable_if<!is_handled_by<THandler, TArgs...>::value>::type
-            add_list(osmium::builder::Builder&, const TArgs&...) noexcept {
+            add_list(osmium::builder::Builder& /*parent*/, const TArgs&... /*args*/) noexcept {
             }
 
             template <typename TBuilder, typename THandler, typename... TArgs>
             inline typename std::enable_if<is_handled_by<THandler, TArgs...>::value>::type
             add_list(osmium::builder::Builder& parent, const TArgs&... args) {
-                TBuilder builder(parent.buffer(), &parent);
+                TBuilder builder{parent.buffer(), &parent};
                 (void)std::initializer_list<int>{
                     (THandler::set_value(builder, args), 0)...
                 };
@@ -762,7 +837,7 @@ namespace osmium {
             static_assert(detail::are_all_handled_by<detail::any_node_handlers, TArgs...>::value, "Attribute not allowed in add_node()");
 
             {
-                NodeBuilder builder(buffer);
+                NodeBuilder builder{buffer};
 
                 detail::add_basic<detail::node_handler>(builder, args...);
                 detail::add_user(builder, args...);
@@ -785,7 +860,7 @@ namespace osmium {
             static_assert(detail::are_all_handled_by<detail::any_way_handlers, TArgs...>::value, "Attribute not allowed in add_way()");
 
             {
-                WayBuilder builder(buffer);
+                WayBuilder builder{buffer};
 
                 detail::add_basic<detail::object_handler>(builder, args...);
                 detail::add_user(builder, args...);
@@ -809,7 +884,7 @@ namespace osmium {
             static_assert(detail::are_all_handled_by<detail::any_relation_handlers, TArgs...>::value, "Attribute not allowed in add_relation()");
 
             {
-                RelationBuilder builder(buffer);
+                RelationBuilder builder{buffer};
 
                 detail::add_basic<detail::object_handler>(builder, args...);
                 detail::add_user(builder, args...);
@@ -833,7 +908,7 @@ namespace osmium {
             static_assert(detail::are_all_handled_by<detail::any_changeset_handlers, TArgs...>::value, "Attribute not allowed in add_changeset()");
 
             {
-                ChangesetBuilder builder(buffer);
+                ChangesetBuilder builder{buffer};
 
                 detail::add_basic<detail::changeset_handler>(builder, args...);
                 detail::add_user(builder, args...);
@@ -857,7 +932,7 @@ namespace osmium {
             static_assert(detail::are_all_handled_by<detail::any_area_handlers, TArgs...>::value, "Attribute not allowed in add_area()");
 
             {
-                AreaBuilder builder(buffer);
+                AreaBuilder builder{buffer};
 
                 detail::add_basic<detail::object_handler>(builder, args...);
                 detail::add_user(builder, args...);
@@ -884,7 +959,7 @@ namespace osmium {
             static_assert(detail::are_all_handled_by<detail::nodes_handler, TArgs...>::value, "Attribute not allowed in add_way_node_list()");
 
             {
-                WayNodeListBuilder builder(buffer);
+                WayNodeListBuilder builder{buffer};
                 (void)std::initializer_list<int>{
                     (detail::nodes_handler::set_value(builder, args), 0)...
                 };
@@ -906,7 +981,7 @@ namespace osmium {
             static_assert(detail::are_all_handled_by<detail::tags_handler, TArgs...>::value, "Attribute not allowed in add_tag_list()");
 
             {
-                TagListBuilder builder(buffer);
+                TagListBuilder builder{buffer};
                 (void)std::initializer_list<int>{
                     (detail::tags_handler::set_value(builder, args), 0)...
                 };

@@ -14,13 +14,23 @@ function Tags.get_forward_backward_by_key(way,data,key)
   local forward = way:get_value_by_key(key .. ':forward')
   local backward = way:get_value_by_key(key .. ':backward')
 
-  if forward and backward then
-    return forward, backward
+  if not forward or not backward then
+     local common = way:get_value_by_key(key)
+
+     if (data.oneway) then
+        if data.is_forward_oneway then
+           forward = forward or common
+        end
+        if data.is_reverse_oneway then
+           backward = backward or common
+        end
+     else
+        forward = forward or common
+        backward = backward or common
+     end
   end
 
-  local common = way:get_value_by_key(key)
-  return forward or common,
-         backward or common
+  return forward, backward
 end
 
 -- return [forward,backward] values, searching a

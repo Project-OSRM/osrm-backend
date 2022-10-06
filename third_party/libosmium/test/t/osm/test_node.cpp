@@ -1,12 +1,14 @@
 #include "catch.hpp"
 
-#include <boost/crc.hpp>
+#include "test_crc.hpp"
 
 #include <osmium/builder/attr.hpp>
 #include <osmium/osm/crc.hpp>
 #include <osmium/osm/node.hpp>
 
-using namespace osmium::builder::attr;
+#include <string>
+
+using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
 TEST_CASE("Build node") {
     osmium::memory::Buffer buffer{10000};
@@ -24,16 +26,16 @@ TEST_CASE("Build node") {
         _location(3.5, 4.7)
     );
 
-    osmium::Node& node = buffer.get<osmium::Node>(0);
+    auto& node = buffer.get<osmium::Node>(0);
 
     REQUIRE(osmium::item_type::node == node.type());
     REQUIRE(node.type_is_in(osmium::osm_entity_bits::node));
     REQUIRE(node.type_is_in(osmium::osm_entity_bits::nwr));
-    REQUIRE(17l == node.id());
-    REQUIRE(17ul == node.positive_id());
+    REQUIRE(17L == node.id());
+    REQUIRE(17UL == node.positive_id());
     REQUIRE(3 == node.version());
-    REQUIRE(true == node.visible());
-    REQUIRE(false == node.deleted());
+    REQUIRE(node.visible());
+    REQUIRE_FALSE(node.deleted());
     REQUIRE(333 == node.changeset());
     REQUIRE(21 == node.uid());
     REQUIRE(std::string{"foo"} == node.user());
@@ -41,13 +43,16 @@ TEST_CASE("Build node") {
     REQUIRE(osmium::Location(3.5, 4.7) == node.location());
     REQUIRE(2 == node.tags().size());
 
-    osmium::CRC<boost::crc_32_type> crc32;
+    osmium::CRC<crc_type> crc32;
     crc32.update(node);
     REQUIRE(crc32().checksum() == 0x7dc553f9);
 
     node.set_visible(false);
-    REQUIRE(false == node.visible());
-    REQUIRE(true == node.deleted());
+    REQUIRE_FALSE(node.visible());
+    REQUIRE(node.deleted());
+
+    node.remove_tags();
+    REQUIRE(node.tags().empty());
 }
 
 TEST_CASE("default values for node attributes") {
@@ -56,16 +61,16 @@ TEST_CASE("default values for node attributes") {
     osmium::builder::add_node(buffer, _id(0));
 
     const osmium::Node& node = buffer.get<osmium::Node>(0);
-    REQUIRE(0l == node.id());
-    REQUIRE(0ul == node.positive_id());
+    REQUIRE(0L == node.id());
+    REQUIRE(0UL == node.positive_id());
     REQUIRE(0 == node.version());
-    REQUIRE(true == node.visible());
+    REQUIRE(node.visible());
     REQUIRE(0 == node.changeset());
     REQUIRE(0 == node.uid());
     REQUIRE(std::string{} == node.user());
     REQUIRE(0 == uint32_t(node.timestamp()));
     REQUIRE(osmium::Location() == node.location());
-    REQUIRE(0 == node.tags().size());
+    REQUIRE(node.tags().empty());
 }
 
 TEST_CASE("set node attributes from strings") {
@@ -73,7 +78,7 @@ TEST_CASE("set node attributes from strings") {
 
     osmium::builder::add_node(buffer, _id(0));
 
-    osmium::Node& node = buffer.get<osmium::Node>(0);
+    auto& node = buffer.get<osmium::Node>(0);
     node.set_id("-17")
         .set_version("3")
         .set_visible("true")
@@ -81,10 +86,10 @@ TEST_CASE("set node attributes from strings") {
         .set_timestamp("2014-03-17T16:23:08Z")
         .set_uid("21");
 
-    REQUIRE(-17l == node.id());
-    REQUIRE(17ul == node.positive_id());
+    REQUIRE(-17L == node.id());
+    REQUIRE(17UL == node.positive_id());
     REQUIRE(3 == node.version());
-    REQUIRE(true == node.visible());
+    REQUIRE(node.visible());
     REQUIRE(333 == node.changeset());
     REQUIRE(std::string{"2014-03-17T16:23:08Z"} == node.timestamp().to_iso());
     REQUIRE(21 == node.uid());
@@ -95,7 +100,7 @@ TEST_CASE("set node attributes from strings using set_attribute()") {
 
     osmium::builder::add_node(buffer, _id(0));
 
-    osmium::Node& node = buffer.get<osmium::Node>(0);
+    auto& node = buffer.get<osmium::Node>(0);
     node.set_attribute("id", "-17")
         .set_attribute("version", "3")
         .set_attribute("visible", "true")
@@ -103,10 +108,10 @@ TEST_CASE("set node attributes from strings using set_attribute()") {
         .set_attribute("timestamp", "2014-03-17T16:23:08Z")
         .set_attribute("uid", "21");
 
-    REQUIRE(-17l == node.id());
-    REQUIRE(17ul == node.positive_id());
+    REQUIRE(-17L == node.id());
+    REQUIRE(17UL == node.positive_id());
     REQUIRE(3 == node.version());
-    REQUIRE(true == node.visible());
+    REQUIRE(node.visible());
     REQUIRE(333 == node.changeset());
     REQUIRE(std::string{"2014-03-17T16:23:08Z"} == node.timestamp().to_iso());
     REQUIRE(21 == node.uid());
@@ -117,7 +122,7 @@ TEST_CASE("Setting attributes from bad data on strings should fail") {
 
     osmium::builder::add_node(buffer, _id(0));
 
-    osmium::Node& node = buffer.get<osmium::Node>(0);
+    auto& node = buffer.get<osmium::Node>(0);
     REQUIRE_THROWS(node.set_id("bar"));
     REQUIRE_THROWS(node.set_id("123x"));
     REQUIRE_THROWS(node.set_version("123x"));
@@ -133,10 +138,10 @@ TEST_CASE("Setting attributes from bad data on strings should fail") {
 TEST_CASE("set large id") {
     osmium::memory::Buffer buffer{10000};
 
-    const int64_t id = 3000000000l;
+    const int64_t id = 3000000000L;
     osmium::builder::add_node(buffer, _id(id));
 
-    osmium::Node& node = buffer.get<osmium::Node>(0);
+    auto& node = buffer.get<osmium::Node>(0);
     REQUIRE(id == node.id());
     REQUIRE(static_cast<osmium::unsigned_object_id_type>(id) == node.positive_id());
 
@@ -169,7 +174,7 @@ TEST_CASE("Setting diff flags on node") {
 
     osmium::builder::add_node(buffer, _id(17));
 
-    osmium::Node& node = buffer.get<osmium::Node>(0);
+    auto& node = buffer.get<osmium::Node>(0);
 
     REQUIRE(node.diff() == osmium::diff_indicator_type::none);
     REQUIRE(node.diff_as_char() == '*');

@@ -7,10 +7,10 @@ Feature: Car - Destination only, no passing through
     Scenario: Car - Destination only street
         Given the node map
             """
-            a       e
-              b c d
+            a         e
+              b1 c 2d
 
-            x       y
+            x         y
             """
 
         And the ways
@@ -23,21 +23,21 @@ Feature: Car - Destination only, no passing through
         When I route I should get
             | from | to | route      |
             | a    | b  | ab,ab      |
-            | a    | c  | ab,bcd     |
-            | a    | d  | ab,bcd,bcd |
+            | a    | c  | ab,bcd,bcd |
+            | a    | 2  | ab,bcd,bcd |
             | a    | e  | axye,axye  |
             | e    | d  | de,de      |
-            | e    | c  | de,bcd     |
-            | e    | b  | de,bcd,bcd |
+            | e    | c  | de,bcd,bcd |
+            | e    | 1  | de,bcd,bcd |
             | e    | a  | axye,axye  |
 
     Scenario: Car - Destination only street
         Given the node map
             """
-            a       e
-              b c d
+            a         e
+              b1 c 2d
 
-            x       y
+            x         y
             """
 
         And the ways
@@ -51,12 +51,12 @@ Feature: Car - Destination only, no passing through
         When I route I should get
             | from | to | route       |
             | a    | b  | ab,ab       |
-            | a    | c  | ab,bc       |
-            | a    | d  | ab,cd       |
+            | a    | c  | ab,bc,bc    |
+            | a    | 2  | ab,bc,cd    |
             | a    | e  | axye,axye   |
             | e    | d  | de,de       |
-            | e    | c  | de,cd       |
-            | e    | b  | de,bc       |
+            | e    | c  | de,cd,cd    |
+            | e    | 1  | de,cd,bc    |
             | e    | a  | axye,axye   |
 
     Scenario: Car - Routing inside a destination only area
@@ -117,6 +117,7 @@ Feature: Car - Destination only, no passing through
                    +    \
                    +    |
                    d    |
+                   1    |
                     \___e
             """
 
@@ -129,5 +130,60 @@ Feature: Car - Destination only, no passing through
         When I route I should get
             | from | to | route         |
             | e    | a  | acbe,acbe     |
-            | d    | a  | de,acbe,acbe  |
+            | 1    | a  | de,acbe,acbe  |
             | c    | d  | cd,cd         |
+
+    Scenario: Car - Routing through a parking lot tagged access=destination,service
+        Given the node map
+            """
+               a----c++++b+++g------h---i
+               |    +    +   +     /
+               |    +    +   +    /
+               |    +    +  +    /
+               |    d++++e+f    /
+               z--------------y
+            """
+
+        And the ways
+            | nodes | access      | highway   |
+            | ac    |             | secondary |
+            | ghi   |             | secondary |
+            | azyhi |             | secondary |
+            | cd    | destination | service   |
+            | def   | destination | service   |
+            | cbg   | destination | service   |
+            | be    | destination | service   |
+            | gf    | destination | service   |
+
+        When I route I should get
+            | from | to | route               |
+            | a    | i  | azyhi,azyhi         |
+            | b    | f  | be,def,def          |
+            | b    | i  | cbg,ghi,azyhi,azyhi |
+
+    Scenario: Car - Disallow snapping to access=private,highway=service
+        Given a grid size of 20 meters
+        Given the node map
+            """
+               a---c---b
+                   :
+                   x
+                   :
+                   d
+                    \__e
+            """
+
+        And the ways
+            | nodes | access   | highway |
+            | acb   |          | primary |
+            | cx    | private  | service |
+            | xd    | private  | service |
+            | de    |          | primary |
+
+        When I route I should get
+            | from | to | route     |
+            | a    | x  | acb,xd,xd |
+            | a    | d  | acb,xd,xd |
+            | a    | e  | acb,xd,de |
+            | x    | e  | de,de     |
+            # do not snap to access=private,highway=service roads when routing over them is not necessary

@@ -15,11 +15,11 @@ namespace detail
 {
 template <storage::Ownership Ownership>
 using QueryGraph = util::StaticGraph<typename QueryEdge::EdgeData, Ownership>;
-}
+} // namespace detail
 
 using QueryGraph = detail::QueryGraph<storage::Ownership::Container>;
 using QueryGraphView = detail::QueryGraph<storage::Ownership::View>;
-}
-}
+} // namespace contractor
+} // namespace osrm
 
 #endif // QUERYEDGE_HPP

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2016, Project OSRM contributors
+Copyright (c) 2017, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -59,14 +59,61 @@ struct TableParameters : public BaseParameters
 {
     std::vector<std::size_t> sources;
     std::vector<std::size_t> destinations;
+    double fallback_speed = INVALID_FALLBACK_SPEED;
+
+    enum class FallbackCoordinateType
+    {
+        Input = 0,
+        Snapped = 1
+    };
+
+    FallbackCoordinateType fallback_coordinate_type = FallbackCoordinateType::Input;
+
+    enum class AnnotationsType
+    {
+        None = 0,
+        Duration = 0x01,
+        Distance = 0x02,
+        All = Duration | Distance
+    };
+
+    AnnotationsType annotations = AnnotationsType::Duration;
+
+    double scale_factor = 1;
 
     TableParameters() = default;
     template <typename... Args>
     TableParameters(std::vector<std::size_t> sources_,
                     std::vector<std::size_t> destinations_,
-                    Args... args_)
+                    Args &&... args_)
         : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
           destinations{std::move(destinations_)}
+    {
+    }
+
+    template <typename... Args>
+    TableParameters(std::vector<std::size_t> sources_,
+                    std::vector<std::size_t> destinations_,
+                    const AnnotationsType annotations_,
+                    Args &&... args_)
+        : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
+          destinations{std::move(destinations_)}, annotations{annotations_}
+    {
+    }
+
+    template <typename... Args>
+    TableParameters(std::vector<std::size_t> sources_,
+                    std::vector<std::size_t> destinations_,
+                    const AnnotationsType annotations_,
+                    double fallback_speed_,
+                    FallbackCoordinateType fallback_coordinate_type_,
+                    double scale_factor_,
+                    Args &&... args_)
+        : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
+          destinations{std::move(destinations_)}, fallback_speed{fallback_speed_},
+          fallback_coordinate_type{fallback_coordinate_type_}, annotations{annotations_},
+          scale_factor{scale_factor_}
+
     {
     }
 
@@ -75,20 +122,13 @@ struct TableParameters : public BaseParameters
         if (!BaseParameters::IsValid())
             return false;
 
-        // Distance Table makes only sense with 2+ coodinates
+        // Distance Table makes only sense with 2+ coordinates
         if (coordinates.size() < 2)
             return false;
 
-        // 1/ The user is able to specify duplicates in srcs and dsts, in that case it's her fault
+        // 1/ The user is able to specify duplicates in srcs and dsts, in that case it's their fault
 
-        // 2/ len(srcs) and len(dsts) smaller or equal to len(locations)
-        if (sources.size() > coordinates.size())
-            return false;
-
-        if (destinations.size() > coordinates.size())
-            return false;
-
-        // 3/ 0 <= index < len(locations)
+        // 2/ 0 <= index < len(locations)
         const auto not_in_range = [this](const std::size_t x) { return x >= coordinates.size(); };
 
         if (std::any_of(begin(sources), end(sources), not_in_range))
@@ -97,11 +137,37 @@ struct TableParameters : public BaseParameters
         if (std::any_of(begin(destinations), end(destinations), not_in_range))
             return false;
 
+        if (fallback_speed <= 0)
+            return false;
+
+        if (scale_factor <= 0)
+            return false;
+
         return true;
     }
 };
+inline bool operator&(TableParameters::AnnotationsType lhs, TableParameters::AnnotationsType rhs)
+{
+    return static_cast<bool>(
+        static_cast<std::underlying_type_t<TableParameters::AnnotationsType>>(lhs) &
+        static_cast<std::underlying_type_t<TableParameters::AnnotationsType>>(rhs));
 }
+
+inline TableParameters::AnnotationsType operator|(TableParameters::AnnotationsType lhs,
+                                                  TableParameters::AnnotationsType rhs)
+{
+    return (TableParameters::AnnotationsType)(
+        static_cast<std::underlying_type_t<TableParameters::AnnotationsType>>(lhs) |
+        static_cast<std::underlying_type_t<TableParameters::AnnotationsType>>(rhs));
 }
+
+inline TableParameters::AnnotationsType &operator|=(TableParameters::AnnotationsType &lhs,
+                                                    TableParameters::AnnotationsType rhs)
+{
+    return lhs = lhs | rhs;
 }
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif // ENGINE_API_TABLE_PARAMETERS_HPP

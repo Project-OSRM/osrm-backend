@@ -687,7 +687,7 @@ Feature: Slipways and Dedicated Turn Lanes
 
        When I route I should get
             | waypoints | route             | turns                                      | locations |
-            | s,f       | sabc,ae,dbef,dbef | depart,turn slight right,turn right,arrive | s,a,e,f   |
+            | s,f       | sabc,ae,dbef,dbef | depart,turn straight,turn right,arrive     | s,a,e,f   |
 
     @sliproads
     Scenario: Traffic Signal on Sliproad
@@ -992,7 +992,108 @@ Feature: Slipways and Dedicated Turn Lanes
             | dbef  | primary      | dbef  |        |
             | ae    | primary_link | ae    | yes    |
 
-
        When I route I should get
             | waypoints | route          | turns                    | locations |
             | s,f       | sabc,dbef,dbef | depart,turn right,arrive | s,a,f     |
+
+
+    @sliproads
+    Scenario: Sliproad from link via link to primary
+        Given the node map
+            """
+                    d
+                    .
+            s . a . b
+                 `  .
+                  ` .
+                   '.
+                    c
+                    .
+                    f
+            """
+
+        And the ways
+            | nodes | highway      | name | oneway |
+            | sab   | primary_link | sab  |        |
+            | dbcf  | primary      | dbcf |        |
+            | ac    | primary_link | ae   | yes    |
+
+       When I route I should get
+            | waypoints | route         | turns                    | locations |
+            | s,f       | sab,dbcf,dbcf | depart,turn right,arrive | s,a,f     |
+
+
+    @sliproads
+    Scenario: Sliproad with a single intersection in a cross-road
+        Given the node map
+            """
+                    d
+                    .
+            s . a . b
+                 `  .
+                  ' c . g
+                   ..
+                    e
+                    .
+                    f
+            """
+
+        And the ways
+            | nodes | highway      | name  | oneway |
+            | sab   | primary      | sab   |        |
+            | dbcef | primary      | dbcef |        |
+            | ae    | primary_link | sab   | yes    |
+            | cg    | primary      | cg    |        |
+
+       When I route I should get
+            | waypoints | route           | turns                    | locations |
+            | s,f       | sab,dbcef,dbcef | depart,turn right,arrive | s,a,f     |
+
+
+    @sliproads
+    Scenario: Sliproad converted from a fork
+        Given the node map
+            """
+                     d
+                     .
+                     b
+              s . a '.
+                    `c
+                     .
+                     f
+            """
+
+        And the ways
+            | nodes | highway  | name | ref   | oneway |
+            | sa    | tertiary |      | D 60A | yes    |
+            | ab    | tertiary | ab   | D 60A | yes    |
+            | ac    | tertiary |      | D 60A | yes    |
+            | dbcf  | tertiary | dbcf | D 543 | yes    |
+
+       When I route I should get
+            | waypoints | route      | turns                    | locations |
+            | s,f       | ,dbcf,dbcf | depart,turn right,arrive | s,a,f     |
+
+
+    @sliproads
+    Scenario: Sliproad to a road with a reference only
+        Given the node map
+            """
+            s . a . b . d
+                 `  .
+                  ' .
+                   ..
+                    c
+                    .
+                    f
+            """
+
+        And the ways
+            | nodes | highway      | name | ref  | oneway |
+            | sabd  | primary      | road |      |        |
+            | bcf   | primary      |      | K108 |        |
+            | ac    | primary_link |      |      | yes    |
+
+       When I route I should get
+            | waypoints | route  | turns                    | locations |
+            | s,f       | road,, | depart,turn right,arrive | s,a,f     |

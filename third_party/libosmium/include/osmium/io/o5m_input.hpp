@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -39,7 +39,7 @@ DEALINGS IN THE SOFTWARE.
  * Include this file if you want to read OSM o5m and o5c files.
  */
 
-#include <osmium/io/reader.hpp> // IWYU pragma: export
 #include <osmium/io/detail/o5m_input_format.hpp> // IWYU pragma: export
+#include <osmium/io/reader.hpp> // IWYU pragma: export
 
 #endif // OSMIUM_IO_O5M_INPUT_HPP

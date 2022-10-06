@@ -10,13 +10,12 @@ const clu = require('command-line-usage');
 const ansi = require('ansi-escape-sequences');
 const turf = require('turf');
 const jp = require('jsonpath');
+const csv_stringify = require('csv-stringify/lib/sync');
 
 const run_query = (query_options, filters, callback) => {
     let tic = () => 0.;
     http.request(query_options, function (res) {
         let body = '', ttfb = tic();
-        if (res.statusCode != 200)
-            return callback(query_options.path, res.statusCode, ttfb);
 
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
@@ -35,27 +34,51 @@ const run_query = (query_options, filters, callback) => {
     }).end();
 };
 
-function generate_points(polygon, number) {
+function generate_points(polygon, number, coordinates_number, max_distance) {
     let query_points = [];
     while (query_points.length < number) {
-    var chunk = turf
-        .random('points', number, { bbox: turf.bbox(polygon)})
-        .features
-        .map(x => x.geometry.coordinates)
-        .filter(pt => turf.inside(pt, polygon));
-        query_points = query_points.concat(chunk);
+        let points = [];
+
+        while(points.length < coordinates_number) {
+            let chunk = turf
+                .random('points', coordinates_number, { bbox: turf.bbox(polygon)})
+                .features
+                .map(x => x.geometry.coordinates)
+                .filter(pt => turf.inside(pt, polygon));
+
+            if (max_distance > 0)
+            {
+                chunk.forEach(pt => {
+                    if (points.length == 0)
+                    {
+                        points.push(pt);
+                    }
+                    else
+                    {
+                        let distance = turf.distance(pt, points[points.length-1], 'meters');
+                        if (distance < max_distance)
+                        {
+                            points.push(pt);
+                        }
+                    }
+                });
+            }
+            else
+            {
+                points = points.concat(chunk);
+            }
+        }
+
+        query_points.push(points);
     }
-    return query_points.slice(0, number);
+
+    return query_points;
 }
 
-function generate_queries(options, query_points, coordinates_number) {
-    let queries = [];
-    for (let chunk = 0; chunk < query_points.length; chunk += coordinates_number)
-    {
-        let points = query_points.slice(chunk, chunk + coordinates_number);
-        let query = options.path.replace(/{}/g, x =>  points.pop().join(','));
-        queries.push(query);
-    }
+function generate_queries(options, query_points) {
+    let queries = query_points.map(points => {
+        return options.path.replace(/{}/g, x =>  points.pop().join(','));
+    });
     return queries;
 }
 
@@ -73,27 +96,22 @@ function BoundingBox(x) {
 }
 const optionsList = [
     {name: 'help', alias: 'h', type: Boolean, description: 'Display this usage guide.', defaultValue: false},
-    {name: 'server', alias: 's', type: ServerDetails, defaultValue: ServerDetails('localhost:5000'),
-     description: 'OSRM routing server', typeLabel: '[underline]{hostname[:port]}'},
-    {name: 'path', alias: 'p', type: String, defaultValue: '/route/v1/driving/{};{}',
-     description: 'OSRM query path with {} coordinate placeholders, default /route/v1/driving/{};{}', typeLabel: '[underline]{path}'},
-    {name: 'filter', alias: 'f', type: String, defaultValue: ['$.routes[0].weight'], multiple: true,
-     description: 'JSONPath filters, default "$.routes[0].weight"', typeLabel: '[underline]{filter}'},
-    {name: 'bounding-box', alias: 'b', type: BoundingBox, defaultValue: BoundingBox('5.86442,47.2654,15.0508,55.1478'), multiple: true,
-     description: 'queries bounding box, default "5.86442,47.2654,15.0508,55.1478"', typeLabel: '[underline]{west,south,east,north}'},
-    {name: 'max-sockets', alias: 'm', type: Number, defaultValue: 1,
-     description: 'how many concurrent sockets the agent can have open per origin, default 1', typeLabel: '[underline]{number}'},
-    {name: 'number', alias: 'n', type: Number, defaultValue: 10,
-     description: 'number of query points, default 10', typeLabel: '[underline]{number}'},
-    {name: 'queries-files', alias: 'q', type: String,
-     description: 'CSV file with queries in the first row', typeLabel: '[underline]{file}'}];
+    {name: 'server', alias: 's', type: ServerDetails, defaultValue: ServerDetails('localhost:5000'), description: 'OSRM routing server', typeLabel: '{underline hostname[:port]}'},
+    {name: 'path', alias: 'p', type: String, defaultValue: '/route/v1/driving/{};{}', description: 'OSRM query path with \\{\\} coordinate placeholders, default /route/v2/driving/\\{\\};\\{\\}', typeLabel: '{underline path}'},
+    {name: 'filter', alias: 'f', type: String, defaultValue: ['$.routes[0].weight'], multiple: true, description: 'JSONPath filters, default "$.routes[0].weight"', typeLabel: '{underline filter}'},
+    {name: 'bounding-box', alias: 'b', type: BoundingBox, defaultValue: BoundingBox('5.86442,47.2654,15.0508,55.1478'), multiple: true, description: 'queries bounding box, default "5.86442,47.2654,15.0508,55.1478"', typeLabel: '{underline west,south,east,north}'},
+    {name: 'max-sockets', alias: 'm', type: Number, defaultValue: 1, description: 'how many concurrent sockets the agent can have open per origin, default 1', typeLabel: '{underline number}'},
+    {name: 'number', alias: 'n', type: Number, defaultValue: 10, description: 'number of query points, default 10', typeLabel: '{underline number}'},
+    {name: 'max-distance', alias: 'd', type: Number, defaultValue: -1, description: 'maximal distance between coordinates', typeLabel: '{underline number}'},
+    {name: 'queries-files', alias: 'q', type: String, description: 'CSV file with queries in the first row', typeLabel: '{underline file}'},
+];
 const options = cla(optionsList);
 if (options.help) {
-    const banner =
-          String.raw`  ____  _______  __  ___  ___  __  ___  ___  _________  ` + '\n' +
-          String.raw` / __ \/ __/ _ \/  |/  / / _ \/ / / / |/ / |/ / __/ _ \ ` + '\n' +
-          String.raw`/ /_/ /\ \/ , _/ /|_/ / / , _/ /_/ /    /    / _// , _/ ` + '\n' +
-          String.raw`\____/___/_/|_/_/  /_/ /_/|_|\____/_/|_/_/|_/___/_/|_|  `;
+    const banner =`\
+  ____  _______  __  ______  __  ___  ___  _________
+ / __ \\\\/ __/ _ \\\\/  |/  / _ \\\\/ / / / |/ / |/ / __/ _ \\\\
+/ /_/ /\\\\ \\\\/ , _/ /|_/ / , _/ /_/ /    /    / _// , _/
+\\\\____/___/_/|_/_/  /_/_/|_|\\\\____/_/|_/_/|_/___/_/|_|`;
     const usage = clu([
         { content: ansi.format(banner, 'green'), raw: true },
         { header: 'Run OSRM queries and collect results'/*, content: 'Generates something [italic]{very} important.'*/ },
@@ -114,8 +132,8 @@ if (options.hasOwnProperty('queries-files')) {
 } else {
     const polygon = options['bounding-box'].map(x => x.poly).reduce((x,y) => turf.union(x, y));
     const coordinates_number = (options.path.match(/{}/g) || []).length;
-    const query_points = generate_points(polygon, coordinates_number * options.number);
-    queries = generate_queries(options, query_points, coordinates_number);
+    const query_points = generate_points(polygon, options.number, coordinates_number, options['max-distance']);
+    queries = generate_queries(options, query_points);
 }
 queries = queries.map(q => { return {hostname: options.server.hostname, port: options.server.port, path: q}; });
 
@@ -123,11 +141,8 @@ queries = queries.map(q => { return {hostname: options.server.hostname, port: op
 http.globalAgent.maxSockets = options['max-sockets'];
 queries.map(query => {
     run_query(query, options.filter, (query, code, ttfb, total, results) => {
-        let str = `"${query}",${code}`;
-        if (ttfb !== undefined) str += `,${ttfb}`;
-        if (total !== undefined) str += `,${total}`;
-        if (typeof results === 'object' && results.length > 0)
-            str += ',' + results.map(x => isNaN(x) ? '"' + JSON.stringify(x).replace(/\n/g, ';').replace(/"/g, "'") + '"' : Number(x)).join(',');
-        console.log(str);
+        let data = results ? JSON.stringify(results[0]) : '';
+        let record = [[query, code, ttfb, total, data]];
+        process.stdout.write(csv_stringify(record));
     });
 });

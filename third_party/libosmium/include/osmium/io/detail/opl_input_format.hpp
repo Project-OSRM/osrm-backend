@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,17 +33,17 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstdint>
-#include <memory>
-#include <string>
-#include <utility>
-
 #include <osmium/io/detail/input_format.hpp>
 #include <osmium/io/detail/opl_parser_functions.hpp>
 #include <osmium/io/file_format.hpp>
 #include <osmium/io/header.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/thread/util.hpp>
+
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace osmium {
 
@@ -98,45 +98,53 @@ namespace osmium {
                 }
             }
 
-            class OPLParser : public Parser {
+            class OPLParser final : public ParserWithBuffer {
 
-                osmium::memory::Buffer m_buffer{1024*1024};
                 uint64_t m_line_count = 0;
-
-                void maybe_flush() {
-                    if (m_buffer.committed() > 800*1024) {
-                        osmium::memory::Buffer buffer{1024*1024};
-                        using std::swap;
-                        swap(m_buffer, buffer);
-                        send_to_output_queue(std::move(buffer));
-
-                    }
-                }
 
             public:
 
                 explicit OPLParser(parser_arguments& args) :
-                    Parser(args) {
+                    ParserWithBuffer(args) {
                     set_header_value(osmium::io::Header{});
                 }
 
-                ~OPLParser() noexcept final = default;
+                OPLParser(const OPLParser&) = delete;
+                OPLParser& operator=(const OPLParser&) = delete;
+
+                OPLParser(OPLParser&&) = delete;
+                OPLParser& operator=(OPLParser&&) = delete;
+
+                ~OPLParser() noexcept override = default;
 
                 void parse_line(const char* data) {
-                    if (opl_parse_line(m_line_count, data, m_buffer, read_types())) {
-                        maybe_flush();
+                    switch (*data) {
+                        case 'n':
+                            maybe_new_buffer(osmium::item_type::node);
+                            break;
+                        case 'w':
+                            maybe_new_buffer(osmium::item_type::way);
+                            break;
+                        case 'r':
+                            maybe_new_buffer(osmium::item_type::relation);
+                            break;
+                        case 'c':
+                            maybe_new_buffer(osmium::item_type::way);
+                            break;
+                    }
+
+                    if (opl_parse_line(m_line_count, data, buffer(), read_types())) {
+                        flush_nested_buffer();
                     }
                     ++m_line_count;
                 }
 
-                void run() final {
+                void run() override {
                     osmium::thread::set_thread_name("_osmium_opl_in");
 
                     line_by_line(*this);
 
-                    if (m_buffer.committed() > 0) {
-                        send_to_output_queue(std::move(m_buffer));
-                    }
+                    flush_final_buffer();
                 }
 
             }; // class OPLParser
@@ -147,7 +155,7 @@ namespace osmium {
                 file_format::opl,
                 [](parser_arguments& args) {
                     return std::unique_ptr<Parser>(new OPLParser{args});
-            });
+                });
 
             // dummy function to silence the unused variable warning from above
             inline bool get_registered_opl_parser() noexcept {

@@ -38,15 +38,15 @@ Feature: Multi level routing
     Scenario: Testbot - Multi level routing
         Given the node map
             """
-            a───b   e───f
-            │   │   │   │
+           a────b   e─────f
+            \   │   │    /
             d───c   h───g
                  ╲ ╱
                   ╳
                  ╱ ╲
             i───j   m───n
-            │   │   │   │
-            l───k───p───o
+           /    │   │    \
+          l─────k───p─────o
             """
 
         And the nodes
@@ -63,25 +63,81 @@ Feature: Multi level routing
             | cm    | primary |
             | hj    | primary |
             | kp    | primary |
+        And the partition extra arguments "--small-component-size 1 --max-cell-sizes 4,16"
 
         When I route I should get
             | from | to | route                                  | time   |
-            | a    | b  | abcda,abcda                            | 20s    |
-            | a    | f  | abcda,cm,mnopm,kp,ijkli,hj,efghe,efghe | 229.4s |
-            | a    | l  | abcda,cm,mnopm,kp,ijkli,ijkli          | 144.7s |
-            | a    | o  | abcda,cm,mnopm,mnopm,mnopm             | 124.7s |
-            | f    | l  | efghe,hj,ijkli,ijkli,ijkli             | 124.7s |
-            | f    | o  | efghe,hj,ijkli,kp,mnopm,mnopm          | 144.7s |
-            | l    | o  | ijkli,kp,mnopm,mnopm                   | 60s    |
+            | a    | b  | abcda,abcda                            | 25s    |
+            | a    | f  | abcda,cm,mnopm,kp,ijkli,hj,efghe,efghe | 239.2s |
+            | a    | l  | abcda,cm,mnopm,kp,ijkli,ijkli          | 157.1s |
+            | a    | o  | abcda,cm,mnopm,mnopm,mnopm             | 137.1s |
+            | f    | l  | efghe,hj,ijkli,ijkli                   | 136.7s |
+            | f    | o  | efghe,hj,ijkli,kp,mnopm,mnopm          | 162.1s |
+            | l    | o  | ijkli,kp,mnopm,mnopm                   | 80s    |
             | c    | m  | cm,cm                                  | 44.7s  |
+            | f    | a  | efghe,hj,ijkli,kp,mnopm,cm,abcda,abcda | 239.2s |
+            | l    | a  | ijkli,kp,mnopm,cm,abcda,abcda          | 157.1s |
 
         When I request a travel time matrix I should get
-            |   |     a |     f |     l |     o |
-            | a |     0 | 229.4 | 144.7 | 124.7 |
-            | f | 229.4 |     0 | 124.7 | 144.7 |
-            | l | 144.7 | 124.7 |     0 |    60 |
-            | o | 124.7 | 144.7 |    60 |     0 |
+            |   | a     | f     | l     | o     |
+            | a | 0     | 239.2 | 157.1 | 137.1 |
+            | f | 239.2 | 0     | 136.7 | 162.1 |
+            | l | 157.1 | 136.7 | 0     | 80    |
+            | o | 137.1 | 162.1 | 80    | 0     |
 
+        When I request a travel time matrix I should get
+            |   | a | f     | l     | o     |
+            | a | 0 | 239.2 | 157.1 | 137.1 |
+
+        When I request a travel time matrix I should get
+            |   |   a   |
+            | a |   0   |
+            | f | 239.2 |
+            | l | 157.1 |
+            | o | 137.1 |
+
+        When I request a travel time matrix I should get
+            |   | a     | f     | l     | o     |
+            | a | 0     | 239.2 | 157.1 | 137.1 |
+            | o | 137.1 | 162.1 | 80    | 0     |
+
+        When I request a travel time matrix I should get
+            |   |     a |     o |
+            | a |     0 | 137.1 |
+            | f | 239.2 | 162.1 |
+            | l | 157.1 |    80 |
+            | o | 137.1 |     0 |
+
+        When I request a travel distance matrix I should get
+            |   | a      | f      | l      | o      |
+            | a | 0      | 2391.6 | 1570.8 | 1370.9 |
+            | f | 2391.6 | 0      | 1297.2 | 1620.9 |
+            | l | 1570.8 | 1297.2 | 0      | 800    |
+            | o | 1370.9 | 1620.9 | 800    | 0      |
+
+
+        When I request a travel distance matrix I should get
+            |   | a | f      | l      | o      |
+            | a | 0 | 2391.6 | 1570.8 | 1370.9 |
+
+        When I request a travel distance matrix I should get
+            |   | a      |
+            | a | 0      |
+            | f | 2391.6 |
+            | l | 1570.8 |
+            | o | 1370.9 |
+
+        When I request a travel distance matrix I should get
+            |   | a      | f      | l      | o      |
+            | a | 0      | 2391.6 | 1570.8 | 1370.9 |
+            | f | 2391.6 | 0      | 1297.2 | 1620.9 |
+
+        When I request a travel distance matrix I should get
+            |   | a      | o      |
+            | a | 0      | 1370.9 |
+            | f | 2391.6 | 1620.9 |
+            | l | 1570.8 | 800    |
+            | o | 1370.9 | 0      |
 
     Scenario: Testbot - Multi level routing: horizontal road
         Given the node map

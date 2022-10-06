@@ -5,6 +5,8 @@
 #include <osmium/geom/wkb.hpp>
 #include <osmium/geom/wkt.hpp>
 
+#include <string>
+
 TEST_CASE("Projection using MercatorProjection class to WKT") {
     osmium::geom::WKTFactory<osmium::geom::MercatorProjection> factory{2};
 

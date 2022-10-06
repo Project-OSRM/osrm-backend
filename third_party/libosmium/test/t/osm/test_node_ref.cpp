@@ -66,7 +66,7 @@ TEST_CASE("WayNodeList") {
 
         const osmium::WayNodeList& nrl = buffer.get<osmium::WayNodeList>(0);
         REQUIRE(nrl.empty());
-        REQUIRE(nrl.size() == 0);
+        REQUIRE(nrl.size() == 0); // NOLINT(readability-container-size-empty)
     }
 
     SECTION("Change a WayNodeList") {
@@ -76,7 +76,7 @@ TEST_CASE("WayNodeList") {
             {3, {1.0, 1.0}}
         }));
 
-        osmium::WayNodeList& nrl = buffer.get<osmium::WayNodeList>(0);
+        auto& nrl = buffer.get<osmium::WayNodeList>(0);
         REQUIRE(nrl.size() == 3);
 
         REQUIRE(nrl[1].location() == osmium::Location(0.0, 1.0));

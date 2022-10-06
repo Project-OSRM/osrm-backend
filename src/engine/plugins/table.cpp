@@ -2,16 +2,11 @@
 
 #include "engine/api/table_api.hpp"
 #include "engine/api/table_parameters.hpp"
-#include "engine/routing_algorithms/many_to_many.hpp"
-#include "engine/search_engine_data.hpp"
-#include "util/json_container.hpp"
+#include "util/coordinate_calculation.hpp"
 #include "util/string_util.hpp"
 
 #include <cstdlib>
 
-#include <algorithm>
-#include <memory>
-#include <string>
 #include <vector>
 
 #include <boost/assert.hpp>
@@ -30,7 +25,7 @@ TablePlugin::TablePlugin(const int max_locations_distance_table)
 
 Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                   const api::TableParameters &params,
-                                  util::json::Object &result) const
+                                  osrm::engine::api::ResultT &result) const
 {
     if (!algorithms.HasManyToManySearch())
     {
@@ -46,7 +41,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error("InvalidOptions", "Coordinates are invalid", result);
     }
 
-    if (params.bearings.size() > 0 && params.coordinates.size() != params.bearings.size())
+    if (!params.bearings.empty() && params.coordinates.size() != params.bearings.size())
     {
         return Error(
             "InvalidOptions", "Number of bearings does not match number of coordinates", result);
@@ -74,26 +69,89 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     if (phantom_nodes.size() != params.coordinates.size())
     {
-        return Error("NoSegment",
-                     std::string("Could not find a matching segment for coordinate ") +
-                         std::to_string(phantom_nodes.size()),
-                     result);
+        return Error(
+            "NoSegment", MissingPhantomErrorMessage(phantom_nodes, params.coordinates), result);
     }
 
-    auto snapped_phantoms = SnapPhantomNodes(phantom_nodes);
-    auto result_table =
-        algorithms.ManyToManySearch(snapped_phantoms, params.sources, params.destinations);
+    auto snapped_phantoms = SnapPhantomNodes(std::move(phantom_nodes));
 
-    if (result_table.empty())
+    bool request_distance = params.annotations & api::TableParameters::AnnotationsType::Distance;
+    bool request_duration = params.annotations & api::TableParameters::AnnotationsType::Duration;
+
+    auto result_tables_pair = algorithms.ManyToManySearch(
+        snapped_phantoms, params.sources, params.destinations, request_distance);
+
+    if ((request_duration && result_tables_pair.first.empty()) ||
+        (request_distance && result_tables_pair.second.empty()))
     {
         return Error("NoTable", "No table found", result);
     }
 
+    std::vector<api::TableAPI::TableCellRef> estimated_pairs;
+
+    // Scan table for null results - if any exist, replace with distance estimates
+    if (params.fallback_speed != INVALID_FALLBACK_SPEED || params.scale_factor != 1)
+    {
+        for (std::size_t row = 0; row < num_sources; row++)
+        {
+            for (std::size_t column = 0; column < num_destinations; column++)
+            {
+                const auto &table_index = row * num_destinations + column;
+                BOOST_ASSERT(table_index < result_tables_pair.first.size());
+                if (params.fallback_speed != INVALID_FALLBACK_SPEED && params.fallback_speed > 0 &&
+                    result_tables_pair.first[table_index] == MAXIMAL_EDGE_DURATION)
+                {
+                    const auto &source =
+                        snapped_phantoms[params.sources.empty() ? row : params.sources[row]];
+                    const auto &destination =
+                        snapped_phantoms[params.destinations.empty() ? column
+                                                                     : params.destinations[column]];
+
+                    auto distance_estimate =
+                        params.fallback_coordinate_type ==
+                                api::TableParameters::FallbackCoordinateType::Input
+                            ? util::coordinate_calculation::greatCircleDistance(
+                                  candidatesInputLocation(source),
+                                  candidatesInputLocation(destination))
+                            : util::coordinate_calculation::greatCircleDistance(
+                                  candidatesSnappedLocation(source),
+                                  candidatesSnappedLocation(destination));
+
+                    result_tables_pair.first[table_index] =
+                        distance_estimate / (double)params.fallback_speed;
+                    if (!result_tables_pair.second.empty())
+                    {
+                        result_tables_pair.second[table_index] = distance_estimate;
+                    }
+
+                    estimated_pairs.emplace_back(row, column);
+                }
+                if (params.scale_factor > 0 && params.scale_factor != 1 &&
+                    result_tables_pair.first[table_index] != MAXIMAL_EDGE_DURATION &&
+                    result_tables_pair.first[table_index] != 0)
+                {
+                    EdgeDuration diff =
+                        MAXIMAL_EDGE_DURATION / result_tables_pair.first[table_index];
+
+                    if (params.scale_factor >= diff)
+                    {
+                        result_tables_pair.first[table_index] = MAXIMAL_EDGE_DURATION - 1;
+                    }
+                    else
+                    {
+                        result_tables_pair.first[table_index] = std::lround(
+                            result_tables_pair.first[table_index] * params.scale_factor);
+                    }
+                }
+            }
+        }
+    }
+
     api::TableAPI table_api{facade, params};
-    table_api.MakeResponse(result_table, snapped_phantoms, result);
+    table_api.MakeResponse(result_tables_pair, snapped_phantoms, estimated_pairs, result);
 
     return Status::Ok;
 }
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm

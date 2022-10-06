@@ -98,11 +98,11 @@ Feature: Car - Guidance - Bridges and Tunnels
             | dce   | primary |        | Nebenstraße        |
 
         When I route I should get
-            | from | to | route                                      | turns                    |
-            | a    | d  | Hauptstraße,Nebenstraße,Nebenstraße        | depart,turn left,arrive  |
-            | a    | e  | Hauptstraße,Nebenstraße,Nebenstraße        | depart,turn right,arrive |
-            | e    | a  | Nebenstraße,Hauptstraßentunnel,Hauptstraße | depart,turn left,arrive  |
-            | d    | a  | Nebenstraße,Hauptstraßentunnel,Hauptstraße | depart,turn right,arrive |
+            | from | to | route                                      | turns                           |
+            | a    | d  | Hauptstraße,Nebenstraße,Nebenstraße        | depart,end of road left,arrive  |
+            | a    | e  | Hauptstraße,Nebenstraße,Nebenstraße        | depart,end of road right,arrive |
+            | e    | a  | Nebenstraße,Hauptstraßentunnel,Hauptstraße | depart,turn left,arrive         |
+            | d    | a  | Nebenstraße,Hauptstraßentunnel,Hauptstraße | depart,turn right,arrive        |
 
     Scenario: Tunnel with Immediate Turn Front and Back
         Given the node map
@@ -129,4 +129,3 @@ Feature: Car - Guidance - Bridges and Tunnels
             | e    | g  | Nebenstraße,Hauptstraßentunnel,Anderestraße,Anderestraße | depart,turn left,turn left,arrive   |
             | d    | f  | Nebenstraße,Hauptstraßentunnel,Anderestraße,Anderestraße | depart,turn right,turn right,arrive |
             | d    | g  | Nebenstraße,Hauptstraßentunnel,Anderestraße,Anderestraße | depart,turn right,turn left,arrive  |
-

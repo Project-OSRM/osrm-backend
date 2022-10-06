@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -42,15 +42,15 @@ DEALINGS IN THE SOFTWARE.
  * @attention If you include this file, you'll need to link with `libgdal`.
  */
 
+#include <osmium/geom/coordinates.hpp>
+#include <osmium/geom/factory.hpp>
+
+#include <ogr_geometry.h>
+
 #include <cassert>
 #include <cstddef>
 #include <memory>
 #include <utility>
-
-#include <ogr_geometry.h>
-
-#include <osmium/geom/coordinates.hpp>
-#include <osmium/geom/factory.hpp>
 
 namespace osmium {
 
@@ -82,7 +82,7 @@ namespace osmium {
 
                 /* Point */
 
-                point_type make_point(const osmium::geom::Coordinates& xy) const {
+                static point_type make_point(const osmium::geom::Coordinates& xy) {
                     return point_type{new OGRPoint{xy.x, xy.y}};
                 }
 

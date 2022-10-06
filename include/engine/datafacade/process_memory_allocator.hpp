@@ -20,19 +20,18 @@ namespace datafacade
  * This class holds a unique_ptr to the memory block, so it
  * is auto-freed upon destruction.
  */
-class ProcessMemoryAllocator : public ContiguousBlockAllocator
+class ProcessMemoryAllocator final : public ContiguousBlockAllocator
 {
   public:
     explicit ProcessMemoryAllocator(const storage::StorageConfig &config);
     ~ProcessMemoryAllocator() override final;
 
     // interface to give access to the datafacades
-    storage::DataLayout &GetLayout() override final;
-    char *GetMemory() override final;
+    const storage::SharedDataIndex &GetIndex() override final;
 
   private:
+    storage::SharedDataIndex index;
     std::unique_ptr<char[]> internal_memory;
-    std::unique_ptr<storage::DataLayout> internal_layout;
 };
 
 } // namespace datafacade

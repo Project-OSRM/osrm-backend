@@ -4,7 +4,7 @@ libdir=@PKGCONFIG_LIBRARY_DIR@
 
 Name: libOSRM
 Description: Project OSRM library
-Version: v@OSRM_VERSION@
+Version: @OSRM_VERSION@
 Requires:
 Libs: -L${libdir} -losrm @PKGCONFIG_OSRM_LDFLAGS@
 Libs.private: @PKGCONFIG_OSRM_DEPENDENT_LIBRARIES@

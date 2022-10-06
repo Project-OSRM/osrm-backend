@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -42,10 +42,6 @@ DEALINGS IN THE SOFTWARE.
  * @attention If you include this file, you'll need to link with `libgdal`.
  */
 
-#include <memory>
-
-#include <gdalcpp.hpp>
-
 #include <osmium/area/problem_reporter.hpp>
 #include <osmium/geom/factory.hpp>
 #include <osmium/geom/ogr.hpp>
@@ -55,6 +51,10 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/node_ref_list.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/way.hpp>
+
+#include <gdalcpp.hpp>
+
+#include <memory>
 
 namespace osmium {
 
@@ -117,8 +117,7 @@ namespace osmium {
                     .add_field("nodes", OFTInteger, 8)
                     .add_field("id1", OFTReal, 12, 1)
                     .add_field("id2", OFTReal, 12, 1)
-                    .add_field("problem", OFTString, 30)
-                ;
+                    .add_field("problem", OFTString, 30);
 
                 m_layer_lerror
                     .add_field("obj_type", OFTString, 1)
@@ -126,18 +125,14 @@ namespace osmium {
                     .add_field("nodes", OFTInteger, 8)
                     .add_field("id1", OFTReal, 12, 1)
                     .add_field("id2", OFTReal, 12, 1)
-                    .add_field("problem", OFTString, 30)
-                ;
+                    .add_field("problem", OFTString, 30);
 
                 m_layer_ways
                     .add_field("obj_type", OFTString, 1)
                     .add_field("obj_id", OFTInteger, 10)
                     .add_field("way_id", OFTInteger, 10)
-                    .add_field("nodes", OFTInteger, 8)
-                ;
+                    .add_field("nodes", OFTInteger, 8);
             }
-
-            ~ProblemReporterOGR() override = default;
 
             void report_duplicate_node(osmium::object_id_type node_id1, osmium::object_id_type node_id2, osmium::Location location) override {
                 write_point("duplicate_node", node_id1, node_id2, location);
@@ -162,7 +157,7 @@ namespace osmium {
                 write_line("overlapping_segment", nr1.ref(), nr2.ref(), nr1.location(), nr2.location());
             }
 
-            void report_ring_not_closed(const osmium::NodeRef& nr, const osmium::Way* way = nullptr) override {
+            void report_ring_not_closed(const osmium::NodeRef& nr, const osmium::Way* way) override {
                 write_point("ring_not_closed", nr.ref(), way ? way->id() : 0, nr.location());
             }
 

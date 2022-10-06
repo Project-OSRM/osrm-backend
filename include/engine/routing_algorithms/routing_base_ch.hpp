@@ -24,11 +24,10 @@ namespace ch
 // Stalling
 template <bool DIRECTION, typename HeapT>
 bool stallAtNode(const DataFacade<Algorithm> &facade,
-                 const NodeID node,
-                 const EdgeWeight weight,
+                 const typename HeapT::HeapNode &heapNode,
                  const HeapT &query_heap)
 {
-    for (auto edge : facade.GetAdjacentEdgeRange(node))
+    for (auto edge : facade.GetAdjacentEdgeRange(heapNode.node))
     {
         const auto &data = facade.GetEdgeData(edge);
         if (DIRECTION == REVERSE_DIRECTION ? data.forward : data.backward)
@@ -36,9 +35,10 @@ bool stallAtNode(const DataFacade<Algorithm> &facade,
             const NodeID to = facade.GetTarget(edge);
             const EdgeWeight edge_weight = data.weight;
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
-            if (query_heap.WasInserted(to))
+            const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
+            if (toHeapNode)
             {
-                if (query_heap.GetKey(to) + edge_weight < weight)
+                if (toHeapNode->weight + edge_weight < heapNode.weight)
                 {
                     return true;
                 }
@@ -50,11 +50,10 @@ bool stallAtNode(const DataFacade<Algorithm> &facade,
 
 template <bool DIRECTION>
 void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
-                        const NodeID node,
-                        const EdgeWeight weight,
+                        const SearchEngineData<Algorithm>::QueryHeap::HeapNode &heapNode,
                         SearchEngineData<Algorithm>::QueryHeap &heap)
 {
-    for (const auto edge : facade.GetAdjacentEdgeRange(node))
+    for (const auto edge : facade.GetAdjacentEdgeRange(heapNode.node))
     {
         const auto &data = facade.GetEdgeData(edge);
         if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
@@ -63,19 +62,21 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const EdgeWeight edge_weight = data.weight;
 
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
-            const EdgeWeight to_weight = weight + edge_weight;
+            const EdgeWeight to_weight = heapNode.weight + edge_weight;
 
+            const auto toHeapNode = heap.GetHeapNodeIfWasInserted(to);
             // New Node discovered -> Add to Heap + Node Info Storage
-            if (!heap.WasInserted(to))
+            if (!toHeapNode)
             {
-                heap.Insert(to, to_weight, node);
+                heap.Insert(to, to_weight, heapNode.node);
             }
             // Found a shorter Path -> Update weight
-            else if (to_weight < heap.GetKey(to))
+            else if (to_weight < toHeapNode->weight)
             {
                 // new parent
-                heap.GetData(to).parent = node;
-                heap.DecreaseKey(to, to_weight);
+                toHeapNode->data.parent = heapNode.node;
+                toHeapNode->weight = to_weight;
+                heap.DecreaseKey(*toHeapNode);
             }
         }
     }
@@ -119,38 +120,37 @@ void routingStep(const DataFacade<Algorithm> &facade,
                  NodeID &middle_node_id,
                  EdgeWeight &upper_bound,
                  EdgeWeight min_edge_offset,
-                 const bool force_loop_forward,
-                 const bool force_loop_reverse)
+                 const std::vector<NodeID> &force_loop_forward_nodes,
+                 const std::vector<NodeID> &force_loop_reverse_nodes)
 {
-    const NodeID node = forward_heap.DeleteMin();
-    const EdgeWeight weight = forward_heap.GetKey(node);
+    auto heapNode = forward_heap.DeleteMinGetHeapNode();
+    const auto reverseHeapNode = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
 
-    if (reverse_heap.WasInserted(node))
+    if (reverseHeapNode)
     {
-        const EdgeWeight new_weight = reverse_heap.GetKey(node) + weight;
+        const EdgeWeight new_weight = reverseHeapNode->weight + heapNode.weight;
         if (new_weight < upper_bound)
         {
-            // if loops are forced, they are so at the source
-            if ((force_loop_forward && forward_heap.GetData(node).parent == node) ||
-                (force_loop_reverse && reverse_heap.GetData(node).parent == node) ||
+            if (force_loop(force_loop_forward_nodes, heapNode) ||
+                force_loop(force_loop_reverse_nodes, heapNode) ||
                 // in this case we are looking at a bi-directional way where the source
                 // and target phantom are on the same edge based node
                 new_weight < 0)
             {
                 // check whether there is a loop present at the node
-                for (const auto edge : facade.GetAdjacentEdgeRange(node))
+                for (const auto edge : facade.GetAdjacentEdgeRange(heapNode.node))
                 {
                     const auto &data = facade.GetEdgeData(edge);
                     if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
                     {
                         const NodeID to = facade.GetTarget(edge);
-                        if (to == node)
+                        if (to == heapNode.node)
                         {
                             const EdgeWeight edge_weight = data.weight;
                             const EdgeWeight loop_weight = new_weight + edge_weight;
                             if (loop_weight >= 0 && loop_weight < upper_bound)
                             {
-                                middle_node_id = node;
+                                middle_node_id = heapNode.node;
                                 upper_bound = loop_weight;
                             }
                         }
@@ -161,7 +161,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
             {
                 BOOST_ASSERT(new_weight >= 0);
 
-                middle_node_id = node;
+                middle_node_id = heapNode.node;
                 upper_bound = new_weight;
             }
         }
@@ -170,25 +170,26 @@ void routingStep(const DataFacade<Algorithm> &facade,
     // make sure we don't terminate too early if we initialize the weight
     // for the nodes in the forward heap with the forward/reverse offset
     BOOST_ASSERT(min_edge_offset <= 0);
-    if (weight + min_edge_offset > upper_bound)
+    if (heapNode.weight + min_edge_offset > upper_bound)
     {
         forward_heap.DeleteAll();
         return;
     }
 
     // Stalling
-    if (STALLING && stallAtNode<DIRECTION>(facade, node, weight, forward_heap))
+    if (STALLING && stallAtNode<DIRECTION>(facade, heapNode, forward_heap))
     {
         return;
     }
 
-    relaxOutgoingEdges<DIRECTION>(facade, node, weight, forward_heap);
+    relaxOutgoingEdges<DIRECTION>(facade, heapNode, forward_heap);
 }
 
 template <bool UseDuration>
-EdgeWeight getLoopWeight(const DataFacade<Algorithm> &facade, NodeID node)
+std::tuple<EdgeWeight, EdgeDistance> getLoopWeight(const DataFacade<Algorithm> &facade, NodeID node)
 {
     EdgeWeight loop_weight = UseDuration ? MAXIMAL_EDGE_DURATION : INVALID_EDGE_WEIGHT;
+    EdgeDistance loop_distance = MAXIMAL_EDGE_DISTANCE;
     for (auto edge : facade.GetAdjacentEdgeRange(node))
     {
         const auto &data = facade.GetEdgeData(edge);
@@ -198,11 +199,15 @@ EdgeWeight getLoopWeight(const DataFacade<Algorithm> &facade, NodeID node)
             if (to == node)
             {
                 const auto value = UseDuration ? data.duration : data.weight;
-                loop_weight = std::min(loop_weight, value);
+                if (value < loop_weight)
+                {
+                    loop_weight = value;
+                    loop_distance = data.distance;
+                }
             }
         }
     }
-    return loop_weight;
+    return std::make_tuple(loop_weight, loop_distance);
 }
 
 /**
@@ -288,11 +293,111 @@ void unpackPath(const DataFacade<Algorithm> &facade,
     }
 }
 
+template <typename BidirectionalIterator>
+EdgeDistance calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
+                                         BidirectionalIterator packed_path_begin,
+                                         BidirectionalIterator packed_path_end)
+{
+    // Make sure we have at least something to unpack
+    if (packed_path_begin == packed_path_end ||
+        std::distance(packed_path_begin, packed_path_end) <= 1)
+        return 0;
+
+    std::stack<std::tuple<NodeID, NodeID, bool>> recursion_stack;
+    std::stack<EdgeDistance> distance_stack;
+    // We have to push the path in reverse order onto the stack because it's LIFO.
+    for (auto current = std::prev(packed_path_end); current > packed_path_begin;
+         current = std::prev(current))
+    {
+        recursion_stack.emplace(*std::prev(current), *current, false);
+    }
+
+    std::tuple<NodeID, NodeID, bool> edge;
+    while (!recursion_stack.empty())
+    {
+        edge = recursion_stack.top();
+        recursion_stack.pop();
+
+        // Have we processed the edge before? tells us if we have values in the durations stack that
+        // we can add up
+        if (!std::get<2>(edge))
+        { // haven't processed edge before, so process it in the body!
+
+            std::get<2>(edge) = true; // mark that this edge will now be processed
+
+            // Look for an edge on the forward CH graph (.forward)
+            EdgeID smaller_edge_id =
+                facade.FindSmallestEdge(std::get<0>(edge), std::get<1>(edge), [](const auto &data) {
+                    return data.forward;
+                });
+
+            // If we didn't find one there, the we might be looking at a part of the path that
+            // was found using the backward search.  Here, we flip the node order (.second,
+            // .first) and only consider edges with the `.backward` flag.
+            if (SPECIAL_EDGEID == smaller_edge_id)
+            {
+                smaller_edge_id =
+                    facade.FindSmallestEdge(std::get<1>(edge),
+                                            std::get<0>(edge),
+                                            [](const auto &data) { return data.backward; });
+            }
+
+            // If we didn't find anything *still*, then something is broken and someone has
+            // called this function with bad values.
+            BOOST_ASSERT_MSG(smaller_edge_id != SPECIAL_EDGEID, "Invalid smaller edge ID");
+
+            const auto &data = facade.GetEdgeData(smaller_edge_id);
+            BOOST_ASSERT_MSG(data.weight != std::numeric_limits<EdgeWeight>::max(),
+                             "edge weight invalid");
+
+            // If the edge is a shortcut, we need to add the two halfs to the stack.
+            if (data.shortcut)
+            { // unpack
+                const NodeID middle_node_id = data.turn_id;
+                // Note the order here - we're adding these to a stack, so we
+                // want the first->middle to get visited before middle->second
+                recursion_stack.emplace(edge);
+                recursion_stack.emplace(middle_node_id, std::get<1>(edge), false);
+                recursion_stack.emplace(std::get<0>(edge), middle_node_id, false);
+            }
+            else
+            {
+                // compute the duration here and put it onto the duration stack using method
+                // similar to annotatePath but smaller
+                EdgeDistance distance = computeEdgeDistance(facade, std::get<0>(edge));
+                distance_stack.emplace(distance);
+            }
+        }
+        else
+        { // the edge has already been processed. this means that there are enough values in the
+            // distances stack
+
+            BOOST_ASSERT_MSG(distance_stack.size() >= 2,
+                             "There are not enough (at least 2) values on the distance stack");
+            EdgeDistance distance1 = distance_stack.top();
+            distance_stack.pop();
+            EdgeDistance distance2 = distance_stack.top();
+            distance_stack.pop();
+            EdgeDistance distance = distance1 + distance2;
+            distance_stack.emplace(distance);
+        }
+    }
+
+    EdgeDistance total_distance = 0;
+    while (!distance_stack.empty())
+    {
+        total_distance += distance_stack.top();
+        distance_stack.pop();
+    }
+
+    return total_distance;
+}
+
 template <typename RandomIter, typename FacadeT>
 void unpackPath(const FacadeT &facade,
                 RandomIter packed_path_begin,
                 RandomIter packed_path_end,
-                const PhantomNodes &phantom_nodes,
+                const PhantomEndpoints &route_endpoints,
                 std::vector<PathData> &unpacked_path)
 {
     const auto nodes_number = std::distance(packed_path_begin, packed_path_end);
@@ -316,7 +421,7 @@ void unpackPath(const FacadeT &facade,
                    });
     }
 
-    annotatePath(facade, phantom_nodes, unpacked_nodes, unpacked_edges, unpacked_path);
+    annotatePath(facade, route_endpoints, unpacked_nodes, unpacked_edges, unpacked_path);
 }
 
 /**
@@ -340,6 +445,11 @@ void retrievePackedPathFromSingleHeap(const SearchEngineData<Algorithm>::QueryHe
                                       const NodeID middle_node_id,
                                       std::vector<NodeID> &packed_path);
 
+void retrievePackedPathFromSingleManyToManyHeap(
+    const SearchEngineData<Algorithm>::ManyToManyQueryHeap &search_heap,
+    const NodeID middle_node_id,
+    std::vector<NodeID> &packed_path);
+
 // assumes that heaps are already setup correctly.
 // ATTENTION: This only works if no additional offset is supplied next to the Phantom Node
 // Offsets.
@@ -356,12 +466,35 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
             const DataFacade<Algorithm> &facade,
             SearchEngineData<Algorithm>::QueryHeap &forward_heap,
             SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-            std::int32_t &weight,
+            EdgeWeight &weight,
             std::vector<NodeID> &packed_leg,
-            const bool force_loop_forward,
-            const bool force_loop_reverse,
-            const PhantomNodes &phantom_nodes,
-            const int duration_upper_bound = INVALID_EDGE_WEIGHT);
+            const std::vector<NodeID> &force_loop_forward_node,
+            const std::vector<NodeID> &force_loop_reverse_node,
+            const EdgeWeight duration_upper_bound = INVALID_EDGE_WEIGHT);
+
+template <typename PhantomEndpointT>
+void search(SearchEngineData<Algorithm> &engine_working_data,
+            const DataFacade<Algorithm> &facade,
+            SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+            SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+            EdgeWeight &weight,
+            std::vector<NodeID> &packed_leg,
+            const std::vector<NodeID> &force_loop_forward_node,
+            const std::vector<NodeID> &force_loop_reverse_node,
+            const PhantomEndpointT & /*endpoints*/,
+            const EdgeWeight duration_upper_bound = INVALID_EDGE_WEIGHT)
+{
+    // Avoid templating the CH search implementations.
+    return search(engine_working_data,
+                  facade,
+                  forward_heap,
+                  reverse_heap,
+                  weight,
+                  packed_leg,
+                  force_loop_forward_node,
+                  force_loop_reverse_node,
+                  duration_upper_bound);
+}
 
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
@@ -375,52 +508,6 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           int duration_upper_bound = INVALID_EDGE_WEIGHT);
 
 } // namespace ch
-
-namespace corech
-{
-// assumes that heaps are already setup correctly.
-// A forced loop might be necessary, if source and target are on the same segment.
-// If this is the case and the offsets of the respective direction are larger for the source
-// than the target
-// then a force loop is required (e.g. source_phantom.forward_segment_id ==
-// target_phantom.forward_segment_id
-// && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
-// requires
-// a force loop, if the heaps have been initialized with positive offsets.
-void search(SearchEngineData<Algorithm> &engine_working_data,
-            const DataFacade<corech::Algorithm> &facade,
-            SearchEngineData<ch::Algorithm>::QueryHeap &forward_heap,
-            SearchEngineData<ch::Algorithm>::QueryHeap &reverse_heap,
-            int &weight,
-            std::vector<NodeID> &packed_leg,
-            const bool force_loop_forward,
-            const bool force_loop_reverse,
-            const PhantomNodes &phantom_nodes,
-            int duration_upper_bound = INVALID_EDGE_WEIGHT);
-
-// Requires the heaps for be empty
-// If heaps should be adjusted to be initialized outside of this function,
-// the addition of force_loop parameters might be required
-double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
-                          const DataFacade<corech::Algorithm> &facade,
-                          SearchEngineData<ch::Algorithm>::QueryHeap &forward_heap,
-                          SearchEngineData<ch::Algorithm>::QueryHeap &reverse_heap,
-                          const PhantomNode &source_phantom,
-                          const PhantomNode &target_phantom,
-                          int duration_upper_bound = INVALID_EDGE_WEIGHT);
-
-template <typename RandomIter, typename FacadeT>
-void unpackPath(const FacadeT &facade,
-                RandomIter packed_path_begin,
-                RandomIter packed_path_end,
-                const PhantomNodes &phantom_nodes,
-                std::vector<PathData> &unpacked_path)
-{
-    return ch::unpackPath(facade, packed_path_begin, packed_path_end, phantom_nodes, unpacked_path);
-}
-
-} // namespace corech
-
 } // namespace routing_algorithms
 } // namespace engine
 } // namespace osrm

@@ -6,7 +6,7 @@ file(GLOB PackedVectorBenchmarkSources packed_vector.cpp)
 add_executable(rtree-bench
 	EXCLUDE_FROM_ALL
 	${RTreeBenchmarkSources}
-	$<TARGET_OBJECTS:UTIL>)
+    $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
 
 target_include_directories(rtree-bench
 	PUBLIC

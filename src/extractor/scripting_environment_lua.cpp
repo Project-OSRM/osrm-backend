@@ -2,14 +2,19 @@
 
 #include "extractor/extraction_helper_functions.hpp"
 #include "extractor/extraction_node.hpp"
+#include "extractor/extraction_relation.hpp"
 #include "extractor/extraction_segment.hpp"
 #include "extractor/extraction_turn.hpp"
 #include "extractor/extraction_way.hpp"
 #include "extractor/internal_extractor_edge.hpp"
+#include "extractor/maneuver_override_relation_parser.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/raster_source.hpp"
 #include "extractor/restriction_parser.hpp"
+
+#include "guidance/turn_instruction.hpp"
+
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
 #include "util/log.hpp"
@@ -17,8 +22,6 @@
 #include "util/typedefs.hpp"
 
 #include <osmium/osm.hpp>
-
-#include <tbb/parallel_for.h>
 
 #include <memory>
 #include <sstream>
@@ -31,13 +34,18 @@ template <> struct is_container<osmium::Node> : std::false_type
 template <> struct is_container<osmium::Way> : std::false_type
 {
 };
-}
+template <> struct is_container<osmium::Relation> : std::false_type
+{
+};
+} // namespace sol
 
 namespace osrm
 {
 namespace extractor
 {
 
+namespace
+{
 template <class T>
 auto get_value_by_key(T const &object, const char *key) -> decltype(object.get_value_by_key(key))
 {
@@ -76,8 +84,19 @@ template <class T> double lonToDouble(T const &object)
     return static_cast<double>(util::toFloating(object.lon));
 }
 
-Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(const std::string &file_name)
-    : file_name(file_name)
+struct to_lua_object : public boost::static_visitor<sol::object>
+{
+    to_lua_object(sol::state &state) : state(state) {}
+    template <typename T> auto operator()(T &v) const { return sol::make_object(state, v); }
+    auto operator()(boost::blank &) const { return sol::lua_nil; }
+    sol::state &state;
+};
+} // namespace
+
+Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(
+    const std::string &file_name,
+    const std::vector<boost::filesystem::path> &location_dependent_data_paths)
+    : file_name(file_name), location_dependent_data(location_dependent_data_paths)
 {
     util::Log() << "Using script " << file_name;
 }
@@ -94,127 +113,77 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
     context.state.new_enum("mode",
                            "inaccessible",
-                           TRAVEL_MODE_INACCESSIBLE,
+                           extractor::TRAVEL_MODE_INACCESSIBLE,
                            "driving",
-                           TRAVEL_MODE_DRIVING,
+                           extractor::TRAVEL_MODE_DRIVING,
                            "cycling",
-                           TRAVEL_MODE_CYCLING,
+                           extractor::TRAVEL_MODE_CYCLING,
                            "walking",
-                           TRAVEL_MODE_WALKING,
+                           extractor::TRAVEL_MODE_WALKING,
                            "ferry",
-                           TRAVEL_MODE_FERRY,
+                           extractor::TRAVEL_MODE_FERRY,
                            "train",
-                           TRAVEL_MODE_TRAIN,
+                           extractor::TRAVEL_MODE_TRAIN,
                            "pushing_bike",
-                           TRAVEL_MODE_PUSHING_BIKE,
+                           extractor::TRAVEL_MODE_PUSHING_BIKE,
                            "steps_up",
-                           TRAVEL_MODE_STEPS_UP,
+                           extractor::TRAVEL_MODE_STEPS_UP,
                            "steps_down",
-                           TRAVEL_MODE_STEPS_DOWN,
+                           extractor::TRAVEL_MODE_STEPS_DOWN,
                            "river_up",
-                           TRAVEL_MODE_RIVER_UP,
+                           extractor::TRAVEL_MODE_RIVER_UP,
                            "river_down",
-                           TRAVEL_MODE_RIVER_DOWN,
+                           extractor::TRAVEL_MODE_RIVER_DOWN,
                            "route",
-                           TRAVEL_MODE_ROUTE);
+                           extractor::TRAVEL_MODE_ROUTE);
 
     context.state.new_enum("road_priority_class",
                            "motorway",
-                           extractor::guidance::RoadPriorityClass::MOTORWAY,
+                           extractor::RoadPriorityClass::MOTORWAY,
+                           "motorway_link",
+                           extractor::RoadPriorityClass::MOTORWAY_LINK,
                            "trunk",
-                           extractor::guidance::RoadPriorityClass::TRUNK,
+                           extractor::RoadPriorityClass::TRUNK,
+                           "trunk_link",
+                           extractor::RoadPriorityClass::TRUNK_LINK,
                            "primary",
-                           extractor::guidance::RoadPriorityClass::PRIMARY,
+                           extractor::RoadPriorityClass::PRIMARY,
+                           "primary_link",
+                           extractor::RoadPriorityClass::PRIMARY_LINK,
                            "secondary",
-                           extractor::guidance::RoadPriorityClass::SECONDARY,
+                           extractor::RoadPriorityClass::SECONDARY,
+                           "secondary_link",
+                           extractor::RoadPriorityClass::SECONDARY_LINK,
                            "tertiary",
-                           extractor::guidance::RoadPriorityClass::TERTIARY,
+                           extractor::RoadPriorityClass::TERTIARY,
+                           "tertiary_link",
+                           extractor::RoadPriorityClass::TERTIARY_LINK,
                            "main_residential",
-                           extractor::guidance::RoadPriorityClass::MAIN_RESIDENTIAL,
+                           extractor::RoadPriorityClass::MAIN_RESIDENTIAL,
                            "side_residential",
-                           extractor::guidance::RoadPriorityClass::SIDE_RESIDENTIAL,
+                           extractor::RoadPriorityClass::SIDE_RESIDENTIAL,
+                           "alley",
+                           extractor::RoadPriorityClass::ALLEY,
+                           "parking",
+                           extractor::RoadPriorityClass::PARKING,
                            "link_road",
-                           extractor::guidance::RoadPriorityClass::LINK_ROAD,
+                           extractor::RoadPriorityClass::LINK_ROAD,
+                           "unclassified",
+                           extractor::RoadPriorityClass::UNCLASSIFIED,
                            "bike_path",
-                           extractor::guidance::RoadPriorityClass::BIKE_PATH,
+                           extractor::RoadPriorityClass::BIKE_PATH,
                            "foot_path",
-                           extractor::guidance::RoadPriorityClass::FOOT_PATH,
+                           extractor::RoadPriorityClass::FOOT_PATH,
                            "connectivity",
-                           extractor::guidance::RoadPriorityClass::CONNECTIVITY);
+                           extractor::RoadPriorityClass::CONNECTIVITY);
 
-    context.state.new_enum("turn_type",
-                           "invalid",
-                           extractor::guidance::TurnType::Invalid,
-                           "new_name",
-                           extractor::guidance::TurnType::NewName,
-                           "continue",
-                           extractor::guidance::TurnType::Continue,
-                           "turn",
-                           extractor::guidance::TurnType::Turn,
-                           "merge",
-                           extractor::guidance::TurnType::Merge,
-                           "on_ramp",
-                           extractor::guidance::TurnType::OnRamp,
-                           "off_ramp",
-                           extractor::guidance::TurnType::OffRamp,
-                           "fork",
-                           extractor::guidance::TurnType::Fork,
-                           "end_of_road",
-                           extractor::guidance::TurnType::EndOfRoad,
-                           "notification",
-                           extractor::guidance::TurnType::Notification,
-                           "enter_roundabout",
-                           extractor::guidance::TurnType::EnterRoundabout,
-                           "enter_and_exit_roundabout",
-                           extractor::guidance::TurnType::EnterAndExitRoundabout,
-                           "enter_rotary",
-                           extractor::guidance::TurnType::EnterRotary,
-                           "enter_and_exit_rotary",
-                           extractor::guidance::TurnType::EnterAndExitRotary,
-                           "enter_roundabout_intersection",
-                           extractor::guidance::TurnType::EnterRoundaboutIntersection,
-                           "enter_and_exit_roundabout_intersection",
-                           extractor::guidance::TurnType::EnterAndExitRoundaboutIntersection,
-                           "use_lane",
-                           extractor::guidance::TurnType::Suppressed,
-                           "no_turn",
-                           extractor::guidance::TurnType::NoTurn,
-                           "suppressed",
-                           extractor::guidance::TurnType::Suppressed,
-                           "enter_roundabout_at_exit",
-                           extractor::guidance::TurnType::EnterRoundaboutAtExit,
-                           "exit_roundabout",
-                           extractor::guidance::TurnType::ExitRoundabout,
-                           "enter_rotary_at_exit",
-                           extractor::guidance::TurnType::EnterRotaryAtExit,
-                           "exit_rotary",
-                           extractor::guidance::TurnType::ExitRotary,
-                           "enter_roundabout_intersection_at_exit",
-                           extractor::guidance::TurnType::EnterRoundaboutIntersectionAtExit,
-                           "exit_roundabout_intersection",
-                           extractor::guidance::TurnType::ExitRoundaboutIntersection,
-                           "stay_on_roundabout",
-                           extractor::guidance::TurnType::StayOnRoundabout,
-                           "sliproad",
-                           extractor::guidance::TurnType::Sliproad);
-
-    context.state.new_enum("direction_modifier",
-                           "u_turn",
-                           extractor::guidance::DirectionModifier::UTurn,
-                           "sharp_right",
-                           extractor::guidance::DirectionModifier::SharpRight,
-                           "right",
-                           extractor::guidance::DirectionModifier::Right,
-                           "slight_right",
-                           extractor::guidance::DirectionModifier::SlightRight,
-                           "straight",
-                           extractor::guidance::DirectionModifier::Straight,
-                           "slight_left",
-                           extractor::guidance::DirectionModifier::SlightLeft,
-                           "left",
-                           extractor::guidance::DirectionModifier::Left,
-                           "sharp_left",
-                           extractor::guidance::DirectionModifier::SharpLeft);
+    context.state.new_enum("item_type",
+                           "node",
+                           osmium::item_type::node,
+                           "way",
+                           osmium::item_type::way,
+                           "relation",
+                           osmium::item_type::relation);
 
     context.state.new_usertype<RasterContainer>("raster",
                                                 "load",
@@ -265,50 +234,107 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                  "valid",
                                                  &osmium::Location::valid);
 
+    auto get_location_tag = [](auto &context, const auto &location, const char *key) {
+        if (context.location_dependent_data.empty())
+            return sol::object(context.state);
+
+        const LocationDependentData::point_t point{location.lon(), location.lat()};
+        if (!boost::geometry::equals(context.last_location_point, point))
+        {
+            context.last_location_point = point;
+            context.last_location_indexes =
+                context.location_dependent_data.GetPropertyIndexes(point);
+        }
+
+        auto value = context.location_dependent_data.FindByKey(context.last_location_indexes, key);
+        return boost::apply_visitor(to_lua_object(context.state), value);
+    };
+
     context.state.new_usertype<osmium::Way>(
         "Way",
         "get_value_by_key",
         &get_value_by_key<osmium::Way>,
         "id",
         &osmium::Way::id,
-        "get_nodes",
-        [](const osmium::Way &way) { return sol::as_table(way.nodes()); },
         "version",
-        &osmium::Way::version);
+        &osmium::Way::version,
+        "get_nodes",
+        [](const osmium::Way &way) { return sol::as_table(&way.nodes()); },
+        "get_location_tag",
+        [&context, &get_location_tag](const osmium::Way &way, const char *key) {
+            // HEURISTIC: use a single node (last) of the way to localize the way
+            // For more complicated scenarios a proper merging of multiple tags
+            // at one or many locations must be provided
+            const auto &nodes = way.nodes();
+            const auto &location = nodes.back().location();
+            return get_location_tag(context, location, key);
+        });
 
-    context.state.new_usertype<osmium::Node>("Node",
-                                             "location",
-                                             &osmium::Node::location,
-                                             "get_value_by_key",
-                                             &get_value_by_key<osmium::Node>,
-                                             "id",
-                                             &osmium::Node::id,
-                                             "version",
-                                             &osmium::Way::version);
+    context.state.new_usertype<osmium::Node>(
+        "Node",
+        "location",
+        &osmium::Node::location,
+        "get_value_by_key",
+        &get_value_by_key<osmium::Node>,
+        "id",
+        &osmium::Node::id,
+        "version",
+        &osmium::Node::version,
+        "get_location_tag",
+        [&context, &get_location_tag](const osmium::Node &node, const char *key) {
+            return get_location_tag(context, node.location(), key);
+        });
 
-    context.state.new_usertype<ExtractionNode>("ResultNode",
-                                               "traffic_lights",
-                                               &ExtractionNode::traffic_lights,
-                                               "barrier",
-                                               &ExtractionNode::barrier);
+    context.state.new_enum("traffic_lights",
+                           "none",
+                           extractor::TrafficLightClass::NONE,
+                           "direction_all",
+                           extractor::TrafficLightClass::DIRECTION_ALL,
+                           "direction_forward",
+                           extractor::TrafficLightClass::DIRECTION_FORWARD,
+                           "direction_reverse",
+                           extractor::TrafficLightClass::DIRECTION_REVERSE);
 
-    context.state.new_usertype<guidance::RoadClassification>(
+    context.state.new_usertype<ExtractionNode>(
+        "ResultNode",
+        "traffic_lights",
+        sol::property([](const ExtractionNode &node) { return node.traffic_lights; },
+                      [](ExtractionNode &node, const sol::object &obj) {
+                          if (obj.is<bool>())
+                          {
+                              // The old approach of assigning a boolean traffic light
+                              // state to the node is converted to the class enum
+                              // TODO: Make a breaking API change and remove this option.
+                              bool val = obj.as<bool>();
+                              node.traffic_lights = (val) ? TrafficLightClass::DIRECTION_ALL
+                                                          : TrafficLightClass::NONE;
+                              return;
+                          }
+
+                          BOOST_ASSERT(obj.is<TrafficLightClass::Direction>());
+                          {
+                              TrafficLightClass::Direction val =
+                                  obj.as<TrafficLightClass::Direction>();
+                              node.traffic_lights = val;
+                          }
+                      }),
+        "barrier",
+        &ExtractionNode::barrier);
+
+    context.state.new_usertype<RoadClassification>(
         "RoadClassification",
         "motorway_class",
-        sol::property(&guidance::RoadClassification::IsMotorwayClass,
-                      &guidance::RoadClassification::SetMotorwayFlag),
+        sol::property(&RoadClassification::IsMotorwayClass, &RoadClassification::SetMotorwayFlag),
         "link_class",
-        sol::property(&guidance::RoadClassification::IsLinkClass,
-                      &guidance::RoadClassification::SetLinkClass),
+        sol::property(&RoadClassification::IsLinkClass, &RoadClassification::SetLinkClass),
         "may_be_ignored",
-        sol::property(&guidance::RoadClassification::IsLowPriorityRoadClass,
-                      &guidance::RoadClassification::SetLowPriorityFlag),
+        sol::property(&RoadClassification::IsLowPriorityRoadClass,
+                      &RoadClassification::SetLowPriorityFlag),
         "road_priority_class",
-        sol::property(&guidance::RoadClassification::GetClass,
-                      &guidance::RoadClassification::SetClass),
+        sol::property(&RoadClassification::GetClass, &RoadClassification::SetClass),
         "num_lanes",
-        sol::property(&guidance::RoadClassification::GetNumberOfLanes,
-                      &guidance::RoadClassification::SetNumberOfLanes));
+        sol::property(&RoadClassification::GetNumberOfLanes,
+                      &RoadClassification::SetNumberOfLanes));
 
     context.state.new_usertype<ExtractionWay>(
         "ResultWay",
@@ -322,8 +348,16 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         &ExtractionWay::backward_rate,
         "name",
         sol::property(&ExtractionWay::GetName, &ExtractionWay::SetName),
-        "ref",
-        sol::property(&ExtractionWay::GetRef, &ExtractionWay::SetRef),
+        "ref", // backward compatibility
+        sol::property(&ExtractionWay::GetForwardRef,
+                      [](ExtractionWay &way, const char *ref) {
+                          way.SetForwardRef(ref);
+                          way.SetBackwardRef(ref);
+                      }),
+        "forward_ref",
+        sol::property(&ExtractionWay::GetForwardRef, &ExtractionWay::SetForwardRef),
+        "backward_ref",
+        sol::property(&ExtractionWay::GetBackwardRef, &ExtractionWay::SetBackwardRef),
         "pronunciation",
         sol::property(&ExtractionWay::GetPronunciation, &ExtractionWay::SetPronunciation),
         "destinations",
@@ -364,7 +398,67 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                       [](ExtractionWay &way, bool flag) { way.forward_restricted = flag; }),
         "backward_restricted",
         sol::property([](const ExtractionWay &way) { return way.backward_restricted; },
-                      [](ExtractionWay &way, bool flag) { way.backward_restricted = flag; }));
+                      [](ExtractionWay &way, bool flag) { way.backward_restricted = flag; }),
+        "is_left_hand_driving",
+        sol::property([](const ExtractionWay &way) { return way.is_left_hand_driving; },
+                      [](ExtractionWay &way, bool flag) { way.is_left_hand_driving = flag; }),
+        "highway_turn_classification",
+        sol::property([](const ExtractionWay &way) { return way.highway_turn_classification; },
+                      [](ExtractionWay &way, int flag) { way.highway_turn_classification = flag; }),
+        "access_turn_classification",
+        sol::property([](const ExtractionWay &way) { return way.access_turn_classification; },
+                      [](ExtractionWay &way, int flag) { way.access_turn_classification = flag; }));
+
+    auto getTypedRefBySol = [](const sol::object &obj) -> ExtractionRelation::OsmIDTyped {
+        if (obj.is<osmium::Way>())
+        {
+            osmium::Way *way = obj.as<osmium::Way *>();
+            return {way->id(), osmium::item_type::way};
+        }
+
+        if (obj.is<ExtractionRelation>())
+        {
+            ExtractionRelation *rel = obj.as<ExtractionRelation *>();
+            return rel->id;
+        }
+
+        if (obj.is<osmium::Node>())
+        {
+            osmium::Node *node = obj.as<osmium::Node *>();
+            return {node->id(), osmium::item_type::node};
+        }
+
+        return ExtractionRelation::OsmIDTyped(0, osmium::item_type::undefined);
+    };
+
+    context.state.new_usertype<ExtractionRelation::OsmIDTyped>(
+        "OsmIDTyped",
+        "id",
+        &ExtractionRelation::OsmIDTyped::GetID,
+        "type",
+        &ExtractionRelation::OsmIDTyped::GetType);
+
+    context.state.new_usertype<ExtractionRelation>(
+        "ExtractionRelation",
+        "id",
+        [](ExtractionRelation &rel) { return rel.id.GetID(); },
+        "get_value_by_key",
+        [](ExtractionRelation &rel, const char *key) -> const char * { return rel.GetAttr(key); },
+        "get_role",
+        [&getTypedRefBySol](ExtractionRelation &rel, const sol::object &obj) -> const char * {
+            return rel.GetRole(getTypedRefBySol(obj));
+        });
+
+    context.state.new_usertype<ExtractionRelationContainer>(
+        "ExtractionRelationContainer",
+        "get_relations",
+        [&getTypedRefBySol](ExtractionRelationContainer &cont, const sol::object &obj)
+            -> const ExtractionRelationContainer::RelationIDList & {
+            return cont.GetRelations(getTypedRefBySol(obj));
+        },
+        "relation",
+        [](ExtractionRelationContainer &cont, const ExtractionRelation::OsmIDTyped &rel_id)
+            -> const ExtractionRelation & { return cont.GetRelationData(rel_id); });
 
     context.state.new_usertype<ExtractionSegment>("ExtractionSegment",
                                                   "source",
@@ -377,24 +471,6 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                   &ExtractionSegment::weight,
                                                   "duration",
                                                   &ExtractionSegment::duration);
-
-    context.state.new_usertype<ExtractionTurn>("ExtractionTurn",
-                                               "angle",
-                                               &ExtractionTurn::angle,
-                                               "turn_type",
-                                               &ExtractionTurn::turn_type,
-                                               "direction_modifier",
-                                               &ExtractionTurn::direction_modifier,
-                                               "has_traffic_light",
-                                               &ExtractionTurn::has_traffic_light,
-                                               "weight",
-                                               &ExtractionTurn::weight,
-                                               "duration",
-                                               &ExtractionTurn::duration,
-                                               "source_restricted",
-                                               &ExtractionTurn::source_restricted,
-                                               "target_restricted",
-                                               &ExtractionTurn::target_restricted);
 
     // Keep in mind .location is available only if .pbf is preprocessed to set the location with the
     // ref using osmium command "osmium add-locations-to-ways"
@@ -457,10 +533,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
     util::Log() << "Using profile api version " << context.api_version;
 
     // version-dependent parts of the api
-    switch (context.api_version)
-    {
-    case 2:
-    {
+    auto initV2Context = [&]() {
         // clear global not used in v2
         context.state["properties"] = sol::nullopt;
 
@@ -543,10 +616,216 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             if (force_split_edges != sol::nullopt)
                 context.properties.force_split_edges = force_split_edges.value();
         }
+    };
+
+    auto initialize_V3_extraction_turn = [&]() {
+        context.state.new_usertype<ExtractionTurn>(
+            "ExtractionTurn",
+            "angle",
+            &ExtractionTurn::angle,
+            "turn_type",
+            sol::property([](const ExtractionTurn &turn) {
+                if (turn.number_of_roads > 2 || turn.source_mode != turn.target_mode ||
+                    turn.is_u_turn)
+                    return osrm::guidance::TurnType::Turn;
+                else
+                    return osrm::guidance::TurnType::NoTurn;
+            }),
+            "direction_modifier",
+            sol::property([](const ExtractionTurn &turn) {
+                if (turn.is_u_turn)
+                    return osrm::guidance::DirectionModifier::UTurn;
+                else
+                    return osrm::guidance::DirectionModifier::Straight;
+            }),
+            "has_traffic_light",
+            &ExtractionTurn::has_traffic_light,
+            "weight",
+            &ExtractionTurn::weight,
+            "duration",
+            &ExtractionTurn::duration,
+            "source_restricted",
+            &ExtractionTurn::source_restricted,
+            "target_restricted",
+            &ExtractionTurn::target_restricted,
+            "is_left_hand_driving",
+            &ExtractionTurn::is_left_hand_driving);
+
+        context.state.new_enum("turn_type",
+                               "invalid",
+                               osrm::guidance::TurnType::Invalid,
+                               "new_name",
+                               osrm::guidance::TurnType::NewName,
+                               "continue",
+                               osrm::guidance::TurnType::Continue,
+                               "turn",
+                               osrm::guidance::TurnType::Turn,
+                               "merge",
+                               osrm::guidance::TurnType::Merge,
+                               "on_ramp",
+                               osrm::guidance::TurnType::OnRamp,
+                               "off_ramp",
+                               osrm::guidance::TurnType::OffRamp,
+                               "fork",
+                               osrm::guidance::TurnType::Fork,
+                               "end_of_road",
+                               osrm::guidance::TurnType::EndOfRoad,
+                               "notification",
+                               osrm::guidance::TurnType::Notification,
+                               "enter_roundabout",
+                               osrm::guidance::TurnType::EnterRoundabout,
+                               "enter_and_exit_roundabout",
+                               osrm::guidance::TurnType::EnterAndExitRoundabout,
+                               "enter_rotary",
+                               osrm::guidance::TurnType::EnterRotary,
+                               "enter_and_exit_rotary",
+                               osrm::guidance::TurnType::EnterAndExitRotary,
+                               "enter_roundabout_intersection",
+                               osrm::guidance::TurnType::EnterRoundaboutIntersection,
+                               "enter_and_exit_roundabout_intersection",
+                               osrm::guidance::TurnType::EnterAndExitRoundaboutIntersection,
+                               "use_lane",
+                               osrm::guidance::TurnType::Suppressed,
+                               "no_turn",
+                               osrm::guidance::TurnType::NoTurn,
+                               "suppressed",
+                               osrm::guidance::TurnType::Suppressed,
+                               "enter_roundabout_at_exit",
+                               osrm::guidance::TurnType::EnterRoundaboutAtExit,
+                               "exit_roundabout",
+                               osrm::guidance::TurnType::ExitRoundabout,
+                               "enter_rotary_at_exit",
+                               osrm::guidance::TurnType::EnterRotaryAtExit,
+                               "exit_rotary",
+                               osrm::guidance::TurnType::ExitRotary,
+                               "enter_roundabout_intersection_at_exit",
+                               osrm::guidance::TurnType::EnterRoundaboutIntersectionAtExit,
+                               "exit_roundabout_intersection",
+                               osrm::guidance::TurnType::ExitRoundaboutIntersection,
+                               "stay_on_roundabout",
+                               osrm::guidance::TurnType::StayOnRoundabout,
+                               "sliproad",
+                               osrm::guidance::TurnType::Sliproad);
+
+        context.state.new_enum("direction_modifier",
+                               "u_turn",
+                               osrm::guidance::DirectionModifier::UTurn,
+                               "sharp_right",
+                               osrm::guidance::DirectionModifier::SharpRight,
+                               "right",
+                               osrm::guidance::DirectionModifier::Right,
+                               "slight_right",
+                               osrm::guidance::DirectionModifier::SlightRight,
+                               "straight",
+                               osrm::guidance::DirectionModifier::Straight,
+                               "slight_left",
+                               osrm::guidance::DirectionModifier::SlightLeft,
+                               "left",
+                               osrm::guidance::DirectionModifier::Left,
+                               "sharp_left",
+                               osrm::guidance::DirectionModifier::SharpLeft);
+    };
+
+    switch (context.api_version)
+    {
+    case 4:
+    {
+        context.state.new_usertype<ExtractionTurnLeg>(
+            "ExtractionTurnLeg",
+            "is_restricted",
+            &ExtractionTurnLeg::is_restricted,
+            "is_motorway",
+            &ExtractionTurnLeg::is_motorway,
+            "is_link",
+            &ExtractionTurnLeg::is_link,
+            "number_of_lanes",
+            &ExtractionTurnLeg::number_of_lanes,
+            "highway_turn_classification",
+            &ExtractionTurnLeg::highway_turn_classification,
+            "access_turn_classification",
+            &ExtractionTurnLeg::access_turn_classification,
+            "speed",
+            &ExtractionTurnLeg::speed,
+            "priority_class",
+            &ExtractionTurnLeg::priority_class,
+            "is_incoming",
+            &ExtractionTurnLeg::is_incoming,
+            "is_outgoing",
+            &ExtractionTurnLeg::is_outgoing);
+
+        context.state.new_usertype<ExtractionTurn>(
+            "ExtractionTurn",
+            "angle",
+            &ExtractionTurn::angle,
+            "number_of_roads",
+            &ExtractionTurn::number_of_roads,
+            "is_u_turn",
+            &ExtractionTurn::is_u_turn,
+            "has_traffic_light",
+            &ExtractionTurn::has_traffic_light,
+            "is_left_hand_driving",
+            &ExtractionTurn::is_left_hand_driving,
+
+            "source_restricted",
+            &ExtractionTurn::source_restricted,
+            "source_mode",
+            &ExtractionTurn::source_mode,
+            "source_is_motorway",
+            &ExtractionTurn::source_is_motorway,
+            "source_is_link",
+            &ExtractionTurn::source_is_link,
+            "source_number_of_lanes",
+            &ExtractionTurn::source_number_of_lanes,
+            "source_highway_turn_classification",
+            &ExtractionTurn::source_highway_turn_classification,
+            "source_access_turn_classification",
+            &ExtractionTurn::source_access_turn_classification,
+            "source_speed",
+            &ExtractionTurn::source_speed,
+            "source_priority_class",
+            &ExtractionTurn::source_priority_class,
+
+            "target_restricted",
+            &ExtractionTurn::target_restricted,
+            "target_mode",
+            &ExtractionTurn::target_mode,
+            "target_is_motorway",
+            &ExtractionTurn::target_is_motorway,
+            "target_is_link",
+            &ExtractionTurn::target_is_link,
+            "target_number_of_lanes",
+            &ExtractionTurn::target_number_of_lanes,
+            "target_highway_turn_classification",
+            &ExtractionTurn::target_highway_turn_classification,
+            "target_access_turn_classification",
+            &ExtractionTurn::target_access_turn_classification,
+            "target_speed",
+            &ExtractionTurn::target_speed,
+            "target_priority_class",
+            &ExtractionTurn::target_priority_class,
+
+            "roads_on_the_right",
+            &ExtractionTurn::roads_on_the_right,
+            "roads_on_the_left",
+            &ExtractionTurn::roads_on_the_left,
+            "weight",
+            &ExtractionTurn::weight,
+            "duration",
+            &ExtractionTurn::duration);
+        initV2Context();
+        break;
+    }
+    case 3:
+    case 2:
+    {
+        initialize_V3_extraction_turn();
+        initV2Context();
         break;
     }
     case 1:
     {
+        initialize_V3_extraction_turn();
+
         // cache references to functions for faster execution
         context.turn_function = context.state["turn_function"];
         context.node_function = context.state["node_function"];
@@ -577,6 +856,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         break;
     }
     case 0:
+        initialize_V3_extraction_turn();
+
         // cache references to functions for faster execution
         context.turn_function = context.state["turn_function"];
         context.node_function = context.state["node_function"];
@@ -605,7 +886,7 @@ LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
     auto &ref = script_contexts.local(initialized);
     if (!initialized)
     {
-        ref = std::make_unique<LuaScriptingContext>();
+        ref = std::make_unique<LuaScriptingContext>(location_dependent_data);
         InitContext(*ref);
     }
 
@@ -615,9 +896,12 @@ LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
 void Sol2ScriptingEnvironment::ProcessElements(
     const osmium::memory::Buffer &buffer,
     const RestrictionParser &restriction_parser,
+    const ManeuverOverrideRelationParser &maneuver_override_parser,
+    const ExtractionRelationContainer &relations,
     std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
     std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
-    std::vector<InputConditionalTurnRestriction> &resulting_restrictions)
+    std::vector<InputTurnRestriction> &resulting_restrictions,
+    std::vector<InputManeuverOverride> &resulting_maneuver_overrides)
 {
     ExtractionNode result_node;
     ExtractionWay result_way;
@@ -628,32 +912,42 @@ void Sol2ScriptingEnvironment::ProcessElements(
         switch (entity->type())
         {
         case osmium::item_type::node:
+        {
+            const auto &node = static_cast<const osmium::Node &>(*entity);
+            // NOLINTNEXTLINE(bugprone-use-after-move)
             result_node.clear();
             if (local_context.has_node_function &&
-                (!static_cast<const osmium::Node &>(*entity).tags().empty() ||
-                 local_context.properties.call_tagless_node_function))
+                (!node.tags().empty() || local_context.properties.call_tagless_node_function))
             {
-                local_context.ProcessNode(static_cast<const osmium::Node &>(*entity), result_node);
+                local_context.ProcessNode(node, result_node, relations);
             }
-            resulting_nodes.push_back(std::pair<const osmium::Node &, ExtractionNode>(
-                static_cast<const osmium::Node &>(*entity), std::move(result_node)));
-            break;
+            resulting_nodes.push_back({node, result_node});
+        }
+        break;
         case osmium::item_type::way:
+        {
+            const osmium::Way &way = static_cast<const osmium::Way &>(*entity);
+            // NOLINTNEXTLINE(bugprone-use-after-move)
             result_way.clear();
             if (local_context.has_way_function)
             {
-                local_context.ProcessWay(static_cast<const osmium::Way &>(*entity), result_way);
+                local_context.ProcessWay(way, result_way, relations);
             }
-            resulting_ways.push_back(std::pair<const osmium::Way &, ExtractionWay>(
-                static_cast<const osmium::Way &>(*entity), std::move(result_way)));
-            break;
+            resulting_ways.push_back({way, std::move(result_way)});
+        }
+        break;
         case osmium::item_type::relation:
         {
-            auto result_res =
-                restriction_parser.TryParse(static_cast<const osmium::Relation &>(*entity));
-            if (result_res)
+            const auto &relation = static_cast<const osmium::Relation &>(*entity);
+            auto results = restriction_parser.TryParse(relation);
+            if (!results.empty())
             {
-                resulting_restrictions.push_back(*result_res);
+                std::move(
+                    results.begin(), results.end(), std::back_inserter(resulting_restrictions));
+            }
+            else if (auto result_res = maneuver_override_parser.TryParse(relation))
+            {
+                resulting_maneuver_overrides.push_back(std::move(*result_res));
             }
         }
         break;
@@ -667,7 +961,7 @@ std::vector<std::string>
 Sol2ScriptingEnvironment::GetStringListFromFunction(const std::string &function_name)
 {
     auto &context = GetSol2Context();
-    BOOST_ASSERT(context.state.lua_state() != nullptr);
+    BOOST_ASSERT(context.state.lua_state());
     std::vector<std::string> strings;
     sol::function function = context.state[function_name];
     if (function.valid())
@@ -677,18 +971,38 @@ Sol2ScriptingEnvironment::GetStringListFromFunction(const std::string &function_
     return strings;
 }
 
+namespace
+{
+
+// string list can be defined either as a Set(see profiles/lua/set.lua) or as a Sequence (see
+// profiles/lua/sequence.lua) `Set` is a table with keys that are actual values we are looking for
+// and values that always `true`. `Sequence` is a table with keys that are indices and values that
+// are actual values we are looking for.
+
+std::string GetSetOrSequenceValue(const std::pair<sol::object, sol::object> &pair)
+{
+    if (pair.second.is<std::string>())
+    {
+        return pair.second.as<std::string>();
+    }
+    BOOST_ASSERT(pair.first.is<std::string>());
+    return pair.first.as<std::string>();
+}
+
+} // namespace
+
 std::vector<std::string>
 Sol2ScriptingEnvironment::GetStringListFromTable(const std::string &table_name)
 {
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state() != nullptr);
     std::vector<std::string> strings;
-    sol::table table = context.profile_table[table_name];
-    if (table.valid())
+    sol::optional<sol::table> table = context.profile_table[table_name];
+    if (table && table->valid())
     {
-        for (auto &&pair : table)
+        for (auto &&pair : *table)
         {
-            strings.push_back(pair.second.as<std::string>());
+            strings.emplace_back(GetSetOrSequenceValue(pair));
         }
     }
     return strings;
@@ -701,13 +1015,13 @@ Sol2ScriptingEnvironment::GetStringListsFromTable(const std::string &table_name)
 
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state() != nullptr);
-    sol::table table = context.profile_table[table_name];
-    if (!table.valid())
+    sol::optional<sol::table> table = context.profile_table[table_name];
+    if (!table || !table->valid())
     {
         return string_lists;
     }
 
-    for (const auto &pair : table)
+    for (const auto &pair : *table)
     {
         sol::table inner_table = pair.second;
         if (!inner_table.valid())
@@ -719,7 +1033,7 @@ Sol2ScriptingEnvironment::GetStringListsFromTable(const std::string &table_name)
         std::vector<std::string> inner_vector;
         for (const auto &inner_pair : inner_table)
         {
-            inner_vector.push_back(inner_pair.first.as<std::string>());
+            inner_vector.emplace_back(GetSetOrSequenceValue(inner_pair));
         }
         string_lists.push_back(std::move(inner_vector));
     }
@@ -732,6 +1046,8 @@ std::vector<std::vector<std::string>> Sol2ScriptingEnvironment::GetExcludableCla
     auto &context = GetSol2Context();
     switch (context.api_version)
     {
+    case 4:
+    case 3:
     case 2:
         return Sol2ScriptingEnvironment::GetStringListsFromTable("excludable");
     default:
@@ -744,6 +1060,8 @@ std::vector<std::string> Sol2ScriptingEnvironment::GetClassNames()
     auto &context = GetSol2Context();
     switch (context.api_version)
     {
+    case 4:
+    case 3:
     case 2:
         return Sol2ScriptingEnvironment::GetStringListFromTable("classes");
     default:
@@ -756,6 +1074,8 @@ std::vector<std::string> Sol2ScriptingEnvironment::GetNameSuffixList()
     auto &context = GetSol2Context();
     switch (context.api_version)
     {
+    case 4:
+    case 3:
     case 2:
         return Sol2ScriptingEnvironment::GetStringListFromTable("suffix_list");
     case 1:
@@ -770,10 +1090,25 @@ std::vector<std::string> Sol2ScriptingEnvironment::GetRestrictions()
     auto &context = GetSol2Context();
     switch (context.api_version)
     {
+    case 4:
+    case 3:
     case 2:
         return Sol2ScriptingEnvironment::GetStringListFromTable("restrictions");
     case 1:
         return Sol2ScriptingEnvironment::GetStringListFromFunction("get_restrictions");
+    default:
+        return {};
+    }
+}
+
+std::vector<std::string> Sol2ScriptingEnvironment::GetRelations()
+{
+    auto &context = GetSol2Context();
+    switch (context.api_version)
+    {
+    case 4:
+    case 3:
+        return Sol2ScriptingEnvironment::GetStringListFromTable("relation_types");
     default:
         return {};
     }
@@ -785,10 +1120,12 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
 
     switch (context.api_version)
     {
+    case 4:
+    case 3:
     case 2:
         if (context.has_turn_penalty_function)
         {
-            context.turn_function(context.profile_table, turn);
+            context.turn_function(context.profile_table, std::ref(turn));
 
             // Turn weight falls back to the duration value in deciseconds
             // or uses the extracted unit-less weight value
@@ -803,7 +1140,7 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
     case 1:
         if (context.has_turn_penalty_function)
         {
-            context.turn_function(turn);
+            context.turn_function(std::ref(turn));
 
             // Turn weight falls back to the duration value in deciseconds
             // or uses the extracted unit-less weight value
@@ -815,14 +1152,14 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
     case 0:
         if (context.has_turn_penalty_function)
         {
-            if (turn.turn_type != guidance::TurnType::NoTurn)
+            if (turn.number_of_roads > 2)
             {
                 // Get turn duration and convert deci-seconds to seconds
                 turn.duration = static_cast<double>(context.turn_function(turn.angle)) / 10.;
                 BOOST_ASSERT(turn.weight == 0);
 
                 // add U-turn penalty
-                if (turn.direction_modifier == guidance::DirectionModifier::UTurn)
+                if (turn.is_u_turn)
                     turn.duration += context.properties.GetUturnPenalty();
             }
             else
@@ -851,51 +1188,68 @@ void Sol2ScriptingEnvironment::ProcessSegment(ExtractionSegment &segment)
     {
         switch (context.api_version)
         {
+        case 4:
+        case 3:
         case 2:
-            context.segment_function(context.profile_table, segment);
+            context.segment_function(context.profile_table, std::ref(segment));
             break;
         case 1:
-            context.segment_function(segment);
+            context.segment_function(std::ref(segment));
             break;
         case 0:
-            context.segment_function(
-                segment.source, segment.target, segment.distance, segment.duration);
+            context.segment_function(std::ref(segment.source),
+                                     std::ref(segment.target),
+                                     segment.distance,
+                                     segment.duration);
             segment.weight = segment.duration; // back-compatibility fallback to duration
             break;
         }
     }
 }
 
-void LuaScriptingContext::ProcessNode(const osmium::Node &node, ExtractionNode &result)
+void LuaScriptingContext::ProcessNode(const osmium::Node &node,
+                                      ExtractionNode &result,
+                                      const ExtractionRelationContainer &relations)
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 
     switch (api_version)
     {
+    case 4:
+    case 3:
+        node_function(profile_table, std::cref(node), std::ref(result), std::cref(relations));
+        break;
     case 2:
-        node_function(profile_table, node, result);
+        node_function(profile_table, std::cref(node), std::ref(result));
         break;
     case 1:
     case 0:
-        node_function(node, result);
+        node_function(std::cref(node), std::ref(result));
         break;
     }
 }
 
-void LuaScriptingContext::ProcessWay(const osmium::Way &way, ExtractionWay &result)
+void LuaScriptingContext::ProcessWay(const osmium::Way &way,
+                                     ExtractionWay &result,
+                                     const ExtractionRelationContainer &relations)
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 
     switch (api_version)
     {
+    case 4:
+    case 3:
+        way_function(profile_table, std::cref(way), std::ref(result), std::cref(relations));
+        break;
     case 2:
-        way_function(profile_table, way, result);
+        way_function(profile_table, std::cref(way), std::ref(result));
         break;
     case 1:
     case 0:
-        way_function(way, result);
+        way_function(std::cref(way), std::ref(result));
         break;
     }
 }
-}
-}
+
+} // namespace extractor
+} // namespace osrm

@@ -1,3 +1,8 @@
+# OSRM HTTP server
+
+The built-in HTTP server is a basic HTTP/1.0 server that supports a 'keep-alive' extension. Persistent connections are limited to 512 requests per
+connection and allow no more than 5 seconds between requests.
+
 ## General options
 
 All OSRM HTTP requests use a common structure.
@@ -16,22 +21,24 @@ GET /{service}/{version}/{profile}/{coordinates}[.{format}]?option=value&option=
 | `version` | Version of the protocol implemented by the service. `v1` for all OSRM 5.x installations |
 | `profile` | Mode of transportation, is determined statically by the Lua profile that is used to prepare the data using `osrm-extract`. Typically `car`, `bike` or `foot` if using one of the supplied profiles. |
 | `coordinates`| String of format `{longitude},{latitude};{longitude},{latitude}[;{longitude},{latitude} ...]` or `polyline({polyline}) or polyline6({polyline6})`. |
-| `format`| Only `json` is supported at the moment. This parameter is optional and defaults to `json`. |
+| `format`| `json` or `flatbuffers`. This parameter is optional and defaults to `json`. |
 
 Passing any `option=value` is optional. `polyline` follows Google's polyline format with precision 5 by default and can be generated using [this package](https://www.npmjs.com/package/polyline).
 
-To pass parameters to each location some options support an array like encoding:
+To pass parameters to each location some options support an array-like encoding:
 
 **Request options**
 
-| Option         | Values                                                 | Description                                                                                           |
-|----------------|--------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-|bearings        |`{bearing};{bearing}[;{bearing} ...]`                   |Limits the search to segments with given bearing in degrees towards true north in clockwise direction. |
-|radiuses        |`{radius};{radius}[;{radius} ...]`                      |Limits the search to given radius in meters.                                                           |
-|generate\_hints |`true` (default), `false`                               |Adds a Hint to the response which can be used in subsequent requests, see `hints` parameter.           |
-|hints           |`{hint};{hint}[;{hint} ...]`                            |Hint from previous request to derive position in street network.                                       |
-|approaches      |`{approach};{approach}[;{approach} ...]`                |Keep waypoints on curb side.                                                                           |
-|exclude         |`{class}[,{class}]`                                     |Additive list of classes to avoid, order does not matter.                                              |
+| Option         | Values                                                 | Description                                                                                                                                                                                               |
+|----------------|--------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|bearings        |`{bearing};{bearing}[;{bearing} ...]`                   |Limits the search to segments with given bearing in degrees towards true north in a clockwise direction.                                                                                                     |
+|radiuses        |`{radius};{radius}[;{radius} ...]`                      |Limits the search to given radius in meters.                                                                                                                                                               |
+|generate\_hints |`true` (default), `false`                               |Adds a Hint to the response which can be used in subsequent requests, see `hints` parameter.                                                                                                               |
+|hints           |`{hint};{hint}[;{hint} ...]`                            |Hint from previous request to derive position in street network.                                                                                                                                           |
+|approaches      |`{approach};{approach}[;{approach} ...]`                |Keep waypoints on curbside.                                                                                                                                                                               |
+|exclude         |`{class}[,{class}]`                                     |Additive list of classes to avoid, the order does not matter.                                                                                                                                                  |
+|snapping        |`default` (default), `any`                              |Default snapping avoids is_startpoint (see profile) edges, `any` will snap to any edge in the graph                                                                                                        |
+|skip_waypoints  |`true`, `false` (default)                               |Removes waypoints from the response. Waypoints are still calculated, but not serialized. Could be useful in case you are interested in some other part of the response and do not want to transfer waste data. |
 
 Where the elements follow the following format:
 
@@ -49,7 +56,7 @@ Where the elements follow the following format:
 
 The number of elements must match exactly the number of locations (except for `generate_hints` and `exclude`). If you don't want to pass a value but instead use the default you can pass an empty `element`.
 
-Example: 2nd location use the default value for `option`:
+Example: 2nd location uses the default value for `option`:
 
 ```
 {option}={element};;{element}
@@ -70,6 +77,8 @@ curl 'http://router.project-osrm.org/route/v1/driving/polyline(ofp_Ik_vpAilAyu@t
 
 ### Responses
 
+#### Code
+
 Every response object has a `code` property containing one of the strings below or a service dependent code:
 
 | Type              | Description                                                                      |
@@ -79,20 +88,25 @@ Every response object has a `code` property containing one of the strings below 
 | `InvalidService`  | Service name is invalid.                                                         |
 | `InvalidVersion`  | Version is not found.                                                            |
 | `InvalidOptions`  | Options are invalid.                                                             |
-| `InvalidQuery`    | The query string is synctactically malformed.                                    |
+| `InvalidQuery`    | The query string is syntactically malformed.                                    |
 | `InvalidValue`    | The successfully parsed query parameters are invalid.                            |
-| `NoSegment`       | One of the supplied input coordinates could not snap to street segment.          |
-| `TooBig`          | The request size violates one of the service specific request size restrictions. |
+| `NoSegment`       | One of the supplied input coordinates could not snap to the street segment.          |
+| `TooBig`          | The request size violates one of the service-specific request size restrictions. |
 
-- `message` is a **optional** human-readable error message. All other status types are service dependent.
-- In case of an error the HTTP status code will be `400`. Otherwise the HTTP status code will be `200` and `code` will be `Ok`.
+- `message` is a **optional** human-readable error message. All other status types are service-dependent.
+- In case of an error the HTTP status code will be `400`. Otherwise, the HTTP status code will be `200` and `code` will be `Ok`.
+
+#### Data version
+
+Every response object has a `data_version` property containing a timestamp from the original OpenStreetMap file. This field is optional. It can be omitted if the data_version parameter was not set on the osrm-extract stage or the OSM file has not `osmosis_replication_timestamp` section.
 
 #### Example response
 
 ```json
 {
 "code": "Ok",
-"message": "Everything worked"
+"message": "Everything worked",
+"data_version": "2017-11-17T21:43:02Z"
 }
 ```
 
@@ -115,11 +129,14 @@ In addition to the [general options](#general-options) the following options are
 |------------|------------------------------|----------------------------------------------------|
 |number      |`integer >= 1` (default `1`)  |Number of nearest segments that should be returned. |
 
+As `waypoints` is a single thing, returned by that service, using it with the option `skip_waypoints` set to `true` is quite useless, but still
+possible. In that case, only the `code` field will be returned. 
+
 **Response**
 
 - `code` if the request was successful `Ok` otherwise see the service dependent and general status codes.
 - `waypoints` array of `Waypoint` objects sorted by distance to the input coordinate. Each object has at least the following additional properties:
-  - `distance`: Distance in meters to the supplied input coordinate.
+  - `nodes`: Array of OpenStreetMap node ids.
 
 #### Example Requests
 
@@ -130,10 +147,14 @@ curl 'http://router.project-osrm.org/nearest/v1/driving/13.388860,52.517037?numb
 
 #### Example Response
 
-```json
+```JSON
 {
    "waypoints" : [
       {
+         "nodes": [
+            2264199819,
+            0
+         ],
          "hint" : "KSoKADRYroqUBAEAEAAAABkAAAAGAAAAAAAAABhnCQCLtwAA_0vMAKlYIQM8TMwArVghAwEAAQH1a66g",
          "distance" : 4.152629,
          "name" : "Friedrichstraße",
@@ -143,6 +164,10 @@ curl 'http://router.project-osrm.org/nearest/v1/driving/13.388860,52.517037?numb
          ]
       },
       {
+         "nodes": [
+            2045820592,
+            0
+         ],
          "hint" : "KSoKADRYroqUBAEABgAAAAAAAAAAAAAAKQAAABhnCQCLtwAA7kvMAAxZIQM8TMwArVghAwAAAQH1a66g",
          "distance" : 11.811961,
          "name" : "Friedrichstraße",
@@ -152,6 +177,10 @@ curl 'http://router.project-osrm.org/nearest/v1/driving/13.388860,52.517037?numb
          ]
       },
       {
+         "nodes": [
+            0,
+            21487242
+         ],
          "hint" : "KioKgDbbDgCUBAEAAAAAABoAAAAAAAAAPAAAABlnCQCLtwAA50vMADJZIQM8TMwArVghAwAAAQH1a66g",
          "distance" : 15.872438,
          "name" : "Friedrichstraße",
@@ -182,7 +211,8 @@ In addition to the [general options](#general-options) the following options are
 |annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`  |Returns additional metadata for each coordinate along the route geometry.      |
 |geometries  |`polyline` (default), `polyline6`, `geojson` |Returned route geometry format (influences overview and per step)              |
 |overview    |`simplified` (default), `full`, `false`      |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
-|continue\_straight |`default` (default), `true`, `false` |Forces the route to keep going straight at waypoints constraining uturns there even if it would be faster. Default value depends on the profile. |
+|continue\_straight |`default` (default), `true`, `false`  |Forces the route to keep going straight at waypoints constraining uturns there even if it would be faster. Default value depends on the profile. |
+|waypoints   | `{index};{index};{index}...`                |Treats input coordinates indicated by given indices as waypoints in returned Match object. Default is to treat all input coordinates as waypoints.    |
 
 \* Please note that even if alternative routes are requested, a result cannot be guaranteed.
 
@@ -209,13 +239,13 @@ curl 'http://router.project-osrm.org/route/v1/driving/13.388860,52.517037;13.397
 
 ### Table service
 
-Computes the duration of the fastest route between all pairs of supplied coordinates.
+Computes the duration of the fastest route between all pairs of supplied coordinates. Returns durations or distances or both between the coordinate pairs. Note that the distances are not the shortest distance between two coordinates, but rather the distances of the fastest routes. Durations are in seconds and distances are in meters.
 
 ```endpoint
-GET /table/v1/{profile}/{coordinates}?{sources}=[{elem}...];&destinations=[{elem}...]
+GET /table/v1/{profile}/{coordinates}?{sources}=[{elem}...];&{destinations}=[{elem}...]&annotations={duration|distance|duration,distance}
 ```
 
-**Coordinates**
+**Options**
 
 In addition to the [general options](#general-options) the following options are supported for this service:
 
@@ -223,9 +253,15 @@ In addition to the [general options](#general-options) the following options are
 |------------|--------------------------------------------------|---------------------------------------------|
 |sources     |`{index};{index}[;{index} ...]` or `all` (default)|Use location with given index as source.     |
 |destinations|`{index};{index}[;{index} ...]` or `all` (default)|Use location with given index as destination.|
+|annotations |`duration` (default), `distance`, or `duration,distance`|Return the requested table or tables in response. |
+|fallback_speed|`double > 0`| If no route found between a source/destination pair, calculate the as-the-crow-flies distance, then use this speed to estimate duration.|
+|fallback_coordinate|`input` (default), or `snapped`| When using a `fallback_speed`, use the user-supplied coordinate (`input`), or the snapped location (`snapped`) for calculating distances.|
+|scale_factor|`double > 0`| Use in conjunction with `annotations=durations`. Scales the table `duration` values by this number.|
 
 Unlike other array encoded options, the length of `sources` and `destinations` can be **smaller or equal**
 to number of input locations;
+
+With `skip_waypoints` set to `true`, both `sources` and `destinations` arrays will be skipped.
 
 **Example:**
 
@@ -240,36 +276,148 @@ sources=0;5;7&destinations=5;1;4;2;3;6
 #### Example Request
 
 ```curl
-# Returns a 3x3 matrix:
+# Returns a 3x3 duration matrix:
 curl 'http://router.project-osrm.org/table/v1/driving/13.388860,52.517037;13.397634,52.529407;13.428555,52.523219'
 
-# Returns a 1x3 matrix
+# Returns a 1x3 duration matrix
 curl 'http://router.project-osrm.org/table/v1/driving/13.388860,52.517037;13.397634,52.529407;13.428555,52.523219?sources=0'
 
-# Returns a asymmetric 3x2 matrix with from the polyline encoded locations `qikdcB}~dpXkkHz`:
+# Returns a asymmetric 3x2 duration matrix with from the polyline encoded locations `qikdcB}~dpXkkHz`:
 curl 'http://router.project-osrm.org/table/v1/driving/polyline(egs_Iq_aqAppHzbHulFzeMe`EuvKpnCglA)?sources=0;1;3&destinations=2;4'
+
+# Returns a 3x3 duration matrix:
+curl 'http://router.project-osrm.org/table/v1/driving/13.388860,52.517037;13.397634,52.529407;13.428555,52.523219?annotations=duration'
+
+# Returns a 3x3 distance matrix for CH:
+curl 'http://router.project-osrm.org/table/v1/driving/13.388860,52.517037;13.397634,52.529407;13.428555,52.523219?annotations=distance'
+
+# Returns a 3x3 duration matrix and a 3x3 distance matrix for CH:
+curl 'http://router.project-osrm.org/table/v1/driving/13.388860,52.517037;13.397634,52.529407;13.428555,52.523219?annotations=distance,duration'
 ```
 
 **Response**
 
 - `code` if the request was successful `Ok` otherwise see the service dependent and general status codes.
 - `durations` array of arrays that stores the matrix in row-major order. `durations[i][j]` gives the travel time from
-  the i-th waypoint to the j-th waypoint. Values are given in seconds. Can be `null` if no route between `i` and `j` can be found.
+  the i-th source to the j-th destination. Values are given in seconds. Can be `null` if no route between `i` and `j` can be found.
+- `distances` array of arrays that stores the matrix in row-major order. `distances[i][j]` gives the travel distance from
+  the i-th source to the j-th destination. Values are given in meters. Can be `null` if no route between `i` and `j` can be found.
 - `sources` array of `Waypoint` objects describing all sources in order
 - `destinations` array of `Waypoint` objects describing all destinations in order
+- `fallback_speed_cells` (optional) array of arrays containing `i,j` pairs indicating which cells contain estimated values based on `fallback_speed`.  Will be absent if `fallback_speed` is not used.
 
 In case of error the following `code`s are supported in addition to the general ones:
 
-| Type              | Description     |
-|-------------------|-----------------|
+| Type             | Description     |
+|------------------|-----------------|
 | `NoTable`        | No route found. |
+| `NotImplemented`  | This request is not supported |
 
 All other properties might be undefined.
+
+#### Example Response
+
+```json
+{
+  "sources": [
+    {
+      "location": [
+        13.3888,
+        52.517033
+      ],
+      "hint": "PAMAgEVJAoAUAAAAIAAAAAcAAAAAAAAArss0Qa7LNEHiVIRA4lSEQAoAAAAQAAAABAAAAAAAAADMAAAAAEzMAKlYIQM8TMwArVghAwEA3wps52D3",
+      "name": "Friedrichstraße"
+    },
+    {
+      "location": [
+        13.397631,
+        52.529432
+      ],
+      "hint": "WIQBgL6mAoAEAAAABgAAAAAAAAA7AAAAhU6PQHvHj0IAAAAAQbyYQgQAAAAGAAAAAAAAADsAAADMAAAAf27MABiJIQOCbswA_4ghAwAAXwVs52D3",
+      "name": "Torstraße"
+    },
+    {
+      "location": [
+        13.428554,
+        52.523239
+      ],
+      "hint": "7UcAgP___38fAAAAUQAAACYAAABTAAAAhSQKQrXq5kKRbiZCWJo_Qx8AAABRAAAAJgAAAFMAAADMAAAASufMAOdwIQNL58wA03AhAwMAvxBs52D3",
+      "name": "Platz der Vereinten Nationen"
+    }
+  ],
+  "durations": [
+    [
+      0,
+      192.6,
+      382.8
+    ],
+    [
+      199,
+      0,
+      283.9
+    ],
+    [
+      344.7,
+      222.3,
+      0
+    ]
+  ],
+  "destinations": [
+    {
+      "location": [
+        13.3888,
+        52.517033
+      ],
+      "hint": "PAMAgEVJAoAUAAAAIAAAAAcAAAAAAAAArss0Qa7LNEHiVIRA4lSEQAoAAAAQAAAABAAAAAAAAADMAAAAAEzMAKlYIQM8TMwArVghAwEA3wps52D3",
+      "name": "Friedrichstraße"
+    },
+    {
+      "location": [
+        13.397631,
+        52.529432
+      ],
+      "hint": "WIQBgL6mAoAEAAAABgAAAAAAAAA7AAAAhU6PQHvHj0IAAAAAQbyYQgQAAAAGAAAAAAAAADsAAADMAAAAf27MABiJIQOCbswA_4ghAwAAXwVs52D3",
+      "name": "Torstraße"
+    },
+    {
+      "location": [
+        13.428554,
+        52.523239
+      ],
+      "hint": "7UcAgP___38fAAAAUQAAACYAAABTAAAAhSQKQrXq5kKRbiZCWJo_Qx8AAABRAAAAJgAAAFMAAADMAAAASufMAOdwIQNL58wA03AhAwMAvxBs52D3",
+      "name": "Platz der Vereinten Nationen"
+    }
+  ],
+  "code": "Ok",
+  "distances": [
+    [
+      0,
+      1886.89,
+      3791.3
+    ],
+    [
+      1824,
+      0,
+      2838.09
+    ],
+    [
+      3275.36,
+      2361.73,
+      0
+    ]
+  ],
+  "fallback_speed_cells": [
+    [ 0, 1 ],
+    [ 1, 0 ]
+  ]
+}
+```
+
 
 ### Match service
 
 Map matching matches/snaps given GPS points to the road network in the most plausible way.
-Please note the request might result multiple sub-traces. Large jumps in the timestamps (> 60s) or improbable transitions lead to trace splits if a complete matching could not be found.
+Please note the request might result in multiple sub-traces. Large jumps in the timestamps (> 60s) or improbable transitions lead to trace splits if a complete matching could not be found.
 The algorithm might not be able to match all points. Outliers are removed if they can not be matched successfully.
 
 ```endpoint
@@ -288,6 +436,7 @@ In addition to the [general options](#general-options) the following options are
 |radiuses    |`{radius};{radius}[;{radius} ...]`              |Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy.|
 |gaps        |`split` (default), `ignore`                     |Allows the input track splitting based on huge timestamp gaps between points.             |
 |tidy        |`true`, `false` (default)                       |Allows the input track modification to obtain better matching quality for noisy tracks.   |
+|waypoints   | `{index};{index};{index}...`                   |Treats input coordinates indicated by given indices as waypoints in returned Match object. Default is to treat all input coordinates as waypoints.    |
 
 |Parameter   |Values                             |
 |------------|-----------------------------------|
@@ -303,11 +452,11 @@ The area to search is chosen such that the correct candidate should be considere
 
 - `code` if the request was successful `Ok` otherwise see the service dependent and general status codes.
 - `tracepoints`: Array of `Waypoint` objects representing all points of the trace in order.
-  If the trace point was ommited by map matching because it is an outlier, the entry will be `null`.
+  If the tracepoint was omitted by map matching because it is an outlier, the entry will be `null`.
   Each `Waypoint` object has the following additional properties:
   - `matchings_index`: Index to the `Route` object in `matchings` the sub-trace was matched to.
   - `waypoint_index`: Index of the waypoint inside the matched route.
-  - `alternatives_count`: Number of probable alternative matchings for this trace point. A value of zero indicate that this point was matched unambiguously. Split the trace at these points for incremental map matching.
+  - `alternatives_count`: Number of probable alternative matchings for this tracepoint. A value of zero indicates that this point was matched unambiguously. Split the trace at these points for incremental map matching.
 - `matchings`: An array of `Route` objects that assemble the trace. Each `Route` object has the following additional properties:
   - `confidence`: Confidence of the matching. `float` value between 0 and 1. 1 is very confident that the matching is correct.
 
@@ -322,7 +471,7 @@ All other properties might be undefined.
 ### Trip service
 
 The trip plugin solves the Traveling Salesman Problem using a greedy heuristic (farthest-insertion algorithm) for 10 or more waypoints and uses brute force for less than 10 waypoints.
-The returned path does not have to be the fastest path. As TSP is NP-hard it only returns an approximation.
+The returned path does not have to be the fastest one. As TSP is NP-hard it only returns an approximation.
 Note that all input coordinates have to be connected for the trip service to work.
 
 ```endpoint
@@ -343,12 +492,12 @@ In addition to the [general options](#general-options) the following options are
 
 **Fixing Start and End Points**
 
-It is possible to explicitely set the start or end coordinate of the trip.
-When source is set to `first`, the first coordinate is used as start coordinate of the trip in the output. When destination is set to `last`, the last coordinate will be used as destination of the trip in the returned output. If you specify `any`, any of the coordinates can be used as the first or last coordinate in the output.
+It is possible to explicitly set the start or end coordinate of the trip.
+When the source is set to `first`, the first coordinate is used as the start coordinate of the trip in the output. When the destination is set to `last`, the last coordinate will be used as the destination of the trip in the returned output. If you specify `any`, any of the coordinates can be used as the first or last coordinate in the output.
 
 However, if `source=any&destination=any` the returned round-trip will still start at the first input coordinate by default.
 
-Currently, not all combinations of `roundtrip`, `source` and `destination` are supported.
+Currently, not all combinations of `roundtrip`, `source`, and `destination` are supported.
 Right now, the following combinations are possible:
 
 | roundtrip | source | destination | supported |
@@ -358,8 +507,8 @@ Right now, the following combinations are possible:
 | true | any | last | **yes** |
 | true | any | any | **yes** |
 | false | first | last | **yes** |
-| false | first | any | no |
-| false | any | last | no |
+| false | first | any | **yes** |
+| false | any | last | **yes** |
 | false | any | any | no |
 
 #### Example Requests
@@ -427,7 +576,8 @@ Vector tiles contain two layers:
 | `duration`   | `float`   | how long this segment takes to traverse, in seconds.  This value is to calculate the total route ETA. |
 | `weight  `   | `integer` | how long this segment takes to traverse, in units (may differ from `duration` when artificial biasing is applied in the Lua profiles).  ACTUAL ROUTING USES THIS VALUE. |
 | `name`       | `string`  | the name of the road this segment belongs to |
-| `rate`       | `float`   | the value of `length/weight` - analagous to `speed`, but using the `weight` value rather than `duration`, rounded to the nearest integer |
+| `rate`       | `float`   | the value of `length/weight` - analogous to `speed`, but using the `weight` value rather than `duration`, rounded to the nearest integer |
+| `is_startpoint` | `boolean` | whether this segment can be used as a start/endpoint for routes |
 
 `turns` layer:
 
@@ -451,13 +601,13 @@ Represents a route through (potentially multiple) waypoints.
 
 - `distance`: The distance traveled by the route, in `float` meters.
 - `duration`: The estimated travel time, in `float` number of seconds.
-- `geometry`: The whole geometry of the route value depending on `overview` parameter, format depending on the `geometries` parameter. See `RouteStep`'s `geometry` property for a parameter documentation.
+- `geometry`: The whole geometry of the route value depending on `overview` parameter, format depending on the `geometries` parameter. See `RouteStep`'s `geometry` property for the parameter documentation.
 - `weight`: The calculated weight of the route.
-- `weight_name`: The name of the weight profile used during extraction phase.
+- `weight_name`: The name of the weight profile used during the extraction phase.
 
 | overview   | Description                 |
 |------------|-----------------------------|
-| simplified | Geometry is simplified according to the highest zoom level it can still be displayed on full. |
+| simplified | Geometry is simplified according to the highest zoom level it can still be displayed in full. |
 | full       | Geometry is not simplified. |
 | false      | Geometry is not added.      |
 
@@ -502,7 +652,7 @@ Represents a route between two waypoints.
 
 | summary      |                                                                       |
 |--------------|-----------------------------------------------------------------------|
-| true         | Names of the two major roads used. Can be empty if route is too short.|
+| true         | Names of the two major roads used. Can be empty if the route is too short.|
 | false        | empty `string`                                                        |
 
 - `steps`: Depends on the `steps` parameter.
@@ -512,12 +662,12 @@ Represents a route between two waypoints.
 | true         | array of `RouteStep` objects describing the turn-by-turn instructions |
 | false        | empty array                                                           |
 
-- `annotation`: Additional details about each coordinate along the route geometry:
+- `annotation`: Additional details about each coordinate along with the route geometry:
 
-| annotations  |                                                                       |
-|--------------|-----------------------------------------------------------------------|
-| true         | An `Annotation` object containing node ids, durations distances and   |
-| false        | weights `undefined`                                                   |
+| annotations  |                                                                               |
+|--------------|-------------------------------------------------------------------------------|
+| true         | An `Annotation` object containing node ids, durations, distances, and weights. |
+| false        | `undefined`                                                                   |
 
 #### Example
 
@@ -533,6 +683,7 @@ With `steps=false` and `annotations=true`:
     "distance": [5,5,10,5,5],
     "duration": [15,15,40,15,15],
     "datasources": [1,0,0,0,1],
+    "metadata": { "datasource_names": ["traffic","lua profile","lua profile","lua profile","traffic"] },
     "nodes": [49772551,49772552,49786799,49786800,49786801,49786802],
     "speed": [0.3, 0.3, 0.3, 0.3, 0.3]
   }
@@ -545,12 +696,14 @@ Annotation of the whole route leg with fine-grained information about each segme
 
 **Properties**
 
-- `distance`: The distance, in metres, between each pair of coordinates
+- `distance`: The distance, in meters, between each pair of coordinates
 - `duration`: The duration between each pair of coordinates, in seconds.  Does not include the duration of any turns.
-- `datasources`: The index of the datasource for the speed between each pair of coordinates. `0` is the default profile, other values are supplied via `--segment-speed-file` to `osrm-contract`
+- `datasources`: The index of the data source for the speed between each pair of coordinates. `0` is the default profile, other values are supplied via `--segment-speed-file` to `osrm-contract` or `osrm-customize`.  String-like names are in the `metadata.datasource_names` array.
 - `nodes`: The OSM node ID for each coordinate along the route, excluding the first/last user-supplied coordinates
 - `weight`: The weights between each pair of coordinates.  Does not include any turn costs.
 - `speed`: Convenience field, calculation of `distance / duration` rounded to one decimal place
+- `metadata`: Metadata related to other annotations
+  - `datasource_names`: The names of the data sources used for the speed between each pair of coordinates.  `lua profile` is the default profile, other values are the filenames supplied via `--segment-speed-file` to `osrm-contract` or `osrm-customize`
 
 #### Example
 
@@ -559,6 +712,7 @@ Annotation of the whole route leg with fine-grained information about each segme
   "distance": [5,5,10,5,5],
   "duration": [15,15,40,15,15],
   "datasources": [1,0,0,0,1],
+  "metadata": { "datasource_names": ["traffic","lua profile","lua profile","lua profile","traffic"] },
   "nodes": [49772551,49772552,49786799,49786800,49786801,49786802],
   "weight": [15,15,40,15,15]
 }
@@ -586,7 +740,7 @@ step.
 
 - `name`: The name of the way along which travel proceeds.
 - `ref`: A reference number or code for the way. Optionally included, if ref data is available for the given way.
-- `pronunciation`: The pronunciation hint of the way name. Will be `undefined` if there is no pronunciation hit.
+- `pronunciation`: A string containing an [IPA](https://en.wikipedia.org/wiki/International_Phonetic_Alphabet) phonetic transcription indicating how to pronounce the name in the `name` property. This property is omitted if pronunciation data is unavailable for the step.
 - `destinations`: The destinations of the way. Will be `undefined` if there are no destinations.
 - `exits`: The exit numbers or names of the way. Will be `undefined` if there are no exit numbers or names.
 - `mode`: A string signifying the mode of transportation.
@@ -594,6 +748,7 @@ step.
 - `intersections`: A list of `Intersection` objects that are passed along the segment, the very first belonging to the StepManeuver
 - `rotary_name`: The name for the rotary. Optionally included, if the step is a rotary and a rotary name is available.
 - `rotary_pronunciation`: The pronunciation hint of the rotary name. Optionally included, if the step is a rotary and a rotary pronunciation is available.
+- `driving_side`: The legal driving side at the location for this step.  Either `left` or `right`.
 
 #### Example
 
@@ -607,8 +762,8 @@ step.
       {  "bearings" : [ 10, 92, 184, 270 ],
          "lanes" : [
             { "indications" : [ "left", "straight" ],
-               "valid" : "false" },
-            { "valid" : "true",
+               "valid" : false },
+            { "valid" : true,
                "indications" : [ "right" ] }
          ],
          "out" : 2,
@@ -619,9 +774,9 @@ step.
       {  "out" : 1,
          "lanes" : [
             { "indications" : [ "straight" ],
-               "valid" : "true" },
+               "valid" : true },
             { "indications" : [ "right" ],
-               "valid" : "false" }
+               "valid" : false }
          ],
          "bearings" : [ 60, 240, 330 ],
          "in" : 0,
@@ -648,11 +803,11 @@ step.
 - `bearing_after`: The clockwise angle from true north to the
   direction of travel immediately after the maneuver.  Range 0-359.
 - `type` A string indicating the type of maneuver. **new identifiers might be introduced without API change**
-   Types  unknown to the client should be handled like the `turn` type, the existence of correct `modifier` values is guranteed.
+   Types unknown to the client should be handled like the `turn` type, the existence of correct `modifier` values is guaranteed.
 
 | `type`           | Description                                                  |
 |------------------|--------------------------------------------------------------|
-| `turn`           | a basic turn into direction of the `modifier`                |
+| `turn`           | a basic turn into the direction of the `modifier`                |
 | `new name`       | no turn is taken/possible, but the road name changes. The road can take a turn itself, following `modifier`.                  |
 | `depart`         | indicates the departure of the leg                           |
 | `arrive`         | indicates the destination of the leg                         |
@@ -664,11 +819,11 @@ step.
 | `end of road`    | road ends in a T intersection turn in direction of `modifier`|
 | `use lane`       | **Deprecated** replaced by lanes on all intersection entries |
 | `continue`       | Turn in direction of `modifier` to stay on the same road     |
-| `roundabout`     | traverse roundabout, has additional property `exit` with NR if the roundabout is left. The modifier specifies the direction of entering the roundabout. |
+| `roundabout`     | traverse roundabout, if the route leaves the roundabout there will be an additional property `exit` for exit counting. The modifier specifies the direction of entering the roundabout. |
 | `rotary`         | a traffic circle. While very similar to a larger version of a roundabout, it does not necessarily follow roundabout rules for right of way. It can offer `rotary_name` and/or `rotary_pronunciation` parameters (located in the RouteStep object) in addition to the `exit` parameter (located on the StepManeuver object).  |
-| `roundabout turn`| Describes a turn at a small roundabout that should be treated as normal turn. The `modifier` indicates the turn direciton. Example instruction: `At the roundabout turn left`. |
+| `roundabout turn`| Describes a turn at a small roundabout that should be treated as a normal turn. The `modifier` indicates the turn direction. Example instruction: `At the roundabout turn left`. |
 | `notification`   | not an actual turn but a change in the driving conditions. For example the travel mode or classes. If the road takes a turn itself, the `modifier` describes the direction |
-| `exit roundabout`| Describes a maneuver exiting a roundabout (usually preceeded by a `roundabout` instruction) |
+| `exit roundabout`| Describes a maneuver exiting a roundabout (usually preceded by a `roundabout` instruction) |
 | `exit rotary`    | Describes the maneuver exiting a rotary (large named roundabout) |
 
   Please note that even though there are `new name` and `notification` instructions, the `mode` and `name` can change
@@ -678,7 +833,7 @@ step.
 
 | `modifier`        | Description                               |
 |-------------------|-------------------------------------------|
-| `uturn`           | indicates  reversal of direction          |
+| `uturn`           | indicates the reversal of direction          |
 | `sharp right`     | a sharp right turn                        |
 | `right`           | a normal turn to the right                |
 | `slight right`    | a slight turn to the right                |
@@ -696,8 +851,8 @@ step.
 | `turn`                 | `modifier` indicates the change in direction accomplished through the turn                                                |
 | `depart`/`arrive`      | `modifier` indicates the position of departure point and arrival point in relation to the current direction of travel      |
 
-- `exit` An optional `integer` indicating number of the exit to take. The property exists for the `roundabout` / `rotary` property:
-  Number of the roundabout exit to take. If exit is `undefined` the destination is on the roundabout.
+- `exit` An optional `integer` indicating the number of the exit to take. The property exists for the `roundabout` / `rotary` property:
+  Number of the roundabout exit to take. If an exit is `undefined` the destination is on the roundabout.
 
 
 New properties (potentially depending on `type`) may be introduced in the future without an API version change.
@@ -708,7 +863,7 @@ A `Lane` represents a turn lane at the corresponding turn location.
 
 **Properties**
 
-- `indications`: a indication (e.g. marking on the road) specifying the turn lane. A road can have multiple indications (e.g. an arrow pointing straight and left). The indications are given in an array, each containing one of the following types. Further indications might be added on without an API version change.
+- `indications`: an indication (e.g. marking on the road) specifying the turn lane. A road can have multiple indications (e.g. an arrow pointing straight and left). The indications are given in an array, each containing one of the following types. Further indications might be added on without an API version change.
 
 | `value`                | Description                                                                                                               |
 |------------------------|---------------------------------------------------------------------------------------------------------------------------|
@@ -729,13 +884,13 @@ A `Lane` represents a turn lane at the corresponding turn location.
 ```json
 {
     "indications": ["left", "straight"],
-    "valid": "false"
+    "valid": false
 }
  ```
 
 ### Intersection object
 
-An intersection gives a full representation of any cross-way the path passes bay. For every step, the very first intersection (`intersections[0]`) corresponds to the
+An intersection gives a full representation of any cross-way the path passes by. For every step, the very first intersection (`intersections[0]`) corresponds to the
 location of the StepManeuver. Further intersections are listed for every cross-way until the next turn instruction.
 
 **Properties**
@@ -764,21 +919,22 @@ location of the StepManeuver. Further intersections are listed for every cross-w
     "classes": ["toll", "restricted"],
     "lanes":{
         "indications": ["left", "straight"],
-        "valid": "false"
+        "valid": false
     }
 }
 ```
 
 ### Waypoint object
 
-Object used to describe waypoint on a route.
+The object is used to describe the waypoint on a route.
 
 **Properties**
 
 - `name` Name of the street the coordinate snapped to
 - `location` Array that contains the `[longitude, latitude]` pair of the snapped coordinate
+- `distance` The distance, in meters, from the input coordinate to the snapped coordinate
 - `hint` Unique internal identifier of the segment (ephemeral, not constant over data updates)
-   This can be used on subsequent request to significantly speed up the query and to connect multiple services.
+   This can be used on subsequent requests to significantly speed up the query and to connect multiple services.
    E.g. you can use the `hint` value obtained by the `nearest` query as `hint` values for `route` inputs.
 
 #### Example
@@ -794,3 +950,175 @@ Object used to describe waypoint on a route.
    ]
 }
 ```
+
+## Flatbuffers format
+
+The default response format is `json`, but OSRM supports binary [`flatbuffers`](https://google.github.io/flatbuffers/) format, which 
+is much faster in serialization/deserialization, comparing to `json`.
+
+The format itself is described in message descriptors, located at `include/engine/api/flatbuffers` directory. Those descriptors could
+be compiled to provide protocol parsers in Go/Javascript/Typescript/Java/Dart/C#/Python/Lobster/Lua/Rust/PHP/Kotlin. Precompiled 
+protocol parser for C++ is supplied with OSRM.
+
+`Flatbuffers` format provides exactly the same data, as `json` format with a slightly different layout, which was optimized to minimize
+in-transfer size.
+
+### Root object
+
+Root object is the only object, available from a 'raw' `flatbuffers` buffer. It can be constructed with a following call:
+
+         auto osrm = osrm::engine::api::fbresult::GetFBResult(some_input_buffer);
+
+**Properties**
+
+- `error`: `bool` Marks response as erroneous. An erroneous response should include the `code` fieldset, all the other fields may not be present. 
+- `code`: `Error` Error description object, only present, when `error` is `true`
+- `waypoints`: `[Waypoint]` Array of `Waypoint` objects. Should present for every service call, unless `skip_waypoints` is set to `true`. Table service will put `sources` array here.
+- `routes`: `[RouteObject]` Array of `RouteObject` objects. May be empty or absent. Should present for Route/Trip/Match services call.
+- `table`: `Table` Table object, may absent. Should be present in case of Table service call.
+
+### Error object
+
+Contains error information.
+
+**Properties**
+
+- `code`: `string` Error code 
+- `message`: `string` Detailed error message
+
+### Waypoint object
+
+Almost the same as `json` Waypoint object. The following properties differ:
+
+- `location`: `Position` Same as `json` location field, but different format. 
+- `nodes`: `Uint64Pair` Same as `json` nodes field, but different format.
+
+### RouteObject object
+
+Almost the same as `json` Route object. The following properties differ:
+
+- `polyline`: `string` Same as `json` geometry.polyline or geometry.polyline6 fields. One field for both formats. 
+- `coordinates`: `[Position]` Same as `json` geometry.coordinates field, but different format.
+- `legs`: `[Leg]` Array of `Leg` objects.
+
+### Leg object
+
+Almost the same as `json` Leg object. The following properties differ:
+
+- `annotations`: `Annotation` Same as `json` annotation field, but different format.
+- `steps`: `[Step]` Same as `step` annotation field, but different format.
+
+### Step object
+
+Almost the same as `json` Step object. The following properties differ:
+
+- `polyline`: `string` Same as `json` geometry.polyline or geometry.polyline6 fields. One field for both formats. 
+- `coordinates`: `[Position]` Same as `json` geometry.coordinates field, but different format.
+- `maneuver`: `StepManeuver` Same as `json` maneuver field, but different format.
+
+| `type`           | Description                                                                                                                                                                                                                                                                                                                  |
+|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Turn`           | a basic turn into the direction of the `modifier`                                                                                                                                                                                                                                                                                |
+| `NewName`        | no turn is taken/possible, but the road name changes. The road can take a turn itself, following `modifier`.                                                                                                                                                                                                                 |
+| `Depart`         | indicates the departure of the leg                                                                                                                                                                                                                                                                                           |
+| `Arrive`         | indicates the destination of the leg                                                                                                                                                                                                                                                                                         |
+| `Merge`          | merge onto a street (e.g. getting on the highway from a ramp, the `modifier specifies the direction of the merge`)                                                                                                                                                                                                           |
+| `OnRamp`         | take a ramp to enter a highway (direction given my `modifier`)                                                                                                                                                                                                                                                               |
+| `OffRamp`        | take a ramp to exit a highway (direction given my `modifier`)                                                                                                                                                                                                                                                                |
+| `Fork`           | take the left/right side at a fork depending on `modifier`                                                                                                                                                                                                                                                                   |
+| `EndOfRoad`      | road ends in a T intersection turn in direction of `modifier`                                                                                                                                                                                                                                                                |
+| `Continue`       | Turn in direction of `modifier` to stay on the same road                                                                                                                                                                                                                                                                     |
+| `Roundabout`     | traverse roundabout, if the route leaves the roundabout there will be an additional property `exit` for exit counting. The modifier specifies the direction of entering the roundabout.                                                                                                                                      |
+| `Rotary`         | a traffic circle. While very similar to a larger version of a roundabout, it does not necessarily follow roundabout rules for right of way. It can offer `rotary_name` and/or `rotary_pronunciation` parameters (located in the RouteStep object) in addition to the `exit` parameter (located on the StepManeuver object).  |
+| `RoundaboutTurn` | Describes a turn at a small roundabout that should be treated as a normal turn. The `modifier` indicates the turn direction. Example instruction: `At the roundabout turn left`.                                                                                                                                               |
+| `Notification`   | not an actual turn but a change in the driving conditions. For example the travel mode or classes. If the road takes a turn itself, the `modifier` describes the direction                                                                                                                                                   |
+| `ExitRoundabout` | Describes a maneuver exiting a roundabout (usually preceded by a `roundabout` instruction)                                                                                                                                                                                                                                  |
+| `ExitRotary`     | Describes the maneuver exiting a rotary (large named roundabout)                                                                                                                                                                                                                                                             |
+
+- `driving_side`: `bool` Ttrue stands for the left side driving. 
+- `intersections`: `[Intersection]` Same as `json` intersections field, but different format.
+
+### Intersection object
+
+Almost the same as `json` Intersection object. The following properties differ:
+
+- `location`: `Position` Same as `json` location property, but in a different format.
+- `lanes`: `[Lane]` Array of `Lane` objects.
+
+### Lane object
+
+Almost the same as `json` Lane object. The following properties differ:
+
+- `indications`: `Turn` Array of `Turn` enum values. 
+
+| `value`                | Description                                                                                                               |
+|------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| `None`                 | No dedicated indication is shown.                                                                                         |
+| `UTurn`                | An indication signaling the possibility to reverse (i.e. fully bend arrow).                                               |
+| `SharpRight`           | An indication indicating a sharp right turn (i.e. strongly bend arrow).                                                   |
+| `Right`                | An indication indicating a right turn (i.e. bend arrow).                                                                  |
+| `SlightRight`          | An indication indicating a slight right turn (i.e. slightly bend arrow).                                                  |
+| `Straight`             | No dedicated indication is shown (i.e. straight arrow).                                                                   |
+| `SlightLeft`           | An indication indicating a slight left turn (i.e. slightly bend arrow).                                                   |
+| `Left`                 | An indication indicating a left turn (i.e. bend arrow).                                                                   |
+| `SharpLeft`            | An indication indicating a sharp left turn (i.e. strongly bend arrow).                                                    |
+
+### StepManeuver object
+
+Almost the same as `json` StepManeuver object. The following properties differ:
+
+- `location`: `Position` Same as `json` location property, but in a different format.
+- `type`: `ManeuverType` Type of a maneuver (enum)
+
+| `type`           | Description                                                  |
+|------------------|--------------------------------------------------------------|
+| `Turn`           | a basic turn into the direction of the `modifier`                |
+| `NewName`        | no turn is taken/possible, but the road name changes. The road can take a turn itself, following `modifier`.                  |
+| `Depart`         | indicates the departure of the leg                           |
+| `Arrive`         | indicates the destination of the leg                         |
+| `Merge`          | merge onto a street (e.g. getting on the highway from a ramp, the `modifier specifies the direction of the merge`) |
+| `OnRamp`         | take a ramp to enter a highway (direction given my `modifier`) |
+| `OffRamp`        | take a ramp to exit a highway (direction given my `modifier`)  |
+| `Fork`           | take the left/right side at a fork depending on `modifier`   |
+| `EndOfRoad`      | road ends in a T intersection turn in direction of `modifier`|
+| `Continue`       | Turn in direction of `modifier` to stay on the same road     |
+| `Roundabout`     | traverse roundabout, if the route leaves the roundabout there will be an additional property `exit` for exit counting. The modifier specifies the direction of entering the roundabout. |
+| `Rotary`         | a traffic circle. While very similar to a larger version of a roundabout, it does not necessarily follow roundabout rules for right of way. It can offer `rotary_name` and/or `rotary_pronunciation` parameters (located in the RouteStep object) in addition to the `exit` parameter (located on the StepManeuver object).  |
+| `RoundaboutTurn` | Describes a turn at a small roundabout that should be treated as a normal turn. The `modifier` indicates the turn direction. Example instruction: `At the roundabout turn left`. |
+| `Notification`   | not an actual turn but a change in the driving conditions. For example the travel mode or classes. If the road takes a turn itself, the `modifier` describes the direction |
+| `ExitRoundabout` | Describes a maneuver exiting a roundabout (usually preceded by a `roundabout` instruction) |
+| `ExitRotary`    | Describes the maneuver exiting a rotary (large named roundabout) |
+
+- `modifier`: `Turn` Maneuver turn (enum) 
+
+### Annotation object
+
+Exactly the same as `json` annotation object. 
+
+
+### Position object
+
+A point on Earth. 
+
+***Properties***
+- `longitute`: `float` Point's longitude
+- `latitude`: `float` Point's latitude
+
+### Uint64Pair
+
+A pair of long long integers. Used only by `Waypoint` object.
+
+***Properties***
+- `first`: `uint64` First pair value.
+- `second`: `uint64` Second pair value.
+
+### Table object
+
+Almost the same as `json` Table object. The main difference is that 'sources' field is absent and the root's object 'waypoints' field is
+used instead. All the other differences follow:
+
+- `durations`: `[float]` Flat representation of a durations matrix. Element at row;col can be addressed as [row * cols + col]
+- `distances`: `[float]` Flat representation of a destinations matrix. Element at row;col can be addressed as [row * cols + col]
+- `destinations`: `[Waypoint]` Array of `Waypoint` objects. Will be `null` if `skip_waypoints` will be set to `true`
+- `rows`: `ushort` Number of rows in durations/destinations matrices.
+- `cols`: `ushort` Number of cols in durations/destinations matrices.

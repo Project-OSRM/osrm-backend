@@ -36,6 +36,36 @@ Feature: Simple Turns
             | f,a       | depart,arrive                   | road,road      | true:0,true:0 false:150 false:180;true:180   |
             | e,a       | depart,turn slight right,arrive | turn,road,road | true:333;true:0 false:150 false:180;true:180 |
 
+    Scenario: Turning into splitting road - no improvement
+        Given the node map
+            """
+                a
+                b
+              / |
+            c   d - e
+            |   |
+            |   |
+            |   |
+            |   |
+            |   |
+            |   |
+            |   |
+            |   |
+            g   f
+            """
+
+        And the ways
+            | nodes | name | highway | oneway |
+            | ab    | road | primary | no     |
+            | bcg   | road | primary | yes    |
+            | fdb   | road | primary | yes    |
+            | ed    | turn | primary | yes    |
+
+        When I route I should get
+            | waypoints | turns                    | route          | intersections                               |
+            | f,a       | depart,arrive            | road,road      | true:0,true:0 false:90 false:180;true:180   |
+            | e,a       | depart,turn right,arrive | turn,road,road | true:270;true:0 false:90 false:180;true:180 |
+
     Scenario: Turning into splitting road
         Given the node map
         """

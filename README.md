@@ -1,15 +1,15 @@
 ## Open Source Routing Machine
 
-| Linux / macOS | Windows | Code Coverage |
-| ------------- | ------- | ------------- |
-| [![Travis](https://travis-ci.org/Project-OSRM/osrm-backend.png?branch=master)](https://travis-ci.org/Project-OSRM/osrm-backend) | [![AppVeyor](https://ci.appveyor.com/api/projects/status/4iuo3s9gxprmcjjh)](https://ci.appveyor.com/project/DennisOSRM/osrm-backend) | [![Codecov](https://codecov.io/gh/Project-OSRM/osrm-backend/branch/master/graph/badge.svg)](https://codecov.io/gh/Project-OSRM/osrm-backend) |
+| Linux / macOS / Windows | Code Coverage |
+| ----------------------- | ------------- |
+| [![osrm-backend CI](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml/badge.svg)](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml) | [![Codecov](https://codecov.io/gh/Project-OSRM/osrm-backend/branch/master/graph/badge.svg)](https://codecov.io/gh/Project-OSRM/osrm-backend) |
 
 High performance routing engine written in C++14 designed to run on OpenStreetMap data.
 
 The following services are available via HTTP API, C++ library interface and NodeJs wrapper:
 - Nearest - Snaps coordinates to the street network and returns the nearest matches
 - Route - Finds the fastest route between coordinates
-- Table - Computes the duration of the fastest route between all pairs of supplied coordinates
+- Table - Computes the duration or distances of the fastest route between all pairs of supplied coordinates
 - Match - Snaps noisy GPS traces to the road network in the most plausible way
 - Trip - Solves the Traveling Salesman Problem using a greedy heuristic
 - Tile - Generates Mapbox Vector Tiles with internal routing metadata
@@ -19,7 +19,6 @@ To quickly try OSRM use our [demo server](http://map.project-osrm.org) which com
 For a quick introduction about how the road network is represented in OpenStreetMap and how to map specific road network features have a look at [this guide about mapping for navigation](https://www.mapbox.com/mapping/mapping-for-navigation/).
 
 Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
-- [node-osrm](https://www.npmjs.com/package/osrm) - Production-ready NodeJs bindings for the routing engine
 - [osrm-frontend](https://github.com/Project-OSRM/osrm-frontend) - User-facing frontend with map. The demo server runs this on top of the backend
 - [osrm-text-instructions](https://github.com/Project-OSRM/osrm-text-instructions) - Text instructions from OSRM route response
 - [osrm-backend-docker](https://hub.docker.com/r/osrm/osrm-backend/) - Ready to use Docker images
@@ -41,9 +40,17 @@ Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 
 The easiest and quickest way to setup your own routing engine is to use Docker images we provide.
 
+There are two pre-processing pipelines available:
+- Contraction Hierarchies (CH)
+- Multi-Level Dijkstra (MLD)
+
+we recommend using MLD by default except for special use-cases such as very large distance matrices where CH is still a better fit for the time being.
+In the following we explain the MLD pipeline.
+If you want to use the CH pipeline instead replace `osrm-partition` and `osrm-customize` with a single `osrm-contract` and change the algorithm option for `osrm-routed` to `--algorithm ch`.
+
 ### Using Docker
 
-We base our Docker images ([backend](https://hub.docker.com/r/osrm/osrm-backend/), [frontend](https://hub.docker.com/r/osrm/osrm-frontend/)) on Alpine Linux and make sure they are as lightweight as possible.
+We base our Docker images ([backend](https://hub.docker.com/r/osrm/osrm-backend/), [frontend](https://hub.docker.com/r/osrm/osrm-frontend/)) on Debian and make sure they are as lightweight as possible.
 
 Download OpenStreetMap extracts for example from [Geofabrik](http://download.geofabrik.de/)
 
@@ -51,10 +58,16 @@ Download OpenStreetMap extracts for example from [Geofabrik](http://download.geo
 
 Pre-process the extract with the car profile and start a routing engine HTTP server on port 5000
 
-    docker run -t -v $(pwd):/data osrm/osrm-backend osrm-extract -p /opt/car.lua /data/berlin-latest.osm.pbf
-    docker run -t -v $(pwd):/data osrm/osrm-backend osrm-contract /data/berlin-latest.osrm
+    docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-extract -p /opt/car.lua /data/berlin-latest.osm.pbf
 
-    docker run -t -i -p 5000:5000 -v $(pwd):/data osrm/osrm-backend osrm-routed /data/berlin-latest.osrm
+The flag `-v "${PWD}:/data"` creates the directory `/data` inside the docker container and makes the current working directory `"${PWD}"` available there. The file `/data/berlin-latest.osm.pbf` inside the container is referring to `"${PWD}/berlin-latest.osm.pbf"` on the host.
+
+    docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-partition /data/berlin-latest.osrm
+    docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-customize /data/berlin-latest.osrm
+
+Note there is no `berlin-latest.osrm` file, but multiple `berlin-latest.osrm.*` files, i.e. `berlin-latest.osrm` is not file path, but "base" path referring to set of files and there is an option to omit this `.osrm` suffix completely(e.g. `osrm-partition /data/berlin-latest`). 
+
+    docker run -t -i -p 5000:5000 -v "${PWD}:/data" osrm/osrm-backend osrm-routed --algorithm mld /data/berlin-latest.osrm
 
 Make requests against the HTTP server
 
@@ -90,8 +103,8 @@ Install dependencies
 
 ```bash
 sudo apt install build-essential git cmake pkg-config \
-libbz2-dev libstxxl-dev libstxxl1v5 libxml2-dev \
-libzip-dev libboost-all-dev lua5.2 liblua5.2-dev libtbb-dev
+libbz2-dev libxml2-dev libzip-dev libboost-all-dev \
+lua5.2 liblua5.2-dev libtbb-dev
 ```
 
 Compile and install OSRM binaries
@@ -104,29 +117,10 @@ cmake --build .
 sudo cmake --build . --target install
 ```
 
-Grab a `.osm.pbf` extract from [Geofabrik](http://download.geofabrik.de/index.html) or [Mapzen's Metro Extracts](https://mapzen.com/data/metro-extracts/)
-
-```bash
-wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
-```
-
-Pre-process the extract and start the HTTP server
-
-```
-osrm-extract berlin-latest.osm.pbf -p profiles/car.lua
-osrm-contract berlin-latest.osrm
-osrm-routed berlin-latest.osrm
-```
-
-Running Queries
-
-```
-curl "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
-```
-
 ### Request Against the Demo Server
 
-Read the [API usage policy](https://github.com/Project-OSRM/osrm-backend/wiki/Api-usage-policy).
+Read the [API usage policy](https://github.com/Project-OSRM/osrm-backend/wiki/Demo-server).
+
 Simple query with instructions and alternatives on Berlin:
 
 ```
@@ -157,7 +151,9 @@ which will check and use pre-built binaries if they're available for this releas
 
 to always force building the Node.js bindings from source.
 
-For usage details have a look [these API docs](docs/nodejs/api.md).
+For usage details have a look [these API docs](docs/nodejs/api.md). 
+
+An exemplary implementation by a 3rd party with Docker and Node.js can be found [here](https://github.com/door2door-io/osrm-express-server-demo).
 
 
 ## References in publications

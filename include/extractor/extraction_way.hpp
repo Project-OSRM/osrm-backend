@@ -1,7 +1,7 @@
 #ifndef EXTRACTION_WAY_HPP
 #define EXTRACTION_WAY_HPP
 
-#include "extractor/guidance/road_classification.hpp"
+#include "extractor/road_classification.hpp"
 #include "extractor/travel_mode.hpp"
 #include "util/guidance/turn_lanes.hpp"
 #include "util/typedefs.hpp"
@@ -26,7 +26,7 @@ inline void maybeSetString(std::string &str, const char *value)
         str = std::string(value);
     }
 }
-}
+} // namespace detail
 
 /**
  * This struct is the direct result of the call to ```way_function```
@@ -46,28 +46,34 @@ struct ExtractionWay
         backward_rate = -1;
         duration = -1;
         weight = -1;
-        roundabout = false;
-        circular = false;
-        is_startpoint = true;
         name.clear();
-        ref.clear();
+        forward_ref.clear();
+        backward_ref.clear();
         pronunciation.clear();
         destinations.clear();
         exits.clear();
-        forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
-        backward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
         turn_lanes_forward.clear();
         turn_lanes_backward.clear();
-        road_classification = guidance::RoadClassification();
-        backward_restricted = false;
+        road_classification = RoadClassification();
+        forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
+        backward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
+        roundabout = false;
+        circular = false;
+        is_startpoint = true;
         forward_restricted = false;
+        backward_restricted = false;
+        is_left_hand_driving = false;
+        highway_turn_classification = 0;
+        access_turn_classification = 0;
     }
 
     // wrappers to allow assigning nil (nullptr) to string values
     void SetName(const char *value) { detail::maybeSetString(name, value); }
     const char *GetName() const { return name.c_str(); }
-    void SetRef(const char *value) { detail::maybeSetString(ref, value); }
-    const char *GetRef() const { return ref.c_str(); }
+    void SetForwardRef(const char *value) { detail::maybeSetString(forward_ref, value); }
+    const char *GetForwardRef() const { return forward_ref.c_str(); }
+    void SetBackwardRef(const char *value) { detail::maybeSetString(backward_ref, value); }
+    const char *GetBackwardRef() const { return backward_ref.c_str(); }
     void SetDestinations(const char *value) { detail::maybeSetString(destinations, value); }
     const char *GetDestinations() const { return destinations.c_str(); }
     void SetExits(const char *value) { detail::maybeSetString(exits, value); }
@@ -100,22 +106,31 @@ struct ExtractionWay
     // weight of the whole way in both directions
     double weight;
     std::string name;
-    std::string ref;
+    std::string forward_ref;
+    std::string backward_ref;
     std::string pronunciation;
     std::string destinations;
     std::string exits;
     std::string turn_lanes_forward;
     std::string turn_lanes_backward;
-    guidance::RoadClassification road_classification;
+    RoadClassification road_classification;
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
+
+    // Boolean flags
     bool roundabout : 1;
     bool circular : 1;
     bool is_startpoint : 1;
     bool forward_restricted : 1;
     bool backward_restricted : 1;
+    bool is_left_hand_driving : 1;
+    bool : 2;
+
+    // user classifications for turn penalties
+    std::uint8_t highway_turn_classification : 4;
+    std::uint8_t access_turn_classification : 4;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif // EXTRACTION_WAY_HPP
