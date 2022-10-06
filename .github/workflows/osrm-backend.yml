@@ -88,10 +88,7 @@ jobs:
     - name: Prepare environment
       run: |
         npm ci --ignore-scripts
-        wget https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-208096c1/clang-format-10_linux-amd64 -O /usr/local/bin/clang-format-10.0.0
-        echo "8c5c5499d53eb004c81027046098895ba019ff6d020c09f1d49f017d32e0430aaf04a3dcef949528c097d45f0fe1a2d92019a760077e2a347b1fe5f244e05e97  /usr/local/bin/clang-format-10.0.0" | sha512sum --check --status
-        chmod +x /usr/local/bin/clang-format-10.0.0
-        clang-format-10.0.0 --version
+        clang-format-10 --version
     - name: Run checks
       run: |
         ./scripts/check_taginfo.py taginfo.json profiles/car.lua
@@ -701,6 +698,7 @@ jobs:
         pushd ${OSRM_BUILD_DIR}
         make --jobs=${JOBS} benchmarks
         ./src/benchmarks/alias-bench 
+        ./src/benchmarks/json-render-bench ../src/benchmarks/portugal_to_korea.json
         ./src/benchmarks/match-bench ../test/data/ch/monaco.osrm
         ./src/benchmarks/packedvector-bench
         ./src/benchmarks/rtree-bench ../test/data/monaco.osrm.ramIndex ../test/data/monaco.osrm.fileIndex ../test/data/monaco.osrm.nbg_nodes

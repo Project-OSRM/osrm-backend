@@ -62,6 +62,7 @@ Thumbs.db
 /.vs*
 /*.local.bat
 /CMakeSettings.json
+/.cache
 
 # Jetbrains related files #
 ###########################

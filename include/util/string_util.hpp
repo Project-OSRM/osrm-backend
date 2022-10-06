@@ -58,11 +58,30 @@ template <int length, int precision> char *printInt(char *buffer, int value)
     return buffer;
 }
 
-inline std::string escape_JSON(const std::string &input)
+inline bool RequiresJSONStringEscaping(const std::string &string)
 {
-    // escape and skip reallocations if possible
-    std::string output;
-    output.reserve(input.size() + 4); // +4 assumes two backslashes on avg
+    for (const char letter : string)
+    {
+        switch (letter)
+        {
+        case '\\':
+        case '"':
+        case '/':
+        case '\b':
+        case '\f':
+        case '\n':
+        case '\r':
+        case '\t':
+            return true;
+        default:
+            continue;
+        }
+    }
+    return false;
+}
+
+inline void EscapeJSONString(const std::string &input, std::string &output)
+{
     for (const char letter : input)
     {
         switch (letter)
@@ -96,7 +115,6 @@ inline std::string escape_JSON(const std::string &input)
             break;
         }
     }
-    return output;
 }
 
 inline std::size_t URIDecode(const std::string &input, std::string &output)

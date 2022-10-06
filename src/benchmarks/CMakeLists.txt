@@ -30,6 +30,18 @@ target_link_libraries(match-bench
 	${TBB_LIBRARIES}
 	${MAYBE_SHAPEFILE})
 
+add_executable(json-render-bench
+	EXCLUDE_FROM_ALL
+	json_render.cpp
+	$<TARGET_OBJECTS:UTIL>)
+
+target_link_libraries(json-render-bench
+	osrm
+	${BOOST_BASE_LIBRARIES}
+	${CMAKE_THREAD_LIBS_INIT}
+	${TBB_LIBRARIES}
+	${MAYBE_SHAPEFILE})
+
 add_executable(alias-bench
 	EXCLUDE_FROM_ALL
     ${AliasBenchmarkSources}
@@ -40,6 +52,8 @@ target_link_libraries(alias-bench
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES}
 	${MAYBE_SHAPEFILE})
+
+
 
 add_executable(packedvector-bench
 	EXCLUDE_FROM_ALL
@@ -58,4 +72,5 @@ add_custom_target(benchmarks
 	rtree-bench
 	packedvector-bench
 	match-bench
+	json-render-bench
     alias-bench)
