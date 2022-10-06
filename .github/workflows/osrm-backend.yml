@@ -568,39 +568,24 @@ jobs:
 
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
           echo "JOBS=$((`nproc` + 1))" >>  $GITHUB_ENV
-          export MASON_OS=linux
         elif [[ "${RUNNER_OS}" == "macOS" ]]; then
           echo "JOBS=$((`sysctl -n hw.ncpu` + 1))" >>  $GITHUB_ENV
-          sudo mdutil -i off /
-          export MASON_OS=osx
         fi
-        echo "MASON=${GITHUB_WORKSPACE}/scripts/mason.sh" >> $GITHUB_ENV
 
-        echo "CMAKE_URL=https://mason-binaries.s3.amazonaws.com/${MASON_OS}-x86_64/cmake/${CMAKE_VERSION}.tar.gz" >> $GITHUB_ENV
-        echo "CMAKE_DIR=mason_packages/${MASON_OS}-x86_64/cmake/${CMAKE_VERSION}" >> $GITHUB_ENV
     - name: Install dev dependencies
       run: |
         python3 -m pip install conan==1.51.3
 
-        # CMake
-        mkdir -p ${CMAKE_DIR}
-        wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${CMAKE_DIR}
-        echo "${CMAKE_DIR}/bin" >> $GITHUB_PATH
-
         # ccache
-        ${MASON} install ccache ${CCACHE_VERSION}
-        echo "$(${MASON} prefix ccache ${CCACHE_VERSION})/bin" >> $GITHUB_PATH
-
+        if [[ "${RUNNER_OS}" == "Linux" ]]; then
+          sudo apt-get update -y && sudo apt-get install ccache
+        elif [[ "${RUNNER_OS}" == "macOS" ]]; then
+          brew install ccache
+        fi
+ 
         # clang
         if [[ "${CCOMPILER}" == "clang-6.0" ]]; then
           sudo apt-get update -y && sudo apt-get install clang++-6
-        fi
-        # we only enable lto for release builds
-        # and therefore don't need to us ld.gold or llvm tools for linking
-        # for debug builds
-        if [[ "${CCOMPILER}" == clang-* ]] && [[ ${BUILD_TYPE} == 'Release' ]]; then
-          ${MASON} install binutils 2.27
-          echo "$(${MASON} prefix binutils 2.27)/bin" >> $GITHUB_PATH
         fi
       
         # Linux dev packages

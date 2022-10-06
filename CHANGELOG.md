@@ -27,6 +27,7 @@
       - FIXED: Internal refactoring of identifier types used in data facade [#6044](https://github.com/Project-OSRM/osrm-backend/pull/6044)
       - CHANGED: Update docs to reflect recent build and dependency changes [#6383](https://github.com/Project-OSRM/osrm-backend/issues/6383)
     - Build:
+      - REMOVED: Get rid of Mason. [#6387](https://github.com/Project-OSRM/osrm-backend/pull/6387)
       - CHANGED: Use clang-format from CI base image. [#6391](https://github.com/Project-OSRM/osrm-backend/pull/6391)
       - ADDED: Build Node bindings on Windows. [#6334](https://github.com/Project-OSRM/osrm-backend/pull/6334)
       - ADDED: Configure cross-compilation for Apple Silicon. [#6360](https://github.com/Project-OSRM/osrm-backend/pull/6360)

@@ -34,7 +34,7 @@ foreach(binary ${OSRM_BINARIES})
   list(APPEND ARTIFACTS "${BINDING_DIR}/${binary}")
 endforeach(binary)
 
-# For mason-enabled builds we copy over tbb's shared objects for packaging.
+# For Conan-enabled builds we copy over tbb's shared objects for packaging.
 # TODO: consider using statically linked tbb library (for node_osrm only!)
 if (ENABLE_CONAN)
   foreach(libpath ${CONAN_LIB_DIRS_ONETBB})

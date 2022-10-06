@@ -1,8 +1,3 @@
-# mason #
-#########
-/.mason
-/mason_packages
-
 # pre compiled dependencies #
 #############################
 osrm-deps
