@@ -142,8 +142,8 @@ Feature: Car - Turn restrictions
             | restriction | dx       | dx     | x        | no_u_turn   |
 
         When I route I should get
-            | waypoints | route             |
-            | a,x,a     | ax,ax,xb,xb,ax,ax |
+            | waypoints | route             | turns                                                        |
+            | a,x,a     | ax,xb,xb,xb,ax,ax | depart,new name straight,continue uturn,arrive,depart,arrive |
 
     @no_turning
     Scenario: Car - Handle any no_* relation
