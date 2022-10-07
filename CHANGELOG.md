@@ -62,6 +62,7 @@
       - FIXED: Bump CI complete meta job to ubuntu-20.04 [#6323](https://github.com/Project-OSRM/osrm-backend/pull/6323)
       - CHANGED: Node packages are now scoped by @project-osrm [#6386](https://github.com/Project-OSRM/osrm-backend/issues/6386)
     - Routing:
+      - CHANGED: Add support for surface=metal,grass_paver,woodchips in bicyle profile. [#6395](https://github.com/Project-OSRM/osrm-backend/pull/6395)
       - CHANGED: Lazily generate optional route path data [#6045](https://github.com/Project-OSRM/osrm-backend/pull/6045)
       - FIXED: Completed support for no_entry and no_exit turn restrictions. [#5988](https://github.com/Project-OSRM/osrm-backend/pull/5988)
       - ADDED: Add support for non-round-trips with a single fixed endpoint. [#6050](https://github.com/Project-OSRM/osrm-backend/pull/6050)
