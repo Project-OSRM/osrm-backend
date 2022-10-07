@@ -15,6 +15,7 @@ Feature: Bike - Surfaces
             | cycleway | cobblestone:flattened | 72 s    |
             | cycleway | paving_stones         | 72 s    |
             | cycleway | wood                  | 72 s    |
+            | cycleway | metal                 | 72 s    |
             | cycleway | compacted             | 72 s    |
             | cycleway | fine_gravel           | 72 s    |
             | cycleway | ground                | 72 s    |
@@ -22,11 +23,13 @@ Feature: Bike - Surfaces
             | cycleway | cobblestone           | 102.9 s |
             | cycleway | gravel                | 120 s   |
             | cycleway | pebblestone           | 120 s   |
+            | cycleway | grass_paver           | 120 s   |
             | cycleway | dirt                  | 90 s    |
             | cycleway | earth                 | 120 s   |
             | cycleway | grass                 | 120 s   |
             | cycleway | mud                   | 240 s   |
             | cycleway | sand                  | 240 s   |
+            | cycleway | woodchips             | 240 s   |
             | cycleway | sett                  | 80 s    |
 
     Scenario: Bicycle - Good surfaces on small paths
