@@ -1,4 +1,4 @@
-# 5.27.0-rc.1
+# 5.27.0
   - Changes from 5.26.0
     - API:
       - ADDED: Add Flatbuffers support to NodeJS bindings. [#6338](https://github.com/Project-OSRM/osrm-backend/pull/6338)
