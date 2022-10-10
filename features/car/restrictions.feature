@@ -116,6 +116,36 @@ Feature: Car - Turn restrictions
             | c    | b  | cj,bj,bj |
 
     @no_turning
+    Scenario: Car - No u-turn
+    # https://www.openstreetmap.org/edit?node=54878482#map=19/34.05242/-117.19067
+        Given the node map
+            """
+                c
+                3
+            a 1 x 2 b
+                4
+                d
+            """
+
+        And the ways
+            | nodes |
+            | ax    |
+            | xb    |
+            | cx    |
+            | xd    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction |
+            | restriction | ax       | ax     | x        | no_u_turn   |
+            | restriction | bx       | bx     | x        | no_u_turn   |
+            | restriction | cx       | cx     | x        | no_u_turn   |
+            | restriction | dx       | dx     | x        | no_u_turn   |
+
+        When I route I should get
+            | waypoints | route             | turns                                                        |
+            | a,x,a     | ax,xb,xb,xb,ax,ax | depart,new name straight,continue uturn,arrive,depart,arrive |
+
+    @no_turning
     Scenario: Car - Handle any no_* relation
         Given the node map
             """
