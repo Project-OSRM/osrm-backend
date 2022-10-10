@@ -29,7 +29,7 @@ jobs:
       ENABLE_APPLE_SILICON: "OFF"
     steps:
     - uses: actions/checkout@v3
-    - run: pip install conan==1.51.3
+    - run: pip install conan==1.53.0
     - run: conan --version
     - run: cmake --version
     - uses: actions/setup-node@v3
@@ -252,7 +252,7 @@ jobs:
             CXXFLAGS: "-m32 -msse2 -mfpmath=sse"
             TARGET_ARCH: i686
             ENABLE_CONAN: ON
-            
+
           - name: gcc-8-release
             continue-on-error: false
             node: 12
@@ -460,7 +460,7 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
-          
+
           - name: conan-macos-arm64-release-node-lts
             build_node_package: true
             continue-on-error: true
@@ -553,7 +553,7 @@ jobs:
         key: v3-test-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
           v3-test-${{ matrix.name }}-
-      
+
     - name: Prepare environment
       run: |
         PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
@@ -574,7 +574,7 @@ jobs:
 
     - name: Install dev dependencies
       run: |
-        python3 -m pip install conan==1.51.3
+        python3 -m pip install conan==1.53.0
 
         # ccache
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
@@ -582,12 +582,12 @@ jobs:
         elif [[ "${RUNNER_OS}" == "macOS" ]]; then
           brew install ccache
         fi
- 
+
         # clang
         if [[ "${CCOMPILER}" == "clang-6.0" ]]; then
           sudo apt-get update -y && sudo apt-get install clang++-6
         fi
-      
+
         # Linux dev packages
         if [ "${TARGET_ARCH}" != "i686" ] && [ "${ENABLE_CONAN}" != "ON" ]; then
           sudo apt-get update -y
@@ -697,7 +697,7 @@ jobs:
       run: |
         pushd ${OSRM_BUILD_DIR}
         make --jobs=${JOBS} benchmarks
-        ./src/benchmarks/alias-bench 
+        ./src/benchmarks/alias-bench
         ./src/benchmarks/json-render-bench ../src/benchmarks/portugal_to_korea.json
         ./src/benchmarks/match-bench ../test/data/ch/monaco.osrm
         ./src/benchmarks/packedvector-bench
