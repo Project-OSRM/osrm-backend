@@ -178,6 +178,7 @@ function setup()
       concrete = default_speed,
       concrete_lanes = default_speed,
       wood = 10,
+      metal = 10,
       ["cobblestone:flattened"] = 10,
       paving_stones = 10,
       compacted = 10,
@@ -186,12 +187,14 @@ function setup()
       fine_gravel = 10,
       gravel = 6,
       pebblestone = 6,
+      grass_paver = 6,
       ground = 10,
       dirt = 8,
       earth = 6,
       grass = 6,
       mud = 3,
       sand = 3,
+      woodchips = 3,
       sett = 9
     },
 

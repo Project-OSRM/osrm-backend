@@ -1,4 +1,7 @@
 # Unreleased
+  - Changes from 5.27.0
+    - Routing:
+      - CHANGED: Add support for surface=metal,grass_paver,woodchips in bicyle profile. [#6395](https://github.com/Project-OSRM/osrm-backend/pull/6395)
 
 # 5.27.0
   - Changes from 5.26.0
