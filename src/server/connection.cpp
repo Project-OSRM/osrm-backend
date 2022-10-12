@@ -183,6 +183,7 @@ void Connection::handle_write(const boost::system::error_code &error)
             current_request = http::request();
             current_reply = http::reply();
             http_request_parser.emplace();
+            http_request_parser->header_limit(std::numeric_limits<std::uint32_t>::max());
             incoming_data_buffer = boost::array<char, 8192>();
             output_buffer.clear();
             this->start();
