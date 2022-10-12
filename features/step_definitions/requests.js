@@ -4,7 +4,7 @@ module.exports = function () {
     this.When(/^I request \/(.*)$/, (path, callback) => {
         this.reprocessAndLoadData((e) => {
             if (e) return callback(e);
-            this.requestPath(path, {}, (err, res, body) => {
+            this.requestUrl(path, (err, res, body) => {
                 this.response = res;
                 callback(err, res, body);
             });
@@ -23,13 +23,13 @@ module.exports = function () {
         this.ShouldBeWellFormed();
     });
 
-    this.Then(/^status code should be (\d+)$/, (code, callback) => {
+    this.Then(/^status code should be (.+)$/, (code, callback) => {
         try {
             this.json = JSON.parse(this.response.body);
         } catch(e) {
             return callback(e);
         }
-        assert.equal(this.json.status, parseInt(code));
+        assert.equal(this.json.code, code);
         callback();
     });
 

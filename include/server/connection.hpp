@@ -69,7 +69,7 @@ class Connection : public std::enable_shared_from_this<Connection>
     boost::asio::deadline_timer timer;
     RequestHandler &request_handler;
     std::optional<RequestParser> http_request_parser;
-    boost::array<char, 8192> incoming_data_buffer;
+    std::vector<char> incoming_data_buffer;
     http::request current_request;
     http::reply current_reply;
     std::vector<char> compressed_output;
