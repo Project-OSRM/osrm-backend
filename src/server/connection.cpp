@@ -12,7 +12,8 @@ namespace osrm
 namespace server
 {
 
-namespace {
+namespace
+{
 const size_t CHUNK_SIZE = 8192;
 
 } // namespace
@@ -64,7 +65,8 @@ void Connection::start()
     }
 }
 
-void Connection::handle_read(const boost::system::error_code &error, std::size_t /*bytes_transferred*/)
+void Connection::handle_read(const boost::system::error_code &error,
+                             std::size_t /*bytes_transferred*/)
 {
     if (error)
     {
@@ -95,11 +97,12 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
             const auto current_size = incoming_data_buffer.size();
             incoming_data_buffer.resize(incoming_data_buffer.size() + CHUNK_SIZE);
             // we don't have a result yet, so continue reading
-            TCP_socket.async_read_some(boost::asio::buffer(incoming_data_buffer.data() + current_size, CHUNK_SIZE),
-                                       boost::bind(&Connection::handle_read,
-                                                   this->shared_from_this(),
-                                                   boost::asio::placeholders::error,
-                                                   boost::asio::placeholders::bytes_transferred));
+            TCP_socket.async_read_some(
+                boost::asio::buffer(incoming_data_buffer.data() + current_size, CHUNK_SIZE),
+                boost::bind(&Connection::handle_read,
+                            this->shared_from_this(),
+                            boost::asio::placeholders::error,
+                            boost::asio::placeholders::bytes_transferred));
         }
         else
         {
