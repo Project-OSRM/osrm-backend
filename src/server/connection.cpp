@@ -95,7 +95,7 @@ void Connection::handle_read(const boost::system::error_code &error,
         if (ec == boost::beast::http::error::need_more)
         {
             const auto current_size = incoming_data_buffer.size();
-            incoming_data_buffer.resize(incoming_data_buffer.size() + CHUNK_SIZE);
+            incoming_data_buffer.resize(incoming_data_buffer.size() + CHUNK_SIZE, 0);
             // we don't have a result yet, so continue reading
             TCP_socket.async_read_some(
                 boost::asio::buffer(incoming_data_buffer.data() + current_size, CHUNK_SIZE),
