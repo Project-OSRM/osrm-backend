@@ -1,5 +1,8 @@
 # Unreleased
   - Changes from 5.27.0
+    - Misc:
+      - FIXED: Revert back to using custom HTTP parser instead of Boost.Beast. [#6407](https://github.com/Project-OSRM/osrm-backend/pull/6407)
+      - FIXED: Fix bug with large HTTP requests leading to Bad Request in osrm-routed. [#6403](https://github.com/Project-OSRM/osrm-backend/pull/6403)
     - Routing:
       - CHANGED: Add support for surface=metal,grass_paver,woodchips in bicyle profile. [#6395](https://github.com/Project-OSRM/osrm-backend/pull/6395)
 
@@ -8,7 +11,9 @@
     - API:
       - ADDED: Add Flatbuffers support to NodeJS bindings. [#6338](https://github.com/Project-OSRM/osrm-backend/pull/6338)
       - CHANGED: Add `data_version` field to responses of all services. [#5387](https://github.com/Project-OSRM/osrm-backend/pull/5387)
+      - FIXED: Use Boost.Beast to parse HTTP request. [#6294](https://github.com/Project-OSRM/osrm-backend/pull/6294)
       - FIXED: Fix inefficient osrm-routed connection handling [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
+      - FIXED: Fix HTTP compression precedence [#6113](https://github.com/Project-OSRM/osrm-backend/pull/6113)
     - NodeJS:
       - FIXED: Support `skip_waypoints` in Node bindings [#6060](https://github.com/Project-OSRM/osrm-backend/pull/6060)
     - Misc:
