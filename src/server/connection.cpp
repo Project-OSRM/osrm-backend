@@ -12,16 +12,10 @@ namespace osrm
 namespace server
 {
 
-namespace
-{
-const size_t CHUNK_SIZE = 8192;
-
-} // namespace
 Connection::Connection(boost::asio::io_context &io_context, RequestHandler &handler)
     : strand(boost::asio::make_strand(io_context)), TCP_socket(strand), timer(strand),
       request_handler(handler), http_request_parser(std::make_optional<RequestParser>())
 {
-    http_request_parser->header_limit(std::numeric_limits<std::uint32_t>::max());
 }
 
 boost::asio::ip::tcp::socket &Connection::socket() { return TCP_socket; }
@@ -65,8 +59,7 @@ void Connection::start()
     }
 }
 
-void Connection::handle_read(const boost::system::error_code &error,
-                             std::size_t /*bytes_transferred*/)
+void Connection::handle_read(const boost::system::error_code &error, std::size_t bytes_transferred)
 {
     if (error)
     {
@@ -86,7 +79,7 @@ void Connection::handle_read(const boost::system::error_code &error,
     }
 
     boost::beast::error_code ec;
-    http_request_parser->put(boost::asio::buffer(incoming_data_buffer), ec);
+    http_request_parser->put(boost::asio::buffer(incoming_data_buffer, bytes_transferred), ec);
     // no error detected, let's parse the request
     http::compression_type compression_type(http::no_compression);
 
@@ -94,15 +87,12 @@ void Connection::handle_read(const boost::system::error_code &error,
     {
         if (ec == boost::beast::http::error::need_more)
         {
-            const auto current_size = incoming_data_buffer.size();
-            incoming_data_buffer.resize(incoming_data_buffer.size() + CHUNK_SIZE, 0);
             // we don't have a result yet, so continue reading
-            TCP_socket.async_read_some(
-                boost::asio::buffer(incoming_data_buffer.data() + current_size, CHUNK_SIZE),
-                boost::bind(&Connection::handle_read,
-                            this->shared_from_this(),
-                            boost::asio::placeholders::error,
-                            boost::asio::placeholders::bytes_transferred));
+            TCP_socket.async_read_some(boost::asio::buffer(incoming_data_buffer),
+                                       boost::bind(&Connection::handle_read,
+                                                   this->shared_from_this(),
+                                                   boost::asio::placeholders::error,
+                                                   boost::asio::placeholders::bytes_transferred));
         }
         else
         {
@@ -193,8 +183,7 @@ void Connection::handle_write(const boost::system::error_code &error)
             current_request = http::request();
             current_reply = http::reply();
             http_request_parser.emplace();
-            http_request_parser->header_limit(std::numeric_limits<std::uint32_t>::max());
-            incoming_data_buffer.resize(CHUNK_SIZE, 0);
+            incoming_data_buffer = boost::array<char, 8192>();
             output_buffer.clear();
             this->start();
         }
