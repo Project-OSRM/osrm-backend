@@ -38,7 +38,8 @@ if (ENABLE_FUZZING)
 	  "table_parameters"
 	  "tile_parameters"
 	  "trip_parameters"
-	  "url_parser")
+	  "url_parser"
+	  "request_parser")
 
   foreach (target ${ServerTargets})
 	  add_fuzz_target(${target})
