@@ -754,6 +754,10 @@ jobs:
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
       run: |
         npm run nodejs-tests
+    - name: 
+      if: failure()
+      run: |
+        cat /home/runner/.conan/data/onetbb/2021.3.0/_/_/build/a36e366b2b0ea0e76bafba6092e0a74838fad5fd/build/generators/conan_toolchain.cmake
     - name: Upload test logs
       uses: actions/upload-artifact@v3
       if: failure()
