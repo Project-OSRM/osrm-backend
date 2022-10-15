@@ -503,7 +503,7 @@ if(ENABLE_CONAN)
     GENERATORS cmake_find_package json  # json generator generates a conanbuildinfo.json in the build folder so (non-CMake) projects can easily parse OSRM's dependencies
     KEEP_RPATHS
     NO_OUTPUT_DIRS
-    ENV chost=aarch64
+    ENV CONAN_CMAKE_SYSTEM_PROCESSOR=aarch64
     OPTIONS boost:filesystem_version=3 # https://stackoverflow.com/questions/73392648/error-with-boost-filesystem-version-in-cmake
             onetbb:shared=${TBB_SHARED}
             boost:without_stacktrace=True # Apple Silicon cross-compilation fails without it
