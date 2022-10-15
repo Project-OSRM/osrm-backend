@@ -573,27 +573,27 @@ jobs:
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
-    - name: Enable compiler cache
-      uses: actions/cache@v2
-      with:
-        path: ~/.ccache
-        key: ccache-${{ matrix.name }}-${{ github.sha }}
-        restore-keys: |
-          ccache-${{ matrix.name }}-
-    - name: Enable Conan cache
-      uses: actions/cache@v2
-      with:
-        path: ~/.conan
-        key: v6-conan-${{ matrix.name }}-${{ github.sha }}
-        restore-keys: |
-          v6-conan-${{ matrix.name }}-
-    - name: Enable test cache
-      uses: actions/cache@v2
-      with:
-        path: ${{github.workspace}}/test/cache
-        key: v3-test-${{ matrix.name }}-${{ github.sha }}
-        restore-keys: |
-          v3-test-${{ matrix.name }}-
+    # - name: Enable compiler cache
+    #   uses: actions/cache@v2
+    #   with:
+    #     path: ~/.ccache
+    #     key: ccache-${{ matrix.name }}-${{ github.sha }}
+    #     restore-keys: |
+    #       ccache-${{ matrix.name }}-
+    # - name: Enable Conan cache
+    #   uses: actions/cache@v2
+    #   with:
+    #     path: ~/.conan
+    #     key: v6-conan-${{ matrix.name }}-${{ github.sha }}
+    #     restore-keys: |
+    #       v6-conan-${{ matrix.name }}-
+    # - name: Enable test cache
+    #   uses: actions/cache@v2
+    #   with:
+    #     path: ${{github.workspace}}/test/cache
+    #     key: v3-test-${{ matrix.name }}-${{ github.sha }}
+    #     restore-keys: |
+    #       v3-test-${{ matrix.name }}-
 
     - name: Prepare environment
       run: |
@@ -684,6 +684,8 @@ jobs:
           APPLE_SILICON_FLAGS=()
         fi
 
+        AARCH64_FLAGS=(-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=aarch64 -DCMAKE_FIND_ROOT_PATH=/usr/aarch64-linux-gnu -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER)
+        
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                  -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
                  -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
@@ -695,7 +697,8 @@ jobs:
                  -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
                  -DENABLE_CCACHE=ON \
                  -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
-                 "${APPLE_SILICON_FLAGS[@]}"
+                 "${APPLE_SILICON_FLAGS[@]}" \
+                 "${AARCH64_FLAGS[@]"
 
         make --jobs=${JOBS}
 
