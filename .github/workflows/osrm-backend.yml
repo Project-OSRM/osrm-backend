@@ -20,84 +20,84 @@ env:
   ENABLE_NODE_BINDINGS: "ON"
 
 jobs:
-  windows:
-    needs: format-taginfo-docs
-    runs-on: windows-2022
-    continue-on-error: false
-    env:
-      BUILD_TYPE: Release
-      ENABLE_APPLE_SILICON: "OFF"
-    steps:
-    - uses: actions/checkout@v3
-    - run: pip install conan==1.53.0
-    - run: conan --version
-    - run: cmake --version
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 16
-    - run: node --version
-    - run: npm --version
-    - name: Prepare environment
-      shell: bash
-      run: |
-        PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
-        echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
-    - run: npm install --ignore-scripts
-    - run: npm link --ignore-scripts
-    - uses: microsoft/setup-msbuild@v1.1
-    - name: Build
-      run: |
-        .\scripts\ci\windows-build.bat
-    - name: Run node tests
-      shell: bash
-      run: |
-        ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
-        node test/nodejs/index.js
-    - name: Build Node package
-      shell: bash
-      run: ./scripts/ci/node_package.sh
-    - name: Publish Node package
-      if: ${{ env.PUBLISH == 'On' }}
-      uses: ncipollo/release-action@v1
-      with:
-        allowUpdates: true
-        artifactErrorsFailBuild: true
-        artifacts: build/stage/**/*.tar.gz
-        omitBody: true
-        omitBodyDuringUpdate: true
-        omitName: true
-        omitNameDuringUpdate: true
-        replacesArtifacts: true
-        token: ${{ secrets.GITHUB_TOKEN }}
+  # windows:
+  #   needs: format-taginfo-docs
+  #   runs-on: windows-2022
+  #   continue-on-error: false
+  #   env:
+  #     BUILD_TYPE: Release
+  #     ENABLE_APPLE_SILICON: "OFF"
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - run: pip install conan==1.53.0
+  #   - run: conan --version
+  #   - run: cmake --version
+  #   - uses: actions/setup-node@v3
+  #     with:
+  #       node-version: 16
+  #   - run: node --version
+  #   - run: npm --version
+  #   - name: Prepare environment
+  #     shell: bash
+  #     run: |
+  #       PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+  #       echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
+  #   - run: npm install --ignore-scripts
+  #   - run: npm link --ignore-scripts
+  #   - uses: microsoft/setup-msbuild@v1.1
+  #   - name: Build
+  #     run: |
+  #       .\scripts\ci\windows-build.bat
+  #   - name: Run node tests
+  #     shell: bash
+  #     run: |
+  #       ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
+  #       node test/nodejs/index.js
+  #   - name: Build Node package
+  #     shell: bash
+  #     run: ./scripts/ci/node_package.sh
+  #   - name: Publish Node package
+  #     if: ${{ env.PUBLISH == 'On' }}
+  #     uses: ncipollo/release-action@v1
+  #     with:
+  #       allowUpdates: true
+  #       artifactErrorsFailBuild: true
+  #       artifacts: build/stage/**/*.tar.gz
+  #       omitBody: true
+  #       omitBodyDuringUpdate: true
+  #       omitName: true
+  #       omitNameDuringUpdate: true
+  #       replacesArtifacts: true
+  #       token: ${{ secrets.GITHUB_TOKEN }}
 
-  format-taginfo-docs:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 12
-    - name: Enable Node.js cache
-      uses: actions/cache@v2
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-    - name: Prepare environment
-      run: |
-        npm ci --ignore-scripts
-        clang-format-10 --version
-    - name: Run checks
-      run: |
-        ./scripts/check_taginfo.py taginfo.json profiles/car.lua
-        ./scripts/format.sh && ./scripts/error_on_dirty.sh
-        node ./scripts/validate_changelog.js
-        npm run docs && ./scripts/error_on_dirty.sh
+  # format-taginfo-docs:
+  #   runs-on: ubuntu-20.04
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Use Node.js
+  #     uses: actions/setup-node@v3
+  #     with:
+  #       node-version: 12
+  #   - name: Enable Node.js cache
+  #     uses: actions/cache@v2
+  #     with:
+  #       path: ~/.npm
+  #       key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+  #       restore-keys: |
+  #         ${{ runner.os }}-node-
+  #   - name: Prepare environment
+  #     run: |
+  #       npm ci --ignore-scripts
+  #       clang-format-10 --version
+  #   - name: Run checks
+  #     run: |
+  #       ./scripts/check_taginfo.py taginfo.json profiles/car.lua
+  #       ./scripts/format.sh && ./scripts/error_on_dirty.sh
+  #       node ./scripts/validate_changelog.js
+  #       npm run docs && ./scripts/error_on_dirty.sh
 
   docker-image:
-    needs: format-taginfo-docs
+   # needs: format-taginfo-docs
     runs-on: ubuntu-22.04
     continue-on-error: false
     steps:
@@ -385,8 +385,8 @@ jobs:
             node: 16
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
-            CCOMPILER: aarch64-linux-gnu-gcc
-            CXXCOMPILER: aarch64-linux-gnu-g++
+            CCOMPILER: /usr/bin/aarch64-linux-gnu-gcc
+            CXXCOMPILER: /usr/bin/aarch64-linux-gnu-g++
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -625,7 +625,7 @@ jobs:
         tar zxvf onetbb.tgz
         sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
         sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
-
+    - run: ls -R /usr/bin/
     - name: Prepare build
       run: |
         mkdir ${OSRM_BUILD_DIR}
