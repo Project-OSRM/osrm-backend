@@ -667,7 +667,7 @@ jobs:
         fi
         echo "CC=${CCOMPILER}" >> $GITHUB_ENV
         echo "CXX=${CXXCOMPILER}" >> $GITHUB_ENV
-    - run: cp toolchain.cmake /home/runner/.conan/data/onetbb/2021.3.0/_/_/build/a36e366b2b0ea0e76bafba6092e0a74838fad5fd/build/generators/conan_toolchain.cmake
+    - run: mkdir /home/runner/.conan/data/onetbb/2021.3.0/_/_/build/a36e366b2b0ea0e76bafba6092e0a74838fad5fd/build/generators/ && cp toolchain.cmake /home/runner/.conan/data/onetbb/2021.3.0/_/_/build/a36e366b2b0ea0e76bafba6092e0a74838fad5fd/build/generators/conan_toolchain.cmake
     - name: Build and install OSRM
       run: |
         echo "Using ${JOBS} jobs"
