@@ -31,6 +31,9 @@ jobs:
           arch: aarch64
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
+          install: |
+            apt-get update -y && apt-get install -y python3 node
+
           run: |
             pip install conan==1.53.0
 
