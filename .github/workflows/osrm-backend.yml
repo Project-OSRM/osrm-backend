@@ -416,8 +416,8 @@ jobs:
             node: 16
             runs-on: ubuntu-20.04
             BUILD_TYPE: Release
-            CCOMPILER: /usr/bin/aarch64-linux-gnu-gcc
-            CXXCOMPILER: /usr/bin/aarch64-linux-gnu-g++
+            CCOMPILER: /usr/bin/aarch64-linux-gnu-gcc-9
+            CXXCOMPILER: /usr/bin/aarch64-linux-gnu-g++-9
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -617,7 +617,7 @@ jobs:
       run: |
         python3 -m pip install conan==1.53.0
 
-        sudo apt-get update -y && sudo apt-get -y install gcc-aarch64-linux-gnu
+        sudo apt-get update -y && sudo apt-get -y install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
         # ccache
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
           sudo apt-get update -y && sudo apt-get install ccache
