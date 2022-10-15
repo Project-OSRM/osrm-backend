@@ -28,7 +28,7 @@ jobs:
         name: Run commands
         id: runcmd
         with:
-          arch: arm64
+          arch: aarch64
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
           run: |
