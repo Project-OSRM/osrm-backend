@@ -685,7 +685,7 @@ jobs:
         fi
 
         AARCH64_FLAGS=(-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=aarch64 -DCMAKE_FIND_ROOT_PATH=/usr/aarch64-linux-gnu -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER)
-        
+
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                  -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
                  -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
@@ -698,7 +698,7 @@ jobs:
                  -DENABLE_CCACHE=ON \
                  -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
                  "${APPLE_SILICON_FLAGS[@]}" \
-                 "${AARCH64_FLAGS[@]"
+                 "${AARCH64_FLAGS[@]}"
 
         make --jobs=${JOBS}
 
