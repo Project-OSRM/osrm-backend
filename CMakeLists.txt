@@ -518,8 +518,8 @@ if(ENABLE_CONAN)
   # explicitly say Conan to use x86 dependencies if build for x86 platforms (https://github.com/conan-io/cmake-conan/issues/141)
   if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     conan_cmake_run("${CONAN_ARGS};ARCH;x86")
-  # cross-compilation for Apple Silicon
-  elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64" AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
+  # cross-compilation for arm64 processors
+  elseif((CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64") AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
     conan_cmake_run("${CONAN_ARGS};ARCH;armv8")
   else()
     conan_cmake_run("${CONAN_ARGS}")
