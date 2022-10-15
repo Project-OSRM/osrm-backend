@@ -37,7 +37,8 @@ jobs:
           run: |
             apt-get update -y && apt-get install -y python3-pip
             pip3 install conan==1.53.0
-
+            apt-get update -y && apt-get install -y npm
+            
             npm install --ignore-scripts
             npm link --ignore-scripts
 
