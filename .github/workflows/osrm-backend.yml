@@ -35,8 +35,8 @@ jobs:
             apt-get update -y && apt-get install -y python3 nodejs cmake build-essential
 
           run: |
-            python3 -m ensurepip --upgrade
-            python3 -m pip install conan==1.53.0
+            apt-get update -y && apt-get install -y python3-pip
+            pip3 install conan==1.53.0
 
             npm install --ignore-scripts
             npm link --ignore-scripts
