@@ -32,10 +32,10 @@ jobs:
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
           install: |
-            apt-get update -y && apt-get install -y python3 nodejs
+            apt-get update -y && apt-get install -y python3 nodejs cmake clang clang++
 
           run: |
-            pip install conan==1.53.0
+            python3 -m pip install conan==1.53.0
 
             npm install --ignore-scripts
             npm link --ignore-scripts
