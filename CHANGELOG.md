@@ -1,7 +1,7 @@
 # Unreleased
   - Changes from 5.27.1
     - Misc:
-      - FIXED: Fix annotations=true handling in NodeJS bindings. [#6415](https://github.com/Project-OSRM/osrm-backend/pull/6415/)
+      - FIXED: Fix annotations=true handling in NodeJS bindings & libosrm. [#6415](https://github.com/Project-OSRM/osrm-backend/pull/6415/)
 # 5.27.1
   - Changes from 5.27.0
     - Misc:

@@ -778,7 +778,7 @@ class RouteAPI : public BaseAPI
                 util::json::Object annotation;
 
                 // AnnotationsType uses bit flags, & operator checks if a property is set
-                if (parameters.annotations_type & RouteParameters::AnnotationsType::Speed)
+                if (requested_annotations & RouteParameters::AnnotationsType::Speed)
                 {
                     double prev_speed = 0;
                     annotation.values["speed"] = GetAnnotations(
