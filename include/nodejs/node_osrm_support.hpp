@@ -848,6 +848,9 @@ inline bool parseCommonParameters(const v8::Local<v8::Object> &obj, ParamType &p
                     Nan::ThrowError("this 'annotations' param is not supported");
                     return false;
                 }
+
+                params->annotations =
+                    params->annotations_type != osrm::RouteParameters::AnnotationsType::None;
             }
         }
         else
