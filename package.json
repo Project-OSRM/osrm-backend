@@ -7,7 +7,7 @@
     "@mapbox/node-pre-gyp": "^1.0.9",
     "cheap-ruler": "^3.0.2",
     "mkdirp": "^0.5.6",
-    "nan": "^2.16.0",
+    "nan": "^2.17.0",
     "node-cmake": "^2.5.1",
     "rimraf": "^2.7.1"
   },
