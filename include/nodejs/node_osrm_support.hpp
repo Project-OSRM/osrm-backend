@@ -799,6 +799,9 @@ inline bool parseCommonParameters(const v8::Local<v8::Object> &obj, ParamType &p
         if (annotations->IsBoolean())
         {
             params->annotations = Nan::To<bool>(annotations).FromJust();
+            params->annotations_type = params->annotations
+                        ? osrm::RouteParameters::AnnotationsType::All
+                        : osrm::RouteParameters::AnnotationsType::None;
         }
         else if (annotations->IsArray())
         {
