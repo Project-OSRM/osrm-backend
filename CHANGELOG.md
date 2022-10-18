@@ -1,6 +1,7 @@
 # Unreleased
   - Changes from 5.27.1
     - Misc:
+      - FIXED: Handle snapping parameter for all plugins in NodeJs bindings, but not for Route only. [#6417](https://github.com/Project-OSRM/osrm-backend/pull/6417)
       - FIXED: Fix bindings compilation issue on the latest Node. Update NAN to 2.17.0. [#6416](https://github.com/Project-OSRM/osrm-backend/pull/6416)
 # 5.27.1
   - Changes from 5.27.0
