@@ -767,6 +767,37 @@ inline bool argumentsToParameter(const Nan::FunctionCallbackInfo<v8::Value> &arg
             return false;
         }
     }
+
+    if (Nan::Has(obj, Nan::New("snapping").ToLocalChecked()).FromJust())
+    {
+        v8::Local<v8::Value> snapping =
+            Nan::Get(obj, Nan::New("snapping").ToLocalChecked()).ToLocalChecked();
+        if (snapping.IsEmpty())
+            return false;
+
+        if (!snapping->IsString())
+        {
+            Nan::ThrowError("Snapping must be a string: [default, any]");
+            return false;
+        }
+        const Nan::Utf8String snapping_utf8str(snapping);
+        std::string snapping_str{*snapping_utf8str, *snapping_utf8str + snapping_utf8str.length()};
+
+        if (snapping_str == "default")
+        {
+            params->snapping = osrm::RouteParameters::SnappingType::Default;
+        }
+        else if (snapping_str == "any")
+        {
+            params->snapping = osrm::RouteParameters::SnappingType::Any;
+        }
+        else
+        {
+            Nan::ThrowError("'snapping' param must be one of [default, any]");
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -1106,36 +1137,6 @@ argumentsToRouteParameter(const Nan::FunctionCallbackInfo<v8::Value> &args,
                     return route_parameters_ptr();
                 }
             }
-        }
-    }
-
-    if (Nan::Has(obj, Nan::New("snapping").ToLocalChecked()).FromJust())
-    {
-        v8::Local<v8::Value> snapping =
-            Nan::Get(obj, Nan::New("snapping").ToLocalChecked()).ToLocalChecked();
-        if (snapping.IsEmpty())
-            return route_parameters_ptr();
-
-        if (!snapping->IsString())
-        {
-            Nan::ThrowError("Snapping must be a string: [default, any]");
-            return route_parameters_ptr();
-        }
-        const Nan::Utf8String snapping_utf8str(snapping);
-        std::string snapping_str{*snapping_utf8str, *snapping_utf8str + snapping_utf8str.length()};
-
-        if (snapping_str == "default")
-        {
-            params->snapping = osrm::RouteParameters::SnappingType::Default;
-        }
-        else if (snapping_str == "any")
-        {
-            params->snapping = osrm::RouteParameters::SnappingType::Any;
-        }
-        else
-        {
-            Nan::ThrowError("'snapping' param must be one of [default, any]");
-            return route_parameters_ptr();
         }
     }
 
