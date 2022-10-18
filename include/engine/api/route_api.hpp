@@ -439,7 +439,7 @@ class RouteAPI : public BaseAPI
     {
         // AnnotationsType uses bit flags, & operator checks if a property is set
         flatbuffers::Offset<flatbuffers::Vector<float>> speed;
-        if (parameters.annotations_type & RouteParameters::AnnotationsType::Speed)
+        if (requested_annotations & RouteParameters::AnnotationsType::Speed)
         {
             double prev_speed = 0;
             speed =
