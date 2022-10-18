@@ -1,7 +1,7 @@
 # Unreleased
   - Changes from 5.27.1
     - Misc:
-      - FIXED: Fix bindings compilation issue on the latest Node. Update NAN to 2.17.0. [#6416](https://github.com/Project-OSRM/osrm-backend/pull/6416) 
+      - FIXED: Fix bindings compilation issue on the latest Node. Update NAN to 2.17.0. [#6416](https://github.com/Project-OSRM/osrm-backend/pull/6416)
 # 5.27.1
   - Changes from 5.27.0
     - Misc:
