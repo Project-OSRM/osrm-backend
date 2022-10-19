@@ -584,7 +584,7 @@ void test_manual_setting_of_annotations_property(bool use_json_only_api)
                            .values["annotation"]
                            .get<json::Object>()
                            .values;
-    BOOST_CHECK_EQUAL(annotations.size(), 6);
+    BOOST_CHECK_EQUAL(annotations.size(), 7);
 }
 BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property_old_api)
 {

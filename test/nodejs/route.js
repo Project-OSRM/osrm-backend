@@ -286,9 +286,9 @@ test('route: routes Monaco with several (duration, distance, nodes) annotations 
         assert.ok(first.routes[0].legs.every(l => { return l.annotation.distance;}), 'every leg has annotations for distance');
         assert.ok(first.routes[0].legs.every(l => { return l.annotation.duration;}), 'every leg has annotations for durations');
         assert.ok(first.routes[0].legs.every(l => { return l.annotation.nodes;}), 'every leg has annotations for nodes');
-        assert.notOk(first.routes[0].legs.every(l => { return l.annotation.weight; }), 'has no annotations for weight')
-        assert.notOk(first.routes[0].legs.every(l => { return l.annotation.datasources; }), 'has no annotations for datasources')
-        assert.notOk(first.routes[0].legs.every(l => { return l.annotation.speed; }), 'has no annotations for speed')
+        assert.notOk(first.routes[0].legs.every(l => { return l.annotation.weight; }), 'has no annotations for weight');
+        assert.notOk(first.routes[0].legs.every(l => { return l.annotation.datasources; }), 'has no annotations for datasources');
+        assert.notOk(first.routes[0].legs.every(l => { return l.annotation.speed; }), 'has no annotations for speed');
 
         options.overview = 'full';
         osrm.route(options, function(err, full) {
@@ -303,7 +303,7 @@ test('route: routes Monaco with several (duration, distance, nodes) annotations 
 });
 
 test('route: routes Monaco with options', function(assert) {
-    assert.plan(11);
+    assert.plan(17);
     var osrm = new OSRM(monaco_path);
     var options = {
         coordinates: two_test_coordinates,
@@ -322,6 +322,12 @@ test('route: routes Monaco with options', function(assert) {
         assert.ok(first.routes[0].legs[0]);
         assert.ok(first.routes[0].legs.every(l => { return l.steps.length > 0; }), 'every leg has steps');
         assert.ok(first.routes[0].legs.every(l => { return l.annotation;}), 'every leg has annotations');
+        assert.ok(first.routes[0].legs.every(l => { return l.annotation.distance;}), 'every leg has annotations for distance');
+        assert.ok(first.routes[0].legs.every(l => { return l.annotation.duration;}), 'every leg has annotations for durations');
+        assert.ok(first.routes[0].legs.every(l => { return l.annotation.nodes;}), 'every leg has annotations for nodes');
+        assert.ok(first.routes[0].legs.every(l => { return l.annotation.weight; }), 'every leg has annotations for weight');
+        assert.ok(first.routes[0].legs.every(l => { return l.annotation.datasources; }), 'every leg has annotations for datasources');
+        assert.ok(first.routes[0].legs.every(l => { return l.annotation.speed; }), 'every leg has annotations for speed');
 
         options.overview = 'full';
         osrm.route(options, function(err, full) {
