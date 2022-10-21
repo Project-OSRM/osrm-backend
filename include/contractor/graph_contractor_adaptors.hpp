@@ -29,18 +29,20 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
 
 #ifndef NDEBUG
         const unsigned int constexpr DAY_IN_DECI_SECONDS = 24 * 60 * 60 * 10;
-        if (static_cast<unsigned int>(std::max(input_edge.data.weight, 1)) > DAY_IN_DECI_SECONDS)
+        if (from_alias<unsigned int>(std::max(input_edge.data.weight, EdgeWeight{1})) >
+            DAY_IN_DECI_SECONDS)
         {
             util::Log(logWARNING) << "Edge weight large -> "
-                                  << static_cast<unsigned int>(std::max(input_edge.data.weight, 1))
+                                  << from_alias<unsigned int>(
+                                         std::max(input_edge.data.weight, EdgeWeight{1}))
                                   << " : " << static_cast<unsigned int>(input_edge.source) << " -> "
                                   << static_cast<unsigned int>(input_edge.target);
         }
 #endif
         edges.emplace_back(input_edge.source,
                            input_edge.target,
-                           std::max(input_edge.data.weight, 1),
-                           input_edge.data.duration,
+                           std::max(input_edge.data.weight, {1}),
+                           to_alias<EdgeDuration>(input_edge.data.duration),
                            input_edge.data.distance,
                            1,
                            input_edge.data.turn_id,
@@ -50,8 +52,8 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
 
         edges.emplace_back(input_edge.target,
                            input_edge.source,
-                           std::max(input_edge.data.weight, 1),
-                           input_edge.data.duration,
+                           std::max(input_edge.data.weight, {1}),
+                           to_alias<EdgeDuration>(input_edge.data.duration),
                            input_edge.data.distance,
                            1,
                            input_edge.data.turn_id,
@@ -109,7 +111,7 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
         // merge edges (s,t) and (t,s) into bidirectional edge
         if (forward_edge.data.weight == reverse_edge.data.weight)
         {
-            if ((int)forward_edge.data.weight != INVALID_EDGE_WEIGHT)
+            if (forward_edge.data.weight != INVALID_EDGE_WEIGHT)
             {
                 forward_edge.data.backward = true;
                 edges[edge++] = forward_edge;
@@ -117,11 +119,11 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
         }
         else
         { // insert seperate edges
-            if (((int)forward_edge.data.weight) != INVALID_EDGE_WEIGHT)
+            if (forward_edge.data.weight != INVALID_EDGE_WEIGHT)
             {
                 edges[edge++] = forward_edge;
             }
-            if ((int)reverse_edge.data.weight != INVALID_EDGE_WEIGHT)
+            if (reverse_edge.data.weight != INVALID_EDGE_WEIGHT)
             {
                 edges[edge++] = reverse_edge;
             }
@@ -157,7 +159,7 @@ template <class Edge, typename GraphT> inline std::vector<Edge> toEdges(GraphT g
                 new_edge.target = target;
                 BOOST_ASSERT_MSG(SPECIAL_NODEID != new_edge.target, "Target id invalid");
                 new_edge.data.weight = data.weight;
-                new_edge.data.duration = data.duration;
+                new_edge.data.duration = from_alias<EdgeDuration::value_type>(data.duration);
                 new_edge.data.distance = data.distance;
                 new_edge.data.shortcut = data.shortcut;
                 new_edge.data.turn_id = data.id;

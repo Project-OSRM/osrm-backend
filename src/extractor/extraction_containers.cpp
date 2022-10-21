@@ -712,9 +712,11 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             scripting_environment.ProcessSegment(segment);
 
             auto &edge = edge_iterator->result;
-            edge.weight = std::max<EdgeWeight>(1, std::round(segment.weight * weight_multiplier));
-            edge.duration = std::max<EdgeWeight>(1, std::round(segment.duration * 10.));
-            edge.distance = static_cast<float>(accurate_distance);
+            edge.weight = std::max<EdgeWeight>(
+                {1}, to_alias<EdgeWeight>(std::round(segment.weight * weight_multiplier)));
+            edge.duration = std::max<EdgeDuration>(
+                {1}, to_alias<EdgeDuration>(std::round(segment.duration * 10.)));
+            edge.distance = to_alias<EdgeDistance>(accurate_distance);
 
             // assign new node id
             const auto node_id = mapExternalToInternalNodeID(
@@ -779,10 +781,8 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         NodeID source = all_edges_list[i].result.source;
         NodeID target = all_edges_list[i].result.target;
 
-        auto min_forward = std::make_pair(std::numeric_limits<EdgeWeight>::max(),
-                                          std::numeric_limits<EdgeWeight>::max());
-        auto min_backward = std::make_pair(std::numeric_limits<EdgeWeight>::max(),
-                                           std::numeric_limits<EdgeWeight>::max());
+        auto min_forward = std::make_pair(MAXIMAL_EDGE_WEIGHT, MAXIMAL_EDGE_DURATION);
+        auto min_backward = std::make_pair(MAXIMAL_EDGE_WEIGHT, MAXIMAL_EDGE_DURATION);
         std::size_t min_forward_idx = std::numeric_limits<std::size_t>::max();
         std::size_t min_backward_idx = std::numeric_limits<std::size_t>::max();
 

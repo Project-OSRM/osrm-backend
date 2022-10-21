@@ -23,7 +23,7 @@ struct TurnData final
     const int in_angle;
     const int turn_angle;
     const EdgeWeight weight;
-    const EdgeWeight duration;
+    const EdgeDuration duration;
     const guidance::TurnInstruction turn_instruction;
 };
 

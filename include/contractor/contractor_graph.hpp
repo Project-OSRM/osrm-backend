@@ -12,12 +12,12 @@ namespace contractor
 struct ContractorEdgeData
 {
     ContractorEdgeData()
-        : weight(0), duration(0), distance(0), id(0), originalEdges(0), shortcut(0), forward(0),
+        : weight{0}, duration{0}, distance{0}, id(0), originalEdges(0), shortcut(0), forward(0),
           backward(0)
     {
     }
     ContractorEdgeData(EdgeWeight weight,
-                       EdgeWeight duration,
+                       EdgeDuration duration,
                        EdgeDistance distance,
                        unsigned original_edges,
                        unsigned id,
@@ -30,7 +30,7 @@ struct ContractorEdgeData
     {
     }
     EdgeWeight weight;
-    EdgeWeight duration;
+    EdgeDuration duration;
     EdgeDistance distance;
     unsigned id;
     unsigned originalEdges : 29;

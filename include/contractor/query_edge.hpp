@@ -17,15 +17,15 @@ struct QueryEdge
     struct EdgeData
     {
         explicit EdgeData()
-            : turn_id(0), shortcut(false), weight(0), duration(0), forward(false), backward(false),
-              distance(0)
+            : turn_id(0), shortcut(false), weight{0}, duration(0), forward(false),
+              backward(false), distance{0}
         {
         }
 
         EdgeData(const NodeID turn_id,
                  const bool shortcut,
                  const EdgeWeight weight,
-                 const EdgeWeight duration,
+                 const EdgeDuration duration,
                  const EdgeDistance distance,
                  const bool forward,
                  const bool backward)
@@ -50,7 +50,7 @@ struct QueryEdge
         NodeID turn_id : 31;
         bool shortcut : 1;
         EdgeWeight weight;
-        EdgeWeight duration : 30;
+        EdgeDuration::value_type duration : 30;
         std::uint32_t forward : 1;
         std::uint32_t backward : 1;
         EdgeDistance distance;

@@ -217,8 +217,8 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
             const auto haversine_distance = util::coordinate_calculation::greatCircleDistance(
                 prev_coordinate, current_coordinate);
             // assumes minumum of 4 m/s
-            const EdgeWeight weight_upper_bound =
-                ((haversine_distance + max_distance_delta) / 4.) * facade.GetWeightMultiplier();
+            const EdgeWeight weight_upper_bound = to_alias<EdgeWeight>(
+                ((haversine_distance + max_distance_delta) / 4.) * facade.GetWeightMultiplier());
 
             // compute d_t for this timestamp and the next one
             for (const auto s : util::irange<std::size_t>(0UL, prev_viterbi.size()))

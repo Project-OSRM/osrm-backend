@@ -83,7 +83,7 @@ template <> class AlgorithmDataFacade<MLD>
 
     virtual EdgeWeight GetNodeWeight(const NodeID edge_based_node_id) const = 0;
 
-    virtual EdgeWeight
+    virtual EdgeDuration
     GetNodeDuration(const NodeID edge_based_node_id) const = 0; // TODO: to be removed
 
     virtual EdgeDistance GetNodeDistance(const NodeID edge_based_node_id) const = 0;

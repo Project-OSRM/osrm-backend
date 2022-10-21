@@ -61,7 +61,7 @@ class CellCustomizer
                 }
             }
             heap.Clear();
-            heap.Insert(source, 0, {false, 0, 0});
+            heap.Insert(source, {0}, {false, {0}, {0}});
 
             // explore search space
             while (!heap.Empty() && !destinations_set.empty())
@@ -216,12 +216,11 @@ class CellCustomizer
                                                     partition.GetCell(level - 1, to)))
             {
                 const EdgeWeight to_weight = weight + data.weight;
-                const EdgeDuration to_duration = duration + data.duration;
+                const EdgeDuration to_duration = duration + to_alias<EdgeDuration>(data.duration);
                 const EdgeDistance to_distance = distance + data.distance;
                 if (!heap.WasInserted(to))
                 {
-                    heap.Insert(
-                        to, to_weight, {false, duration + data.duration, distance + data.distance});
+                    heap.Insert(to, to_weight, {false, to_duration, to_distance});
                 }
                 else if (std::tie(to_weight, to_duration, to_distance) <
                          std::tie(

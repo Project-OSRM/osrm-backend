@@ -44,7 +44,7 @@ struct RankedCandidateNode
 
     bool operator<(const RankedCandidateNode &other) const
     {
-        return (2 * weight + sharing) < (2 * other.weight + other.sharing);
+        return (EdgeWeight{2} * weight + sharing) < (EdgeWeight{2} * other.weight + other.sharing);
     }
 };
 
@@ -66,8 +66,8 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
     // toHeapNode is the same
     const auto heapNode = forward_heap.DeleteMinGetHeapNode();
 
-    const auto scaled_weight =
-        static_cast<EdgeWeight>((heapNode.weight + min_edge_offset) / (1. + VIAPATH_EPSILON));
+    const auto scaled_weight = to_alias<EdgeWeight>(
+        from_alias<double>(heapNode.weight + min_edge_offset) / (1. + VIAPATH_EPSILON));
     if ((INVALID_EDGE_WEIGHT != *upper_bound_to_shortest_path_weight) &&
         (scaled_weight > *upper_bound_to_shortest_path_weight))
     {
@@ -84,7 +84,7 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
         const EdgeWeight new_weight = reverseHeapNode->weight + heapNode.weight;
         if (new_weight < *upper_bound_to_shortest_path_weight)
         {
-            if (new_weight >= 0)
+            if (new_weight >= EdgeWeight{0})
             {
                 *middle_node = heapNode.node;
                 *upper_bound_to_shortest_path_weight = new_weight;
@@ -92,7 +92,8 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
             else
             {
                 // check whether there is a loop present at the node
-                const auto loop_weight = std::get<0>(getLoopWeight<false>(facade, heapNode.node));
+                const auto loop_weight =
+                    std::get<0>(getLoopMetric<EdgeWeight>(facade, heapNode.node));
                 const EdgeWeight new_weight_with_loop = new_weight + loop_weight;
                 if (loop_weight != INVALID_EDGE_WEIGHT &&
                     new_weight_with_loop <= *upper_bound_to_shortest_path_weight)
@@ -112,7 +113,7 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
             const NodeID to = facade.GetTarget(edge);
             const EdgeWeight edge_weight = data.weight;
 
-            BOOST_ASSERT(edge_weight > 0);
+            BOOST_ASSERT(edge_weight > EdgeWeight{0});
             const EdgeWeight to_weight = heapNode.weight + edge_weight;
 
             const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
@@ -180,7 +181,7 @@ void computeWeightAndSharingOfViaPath(SearchEngineData<Algorithm> &engine_workin
 
     NodeID s_v_middle = SPECIAL_NODEID;
     EdgeWeight upper_bound_s_v_path_weight = INVALID_EDGE_WEIGHT;
-    new_reverse_heap.Insert(via_node, 0, via_node);
+    new_reverse_heap.Insert(via_node, {0}, via_node);
     // compute path <s,..,v> by reusing forward search from s
     while (!new_reverse_heap.Empty())
     {
@@ -196,7 +197,7 @@ void computeWeightAndSharingOfViaPath(SearchEngineData<Algorithm> &engine_workin
     // compute path <v,..,t> by reusing backward search from node t
     NodeID v_t_middle = SPECIAL_NODEID;
     EdgeWeight upper_bound_of_v_t_path_weight = INVALID_EDGE_WEIGHT;
-    new_forward_heap.Insert(via_node, 0, via_node);
+    new_forward_heap.Insert(via_node, {0}, via_node);
     while (!new_forward_heap.Empty())
     {
         routingStep<FORWARD_DIRECTION>(facade,
@@ -342,7 +343,7 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
     *s_v_middle = SPECIAL_NODEID;
     EdgeWeight upper_bound_s_v_path_weight = INVALID_EDGE_WEIGHT;
     // compute path <s,..,v> by reusing forward search from s
-    new_reverse_heap.Insert(candidate.node, 0, candidate.node);
+    new_reverse_heap.Insert(candidate.node, {0}, candidate.node);
     while (new_reverse_heap.Size() > 0)
     {
         routingStep<REVERSE_DIRECTION>(facade,
@@ -363,7 +364,7 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
     // compute path <v,..,t> by reusing backward search from t
     *v_t_middle = SPECIAL_NODEID;
     EdgeWeight upper_bound_of_v_t_path_weight = INVALID_EDGE_WEIGHT;
-    new_forward_heap.Insert(candidate.node, 0, candidate.node);
+    new_forward_heap.Insert(candidate.node, {0}, candidate.node);
     while (new_forward_heap.Size() > 0)
     {
         routingStep<FORWARD_DIRECTION>(facade,
@@ -400,8 +401,9 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
     {
         return false;
     }
-    const EdgeWeight T_threshold = static_cast<EdgeWeight>(VIAPATH_ALPHA * weight_of_shortest_path);
-    EdgeWeight unpacked_until_weight = 0;
+    const EdgeWeight T_threshold =
+        to_alias<EdgeWeight>(VIAPATH_ALPHA * from_alias<double>(weight_of_shortest_path));
+    EdgeWeight unpacked_until_weight = {0};
 
     std::stack<SearchSpaceEdge> unpack_stack;
     // Traverse path s-->v
@@ -463,7 +465,7 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
     }
 
     EdgeWeight t_test_path_weight = unpacked_until_weight;
-    unpacked_until_weight = 0;
+    unpacked_until_weight = {0};
     // Traverse path s-->v
     BOOST_ASSERT(!packed_v_t_path.empty());
     for (unsigned i = 0, packed_path_length = static_cast<unsigned>(packed_v_t_path.size() - 1);
@@ -532,8 +534,8 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
     EdgeWeight upper_bound = INVALID_EDGE_WEIGHT;
     NodeID middle = SPECIAL_NODEID;
 
-    forward_heap3.Insert(s_P, 0, s_P);
-    reverse_heap3.Insert(t_P, 0, t_P);
+    forward_heap3.Insert(s_P, {0}, s_P);
+    reverse_heap3.Insert(t_P, {0}, t_P);
     // exploration from s and t until deletemin/(1+epsilon) > _lengt_oO_sShortest_path
     while ((forward_heap3.Size() + reverse_heap3.Size()) > 0)
     {
@@ -580,10 +582,11 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engi
 
     insertNodesInHeaps(forward_heap1, reverse_heap1, endpoint_candidates);
     // get offset to account for offsets on phantom nodes on compressed edges
-    EdgeWeight min_edge_offset = forward_heap1.Empty() ? 0 : std::min(0, forward_heap1.MinKey());
-    BOOST_ASSERT(min_edge_offset <= 0);
+    EdgeWeight min_edge_offset =
+        forward_heap1.Empty() ? EdgeWeight{0} : std::min<EdgeWeight>({0}, forward_heap1.MinKey());
+    BOOST_ASSERT(min_edge_offset <= EdgeWeight{0});
     // we only every insert negative offsets for nodes in the forward heap
-    BOOST_ASSERT(reverse_heap1.Empty() || reverse_heap1.MinKey() >= 0);
+    BOOST_ASSERT(reverse_heap1.Empty() || reverse_heap1.MinKey() >= EdgeWeight{0});
 
     // search from s and t till new_min/(1+epsilon) > weight_of_shortest_path
     while (0 < (forward_heap1.Size() + reverse_heap1.Size()))
@@ -701,22 +704,27 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engi
         if (node == middle_node)
             continue;
         const auto fwd_iterator = approximated_forward_sharing.find(node);
-        const EdgeWeight fwd_sharing =
-            (fwd_iterator != approximated_forward_sharing.end()) ? fwd_iterator->second : 0;
+        const EdgeWeight fwd_sharing = (fwd_iterator != approximated_forward_sharing.end())
+                                           ? fwd_iterator->second
+                                           : EdgeWeight{0};
         const auto rev_iterator = approximated_reverse_sharing.find(node);
-        const EdgeWeight rev_sharing =
-            (rev_iterator != approximated_reverse_sharing.end()) ? rev_iterator->second : 0;
+        const EdgeWeight rev_sharing = (rev_iterator != approximated_reverse_sharing.end())
+                                           ? rev_iterator->second
+                                           : EdgeWeight{0};
 
         const EdgeWeight approximated_sharing = fwd_sharing + rev_sharing;
         const EdgeWeight approximated_weight =
             forward_heap1.GetKey(node) + reverse_heap1.GetKey(node);
         const bool weight_passes =
-            (approximated_weight < upper_bound_to_shortest_path_weight * (1 + VIAPATH_EPSILON));
+            (from_alias<double>(approximated_weight) <
+             from_alias<double>(upper_bound_to_shortest_path_weight) * (1 + VIAPATH_EPSILON));
         const bool sharing_passes =
-            (approximated_sharing <= upper_bound_to_shortest_path_weight * VIAPATH_GAMMA);
+            (from_alias<double>(approximated_sharing) <=
+             from_alias<double>(upper_bound_to_shortest_path_weight) * VIAPATH_GAMMA);
         const bool stretch_passes =
-            (approximated_weight - approximated_sharing) <
-            ((1. + VIAPATH_EPSILON) * (upper_bound_to_shortest_path_weight - approximated_sharing));
+            from_alias<double>(approximated_weight - approximated_sharing) <
+            ((1. + VIAPATH_EPSILON) *
+             from_alias<double>(upper_bound_to_shortest_path_weight - approximated_sharing));
 
         if (weight_passes && sharing_passes && stretch_passes)
         {
@@ -737,7 +745,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engi
     // prioritizing via nodes for deep inspection
     for (const NodeID node : preselected_node_list)
     {
-        EdgeWeight weight_of_via_path = 0, sharing_of_via_path = 0;
+        EdgeWeight weight_of_via_path = {0}, sharing_of_via_path = {0};
         computeWeightAndSharingOfViaPath(engine_working_data,
                                          facade,
                                          node,
@@ -745,10 +753,11 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engi
                                          &sharing_of_via_path,
                                          packed_shortest_path,
                                          min_edge_offset);
-        const EdgeWeight maximum_allowed_sharing =
-            static_cast<EdgeWeight>(upper_bound_to_shortest_path_weight * VIAPATH_GAMMA);
+        const EdgeWeight maximum_allowed_sharing = to_alias<EdgeWeight>(
+            from_alias<double>(upper_bound_to_shortest_path_weight) * VIAPATH_GAMMA);
         if (sharing_of_via_path <= maximum_allowed_sharing &&
-            weight_of_via_path <= upper_bound_to_shortest_path_weight * (1 + VIAPATH_EPSILON))
+            from_alias<double>(weight_of_via_path) <=
+                from_alias<double>(upper_bound_to_shortest_path_weight) * (1 + VIAPATH_EPSILON))
         {
             ranked_candidates_list.emplace_back(node, weight_of_via_path, sharing_of_via_path);
         }
