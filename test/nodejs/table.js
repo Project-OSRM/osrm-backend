@@ -80,6 +80,30 @@ test('table: returns buffer', function(assert) {
     });
 });
 
+test('table: throws on invalid snapping values', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(data_path);
+    var options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+        snapping: 'zing'
+    };
+    assert.throws(function () { osrm.table(options, function (err, response) { }); },
+        /'snapping' param must be one of \[default, any\]/);
+});
+
+test('table: snapping parameter passed through OK', function (assert) {
+    assert.plan(2);
+    var osrm = new OSRM(data_path);
+    var options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+        snapping: 'any'
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table['durations'], 'distances table result should exist');
+    });
+});
+
 var tables = ['distances', 'durations'];
 
 tables.forEach(function(annotation) {
