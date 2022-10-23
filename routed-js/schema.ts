@@ -36,10 +36,15 @@ const queryStringJsonSchemaGeneral = {
         radiuses: {
             type: 'array',
             items: {
-                type: ['number', 'string'],
-                oneOf: [
-                    { exclusiveMinimum: 0 },
-                    { enum: ['unlimited'] }
+                anyOf: [
+                    {
+                        type: 'number',
+                        exclusiveMinimum: 0
+                    },
+                    {
+                        type: 'string',
+                        enum: ['unlimited']
+                    }
                 ]
             }
         },
@@ -294,6 +299,9 @@ export function parseQueryString(queryString: string): any {
     // TODO: copy-paste
     if ('timestamps' in parsed) {
         parsed['timestamps'] = parseArray(parsed['timestamps'], ';');
+    }
+    if ('radiuses' in parsed) {
+        parsed['radiuses'] = parseArray(parsed['radiuses'], ';');
     }
     if ('approaches' in parsed) {
         parsed['approaches'] = parseArray(parsed['approaches'], ';');
