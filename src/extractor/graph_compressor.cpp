@@ -276,7 +276,6 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 const auto forward_weight2 = fwd_edge_data2.weight;
                 const auto forward_duration1 = fwd_edge_data1.duration;
                 const auto forward_duration2 = fwd_edge_data2.duration;
-                const auto forward_distance2 = fwd_edge_data2.distance;
 
                 BOOST_ASSERT(0 != forward_weight1);
                 BOOST_ASSERT(0 != forward_weight2);
@@ -285,7 +284,6 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 const auto reverse_weight2 = rev_edge_data2.weight;
                 const auto reverse_duration1 = rev_edge_data1.duration;
                 const auto reverse_duration2 = rev_edge_data2.duration;
-                const auto reverse_distance2 = rev_edge_data2.distance;
 
 #ifndef NDEBUG
                 // Because distances are symmetrical, we only need one
@@ -293,6 +291,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 // their mirrors.
                 const auto reverse_distance1 = rev_edge_data1.distance;
                 const auto forward_distance1 = fwd_edge_data1.distance;
+                const auto forward_distance2 = fwd_edge_data2.distance;
+                const auto reverse_distance2 = rev_edge_data2.distance;
                 BOOST_ASSERT(forward_distance1 == reverse_distance2);
                 BOOST_ASSERT(forward_distance2 == reverse_distance1);
 #endif
@@ -300,35 +300,30 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 BOOST_ASSERT(0 != reverse_weight1);
                 BOOST_ASSERT(0 != reverse_weight2);
 
-                auto apply_e2_to_e1 = [&graph](EdgeID edge,
-                                               EdgeWeight weight,
-                                               EdgeDuration duration,
-                                               EdgeDistance distance,
-                                               EdgeDuration &duration_penalty,
-                                               EdgeWeight &weight_penalty) {
-                    auto &edge_data = graph.GetEdgeData(edge);
-                    edge_data.weight += weight;
-                    edge_data.duration += duration;
-                    edge_data.distance += distance;
+                auto apply_e2_to_e1 = [&graph](EdgeID edge1,
+                                               EdgeID edge2,
+                                               EdgeWeight &weight_penalty,
+                                               EdgeDuration &duration_penalty) {
+                    auto &edge1_data = graph.GetEdgeData(edge1);
+                    const auto &edge2_data = graph.GetEdgeData(edge2);
+                    edge1_data.weight += edge2_data.weight;
+                    edge1_data.duration += edge2_data.duration;
+                    edge1_data.distance += edge2_data.distance;
                     if (weight_penalty != INVALID_EDGE_WEIGHT &&
                         duration_penalty != MAXIMAL_EDGE_DURATION)
                     {
-                        edge_data.weight += weight_penalty;
-                        edge_data.duration += duration_penalty;
+                        edge1_data.weight += weight_penalty;
+                        edge1_data.duration += duration_penalty;
                         // Note: no penalties for distances
                     }
                 };
 
                 apply_e2_to_e1(forward_e1,
-                               forward_weight2,
-                               forward_duration2,
-                               forward_distance2,
+                               forward_e2,
                                forward_node_weight_penalty,
                                forward_node_duration_penalty);
                 apply_e2_to_e1(reverse_e1,
-                               reverse_weight2,
-                               reverse_duration2,
-                               reverse_distance2,
+                               reverse_e2,
                                reverse_node_weight_penalty,
                                reverse_node_duration_penalty);
 

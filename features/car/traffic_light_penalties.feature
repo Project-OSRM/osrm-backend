@@ -66,15 +66,50 @@ Feature: Car - Handle traffic lights
             | k    | traffic_signals | backward                  |
 
         When I route I should get
-            | from | to | time   | #                             |
-            | 1    | 2  |  11.1s | no turn with no traffic light |
-            | 2    | 1  |  11.1s | no turn with no traffic light |
-            | 3    | 4  |  13.1s | no turn with traffic light    |
-            | 4    | 3  |  13.1s | no turn with traffic light    |
-            | 5    | 6  |  13.1s | no turn with traffic light    |
-            | 6    | 5  |  11.1s | no turn with no traffic light |
-            | 7    | 8  |  11.1s | no turn with no traffic light |
-            | 8    | 7  |  13.1s | no turn with traffic light    |
+            | from | to | time   | weight | #                             |
+            | 1    | 2  |  11.1s | 11.1   | no turn with no traffic light |
+            | 2    | 1  |  11.1s | 11.1   | no turn with no traffic light |
+            | 3    | 4  |  13.1s | 13.1   | no turn with traffic light    |
+            | 4    | 3  |  13.1s | 13.1   | no turn with traffic light    |
+            | 5    | 6  |  13.1s | 13.1   | no turn with traffic light    |
+            | 6    | 5  |  11.1s | 11.1   | no turn with no traffic light |
+            | 7    | 8  |  11.1s | 11.1   | no turn with no traffic light |
+            | 8    | 7  |  13.1s | 13.1   | no turn with traffic light    |
+
+
+    Scenario: Car - Traffic signal direction with distance weight
+        Given the profile file "car" initialized with
+        """
+        profile.properties.weight_name = 'distance'
+        profile.properties.traffic_light_penalty = 100000
+        """
+
+        Given the node map
+            """
+            a---b---c
+            1       2
+            |       |
+            |       |
+            |       |
+            |       |
+            |       |
+            d-------f
+
+            """
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | adfc  | primary |
+
+        And the nodes
+            | node | highway         |
+            | b    | traffic_signals |
+
+        When I route I should get
+            | from | to | time      | distances | weight | #                                     |
+            | 1    | 2  | 100033.2s | 599.9m,0m | 599.8  | goes via the expensive traffic signal |
+
 
 
     Scenario: Car - Encounters a traffic light
