@@ -296,27 +296,15 @@ export function parseQueryString(queryString: string): any {
         // 0 means "infinity"
         maxKeys: 0
     });
-    // TODO: copy-paste
-    if ('timestamps' in parsed) {
-        parsed['timestamps'] = parseArray(parsed['timestamps'], ';');
+    for (const key of ['timestamps', 'radiuses', 'approaches', 'waypoints', 'hints']) {
+        if (key in parsed) {
+            parsed[key] = parseArray(parsed[key], ';');
+        }
     }
-    if ('radiuses' in parsed) {
-        parsed['radiuses'] = parseArray(parsed['radiuses'], ';');
-    }
-    if ('approaches' in parsed) {
-        parsed['approaches'] = parseArray(parsed['approaches'], ';');
-    }
-    if ('waypoints' in parsed) {
-        parsed['waypoints'] = parseArray(parsed['waypoints'], ';');
-    }
-    if ('sources' in parsed && parsed['sources'] !== 'all') {
-        parsed['sources'] = parseArray(parsed['sources'], ';');
-    }
-    if ('destinations' in parsed && parsed['destinations'] !== 'all') {
-        parsed['destinations'] = parseArray(parsed['destinations'], ';');
-    }
-    if ('hints' in parsed) {
-        parsed['hints'] = parseArray(parsed['hints'], ';');
+    for (const key of ['sources', 'destinations']) {
+        if (key in parsed && parsed[key] !== 'all') {
+            parsed[key] = parseArray(parsed[key], ';');
+        }
     }
     if ('exclude' in parsed) {
         parsed['exclude'] = parseArray(parsed['exclude'], ',');

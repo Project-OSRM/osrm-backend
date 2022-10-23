@@ -19,7 +19,7 @@
   },
   "scripts": {
     "lint": "node ./node_modules/eslint/bin/eslint.js -c ./.eslintrc features/step_definitions/ features/support/",
-    "test": "./scripts/run_cucumber_tests.sh",
+    "test": "npm run lint && ./scripts/run_cucumber_tests.sh",
     "clean": "rm -rf test/cache",
     "docs": "./scripts/build_api_docs.sh",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh",
