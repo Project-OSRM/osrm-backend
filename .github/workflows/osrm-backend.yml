@@ -96,6 +96,33 @@ jobs:
         node ./scripts/validate_changelog.js
         npm run docs && ./scripts/error_on_dirty.sh
 
+  routed-js:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 14
+    - name: Enable Node.js cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+    - name: Prepare environment
+      run: |
+        npm ci --ignore-scripts
+    - name: Compile routed-js
+      run: |
+        pushd routed-js 
+        npx tsc
+        popd
+        ./scripts/error_on_dirty.sh
+
+
+
   # docker-image:
   #   needs: format-taginfo-docs
   #   runs-on: ubuntu-22.04
