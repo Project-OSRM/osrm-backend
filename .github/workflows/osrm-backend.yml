@@ -226,7 +226,7 @@ jobs:
 
           - name: conan-linux-release
             continue-on-error: false
-            node: 12
+            node: 14
             runs-on: ubuntu-20.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
