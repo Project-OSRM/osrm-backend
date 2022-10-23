@@ -4,7 +4,8 @@ Feature: Basic trip planning
     Background:
         Given the profile "testbot"
         Given a grid size of 10 meters
-
+    
+    @skip_on_routed_js
     Scenario: Testbot - Trip: Invalid options (like was in test suite for a long time)
         Given the node map
             """

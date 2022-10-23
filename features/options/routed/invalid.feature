@@ -4,6 +4,7 @@ Feature: osrm-routed command line options: invalid options
     Background:
         Given the profile "testbot"
 
+    @skip_on_routed_js
     Scenario: osrm-routed - Non-existing option
         When I try to run "osrm-routed --fly-me-to-the-moon"
         Then stdout should be empty

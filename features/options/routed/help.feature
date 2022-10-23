@@ -4,6 +4,7 @@ Feature: osrm-routed command line options: help
     Background:
         Given the profile "testbot"
 
+    @skip_on_routed_js
     Scenario: osrm-routed - Help should be shown when no options are passed
         When I run "osrm-routed"
         Then stderr should be empty
@@ -24,6 +25,7 @@ Feature: osrm-routed command line options: help
         And stdout should contain "--max-matching-size"
         And it should exit successfully
 
+    @skip_on_routed_js
     Scenario: osrm-routed - Help, short
         When I run "osrm-routed -h"
         Then stderr should be empty
@@ -44,6 +46,8 @@ Feature: osrm-routed command line options: help
         And stdout should contain "--max-matching-size"
         And it should exit successfully
 
+
+    @skip_on_routed_js
     Scenario: osrm-routed - Help, long
         When I run "osrm-routed --help"
         Then stderr should be empty

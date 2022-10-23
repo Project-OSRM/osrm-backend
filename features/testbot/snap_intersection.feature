@@ -570,7 +570,7 @@ Feature: Snapping at intersections
             | a,f,k     | ac,cf,cf,fj,kj,kj     | 132.8s | 132.8  |
             | k,f       | ik,fi,fi              | 54.3s  | 54.3   |
             | f,a       | ef,ae,ae              | 66.6s  | 66.6   |
-            | k,f,a     | kj,fj,fj,ef,ae,ae     | 141.399999999s | 141.399999999  |
+            | k,f,a     | kj,fj,fj,ef,ae,ae     | 141.399999999s +- 1e-7 | 141.399999999 +- 1e-7 |
 
         When I request a travel time matrix I should get
             |   |  a    |   f  |     k |
@@ -626,4 +626,4 @@ Feature: Snapping at intersections
             | a,f,k     | ad,df,df,fj,kj,kj    | 105.6s | 105.6  |
             | k,f       | ik,fi,fi             | 54.3s  | 54.3   |
             | f,a       | ef,ae,ae             | 66.6s  | 66.6   |
-            | k,f,a     | ik,fi,fi,ef,ae,ae    | 120.899999999s | 120.899999999  |
+            | k,f,a     | ik,fi,fi,ef,ae,ae    | 120.899999999s +- 1e-7 | 120.899999999 +- 1e-7  |

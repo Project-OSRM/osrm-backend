@@ -32,6 +32,7 @@ Feature: Ways of loading data
         Then stderr should be empty
         And it should exit successfully
 
+    @skip_on_routed_js
     Scenario: osrm-datastore - Fail if no shared memory blocks are loaded
         When I run "osrm-datastore --spring-clean" with input "Y"
         And I try to run "osrm-routed --shared-memory=1"

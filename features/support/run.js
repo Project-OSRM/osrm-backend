@@ -39,7 +39,11 @@ module.exports = function () {
 
     this.runBin = (bin, options, env, callback) => {
         let cmd = path.resolve(util.format('%s/%s%s', this.BIN_PATH, bin, this.EXE));
+        if (this.USE_ROUTED_JS && bin === 'osrm-routed') {
+            cmd = 'osrm-routed-js';
+        }
         let opts = options.split(' ').filter((x) => { return x && x.length > 0; });
+        
         let log = fs.createWriteStream(this.scenarioLogFile, {'flags': 'a'});
         log.write(util.format('*** running %s %s\n', cmd, options));
         // we need to set a large maxbuffer here because we have long running processes like osrm-routed

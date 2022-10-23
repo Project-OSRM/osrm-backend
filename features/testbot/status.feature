@@ -39,6 +39,7 @@ Feature: Status messages
             | a    | c  |       | 400    | Impossible route between points  |
             | b    | d  |       | 400    | Impossible route between points  |
 
+    @skip_on_routed_js
     Scenario: Malformed requests
         Given the node locations
             | node | lat  | lon  |
