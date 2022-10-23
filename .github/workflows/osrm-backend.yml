@@ -111,12 +111,10 @@ jobs:
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
-    - name: Prepare environment
-      run: |
-        npm ci --ignore-scripts
     - name: Compile routed-js
       run: |
         pushd routed-js 
+        npm ci
         npx tsc
         popd
         ./scripts/error_on_dirty.sh
