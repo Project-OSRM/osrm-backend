@@ -714,9 +714,9 @@ jobs:
         # All tests assume to be run from the build directory
         pushd ${OSRM_BUILD_DIR}
         for i in ./unit_tests/*-tests ; do echo Running $i ; $i ; done
-        # if [ -z "${ENABLE_SANITIZER}" ] && [ "$TARGET_ARCH" != "i686" ]; then
-        #   npm run nodejs-tests
-        # fi
+        if [ -z "${ENABLE_SANITIZER}" ] && [ "$TARGET_ARCH" != "i686" ]; then
+          npm run nodejs-tests
+        fi
         popd
         npm test
     - name: Run benchmarks
@@ -782,8 +782,8 @@ jobs:
         replacesArtifacts: true
         token: ${{ secrets.GITHUB_TOKEN }}
 
-  # ci-complete:
-  #   runs-on: ubuntu-22.04
-  #   needs: [build-test-publish, docker-image, windows]
-  #   steps:
-  #   - run: echo "CI complete"
+  ci-complete:
+    runs-on: ubuntu-22.04
+    needs: [build-test-publish, docker-image, routed-js, windows]
+    steps:
+    - run: echo "CI complete"
