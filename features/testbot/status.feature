@@ -18,7 +18,7 @@ Feature: Status messages
             | from | to | route | status | message                    |
             | a    | b  | ab,ab | 200    |                            |
             | b    | a  | ab,ab | 200    |                            |
-
+    @skip_on_routed_js
     Scenario: No route found
         Given the node map
             """

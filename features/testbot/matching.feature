@@ -563,6 +563,7 @@ Feature: Basic Map Matching
             | trace | timestamps | code     |
             | abcd  | 0 1 62 63  | NoMatch  |
 
+    @skip_on_routed_js
     Scenario: Testbot - Map matching invalid waypoints
         Given the node map
             """
@@ -580,6 +581,7 @@ Feature: Basic Map Matching
             | trace | code           |
             | abcd  | InvalidOptions |
 
+    @skip_on_routed_js
     Scenario: Matching fail with waypoints param missing start/end
         Given the node map
             """
@@ -788,7 +790,7 @@ Feature: Basic Map Matching
           | 1234  | 1.000135,1,1.000225,1,1.000404,1,1.000449,1 | 1:2:0.4    | 1:2:0.4  | 3.4      |
           | 4321  | 1.000449,1,1.000404,1,1.000225,1,1.000135,1 | 0.4:2:1    | 0.4:2:1  | 3.4      |
 
-    @match @testbot
+    @match @testbot @skip_on_routed_js
     Scenario: Regression test - add source phantom properly (two phantoms on one edge)
         Given the profile "testbot"
         Given a grid size of 10 meters
@@ -809,7 +811,7 @@ Feature: Basic Map Matching
 
         # These should have the same weights/duration in either direction
         When I match I should get
-          | trace | geometry             | a:distance    | a:duration | a:weight | duration |
-          | 2345  | 1.00018,1,1.000314,1 | 14.914666491  | 1.4        | 1.4      | 1.4      |
-          | 4321  | 1.00027,1,1.000135,1 | 15.025969972  | 1.5        | 1.5      | 1.5      |
+          | trace | geometry             | a:distance   | a:duration | a:weight | duration |
+          | 2345  | 1.00018,1,1.000314,1 | 14.914666491 | 1.4        | 1.4      | 1.4      |
+          | 4321  | 1.00027,1,1.000135,1 | 15.025969972 | 1.5        | 1.5      | 1.5      |
 

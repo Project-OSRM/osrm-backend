@@ -94,6 +94,7 @@ async function main() {
         } catch (e: any) {
             reply.code(400);
 
+            // TODO: bindings do not return `message`, but put `code` into `message`
             return {
                 code: e.message,
                 message: e.message
