@@ -699,8 +699,8 @@ jobs:
         make --jobs=${JOBS}
         popd
     - name: Install osrm-routed-js dependencies
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != '12' }}
-      run: cd routed-js && npm ci && npm link &&osrm-routed-js --version
+      if: ${{ matrix.node != 12 }}
+      run: cd routed-js && npm ci && npm link && osrm-routed-js --version
     - name: Run all tests
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
       run: |
