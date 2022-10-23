@@ -7,9 +7,7 @@ NODE_MAJOR_VERSION=$(echo $NODE_VERSION | cut -d. -f1)
 if [[ $NODE_MAJOR_VERSION != "v12" ]]; then
     export OSRM_USE_ROUTED_JS=1
     node ./node_modules/cucumber/bin/cucumber.js features/ -p verify_routed_js
-    node ./node_modules/cucumber/bin/cucumber.js features/ -p verify_routed_js -m mmap
-    node ./node_modules/cucumber/bin/cucumber.js features/ -p mld_routed_js 
-    node ./node_modules/cucumber/bin/cucumber.js features/ -p mld_routed_js -m mmap
+    node ./node_modules/cucumber/bin/cucumber.js features/ -p mld_routed_js
     unset OSRM_USE_ROUTED_JS
 fi
 
