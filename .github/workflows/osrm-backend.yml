@@ -29,7 +29,7 @@ jobs:
       ENABLE_APPLE_SILICON: "OFF"
     steps:
     - uses: actions/checkout@v3
-    - run: pip install conan==1.51.3
+    - run: pip install conan==1.53.0
     - run: conan --version
     - run: cmake --version
     - uses: actions/setup-node@v3
@@ -701,7 +701,6 @@ jobs:
     - name: Install osrm-routed-js dependencies
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != '12' }}
       run: cd routed-js && npm ci && npm link &&osrm-routed-js --version
-    - run: osrm-routed-js --version
     - name: Run all tests
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
       run: |
