@@ -1,7 +1,7 @@
 # Unreleased
   - Changes from 5.27.1
     - Build:
-      - CHANGED: Update actions/cache to v3. [#6420](https://github.com/Project-OSRM/osrm-backend/pull/6420) 
+      - CHANGED: Update actions/cache to v3. [#6420](https://github.com/Project-OSRM/osrm-backend/pull/6420)
     - Misc:
       - FIXED: Handle snapping parameter for all plugins in NodeJs bindings, but not for Route only. [#6417](https://github.com/Project-OSRM/osrm-backend/pull/6417)
       - FIXED: Fix annotations=true handling in NodeJS bindings & libosrm. [#6415](https://github.com/Project-OSRM/osrm-backend/pull/6415/)
