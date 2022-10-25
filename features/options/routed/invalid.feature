@@ -12,6 +12,7 @@ Feature: osrm-routed command line options: invalid options
         And stderr should contain "fly-me-to-the-moon"
         And it should exit with an error
 
+    @skip_on_routed_js
     Scenario: osrm-routed - Missing file
         When I try to run "osrm-routed over-the-rainbow.osrm"
         Then stderr should contain "over-the-rainbow.osrm"

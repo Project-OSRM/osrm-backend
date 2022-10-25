@@ -70,7 +70,9 @@ async function main() {
         },
         querystringParser: parseQueryString
     });
-
+    await fastify.register(
+      import('@fastify/compress')
+    );
 
 
 
