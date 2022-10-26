@@ -2,6 +2,8 @@
 import Fastify, { FastifyReply, FastifyRequest } from 'fastify';
 import { OSRMWrapper, version as OSRMVersion } from './OSRMWrapper';
 import yargs from 'yargs/yargs';
+import cluster from 'cluster';
+import os from 'os';
 import { routeSchema, nearestSchema, tableSchema, tripSchema, matchSchema, tileSchema, parseQueryString, parseCoordinatesAndFormat } from './schema';
 import { ServiceHandler } from './ServiceHandler';
 import { MatchServiceHandler } from './MatchServiceHandler';
@@ -11,12 +13,11 @@ import { TableServiceHandler } from './TableServiceHandler';
 import { TripServiceHandler } from './TripServiceHandler';
 import { Format } from './Format';
 
-
 async function main() {
     const argv = await yargs(process.argv.slice(2)).options({
         ip: { type: 'string', default: '0.0.0.0', alias: 'i' },
         port: { type: 'number', default: 5000, alias: 'p' },
-        threads: { type: 'number', alias: 't' },
+        workers: { type: 'number', alias: ['t', 'threads'], default: os.cpus().length },
         shared_memory: { type: 'boolean', alias: ['shared-memory', 's'] },
         mmap: { type: 'boolean', default: false, alias: ['m'] },
         algorithm: { choices: ['CH', 'CoreCH', 'MLD'], default: 'CH', alias: 'a' },
@@ -59,7 +60,6 @@ async function main() {
         max_alternatives: argv.max_alternatives,
         max_matching_radius: argv.max_matching_size
     });
-
 
     const fastify = Fastify({
         logger: true,
@@ -133,12 +133,34 @@ async function main() {
         return osrm.tile([zoom, x, y]);
     });
 
-
-    fastify.listen({ port: argv.port, host: argv.ip }, (err, address) => {
-        if (err) { throw err; }
-
+    const start = async () => {
+      try {
+        await fastify.listen({ port: argv.port, host: argv.ip });
         process.stdout.write('running and waiting for requests\n');
-    });
+      } catch (err) {
+        fastify.log.error(err);
+          process.exit(1); 
+      }
+    };
+
+    const clusterWorkerSize = argv.workers;
+
+    if (clusterWorkerSize > 1) {
+      if (cluster.isMaster) {
+          for (let i=0; i < clusterWorkerSize; i++) {
+              cluster.fork();
+          }
+  
+          cluster.on("exit", function(worker: any) {
+              console.log("Worker", worker.id, " has exited.")
+          })
+      } else {
+          start();
+      }
+    } else {
+        start();
+    }
+
 }
 
 main();

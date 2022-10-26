@@ -30,6 +30,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fastify_1 = __importDefault(require("fastify"));
 const OSRMWrapper_1 = require("./OSRMWrapper");
 const yargs_1 = __importDefault(require("yargs/yargs"));
+const cluster_1 = __importDefault(require("cluster"));
+const os_1 = __importDefault(require("os"));
 const schema_1 = require("./schema");
 const MatchServiceHandler_1 = require("./MatchServiceHandler");
 const NearestServiceHandler_1 = require("./NearestServiceHandler");
@@ -41,7 +43,7 @@ async function main() {
     const argv = await (0, yargs_1.default)(process.argv.slice(2)).options({
         ip: { type: 'string', default: '0.0.0.0', alias: 'i' },
         port: { type: 'number', default: 5000, alias: 'p' },
-        threads: { type: 'number', alias: 't' },
+        workers: { type: 'number', alias: ['t', 'threads'], default: os_1.default.cpus().length },
         shared_memory: { type: 'boolean', alias: ['shared-memory', 's'] },
         mmap: { type: 'boolean', default: false, alias: ['m'] },
         algorithm: { choices: ['CH', 'CoreCH', 'MLD'], default: 'CH', alias: 'a' },
@@ -137,11 +139,32 @@ async function main() {
         reply.type('application/x-protobuf').code(200);
         return osrm.tile([zoom, x, y]);
     });
-    fastify.listen({ port: argv.port, host: argv.ip }, (err, address) => {
-        if (err) {
-            throw err;
+    const start = async () => {
+        try {
+            await fastify.listen({ port: argv.port, host: argv.ip });
+            process.stdout.write('running and waiting for requests\n');
         }
-        process.stdout.write('running and waiting for requests\n');
-    });
+        catch (err) {
+            fastify.log.error(err);
+            process.exit(1);
+        }
+    };
+    const clusterWorkerSize = argv.workers;
+    if (clusterWorkerSize > 1) {
+        if (cluster_1.default.isMaster) {
+            for (let i = 0; i < clusterWorkerSize; i++) {
+                cluster_1.default.fork();
+            }
+            cluster_1.default.on("exit", function (worker) {
+                console.log("Worker", worker.id, " has exited.");
+            });
+        }
+        else {
+            start();
+        }
+    }
+    else {
+        start();
+    }
 }
 main();
