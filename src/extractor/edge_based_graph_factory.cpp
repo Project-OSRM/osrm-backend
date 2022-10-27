@@ -60,6 +60,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const CompressedEdgeContainer &compressed_edge_container,
     const std::unordered_set<NodeID> &barrier_nodes,
     const TrafficSignals &traffic_signals,
+    const StopSigns &stop_signs,
     const std::vector<util::Coordinate> &coordinates,
     const NameTable &name_table,
     const std::unordered_set<EdgeID> &segregated_edges,
@@ -67,7 +68,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     : m_edge_based_node_container(node_data_container), m_connectivity_checksum(0),
       m_number_of_edge_based_nodes(0), m_coordinates(coordinates),
       m_node_based_graph(node_based_graph), m_barrier_nodes(barrier_nodes),
-      m_traffic_signals(traffic_signals), m_compressed_edge_container(compressed_edge_container),
+      m_traffic_signals(traffic_signals), m_stop_signs(stop_signs), m_compressed_edge_container(compressed_edge_container),
       name_table(name_table), segregated_edges(segregated_edges),
       lane_description_map(lane_description_map)
 {
@@ -643,6 +644,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             // the traffic signal direction was potentially ambiguously annotated on the junction
             // node But we'll check anyway.
             const auto is_traffic_light = m_traffic_signals.HasSignal(from_node, intersection_node);
+            const auto is_stop_sign = m_stop_signs.HasSignal(from_node, intersection_node);
+            std::cerr << "IS STOP SIGN " << is_stop_sign << std::endl;
             const auto is_uturn =
                 guidance::getTurnDirection(turn_angle) == guidance::DirectionModifier::UTurn;
 
@@ -652,6 +655,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 road_legs_on_the_right.size() + road_legs_on_the_left.size() + 2 - is_uturn,
                 is_uturn,
                 is_traffic_light,
+                is_stop_sign,
                 m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data)
                     .is_left_hand_driving,
                 // source info

@@ -1,6 +1,7 @@
 #include "extractor/node_based_graph_factory.hpp"
 #include "extractor/files.hpp"
 #include "extractor/graph_compressor.hpp"
+#include "extractor/traffic_signals.hpp"
 #include "storage/io.hpp"
 
 #include "util/log.hpp"
@@ -20,6 +21,7 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
     std::vector<TurnRestriction> &turn_restrictions,
     std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
     const TrafficSignals &traffic_signals,
+    const StopSigns &stop_signs,
     std::unordered_set<NodeID> &&barriers,
     std::vector<util::Coordinate> &&coordinates,
     extractor::PackedOSMIDs &&osm_node_ids,
@@ -29,7 +31,7 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
       coordinates(std::move(coordinates)), osm_node_ids(std::move(osm_node_ids))
 {
     BuildCompressedOutputGraph(edge_list);
-    Compress(scripting_environment, turn_restrictions, maneuver_overrides, traffic_signals);
+    Compress(scripting_environment, turn_restrictions, maneuver_overrides, traffic_signals, stop_signs);
     CompressGeometry();
     CompressAnnotationData();
 }
@@ -74,11 +76,13 @@ void NodeBasedGraphFactory::BuildCompressedOutputGraph(const std::vector<NodeBas
 void NodeBasedGraphFactory::Compress(ScriptingEnvironment &scripting_environment,
                                      std::vector<TurnRestriction> &turn_restrictions,
                                      std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
-                                     const TrafficSignals &traffic_signals)
+                                     const TrafficSignals &traffic_signals,
+                                     const StopSigns &stop_signs)
 {
     GraphCompressor graph_compressor;
     graph_compressor.Compress(barriers,
                               traffic_signals,
+                              stop_signs,
                               scripting_environment,
                               turn_restrictions,
                               maneuver_overrides,

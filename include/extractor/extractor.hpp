@@ -67,6 +67,7 @@ class Extractor
         std::vector<TurnRestriction> turn_restrictions;
         std::vector<UnresolvedManeuverOverride> unresolved_maneuver_overrides;
         TrafficSignals traffic_signals;
+        StopSigns stop_signs;
         std::unordered_set<NodeID> barriers;
         std::vector<util::Coordinate> osm_coordinates;
         extractor::PackedOSMIDs osm_node_ids;
@@ -87,6 +88,7 @@ class Extractor
         const CompressedEdgeContainer &compressed_edge_container,
         const std::unordered_set<NodeID> &barrier_nodes,
         const TrafficSignals &traffic_signals,
+        const StopSigns &stop_signs,
         const RestrictionGraph &restriction_graph,
         const std::unordered_set<EdgeID> &segregated_edges,
         const NameTable &name_table,

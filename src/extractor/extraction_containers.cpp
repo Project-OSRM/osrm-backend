@@ -413,11 +413,14 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
     const auto restriction_ways = IdentifyRestrictionWays();
     const auto maneuver_override_ways = IdentifyManeuverOverrideWays();
     const auto traffic_signals = IdentifyTrafficSignals();
+    const auto stop_signs = IdentifyStopSigns();
 
     PrepareNodes();
     PrepareEdges(scripting_environment);
 
     PrepareTrafficSignals(traffic_signals);
+    PrepareStopSigns(stop_signs);
+    
     PrepareManeuverOverrides(maneuver_override_ways);
     PrepareRestrictions(restriction_ways);
     WriteCharData(name_file_name);
@@ -979,6 +982,54 @@ void ExtractionContainers::PrepareTrafficSignals(
     log << "ok, after " << TIMER_SEC(prepare_traffic_signals) << "s";
 }
 
+// TODO: copy-paste
+void ExtractionContainers::PrepareStopSigns(const ReferencedStopSigns &referenced_stop_signs) {
+    const auto &bidirectional_signal_nodes = referenced_stop_signs.first;
+    const auto &unidirectional_signal_segments = referenced_stop_signs.second;
+
+    util::UnbufferedLog log;
+    log << "Preparing traffic light signals for " << bidirectional_signal_nodes.size()
+        << " bidirectional, " << unidirectional_signal_segments.size()
+        << " unidirectional nodes ...";
+    TIMER_START(prepare_traffic_signals);
+
+    std::unordered_set<NodeID> bidirectional;
+    std::unordered_set<std::pair<NodeID, NodeID>, boost::hash<std::pair<NodeID, NodeID>>>
+        unidirectional;
+
+    for (const auto &osm_node : bidirectional_signal_nodes)
+    {
+        const auto node_id = mapExternalToInternalNodeID(
+            used_node_id_list.begin(), used_node_id_list.end(), osm_node);
+        if (node_id != SPECIAL_NODEID)
+        {
+            bidirectional.insert(node_id);
+        }
+    }
+    for (const auto &to_from : unidirectional_signal_segments)
+    {
+        const auto to_node_id = mapExternalToInternalNodeID(
+            used_node_id_list.begin(), used_node_id_list.end(), to_from.first);
+        const auto from_node_id = mapExternalToInternalNodeID(
+            used_node_id_list.begin(), used_node_id_list.end(), to_from.second);
+        if (from_node_id != SPECIAL_NODEID && to_node_id != SPECIAL_NODEID)
+        {
+            unidirectional.insert({from_node_id, to_node_id});
+        }
+    }
+
+    internal_stop_signs.bidirectional_nodes = std::move(bidirectional);
+    internal_stop_signs.unidirectional_segments = std::move(unidirectional);
+
+    TIMER_STOP(prepare_traffic_signals);
+    log << "ok, after " << TIMER_SEC(prepare_traffic_signals) << "s";
+}
+
+// void ExtractionContainers::PrepareGiveWays(const ReferencedGiveWays &referenced_give_ways) {
+
+// }
+    
+
 void ExtractionContainers::PrepareManeuverOverrides(const ReferencedWays &maneuver_override_ways)
 {
     auto const osm_node_to_internal_nbn = [&](auto const osm_node) {
@@ -1158,6 +1209,95 @@ ExtractionContainers::ReferencedWays ExtractionContainers::IdentifyRestrictionWa
 
     return restriction_ways;
 }
+
+// TODO: copy-paste
+ExtractionContainers::ReferencedStopSigns ExtractionContainers::IdentifyStopSigns()
+{
+    util::UnbufferedLog log;
+    log << "Collecting traffic signal information on " << external_stop_signs.size()
+        << " signals...";
+    TIMER_START(identify_traffic_signals);
+
+    // Temporary store for nodes containing a unidirectional signal.
+    std::unordered_map<OSMNodeID, StopSign::Direction> unidirectional_signals;
+
+    // For each node that has a unidirectional traffic signal, we store the node(s)
+    // that lead up to the signal.
+    std::unordered_multimap<OSMNodeID, OSMNodeID> signal_segments;
+
+    std::unordered_set<OSMNodeID> bidirectional_signals;
+
+    const auto mark_signals = [&](auto const &traffic_signal) {
+        if (traffic_signal.second == StopSign::DIRECTION_FORWARD ||
+            traffic_signal.second == StopSign::DIRECTION_REVERSE)
+        {
+            unidirectional_signals.insert({traffic_signal.first, traffic_signal.second});
+        }
+        else
+        {
+            BOOST_ASSERT(traffic_signal.second == StopSign::DIRECTION_ALL);
+            bidirectional_signals.insert(traffic_signal.first);
+        }
+    };
+    std::for_each(external_stop_signs.begin(), external_stop_signs.end(), mark_signals);
+
+    // Extract all the segments that lead up to unidirectional traffic signals.
+    const auto set_segments = [&](const size_t way_list_idx, auto const & /*unused*/) {
+        const auto node_start_offset =
+            used_node_id_list.begin() + way_node_id_offsets[way_list_idx];
+        const auto node_end_offset =
+            used_node_id_list.begin() + way_node_id_offsets[way_list_idx + 1];
+
+        for (auto node_it = node_start_offset; node_it < node_end_offset; node_it++)
+        {
+            const auto sig = unidirectional_signals.find(*node_it);
+            if (sig != unidirectional_signals.end())
+            {
+                if (sig->second == StopSign::DIRECTION_FORWARD)
+                {
+                    if (node_it != node_start_offset)
+                    {
+                        // Previous node leads to signal
+                        signal_segments.insert({*node_it, *(node_it - 1)});
+                    }
+                }
+                else
+                {
+                    BOOST_ASSERT(sig->second == StopSign::DIRECTION_REVERSE);
+                    if (node_it + 1 != node_end_offset)
+                    {
+                        // Next node leads to signal
+                        signal_segments.insert({*node_it, *(node_it + 1)});
+                    }
+                }
+            }
+        }
+    };
+    util::for_each_indexed(ways_list.cbegin(), ways_list.cend(), set_segments);
+
+    util::for_each_pair(
+        signal_segments, [](const auto pair_a, const auto pair_b) {
+            if (pair_a.first == pair_b.first)
+            {
+                // If a node is appearing multiple times in this map, then it's ambiguous.
+                // The node is an intersection and the traffic direction is being use for multiple
+                // ways. We can't be certain of the original intent. See:
+                // https://wiki.openstreetmap.org/wiki/Key:traffic_signals:direction
+
+                // OSRM will include the signal for all intersecting ways in the specified
+                // direction, but let's flag this as a concern.
+                util::Log(logWARNING)
+                    << "OSM node " << pair_a.first
+                    << " has a unidirectional traffic signal ambiguously applied to multiple ways";
+            }
+        });
+
+    TIMER_STOP(identify_traffic_signals);
+    log << "ok, after " << TIMER_SEC(identify_traffic_signals) << "s";
+
+    return {std::move(bidirectional_signals), std::move(signal_segments)};
+}
+
 
 ExtractionContainers::ReferencedTrafficSignals ExtractionContainers::IdentifyTrafficSignals()
 {

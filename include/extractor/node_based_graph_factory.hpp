@@ -42,6 +42,8 @@ class NodeBasedGraphFactory
                           std::vector<TurnRestriction> &turn_restrictions,
                           std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
                           const TrafficSignals &traffic_signals,
+                          const StopSigns &stop_signs,
+                          
                           std::unordered_set<NodeID> &&barriers,
                           std::vector<util::Coordinate> &&coordinates,
                           extractor::PackedOSMIDs &&osm_node_ids,
@@ -73,7 +75,8 @@ class NodeBasedGraphFactory
     void Compress(ScriptingEnvironment &scripting_environment,
                   std::vector<TurnRestriction> &turn_restrictions,
                   std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
-                  const TrafficSignals &traffic_signals);
+                  const TrafficSignals &traffic_signals,
+                  const StopSigns &stop_signs);
 
     // Most ways are bidirectional, making the geometry in forward and backward direction the same,
     // except for reversal. We make use of this fact by keeping only one representation of the

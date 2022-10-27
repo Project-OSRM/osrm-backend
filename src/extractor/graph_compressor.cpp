@@ -23,6 +23,7 @@ static constexpr int SECOND_TO_DECISECOND = 10;
 
 void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                const TrafficSignals &traffic_signals,
+                               const StopSigns &stop_signs,
                                ScriptingEnvironment &scripting_environment,
                                std::vector<TurnRestriction> &turn_restrictions,
                                std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
@@ -212,11 +213,15 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 const bool has_forward_signal = traffic_signals.HasSignal(node_u, node_v);
                 const bool has_reverse_signal = traffic_signals.HasSignal(node_w, node_v);
 
+                const bool has_forward_stop_sign = stop_signs.HasSignal(node_u, node_v);
+                const bool has_reverse_stop_sign = stop_signs.HasSignal(node_w, node_v);
+                
+                // TODO: can we have a case when we have both traffic signal and stop sign? how should we handle it?
                 EdgeDuration forward_node_duration_penalty = MAXIMAL_EDGE_DURATION;
                 EdgeWeight forward_node_weight_penalty = INVALID_EDGE_WEIGHT;
                 EdgeDuration reverse_node_duration_penalty = MAXIMAL_EDGE_DURATION;
                 EdgeWeight reverse_node_weight_penalty = INVALID_EDGE_WEIGHT;
-                if (has_forward_signal || has_reverse_signal)
+                if (has_forward_signal || has_reverse_signal || has_forward_stop_sign || has_reverse_stop_sign)
                 {
                     // we cannot handle this as node penalty, if it depends on turn direction
                     if (fwd_edge_data1.flags.restricted != fwd_edge_data2.flags.restricted)
@@ -228,7 +233,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                     ExtractionTurn extraction_turn(0,
                                                    2,
                                                    false,
-                                                   true,
+                                                   has_forward_signal || has_reverse_signal,
+                                                   has_forward_stop_sign || has_reverse_stop_sign,
                                                    false,
                                                    false,
                                                    TRAVEL_MODE_DRIVING,
@@ -258,8 +264,11 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                                               EdgeWeight &weight_penalty) {
                             if (signal)
                             {
+                                std::cerr << "DUR = " << extraction_turn.duration <<  " WEIGHT = " << extraction_turn.weight << std::endl;
                                 duration_penalty = extraction_turn.duration * SECOND_TO_DECISECOND;
                                 weight_penalty = extraction_turn.weight * weight_multiplier;
+
+                                std::cerr << "DUR = " << duration_penalty <<  " WEIGHT = " << weight_penalty << std::endl;
                             }
                         };
 
@@ -267,6 +276,12 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                              forward_node_duration_penalty,
                                              forward_node_weight_penalty);
                     update_direction_penalty(has_reverse_signal,
+                                             reverse_node_duration_penalty,
+                                             reverse_node_weight_penalty);
+                    update_direction_penalty(has_forward_stop_sign,
+                                             forward_node_duration_penalty,
+                                             forward_node_weight_penalty);
+                    update_direction_penalty(has_reverse_stop_sign,
                                              reverse_node_duration_penalty,
                                              reverse_node_weight_penalty);
                 }

@@ -7,6 +7,8 @@ Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 Relations = require("lib/relations")
 TrafficSignal = require("lib/traffic_signal")
+StopSign = require("lib/stop_sign")
+GiveWay = require("lib/give_way")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
 Utils = require("lib/utils")
@@ -362,6 +364,12 @@ function process_node(profile, node, result, relations)
 
   -- check if node is a traffic light
   result.traffic_lights = TrafficSignal.get_value(node)
+
+  -- check if node is stop sign
+  result.stop_sign = StopSign.get_value(node)
+
+  -- check if node is a give way sign
+  result.give_way = GiveWay.get_value(node)
 end
 
 function process_way(profile, way, result, relations)
@@ -472,6 +480,9 @@ function process_turn(profile, turn)
 
   if turn.has_traffic_light then
       turn.duration = profile.properties.traffic_light_penalty
+  elseif turn.has_stop_sign then
+    -- TODO: use another constant
+    turn.duration = profile.properties.traffic_light_penalty
   end
 
   if turn.number_of_roads > 2 or turn.source_mode ~= turn.target_mode or turn.is_u_turn then

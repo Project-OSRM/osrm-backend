@@ -294,6 +294,24 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                            extractor::TrafficLightClass::DIRECTION_FORWARD,
                            "direction_reverse",
                            extractor::TrafficLightClass::DIRECTION_REVERSE);
+    context.state.new_enum("stop_sign",
+                           "none",
+                           extractor::StopSign::NONE,
+                           "direction_all",
+                           extractor::StopSign::DIRECTION_ALL,
+                           "direction_forward",
+                           extractor::StopSign::DIRECTION_FORWARD,
+                           "direction_reverse",
+                           extractor::StopSign::DIRECTION_REVERSE);
+    context.state.new_enum("give_way",
+                           "none",
+                           extractor::GiveWay::NONE,
+                           "direction_all",
+                           extractor::GiveWay::DIRECTION_ALL,
+                           "direction_forward",
+                           extractor::GiveWay::DIRECTION_FORWARD,
+                           "direction_reverse",
+                           extractor::GiveWay::DIRECTION_REVERSE);
 
     context.state.new_usertype<ExtractionNode>(
         "ResultNode",
@@ -317,6 +335,18 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                   obj.as<TrafficLightClass::Direction>();
                               node.traffic_lights = val;
                           }
+                      }),
+        "stop_sign",
+        sol::property([](const ExtractionNode &node) { return node.stop_sign; },
+                      [](ExtractionNode &node, const sol::object &obj) {
+                          BOOST_ASSERT(obj.is<StopSign::Direction>());
+                          node.stop_sign = obj.as<StopSign::Direction>();
+                      }),
+        "give_way",
+        sol::property([](const ExtractionNode &node) { return node.give_way; },
+                      [](ExtractionNode &node, const sol::object &obj) {
+                          BOOST_ASSERT(obj.is<GiveWay::Direction>());
+                          node.give_way = obj.as<GiveWay::Direction>();
                       }),
         "barrier",
         &ExtractionNode::barrier);
@@ -640,6 +670,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             }),
             "has_traffic_light",
             &ExtractionTurn::has_traffic_light,
+            "has_stop_sign",
+            &ExtractionTurn::has_stop_sign,
             "weight",
             &ExtractionTurn::weight,
             "duration",
@@ -765,7 +797,6 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             &ExtractionTurn::has_traffic_light,
             "is_left_hand_driving",
             &ExtractionTurn::is_left_hand_driving,
-
             "source_restricted",
             &ExtractionTurn::source_restricted,
             "source_mode",
@@ -1125,15 +1156,23 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
     case 2:
         if (context.has_turn_penalty_function)
         {
+            std::cerr << "GOT TURN " << turn.has_stop_sign << " " << turn.has_traffic_light << std::endl;
+
             context.turn_function(context.profile_table, std::ref(turn));
 
             // Turn weight falls back to the duration value in deciseconds
             // or uses the extracted unit-less weight value
-            if (context.properties.fallback_to_duration)
+            if (context.properties.fallback_to_duration) {
+                std::cerr << "FALLBACK\n";
                 turn.weight = turn.duration;
-            else
-                // cap turn weight to max turn weight, which depend on weight precision
+            }
+                
+            else {
+ // cap turn weight to max turn weight, which depend on weight precision
                 turn.weight = std::min(turn.weight, context.properties.GetMaxTurnWeight());
+                std::cerr << "NO FALLBACK " << turn.weight << std::endl;
+            }
+               
         }
 
         break;
@@ -1171,7 +1210,7 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
         }
 
         // Add traffic light penalty, back-compatibility of api_version=0
-        if (turn.has_traffic_light)
+        if (turn.has_traffic_light || turn.has_stop_sign)
             turn.duration += context.properties.GetTrafficSignalPenalty();
 
         // Turn weight falls back to the duration value in deciseconds
