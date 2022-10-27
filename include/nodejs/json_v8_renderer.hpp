@@ -3,7 +3,10 @@
 
 #include "osrm/json_container.hpp"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <nan.h>
+#pragma GCC diagnostic pop
 
 #include <functional>
 
@@ -28,7 +31,7 @@ struct V8Renderer
         {
             v8::Local<v8::Value> child;
             mapbox::util::apply_visitor(V8Renderer(child), keyValue.second);
-            obj->Set(Nan::New(keyValue.first).ToLocalChecked(), child);
+            Nan::Set(obj, Nan::New(keyValue.first).ToLocalChecked(), child);
         }
         out = obj;
     }
@@ -40,7 +43,7 @@ struct V8Renderer
         {
             v8::Local<v8::Value> child;
             mapbox::util::apply_visitor(V8Renderer(child), array.values[i]);
-            a->Set(i, child);
+            Nan::Set(a, i, child);
         }
         out = a;
     }
@@ -57,9 +60,9 @@ struct V8Renderer
 
 inline void renderToV8(v8::Local<v8::Value> &out, const osrm::json::Object &object)
 {
-    osrm::json::Value value = object;
-    mapbox::util::apply_visitor(V8Renderer(out), value);
+    V8Renderer renderer(out);
+    renderer(object);
 }
-}
+} // namespace node_osrm
 
 #endif // JSON_V8_RENDERER_HPP

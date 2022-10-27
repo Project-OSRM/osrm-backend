@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2016, Project OSRM contributors
+Copyright (c) 2017, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -39,8 +39,8 @@ namespace util
 namespace json
 {
 struct Object;
-} // ns json
-} // ns util
+} // namespace json
+} // namespace util
 
 namespace engine
 {
@@ -52,11 +52,11 @@ struct NearestParameters;
 struct TripParameters;
 struct MatchParameters;
 struct TileParameters;
-} // ns api
+} // namespace api
 
 class EngineInterface;
 struct EngineConfig;
-} // ns engine
-} // ns osrm
+} // namespace engine
+} // namespace osrm
 
 #endif

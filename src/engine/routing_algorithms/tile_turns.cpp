@@ -101,9 +101,6 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
     //         w
     //  uv is the "approach"
     //  vw is the "exit"
-    std::vector<EdgeWeight> approach_weight_vector;
-    std::vector<EdgeWeight> approach_duration_vector;
-
     // Look at every node in the directed graph we created
     for (const auto &startnode : sorted_startnodes)
     {
@@ -148,41 +145,8 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
                     const auto &data = facade.GetEdgeData(edge_based_edge_id);
 
                     // Now, calculate the sum of the weight of all the segments.
-                    if (edge_based_node_info.find(approachedge.edge_based_node_id)
-                            ->second.is_geometry_forward)
-                    {
-                        approach_weight_vector = facade.GetUncompressedForwardWeights(
-                            edge_based_node_info.find(approachedge.edge_based_node_id)
-                                ->second.packed_geometry_id);
-                        approach_duration_vector = facade.GetUncompressedForwardDurations(
-                            edge_based_node_info.find(approachedge.edge_based_node_id)
-                                ->second.packed_geometry_id);
-                    }
-                    else
-                    {
-                        approach_weight_vector = facade.GetUncompressedReverseWeights(
-                            edge_based_node_info.find(approachedge.edge_based_node_id)
-                                ->second.packed_geometry_id);
-                        approach_duration_vector = facade.GetUncompressedReverseDurations(
-                            edge_based_node_info.find(approachedge.edge_based_node_id)
-                                ->second.packed_geometry_id);
-                    }
-                    const auto sum_node_weight = std::accumulate(approach_weight_vector.begin(),
-                                                                 approach_weight_vector.end(),
-                                                                 EdgeWeight{0});
-                    const auto sum_node_duration = std::accumulate(approach_duration_vector.begin(),
-                                                                   approach_duration_vector.end(),
-                                                                   EdgeWeight{0});
-
-                    // The edge.weight is the whole edge weight, which includes the turn
-                    // cost.
-                    // The turn cost is the edge.weight minus the sum of the individual road
-                    // segment weights.  This might not be 100% accurate, because some
-                    // intersections include stop signs, traffic signals and other
-                    // penalties, but at this stage, we can't divide those out, so we just
-                    // treat the whole lot as the "turn cost" that we'll stick on the map.
-                    const auto turn_weight = data.weight - sum_node_weight;
-                    const auto turn_duration = data.duration - sum_node_duration;
+                    const auto turn_weight = facade.GetWeightPenaltyForEdgeID(data.turn_id);
+                    const auto turn_duration = facade.GetDurationPenaltyForEdgeID(data.turn_id);
                     const auto turn_instruction = facade.GetTurnInstructionForEdgeID(data.turn_id);
 
                     // Find the three nodes that make up the turn movement)

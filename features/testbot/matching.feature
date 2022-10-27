@@ -21,8 +21,27 @@ Feature: Basic Map Matching
             | abcd  | no     |
 
         When I match I should get
-            | trace | timestamps | matchings |
-            | ab1d  | 0 1 2 3    | ad        |
+            | trace | timestamps | matchings | data_version |
+            | ab1d  | 0 1 2 3    | ad        |              |
+
+    Scenario: Data_version test on matching
+        Given a grid size of 100 meters
+        Given the node map
+            """
+            a b c d
+
+                1
+            """
+
+        And the extract extra arguments "--data_version cucumber_data_version"
+
+        And the ways
+            | nodes | oneway |
+            | abcd  | no     |
+
+        When I match I should get
+            | trace | timestamps | matchings | data_version          |
+            | ab1d  | 0 1 2 3    | ad        | cucumber_data_version |
 
     Scenario: Testbot - Map matching with trace splitting
         Given the node map
@@ -279,8 +298,8 @@ Feature: Basic Map Matching
             | fb    | yes    |
 
         When I match I should get
-            | trace | matchings | geometry                                      |
-            | efbc  | efbc      | 1,0.99964,1.00036,0.99964,1.00036,1,1.000719,1 |
+            | trace | matchings | geometry                                           |
+            | efbc  | efbc      | 1,0.999638,1.000359,0.999638,1.000359,1,1.000719,1 |
 
     Scenario: Testbot - Geometry details using geojson
         Given the query options
@@ -356,7 +375,7 @@ Feature: Basic Map Matching
 
         When I match I should get
             | trace  | matchings | alternatives         |
-            | abcdef | abcde     | 0,0,0,0,1,1          |
+            | abcdef | abcde     | 0,0,0,1,1,1          |
 
     Scenario: Testbot - Speed greater than speed threshold
         Given a grid size of 100 meters
@@ -480,3 +499,317 @@ Feature: Basic Map Matching
             | trace | a:nodes     |
             | 12    | 1:2:3:4:5:6 |
             | 21    | 6:5:4:3:2:1 |
+
+
+    Scenario: Matching with waypoints param for start/end
+        Given the node map
+            """
+            a-----b---c
+                  |
+                  |
+                  d
+                  |
+                  |
+                  e
+            """
+        And the ways
+            | nodes | oneway |
+            | abc   | no     |
+            | bde   | no     |
+
+        Given the query options
+            | waypoints | 0;3   |
+
+        When I match I should get
+            | trace | code    | matchings | waypoints |
+            | abde  | Ok      | abde      | ae        |
+
+    Scenario: Matching with waypoints param that were tidied away
+        Given the node map
+            """
+            a - b - c - e
+                    |
+                    f
+                    |
+                    g
+            """
+        And the ways
+            | nodes | oneway |
+            | abce  | no     |
+            | cfg   | no     |
+
+        Given the query options
+            | tidy      | true    |
+            | waypoints | 0;2;5   |
+
+        When I match I should get
+            | trace  | code    | matchings | waypoints |
+            | abccfg | Ok      | abcfg     | acg       |
+
+    Scenario: Testbot - Map matching refuses to use waypoints with trace splitting
+        Given the node map
+            """
+            a b c d
+                e
+            """
+        Given the query options
+            | waypoints | 0;3   |
+
+        And the ways
+            | nodes | oneway |
+            | abcd  | no     |
+
+        When I match I should get
+            | trace | timestamps | code     |
+            | abcd  | 0 1 62 63  | NoMatch  |
+
+    Scenario: Testbot - Map matching invalid waypoints
+        Given the node map
+            """
+            a b c d
+                e
+            """
+        Given the query options
+            | waypoints | 0;4   |
+
+        And the ways
+            | nodes | oneway |
+            | abcd  | no     |
+
+        When I match I should get
+            | trace | code           |
+            | abcd  | InvalidOptions |
+
+    Scenario: Matching fail with waypoints param missing start/end
+        Given the node map
+            """
+            a-----b---c
+                  |
+                  |
+                  d
+                  |
+                  |
+                  e
+            """
+        And the ways
+            | nodes | oneway |
+            | abc   | no     |
+            | bde   | no     |
+
+        Given the query options
+            | waypoints | 1;3   |
+
+        When I match I should get
+            | trace | code         |
+            | abde  | InvalidValue |
+
+    Scenario: Testbot - Map matching with outlier that has no candidate and waypoint parameter
+        Given a grid size of 100 meters
+        Given the node map
+            """
+            a b c d
+
+                1
+            """
+
+        And the ways
+            | nodes | oneway |
+            | abcd  | no     |
+
+        Given the query options
+            | waypoints | 0;2;3   |
+
+        When I match I should get
+            | trace | timestamps | code    |
+            | ab1d  | 0 1 2 3    | NoMatch |
+
+    Scenario: Regression test - avoid collapsing legs of a tidied split trace
+        Given a grid size of 20 meters
+        Given the node map
+            """
+            a--b--f
+               |
+               |
+               e--c---d--g
+            """
+        Given the query options
+        | tidy | true |
+
+        And the ways
+            | nodes | oneway |
+            | abf   | no     |
+            | be    | no     |
+            | ecdg  | no     |
+
+        When I match I should get
+        | trace    | timestamps                                   | matchings  | code |
+        | abbecd   | 10 11 27 1516914902 1516914913 1516914952    | ab,ecd     | Ok   |
+
+    Scenario: Regression test - waypoints trimming too much geometry
+        # fixes bug in map matching collapsing that was dropping path geometries
+        # after segments that had 0 distance in internal route results
+        Given the node map
+            """
+            ad
+            |
+            |
+            |
+            |
+            |e   g
+            b--------------c
+            f              h
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+
+        Given the query options
+            | waypoints | 0;4   |
+            | overview  | full  |
+
+        When I match I should get
+            | trace    | geometry                           | code |
+            | defgh    | 1,1,1,0.999457,1.000674,0.999457   | Ok   |
+
+    @match @testbot
+    Scenario: Regression test - waypoints trimming too much geometry
+        Given the profile "testbot"
+        Given a grid size of 10 meters
+        Given the query options
+          | geometries | geojson |
+        Given the node map
+          """
+            bh
+             |
+             |
+             |
+             c
+             g\
+               \k
+                \
+                 \
+                  \
+                 j f
+          """
+        And the ways
+          | nodes |
+          | hc    |
+          | cf    |
+        Given the query options
+          | waypoints | 0;3  |
+          | overview  | full |
+        When I match I should get
+          | trace | geometry                                       | code |
+          | bgkj  | 1.000135,1,1.000135,0.999638,1.000386,0.999132 | Ok   |
+
+
+    @match @testbot
+    # Regression test for issue #4919
+    Scenario: Regression test - non-uturn maneuver preferred over uturn
+        Given the profile "testbot"
+        Given a grid size of 10 meters
+        Given the query options
+          | geometries | geojson |
+        Given the node map
+          """
+                e
+                ;
+                ;
+          a----hb-----c
+                ;
+                ;
+                d
+          """
+        And the ways
+          | nodes |
+          | abc   |
+          | dbe   |
+        Given the query options
+          | waypoints | 0;2  |
+          | overview  | full |
+          | steps     | true |
+        When I match I should get
+          | trace | geometry                                       | turns                    | code |
+          | abc   | 1,0.999729,1.000269,0.999729,1.000539,0.999729 | depart,arrive            | Ok   |
+          | abd   | 1,0.999729,1.000269,0.999729,1.000269,0.999457 | depart,turn right,arrive | Ok   |
+          | abe   | 1,0.999729,1.000269,0.999729,1.000269,1        | depart,turn left,arrive  | Ok   |
+          | ahd   | 1,0.999729,1.000269,0.999729,1.000269,0.999457 | depart,turn right,arrive | Ok   |
+          | ahe   | 1,0.999729,1.000269,0.999729,1.000269,1        | depart,turn left,arrive  | Ok   |
+
+    @match @testbot
+    Scenario: Regression test - add source phantoms properly (one phantom on one edge)
+        Given the profile "testbot"
+        Given a grid size of 10 meters
+        Given the node map
+          """
+          a--1-b2-cd3--e
+          """
+        And the ways
+          | nodes |
+          | ab    |
+          | bcd   |
+          | de    |
+        Given the query options
+          | geometries     | geojson         |
+          | overview       | full            |
+          | steps          | true            |
+          | waypoints      | 0;2             |
+          | annotations    | duration,weight |
+          | generate_hints | false           |
+        When I match I should get
+          | trace | geometry                                               | a:duration    | a:weight      | duration |
+          | 123   | 1.000135,1,1.000225,1,1.000359,1,1.000404,1,1.000449,1 | 1:1.5:0.5:0.4 | 1:1.5:0.5:0.4 | 3.4      |
+          | 321   | 1.000449,1,1.000404,1,1.000359,1,1.000225,1,1.000135,1 | 0.4:0.5:1.5:1 | 0.4:0.5:1.5:1 | 3.4      |
+
+    @match @testbot
+    Scenario: Regression test - add source phantom properly (two phantoms on one edge)
+        Given the profile "testbot"
+        Given a grid size of 10 meters
+        Given the node map
+          """
+          a--1-b23-c4--d
+          """
+        And the ways
+          | nodes |
+          | ab    |
+          | bc    |
+          | cd    |
+        Given the query options
+          | geometries     | geojson         |
+          | overview       | full            |
+          | steps          | true            |
+          | waypoints      | 0;3             |
+          | annotations    | duration,weight |
+          | generate_hints | false           |
+        When I match I should get
+          | trace | geometry                                    | a:duration | a:weight | duration |
+          | 1234  | 1.000135,1,1.000225,1,1.000404,1,1.000449,1 | 1:2:0.4    | 1:2:0.4  | 3.4      |
+          | 4321  | 1.000449,1,1.000404,1,1.000225,1,1.000135,1 | 0.4:2:1    | 0.4:2:1  | 3.4      |
+
+    @match @testbot
+    Scenario: Regression test - add source phantom properly (two phantoms on one edge)
+        Given the profile "testbot"
+        Given a grid size of 10 meters
+        Given the node map
+          """
+          a--12345-b
+          """
+        And the ways
+          | nodes |
+          | ab    |
+        Given the query options
+          | geometries     | geojson                  |
+          | overview       | full                     |
+          | steps          | true                     |
+          | waypoints      | 0;3                      |
+          | annotations    | duration,weight,distance |
+          | generate_hints | false                    |
+
+        # These should have the same weights/duration in either direction
+        When I match I should get
+          | trace | geometry             | a:distance    | a:duration | a:weight | duration |
+          | 2345  | 1.00018,1,1.000314,1 | 14.914666491  | 1.4        | 1.4      | 1.4      |
+          | 4321  | 1.00027,1,1.000135,1 | 15.025969972  | 1.5        | 1.5      | 1.5      |
+

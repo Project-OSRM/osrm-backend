@@ -33,7 +33,7 @@ inline bool isValidClassName(const std::string &name)
                return std::isalnum(c);
            }) == name.end();
 }
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif

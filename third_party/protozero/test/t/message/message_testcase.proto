@@ -1,0 +1,18 @@
+syntax = "proto2";
+
+option optimize_for = LITE_RUNTIME;
+
+package TestMessage;
+
+message Sub {
+    required string s = 1;
+}
+
+message Test {
+    required Sub submessage = 1;
+}
+
+message Opt {
+    optional string s = 1;
+}
+

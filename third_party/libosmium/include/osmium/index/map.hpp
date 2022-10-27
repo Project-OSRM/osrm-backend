@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,9 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/util/compatibility.hpp>
+#include <osmium/util/string.hpp>
+
 #include <algorithm>
 #include <cstddef>
 #include <functional>
@@ -43,11 +46,9 @@ DEALINGS IN THE SOFTWARE.
 #include <type_traits>
 #include <vector>
 
-#include <osmium/util/string.hpp>
-
 namespace osmium {
 
-    struct map_factory_error : public std::runtime_error {
+    struct OSMIUM_EXPORT map_factory_error : public std::runtime_error {
 
         explicit map_factory_error(const char* message) :
             std::runtime_error(message) {
@@ -98,13 +99,10 @@ namespace osmium {
                 static_assert(std::is_integral<TId>::value && std::is_unsigned<TId>::value,
                               "TId template parameter for class Map must be unsigned integral type");
 
-                Map(const Map&) = delete;
-                Map& operator=(const Map&) = delete;
-
             protected:
 
-                Map(Map&&) = default;
-                Map& operator=(Map&&) = default;
+                Map(Map&&) noexcept = default;
+                Map& operator=(Map&&) noexcept = default;
 
             public:
 
@@ -114,11 +112,14 @@ namespace osmium {
                 /// The "value" type, usually a Location or size_t.
                 using value_type = TValue;
 
-                Map() = default;
+                Map() noexcept = default;
+
+                Map(const Map&) = delete;
+                Map& operator=(const Map&) = delete;
 
                 virtual ~Map() noexcept = default;
 
-                virtual void reserve(const size_t) {
+                virtual void reserve(const std::size_t /*size*/) {
                     // default implementation is empty
                 }
 
@@ -151,7 +152,7 @@ namespace osmium {
                  * accurate. You can not use this to find out how much memory the
                  * storage uses. Use used_memory() for that.
                  */
-                virtual size_t size() const = 0;
+                virtual std::size_t size() const = 0;
 
                 /**
                  * Get the memory used for this storage in bytes. Note that this
@@ -160,7 +161,7 @@ namespace osmium {
                  * the main memory used, for storage classes storing data on disk
                  * this is the memory used on disk.
                  */
-                virtual size_t used_memory() const = 0;
+                virtual std::size_t used_memory() const = 0;
 
                 /**
                  * Clear memory used for this storage. After this you can not
@@ -210,13 +211,15 @@ namespace osmium {
 
             MapFactory() = default;
 
+        public:
+
             MapFactory(const MapFactory&) = delete;
             MapFactory& operator=(const MapFactory&) = delete;
 
             MapFactory(MapFactory&&) = delete;
             MapFactory& operator=(MapFactory&&) = delete;
 
-        public:
+            ~MapFactory() noexcept = default;
 
             static MapFactory<id_type, value_type>& instance() {
                 static MapFactory<id_type, value_type> factory;
@@ -262,16 +265,16 @@ namespace osmium {
 
         namespace map {
 
-            template <typename TId, typename TValue, template<typename, typename> class TMap>
+            template <typename TId, typename TValue, template <typename, typename> class TMap>
             struct create_map {
-                TMap<TId, TValue>* operator()(const std::vector<std::string>&) {
+                TMap<TId, TValue>* operator()(const std::vector<std::string>& /*config_string*/) {
                     return new TMap<TId, TValue>();
                 }
             };
 
         } // namespace map
 
-        template <typename TId, typename TValue, template<typename, typename> class TMap>
+        template <typename TId, typename TValue, template <typename, typename> class TMap>
         inline bool register_map(const std::string& name) {
             return osmium::index::MapFactory<TId, TValue>::instance().register_map(name, [](const std::vector<std::string>& config) {
                 return map::create_map<TId, TValue, TMap>()(config);
@@ -283,10 +286,11 @@ namespace osmium {
 
 #define REGISTER_MAP(id, value, klass, name) \
 namespace osmium { namespace index { namespace detail { \
-    const bool OSMIUM_CONCATENATE_(registered_, name) = osmium::index::register_map<id, value, klass>(#name); \
-    inline bool OSMIUM_CONCATENATE_(get_registered_, name)() noexcept { \
-        return OSMIUM_CONCATENATE_(registered_, name); \
-    } \
+    namespace OSMIUM_CONCATENATE_(register_map_, __COUNTER__) { \
+    const bool registered = osmium::index::register_map<id, value, klass>(#name); \
+    inline bool get_registered() noexcept { \
+        return registered; \
+    } } \
 } } }
 
     } // namespace index

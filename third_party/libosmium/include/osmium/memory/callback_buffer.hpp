@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,11 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/memory/buffer.hpp>
+
 #include <cstddef>
 #include <functional>
 #include <utility>
-
-#include <osmium/memory/buffer.hpp>
 
 namespace osmium {
 
@@ -76,8 +76,13 @@ namespace osmium {
 
         private:
 
-            static constexpr const std::size_t default_initial_buffer_size = 1024 * 1024;
-            static constexpr const std::size_t default_max_buffer_size     =  800 * 1024;
+            enum {
+                default_initial_buffer_size = 1024UL * 1024UL
+            };
+
+            enum {
+                default_max_buffer_size = 800UL * 1024UL
+            };
 
             osmium::memory::Buffer m_buffer;
             std::size_t m_initial_buffer_size;
@@ -112,11 +117,11 @@ namespace osmium {
              * @param max_buffer_size If the buffer grows beyond this size the
              *                        callback will be called.
              */
-            explicit CallbackBuffer(const callback_func_type& callback, std::size_t initial_buffer_size = default_initial_buffer_size, std::size_t max_buffer_size = default_max_buffer_size) :
+            explicit CallbackBuffer(callback_func_type callback, std::size_t initial_buffer_size = default_initial_buffer_size, std::size_t max_buffer_size = default_max_buffer_size) :
                 m_buffer(initial_buffer_size, osmium::memory::Buffer::auto_grow::yes),
                 m_initial_buffer_size(initial_buffer_size),
                 m_max_buffer_size(max_buffer_size),
-                m_callback(callback) {
+                m_callback(std::move(callback)) {
             }
 
             /**
@@ -174,10 +179,10 @@ namespace osmium {
              * callback.
              */
             osmium::memory::Buffer read() {
-                osmium::memory::Buffer buffer{m_initial_buffer_size, osmium::memory::Buffer::auto_grow::yes};
+                osmium::memory::Buffer new_buffer{m_initial_buffer_size, osmium::memory::Buffer::auto_grow::yes};
                 using std::swap;
-                swap(buffer, m_buffer);
-                return buffer;
+                swap(new_buffer, m_buffer);
+                return new_buffer;
             }
 
         }; // class CallbackBuffer

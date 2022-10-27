@@ -1,43 +1,20 @@
 #include "contractor/graph_contractor.hpp"
 
 #include "../common/range_tools.hpp"
+#include "helper.hpp"
 
-#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
-
-#include <tbb/task_scheduler_init.h>
+#include <tbb/global_control.h>
 
 using namespace osrm;
 using namespace osrm::contractor;
+using namespace osrm::unit_test;
 
 BOOST_AUTO_TEST_SUITE(graph_contractor)
 
-using TestEdge = std::tuple<unsigned, unsigned, int>;
-ContractorGraph makeGraph(const std::vector<TestEdge> &edges)
-{
-    std::vector<ContractorEdge> input_edges;
-    auto id = 0u;
-    auto max_id = 0u;
-    for (const auto &edge : edges)
-    {
-        unsigned start;
-        unsigned target;
-        int weight;
-        std::tie(start, target, weight) = edge;
-        max_id = std::max(std::max(start, target), max_id);
-        input_edges.push_back(ContractorEdge{
-            start, target, ContractorEdgeData{weight, weight * 2, id++, 0, false, true, false}});
-        input_edges.push_back(ContractorEdge{
-            target, start, ContractorEdgeData{weight, weight * 2, id++, 0, false, false, true}});
-    }
-    std::sort(input_edges.begin(), input_edges.end());
-
-    return ContractorGraph{max_id + 1, std::move(input_edges)};
-}
-
 BOOST_AUTO_TEST_CASE(contract_graph)
 {
-    tbb::task_scheduler_init scheduler(1);
+    tbb::global_control scheduler(tbb::global_control::max_allowed_parallelism, 1);
     /*
      *                 <--1--<
      * (0) >--3--> (1) >--3--> (3)
@@ -110,7 +87,7 @@ BOOST_AUTO_TEST_CASE(contract_graph)
     reference_graph.DeleteEdgesTo(1, 3);
     reference_graph.DeleteEdgesTo(4, 3);
     // Insert shortcut
-    reference_graph.InsertEdge(4, 1, {2, 4, 3, 0, true, true, false});
+    reference_graph.InsertEdge(4, 1, {2, 4, 1.0, 3, 0, true, true, false});
 
     /* After contracting 4:
      *

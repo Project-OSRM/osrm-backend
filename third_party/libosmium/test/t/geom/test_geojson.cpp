@@ -1,22 +1,22 @@
 #include "catch.hpp"
 
-#include <osmium/geom/geojson.hpp>
-
 #include "area_helper.hpp"
 #include "wnl_helper.hpp"
 
+#include <osmium/geom/geojson.hpp>
+
+#include <iterator>
+#include <string>
+
 TEST_CASE("GeoJSON point geometry") {
     osmium::geom::GeoJSONFactory<> factory;
+    const std::string json{factory.create_point(osmium::Location{3.2, 4.2})};
+    REQUIRE(std::string{"{\"type\":\"Point\",\"coordinates\":[3.2,4.2]}"} == json);
+}
 
-    SECTION("point") {
-        const std::string json{factory.create_point(osmium::Location{3.2, 4.2})};
-        REQUIRE(std::string{"{\"type\":\"Point\",\"coordinates\":[3.2,4.2]}"} == json);
-    }
-
-    SECTION("empty_point") {
-        REQUIRE_THROWS_AS(factory.create_point(osmium::Location{}), const osmium::invalid_location&);
-    }
-
+TEST_CASE("GeoJSON empty point geometry") {
+    osmium::geom::GeoJSONFactory<> factory;
+    REQUIRE_THROWS_AS(factory.create_point(osmium::Location{}), osmium::invalid_location);
 }
 
 TEST_CASE("GeoJSON linestring geometry") {
@@ -50,17 +50,17 @@ TEST_CASE("GeoJSON linestring geometry") {
     SECTION("empty_linestring") {
         const auto& wnl = create_test_wnl_empty(buffer);
 
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl), const osmium::geometry_error&);
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), const osmium::geometry_error&);
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all), const osmium::geometry_error&);
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward), const osmium::geometry_error&);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::geometry_error);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), osmium::geometry_error);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all), osmium::geometry_error);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward), osmium::geometry_error);
     }
 
     SECTION("linestring with two same locations") {
         const auto& wnl = create_test_wnl_same_location(buffer);
 
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl), const osmium::geometry_error&);
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), const osmium::geometry_error&);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::geometry_error);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), osmium::geometry_error);
 
         {
             const std::string json{factory.create_linestring(wnl, osmium::geom::use_nodes::all)};
@@ -75,9 +75,35 @@ TEST_CASE("GeoJSON linestring geometry") {
 
     SECTION("linestring with undefined location") {
         const auto& wnl = create_test_wnl_undefined_location(buffer);
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl), const osmium::invalid_location&);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::invalid_location);
     }
 
+}
+
+TEST_CASE("GeoJSON polygon geometry") {
+    osmium::geom::GeoJSONFactory<> factory;
+    osmium::memory::Buffer buffer{1000};
+    const auto& wnl = create_test_wnl_closed(buffer);
+
+    SECTION("unique forwards (default)") {
+      const std::string wkt{factory.create_polygon(wnl)};
+      REQUIRE(wkt == "{\"type\":\"Polygon\",\"coordinates\":[[[3,3],[4.1,4.1],[3.6,4.1],[3.1,3.5],[3,3]]]}");
+    }
+
+    SECTION("unique backwards") {
+      const std::string wkt{factory.create_polygon(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward)};
+      REQUIRE(wkt == "{\"type\":\"Polygon\",\"coordinates\":[[[3,3],[3.1,3.5],[3.6,4.1],[4.1,4.1],[3,3]]]}");
+    }
+
+    SECTION("all forwards") {
+      const std::string wkt{factory.create_polygon(wnl,  osmium::geom::use_nodes::all)};
+      REQUIRE(wkt == "{\"type\":\"Polygon\",\"coordinates\":[[[3,3],[4.1,4.1],[4.1,4.1],[3.6,4.1],[3.1,3.5],[3,3]]]}");
+    }
+
+    SECTION("all backwards") {
+      const std::string wkt{factory.create_polygon(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward)};
+      REQUIRE(wkt == "{\"type\":\"Polygon\",\"coordinates\":[[[3,3],[3.1,3.5],[3.6,4.1],[4.1,4.1],[4.1,4.1],[3,3]]]}");
+    }
 }
 
 TEST_CASE("GeoJSON area geometry") {

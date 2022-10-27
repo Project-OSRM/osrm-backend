@@ -1,12 +1,15 @@
 {
-  "name": "osrm",
-  "version": "5.12.0-roundaboutexits.1",
+  "name": "@project-osrm/osrm",
+  "version": "5.28.0-unreleased",
   "private": false,
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++14 designed to run on OpenStreetMap data.",
   "dependencies": {
-    "nan": "^2.6.2",
-    "node-cmake": "^2.3.2",
-    "node-pre-gyp": "^0.6.36"
+    "@mapbox/node-pre-gyp": "^1.0.9",
+    "cheap-ruler": "^3.0.2",
+    "mkdirp": "^0.5.6",
+    "nan": "^2.17.0",
+    "node-cmake": "^2.5.1",
+    "rimraf": "^2.7.1"
   },
   "browserify": {
     "transform": [
@@ -16,7 +19,7 @@
   },
   "scripts": {
     "lint": "node ./node_modules/eslint/bin/eslint.js -c ./.eslintrc features/step_definitions/ features/support/",
-    "test": "npm run lint && node ./node_modules/cucumber/bin/cucumber.js features/ -p verify && node ./node_modules/cucumber/bin/cucumber.js features/ -p mld",
+    "test": "npm run lint && node ./node_modules/cucumber/bin/cucumber.js features/ -p verify && node ./node_modules/cucumber/bin/cucumber.js features/ -p verify -m mmap && node ./node_modules/cucumber/bin/cucumber.js features/ -p mld && node ./node_modules/cucumber/bin/cucumber.js features/ -p mld -m mmap",
     "clean": "rm -rf test/cache",
     "docs": "./scripts/build_api_docs.sh",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh",
@@ -36,34 +39,50 @@
     "node": ">=4.0.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.18.10",
+    "@babel/core": "^7.18.13",
+    "@babel/preset-env": "^7.18.10",
+    "@babel/preset-react": "^7.18.6",
+    "acorn": "^8.8.0",
+    "ansi-escape-sequences": "^5.1.2",
     "aws-sdk": "~2.0.31",
     "babel-plugin-transform-class-properties": "^6.24.1",
+    "babelify": "^10.0.0",
+    "browserify": "^17.0.0",
     "chalk": "^1.1.3",
+    "command-line-args": "^5.2.1",
+    "command-line-usage": "^5.0.4",
+    "csv-stringify": "^3.0.0",
     "cucumber": "^1.2.1",
     "d3-queue": "^2.0.3",
-    "docbox": "^1.0.6",
-    "documentation": "^4.0.0-rc.1",
-    "eslint": "^2.4.0",
+    "docbox": "^1.0.11",
+    "documentation": "^4.0.0",
+    "eslint": "^5.16.0",
     "faucet": "^0.0.1",
-    "mkdirp": "^0.5.1",
+    "jsonpath": "^1.1.1",
     "node-timeout": "0.0.4",
     "polyline": "^0.2.0",
-    "request": "^2.69.0",
-    "rimraf": "^2.5.4",
-    "tape": "^4.7.0",
+    "request": "^2.88.2",
+    "tape": "^4.16.0",
+    "turf": "^3.0.14",
+    "uglify-js": "^3.17.0",
     "xmlbuilder": "^4.2.1"
   },
   "bundleDependencies": [
+    "mkdirp",
     "nan",
     "node-cmake",
-    "node-pre-gyp"
+    "rimraf"
   ],
   "main": "lib/index.js",
   "binary": {
     "module_name": "node_osrm",
     "module_path": "./lib/binding/",
-    "host": "https://mapbox-node-binary.s3.amazonaws.com",
-    "remote_path": "./{name}/v{version}/{configuration}/",
-    "package_name": "{node_abi}-{platform}-{arch}.tar.gz"
+    "host": "https://github.com",
+    "remote_path": "./Project-OSRM/osrm-backend/releases/download/v{version}/",
+    "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}-{configuration}.tar.gz"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

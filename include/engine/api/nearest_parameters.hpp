@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2016, Project OSRM contributors
+Copyright (c) 2017, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -52,8 +52,8 @@ struct NearestParameters : public BaseParameters
 
     bool IsValid() const { return BaseParameters::IsValid() && number_of_results >= 1; }
 };
-}
-}
-}
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif // ENGINE_API_NEAREST_PARAMETERS_HPP

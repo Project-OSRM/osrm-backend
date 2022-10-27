@@ -33,7 +33,8 @@
 #      geos       - include if you want to use any of the GEOS functions
 #      gdal       - include if you want to use any of the OGR functions
 #      proj       - include if you want to use any of the Proj.4 functions
-#      sparsehash - include if you use the sparsehash index
+#      sparsehash - include if you use the sparsehash index (deprecated!)
+#      lz4        - include support for LZ4 compression of PBF files
 #
 #    You can check for success with something like this:
 #
@@ -54,8 +55,7 @@
 #
 #----------------------------------------------------------------------
 
-# This is the list of directories where we look for osmium and protozero
-# includes.
+# This is the list of directories where we look for osmium includes.
 set(_osmium_include_path
         ../libosmium
         ~/Library/Frameworks
@@ -72,6 +72,9 @@ find_path(OSMIUM_INCLUDE_DIR osmium/version.hpp
 
 # Check libosmium version number
 if(Osmium_FIND_VERSION)
+    if(NOT EXISTS "${OSMIUM_INCLUDE_DIR}/osmium/version.hpp")
+        message(FATAL_ERROR "Missing ${OSMIUM_INCLUDE_DIR}/osmium/version.hpp. Either your libosmium version is too old, or libosmium wasn't found in the place you said.")
+    endif()
     file(STRINGS "${OSMIUM_INCLUDE_DIR}/osmium/version.hpp" _libosmium_version_define REGEX "#define LIBOSMIUM_VERSION_STRING")
     if("${_libosmium_version_define}" MATCHES "#define LIBOSMIUM_VERSION_STRING \"([0-9.]+)\"")
         set(_libosmium_version "${CMAKE_MATCH_1}")
@@ -112,31 +115,23 @@ endif()
 if(Osmium_USE_PBF)
     find_package(ZLIB)
     find_package(Threads)
+    find_package(Protozero 1.6.3)
 
-    message(STATUS "Looking for protozero")
-    find_path(PROTOZERO_INCLUDE_DIR protozero/version.hpp
-        PATH_SUFFIXES include
-        PATHS ${_osmium_include_path}
-              ${OSMIUM_INCLUDE_DIR}
-    )
-    if(PROTOZERO_INCLUDE_DIR)
-        message(STATUS "Looking for protozero - found")
-    else()
-        message(STATUS "Looking for protozero - not found")
+    if(Osmium_USE_LZ4)
+        find_package(LZ4 REQUIRED)
+        add_definitions(-DOSMIUM_WITH_LZ4)
     endif()
 
     list(APPEND OSMIUM_EXTRA_FIND_VARS ZLIB_FOUND Threads_FOUND PROTOZERO_INCLUDE_DIR)
-    if(ZLIB_FOUND AND Threads_FOUND AND PROTOZERO_INCLUDE_DIR)
+    if(ZLIB_FOUND AND Threads_FOUND AND PROTOZERO_FOUND)
         list(APPEND OSMIUM_PBF_LIBRARIES
             ${ZLIB_LIBRARIES}
+            ${LZ4_LIBRARIES}
             ${CMAKE_THREAD_LIBS_INIT}
         )
-        if(WIN32)
-            # This is needed for the ntohl() function
-            list(APPEND OSMIUM_PBF_LIBRARIES ws2_32)
-        endif()
         list(APPEND OSMIUM_INCLUDE_DIRS
             ${ZLIB_INCLUDE_DIR}
+            ${LZ4_INCLUDE_DIRS}
             ${PROTOZERO_INCLUDE_DIR}
         )
     else()
@@ -229,6 +224,7 @@ endif()
 #----------------------------------------------------------------------
 # Component 'sparsehash'
 if(Osmium_USE_SPARSEHASH)
+    message(WARNING "Osmium: Use of Google SparseHash is deprecated. Please switch to a different index type.")
     find_path(SPARSEHASH_INCLUDE_DIR google/sparsetable)
 
     list(APPEND OSMIUM_EXTRA_FIND_VARS SPARSEHASH_INCLUDE_DIR)
@@ -340,7 +336,7 @@ if(MSVC)
     add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS)
 endif()
 
-if(APPLE)
+if(APPLE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 # following only available from cmake 2.8.12:
 #   add_compile_options(-stdlib=libc++)
 # so using this instead:
@@ -361,10 +357,10 @@ endif()
 set(OSMIUM_DRACONIC_CLANG_OPTIONS "-Wdocumentation -Wunused-exception-parameter -Wmissing-declarations -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unused-macros -Wno-exit-time-destructors -Wno-global-constructors -Wno-padded -Wno-switch-enum -Wno-missing-prototypes -Wno-weak-vtables -Wno-cast-align -Wno-float-equal")
 
 if(Osmium_DEBUG)
-    message(STATUS "OSMIUM_XML_LIBRARIES=" ${OSMIUM_XML_LIBRARIES})
-    message(STATUS "OSMIUM_PBF_LIBRARIES=" ${OSMIUM_PBF_LIBRARIES})
-    message(STATUS "OSMIUM_IO_LIBRARIES=" ${OSMIUM_IO_LIBRARIES})
-    message(STATUS "OSMIUM_LIBRARIES=" ${OSMIUM_LIBRARIES})
-    message(STATUS "OSMIUM_INCLUDE_DIRS=" ${OSMIUM_INCLUDE_DIRS})
+    message(STATUS "OSMIUM_XML_LIBRARIES=${OSMIUM_XML_LIBRARIES}")
+    message(STATUS "OSMIUM_PBF_LIBRARIES=${OSMIUM_PBF_LIBRARIES}")
+    message(STATUS "OSMIUM_IO_LIBRARIES=${OSMIUM_IO_LIBRARIES}")
+    message(STATUS "OSMIUM_LIBRARIES=${OSMIUM_LIBRARIES}")
+    message(STATUS "OSMIUM_INCLUDE_DIRS=${OSMIUM_INCLUDE_DIRS}")
 endif()
 

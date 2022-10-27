@@ -7,7 +7,7 @@
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 
-#include "extractor/guidance/turn_lane_types.hpp"
+#include "extractor/turn_lane_types.hpp"
 #include "util/guidance/turn_lanes.hpp"
 
 #include <cstddef>
@@ -41,7 +41,7 @@ struct IntermediateIntersection
 
     // turn lane information
     util::guidance::LaneTuple lanes;
-    extractor::guidance::TurnLaneDescription lane_description;
+    extractor::TurnLaneDescription lane_description;
     std::vector<std::string> classes;
 };
 
@@ -59,7 +59,9 @@ inline IntermediateIntersection getInvalidIntersection()
 
 struct RouteStep
 {
+    NodeID from_id;
     unsigned name_id;
+    bool is_segregated;
     std::string name;
     std::string ref;
     std::string pronunciation;
@@ -76,6 +78,7 @@ struct RouteStep
     std::size_t geometry_begin;
     std::size_t geometry_end;
     std::vector<IntermediateIntersection> intersections;
+    bool is_left_hand_driving;
 
     // remove all information from the route step, marking it as invalid (used to indicate empty
     // steps to be removed).
@@ -123,12 +126,13 @@ inline void RouteStep::Invalidate()
     duration = 0;
     distance = 0;
     weight = 0;
-    mode = TRAVEL_MODE_INACCESSIBLE;
+    mode = extractor::TRAVEL_MODE_INACCESSIBLE;
     maneuver = getInvalidStepManeuver();
     geometry_begin = 0;
     geometry_end = 0;
     intersections.clear();
     intersections.push_back(getInvalidIntersection());
+    is_left_hand_driving = false;
 }
 
 // Elongate by another step in front

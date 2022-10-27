@@ -1,14 +1,15 @@
 #include "catch.hpp"
 
-#include <map>
-#include <vector>
-
 #include <osmium/builder/attr.hpp>
-#include <osmium/builder/builder_helper.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm/tag.hpp>
 
-using namespace osmium::builder::attr;
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
+
+using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
 TEST_CASE("create tag list") {
     osmium::memory::Buffer buffer{10240};
@@ -153,7 +154,7 @@ TEST_CASE("create tag list") {
     }
 
     SECTION("with add_tag_list from map") {
-        std::map<const char*, const char*> m{
+        std::map<std::string, std::string> m{
             { "highway", "primary" },
             { "name", "Main Street" }
         };

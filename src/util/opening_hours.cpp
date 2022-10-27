@@ -125,7 +125,7 @@ namespace
 {
 namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
-}
+} // namespace
 
 template <typename Iterator, typename Skipper = qi::blank_type>
 struct opening_hours_grammar : qi::grammar<Iterator, Skipper, std::vector<OpeningHours>()>
@@ -137,12 +137,12 @@ struct opening_hours_grammar : qi::grammar<Iterator, Skipper, std::vector<Openin
         using qi::_a;
         using qi::_b;
         using qi::_c;
-        using qi::_r1;
         using qi::_pass;
+        using qi::_r1;
         using qi::_val;
+        using qi::char_;
         using qi::eoi;
         using qi::lit;
-        using qi::char_;
         using qi::uint_;
         using oh = osrm::util::OpeningHours;
 
@@ -303,7 +303,7 @@ struct opening_hours_grammar : qi::grammar<Iterator, Skipper, std::vector<Openin
 
         daynum
             = uint2_p[_pass = bind([](unsigned x) { return 01 <= x && x <= 31; }, _1), _val = _1]
-            >> (&~lit(':') | eoi)
+            >> !qi::no_skip[lit(':') >> uint2_p] // distinguish "daynum:.." from "hour:minute"
             ;
 
         weeknum = uint2_p[_pass = bind([](unsigned x) { return 01 <= x && x <= 53; }, _1), _val = _1];
@@ -398,7 +398,7 @@ struct opening_hours_grammar : qi::grammar<Iterator, Skipper, std::vector<Openin
     qi::uint_parser<unsigned, 10, 2, 2> uint2_p;
     qi::uint_parser<unsigned, 10, 4, 4> uint4_p;
 };
-}
+} // namespace detail
 
 std::vector<OpeningHours> ParseOpeningHours(const std::string &str)
 {
@@ -431,5 +431,5 @@ bool CheckOpeningHours(const std::vector<OpeningHours> &input, const struct tm &
     return is_open;
 }
 
-} // util
-} // osrm
+} // namespace util
+} // namespace osrm

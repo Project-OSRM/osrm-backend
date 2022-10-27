@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,18 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstdint>
-#include <string>
-
-// needed for htonl and ntohl
-#ifndef _WIN32
-# include <netinet/in.h>
-#else
-# include <winsock2.h>
-#endif
-
 #include <osmium/io/error.hpp>
 #include <osmium/osm/location.hpp>
+
+#include <cstdint>
+#include <string>
 
 namespace osmium {
 
@@ -72,13 +65,32 @@ namespace osmium {
             const int max_blob_header_size = 64 * 1024; // 64 kB
 
             // the maximum size of an uncompressed blob in bytes
-            const uint64_t max_uncompressed_blob_size = 32 * 1024 * 1024; // 32 MB
+            const uint64_t max_uncompressed_blob_size = 32UL * 1024UL * 1024UL; // 32 MB
 
             // resolution for longitude/latitude used for conversion
             // between representation as double and as int
-            const int64_t lonlat_resolution = 1000 * 1000 * 1000;
+            const int64_t lonlat_resolution = 1000L * 1000L * 1000L;
 
             const int64_t resolution_convert = lonlat_resolution / osmium::detail::coordinate_precision;
+
+            enum class pbf_compression : uint8_t {
+                none = 0,
+                zlib = 1,
+                lz4 = 2
+            };
+
+            inline pbf_compression get_compression_type(const std::string& val) {
+                if (val.empty() || val == "zlib" || val == "true") {
+                    return pbf_compression::zlib;
+                }
+                if (val == "none" || val == "false") {
+                    return pbf_compression::none;
+                }
+                if (val == "lz4") {
+                    return pbf_compression::lz4;
+                }
+                throw std::invalid_argument{"Unknown value for 'pbf_compression' option."};
+            }
 
         } // namespace detail
 

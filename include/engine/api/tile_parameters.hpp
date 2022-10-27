@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2016, Project OSRM contributors
+Copyright (c) 2017, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -70,8 +70,8 @@ struct TileParameters final
         return valid_x && valid_y && valid_z;
     }
 };
-}
-}
-}
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif

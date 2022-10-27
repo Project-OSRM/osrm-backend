@@ -1,8 +1,3 @@
-# mason #
-#########
-/.mason
-/mason_packages
-
 # pre compiled dependencies #
 #############################
 osrm-deps
@@ -49,7 +44,7 @@ Thumbs.db
 /_build*
 /build/
 /example/build/
-/test/data/monaco*
+/test/data/monaco.osrm*
 /test/data/ch
 /test/data/corech
 /test/data/mld
@@ -66,12 +61,12 @@ Thumbs.db
 ######################################
 /.vs*
 /*.local.bat
+/CMakeSettings.json
+/.cache
 
-# stxxl related files #
-#######################
-.stxxl
-stxxl.log
-stxxl.errlog
+# Jetbrains related files #
+###########################
+.idea/
 
 # Compiled Binary Files #
 ####################################

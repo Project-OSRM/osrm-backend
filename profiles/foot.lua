@@ -24,18 +24,10 @@ function setup()
     default_speed           = walking_speed,
     oneway_handling         = 'specific',     -- respect 'oneway:foot' but not 'oneway'
 
-    barrier_whitelist = Set {
-      'cycle_barrier',
-      'bollard',
-      'entrance',
-      'cattle_grid',
-      'border_control',
-      'toll_booth',
-      'sally_port',
-      'gate',
-      'no',
-      'kerb',
-      'block'
+    barrier_blacklist = Set {
+      'yes',
+      'wall',
+      'fence'
     },
 
     access_tag_whitelist = Set {
@@ -63,6 +55,9 @@ function setup()
       'foot',
       'access'
     },
+
+    -- tags disallow access to in combination with highway=service
+    service_access_tag_blacklist = Set { },
 
     restrictions = Sequence {
       'foot'
@@ -153,7 +148,7 @@ function process_node(profile, node, result)
       local bollard = node:get_value_by_key("bollard")
       local rising_bollard = bollard and "rising" == bollard
 
-      if not profile.barrier_whitelist[barrier] and not rising_bollard then
+      if profile.barrier_blacklist[barrier] and not rising_bollard then
         result.barrier = true
       end
     end
@@ -162,6 +157,7 @@ function process_node(profile, node, result)
   -- check if node is a traffic light
   local tag = node:get_value_by_key("highway")
   if "traffic_signals" == tag then
+    -- Direction should only apply to vehicles
     result.traffic_lights = true
   end
 end
@@ -243,7 +239,7 @@ function process_way(profile, way, result)
     WayHandlers.weights
   }
 
-  WayHandlers.run(profile,way,result,data,handlers)
+  WayHandlers.run(profile, way, result, data, handlers)
 end
 
 function process_turn (profile, turn)

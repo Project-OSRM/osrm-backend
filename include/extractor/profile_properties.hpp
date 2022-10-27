@@ -10,6 +10,7 @@
 #include <boost/optional.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 
 namespace osrm
@@ -28,7 +29,8 @@ struct ProfileProperties
         : traffic_signal_penalty(0), u_turn_penalty(0),
           max_speed_for_map_matching(DEFAULT_MAX_SPEED), continue_straight_at_waypoint(true),
           use_turn_restrictions(false), left_hand_driving(false), fallback_to_duration(true),
-          weight_name{"duration"}, call_tagless_node_function(true)
+          weight_name{"duration"}, class_names{{}}, excludable_classes{{}},
+          call_tagless_node_function(true)
     {
         std::fill(excludable_classes.begin(), excludable_classes.end(), INAVLID_CLASS_DATA);
         BOOST_ASSERT(weight_name[MAX_WEIGHT_NAME_LENGTH] == '\0');
@@ -124,7 +126,7 @@ struct ProfileProperties
     bool continue_straight_at_waypoint;
     //! flag used for restriction parser (e.g. used for the walk profile)
     bool use_turn_restrictions;
-    bool left_hand_driving;
+    bool left_hand_driving; // DEPRECATED: property value is local to edges from API version 2
     bool fallback_to_duration;
     //! stores the name of the weight (e.g. 'duration', 'distance', 'safety')
     char weight_name[MAX_WEIGHT_NAME_LENGTH + 1];
@@ -136,7 +138,7 @@ struct ProfileProperties
     bool force_split_edges = false;
     bool call_tagless_node_function = true;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif

@@ -21,7 +21,8 @@ struct CustomizationConfig final : storage::IOConfig
                     ".osrm.partition",
                     ".osrm.cells",
                     ".osrm.ebg_nodes",
-                    ".osrm.properties"},
+                    ".osrm.properties",
+                    ".osrm.enw"},
                    {},
                    {".osrm.cell_metrics", ".osrm.mldgr"}),
           requested_num_threads(0)
@@ -38,7 +39,7 @@ struct CustomizationConfig final : storage::IOConfig
 
     updater::UpdaterConfig updater_config;
 };
-}
-}
+} // namespace customizer
+} // namespace osrm
 
 #endif // OSRM_CUSTOMIZE_CUSTOMIZER_CONFIG_HPP

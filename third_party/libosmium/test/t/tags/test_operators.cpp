@@ -1,10 +1,10 @@
 #include "catch.hpp"
 
-#include <iterator>
-
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm/tag.hpp>
+
+#include <iterator>
 
 TEST_CASE("Equality comparison of tags") {
     osmium::memory::Buffer buffer1{10240};
@@ -23,8 +23,8 @@ TEST_CASE("Equality comparison of tags") {
     }
     buffer2.commit();
 
-    const osmium::TagList& tl1 = buffer1.get<const osmium::TagList>(0);
-    const osmium::TagList& tl2 = buffer2.get<const osmium::TagList>(0);
+    const auto& tl1 = buffer1.get<const osmium::TagList>(0);
+    const auto& tl2 = buffer2.get<const osmium::TagList>(0);
 
     auto tagit1 = tl1.begin();
     auto tagit2 = tl2.begin();
@@ -44,7 +44,7 @@ TEST_CASE("Ordering of tags") {
     }
     buffer.commit();
 
-    const osmium::TagList& tl = buffer.get<const osmium::TagList>(0);
+    const auto& tl = buffer.get<const osmium::TagList>(0);
     const osmium::Tag& t1 = *(tl.begin());
     const osmium::Tag& t2 = *(std::next(tl.begin(), 1));
     const osmium::Tag& t3 = *(std::next(tl.begin(), 2));

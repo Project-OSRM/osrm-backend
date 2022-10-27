@@ -16,7 +16,6 @@
 
 */
 
-#include <cstdlib>  // for std::exit
 #include <iostream> // for std::cerr
 
 // Allow any format of input files (XML, PBF, ...)
@@ -29,28 +28,34 @@
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " OSMFILE\n";
-        std::exit(1);
+        return 1;
     }
 
-    // The Reader is initialized here with an osmium::io::File, but could
-    // also be directly initialized with a file name.
-    osmium::io::File input_file{argv[1]};
-    osmium::io::Reader reader{input_file};
+    try {
+        // The Reader is initialized here with an osmium::io::File, but could
+        // also be directly initialized with a file name.
+        osmium::io::File input_file{argv[1]};
+        osmium::io::Reader reader{input_file};
 
-    // Initialize progress bar, enable it only if STDERR is a TTY.
-    osmium::ProgressBar progress{reader.file_size(), osmium::util::isatty(2)};
+        // Initialize progress bar, enable it only if STDERR is a TTY.
+        osmium::ProgressBar progress{reader.file_size(), osmium::isatty(2)};
 
-    // OSM data comes in buffers, read until there are no more.
-    while (osmium::memory::Buffer buffer = reader.read()) {
-        // Update progress bar for each buffer.
-        progress.update(reader.offset());
+        // OSM data comes in buffers, read until there are no more.
+        while (osmium::memory::Buffer buffer = reader.read()) {
+            // Update progress bar for each buffer.
+            progress.update(reader.offset());
+        }
+
+        // Progress bar is done.
+        progress.done();
+
+        // You do not have to close the Reader explicitly, but because the
+        // destructor can't throw, you will not see any errors otherwise.
+        reader.close();
+    } catch (const std::exception& e) {
+        // All exceptions used by the Osmium library derive from std::exception.
+        std::cerr << e.what() << '\n';
+        return 1;
     }
-
-    // Progress bar is done.
-    progress.done();
-
-    // You do not have to close the Reader explicitly, but because the
-    // destructor can't throw, you will not see any errors otherwise.
-    reader.close();
 }
 

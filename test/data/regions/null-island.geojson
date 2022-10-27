@@ -1,0 +1,14 @@
+{
+"type": "FeatureCollection",
+"features": [ {
+    "type": "Feature",
+    "properties": {
+      "driving_side": "left",
+      "answer": 42,
+      "boolean": true,
+      "object": { "hello": "world" },
+      "array": [4, 8, 15, 16, 23, 42]
+    },
+    "geometry": { "type": "Polygon", "coordinates": [ [ [0, 0], [0, 2], [2, 2], [2, 0], [0, 0] ] ] }
+  } ]
+}

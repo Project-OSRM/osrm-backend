@@ -103,17 +103,16 @@ SegmentDuration CompressedEdgeContainer::ClipDuration(const SegmentDuration dura
 //   ----------> via_node_id -----------> target_node_id
 //     weight_1                weight_2
 //     duration_1              duration_2
-void CompressedEdgeContainer::CompressEdge(
-    const EdgeID edge_id_1,
-    const EdgeID edge_id_2,
-    const NodeID via_node_id,
-    const NodeID target_node_id,
-    const EdgeWeight weight1,
-    const EdgeWeight weight2,
-    const EdgeDuration duration1,
-    const EdgeDuration duration2,
-    const boost::optional<EdgeWeight> node_weight_penalty,
-    const boost::optional<EdgeDuration> node_duration_penalty)
+void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
+                                           const EdgeID edge_id_2,
+                                           const NodeID via_node_id,
+                                           const NodeID target_node_id,
+                                           const EdgeWeight weight1,
+                                           const EdgeWeight weight2,
+                                           const EdgeDuration duration1,
+                                           const EdgeDuration duration2,
+                                           const EdgeWeight node_weight_penalty,
+                                           const EdgeDuration node_duration_penalty)
 {
     // remove super-trivial geometries
     BOOST_ASSERT(SPECIAL_EDGEID != edge_id_1);
@@ -169,10 +168,11 @@ void CompressedEdgeContainer::CompressEdge(
 
     // if the via-node offers a penalty, we add the weight of the penalty as an artificial
     // segment that references SPECIAL_NODEID
-    if (node_weight_penalty && node_duration_penalty)
+    if (node_weight_penalty != INVALID_EDGE_WEIGHT &&
+        node_duration_penalty != MAXIMAL_EDGE_DURATION)
     {
         edge_bucket_list1.emplace_back(OnewayCompressedEdge{
-            via_node_id, ClipWeight(*node_weight_penalty), ClipDuration(*node_duration_penalty)});
+            via_node_id, ClipWeight(node_weight_penalty), ClipDuration(node_duration_penalty)});
     }
 
     if (HasEntryForID(edge_id_2))
@@ -264,6 +264,9 @@ void CompressedEdgeContainer::InitializeBothwayVector()
 
 unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID r_edge_id)
 {
+    if (!segment_data)
+        InitializeBothwayVector();
+
     const auto &forward_bucket = GetBucketReference(f_edge_id);
     const auto &reverse_bucket = GetBucketReference(r_edge_id);
 
@@ -393,5 +396,5 @@ std::unique_ptr<SegmentDataContainer> CompressedEdgeContainer::ToSegmentData()
 
     return std::move(segment_data);
 }
-}
-}
+} // namespace extractor
+} // namespace osrm

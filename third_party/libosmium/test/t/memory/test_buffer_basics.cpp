@@ -1,9 +1,9 @@
 #include "catch.hpp"
 
+#include <osmium/memory/buffer.hpp>
+
 #include <array>
 #include <stdexcept>
-
-#include <osmium/memory/buffer.hpp>
 
 TEST_CASE("Buffer basics") {
     osmium::memory::Buffer invalid_buffer1;
@@ -75,7 +75,7 @@ TEST_CASE("Reserve space in a non-growing buffer") {
 
     REQUIRE(buffer.reserve_space(20) != nullptr);
     REQUIRE(buffer.written() == 20);
-    REQUIRE_THROWS_AS(buffer.reserve_space(1000), const osmium::buffer_is_full&);
+    REQUIRE_THROWS_AS(buffer.reserve_space(1000), osmium::buffer_is_full);
 }
 
 TEST_CASE("Reserve space in a growing buffer") {
@@ -88,7 +88,7 @@ TEST_CASE("Reserve space in a growing buffer") {
 }
 
 TEST_CASE("Create buffer from existing data with good alignment works") {
-    std::array<unsigned char, 128> data;
+    std::array<unsigned char, 128> data = {{0}};
 
     osmium::memory::Buffer buffer{data.data(), data.size()};
     REQUIRE(buffer.capacity() == 128);
@@ -96,7 +96,7 @@ TEST_CASE("Create buffer from existing data with good alignment works") {
 }
 
 TEST_CASE("Create buffer from existing data with good alignment and committed value works") {
-    std::array<unsigned char, 128> data;
+    std::array<unsigned char, 128> data = {{0}};
 
     osmium::memory::Buffer buffer{data.data(), data.size(), 32};
     REQUIRE(buffer.capacity() == 128);
@@ -105,7 +105,7 @@ TEST_CASE("Create buffer from existing data with good alignment and committed va
 }
 
 TEST_CASE("Create buffer from existing data with bad alignment fails") {
-    std::array<unsigned char, 128> data;
+    std::array<unsigned char, 128> data = {{0}};
 
     const auto l1 = [&](){
         osmium::memory::Buffer buffer{data.data(), 127};
@@ -123,9 +123,9 @@ TEST_CASE("Create buffer from existing data with bad alignment fails") {
         osmium::memory::Buffer buffer{data.data(), 32, 128};
     };
 
-    REQUIRE_THROWS_AS(l1(), const std::invalid_argument&);
-    REQUIRE_THROWS_AS(l2(), const std::invalid_argument&);
-    REQUIRE_THROWS_AS(l3(), const std::invalid_argument&);
-    REQUIRE_THROWS_AS(l4(), const std::invalid_argument&);
+    REQUIRE_THROWS_AS(l1(), std::invalid_argument);
+    REQUIRE_THROWS_AS(l2(), std::invalid_argument);
+    REQUIRE_THROWS_AS(l3(), std::invalid_argument);
+    REQUIRE_THROWS_AS(l4(), std::invalid_argument);
 }
 

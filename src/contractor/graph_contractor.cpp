@@ -12,6 +12,7 @@
 
 #include <boost/assert.hpp>
 
+#include <tbb/blocked_range.h>
 #include <tbb/enumerable_thread_specific.h>
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_invoke.h>
@@ -214,6 +215,7 @@ void ContractNode(ContractorThreadData *data,
                                                     target,
                                                     path_weight,
                                                     in_data.duration + out_data.duration,
+                                                    in_data.distance + out_data.distance,
                                                     out_data.originalEdges + in_data.originalEdges,
                                                     node,
                                                     SHORTCUT_ARC,
@@ -224,6 +226,7 @@ void ContractNode(ContractorThreadData *data,
                                                     source,
                                                     path_weight,
                                                     in_data.duration + out_data.duration,
+                                                    in_data.distance + out_data.distance,
                                                     out_data.originalEdges + in_data.originalEdges,
                                                     node,
                                                     SHORTCUT_ARC,
@@ -279,6 +282,7 @@ void ContractNode(ContractorThreadData *data,
                                                 target,
                                                 path_weight,
                                                 in_data.duration + out_data.duration,
+                                                in_data.distance + out_data.distance,
                                                 out_data.originalEdges + in_data.originalEdges,
                                                 node,
                                                 SHORTCUT_ARC,
@@ -289,6 +293,7 @@ void ContractNode(ContractorThreadData *data,
                                                 source,
                                                 path_weight,
                                                 in_data.duration + out_data.duration,
+                                                in_data.distance + out_data.distance,
                                                 out_data.originalEdges + in_data.originalEdges,
                                                 node,
                                                 SHORTCUT_ARC,
@@ -384,7 +389,7 @@ void RenumberData(std::vector<RemainingNodeData> &remaining_nodes,
     // we need to make a copy here because we are going to modify it
     auto to_orig = new_to_old_node_id;
 
-    auto new_node_id = 0;
+    auto new_node_id = 0u;
 
     // All remaining nodes get the low IDs
     for (auto &remaining : remaining_nodes)
@@ -555,7 +560,7 @@ bool IsNodeIndependent(const util::XORFastHash<> &hash,
     }
     return true;
 }
-}
+} // namespace
 
 std::vector<bool> contractGraph(ContractorGraph &graph,
                                 std::vector<bool> node_is_uncontracted_,
@@ -666,10 +671,10 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
             });
 
         // sort all remaining nodes to the beginning of the sequence
-        const auto begin_independent_nodes =
-            stable_partition(remaining_nodes.begin(),
-                             remaining_nodes.end(),
-                             [](RemainingNodeData node_data) { return !node_data.is_independent; });
+        const auto begin_independent_nodes = std::stable_partition(
+            remaining_nodes.begin(), remaining_nodes.end(), [](RemainingNodeData node_data) {
+                return !node_data.is_independent;
+            });
         auto begin_independent_nodes_idx =
             std::distance(remaining_nodes.begin(), begin_independent_nodes);
         auto end_independent_nodes_idx = remaining_nodes.size();

@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,10 +33,10 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/handler.hpp>
+
 #include <memory>
 #include <utility>
-
-#include <osmium/handler.hpp>
 
 namespace osmium {
 
@@ -54,21 +54,29 @@ namespace osmium {
 
             public:
 
-                virtual ~HandlerWrapperBase() = default;
+                HandlerWrapperBase() = default;
 
-                virtual void node(const osmium::Node&) {
+                HandlerWrapperBase(const HandlerWrapperBase&) = default;
+                HandlerWrapperBase& operator=(const HandlerWrapperBase&) = default;
+
+                HandlerWrapperBase(HandlerWrapperBase&&) noexcept = default;
+                HandlerWrapperBase& operator=(HandlerWrapperBase&&) noexcept = default;
+
+                virtual ~HandlerWrapperBase() noexcept = default;
+
+                virtual void node(const osmium::Node& /*node*/) {
                 }
 
-                virtual void way(const osmium::Way&) {
+                virtual void way(const osmium::Way& /*way*/) {
                 }
 
-                virtual void relation(const osmium::Relation&) {
+                virtual void relation(const osmium::Relation& /*relation*/) {
                 }
 
-                virtual void area(const osmium::Area&) {
+                virtual void area(const osmium::Area& /*area*/) {
                 }
 
-                virtual void changeset(const osmium::Changeset&) {
+                virtual void changeset(const osmium::Changeset& /*changeset*/) {
                 }
 
                 virtual void flush() {
@@ -78,7 +86,7 @@ namespace osmium {
 
 
             // The following uses trick from
-            // http://stackoverflow.com/questions/257288/is-it-possible-to-write-a-c-template-to-check-for-a-functions-existence
+            // https://stackoverflow.com/questions/257288/is-it-possible-to-write-a-c-template-to-check-for-a-functions-existence
             // to either call handler style functions or visitor style operator().
 
 #define OSMIUM_DYNAMIC_HANDLER_DISPATCH(_name_, _type_) \
@@ -98,12 +106,12 @@ auto _name_##_dispatch(THandler& handler, const osmium::_type_& object, long) ->
             OSMIUM_DYNAMIC_HANDLER_DISPATCH(area, Area)
 
             template <typename THandler>
-            auto flush_dispatch(THandler& handler, int) -> decltype(handler.flush(), void()) {
+            auto flush_dispatch(THandler& handler, int /*dispatch*/) -> decltype(handler.flush(), void()) {
                 handler.flush();
             }
 
             template <typename THandler>
-            void flush_dispatch(THandler&, long) {
+            void flush_dispatch(THandler& /*handler*/, long /*dispatch*/) { // NOLINT(google-runtime-int)
             }
 
             template <typename THandler>
@@ -117,6 +125,14 @@ auto _name_##_dispatch(THandler& handler, const osmium::_type_& object, long) ->
                 explicit HandlerWrapper(TArgs&&... args) :
                     m_handler(std::forward<TArgs>(args)...) {
                 }
+
+                HandlerWrapper(const HandlerWrapper&) = default;
+                HandlerWrapper& operator=(const HandlerWrapper&) = default;
+
+                HandlerWrapper(HandlerWrapper&&) noexcept = default;
+                HandlerWrapper& operator=(HandlerWrapper&&) noexcept = default;
+
+                ~HandlerWrapper() noexcept override = default;
 
                 void node(const osmium::Node& node) final {
                     node_dispatch(m_handler, node, 0);

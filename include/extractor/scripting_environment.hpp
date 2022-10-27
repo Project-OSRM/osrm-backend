@@ -1,16 +1,14 @@
 #ifndef SCRIPTING_ENVIRONMENT_HPP
 #define SCRIPTING_ENVIRONMENT_HPP
 
-#include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/internal_extractor_edge.hpp"
+#include "extractor/maneuver_override.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/restriction.hpp"
 
 #include <osmium/memory/buffer.hpp>
 
 #include <boost/optional/optional.hpp>
-
-#include <tbb/concurrent_vector.h>
 
 #include <string>
 #include <vector>
@@ -20,7 +18,7 @@ namespace osmium
 class Node;
 class Way;
 class Relation;
-}
+} // namespace osmium
 
 namespace osrm
 {
@@ -28,16 +26,16 @@ namespace osrm
 namespace util
 {
 struct Coordinate;
-}
+} // namespace util
 
 namespace extractor
 {
 
 class RestrictionParser;
+class ManeuverOverrideRelationParser;
 class ExtractionRelationContainer;
 struct ExtractionNode;
 struct ExtractionWay;
-struct ExtractionRelation;
 struct ExtractionTurn;
 struct ExtractionSegment;
 
@@ -59,19 +57,23 @@ class ScriptingEnvironment
     virtual std::vector<std::string> GetClassNames() = 0;
     virtual std::vector<std::string> GetNameSuffixList() = 0;
     virtual std::vector<std::string> GetRestrictions() = 0;
+    virtual std::vector<std::string> GetRelations() = 0;
     virtual void ProcessTurn(ExtractionTurn &turn) = 0;
     virtual void ProcessSegment(ExtractionSegment &segment) = 0;
 
-    virtual void ProcessElements(
-        const osmium::memory::Buffer &buffer,
-        const RestrictionParser &restriction_parser,
-        const ExtractionRelationContainer &relations,
-        std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
-        std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
-        std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> &resulting_relations,
-        std::vector<InputConditionalTurnRestriction> &resulting_restrictions) = 0;
+    virtual void
+    ProcessElements(const osmium::memory::Buffer &buffer,
+                    const RestrictionParser &restriction_parser,
+                    const ManeuverOverrideRelationParser &maneuver_override_parser,
+                    const ExtractionRelationContainer &relations,
+                    std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
+                    std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
+                    std::vector<InputTurnRestriction> &resulting_restrictions,
+                    std::vector<InputManeuverOverride> &resulting_maneuver_overrides) = 0;
+
+    virtual bool HasLocationDependentData() const = 0;
 };
-}
-}
+} // namespace extractor
+} // namespace osrm
 
 #endif /* SCRIPTING_ENVIRONMENT_HPP */

@@ -1,0 +1,11 @@
+# Generate source groups so the files are properly sorted in IDEs like Xcode.
+function(create_source_groups target)
+    get_target_property(sources ${target} SOURCES)
+    foreach(file ${sources})
+        get_filename_component(file "${file}" ABSOLUTE)
+        string(REGEX REPLACE "^${CMAKE_SOURCE_DIR}/" "" group "${file}")
+        get_filename_component(group "${group}" DIRECTORY)
+        string(REPLACE "/" "\\" group "${group}")
+        source_group("${group}" FILES "${file}")
+    endforeach()
+endfunction()

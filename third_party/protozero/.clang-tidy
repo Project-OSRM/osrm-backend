@@ -1,0 +1,59 @@
+---
+Checks: '*,-bugprone-signed-char-misuse,-cert-dcl21-cpp,-cert-err58-cpp,-cert-err60-cpp,-cppcoreguidelines-avoid-c-arrays,-cppcoreguidelines-avoid-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-type-reinterpret-cast,-fuchsia-*,-google-runtime-references,-hicpp-avoid-c-arrays,-hicpp-no-array-decay,-hicpp-vararg,-modernize-avoid-c-arrays,-modernize-use-trailing-return-type,-readability-implicit-bool-conversion,-readability-magic-numbers'
+#
+#  Disabled checks:
+#
+#  bugprone-signed-char-misuse
+#    Lots of warnings in varint.hpp otherwise.
+#
+#  cert-dcl21-cpp
+#    It is unclear whether this is still a good recommendation in modern C++.
+#
+#  cert-err58-cpp
+#    Due to the Catch2 test framework.
+#
+#  cert-err60-cpp
+#    Reports std::runtime_error as broken which we can't do anything about.
+#
+#  cppcoreguidelines-avoid-c-arrays
+#  hicpp-avoid-c-arrays
+#  modernize-avoid-c-arrays
+#    Makes sense for some array, but especially for char arrays using
+#    std::array isn't a good solution.
+#
+#  cppcoreguidelines-avoid-magic-numbers
+#  readability-magic-numbers
+#    Good idea, but it goes too far to force this everywhere.
+#
+#  cppcoreguidelines-macro-usage
+#    There are cases where macros are simply needed.
+#
+#  cppcoreguidelines-pro-bounds-array-to-pointer-decay
+#    Limited use and many false positives including for all asserts.
+#
+#  cppcoreguidelines-pro-bounds-pointer-arithmetic
+#    This is a low-level library, it needs to do pointer arithmetic.
+#
+#  cppcoreguidelines-pro-type-reinterpret-cast
+#    This is a low-level library, it needs to do reinterpret-casts.
+#
+#  fuchsia-*
+#    Much too strict.
+#
+#  google-runtime-references
+#    This is just a matter of preference, and we can't change the interfaces
+#    now anyways.
+#
+#  hicpp-no-array-decay
+#    Limited use and many false positives including for all asserts.
+#
+#  modernize-use-trailing-return-type
+#    We are not quite that modern.
+#
+#  readability-implicit-bool-conversion
+#    Not necessarily more readable.
+#
+WarningsAsErrors: '*'
+HeaderFilterRegex: '\/include\/'
+AnalyzeTemporaryDtors: false
+...

@@ -64,7 +64,7 @@ Feature: Merge Segregated Roads
 
         When I route I should get
             | waypoints | route               | intersections                                                                                      |
-            | a,f       | road,road,road,road | true:90,false:45 true:135 false:270;true:45 true:180 false:315;true:90 false:225 true:315;true:270 |
+            | a,f       | road,road,road      | true:90,false:45 true:135 false:270;true:45 true:180 false:315,true:90 false:225 true:315;true:270 |
 
     #https://www.openstreetmap.org/#map=19/52.50003/13.33915
     @negative
@@ -193,7 +193,7 @@ Feature: Merge Segregated Roads
 
         When I route I should get
             | waypoints | route     | intersections                                                           |
-            | a,g       | road,road | true:90,false:90 true:150 false:270,true:90 false:270 true:345;true:270 |
+            | a,g       | road,road | true:90,false:90 true:165 false:270,true:90 false:270 true:345;true:270 |
 
     Scenario: Merging parallel roads with intermediate bridges
     # https://www.mapillary.com/app/?lat=52.466483333333336&lng=13.431908333333332&z=17&focus=photo&pKey=LWXnKqoGqUNLnG0lofiO0Q
@@ -332,10 +332,11 @@ Feature: Merge Segregated Roads
               |
              .b.
             c   h
+            1   |
+            |   4
             |   |
-            |   |
-            1   2
-            |   |
+            2   |
+            |   3
             d   g
              'e'
               |
@@ -354,13 +355,13 @@ Feature: Merge Segregated Roads
             | hb    | road   | yes    |
 
         When I route I should get
-            | waypoints | turns         | route       | intersections 									  |
+            | waypoints | turns         | route       | intersections                                     |
             | a,f       | depart,arrive | road,road   | true:180,false:0 true:180,false:0 true:180;true:0 |
-            | c,f       | depart,arrive | bridge,road | true:180,false:0 true:180;true:0 				  |
             | 1,f       | depart,arrive | bridge,road | true:180,false:0 true:180;true:0                  |
+            | 2,f       | depart,arrive | bridge,road | true:180,false:0 true:180;true:0                  |
             | f,a       | depart,arrive | road,road   | true:0,true:0 false:180,true:0 false:180;true:180 |
-            | g,a       | depart,arrive | bridge,road | true:0,true:0 false:180;true:180                  |
-            | 2,a       | depart,arrive | bridge,road | true:0,true:0 false:180;true:180                  |
+            | 3,a       | depart,arrive | bridge,road | true:0,true:0 false:180;true:180                  |
+            | 4,a       | depart,arrive | bridge,road | true:0,true:0 false:180;true:180                  |
 
     @negative
     Scenario: Traffic Circle
@@ -384,40 +385,53 @@ Feature: Merge Segregated Roads
             | cd    | right  | no     |
 
         When I route I should get
-            | waypoints | route                           | intersections                                                                                       |
-            | a,d       | left,circle,circle,right,right  | true:90;false:90 true:120 false:270;true:60 true:180 false:300;true:90 false:240 true:270;true:270  |
-            | g,d       | bottom,circle,right,right       | true:0;true:60 false:180 false:300;true:90 false:240 true:270;true:270                              |
+            | waypoints | route                     | intersections                                                                                      |
+            | a,d       | left,circle,right,right   | true:90,false:90 true:120 false:270;true:60 true:180 false:300;true:90 false:240 true:270;true:270 |
+            | g,d       | bottom,circle,right,right | true:0;true:60 false:180 false:300;true:90 false:240 true:270;true:270                             |
 
     Scenario: Middle Island
         Given the node map
             """
               a
               |
-              b
+              b-----z
+             / \
             c   h
             |   |
             |   |
             |   |
             |   |
+            |   |
+            |   |
+            |   |
+            |   |
+            |   |
             d   g
+             \ /
               e
               |
               f
             """
 
         And the ways
-            | nodes | name | oneway |
-            | ab    | road | no     |
-            | ef    | road | no     |
-            | bcde  | road | yes    |
-            | eghb  | road | yes    |
+            | nodes | name  | oneway |
+            | ab    | road  | no     |
+            | ef    | road  | no     |
+            | bcde  | road  | yes    |
+            | eghb  | road  | yes    |
+            | bz    | cross | no  |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction  |
+            | restriction | bz       | bcde   | b        | no_left_turn |
 
         When I route I should get
-            | waypoints | turns         | route     |
-            | a,f       | depart,arrive | road,road |
-            | c,f       | depart,arrive | road,road |
-            | f,a       | depart,arrive | road,road |
-            | g,a       | depart,arrive | road,road |
+            | waypoints | turns                    | route           |
+            | a,f       | depart,arrive            | road,road       |
+            | c,f       | depart,arrive            | road,road       |
+            | f,a       | depart,arrive            | road,road       |
+            | g,a       | depart,arrive            | road,road       |
+            | z,a       | depart,turn right,arrive | cross,road,road |
 
     Scenario: Traffic Island
         Given the node map
@@ -518,8 +532,183 @@ Feature: Merge Segregated Roads
 
         # the goal here should be not to mention the intersection in the middle at all and also suppress the segregated parts
         When I route I should get
-            | waypoints | route            | intersections																																    |
+            | waypoints | route            | intersections																																	|
             | a,l       | horiz,vert,vert  | true:90;false:0 true:60 true:90 true:180 false:270,true:60 false:120 false:240 false:300,true:0 false:90 false:180 false:240 true:270;true:180 |
-            | a,d       | horiz,horiz      | true:90,false:0 true:60 true:90 true:180 false:270,false:0 true:90 false:180 false:270 true:300;true:270									    |
+            | a,d       | horiz,horiz      | true:90,false:0 true:60 true:90 true:180 false:270,false:0 true:90 false:180 false:270 true:300;true:270										|
             | j,h       | vert,horiz,horiz | true:0;true:0 true:90 false:180 false:270 true:300,false:60 false:120 false:240 true:300,false:0 false:90 false:120 true:180 true:270;true:90  |
-            | j,l       | vert,vert        | true:0,true:0 true:90 false:180 false:270 true:300,true:0 false:90 false:180 true:240 false:270;true:180									    |
+            | j,l       | vert,vert        | true:0,true:0 true:90 false:180 false:270 true:300,true:0 false:90 false:180 true:240 false:270;true:180										|
+
+
+    Scenario: Square Area - Don't merge almost circular roads
+        Given a grid size of 2 meters
+        Given the node map
+            """
+                           i
+                       b    `
+                         `   `    p .
+                  a        ` g` `     \         f
+                   \      /             o      /
+                     \   /               \    /
+                  h - - c                  n /
+                        \                  \/
+                         k                  e
+                         \               /
+                          l            /
+                            \        /
+                              m  . d
+                                  /
+                                 j
+            """
+
+        And the ways
+            | nodes       | name           | oneway |
+            | ac          | Halenseestraße | yes    |
+            | gb          | Halenseestraße | yes    |
+            | cklmdenopgc | Rathenauplatz  | yes    |
+            | ig          | Kurfürstendamm | yes    |
+            | ef          | Kurfürstendamm | yes    |
+            | ch          | Hubertusallee  | yes    |
+            | jd          | Hubertusallee  | yes    |
+
+        When I route I should get
+            | waypoints | route                                                    | turns                               |
+            | i,h       | Kurfürstendamm,Rathenauplatz,Hubertusallee,Hubertusallee | depart,turn right,turn right,arrive |
+
+    # https://www.openstreetmap.org/#map=19/52.46339/13.40272
+    Scenario: Do not merge links between segregated roads
+        Given the node map
+            """
+            f
+              `````````` ..............
+                                        ` ` ` `  e - - - - - - - d
+            a                                    1
+             ```````````..............           |
+                                      `````````` b - - - - - - - c
+                                                 |
+                                                 |
+                                                 |
+                                                 |
+                                                 g
+            """
+
+        And the ways
+            | nodes | name | oneway |
+            | ab    | germ | yes    |
+            | bc    | ober | yes    |
+            | de    | ober | yes    |
+            | ef    | germ | yes    |
+            | eb    | germ | no     |
+            | gb    | germ | no     |
+
+        When I route I should get
+            | waypoints | route          | turns                        |
+            | a,c       | germ,ober      | depart,arrive                |
+            | a,g       | germ,germ,germ | depart,continue right,arrive |
+            | a,1       | germ,germ,germ | depart,continue left,arrive  |
+            | d,g       | ober,germ,germ | depart,turn left,arrive      |
+
+    # https://www.openstreetmap.org/#map=19/51.32888/6.57059
+    Scenario: Places in presence of oneways
+        Given the node map
+            """
+                    i                                                                                                           l
+                    |                                                                                                           |
+                    |                                                                                                           |
+                    g - - - - - - - - - - - - - - - - - - - - - - - - - 1 - - - - - - - - - - - - - - - - - - - - - - - - - - - f
+                    |                                                                                                           |
+                    |                                                                                                           |
+            a - - - b - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 2 - - - - - - - - - - - - - - - c - - - d
+                    |                                                                                                           |
+                    |                                                                                                           |
+                    j                                                                                                           k
+            """
+
+        And the ways
+            | nodes | name     | oneway |
+            | ab    | schwert  | yes    |
+            | cd    | schwert  | yes    |
+            | ig    | luise    | yes    |
+            | bj    | luise    | yes    |
+            | kc    | marianne | yes    |
+            | fl    | marianne | yes    |
+            | bc    | albrecht | no     |
+            | fg    | albrecht | no     |
+            | gb    | albrecht | yes    |
+            | cf    | albrecht | yes    |
+
+        When I route I should get
+            | waypoints | route                              | turns                                          |
+            | a,l       | schwert,albrecht,marianne,marianne | depart,new name straight,turn left,arrive      |
+            | a,j       | schwert,luise,luise                | depart,turn right,arrive                       |
+            | a,1       | schwert,albrecht,albrecht,albrecht | depart,new name straight,continue uturn,arrive |
+            | k,l       | marianne,marianne                  | depart,arrive                                  |
+            | k,j       | marianne,albrecht,luise,luise      | depart,turn left,turn left,arrive              |
+            | k,d       | marianne,schwert,schwert           | depart,turn right,arrive                       |
+            | i,j       | luise,luise                        | depart,arrive                                  |
+            | i,d       | luise,albrecht,schwert             | depart,turn left,arrive                        |
+            | i,l       | luise,albrecht,marianne,marianne   | depart,turn left,turn left,arrive              |
+
+    # https://www.openstreetmap.org/#map=19/52.46339/13.40272
+    Scenario: Do not merge links between segregated roads
+        Given the node map
+            """
+                                                               d
+            f...............                                   |
+                            `````````` ..............          |
+            a...............                          ` ` ` `  e
+                            ``````````..............           1
+                                                    `````````` b
+                                                                    - - - - - - - c
+            """
+
+        And the ways
+            | nodes | name | oneway |
+            | ab    | otto | yes    |
+            | bc    | otto | no     |
+            | de    | neu  | no     |
+            | ef    | otto | yes    |
+            | eb    | otto | no     |
+
+        When I route I should get
+            | waypoints | route               | turns                                      | #	|
+            | a,c       | otto,otto           | depart,arrive                              |	|
+			| a,f       | otto,otto,otto      | depart,continue uturn,arrive               |    |
+			| a,1       | otto,otto,otto      | depart,continue left,arrive                |    |
+			| a,d       | otto,neu,neu        | depart,turn left,arrive                    |    |
+            | c,1       | otto,otto           | depart,arrive                              |    |
+            | c,f       | otto,otto,otto      | depart,continue left,arrive                | Ideally, this would be depart,arrive, but the obvious discovery making the turn onto `1` from `c` obvious interferes here |
+
+    # https://www.openstreetmap.org/#map=18/50.94608/7.02030
+    Scenario: Do not merge oneway places
+        Given the node map
+            """
+                                j
+                                |
+                                |
+            g - f - - - - - - - e
+                |               |
+                |               |
+                |               d
+                |                \
+                |                .c.
+                a - - - - - - b`    `
+                |                    `
+                |                      ` h
+                |
+                |
+                i
+            """
+
+        And the ways
+            | nodes | name | oneway |
+            | efabc | kobe | yes    |
+            | edc   | kobe | no     |
+            | fg    | arn  | no     |
+            | ia    | kobu | yes    |
+            | hc    | wei  | no     |
+            | ej    | wei  | no     |
+
+        When I route I should get
+            | waypoints | route          | turns                       |
+            | j,h       | wei,wei		 | depart,arrive			   |
+            | a,d       | kobe,kobe,kobe | depart,continue left,arrive |

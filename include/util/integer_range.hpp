@@ -86,11 +86,11 @@ template <typename Integer>
 range<Integer>
 irange(const Integer first,
        const Integer last,
-       typename std::enable_if<std::is_integral<Integer>::value>::type * = 0) noexcept
+       typename std::enable_if<std::is_integral<Integer>::value>::type * = nullptr) noexcept
 {
     return range<Integer>(first, last);
 }
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // INTEGER_RANGE_HPP

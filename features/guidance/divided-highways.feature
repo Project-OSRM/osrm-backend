@@ -13,19 +13,23 @@ Feature: Divided road entry
             d-------e-----f
                     |
                     |
-                    g
+                i---g---j
+                    |
+                    |
+                    h
             """
 
         And the ways
-            | nodes  | name    | highway     | oneway |
-            | abc    | main st | residential | -1     |
-            | def    | main st | residential | yes    |
-            | be     | main st | residential |        |
-            | eg     | side st | residential |        |
+            | nodes  | name     | highway     | oneway |
+            | abc    | main st  | residential | -1     |
+            | def    | main st  | residential | yes    |
+            | be     | main st  | residential |        |
+            | egh    | side st  | residential |        |
+            | igj    | maple st | residential |        |
 
        When I route I should get
             | waypoints | route                  | turns                   |
-            | g,a       | side st,main st,main st| depart,end of road left,arrive |
+            | h,a       | side st,main st,main st| depart,end of road left,arrive |
 
 
     # Similar to previous one, but the joining way is tagged with the side-street name
@@ -37,18 +41,22 @@ Feature: Divided road entry
             d-------e-----f
                     |
                     |
-                    g
+                i---g---j
+                    |
+                    |
+                    h
             """
 
         And the ways
-            | nodes  | name    | highway     | oneway |
-            | abc    | main st | residential | -1     |
-            | def    | main st | residential | yes    |
-            | beg    | side st | residential |        |
+            | nodes  | name     | highway     | oneway |
+            | abc    | main st  | residential | -1     |
+            | def    | main st  | residential | yes    |
+            | begh   | side st  | residential |        |
+            | igj    | maple st | residential |        |
 
        When I route I should get
             | waypoints | route    | turns                           |
-            | g,a       | side st,main st,main st| depart,end of road left,arrive |
+            | h,a       | side st,main st,main st| depart,end of road left,arrive |
 
 
     # Center join named after crossroad
@@ -100,3 +108,32 @@ Feature: Divided road entry
        When I route I should get
             | waypoints | route    | turns                           |
             | g,a       | side st,main st,main st| depart,turn left,arrive |
+
+    # Verify end of road left turn across divided roads
+    Scenario: Join on a divided road, named after the side street
+        Given the node map
+            """
+            a-----h--b-----c
+                  |  |
+            d-----i--e-----f
+                  |  |
+                  |  |
+              m---j--g---n
+                  |  |
+                  |  |
+                  k  l
+            """
+
+        And the ways
+            | nodes  | name    | highway     | oneway |
+            | ahbc   | main st | residential | -1     |
+            | dief   | main st | residential | yes    |
+            | begl   | side st | residential | -1     |
+            | hijk   | side st | residential | yes    |
+            | mjgn   | maple st| residential | no     |
+
+       When I route I should get
+            | waypoints | route    | turns                           |
+            | l,a       | side st,main st,main st| depart,end of road left,arrive |
+
+

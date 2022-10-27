@@ -62,18 +62,16 @@ std::istream &operator>>(std::istream &in, EngineConfig::Algorithm &algorithm)
     in >> token;
     boost::to_lower(token);
 
-    if (token == "ch")
+    if (token == "ch" || token == "corech")
         algorithm = EngineConfig::Algorithm::CH;
-    else if (token == "corech")
-        algorithm = EngineConfig::Algorithm::CoreCH;
     else if (token == "mld")
         algorithm = EngineConfig::Algorithm::MLD;
     else
         throw util::RuntimeError(token, ErrorCode::UnknownAlgorithm, SOURCE_REF);
     return in;
 }
-}
-}
+} // namespace engine
+} // namespace osrm
 
 // generate boost::program_options object for the routing part
 inline unsigned generateServerProgramOptions(const int argc,
@@ -82,21 +80,27 @@ inline unsigned generateServerProgramOptions(const int argc,
                                              std::string &ip_address,
                                              int &ip_port,
                                              bool &trial,
-                                             EngineConfig &config)
+                                             EngineConfig &config,
+                                             int &requested_thread_num)
 {
-    using boost::program_options::value;
     using boost::filesystem::path;
+    using boost::program_options::value;
 
     const auto hardware_threads = std::max<int>(1, std::thread::hardware_concurrency());
 
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
-    generic_options.add_options() //
-        ("version,v", "Show version")("help,h", "Show this help message")(
-            "verbosity,l",
-            boost::program_options::value<std::string>(&config.verbosity)->default_value("INFO"),
-            std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str())(
-            "trial", value<bool>(&trial)->implicit_value(true), "Quit after initialization");
+    generic_options.add_options()            //
+        ("version,v", "Show version")        //
+        ("help,h", "Show this help message") //
+        ("verbosity,l",
+#ifdef NDEBUG
+         boost::program_options::value<std::string>(&config.verbosity)->default_value("INFO"),
+#else
+         boost::program_options::value<std::string>(&config.verbosity)->default_value("DEBUG"),
+#endif
+         std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str()) //
+        ("trial", value<bool>(&trial)->implicit_value(true), "Quit after initialization");
 
     // declare a group of options that will be allowed on command line
     boost::program_options::options_description config_options("Configuration");
@@ -108,11 +112,20 @@ inline unsigned generateServerProgramOptions(const int argc,
          value<int>(&ip_port)->default_value(5000),
          "TCP/IP port") //
         ("threads,t",
-         value<int>(&config.use_threads_number)->default_value(hardware_threads),
+         value<int>(&requested_thread_num)->default_value(hardware_threads),
          "Number of threads to use") //
         ("shared-memory,s",
          value<bool>(&config.use_shared_memory)->implicit_value(true)->default_value(false),
          "Load data from shared memory") //
+        ("memory_file",
+         value<boost::filesystem::path>(&config.memory_file),
+         "DEPRECATED: Will behave the same as --mmap.")(
+            "mmap,m",
+            value<bool>(&config.use_mmap)->implicit_value(true)->default_value(false),
+            "Map datafiles directly, do not use any additional memory.") //
+        ("dataset-name",
+         value<std::string>(&config.dataset_name),
+         "Name of the shared memory dataset to connect to.") //
         ("algorithm,a",
          value<EngineConfig::Algorithm>(&config.algorithm)
              ->default_value(EngineConfig::Algorithm::CH, "CH"),
@@ -134,7 +147,10 @@ inline unsigned generateServerProgramOptions(const int argc,
          "Max. results supported in nearest query") //
         ("max-alternatives",
          value<int>(&config.max_alternatives)->default_value(3),
-         "Max. number of alternatives supported in the MLD route query");
+         "Max. number of alternatives supported in the MLD route query") //
+        ("max-matching-radius",
+         value<double>(&config.max_radius_map_matching)->default_value(-1.0),
+         "Max. radius size supported in map matching query. Default: unlimited.");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
@@ -198,13 +214,14 @@ inline unsigned generateServerProgramOptions(const int argc,
     }
 
     // Adjust number of threads to hardware concurrency
-    config.use_threads_number = std::min(hardware_threads, config.use_threads_number);
+    requested_thread_num = std::min(hardware_threads, requested_thread_num);
 
     std::cout << visible_options;
     return INIT_OK_DO_NOT_START_ENGINE;
 }
 
-int main(int argc, const char *argv[]) try
+int main(int argc, const char *argv[])
+try
 {
     util::LogPolicy::GetInstance().Unmute();
 
@@ -215,8 +232,9 @@ int main(int argc, const char *argv[]) try
     EngineConfig config;
     boost::filesystem::path base_path;
 
-    const unsigned init_result =
-        generateServerProgramOptions(argc, argv, base_path, ip_address, ip_port, trial_run, config);
+    int requested_thread_num = 1;
+    const unsigned init_result = generateServerProgramOptions(
+        argc, argv, base_path, ip_address, ip_port, trial_run, config, requested_thread_num);
     if (init_result == INIT_OK_DO_NOT_START_ENGINE)
     {
         return EXIT_SUCCESS;
@@ -253,20 +271,18 @@ int main(int argc, const char *argv[]) try
         util::Log() << "Loading from shared memory";
     }
 
-    // Use the same number of threads for Server and TBB threads pools
-    // It doubles number of used threads
-    auto requested_thread_num = config.use_threads_number;
-
     util::Log() << "Threads: " << requested_thread_num;
     util::Log() << "IP address: " << ip_address;
     util::Log() << "IP port: " << ip_port;
 
 #ifndef _WIN32
     int sig = 0;
-    sigset_t new_mask;
-    sigset_t old_mask;
-    sigfillset(&new_mask);
-    pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
+    sigset_t wait_mask;
+    sigemptyset(&wait_mask);
+    sigaddset(&wait_mask, SIGINT);
+    sigaddset(&wait_mask, SIGQUIT);
+    sigaddset(&wait_mask, SIGTERM);
+    pthread_sigmask(SIG_BLOCK, &wait_mask, nullptr); // only block necessary signals
 #endif
 
     auto service_handler = std::make_unique<server::ServiceHandler>(config);
@@ -288,19 +304,13 @@ int main(int argc, const char *argv[]) try
         std::thread server_thread(std::move(server_task));
 
 #ifndef _WIN32
-        sigset_t wait_mask;
-        pthread_sigmask(SIG_SETMASK, &old_mask, nullptr);
-        sigemptyset(&wait_mask);
-        sigaddset(&wait_mask, SIGINT);
-        sigaddset(&wait_mask, SIGQUIT);
-        sigaddset(&wait_mask, SIGTERM);
-        pthread_sigmask(SIG_BLOCK, &wait_mask, nullptr);
         util::Log() << "running and waiting for requests";
         if (std::getenv("SIGNAL_PARENT_WHEN_READY"))
         {
             kill(getppid(), SIGUSR1);
         }
         sigwait(&wait_mask, &sig);
+        util::Log() << "received signal " << sig;
 #else
         // Set console control handler to allow server to be stopped.
         console_ctrl_function = std::bind(&server::Server::Stop, routing_server);

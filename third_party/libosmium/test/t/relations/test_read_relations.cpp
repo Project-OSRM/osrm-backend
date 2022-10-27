@@ -1,4 +1,5 @@
 #include "catch.hpp"
+
 #include "utils.hpp"
 
 #include <osmium/handler.hpp>
@@ -13,7 +14,7 @@ public:
     int count = 0;
     bool prep = false;
 
-    void relation(const osmium::Relation&) noexcept {
+    void relation(const osmium::Relation& /*relation*/) noexcept {
         ++count;
     }
 

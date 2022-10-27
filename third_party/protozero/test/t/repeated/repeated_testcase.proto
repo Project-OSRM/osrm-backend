@@ -1,0 +1,12 @@
+syntax = "proto2";
+
+option optimize_for = LITE_RUNTIME;
+
+package TestRepeated;
+
+message Test {
+
+    repeated int32 i = 1;
+
+}
+

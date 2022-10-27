@@ -6,11 +6,11 @@ ECHO ~~~~~~ %~f0 ~~~~~~
 
 ECHO.
 ECHO build-local ["config=Dev"]
-ECHO default config^: RelWithDebInfo
+ECHO default config^: Release
 ECHO.
 
 SET platform=x64
-SET config=RelWithDebInfo
+SET config=Release
 
 :: OVERRIDE PARAMETERS >>>>>>>>
 :NEXT-ARG
@@ -23,9 +23,6 @@ GOTO NEXT-ARG
 
 :ARGS-DONE
 ::<<<<< OVERRIDE PARAMETERS
-
-WHERE 7z
-IF %ERRORLEVEL% NEQ 0 ECHO 7zip not on PATH && GOTO ERROR
 
 CALL build-appveyor.bat
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR

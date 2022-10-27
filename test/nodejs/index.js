@@ -1,6 +1,7 @@
 var OSRM = require('../../');
 var test = require('tape');
 var monaco_path = require('./constants').data_path;
+var test_memory_file = require('./constants').test_memory_file;
 var monaco_mld_path = require('./constants').mld_data_path;
 var monaco_corech_path = require('./constants').corech_data_path;
 
@@ -34,6 +35,12 @@ test('constructor: throws if necessary files do not exist', function(assert) {
 test('constructor: takes a shared memory argument', function(assert) {
     assert.plan(1);
     var osrm = new OSRM({path: monaco_path, shared_memory: false});
+    assert.ok(osrm);
+});
+
+test('constructor: takes a memory file', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({path: monaco_path, memory_file: test_memory_file});
     assert.ok(osrm);
 });
 
@@ -93,9 +100,16 @@ test('constructor: autoswitches to CoreCH for a CH dataset if capable', function
 
 test('constructor: throws if data doesn\'t match algorithm', function(assert) {
     assert.plan(3);
-    assert.throws(function() { new OSRM({algorithm: 'CoreCH', path: monaco_mld_path}); });
-    assert.throws(function() { new OSRM({algorithm: 'CoreCH', path: monaco_path}); });
-    assert.throws(function() { new OSRM({algorithm: 'MLD', path: monaco_path}); });
+    assert.throws(function() { new OSRM({algorithm: 'CoreCH', path: monaco_mld_path}); }, /Could not find any metrics for CH/, 'CoreCH with MLD data');
+    assert.ok(new OSRM({algorithm: 'CoreCH', path: monaco_path}), 'CoreCH with CH data');
+    assert.throws(function() { new OSRM({algorithm: 'MLD', path: monaco_path}); }, /Could not find any metrics for MLD/, 'MLD with CH data');
+});
+
+test('constructor: throws if dataset_name is not a string', function(assert) {
+    assert.plan(3);
+    assert.throws(function() { new OSRM({dataset_name: 1337, path: monaco_mld_path}); }, /dataset_name needs to be a string/, 'Does not accept int');
+    assert.ok(new OSRM({dataset_name: "", shared_memory: true}), 'Does accept string');
+    assert.throws(function() { new OSRM({dataset_name: "unsued_name___", shared_memory: true}); }, /Could not find shared memory region/, 'Does not accept wrong name');
 });
 
 test('constructor: parses custom limits', function(assert) {

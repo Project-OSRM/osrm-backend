@@ -2,11 +2,11 @@
 #define DYNAMICGRAPH_HPP
 
 #include "util/deallocating_vector.hpp"
+#include "util/exception.hpp"
+#include "util/exception_utils.hpp"
 #include "util/integer_range.hpp"
 #include "util/permutation.hpp"
 #include "util/typedefs.hpp"
-
-#include "storage/io_fwd.hpp"
 
 #include <boost/assert.hpp>
 
@@ -22,17 +22,6 @@ namespace osrm
 {
 namespace util
 {
-template <typename EdgeDataT> class DynamicGraph;
-
-namespace serialization
-{
-template <typename EdgeDataT, bool UseSharedMemory>
-void read(storage::io::FileReader &reader, DynamicGraph<EdgeDataT> &graph);
-
-template <typename EdgeDataT, bool UseSharedMemory>
-void write(storage::io::FileWriter &writer, const DynamicGraph<EdgeDataT> &graph);
-}
-
 namespace detail
 {
 // These types need to live outside of DynamicGraph
@@ -52,7 +41,7 @@ template <typename NodeIterator, typename EdgeDataT> struct DynamicEdge
     NodeIterator target;
     EdgeDataT data;
 };
-}
+} // namespace detail
 
 template <typename EdgeDataT> class DynamicGraph
 {
@@ -115,7 +104,7 @@ template <typename EdgeDataT> class DynamicGraph
 
         number_of_nodes = nodes;
         number_of_edges = static_cast<EdgeIterator>(graph.size());
-        node_array.resize(number_of_nodes + 1);
+        node_array.resize(number_of_nodes);
         EdgeIterator edge = 0;
         EdgeIterator position = 0;
         for (const auto node : irange(0u, number_of_nodes))
@@ -129,7 +118,6 @@ template <typename EdgeDataT> class DynamicGraph
             node_array[node].edges = edge - last_edge;
             position += node_array[node].edges;
         }
-        node_array.back().first_edge = position;
         edge_list.reserve(static_cast<std::size_t>(edge_list.size() * 1.1));
         edge_list.resize(position);
         edge = 0;
@@ -144,6 +132,8 @@ template <typename EdgeDataT> class DynamicGraph
                 ++edge;
             }
         }
+
+        BOOST_ASSERT(node_array.size() == number_of_nodes);
     }
 
     // Copy&move for the same data
@@ -191,6 +181,8 @@ template <typename EdgeDataT> class DynamicGraph
     // Removes all edges to and from nodes for which filter(node_id) returns false
     template <typename Pred> auto Filter(Pred filter) const &
     {
+        BOOST_ASSERT(node_array.size() == number_of_nodes);
+
         DynamicGraph other;
 
         other.number_of_nodes = number_of_nodes;
@@ -202,6 +194,8 @@ template <typename EdgeDataT> class DynamicGraph
         std::transform(
             node_array.begin(), node_array.end(), other.node_array.begin(), [&](const Node &node) {
                 const EdgeIterator first_edge = other.edge_list.size();
+
+                BOOST_ASSERT(node_id < number_of_nodes);
                 if (filter(node_id++))
                 {
                     std::copy_if(edge_list.begin() + node.first_edge,
@@ -223,6 +217,7 @@ template <typename EdgeDataT> class DynamicGraph
     unsigned GetNumberOfNodes() const { return number_of_nodes; }
 
     unsigned GetNumberOfEdges() const { return number_of_edges; }
+    auto GetEdgeCapacity() const { return edge_list.size(); }
 
     unsigned GetOutDegree(const NodeIterator n) const { return node_array[n].edges; }
 
@@ -415,10 +410,15 @@ template <typename EdgeDataT> class DynamicGraph
     void Renumber(const std::vector<NodeID> &old_to_new_node)
     {
         // permutate everything but the sentinel
-        util::inplacePermutation(node_array.begin(), std::prev(node_array.end()), old_to_new_node);
+        util::inplacePermutation(node_array.begin(), node_array.end(), old_to_new_node);
 
         // Build up edge permutation
-        auto new_edge_index = 0;
+        if (edge_list.size() >= std::numeric_limits<EdgeID>::max())
+        {
+            throw util::exception("There are too many edges, OSRM only supports 2^32" + SOURCE_REF);
+        }
+
+        EdgeID new_edge_index = 0;
         std::vector<EdgeID> old_to_new_edge(edge_list.size(), SPECIAL_EDGEID);
         for (auto node : util::irange<NodeID>(0, number_of_nodes))
         {
@@ -468,7 +468,7 @@ template <typename EdgeDataT> class DynamicGraph
     std::vector<Node> node_array;
     DeallocatingVector<Edge> edge_list;
 };
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // DYNAMICGRAPH_HPP

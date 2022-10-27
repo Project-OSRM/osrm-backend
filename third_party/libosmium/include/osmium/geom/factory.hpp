@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,11 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstddef>
-#include <stdexcept>
-#include <string>
-#include <utility>
-
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/memory/collection.hpp>
 #include <osmium/memory/item.hpp>
@@ -49,6 +44,12 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/node_ref_list.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/way.hpp>
+#include <osmium/util/compatibility.hpp>
+
+#include <cstddef>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 namespace osmium {
 
@@ -56,7 +57,7 @@ namespace osmium {
      * Exception thrown when an invalid geometry is encountered. An example
      * would be a linestring with less than two points.
      */
-    class geometry_error : public std::runtime_error {
+    class OSMIUM_EXPORT geometry_error : public std::runtime_error {
 
         std::string m_message;
         osmium::object_id_type m_id;
@@ -131,11 +132,11 @@ namespace osmium {
                 return Coordinates{location.lon(), location.lat()};
             }
 
-            int epsg() const noexcept {
+            static int epsg() noexcept {
                 return 4326;
             }
 
-            std::string proj_string() const {
+            static std::string proj_string() noexcept {
                 return "+proj=longlat +datum=WGS84 +no_defs";
             }
 
@@ -267,7 +268,6 @@ namespace osmium {
                 size_t num_points = 0;
 
                 if (un == use_nodes::unique) {
-                    osmium::Location last_location;
                     switch (dir) {
                         case direction::forward:
                             num_points = fill_linestring_unique(wnl.cbegin(), wnl.cend());
@@ -294,7 +294,7 @@ namespace osmium {
                 return linestring_finish(num_points);
             }
 
-            linestring_type create_linestring(const osmium::Way& way, use_nodes un=use_nodes::unique, direction dir = direction::forward) {
+            linestring_type create_linestring(const osmium::Way& way, use_nodes un = use_nodes::unique, direction dir = direction::forward) {
                 try {
                     return create_linestring(way.nodes(), un, dir);
                 } catch (osmium::geometry_error& e) {
@@ -341,7 +341,6 @@ namespace osmium {
                 size_t num_points = 0;
 
                 if (un == use_nodes::unique) {
-                    osmium::Location last_location;
                     switch (dir) {
                         case direction::forward:
                             num_points = fill_polygon_unique(wnl.cbegin(), wnl.cend());
@@ -368,7 +367,7 @@ namespace osmium {
                 return polygon_finish(num_points);
             }
 
-            polygon_type create_polygon(const osmium::Way& way, use_nodes un=use_nodes::unique, direction dir = direction::forward) {
+            polygon_type create_polygon(const osmium::Way& way, use_nodes un = use_nodes::unique, direction dir = direction::forward) {
                 try {
                     return create_polygon(way.nodes(), un, dir);
                 } catch (osmium::geometry_error& e) {
@@ -387,7 +386,7 @@ namespace osmium {
 
                     for (const auto& item : area) {
                         if (item.type() == osmium::item_type::outer_ring) {
-                            auto& ring = static_cast<const osmium::OuterRing&>(item);
+                            const auto& ring = static_cast<const osmium::OuterRing&>(item);
                             if (num_polygons > 0) {
                                 m_impl.multipolygon_polygon_finish();
                             }
@@ -398,7 +397,7 @@ namespace osmium {
                             ++num_rings;
                             ++num_polygons;
                         } else if (item.type() == osmium::item_type::inner_ring) {
-                            auto& ring = static_cast<const osmium::InnerRing&>(item);
+                            const auto& ring = static_cast<const osmium::InnerRing&>(item);
                             m_impl.multipolygon_inner_ring_start();
                             add_points(ring);
                             m_impl.multipolygon_inner_ring_finish();

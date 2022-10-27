@@ -37,6 +37,9 @@ struct Result
     Mask can_be_removed;
     // Maps the MatchParameter's original items to items which should not be removed.
     Mapping tidied_to_original;
+    // Masking the MatchParameter coordinates for items whose indices were present in the
+    // `waypoints` parameter.
+    Mask was_waypoint;
 };
 
 inline Result keep_all(const MatchParameters &params)
@@ -44,6 +47,17 @@ inline Result keep_all(const MatchParameters &params)
     Result result;
 
     result.can_be_removed.resize(params.coordinates.size(), false);
+    result.was_waypoint.resize(params.coordinates.size(), true);
+    // by default all input coordinates are treated as waypoints
+    if (!params.waypoints.empty())
+    {
+        for (const auto p : params.waypoints)
+        {
+            result.was_waypoint.set(p, false);
+        }
+        // logic is a little funny, uses inversion to set the bitfield
+        result.was_waypoint.flip();
+    }
     result.tidied_to_original.reserve(params.coordinates.size());
     for (std::size_t current = 0; current < params.coordinates.size(); ++current)
     {
@@ -61,6 +75,8 @@ inline Result keep_all(const MatchParameters &params)
         {
             result.parameters.coordinates.push_back(params.coordinates[i]);
 
+            if (result.was_waypoint[i])
+                result.parameters.waypoints.push_back(result.parameters.coordinates.size() - 1);
             if (!params.hints.empty())
                 result.parameters.hints.push_back(params.hints[i]);
 
@@ -74,6 +90,8 @@ inline Result keep_all(const MatchParameters &params)
                 result.parameters.timestamps.push_back(params.timestamps[i]);
         }
     }
+    if (params.waypoints.empty())
+        result.parameters.waypoints.clear();
 
     return result;
 }
@@ -85,6 +103,15 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
     Result result;
 
     result.can_be_removed.resize(params.coordinates.size(), false);
+    result.was_waypoint.resize(params.coordinates.size(), true);
+    if (!params.waypoints.empty())
+    {
+        for (const auto p : params.waypoints)
+        {
+            result.was_waypoint.set(p, false);
+        }
+        result.was_waypoint.flip();
+    }
 
     result.tidied_to_original.push_back(0);
 
@@ -95,7 +122,7 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
     // Walk over adjacent (coord, ts)-pairs, with rhs being the candidate to discard or keep
     for (std::size_t current = 0, next = 1; next < params.coordinates.size() - 1; ++current, ++next)
     {
-        auto distance_delta = util::coordinate_calculation::haversineDistance(
+        auto distance_delta = util::coordinate_calculation::greatCircleDistance(
             params.coordinates[current], params.coordinates[next]);
         running.distance_in_meters += distance_delta;
         const auto over_distance = running.distance_in_meters >= cfg.distance_in_meters;
@@ -138,13 +165,14 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
 
     // We have to filter parallel arrays that may be empty or the exact same size.
     // result.parameters contains an empty MatchParameters at this point: conditionally fill.
-
     for (std::size_t i = 0; i < result.can_be_removed.size(); ++i)
     {
         if (!result.can_be_removed[i])
         {
             result.parameters.coordinates.push_back(params.coordinates[i]);
 
+            if (result.was_waypoint[i])
+                result.parameters.waypoints.push_back(result.parameters.coordinates.size() - 1);
             if (!params.hints.empty())
                 result.parameters.hints.push_back(params.hints[i]);
 
@@ -157,15 +185,24 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
             if (!params.timestamps.empty())
                 result.parameters.timestamps.push_back(params.timestamps[i]);
         }
+        else
+        {
+            // one of the coordinates meant to be used as a waypoint was marked for removal
+            // update the original waypoint index to the new representative coordinate
+            const auto last_idx = result.parameters.coordinates.size() - 1;
+            if (result.was_waypoint[i] && (result.parameters.waypoints.back() != last_idx))
+            {
+                result.parameters.waypoints.push_back(last_idx);
+            }
+        }
     }
-    BOOST_ASSERT(result.tidied_to_original.size() == result.parameters.coordinates.size());
 
     return result;
 }
 
-} // ns tidy
-} // ns api
-} // ns engine
-} // ns osrm
+} // namespace tidy
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif

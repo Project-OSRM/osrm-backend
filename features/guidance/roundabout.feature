@@ -745,12 +745,15 @@ Feature: Basic Roundabout
 
 
      Scenario: Drive through roundabout
+        Given a grid size of 5 meters
         Given the node map
            """
-              a
-            b e d  f
-              c
-            g   h
+                . a .
+              .       .
+            b     e --- d ---- f
+              .        .
+                 .c.
+               g     h
            """
 
         And the ways
@@ -760,12 +763,12 @@ Feature: Basic Roundabout
            | gch   |            | yes    |
 
         When I route I should get
-           | waypoints | bearings | route           | turns                                                      |
-           | e,f       | 90 90    | edf,edf         | depart,arrive                                              |
-           | e,h       | 90 135   | edf,gch,gch,gch | depart,roundabout-exit-2,exit roundabout straight,arrive   |
-           | g,f       | 45 90    | gch,edf,edf,edf | depart,roundabout-exit-2,exit roundabout right,arrive      |
-           | g,h       | 45 135   | gch,gch,gch     | depart,exit roundabout right,arrive                        |
-           | e,e       | 90 270   | edf,edf,edf,edf | depart,roundabout-exit-3,exit roundabout sharp left,arrive |
+           | waypoints | bearings | route           | turns                                                        |
+           | e,f       | 90 90    | edf,edf         | depart,arrive                                                |
+           | e,h       | 90 130   | edf,gch,gch,gch | depart,roundabout-exit-2,exit roundabout straight,arrive     |
+           | g,f       | 50 90    | gch,edf,edf,edf | depart,roundabout-exit-2,exit roundabout slight right,arrive |
+           | g,h       | 50 130   | gch,gch,gch     | depart,exit roundabout right,arrive                          |
+           | e,e       | 90 270   | edf,edf,edf,edf | depart,roundabout-exit-3,exit roundabout sharp left,arrive   |
 
     Scenario: CCW and CW roundabouts with overlaps
         Given the node map
@@ -788,10 +791,10 @@ Feature: Basic Roundabout
         # the turn angles here are quite strange, so we do get uturns for exiting
         When I route I should get
             | from | to | route       | turns                                                 | distance |
-            | e    | f  | ed,af,af,af | depart,roundabout-exit-1,exit roundabout left,arrive  | 80.1m    |
-            | f    | e  | af,ed,ed,ed | depart,roundabout-exit-1,exit roundabout uturn,arrive | 120.1m   |
-            | k    | l  | kg,hl,hl,hl | depart,roundabout-exit-1,exit roundabout right,arrive | 80.1m    |
-            | l    | k  | hl,kg,kg,kg | depart,roundabout-exit-1,exit roundabout uturn,arrive | 120.1m   |
+            | e    | f  | ed,af,af,af | depart,roundabout-exit-1,exit roundabout left,arrive  | 80m      |
+            | f    | e  | af,ed,ed,ed | depart,roundabout-exit-1,exit roundabout uturn,arrive | 120m     |
+            | k    | l  | kg,hl,hl,hl | depart,roundabout-exit-1,exit roundabout right,arrive | 80m      |
+            | l    | k  | hl,kg,kg,kg | depart,roundabout-exit-1,exit roundabout uturn,arrive | 120m     |
 
     @4030 @4075
     Scenario: Service roundabout with service exits
@@ -829,19 +832,19 @@ Feature: Basic Roundabout
             """
 
         And the ways
-            | nodes | highway  | junction   | oneway | #         |
-            | abcda | tertiary | roundabout |        | circle    |
-            | ebds  | tertiary |            |        | road      |
-            | cm    | tertiary |            |        |           |
-            | ds    | tertiary |            |        | road      |
-            | rstur | tertiary | roundabout |        | circle2   |
-            | ufghl | tertiary |            |        | road      |
-            | tv    | tertiary |            |        |           |
-            | gi    | tertiary |            | yes    | sliproad  |
-            | jhik  | tertiary |            |        | crossroad |
+            | nodes | highway       | junction   | oneway | #         |
+            | abcda | tertiary      | roundabout |        | circle    |
+            | ebds  | tertiary      |            |        | road      |
+            | cm    | tertiary      |            |        |           |
+            | ds    | tertiary      |            |        | road      |
+            | rstur | tertiary      | roundabout |        | circle2   |
+            | ufghl | tertiary      |            |        | road      |
+            | tv    | tertiary      |            |        |           |
+            | gi    | tertiary_link |            | yes    | sliproad  |
+            | jhik  | tertiary      |            |        | crossroad |
 
 
         When I route I should get
             | from | to | route                      | turns                                                   | distance |
-            | e    | k  | ebds,ufghl,ufghl,jhik,jhik | depart,rstur-exit-2,exit rotary right,turn right,arrive | 189.1m   |
+            | e    | k  | ebds,ufghl,ufghl,jhik,jhik | depart,rstur-exit-2,exit rotary right,turn right,arrive | 189.2m   |
             | 1    | k  | ebds,ufghl,ufghl,jhik,jhik | depart,rstur-exit-2,exit rotary right,turn right,arrive | 159.1m   |

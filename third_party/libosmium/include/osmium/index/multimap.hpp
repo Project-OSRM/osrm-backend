@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -54,13 +54,10 @@ namespace osmium {
 
                 using element_type = typename std::pair<TId, TValue>;
 
-                Multimap(const Multimap&) = delete;
-                Multimap& operator=(const Multimap&) = delete;
-
             protected:
 
-                Multimap(Multimap&&) = default;
-                Multimap& operator=(Multimap&&) = default;
+                Multimap(Multimap&&) noexcept = default;
+                Multimap& operator=(Multimap&&) noexcept = default;
 
             public:
 
@@ -71,6 +68,9 @@ namespace osmium {
                 using value_type = TValue;
 
                 Multimap() = default;
+
+                Multimap(const Multimap&) = delete;
+                Multimap& operator=(const Multimap&) = delete;
 
                 virtual ~Multimap() noexcept = default;
 
@@ -113,7 +113,7 @@ namespace osmium {
                 }
 
                 virtual void dump_as_list(const int /*fd*/) {
-                    std::runtime_error("can't dump as list");
+                    throw std::runtime_error{"can't dump as list"};
                 }
 
             }; // class Multimap

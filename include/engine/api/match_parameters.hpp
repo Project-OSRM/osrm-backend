@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2016, Project OSRM contributors
+Copyright (c) 2017, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -68,8 +68,22 @@ struct MatchParameters : public RouteParameters
     }
 
     template <typename... Args>
-    MatchParameters(std::vector<unsigned> timestamps_, GapsType gaps_, bool tidy_, Args... args_)
-        : RouteParameters{std::forward<Args>(args_)...}, timestamps{std::move(timestamps_)},
+    MatchParameters(const std::vector<unsigned> &timestamps_,
+                    GapsType gaps_,
+                    bool tidy_,
+                    Args &&... args_)
+        : MatchParameters(timestamps_, gaps_, tidy_, {}, std::forward<Args>(args_)...)
+    {
+    }
+
+    template <typename... Args>
+    MatchParameters(std::vector<unsigned> timestamps_,
+                    GapsType gaps_,
+                    bool tidy_,
+                    const std::vector<std::size_t> &waypoints_,
+                    Args &&... args_)
+        : RouteParameters{std::forward<Args>(args_)..., waypoints_}, timestamps{std::move(
+                                                                         timestamps_)},
           gaps(gaps_), tidy(tidy_)
     {
     }
@@ -84,8 +98,8 @@ struct MatchParameters : public RouteParameters
                (timestamps.empty() || timestamps.size() == coordinates.size());
     }
 };
-}
-}
-}
+} // namespace api
+} // namespace engine
+} // namespace osrm
 
 #endif

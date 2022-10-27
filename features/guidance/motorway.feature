@@ -81,7 +81,7 @@ Feature: Motorway Guidance
             """
                  ,g,e
                ,f,d
-            a-b-c 
+            a-b-c
             """
 
         And the ways
@@ -201,7 +201,7 @@ Feature: Motorway Guidance
             | a,e       | abcde,abcde     | depart,arrive                      |
             | f,e       | fgc,abcde,abcde | depart,merge slight left,arrive    |
             | a,i       | abcde,chi,chi   | depart,off ramp slight right,arrive |
-            | f,i       | fgc,chi,chi     | depart,off ramp right,arrive       |
+            | f,i       | fgc,chi,chi     | depart,off ramp slight right,arrive |
 
     Scenario: On And Off Ramp Left
        Given the node map
@@ -221,7 +221,7 @@ Feature: Motorway Guidance
             | a,e       | abcde,abcde     | depart,arrive                     |
             | f,e       | fgc,abcde,abcde | depart,merge slight right,arrive  |
             | a,i       | abcde,chi,chi   | depart,off ramp slight left,arrive |
-            | f,i       | fgc,chi,chi     | depart,off ramp left,arrive       |
+            | f,i       | fgc,chi,chi     | depart,off ramp slight left,arrive |
 
     Scenario: Merging Motorways
         Given the node map
@@ -281,3 +281,67 @@ Feature: Motorway Guidance
             | waypoints | route | turns         |
             | a,d       | ,     | depart,arrive |
             | b,d       | ,     | depart,arrive |
+
+
+    Scenario: Ramp Exit with Lower Priority
+        Given the node map
+            """
+            a-b-c-d-e
+               `--f-g
+            """
+
+        And the ways
+            | nodes | highway      | oneway |
+            | abcde | trunk        |        |
+            | bfg   | primary_link | yes    |
+
+       When I route I should get
+            | waypoints | route         | turns                               |
+            | a,e       | abcde,abcde   | depart,arrive                       |
+            | a,g       | abcde,bfg,bfg | depart,off ramp slight right,arrive |
+
+
+    # https://www.openstreetmap.org/node/67366428#map=18/33.64613/-84.44425
+    Scenario: Ramp Bifurcations should not be suppressed
+        Given the node map
+            """
+                 /-----------c      /-----------e
+            a---b------------------d------------f
+            """
+
+        And the ways
+            | nodes | highway       | name | destination                                         |
+            | ab    | motorway      |      |                                                     |
+            | bc    | motorway_link |      | City 17                                             |
+            | bd    | motorway_link |      |                                                     |
+            | de    | motorway_link |      | Domestic Terminal;Camp Creek Parkway;Riverdale Road |
+            | df    | motorway_link |      | Montgomery                                          |
+
+
+       When I route I should get
+            | waypoints | route | turns                                            |
+            | a,c       | ,,    | depart,fork slight left,arrive                   |
+            | a,e       | ,,,   | depart,fork slight right,fork slight left,arrive  |
+            | a,f       | ,,,   | depart,fork slight right,fork slight right,arrive |
+
+
+    # https://www.openstreetmap.org/#map=19/53.46186/-2.24509
+    Scenario: Highway Fork with a Link
+        Given the node map
+            """
+                 /-----------d
+            a-b-c------------e
+                 \-----------f
+            """
+
+        And the ways
+            | nodes | highway       |
+            | abce  | motorway      |
+            | cf    | motorway      |
+            | cd    | motorway_link |
+
+       When I route I should get
+            | waypoints | route      | turns                              |
+            | a,d       | abce,cd,cd | depart,off ramp slight left,arrive |
+            | a,e       | abce,abce  | depart,arrive                      |
+            | a,f       | abce,cf,cf | depart,turn slight right,arrive |

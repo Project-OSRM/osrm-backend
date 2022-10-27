@@ -38,7 +38,7 @@ using BinaryFromBase64 = boost::archive::iterators::transform_width<
     8, // get a view of 8 bit
     6  // from a sequence of 6 bit
     >;
-} // ns detail
+} // namespace detail
 namespace engine
 {
 
@@ -87,7 +87,7 @@ inline std::string encodeBase64(const std::string &x) { return encodeBase64(x.da
 // Encode any sufficiently trivial object to Base64.
 template <typename T> std::string encodeBase64Bytewise(const T &x)
 {
-#if not defined __GNUC__ or __GNUC__ > 4
+#if !defined(__GNUC__) || (__GNUC__ > 4)
     static_assert(std::is_trivially_copyable<T>::value, "requires a trivially copyable type");
 #endif
 
@@ -124,7 +124,7 @@ inline std::string decodeBase64(const std::string &encoded)
 // Decodes from Base 64 to any sufficiently trivial object.
 template <typename T> T decodeBase64Bytewise(const std::string &encoded)
 {
-#if not defined __GNUC__ or __GNUC__ > 4
+#if !defined(__GNUC__) || (__GNUC__ > 4)
     static_assert(std::is_trivially_copyable<T>::value, "requires a trivially copyable type");
 #endif
 
@@ -135,7 +135,7 @@ template <typename T> T decodeBase64Bytewise(const std::string &encoded)
     return x;
 }
 
-} // ns engine
-} // ns osrm
+} // namespace engine
+} // namespace osrm
 
 #endif /* OSRM_BASE64_HPP */

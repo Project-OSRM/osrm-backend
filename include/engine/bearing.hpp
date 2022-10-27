@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2016, Project OSRM contributors
+Copyright (c) 2017, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -46,7 +46,7 @@ inline bool operator==(const Bearing lhs, const Bearing rhs)
     return lhs.bearing == rhs.bearing && lhs.range == rhs.range;
 }
 inline bool operator!=(const Bearing lhs, const Bearing rhs) { return !(lhs == rhs); }
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif

@@ -4,14 +4,13 @@
 #include "util/log.hpp"
 #include "util/version.hpp"
 
-#include <tbb/task_scheduler_init.h>
-
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 #include <cstdlib>
 #include <exception>
 #include <new>
+#include <thread>
 
 #include "util/meminfo.hpp"
 
@@ -43,9 +42,13 @@ return_code parseArguments(int argc,
         boost::program_options::value<boost::filesystem::path>(&extractor_config.profile_path)
             ->default_value("profiles/car.lua"),
         "Path to LUA routing profile")(
+        "data_version,d",
+        boost::program_options::value<std::string>(&extractor_config.data_version)
+            ->default_value(""),
+        "Data version. Leave blank to avoid. osmosis - to get timestamp from file")(
         "threads,t",
         boost::program_options::value<unsigned int>(&extractor_config.requested_num_threads)
-            ->default_value(tbb::task_scheduler_init::default_num_threads()),
+            ->default_value(std::thread::hardware_concurrency()),
         "Number of threads to use")(
         "small-component-size",
         boost::program_options::value<unsigned int>(&extractor_config.small_component_size)
@@ -58,11 +61,25 @@ return_code parseArguments(int argc,
             ->default_value(false),
         "Use metadata during osm parsing (This can affect the extraction performance).")(
         "parse-conditional-restrictions",
-        boost::program_options::value<bool>(&extractor_config.parse_conditionals)
+        boost::program_options::bool_switch(&extractor_config.parse_conditionals)
             ->implicit_value(true)
             ->default_value(false),
         "Save conditional restrictions found during extraction to disk for use "
-        "during contraction");
+        "during contraction")("location-dependent-data",
+                              boost::program_options::value<std::vector<boost::filesystem::path>>(
+                                  &extractor_config.location_dependent_data_paths)
+                                  ->composing(),
+                              "GeoJSON files with location-dependent data")(
+        "disable-location-cache",
+        boost::program_options::bool_switch(&extractor_config.use_locations_cache)
+            ->implicit_value(false)
+            ->default_value(true),
+        "Use internal nodes locations cache for location-dependent data lookups")(
+        "dump-nbg-graph",
+        boost::program_options::bool_switch(&extractor_config.dump_nbg_graph)
+            ->implicit_value(true)
+            ->default_value(false),
+        "Dump raw node-based graph to *.osrm file for debug purposes.");
 
     bool dummy;
     // hidden options, will be allowed on command line, but will not be
@@ -73,7 +90,7 @@ return_code parseArguments(int argc,
         boost::program_options::value<boost::filesystem::path>(&extractor_config.input_path),
         "Input file in .osm, .osm.bz2 or .osm.pbf format")(
         "generate-edge-lookup",
-        boost::program_options::value<bool>(&dummy)->implicit_value(true)->default_value(false),
+        boost::program_options::bool_switch(&dummy)->implicit_value(true)->default_value(false),
         "Not used anymore");
 
     // positional option
@@ -129,7 +146,8 @@ return_code parseArguments(int argc,
     return return_code::ok;
 }
 
-int main(int argc, char *argv[]) try
+int main(int argc, char *argv[])
+try
 {
     util::LogPolicy::GetInstance().Unmute();
     extractor::ExtractorConfig extractor_config;
@@ -173,28 +191,24 @@ int main(int argc, char *argv[]) try
 
     osrm::extract(extractor_config);
 
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
 
     return EXIT_SUCCESS;
 }
 catch (const osrm::RuntimeError &e)
 {
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
     util::Log(logERROR) << e.what();
     return e.GetCode();
 }
 catch (const std::system_error &e)
 {
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
     util::Log(logERROR) << e.what();
     return e.code().value();
 }
 catch (const std::bad_alloc &e)
 {
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
     util::Log(logERROR) << "[exception] " << e.what();
     util::Log(logERROR) << "Please provide more memory or consider using a larger swapfile";

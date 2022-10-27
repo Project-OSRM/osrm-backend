@@ -1,0 +1,18 @@
+
+option optimize_for = LITE_RUNTIME;
+
+package TestRepeatedPackedEnum;
+
+enum Color {
+    BLACK = 0;
+    RED   = 1;
+    GREEN = 2;
+    BLUE  = 3;
+}
+
+message Test {
+
+    repeated Color color = 1 [packed=true];
+
+}
+

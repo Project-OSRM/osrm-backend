@@ -22,7 +22,6 @@
 
 */
 
-#include <cstdlib>   // for std::exit
 #include <cstring>   // for std::strcmp
 #include <exception> // for std::exception
 #include <iostream>  // for std::cout, std::cerr
@@ -66,7 +65,7 @@ class RewriteHandler : public osmium::handler::Handler {
     // Copy all tags with two changes:
     // * Do not copy "created_by" tags
     // * Change "landuse=forest" into "natural=wood"
-    void copy_tags(osmium::builder::Builder& parent, const osmium::TagList& tags) {
+    static void copy_tags(osmium::builder::Builder& parent, const osmium::TagList& tags) {
 
         // The TagListBuilder is used to create a list of tags. The parameter
         // to create it is a reference to the builder of the object that
@@ -76,14 +75,14 @@ class RewriteHandler : public osmium::handler::Handler {
         // Iterate over all tags and build new tags using the new builder
         // based on the old ones.
         for (const auto& tag : tags) {
-            if (std::strcmp(tag.key(), "created_by")) {
-                if (!std::strcmp(tag.key(), "landuse") && !std::strcmp(tag.value(), "forest")) {
-                    // add_tag() can be called with key and value C strings
-                    builder.add_tag("natural", "wood");
-                } else {
-                    // add_tag() can also be called with an osmium::Tag
-                    builder.add_tag(tag);
-                }
+            if (!std::strcmp(tag.key(), "created_by")) {
+                // ignore
+            } else if (!std::strcmp(tag.key(), "landuse") && !std::strcmp(tag.value(), "forest")) {
+                // add_tag() can be called with key and value C strings
+                builder.add_tag("natural", "wood");
+            } else {
+                // add_tag() can also be called with an osmium::Tag
+                builder.add_tag(tag);
             }
         }
     }
@@ -150,7 +149,7 @@ public:
 int main(int argc, char* argv[]) {
     if (argc != 3) {
         std::cerr << "Usage: " << argv[0] << " INFILE OUTFILE\n";
-        std::exit(1);
+        return 1;
     }
 
     // Get input and output file names from command line.
@@ -196,8 +195,8 @@ int main(int argc, char* argv[]) {
         reader.close();
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
-        std::cerr << e.what() << "\n";
-        std::exit(1);
+        std::cerr << e.what() << '\n';
+        return 1;
     }
 }
 

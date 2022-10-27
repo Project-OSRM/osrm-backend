@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2016, Project OSRM contributors
+Copyright (c) 2017, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -54,17 +54,17 @@ struct StorageConfig final : IOConfig
                     ".osrm.fileIndex",
                     ".osrm.edges",
                     ".osrm.geometry",
-                    ".osrm.timestamp",
                     ".osrm.turn_weight_penalties",
                     ".osrm.turn_duration_penalties",
                     ".osrm.datasource_names",
                     ".osrm.names",
+                    ".osrm.timestamp",
                     ".osrm.properties",
-                    ".osrm.icd"},
+                    ".osrm.icd",
+                    ".osrm.maneuver_overrides"},
                    {".osrm.hsgr",
                     ".osrm.nbg_nodes",
                     ".osrm.ebg_nodes",
-                    ".osrm.core",
                     ".osrm.cells",
                     ".osrm.cell_metrics",
                     ".osrm.mldgr",
@@ -75,7 +75,7 @@ struct StorageConfig final : IOConfig
     {
     }
 };
-}
-}
+} // namespace storage
+} // namespace osrm
 
 #endif

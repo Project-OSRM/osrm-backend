@@ -1,11 +1,11 @@
-#ifndef OSMIUM_ITEM_STASH_HPP
-#define OSMIUM_ITEM_STASH_HPP
+#ifndef OSMIUM_STORAGE_ITEM_STASH_HPP
+#define OSMIUM_STORAGE_ITEM_STASH_HPP
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,9 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/memory/buffer.hpp>
+#include <osmium/memory/item.hpp>
+
 #include <cassert>
 #include <cstdlib>
 #include <limits>
@@ -43,9 +46,6 @@ DEALINGS IN THE SOFTWARE.
 # include <iostream>
 # include <chrono>
 #endif
-
-#include <osmium/memory/buffer.hpp>
-#include <osmium/memory/item.hpp>
 
 namespace osmium {
 
@@ -72,7 +72,12 @@ namespace osmium {
 
             friend class ItemStash;
 
-            std::size_t value;
+            std::size_t value; // NOLINT(modernize-use-default-member-init)
+                               // Some compilers don't like the default member
+                               // init: "error: defaulted default constructor
+                               // of 'handle_type' cannot be used by non-static
+                               // data member initializer which appears before
+                               // end of class definition"
 
             explicit handle_type(std::size_t new_value) noexcept :
                 value(new_value) {
@@ -81,7 +86,7 @@ namespace osmium {
 
         public:
 
-            /// The defalt constructor creates an invalid handle.
+            /// The default constructor creates an invalid handle.
             handle_type() noexcept :
                 value(0) {
             }
@@ -110,8 +115,13 @@ namespace osmium {
 
     private:
 
-        static constexpr const std::size_t initial_buffer_size = 1024 * 1024;
-        static constexpr const std::size_t removed_item_offset = std::numeric_limits<std::size_t>::max();
+        enum {
+            initial_buffer_size = 1024UL * 1024UL
+        };
+
+        enum {
+            removed_item_offset = std::numeric_limits<std::size_t>::max()
+        };
 
         osmium::memory::Buffer m_buffer;
         std::vector<std::size_t> m_index;
@@ -171,16 +181,16 @@ namespace osmium {
         // buffer grow (*3). The checks (*1) and (*2) make sure there is
         // minimum and maximum for the number of removed objects.
         bool should_gc() const noexcept {
-            if (m_count_removed < 10 * 1000) { // *1
+            if (m_count_removed < 10UL * 1000UL) { // *1
                 return false;
             }
-            if (m_count_removed >  5 * 1000 * 1000) { // *2
+            if (m_count_removed > 5UL * 1000UL * 1000UL) { // *2
                 return true;
             }
-            if (m_count_removed * 5 < m_count_items) { // *3
+            if (m_count_removed * 5UL < m_count_items) { // *3
                 return false;
             }
-            return m_buffer.capacity() - m_buffer.committed() < 10 * 1024; // *4
+            return m_buffer.capacity() - m_buffer.committed() < 10UL * 1024UL; // *4
         }
 
     public:
@@ -339,4 +349,4 @@ namespace osmium {
 
 } // namespace osmium
 
-#endif // OSMIUM_ITEM_STASH_HPP
+#endif // OSMIUM_STORAGE_ITEM_STASH_HPP

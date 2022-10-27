@@ -280,6 +280,35 @@ Feature: Simple Turns
             | a,d       | road,road | depart,arrive |
             | e,a       | road,road | depart,arrive |
 
+    Scenario: Splitting Road with many lanes; same as above makes sure len(turn:lanes) work as expected
+        Given the node map
+            """
+                              f - - - - - - - - - - - - - - - - - - - - e
+                             '
+                            '
+                           '
+                          '
+                         '
+            a - - - - - b
+                         '
+                          '
+                           '
+                            '
+                             '
+                              c - - - - - - - - - - - - - - - - - - - - d
+            """
+
+        And the ways
+            | nodes | highway | name | turn:lanes               | oneway |
+            | ab    | primary | road | left\|left\|right\|right | no     |
+            | bcd   | primary | road | through\|through         | yes    |
+            | efb   | primary | road | through\|through         | yes    |
+
+        When I route I should get
+            | waypoints | route     | turns         |
+            | a,d       | road,road | depart,arrive |
+            | e,a       | road,road | depart,arrive |
+
     @todo
     # currently the intersections don't match up do to the `merging` process.
     # The intermediate intersection is technically no-turn at all, since the road continues.
@@ -819,6 +848,7 @@ Feature: Simple Turns
             | h,a       | Heide,Perle,Perle   | depart,turn left,arrive  | true:16;true:90 true:195 true:270 true:345;true:90    |
 
     #http://www.openstreetmap.org/#map=19/52.53293/13.32956
+    # adjusted ways to reflect the case geometry for 2/3/2018
     Scenario: Curved Exit from Curved Road
         Given the node map
             """
@@ -845,16 +875,16 @@ Feature: Simple Turns
 
         And the ways
             | nodes  | name    | oneway | lanes | highway     |
-            | abcd   | Siemens | no     | 5     | secondary   |
-            | defg   | Erna    | no     | 3     | secondary   |
+            | ab     | Siemens | no     | 5     | secondary   |
+            | bcdefg | Erna    | no     | 3     | secondary   |
             | dhij   | Siemens | no     |       | residential |
 
         When I route I should get
-            | waypoints | route                   | turns                               |
-            | a,j       | Siemens,Siemens,Siemens | depart,continue slight right,arrive |
-            | a,g       | Siemens,Erna            | depart,arrive                       |
-            | g,j       | Erna,Siemens,Siemens    | depart,turn left,arrive             |
-            | g,a       | Erna,Siemens            | depart,arrive                       |
+            | waypoints | route                   | turns                           |
+            | a,j       | Siemens,Siemens,Siemens | depart,turn slight right,arrive |
+            | a,g       | Siemens,Erna            | depart,arrive                   |
+            | g,j       | Erna,Siemens,Siemens    | depart,turn left,arrive         |
+            | g,a       | Erna,Siemens            | depart,arrive                   |
 
      #http://www.openstreetmap.org/#map=19/52.51303/13.32170
      Scenario: Ernst Reuter Platz
@@ -932,12 +962,12 @@ Feature: Simple Turns
                                                             g
                                                           .
                                                         .
-                                                      .
-                                                    .
-                                                  f
-                            h                   .
-                               .              .
-                                  .         j
+                                                       .
+                                                     .
+                             h                     f
+                                                .
+                                 .            .
+                                   .        j
                                      .    .
                                         c
                                       . . .

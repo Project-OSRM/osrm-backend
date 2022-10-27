@@ -1,0 +1,70 @@
+#-----------------------------------------------------------------------------
+#
+#  Configuration for continuous integration service at appveyor.com
+#
+#-----------------------------------------------------------------------------
+
+platform: x64
+
+image: Visual Studio 2017
+
+clone_depth: 1
+
+#-----------------------------------------------------------------------------
+
+environment:
+  matrix:
+  - config: MSYS2
+    autocrlf: true
+  - config: Debug
+    autocrlf: true
+  - config: RelWithDebInfo
+    autocrlf: true
+  - config: Debug
+    autocrlf: false
+  - config: RelWithDebInfo
+    autocrlf: false
+  - config: Debug
+    autocrlf: false
+    platform: x86
+
+#-----------------------------------------------------------------------------
+
+init:
+  - git config --global core.autocrlf %autocrlf%
+  - git config --get core.autocrlf
+
+# The option --ask=20 is a workaround for a problem with the MSYS2 update
+# process. Without it the following error is printed and the appveyor script
+# halts: "msys2-runtime and catgets are in conflict. Remove catgets?"
+# See also: https://github.com/Alexpux/MSYS2-packages/issues/1141
+install:
+  - if "%config%"=="MSYS2" (
+      set "PATH=C:\msys64\mingw64\bin;C:\msys64\usr\bin;%PATH%" &&
+      pacman --noconfirm --sync --refresh --refresh --sysupgrade --sysupgrade --ask=20 &&
+      pacman -Rc --noconfirm mingw-w64-x86_64-gcc-libs &&
+      pacman -S --needed --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-doxygen mingw-w64-x86_64-protobuf
+    )
+
+build_script:
+  - cd c:\projects\protozero
+  - mkdir build
+  - cd build
+  - if "%platform%"=="x64" (
+      set vcvarsall_arg=amd64
+    ) else (
+      set vcvarsall_arg=x86
+    )
+  - if "%config%"=="MSYS2" (
+      cmake .. -LA -G "MSYS Makefiles" &&
+      make VERBOSE=1
+    ) else (
+      "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall" %vcvarsall_arg% &&
+      cmake .. -LA -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=%config% &&
+      nmake VERBOSE=1
+    )
+
+test_script:
+  - ctest --output-on-failure
+
+#-----------------------------------------------------------------------------

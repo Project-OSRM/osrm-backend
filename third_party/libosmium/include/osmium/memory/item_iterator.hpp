@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,14 +33,14 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/memory/item.hpp>
+#include <osmium/osm/item_type.hpp>
+
 #include <cassert>
 #include <cstddef>
 #include <iosfwd>
 #include <iterator>
 #include <type_traits>
-
-#include <osmium/memory/item.hpp>
-#include <osmium/osm/item_type.hpp>
 
 namespace osmium {
 
@@ -49,7 +49,7 @@ namespace osmium {
         namespace detail {
 
             template <typename T>
-            constexpr inline bool type_is_compatible(osmium::item_type t) noexcept {
+            constexpr inline bool type_is_compatible(const osmium::item_type t) noexcept {
                 return T::is_compatible_to(t);
             }
 
@@ -120,7 +120,7 @@ namespace osmium {
             }
 
             ItemIterator<TMember> operator++(int) noexcept {
-                ItemIterator<TMember> tmp(*this);
+                ItemIterator<TMember> tmp{*this};
                 operator++();
                 return tmp;
             }
@@ -221,10 +221,9 @@ namespace osmium {
             /**
              * Return the number of items in this range.
              *
-             * Note that this methods has worst-case complexity O(n) with n
-             * being the number of items in the underlying range.
+             * Complexity: Linear in the number of items.
              */
-            size_t size() const {
+            std::size_t size() const noexcept {
                 if (m_begin == m_end) {
                     return 0;
                 }
@@ -234,10 +233,9 @@ namespace osmium {
             /**
              * Is this range empty?
              *
-             * Note that this methods has worst-case complexity O(n) with n
-             * being the number of items in the underlying range.
+             * Complexity: Linear in the number of items.
              */
-            bool empty() const {
+            bool empty() const noexcept {
                 return size() == 0;
             }
 

@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,14 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <exception>
-#include <functional>
-#include <future>
-#include <map>
-#include <memory>
-#include <string>
-#include <utility>
-
 #include <osmium/io/detail/queue_util.hpp>
 #include <osmium/io/error.hpp>
 #include <osmium/io/file.hpp>
@@ -50,6 +42,14 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/entity_bits.hpp>
 #include <osmium/thread/pool.hpp>
 
+#include <array>
+#include <exception>
+#include <functional>
+#include <future>
+#include <memory>
+#include <string>
+#include <utility>
+
 namespace osmium {
 
     namespace io {
@@ -58,11 +58,15 @@ namespace osmium {
 
             struct parser_arguments {
                 osmium::thread::Pool& pool;
+                int fd;
                 future_string_queue_type& input_queue;
                 future_buffer_queue_type& output_queue;
                 std::promise<osmium::io::Header>& header_promise;
+                std::atomic<std::size_t>* offset_ptr;
                 osmium::osm_entity_bits::type read_which_entities;
                 osmium::io::read_meta read_metadata;
+                osmium::io::buffers_type buffers_kind;
+                bool want_buffered_pages_removed;
             };
 
             class Parser {
@@ -162,6 +166,72 @@ namespace osmium {
 
             }; // class Parser
 
+            class ParserWithBuffer : public Parser {
+
+                enum {
+                    initial_buffer_size = 1024UL * 1024UL
+                };
+
+                osmium::memory::Buffer m_buffer{initial_buffer_size,
+                                                osmium::memory::Buffer::auto_grow::internal};
+
+                osmium::io::buffers_type m_buffers_kind;
+                osmium::item_type m_last_type = osmium::item_type::undefined;
+
+                bool is_different_type(osmium::item_type current_type) noexcept {
+                    if (m_last_type == current_type) {
+                        return false;
+                    }
+
+                    if (m_last_type == osmium::item_type::undefined) {
+                        m_last_type = current_type;
+                        return false;
+                    }
+
+                    m_last_type = current_type;
+                    return true;
+                }
+
+            protected:
+
+                explicit ParserWithBuffer(parser_arguments& args) :
+                    Parser(args),
+                    m_buffers_kind(args.buffers_kind) {
+                }
+
+                osmium::memory::Buffer& buffer() noexcept {
+                    return m_buffer;
+                }
+
+                void flush_nested_buffer() {
+                    if (m_buffer.has_nested_buffers()) {
+                        std::unique_ptr<osmium::memory::Buffer> buffer_ptr{m_buffer.get_last_nested()};
+                        send_to_output_queue(std::move(*buffer_ptr));
+                    }
+                }
+
+                void flush_final_buffer() {
+                    if (m_buffer.committed() > 0) {
+                        send_to_output_queue(std::move(m_buffer));
+                    }
+                }
+
+                void maybe_new_buffer(osmium::item_type current_type) {
+                    if (m_buffers_kind == buffers_type::any) {
+                        return;
+                    }
+
+                    if (is_different_type(current_type) && m_buffer.committed() > 0) {
+                        osmium::memory::Buffer new_buffer{initial_buffer_size,
+                                                          osmium::memory::Buffer::auto_grow::internal};
+                        using std::swap;
+                        swap(new_buffer, m_buffer);
+                        send_to_output_queue(std::move(new_buffer));
+                    }
+                }
+
+            }; // class ParserWithBuffer
+
             /**
              * This factory class is used to create objects that decode OSM
              * data written in a specified format.
@@ -177,37 +247,41 @@ namespace osmium {
 
             private:
 
-                using map_type = std::map<osmium::io::file_format, create_parser_type>;
+                std::array<create_parser_type, static_cast<std::size_t>(file_format::last) + 1> m_callbacks;
 
-                map_type m_callbacks;
+                ParserFactory() noexcept = default;
 
-                ParserFactory() :
-                    m_callbacks() {
+                create_parser_type& callbacks(const osmium::io::file_format format) noexcept {
+                    return m_callbacks[static_cast<std::size_t>(format)];
+                }
+
+                const create_parser_type& callbacks(const osmium::io::file_format format) const noexcept {
+                    return m_callbacks[static_cast<std::size_t>(format)];
                 }
 
             public:
 
-                static ParserFactory& instance() {
+                static ParserFactory& instance() noexcept {
                     static ParserFactory factory;
                     return factory;
                 }
 
-                bool register_parser(osmium::io::file_format format, create_parser_type&& create_function) {
-                    const auto result = m_callbacks.emplace(format, std::forward<create_parser_type>(create_function));
-                    return result.second;
+                bool register_parser(const osmium::io::file_format format, create_parser_type&& create_function) {
+                    callbacks(format) = std::move(create_function);
+                    return true;
                 }
 
                 create_parser_type get_creator_function(const osmium::io::File& file) const {
-                    const auto it = m_callbacks.find(file.format());
-                    if (it == m_callbacks.end()) {
-                        throw unsupported_file_format_error{
-                                std::string{"Can not open file '"} +
-                                file.filename() +
-                                "' with type '" +
-                                as_string(file.format()) +
-                                "'. No support for reading this format in this program."};
+                    auto func = callbacks(file.format());
+                    if (func) {
+                        return func;
                     }
-                    return it->second;
+                    throw unsupported_file_format_error{
+                        std::string{"Can not open file '"} +
+                        file.filename() +
+                        "' with type '" +
+                        as_string(file.format()) +
+                        "'. No support for reading this format in this program."};
                 }
 
             }; // class ParserFactory

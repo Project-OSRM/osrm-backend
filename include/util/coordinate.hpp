@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2016, Project OSRM contributors
+Copyright (c) 2017, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef COORDINATE_HPP_
-#define COORDINATE_HPP_
+#ifndef OSRM_UTIL_COORDINATE_HPP_
+#define OSRM_UTIL_COORDINATE_HPP_
 
 #include "util/alias.hpp"
 
@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstddef>
 #include <iosfwd> //for std::ostream
+#include <sstream>
 #include <string>
 #include <type_traits>
 
@@ -59,7 +60,7 @@ struct unsafelatitude
 struct unsafelongitude
 {
 };
-}
+} // namespace tag
 
 // Internal lon/lat types - assumed to be range safe
 using FixedLatitude = Alias<std::int32_t, tag::latitude>;
@@ -215,7 +216,6 @@ struct Coordinate
     bool IsValid() const;
     friend bool operator==(const Coordinate lhs, const Coordinate rhs);
     friend bool operator!=(const Coordinate lhs, const Coordinate rhs);
-    friend std::ostream &operator<<(std::ostream &out, const Coordinate coordinate);
 };
 
 /**
@@ -256,19 +256,16 @@ struct FloatCoordinate
     bool IsValid() const;
     friend bool operator==(const FloatCoordinate lhs, const FloatCoordinate rhs);
     friend bool operator!=(const FloatCoordinate lhs, const FloatCoordinate rhs);
-    friend std::ostream &operator<<(std::ostream &out, const FloatCoordinate coordinate);
 };
 
 bool operator==(const Coordinate lhs, const Coordinate rhs);
 bool operator==(const FloatCoordinate lhs, const FloatCoordinate rhs);
-std::ostream &operator<<(std::ostream &out, const Coordinate coordinate);
-std::ostream &operator<<(std::ostream &out, const FloatCoordinate coordinate);
 
 inline Coordinate::Coordinate(const FloatCoordinate &other)
     : Coordinate(toFixed(other.lon), toFixed(other.lat))
 {
 }
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif /* COORDINATE_HPP_ */

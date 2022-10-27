@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,12 +33,12 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cmath>
-#include <string>
-
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/geom/util.hpp>
 #include <osmium/osm/location.hpp>
+
+#include <cmath>
+#include <string>
 
 namespace osmium {
 
@@ -49,12 +49,12 @@ namespace osmium {
             constexpr double earth_radius_for_epsg3857 = 6378137.0;
             constexpr double max_coordinate_epsg3857 = 20037508.34;
 
-            constexpr inline double lon_to_x(double lon) {
+            constexpr inline double lon_to_x(double lon) noexcept {
                 return earth_radius_for_epsg3857 * deg_to_rad(lon);
             }
 
             inline double lat_to_y_with_tan(double lat) { // not constexpr because math functions aren't
-                return earth_radius_for_epsg3857 * std::log(std::tan(osmium::geom::PI/4 + deg_to_rad(lat)/2));
+                return earth_radius_for_epsg3857 * std::log(std::tan(osmium::geom::PI / 4 + deg_to_rad(lat) / 2));
             }
 
 #ifdef OSMIUM_USE_SLOW_MERCATOR_PROJECTION
@@ -101,7 +101,7 @@ namespace osmium {
             }
 
             inline double y_to_lat(double y) { // not constexpr because math functions aren't
-                return rad_to_deg(2 * std::atan(std::exp(y / earth_radius_for_epsg3857)) - osmium::geom::PI/2);
+                return rad_to_deg(2 * std::atan(std::exp(y / earth_radius_for_epsg3857)) - osmium::geom::PI / 2);
             }
 
         } // namespace detail
@@ -116,6 +116,9 @@ namespace osmium {
          * Convert the coordinates from WGS84 lon/lat to web mercator.
          *
          * @pre @code c.valid() @endcode
+         * @pre Coordinates must be in valid range, longitude between
+         *      -180 and +180 degree, latitude between -MERCATOR_MAX_LAT
+         *      and MERCATOR_MAX_LAT.
          */
         inline Coordinates lonlat_to_mercator(const Coordinates& c) {
             return Coordinates{detail::lon_to_x(c.x), detail::lat_to_y(c.y)};
@@ -125,6 +128,8 @@ namespace osmium {
          * Convert the coordinates from web mercator to WGS84 lon/lat.
          *
          * @pre @code c.valid() @endcode
+         * @pre Coordinates must be in valid range (longitude and
+         *      latidude between -/+20037508.34).
          */
         inline Coordinates mercator_to_lonlat(const Coordinates& c) {
             return Coordinates{detail::x_to_lon(c.x), detail::y_to_lat(c.y)};
@@ -138,18 +143,29 @@ namespace osmium {
 
         public:
 
-            MercatorProjection() {
+            // This is not "= default" on purpose because some compilers don't
+            // like it and complain that "default initialization of an object
+            // of const type 'const osmium::geom::MercatorProjection' requires
+            // a user-provided default constructor".
+            MercatorProjection() { // NOLINT(hicpp-use-equals-default, modernize-use-equals-default)
             }
 
+            /**
+             * Do coordinate transformation.
+             *
+             * @pre Coordinates must be in valid range, longitude between
+             *      -180 and +180 degree, latitude between -MERCATOR_MAX_LAT
+             *      and MERCATOR_MAX_LAT.
+             */
             Coordinates operator()(osmium::Location location) const {
                 return Coordinates{detail::lon_to_x(location.lon()), detail::lat_to_y(location.lat())};
             }
 
-            int epsg() const noexcept {
+            static int epsg() noexcept {
                 return 3857;
             }
 
-            std::string proj_string() const {
+            static std::string proj_string() noexcept {
                 return "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs";
             }
 

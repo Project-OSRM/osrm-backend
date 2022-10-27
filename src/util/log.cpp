@@ -2,6 +2,7 @@
 #include "util/isatty.hpp"
 #include <boost/algorithm/string/predicate.hpp>
 #include <cstdio>
+#include <fmt/chrono.h>
 #include <iostream>
 #include <mutex>
 #include <string>
@@ -16,13 +17,13 @@ namespace
 static const char COL_RESET[]{"\x1b[0m"};
 static const char RED[]{"\x1b[31m"};
 static const char YELLOW[]{"\x1b[33m"};
-#ifndef NDEBUG
+#ifdef ENABLE_DEBUG_LOGGING
 static const char MAGENTA[]{"\x1b[35m"};
 #endif
 // static const char GREEN[] { "\x1b[32m"};
 // static const char BLUE[] { "\x1b[34m"};
 // static const char CYAN[] { "\x1b[36m"};
-}
+} // namespace
 
 void LogPolicy::Unmute() { m_is_mute = false; }
 
@@ -63,35 +64,47 @@ std::string LogPolicy::GetLevels()
     return "NONE, ERROR, WARNING, INFO, DEBUG";
 }
 
-Log::Log(LogLevel level_, std::ostream &ostream) : level(level_), stream(ostream)
+Log::Log(LogLevel level_, std::ostream &ostream) : level(level_), stream(ostream) { Init(); }
+
+Log::Log(LogLevel level_) : level(level_), buffer{}, stream{buffer} { Init(); }
+
+void Log::Init()
 {
     std::lock_guard<std::mutex> lock(get_mutex());
     if (!LogPolicy::GetInstance().IsMute() && level <= LogPolicy::GetInstance().GetLevel())
     {
         const bool is_terminal = IsStdoutATTY();
+
+        auto format = [is_terminal](const char *level, const char *color) {
+            const auto timestamp = std::chrono::system_clock::now();
+            return fmt::format("{}[{:%FT%H:%M:}{:%S}] [{}] ",
+                               is_terminal ? color : "",
+                               timestamp,
+                               timestamp.time_since_epoch(),
+                               level);
+        };
+
         switch (level)
         {
         case logNONE:
             break;
         case logWARNING:
-            stream << (is_terminal ? YELLOW : "") << "[warn] ";
+            stream << format("warn", YELLOW);
             break;
         case logERROR:
-            stream << (is_terminal ? RED : "") << "[error] ";
+            stream << format("error", RED);
             break;
         case logDEBUG:
-#ifndef NDEBUG
-            stream << (is_terminal ? MAGENTA : "") << "[debug] ";
+#ifdef ENABLE_DEBUG_LOGGING
+            stream << format("debug", MAGENTA);
 #endif
             break;
         default: // logINFO:
-            stream << "[info] ";
+            stream << format("info", "");
             break;
         }
     }
 }
-
-Log::Log(LogLevel level_) : Log(level_, buffer) {}
 
 std::mutex &Log::get_mutex()
 {
@@ -126,7 +139,7 @@ Log::~Log()
                 std::cerr << std::endl;
                 break;
             case logDEBUG:
-#ifdef NDEBUG
+#ifndef ENABLE_DEBUG_LOGGING
                 break;
 #endif
             case logINFO:
@@ -150,5 +163,5 @@ UnbufferedLog::UnbufferedLog(LogLevel level_)
 {
     stream.flags(std::ios_base::unitbuf);
 }
-}
-}
+} // namespace util
+} // namespace osrm

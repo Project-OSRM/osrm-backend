@@ -1,18 +1,18 @@
 @routing @testbot @nil
-Feature: Testbot - Check assigning nil values
-    Scenario: Assign nil values to all way strings
+Feature: Testbot - Check assigning empty values
+    Scenario: Assign empty values to all way strings
         Given the profile file
         """
         functions = require('testbot')
 
         function way_function(profile, way, result)
-          result.name = nil
-          result.ref = nil
-          result.destinations = nil
-          result.exits = nil
-          result.pronunciation = nil
-          result.turn_lanes_forward = nil
-          result.turn_lanes_backward = nil
+          result.name = ""
+          result.ref = ""
+          result.destinations = ""
+          result.exits = ""
+          result.pronunciation = ""
+          result.turn_lanes_forward = ""
+          result.turn_lanes_backward = ""
 
           result.forward_speed = 10
           result.backward_speed = 10

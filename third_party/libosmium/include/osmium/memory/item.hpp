@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -36,8 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <cstddef>
 #include <cstdint>
 
-#include <osmium/util/cast.hpp>
-
 namespace osmium {
 
     // forward declaration, see osmium/osm/item_type.hpp for declaration
@@ -59,7 +57,9 @@ namespace osmium {
         using item_size_type = uint32_t;
 
         // align datastructures to this many bytes
-        constexpr const std::size_t align_bytes = 8;
+        enum : std::size_t {
+            align_bytes = 8UL
+        };
 
         inline constexpr std::size_t padded_length(std::size_t length) noexcept {
             return (length + align_bytes - 1) & ~(align_bytes - 1);
@@ -78,15 +78,15 @@ namespace osmium {
 
             protected:
 
-                ItemHelper() = default;
+                ItemHelper() noexcept = default;
 
-                ~ItemHelper() = default;
+                ItemHelper(const ItemHelper&) noexcept = default;
+                ItemHelper(ItemHelper&&) noexcept = default;
 
-                ItemHelper(const ItemHelper&) = default;
-                ItemHelper(ItemHelper&&) = default;
+                ItemHelper& operator=(const ItemHelper&) noexcept = default;
+                ItemHelper& operator=(ItemHelper&&) noexcept = default;
 
-                ItemHelper& operator=(const ItemHelper&) = default;
-                ItemHelper& operator=(ItemHelper&&) = default;
+                ~ItemHelper() noexcept = default;
 
             public:
 
@@ -125,7 +125,7 @@ namespace osmium {
 
         protected:
 
-            explicit Item(item_size_type size = 0, item_type type = item_type()) noexcept :
+            explicit Item(item_size_type size = 0, item_type type = item_type{}) noexcept :
                 m_size(size),
                 m_type(type),
                 m_removed(false),
@@ -133,18 +133,20 @@ namespace osmium {
                 m_padding(0) {
             }
 
-            Item(const Item&) = delete;
-            Item(Item&&) = delete;
-
-            Item& operator=(const Item&) = delete;
-            Item& operator=(Item&&) = delete;
-
             Item& set_type(const item_type item_type) noexcept {
                 m_type = item_type;
                 return *this;
             }
 
         public:
+
+            Item(const Item&) = delete;
+            Item& operator=(const Item&) = delete;
+
+            Item(Item&&) = delete;
+            Item& operator=(Item&&) = delete;
+
+            ~Item() noexcept = default;
 
             constexpr static bool is_compatible_to(osmium::item_type /*t*/) noexcept {
                 return true;
@@ -163,7 +165,7 @@ namespace osmium {
             }
 
             item_size_type padded_size() const {
-                return static_cast_with_assert<item_size_type>(padded_length(m_size));
+                return static_cast<item_size_type>(padded_length(m_size));
             }
 
             item_type type() const noexcept {
@@ -174,7 +176,7 @@ namespace osmium {
                 return m_removed;
             }
 
-            void set_removed(bool removed) noexcept {
+            void set_removed(const bool removed) noexcept {
                 m_removed = removed;
             }
 
@@ -187,7 +189,7 @@ namespace osmium {
                 return diff_chars[m_diff];
             }
 
-            void set_diff(diff_indicator_type diff) noexcept {
+            void set_diff(const diff_indicator_type diff) noexcept {
                 m_diff = uint16_t(diff);
             }
 

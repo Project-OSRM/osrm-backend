@@ -1,11 +1,12 @@
 #ifndef OSRM_CELLS_CUSTOMIZER_HPP
 #define OSRM_CELLS_CUSTOMIZER_HPP
 
-#include "partition/cell_storage.hpp"
-#include "partition/multi_level_partition.hpp"
+#include "partitioner/cell_storage.hpp"
+#include "partitioner/multi_level_partition.hpp"
 #include "util/query_heap.hpp"
 
 #include <tbb/enumerable_thread_specific.h>
+#include <tbb/parallel_for.h>
 
 #include <unordered_set>
 
@@ -21,6 +22,7 @@ class CellCustomizer
     {
         bool from_clique;
         EdgeDuration duration;
+        EdgeDistance distance;
     };
 
   public:
@@ -28,12 +30,12 @@ class CellCustomizer
         util::QueryHeap<NodeID, NodeID, EdgeWeight, HeapData, util::ArrayStorage<NodeID, int>>;
     using HeapPtr = tbb::enumerable_thread_specific<Heap>;
 
-    CellCustomizer(const partition::MultiLevelPartition &partition) : partition(partition) {}
+    CellCustomizer(const partitioner::MultiLevelPartition &partition) : partition(partition) {}
 
     template <typename GraphT>
     void Customize(const GraphT &graph,
                    Heap &heap,
-                   const partition::CellStorage &cells,
+                   const partitioner::CellStorage &cells,
                    const std::vector<bool> &allowed_nodes,
                    CellMetric &metric,
                    LevelID level,
@@ -59,7 +61,7 @@ class CellCustomizer
                 }
             }
             heap.Clear();
-            heap.Insert(source, 0, {false, 0});
+            heap.Insert(source, 0, {false, 0, 0});
 
             // explore search space
             while (!heap.Empty() && !destinations_set.empty())
@@ -67,8 +69,18 @@ class CellCustomizer
                 const NodeID node = heap.DeleteMin();
                 const EdgeWeight weight = heap.GetKey(node);
                 const EdgeDuration duration = heap.GetData(node).duration;
+                const EdgeDistance distance = heap.GetData(node).distance;
 
-                RelaxNode(graph, cells, allowed_nodes, metric, heap, level, node, weight, duration);
+                RelaxNode(graph,
+                          cells,
+                          allowed_nodes,
+                          metric,
+                          heap,
+                          level,
+                          node,
+                          weight,
+                          duration,
+                          distance);
 
                 destinations_set.erase(node);
             }
@@ -76,27 +88,33 @@ class CellCustomizer
             // fill a map of destination nodes to placeholder pointers
             auto weights = cell.GetOutWeight(source);
             auto durations = cell.GetOutDuration(source);
+            auto distances = cell.GetOutDistance(source);
             for (auto &destination : destinations)
             {
                 BOOST_ASSERT(!weights.empty());
                 BOOST_ASSERT(!durations.empty());
+                BOOST_ASSERT(!distances.empty());
 
                 const bool inserted = heap.WasInserted(destination);
                 weights.front() = inserted ? heap.GetKey(destination) : INVALID_EDGE_WEIGHT;
                 durations.front() =
                     inserted ? heap.GetData(destination).duration : MAXIMAL_EDGE_DURATION;
+                distances.front() =
+                    inserted ? heap.GetData(destination).distance : INVALID_EDGE_DISTANCE;
 
                 weights.advance_begin(1);
                 durations.advance_begin(1);
+                distances.advance_begin(1);
             }
             BOOST_ASSERT(weights.empty());
             BOOST_ASSERT(durations.empty());
+            BOOST_ASSERT(distances.empty());
         }
     }
 
     template <typename GraphT>
     void Customize(const GraphT &graph,
-                   const partition::CellStorage &cells,
+                   const partitioner::CellStorage &cells,
                    const std::vector<bool> &allowed_nodes,
                    CellMetric &metric) const
     {
@@ -120,14 +138,15 @@ class CellCustomizer
   private:
     template <typename GraphT>
     void RelaxNode(const GraphT &graph,
-                   const partition::CellStorage &cells,
+                   const partitioner::CellStorage &cells,
                    const std::vector<bool> &allowed_nodes,
                    const CellMetric &metric,
                    Heap &heap,
                    LevelID level,
                    NodeID node,
                    EdgeWeight weight,
-                   EdgeDuration duration) const
+                   EdgeDuration duration,
+                   EdgeDistance distance) const
     {
         auto first_level = level == 1;
         BOOST_ASSERT(heap.WasInserted(node));
@@ -148,6 +167,7 @@ class CellCustomizer
                 auto subcell = cells.GetCell(metric, level - 1, subcell_id);
                 auto subcell_destination = subcell.GetDestinationNodes().begin();
                 auto subcell_duration = subcell.GetOutDuration(node).begin();
+                auto subcell_distance = subcell.GetOutDistance(node).begin();
                 for (auto subcell_weight : subcell.GetOutWeight(node))
                 {
                     if (subcell_weight != INVALID_EDGE_WEIGHT)
@@ -159,19 +179,25 @@ class CellCustomizer
                         }
 
                         const EdgeWeight to_weight = weight + subcell_weight;
+                        const EdgeDuration to_duration = duration + *subcell_duration;
+                        const EdgeDistance to_distance = distance + *subcell_distance;
                         if (!heap.WasInserted(to))
                         {
-                            heap.Insert(to, to_weight, {true, duration + *subcell_duration});
+                            heap.Insert(to, to_weight, {true, to_duration, to_distance});
                         }
-                        else if (to_weight < heap.GetKey(to))
+                        else if (std::tie(to_weight, to_duration, to_distance) <
+                                 std::tie(heap.GetKey(to),
+                                          heap.GetData(to).duration,
+                                          heap.GetData(to).distance))
                         {
                             heap.DecreaseKey(to, to_weight);
-                            heap.GetData(to) = {true, duration + *subcell_duration};
+                            heap.GetData(to) = {true, to_duration, to_distance};
                         }
                     }
 
                     ++subcell_destination;
                     ++subcell_duration;
+                    ++subcell_distance;
                 }
             }
         }
@@ -186,27 +212,31 @@ class CellCustomizer
             }
 
             const auto &data = graph.GetEdgeData(edge);
-            if (data.forward &&
-                (first_level ||
-                 partition.GetCell(level - 1, node) != partition.GetCell(level - 1, to)))
+            if (data.forward && (first_level || partition.GetCell(level - 1, node) !=
+                                                    partition.GetCell(level - 1, to)))
             {
                 const EdgeWeight to_weight = weight + data.weight;
+                const EdgeDuration to_duration = duration + data.duration;
+                const EdgeDistance to_distance = distance + data.distance;
                 if (!heap.WasInserted(to))
                 {
-                    heap.Insert(to, to_weight, {false, duration + data.duration});
+                    heap.Insert(
+                        to, to_weight, {false, duration + data.duration, distance + data.distance});
                 }
-                else if (to_weight < heap.GetKey(to))
+                else if (std::tie(to_weight, to_duration, to_distance) <
+                         std::tie(
+                             heap.GetKey(to), heap.GetData(to).duration, heap.GetData(to).distance))
                 {
                     heap.DecreaseKey(to, to_weight);
-                    heap.GetData(to) = {false, duration + data.duration};
+                    heap.GetData(to) = {false, to_duration, to_distance};
                 }
             }
         }
     }
 
-    const partition::MultiLevelPartition &partition;
+    const partitioner::MultiLevelPartition &partition;
 };
-}
-}
+} // namespace customizer
+} // namespace osrm
 
 #endif // OSRM_CELLS_CUSTOMIZER_HPP

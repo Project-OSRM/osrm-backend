@@ -126,3 +126,24 @@ Feature: Merging
         When I route I should get
             | waypoints | route      | turns                            |
             | d,c       | ,A100,A100 | depart,merge slight right,arrive |
+
+
+    # https://www.openstreetmap.org/way/254299122
+    @merge
+    Scenario: Merge onto a motorway with junction references
+        Given the node map
+            """
+            a     b      c     d
+            e                  f
+            """
+
+        And the ways
+            | nodes | name | junction:ref | highway       | oneway |
+            | abc   | A100 |              | motorway      | yes    |
+            | cd    | A100 | 1A           | motorway      | yes    |
+            | eb    |      |              | motorway_link | yes    |
+            | cf    |      | 1B           | motorway_link | yes    |
+
+        When I route I should get
+            | waypoints | route      | turns                           |
+            | e,d       | ,A100,A100 | depart,merge slight left,arrive |

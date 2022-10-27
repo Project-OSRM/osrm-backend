@@ -10,3 +10,10 @@ Some rules for contributing to this project:
   you have added. Please read the [notes for developers](NOTES_FOR_DEVELOPERS.md)
   beforehand which contains some coding guidelines.
 
+If you are reporting a problem:
+
+* Describe exactly what you were trying to achieve, what you did, what you
+  expected to happen and what did happen instead. Include relevant information
+  about the platform, OS version etc. you are using. Include shell commands you
+  typed in, log files, errors messages etc.
+

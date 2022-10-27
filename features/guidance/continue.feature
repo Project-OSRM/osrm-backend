@@ -22,6 +22,40 @@ Feature: Continue Instructions
             | a,c       | abc,abc,abc | depart,continue left,arrive |
             | a,d       | abc,bd,bd   | depart,turn straight,arrive |
 
+    Scenario: Road turning left, Suffix changes
+        Given the node map
+            """
+                c
+            a - b-d
+            """
+
+        And the ways
+            | nodes  | highway | name                    |
+            | ab     | primary | North Capitol Northeast |
+            | bc     | primary | North Capitol Northwest |
+            | bd     | primary | some random street      |
+
+       When I route I should get
+            | waypoints | route                                                                   | turns                       |
+            | a,c       | North Capitol Northeast,North Capitol Northwest,North Capitol Northwest | depart,continue left,arrive |
+
+    Scenario: Road turning left, Suffix changes, no-spaces
+        Given the node map
+            """
+                c
+            a - b-d
+            """
+
+        And the ways
+            | nodes  | highway | name                   |
+            | ab     | primary | North CapitolNortheast |
+            | bc     | primary | North CapitolNorthwest |
+            | bd     | primary | some random street     |
+
+       When I route I should get
+            | waypoints | route                                                                | turns                       |
+            | a,c       | North CapitolNortheast,North CapitolNorthwest,North CapitolNorthwest | depart,continue left,arrive |
+
     Scenario: Road turning left and straight
         Given the node map
             """

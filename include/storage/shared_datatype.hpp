@@ -1,335 +1,304 @@
 #ifndef SHARED_DATA_TYPE_HPP
 #define SHARED_DATA_TYPE_HPP
 
+#include "storage/block.hpp"
+#include "storage/io_fwd.hpp"
+
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
-#include "util/log.hpp"
 
 #include <boost/assert.hpp>
 
 #include <array>
 #include <cstdint>
+#include <map>
+#include <numeric>
+#include <unordered_set>
 
 namespace osrm
 {
 namespace storage
 {
 
-// Added at the start and end of each block as sanity check
-const constexpr char CANARY[4] = {'O', 'S', 'R', 'M'};
-
-const constexpr char *block_id_to_name[] = {"NAME_CHAR_DATA",
-                                            "GEOMETRY_ID_LIST",
-                                            "NAME_ID_LIST",
-                                            "COMPONENT_ID_LIST",
-                                            "TRAVEL_MODE_LIST",
-                                            "CLASSES_LIST",
-                                            "CH_GRAPH_NODE_LIST",
-                                            "CH_GRAPH_EDGE_LIST",
-                                            "CH_EDGE_FILTER_0",
-                                            "CH_EDGE_FILTER_1",
-                                            "CH_EDGE_FILTER_2",
-                                            "CH_EDGE_FILTER_3",
-                                            "CH_EDGE_FILTER_4",
-                                            "CH_EDGE_FILTER_5",
-                                            "CH_EDGE_FILTER_6",
-                                            "CH_EDGE_FILTER_7",
-                                            "COORDINATE_LIST",
-                                            "OSM_NODE_ID_LIST",
-                                            "TURN_INSTRUCTION",
-                                            "ENTRY_CLASSID",
-                                            "R_SEARCH_TREE",
-                                            "R_SEARCH_TREE_LEVELS",
-                                            "GEOMETRIES_INDEX",
-                                            "GEOMETRIES_NODE_LIST",
-                                            "GEOMETRIES_FWD_WEIGHT_LIST",
-                                            "GEOMETRIES_REV_WEIGHT_LIST",
-                                            "GEOMETRIES_FWD_DURATION_LIST",
-                                            "GEOMETRIES_REV_DURATION_LIST",
-                                            "GEOMETRIES_FWD_DATASOURCES_LIST",
-                                            "GEOMETRIES_REV_DATASOURCES_LIST",
-                                            "HSGR_CHECKSUM",
-                                            "TIMESTAMP",
-                                            "FILE_INDEX_PATH",
-                                            "CH_CORE_MARKER_0",
-                                            "CH_CORE_MARKER_1",
-                                            "CH_CORE_MARKER_2",
-                                            "CH_CORE_MARKER_3",
-                                            "CH_CORE_MARKER_4",
-                                            "CH_CORE_MARKER_5",
-                                            "CH_CORE_MARKER_6",
-                                            "CH_CORE_MARKER_7",
-                                            "DATASOURCES_NAMES",
-                                            "PROPERTIES",
-                                            "BEARING_CLASSID",
-                                            "BEARING_OFFSETS",
-                                            "BEARING_BLOCKS",
-                                            "BEARING_VALUES",
-                                            "ENTRY_CLASS",
-                                            "LANE_DATA_ID",
-                                            "PRE_TURN_BEARING",
-                                            "POST_TURN_BEARING",
-                                            "TURN_LANE_DATA",
-                                            "LANE_DESCRIPTION_OFFSETS",
-                                            "LANE_DESCRIPTION_MASKS",
-                                            "TURN_WEIGHT_PENALTIES",
-                                            "TURN_DURATION_PENALTIES",
-                                            "MLD_LEVEL_DATA",
-                                            "MLD_PARTITION",
-                                            "MLD_CELL_TO_CHILDREN",
-                                            "MLD_CELL_WEIGHTS_0",
-                                            "MLD_CELL_WEIGHTS_1",
-                                            "MLD_CELL_WEIGHTS_2",
-                                            "MLD_CELL_WEIGHTS_3",
-                                            "MLD_CELL_WEIGHTS_4",
-                                            "MLD_CELL_WEIGHTS_5",
-                                            "MLD_CELL_WEIGHTS_6",
-                                            "MLD_CELL_WEIGHTS_7",
-                                            "MLD_CELL_DURATIONS_0",
-                                            "MLD_CELL_DURATIONS_1",
-                                            "MLD_CELL_DURATIONS_2",
-                                            "MLD_CELL_DURATIONS_3",
-                                            "MLD_CELL_DURATIONS_4",
-                                            "MLD_CELL_DURATIONS_5",
-                                            "MLD_CELL_DURATIONS_6",
-                                            "MLD_CELL_DURATIONS_7",
-                                            "MLD_CELL_SOURCE_BOUNDARY",
-                                            "MLD_CELL_DESTINATION_BOUNDARY",
-                                            "MLD_CELLS",
-                                            "MLD_CELL_LEVEL_OFFSETS",
-                                            "MLD_GRAPH_NODE_LIST",
-                                            "MLD_GRAPH_EDGE_LIST",
-                                            "MLD_GRAPH_NODE_TO_OFFSET"};
-
-struct DataLayout
+class BaseDataLayout;
+namespace serialization
 {
-    enum BlockID
+inline void read(io::BufferReader &reader, BaseDataLayout &layout);
+
+inline void write(io::BufferWriter &writer, const BaseDataLayout &layout);
+} // namespace serialization
+
+namespace detail
+{
+// Removes the file name if name_prefix is a directory and name is not a file in that directory
+inline std::string trimName(const std::string &name_prefix, const std::string &name)
+{
+    // list directory and
+    if (!name_prefix.empty() && name_prefix.back() == '/')
     {
-        NAME_CHAR_DATA = 0,
-        GEOMETRY_ID_LIST,
-        NAME_ID_LIST,
-        COMPONENT_ID_LIST,
-        TRAVEL_MODE_LIST,
-        CLASSES_LIST,
-        CH_GRAPH_NODE_LIST,
-        CH_GRAPH_EDGE_LIST,
-        CH_EDGE_FILTER_0,
-        CH_EDGE_FILTER_1,
-        CH_EDGE_FILTER_2,
-        CH_EDGE_FILTER_3,
-        CH_EDGE_FILTER_4,
-        CH_EDGE_FILTER_5,
-        CH_EDGE_FILTER_6,
-        CH_EDGE_FILTER_7,
-        COORDINATE_LIST,
-        OSM_NODE_ID_LIST,
-        TURN_INSTRUCTION,
-        ENTRY_CLASSID,
-        R_SEARCH_TREE,
-        R_SEARCH_TREE_LEVELS,
-        GEOMETRIES_INDEX,
-        GEOMETRIES_NODE_LIST,
-        GEOMETRIES_FWD_WEIGHT_LIST,
-        GEOMETRIES_REV_WEIGHT_LIST,
-        GEOMETRIES_FWD_DURATION_LIST,
-        GEOMETRIES_REV_DURATION_LIST,
-        GEOMETRIES_FWD_DATASOURCES_LIST,
-        GEOMETRIES_REV_DATASOURCES_LIST,
-        HSGR_CHECKSUM,
-        TIMESTAMP,
-        FILE_INDEX_PATH,
-        CH_CORE_MARKER_0,
-        CH_CORE_MARKER_1,
-        CH_CORE_MARKER_2,
-        CH_CORE_MARKER_3,
-        CH_CORE_MARKER_4,
-        CH_CORE_MARKER_5,
-        CH_CORE_MARKER_6,
-        CH_CORE_MARKER_7,
-        DATASOURCES_NAMES,
-        PROPERTIES,
-        BEARING_CLASSID,
-        BEARING_OFFSETS,
-        BEARING_BLOCKS,
-        BEARING_VALUES,
-        ENTRY_CLASS,
-        LANE_DATA_ID,
-        PRE_TURN_BEARING,
-        POST_TURN_BEARING,
-        TURN_LANE_DATA,
-        LANE_DESCRIPTION_OFFSETS,
-        LANE_DESCRIPTION_MASKS,
-        TURN_WEIGHT_PENALTIES,
-        TURN_DURATION_PENALTIES,
-        MLD_LEVEL_DATA,
-        MLD_PARTITION,
-        MLD_CELL_TO_CHILDREN,
-        MLD_CELL_WEIGHTS_0,
-        MLD_CELL_WEIGHTS_1,
-        MLD_CELL_WEIGHTS_2,
-        MLD_CELL_WEIGHTS_3,
-        MLD_CELL_WEIGHTS_4,
-        MLD_CELL_WEIGHTS_5,
-        MLD_CELL_WEIGHTS_6,
-        MLD_CELL_WEIGHTS_7,
-        MLD_CELL_DURATIONS_0,
-        MLD_CELL_DURATIONS_1,
-        MLD_CELL_DURATIONS_2,
-        MLD_CELL_DURATIONS_3,
-        MLD_CELL_DURATIONS_4,
-        MLD_CELL_DURATIONS_5,
-        MLD_CELL_DURATIONS_6,
-        MLD_CELL_DURATIONS_7,
-        MLD_CELL_SOURCE_BOUNDARY,
-        MLD_CELL_DESTINATION_BOUNDARY,
-        MLD_CELLS,
-        MLD_CELL_LEVEL_OFFSETS,
-        MLD_GRAPH_NODE_LIST,
-        MLD_GRAPH_EDGE_LIST,
-        MLD_GRAPH_NODE_TO_OFFSET,
-        NUM_BLOCKS
-    };
-
-    std::array<std::uint64_t, NUM_BLOCKS> num_entries;
-    std::array<std::size_t, NUM_BLOCKS> entry_size;
-    std::array<std::size_t, NUM_BLOCKS> entry_align;
-
-    DataLayout() : num_entries(), entry_size(), entry_align() {}
-
-    template <typename T> inline void SetBlockSize(BlockID bid, uint64_t entries)
-    {
-        static_assert(sizeof(T) % alignof(T) == 0, "aligned T* can't be used as an array pointer");
-        num_entries[bid] = entries;
-        entry_size[bid] = sizeof(T);
-        entry_align[bid] = alignof(T);
-    }
-
-    inline uint64_t GetBlockEntries(BlockID bid) const { return num_entries[bid]; }
-
-    inline uint64_t GetBlockSize(BlockID bid) const
-    {
-        // special bit encoding
-        if (bid >= CH_CORE_MARKER_0 && bid <= CH_CORE_MARKER_7)
+        auto directory_position = name.find_first_of('/', name_prefix.length());
+        // this is a "file" in the directory of name_prefix
+        if (directory_position == std::string::npos)
         {
-            return (num_entries[bid] / 32 + 1) * entry_size[bid];
+            return name;
         }
-        return num_entries[bid] * entry_size[bid];
+        else
+        {
+            return name.substr(0, directory_position);
+        }
+    }
+    else
+    {
+        return name;
+    }
+}
+} // namespace detail
+
+class BaseDataLayout
+{
+  public:
+    virtual ~BaseDataLayout() = default;
+
+    inline void SetBlock(const std::string &name, const Block &block) { blocks[name] = block; }
+
+    inline std::uint64_t GetBlockEntries(const std::string &name) const
+    {
+        return GetBlock(name).num_entries;
     }
 
-    inline uint64_t GetSizeOfLayout() const
+    inline std::uint64_t GetBlockSize(const std::string &name) const
     {
-        uint64_t result = 0;
-        for (auto i = 0; i < NUM_BLOCKS; i++)
+        return GetBlock(name).byte_size;
+    }
+
+    inline bool HasBlock(const std::string &name) const
+    {
+        return blocks.find(name) != blocks.end();
+    }
+
+    // Depending on the name prefix this function either lists all blocks with the same prefix
+    // or all entries in the sub-directory.
+    // '/ch/edge' -> '/ch/edge_filter/0/blocks', '/ch/edge_filter/1/blocks'
+    // '/ch/edge_filters/' -> '/ch/edge_filter/0', '/ch/edge_filter/1'
+    template <typename OutIter> void List(const std::string &name_prefix, OutIter out) const
+    {
+        std::unordered_set<std::string> returned_name;
+
+        for (const auto &pair : blocks)
         {
-            BOOST_ASSERT(entry_align[i] > 0);
-            result += 2 * sizeof(CANARY) + GetBlockSize((BlockID)i) + entry_align[i];
+            // check if string begins with the name prefix
+            if (pair.first.find(name_prefix) == 0)
+            {
+                auto trimmed_name = detail::trimName(name_prefix, pair.first);
+                auto ret = returned_name.insert(trimmed_name);
+                if (ret.second)
+                {
+                    *out++ = trimmed_name;
+                }
+            }
+        }
+    }
+
+    virtual void *GetBlockPtr(void *base_ptr, const std::string &name) const = 0;
+    virtual std::uint64_t GetSizeOfLayout() const = 0;
+
+  protected:
+    const Block &GetBlock(const std::string &name) const
+    {
+        auto iter = blocks.find(name);
+        if (iter == blocks.end())
+        {
+            throw util::exception("Could not find block " + name);
+        }
+
+        return iter->second;
+    }
+
+    friend void serialization::read(io::BufferReader &reader, BaseDataLayout &layout);
+    friend void serialization::write(io::BufferWriter &writer, const BaseDataLayout &layout);
+
+    std::map<std::string, Block> blocks;
+};
+
+class ContiguousDataLayout final : public BaseDataLayout
+{
+  public:
+    inline std::uint64_t GetSizeOfLayout() const override final
+    {
+        std::uint64_t result = 0;
+        for (const auto &name_and_block : blocks)
+        {
+            result += GetBlockSize(name_and_block.first) + BLOCK_ALIGNMENT;
         }
         return result;
     }
 
-    // \brief Fit aligned storage in buffer.
-    // Interface Similar to [ptr.align] but omits space computation.
-    // The method can be removed and changed directly to an std::align
-    // function call after dropping gcc < 5 support.
-    inline void *align(std::size_t align, std::size_t, void *&ptr) const noexcept
+    inline void *GetBlockPtr(void *base_ptr, const std::string &name) const override final
     {
-        const auto intptr = reinterpret_cast<uintptr_t>(ptr);
-        const auto aligned = (intptr - 1u + align) & -align;
+        // TODO: re-enable this alignment checking somehow
+        // static_assert(BLOCK_ALIGNMENT % std::alignment_of<T>::value == 0,
+        //               "Datatype does not fit alignment constraints.");
+
+        return GetAlignedBlockPtr(base_ptr, name);
+    }
+
+  private:
+    friend void serialization::read(io::BufferReader &reader, BaseDataLayout &layout);
+    friend void serialization::write(io::BufferWriter &writer, const BaseDataLayout &layout);
+
+    // Fit aligned storage in buffer to 64 bytes to conform with AVX 512 types
+    inline void *align(void *&ptr) const noexcept
+    {
+        const auto intptr = reinterpret_cast<std::uintptr_t>(ptr);
+        const auto aligned = (intptr - 1u + BLOCK_ALIGNMENT) & -BLOCK_ALIGNMENT;
         return ptr = reinterpret_cast<void *>(aligned);
     }
 
-    inline void *GetAlignedBlockPtr(void *ptr, BlockID bid) const
+    inline void *GetAlignedBlockPtr(void *ptr, const std::string &name) const
     {
-        for (auto i = 0; i < bid; i++)
+        auto block_iter = blocks.find(name);
+        if (block_iter == blocks.end())
         {
-            ptr = static_cast<char *>(ptr) + sizeof(CANARY);
-            ptr = align(entry_align[i], entry_size[i], ptr);
-            ptr = static_cast<char *>(ptr) + GetBlockSize((BlockID)i);
-            ptr = static_cast<char *>(ptr) + sizeof(CANARY);
+            throw util::exception("Could not find block " + name);
         }
 
-        ptr = static_cast<char *>(ptr) + sizeof(CANARY);
-        ptr = align(entry_align[bid], entry_size[bid], ptr);
+        for (auto iter = blocks.begin(); iter != block_iter; ++iter)
+        {
+            ptr = align(ptr);
+            ptr = static_cast<char *>(ptr) + iter->second.byte_size;
+        }
+
+        ptr = align(ptr);
         return ptr;
     }
 
-    template <typename T> inline T *GetBlockEnd(char *shared_memory, BlockID bid) const
+    static constexpr std::size_t BLOCK_ALIGNMENT = 64;
+};
+
+class TarDataLayout final : public BaseDataLayout
+{
+  public:
+    inline std::uint64_t GetSizeOfLayout() const override final
     {
-        auto begin = GetBlockPtr<T>(shared_memory, bid);
-        return begin + GetBlockEntries(bid);
+        std::uint64_t result = 0;
+        for (const auto &name_and_block : blocks)
+        {
+            result += GetBlockSize(name_and_block.first);
+        }
+        return result;
     }
 
-    template <typename T, bool WRITE_CANARY = false>
-    inline T *GetBlockPtr(char *shared_memory, BlockID bid) const
+    inline void *GetBlockPtr(void *base_ptr, const std::string &name) const override final
     {
-        char *ptr = (char *)GetAlignedBlockPtr(shared_memory, bid);
-        if (WRITE_CANARY)
+        auto offset = GetBlock(name).offset;
+        const auto offset_address = reinterpret_cast<std::uintptr_t>(base_ptr) + offset;
+        return reinterpret_cast<void *>(offset_address);
+    }
+};
+
+struct SharedRegion
+{
+    static constexpr const int MAX_NAME_LENGTH = 254;
+
+    SharedRegion() : name{0}, timestamp{0} {}
+    SharedRegion(const std::string &name_, std::uint64_t timestamp, std::uint16_t shm_key)
+        : name{0}, timestamp{timestamp}, shm_key{shm_key}
+    {
+        std::copy_n(name_.begin(), std::min<std::size_t>(MAX_NAME_LENGTH, name_.size()), name);
+    }
+
+    bool IsEmpty() const { return timestamp == 0; }
+
+    char name[MAX_NAME_LENGTH + 1];
+    std::uint64_t timestamp;
+    std::uint16_t shm_key = 0;
+};
+
+// Keeps a list of all shared regions in a fixed-sized struct
+// for fast access and deserialization.
+struct SharedRegionRegister
+{
+    using RegionID = std::uint16_t;
+    static constexpr const RegionID INVALID_REGION_ID = std::numeric_limits<RegionID>::max();
+    using ShmKey = decltype(SharedRegion::shm_key);
+
+    // Returns the key of the region with the given name
+    RegionID Find(const std::string &name) const
+    {
+        auto iter = std::find_if(regions.begin(), regions.end(), [&](const auto &region) {
+            return std::strncmp(region.name, name.c_str(), SharedRegion::MAX_NAME_LENGTH) == 0;
+        });
+
+        if (iter == regions.end())
         {
-            char *start_canary_ptr = ptr - sizeof(CANARY);
-            char *end_canary_ptr = ptr + GetBlockSize(bid);
-            std::copy(CANARY, CANARY + sizeof(CANARY), start_canary_ptr);
-            std::copy(CANARY, CANARY + sizeof(CANARY), end_canary_ptr);
+            return INVALID_REGION_ID;
         }
         else
         {
-            char *start_canary_ptr = ptr - sizeof(CANARY);
-            char *end_canary_ptr = ptr + GetBlockSize(bid);
-            bool start_canary_alive = std::equal(CANARY, CANARY + sizeof(CANARY), start_canary_ptr);
-            bool end_canary_alive = std::equal(CANARY, CANARY + sizeof(CANARY), end_canary_ptr);
-            if (!start_canary_alive)
+            return std::distance(regions.begin(), iter);
+        }
+    }
+
+    RegionID Register(const std::string &name, ShmKey key)
+    {
+        auto iter = std::find_if(
+            regions.begin(), regions.end(), [&](const auto &region) { return region.IsEmpty(); });
+        if (iter == regions.end())
+        {
+            throw util::exception("No shared memory regions left. Could not register " + name +
+                                  ".");
+        }
+        else
+        {
+            constexpr std::uint32_t INITIAL_TIMESTAMP = 1;
+            *iter = SharedRegion{name, INITIAL_TIMESTAMP, key};
+            RegionID key = std::distance(regions.begin(), iter);
+            return key;
+        }
+    }
+
+    template <typename OutIter> void List(OutIter out) const
+    {
+        for (const auto &region : regions)
+        {
+            if (!region.IsEmpty())
             {
-                throw util::exception("Start canary of block corrupted. (" +
-                                      std::string(block_id_to_name[bid]) + ")" + SOURCE_REF);
-            }
-            if (!end_canary_alive)
-            {
-                throw util::exception("End canary of block corrupted. (" +
-                                      std::string(block_id_to_name[bid]) + ")" + SOURCE_REF);
+                *out++ = region.name;
             }
         }
-
-        return (T *)ptr;
     }
-};
 
-enum SharedDataType
-{
-    REGION_NONE,
-    REGION_1,
-    REGION_2
-};
+    const auto &GetRegion(const RegionID key) const { return regions[key]; }
 
-struct SharedDataTimestamp
-{
-    explicit SharedDataTimestamp(SharedDataType region, unsigned timestamp)
-        : region(region), timestamp(timestamp)
+    auto &GetRegion(const RegionID key) { return regions[key]; }
+
+    ShmKey ReserveKey()
     {
+        auto free_key_iter = std::find(shm_key_in_use.begin(), shm_key_in_use.end(), false);
+        if (free_key_iter == shm_key_in_use.end())
+        {
+            throw util::exception("Could not reserve a new SHM key. All keys are in use");
+        }
+
+        *free_key_iter = true;
+        return std::distance(shm_key_in_use.begin(), free_key_iter);
     }
 
-    SharedDataType region;
-    unsigned timestamp;
+    void ReleaseKey(ShmKey key) { shm_key_in_use[key] = false; }
+
+    static constexpr const std::size_t MAX_SHARED_REGIONS = 512;
+    static_assert(MAX_SHARED_REGIONS < std::numeric_limits<RegionID>::max(),
+                  "Number of shared memory regions needs to be less than the region id size.");
+
+    static constexpr const std::size_t MAX_SHM_KEYS = MAX_SHARED_REGIONS * 2;
 
     static constexpr const char *name = "osrm-region";
+
+  private:
+    std::array<SharedRegion, MAX_SHARED_REGIONS> regions;
+    std::array<bool, MAX_SHM_KEYS> shm_key_in_use;
 };
-
-inline std::string regionToString(const SharedDataType region)
-{
-    switch (region)
-    {
-    case REGION_1:
-        return "REGION_1";
-    case REGION_2:
-        return "REGION_2";
-    case REGION_NONE:
-        return "REGION_NONE";
-    default:
-        return "INVALID_REGION";
-    }
-}
-
-static_assert(sizeof(block_id_to_name) / sizeof(*block_id_to_name) == DataLayout::NUM_BLOCKS,
-              "Number of blocks needs to match the number of Block names.");
-}
-}
+} // namespace storage
+} // namespace osrm
 
 #endif /* SHARED_DATA_TYPE_HPP */

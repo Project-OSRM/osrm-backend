@@ -14,8 +14,7 @@ file(REMOVE multipolygon.db multipolygon-tests.json)
 #
 #-----------------------------------------------------------------------------
 execute_process(
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/testdata-multipolygon
-        ${OSM_TESTDATA}/grid/data/all.osm
+    COMMAND ${EXECUTABLE} ${OSM_TESTDATA}/grid/data/all.osm
     RESULT_VARIABLE _result
     OUTPUT_FILE multipolygon.log
     ERROR_FILE multipolygon.log

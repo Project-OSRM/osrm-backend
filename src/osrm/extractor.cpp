@@ -10,8 +10,9 @@ namespace osrm
 
 void extract(const extractor::ExtractorConfig &config)
 {
-    extractor::Sol2ScriptingEnvironment scripting_environment(config.profile_path.string().c_str());
+    extractor::Sol2ScriptingEnvironment scripting_environment(config.profile_path.string(),
+                                                              config.location_dependent_data_paths);
     extractor::Extractor(config).run(scripting_environment);
 }
 
-} // ns osrm
+} // namespace osrm

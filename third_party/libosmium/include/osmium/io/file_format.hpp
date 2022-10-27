@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -47,7 +47,9 @@ namespace osmium {
             json      = 4,
             o5m       = 5,
             debug     = 6,
-            blackhole = 7
+            blackhole = 7,
+            ids       = 8,
+            last      = 8 // must have the same value as the last real value
         };
 
         enum class read_meta {
@@ -55,7 +57,12 @@ namespace osmium {
             yes = 1
         };
 
-        inline const char* as_string(file_format format) {
+        enum class buffers_type {
+            any    = 0,
+            single = 1
+        };
+
+        inline const char* as_string(const file_format format) noexcept {
             switch (format) {
                 case file_format::xml:
                     return "XML";
@@ -71,6 +78,8 @@ namespace osmium {
                     return "DEBUG";
                 case file_format::blackhole:
                     return "BLACKHOLE";
+                case file_format::ids:
+                    return "IDS";
                 default: // file_format::unknown
                     break;
             }

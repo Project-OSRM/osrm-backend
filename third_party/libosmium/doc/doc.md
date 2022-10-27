@@ -4,7 +4,7 @@ data.
 
 This is the API documentation that was automatically created from the
 source code. For more information about the Osmium Library see
-http://osmcode.org/libosmium .
+https://osmcode.org/libosmium .
 
 Osmium is free software and available under the Boost Software License.
 The source code is available at https://github.com/osmcode/libosmium .

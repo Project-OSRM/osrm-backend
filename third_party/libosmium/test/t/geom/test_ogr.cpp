@@ -1,23 +1,22 @@
 #include "catch.hpp"
 
-#include <osmium/geom/ogr.hpp>
-
 #include "area_helper.hpp"
 #include "wnl_helper.hpp"
 
+#include <osmium/geom/ogr.hpp>
+
+#include <memory>
+
 TEST_CASE("OGR point geometry") {
     osmium::geom::OGRFactory<> factory;
+    std::unique_ptr<OGRPoint> point{factory.create_point(osmium::Location{3.2, 4.2})};
+    REQUIRE(3.2 == point->getX());
+    REQUIRE(4.2 == point->getY());
+}
 
-    SECTION("point") {
-        std::unique_ptr<OGRPoint> point{factory.create_point(osmium::Location{3.2, 4.2})};
-        REQUIRE(3.2 == point->getX());
-        REQUIRE(4.2 == point->getY());
-    }
-
-    SECTION("empty_point") {
-        REQUIRE_THROWS_AS(factory.create_point(osmium::Location()), const osmium::invalid_location&);
-    }
-
+TEST_CASE("OGR empty point geometry") {
+    osmium::geom::OGRFactory<> factory;
+    REQUIRE_THROWS_AS(factory.create_point(osmium::Location()), osmium::invalid_location);
 }
 
 TEST_CASE("OGR linestring geometry") {
@@ -67,7 +66,7 @@ TEST_CASE("OGR area geometry") {
         std::unique_ptr<OGRMultiPolygon> mp {factory.create_multipolygon(area)};
         REQUIRE(1 == mp->getNumGeometries());
 
-        const OGRPolygon* p0 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(0));
+        const auto* p0 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(0));
         REQUIRE(p0);
         REQUIRE(0 == p0->getNumInteriorRings());
 
@@ -83,7 +82,7 @@ TEST_CASE("OGR area geometry") {
         std::unique_ptr<OGRMultiPolygon> mp {factory.create_multipolygon(area)};
         REQUIRE(1 == mp->getNumGeometries());
 
-        const OGRPolygon* p0 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(0));
+        const auto* p0 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(0));
         REQUIRE(p0);
         REQUIRE(1 == p0->getNumInteriorRings());
 
@@ -100,14 +99,14 @@ TEST_CASE("OGR area geometry") {
         std::unique_ptr<OGRMultiPolygon> mp {factory.create_multipolygon(area)};
         REQUIRE(2 == mp->getNumGeometries());
 
-        const OGRPolygon* p0 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(0));
+        const auto* p0 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(0));
         REQUIRE(p0);
         REQUIRE(2 == p0->getNumInteriorRings());
 
         const OGRLineString* l0e = p0->getExteriorRing();
         REQUIRE(5 == l0e->getNumPoints());
 
-        const OGRPolygon* p1 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(1));
+        const auto* p1 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(1));
         REQUIRE(p1);
         REQUIRE(0 == p1->getNumInteriorRings());
 

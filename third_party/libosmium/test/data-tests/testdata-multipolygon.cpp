@@ -1,14 +1,4 @@
 
-#include <cstring>
-#include <iostream>
-#include <fstream>
-#include <map>
-#include <string>
-
-#include <gdalcpp.hpp>
-
-#include <osmium/index/map/sparse_mem_array.hpp>
-
 #include <osmium/area/assembler_legacy.hpp>
 #include <osmium/area/multipolygon_collector.hpp>
 #include <osmium/area/problem_reporter_ogr.hpp>
@@ -16,8 +6,17 @@
 #include <osmium/geom/wkt.hpp>
 #include <osmium/handler.hpp>
 #include <osmium/handler/node_locations_for_ways.hpp>
+#include <osmium/index/map/sparse_mem_array.hpp>
 #include <osmium/io/xml_input.hpp>
 #include <osmium/visitor.hpp>
+
+#include <gdalcpp.hpp>
+
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <string>
 
 using index_type = osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location>;
 using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
@@ -35,7 +34,7 @@ using tagmap_type = std::map<const char*, const char*, less_charptr>;
 tagmap_type create_map(const osmium::TagList& taglist) {
     tagmap_type map;
 
-    for (auto& tag : taglist) {
+    for (const auto& tag : taglist) {
         map[tag.key()] = tag.value();
     }
 
@@ -73,6 +72,12 @@ public:
         m_layer_mpoly.add_field("from_type", OFTString, 1);
     }
 
+    TestHandler(const TestHandler&) = delete;
+    TestHandler& operator=(const TestHandler&) = delete;
+
+    TestHandler(TestHandler&&) = delete;
+    TestHandler& operator=(TestHandler&&) = delete;
+
     ~TestHandler() {
         m_out << "\n]\n";
     }
@@ -109,7 +114,7 @@ public:
 
             const auto tagmap = create_map(area.tags());
             bool first = true;
-            for (auto& tag : tagmap) {
+            for (const auto& tag : tagmap) {
                 if (first) {
                     first = false;
                 } else {
@@ -145,42 +150,49 @@ public:
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " INFILE\n";
-        std::exit(1);
+        return 1;
     }
 
-    const std::string output_format{"SQLite"};
-    const std::string input_filename{argv[1]};
-    const std::string output_filename{"multipolygon.db"};
+    try {
+        const std::string output_format{"SQLite"};
+        const std::string input_filename{argv[1]};
+        const std::string output_filename{"multipolygon.db"};
 
-    CPLSetConfigOption("OGR_SQLITE_SYNCHRONOUS", "FALSE");
-    gdalcpp::Dataset dataset{output_format, output_filename, gdalcpp::SRS{}, {"SPATIALITE=TRUE"}};
+        CPLSetConfigOption("OGR_SQLITE_SYNCHRONOUS", "FALSE");
+        gdalcpp::Dataset dataset{output_format, output_filename, gdalcpp::SRS{}, {"SPATIALITE=TRUE"}};
 
-    osmium::area::ProblemReporterOGR problem_reporter{dataset};
-    osmium::area::AssemblerLegacy::config_type assembler_config;
-    assembler_config.problem_reporter = &problem_reporter;
-    assembler_config.check_roles = true;
-    assembler_config.create_empty_areas = true;
-    assembler_config.debug_level = 2;
-    osmium::area::MultipolygonCollector<osmium::area::AssemblerLegacy> collector{assembler_config};
+        osmium::area::ProblemReporterOGR problem_reporter{dataset};
+        osmium::area::AssemblerLegacy::config_type assembler_config;
+        assembler_config.problem_reporter = &problem_reporter;
+        assembler_config.check_roles = true;
+        assembler_config.create_empty_areas = true;
+        assembler_config.debug_level = 2;
+        osmium::area::MultipolygonCollector<osmium::area::AssemblerLegacy> collector{assembler_config};
 
-    std::cerr << "Pass 1...\n";
-    osmium::io::Reader reader1{input_filename};
-    collector.read_relations(reader1);
-    reader1.close();
-    std::cerr << "Pass 1 done\n";
+        std::cerr << "Pass 1...\n";
+        osmium::io::Reader reader1{input_filename};
+        collector.read_relations(reader1);
+        reader1.close();
+        std::cerr << "Pass 1 done\n";
 
-    index_type index;
-    location_handler_type location_handler{index};
-    location_handler.ignore_errors();
+        index_type index;
+        location_handler_type location_handler{index};
+        location_handler.ignore_errors();
 
-    TestHandler test_handler{dataset};
+        TestHandler test_handler{dataset};
 
-    std::cerr << "Pass 2...\n";
-    osmium::io::Reader reader2{input_filename};
-    osmium::apply(reader2, location_handler, test_handler, collector.handler([&test_handler](const osmium::memory::Buffer& area_buffer) {
-        osmium::apply(area_buffer, test_handler);
-    }));
-    reader2.close();
-    std::cerr << "Pass 2 done\n";
+        std::cerr << "Pass 2...\n";
+        osmium::io::Reader reader2{input_filename};
+        osmium::apply(reader2, location_handler, test_handler, collector.handler([&test_handler](const osmium::memory::Buffer& area_buffer) {
+            osmium::apply(area_buffer, test_handler);
+        }));
+        reader2.close();
+        std::cerr << "Pass 2 done\n";
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << '\n';
+        return 1;
+    }
+
+    return 0;
 }
 

@@ -45,11 +45,12 @@ class OSRMBaseLoader{
         var retryCount = 0;
         let retry = (err) => {
           if (err) {
-            if (retryCount < 10) {
+            if (retryCount < this.scope.OSRM_CONNECTION_RETRIES) {
+              const timeoutMs = 10 * Math.pow(this.scope.OSRM_CONNECTION_EXP_BACKOFF_COEF, retryCount);
               retryCount++;
-              setTimeout(() => { tryConnect(this.scope.OSRM_PORT, retry); }, 10);
+              setTimeout(() => { tryConnect(this.scope.OSRM_IP, this.scope.OSRM_PORT, retry); }, timeoutMs);
             } else {
-              callback(new Error("Could not connect to osrm-routed after ten retries."));
+              callback(new Error(`Could not connect to osrm-routed after ${this.scope.OSRM_CONNECTION_RETRIES} retries.`));
             }
           }
           else
@@ -58,7 +59,7 @@ class OSRMBaseLoader{
           }
         };
 
-        tryConnect(this.scope.OSRM_PORT, retry);
+        tryConnect(this.scope.OSRM_IP, this.scope.OSRM_PORT, retry);
     }
 };
 
@@ -77,14 +78,54 @@ class OSRMDirectLoader extends OSRMBaseLoader {
     osrmUp (callback) {
         if (this.osrmIsRunning()) return callback(new Error("osrm-routed already running!"));
 
-        const command_arguments = util.format('%s -p %d -a %s', this.inputFile, this.scope.OSRM_PORT, this.scope.ROUTING_ALGORITHM);
+        const command_arguments = util.format('%s -p %d -i %s -a %s', this.inputFile, this.scope.OSRM_PORT, this.scope.OSRM_IP, this.scope.ROUTING_ALGORITHM);
         this.child = this.scope.runBin('osrm-routed', command_arguments, this.scope.environment, (err) => {
             if (err && err.signal !== 'SIGINT') {
                 this.child = null;
                 throw new Error(util.format('osrm-routed %s: %s', errorReason(err), err.cmd));
             }
         });
-        callback();
+
+        this.child.readyFunc = (data) => {
+            if (/running and waiting for requests/.test(data)) {
+              this.child.stdout.removeListener('data', this.child.readyFunc);
+              callback();
+            }
+        };
+        this.child.stdout.on('data',this.child.readyFunc);
+    }
+};
+
+class OSRMmmapLoader extends OSRMBaseLoader {
+    constructor (scope) {
+        super(scope);
+    }
+
+    load (inputFile, callback) {
+        this.inputFile = inputFile;
+        this.shutdown(() => {
+            this.launch(callback);
+        });
+    }
+
+    osrmUp (callback) {
+        if (this.osrmIsRunning()) return callback(new Error("osrm-routed already running!"));
+
+        const command_arguments = util.format('%s -p %d -i %s -a %s --mmap', this.inputFile, this.scope.OSRM_PORT, this.scope.OSRM_IP, this.scope.ROUTING_ALGORITHM);
+        this.child = this.scope.runBin('osrm-routed', command_arguments, this.scope.environment, (err) => {
+            if (err && err.signal !== 'SIGINT') {
+                this.child = null;
+                throw new Error(util.format('osrm-routed %s: %s', errorReason(err), err.cmd));
+            }
+        });
+
+        this.child.readyFunc = (data) => {
+          if (/running and waiting for requests/.test(data)) {
+            this.child.stdout.removeListener('data', this.child.readyFunc);
+            callback();
+          }
+        };
+        this.child.stdout.on('data',this.child.readyFunc);
     }
 };
 
@@ -107,7 +148,8 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
     }
 
     loadData (callback) {
-        this.scope.runBin('osrm-datastore', this.inputFile, this.scope.environment, (err) => {
+        const command_arguments = util.format('--dataset-name=%s %s', this.scope.DATASET_NAME, this.inputFile);
+        this.scope.runBin('osrm-datastore', command_arguments, this.scope.environment, (err) => {
             if (err) return callback(new Error('*** osrm-datastore exited with ' + err.code + ': ' + err));
             callback();
         });
@@ -116,7 +158,7 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
     osrmUp (callback) {
         if (this.osrmIsRunning()) return callback();
 
-        const command_arguments = util.format('--shared-memory=1 -p %d -a %s', this.scope.OSRM_PORT, this.scope.ROUTING_ALGORITHM);
+        const command_arguments = util.format('--dataset-name=%s -s -i %s -p %d -a %s', this.scope.DATASET_NAME, this.scope.OSRM_IP, this.scope.OSRM_PORT, this.scope.ROUTING_ALGORITHM);
         this.child = this.scope.runBin('osrm-routed', command_arguments, this.scope.environment, (err) => {
             if (err && err.signal !== 'SIGINT') {
                 this.child = null;
@@ -134,21 +176,31 @@ class OSRMLoader {
         this.scope = scope;
         this.sharedLoader = new OSRMDatastoreLoader(this.scope);
         this.directLoader = new OSRMDirectLoader(this.scope);
+        this.mmapLoader = new OSRMmmapLoader(this.scope);
         this.method = scope.DEFAULT_LOAD_METHOD;
     }
 
     load (inputFile, callback) {
+        if (!this.loader) {
+            this.loader = {shutdown: (cb) => cb() };
+        }
         if (this.method === 'datastore') {
-            this.directLoader.shutdown((err) => {
+            this.loader.shutdown((err) => {
               if (err) return callback(err);
               this.loader = this.sharedLoader;
               this.sharedLoader.load(inputFile, callback);
             });
         } else if (this.method === 'directly') {
-            this.sharedLoader.shutdown((err) => {
+            this.loader.shutdown((err) => {
               if (err) return callback(err);
               this.loader = this.directLoader;
               this.directLoader.load(inputFile, callback);
+            });
+        } else if (this.method === 'mmap') {
+            this.loader.shutdown((err) => {
+              if (err) return callback(err);
+              this.loader = this.mmapLoader;
+              this.mmapLoader.load(inputFile, callback);
             });
         } else {
             callback(new Error('*** Unknown load method ' + method));

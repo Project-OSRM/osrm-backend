@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,18 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
-#include <cassert>
-#include <cstdint>
-#include <cstddef>
-#include <cstring>
-#include <initializer_list>
-#include <limits>
-#include <new>
-#include <stdexcept>
-#include <string>
-#include <utility>
-
 #include <osmium/builder/builder.hpp>
 #include <osmium/memory/item.hpp>
 #include <osmium/osm/area.hpp>
@@ -60,8 +48,18 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/timestamp.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/way.hpp>
-#include <osmium/util/cast.hpp>
-#include <osmium/util/compatibility.hpp>
+
+#include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <initializer_list>
+#include <limits>
+#include <new>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 namespace osmium {
 
@@ -84,6 +82,12 @@ namespace osmium {
                 Builder(parent.buffer(), &parent, sizeof(TagList)) {
                 new (&item()) TagList{};
             }
+
+            TagListBuilder(const TagListBuilder&) = delete;
+            TagListBuilder& operator=(const TagListBuilder&) = delete;
+
+            TagListBuilder(TagListBuilder&&) = delete;
+            TagListBuilder& operator=(TagListBuilder&&) = delete;
 
             ~TagListBuilder() {
                 add_padding();
@@ -196,6 +200,12 @@ namespace osmium {
                 new (&item()) T{};
             }
 
+            NodeRefListBuilder(const NodeRefListBuilder&) = delete;
+            NodeRefListBuilder& operator=(const NodeRefListBuilder&) = delete;
+
+            NodeRefListBuilder(NodeRefListBuilder&&) = delete;
+            NodeRefListBuilder& operator=(NodeRefListBuilder&&) = delete;
+
             ~NodeRefListBuilder() {
                 add_padding();
             }
@@ -247,6 +257,12 @@ namespace osmium {
                 new (&item()) RelationMemberList{};
             }
 
+            RelationMemberListBuilder(const RelationMemberListBuilder&) = delete;
+            RelationMemberListBuilder& operator=(const RelationMemberListBuilder&) = delete;
+
+            RelationMemberListBuilder(RelationMemberListBuilder&&) = delete;
+            RelationMemberListBuilder& operator=(RelationMemberListBuilder&&) = delete;
+
             ~RelationMemberListBuilder() {
                 add_padding();
             }
@@ -265,7 +281,7 @@ namespace osmium {
              *         osmium::max_osm_string_length
              */
             void add_member(osmium::item_type type, object_id_type ref, const char* role, const std::size_t role_length, const osmium::OSMObject* full_member = nullptr) {
-                osmium::RelationMember* member = reserve_space_for<osmium::RelationMember>();
+                auto* member = reserve_space_for<osmium::RelationMember>();
                 new (member) osmium::RelationMember{ref, type, full_member != nullptr};
                 add_size(sizeof(RelationMember));
                 add_role(*member, role, role_length);
@@ -339,6 +355,12 @@ namespace osmium {
                 new (&item()) ChangesetDiscussion{};
             }
 
+            ChangesetDiscussionBuilder(const ChangesetDiscussionBuilder&) = delete;
+            ChangesetDiscussionBuilder& operator=(const ChangesetDiscussionBuilder&) = delete;
+
+            ChangesetDiscussionBuilder(ChangesetDiscussionBuilder&&) = delete;
+            ChangesetDiscussionBuilder& operator=(ChangesetDiscussionBuilder&&) = delete;
+
             ~ChangesetDiscussionBuilder() {
                 assert(!m_comment && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
                 add_padding();
@@ -382,18 +404,22 @@ namespace osmium {
 
             constexpr static const std::size_t min_size_for_user = osmium::memory::padded_length(sizeof(string_size_type) + 1);
 
+            void set_user_size(string_size_type size) noexcept {
+                std::memcpy(item_pos() + sizeof(T), &size, sizeof(string_size_type));
+            }
+
         public:
 
             explicit OSMObjectBuilder(osmium::memory::Buffer& buffer, Builder* parent = nullptr) :
                 Builder(buffer, parent, sizeof(T) + min_size_for_user) {
                 new (&item()) T{};
                 add_size(min_size_for_user);
-                std::fill_n(object().data() + sizeof(T), min_size_for_user, 0);
-                object().set_user_size(1);
+                std::memset(object().data() + sizeof(T), 0, min_size_for_user);
+                set_user_size(1);
             }
 
             /**
-             * Get a reference to the object buing built.
+             * Get a reference to the object being built.
              *
              * Note that this reference will be invalidated by every action
              * on the builder that might make the buffer grow. This includes
@@ -404,7 +430,7 @@ namespace osmium {
             }
 
             /**
-             * Get a const reference to the object buing built.
+             * Get a const reference to the object being built.
              *
              * Note that this reference will be invalidated by every action
              * on the builder that might make the buffer grow. This includes
@@ -424,14 +450,14 @@ namespace osmium {
                 const auto size_of_object = sizeof(T) + sizeof(string_size_type);
                 assert(cobject().user_size() == 1 && (size() <= size_of_object + osmium::memory::padded_length(1))
                        && "set_user() must be called at most once and before any sub-builders");
-                const auto available_space = min_size_for_user - sizeof(string_size_type) - 1;
+                constexpr const auto available_space = min_size_for_user - sizeof(string_size_type) - 1;
                 if (length > available_space) {
                     const auto space_needed = osmium::memory::padded_length(length - available_space);
-                    std::fill_n(reserve_space(space_needed), space_needed, 0);
+                    std::memset(reserve_space(space_needed), 0, space_needed);
                     add_size(static_cast<uint32_t>(space_needed));
                 }
-                std::copy_n(user, length, object().data() + size_of_object);
-                object().set_user_size(length + 1);
+                std::memcpy(object().data() + size_of_object, user, length);
+                set_user_size(length + 1);
 
                 return static_cast<TDerived&>(*this);
             }
@@ -440,24 +466,25 @@ namespace osmium {
              * Set user name.
              *
              * @param user Pointer to \0-terminated user name.
+             *
+             * @pre @code strlen(user) < 2^16 - 1 @endcode
              */
             TDerived& set_user(const char* user) {
-                return set_user(user, static_cast_with_assert<string_size_type>(std::strlen(user)));
+                const auto len = std::strlen(user);
+                assert(len < std::numeric_limits<string_size_type>::max());
+                return set_user(user, static_cast<string_size_type>(len));
             }
 
             /**
              * Set user name.
              *
              * @param user User name.
+             *
+             * @pre @code user.size() < 2^16 - 1 @endcode
              */
             TDerived& set_user(const std::string& user) {
-                return set_user(user.data(), static_cast_with_assert<string_size_type>(user.size()));
-            }
-
-            /// @deprecated Use set_user(...) instead.
-            template <typename... TArgs>
-            OSMIUM_DEPRECATED void add_user(TArgs&&... args) {
-                set_user(std::forward<TArgs>(args)...);
+                assert(user.size() < std::numeric_limits<string_size_type>::max());
+                return set_user(user.data(), static_cast<string_size_type>(user.size()));
             }
 
             OSMIUM_FORWARD(set_id)
@@ -578,7 +605,7 @@ namespace osmium {
                 Builder(buffer, parent, sizeof(Changeset) + min_size_for_user) {
                 new (&item()) Changeset{};
                 add_size(min_size_for_user);
-                std::fill_n(object().data() + sizeof(Changeset), min_size_for_user, 0);
+                std::memset(object().data() + sizeof(Changeset), 0, min_size_for_user);
                 object().set_user_size(1);
             }
 
@@ -614,11 +641,6 @@ namespace osmium {
             OSMIUM_FORWARD(set_attribute)
             OSMIUM_FORWARD(set_removed)
 
-            // @deprecated Use set_bounds() instead.
-            OSMIUM_DEPRECATED osmium::Box& bounds() noexcept {
-                return object().bounds();
-            }
-
             ChangesetBuilder& set_bounds(const osmium::Box& box) noexcept {
                 object().bounds() = box;
                 return *this;
@@ -633,13 +655,13 @@ namespace osmium {
             ChangesetBuilder& set_user(const char* user, const string_size_type length) {
                 assert(cobject().user_size() == 1 && (size() <= sizeof(Changeset) + osmium::memory::padded_length(1))
                        && "set_user() must be called at most once and before any sub-builders");
-                const auto available_space = min_size_for_user - 1;
+                constexpr const auto available_space = min_size_for_user - 1;
                 if (length > available_space) {
                     const auto space_needed = osmium::memory::padded_length(length - available_space);
-                    std::fill_n(reserve_space(space_needed), space_needed, 0);
+                    std::memset(reserve_space(space_needed), 0, space_needed);
                     add_size(static_cast<uint32_t>(space_needed));
                 }
-                std::copy_n(user, length, object().data() + sizeof(Changeset));
+                std::memcpy(object().data() + sizeof(Changeset), user, length);
                 object().set_user_size(length + 1);
 
                 return *this;
@@ -649,24 +671,25 @@ namespace osmium {
              * Set user name.
              *
              * @param user Pointer to \0-terminated user name.
+             *
+             * @pre @code strlen(user) < 2^16 - 1 @endcode
              */
             ChangesetBuilder& set_user(const char* user) {
-                return set_user(user, static_cast_with_assert<string_size_type>(std::strlen(user)));
+                const auto len = std::strlen(user);
+                assert(len <= std::numeric_limits<string_size_type>::max());
+                return set_user(user, static_cast<string_size_type>(len));
             }
 
             /**
              * Set user name.
              *
              * @param user User name.
+             *
+             * @pre @code user.size() < 2^16 - 1 @endcode
              */
             ChangesetBuilder& set_user(const std::string& user) {
-                return set_user(user.data(), static_cast_with_assert<string_size_type>(user.size()));
-            }
-
-            /// @deprecated Use set_user(...) instead.
-            template <typename... TArgs>
-            OSMIUM_DEPRECATED void add_user(TArgs&&... args) {
-                set_user(std::forward<TArgs>(args)...);
+                assert(user.size() < std::numeric_limits<string_size_type>::max());
+                return set_user(user.data(), static_cast<string_size_type>(user.size()));
             }
 
         }; // class ChangesetBuilder

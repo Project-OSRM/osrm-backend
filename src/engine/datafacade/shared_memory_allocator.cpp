@@ -1,4 +1,7 @@
 #include "engine/datafacade/shared_memory_allocator.hpp"
+
+#include "storage/serialization.hpp"
+
 #include "util/log.hpp"
 
 #include "boost/assert.hpp"
@@ -10,24 +13,33 @@ namespace engine
 namespace datafacade
 {
 
-SharedMemoryAllocator::SharedMemoryAllocator(storage::SharedDataType data_region)
+SharedMemoryAllocator::SharedMemoryAllocator(
+    const std::vector<storage::SharedRegionRegister::ShmKey> &shm_keys)
 {
-    util::Log(logDEBUG) << "Loading new data for region " << regionToString(data_region);
+    std::vector<storage::SharedDataIndex::AllocatedRegion> regions;
 
-    BOOST_ASSERT(storage::SharedMemory::RegionExists(data_region));
-    m_large_memory = storage::makeSharedMemory(data_region);
+    for (const auto shm_key : shm_keys)
+    {
+        util::Log(logDEBUG) << "Loading new data for region " << (int)shm_key;
+        BOOST_ASSERT(storage::SharedMemory::RegionExists(shm_key));
+        auto mem = storage::makeSharedMemory(shm_key);
+
+        storage::io::BufferReader reader(reinterpret_cast<char *>(mem->Ptr()), mem->Size());
+        std::unique_ptr<storage::BaseDataLayout> layout =
+            std::make_unique<storage::ContiguousDataLayout>();
+        storage::serialization::read(reader, *layout);
+        auto layout_size = reader.GetPosition();
+
+        regions.push_back({reinterpret_cast<char *>(mem->Ptr()) + layout_size, std::move(layout)});
+        memory_regions.push_back(std::move(mem));
+    }
+
+    index = storage::SharedDataIndex{std::move(regions)};
 }
 
 SharedMemoryAllocator::~SharedMemoryAllocator() {}
 
-storage::DataLayout &SharedMemoryAllocator::GetLayout()
-{
-    return *reinterpret_cast<storage::DataLayout *>(m_large_memory->Ptr());
-}
-char *SharedMemoryAllocator::GetMemory()
-{
-    return reinterpret_cast<char *>(m_large_memory->Ptr()) + sizeof(storage::DataLayout);
-}
+const storage::SharedDataIndex &SharedMemoryAllocator::GetIndex() { return index; }
 
 } // namespace datafacade
 } // namespace engine

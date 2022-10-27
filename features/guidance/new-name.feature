@@ -274,8 +274,8 @@ Feature: New-Name Instructions
             | bc    | Central Expressway       | US 75 | motorway |
 
         When I route I should get
-            | waypoints | route                                                          | turns                           |
-            | a,c       | North Central Expressway,Central Expressway,Central Expressway | depart,new name straight,arrive |
+            | waypoints | route                                       | turns         |
+            | a,c       | North Central Expressway,Central Expressway | depart,arrive |
 
     Scenario: Prefix Change
         Given the node map
@@ -289,8 +289,8 @@ Feature: New-Name Instructions
             | cb    | Central Expressway       | US 75 | motorway |
 
         When I route I should get
-            | waypoints | route                                                                | turns                           |
-            | c,a       | Central Expressway,North Central Expressway,North Central Expressway | depart,new name straight,arrive |
+            | waypoints | route                                       | turns         |
+            | c,a       | Central Expressway,North Central Expressway | depart,arrive |
 
     Scenario: No Name, Same Reference
         Given the node map
@@ -381,6 +381,21 @@ Feature: New-Name Instructions
         When I route I should get
             | waypoints | route | turns         |
             | a,c       | ,     | depart,arrive |
+
+    Scenario: No Name, Reference changed
+        Given the node map
+            """
+            a ----- b ----- c
+            """
+
+        And the ways
+            | nodes | name | ref    | highway  |
+            | ab    |      | US 322 | motorway |
+            | bc    |      | US 422 | motorway |
+
+        When I route I should get
+            | waypoints | route | turns                           |
+            | a,c       | ,,    | depart,new name straight,arrive |
 
     Scenario: Spaces in refs for containment check, #3086
         Given the node map

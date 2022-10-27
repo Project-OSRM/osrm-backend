@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,10 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstdint>
-#include <cstring>
-#include <iterator>
-
 #include <osmium/memory/collection.hpp>
 #include <osmium/memory/item.hpp>
 #include <osmium/osm/box.hpp>
@@ -46,6 +42,10 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/timestamp.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/types_from_string.hpp>
+
+#include <cstdint>
+#include <cstring>
+#include <iterator>
 
 namespace osmium {
 
@@ -65,12 +65,6 @@ namespace osmium {
         changeset_comment_size_type m_text_size;
         string_size_type m_user_size;
 
-        ChangesetComment(const ChangesetComment&) = delete;
-        ChangesetComment(ChangesetComment&&) = delete;
-
-        ChangesetComment& operator=(const ChangesetComment&) = delete;
-        ChangesetComment& operator=(ChangesetComment&&) = delete;
-
         unsigned char* endpos() {
             return data() + osmium::memory::padded_length(sizeof(ChangesetComment) + m_user_size + m_text_size);
         }
@@ -86,7 +80,7 @@ namespace osmium {
             return endpos();
         }
 
-        unsigned const char* next() const {
+        const unsigned char* next() const {
             return endpos();
         }
 
@@ -108,6 +102,14 @@ namespace osmium {
             m_text_size(0),
             m_user_size(0) {
         }
+
+        ChangesetComment(const ChangesetComment&) = delete;
+        ChangesetComment& operator=(const ChangesetComment&) = delete;
+
+        ChangesetComment(ChangesetComment&&) = delete;
+        ChangesetComment& operator=(ChangesetComment&&) = delete;
+
+        ~ChangesetComment() noexcept = default;
 
         osmium::Timestamp date() const noexcept {
             return m_date;
@@ -131,9 +133,7 @@ namespace osmium {
 
     public:
 
-        ChangesetDiscussion() :
-            osmium::memory::Collection<ChangesetComment, osmium::item_type::changeset_discussion>() {
-        }
+        ChangesetDiscussion() noexcept = default;
 
     }; // class ChangesetDiscussion
 
@@ -255,7 +255,8 @@ namespace osmium {
          * @returns Reference to changeset to make calls chainable.
          */
         Changeset& set_uid(const char* uid) {
-            return set_uid_from_signed(string_to_user_id(uid));
+            m_uid = string_to_uid(uid);
+            return *this;
         }
 
         /// Is this user anonymous?
@@ -365,6 +366,11 @@ namespace osmium {
             return reinterpret_cast<const char*>(data() + sizeof(Changeset));
         }
 
+        /// Clear user name.
+        void clear_user() noexcept {
+            std::memset(data() + sizeof(Changeset), 0, user_size());
+        }
+
         /// Get the list of tags.
         const TagList& tags() const {
             return osmium::detail::subitem_of_type<const TagList>(cbegin(), cend());
@@ -440,7 +446,7 @@ namespace osmium {
     }
 
     inline bool operator!=(const Changeset& lhs, const Changeset& rhs) {
-        return ! (lhs == rhs);
+        return !(lhs == rhs);
     }
 
     /**
@@ -455,11 +461,11 @@ namespace osmium {
     }
 
     inline bool operator<=(const Changeset& lhs, const Changeset& rhs) {
-        return ! (rhs < lhs);
+        return !(rhs < lhs);
     }
 
     inline bool operator>=(const Changeset& lhs, const Changeset& rhs) {
-        return ! (lhs < rhs);
+        return !(lhs < rhs);
     }
 
 } // namespace osmium

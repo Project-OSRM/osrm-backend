@@ -10,12 +10,11 @@
 #include <boost/program_options.hpp>
 #include <boost/program_options/errors.hpp>
 
-#include <tbb/task_scheduler_init.h>
-
 #include <cstdlib>
 #include <exception>
 #include <new>
 #include <ostream>
+#include <thread>
 
 #include "util/meminfo.hpp"
 
@@ -45,25 +44,27 @@ return_code parseArguments(int argc,
     config_options.add_options()(
         "threads,t",
         boost::program_options::value<unsigned int>(&contractor_config.requested_num_threads)
-            ->default_value(tbb::task_scheduler_init::default_num_threads()),
+            ->default_value(std::thread::hardware_concurrency()),
         "Number of threads to use")(
         "core,k",
         boost::program_options::value<double>(&contractor_config.core_factor)->default_value(1.0),
-        "Percentage of the graph (in vertices) to contract [0..1]")(
-        "segment-speed-file",
-        boost::program_options::value<std::vector<std::string>>(
-            &contractor_config.updater_config.segment_speed_lookup_paths)
-            ->composing(),
-        "Lookup files containing nodeA, nodeB, speed data to adjust edge weights")(
+        "DEPRECATED: Will always be 1.0. Percentage of the graph (in vertices) to contract "
+        "[0..1].")("segment-speed-file",
+                   boost::program_options::value<std::vector<std::string>>(
+                       &contractor_config.updater_config.segment_speed_lookup_paths)
+                       ->composing(),
+                   "Lookup files containing nodeA, nodeB, speed data to adjust edge weights")(
         "turn-penalty-file",
         boost::program_options::value<std::vector<std::string>>(
             &contractor_config.updater_config.turn_penalty_lookup_paths)
             ->composing(),
         "Lookup files containing from_, to_, via_nodes, and turn penalties to adjust turn weights")(
         "level-cache,o",
-        boost::program_options::value<bool>(&contractor_config.use_cached_priority)
+        boost::program_options::bool_switch(&contractor_config.use_cached_priority)
             ->default_value(false),
-        "Use .level file to retain the contaction level for each node from the last run.")(
+        "DEPRECATED: Will always be false. Use .level file to retain the contraction level for "
+        "each "
+        "node from the last run.")(
         "edge-weight-updates-over-factor",
         boost::program_options::value<double>(
             &contractor_config.updater_config.log_edge_updates_factor)
@@ -141,7 +142,8 @@ return_code parseArguments(int argc,
     return return_code::ok;
 }
 
-int main(int argc, char *argv[]) try
+int main(int argc, char *argv[])
+try
 {
     util::LogPolicy::GetInstance().Unmute();
     std::string verbosity;
@@ -169,7 +171,7 @@ int main(int argc, char *argv[]) try
         return EXIT_FAILURE;
     }
 
-    const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
+    const unsigned recommended_num_threads = std::thread::hardware_concurrency();
 
     if (recommended_num_threads != contractor_config.requested_num_threads)
     {
@@ -185,25 +187,20 @@ int main(int argc, char *argv[]) try
     util::Log() << "Input file: " << contractor_config.base_path.string() << ".osrm";
     util::Log() << "Threads: " << contractor_config.requested_num_threads;
 
-    tbb::task_scheduler_init init(contractor_config.requested_num_threads);
-
     osrm::contract(contractor_config);
 
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
 
     return EXIT_SUCCESS;
 }
 catch (const osrm::RuntimeError &e)
 {
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
     util::Log(logERROR) << e.what();
     return e.GetCode();
 }
 catch (const std::bad_alloc &e)
 {
-    util::DumpSTXXLStats();
     util::DumpMemoryStats();
     util::Log(logERROR) << e.what();
     util::Log(logERROR) << "Please provide more memory or consider using a larger swapfile";

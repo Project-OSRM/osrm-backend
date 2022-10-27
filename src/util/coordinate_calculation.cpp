@@ -5,6 +5,8 @@
 
 #include <boost/assert.hpp>
 
+#include <mapbox/cheap_ruler.hpp>
+
 #include <algorithm>
 #include <iterator>
 #include <limits>
@@ -17,6 +19,44 @@ namespace util
 
 namespace coordinate_calculation
 {
+
+namespace
+{
+class CheapRulerContainer
+{
+  public:
+    CheapRulerContainer(const int number_of_rulers)
+        : cheap_ruler_cache(number_of_rulers, mapbox::cheap_ruler::CheapRuler(0)),
+          step(90.0 * COORDINATE_PRECISION / number_of_rulers)
+    {
+        for (int n = 0; n < number_of_rulers; n++)
+        {
+            cheap_ruler_cache[n] = mapbox::cheap_ruler::CheapRuler(
+                step * (n + 0.5) / COORDINATE_PRECISION, mapbox::cheap_ruler::CheapRuler::Meters);
+        }
+    };
+
+    mapbox::cheap_ruler::CheapRuler &getRuler(const FixedLatitude lat_1, const FixedLatitude lat_2)
+    {
+        auto lat = (lat_1 + lat_2) / util::FixedLatitude{2};
+        return getRuler(lat);
+    }
+
+    mapbox::cheap_ruler::CheapRuler &getRuler(const FixedLatitude lat)
+    {
+        BOOST_ASSERT(step > 2);
+        // the |lat| > 0  ->  |lat|-1 > -1  ->  (|lat|-1)/step > -1/step > -1/2 >= -1  ->  bin >= 0
+        std::size_t bin = (std::abs(static_cast<int>(lat)) - 1) / step;
+        BOOST_ASSERT(bin < cheap_ruler_cache.size());
+        return cheap_ruler_cache[bin];
+    };
+
+  private:
+    std::vector<mapbox::cheap_ruler::CheapRuler> cheap_ruler_cache;
+    const int step;
+};
+static CheapRulerContainer cheap_ruler_container(1800);
+} // namespace
 
 // Does not project the coordinates!
 std::uint64_t squaredEuclideanDistance(const Coordinate lhs, const Coordinate rhs)
@@ -32,54 +72,16 @@ std::uint64_t squaredEuclideanDistance(const Coordinate lhs, const Coordinate rh
     return result;
 }
 
-double haversineDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
-{
-    auto lon1 = static_cast<int>(coordinate_1.lon);
-    auto lat1 = static_cast<int>(coordinate_1.lat);
-    auto lon2 = static_cast<int>(coordinate_2.lon);
-    auto lat2 = static_cast<int>(coordinate_2.lat);
-    BOOST_ASSERT(lon1 != std::numeric_limits<int>::min());
-    BOOST_ASSERT(lat1 != std::numeric_limits<int>::min());
-    BOOST_ASSERT(lon2 != std::numeric_limits<int>::min());
-    BOOST_ASSERT(lat2 != std::numeric_limits<int>::min());
-    const double lt1 = lat1 / COORDINATE_PRECISION;
-    const double ln1 = lon1 / COORDINATE_PRECISION;
-    const double lt2 = lat2 / COORDINATE_PRECISION;
-    const double ln2 = lon2 / COORDINATE_PRECISION;
-
-    const double dlat1 = lt1 * detail::DEGREE_TO_RAD;
-    const double dlong1 = ln1 * detail::DEGREE_TO_RAD;
-    const double dlat2 = lt2 * detail::DEGREE_TO_RAD;
-    const double dlong2 = ln2 * detail::DEGREE_TO_RAD;
-
-    const double dlong = dlong1 - dlong2;
-    const double dlat = dlat1 - dlat2;
-
-    const double aharv = std::pow(std::sin(dlat / 2.0), 2.0) +
-                         std::cos(dlat1) * std::cos(dlat2) * std::pow(std::sin(dlong / 2.), 2);
-    const double charv = 2. * std::atan2(std::sqrt(aharv), std::sqrt(1.0 - aharv));
-    return detail::EARTH_RADIUS * charv;
-}
-
 double greatCircleDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
 {
-    auto lon1 = static_cast<int>(coordinate_1.lon);
-    auto lat1 = static_cast<int>(coordinate_1.lat);
-    auto lon2 = static_cast<int>(coordinate_2.lon);
-    auto lat2 = static_cast<int>(coordinate_2.lat);
-    BOOST_ASSERT(lat1 != std::numeric_limits<int>::min());
-    BOOST_ASSERT(lon1 != std::numeric_limits<int>::min());
-    BOOST_ASSERT(lat2 != std::numeric_limits<int>::min());
-    BOOST_ASSERT(lon2 != std::numeric_limits<int>::min());
-
-    const double float_lat1 = (lat1 / COORDINATE_PRECISION) * detail::DEGREE_TO_RAD;
-    const double float_lon1 = (lon1 / COORDINATE_PRECISION) * detail::DEGREE_TO_RAD;
-    const double float_lat2 = (lat2 / COORDINATE_PRECISION) * detail::DEGREE_TO_RAD;
-    const double float_lon2 = (lon2 / COORDINATE_PRECISION) * detail::DEGREE_TO_RAD;
-
-    const double x_value = (float_lon2 - float_lon1) * std::cos((float_lat1 + float_lat2) / 2.0);
-    const double y_value = float_lat2 - float_lat1;
-    return std::hypot(x_value, y_value) * detail::EARTH_RADIUS;
+    // Should be within 0.1% or so of Vincenty method (assuming 19 buckets are enough)
+    // Should be more faster and more precise than Haversine
+    const auto lon1 = static_cast<double>(util::toFloating(coordinate_1.lon));
+    const auto lat1 = static_cast<double>(util::toFloating(coordinate_1.lat));
+    const auto lon2 = static_cast<double>(util::toFloating(coordinate_2.lon));
+    const auto lat2 = static_cast<double>(util::toFloating(coordinate_2.lat));
+    return cheap_ruler_container.getRuler(coordinate_1.lat, coordinate_2.lat)
+        .distance({lon1, lat1}, {lon2, lat2});
 }
 
 double perpendicularDistance(const Coordinate segment_source,
@@ -125,30 +127,24 @@ Coordinate centroid(const Coordinate lhs, const Coordinate rhs)
     return centroid;
 }
 
-double bearing(const Coordinate first_coordinate, const Coordinate second_coordinate)
+double bearing(const Coordinate coordinate_1, const Coordinate coordinate_2)
 {
-    const double lon_diff =
-        static_cast<double>(toFloating(second_coordinate.lon - first_coordinate.lon));
-    const double lon_delta = detail::degToRad(lon_diff);
-    const double lat1 = detail::degToRad(static_cast<double>(toFloating(first_coordinate.lat)));
-    const double lat2 = detail::degToRad(static_cast<double>(toFloating(second_coordinate.lat)));
-    const double y = std::sin(lon_delta) * std::cos(lat2);
-    const double x =
-        std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(lon_delta);
-    double result = detail::radToDeg(std::atan2(y, x));
-    while (result < 0.0)
+    const auto lon1 = static_cast<double>(util::toFloating(coordinate_1.lon));
+    const auto lat1 = static_cast<double>(util::toFloating(coordinate_1.lat));
+    const auto lon2 = static_cast<double>(util::toFloating(coordinate_2.lon));
+    const auto lat2 = static_cast<double>(util::toFloating(coordinate_2.lat));
+    const auto &ruler = cheap_ruler_container.getRuler(coordinate_1.lat, coordinate_2.lat);
+    auto result = ruler.bearing({lon1, lat1}, {lon2, lat2});
+    if (result < 0.0)
     {
         result += 360.0;
     }
+    BOOST_ASSERT(0 <= result && result <= 360);
 
-    while (result >= 360.0)
-    {
-        result -= 360.0;
-    }
     // If someone gives us two identical coordinates, then the concept of a bearing
     // makes no sense.  However, because it sometimes happens, we'll at least
     // return a consistent value of 0 so that the behaviour isn't random.
-    BOOST_ASSERT(first_coordinate != second_coordinate || result == 0.);
+    BOOST_ASSERT(coordinate_1 != coordinate_2 || result == 0.);
 
     return result;
 }
@@ -268,7 +264,7 @@ double circleRadius(const Coordinate C1, const Coordinate C2, const Coordinate C
     // a circle by three points requires thee distinct points
     auto center = circleCenter(C1, C2, C3);
     if (center)
-        return haversineDistance(C1, *center);
+        return greatCircleDistance(C1, *center);
     else
         return std::numeric_limits<double>::infinity();
 }
@@ -287,7 +283,7 @@ Coordinate interpolateLinear(double factor, const Coordinate from, const Coordin
     FixedLatitude interpolated_lat{
         static_cast<std::int32_t>(from_lat + factor * (to_lat - from_lat))};
 
-    return {std::move(interpolated_lon), std::move(interpolated_lat)};
+    return {interpolated_lon, interpolated_lat};
 }
 
 // compute the signed area of a triangle
@@ -318,8 +314,8 @@ double findClosestDistance(const Coordinate coordinate,
                            const Coordinate segment_begin,
                            const Coordinate segment_end)
 {
-    return haversineDistance(coordinate,
-                             projectPointOnSegment(segment_begin, segment_end, coordinate).second);
+    return greatCircleDistance(
+        coordinate, projectPointOnSegment(segment_begin, segment_end, coordinate).second);
 }
 
 // find the closes distance between two sets of coordinates
@@ -332,7 +328,7 @@ double findClosestDistance(const std::vector<Coordinate> &lhs, const std::vector
             std::min(current_min, findClosestDistance(coordinate, rhs.begin(), rhs.end()));
         return false;
     };
-
+    // NOLINTNEXTLINE(bugprone-unused-return-value)
     std::find_if(std::begin(lhs), std::end(lhs), compute_minimum_distance_in_rhs);
     return current_min;
 }
@@ -381,6 +377,48 @@ Coordinate difference(const Coordinate lhs, const Coordinate rhs)
     return {util::FixedLongitude{lon_diff_int}, util::FixedLatitude{lat_diff_int}};
 }
 
-} // ns coordinate_calculation
-} // ns util
-} // ns osrm
+double computeArea(const std::vector<Coordinate> &polygon)
+{
+    using util::coordinate_calculation::greatCircleDistance;
+
+    if (polygon.empty())
+        return 0.;
+
+    BOOST_ASSERT(polygon.front() == polygon.back());
+
+    // Take the reference point with the smallest latitude.
+    // ⚠ ref_latitude is the standard parallel for the equirectangular projection
+    // that is not an area-preserving projection
+    const auto ref_point =
+        std::min_element(polygon.begin(), polygon.end(), [](const auto &lhs, const auto &rhs) {
+            return lhs.lat < rhs.lat;
+        });
+    const auto ref_latitude = ref_point->lat;
+
+    // Compute area of under a curve and a line that is parallel the equator with ref_latitude
+    // For closed curves it corresponds to the shoelace algorithm for polygon areas
+    double area = 0.;
+    auto first = polygon.begin();
+    auto previous_base = util::Coordinate{first->lon, ref_latitude};
+    auto previous_y = greatCircleDistance(previous_base, *first);
+    for (++first; first != polygon.end(); ++first)
+    {
+        BOOST_ASSERT(first->lat >= ref_latitude);
+
+        const auto current_base = util::Coordinate{first->lon, ref_latitude};
+        const auto current_y = greatCircleDistance(current_base, *first);
+        const auto chunk_area =
+            greatCircleDistance(previous_base, current_base) * (previous_y + current_y);
+
+        area += (current_base.lon >= previous_base.lon) ? chunk_area : -chunk_area;
+
+        previous_base = current_base;
+        previous_y = current_y;
+    }
+
+    return area / 2.;
+}
+
+} // namespace coordinate_calculation
+} // namespace util
+} // namespace osrm

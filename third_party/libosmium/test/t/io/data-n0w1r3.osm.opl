@@ -1,0 +1,4 @@
+w20 v1 dV c1 t2014-01-01T00:00:00Z i1 utest Thighway=primary Nn10,n11
+r30 v1 dV c1 t2014-01-01T00:00:00Z i1 utest Ttype=test Mn10@none
+r31 v1 dV c1 t2014-01-01T00:00:00Z i1 utest Ttype=restriction Mw20@from,n11@via,w22@to
+r32 v1 dV c1 t2014-01-01T00:00:00Z i1 utest Ttest=relinrel Mr30@none

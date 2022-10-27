@@ -13,8 +13,8 @@ namespace web_mercator
 {
 namespace detail
 {
-const constexpr long double DEGREE_TO_RAD = 0.017453292519943295769236907684886;
-const constexpr long double RAD_TO_DEGREE = 1. / DEGREE_TO_RAD;
+const constexpr double DEGREE_TO_RAD = 0.017453292519943295769236907684886;
+const constexpr double RAD_TO_DEGREE = 1. / DEGREE_TO_RAD;
 // radius used by WGS84
 const constexpr double EARTH_RADIUS_WGS84 = 6378137.0;
 // earth circumference devided by 2
@@ -22,7 +22,7 @@ const constexpr double MAXEXTENT = EARTH_RADIUS_WGS84 * boost::math::constants::
 // ^ math functions are not constexpr since they have side-effects (setting errno) :(
 const constexpr double EPSG3857_MAX_LATITUDE = 85.051128779806592378; // 90(4*atan(exp(pi))/pi-1)
 const constexpr double MAX_LONGITUDE = 180.0;
-}
+} // namespace detail
 
 // Converts projected mercator degrees to PX
 const constexpr double DEGREE_TO_PX = detail::MAXEXTENT / 180.0;
@@ -169,8 +169,8 @@ inline void xyzToMercator(
     maxx = static_cast<double>(clamp(util::FloatLongitude{maxx})) * DEGREE_TO_PX;
     maxy = latToY(util::FloatLatitude{maxy}) * DEGREE_TO_PX;
 }
-}
-}
-}
+} // namespace web_mercator
+} // namespace util
+} // namespace osrm
 
 #endif

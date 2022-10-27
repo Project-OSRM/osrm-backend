@@ -2,6 +2,7 @@
 #define OSRM_CONTRACTOR_GRAPH_CONTRACTION_ADAPTORS_HPP_
 
 #include "contractor/contractor_graph.hpp"
+
 #include "util/log.hpp"
 #include "util/percent.hpp"
 
@@ -40,6 +41,7 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
                            input_edge.target,
                            std::max(input_edge.data.weight, 1),
                            input_edge.data.duration,
+                           input_edge.data.distance,
                            1,
                            input_edge.data.turn_id,
                            false,
@@ -50,6 +52,7 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
                            input_edge.source,
                            std::max(input_edge.data.weight, 1),
                            input_edge.data.duration,
+                           input_edge.data.distance,
                            1,
                            input_edge.data.turn_id,
                            false,
@@ -81,6 +84,7 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
         forward_edge.data.originalEdges = reverse_edge.data.originalEdges = 1;
         forward_edge.data.weight = reverse_edge.data.weight = INVALID_EDGE_WEIGHT;
         forward_edge.data.duration = reverse_edge.data.duration = MAXIMAL_EDGE_DURATION;
+        forward_edge.data.distance = reverse_edge.data.distance = MAXIMAL_EDGE_DISTANCE;
         // remove parallel edges
         while (i < edges.size() && edges[i].source == source && edges[i].target == target)
         {
@@ -89,12 +93,16 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
                 forward_edge.data.weight = std::min(edges[i].data.weight, forward_edge.data.weight);
                 forward_edge.data.duration =
                     std::min(edges[i].data.duration, forward_edge.data.duration);
+                forward_edge.data.distance =
+                    std::min(edges[i].data.distance, forward_edge.data.distance);
             }
             if (edges[i].data.backward)
             {
                 reverse_edge.data.weight = std::min(edges[i].data.weight, reverse_edge.data.weight);
                 reverse_edge.data.duration =
                     std::min(edges[i].data.duration, reverse_edge.data.duration);
+                reverse_edge.data.distance =
+                    std::min(edges[i].data.distance, reverse_edge.data.distance);
             }
             ++i;
         }
@@ -125,44 +133,44 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
     return ContractorGraph{number_of_nodes, edges};
 }
 
-template <class Edge, typename GraphT> inline util::DeallocatingVector<Edge> toEdges(GraphT graph)
+template <class Edge, typename GraphT> inline std::vector<Edge> toEdges(GraphT graph)
 {
-    util::DeallocatingVector<Edge> edges;
+    util::Log() << "Converting contracted graph with " << graph.GetNumberOfEdges()
+                << " to edge list (" << (graph.GetNumberOfEdges() * sizeof(Edge)) << " bytes)";
+    std::vector<Edge> edges(graph.GetNumberOfEdges());
 
-    util::UnbufferedLog log;
-    log << "Getting edges of minimized graph ";
-    util::Percent p(log, graph.GetNumberOfNodes());
-    const NodeID number_of_nodes = graph.GetNumberOfNodes();
-    if (graph.GetNumberOfNodes())
     {
-        Edge new_edge;
+        util::UnbufferedLog log;
+        log << "Getting edges of minimized graph ";
+        util::Percent p(log, graph.GetNumberOfNodes());
+        const NodeID number_of_nodes = graph.GetNumberOfNodes();
+        std::size_t edge_index = 0;
         for (const auto node : util::irange(0u, number_of_nodes))
         {
             p.PrintStatus(node);
             for (auto edge : graph.GetAdjacentEdgeRange(node))
             {
                 const NodeID target = graph.GetTarget(edge);
-                const ContractorGraph::EdgeData &data = graph.GetEdgeData(edge);
+                const auto &data = graph.GetEdgeData(edge);
+                auto &new_edge = edges[edge_index++];
                 new_edge.source = node;
                 new_edge.target = target;
                 BOOST_ASSERT_MSG(SPECIAL_NODEID != new_edge.target, "Target id invalid");
                 new_edge.data.weight = data.weight;
                 new_edge.data.duration = data.duration;
+                new_edge.data.distance = data.distance;
                 new_edge.data.shortcut = data.shortcut;
                 new_edge.data.turn_id = data.id;
                 BOOST_ASSERT_MSG(new_edge.data.turn_id != INT_MAX, // 2^31
                                  "edge id invalid");
                 new_edge.data.forward = data.forward;
                 new_edge.data.backward = data.backward;
-                edges.push_back(new_edge);
             }
         }
+        BOOST_ASSERT(edge_index == edges.size());
     }
 
-    // sort and remove duplicates
     tbb::parallel_sort(edges.begin(), edges.end());
-    auto new_end = std::unique(edges.begin(), edges.end());
-    edges.resize(new_end - edges.begin());
 
     return edges;
 }

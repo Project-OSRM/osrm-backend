@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,11 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstddef>
-
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/types.hpp>
+
+#include <cstddef>
 
 namespace osmium {
 
@@ -62,19 +62,25 @@ namespace osmium {
         protected:
 
             // Type of object we are currently working on
-            osmium::item_type m_object_type;
+            osmium::item_type m_object_type = osmium::item_type::undefined;
 
             // ID of the relation/way we are currently working on
-            osmium::object_id_type m_object_id;
+            osmium::object_id_type m_object_id = 0;
 
             // Number of nodes in the area
-            size_t m_nodes;
+            size_t m_nodes = 0;
 
         public:
 
             ProblemReporter() = default;
 
-            virtual ~ProblemReporter() = default;
+            ProblemReporter(const ProblemReporter&) = default;
+            ProblemReporter& operator=(const ProblemReporter&) = default;
+
+            ProblemReporter(ProblemReporter&&) noexcept = default;
+            ProblemReporter& operator=(ProblemReporter&&) noexcept = default;
+
+            virtual ~ProblemReporter() noexcept = default;
 
             /**
              * Set the object the next problem reports will be on.
@@ -85,6 +91,10 @@ namespace osmium {
             void set_object(osmium::item_type object_type, osmium::object_id_type object_id) noexcept {
                 m_object_type = object_type;
                 m_object_id = object_id;
+            }
+
+            osmium::object_id_type object_id() const noexcept {
+                return m_object_id;
             }
 
             void set_nodes(size_t nodes) noexcept {
@@ -161,7 +171,7 @@ namespace osmium {
              * @param nr   NodeRef of one end of the ring.
              * @param way  Optional pointer to way the end node is in.
              */
-            virtual void report_ring_not_closed(const osmium::NodeRef& nr, const osmium::Way* way = nullptr) {
+            virtual void report_ring_not_closed(const osmium::NodeRef& nr, const osmium::Way* way) {
             }
 
             /**

@@ -31,7 +31,7 @@ class TripPlugin final : public BasePlugin
     const int max_locations_trip;
 
     InternalRouteResult ComputeRoute(const RoutingAlgorithmsInterface &algorithms,
-                                     const std::vector<PhantomNode> &phantom_node_list,
+                                     const std::vector<PhantomNodeCandidates> &candidates_list,
                                      const std::vector<NodeID> &trip,
                                      const bool roundtrip) const;
 
@@ -40,10 +40,10 @@ class TripPlugin final : public BasePlugin
 
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::TripParameters &parameters,
-                         util::json::Object &json_result) const;
+                         osrm::engine::api::ResultT &json_result) const;
 };
-}
-}
-}
+} // namespace plugins
+} // namespace engine
+} // namespace osrm
 
 #endif // TRIP_HPP

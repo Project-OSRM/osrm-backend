@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,10 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/osm/item_type.hpp>
+#include <osmium/osm/relation.hpp>
+#include <osmium/osm/types.hpp>
+
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -41,10 +45,6 @@ DEALINGS IN THE SOFTWARE.
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#include <osmium/osm/item_type.hpp>
-#include <osmium/osm/relation.hpp>
-#include <osmium/osm/types.hpp>
 
 namespace osmium {
 
@@ -66,12 +66,12 @@ namespace osmium {
                     TKeyInternal key;
                     TValueInternal value;
 
-                    explicit kv_pair(key_type key_id) :
+                    explicit kv_pair(const key_type key_id) :
                         key(static_cast<TKeyInternal>(key_id)),
                         value() {
                     }
 
-                    kv_pair(key_type key_id, value_type value_id) :
+                    kv_pair(const key_type key_id, const value_type value_id) :
                         key(static_cast<TKeyInternal>(key_id)),
                         value(static_cast<TValueInternal>(value_id)) {
                     }
@@ -91,7 +91,7 @@ namespace osmium {
 
                 using const_iterator = typename std::vector<kv_pair>::const_iterator;
 
-                void set(key_type key, value_type value) {
+                void set(const key_type key, const value_type value) {
                     m_map.emplace_back(key, value);
                 }
 
@@ -119,7 +119,7 @@ namespace osmium {
                     m_map.erase(last, m_map.end());
                 }
 
-                std::pair<const_iterator, const_iterator> get(key_type key) const noexcept {
+                std::pair<const_iterator, const_iterator> get(const key_type key) const noexcept {
                     return std::equal_range(m_map.begin(), m_map.end(), kv_pair{key}, [](const kv_pair& lhs, const kv_pair& rhs) {
                         return lhs.key < rhs.key;
                     });
@@ -133,7 +133,7 @@ namespace osmium {
                     return m_map.size();
                 }
 
-                void reserve(std::size_t size) {
+                void reserve(const std::size_t size) {
                     m_map.reserve(size);
                 }
 
@@ -187,8 +187,10 @@ namespace osmium {
             RelationsMapIndex(const RelationsMapIndex&) = delete;
             RelationsMapIndex& operator=(const RelationsMapIndex&) = delete;
 
-            RelationsMapIndex(RelationsMapIndex&&) = default;
-            RelationsMapIndex& operator=(RelationsMapIndex&&) = default;
+            RelationsMapIndex(RelationsMapIndex&& /*other*/) noexcept(std::is_nothrow_move_constructible<map_type>::value);
+            RelationsMapIndex& operator=(RelationsMapIndex&& /*other*/) noexcept(std::is_nothrow_move_assignable<map_type>::value);
+
+            ~RelationsMapIndex() noexcept = default;
 
             /**
              * Find the given relation id in the index and call the given
@@ -207,10 +209,10 @@ namespace osmium {
              *             (Lookup uses binary search.)
              */
             template <typename TFunc>
-            void for_each_parent(osmium::unsigned_object_id_type member_id, TFunc&& func) const {
+            void for_each_parent(const osmium::unsigned_object_id_type member_id, TFunc&& func) const {
                 const auto parents = m_map.get(member_id);
                 for (auto it = parents.first; it != parents.second; ++it) {
-                    std::forward<TFunc>(func)(it->value);
+                    func(it->value);
                 }
             }
 
@@ -229,10 +231,10 @@ namespace osmium {
              *             (Lookup uses binary search.)
              */
             template <typename TFunc>
-            void for_each(osmium::unsigned_object_id_type id, TFunc&& func) const {
+            void for_each(const osmium::unsigned_object_id_type id, TFunc&& func) const {
                 const auto parents = m_map.get(id);
                 for (auto it = parents.first; it != parents.second; ++it) {
-                    std::forward<TFunc>(func)(it->value);
+                    func(it->value);
                 }
             }
 
@@ -255,6 +257,11 @@ namespace osmium {
             }
 
         }; // class RelationsMapIndex
+
+        // defined outside the class on purpose
+        // see https://akrzemi1.wordpress.com/2015/09/11/declaring-the-move-constructor/
+        inline RelationsMapIndex::RelationsMapIndex(RelationsMapIndex&&) noexcept(std::is_nothrow_move_constructible<map_type>::value) = default;
+        inline RelationsMapIndex& RelationsMapIndex::operator=(RelationsMapIndex&&) noexcept(std::is_nothrow_move_assignable<map_type>::value) = default;
 
         class RelationsMapIndexes {
 
@@ -321,13 +328,15 @@ namespace osmium {
             RelationsMapStash(const RelationsMapStash&) = delete;
             RelationsMapStash& operator=(const RelationsMapStash&) = delete;
 
-            RelationsMapStash(RelationsMapStash&&) = default;
-            RelationsMapStash& operator=(RelationsMapStash&&) = default;
+            RelationsMapStash(RelationsMapStash&& /*other*/) noexcept(std::is_nothrow_move_constructible<map_type>::value);
+            RelationsMapStash& operator=(RelationsMapStash&& /*other*/) noexcept(std::is_nothrow_move_assignable<map_type>::value);
+
+            ~RelationsMapStash() noexcept = default;
 
             /**
              * Add mapping from member to parent relation in the stash.
              */
-            void add(osmium::unsigned_object_id_type member_id, osmium::unsigned_object_id_type relation_id) {
+            void add(const osmium::unsigned_object_id_type member_id, const osmium::unsigned_object_id_type relation_id) {
                 assert(m_valid && "You can't use the RelationsMap any more after calling build_index()");
                 m_map.set(member_id, relation_id);
             }
@@ -430,6 +439,11 @@ namespace osmium {
             }
 
         }; // class RelationsMapStash
+
+        // defined outside the class on purpose
+        // see https://akrzemi1.wordpress.com/2015/09/11/declaring-the-move-constructor/
+        inline RelationsMapStash::RelationsMapStash(RelationsMapStash&&) noexcept(std::is_nothrow_move_constructible<map_type>::value) = default;
+        inline RelationsMapStash& RelationsMapStash::operator=(RelationsMapStash&&) noexcept(std::is_nothrow_move_assignable<map_type>::value) = default;
 
     } // namespace index
 

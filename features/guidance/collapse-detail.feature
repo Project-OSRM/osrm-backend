@@ -147,3 +147,32 @@ Feature: Collapse
             | waypoints | route            | turns                    |
             | a,d       | road,left,left   | depart,turn left,arrive  |
             | a,e       | road,right,right | depart,turn right,arrive |
+
+    # https://www.openstreetmap.org/#map=18/53.89755/27.54306
+    Scenario: Wide turn into invalid u-turn
+        Given the node map
+            """
+                      g
+                      |
+                      |
+                      f - - - - e
+                      |
+                      |
+                      |
+                h - - d
+                      |
+                      |
+                      |
+            a - - - - b - - - - c
+            """
+
+        And the ways
+            | nodes | highway   | name |
+            | abc   | secondary | road |
+            | bdfg  | service   |      |
+            | hd    | service   |      |
+            | fe    | service   |      |
+
+        When I route I should get
+            | waypoints | route   | turns                               |
+            | c,e       | road,,, | depart,turn right,turn right,arrive |

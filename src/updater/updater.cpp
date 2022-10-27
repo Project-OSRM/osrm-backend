@@ -4,21 +4,19 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/files.hpp"
-#include "extractor/node_based_edge.hpp"
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/serialization.hpp"
 
-#include "storage/io.hpp"
+#include "guidance/files.hpp"
 
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/for_each_pair.hpp"
-#include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
+#include "util/mmap_tar.hpp"
 #include "util/opening_hours.hpp"
-#include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 #include "util/string_util.hpp"
 #include "util/timezones.hpp"
@@ -27,25 +25,20 @@
 
 #include <boost/assert.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/geometry.hpp>
-#include <boost/geometry/index/rtree.hpp>
-#include <boost/interprocess/file_mapping.hpp>
-#include <boost/interprocess/mapped_region.hpp>
 
 #include <tbb/blocked_range.h>
-#include <tbb/concurrent_unordered_map.h>
+#include <tbb/concurrent_vector.h>
 #include <tbb/enumerable_thread_specific.h>
-#include <tbb/parallel_for_each.h>
+#include <tbb/parallel_for.h>
 #include <tbb/parallel_invoke.h>
+#include <tbb/parallel_sort.h>
 
 #include <algorithm>
 #include <atomic>
 #include <bitset>
 #include <cstdint>
-#include <fstream>
 #include <iterator>
 #include <memory>
-#include <thread>
 #include <tuple>
 #include <vector>
 
@@ -66,7 +59,7 @@ template <typename T1, typename T2> struct hash<std::tuple<T1, T2>>
         return hash_val(std::get<0>(t), std::get<1>(t));
     }
 };
-}
+} // namespace std
 
 namespace osrm
 {
@@ -77,6 +70,7 @@ namespace
 
 template <typename T> inline bool is_aligned(const void *pointer)
 {
+    // NOLINTNEXTLINE(misc-redundant-expression)
     static_assert(sizeof(T) % alignof(T) == 0, "pointer can not be used as an array pointer");
     return reinterpret_cast<uintptr_t>(pointer) % alignof(T) == 0;
 }
@@ -111,9 +105,6 @@ void checkWeightsConsistency(
     extractor::EdgeBasedNodeDataContainer node_data;
     extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
 
-    extractor::TurnDataContainer turn_data;
-    extractor::files::readTurnData(config.GetPath(".osrm.edges"), turn_data);
-
     for (auto &edge : edge_based_edge_list)
     {
         const auto node_id = edge.source;
@@ -122,6 +113,7 @@ void checkWeightsConsistency(
         if (geometry_id.forward)
         {
             auto range = segment_data.GetForwardWeights(geometry_id.id);
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             EdgeWeight weight = std::accumulate(range.begin(), range.end(), EdgeWeight{0});
             if (weight > edge.data.weight)
             {
@@ -132,6 +124,7 @@ void checkWeightsConsistency(
         else
         {
             auto range = segment_data.GetReverseWeights(geometry_id.id);
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             EdgeWeight weight = std::accumulate(range.begin(), range.end(), EdgeWeight{0});
             if (weight > edge.data.weight)
             {
@@ -143,13 +136,15 @@ void checkWeightsConsistency(
 }
 #endif
 
+static const constexpr std::size_t LUA_SOURCE = 0;
+
 tbb::concurrent_vector<GeometryID>
 updateSegmentData(const UpdaterConfig &config,
                   const extractor::ProfileProperties &profile_properties,
                   const SegmentLookupTable &segment_speed_lookup,
                   extractor::SegmentDataContainer &segment_data,
                   std::vector<util::Coordinate> &coordinates,
-                  extractor::PackedOSMIDs &osm_node_ids)
+                  const extractor::PackedOSMIDs &osm_node_ids)
 {
     // vector to count used speeds for logging
     // size offset by one since index 0 is used for speeds not from external file
@@ -157,13 +152,13 @@ updateSegmentData(const UpdaterConfig &config,
     std::size_t num_counters = config.segment_speed_lookup_paths.size() + 1;
     tbb::enumerable_thread_specific<counters_type> segment_speeds_counters(
         counters_type(num_counters, 0));
-    const constexpr auto LUA_SOURCE = 0;
 
     // closure to convert SpeedSource value to weight and count fallbacks to durations
     std::atomic<std::uint32_t> fallbacks_to_duration{0};
-    auto convertToWeight = [&profile_properties, &fallbacks_to_duration](
-        const SegmentWeight &existing_weight, const SpeedSource &value, double distance_in_meters) {
-
+    auto convertToWeight = [&profile_properties,
+                            &fallbacks_to_duration](const SegmentWeight &existing_weight,
+                                                    const SpeedSource &value,
+                                                    double distance_in_meters) {
         double rate = std::numeric_limits<double>::quiet_NaN();
 
         // if value.rate is not set, we fall back to duration
@@ -214,7 +209,7 @@ updateSegmentData(const UpdaterConfig &config,
 
     using DirectionalGeometryID = extractor::SegmentDataContainer::DirectionalGeometryID;
     auto range = tbb::blocked_range<DirectionalGeometryID>(0, segment_data.GetNumberOfGeometries());
-    tbb::parallel_for(range, [&, LUA_SOURCE](const auto &range) {
+    tbb::parallel_for(range, [&](const auto &range) {
         auto &counters = segment_speeds_counters.local();
         std::vector<double> segment_lengths;
         for (auto geometry_id = range.begin(); geometry_id < range.end(); geometry_id++)
@@ -427,14 +422,23 @@ updateTurnPenalties(const UpdaterConfig &config,
                     const TurnLookupTable &turn_penalty_lookup,
                     std::vector<TurnPenalty> &turn_weight_penalties,
                     std::vector<TurnPenalty> &turn_duration_penalties,
-                    extractor::PackedOSMIDs osm_node_ids)
+                    const extractor::PackedOSMIDs &osm_node_ids)
 {
     const auto weight_multiplier = profile_properties.GetWeightMultiplier();
 
+    // [NOTE] turn_index_blocks could be simply loaded by `files::readTurnPenaltiesIndex()`,
+    //      however, we leave the below mmap to keep compatiblity.
+    //      Use `files::readTurnPenaltiesIndex()` instead once the compatiblity is not that
+    //      important.
     // Mapped file pointer for turn indices
     boost::iostreams::mapped_file_source turn_index_region;
-    auto turn_index_blocks = util::mmapFile<extractor::lookup::TurnIndexBlock>(
-        config.GetPath(".osrm.turn_penalties_index"), turn_index_region);
+    const extractor::lookup::TurnIndexBlock *turn_index_blocks;
+    {
+        auto map =
+            util::mmapTarFile(config.GetPath(".osrm.turn_penalties_index"), turn_index_region);
+        turn_index_blocks = reinterpret_cast<const extractor::lookup::TurnIndexBlock *>(
+            map["/extractor/turn_index"].first);
+    }
 
     // Get the turn penalty and update to the new value if required
     std::vector<std::uint64_t> updated_turns;
@@ -501,7 +505,7 @@ bool IsRestrictionValid(const Timezoner &tz_handler, const extractor::Conditiona
 std::vector<std::uint64_t>
 updateConditionalTurns(std::vector<TurnPenalty> &turn_weight_penalties,
                        const std::vector<extractor::ConditionalTurnPenalty> &conditional_turns,
-                       Timezoner time_zone_handler)
+                       const Timezoner &time_zone_handler)
 {
     std::vector<std::uint64_t> updated_turns;
     if (conditional_turns.size() == 0)
@@ -511,35 +515,43 @@ updateConditionalTurns(std::vector<TurnPenalty> &turn_weight_penalties,
     {
         if (IsRestrictionValid(time_zone_handler, penalty))
         {
-            std::cout << "Disabling: " << penalty.turn_offset << std::endl;
             turn_weight_penalties[penalty.turn_offset] = INVALID_TURN_PENALTY;
             updated_turns.push_back(penalty.turn_offset);
         }
     }
     return updated_turns;
 }
-}
+} // namespace
 
-Updater::NumNodesAndEdges Updater::LoadAndUpdateEdgeExpandedGraph() const
+EdgeID
+Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
+                                        std::vector<EdgeWeight> &node_weights,
+                                        std::uint32_t &connectivity_checksum) const
 {
-    std::vector<EdgeWeight> node_weights;
-    std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
-    auto max_edge_id = Updater::LoadAndUpdateEdgeExpandedGraph(edge_based_edge_list, node_weights);
-    return std::make_tuple(max_edge_id + 1, std::move(edge_based_edge_list));
+    std::vector<EdgeDuration> node_durations(node_weights.size());
+    return LoadAndUpdateEdgeExpandedGraph(
+        edge_based_edge_list, node_weights, node_durations, connectivity_checksum);
 }
 
 EdgeID
 Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
-                                        std::vector<EdgeWeight> &node_weights) const
+                                        std::vector<EdgeWeight> &node_weights,
+                                        std::vector<EdgeDuration> &node_durations,
+                                        std::uint32_t &connectivity_checksum) const
 {
     TIMER_START(load_edges);
 
-    EdgeID max_edge_id = 0;
+    EdgeID number_of_edge_based_nodes = 0;
     std::vector<util::Coordinate> coordinates;
     extractor::PackedOSMIDs osm_node_ids;
 
-    extractor::files::readEdgeBasedGraph(
-        config.GetPath(".osrm.ebg"), max_edge_id, edge_based_edge_list);
+    extractor::files::readEdgeBasedNodeWeightsDurations(
+        config.GetPath(".osrm.enw"), node_weights, node_durations);
+
+    extractor::files::readEdgeBasedGraph(config.GetPath(".osrm.ebg"),
+                                         number_of_edge_based_nodes,
+                                         edge_based_edge_list,
+                                         connectivity_checksum);
     extractor::files::readNodes(config.GetPath(".osrm.nbg_nodes"), coordinates, osm_node_ids);
 
     const bool update_conditional_turns =
@@ -550,7 +562,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     if (!update_edge_weights && !update_turn_penalties && !update_conditional_turns)
     {
         saveDatasourcesNames(config);
-        return max_edge_id;
+        return number_of_edge_based_nodes;
     }
 
     if (config.segment_speed_lookup_paths.size() + config.turn_penalty_lookup_paths.size() > 255)
@@ -558,60 +570,37 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                               SOURCE_REF);
 
     extractor::EdgeBasedNodeDataContainer node_data;
-    extractor::TurnDataContainer turn_data;
     extractor::SegmentDataContainer segment_data;
     extractor::ProfileProperties profile_properties;
     std::vector<TurnPenalty> turn_weight_penalties;
     std::vector<TurnPenalty> turn_duration_penalties;
     if (update_edge_weights || update_turn_penalties || update_conditional_turns)
     {
-        const auto load_segment_data = [&] {
-            extractor::files::readSegmentData(config.GetPath(".osrm.geometry"), segment_data);
-        };
+        tbb::parallel_invoke(
+            [&] {
+                extractor::files::readSegmentData(config.GetPath(".osrm.geometry"), segment_data);
+            },
+            [&] { extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data); },
 
-        const auto load_node_data = [&] {
-            extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
-        };
-
-        const auto load_edge_data = [&] {
-            extractor::files::readTurnData(config.GetPath(".osrm.edges"), turn_data);
-        };
-
-        const auto load_turn_weight_penalties = [&] {
-            using storage::io::FileReader;
-            FileReader reader(config.GetPath(".osrm.turn_weight_penalties"),
-                              FileReader::VerifyFingerprint);
-            storage::serialization::read(reader, turn_weight_penalties);
-        };
-
-        const auto load_turn_duration_penalties = [&] {
-            using storage::io::FileReader;
-            FileReader reader(config.GetPath(".osrm.turn_duration_penalties"),
-                              FileReader::VerifyFingerprint);
-            storage::serialization::read(reader, turn_duration_penalties);
-        };
-
-        const auto load_profile_properties = [&] {
-            // Propagate profile properties to contractor configuration structure
-            storage::io::FileReader profile_properties_file(
-                config.GetPath(".osrm.properties"), storage::io::FileReader::VerifyFingerprint);
-            profile_properties = profile_properties_file.ReadOne<extractor::ProfileProperties>();
-        };
-
-        tbb::parallel_invoke(load_node_data,
-                             load_edge_data,
-                             load_segment_data,
-                             load_turn_weight_penalties,
-                             load_turn_duration_penalties,
-                             load_profile_properties);
+            [&] {
+                extractor::files::readTurnWeightPenalty(
+                    config.GetPath(".osrm.turn_weight_penalties"), turn_weight_penalties);
+            },
+            [&] {
+                extractor::files::readTurnDurationPenalty(
+                    config.GetPath(".osrm.turn_duration_penalties"), turn_duration_penalties);
+            },
+            [&] {
+                extractor::files::readProfileProperties(config.GetPath(".osrm.properties"),
+                                                        profile_properties);
+            });
     }
 
     std::vector<extractor::ConditionalTurnPenalty> conditional_turns;
     if (update_conditional_turns)
     {
-        using storage::io::FileReader;
-        FileReader reader(config.GetPath(".osrm.restrictions"), FileReader::VerifyFingerprint);
-        extractor::serialization::read(reader, conditional_turns);
+        extractor::files::readConditionalRestrictions(config.GetPath(".osrm.restrictions"),
+                                                      conditional_turns);
     }
 
     tbb::concurrent_vector<GeometryID> updated_segments;
@@ -703,6 +692,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                 new_weight += weight;
             }
             const auto durations = segment_data.GetForwardDurations(geometry_id.id);
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             new_duration = std::accumulate(durations.begin(), durations.end(), EdgeWeight{0});
         }
         else
@@ -718,6 +708,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                 new_weight += weight;
             }
             const auto durations = segment_data.GetReverseDurations(geometry_id.id);
+            // NOLINTNEXTLINE(bugprone-fold-init-type)
             new_duration = std::accumulate(durations.begin(), durations.end(), EdgeWeight{0});
         }
         return std::make_tuple(new_weight, new_duration);
@@ -754,12 +745,12 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                 accumulated_segment_data[updated_iter - updated_segments.begin()];
 
             // Update the node-weight cache. This is the weight of the edge-based-node
-            // only,
-            // it doesn't include the turn. We may visit the same node multiple times,
-            // but
-            // we should always assign the same value here.
-            if (node_weights.size() > 0)
-                node_weights[edge.source] = new_weight;
+            // only, it doesn't include the turn. We may visit the same node multiple times,
+            // but we should always assign the same value here.
+            BOOST_ASSERT(edge.source < node_weights.size());
+            node_weights[edge.source] =
+                node_weights[edge.source] & 0x80000000 ? new_weight | 0x80000000 : new_weight;
+            node_durations[edge.source] = new_duration;
 
             // We found a zero-speed edge, so we'll skip this whole edge-based-edge
             // which
@@ -779,9 +770,9 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
             {
                 if (turn_weight_penalty < 0)
                 {
-                    util::Log(logWARNING) << "turn penalty " << turn_weight_penalty
-                                          << " is too negative: clamping turn weight to "
-                                          << weight_min_value;
+                    util::Log(logWARNING)
+                        << "turn penalty " << turn_weight_penalty
+                        << " is too negative: clamping turn weight to " << weight_min_value;
                     turn_weight_penalty = weight_min_value - new_weight;
                     turn_weight_penalties[edge.data.turn_id] = turn_weight_penalty;
                 }
@@ -810,19 +801,14 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 
     if (update_turn_penalties || update_conditional_turns)
     {
-        const auto save_penalties = [](const auto &filename, const auto &data) -> void {
-            storage::io::FileWriter writer(filename, storage::io::FileWriter::GenerateFingerprint);
-            storage::serialization::write(writer, data);
-        };
-
         tbb::parallel_invoke(
             [&] {
-                save_penalties(config.GetPath(".osrm.turn_weight_penalties"),
-                               turn_weight_penalties);
+                extractor::files::writeTurnWeightPenalty(
+                    config.GetPath(".osrm.turn_weight_penalties"), turn_weight_penalties);
             },
             [&] {
-                save_penalties(config.GetPath(".osrm.turn_duration_penalties"),
-                               turn_duration_penalties);
+                extractor::files::writeTurnDurationPenalty(
+                    config.GetPath(".osrm.turn_duration_penalties"), turn_duration_penalties);
             });
     }
 
@@ -838,7 +824,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 
     TIMER_STOP(load_edges);
     util::Log() << "Done reading edges in " << TIMER_MSEC(load_edges) << "ms.";
-    return max_edge_id;
+    return number_of_edge_based_nodes;
 }
-}
-}
+} // namespace updater
+} // namespace osrm

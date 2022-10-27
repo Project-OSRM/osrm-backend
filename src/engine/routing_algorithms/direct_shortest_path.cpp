@@ -1,5 +1,4 @@
 #include "engine/routing_algorithms/direct_shortest_path.hpp"
-
 #include "engine/routing_algorithms/routing_base.hpp"
 #include "engine/routing_algorithms/routing_base_ch.hpp"
 #include "engine/routing_algorithms/routing_base_mld.hpp"
@@ -11,16 +10,16 @@ namespace engine
 namespace routing_algorithms
 {
 
-/// This is a striped down version of the general shortest path algorithm.
+/// This is a stripped down version of the general shortest path algorithm.
 /// The general algorithm always computes two queries for each leg. This is only
-/// necessary in case of vias, where the directions of the start node is constrainted
+/// necessary in case of vias, where the directions of the start node is constrained
 /// by the previous route.
-/// This variation is only an optimazation for graphs with slow queries, for example
+/// This variation is only an optimization for graphs with slow queries, for example
 /// not fully contracted graphs.
-template <typename Algorithm>
-InternalRouteResult directShortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
-                                             const DataFacade<Algorithm> &facade,
-                                             const PhantomNodes &phantom_nodes)
+template <>
+InternalRouteResult directShortestPathSearch(SearchEngineData<ch::Algorithm> &engine_working_data,
+                                             const DataFacade<ch::Algorithm> &facade,
+                                             const PhantomEndpointCandidates &endpoint_candidates)
 {
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
     auto &forward_heap = *engine_working_data.forward_heap_1;
@@ -30,7 +29,7 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<Algorithm> &engine
 
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_leg;
-    insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
+    insertNodesInHeaps(forward_heap, reverse_heap, endpoint_candidates);
 
     search(engine_working_data,
            facade,
@@ -38,9 +37,9 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<Algorithm> &engine
            reverse_heap,
            weight,
            packed_leg,
-           DO_NOT_FORCE_LOOPS,
-           DO_NOT_FORCE_LOOPS,
-           phantom_nodes);
+           {},
+           {},
+           endpoint_candidates);
 
     std::vector<NodeID> unpacked_nodes;
     std::vector<EdgeID> unpacked_edges;
@@ -61,28 +60,19 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<Algorithm> &engine
                        });
     }
 
-    return extractRoute(facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges);
+    return extractRoute(facade, weight, endpoint_candidates, unpacked_nodes, unpacked_edges);
 }
-
-template InternalRouteResult
-directShortestPathSearch(SearchEngineData<corech::Algorithm> &engine_working_data,
-                         const DataFacade<corech::Algorithm> &facade,
-                         const PhantomNodes &phantom_nodes);
-
-template InternalRouteResult
-directShortestPathSearch(SearchEngineData<ch::Algorithm> &engine_working_data,
-                         const DataFacade<ch::Algorithm> &facade,
-                         const PhantomNodes &phantom_nodes);
 
 template <>
 InternalRouteResult directShortestPathSearch(SearchEngineData<mld::Algorithm> &engine_working_data,
                                              const DataFacade<mld::Algorithm> &facade,
-                                             const PhantomNodes &phantom_nodes)
+                                             const PhantomEndpointCandidates &endpoint_candidates)
 {
-    engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
+    engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes(),
+                                                                 facade.GetMaxBorderNodeID() + 1);
     auto &forward_heap = *engine_working_data.forward_heap_1;
     auto &reverse_heap = *engine_working_data.reverse_heap_1;
-    insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
+    insertNodesInHeaps(forward_heap, reverse_heap, endpoint_candidates);
 
     // TODO: when structured bindings will be allowed change to
     // auto [weight, source_node, target_node, unpacked_edges] = ...
@@ -93,12 +83,12 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<mld::Algorithm> &e
                                                                    facade,
                                                                    forward_heap,
                                                                    reverse_heap,
-                                                                   DO_NOT_FORCE_LOOPS,
-                                                                   DO_NOT_FORCE_LOOPS,
+                                                                   {},
+                                                                   {},
                                                                    INVALID_EDGE_WEIGHT,
-                                                                   phantom_nodes);
+                                                                   endpoint_candidates);
 
-    return extractRoute(facade, weight, phantom_nodes, unpacked_nodes, unpacked_edges);
+    return extractRoute(facade, weight, endpoint_candidates, unpacked_nodes, unpacked_edges);
 }
 
 } // namespace routing_algorithms

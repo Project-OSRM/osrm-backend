@@ -6,7 +6,7 @@ set_tests_properties(examples_area_test_help PROPERTIES
                      PASS_REGULAR_EXPRESSION "^osmium_area_test .* OSMFILE")
 
 add_test(NAME examples_area_test_data
-         COMMAND osmium_area_test ${CMAKE_CURRENT_SOURCE_DIR}/data.osm)
+         COMMAND osmium_area_test -o ${CMAKE_CURRENT_SOURCE_DIR}/data.osm)
 
 set_tests_properties(examples_area_test_data PROPERTIES
                      PASS_REGULAR_EXPRESSION "\nWarning! Some member ways missing for these multipolygon relations: 701901\n$")
