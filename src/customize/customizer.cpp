@@ -133,7 +133,8 @@ int Customizer::Run(const CustomizationConfig &config)
     auto graph = LoadAndUpdateEdgeExpandedGraph(
         config, mlp, node_weights, node_durations, node_distances, connectivity_checksum);
     BOOST_ASSERT(graph.GetNumberOfNodes() == node_weights.size());
-    std::for_each(node_weights.begin(), node_weights.end(), [](auto &w) { w &= 0x7fffffff; });
+    std::for_each(
+        node_weights.begin(), node_weights.end(), [](auto &w) { w &= EdgeWeight{0x7fffffff}; });
     util::Log() << "Loaded edge based graph: " << graph.GetNumberOfEdges() << " edges, "
                 << graph.GetNumberOfNodes() << " nodes";
 

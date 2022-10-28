@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
     CompressedEdgeContainer container;
 
     // compress 0---1---2 to 0---2
-    container.CompressEdge(0, 1, 1, 2, 1, 1, 11, 11);
+    container.CompressEdge(0, 1, 1, 2, {1}, {1}, {11}, {11});
     BOOST_CHECK(container.HasEntryForID(0));
     BOOST_CHECK(!container.HasEntryForID(1));
     BOOST_CHECK(!container.HasEntryForID(2));
@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
     BOOST_CHECK_EQUAL(container.GetLastEdgeSourceID(0), 1);
 
     // compress 2---3---4 to 2---4
-    container.CompressEdge(2, 3, 3, 4, 1, 1, 11, 11);
+    container.CompressEdge(2, 3, 3, 4, {1}, {1}, {11}, {11});
     BOOST_CHECK(container.HasEntryForID(0));
     BOOST_CHECK(!container.HasEntryForID(1));
     BOOST_CHECK(container.HasEntryForID(2));
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
     BOOST_CHECK_EQUAL(container.GetLastEdgeSourceID(2), 3);
 
     // compress 0---2---4 to 0---4
-    container.CompressEdge(0, 2, 2, 4, 2, 2, 22, 22);
+    container.CompressEdge(0, 2, 2, 4, {2}, {2}, {22}, {22});
     BOOST_CHECK(container.HasEntryForID(0));
     BOOST_CHECK(!container.HasEntryForID(1));
     BOOST_CHECK(!container.HasEntryForID(2));
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(t_crossing)
     CompressedEdgeContainer container;
 
     // compress 0---1---2 to 0---2
-    container.CompressEdge(0, 1, 1, 2, 1, 1, 11, 11);
+    container.CompressEdge(0, 1, 1, 2, {1}, {1}, {11}, {11});
     BOOST_CHECK(container.HasEntryForID(0));
     BOOST_CHECK(!container.HasEntryForID(1));
     BOOST_CHECK(!container.HasEntryForID(2));
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(t_crossing)
     BOOST_CHECK_EQUAL(container.GetLastEdgeSourceID(0), 1);
 
     // compress 2---5---6 to 2---6
-    container.CompressEdge(4, 5, 5, 6, 1, 1, 11, 11);
+    container.CompressEdge(4, 5, 5, 6, {1}, {1}, {11}, {11});
     BOOST_CHECK(container.HasEntryForID(0));
     BOOST_CHECK(!container.HasEntryForID(1));
     BOOST_CHECK(!container.HasEntryForID(2));
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(t_crossing)
     BOOST_CHECK_EQUAL(container.GetLastEdgeSourceID(4), 5);
 
     // compress 2---3---4 to 2---4
-    container.CompressEdge(2, 3, 3, 4, 1, 1, 11, 11);
+    container.CompressEdge(2, 3, 3, 4, {1}, {1}, {11}, {11});
     BOOST_CHECK(container.HasEntryForID(0));
     BOOST_CHECK(!container.HasEntryForID(1));
     BOOST_CHECK(container.HasEntryForID(2));

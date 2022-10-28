@@ -62,10 +62,13 @@ void relaxBorderEdges(const DataFacade<mld::Algorithm> &facade,
             const auto node_weight = facade.GetNodeWeight(node_id);
             const auto node_duration = facade.GetNodeDuration(node_id);
             const auto node_distance = facade.GetNodeDistance(node_id);
-            const auto turn_weight = node_weight + facade.GetWeightPenaltyForEdgeID(turn_id);
-            const auto turn_duration = node_duration + facade.GetDurationPenaltyForEdgeID(turn_id);
+            const auto turn_weight =
+                node_weight + alias_cast<EdgeWeight>(facade.GetWeightPenaltyForEdgeID(turn_id));
+            const auto turn_duration =
+                node_duration +
+                alias_cast<EdgeDuration>(facade.GetDurationPenaltyForEdgeID(turn_id));
 
-            BOOST_ASSERT_MSG(node_weight + turn_weight > 0, "edge weight is invalid");
+            BOOST_ASSERT_MSG(node_weight + turn_weight > EdgeWeight{0}, "edge weight is invalid");
             const auto to_weight = weight + turn_weight;
             const auto to_duration = duration + turn_duration;
             const auto to_distance = distance + node_distance;
@@ -259,17 +262,17 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                     target_nodes_index.insert(
                         {phantom_node.forward_segment_id.id,
                          std::make_tuple(index,
-                                         -phantom_node.GetForwardWeightPlusOffset(),
-                                         -phantom_node.GetForwardDuration(),
-                                         -phantom_node.GetForwardDistance())});
+                                         EdgeWeight{0} - phantom_node.GetForwardWeightPlusOffset(),
+                                         EdgeDuration{0} - phantom_node.GetForwardDuration(),
+                                         EdgeDistance{0} - phantom_node.GetForwardDistance())});
 
                 if (phantom_node.IsValidReverseSource())
                     target_nodes_index.insert(
                         {phantom_node.reverse_segment_id.id,
                          std::make_tuple(index,
-                                         -phantom_node.GetReverseWeightPlusOffset(),
-                                         -phantom_node.GetReverseDuration(),
-                                         -phantom_node.GetReverseDistance())});
+                                         EdgeWeight{0} - phantom_node.GetReverseWeightPlusOffset(),
+                                         EdgeDuration{0} - phantom_node.GetReverseDuration(),
+                                         EdgeDistance{0} - phantom_node.GetReverseDistance())});
             }
         }
     }
@@ -292,12 +295,12 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                 std::tie(index, target_weight, target_duration, target_distance) = it->second;
 
                 const auto path_weight = weight + target_weight;
-                if (path_weight >= 0)
+                if (path_weight >= EdgeWeight{0})
                 {
                     const auto path_duration = duration + target_duration;
                     const auto path_distance = distance + target_distance;
 
-                    EdgeDistance nulldistance = 0;
+                    EdgeDistance nulldistance = {0};
                     auto &current_distance =
                         distances_table.empty() ? nulldistance : distances_table[index];
 
@@ -350,17 +353,17 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                 if (phantom_node.IsValidForwardSource())
                 {
                     insert_node(phantom_node.forward_segment_id.id,
-                                -phantom_node.GetForwardWeightPlusOffset(),
-                                -phantom_node.GetForwardDuration(),
-                                -phantom_node.GetForwardDistance());
+                                EdgeWeight{0} - phantom_node.GetForwardWeightPlusOffset(),
+                                EdgeDuration{0} - phantom_node.GetForwardDuration(),
+                                EdgeDistance{0} - phantom_node.GetForwardDistance());
                 }
 
                 if (phantom_node.IsValidReverseSource())
                 {
                     insert_node(phantom_node.reverse_segment_id.id,
-                                -phantom_node.GetReverseWeightPlusOffset(),
-                                -phantom_node.GetReverseDuration(),
-                                -phantom_node.GetReverseDistance());
+                                EdgeWeight{0} - phantom_node.GetReverseWeightPlusOffset(),
+                                EdgeDuration{0} - phantom_node.GetReverseDuration(),
+                                EdgeDistance{0} - phantom_node.GetReverseDistance());
                 }
             }
             else if (DIRECTION == REVERSE_DIRECTION)
@@ -444,7 +447,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         auto &current_weight = weights_table[location];
         auto &current_duration = durations_table[location];
 
-        EdgeDistance nulldistance = 0;
+        EdgeDistance nulldistance = {0};
         auto &current_distance = distances_table.empty() ? nulldistance : distances_table[location];
 
         // Check if new weight is better
@@ -452,8 +455,9 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         auto new_duration = heapNode.data.duration + target_duration;
         auto new_distance = heapNode.data.distance + target_distance;
 
-        if (new_weight >= 0 && std::tie(new_weight, new_duration, new_distance) <
-                                   std::tie(current_weight, current_duration, current_distance))
+        if (new_weight >= EdgeWeight{0} &&
+            std::tie(new_weight, new_duration, new_distance) <
+                std::tie(current_weight, current_duration, current_distance))
         {
             current_weight = new_weight;
             current_duration = new_duration;

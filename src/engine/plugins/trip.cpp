@@ -20,9 +20,9 @@ namespace engine
 namespace plugins
 {
 
-bool IsStronglyConnectedComponent(const util::DistTableWrapper<EdgeWeight> &result_table)
+bool IsStronglyConnectedComponent(const util::DistTableWrapper<EdgeDuration> &result_table)
 {
-    return std::find(std::begin(result_table), std::end(result_table), INVALID_EDGE_WEIGHT) ==
+    return std::find(std::begin(result_table), std::end(result_table), INVALID_EDGE_DURATION) ==
            std::end(result_table);
 }
 
@@ -68,7 +68,7 @@ TripPlugin::ComputeRoute(const RoutingAlgorithmsInterface &algorithms,
 
 void ManipulateTableForFSE(const std::size_t source_id,
                            const std::size_t destination_id,
-                           util::DistTableWrapper<EdgeWeight> &result_table)
+                           util::DistTableWrapper<EdgeDuration> &result_table)
 {
     // ****************** Change Table *************************
     // The following code manipulates the table and produces the new table for
@@ -94,7 +94,7 @@ void ManipulateTableForFSE(const std::size_t source_id,
     {
         if (i == source_id)
             continue;
-        result_table.SetValue(i, source_id, INVALID_EDGE_WEIGHT);
+        result_table.SetValue(i, source_id, INVALID_EDGE_DURATION);
     }
 
     // change parameters.destination row
@@ -104,22 +104,22 @@ void ManipulateTableForFSE(const std::size_t source_id,
     {
         if (i == destination_id)
             continue;
-        result_table.SetValue(destination_id, i, INVALID_EDGE_WEIGHT);
+        result_table.SetValue(destination_id, i, INVALID_EDGE_DURATION);
     }
 
     // set destination->source to zero so roundtrip treats source and
     // destination as one location
-    result_table.SetValue(destination_id, source_id, 0);
+    result_table.SetValue(destination_id, source_id, {0});
 
     // set source->destination as very high number so algorithm is forced
     // to find another path to get to destination
-    result_table.SetValue(source_id, destination_id, INVALID_EDGE_WEIGHT);
+    result_table.SetValue(source_id, destination_id, INVALID_EDGE_DURATION);
 
     //*********  End of changes to table  *************************************
 }
 
 void ManipulateTableForNonRoundtripFS(const std::size_t source_id,
-                                      util::DistTableWrapper<EdgeWeight> &result_table)
+                                      util::DistTableWrapper<EdgeDuration> &result_table)
 {
     // We can use the round-trip calculation to simulate non-round-trip fixed start
     // by making all paths to the source location zero. Effectively finding an 'optimal'
@@ -127,12 +127,12 @@ void ManipulateTableForNonRoundtripFS(const std::size_t source_id,
     // source.
     for (const auto i : util::irange<size_t>(0, result_table.GetNumberOfNodes()))
     {
-        result_table.SetValue(i, source_id, 0);
+        result_table.SetValue(i, source_id, {0});
     }
 }
 
 void ManipulateTableForNonRoundtripFE(const std::size_t destination_id,
-                                      util::DistTableWrapper<EdgeWeight> &result_table)
+                                      util::DistTableWrapper<EdgeDuration> &result_table)
 {
     // We can use the round-trip calculation to simulate non-round-trip fixed end
     // by making all paths from the destination to other locations zero.
@@ -140,7 +140,7 @@ void ManipulateTableForNonRoundtripFE(const std::size_t destination_id,
     // from the destination to any source.
     for (const auto i : util::irange<size_t>(0, result_table.GetNumberOfNodes()))
     {
-        result_table.SetValue(destination_id, i, 0);
+        result_table.SetValue(destination_id, i, {0});
     }
 }
 
@@ -218,7 +218,7 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     BOOST_ASSERT(snapped_phantoms.size() == number_of_locations);
 
     // compute the duration table of all phantom nodes
-    auto result_duration_table = util::DistTableWrapper<EdgeWeight>(
+    auto result_duration_table = util::DistTableWrapper<EdgeDuration>(
         algorithms.ManyToManySearch(snapped_phantoms, {}, {}, /*requestDistance*/ false).first,
         number_of_locations);
 

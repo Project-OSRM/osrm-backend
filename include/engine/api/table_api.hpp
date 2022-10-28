@@ -133,7 +133,8 @@ class TableAPI final : public BaseAPI
         }
 
         bool have_speed_cells =
-            parameters.fallback_speed != INVALID_FALLBACK_SPEED && parameters.fallback_speed > 0;
+            parameters.fallback_speed != from_alias<double>(INVALID_FALLBACK_SPEED) &&
+            parameters.fallback_speed > 0;
         flatbuffers::Offset<flatbuffers::Vector<uint32_t>> speed_cells;
         if (have_speed_cells)
         {
@@ -223,7 +224,8 @@ class TableAPI final : public BaseAPI
                 MakeDistanceTable(tables.second, number_of_sources, number_of_destinations);
         }
 
-        if (parameters.fallback_speed != INVALID_FALLBACK_SPEED && parameters.fallback_speed > 0)
+        if (parameters.fallback_speed != from_alias<double>(INVALID_FALLBACK_SPEED) &&
+            parameters.fallback_speed > 0)
         {
             response.values["fallback_speed_cells"] = MakeEstimatesTable(fallback_speed_cells);
         }
@@ -272,17 +274,17 @@ class TableAPI final : public BaseAPI
 
     virtual flatbuffers::Offset<flatbuffers::Vector<float>>
     MakeDurationTable(flatbuffers::FlatBufferBuilder &builder,
-                      const std::vector<EdgeWeight> &values) const
+                      const std::vector<EdgeDuration> &values) const
     {
         std::vector<float> distance_table;
         distance_table.resize(values.size());
         std::transform(
-            values.begin(), values.end(), distance_table.begin(), [](const EdgeWeight duration) {
+            values.begin(), values.end(), distance_table.begin(), [](const EdgeDuration duration) {
                 if (duration == MAXIMAL_EDGE_DURATION)
                 {
                     return 0.;
                 }
-                return duration / 10.;
+                return from_alias<double>(duration) / 10.;
             });
         return builder.CreateVector(distance_table);
     }
@@ -299,7 +301,7 @@ class TableAPI final : public BaseAPI
                 {
                     return 0.;
                 }
-                return std::round(distance * 10) / 10.;
+                return std::round(from_alias<double>(distance) * 10) / 10.;
             });
         return builder.CreateVector(duration_table);
     }
@@ -347,7 +349,7 @@ class TableAPI final : public BaseAPI
         return json_waypoints;
     }
 
-    virtual util::json::Array MakeDurationTable(const std::vector<EdgeWeight> &values,
+    virtual util::json::Array MakeDurationTable(const std::vector<EdgeDuration> &values,
                                                 std::size_t number_of_rows,
                                                 std::size_t number_of_columns) const
     {
@@ -361,13 +363,14 @@ class TableAPI final : public BaseAPI
             std::transform(row_begin_iterator,
                            row_end_iterator,
                            json_row.values.begin(),
-                           [](const EdgeWeight duration) {
+                           [](const EdgeDuration duration) {
                                if (duration == MAXIMAL_EDGE_DURATION)
                                {
                                    return util::json::Value(util::json::Null());
                                }
                                // division by 10 because the duration is in deciseconds (10s)
-                               return util::json::Value(util::json::Number(duration / 10.));
+                               return util::json::Value(
+                                   util::json::Number(from_alias<double>(duration) / 10.));
                            });
             json_table.values.push_back(std::move(json_row));
         }
@@ -394,8 +397,8 @@ class TableAPI final : public BaseAPI
                                    return util::json::Value(util::json::Null());
                                }
                                // round to single decimal place
-                               return util::json::Value(
-                                   util::json::Number(std::round(distance * 10) / 10.));
+                               return util::json::Value(util::json::Number(
+                                   std::round(from_alias<double>(distance) * 10) / 10.));
                            });
             json_table.values.push_back(std::move(json_row));
         }

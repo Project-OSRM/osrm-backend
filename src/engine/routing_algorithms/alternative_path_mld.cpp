@@ -85,9 +85,9 @@ struct WeightedViaNodeUnpackedPath
 // Scale the maximum allowed weight increase based on its magnitude:
 //  - Shortest path 10 minutes, alternative 13 minutes => Factor of 0.30 ok
 //  - Shortest path 10 hours, alternative 13 hours     => Factor of 0.30 unreasonable
-double getLongerByFactorBasedOnDuration(const EdgeWeight duration)
+double getLongerByFactorBasedOnDuration(const EdgeDuration duration)
 {
-    BOOST_ASSERT(duration != INVALID_EDGE_WEIGHT);
+    BOOST_ASSERT(duration != INVALID_EDGE_DURATION);
 
     // We only have generic weights here and no durations without unpacking.
     // We also have restricted way penalties which are huge and will screw scaling here.
@@ -118,19 +118,20 @@ double getLongerByFactorBasedOnDuration(const EdgeWeight duration)
     const constexpr auto c = 2.45437877e+09;
     const constexpr auto d = -2.07944571e+03;
 
-    if (duration < EdgeWeight(5 * 60))
+    if (duration < EdgeDuration{5 * 60})
     {
         return 1.0;
     }
-    else if (duration > EdgeWeight(10 * 60 * 60))
+    else if (duration > EdgeDuration{10 * 60 * 60})
     {
         return 0.20;
     }
 
     // Bigger than 10 minutes but smaller than 10 hours
-    BOOST_ASSERT(duration >= 5 * 60 && duration <= 10 * 60 * 60);
+    BOOST_ASSERT(duration >= EdgeDuration{5 * 60} && duration <= EdgeDuration{10 * 60 * 60});
 
-    return a + b / (duration - d) + c / std::pow(duration - d, 3);
+    return a + b / (from_alias<double>(duration) - d) +
+           c / std::pow(from_alias<double>(duration) - d, 3);
 }
 
 Parameters parametersFromRequest(const PhantomEndpointCandidates &endpoint_candidates)
@@ -223,10 +224,11 @@ RandIt filterViaCandidatesByStretch(RandIt first,
     // Assumes weight roughly corresponds to duration-ish. If this is not the case e.g.
     // because users are setting weight to be distance in the profiles, then we might
     // either generate more candidates than we have to or not enough. But is okay.
-    const auto stretch_weight_limit = (1. + parameters.kAtMostLongerBy) * weight;
+    const auto stretch_weight_limit =
+        (1. + parameters.kAtMostLongerBy) * from_alias<double>(weight);
 
     const auto over_weight_limit = [=](const auto via) {
-        return via.weight > stretch_weight_limit;
+        return from_alias<double>(via.weight) > stretch_weight_limit;
     };
 
     return std::remove_if(first, last, over_weight_limit);
@@ -444,7 +446,8 @@ RandIt filterPackedPathsByLocalOptimality(const WeightedViaNodePackedPath &path,
         const auto detour_length = forward_heap.GetKey(via) - forward_heap.GetKey(a) +
                                    reverse_heap.GetKey(via) - reverse_heap.GetKey(b);
 
-        return plateaux_length < parameters.kAtLeastOptimalAroundViaBy * detour_length;
+        return from_alias<double>(plateaux_length) <
+               parameters.kAtLeastOptimalAroundViaBy * from_alias<double>(detour_length);
     };
 
     return std::remove_if(first, last, is_not_locally_optimal);
@@ -482,8 +485,8 @@ RandIt filterUnpackedPathsBySharing(RandIt first,
             return false;
         }
 
-        EdgeWeight total_duration = 0;
-        const auto add_if_seen = [&](const EdgeWeight duration, const NodeID node) {
+        EdgeDuration total_duration = {0};
+        const auto add_if_seen = [&](const EdgeDuration duration, const NodeID node) {
             auto node_duration = facade.GetNodeDuration(node);
             total_duration += node_duration;
             if (nodes.count(node) > 0)
@@ -496,7 +499,7 @@ RandIt filterUnpackedPathsBySharing(RandIt first,
         const auto shared_duration = std::accumulate(
             begin(unpacked.nodes), end(unpacked.nodes), EdgeDuration{0}, add_if_seen);
 
-        unpacked.sharing = shared_duration / static_cast<double>(total_duration);
+        unpacked.sharing = from_alias<double>(shared_duration) / from_alias<double>(total_duration);
         BOOST_ASSERT(unpacked.sharing >= 0.);
         BOOST_ASSERT(unpacked.sharing <= 1.);
 
@@ -531,10 +534,11 @@ RandIt filterAnnotatedRoutesByStretch(RandIt first,
     BOOST_ASSERT(shortest_route.is_valid());
 
     const auto shortest_route_duration = shortest_route.duration();
-    const auto stretch_duration_limit = (1. + parameters.kAtMostLongerBy) * shortest_route_duration;
+    const auto stretch_duration_limit =
+        (1. + parameters.kAtMostLongerBy) * from_alias<double>(shortest_route_duration);
 
     const auto over_duration_limit = [=](const auto &route) {
-        return route.duration() > stretch_duration_limit;
+        return from_alias<double>(route.duration()) > stretch_duration_limit;
     };
 
     return std::remove_if(first, last, over_duration_limit);
@@ -610,8 +614,8 @@ void unpackPackedPaths(InputIt first,
                 // Here heaps can be reused, let's go deeper!
                 forward_heap.Clear();
                 reverse_heap.Clear();
-                forward_heap.Insert(source, 0, {source});
-                reverse_heap.Insert(target, 0, {target});
+                forward_heap.Insert(source, {0}, {source});
+                reverse_heap.Insert(target, {0}, {target});
 
                 BOOST_ASSERT(!facade.ExcludeNode(source));
                 BOOST_ASSERT(!facade.ExcludeNode(target));
@@ -694,7 +698,8 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
     while (forward_heap.Size() + reverse_heap.Size() > 0)
     {
         if (shortest_path_weight != INVALID_EDGE_WEIGHT)
-            overlap_weight = shortest_path_weight * parameters.kSearchSpaceOverlapFactor;
+            overlap_weight = to_alias<EdgeWeight>(from_alias<double>(shortest_path_weight) *
+                                                  parameters.kSearchSpaceOverlapFactor);
 
         // Termination criteria - when we have a shortest path this will guarantee for our overlap.
         const bool keep_going = forward_heap_min + reverse_heap_min < overlap_weight;
@@ -820,8 +825,10 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     NodeID shortest_path_via = shortest_path_via_it->node;
     EdgeWeight shortest_path_weight = shortest_path_via_it->weight;
 
-    const double duration_estimation = shortest_path_weight / facade.GetWeightMultiplier();
-    parameters.kAtMostLongerBy = getLongerByFactorBasedOnDuration(duration_estimation);
+    const double duration_estimation =
+        from_alias<double>(shortest_path_weight) / facade.GetWeightMultiplier();
+    parameters.kAtMostLongerBy =
+        getLongerByFactorBasedOnDuration(to_alias<EdgeDuration>(duration_estimation));
 
     // Filters via candidate nodes with heuristics
 

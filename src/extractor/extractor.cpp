@@ -668,7 +668,7 @@ void Extractor::FindComponents(unsigned number_of_edge_based_nodes,
 
     for (const auto &edge : input_edge_list)
     {
-        BOOST_ASSERT_MSG(static_cast<unsigned int>(std::max(edge.data.weight, 1)) > 0,
+        BOOST_ASSERT_MSG((std::max(edge.data.weight, EdgeWeight{1})) > EdgeWeight{0},
                          "edge distance < 1");
         BOOST_ASSERT(edge.source < number_of_edge_based_nodes);
         BOOST_ASSERT(edge.target < number_of_edge_based_nodes);

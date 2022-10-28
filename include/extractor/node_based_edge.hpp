@@ -141,7 +141,7 @@ inline NodeBasedEdgeClassification::NodeBasedEdgeClassification()
 }
 
 inline NodeBasedEdge::NodeBasedEdge()
-    : source(SPECIAL_NODEID), target(SPECIAL_NODEID), weight(0), duration(0), distance(0),
+    : source(SPECIAL_NODEID), target(SPECIAL_NODEID), weight{0}, duration{0}, distance{0},
       annotation_data(-1)
 {
 }

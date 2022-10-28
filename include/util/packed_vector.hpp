@@ -83,17 +83,43 @@ inline T get_upper_half_value(WordT word,
 }
 
 template <typename WordT, typename T>
-inline WordT set_lower_value(WordT word, WordT mask, std::uint8_t offset, T value)
+inline WordT set_lower_value(WordT word,
+                             WordT mask,
+                             std::uint8_t offset,
+                             T value,
+                             typename std::enable_if_t<std::is_integral<T>::value> * = nullptr)
 {
     static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
     return (word & ~mask) | ((static_cast<WordT>(value) << offset) & mask);
 }
 
 template <typename WordT, typename T>
-inline WordT set_upper_value(WordT word, WordT mask, std::uint8_t offset, T value)
+inline WordT set_upper_value(WordT word,
+                             WordT mask,
+                             std::uint8_t offset,
+                             T value,
+                             typename std::enable_if_t<std::is_integral<T>::value> * = nullptr)
 {
     static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
     return (word & ~mask) | ((static_cast<WordT>(value) >> offset) & mask);
+}
+
+template <typename WordT, typename T>
+inline WordT set_lower_value(
+    WordT word, WordT mask, std::uint8_t offset, T value, typename T::value_type * = nullptr)
+{
+    static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
+    return (word & ~mask) |
+           ((static_cast<WordT>(static_cast<typename T::value_type>(value)) << offset) & mask);
+}
+
+template <typename WordT, typename T>
+inline WordT set_upper_value(
+    WordT word, WordT mask, std::uint8_t offset, T value, typename T::value_type * = nullptr)
+{
+    static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
+    return (word & ~mask) |
+           ((static_cast<WordT>(static_cast<typename T::value_type>(value)) >> offset) & mask);
 }
 
 inline bool compare_and_swap(uint64_t *ptr, uint64_t old_value, uint64_t new_value)
@@ -285,6 +311,12 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         bool operator==(const internal_reference &other) const
         {
             return &container == &other.container && internal_index == other.internal_index;
+        }
+
+        // FIXME: This is needed for tests on Boost ranges to correctly compare Alias values.
+        template <typename F, typename U> bool operator!=(const osrm::Alias<F, U> value) const
+        {
+            return container.get_value(internal_index) != value;
         }
 
         friend std::ostream &operator<<(std::ostream &os, const internal_reference &rhs)

@@ -74,24 +74,26 @@ unsigned CompressedEdgeContainer::GetZippedPositionForReverseID(const EdgeID edg
     return map_iterator->second;
 }
 
-SegmentWeight CompressedEdgeContainer::ClipWeight(const SegmentWeight weight)
+SegmentWeight CompressedEdgeContainer::ClipWeight(const EdgeWeight weight)
 {
-    if (weight >= INVALID_SEGMENT_WEIGHT)
+    SegmentWeight seg_weight = alias_cast<SegmentWeight>(weight);
+    if (seg_weight >= INVALID_SEGMENT_WEIGHT)
     {
         clipped_weights++;
         return MAX_SEGMENT_WEIGHT;
     }
-    return weight;
+    return seg_weight;
 }
 
-SegmentDuration CompressedEdgeContainer::ClipDuration(const SegmentDuration duration)
+SegmentDuration CompressedEdgeContainer::ClipDuration(const EdgeDuration duration)
 {
-    if (duration >= INVALID_SEGMENT_DURATION)
+    SegmentDuration seg_duration = alias_cast<SegmentDuration>(duration);
+    if (seg_duration >= INVALID_SEGMENT_DURATION)
     {
         clipped_weights++;
         return MAX_SEGMENT_DURATION;
     }
-    return duration;
+    return seg_duration;
 }
 
 // Adds info for a compressed edge to the container.   edge_id_2
@@ -119,8 +121,8 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     BOOST_ASSERT(SPECIAL_EDGEID != edge_id_2);
     BOOST_ASSERT(SPECIAL_NODEID != via_node_id);
     BOOST_ASSERT(SPECIAL_NODEID != target_node_id);
-    BOOST_ASSERT(INVALID_SEGMENT_WEIGHT != weight1);
-    BOOST_ASSERT(INVALID_SEGMENT_WEIGHT != weight2);
+    BOOST_ASSERT(INVALID_EDGE_WEIGHT != weight1);
+    BOOST_ASSERT(INVALID_EDGE_WEIGHT != weight2);
 
     // append list of removed edge_id plus via node to surviving edge id:
     // <surv_1, .. , surv_n, via_node_id, rem_1, .. rem_n
@@ -207,13 +209,14 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
 
 void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id,
                                                   const NodeID target_node_id,
-                                                  const SegmentWeight weight,
-                                                  const SegmentDuration duration)
+                                                  const EdgeWeight weight,
+                                                  const EdgeDuration duration)
 {
     // remove super-trivial geometries
     BOOST_ASSERT(SPECIAL_EDGEID != edge_id);
     BOOST_ASSERT(SPECIAL_NODEID != target_node_id);
     BOOST_ASSERT(INVALID_EDGE_WEIGHT != weight);
+    BOOST_ASSERT(INVALID_EDGE_DURATION != duration);
 
     // Add via node id. List is created if it does not exist
     if (!HasEntryForID(edge_id))
@@ -336,12 +339,12 @@ void CompressedEdgeContainer::PrintStatistics() const
     if (clipped_weights > 0)
     {
         util::Log(logWARNING) << "Clipped " << clipped_weights << " segment weights to "
-                              << (INVALID_SEGMENT_WEIGHT - 1);
+                              << MAX_SEGMENT_WEIGHT;
     }
     if (clipped_durations > 0)
     {
         util::Log(logWARNING) << "Clipped " << clipped_durations << " segment durations to "
-                              << (INVALID_SEGMENT_DURATION - 1);
+                              << MAX_SEGMENT_DURATION;
     }
 
     util::Log() << "Geometry successfully removed:"

@@ -37,10 +37,10 @@ struct PathData
     EdgeWeight weight_of_turn;
     // duration that is traveled on the segment until the turn is reached,
     // including a turn if the segment precedes one.
-    EdgeWeight duration_until_turn;
+    EdgeDuration duration_until_turn;
     // If this segment immediately precedes a turn, then duration_of_turn
     // will contain the duration of the turn.  Otherwise it will be 0.
-    EdgeWeight duration_of_turn;
+    EdgeDuration duration_of_turn;
     // Source of the speed value on this road segment
     DatasourceID datasource_id;
     // If segment precedes a turn, ID of the turn itself
@@ -63,9 +63,9 @@ struct InternalRouteResult
     }
 
     // Note: includes duration for turns, except for at start and end node.
-    EdgeWeight duration() const
+    EdgeDuration duration() const
     {
-        EdgeWeight ret{0};
+        EdgeDuration ret{0};
 
         for (const auto &leg : unpacked_path_segments)
             for (const auto &segment : leg)

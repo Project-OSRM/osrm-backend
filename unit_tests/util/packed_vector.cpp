@@ -76,13 +76,13 @@ BOOST_AUTO_TEST_CASE(packed_vector_iterator_test)
 
     BOOST_CHECK(std::is_sorted(packed_vec.begin(), packed_vec.end()));
 
-    auto idx = 0;
+    auto vec_idx = 0;
     for (auto value : packed_vec)
     {
-        BOOST_CHECK_EQUAL(packed_vec[idx], value);
-        idx++;
+        BOOST_CHECK_EQUAL(packed_vec[vec_idx], value);
+        vec_idx++;
     }
-    BOOST_CHECK_EQUAL(idx, packed_vec.size());
+    BOOST_CHECK_EQUAL(vec_idx, packed_vec.size());
 
     auto range = boost::make_iterator_range(packed_vec.cbegin(), packed_vec.cend());
     BOOST_CHECK_EQUAL(range.size(), packed_vec.size());
@@ -215,18 +215,38 @@ BOOST_AUTO_TEST_CASE(packed_weights_container_with_type_erasure)
 
     PackedVector<SegmentWeight, SEGMENT_WEIGHT_BITS> vector(7);
 
-    std::iota(vector.begin(), vector.end(), 0);
+    std::iota(vector.begin(), vector.end(), SegmentWeight{0});
 
     auto forward = boost::make_iterator_range(vector.begin() + 1, vector.begin() + 6);
     auto forward_any = WeightsAnyRange(forward.begin(), forward.end());
 
-    CHECK_EQUAL_RANGE(forward, 1, 2, 3, 4, 5);
-    CHECK_EQUAL_RANGE(forward_any, 1, 2, 3, 4, 5);
+    CHECK_EQUAL_RANGE(forward,
+                      SegmentWeight{1},
+                      SegmentWeight{2},
+                      SegmentWeight{3},
+                      SegmentWeight{4},
+                      SegmentWeight{5});
+    CHECK_EQUAL_RANGE(forward_any,
+                      SegmentWeight{1},
+                      SegmentWeight{2},
+                      SegmentWeight{3},
+                      SegmentWeight{4},
+                      SegmentWeight{5});
 
     auto reverse = boost::adaptors::reverse(forward);
     auto reverse_any = WeightsAnyRange(reverse);
-    CHECK_EQUAL_RANGE(reverse, 5, 4, 3, 2, 1);
-    CHECK_EQUAL_RANGE(reverse_any, 5, 4, 3, 2, 1);
+    CHECK_EQUAL_RANGE(reverse,
+                      SegmentWeight{5},
+                      SegmentWeight{4},
+                      SegmentWeight{3},
+                      SegmentWeight{2},
+                      SegmentWeight{1});
+    CHECK_EQUAL_RANGE(reverse_any,
+                      SegmentWeight{5},
+                      SegmentWeight{4},
+                      SegmentWeight{3},
+                      SegmentWeight{2},
+                      SegmentWeight{1});
 }
 
 BOOST_AUTO_TEST_CASE(packed_weights_view_with_type_erasure)
@@ -244,14 +264,14 @@ BOOST_AUTO_TEST_CASE(packed_weights_view_with_type_erasure)
     auto forward = boost::make_iterator_range(view.begin() + 1, view.begin() + 4);
     auto forward_any = WeightsAnyRange(forward.begin(), forward.end());
 
-    CHECK_EQUAL_RANGE(forward, 1, 2, 3);
-    CHECK_EQUAL_RANGE(forward_any, 1, 2, 3);
+    CHECK_EQUAL_RANGE(forward, SegmentWeight{1}, SegmentWeight{2}, SegmentWeight{3});
+    CHECK_EQUAL_RANGE(forward_any, SegmentWeight{1}, SegmentWeight{2}, SegmentWeight{3});
 
     auto reverse = boost::adaptors::reverse(forward);
     auto reverse_any = WeightsAnyRange(reverse);
 
-    CHECK_EQUAL_RANGE(reverse, 3, 2, 1);
-    CHECK_EQUAL_RANGE(reverse_any, 3, 2, 1);
+    CHECK_EQUAL_RANGE(reverse, SegmentWeight{3}, SegmentWeight{2}, SegmentWeight{1});
+    CHECK_EQUAL_RANGE(reverse_any, SegmentWeight{3}, SegmentWeight{2}, SegmentWeight{1});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

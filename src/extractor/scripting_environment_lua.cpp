@@ -549,7 +549,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                "precision",
                                COORDINATE_PRECISION,
                                "max_turn_weight",
-                               std::numeric_limits<TurnPenalty>::max());
+                               std::numeric_limits<TurnPenalty::value_type>::max());
 
         // call initialize function
         sol::function setup_function = function_table.value()["setup"];

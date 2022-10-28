@@ -94,7 +94,7 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &out
 }
 
 void EdgeBasedGraphFactory::GetEdgeBasedNodeDurations(
-    std::vector<EdgeWeight> &output_node_durations)
+    std::vector<EdgeDuration> &output_node_durations)
 {
     using std::swap; // Koenig swap
     swap(m_edge_based_node_durations, output_node_durations);
@@ -147,7 +147,8 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
     //  * in other cases node weights must be masked with 0x7fffffff to clear MSB
     if (nbe_to_ebn_mapping[edge_id_1] != SPECIAL_NODEID &&
         nbe_to_ebn_mapping[edge_id_2] == SPECIAL_NODEID)
-        m_edge_based_node_weights[nbe_to_ebn_mapping[edge_id_1]] |= 0x80000000;
+        m_edge_based_node_weights[nbe_to_ebn_mapping[edge_id_1]] |=
+            EdgeWeight{static_cast<EdgeWeight::value_type>(0x80000000)};
 
     BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_1) ==
                  m_compressed_edge_container.HasEntryForID(edge_id_2));
@@ -400,7 +401,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
                 segregated_edges.count(eid) > 0;
 
             const auto ebn_weight = m_edge_based_node_weights[nbe_to_ebn_mapping[eid]];
-            BOOST_ASSERT((ebn_weight & 0x7fffffff) == edge_data.weight);
+            BOOST_ASSERT((ebn_weight & EdgeWeight{0x7fffffff}) == edge_data.weight);
             m_edge_based_node_weights.push_back(ebn_weight);
             m_edge_based_node_durations.push_back(
                 m_edge_based_node_durations[nbe_to_ebn_mapping[eid]]);
@@ -663,7 +664,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 edge_data1.flags.highway_turn_classification,
                 edge_data1.flags.access_turn_classification,
                 ((double)intersection::findEdgeLength(edge_geometries, node_based_edge_from) /
-                 edge_data1.duration) *
+                 from_alias<double>(edge_data1.duration)) *
                     36,
                 edge_data1.flags.road_classification.GetPriority(),
                 // target info
@@ -675,7 +676,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 edge_data2.flags.highway_turn_classification,
                 edge_data2.flags.access_turn_classification,
                 ((double)intersection::findEdgeLength(edge_geometries, node_based_edge_to) /
-                 edge_data2.duration) *
+                 from_alias<double>(edge_data2.duration)) *
                     36,
                 edge_data2.flags.road_classification.GetPriority(),
                 // connected roads
@@ -686,17 +687,18 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             // turn penalties are limited to [-2^15, 2^15) which roughly translates to 54 minutes
             // and fits signed 16bit deci-seconds
-            auto weight_penalty =
-                boost::numeric_cast<TurnPenalty>(extracted_turn.weight * weight_multiplier);
-            auto duration_penalty = boost::numeric_cast<TurnPenalty>(extracted_turn.duration * 10.);
+            auto weight_penalty = TurnPenalty{boost::numeric_cast<TurnPenalty::value_type>(
+                extracted_turn.weight * weight_multiplier)};
+            auto duration_penalty = TurnPenalty{
+                boost::numeric_cast<TurnPenalty::value_type>(extracted_turn.duration * 10.)};
 
             BOOST_ASSERT(SPECIAL_NODEID != nbe_to_ebn_mapping[node_based_edge_from]);
             BOOST_ASSERT(SPECIAL_NODEID != nbe_to_ebn_mapping[node_based_edge_to]);
 
             // auto turn_id = m_edge_based_edge_list.size();
-            auto weight = boost::numeric_cast<EdgeWeight>(edge_data1.weight + weight_penalty);
-            auto duration = boost::numeric_cast<EdgeWeight>(edge_data1.duration + duration_penalty);
-            auto distance = boost::numeric_cast<EdgeDistance>(edge_data1.distance);
+            auto weight = edge_data1.weight + alias_cast<EdgeWeight>(weight_penalty);
+            auto duration = edge_data1.duration + alias_cast<EdgeDuration>(duration_penalty);
+            auto distance = edge_data1.distance;
 
             EdgeBasedEdge edge_based_edge = {edge_based_node_from,
                                              edge_based_node_to,
@@ -860,7 +862,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                     edge_data.flags.access_turn_classification,
                                     ((double)intersection::findEdgeLength(edge_geometries,
                                                                           connected_edge.eid) /
-                                     edge_data.duration) *
+                                     from_alias<double>(edge_data.duration)) *
                                         36,
                                     edge_data.flags.road_classification.GetPriority(),
                                     is_incoming,

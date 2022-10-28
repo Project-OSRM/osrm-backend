@@ -41,8 +41,8 @@ splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
         directed.emplace_back(edge.source,
                               edge.target,
                               edge.data.turn_id,
-                              std::max(edge.data.weight, 1),
-                              edge.data.duration,
+                              std::max(edge.data.weight, {1}),
+                              to_alias<EdgeDuration>(edge.data.duration),
                               edge.data.distance,
                               edge.data.forward,
                               edge.data.backward);
@@ -50,8 +50,8 @@ splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
         directed.emplace_back(edge.target,
                               edge.source,
                               edge.data.turn_id,
-                              std::max(edge.data.weight, 1),
-                              edge.data.duration,
+                              std::max(edge.data.weight, {1}),
+                              to_alias<EdgeDuration>(edge.data.duration),
                               edge.data.distance,
                               edge.data.backward,
                               edge.data.forward);

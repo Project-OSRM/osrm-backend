@@ -363,7 +363,8 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
 
                 // TODO: BOOST_ASSERT(edge_data.weight == node_weight + turn_penalty);
 
-                const EdgeWeight to_weight = heapNode.weight + node_weight + turn_penalty;
+                const EdgeWeight to_weight =
+                    heapNode.weight + node_weight + alias_cast<EdgeWeight>(turn_penalty);
 
                 const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
                 if (!toHeapNode)
@@ -410,7 +411,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
         // MLD uses loops forcing only to prune single node paths in forward and/or
         // backward direction (there is no need to force loops in MLD but in CH)
         if (!force_loop(force_loop_forward_nodes, heapNode) &&
-            !force_loop(force_loop_reverse_nodes, heapNode) && (path_weight >= 0) &&
+            !force_loop(force_loop_reverse_nodes, heapNode) && (path_weight >= EdgeWeight{0}) &&
             (path_weight < path_upper_bound))
         {
             middle_node = heapNode.node;
@@ -529,8 +530,8 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
             // Here heaps can be reused, let's go deeper!
             forward_heap.Clear();
             reverse_heap.Clear();
-            forward_heap.Insert(source, 0, {source});
-            reverse_heap.Insert(target, 0, {target});
+            forward_heap.Insert(source, {0}, {source});
+            reverse_heap.Insert(target, {0}, {target});
 
             // TODO: when structured bindings will be allowed change to
             // auto [subpath_weight, subpath_source, subpath_target, subpath] = ...
