@@ -9,10 +9,10 @@ function TrafficSignal.get_value(node)
         local direction = node:get_value_by_key("traffic_signals:direction")
         if direction then
             if "forward" == direction then
-                return traffic_lights.direction_forward
+                return traffic_flow_control_direction.direction_forward
             end
             if "backward" == direction then
-                return traffic_lights.direction_reverse
+                return traffic_flow_control_direction.direction_reverse
             end
         end
         -- return traffic_lights.direction_all

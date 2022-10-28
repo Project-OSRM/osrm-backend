@@ -30,6 +30,7 @@ function setup()
       use_turn_restrictions          = true,
       left_hand_driving              = false,
       traffic_light_penalty          = 2,
+      stop_sign_penalty              = 2
     },
 
     default_mode              = mode.driving,
@@ -481,8 +482,7 @@ function process_turn(profile, turn)
   if turn.has_traffic_light then
       turn.duration = profile.properties.traffic_light_penalty
   elseif turn.has_stop_sign then
-    -- TODO: use another constant
-    turn.duration = profile.properties.traffic_light_penalty
+    turn.duration = profile.properties.stop_sign_penalty
   end
 
 

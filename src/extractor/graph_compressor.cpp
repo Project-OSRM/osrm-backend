@@ -209,15 +209,26 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 graph.GetEdgeData(reverse_e2).annotation_data = selectAnnotation(
                     rev_edge_data2.annotation_data, rev_edge_data1.annotation_data);
 
-                // Add node penalty when compress edge crosses a traffic signal
+                // Add node penalty when compress edge crosses a traffic signal/stop sign/give way
                 const bool has_forward_signal = traffic_signals.Has(node_u, node_v);
                 const bool has_reverse_signal = traffic_signals.Has(node_w, node_v);
 
-                const bool has_forward_stop_sign = stop_signs.Has(node_u, node_v);
-                const bool has_reverse_stop_sign = stop_signs.Has(node_w, node_v);
+                bool has_forward_stop_sign = stop_signs.Has(node_u, node_v);
+                bool has_reverse_stop_sign = stop_signs.Has(node_w, node_v);
 
-                // TODO: can we have a case when we have both traffic signal and stop sign? how
-                // should we handle it?
+                // we apply penalty for only one of the control flow nodes
+                if (has_forward_stop_sign && has_forward_signal) {
+                    has_forward_stop_sign = false;
+                    util::Log(logWARNING) << "Node " << node_v
+                                          << " has both a traffic signal and a stop sign";
+                }
+                if (has_reverse_stop_sign && has_reverse_signal) {
+                    has_forward_stop_sign = false;
+                    util::Log(logWARNING) << "Node " << node_v
+                                          << " has both a traffic signal and a stop sign";
+                }
+
+
                 EdgeDuration forward_node_duration_penalty = MAXIMAL_EDGE_DURATION;
                 EdgeWeight forward_node_weight_penalty = INVALID_EDGE_WEIGHT;
                 EdgeDuration reverse_node_duration_penalty = MAXIMAL_EDGE_DURATION;
@@ -260,22 +271,14 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                                    roads_on_the_left);
                     scripting_environment.ProcessTurn(extraction_turn);
 
-                    std::cerr << "HAS STOP SIGN = " << extraction_turn.has_stop_sign << " "
-                              << extraction_turn.duration << std::endl;
-
                     auto update_direction_penalty =
-                        [&extraction_turn, weight_multiplier](bool signal,
+                        [&extraction_turn, weight_multiplier](bool has_traffic_control_node,
                                                               EdgeDuration &duration_penalty,
                                                               EdgeWeight &weight_penalty) {
-                            if (signal)
+                            if (has_traffic_control_node)
                             {
-                                std::cerr << "DUR = " << extraction_turn.duration
-                                          << " WEIGHT = " << extraction_turn.weight << std::endl;
                                 duration_penalty = extraction_turn.duration * SECOND_TO_DECISECOND;
                                 weight_penalty = extraction_turn.weight * weight_multiplier;
-
-                                std::cerr << "DUR = " << duration_penalty
-                                          << " WEIGHT = " << weight_penalty << std::endl;
                             }
                         };
 
