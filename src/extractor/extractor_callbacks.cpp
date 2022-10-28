@@ -78,7 +78,7 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
     {
         external_memory.barrier_nodes.push_back(id);
     }
-    if (result_node.traffic_lights != TrafficLightClass::NONE)
+    if (result_node.traffic_lights != TrafficFlowControlNodeDirection::NONE)
     {
         external_memory.external_traffic_signals.push_back({id, result_node.traffic_lights});
     }
@@ -86,7 +86,7 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
     // {
     //     external_memory.external_give_ways.push_back({id, result_node.give_way});
     // }
-    if (result_node.stop_sign != StopSign::Direction::NONE)
+    if (result_node.stop_sign != TrafficFlowControlNodeDirection::NONE)
     {
         std::cerr << "FOUND STOP SIGN\n";
         external_memory.external_stop_signs.push_back({id, result_node.stop_sign});

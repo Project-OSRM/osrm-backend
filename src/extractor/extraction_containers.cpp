@@ -939,7 +939,7 @@ ExtractionContainers::ReferencedWays ExtractionContainers::IdentifyManeuverOverr
 }
 
 void ExtractionContainers::PrepareTrafficSignals(
-    const ExtractionContainers::ReferencedTrafficSignals &referenced_traffic_signals)
+    const ReferencedTrafficFlowControlNodes &referenced_traffic_signals)
 {
     const auto &bidirectional_signal_nodes = referenced_traffic_signals.first;
     const auto &unidirectional_signal_segments = referenced_traffic_signals.second;
@@ -983,7 +983,7 @@ void ExtractionContainers::PrepareTrafficSignals(
 }
 
 // TODO: copy-paste
-void ExtractionContainers::PrepareStopSigns(const ReferencedStopSigns &referenced_stop_signs) {
+void ExtractionContainers::PrepareStopSigns(const ReferencedTrafficFlowControlNodes &referenced_stop_signs) {
     const auto &bidirectional_signal_nodes = referenced_stop_signs.first;
     const auto &unidirectional_signal_segments = referenced_stop_signs.second;
 
@@ -1211,7 +1211,7 @@ ExtractionContainers::ReferencedWays ExtractionContainers::IdentifyRestrictionWa
 }
 
 // TODO: copy-paste
-ExtractionContainers::ReferencedStopSigns ExtractionContainers::IdentifyStopSigns()
+ExtractionContainers::ReferencedTrafficFlowControlNodes ExtractionContainers::IdentifyStopSigns()
 {
     util::UnbufferedLog log;
     log << "Collecting traffic signal information on " << external_stop_signs.size()
@@ -1219,7 +1219,7 @@ ExtractionContainers::ReferencedStopSigns ExtractionContainers::IdentifyStopSign
     TIMER_START(identify_traffic_signals);
 
     // Temporary store for nodes containing a unidirectional signal.
-    std::unordered_map<OSMNodeID, StopSign::Direction> unidirectional_signals;
+    std::unordered_map<OSMNodeID, TrafficFlowControlNodeDirection> unidirectional_signals;
 
     // For each node that has a unidirectional traffic signal, we store the node(s)
     // that lead up to the signal.
@@ -1228,14 +1228,14 @@ ExtractionContainers::ReferencedStopSigns ExtractionContainers::IdentifyStopSign
     std::unordered_set<OSMNodeID> bidirectional_signals;
 
     const auto mark_signals = [&](auto const &traffic_signal) {
-        if (traffic_signal.second == StopSign::DIRECTION_FORWARD ||
-            traffic_signal.second == StopSign::DIRECTION_REVERSE)
+        if (traffic_signal.second == TrafficFlowControlNodeDirection::FORWARD ||
+            traffic_signal.second == TrafficFlowControlNodeDirection::REVERSE)
         {
             unidirectional_signals.insert({traffic_signal.first, traffic_signal.second});
         }
         else
         {
-            BOOST_ASSERT(traffic_signal.second == StopSign::DIRECTION_ALL);
+            BOOST_ASSERT(traffic_signal.second == TrafficFlowControlNodeDirection::ALL);
             bidirectional_signals.insert(traffic_signal.first);
         }
     };
@@ -1253,7 +1253,7 @@ ExtractionContainers::ReferencedStopSigns ExtractionContainers::IdentifyStopSign
             const auto sig = unidirectional_signals.find(*node_it);
             if (sig != unidirectional_signals.end())
             {
-                if (sig->second == StopSign::DIRECTION_FORWARD)
+                if (sig->second == TrafficFlowControlNodeDirection::FORWARD)
                 {
                     if (node_it != node_start_offset)
                     {
@@ -1263,7 +1263,7 @@ ExtractionContainers::ReferencedStopSigns ExtractionContainers::IdentifyStopSign
                 }
                 else
                 {
-                    BOOST_ASSERT(sig->second == StopSign::DIRECTION_REVERSE);
+                    BOOST_ASSERT(sig->second == TrafficFlowControlNodeDirection::REVERSE);
                     if (node_it + 1 != node_end_offset)
                     {
                         // Next node leads to signal
@@ -1299,7 +1299,7 @@ ExtractionContainers::ReferencedStopSigns ExtractionContainers::IdentifyStopSign
 }
 
 
-ExtractionContainers::ReferencedTrafficSignals ExtractionContainers::IdentifyTrafficSignals()
+ExtractionContainers::ReferencedTrafficFlowControlNodes ExtractionContainers::IdentifyTrafficSignals()
 {
     util::UnbufferedLog log;
     log << "Collecting traffic signal information on " << external_traffic_signals.size()
@@ -1307,7 +1307,7 @@ ExtractionContainers::ReferencedTrafficSignals ExtractionContainers::IdentifyTra
     TIMER_START(identify_traffic_signals);
 
     // Temporary store for nodes containing a unidirectional signal.
-    std::unordered_map<OSMNodeID, TrafficLightClass::Direction> unidirectional_signals;
+    std::unordered_map<OSMNodeID, TrafficFlowControlNodeDirection> unidirectional_signals;
 
     // For each node that has a unidirectional traffic signal, we store the node(s)
     // that lead up to the signal.
@@ -1316,14 +1316,14 @@ ExtractionContainers::ReferencedTrafficSignals ExtractionContainers::IdentifyTra
     std::unordered_set<OSMNodeID> bidirectional_signals;
 
     const auto mark_signals = [&](auto const &traffic_signal) {
-        if (traffic_signal.second == TrafficLightClass::DIRECTION_FORWARD ||
-            traffic_signal.second == TrafficLightClass::DIRECTION_REVERSE)
+        if (traffic_signal.second == TrafficFlowControlNodeDirection::FORWARD ||
+            traffic_signal.second == TrafficFlowControlNodeDirection::REVERSE)
         {
             unidirectional_signals.insert({traffic_signal.first, traffic_signal.second});
         }
         else
         {
-            BOOST_ASSERT(traffic_signal.second == TrafficLightClass::DIRECTION_ALL);
+            BOOST_ASSERT(traffic_signal.second == TrafficFlowControlNodeDirection::ALL);
             bidirectional_signals.insert(traffic_signal.first);
         }
     };
@@ -1341,7 +1341,7 @@ ExtractionContainers::ReferencedTrafficSignals ExtractionContainers::IdentifyTra
             const auto sig = unidirectional_signals.find(*node_it);
             if (sig != unidirectional_signals.end())
             {
-                if (sig->second == TrafficLightClass::DIRECTION_FORWARD)
+                if (sig->second == TrafficFlowControlNodeDirection::FORWARD)
                 {
                     if (node_it != node_start_offset)
                     {
@@ -1351,7 +1351,7 @@ ExtractionContainers::ReferencedTrafficSignals ExtractionContainers::IdentifyTra
                 }
                 else
                 {
-                    BOOST_ASSERT(sig->second == TrafficLightClass::DIRECTION_REVERSE);
+                    BOOST_ASSERT(sig->second == TrafficFlowControlNodeDirection::REVERSE);
                     if (node_it + 1 != node_end_offset)
                     {
                         // Next node leads to signal

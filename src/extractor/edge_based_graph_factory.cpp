@@ -59,8 +59,8 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     EdgeBasedNodeDataContainer &node_data_container,
     const CompressedEdgeContainer &compressed_edge_container,
     const std::unordered_set<NodeID> &barrier_nodes,
-    const TrafficSignals &traffic_signals,
-    const StopSigns &stop_signs,
+    const TrafficFlowControlNodes &traffic_signals,
+    const TrafficFlowControlNodes &stop_signs,
     const std::vector<util::Coordinate> &coordinates,
     const NameTable &name_table,
     const std::unordered_set<EdgeID> &segregated_edges,
@@ -643,8 +643,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             // In theory we shouldn't get a directed traffic light on a turn, as it indicates that
             // the traffic signal direction was potentially ambiguously annotated on the junction
             // node But we'll check anyway.
-            const auto is_traffic_light = m_traffic_signals.HasSignal(from_node, intersection_node);
-            const auto is_stop_sign = m_stop_signs.HasSignal(from_node, intersection_node);
+            const auto is_traffic_light = m_traffic_signals.Has(from_node, intersection_node);
+            const auto is_stop_sign = m_stop_signs.Has(from_node, intersection_node);
             std::cerr << "IS STOP SIGN " << is_stop_sign << std::endl;
             const auto is_uturn =
                 guidance::getTurnDirection(turn_angle) == guidance::DirectionModifier::UTurn;

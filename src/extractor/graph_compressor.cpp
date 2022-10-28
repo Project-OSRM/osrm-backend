@@ -22,8 +22,8 @@ namespace extractor
 static constexpr int SECOND_TO_DECISECOND = 10;
 
 void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
-                               const TrafficSignals &traffic_signals,
-                               const StopSigns &stop_signs,
+                               const TrafficFlowControlNodes &traffic_signals,
+                               const TrafficFlowControlNodes &stop_signs,
                                ScriptingEnvironment &scripting_environment,
                                std::vector<TurnRestriction> &turn_restrictions,
                                std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
@@ -210,11 +210,11 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                     rev_edge_data2.annotation_data, rev_edge_data1.annotation_data);
 
                 // Add node penalty when compress edge crosses a traffic signal
-                const bool has_forward_signal = traffic_signals.HasSignal(node_u, node_v);
-                const bool has_reverse_signal = traffic_signals.HasSignal(node_w, node_v);
+                const bool has_forward_signal = traffic_signals.Has(node_u, node_v);
+                const bool has_reverse_signal = traffic_signals.Has(node_w, node_v);
 
-                const bool has_forward_stop_sign = stop_signs.HasSignal(node_u, node_v);
-                const bool has_reverse_stop_sign = stop_signs.HasSignal(node_w, node_v);
+                const bool has_forward_stop_sign = stop_signs.Has(node_u, node_v);
+                const bool has_reverse_stop_sign = stop_signs.Has(node_w, node_v);
                 
                 // TODO: can we have a case when we have both traffic signal and stop sign? how should we handle it?
                 EdgeDuration forward_node_duration_penalty = MAXIMAL_EDGE_DURATION;
@@ -257,6 +257,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                                    roads_on_the_right,
                                                    roads_on_the_left);
                     scripting_environment.ProcessTurn(extraction_turn);
+
+                    std::cerr << "HAS STOP SIGN = " << extraction_turn.has_stop_sign << " " << extraction_turn.duration << std::endl;
 
                     auto update_direction_penalty =
                         [&extraction_turn, weight_multiplier](bool signal,

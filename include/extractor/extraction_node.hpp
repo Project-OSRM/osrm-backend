@@ -1,7 +1,7 @@
 #ifndef EXTRACTION_NODE_HPP
 #define EXTRACTION_NODE_HPP
 
-#include "traffic_lights.hpp"
+#include "traffic_signals.hpp"
 #include <cstdint>
 
 namespace osrm
@@ -12,20 +12,20 @@ namespace extractor
 
 struct ExtractionNode
 {
-    ExtractionNode() : traffic_lights(TrafficLightClass::NONE), barrier(false) {}
+    ExtractionNode() : traffic_lights(TrafficFlowControlNodeDirection::NONE), barrier(false) {}
     void clear()
     {
-        traffic_lights = TrafficLightClass::NONE;
-        stop_sign = StopSign::Direction::NONE;
-        give_way = GiveWay::Direction::NONE;
+        traffic_lights = TrafficFlowControlNodeDirection::NONE;
+        stop_sign = TrafficFlowControlNodeDirection::NONE;
+        give_way = TrafficFlowControlNodeDirection::NONE;
         barrier = false;
     }
-    TrafficLightClass::Direction traffic_lights;
+    TrafficFlowControlNodeDirection traffic_lights;
     bool barrier;
 
 
-    StopSign::Direction stop_sign;
-    GiveWay::Direction give_way;
+    TrafficFlowControlNodeDirection stop_sign;
+    TrafficFlowControlNodeDirection give_way;
 };
 } // namespace extractor
 } // namespace osrm

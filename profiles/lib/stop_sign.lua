@@ -6,15 +6,15 @@ function StopSign.get_value(node)
         local direction = node:get_value_by_key("direction")
         if direction then
             if "forward" == direction then
-                return stop_sign.direction_forward
+                return traffic_flow_control_direction.direction_forward
             end
             if "backward" == direction then
-                return stop_sign.direction_reverse
+                return traffic_flow_control_direction.direction_reverse
             end
         end
-        return stop_sign.direction_all
+        return traffic_flow_control_direction.direction_all
     end
-    return stop_sign.none
+    return traffic_flow_control_direction.none
 end
 
 return StopSign

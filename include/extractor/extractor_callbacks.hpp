@@ -10,6 +10,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace osmium
 {
@@ -71,6 +72,7 @@ class ExtractorCallbacks
     LaneDescriptionMap &lane_description_map;
     bool fallback_to_duration;
     bool force_split_edges;
+
 
   public:
     using ClassesMap = std::unordered_map<std::string, ClassData>;

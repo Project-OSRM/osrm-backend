@@ -284,35 +284,26 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         [&context, &get_location_tag](const osmium::Node &node, const char *key) {
             return get_location_tag(context, node.location(), key);
         });
-
+    // just for backward compatibility
+    // TODO: remove in v6
     context.state.new_enum("traffic_lights",
                            "none",
-                           extractor::TrafficLightClass::NONE,
+                           extractor::TrafficFlowControlNodeDirection::NONE,
                            "direction_all",
-                           extractor::TrafficLightClass::DIRECTION_ALL,
+                           extractor::TrafficFlowControlNodeDirection::ALL,
                            "direction_forward",
-                           extractor::TrafficLightClass::DIRECTION_FORWARD,
+                           extractor::TrafficFlowControlNodeDirection::FORWARD,
                            "direction_reverse",
-                           extractor::TrafficLightClass::DIRECTION_REVERSE);
-    context.state.new_enum("stop_sign",
+                           extractor::TrafficFlowControlNodeDirection::REVERSE);
+    context.state.new_enum("traffic_flow_control_direction",
                            "none",
-                           extractor::StopSign::NONE,
+                           extractor::TrafficFlowControlNodeDirection::NONE,
                            "direction_all",
-                           extractor::StopSign::DIRECTION_ALL,
+                           extractor::TrafficFlowControlNodeDirection::ALL,
                            "direction_forward",
-                           extractor::StopSign::DIRECTION_FORWARD,
+                           extractor::TrafficFlowControlNodeDirection::FORWARD,
                            "direction_reverse",
-                           extractor::StopSign::DIRECTION_REVERSE);
-    context.state.new_enum("give_way",
-                           "none",
-                           extractor::GiveWay::NONE,
-                           "direction_all",
-                           extractor::GiveWay::DIRECTION_ALL,
-                           "direction_forward",
-                           extractor::GiveWay::DIRECTION_FORWARD,
-                           "direction_reverse",
-                           extractor::GiveWay::DIRECTION_REVERSE);
-
+                           extractor::TrafficFlowControlNodeDirection::REVERSE);
     context.state.new_usertype<ExtractionNode>(
         "ResultNode",
         "traffic_lights",
@@ -324,29 +315,29 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                               // state to the node is converted to the class enum
                               // TODO: Make a breaking API change and remove this option.
                               bool val = obj.as<bool>();
-                              node.traffic_lights = (val) ? TrafficLightClass::DIRECTION_ALL
-                                                          : TrafficLightClass::NONE;
+                              node.traffic_lights = (val) ? TrafficFlowControlNodeDirection::ALL
+                                                          : TrafficFlowControlNodeDirection::NONE;
                               return;
                           }
 
-                          BOOST_ASSERT(obj.is<TrafficLightClass::Direction>());
+                          BOOST_ASSERT(obj.is<TrafficFlowControlNodeDirection>());
                           {
-                              TrafficLightClass::Direction val =
-                                  obj.as<TrafficLightClass::Direction>();
+                              TrafficFlowControlNodeDirection val =
+                                  obj.as<TrafficFlowControlNodeDirection>();
                               node.traffic_lights = val;
                           }
                       }),
         "stop_sign",
         sol::property([](const ExtractionNode &node) { return node.stop_sign; },
                       [](ExtractionNode &node, const sol::object &obj) {
-                          BOOST_ASSERT(obj.is<StopSign::Direction>());
-                          node.stop_sign = obj.as<StopSign::Direction>();
+                          BOOST_ASSERT(obj.is<TrafficFlowControlNodeDirection>());
+                          node.stop_sign = obj.as<TrafficFlowControlNodeDirection>();
                       }),
         "give_way",
         sol::property([](const ExtractionNode &node) { return node.give_way; },
                       [](ExtractionNode &node, const sol::object &obj) {
-                          BOOST_ASSERT(obj.is<GiveWay::Direction>());
-                          node.give_way = obj.as<GiveWay::Direction>();
+                          BOOST_ASSERT(obj.is<TrafficFlowControlNodeDirection>());
+                          node.give_way = obj.as<TrafficFlowControlNodeDirection>();
                       }),
         "barrier",
         &ExtractionNode::barrier);
@@ -1170,7 +1161,8 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
             else {
  // cap turn weight to max turn weight, which depend on weight precision
                 turn.weight = std::min(turn.weight, context.properties.GetMaxTurnWeight());
-                std::cerr << "NO FALLBACK " << turn.weight << std::endl;
+                std::cerr << "NO FALLBACK " << turn.weight << " " << turn.duration << std::endl;
+
             }
                
         }
