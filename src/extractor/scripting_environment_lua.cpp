@@ -786,6 +786,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             &ExtractionTurn::has_traffic_light,
             "has_stop_sign",
             &ExtractionTurn::has_stop_sign,
+            "has_give_way_sign",
+            &ExtractionTurn::has_give_way_sign,
             "is_left_hand_driving",
             &ExtractionTurn::is_left_hand_driving,
             "source_restricted",
@@ -1198,7 +1200,7 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
         }
 
         // Add traffic light penalty, back-compatibility of api_version=0
-        if (turn.has_traffic_light || turn.has_stop_sign)
+        if (turn.has_traffic_light)
             turn.duration += context.properties.GetTrafficSignalPenalty();
 
         // Turn weight falls back to the duration value in deciseconds

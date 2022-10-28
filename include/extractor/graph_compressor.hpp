@@ -28,6 +28,7 @@ class GraphCompressor
     void Compress(const std::unordered_set<NodeID> &barrier_nodes,
                   const TrafficFlowControlNodes &traffic_signals,
                   const TrafficFlowControlNodes &stop_signs,
+                  const TrafficFlowControlNodes &give_way_signs,
                   ScriptingEnvironment &scripting_environment,
                   std::vector<TurnRestriction> &turn_restrictions,
                   std::vector<UnresolvedManeuverOverride> &maneuver_overrides,

@@ -40,7 +40,7 @@ class ExtractionContainers
     ReferencedWays IdentifyManeuverOverrideWays();
 
     ReferencedTrafficFlowControlNodes IdentifyTrafficFlowControlNodes(
-        const std::vector<InputTrafficFlowControlNode> &external_stop_signs);
+        const std::vector<InputTrafficFlowControlNode> &external_traffic_control_nodes);
 
     void PrepareNodes();
     void PrepareManeuverOverrides(const ReferencedWays &maneuver_override_ways);
@@ -83,7 +83,7 @@ class ExtractionContainers
     TrafficFlowControlNodes internal_stop_signs;
 
     std::vector<InputTrafficFlowControlNode> external_give_ways;
-    TrafficFlowControlNodes internal_give_ways;
+    TrafficFlowControlNodes internal_give_way_signs;
 
     std::vector<NodeBasedEdge> used_edges;
 

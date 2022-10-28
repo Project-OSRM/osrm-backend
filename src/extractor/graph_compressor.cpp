@@ -24,6 +24,7 @@ static constexpr int SECOND_TO_DECISECOND = 10;
 void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                const TrafficFlowControlNodes &traffic_signals,
                                const TrafficFlowControlNodes &stop_signs,
+                               const TrafficFlowControlNodes &give_way_signs,
                                ScriptingEnvironment &scripting_environment,
                                std::vector<TurnRestriction> &turn_restrictions,
                                std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
@@ -223,9 +224,23 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                           << " has both a traffic signal and a stop sign";
                 }
                 if (has_reverse_stop_sign && has_reverse_signal) {
-                    has_forward_stop_sign = false;
+                    has_reverse_stop_sign = false;
                     util::Log(logWARNING) << "Node " << node_v
                                           << " has both a traffic signal and a stop sign";
+                }
+
+                bool has_forward_give_way_sign = give_way_signs.Has(node_u, node_v);
+                bool has_reverse_give_way_sign = give_way_signs.Has(node_w, node_v);
+                                // we apply penalty for only one of the control flow nodes
+                if (has_forward_give_way_sign && (has_forward_signal || has_forward_stop_sign)) {
+                    has_forward_give_way_sign = false;
+                    util::Log(logWARNING) << "Node " << node_v
+                                          << " has both a give way sign and a stop sign or traffic signal";
+                }
+                if (has_reverse_stop_sign && (has_reverse_signal || has_reverse_stop_sign)) {
+                    has_reverse_give_way_sign = false;
+                    util::Log(logWARNING) << "Node " << node_v
+                                          << " has both a give way sign and a stop sign or traffic signal";
                 }
 
 
@@ -248,6 +263,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                                    false,
                                                    has_forward_signal || has_reverse_signal,
                                                    has_forward_stop_sign || has_reverse_stop_sign,
+                                                   has_forward_give_way_sign || has_reverse_give_way_sign,
                                                    false,
                                                    false,
                                                    TRAVEL_MODE_DRIVING,
@@ -292,6 +308,12 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                              forward_node_duration_penalty,
                                              forward_node_weight_penalty);
                     update_direction_penalty(has_reverse_stop_sign,
+                                             reverse_node_duration_penalty,
+                                             reverse_node_weight_penalty);
+                    update_direction_penalty(has_forward_give_way_sign,
+                                             forward_node_duration_penalty,
+                                             forward_node_weight_penalty);
+                    update_direction_penalty(has_reverse_give_way_sign,
                                              reverse_node_duration_penalty,
                                              reverse_node_weight_penalty);
                 }

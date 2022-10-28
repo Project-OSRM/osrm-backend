@@ -52,6 +52,7 @@ struct ExtractionTurn
                    bool is_u_turn,
                    bool has_traffic_light,
                    bool has_stop_sign,
+                   bool has_give_way_sign,
                    bool is_left_hand_driving,
                    bool source_restricted,
                    TravelMode source_mode,
@@ -76,7 +77,7 @@ struct ExtractionTurn
                    const std::vector<ExtractionTurnLeg> &roads_on_the_right,
                    const std::vector<ExtractionTurnLeg> &roads_on_the_left)
         : angle(180. - angle), number_of_roads(number_of_roads), is_u_turn(is_u_turn),
-          has_traffic_light(has_traffic_light), has_stop_sign(has_stop_sign),
+          has_traffic_light(has_traffic_light), has_stop_sign(has_stop_sign), has_give_way_sign(has_give_way_sign),
           is_left_hand_driving(is_left_hand_driving),
 
           source_restricted(source_restricted), source_mode(source_mode),
@@ -103,6 +104,7 @@ struct ExtractionTurn
     const bool is_u_turn;
     const bool has_traffic_light;
     const bool has_stop_sign;
+    const bool has_give_way_sign;
     const bool is_left_hand_driving;
 
     // source info

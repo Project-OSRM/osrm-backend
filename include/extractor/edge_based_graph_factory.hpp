@@ -71,6 +71,7 @@ class EdgeBasedGraphFactory
                                    const std::unordered_set<NodeID> &barrier_nodes,
                                    const TrafficFlowControlNodes &traffic_signals,
                                    const TrafficFlowControlNodes &stop_signs,
+                                   const TrafficFlowControlNodes &give_way_signs,
                                    const std::vector<util::Coordinate> &coordinates,
                                    const NameTable &name_table,
                                    const std::unordered_set<EdgeID> &segregated_edges,
@@ -138,6 +139,7 @@ class EdgeBasedGraphFactory
     const std::unordered_set<NodeID> &m_barrier_nodes;
     const TrafficFlowControlNodes &m_traffic_signals;
     const TrafficFlowControlNodes &m_stop_signs;
+    const TrafficFlowControlNodes &m_give_way_signs;
 
     const CompressedEdgeContainer &m_compressed_edge_container;
 

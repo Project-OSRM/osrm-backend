@@ -68,6 +68,7 @@ class Extractor
         std::vector<UnresolvedManeuverOverride> unresolved_maneuver_overrides;
         TrafficFlowControlNodes traffic_signals;
         TrafficFlowControlNodes stop_signs;
+        TrafficFlowControlNodes give_way_signs;
         std::unordered_set<NodeID> barriers;
         std::vector<util::Coordinate> osm_coordinates;
         extractor::PackedOSMIDs osm_node_ids;
@@ -89,6 +90,7 @@ class Extractor
         const std::unordered_set<NodeID> &barrier_nodes,
         const TrafficFlowControlNodes &traffic_signals,
         const TrafficFlowControlNodes &stop_signs,
+        const TrafficFlowControlNodes &give_way_signs,
         const RestrictionGraph &restriction_graph,
         const std::unordered_set<EdgeID> &segregated_edges,
         const NameTable &name_table,

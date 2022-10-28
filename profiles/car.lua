@@ -30,7 +30,8 @@ function setup()
       use_turn_restrictions          = true,
       left_hand_driving              = false,
       traffic_light_penalty          = 2,
-      stop_sign_penalty              = 2
+      stop_sign_penalty              = 2,
+      give_way_sign_penalty          = 2
     },
 
     default_mode              = mode.driving,
@@ -480,9 +481,11 @@ function process_turn(profile, turn)
   local turn_bias = turn.is_left_hand_driving and 1. / profile.turn_bias or profile.turn_bias
 
   if turn.has_traffic_light then
-      turn.duration = profile.properties.traffic_light_penalty
+    turn.duration = profile.properties.traffic_light_penalty
   elseif turn.has_stop_sign then
     turn.duration = profile.properties.stop_sign_penalty
+  elseif turn.has_give_way_sign then
+    turn.duration = profile.properties.give_way_sign_penalty
   end
 
 

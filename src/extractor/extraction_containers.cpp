@@ -415,12 +415,14 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
     const auto maneuver_override_ways = IdentifyManeuverOverrideWays();
     const auto traffic_signals = IdentifyTrafficFlowControlNodes(external_traffic_signals);
     const auto stop_signs = IdentifyTrafficFlowControlNodes(external_stop_signs);
+    const auto give_ways = IdentifyTrafficFlowControlNodes(external_give_ways);
 
     PrepareNodes();
     PrepareEdges(scripting_environment);
 
     PrepareTrafficFlowControlNodes(traffic_signals, internal_traffic_signals);
     PrepareTrafficFlowControlNodes(stop_signs, internal_stop_signs);
+    PrepareTrafficFlowControlNodes(give_ways, internal_give_way_signs);
 
     PrepareManeuverOverrides(maneuver_override_ways);
     PrepareRestrictions(restriction_ways);
