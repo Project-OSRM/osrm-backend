@@ -8,7 +8,7 @@
 #include "extractor/scripting_environment.hpp"
 
 #include "storage/tar_fwd.hpp"
-#include "traffic_signals.hpp"
+#include "traffic_flow_control_nodes.hpp"
 
 #include <unordered_map>
 #include <unordered_set>

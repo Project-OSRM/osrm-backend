@@ -1,7 +1,7 @@
 #ifndef EXTRACTION_NODE_HPP
 #define EXTRACTION_NODE_HPP
 
-#include "traffic_signals.hpp"
+#include "traffic_flow_control_nodes.hpp"
 #include <cstdint>
 
 namespace osrm

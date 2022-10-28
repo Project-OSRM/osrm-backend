@@ -8,7 +8,7 @@
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/scripting_environment.hpp"
 
-#include "traffic_signals.hpp"
+#include "traffic_flow_control_nodes.hpp"
 #include "util/coordinate.hpp"
 #include "util/node_based_graph.hpp"
 

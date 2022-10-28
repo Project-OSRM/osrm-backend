@@ -4,7 +4,7 @@
 #include "extractor/scripting_environment.hpp"
 #include "util/typedefs.hpp"
 
-#include "traffic_signals.hpp"
+#include "traffic_flow_control_nodes.hpp"
 #include "util/node_based_graph.hpp"
 
 #include <memory>

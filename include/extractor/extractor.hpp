@@ -43,7 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "util/guidance/turn_lanes.hpp"
 
 #include "restriction_graph.hpp"
-#include "traffic_signals.hpp"
+#include "traffic_flow_control_nodes.hpp"
 #include "util/typedefs.hpp"
 
 namespace osrm

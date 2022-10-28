@@ -23,7 +23,7 @@
 #include "util/typedefs.hpp"
 
 #include "storage/io.hpp"
-#include "traffic_signals.hpp"
+#include "traffic_flow_control_nodes.hpp"
 
 #include <algorithm>
 #include <cstddef>

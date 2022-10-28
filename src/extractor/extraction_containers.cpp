@@ -5,7 +5,7 @@
 #include "extractor/name_table.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/serialization.hpp"
-#include "extractor/traffic_signals.hpp"
+#include "extractor/traffic_flow_control_nodes.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/integer_range.hpp"
 

@@ -1,7 +1,7 @@
 #include "extractor/node_based_graph_factory.hpp"
 #include "extractor/files.hpp"
 #include "extractor/graph_compressor.hpp"
-#include "extractor/traffic_signals.hpp"
+#include "extractor/traffic_flow_control_nodes.hpp"
 #include "storage/io.hpp"
 
 #include "util/log.hpp"
