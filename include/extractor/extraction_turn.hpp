@@ -76,7 +76,8 @@ struct ExtractionTurn
                    const std::vector<ExtractionTurnLeg> &roads_on_the_right,
                    const std::vector<ExtractionTurnLeg> &roads_on_the_left)
         : angle(180. - angle), number_of_roads(number_of_roads), is_u_turn(is_u_turn),
-          has_traffic_light(has_traffic_light), has_stop_sign(has_stop_sign), is_left_hand_driving(is_left_hand_driving),
+          has_traffic_light(has_traffic_light), has_stop_sign(has_stop_sign),
+          is_left_hand_driving(is_left_hand_driving),
 
           source_restricted(source_restricted), source_mode(source_mode),
           source_is_motorway(source_is_motorway), source_is_link(source_is_link),

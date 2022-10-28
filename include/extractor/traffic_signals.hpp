@@ -17,7 +17,6 @@ namespace extractor
 //
 // Impl. detail: namespace + enum instead of enum class to make Luabind happy
 
-
 // The traffic light annotation is extracted from node tags.
 // The directions in which the traffic light applies are relative to the way containing the node.
 enum class TrafficFlowControlNodeDirection : std::uint8_t

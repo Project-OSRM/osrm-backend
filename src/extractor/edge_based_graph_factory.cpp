@@ -68,9 +68,9 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     : m_edge_based_node_container(node_data_container), m_connectivity_checksum(0),
       m_number_of_edge_based_nodes(0), m_coordinates(coordinates),
       m_node_based_graph(node_based_graph), m_barrier_nodes(barrier_nodes),
-      m_traffic_signals(traffic_signals), m_stop_signs(stop_signs), m_compressed_edge_container(compressed_edge_container),
-      name_table(name_table), segregated_edges(segregated_edges),
-      lane_description_map(lane_description_map)
+      m_traffic_signals(traffic_signals), m_stop_signs(stop_signs),
+      m_compressed_edge_container(compressed_edge_container), name_table(name_table),
+      segregated_edges(segregated_edges), lane_description_map(lane_description_map)
 {
 }
 

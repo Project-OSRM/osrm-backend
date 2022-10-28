@@ -227,7 +227,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                                    parsed_osm_data.unresolved_maneuver_overrides,
                                                    parsed_osm_data.traffic_signals,
                                                    parsed_osm_data.stop_signs,
-                                                   
+
                                                    std::move(parsed_osm_data.barriers),
                                                    std::move(parsed_osm_data.osm_coordinates),
                                                    std::move(parsed_osm_data.osm_node_ids),

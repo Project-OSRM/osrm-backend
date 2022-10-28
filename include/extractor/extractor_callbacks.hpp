@@ -73,7 +73,6 @@ class ExtractorCallbacks
     bool fallback_to_duration;
     bool force_split_edges;
 
-
   public:
     using ClassesMap = std::unordered_map<std::string, ClassData>;
 

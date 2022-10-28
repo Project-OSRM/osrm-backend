@@ -1147,24 +1147,25 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
     case 2:
         if (context.has_turn_penalty_function)
         {
-            std::cerr << "GOT TURN " << turn.has_stop_sign << " " << turn.has_traffic_light << std::endl;
+            std::cerr << "GOT TURN " << turn.has_stop_sign << " " << turn.has_traffic_light
+                      << std::endl;
 
             context.turn_function(context.profile_table, std::ref(turn));
 
             // Turn weight falls back to the duration value in deciseconds
             // or uses the extracted unit-less weight value
-            if (context.properties.fallback_to_duration) {
+            if (context.properties.fallback_to_duration)
+            {
                 std::cerr << "FALLBACK\n";
                 turn.weight = turn.duration;
             }
-                
-            else {
- // cap turn weight to max turn weight, which depend on weight precision
+
+            else
+            {
+                // cap turn weight to max turn weight, which depend on weight precision
                 turn.weight = std::min(turn.weight, context.properties.GetMaxTurnWeight());
                 std::cerr << "NO FALLBACK " << turn.weight << " " << turn.duration << std::endl;
-
             }
-               
         }
 
         break;

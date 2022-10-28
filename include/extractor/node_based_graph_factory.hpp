@@ -43,7 +43,7 @@ class NodeBasedGraphFactory
                           std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
                           const TrafficFlowControlNodes &traffic_signals,
                           const TrafficFlowControlNodes &stop_signs,
-                          
+
                           std::unordered_set<NodeID> &&barriers,
                           std::vector<util::Coordinate> &&coordinates,
                           extractor::PackedOSMIDs &&osm_node_ids,

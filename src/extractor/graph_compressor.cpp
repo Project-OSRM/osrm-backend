@@ -215,13 +215,15 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
 
                 const bool has_forward_stop_sign = stop_signs.Has(node_u, node_v);
                 const bool has_reverse_stop_sign = stop_signs.Has(node_w, node_v);
-                
-                // TODO: can we have a case when we have both traffic signal and stop sign? how should we handle it?
+
+                // TODO: can we have a case when we have both traffic signal and stop sign? how
+                // should we handle it?
                 EdgeDuration forward_node_duration_penalty = MAXIMAL_EDGE_DURATION;
                 EdgeWeight forward_node_weight_penalty = INVALID_EDGE_WEIGHT;
                 EdgeDuration reverse_node_duration_penalty = MAXIMAL_EDGE_DURATION;
                 EdgeWeight reverse_node_weight_penalty = INVALID_EDGE_WEIGHT;
-                if (has_forward_signal || has_reverse_signal || has_forward_stop_sign || has_reverse_stop_sign)
+                if (has_forward_signal || has_reverse_signal || has_forward_stop_sign ||
+                    has_reverse_stop_sign)
                 {
                     // we cannot handle this as node penalty, if it depends on turn direction
                     if (fwd_edge_data1.flags.restricted != fwd_edge_data2.flags.restricted)
@@ -258,7 +260,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                                    roads_on_the_left);
                     scripting_environment.ProcessTurn(extraction_turn);
 
-                    std::cerr << "HAS STOP SIGN = " << extraction_turn.has_stop_sign << " " << extraction_turn.duration << std::endl;
+                    std::cerr << "HAS STOP SIGN = " << extraction_turn.has_stop_sign << " "
+                              << extraction_turn.duration << std::endl;
 
                     auto update_direction_penalty =
                         [&extraction_turn, weight_multiplier](bool signal,
@@ -266,11 +269,13 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                                               EdgeWeight &weight_penalty) {
                             if (signal)
                             {
-                                std::cerr << "DUR = " << extraction_turn.duration <<  " WEIGHT = " << extraction_turn.weight << std::endl;
+                                std::cerr << "DUR = " << extraction_turn.duration
+                                          << " WEIGHT = " << extraction_turn.weight << std::endl;
                                 duration_penalty = extraction_turn.duration * SECOND_TO_DECISECOND;
                                 weight_penalty = extraction_turn.weight * weight_multiplier;
 
-                                std::cerr << "DUR = " << duration_penalty <<  " WEIGHT = " << weight_penalty << std::endl;
+                                std::cerr << "DUR = " << duration_penalty
+                                          << " WEIGHT = " << weight_penalty << std::endl;
                             }
                         };
 

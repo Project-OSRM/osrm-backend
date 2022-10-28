@@ -138,7 +138,7 @@ class EdgeBasedGraphFactory
     const std::unordered_set<NodeID> &m_barrier_nodes;
     const TrafficFlowControlNodes &m_traffic_signals;
     const TrafficFlowControlNodes &m_stop_signs;
-    
+
     const CompressedEdgeContainer &m_compressed_edge_container;
 
     const NameTable &name_table;

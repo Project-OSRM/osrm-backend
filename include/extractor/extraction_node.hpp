@@ -9,7 +9,6 @@ namespace osrm
 namespace extractor
 {
 
-
 struct ExtractionNode
 {
     ExtractionNode() : traffic_lights(TrafficFlowControlNodeDirection::NONE), barrier(false) {}
@@ -22,7 +21,6 @@ struct ExtractionNode
     }
     TrafficFlowControlNodeDirection traffic_lights;
     bool barrier;
-
 
     TrafficFlowControlNodeDirection stop_sign;
     TrafficFlowControlNodeDirection give_way;

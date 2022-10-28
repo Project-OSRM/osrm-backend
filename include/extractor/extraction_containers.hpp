@@ -26,6 +26,10 @@ namespace extractor
  */
 class ExtractionContainers
 {
+  public:
+    using InputTrafficFlowControlNode = std::pair<OSMNodeID, TrafficFlowControlNodeDirection>;
+
+  private:
     using ReferencedWays = std::unordered_map<OSMWayID, NodesOfWay>;
     using ReferencedTrafficFlowControlNodes =
         std::pair<std::unordered_set<OSMNodeID>, std::unordered_multimap<OSMNodeID, OSMNodeID>>;
@@ -34,15 +38,16 @@ class ExtractionContainers
     // node processing so that they can be referenced in the preparation phase.
     ReferencedWays IdentifyRestrictionWays();
     ReferencedWays IdentifyManeuverOverrideWays();
-    ReferencedTrafficFlowControlNodes IdentifyTrafficSignals();
-    ReferencedTrafficFlowControlNodes IdentifyStopSigns();
-    
+
+    ReferencedTrafficFlowControlNodes IdentifyTrafficFlowControlNodes(
+        const std::vector<InputTrafficFlowControlNode> &external_stop_signs);
 
     void PrepareNodes();
     void PrepareManeuverOverrides(const ReferencedWays &maneuver_override_ways);
     void PrepareRestrictions(const ReferencedWays &restriction_ways);
-    void PrepareTrafficSignals(const ReferencedTrafficFlowControlNodes &referenced_traffic_signals);
-    void PrepareStopSigns(const ReferencedTrafficFlowControlNodes &referenced_stop_signs);
+    void PrepareTrafficFlowControlNodes(
+        const ReferencedTrafficFlowControlNodes &referenced_traffic_control_nodes,
+        TrafficFlowControlNodes &internal_traffic_control_nodes);
 
     void PrepareEdges(ScriptingEnvironment &scripting_environment);
 
@@ -57,10 +62,7 @@ class ExtractionContainers
     using NameOffsets = std::vector<size_t>;
     using WayIDVector = std::vector<OSMWayID>;
     using WayNodeIDOffsets = std::vector<size_t>;
-    using InputTrafficFlowControlNode = std::pair<OSMNodeID, TrafficFlowControlNodeDirection>;
 
-
-  
     std::vector<OSMNodeID> barrier_nodes;
     NodeIDVector used_node_id_list;
     NodeVector all_nodes_list;
@@ -79,10 +81,10 @@ class ExtractionContainers
 
     std::vector<InputTrafficFlowControlNode> external_stop_signs;
     TrafficFlowControlNodes internal_stop_signs;
-    
+
     std::vector<InputTrafficFlowControlNode> external_give_ways;
     TrafficFlowControlNodes internal_give_ways;
-    
+
     std::vector<NodeBasedEdge> used_edges;
 
     // List of restrictions (conditional and unconditional) before we transform them into the

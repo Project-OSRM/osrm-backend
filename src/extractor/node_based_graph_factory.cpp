@@ -31,7 +31,8 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
       coordinates(std::move(coordinates)), osm_node_ids(std::move(osm_node_ids))
 {
     BuildCompressedOutputGraph(edge_list);
-    Compress(scripting_environment, turn_restrictions, maneuver_overrides, traffic_signals, stop_signs);
+    Compress(
+        scripting_environment, turn_restrictions, maneuver_overrides, traffic_signals, stop_signs);
     CompressGeometry();
     CompressAnnotationData();
 }
