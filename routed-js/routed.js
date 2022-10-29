@@ -107,7 +107,7 @@ async function main() {
                     break;
             }
             const result = await handler.handle(coordinates, query, format);
-            result['code'] = 'Ok';
+            //  result['code'] = 'Ok';
             return result;
         }
         catch (e) {

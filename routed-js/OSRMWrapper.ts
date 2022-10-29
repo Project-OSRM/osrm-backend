@@ -15,22 +15,22 @@ export class OSRMWrapper {
     }
 
     async route(options: any): Promise<any> {
-        return util.promisify(this.osrm.route.bind(this.osrm))(options);
+        return util.promisify(this.osrm.route.bind(this.osrm))(options, {format: 'buffer'});
     }
 
     async nearest(options: any): Promise<any> {
-        return util.promisify(this.osrm.nearest.bind(this.osrm))(options);
+        return util.promisify(this.osrm.nearest.bind(this.osrm))(options, {format: 'buffer'});
     }
 
     async table(options: any): Promise<any> {
-        return util.promisify(this.osrm.table.bind(this.osrm))(options);
+        return util.promisify(this.osrm.table.bind(this.osrm))(options, {format: 'buffer'});
     }
 
     async trip(options: any): Promise<any> {
-        return util.promisify(this.osrm.trip.bind(this.osrm))(options);
+        return util.promisify(this.osrm.trip.bind(this.osrm))(options, {format: 'buffer'});
     }
 
     async match(options: any): Promise<any> {
-        return util.promisify(this.osrm.match.bind(this.osrm))(options);
+        return util.promisify(this.osrm.match.bind(this.osrm))(options, {format: 'buffer'});
     }
 }

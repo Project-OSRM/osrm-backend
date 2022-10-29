@@ -92,9 +92,7 @@ async function main() {
                 break;
             }
 
-            const result = await handler.handle(coordinates, query, format);
-            result['code'] = 'Ok';
-            return result;
+            return  handler.handle(coordinates, query, format);
         } catch (e: any) {
             reply.code(400);
 

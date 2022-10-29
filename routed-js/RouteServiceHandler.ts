@@ -10,11 +10,9 @@ export class RouteServiceHandler extends ServiceHandler {
         if (query.approaches) {
             options.approaches = query.approaches;
         }
-
         if (query.waypoints) {
             options.waypoints = query.waypoints;
         }
-      //  throw Error(JSON.stringify(options));
         return options;
     }
 

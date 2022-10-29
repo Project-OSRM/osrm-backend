@@ -13,7 +13,6 @@ class RouteServiceHandler extends ServiceHandler_1.ServiceHandler {
         if (query.waypoints) {
             options.waypoints = query.waypoints;
         }
-        //  throw Error(JSON.stringify(options));
         return options;
     }
     async callOSRM(options) {
