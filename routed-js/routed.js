@@ -106,9 +106,7 @@ async function main() {
                     reply.type('application/x-flatbuffers;schema=osrm.engine.api.fbresult').code(200);
                     break;
             }
-            const result = await handler.handle(coordinates, query, format);
-            //  result['code'] = 'Ok';
-            return result;
+            return handler.handle(coordinates, query, format);
         }
         catch (e) {
             reply.code(400);
