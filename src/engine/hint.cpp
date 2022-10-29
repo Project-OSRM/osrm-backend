@@ -6,8 +6,8 @@
 
 #include <algorithm>
 #include <iterator>
-#include <unordered_set>
 #include <tuple>
+#include <unordered_set>
 
 namespace osrm
 {

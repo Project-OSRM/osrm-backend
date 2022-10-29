@@ -1,7 +1,6 @@
 #ifndef OSRM_EXTRACTOR_WAY_RESTRICTION_MAP_HPP_
 #define OSRM_EXTRACTOR_WAY_RESTRICTION_MAP_HPP_
 
-
 #include "extractor/restriction.hpp"
 #include "extractor/restriction_graph.hpp"
 #include "util/integer_range.hpp"
