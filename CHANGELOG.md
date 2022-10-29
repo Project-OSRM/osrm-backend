@@ -7,6 +7,7 @@
       - FIXED: Fix annotations=true handling in NodeJS bindings & libosrm. [#6415](https://github.com/Project-OSRM/osrm-backend/pull/6415/)
       - FIXED: Fix bindings compilation issue on the latest Node. Update NAN to 2.17.0. [#6416](https://github.com/Project-OSRM/osrm-backend/pull/6416)
       - CHANGED: Make edge metrics strongly typed [#6420](https://github.com/Project-OSRM/osrm-backend/pull/6420)
+      - FIXED: Typo in file name src/util/timed_historgram.cpp -> src/util/timed_histogram.cpp
     - Routing:
       - FIXED: Fix adding traffic signal penalties during compression [#6419](https://github.com/Project-OSRM/osrm-backend/pull/6419)
 # 5.27.1
