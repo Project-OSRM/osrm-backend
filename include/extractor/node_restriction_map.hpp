@@ -6,8 +6,8 @@
 #include "util/typedefs.hpp"
 
 #include <boost/range/adaptor/filtered.hpp>
-#include <boost/unordered_map.hpp>
 
+#include <unordered_map>
 #include <utility>
 #include <vector>
 

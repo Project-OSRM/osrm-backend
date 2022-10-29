@@ -4,8 +4,6 @@
 #include "util/typedefs.hpp"
 #include <unordered_set>
 
-#include <boost/unordered_set.hpp>
-
 namespace osrm
 {
 namespace extractor
