@@ -340,7 +340,7 @@ class SpeedLayerFeatureBuilder : public vtzero::linestring_feature_builder
         add_property(m_layer.key_duration, m_layer.double_index(value));
     }
 
-    void set_name(const boost::string_ref &value)
+    void set_name(const std::string_view value)
     {
         add_property(
             m_layer.key_name,
@@ -518,7 +518,7 @@ void encodeVectorTile(const DataFacadeBase &facade,
                             fbuilder.set_speed(speed_kmh_idx);
                             fbuilder.set_is_small(component_id.is_tiny);
                             fbuilder.set_datasource(
-                                facade.GetDatasourceName(forward_datasource_idx).to_string());
+                                std::string(facade.GetDatasourceName(forward_datasource_idx)));
                             fbuilder.set_weight(from_alias<double>(forward_weight) / 10.0);
                             fbuilder.set_duration(from_alias<double>(forward_duration) / 10.0);
                             fbuilder.set_name(name);
@@ -552,7 +552,7 @@ void encodeVectorTile(const DataFacadeBase &facade,
                             fbuilder.set_speed(speed_kmh_idx);
                             fbuilder.set_is_small(component_id.is_tiny);
                             fbuilder.set_datasource(
-                                facade.GetDatasourceName(reverse_datasource_idx).to_string());
+                                std::string(facade.GetDatasourceName(reverse_datasource_idx)));
                             fbuilder.set_weight(from_alias<double>(reverse_weight) / 10.0);
                             fbuilder.set_duration(from_alias<double>(reverse_duration) / 10.0);
                             fbuilder.set_name(name);
