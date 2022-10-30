@@ -140,7 +140,7 @@ inline bool requiresNameAnnounced(const StringView &from_name,
         const auto checkTable = [&](const std::string &str) {
             return str.empty() || suffix_table.isSuffix(str);
         };
- 
+
         return checkTable(first_prefix) && checkTable(first_suffix) && checkTable(second_prefix) &&
                checkTable(second_suffix);
     };
