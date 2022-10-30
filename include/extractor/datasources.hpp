@@ -3,6 +3,8 @@
 
 #include "util/typedefs.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <string_view>
 
