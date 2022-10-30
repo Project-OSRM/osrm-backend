@@ -1,9 +1,10 @@
 #ifndef OSRM_EXTRACT_DATASOURCES_HPP
 #define OSRM_EXTRACT_DATASOURCES_HPP
 
+#include "util/typedefs.hpp"
+
 #include <cstdint>
-#include <util/string_view.hpp>
-#include <util/typedefs.hpp>
+#include <string_view>
 
 namespace osrm
 {

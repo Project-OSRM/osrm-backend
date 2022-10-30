@@ -2,9 +2,9 @@
 #define OSRM_EXTRACTOR_SUFFIX_LIST_HPP_
 
 #include <string>
+#include <string_view>
 #include <unordered_set>
-
-#include "util/string_view.hpp"
+#include <vector>
 
 namespace osrm
 {

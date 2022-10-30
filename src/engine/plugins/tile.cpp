@@ -4,7 +4,6 @@
 #include "engine/plugins/tile.hpp"
 
 #include "util/coordinate_calculation.hpp"
-#include "util/string_view.hpp"
 #include "util/vector_tile.hpp"
 #include "util/web_mercator.hpp"
 
@@ -20,6 +19,7 @@
 #include <algorithm>
 #include <numeric>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 

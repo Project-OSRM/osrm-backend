@@ -2,10 +2,10 @@
 #define OSRM_EXTRACTOR_NAME_TABLE_HPP
 
 #include "util/indexed_data.hpp"
-#include "util/string_view.hpp"
 #include "util/typedefs.hpp"
 
 #include <string>
+#include <string_view>
 
 namespace osrm
 {

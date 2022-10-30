@@ -4,7 +4,6 @@
 #include "storage/tar_fwd.hpp"
 
 #include "util/exception.hpp"
-#include "util/string_view.hpp"
 #include "util/vector_view.hpp"
 
 #include <boost/assert.hpp>
@@ -14,6 +13,7 @@
 #include <iterator>
 #include <limits>
 #include <string>
+#include <string_view>
 #include <type_traits>
 
 namespace osrm

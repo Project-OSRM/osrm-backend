@@ -26,7 +26,6 @@
 #include "util/integer_range.hpp"
 #include "util/packed_vector.hpp"
 #include "util/string_util.hpp"
-#include "util/string_view.hpp"
 #include "util/typedefs.hpp"
 
 #include "osrm/coordinate.hpp"
@@ -37,6 +36,7 @@
 
 #include <engine/bearing.hpp>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
