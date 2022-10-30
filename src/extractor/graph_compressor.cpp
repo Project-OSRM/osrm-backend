@@ -217,31 +217,9 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 bool has_forward_stop_sign = stop_signs.Has(node_u, node_v);
                 bool has_reverse_stop_sign = stop_signs.Has(node_w, node_v);
 
-                // we apply penalty for only one of the control flow nodes
-                if (has_forward_stop_sign && has_forward_signal) {
-                    has_forward_stop_sign = false;
-                    util::Log(logWARNING) << "Node " << node_v
-                                          << " has both a traffic signal and a stop sign";
-                }
-                if (has_reverse_stop_sign && has_reverse_signal) {
-                    has_reverse_stop_sign = false;
-                    util::Log(logWARNING) << "Node " << node_v
-                                          << " has both a traffic signal and a stop sign";
-                }
-
                 bool has_forward_give_way_sign = give_way_signs.Has(node_u, node_v);
                 bool has_reverse_give_way_sign = give_way_signs.Has(node_w, node_v);
-                                // we apply penalty for only one of the control flow nodes
-                if (has_forward_give_way_sign && (has_forward_signal || has_forward_stop_sign)) {
-                    has_forward_give_way_sign = false;
-                    util::Log(logWARNING) << "Node " << node_v
-                                          << " has both a give way sign and a stop sign or traffic signal";
-                }
-                if (has_reverse_stop_sign && (has_reverse_signal || has_reverse_stop_sign)) {
-                    has_reverse_give_way_sign = false;
-                    util::Log(logWARNING) << "Node " << node_v
-                                          << " has both a give way sign and a stop sign or traffic signal";
-                }
+
 
 
                 EdgeDuration forward_node_duration_penalty = MAXIMAL_EDGE_DURATION;
@@ -249,7 +227,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 EdgeDuration reverse_node_duration_penalty = MAXIMAL_EDGE_DURATION;
                 EdgeWeight reverse_node_weight_penalty = INVALID_EDGE_WEIGHT;
                 if (has_forward_signal || has_reverse_signal || has_forward_stop_sign ||
-                    has_reverse_stop_sign)
+                    has_reverse_stop_sign || has_forward_give_way_sign || has_reverse_give_way_sign)
                 {
                     // we cannot handle this as node penalty, if it depends on turn direction
                     if (fwd_edge_data1.flags.restricted != fwd_edge_data2.flags.restricted)
