@@ -57,7 +57,8 @@ class BaseAPI
     {
         // TODO: check forward/reverse
         const auto toName = [this](const auto &phantom) {
-            return std::string(facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id)));
+            return std::string(
+                facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id)));
         };
         const auto noEmpty = [](const auto &name) { return !name.empty(); };
 
@@ -127,8 +128,9 @@ class BaseAPI
             static_cast<float>(static_cast<double>(util::toFloating(snapped_location.lat))));
 
         const auto toName = [this](const auto &phantom) {
-            return std::string(facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id)));
-        };
+            return std::string(
+                facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id)));
+       };
         const auto noEmpty = [](const auto &name) { return !name.empty(); };
 
         // At an intersection we may have multiple phantom node candidates.
