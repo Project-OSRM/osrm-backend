@@ -131,19 +131,19 @@ inline bool requiresNameAnnounced(const StringView &from_name,
     const auto name_is_contained =
         boost::starts_with(from_name, to_name) || boost::starts_with(to_name, from_name);
 
-    const auto checkForPrefixOrSuffixChange =
-        [](const std::string_view &first, const std::string_view &second, const SuffixTable &suffix_table) {
-            std::string first_prefix, first_suffix, second_prefix, second_suffix;
-            std::tie(first_prefix, first_suffix, second_prefix, second_suffix) =
-                decompose(first, second);
-
-            const auto checkTable = [&](const std::string &str) {
-                return str.empty() || suffix_table.isSuffix(str);
-            };
-
-            return checkTable(first_prefix) && checkTable(first_suffix) &&
-                   checkTable(second_prefix) && checkTable(second_suffix);
+    const auto checkForPrefixOrSuffixChange = [](const std::string_view &first,
+                                                 const std::string_view &second,
+                                                 const SuffixTable &suffix_table) {
+        std::string first_prefix, first_suffix, second_prefix, second_suffix;
+        std::tie(first_prefix, first_suffix, second_prefix, second_suffix) =
+            decompose(first, second);
+        const auto checkTable = [&](const std::string &str) {
+            return str.empty() || suffix_table.isSuffix(str);
         };
+ 
+        return checkTable(first_prefix) && checkTable(first_suffix) && checkTable(second_prefix) &&
+               checkTable(second_suffix);
+    };
 
     const auto is_suffix_change = checkForPrefixOrSuffixChange(from_name, to_name, suffix_table);
     const auto names_are_equal = from_name == to_name || name_is_contained || is_suffix_change;

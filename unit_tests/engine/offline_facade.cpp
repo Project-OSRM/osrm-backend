@@ -203,7 +203,10 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
         return DatasourceReverseRange(DatasourceForwardRange());
     }
 
-    std::string_view GetDatasourceName(const DatasourceID /*id*/) const override { return std::string_view{}; }
+    std::string_view GetDatasourceName(const DatasourceID /*id*/) const override
+    {
+        return std::string_view{};
+    }
 
     guidance::TurnInstruction GetTurnInstructionForEdgeID(const EdgeID /*id*/) const override
     {
@@ -272,9 +275,18 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     NameID GetNameIndex(const NodeID /*nodeID*/) const override { return EMPTY_NAMEID; }
     std::string_view GetNameForID(const NameID /*id*/) const override { return std::string_view{}; }
     std::string_view GetRefForID(const NameID /*id*/) const override { return std::string_view{}; }
-    std::string_view GetPronunciationForID(const NameID /*id*/) const override { return std::string_view{}; }
-    std::string_view GetDestinationsForID(const NameID /*id*/) const override { return std::string_view{}; }
-    std::string_view GetExitsForID(const NameID /*id*/) const override { return std::string_view{}; }
+    std::string_view GetPronunciationForID(const NameID /*id*/) const override
+    {
+        return std::string_view{};
+    }
+    std::string_view GetDestinationsForID(const NameID /*id*/) const override
+    {
+        return std::string_view{};
+    }
+    std::string_view GetExitsForID(const NameID /*id*/) const override
+    {
+        return std::string_view{};
+    }
     bool GetContinueStraightDefault() const override { return false; }
     std::string GetTimestamp() const override { return ""; }
     double GetMapMatchingMaxSpeed() const override { return 0; }
