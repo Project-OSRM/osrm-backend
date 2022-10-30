@@ -2,6 +2,8 @@
 #define OSRM_EXTRACTOR_TRAFFIC_SIGNALS_HPP
 
 #include "util/typedefs.hpp"
+
+#include <boost/functional/hash.hpp>
 #include <unordered_set>
 
 namespace osrm
