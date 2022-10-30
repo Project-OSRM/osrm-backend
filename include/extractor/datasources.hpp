@@ -22,11 +22,11 @@ class Datasources
         std::fill(sources.begin(), sources.end(), '\0');
     }
 
-    util::StringView GetSourceName(DatasourceID id) const
+    std::string_view GetSourceName(DatasourceID id) const
     {
         auto begin = sources.data() + (MAX_LENGTH_NAME * id);
 
-        return util::StringView{begin, lengths[id]};
+        return std::string_view{begin, lengths[id]};
     }
 
     void SetSourceName(DatasourceID id, const std::string &name)

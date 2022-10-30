@@ -9,7 +9,7 @@ namespace osrm
 namespace util
 {
 // Convenience typedef: boost::string_ref, boost::string_view or C++17's string_view
-using StringView = std::string_view;
+// using StringView = std::string_view;
 
 } // namespace util
 } // namespace osrm

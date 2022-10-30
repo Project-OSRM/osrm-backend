@@ -26,8 +26,6 @@ namespace test
 
 class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
 {
-    using StringView = util::StringView;
-
   public:
     bool ExcludeNode(const NodeID) const override { return false; };
 
@@ -95,7 +93,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
         return DatasourceReverseRange(DatasourceForwardRange());
     }
 
-    StringView GetDatasourceName(const DatasourceID) const override final { return {}; }
+    std::string_view GetDatasourceName(const DatasourceID) const override final { return {}; }
 
     osrm::guidance::TurnInstruction
     GetTurnInstructionForEdgeID(const EdgeID /* id */) const override
@@ -154,11 +152,11 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
 
     NameID GetNameIndex(const NodeID /* id */) const override { return 0; }
 
-    StringView GetNameForID(const NameID) const override final { return {}; }
-    StringView GetRefForID(const NameID) const override final { return {}; }
-    StringView GetPronunciationForID(const NameID) const override final { return {}; }
-    StringView GetDestinationsForID(const NameID) const override final { return {}; }
-    StringView GetExitsForID(const NameID) const override final { return {}; }
+    std::string_view GetNameForID(const NameID) const override final { return {}; }
+    std::string_view GetRefForID(const NameID) const override final { return {}; }
+    std::string_view GetPronunciationForID(const NameID) const override final { return {}; }
+    std::string_view GetDestinationsForID(const NameID) const override final { return {}; }
+    std::string_view GetExitsForID(const NameID) const override final { return {}; }
 
     bool GetContinueStraightDefault() const override { return true; }
     double GetMapMatchingMaxSpeed() const override { return 180 / 3.6; }

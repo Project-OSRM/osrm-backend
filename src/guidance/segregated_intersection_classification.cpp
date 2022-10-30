@@ -24,7 +24,7 @@ struct EdgeInfo
 
     NodeID node;
 
-    util::StringView name;
+    std::string_view name;
 
     bool reversed;
 
