@@ -73,7 +73,6 @@ template <typename StringView> inline auto decompose(const StringView &lhs, cons
         std::string str(view);
         std::transform(
             str.begin(), str.end(), str.begin(), [](unsigned char c) { return std::tolower(c); });
-        );
         auto front = str.find_first_not_of(' ');
 
         if (front == std::string::npos)
