@@ -1197,7 +1197,7 @@ ExtractionContainers::IdentifyTrafficFlowControlNodes(
     };
     std::for_each(external_nodes.begin(), external_nodes.end(), mark_traffic_nodes);
 
-    // Extract all the segments that lead up to unidirectional traffic signals.
+    // Extract all the segments that lead up to unidirectional traffic flow control nodes.
     const auto set_segments = [&](const size_t way_list_idx, auto const & /*unused*/) {
         const auto node_start_offset =
             used_node_id_list.begin() + way_node_id_offsets[way_list_idx];

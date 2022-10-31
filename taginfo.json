@@ -126,6 +126,7 @@
         {"key": "route", "object_types": ["way"]},
         {"key": "highway", "value": "traffic_signals", "object_types": ["node"]},
         {"key": "highway", "value": "stop", "object_types": ["node"]},
+        {"key": "highway", "value": "give_way", "object_types": ["node"]},
         {"key": "highway", "value": "crossing", "object_types": ["node"]},
         {"key": "access", "value": "yes"},
         {"key": "access", "value": "motorcar"},
