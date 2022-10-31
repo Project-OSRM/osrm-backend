@@ -220,8 +220,6 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 const bool has_forward_give_way_sign = give_way_signs.Has(node_u, node_v);
                 const bool has_reverse_give_way_sign = give_way_signs.Has(node_w, node_v);
 
-
-
                 EdgeDuration forward_node_duration_penalty = MAXIMAL_EDGE_DURATION;
                 EdgeWeight forward_node_weight_penalty = INVALID_EDGE_WEIGHT;
                 EdgeDuration reverse_node_duration_penalty = MAXIMAL_EDGE_DURATION;
@@ -241,7 +239,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                                    false,
                                                    has_forward_signal || has_reverse_signal,
                                                    has_forward_stop_sign || has_reverse_stop_sign,
-                                                   has_forward_give_way_sign || has_reverse_give_way_sign,
+                                                   has_forward_give_way_sign ||
+                                                       has_reverse_give_way_sign,
                                                    false,
                                                    false,
                                                    TRAVEL_MODE_DRIVING,
@@ -265,21 +264,25 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                                    roads_on_the_left);
                     scripting_environment.ProcessTurn(extraction_turn);
 
-                    auto update_direction_penalty =
-                        [&extraction_turn, weight_multiplier](bool has_traffic_control_node,
-                                                              EdgeDuration &duration_penalty,
-                                                              EdgeWeight &weight_penalty) {
-                            if (has_traffic_control_node)
-                            {
-                                duration_penalty = to_alias<EdgeDuration>(extraction_turn.duration * SECOND_TO_DECISECOND);
-                                weight_penalty = to_alias<EdgeWeight>(extraction_turn.weight * weight_multiplier);
-                            }
-                        };
+                    auto update_direction_penalty = [&extraction_turn, weight_multiplier](
+                                                        bool has_traffic_control_node,
+                                                        EdgeDuration &duration_penalty,
+                                                        EdgeWeight &weight_penalty) {
+                        if (has_traffic_control_node)
+                        {
+                            duration_penalty = to_alias<EdgeDuration>(extraction_turn.duration *
+                                                                      SECOND_TO_DECISECOND);
+                            weight_penalty =
+                                to_alias<EdgeWeight>(extraction_turn.weight * weight_multiplier);
+                        }
+                    };
 
-                    update_direction_penalty(has_forward_signal || has_forward_stop_sign || has_forward_give_way_sign,
+                    update_direction_penalty(has_forward_signal || has_forward_stop_sign ||
+                                                 has_forward_give_way_sign,
                                              forward_node_duration_penalty,
                                              forward_node_weight_penalty);
-                    update_direction_penalty(has_reverse_signal || has_reverse_stop_sign || has_reverse_give_way_sign,
+                    update_direction_penalty(has_reverse_signal || has_reverse_stop_sign ||
+                                                 has_reverse_give_way_sign,
                                              reverse_node_duration_penalty,
                                              reverse_node_weight_penalty);
                 }
