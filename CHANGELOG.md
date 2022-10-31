@@ -9,6 +9,7 @@
       - CHANGED: Make edge metrics strongly typed [#6420](https://github.com/Project-OSRM/osrm-backend/pull/6420)
       - FIXED: Typo in file name src/util/timed_historgram.cpp -> src/util/timed_histogram.cpp [#6428](https://github.com/Project-OSRM/osrm-backend/issues/6428)
     - Routing:
+      - ADDED: Stop and give way signs are now taken into account in car profile. [#6426](https://github.com/Project-OSRM/osrm-backend/pull/6426)
       - FIXED: Fix adding traffic signal penalties during compression [#6419](https://github.com/Project-OSRM/osrm-backend/pull/6419)
 # 5.27.1
   - Changes from 5.27.0
