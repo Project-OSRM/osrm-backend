@@ -31,12 +31,13 @@ Feature: Car - Handle stop signs
             | e    | stop            |
             | l    | stop            |
 
+        # TODO: stop signs with no direction has no any impact on routing at the moment
         When I route I should get
             | from | to | time   | # |
             | 1    | 2  |  11.1s | no turn with no stop sign |
-            | 3    | 4  |  13.1s | no turn with stop sign    |
+            | 3    | 4  |  11.1s | no turn with stop sign    |
             | g    | j  |  18.7s | turn with no stop sign    |
-            | k    | n  |  20.7s | turn with stop sign       |
+            | k    | n  |  18.7s | turn with stop sign       |
 
     Scenario: Car - Stop sign direction
         Given the node map
@@ -68,8 +69,8 @@ Feature: Car - Handle stop signs
             | from | to | time   | weight | #                         |
             | 1    | 2  |  11.1s | 11.1   | no turn with no stop sign |
             | 2    | 1  |  11.1s | 11.1   | no turn with no stop sign |
-            | 3    | 4  |  13.1s | 13.1   | no turn with stop sign    |
-            | 4    | 3  |  13.1s | 13.1   | no turn with stop sign    |
+            | 3    | 4  |  11.1s | 11.1   | no turn with stop sign    |
+            | 4    | 3  |  11.1s | 11.1   | no turn with stop sign    |
             | 5    | 6  |  13.1s | 13.1   | no turn with stop sign    |
             | 6    | 5  |  11.1s | 11.1   | no turn with no stop sign |
             | 7    | 8  |  11.1s | 11.1   | no turn with no stop sign |

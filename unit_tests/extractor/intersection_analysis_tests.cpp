@@ -20,6 +20,9 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
 {
     std::unordered_set<NodeID> barrier_nodes{6};
     TrafficFlowControlNodes traffic_lights;
+    TrafficFlowControlNodes stop_signs;
+    TrafficFlowControlNodes give_way_signs;
+    
     std::vector<NodeBasedEdgeAnnotation> annotations{
         {EMPTY_NAMEID, 0, INAVLID_CLASS_DATA, TRAVEL_MODE_DRIVING, false},
         {EMPTY_NAMEID, 1, INAVLID_CLASS_DATA, TRAVEL_MODE_DRIVING, false}};
@@ -87,6 +90,8 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
 
     GraphCompressor().Compress(barrier_nodes,
                                traffic_lights,
+                               stop_signs,
+                               give_way_signs,
                                scripting_environment,
                                restrictions,
                                maneuver_overrides,
@@ -153,6 +158,8 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
 {
     std::unordered_set<NodeID> barrier_nodes;
     TrafficFlowControlNodes traffic_lights;
+    TrafficFlowControlNodes stop_signs;
+    TrafficFlowControlNodes give_way_signs;
     std::vector<NodeBasedEdgeAnnotation> annotations;
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
@@ -210,6 +217,8 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
 
     GraphCompressor().Compress(barrier_nodes,
                                traffic_lights,
+                               stop_signs,
+                               give_way_signs,
                                scripting_environment,
                                restrictions,
                                maneuver_overrides,
@@ -260,6 +269,8 @@ BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
 {
     std::unordered_set<NodeID> barrier_nodes{1};
     TrafficFlowControlNodes traffic_lights = {{2}, {}};
+    TrafficFlowControlNodes stop_signs = {};
+    TrafficFlowControlNodes give_way_signs = {};
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
@@ -309,6 +320,8 @@ BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
 
     GraphCompressor().Compress(barrier_nodes,
                                traffic_lights,
+                               stop_signs,
+                               give_way_signs,
                                scripting_environment,
                                restrictions,
                                maneuver_overrides,

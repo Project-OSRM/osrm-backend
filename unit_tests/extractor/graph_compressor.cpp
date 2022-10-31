@@ -66,6 +66,8 @@ BOOST_AUTO_TEST_CASE(long_road_test)
 
     std::unordered_set<NodeID> barrier_nodes;
     TrafficFlowControlNodes traffic_lights;
+    TrafficFlowControlNodes stop_signs;
+    TrafficFlowControlNodes give_way_signs;
     std::vector<TurnRestriction> restrictions;
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     CompressedEdgeContainer container;
@@ -88,6 +90,8 @@ BOOST_AUTO_TEST_CASE(long_road_test)
 
     compressor.Compress(barrier_nodes,
                         traffic_lights,
+                        stop_signs,
+                        give_way_signs,
                         scripting_environment,
                         restrictions,
                         maneuver_overrides,
@@ -112,6 +116,8 @@ BOOST_AUTO_TEST_CASE(loop_test)
 
     std::unordered_set<NodeID> barrier_nodes;
     TrafficFlowControlNodes traffic_lights;
+    TrafficFlowControlNodes stop_signs;
+    TrafficFlowControlNodes give_way_signs;
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
@@ -148,6 +154,8 @@ BOOST_AUTO_TEST_CASE(loop_test)
 
     compressor.Compress(barrier_nodes,
                         traffic_lights,
+                        stop_signs,
+                        give_way_signs,
                         scripting_environment,
                         restrictions,
                         maneuver_overrides,
@@ -175,6 +183,8 @@ BOOST_AUTO_TEST_CASE(t_intersection)
 
     std::unordered_set<NodeID> barrier_nodes;
     TrafficFlowControlNodes traffic_lights;
+    TrafficFlowControlNodes stop_signs;
+    TrafficFlowControlNodes give_way_signs;
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
@@ -197,6 +207,8 @@ BOOST_AUTO_TEST_CASE(t_intersection)
 
     compressor.Compress(barrier_nodes,
                         traffic_lights,
+                        stop_signs,
+                        give_way_signs,
                         scripting_environment,
                         restrictions,
                         maneuver_overrides,
@@ -218,6 +230,8 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
 
     std::unordered_set<NodeID> barrier_nodes;
     TrafficFlowControlNodes traffic_lights;
+    TrafficFlowControlNodes stop_signs;
+    TrafficFlowControlNodes give_way_signs;
     std::vector<NodeBasedEdgeAnnotation> annotations(2);
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
@@ -236,6 +250,8 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
 
     compressor.Compress(barrier_nodes,
                         traffic_lights,
+                        stop_signs,
+                        give_way_signs,
                         scripting_environment,
                         restrictions,
                         maneuver_overrides,
@@ -256,6 +272,8 @@ BOOST_AUTO_TEST_CASE(direction_changes)
 
     std::unordered_set<NodeID> barrier_nodes;
     TrafficFlowControlNodes traffic_lights;
+    TrafficFlowControlNodes stop_signs;
+    TrafficFlowControlNodes give_way_signs;
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
@@ -270,6 +288,8 @@ BOOST_AUTO_TEST_CASE(direction_changes)
     Graph graph(5, edges);
     compressor.Compress(barrier_nodes,
                         traffic_lights,
+                        stop_signs,
+                        give_way_signs,
                         scripting_environment,
                         restrictions,
                         maneuver_overrides,
