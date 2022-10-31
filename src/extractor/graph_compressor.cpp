@@ -214,11 +214,11 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 const bool has_forward_signal = traffic_signals.Has(node_u, node_v);
                 const bool has_reverse_signal = traffic_signals.Has(node_w, node_v);
 
-                bool has_forward_stop_sign = stop_signs.Has(node_u, node_v);
-                bool has_reverse_stop_sign = stop_signs.Has(node_w, node_v);
+                const bool has_forward_stop_sign = stop_signs.Has(node_u, node_v);
+                const bool has_reverse_stop_sign = stop_signs.Has(node_w, node_v);
 
-                bool has_forward_give_way_sign = give_way_signs.Has(node_u, node_v);
-                bool has_reverse_give_way_sign = give_way_signs.Has(node_w, node_v);
+                const bool has_forward_give_way_sign = give_way_signs.Has(node_u, node_v);
+                const bool has_reverse_give_way_sign = give_way_signs.Has(node_w, node_v);
 
 
 
@@ -276,22 +276,10 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                             }
                         };
 
-                    update_direction_penalty(has_forward_signal,
+                    update_direction_penalty(has_forward_signal || has_forward_stop_sign || has_forward_give_way_sign,
                                              forward_node_duration_penalty,
                                              forward_node_weight_penalty);
-                    update_direction_penalty(has_reverse_signal,
-                                             reverse_node_duration_penalty,
-                                             reverse_node_weight_penalty);
-                    update_direction_penalty(has_forward_stop_sign,
-                                             forward_node_duration_penalty,
-                                             forward_node_weight_penalty);
-                    update_direction_penalty(has_reverse_stop_sign,
-                                             reverse_node_duration_penalty,
-                                             reverse_node_weight_penalty);
-                    update_direction_penalty(has_forward_give_way_sign,
-                                             forward_node_duration_penalty,
-                                             forward_node_weight_penalty);
-                    update_direction_penalty(has_reverse_give_way_sign,
+                    update_direction_penalty(has_reverse_signal || has_reverse_stop_sign || has_reverse_give_way_sign,
                                              reverse_node_duration_penalty,
                                              reverse_node_weight_penalty);
                 }
