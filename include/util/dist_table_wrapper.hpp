@@ -34,7 +34,7 @@ template <typename T> class DistTableWrapper
 
     std::size_t size() const { return table_.size(); }
 
-    EdgeWeight operator()(NodeID from, NodeID to) const
+    T operator()(NodeID from, NodeID to) const
     {
         BOOST_ASSERT_MSG(from < number_of_nodes_, "from ID is out of bound");
         BOOST_ASSERT_MSG(to < number_of_nodes_, "to ID is out of bound");
@@ -46,7 +46,7 @@ template <typename T> class DistTableWrapper
         return table_[index];
     }
 
-    void SetValue(NodeID from, NodeID to, EdgeWeight value)
+    void SetValue(NodeID from, NodeID to, T value)
     {
         BOOST_ASSERT_MSG(from < number_of_nodes_, "from ID is out of bound");
         BOOST_ASSERT_MSG(to < number_of_nodes_, "to ID is out of bound");

@@ -87,14 +87,11 @@ struct ExternalCellStorage
             return boost::make_iterator_range((EdgeWeight *)0, (EdgeWeight *)0);
         }
 
-        auto GetSourceNodes() const
-        {
-            return boost::make_iterator_range((EdgeWeight *)0, (EdgeWeight *)0);
-        }
+        auto GetSourceNodes() const { return boost::make_iterator_range((NodeID *)0, (NodeID *)0); }
 
         auto GetDestinationNodes() const
         {
-            return boost::make_iterator_range((EdgeWeight *)0, (EdgeWeight *)0);
+            return boost::make_iterator_range((NodeID *)0, (NodeID *)0);
         }
     };
 
@@ -265,7 +262,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
         return {};
     }
 
-    EdgeWeight GetNodeWeight(const NodeID /*node*/) const { return 0; }
+    EdgeWeight GetNodeWeight(const NodeID /*node*/) const { return {0}; }
 
     bool IsForwardEdge(const NodeID /*edge*/) const { return true; }
 

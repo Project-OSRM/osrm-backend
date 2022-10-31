@@ -182,8 +182,8 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
                     all_turn_data.push_back(TurnData{coord_via,
                                                      angle_in,
                                                      turn_angle,
-                                                     turn_weight,
-                                                     turn_duration,
+                                                     alias_cast<EdgeWeight>(turn_weight),
+                                                     alias_cast<EdgeDuration>(turn_duration),
                                                      turn_instruction});
                 }
             }

@@ -63,7 +63,7 @@ struct InternalExtractorEdge
                                    WeightData weight_data,
                                    DurationData duration_data,
                                    util::Coordinate source_coordinate)
-        : result(source, target, 0, 0, 0, {}, -1, {}), weight_data(weight_data),
+        : result(source, target, {0}, {0}, {0}, {}, -1, {}), weight_data(weight_data),
           duration_data(duration_data), source_coordinate(source_coordinate)
     {
     }

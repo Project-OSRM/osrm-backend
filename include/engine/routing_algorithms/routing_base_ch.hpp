@@ -34,7 +34,7 @@ bool stallAtNode(const DataFacade<Algorithm> &facade,
         {
             const NodeID to = facade.GetTarget(edge);
             const EdgeWeight edge_weight = data.weight;
-            BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
+            BOOST_ASSERT_MSG(edge_weight > EdgeWeight{0}, "edge_weight invalid");
             const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
             if (toHeapNode)
             {
@@ -61,7 +61,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const NodeID to = facade.GetTarget(edge);
             const EdgeWeight edge_weight = data.weight;
 
-            BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
+            BOOST_ASSERT_MSG(edge_weight > EdgeWeight{0}, "edge_weight invalid");
             const EdgeWeight to_weight = heapNode.weight + edge_weight;
 
             const auto toHeapNode = heap.GetHeapNodeIfWasInserted(to);
@@ -135,7 +135,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
                 force_loop(force_loop_reverse_nodes, heapNode) ||
                 // in this case we are looking at a bi-directional way where the source
                 // and target phantom are on the same edge based node
-                new_weight < 0)
+                new_weight < EdgeWeight{0})
             {
                 // check whether there is a loop present at the node
                 for (const auto edge : facade.GetAdjacentEdgeRange(heapNode.node))
@@ -148,7 +148,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
                         {
                             const EdgeWeight edge_weight = data.weight;
                             const EdgeWeight loop_weight = new_weight + edge_weight;
-                            if (loop_weight >= 0 && loop_weight < upper_bound)
+                            if (loop_weight >= EdgeWeight{0} && loop_weight < upper_bound)
                             {
                                 middle_node_id = heapNode.node;
                                 upper_bound = loop_weight;
@@ -159,7 +159,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
             }
             else
             {
-                BOOST_ASSERT(new_weight >= 0);
+                BOOST_ASSERT(new_weight >= EdgeWeight{0});
 
                 middle_node_id = heapNode.node;
                 upper_bound = new_weight;
@@ -169,7 +169,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
 
     // make sure we don't terminate too early if we initialize the weight
     // for the nodes in the forward heap with the forward/reverse offset
-    BOOST_ASSERT(min_edge_offset <= 0);
+    BOOST_ASSERT(min_edge_offset <= EdgeWeight{0});
     if (heapNode.weight + min_edge_offset > upper_bound)
     {
         forward_heap.DeleteAll();
@@ -183,31 +183,6 @@ void routingStep(const DataFacade<Algorithm> &facade,
     }
 
     relaxOutgoingEdges<DIRECTION>(facade, heapNode, forward_heap);
-}
-
-template <bool UseDuration>
-std::tuple<EdgeWeight, EdgeDistance> getLoopWeight(const DataFacade<Algorithm> &facade, NodeID node)
-{
-    EdgeWeight loop_weight = UseDuration ? MAXIMAL_EDGE_DURATION : INVALID_EDGE_WEIGHT;
-    EdgeDistance loop_distance = MAXIMAL_EDGE_DISTANCE;
-    for (auto edge : facade.GetAdjacentEdgeRange(node))
-    {
-        const auto &data = facade.GetEdgeData(edge);
-        if (data.forward)
-        {
-            const NodeID to = facade.GetTarget(edge);
-            if (to == node)
-            {
-                const auto value = UseDuration ? data.duration : data.weight;
-                if (value < loop_weight)
-                {
-                    loop_weight = value;
-                    loop_distance = data.distance;
-                }
-            }
-        }
-    }
-    return std::make_tuple(loop_weight, loop_distance);
 }
 
 /**
@@ -301,7 +276,7 @@ EdgeDistance calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
     // Make sure we have at least something to unpack
     if (packed_path_begin == packed_path_end ||
         std::distance(packed_path_begin, packed_path_end) <= 1)
-        return 0;
+        return {0};
 
     std::stack<std::tuple<NodeID, NodeID, bool>> recursion_stack;
     std::stack<EdgeDistance> distance_stack;
@@ -383,7 +358,7 @@ EdgeDistance calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
         }
     }
 
-    EdgeDistance total_distance = 0;
+    EdgeDistance total_distance = {0};
     while (!distance_stack.empty())
     {
         total_distance += distance_stack.top();
@@ -505,8 +480,48 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                           const PhantomNode &source_phantom,
                           const PhantomNode &target_phantom,
-                          int duration_upper_bound = INVALID_EDGE_WEIGHT);
+                          EdgeWeight duration_upper_bound = INVALID_EDGE_WEIGHT);
 
+template <typename EdgeMetric>
+std::tuple<EdgeMetric, EdgeDistance> getLoopMetric(const DataFacade<Algorithm> &facade, NodeID node)
+{
+    EdgeMetric loop_metric;
+    if constexpr (std::is_same<EdgeMetric, EdgeDuration>::value)
+    {
+        loop_metric = INVALID_EDGE_DURATION;
+    }
+    else
+    {
+        loop_metric = INVALID_EDGE_WEIGHT;
+    }
+    EdgeDistance loop_distance = MAXIMAL_EDGE_DISTANCE;
+    for (auto edge : facade.GetAdjacentEdgeRange(node))
+    {
+        const auto &data = facade.GetEdgeData(edge);
+        if (data.forward)
+        {
+            const NodeID to = facade.GetTarget(edge);
+            if (to == node)
+            {
+                EdgeMetric value;
+                if constexpr (std::is_same<EdgeMetric, EdgeDuration>::value)
+                {
+                    value = to_alias<EdgeDuration>(data.duration);
+                }
+                else
+                {
+                    value = data.weight;
+                }
+                if (value < loop_metric)
+                {
+                    loop_metric = value;
+                    loop_distance = data.distance;
+                }
+            }
+        }
+    }
+    return std::make_tuple(loop_metric, loop_distance);
+}
 } // namespace ch
 } // namespace routing_algorithms
 } // namespace engine

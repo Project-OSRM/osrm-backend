@@ -43,9 +43,9 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
         [](const NodeID from, const NodeID to, bool allowed, AnnotationID annotation) {
             return InputEdge{from,
                              to,
-                             1,
-                             1,
-                             1,
+                             EdgeWeight{1},
+                             EdgeDuration{1},
+                             EdgeDistance{1},
                              GeometryID{0, false},
                              !allowed,
                              NodeBasedEdgeClassification(),
@@ -170,9 +170,9 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
     const auto unit_edge = [](const NodeID from, const NodeID to, bool allowed, bool roundabout) {
         return InputEdge{from,
                          to,
-                         1,
-                         1,
-                         1,
+                         EdgeWeight{1},
+                         EdgeDuration{1},
+                         EdgeDistance{1},
                          GeometryID{0, false},
                          !allowed,
                          NodeBasedEdgeClassification{
@@ -275,8 +275,15 @@ BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
     //          6         8 ↔ 9
     //
     const auto unit_edge = [](const NodeID from, const NodeID to, bool allowed) {
-        return InputEdge{
-            from, to, 1, 1, 1, GeometryID{0, false}, !allowed, NodeBasedEdgeClassification{}, 0};
+        return InputEdge{from,
+                         to,
+                         EdgeWeight{1},
+                         EdgeDuration{1},
+                         EdgeDistance{1},
+                         GeometryID{0, false},
+                         !allowed,
+                         NodeBasedEdgeClassification{},
+                         0};
     };
     std::vector<InputEdge> edges = {unit_edge(0, 1, true), // 0
                                     unit_edge(1, 0, true),

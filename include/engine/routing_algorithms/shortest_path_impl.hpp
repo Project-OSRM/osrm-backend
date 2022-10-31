@@ -292,7 +292,7 @@ shortestPathWithWaypointUTurns(SearchEngineData<Algorithm> &engine_working_data,
                                const std::vector<PhantomNodeCandidates> &waypoint_candidates)
 {
 
-    EdgeWeight total_weight = 0;
+    EdgeWeight total_weight = {0};
     std::vector<NodeID> total_packed_path;
     std::vector<std::size_t> packed_leg_begin;
 
@@ -467,8 +467,8 @@ struct route_state
     route_state(const PhantomNodeCandidates &init_candidates)
         : current_leg(0), previous_leg_path_offset(0)
     {
-        last.total_weight_to_forward.resize(init_candidates.size(), 0);
-        last.total_weight_to_reverse.resize(init_candidates.size(), 0);
+        last.total_weight_to_forward.resize(init_candidates.size(), {0});
+        last.total_weight_to_reverse.resize(init_candidates.size(), {0});
         // Initialize routability from source validity.
         std::transform(
             init_candidates.begin(),

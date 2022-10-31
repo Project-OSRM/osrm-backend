@@ -43,14 +43,14 @@ void insertSourceInForwardHeap(Heap &forward_heap, const PhantomNode &source)
     if (source.IsValidForwardSource())
     {
         forward_heap.Insert(source.forward_segment_id.id,
-                            -source.GetForwardWeightPlusOffset(),
+                            EdgeWeight{0} - source.GetForwardWeightPlusOffset(),
                             source.forward_segment_id.id);
     }
 
     if (source.IsValidReverseSource())
     {
         forward_heap.Insert(source.reverse_segment_id.id,
-                            -source.GetReverseWeightPlusOffset(),
+                            EdgeWeight{0} - source.GetReverseWeightPlusOffset(),
                             source.reverse_segment_id.id);
     }
 }
@@ -127,18 +127,18 @@ void insertSourceInHeap(ManyToManyQueryHeap &heap, const PhantomNodeCandidates &
         if (phantom_node.IsValidForwardSource())
         {
             heap.Insert(phantom_node.forward_segment_id.id,
-                        -phantom_node.GetForwardWeightPlusOffset(),
+                        EdgeWeight{0} - phantom_node.GetForwardWeightPlusOffset(),
                         {phantom_node.forward_segment_id.id,
-                         -phantom_node.GetForwardDuration(),
-                         -phantom_node.GetForwardDistance()});
+                         EdgeDuration{0} - phantom_node.GetForwardDuration(),
+                         EdgeDistance{0} - phantom_node.GetForwardDistance()});
         }
         if (phantom_node.IsValidReverseSource())
         {
             heap.Insert(phantom_node.reverse_segment_id.id,
-                        -phantom_node.GetReverseWeightPlusOffset(),
+                        EdgeWeight{0} - phantom_node.GetReverseWeightPlusOffset(),
                         {phantom_node.reverse_segment_id.id,
-                         -phantom_node.GetReverseDuration(),
-                         -phantom_node.GetReverseDistance()});
+                         EdgeDuration{0} - phantom_node.GetReverseDuration(),
+                         EdgeDistance{0} - phantom_node.GetReverseDistance()});
         }
     }
 }
@@ -251,25 +251,24 @@ void annotatePath(const FacadeT &facade,
         BOOST_ASSERT(start_index < end_index);
         for (std::size_t segment_idx = start_index; segment_idx < end_index; ++segment_idx)
         {
-            unpacked_path.push_back(
-                PathData{node_id,
-                         id_vector[segment_idx + 1],
-                         static_cast<EdgeWeight>(weight_vector[segment_idx]),
-                         0,
-                         static_cast<EdgeDuration>(duration_vector[segment_idx]),
-                         0,
-                         datasource_vector[segment_idx],
-                         boost::none});
+            unpacked_path.push_back(PathData{node_id,
+                                             id_vector[segment_idx + 1],
+                                             alias_cast<EdgeWeight>(weight_vector[segment_idx]),
+                                             {0},
+                                             alias_cast<EdgeDuration>(duration_vector[segment_idx]),
+                                             {0},
+                                             datasource_vector[segment_idx],
+                                             boost::none});
         }
         BOOST_ASSERT(!unpacked_path.empty());
 
         const auto turn_duration = facade.GetDurationPenaltyForEdgeID(turn_id);
         const auto turn_weight = facade.GetWeightPenaltyForEdgeID(turn_id);
 
-        unpacked_path.back().duration_until_turn += turn_duration;
-        unpacked_path.back().duration_of_turn = turn_duration;
-        unpacked_path.back().weight_until_turn += turn_weight;
-        unpacked_path.back().weight_of_turn = turn_weight;
+        unpacked_path.back().duration_until_turn += alias_cast<EdgeDuration>(turn_duration);
+        unpacked_path.back().duration_of_turn = alias_cast<EdgeDuration>(turn_duration);
+        unpacked_path.back().weight_until_turn += alias_cast<EdgeWeight>(turn_weight);
+        unpacked_path.back().weight_of_turn = alias_cast<EdgeWeight>(turn_weight);
         unpacked_path.back().turn_edge = turn_id;
     }
 
@@ -311,10 +310,10 @@ void annotatePath(const FacadeT &facade,
         unpacked_path.push_back(
             PathData{target_node_id,
                      id_vector[start_index < end_index ? segment_idx + 1 : segment_idx - 1],
-                     static_cast<EdgeWeight>(weight_vector[segment_idx]),
-                     0,
-                     static_cast<EdgeDuration>(duration_vector[segment_idx]),
-                     0,
+                     alias_cast<EdgeWeight>(weight_vector[segment_idx]),
+                     {0},
+                     alias_cast<EdgeDuration>(duration_vector[segment_idx]),
+                     {0},
                      datasource_vector[segment_idx],
                      boost::none});
     }
@@ -341,9 +340,9 @@ void annotatePath(const FacadeT &facade,
         // node to the first turn would be the same as from end to end of a segment,
         // which is obviously incorrect and not ideal...
         unpacked_path.front().weight_until_turn =
-            std::max(unpacked_path.front().weight_until_turn - source_weight, 0);
+            std::max(unpacked_path.front().weight_until_turn - source_weight, {0});
         unpacked_path.front().duration_until_turn =
-            std::max(unpacked_path.front().duration_until_turn - source_duration, 0);
+            std::max(unpacked_path.front().duration_until_turn - source_duration, {0});
     }
 }
 
@@ -410,7 +409,7 @@ template <typename FacadeT> EdgeDistance computeEdgeDistance(const FacadeT &faca
 {
     const auto geometry_index = facade.GetGeometryIndex(node_id);
 
-    EdgeDistance total_distance = 0.0;
+    EdgeDistance total_distance = {0};
 
     auto geometry_range = facade.GetUncompressedForwardGeometry(geometry_index.id);
     for (auto current = geometry_range.begin(); current < geometry_range.end() - 1; ++current)

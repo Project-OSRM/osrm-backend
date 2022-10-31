@@ -271,8 +271,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                                               EdgeWeight &weight_penalty) {
                             if (has_traffic_control_node)
                             {
-                                duration_penalty = extraction_turn.duration * SECOND_TO_DECISECOND;
-                                weight_penalty = extraction_turn.weight * weight_multiplier;
+                                duration_penalty = to_alias<EdgeDuration>(extraction_turn.duration * SECOND_TO_DECISECOND);
+                                weight_penalty = to_alias<EdgeWeight>(extraction_turn.weight * weight_multiplier);
                             }
                         };
 
@@ -290,8 +290,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 const auto forward_duration1 = fwd_edge_data1.duration;
                 const auto forward_duration2 = fwd_edge_data2.duration;
 
-                BOOST_ASSERT(0 != forward_weight1);
-                BOOST_ASSERT(0 != forward_weight2);
+                BOOST_ASSERT(EdgeWeight{0} != forward_weight1);
+                BOOST_ASSERT(EdgeWeight{0} != forward_weight2);
 
                 const auto reverse_weight1 = rev_edge_data1.weight;
                 const auto reverse_weight2 = rev_edge_data2.weight;
@@ -310,8 +310,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 BOOST_ASSERT(forward_distance2 == reverse_distance1);
 #endif
 
-                BOOST_ASSERT(0 != reverse_weight1);
-                BOOST_ASSERT(0 != reverse_weight2);
+                BOOST_ASSERT(EdgeWeight{0} != reverse_weight1);
+                BOOST_ASSERT(EdgeWeight{0} != reverse_weight2);
 
                 auto apply_e2_to_e1 = [&graph](EdgeID edge1,
                                                EdgeID edge2,
@@ -359,8 +359,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                     if (weight_penalty == INVALID_EDGE_WEIGHT &&
                         other_weight_penalty != INVALID_EDGE_WEIGHT)
                     {
-                        weight_penalty = 0;
-                        duration_penalty = 0;
+                        weight_penalty = {0};
+                        duration_penalty = {0};
                     }
                 };
                 set_dummy_penalty(forward_node_weight_penalty,

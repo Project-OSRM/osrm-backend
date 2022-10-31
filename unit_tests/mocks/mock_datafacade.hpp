@@ -47,11 +47,11 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     }
     TurnPenalty GetWeightPenaltyForEdgeID(const unsigned /* id */) const override final
     {
-        return 0;
+        return {0};
     }
     TurnPenalty GetDurationPenaltyForEdgeID(const unsigned /* id */) const override final
     {
-        return 0;
+        return {0};
     }
     std::string GetTimestamp() const override { return ""; }
     NodeForwardRange GetUncompressedForwardGeometry(const EdgeID /* id */) const override

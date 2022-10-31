@@ -24,16 +24,16 @@ inline bool addLoopWeight(const DataFacade<ch::Algorithm> &facade,
                           EdgeDuration &duration,
                           EdgeDistance &distance)
 { // Special case for CH when contractor creates a loop edge node->node
-    BOOST_ASSERT(weight < 0);
+    BOOST_ASSERT(weight < EdgeWeight{0});
 
-    const auto loop_weight = ch::getLoopWeight<false>(facade, node);
+    const auto loop_weight = ch::getLoopMetric<EdgeWeight>(facade, node);
     if (std::get<0>(loop_weight) != INVALID_EDGE_WEIGHT)
     {
         const auto new_weight_with_loop = weight + std::get<0>(loop_weight);
-        if (new_weight_with_loop >= 0)
+        if (new_weight_with_loop >= EdgeWeight{0})
         {
             weight = new_weight_with_loop;
-            auto result = ch::getLoopWeight<true>(facade, node);
+            auto result = ch::getLoopMetric<EdgeDuration>(facade, node);
             duration += std::get<0>(result);
             distance += std::get<1>(result);
             return true;
@@ -67,9 +67,9 @@ void relaxOutgoingEdges(
             const auto edge_duration = data.duration;
             const auto edge_distance = data.distance;
 
-            BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
+            BOOST_ASSERT_MSG(edge_weight > EdgeWeight{0}, "edge_weight invalid");
             const auto to_weight = heapNode.weight + edge_weight;
-            const auto to_duration = heapNode.data.duration + edge_duration;
+            const auto to_duration = heapNode.data.duration + to_alias<EdgeDuration>(edge_duration);
             const auto to_distance = heapNode.data.distance + edge_distance;
 
             const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
@@ -120,7 +120,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
 
         auto &current_weight = weights_table[row_index * number_of_targets + column_index];
 
-        EdgeDistance nulldistance = 0;
+        EdgeDistance nulldistance = {0};
 
         auto &current_duration = durations_table[row_index * number_of_targets + column_index];
         auto &current_distance =
@@ -132,7 +132,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         auto new_duration = heapNode.data.duration + target_duration;
         auto new_distance = heapNode.data.distance + target_distance;
 
-        if (new_weight < 0)
+        if (new_weight < EdgeWeight{0})
         {
             if (addLoopWeight(facade, heapNode.node, new_weight, new_duration, new_distance))
             {

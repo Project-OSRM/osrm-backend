@@ -170,8 +170,8 @@ void ContractNode(ContractorThreadData *data,
         }
 
         heap.Clear();
-        heap.Insert(source, 0, ContractorHeapData{});
-        EdgeWeight max_weight = 0;
+        heap.Insert(source, {0}, ContractorHeapData{});
+        EdgeWeight max_weight = {0};
         unsigned number_of_targets = 0;
 
         for (auto out_edge : graph.GetAdjacentEdgeRange(node))
@@ -199,7 +199,7 @@ void ContractNode(ContractorThreadData *data,
                         // CAREFUL: This only works due to the independent node-setting. This
                         // guarantees that source is not connected to another node that is
                         // contracted
-                        node_weights[source] = path_weight + 1;
+                        node_weights[source] = path_weight + EdgeWeight{1};
                         BOOST_ASSERT(stats != nullptr);
                         stats->edges_added_count += 2;
                         stats->original_edges_added_count +=
