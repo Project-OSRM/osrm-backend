@@ -82,13 +82,16 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
     {
         external_memory.external_traffic_signals.push_back({id, result_node.traffic_lights});
     }
-    // TODO: we ignore `ALL` for both stop signs and give way signs, because we cannot understand direction of the way they should be applied yet 
-    // see: https://wiki.openstreetmap.org/wiki/Tag:highway%3Dstop#Direction
-    if (result_node.give_way != TrafficFlowControlNodeDirection::NONE && result_node.give_way != TrafficFlowControlNodeDirection::ALL)
+    // TODO: we ignore `ALL` for both stop signs and give way signs, because we cannot understand
+    // direction of the way they should be applied yet see:
+    // https://wiki.openstreetmap.org/wiki/Tag:highway%3Dstop#Direction
+    if (result_node.give_way != TrafficFlowControlNodeDirection::NONE &&
+        result_node.give_way != TrafficFlowControlNodeDirection::ALL)
     {
         external_memory.external_give_ways.push_back({id, result_node.give_way});
     }
-    if (result_node.stop_sign != TrafficFlowControlNodeDirection::NONE && result_node.stop_sign != TrafficFlowControlNodeDirection::ALL)
+    if (result_node.stop_sign != TrafficFlowControlNodeDirection::NONE &&
+        result_node.stop_sign != TrafficFlowControlNodeDirection::ALL)
     {
         external_memory.external_stop_signs.push_back({id, result_node.stop_sign});
     }

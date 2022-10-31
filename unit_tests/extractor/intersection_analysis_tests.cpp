@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
     TrafficFlowControlNodes traffic_lights;
     TrafficFlowControlNodes stop_signs;
     TrafficFlowControlNodes give_way_signs;
-    
+
     std::vector<NodeBasedEdgeAnnotation> annotations{
         {EMPTY_NAMEID, 0, INAVLID_CLASS_DATA, TRAVEL_MODE_DRIVING, false},
         {EMPTY_NAMEID, 1, INAVLID_CLASS_DATA, TRAVEL_MODE_DRIVING, false}};
