@@ -71,7 +71,7 @@ Feature: Car - Handle give way signs
             | 2    | 1  |  11.1s | 11.1   | no turn with no give way |
             | 3    | 4  |  11.1s | 11.1   | no turn with give way    |
             | 4    | 3  |  11.1s | 11.1   | no turn with give way    |
-            | 5    | 6  |  13.1s | 13.1   | no turn with give way    |
+            | 5    | 6  |  12.6s | 12.6   | no turn with give way    |
             | 6    | 5  |  11.1s | 11.1   | no turn with no give way |
             | 7    | 8  |  11.1s | 11.1   | no turn with no give way |
-            | 8    | 7  |  13.1s | 13.1   | no turn with give way    |
+            | 8    | 7  |  12.6s | 12.6   | no turn with give way    |

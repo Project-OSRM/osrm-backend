@@ -31,7 +31,7 @@ function setup()
       left_hand_driving              = false,
       traffic_light_penalty          = 2,
       stop_sign_penalty              = 2,
-      give_way_sign_penalty          = 2
+      give_way_sign_penalty          = 1.5
     },
 
     default_mode              = mode.driving,
