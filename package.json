@@ -68,12 +68,6 @@
     "node-cmake": "^2.5.1",
     "rimraf": "^2.7.1"
   },
-  "bundleDependencies": [
-    "mkdirp",
-    "nan",
-    "node-cmake",
-    "rimraf"
-  ],
   "main": "lib/index.js",
   "binary": {
     "module_name": "node_osrm",
