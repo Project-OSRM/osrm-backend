@@ -95,6 +95,7 @@ jobs:
         ./scripts/format.sh && ./scripts/error_on_dirty.sh
         node ./scripts/validate_changelog.js
         npm run docs && ./scripts/error_on_dirty.sh
+        npm audit --production
 
   docker-image:
     needs: format-taginfo-docs
