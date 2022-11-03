@@ -42,6 +42,7 @@ Checks: >
     -llvm-twine-local,
     misc-*,
     -misc-argument-comment,
+    -misc-const-correctness,
     -misc-non-private-member-variables-in-classes,
     -misc-unconventional-assign-operator,
     -misc-no-recursion,

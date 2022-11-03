@@ -179,14 +179,14 @@ jobs:
             CXXCOMPILER: clang++-6.0
             CUCUMBER_TIMEOUT: 60000
 
-          - name: clang-11.0-debug-clang-tidy
+          - name: clang-15.0-debug-clang-tidy
             continue-on-error: false
             node: 16
             runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: clang-14
-            CXXCOMPILER: clang++-14
+            CCOMPILER: clang-15
+            CXXCOMPILER: clang++-15
             CUCUMBER_TIMEOUT: 60000
             ENABLE_CLANG_TIDY: ON
 
@@ -517,6 +517,12 @@ jobs:
         # clang
         if [[ "${CCOMPILER}" == "clang-6.0" ]]; then
           sudo apt-get update -y && sudo apt-get install clang++-6
+        elif [[ "${CCOMPILER}" == "clang-15" ]]; then
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo apt-get update -y && sudo apt-get install software-properties-common
+          sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-15 main'
+          sudo apt-get update -y && sudo apt-get install clang++-15 clang-tidy-15
+          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-15 100000
         fi
 
         # Linux dev packages
@@ -545,7 +551,6 @@ jobs:
         tar zxvf onetbb.tgz
         sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
         sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
-
     - name: Prepare build
       run: |
         mkdir ${OSRM_BUILD_DIR}
