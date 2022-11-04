@@ -34,20 +34,6 @@
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_pipeline.h>
 
-namespace std
-{
-template <> struct hash<std::pair<NodeID, NodeID>>
-{
-    std::size_t operator()(const std::pair<NodeID, NodeID> &mk) const noexcept
-    {
-        std::size_t seed = 0;
-        boost::hash_combine(seed, mk.first);
-        boost::hash_combine(seed, mk.second);
-        return seed;
-    }
-};
-} // namespace std
-
 namespace osrm
 {
 namespace extractor
@@ -1283,7 +1269,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 std::vector<ConditionalTurnPenalty>
 EdgeBasedGraphFactory::IndexConditionals(std::vector<Conditional> &&conditionals) const
 {
-    boost::unordered_multimap<std::pair<NodeID, NodeID>, ConditionalTurnPenalty *> index;
+    std::unordered_multimap<std::pair<NodeID, NodeID>, ConditionalTurnPenalty *> index;
 
     // build and index of all conditional restrictions
     for (auto &conditional : conditionals)

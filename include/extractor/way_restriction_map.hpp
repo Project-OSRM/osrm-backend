@@ -1,16 +1,15 @@
 #ifndef OSRM_EXTRACTOR_WAY_RESTRICTION_MAP_HPP_
 #define OSRM_EXTRACTOR_WAY_RESTRICTION_MAP_HPP_
 
-#include <utility>
-#include <vector>
-
-// to access the turn restrictions
-#include <boost/unordered_map.hpp>
-
 #include "extractor/restriction.hpp"
 #include "extractor/restriction_graph.hpp"
 #include "util/integer_range.hpp"
 #include "util/typedefs.hpp"
+
+// to access the turn restrictions
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace osrm
 {

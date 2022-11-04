@@ -3,7 +3,7 @@
 
 #include "util/typedefs.hpp"
 
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 #include <vector>
 
 namespace osrm
@@ -43,9 +43,9 @@ class TurnPathCompressor
     // via nodes are the same.
     // Similarly, we do not compress the instruction via node in a maneuver override, as we need
     // this to identify the location of the maneuver during routing path-processing.
-    boost::unordered_multimap<NodeID, TurnPath *> starts;
-    boost::unordered_multimap<NodeID, TurnPath *> vias;
-    boost::unordered_multimap<NodeID, TurnPath *> ends;
+    std::unordered_multimap<NodeID, TurnPath *> starts;
+    std::unordered_multimap<NodeID, TurnPath *> vias;
+    std::unordered_multimap<NodeID, TurnPath *> ends;
 };
 
 } // namespace extractor
