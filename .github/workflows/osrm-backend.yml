@@ -505,7 +505,8 @@ jobs:
 
     - name: Install dev dependencies
       run: |
-        brew install conan
+        python3 -m pip install conan 
+        python3 -m site
         conan --version
 
         # ccache
