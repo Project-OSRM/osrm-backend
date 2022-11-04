@@ -70,7 +70,8 @@ template <typename StringView> inline auto decompose(const StringView &lhs, cons
     const auto trim = [](StringView view) {
         // we compare suffixes based on this value, it might break UTF chars, but as long as we are
         // consistent in handling, we do not create bad results
-        std::string str(view);
+        std::string str;
+        str.reserve(view.size());
         std::transform(
             str.begin(), str.end(), str.begin(), [](unsigned char c) { return std::tolower(c); });
         auto front = str.find_first_not_of(' ');
