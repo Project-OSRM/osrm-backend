@@ -506,8 +506,8 @@ jobs:
     - name: Install dev dependencies
       run: |
         python3 -m pip install conan 
-        python3 -m site
-        conan --version
+        ls -R ~
+        python3 -m conan --version
 
         # ccache
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
