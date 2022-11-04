@@ -230,15 +230,15 @@ jobs:
           #   CCOMPILER: gcc-10
           #   CXXCOMPILER: g++-10
 
-          - name: gcc-9-release
-            continue-on-error: false
-            node: 16
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-9
-            CXXCOMPILER: g++-9
-            CXXFLAGS: -Wno-cast-function-type
+          # - name: gcc-9-release
+          #   continue-on-error: false
+          #   node: 16
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-9
+          #   CXXCOMPILER: g++-9
+          #   CXXFLAGS: -Wno-cast-function-type
 
           # - name: gcc-9-conan-release-i686
           #   continue-on-error: false
@@ -303,7 +303,7 @@ jobs:
             build_node_package: true
             continue-on-error: false
             node: 18
-            runs-on: macos-12
+            runs-on: macos-11
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: clang
@@ -505,7 +505,7 @@ jobs:
 
     - name: Install dev dependencies
       run: |
-        python3 -m pip install conan==1.53.0
+        brew install conan
         conan --version
 
         # ccache
