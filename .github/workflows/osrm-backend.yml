@@ -303,7 +303,7 @@ jobs:
             build_node_package: true
             continue-on-error: false
             node: 18
-            runs-on: macos-11
+            runs-on: macos-12
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: clang
