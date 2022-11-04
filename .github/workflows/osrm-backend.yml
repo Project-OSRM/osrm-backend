@@ -508,7 +508,7 @@ jobs:
         python3 -m pip install conan==1.53.0
         echo "/Library/Frameworks/Python.framework/Versions/3.11/bin" >> $GITHUB_PATH
         ls "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        conan --version
+       # conan --version
 
         # ccache
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
