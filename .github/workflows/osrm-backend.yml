@@ -506,8 +506,8 @@ jobs:
     - name: Install dev dependencies
       run: |
         python3 -m pip install conan==1.53.0
-        echo "${HOME}/Library/Python/3.11/bin" >> $GITHUB_PATH
-        ls "${HOME}/Library/Python/3.11/bin"
+        echo "/Library/Frameworks/Python.framework/Versions/3.11/bin" >> $GITHUB_PATH
+        ls "/Library/Frameworks/Python.framework/Versions/3.11/bin"
         conan --version
 
         # ccache
