@@ -505,8 +505,7 @@ jobs:
 
     - name: Install dev dependencies
       run: |
-        python3 -m pip install conan 
-        ls -R ~
+        python3 -m pip install conan --user
         python3 -m conan --version
 
         # ccache
