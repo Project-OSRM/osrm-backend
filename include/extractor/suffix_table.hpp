@@ -23,7 +23,7 @@ class SuffixTable final
 
     // check whether a string is part of the know suffix list
     bool isSuffix(const std::string &possible_suffix) const;
-    bool isSuffix(std::string_view possible_suffix) const;
+    bool isSuffix(std::string_view& possible_suffix) const;
 
   private:
     // Store lower-cased strings in SuffixTable and a set of StringViews for quick membership

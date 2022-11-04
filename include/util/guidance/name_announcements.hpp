@@ -27,8 +27,8 @@ namespace guidance
 // Name Change Logic
 // Used both during Extraction as well as during Post-Processing
 
-inline std::string_view longest_common_substring(const std::string_view &lhs,
-                                                 const std::string_view &rhs)
+inline std::string_view longest_common_substring(const std::string_view lhs,
+                                                 const std::string_view rhs)
 {
     if (lhs.empty() || rhs.empty())
         return "";
@@ -131,8 +131,8 @@ inline bool requiresNameAnnounced(const StringView &from_name,
     const auto name_is_contained =
         boost::starts_with(from_name, to_name) || boost::starts_with(to_name, from_name);
 
-    const auto checkForPrefixOrSuffixChange = [](const std::string_view &first,
-                                                 const std::string_view &second,
+    const auto checkForPrefixOrSuffixChange = [](const std::string_view first,
+                                                 const std::string_view second,
                                                  const SuffixTable &suffix_table) {
         std::string first_prefix, first_suffix, second_prefix, second_suffix;
         std::tie(first_prefix, first_suffix, second_prefix, second_suffix) =
@@ -203,7 +203,7 @@ inline bool requiresNameAnnounced(const std::string &from_name,
     struct NopSuffixTable final
     {
         NopSuffixTable() {}
-        bool isSuffix(const std::string_view &) const { return false; }
+        bool isSuffix(const std::string_view) const { return false; }
     } static const table;
 
     return requiresNameAnnounced(std::string_view(from_name),
