@@ -299,18 +299,18 @@ jobs:
           #   ENABLE_CONAN: ON
           #   ENABLE_APPLE_SILICON: ON
 
-          # - name: conan-macos-x64-release-node-18
-          #   build_node_package: true
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: macos-11
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang
-          #   CXXCOMPILER: clang++
-          #   CUCUMBER_TIMEOUT: 60000
-          #   ENABLE_ASSERTIONS: ON
-          #   ENABLE_CONAN: ON
+          - name: conan-macos-x64-release-node-18
+            build_node_package: true
+            continue-on-error: false
+            node: 18
+            runs-on: macos-11
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang
+            CXXCOMPILER: clang++
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_ASSERTIONS: ON
+            ENABLE_CONAN: ON
 
           # - name: conan-macos-arm64-release-node-18
           #   build_node_package: true
