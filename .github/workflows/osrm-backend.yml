@@ -507,6 +507,11 @@ jobs:
     - name: Install dev dependencies
       run: |
         python3 -m pip install conan==1.53.0
+        # workaround for issue that GitHub Actions seems to not adding it to PATH after https://github.com/actions/runner-images/pull/6499
+        # and that's why CI cannot find conan executable installed above
+        if [[ "${RUNNER_OS}" == "macOS" ]]; then
+          echo "/Library/Frameworks/Python.framework/Versions/3.11/bin" >> $GITHUB_PATH
+        fi
 
         # ccache
         if [[ "${RUNNER_OS}" == "Linux" ]]; then

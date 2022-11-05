@@ -4,6 +4,7 @@
       - CHANGED: Update actions/cache to v3. [#6420](https://github.com/Project-OSRM/osrm-backend/pull/6420)
       - REMOVED: Drop support of Node 12 & 14. [#6431](https://github.com/Project-OSRM/osrm-backend/pull/6431)
     - Misc:
+      - FIXED: Apply workaround for Conan installation issue on CI. [#6442](https://github.com/Project-OSRM/osrm-backend/pull/6442)
       - FIXED: Fix `npm audit` warnings in NPM package. [#6437](https://github.com/Project-OSRM/osrm-backend/pull/6437)
       - FIXED: Handle snapping parameter for all plugins in NodeJs bindings, but not for Route only. [#6417](https://github.com/Project-OSRM/osrm-backend/pull/6417)
       - FIXED: Fix annotations=true handling in NodeJS bindings & libosrm. [#6415](https://github.com/Project-OSRM/osrm-backend/pull/6415/)
