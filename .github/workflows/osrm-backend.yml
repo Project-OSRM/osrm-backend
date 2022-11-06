@@ -264,15 +264,6 @@ jobs:
             CXXCOMPILER: g++-8
             CXXFLAGS: -Wno-cast-function-type
 
-          - name: gcc-7-release
-            continue-on-error: false
-            node: 16
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-7
-            CXXCOMPILER: g++-7
-
           - name: conan-macos-x64-release-node-16
             build_node_package: true
             continue-on-error: false
@@ -326,16 +317,6 @@ jobs:
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
             ENABLE_APPLE_SILICON: ON
-
-          - name: gcc-7-release-shared
-            continue-on-error: false
-            node: 16
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            BUILD_SHARED_LIBS: ON
-            CCOMPILER: gcc-7
-            CXXCOMPILER: g++-7
 
           - name: node-16-conan-linux-release
             build_node_package: true
