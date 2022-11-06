@@ -645,7 +645,6 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
 
     const util::XORFastHash<> hash;
 
-    unsigned current_level = 0;
     std::size_t next_renumbering = number_of_nodes * 0.35;
     while (remaining_nodes.size() > number_of_core_nodes)
     {
@@ -761,7 +760,6 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
         remaining_nodes.resize(begin_independent_nodes_idx);
 
         p.PrintStatus(number_of_contracted_nodes);
-        ++current_level;
     }
 
     node_data.Renumber(new_to_old_node_id);
