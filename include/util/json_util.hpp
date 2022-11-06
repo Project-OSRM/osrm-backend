@@ -2,7 +2,6 @@
 #define JSON_UTIL_HPP
 
 #include "osrm/json_container.hpp"
-#include "util/container.hpp"
 
 #include <cmath>
 #include <limits>
