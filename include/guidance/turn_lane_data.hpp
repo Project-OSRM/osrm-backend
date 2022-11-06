@@ -24,7 +24,7 @@ struct TurnLaneData
     // one-to-one mapping.
     bool operator<(const TurnLaneData &other) const;
 };
-typedef std::vector<TurnLaneData> LaneDataVector;
+using LaneDataVector = std::vector<TurnLaneData>;
 
 // convertes a string given in the OSM format into a TurnLaneData vector
 OSRM_ATTR_WARN_UNUSED

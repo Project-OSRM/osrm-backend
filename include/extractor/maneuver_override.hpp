@@ -152,8 +152,8 @@ namespace std
 template <> struct hash<osrm::extractor::NodeBasedTurn>
 
 {
-    typedef osrm::extractor::NodeBasedTurn argument_type;
-    typedef std::size_t result_type;
+    using argument_type = osrm::extractor::NodeBasedTurn;
+    using result_type = std::size_t;
     result_type operator()(argument_type const &s) const noexcept
     {
 

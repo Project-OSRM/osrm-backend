@@ -16,7 +16,7 @@ namespace guidance
 // direction modifiers based on angle
 namespace DirectionModifier
 {
-typedef std::uint8_t Enum;
+using Enum = std::uint8_t;
 const constexpr Enum UTurn = 0;
 const constexpr Enum SharpRight = 1;
 const constexpr Enum Right = 2;
@@ -30,7 +30,7 @@ const constexpr Enum MaxDirectionModifier = 8;
 
 namespace TurnType
 {
-typedef std::uint8_t Enum;
+using Enum = std::uint8_t;
 const constexpr Enum Invalid = 0;                      // no valid turn instruction
 const constexpr Enum NewName = 1;                      // no turn, but name changes
 const constexpr Enum Continue = 2;                     // remain on a street

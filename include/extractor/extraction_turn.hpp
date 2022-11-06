@@ -7,6 +7,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 
 #include <cstdint>
+#include <vector>
 
 namespace osrm
 {
