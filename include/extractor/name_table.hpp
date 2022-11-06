@@ -2,10 +2,10 @@
 #define OSRM_EXTRACTOR_NAME_TABLE_HPP
 
 #include "util/indexed_data.hpp"
-#include "util/string_view.hpp"
 #include "util/typedefs.hpp"
 
 #include <string>
+#include <string_view>
 
 namespace osrm
 {
@@ -50,7 +50,7 @@ template <storage::Ownership Ownership> class NameTableImpl
 {
   public:
     using IndexedData =
-        util::detail::IndexedDataImpl<util::VariableGroupBlock<16, util::StringView>, Ownership>;
+        util::detail::IndexedDataImpl<util::VariableGroupBlock<16, std::string_view>, Ownership>;
     using ResultType = typename IndexedData::ResultType;
     using ValueType = typename IndexedData::ValueType;
 
@@ -58,7 +58,7 @@ template <storage::Ownership Ownership> class NameTableImpl
 
     NameTableImpl(IndexedData indexed_data_) : indexed_data{std::move(indexed_data_)} {}
 
-    util::StringView GetNameForID(const NameID id) const
+    std::string_view GetNameForID(const NameID id) const
     {
         if (id == INVALID_NAMEID)
             return {};
@@ -66,7 +66,7 @@ template <storage::Ownership Ownership> class NameTableImpl
         return indexed_data.at(id + 0);
     }
 
-    util::StringView GetDestinationsForID(const NameID id) const
+    std::string_view GetDestinationsForID(const NameID id) const
     {
         if (id == INVALID_NAMEID)
             return {};
@@ -74,7 +74,7 @@ template <storage::Ownership Ownership> class NameTableImpl
         return indexed_data.at(id + 1);
     }
 
-    util::StringView GetExitsForID(const NameID id) const
+    std::string_view GetExitsForID(const NameID id) const
     {
         if (id == INVALID_NAMEID)
             return {};
@@ -82,7 +82,7 @@ template <storage::Ownership Ownership> class NameTableImpl
         return indexed_data.at(id + 4);
     }
 
-    util::StringView GetRefForID(const NameID id) const
+    std::string_view GetRefForID(const NameID id) const
     {
         if (id == INVALID_NAMEID)
             return {};
@@ -91,7 +91,7 @@ template <storage::Ownership Ownership> class NameTableImpl
         return indexed_data.at(id + OFFSET_REF);
     }
 
-    util::StringView GetPronunciationForID(const NameID id) const
+    std::string_view GetPronunciationForID(const NameID id) const
     {
         if (id == INVALID_NAMEID)
             return {};
