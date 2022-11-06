@@ -10,7 +10,10 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/node_modules/node-cmake")
 
 message(STATUS "Configuring node_osrm bindings for NodeJs ${NODEJS_VERSION}")
 
+add_definitions(-DNAPI_VERSION=8)
+#message(FATAL_ERROR "HELLO ${CMAKE_CURRENT_SOURCE_DIR}/../../node_modules/node-addon-api/")
 include_directories(SYSTEM ${CMAKE_JS_INC})
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../../node_modules/node-addon-api/)
 
 add_library(node_osrm SHARED node_osrm.cpp)
 set_target_properties(node_osrm PROPERTIES PREFIX "" SUFFIX ".node")
