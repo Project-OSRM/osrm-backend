@@ -8,19 +8,20 @@ set(BINDING_DIR "${PROJECT_SOURCE_DIR}/lib/binding")
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/node_modules/node-cmake")
 
-include(NodeJS)
-nodejs_init()
-
 message(STATUS "Configuring node_osrm bindings for NodeJs ${NODEJS_VERSION}")
 
-add_nodejs_module(node_osrm node_osrm.cpp)
-set_target_properties(node_osrm PROPERTIES CXX_STANDARD 17)
-# TODO: we disable clang-tidy for this target, because it causes errors in third-party NodeJs related headers
-set_target_properties(node_osrm PROPERTIES CXX_CLANG_TIDY "")
-# TODO: we turn off some warnings for this target, because it causes errors in third-party NodeJs related headers
-target_no_warning(node_osrm suggest-destructor-override)
-target_no_warning(node_osrm suggest-override)
+include_directories(SYSTEM ${CMAKE_JS_INC})
 
+add_library(node_osrm SHARED node_osrm.cpp)
+set_target_properties(node_osrm PROPERTIES PREFIX "" SUFFIX ".node")
+target_link_libraries(node_osrm ${CMAKE_JS_LIB})
+
+if(MSVC AND CMAKE_JS_NODELIB_DEF AND CMAKE_JS_NODELIB_TARGET)
+  # Generate node.lib
+  execute_process(COMMAND ${CMAKE_AR} /def:${CMAKE_JS_NODELIB_DEF} /out:${CMAKE_JS_NODELIB_TARGET} ${CMAKE_STATIC_LINKER_FLAGS})
+endif()
+
+set_target_properties(node_osrm PROPERTIES CXX_STANDARD 17)
 target_link_libraries(node_osrm osrm)
 
 # node_osrm artifacts in ${BINDING_DIR} to depend targets on
