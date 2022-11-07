@@ -22,6 +22,7 @@ private:
     Napi::Value match(const Napi::CallbackInfo& info);
        Napi::Value trip(const Napi::CallbackInfo& info);
    
+   std::shared_ptr<osrm::OSRM> this_;
 //   Napi::Value PlusOne(const Napi::CallbackInfo& info);
 //   Napi::Value Multiply(const Napi::CallbackInfo& info);
 
