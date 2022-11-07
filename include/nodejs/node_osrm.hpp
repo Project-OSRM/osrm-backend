@@ -14,6 +14,7 @@ class Engine : public Napi::ObjectWrap<Engine> {
   static Napi::Object Init(Napi::Env env, Napi::Object exports);
   Engine(const Napi::CallbackInfo& info);
 
+ std::shared_ptr<osrm::OSRM> this_;
 private:
    Napi::Value route(const Napi::CallbackInfo& info);
    Napi::Value nearest(const Napi::CallbackInfo& info);
@@ -22,7 +23,6 @@ private:
     Napi::Value match(const Napi::CallbackInfo& info);
        Napi::Value trip(const Napi::CallbackInfo& info);
    
-   std::shared_ptr<osrm::OSRM> this_;
 //   Napi::Value PlusOne(const Napi::CallbackInfo& info);
 //   Napi::Value Multiply(const Napi::CallbackInfo& info);
 
