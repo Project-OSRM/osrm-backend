@@ -268,7 +268,6 @@ function setup()
 
     -- List only exceptions
     maxspeed_table = {
-      ["at:urban"] = 40,
       ["at:rural"] = 100,
       ["at:trunk"] = 100,
       ["be:motorway"] = 120,
