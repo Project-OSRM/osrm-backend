@@ -11,14 +11,17 @@ namespace node_osrm
 
 struct V8Renderer
 {
-    explicit V8Renderer(const Napi::Env& env, Napi::Value &out) : env(env), out(out) {}
+    explicit V8Renderer(const Napi::Env &env, Napi::Value &out) : env(env), out(out) {}
 
     void operator()(const osrm::json::String &string) const
     {
         out = Napi::String::New(env, string.value);
     }
 
-    void operator()(const osrm::json::Number &number) const { out = Napi::Number::New(env, number.value); }
+    void operator()(const osrm::json::Number &number) const
+    {
+        out = Napi::Number::New(env, number.value);
+    }
 
     void operator()(const osrm::json::Object &object) const
     {
@@ -51,11 +54,11 @@ struct V8Renderer
     void operator()(const osrm::json::Null &) const { out = env.Null(); }
 
   private:
-    const Napi::Env& env;
+    const Napi::Env &env;
     Napi::Value &out;
 };
 
-inline void renderToV8(const Napi::Env& env, Napi::Value &out, const osrm::json::Object &object)
+inline void renderToV8(const Napi::Env &env, Napi::Value &out, const osrm::json::Object &object)
 {
     V8Renderer renderer(env, out);
     renderer(object);

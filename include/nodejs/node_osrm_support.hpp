@@ -1,7 +1,6 @@
 #ifndef OSRM_BINDINGS_NODE_SUPPORT_HPP
 #define OSRM_BINDINGS_NODE_SUPPORT_HPP
 
-#include <napi.h>
 #include "nodejs/json_v8_renderer.hpp"
 #include "engine/api/flatbuffers/fbresult_generated.h"
 #include "osrm/approach.hpp"
@@ -19,6 +18,7 @@
 #include "osrm/tile_parameters.hpp"
 #include "osrm/trip_parameters.hpp"
 #include "util/json_renderer.hpp"
+#include <napi.h>
 
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
@@ -53,14 +53,14 @@ struct PluginParameters
 
 using ObjectOrString = typename mapbox::util::variant<osrm::json::Object, std::string>;
 
-template <typename ResultT> inline Napi::Value render(const Napi::Env& env, const ResultT &result);
+template <typename ResultT> inline Napi::Value render(const Napi::Env &env, const ResultT &result);
 
-template <> Napi::Value inline render(const Napi::Env& env, const std::string &result)
+template <> Napi::Value inline render(const Napi::Env &env, const std::string &result)
 {
     return Napi::Buffer<char>::Copy(env, result.data(), result.size());
 }
 
-template <> Napi::Value inline render(const Napi::Env& env, const ObjectOrString &result)
+template <> Napi::Value inline render(const Napi::Env &env, const ObjectOrString &result)
 {
     if (result.is<osrm::json::Object>())
     {
@@ -72,19 +72,20 @@ template <> Napi::Value inline render(const Napi::Env& env, const ObjectOrString
     else
     {
         // Return the string object as a node Buffer
-        return Napi::Buffer<char>::Copy(env, result.get<std::string>().data(), result.get<std::string>().size());
+        return Napi::Buffer<char>::Copy(
+            env, result.get<std::string>().data(), result.get<std::string>().size());
     }
 }
 
 inline bool IsUnsignedInteger(const Napi::Value &value)
 {
-    if (!value.IsNumber()) {
+    if (!value.IsNumber())
+    {
         return false;
     }
     const auto doubleValue = value.ToNumber().DoubleValue();
     return doubleValue >= 0.0 && std::floor(doubleValue) == doubleValue;
 }
-
 
 inline void ParseResult(const osrm::Status &result_status, osrm::json::Object &result)
 {
@@ -119,17 +120,15 @@ inline void ParseResult(const osrm::Status &result_status,
     }
 }
 
-inline void ThrowError(const Napi::Env& env, const char* message)
+inline void ThrowError(const Napi::Env &env, const char *message)
 {
     Napi::Error::New(env, message).ThrowAsJavaScriptException();
 }
 
-
-inline void ThrowTypeError(const Napi::Env& env, const char* message)
+inline void ThrowTypeError(const Napi::Env &env, const char *message)
 {
     Napi::TypeError::New(env, message).ThrowAsJavaScriptException();
 }
-
 
 inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
 {
@@ -150,8 +149,7 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
 
     if (args[0].IsString())
     {
-        engine_config->storage_config =
-            osrm::StorageConfig(args[0].ToString().Utf8Value());
+        engine_config->storage_config = osrm::StorageConfig(args[0].ToString().Utf8Value());
         engine_config->use_shared_memory = false;
         return engine_config;
     }
@@ -172,8 +170,7 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
     if (memory_file.IsEmpty())
         return engine_config_ptr();
 
-    auto shared_memory =
-        params.Get("shared_memory");
+    auto shared_memory = params.Get("shared_memory");
     if (shared_memory.IsEmpty())
         return engine_config_ptr();
 
@@ -192,8 +189,7 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
         engine_config->memory_file = memory_file.ToString().Utf8Value();
     }
 
-    auto dataset_name =
-        params.Get("dataset_name");
+    auto dataset_name = params.Get("dataset_name");
     if (dataset_name.IsEmpty())
         return engine_config_ptr();
     if (!dataset_name.IsUndefined())
@@ -211,8 +207,7 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
 
     if (!path.IsUndefined())
     {
-        engine_config->storage_config =
-            osrm::StorageConfig(path.ToString().Utf8Value());
+        engine_config->storage_config = osrm::StorageConfig(path.ToString().Utf8Value());
 
         engine_config->use_shared_memory = false;
     }
@@ -243,8 +238,9 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
 
     if (path.IsUndefined() && !engine_config->use_shared_memory)
     {
-        ThrowError(args.Env(), "Shared_memory must be enabled if no path is "
-                        "specified");
+        ThrowError(args.Env(),
+                   "Shared_memory must be enabled if no path is "
+                   "specified");
         return engine_config_ptr();
     }
 
@@ -275,26 +271,20 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
     }
     else if (!algorithm.IsUndefined())
     {
-        ThrowError(args.Env(), "algorithm option must be a string and one of 'CH', 'CoreCH', or 'MLD'.");
+        ThrowError(args.Env(),
+                   "algorithm option must be a string and one of 'CH', 'CoreCH', or 'MLD'.");
         return engine_config_ptr();
     }
 
     // Set EngineConfig system-wide limits on construction, if requested
 
-    auto max_locations_trip =
-        params.Get("max_locations_trip");
-    auto max_locations_viaroute =
-        params.Get("max_locations_viaroute");
-    auto max_locations_distance_table =
-        params.Get("max_locations_distance_table");
-    auto max_locations_map_matching =
-        params.Get("max_locations_map_matching");
-    auto max_results_nearest =
-        params.Get("max_results_nearest");
-    auto max_alternatives =
-        params.Get("max_alternatives");
-    auto max_radius_map_matching =
-        params.Get("max_radius_map_matching");
+    auto max_locations_trip = params.Get("max_locations_trip");
+    auto max_locations_viaroute = params.Get("max_locations_viaroute");
+    auto max_locations_distance_table = params.Get("max_locations_distance_table");
+    auto max_locations_map_matching = params.Get("max_locations_map_matching");
+    auto max_results_nearest = params.Get("max_results_nearest");
+    auto max_alternatives = params.Get("max_alternatives");
+    auto max_radius_map_matching = params.Get("max_radius_map_matching");
 
     if (!max_locations_trip.IsUndefined() && !max_locations_trip.IsNumber())
     {
@@ -332,9 +322,11 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
     if (max_locations_viaroute.IsNumber())
         engine_config->max_locations_viaroute = max_locations_viaroute.ToNumber().Int32Value();
     if (max_locations_distance_table.IsNumber())
-        engine_config->max_locations_distance_table = max_locations_distance_table.ToNumber().Int32Value();
+        engine_config->max_locations_distance_table =
+            max_locations_distance_table.ToNumber().Int32Value();
     if (max_locations_map_matching.IsNumber())
-        engine_config->max_locations_map_matching = max_locations_map_matching.ToNumber().Int32Value();
+        engine_config->max_locations_map_matching =
+            max_locations_map_matching.ToNumber().Int32Value();
     if (max_results_nearest.IsNumber())
         engine_config->max_results_nearest = max_results_nearest.ToNumber().Int32Value();
     if (max_alternatives.IsNumber())
@@ -374,7 +366,8 @@ parseCoordinateArray(const Napi::Array &coordinates_array)
         if (!coordinate_pair.Get(static_cast<uint32_t>(0)).IsNumber() ||
             !coordinate_pair.Get(static_cast<uint32_t>(1)).IsNumber())
         {
-            ThrowError(coordinates_array.Env(), "Each member of a coordinate pair must be a number");
+            ThrowError(coordinates_array.Env(),
+                       "Each member of a coordinate pair must be a number");
             return resulting_coordinates;
         }
 
@@ -389,8 +382,9 @@ parseCoordinateArray(const Napi::Array &coordinates_array)
 
         if (lon > 180 || lon < -180 || lat > 90 || lat < -90)
         {
-            ThrowError(coordinates_array.Env(), "Lng/Lat coordinates must be within world bounds "
-                            "(-180 < lng < 180, -90 < lat < 90)");
+            ThrowError(coordinates_array.Env(),
+                       "Lng/Lat coordinates must be within world bounds "
+                       "(-180 < lng < 180, -90 < lat < 90)");
             return resulting_coordinates;
         }
 
@@ -481,7 +475,8 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
 
         if (approaches_array.Length() != params->coordinates.size())
         {
-            ThrowError(args.Env(), "Approaches array must have the same length as coordinates array");
+            ThrowError(args.Env(),
+                       "Approaches array must have the same length as coordinates array");
             return false;
         }
 
@@ -508,7 +503,8 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
                 }
                 else
                 {
-                    ThrowError(args.Env(), "'approaches' param must be one of [curb, unrestricted]");
+                    ThrowError(args.Env(),
+                               "'approaches' param must be one of [curb, unrestricted]");
                     return false;
                 }
             }
@@ -522,8 +518,7 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
 
     if (obj.Has("bearings"))
     {
-        Napi::Value bearings =
-            obj.Get("bearings");
+        Napi::Value bearings = obj.Get("bearings");
         if (bearings.IsEmpty())
             return false;
 
@@ -563,8 +558,10 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
                         return false;
                     }
 
-                    const auto bearing = bearing_pair.Get(static_cast<uint32_t>(0)).ToNumber().Int32Value();
-                    const auto range =  bearing_pair.Get(static_cast<uint32_t>(1)).ToNumber().Int32Value();
+                    const auto bearing =
+                        bearing_pair.Get(static_cast<uint32_t>(0)).ToNumber().Int32Value();
+                    const auto range =
+                        bearing_pair.Get(static_cast<uint32_t>(1)).ToNumber().Int32Value();
 
                     if (bearing < 0 || bearing > 360 || range < 0 || range > 180)
                     {
@@ -591,8 +588,7 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
 
     if (obj.Has("hints"))
     {
-        Napi::Value hints =
-            obj.Get("hints");
+        Napi::Value hints = obj.Get("hints");
         if (hints.IsEmpty())
             return false;
 
@@ -624,7 +620,8 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
                     return false;
                 }
 
-                params->hints.emplace_back(osrm::engine::Hint::FromBase64(hint.ToString().Utf8Value()));
+                params->hints.emplace_back(
+                    osrm::engine::Hint::FromBase64(hint.ToString().Utf8Value()));
             }
             else if (hint.IsNull())
             {
@@ -640,8 +637,7 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
 
     if (obj.Has("radiuses"))
     {
-        Napi::Value radiuses =
-            obj.Get("radiuses");
+        Napi::Value radiuses = obj.Get("radiuses");
         if (radiuses.IsEmpty())
             return false;
 
@@ -683,8 +679,7 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
 
     if (obj.Has("generate_hints"))
     {
-        Napi::Value generate_hints =
-            obj.Get("generate_hints");
+        Napi::Value generate_hints = obj.Get("generate_hints");
         if (generate_hints.IsEmpty())
             return false;
 
@@ -699,8 +694,7 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
 
     if (obj.Has("skip_waypoints"))
     {
-        Napi::Value skip_waypoints =
-            obj.Get("skip_waypoints");
+        Napi::Value skip_waypoints = obj.Get("skip_waypoints");
         if (skip_waypoints.IsEmpty())
             return false;
 
@@ -715,8 +709,7 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
 
     if (obj.Has("exclude"))
     {
-        Napi::Value exclude =
-            obj.Get("exclude");
+        Napi::Value exclude = obj.Get("exclude");
         if (exclude.IsEmpty())
             return false;
 
@@ -749,8 +742,7 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
 
     if (obj.Has("format"))
     {
-        Napi::Value format =
-            obj.Get("format");
+        Napi::Value format = obj.Get("format");
         if (format.IsEmpty())
         {
             return false;
@@ -899,8 +891,7 @@ inline bool parseCommonParameters(const Napi::Object &obj, ParamType &params)
 
     if (obj.Has("geometries"))
     {
-        Napi::Value geometries =
-            obj.Get("geometries");
+        Napi::Value geometries = obj.Get("geometries");
         if (geometries.IsEmpty())
             return false;
 
@@ -925,15 +916,15 @@ inline bool parseCommonParameters(const Napi::Object &obj, ParamType &params)
         }
         else
         {
-            ThrowError(obj.Env(), "'geometries' param must be one of [polyline, polyline6, geojson]");
+            ThrowError(obj.Env(),
+                       "'geometries' param must be one of [polyline, polyline6, geojson]");
             return false;
         }
     }
 
     if (obj.Has("overview"))
     {
-        Napi::Value overview =
-            obj.Get("overview");
+        Napi::Value overview = obj.Get("overview");
         if (overview.IsEmpty())
             return false;
 
@@ -967,7 +958,6 @@ inline bool parseCommonParameters(const Napi::Object &obj, ParamType &params)
     return true;
 }
 
-
 inline PluginParameters argumentsToPluginParameters(
     const Napi::CallbackInfo &args,
     const boost::optional<osrm::engine::api::BaseParameters::OutputFormatType> &output_format = {})
@@ -980,8 +970,7 @@ inline PluginParameters argumentsToPluginParameters(
     Napi::Object obj = args[1].As<Napi::Object>();
     if (obj.Has("format"))
     {
-        Napi::Value format =
-            obj.Get("format");
+        Napi::Value format = obj.Get("format");
         if (format.IsEmpty())
         {
             return {};
@@ -1013,7 +1002,8 @@ inline PluginParameters argumentsToPluginParameters(
             if (output_format &&
                 output_format != osrm::engine::api::BaseParameters::OutputFormatType::JSON)
             {
-                ThrowError(args.Env(), "Deprecated `json_buffer` can only be used with JSON format");
+                ThrowError(args.Env(),
+                           "Deprecated `json_buffer` can only be used with JSON format");
             }
             return {true};
         }
@@ -1028,9 +1018,8 @@ inline PluginParameters argumentsToPluginParameters(
     return {output_format == osrm::engine::api::BaseParameters::OutputFormatType::FLATBUFFERS};
 }
 
-inline route_parameters_ptr
-argumentsToRouteParameter(const Napi::CallbackInfo &args,
-                          bool requires_multiple_coordinates)
+inline route_parameters_ptr argumentsToRouteParameter(const Napi::CallbackInfo &args,
+                                                      bool requires_multiple_coordinates)
 {
     route_parameters_ptr params = std::make_unique<osrm::RouteParameters>();
     bool has_base_params = argumentsToParameter(args, params, requires_multiple_coordinates);
@@ -1081,15 +1070,15 @@ argumentsToRouteParameter(const Napi::CallbackInfo &args,
 
     if (obj.Has("waypoints"))
     {
-        Napi::Value waypoints =
-            obj.Get("waypoints");
+        Napi::Value waypoints = obj.Get("waypoints");
         if (waypoints.IsEmpty())
             return route_parameters_ptr();
 
         // must be array
         if (!waypoints.IsArray())
         {
-            ThrowError(args.Env(), 
+            ThrowError(
+                args.Env(),
                 "Waypoints must be an array of integers corresponding to the input coordinates.");
             return route_parameters_ptr();
         }
@@ -1104,12 +1093,15 @@ argumentsToRouteParameter(const Napi::CallbackInfo &args,
         auto coords_size = params->coordinates.size();
         auto waypoints_array_size = waypoints_array.Length();
 
-        const auto first_index = waypoints_array.Get(static_cast<uint32_t>(0)).ToNumber().Uint32Value();
-        const auto last_index = waypoints_array.Get(waypoints_array_size - 1).ToNumber().Uint32Value();
+        const auto first_index =
+            waypoints_array.Get(static_cast<uint32_t>(0)).ToNumber().Uint32Value();
+        const auto last_index =
+            waypoints_array.Get(waypoints_array_size - 1).ToNumber().Uint32Value();
         if (first_index != 0 || last_index != coords_size - 1)
         {
-            ThrowError(args.Env(), "First and last waypoints values must correspond to first and last "
-                            "coordinate indices");
+            ThrowError(args.Env(),
+                       "First and last waypoints values must correspond to first and last "
+                       "coordinate indices");
             return route_parameters_ptr();
         }
 
@@ -1126,7 +1118,8 @@ argumentsToRouteParameter(const Napi::CallbackInfo &args,
             const auto index = waypoint_value.ToNumber().Uint32Value();
             if (index >= coords_size)
             {
-                ThrowError(args.Env(), "Waypoints must correspond with the index of an input coordinate");
+                ThrowError(args.Env(),
+                           "Waypoints must correspond with the index of an input coordinate");
                 return route_parameters_ptr();
             }
             params->waypoints.emplace_back(index);
@@ -1154,9 +1147,8 @@ argumentsToRouteParameter(const Napi::CallbackInfo &args,
     return params;
 }
 
-
-inline tile_parameters_ptr
-argumentsToTileParameters(const Napi::CallbackInfo &args, bool /*unused*/)
+inline tile_parameters_ptr argumentsToTileParameters(const Napi::CallbackInfo &args,
+                                                     bool /*unused*/)
 {
     tile_parameters_ptr params = std::make_unique<osrm::TileParameters>();
 
@@ -1188,17 +1180,17 @@ argumentsToTileParameters(const Napi::CallbackInfo &args, bool /*unused*/)
 
     if (!IsUnsignedInteger(x) && !x.IsUndefined())
     {
-       ThrowError(args.Env(), "Tile x coordinate must be unsigned interger");
+        ThrowError(args.Env(), "Tile x coordinate must be unsigned interger");
         return tile_parameters_ptr();
     }
     if (!IsUnsignedInteger(y) && !y.IsUndefined())
     {
-       ThrowError(args.Env(), "Tile y coordinate must be unsigned interger");
+        ThrowError(args.Env(), "Tile y coordinate must be unsigned interger");
         return tile_parameters_ptr();
     }
     if (!IsUnsignedInteger(z) && !z.IsUndefined())
     {
-       ThrowError(args.Env(), "Tile z coordinate must be unsigned interger");
+        ThrowError(args.Env(), "Tile z coordinate must be unsigned interger");
         return tile_parameters_ptr();
     }
 
@@ -1208,17 +1200,15 @@ argumentsToTileParameters(const Napi::CallbackInfo &args, bool /*unused*/)
 
     if (!params->IsValid())
     {
-       ThrowError(args.Env(), "Invalid tile coordinates");
+        ThrowError(args.Env(), "Invalid tile coordinates");
         return tile_parameters_ptr();
     }
 
     return params;
 }
 
-
-inline nearest_parameters_ptr
-argumentsToNearestParameter(const Napi::CallbackInfo &args,
-                            bool requires_multiple_coordinates)
+inline nearest_parameters_ptr argumentsToNearestParameter(const Napi::CallbackInfo &args,
+                                                          bool requires_multiple_coordinates)
 {
     nearest_parameters_ptr params = std::make_unique<osrm::NearestParameters>();
     bool has_base_params = argumentsToParameter(args, params, requires_multiple_coordinates);
@@ -1231,8 +1221,7 @@ argumentsToNearestParameter(const Napi::CallbackInfo &args,
 
     if (obj.Has("number"))
     {
-        Napi::Value number =
-            obj.Get("number");
+        Napi::Value number = obj.Get("number");
 
         if (!IsUnsignedInteger(number))
         {
@@ -1256,10 +1245,8 @@ argumentsToNearestParameter(const Napi::CallbackInfo &args,
     return params;
 }
 
-
-inline table_parameters_ptr
-argumentsToTableParameter(const Napi::CallbackInfo &args,
-                          bool requires_multiple_coordinates)
+inline table_parameters_ptr argumentsToTableParameter(const Napi::CallbackInfo &args,
+                                                      bool requires_multiple_coordinates)
 {
     table_parameters_ptr params = std::make_unique<osrm::TableParameters>();
     bool has_base_params = argumentsToParameter(args, params, requires_multiple_coordinates);
@@ -1294,7 +1281,8 @@ argumentsToTableParameter(const Napi::CallbackInfo &args,
                 size_t source_value = source.ToNumber().Uint32Value();
                 if (source_value >= params->coordinates.size())
                 {
-                    ThrowError(args.Env(), "Source indices must be less than the number of coordinates");
+                    ThrowError(args.Env(),
+                               "Source indices must be less than the number of coordinates");
                     return table_parameters_ptr();
                 }
 
@@ -1310,7 +1298,7 @@ argumentsToTableParameter(const Napi::CallbackInfo &args,
 
     if (obj.Has("destinations"))
     {
-        Napi::Value destinations =obj.Get("destinations");
+        Napi::Value destinations = obj.Get("destinations");
         if (destinations.IsEmpty())
             return table_parameters_ptr();
 
@@ -1332,8 +1320,9 @@ argumentsToTableParameter(const Napi::CallbackInfo &args,
                 size_t destination_value = destination.ToNumber().Uint32Value();
                 if (destination_value >= params->coordinates.size())
                 {
-                    ThrowError(args.Env(), "Destination indices must be less than the number "
-                                    "of coordinates");
+                    ThrowError(args.Env(),
+                               "Destination indices must be less than the number "
+                               "of coordinates");
                     return table_parameters_ptr();
                 }
 
@@ -1349,14 +1338,14 @@ argumentsToTableParameter(const Napi::CallbackInfo &args,
 
     if (obj.Has("annotations"))
     {
-        Napi::Value annotations =obj.Get("annotations");
+        Napi::Value annotations = obj.Get("annotations");
         if (annotations.IsEmpty())
             return table_parameters_ptr();
 
         if (!annotations.IsArray())
         {
-            ThrowError(args.Env(), 
-                "Annotations must an array containing 'duration' or 'distance', or both");
+            ThrowError(args.Env(),
+                       "Annotations must an array containing 'duration' or 'distance', or both");
             return table_parameters_ptr();
         }
 
@@ -1405,7 +1394,7 @@ argumentsToTableParameter(const Napi::CallbackInfo &args,
 
     if (obj.Has("fallback_coordinate"))
     {
-        auto fallback_coordinate =obj.Get("fallback_coordinate");
+        auto fallback_coordinate = obj.Get("fallback_coordinate");
 
         if (!fallback_coordinate.IsString())
         {
@@ -1452,9 +1441,8 @@ argumentsToTableParameter(const Napi::CallbackInfo &args,
     return params;
 }
 
-inline trip_parameters_ptr
-argumentsToTripParameter(const Napi::CallbackInfo &args,
-                         bool requires_multiple_coordinates)
+inline trip_parameters_ptr argumentsToTripParameter(const Napi::CallbackInfo &args,
+                                                    bool requires_multiple_coordinates)
 {
     trip_parameters_ptr params = std::make_unique<osrm::TripParameters>();
     bool has_base_params = argumentsToParameter(args, params, requires_multiple_coordinates);
@@ -1477,25 +1465,24 @@ argumentsToTripParameter(const Napi::CallbackInfo &args,
 
         if (roundtrip.IsBoolean())
         {
-            params->roundtrip =roundtrip.ToBoolean().Value();
+            params->roundtrip = roundtrip.ToBoolean().Value();
         }
         else
         {
-           ThrowError(args.Env(), "'roundtrip' param must be a boolean");
+            ThrowError(args.Env(), "'roundtrip' param must be a boolean");
             return trip_parameters_ptr();
         }
     }
 
     if (obj.Has("source"))
     {
-        Napi::Value source =
-            obj.Get("source");
+        Napi::Value source = obj.Get("source");
         if (source.IsEmpty())
             return trip_parameters_ptr();
 
         if (!source.IsString())
         {
-           ThrowError(args.Env(), "Source must be a string: [any, first]");
+            ThrowError(args.Env(), "Source must be a string: [any, first]");
             return trip_parameters_ptr();
         }
 
@@ -1511,21 +1498,20 @@ argumentsToTripParameter(const Napi::CallbackInfo &args,
         }
         else
         {
-           ThrowError(args.Env(), "'source' param must be one of [any, first]");
+            ThrowError(args.Env(), "'source' param must be one of [any, first]");
             return trip_parameters_ptr();
         }
     }
 
     if (obj.Has("destination"))
     {
-        Napi::Value destination =
-            obj.Get("destination");
+        Napi::Value destination = obj.Get("destination");
         if (destination.IsEmpty())
             return trip_parameters_ptr();
 
         if (!destination.IsString())
         {
-           ThrowError(args.Env(), "Destination must be a string: [any, last]");
+            ThrowError(args.Env(), "Destination must be a string: [any, last]");
             return trip_parameters_ptr();
         }
 
@@ -1541,7 +1527,7 @@ argumentsToTripParameter(const Napi::CallbackInfo &args,
         }
         else
         {
-           ThrowError(args.Env(), "'destination' param must be one of [any, last]");
+            ThrowError(args.Env(), "'destination' param must be one of [any, last]");
             return trip_parameters_ptr();
         }
     }
@@ -1549,9 +1535,8 @@ argumentsToTripParameter(const Napi::CallbackInfo &args,
     return params;
 }
 
-inline match_parameters_ptr
-argumentsToMatchParameter(const Napi::CallbackInfo &args,
-                          bool requires_multiple_coordinates)
+inline match_parameters_ptr argumentsToMatchParameter(const Napi::CallbackInfo &args,
+                                                      bool requires_multiple_coordinates)
 {
     match_parameters_ptr params = std::make_unique<osrm::MatchParameters>();
     bool has_base_params = argumentsToParameter(args, params, requires_multiple_coordinates);
@@ -1562,14 +1547,13 @@ argumentsToMatchParameter(const Napi::CallbackInfo &args,
 
     if (obj.Has("timestamps"))
     {
-        Napi::Value timestamps =
-            obj.Get("timestamps");
+        Napi::Value timestamps = obj.Get("timestamps");
         if (timestamps.IsEmpty())
             return match_parameters_ptr();
 
         if (!timestamps.IsArray())
         {
-           ThrowError(args.Env(), "Timestamps must be an array of integers (or undefined)");
+            ThrowError(args.Env(), "Timestamps must be an array of integers (or undefined)");
             return match_parameters_ptr();
         }
 
@@ -1577,8 +1561,9 @@ argumentsToMatchParameter(const Napi::CallbackInfo &args,
 
         if (params->coordinates.size() != timestamps_array.Length())
         {
-           ThrowError(args.Env(), "Timestamp array must have the same size as the coordinates "
-                            "array");
+            ThrowError(args.Env(),
+                       "Timestamp array must have the same size as the coordinates "
+                       "array");
             return match_parameters_ptr();
         }
 
@@ -1590,7 +1575,7 @@ argumentsToMatchParameter(const Napi::CallbackInfo &args,
 
             if (!timestamp.IsNumber())
             {
-               ThrowError(args.Env(), "Timestamps array items must be numbers");
+                ThrowError(args.Env(), "Timestamps array items must be numbers");
                 return match_parameters_ptr();
             }
             params->timestamps.emplace_back(timestamp.ToNumber().Int64Value());
@@ -1599,14 +1584,13 @@ argumentsToMatchParameter(const Napi::CallbackInfo &args,
 
     if (obj.Has("gaps"))
     {
-        Napi::Value gaps =
-            obj.Get("gaps");
+        Napi::Value gaps = obj.Get("gaps");
         if (gaps.IsEmpty())
             return match_parameters_ptr();
 
         if (!gaps.IsString())
         {
-           ThrowError(args.Env(), "Gaps must be a string: [split, ignore]");
+            ThrowError(args.Env(), "Gaps must be a string: [split, ignore]");
             return match_parameters_ptr();
         }
 
@@ -1622,21 +1606,20 @@ argumentsToMatchParameter(const Napi::CallbackInfo &args,
         }
         else
         {
-           ThrowError(args.Env(), "'gaps' param must be one of [split, ignore]");
+            ThrowError(args.Env(), "'gaps' param must be one of [split, ignore]");
             return match_parameters_ptr();
         }
     }
 
     if (obj.Has("tidy"))
     {
-        Napi::Value tidy =
-            obj.Get("tidy");
+        Napi::Value tidy = obj.Get("tidy");
         if (tidy.IsEmpty())
             return match_parameters_ptr();
 
         if (!tidy.IsBoolean())
         {
-           ThrowError(args.Env(), "tidy must be of type Boolean");
+            ThrowError(args.Env(), "tidy must be of type Boolean");
             return match_parameters_ptr();
         }
 
@@ -1645,15 +1628,15 @@ argumentsToMatchParameter(const Napi::CallbackInfo &args,
 
     if (obj.Has("waypoints"))
     {
-        Napi::Value waypoints =
-            obj.Get("waypoints");
+        Napi::Value waypoints = obj.Get("waypoints");
         if (waypoints.IsEmpty())
             return match_parameters_ptr();
 
         // must be array
         if (!waypoints.IsArray())
         {
-           ThrowError(args.Env(), 
+            ThrowError(
+                args.Env(),
                 "Waypoints must be an array of integers corresponding to the input coordinates.");
             return match_parameters_ptr();
         }
@@ -1662,18 +1645,21 @@ argumentsToMatchParameter(const Napi::CallbackInfo &args,
         // must have at least two elements
         if (waypoints_array.Length() < 2)
         {
-           ThrowError(args.Env(), "At least two waypoints must be provided");
+            ThrowError(args.Env(), "At least two waypoints must be provided");
             return match_parameters_ptr();
         }
         auto coords_size = params->coordinates.size();
         auto waypoints_array_size = waypoints_array.Length();
 
-        const auto first_index = waypoints_array.Get(static_cast<uint32_t>(0)).ToNumber().Uint32Value();
-        const auto last_index = waypoints_array.Get(waypoints_array_size - 1).ToNumber().Uint32Value();
+        const auto first_index =
+            waypoints_array.Get(static_cast<uint32_t>(0)).ToNumber().Uint32Value();
+        const auto last_index =
+            waypoints_array.Get(waypoints_array_size - 1).ToNumber().Uint32Value();
         if (first_index != 0 || last_index != coords_size - 1)
         {
-           ThrowError(args.Env(), "First and last waypoints values must correspond to first and last "
-                            "coordinate indices");
+            ThrowError(args.Env(),
+                       "First and last waypoints values must correspond to first and last "
+                       "coordinate indices");
             return match_parameters_ptr();
         }
 
@@ -1683,14 +1669,15 @@ argumentsToMatchParameter(const Napi::CallbackInfo &args,
             // all elements must be numbers
             if (!waypoint_value.IsNumber())
             {
-               ThrowError(args.Env(), "Waypoint values must be an array of integers");
+                ThrowError(args.Env(), "Waypoint values must be an array of integers");
                 return match_parameters_ptr();
             }
             // check that the waypoint index corresponds with an inpute coordinate
             const auto index = waypoint_value.ToNumber().Uint32Value();
             if (index >= coords_size)
             {
-               ThrowError(args.Env(), "Waypoints must correspond with the index of an input coordinate");
+                ThrowError(args.Env(),
+                           "Waypoints must correspond with the index of an input coordinate");
                 return match_parameters_ptr();
             }
             params->waypoints.emplace_back(index);

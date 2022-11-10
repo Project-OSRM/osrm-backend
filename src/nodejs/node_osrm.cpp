@@ -22,47 +22,48 @@
 
 #include "util/json_renderer.hpp"
 
-namespace node_osrm {
-Napi::Object Engine::Init(Napi::Env env, Napi::Object exports) {
-  Napi::Function func =
-      DefineClass(env,
-                  "OSRM",
-                  {
-                    InstanceMethod("route", &Engine::route),
-                    InstanceMethod("nearest", &Engine::nearest),
-                    InstanceMethod("table", &Engine::table),
-                    InstanceMethod("tile", &Engine::tile),
-                    InstanceMethod("match", &Engine::match),
-                    InstanceMethod("trip", &Engine::trip),
-                    });
+namespace node_osrm
+{
+Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
+{
+    Napi::Function func = DefineClass(env,
+                                      "OSRM",
+                                      {
+                                          InstanceMethod("route", &Engine::route),
+                                          InstanceMethod("nearest", &Engine::nearest),
+                                          InstanceMethod("table", &Engine::table),
+                                          InstanceMethod("tile", &Engine::tile),
+                                          InstanceMethod("match", &Engine::match),
+                                          InstanceMethod("trip", &Engine::trip),
+                                      });
 
-  Napi::FunctionReference* constructor = new Napi::FunctionReference();
-  *constructor = Napi::Persistent(func);
-  env.SetInstanceData(constructor);
+    Napi::FunctionReference *constructor = new Napi::FunctionReference();
+    *constructor = Napi::Persistent(func);
+    env.SetInstanceData(constructor);
 
-  exports.Set("OSRM", func);
-  return exports;
+    exports.Set("OSRM", func);
+    return exports;
 }
 
-Engine::Engine(const Napi::CallbackInfo& info)
-    : Napi::ObjectWrap<Engine>(info) {
+Engine::Engine(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Engine>(info)
+{
 
-        try
-        {
-            auto config = argumentsToEngineConfig(info);
-            if (!config)
-                return;
+    try
+    {
+        auto config = argumentsToEngineConfig(info);
+        if (!config)
+            return;
 
-           this_ = std::make_shared<osrm::OSRM>(*config);
-        }
-        catch (const std::exception &ex)
-        {
-            ThrowTypeError(info.Env(), ex.what());
-        }
+        this_ = std::make_shared<osrm::OSRM>(*config);
+    }
+    catch (const std::exception &ex)
+    {
+        ThrowTypeError(info.Env(), ex.what());
+    }
 }
 
 template <typename ParameterParser, typename ServiceMemFn>
-inline void async(const Napi::CallbackInfo& info,
+inline void async(const Napi::CallbackInfo &info,
                   ParameterParser argsToParams,
                   ServiceMemFn service,
                   bool requires_multiple_coordinates)
@@ -87,9 +88,8 @@ inline void async(const Napi::CallbackInfo& info,
                ServiceMemFn service,
                Napi::Function callback,
                PluginParameters pluginParams_)
-            : Napi::AsyncWorker(callback), osrm{std::move(osrm_)},
-              service{std::move(service)}, params{std::move(params_)}, pluginParams{
-                                                                           std::move(pluginParams_)}
+            : Napi::AsyncWorker(callback), osrm{std::move(osrm_)}, service{std::move(service)},
+              params{std::move(params_)}, pluginParams{std::move(pluginParams_)}
         {
         }
 
@@ -155,10 +155,10 @@ inline void async(const Napi::CallbackInfo& info,
     };
 
     Napi::Function callback = info[info.Length() - 1].As<Napi::Function>();
-    auto worker = new Worker(self->this_, std::move(params), service, callback, std::move(pluginParams));
+    auto worker =
+        new Worker(self->this_, std::move(params), service, callback, std::move(pluginParams));
     worker->Queue();
 }
-
 
 template <typename ParameterParser, typename ServiceMemFn>
 inline void asyncForTiles(const Napi::CallbackInfo &info,
@@ -187,9 +187,8 @@ inline void asyncForTiles(const Napi::CallbackInfo &info,
                ServiceMemFn service,
                Napi::Function callback,
                PluginParameters pluginParams_)
-            : Napi::AsyncWorker(callback), osrm{std::move(osrm_)},
-              service{std::move(service)}, params{std::move(params_)}, pluginParams{
-                                                                           std::move(pluginParams_)}
+            : Napi::AsyncWorker(callback), osrm{std::move(osrm_)}, service{std::move(service)},
+              params{std::move(params_)}, pluginParams{std::move(pluginParams_)}
         {
         }
 
@@ -222,12 +221,11 @@ inline void asyncForTiles(const Napi::CallbackInfo &info,
         osrm::engine::api::ResultT result;
     };
 
-
     Napi::Function callback = info[info.Length() - 1].As<Napi::Function>();
-    auto worker = new Worker(self->this_, std::move(params), service, callback, std::move(pluginParams));
+    auto worker =
+        new Worker(self->this_, std::move(params), service, callback, std::move(pluginParams));
     worker->Queue();
 }
-
 
 // clang-format off
 /**
@@ -270,7 +268,8 @@ inline void asyncForTiles(const Napi::CallbackInfo &info,
  * });
  */
 // clang-format on
-Napi::Value Engine::route(const Napi::CallbackInfo& info) {
+Napi::Value Engine::route(const Napi::CallbackInfo &info)
+{
     osrm::Status (osrm::OSRM::*route_fn)(const osrm::RouteParameters &params,
                                          osrm::engine::api::ResultT &result) const =
         &osrm::OSRM::Route;
@@ -316,7 +315,7 @@ Napi::Value Engine::route(const Napi::CallbackInfo& info) {
  * });
  */
 // clang-format on
-Napi::Value Engine::nearest(const Napi::CallbackInfo& info)
+Napi::Value Engine::nearest(const Napi::CallbackInfo &info)
 {
     osrm::Status (osrm::OSRM::*nearest_fn)(const osrm::NearestParameters &params,
                                            osrm::engine::api::ResultT &result) const =
@@ -376,14 +375,13 @@ Napi::Value Engine::nearest(const Napi::CallbackInfo& info)
  * });
  */
 // clang-format on
-Napi::Value Engine::table(const Napi::CallbackInfo& info)
+Napi::Value Engine::table(const Napi::CallbackInfo &info)
 {
     osrm::Status (osrm::OSRM::*table_fn)(const osrm::TableParameters &params,
                                          osrm::engine::api::ResultT &result) const =
         &osrm::OSRM::Table;
     async(info, &argumentsToTableParameter, table_fn, true);
     return info.Env().Undefined();
-  
 }
 
 // clang-format off
@@ -412,7 +410,7 @@ Napi::Value Engine::table(const Napi::CallbackInfo& info)
  * });
  */
 // clang-format on
-Napi::Value Engine::tile(const Napi::CallbackInfo& info)
+Napi::Value Engine::tile(const Napi::CallbackInfo &info)
 {
     osrm::Status (osrm::OSRM::*tile_fn)(const osrm::TileParameters &params,
                                         osrm::engine::api::ResultT &result) const =
@@ -476,7 +474,7 @@ Napi::Value Engine::tile(const Napi::CallbackInfo& info)
  *
  */
 // clang-format on
-Napi::Value Engine::match(const Napi::CallbackInfo& info)
+Napi::Value Engine::match(const Napi::CallbackInfo &info)
 {
     osrm::Status (osrm::OSRM::*match_fn)(const osrm::MatchParameters &params,
                                          osrm::engine::api::ResultT &result) const =
@@ -552,7 +550,7 @@ Napi::Value Engine::match(const Napi::CallbackInfo& info)
  * });
  */
 // clang-format on
-Napi::Value Engine::trip(const Napi::CallbackInfo& info)
+Napi::Value Engine::trip(const Napi::CallbackInfo &info)
 {
     osrm::Status (osrm::OSRM::*trip_fn)(const osrm::TripParameters &params,
                                         osrm::engine::api::ResultT &result) const =
@@ -651,12 +649,11 @@ Napi::Value Engine::trip(const Napi::CallbackInfo& info)
  *
  */
 
-
 } // namespace node_osrm
 
-Napi::Object InitAll(Napi::Env env, Napi::Object exports) {
-  return node_osrm::Engine::Init(env, exports);
+Napi::Object InitAll(Napi::Env env, Napi::Object exports)
+{
+    return node_osrm::Engine::Init(env, exports);
 }
 
 NODE_API_MODULE(addon, InitAll);
-
