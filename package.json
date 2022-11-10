@@ -70,6 +70,7 @@
   },
   "main": "lib/index.js",
   "binary": {
+    "napi_versions": [8],
     "module_name": "node_osrm",
     "module_path": "./lib/binding/",
     "host": "https://github.com",
