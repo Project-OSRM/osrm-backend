@@ -76,6 +76,15 @@ template <> Napi::Value inline render(const Napi::Env& env, const ObjectOrString
     }
 }
 
+inline bool IsUnsignedInteger(const Napi::Value &value)
+{
+    if (!value.IsNumber()) {
+        return false;
+    }
+    const auto doubleValue = value.ToNumber().DoubleValue();
+    return doubleValue >= 0.0 && std::floor(doubleValue) == doubleValue;
+}
+
 
 inline void ParseResult(const osrm::Status &result_status, osrm::json::Object &result)
 {
@@ -1177,17 +1186,17 @@ argumentsToTileParameters(const Napi::CallbackInfo &args, bool /*unused*/)
     if (x.IsEmpty() || y.IsEmpty() || z.IsEmpty())
         return tile_parameters_ptr();
 
-    if (!x.IsNumber() && !x.IsUndefined())
+    if (!IsUnsignedInteger(x) && !x.IsUndefined())
     {
        ThrowError(args.Env(), "Tile x coordinate must be unsigned interger");
         return tile_parameters_ptr();
     }
-    if (!y.IsNumber() && !y.IsUndefined())
+    if (!IsUnsignedInteger(y) && !y.IsUndefined())
     {
        ThrowError(args.Env(), "Tile y coordinate must be unsigned interger");
         return tile_parameters_ptr();
     }
-    if (!z.IsNumber() && !z.IsUndefined())
+    if (!IsUnsignedInteger(z) && !z.IsUndefined())
     {
        ThrowError(args.Env(), "Tile z coordinate must be unsigned interger");
         return tile_parameters_ptr();
@@ -1225,7 +1234,7 @@ argumentsToNearestParameter(const Napi::CallbackInfo &args,
         Napi::Value number =
             obj.Get("number");
 
-        if (!number.IsNumber())
+        if (!IsUnsignedInteger(number))
         {
             ThrowError(args.Env(), "Number must be an integer greater than or equal to 1");
             return nearest_parameters_ptr();
@@ -1280,7 +1289,7 @@ argumentsToTableParameter(const Napi::CallbackInfo &args,
             if (source.IsEmpty())
                 return table_parameters_ptr();
 
-            if (source.IsNumber())
+            if (IsUnsignedInteger(source))
             {
                 size_t source_value = source.ToNumber().Uint32Value();
                 if (source_value >= params->coordinates.size())
@@ -1318,7 +1327,7 @@ argumentsToTableParameter(const Napi::CallbackInfo &args,
             if (destination.IsEmpty())
                 return table_parameters_ptr();
 
-            if (destination.IsNumber())
+            if (IsUnsignedInteger(destination))
             {
                 size_t destination_value = destination.ToNumber().Uint32Value();
                 if (destination_value >= params->coordinates.size())

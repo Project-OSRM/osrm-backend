@@ -8,7 +8,7 @@ var monaco_corech_path = require('./constants').corech_data_path;
 test('constructor: throws if new keyword is not used', function(assert) {
     assert.plan(1);
     assert.throws(function() { OSRM(); },
-      /Cannot call constructor as function, you need to use 'new' keyword/);
+      /Class constructors cannot be invoked without 'new'/);
 });
 
 test('constructor: uses defaults with no parameter', function(assert) {
