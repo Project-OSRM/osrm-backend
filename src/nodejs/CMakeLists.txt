@@ -4,7 +4,10 @@ cmake_minimum_required(VERSION 3.1)
 
 message(STATUS "Building node_osrm")
 
-set(BINDING_DIR "${PROJECT_SOURCE_DIR}/lib/binding")
+set(NAPI_VERSION 8)
+add_definitions(-DNAPI_VERSION=${NAPI_VERSION})
+
+set(BINDING_DIR "${PROJECT_SOURCE_DIR}/lib/binding_napi_v${NAPI_VERSION}")
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/node_modules/node-cmake")
 
