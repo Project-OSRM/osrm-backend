@@ -72,7 +72,7 @@
   "binary": {
     "napi_versions": [8],
     "module_name": "node_osrm",
-    "module_path": "./lib/binding/",
+    "module_path": "./lib/binding_napi_{napi_build_version}/",
     "host": "https://github.com",
     "remote_path": "./Project-OSRM/osrm-backend/releases/download/v{version}/",
     "package_name": "{module_name}-v{version}-{node_abi}-{napi_build_version}-{platform}-{arch}-{configuration}.tar.gz"
