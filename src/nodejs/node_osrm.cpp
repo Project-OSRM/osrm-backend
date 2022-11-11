@@ -45,6 +45,47 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
     return exports;
 }
 
+// clang-format off
+/**
+ * The `OSRM` method is the main constructor for creating an OSRM instance.
+ * An OSRM instance requires a `.osrm.*` dataset(`.osrm.*` because it contains several files), which is prepared by the OSRM toolchain.
+ * You can create such a `.osrm.*` dataset by running the OSRM binaries we ship in `node_modules/osrm/lib/binding/` and default
+ * profiles (e.g. for setting speeds and determining road types to route on) in `node_modules/osrm/profiles/`:
+ *
+ *     node_modules/osrm/lib/binding/osrm-extract data.osm.pbf -p node_modules/osrm/profiles/car.lua
+ *     node_modules/osrm/lib/binding/osrm-contract data.osrm
+ *
+ * Consult the [osrm-backend](https://github.com/Project-OSRM/osrm-backend) documentation for further details.
+ *
+ * Once you have a complete `network.osrm.*` dataset, you can calculate routes in javascript with this object.
+ *
+ * ```javascript
+ * var osrm = new OSRM('network.osrm');
+ * ```
+ *
+ * @param {Object|String} [options={shared_memory: true}] Options for creating an OSRM object or string to the `.osrm` file.
+ * @param {String} [options.algorithm] The algorithm to use for routing. Can be 'CH', 'CoreCH' or 'MLD'. Default is 'CH'.
+ *        Make sure you prepared the dataset with the correct toolchain.
+ * @param {Boolean} [options.shared_memory] Connects to the persistent shared memory datastore.
+ *        This requires you to run `osrm-datastore` prior to creating an `OSRM` object.
+ * @param {String} [options.dataset_name] Connects to the persistent shared memory datastore defined by `--dataset_name` option when running `osrm-datastore`.
+ *        This requires you to run `osrm-datastore --dataset_name` prior to creating an `OSRM` object.
+ * @param {String} [options.memory_file] **DEPRECATED**
+ *        Old behaviour: Path to a file on disk to store the memory using mmap.  Current behaviour: setting this value is the same as setting `mmap_memory: true`.
+ * @param {Boolean} [options.mmap_memory] Map on-disk files to virtual memory addresses (mmap), rather than loading into RAM.
+ * @param {String} [options.path] The path to the `.osrm` files. This is mutually exclusive with setting {options.shared_memory} to true.
+ * @param {Number} [options.max_locations_trip] Max. locations supported in trip query (default: unlimited).
+ * @param {Number} [options.max_locations_viaroute] Max. locations supported in viaroute query (default: unlimited).
+ * @param {Number} [options.max_locations_distance_table] Max. locations supported in distance table query (default: unlimited).
+ * @param {Number} [options.max_locations_map_matching] Max. locations supported in map-matching query (default: unlimited).
+ * @param {Number} [options.max_radius_map_matching] Max. radius size supported in map matching query (default: 5).
+ * @param {Number} [options.max_results_nearest] Max. results supported in nearest query (default: unlimited).
+ * @param {Number} [options.max_alternatives] Max. number of alternatives supported in alternative routes query (default: 3).
+ *
+ * @class OSRM
+ *
+ */
+// clang-format on
 Engine::Engine(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Engine>(info)
 {
 
