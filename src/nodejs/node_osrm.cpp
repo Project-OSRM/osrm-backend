@@ -697,4 +697,4 @@ Napi::Object InitAll(Napi::Env env, Napi::Object exports)
     return node_osrm::Engine::Init(env, exports);
 }
 
-NODE_API_MODULE(addon, InitAll);
+NODE_API_MODULE(addon, InitAll)
