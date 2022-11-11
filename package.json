@@ -66,7 +66,8 @@
     "tape": "^4.16.0",
     "turf": "^3.0.14",
     "uglify-js": "^3.17.0",
-    "xmlbuilder": "^4.2.1"
+    "xmlbuilder": "^4.2.1",
+    "node-cmake": "^2.5.1"
   },
   "main": "lib/index.js",
   "binary": {
