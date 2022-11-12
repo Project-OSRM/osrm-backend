@@ -635,10 +635,39 @@ jobs:
         ./src/benchmarks/packedvector-bench
         ./src/benchmarks/rtree-bench ../test/data/monaco.osrm.ramIndex ../test/data/monaco.osrm.fileIndex ../test/data/monaco.osrm.nbg_nodes
         popd
+
+    - name: Use Node 16
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - run: node --version
     - name: Run Node package tests only
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
       run: |
         npm run nodejs-tests
+    - name: Use Node 18
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+    - run: node --version
+    - name: Run Node package tests only
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      run: |
+        npm run nodejs-tests
+    - name: Use Node latest
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: latest
+    - run: node --version
+    - name: Run Node package tests only
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      run: |
+        npm run nodejs-tests
+    - run: nvm --version
+    
     - name: Upload test logs
       uses: actions/upload-artifact@v3
       if: failure()
