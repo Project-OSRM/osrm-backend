@@ -104,4 +104,5 @@ node_modules
 debug.lua
 
 # node-osrm artifacts
-lib/binding_napi_v8
+lib/binding
+

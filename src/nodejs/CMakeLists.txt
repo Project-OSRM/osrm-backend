@@ -7,7 +7,7 @@ message(STATUS "Building node_osrm")
 set(NAPI_VERSION 8)
 add_definitions(-DNAPI_VERSION=${NAPI_VERSION})
 
-set(BINDING_DIR "${PROJECT_SOURCE_DIR}/lib/binding_napi_v${NAPI_VERSION}")
+set(BINDING_DIR "${PROJECT_SOURCE_DIR}/lib/binding")
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/node_modules/node-cmake")
 
