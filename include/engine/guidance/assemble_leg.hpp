@@ -145,11 +145,11 @@ inline std::string assembleSummary(const datafacade::BaseDataFacade &facade,
     const auto name_id_to_string = [&](const NameID name_id) {
         const auto name = facade.GetNameForID(name_id);
         if (!name.empty())
-            return name.to_string();
+            return std::string(name);
         else
         {
             const auto ref = facade.GetRefForID(name_id);
-            return ref.to_string();
+            return std::string(ref);
         }
     };
 

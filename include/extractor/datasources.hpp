@@ -1,9 +1,12 @@
 #ifndef OSRM_EXTRACT_DATASOURCES_HPP
 #define OSRM_EXTRACT_DATASOURCES_HPP
 
+#include "util/typedefs.hpp"
+
+#include <algorithm>
+#include <array>
 #include <cstdint>
-#include <util/string_view.hpp>
-#include <util/typedefs.hpp>
+#include <string_view>
 
 namespace osrm
 {
@@ -22,11 +25,11 @@ class Datasources
         std::fill(sources.begin(), sources.end(), '\0');
     }
 
-    util::StringView GetSourceName(DatasourceID id) const
+    std::string_view GetSourceName(DatasourceID id) const
     {
         auto begin = sources.data() + (MAX_LENGTH_NAME * id);
 
-        return util::StringView{begin, lengths[id]};
+        return std::string_view{begin, lengths[id]};
     }
 
     void SetSourceName(DatasourceID id, const std::string &name)
