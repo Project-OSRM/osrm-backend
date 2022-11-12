@@ -40,6 +40,7 @@ async function benchmark() {
         const start = performance.now();
         await route(waypoints);
         const end = performance.now();
+        // record result in microseconds
         performanceHistorgram.record(Math.ceil((end - start) * 1000));
     }
 
