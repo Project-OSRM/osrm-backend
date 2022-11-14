@@ -611,6 +611,6 @@ jobs:
 
   ci-complete:
     runs-on: ubuntu-22.04
-    needs: [build-test-publish, docker-image, windows]
+    needs: [build-test-publish, docker-image, windows-release-node]
     steps:
     - run: echo "CI complete"
