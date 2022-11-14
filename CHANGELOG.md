@@ -4,6 +4,8 @@
       - CHANGED: Upgrade to clang-tidy 15. [#6439](https://github.com/Project-OSRM/osrm-backend/pull/6439)
       - CHANGED: Update actions/cache to v3. [#6420](https://github.com/Project-OSRM/osrm-backend/pull/6420)
       - REMOVED: Drop support of Node 12 & 14. [#6431](https://github.com/Project-OSRM/osrm-backend/pull/6431)
+    - NodeJS:
+      - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
       - REMOVED: Get rid of unused functions in util/json_util.hpp. [#6446](https://github.com/Project-OSRM/osrm-backend/pull/6446)
       - FIXED: Apply workaround for Conan installation issue on CI. [#6442](https://github.com/Project-OSRM/osrm-backend/pull/6442)
