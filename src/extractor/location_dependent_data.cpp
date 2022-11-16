@@ -8,8 +8,8 @@
 #include <rapidjson/istreamwrapper.h>
 
 #include <boost/filesystem.hpp>
-#include <boost/function_output_iterator.hpp>
 #include <boost/geometry/algorithms/equals.hpp>
+#include <boost/iterator/function_output_iterator.hpp>
 
 #include <fstream>
 #include <string>
