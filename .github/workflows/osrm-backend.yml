@@ -20,7 +20,7 @@ env:
   ENABLE_NODE_BINDINGS: "ON"
 
 jobs:
-  windows:
+  windows-release-node:
     needs: format-taginfo-docs
     runs-on: windows-2022
     continue-on-error: false
@@ -264,83 +264,7 @@ jobs:
             CXXCOMPILER: g++-8
             CXXFLAGS: -Wno-cast-function-type
 
-          - name: conan-macos-x64-release-node-16
-            build_node_package: true
-            continue-on-error: false
-            node: 16
-            runs-on: macos-11
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_ASSERTIONS: ON
-            ENABLE_CONAN: ON
-
-          - name: conan-macos-arm64-release-node-16
-            build_node_package: true
-            continue-on-error: false
-            node: 16
-            runs-on: macos-11
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_ASSERTIONS: ON
-            ENABLE_CONAN: ON
-            ENABLE_APPLE_SILICON: ON
-
-          - name: conan-macos-x64-release-node-18
-            build_node_package: true
-            continue-on-error: false
-            node: 18
-            runs-on: macos-11
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_ASSERTIONS: ON
-            ENABLE_CONAN: ON
-
-          - name: conan-macos-arm64-release-node-18
-            build_node_package: true
-            continue-on-error: false
-            node: 18
-            runs-on: macos-11
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_ASSERTIONS: ON
-            ENABLE_CONAN: ON
-            ENABLE_APPLE_SILICON: ON
-
-          - name: node-16-conan-linux-release
-            build_node_package: true
-            continue-on-error: false
-            node: 16
-            runs-on: ubuntu-20.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-6.0
-            CXXCOMPILER: clang++-6.0
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
-
-          - name: node-16-conan-linux-debug
-            build_node_package: true
-            continue-on-error: false
-            node: 16
-            runs-on: ubuntu-20.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-6.0
-            CXXCOMPILER: clang++-6.0
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
-
-          - name: node-18-conan-linux-release
+          - name: conan-linux-release-node
             build_node_package: true
             continue-on-error: false
             node: 18
@@ -351,7 +275,7 @@ jobs:
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: node-18-conan-linux-debug
+          - name: conan-linux-debug-node
             build_node_package: true
             continue-on-error: false
             node: 18
@@ -362,10 +286,10 @@ jobs:
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: conan-macos-x64-release-node-latest
+          - name: conan-macos-x64-release-node
             build_node_package: true
             continue-on-error: true
-            node: latest
+            node: 18
             runs-on: macos-11
             BUILD_TYPE: Release
             CCOMPILER: clang
@@ -374,10 +298,10 @@ jobs:
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
 
-          - name: conan-macos-arm64-release-node-latest
+          - name: conan-macos-arm64-release-node
             build_node_package: true
             continue-on-error: true
-            node: latest
+            node: 18
             runs-on: macos-11
             BUILD_TYPE: Release
             CCOMPILER: clang
@@ -386,28 +310,6 @@ jobs:
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
             ENABLE_APPLE_SILICON: ON
-
-          - name: node-latest-conan-linux-release
-            build_node_package: true
-            continue-on-error: true
-            node: latest
-            runs-on: ubuntu-20.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-6.0
-            CXXCOMPILER: clang++-6.0
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
-
-          - name: node-latest-conan-linux-debug
-            build_node_package: true
-            continue-on-error: true
-            node: latest
-            runs-on: ubuntu-20.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-6.0
-            CXXCOMPILER: clang++-6.0
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
 
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
@@ -627,10 +529,38 @@ jobs:
         ./src/benchmarks/packedvector-bench
         ./src/benchmarks/rtree-bench ../test/data/monaco.osrm.ramIndex ../test/data/monaco.osrm.fileIndex ../test/data/monaco.osrm.nbg_nodes
         popd
-    - name: Run Node package tests only
+
+    - name: Use Node 16
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - name: Run Node package tests on Node 16
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
       run: |
+        node --version
         npm run nodejs-tests
+    - name: Use Node 18
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+    - name: Run Node package tests on Node 18
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      run: |
+        node --version
+        npm run nodejs-tests
+    - name: Use Node latest
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: latest
+    - name: Run Node package tests on Node-latest
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      run: |
+        node --version
+        npm run nodejs-tests
+
     - name: Upload test logs
       uses: actions/upload-artifact@v3
       if: failure()
@@ -681,6 +611,6 @@ jobs:
 
   ci-complete:
     runs-on: ubuntu-22.04
-    needs: [build-test-publish, docker-image, windows]
+    needs: [build-test-publish, docker-image, windows-release-node]
     steps:
     - run: echo "CI complete"

@@ -45,6 +45,7 @@
     "babelify": "^10.0.0",
     "browserify": "^17.0.0",
     "chalk": "^1.1.3",
+    "cheap-ruler": "^3.0.2",
     "command-line-args": "^5.2.1",
     "command-line-usage": "^5.0.4",
     "csv-stringify": "^3.0.0",
@@ -55,26 +56,26 @@
     "eslint": "^5.16.0",
     "faucet": "^0.0.1",
     "jsonpath": "^1.1.1",
+    "mkdirp": "^0.5.6",
+    "node-addon-api": "^5.0.0",
     "node-timeout": "0.0.4",
     "polyline": "^0.2.0",
     "request": "^2.88.2",
+    "rimraf": "^2.7.1",
     "tape": "^4.16.0",
     "turf": "^3.0.14",
     "uglify-js": "^3.17.0",
     "xmlbuilder": "^4.2.1",
-    "cheap-ruler": "^3.0.2",
-    "mkdirp": "^0.5.6",
-    "nan": "^2.17.0",
-    "node-cmake": "^2.5.1",
-    "rimraf": "^2.7.1"
+    "node-cmake": "^2.5.1"
   },
   "main": "lib/index.js",
   "binary": {
+    "napi_versions": [8],
     "module_name": "node_osrm",
-    "module_path": "./lib/binding/",
+    "module_path": "./lib/binding_napi_v{napi_build_version}/",
     "host": "https://github.com",
     "remote_path": "./Project-OSRM/osrm-backend/releases/download/v{version}/",
-    "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}-{configuration}.tar.gz"
+    "package_name": "{module_name}-v{version}-{napi_build_version}-{platform}-{arch}-{configuration}.tar.gz"
   },
   "publishConfig": {
     "access": "public"
