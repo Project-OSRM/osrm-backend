@@ -1,6 +1,7 @@
 #include "updater/csv_source.hpp"
 
 #include "updater/csv_file_parser.hpp"
+#include "updater/parquet_file_parser.hpp"
 
 #include <boost/fusion/adapted/std_pair.hpp>
 #include <boost/fusion/include/adapt_adt.hpp>
@@ -33,12 +34,9 @@ namespace csv
 {
 SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths)
 {
-    static const auto value_if_blank = std::numeric_limits<double>::quiet_NaN();
-    const qi::real_parser<double, qi::ureal_policies<double>> unsigned_double;
-    CSVFilesParser<Segment, SpeedSource> parser(
-        1,
-        qi::ulong_long >> ',' >> qi::ulong_long,
-        unsigned_double >> -(',' >> (qi::double_ | qi::attr(value_if_blank))));
+    //static const auto value_if_blank = std::numeric_limits<double>::quiet_NaN();
+    //const qi::real_parser<double, qi::ureal_policies<double>> unsigned_double;
+    ParquetFilesParser<Segment, SpeedSource> parser;
 
     // Check consistency of keys in the result lookup table
     auto result = parser(paths);
@@ -57,10 +55,7 @@ SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths)
 
 TurnLookupTable readTurnValues(const std::vector<std::string> &paths)
 {
-    CSVFilesParser<Turn, PenaltySource> parser(1,
-                                               qi::ulong_long >> ',' >> qi::ulong_long >> ',' >>
-                                                   qi::ulong_long,
-                                               qi::double_ >> -(',' >> qi::double_));
+    ParquetFilesParser<Turn, PenaltySource> parser;
     return parser(paths);
 }
 } // namespace csv
