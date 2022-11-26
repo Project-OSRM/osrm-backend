@@ -2,6 +2,7 @@
 
 #include "updater/csv_file_parser.hpp"
 #include "updater/parquet_file_parser.hpp"
+#include "updater/source.hpp"
 
 #include <boost/fusion/adapted/std_pair.hpp>
 #include <boost/fusion/include/adapt_adt.hpp>
@@ -32,14 +33,43 @@ namespace updater
 {
 namespace csv
 {
-SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths)
+
+namespace {
+std::unique_ptr<FilesParser<Segment, SpeedSource>> makeSegmentParser(UpdaterConfig::SpeedAndTurnPenaltyFormat format) {
+    switch (format) {
+        case UpdaterConfig::SpeedAndTurnPenaltyFormat::CSV:
+        {
+            static const auto value_if_blank = std::numeric_limits<double>::quiet_NaN();
+            const qi::real_parser<double, qi::ureal_policies<double>> unsigned_double;
+            return std::make_unique<CSVFilesParser<Segment, SpeedSource>>(qi::ulong_long >> ',' >> qi::ulong_long,
+        unsigned_double >> -(',' >> (qi::double_ | qi::attr(value_if_blank))));
+        }
+        case UpdaterConfig::SpeedAndTurnPenaltyFormat::PARQUET:
+            return std::make_unique<ParquetFilesParser<Segment, SpeedSource>>();
+    }
+} 
+
+std::unique_ptr<FilesParser<Turn, PenaltySource>> makeTurnParser(UpdaterConfig::SpeedAndTurnPenaltyFormat format) {
+    switch (format) {
+        case UpdaterConfig::SpeedAndTurnPenaltyFormat::CSV:
+        {
+            return std::make_unique<CSVFilesParser<Turn, PenaltySource>>(qi::ulong_long >> ',' >> qi::ulong_long >> ',' >>
+                                                   qi::ulong_long,
+                                               qi::double_ >> -(',' >> qi::double_));
+        }
+        case UpdaterConfig::SpeedAndTurnPenaltyFormat::PARQUET:
+            return std::make_unique<ParquetFilesParser<Turn, PenaltySource>>();
+    }
+} 
+
+} // namespace
+
+SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths, UpdaterConfig::SpeedAndTurnPenaltyFormat format)
 {
-    //static const auto value_if_blank = std::numeric_limits<double>::quiet_NaN();
-    //const qi::real_parser<double, qi::ureal_policies<double>> unsigned_double;
-    ParquetFilesParser<Segment, SpeedSource> parser;
+    auto parser = makeSegmentParser(format);
 
     // Check consistency of keys in the result lookup table
-    auto result = parser(paths);
+    auto result = (*parser)(paths);
     const auto found_inconsistency =
         std::find_if(std::begin(result.lookup), std::end(result.lookup), [](const auto &entry) {
             return entry.first.from == entry.first.to;
@@ -53,10 +83,10 @@ SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths)
     return result;
 }
 
-TurnLookupTable readTurnValues(const std::vector<std::string> &paths)
+TurnLookupTable readTurnValues(const std::vector<std::string> &paths, UpdaterConfig::SpeedAndTurnPenaltyFormat format)
 {
-    ParquetFilesParser<Turn, PenaltySource> parser;
-    return parser(paths);
+    auto parser = makeTurnParser(format);
+    return (*parser)(paths);
 }
 } // namespace csv
 } // namespace updater

@@ -69,6 +69,12 @@ struct UpdaterConfig final : storage::IOConfig
     double log_edge_updates_factor = 0.0;
     std::time_t valid_now;
 
+
+    enum class SpeedAndTurnPenaltyFormat {
+        CSV,
+        PARQUET
+    } speed_and_turn_penalty_format = SpeedAndTurnPenaltyFormat::CSV;
+
     std::vector<std::string> segment_speed_lookup_paths;
     std::vector<std::string> turn_penalty_lookup_paths;
     std::string tz_file_path;
