@@ -499,6 +499,7 @@ if(ENABLE_CONAN)
     "expat/${CONAN_EXPAT_VERSION}"
     "lua/${CONAN_LUA_VERSION}"
     "onetbb/${CONAN_TBB_VERSION}"
+    "arrow/10.0.0"
     BASIC_SETUP 
     GENERATORS cmake_find_package json  # json generator generates a conanbuildinfo.json in the build folder so (non-CMake) projects can easily parse OSRM's dependencies
     KEEP_RPATHS
