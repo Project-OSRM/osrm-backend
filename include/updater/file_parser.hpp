@@ -1,8 +1,8 @@
 #ifndef OSRM_UPDATER_FILE_PARSER_HPP
 #define OSRM_UPDATER_FILE_PARSER_HPP
+#include <arrow/io/file.h>
 #include <parquet/arrow/reader.h>
 #include <parquet/stream_reader.h>
-#include <arrow/io/file.h>
 
 #include "updater/source.hpp"
 
@@ -88,7 +88,8 @@ template <typename Key, typename Value> struct FilesParser
 
   protected:
     // Parse a single CSV file and return result as a vector<Key, Value>
-    virtual std::vector<std::pair<Key, Value>> ParseFile(const std::string &filename, std::size_t file_id) const;
+    virtual std::vector<std::pair<Key, Value>> ParseFile(const std::string &filename,
+                                                         std::size_t file_id) const;
 };
 } // namespace updater
 } // namespace osrm

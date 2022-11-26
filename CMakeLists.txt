@@ -508,6 +508,9 @@ if(ENABLE_CONAN)
             onetbb:shared=${TBB_SHARED}
             boost:without_stacktrace=True # Apple Silicon cross-compilation fails without it
             arrow:parquet=True
+            arrow:with_snappy=True
+            arrow:with_brotli=True
+            arrow:with_zlib=True
     BUILD missing
   )
   # explicitly say Conan to use x86 dependencies if build for x86 platforms (https://github.com/conan-io/cmake-conan/issues/141)
@@ -568,6 +571,9 @@ else()
   find_package(TBB REQUIRED)
   add_dependency_includes(${TBB_INCLUDE_DIR})
   set(TBB_LIBRARIES TBB::tbb)
+
+  find_package(Parquet REQUIRED)
+  set(ARROW_LIBRARIES Parquet::parquet_shared)
 
   find_package(EXPAT REQUIRED)
   add_dependency_includes(${EXPAT_INCLUDE_DIRS})

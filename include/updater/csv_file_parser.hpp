@@ -1,9 +1,9 @@
 #ifndef OSRM_UPDATER_CSV_FILE_PARSER_HPP
 #define OSRM_UPDATER_CSV_FILE_PARSER_HPP
 #include "file_parser.hpp"
+#include <arrow/io/file.h>
 #include <parquet/arrow/reader.h>
 #include <parquet/stream_reader.h>
-#include <arrow/io/file.h>
 
 #include "updater/source.hpp"
 
@@ -47,7 +47,8 @@ template <typename Key, typename Value> struct CSVFilesParser : public FilesPars
 
   private:
     // Parse a single CSV file and return result as a vector<Key, Value>
-    std::vector<std::pair<Key, Value>> ParseFile(const std::string &filename, std::size_t file_id) const final
+    std::vector<std::pair<Key, Value>> ParseFile(const std::string &filename,
+                                                 std::size_t file_id) const final
     {
         namespace qi = boost::spirit::qi;
 
@@ -90,7 +91,7 @@ template <typename Key, typename Value> struct CSVFilesParser : public FilesPars
             throw util::exception(message.str() + SOURCE_REF);
         }
     }
-  
+
     const KeyRule key_rule;
     const ValueRule value_rule;
 };

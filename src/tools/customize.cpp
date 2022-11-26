@@ -21,7 +21,6 @@ enum class return_code : unsigned
     exit
 };
 
-
 return_code parseArguments(int argc,
                            char *argv[],
                            std::string &verbosity,
@@ -41,8 +40,11 @@ return_code parseArguments(int argc,
         ("threads,t",
          boost::program_options::value<unsigned int>(&customization_config.requested_num_threads)
              ->default_value(std::thread::hardware_concurrency()),
-         "Number of threads to use")
-         ("speed-and-turn-penalty-format", boost::program_options::value<updater::SpeedAndTurnPenaltyFormat>(&customization_config.updater_config.speed_and_turn_penalty_format)->default_value(updater::SpeedAndTurnPenaltyFormat::CSV))(
+         "Number of threads to use")(
+            "speed-and-turn-penalty-format",
+            boost::program_options::value<updater::SpeedAndTurnPenaltyFormat>(
+                &customization_config.updater_config.speed_and_turn_penalty_format)
+                ->default_value(updater::SpeedAndTurnPenaltyFormat::CSV))(
             "segment-speed-file",
             boost::program_options::value<std::vector<std::string>>(
                 &customization_config.updater_config.segment_speed_lookup_paths)

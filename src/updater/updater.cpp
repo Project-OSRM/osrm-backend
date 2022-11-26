@@ -618,7 +618,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     tbb::concurrent_vector<GeometryID> updated_segments;
     if (update_edge_weights)
     {
-        auto segment_speed_lookup = data::readSegmentValues(config.segment_speed_lookup_paths, config.speed_and_turn_penalty_format);
+        auto segment_speed_lookup = data::readSegmentValues(config.segment_speed_lookup_paths,
+                                                            config.speed_and_turn_penalty_format);
 
         TIMER_START(segment);
         updated_segments = updateSegmentData(config,
@@ -633,7 +634,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         util::Log() << "Updating segment data took " << TIMER_MSEC(segment) << "ms.";
     }
 
-    auto turn_penalty_lookup = data::readTurnValues(config.turn_penalty_lookup_paths, config.speed_and_turn_penalty_format);
+    auto turn_penalty_lookup = data::readTurnValues(config.turn_penalty_lookup_paths,
+                                                    config.speed_and_turn_penalty_format);
     if (update_turn_penalties)
     {
         auto updated_turn_penalties = updateTurnPenalties(config,

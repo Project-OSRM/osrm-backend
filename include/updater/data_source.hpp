@@ -10,8 +10,10 @@ namespace updater
 {
 namespace data
 {
-SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths, SpeedAndTurnPenaltyFormat format);
-TurnLookupTable readTurnValues(const std::vector<std::string> &paths, SpeedAndTurnPenaltyFormat format);
+SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths,
+                                     SpeedAndTurnPenaltyFormat format);
+TurnLookupTable readTurnValues(const std::vector<std::string> &paths,
+                               SpeedAndTurnPenaltyFormat format);
 } // namespace data
 } // namespace updater
 } // namespace osrm

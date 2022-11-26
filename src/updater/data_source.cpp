@@ -34,37 +34,45 @@ namespace updater
 namespace data
 {
 
-namespace {
-std::unique_ptr<FilesParser<Segment, SpeedSource>> makeSegmentParser(SpeedAndTurnPenaltyFormat format) {
-    switch (format) {
-        case SpeedAndTurnPenaltyFormat::CSV:
-        {
-            static const auto value_if_blank = std::numeric_limits<double>::quiet_NaN();
-            const qi::real_parser<double, qi::ureal_policies<double>> unsigned_double;
-            return std::make_unique<CSVFilesParser<Segment, SpeedSource>>(qi::ulong_long >> ',' >> qi::ulong_long,
-        unsigned_double >> -(',' >> (qi::double_ | qi::attr(value_if_blank))));
-        }
-        case SpeedAndTurnPenaltyFormat::PARQUET:
-            return std::make_unique<ParquetFilesParser<Segment, SpeedSource>>();
+namespace
+{
+std::unique_ptr<FilesParser<Segment, SpeedSource>>
+makeSegmentParser(SpeedAndTurnPenaltyFormat format)
+{
+    switch (format)
+    {
+    case SpeedAndTurnPenaltyFormat::CSV:
+    {
+        static const auto value_if_blank = std::numeric_limits<double>::quiet_NaN();
+        const qi::real_parser<double, qi::ureal_policies<double>> unsigned_double;
+        return std::make_unique<CSVFilesParser<Segment, SpeedSource>>(
+            qi::ulong_long >> ',' >> qi::ulong_long,
+            unsigned_double >> -(',' >> (qi::double_ | qi::attr(value_if_blank))));
     }
-} 
+    case SpeedAndTurnPenaltyFormat::PARQUET:
+        return std::make_unique<ParquetFilesParser<Segment, SpeedSource>>();
+    }
+}
 
-std::unique_ptr<FilesParser<Turn, PenaltySource>> makeTurnParser(SpeedAndTurnPenaltyFormat format) {
-    switch (format) {
-        case SpeedAndTurnPenaltyFormat::CSV:
-        {
-            return std::make_unique<CSVFilesParser<Turn, PenaltySource>>(qi::ulong_long >> ',' >> qi::ulong_long >> ',' >>
-                                                   qi::ulong_long,
-                                               qi::double_ >> -(',' >> qi::double_));
-        }
-        case SpeedAndTurnPenaltyFormat::PARQUET:
-            return std::make_unique<ParquetFilesParser<Turn, PenaltySource>>();
+std::unique_ptr<FilesParser<Turn, PenaltySource>> makeTurnParser(SpeedAndTurnPenaltyFormat format)
+{
+    switch (format)
+    {
+    case SpeedAndTurnPenaltyFormat::CSV:
+    {
+        return std::make_unique<CSVFilesParser<Turn, PenaltySource>>(
+            qi::ulong_long >> ',' >> qi::ulong_long >> ',' >> qi::ulong_long,
+            qi::double_ >> -(',' >> qi::double_));
     }
-} 
+    case SpeedAndTurnPenaltyFormat::PARQUET:
+        return std::make_unique<ParquetFilesParser<Turn, PenaltySource>>();
+    }
+}
 
 } // namespace
 
-SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths, SpeedAndTurnPenaltyFormat format)
+SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths,
+                                     SpeedAndTurnPenaltyFormat format)
 {
     auto parser = makeSegmentParser(format);
 
@@ -83,7 +91,8 @@ SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths, Spee
     return result;
 }
 
-TurnLookupTable readTurnValues(const std::vector<std::string> &paths, SpeedAndTurnPenaltyFormat format)
+TurnLookupTable readTurnValues(const std::vector<std::string> &paths,
+                               SpeedAndTurnPenaltyFormat format)
 {
     auto parser = makeTurnParser(format);
     return (*parser)(paths);

@@ -1,11 +1,11 @@
 #ifndef OSRM_UPDATER_PARQUET_FILE_PARSER_HPP
 #define OSRM_UPDATER_PARQUET_FILE_PARSER_HPP
 #include "file_parser.hpp"
+#include <arrow/io/file.h>
 #include <optional>
 #include <parquet/arrow/reader.h>
 #include <parquet/exception.h>
 #include <parquet/stream_reader.h>
-#include <arrow/io/file.h>
 
 #include "updater/source.hpp"
 
@@ -31,24 +31,26 @@ template <typename Key, typename Value> struct ParquetFilesParser : public Files
 {
   private:
     // Parse a single Parquet file and return result as a vector<Key, Value>
-    std::vector<std::pair<Key, Value>> ParseFile(const std::string &filename, std::size_t file_id) const final
+    std::vector<std::pair<Key, Value>> ParseFile(const std::string &filename,
+                                                 std::size_t file_id) const final
     {
-        try {
+        try
+        {
             std::shared_ptr<arrow::io::ReadableFile> infile;
 
-            PARQUET_ASSIGN_OR_THROW(
-                infile,
-                arrow::io::ReadableFile::Open(filename));
+            PARQUET_ASSIGN_OR_THROW(infile, arrow::io::ReadableFile::Open(filename));
 
             parquet::StreamReader os{parquet::ParquetFileReader::Open(infile)};
 
             std::vector<std::pair<Key, Value>> result;
-            while ( !os.eof() )
+            while (!os.eof())
             {
                 result.emplace_back(ReadKeyValue(os, file_id));
             }
             return result;
-        } catch (const std::exception &e) {
+        }
+        catch (const std::exception &e)
+        {
             throw util::exception(e.what() + SOURCE_REF);
         }
     }
@@ -64,38 +66,31 @@ template <typename Key, typename Value> struct ParquetFilesParser : public Files
         return {key, value};
     }
 
-    void Read(parquet::StreamReader &os, Turn& turn) const {
-        int64_t from, via, to;
-        os >> from >> via >> to;
-        turn.from = from;
-        turn.via = via;
-        turn.to = to;
+    void Read(parquet::StreamReader &os, Turn &turn) const
+    {
+        os >> turn.from >> turn.via >> turn.to;
     }
 
-    void Read(parquet::StreamReader &os, PenaltySource& penalty_source) const {
+    void Read(parquet::StreamReader &os, PenaltySource &penalty_source) const
+    {
         os >> penalty_source.duration >> penalty_source.weight;
     }
 
-    void Read(parquet::StreamReader &os, Segment& segment) const {
-        int64_t from;
-        int64_t to;
-        os >> from >> to;
-        
-        segment.from = from;
-        segment.to = to;
-        //std::cerr << from << " " << to<< std::endl;
-        //os >> segment.from >> segment.to >> parquet::EndRow;
+    void Read(parquet::StreamReader &os, Segment &segment) const
+    {
+        os >> segment.from >> segment.to;
     }
 
-    void Read(parquet::StreamReader &os, SpeedSource& speed_source) const {
+    void Read(parquet::StreamReader &os, SpeedSource &speed_source) const
+    {
         std::optional<double> rate;
         os >> speed_source.speed >> rate;
         // TODO: boost::optional
-        if (rate) {
+        if (rate)
+        {
             speed_source.rate = *rate;
         }
     }
-  
 };
 } // namespace updater
 } // namespace osrm
