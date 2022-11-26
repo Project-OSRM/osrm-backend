@@ -49,7 +49,7 @@ return_code parseArguments(int argc,
         "core,k",
         boost::program_options::value<double>(&contractor_config.core_factor)->default_value(1.0),
         "DEPRECATED: Will always be 1.0. Percentage of the graph (in vertices) to contract "
-        "[0..1].")("segment-speed-file",
+        "[0..1].") ("speed-and-turn-penalty-format", boost::program_options::value<updater::SpeedAndTurnPenaltyFormat>(&contractor_config.updater_config.speed_and_turn_penalty_format)->default_value(updater::SpeedAndTurnPenaltyFormat::CSV))("segment-speed-file",
                    boost::program_options::value<std::vector<std::string>>(
                        &contractor_config.updater_config.segment_speed_lookup_paths)
                        ->composing(),

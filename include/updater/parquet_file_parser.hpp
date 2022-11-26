@@ -3,6 +3,7 @@
 #include "file_parser.hpp"
 #include <optional>
 #include <parquet/arrow/reader.h>
+#include <parquet/exception.h>
 #include <parquet/stream_reader.h>
 #include <arrow/io/file.h>
 
@@ -26,71 +27,73 @@ namespace osrm
 namespace updater
 {
 
-// Functor to parse a list of CSV files using "key,value,comment" grammar.
-// Key and Value structures must be a model of Random Access Sequence.
-// Also the Value structure must have source member that will be filled
-// with the corresponding file index in the CSV filenames vector.
 template <typename Key, typename Value> struct ParquetFilesParser : public FilesParser<Key, Value>
 {
   private:
-    // Parse a single CSV file and return result as a vector<Key, Value>
+    // Parse a single Parquet file and return result as a vector<Key, Value>
     std::vector<std::pair<Key, Value>> ParseFile(const std::string &filename, std::size_t file_id) const final
     {
-        // TODO: error handling
-        std::shared_ptr<arrow::io::ReadableFile> infile;
+        try {
+            std::shared_ptr<arrow::io::ReadableFile> infile;
 
-        PARQUET_ASSIGN_OR_THROW(
-            infile,
-            arrow::io::ReadableFile::Open(filename));
+            PARQUET_ASSIGN_OR_THROW(
+                infile,
+                arrow::io::ReadableFile::Open(filename));
 
-        parquet::StreamReader os{parquet::ParquetFileReader::Open(infile)};
+            parquet::StreamReader os{parquet::ParquetFileReader::Open(infile)};
 
-        std::vector<std::pair<Key, Value>> result;
-        while ( !os.eof() )
-        {
-            result.emplace_back(ReadKey(os), ReadValue(os, file_id));
-      // ...
+            std::vector<std::pair<Key, Value>> result;
+            while ( !os.eof() )
+            {
+                result.emplace_back(ReadKeyValue(os, file_id));
+            }
+            return result;
+        } catch (const std::exception &e) {
+            throw util::exception(e.what() + SOURCE_REF);
         }
-        return result;
-//     (void)os;
-
     }
 
-    Key ReadKey(parquet::StreamReader &os) const
+    std::pair<Key, Value> ReadKeyValue(parquet::StreamReader &os, std::size_t file_id) const
     {
         Key key;
-        ReadKey(os, key);
-        return key;
-    }
-
-    Value ReadValue(parquet::StreamReader &os, std::size_t file_id) const
-    {
         Value value;
-        ReadValue(os, value);
+        Read(os, key);
+        Read(os, value);
         value.source = file_id;
-        return value;
+        os >> parquet::EndRow;
+        return {key, value};
     }
 
-    void ReadKey(parquet::StreamReader &os, Turn& turn) const {
-        os >> turn.from >> turn.via >> turn.to >> parquet::EndRow;
+    void Read(parquet::StreamReader &os, Turn& turn) const {
+        int64_t from, via, to;
+        os >> from >> via >> to;
+        turn.from = from;
+        turn.via = via;
+        turn.to = to;
     }
 
-    void ReadValue(parquet::StreamReader &os, PenaltySource& penalty_source) const {
-        os >> penalty_source.duration >> penalty_source.weight >> parquet::EndRow;
+    void Read(parquet::StreamReader &os, PenaltySource& penalty_source) const {
+        os >> penalty_source.duration >> penalty_source.weight;
     }
 
-    void ReadKey(parquet::StreamReader &os, Segment& segment) const {
-        os >> segment.from >> segment.to >> parquet::EndRow;
+    void Read(parquet::StreamReader &os, Segment& segment) const {
+        int64_t from;
+        int64_t to;
+        os >> from >> to;
+        
+        segment.from = from;
+        segment.to = to;
+        //std::cerr << from << " " << to<< std::endl;
+        //os >> segment.from >> segment.to >> parquet::EndRow;
     }
 
-    void ReadValue(parquet::StreamReader &os, SpeedSource& speed_source) const {
+    void Read(parquet::StreamReader &os, SpeedSource& speed_source) const {
         std::optional<double> rate;
-        os >> speed_source.speed >> rate >> parquet::EndRow;
+        os >> speed_source.speed >> rate;
         // TODO: boost::optional
         if (rate) {
             speed_source.rate = *rate;
         }
-       // os >> turn.weight >> turn.duration >> turn.pre_turn_bearing >> turn.post_turn_bearing >> turn.source >> parquet::EndRow;
     }
   
 };

@@ -35,11 +35,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "storage/io_config.hpp"
 #include "storage/storage_config.hpp"
+#include <boost/program_options.hpp>
 
 namespace osrm
 {
 namespace updater
 {
+
+
+    enum class SpeedAndTurnPenaltyFormat {
+        CSV,
+        PARQUET
+    };
 
 struct UpdaterConfig final : storage::IOConfig
 {
@@ -69,16 +76,45 @@ struct UpdaterConfig final : storage::IOConfig
     double log_edge_updates_factor = 0.0;
     std::time_t valid_now;
 
-
-    enum class SpeedAndTurnPenaltyFormat {
-        CSV,
-        PARQUET
-    } speed_and_turn_penalty_format = SpeedAndTurnPenaltyFormat::CSV;
+SpeedAndTurnPenaltyFormat speed_and_turn_penalty_format = SpeedAndTurnPenaltyFormat::CSV;
 
     std::vector<std::string> segment_speed_lookup_paths;
     std::vector<std::string> turn_penalty_lookup_paths;
     std::string tz_file_path;
 };
+
+
+inline std::istream& operator>> (std::istream &in, SpeedAndTurnPenaltyFormat& format) {
+    std::string token;
+    in >> token;
+
+    std::transform(token.begin(), token.end(), token.begin(), [](auto c){ return std::tolower(c); });
+
+    if (token == "csv") {
+        format = SpeedAndTurnPenaltyFormat::CSV;
+    } else if (token == "parquet") {
+        format = SpeedAndTurnPenaltyFormat::PARQUET;
+    } else {
+        throw boost::program_options::validation_error{boost::program_options::validation_error::invalid_option_value};
+    }
+    return in;
+}
+
+
+inline std::ostream& operator<< (std::ostream &out, SpeedAndTurnPenaltyFormat format) {
+    switch (format) {
+        case SpeedAndTurnPenaltyFormat::CSV:
+            out << "csv";
+            break;
+        case SpeedAndTurnPenaltyFormat::PARQUET:
+            out << "parquet";
+            break;
+    }
+    return out;
+}
+
+
+
 } // namespace updater
 } // namespace osrm
 

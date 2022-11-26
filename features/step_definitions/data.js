@@ -5,6 +5,7 @@ var path = require('path');
 var fs = require('fs');
 var d3 = require('d3-queue');
 var OSM = require('../lib/osm');
+const parquet = require('parquetjs');
 
 module.exports = function () {
     this.Given(/^the profile "([^"]*)"$/, (profile, callback) => {
@@ -256,6 +257,61 @@ module.exports = function () {
         // we need this to pass it to the profiles
         this.environment = Object.assign({OSRM_RASTER_SOURCE: this.rasterCacheFile}, this.environment);
     });
+
+    this.Given(/^the parquet speed file$/, (data, callback) => {
+        console.log(this.speedsCacheFile);
+        const schema = new parquet.ParquetSchema({
+            from: { type: 'INT64', encoding: 'PLAIN' },
+            to: { type: 'INT64', encoding: 'PLAIN' },
+            speed: { type: 'DOUBLE', encoding: 'PLAIN' },
+            rate: { type: 'DOUBLE', encoding: 'PLAIN', optional: true },
+        });
+        parquet.ParquetWriter.openFile(schema, this.speedsCacheFile).then((writer) => {
+            const promises = [];
+            data.split('\n').forEach((line) => {
+                const entries = line.split(',');
+                const from = Number.parseInt(entries[0]);
+                const to = Number.parseInt(entries[1]);
+                const speed = Number.parseFloat(entries[2]);
+                const rate = entries[3] ? Number.parseFloat(entries[3]) : undefined;
+                console.log('writing', from, to, speed, rate);
+                promises.push(writer.appendRow({ from, to, speed, rate }));
+            });
+            Promise.all(promises).then(() => {
+                writer.close().then(() => {
+                    callback();
+                });
+            });
+        });
+    });
+
+    this.Given(/^the parquet turn penalty file$/, (data, callback) => {
+        const schema = new parquet.ParquetSchema({
+            from: { type: 'INT64' },
+            via: { type: 'INT64' },
+            to: { type: 'INT64' },
+            duration: { type: 'DOUBLE' },
+            weight: { type: 'DOUBLE' },
+        });
+        parquet.ParquetWriter.openFile(schema, this.penaltiesCacheFile).then((writer) => {
+            const promises = [];
+            data.split('\n').forEach((line) => {
+                const entries = line.split(',');
+                const from = Number.parseInt(entries[0]);
+                const via = Number.parseInt(entries[1]);
+                const to = Number.parseInt(entries[2]);
+                const duration = Number.parseFloat(entries[3]);
+                const weight = Number.parseFloat(entries[4]);
+                promises.push(writer.appendRow({ from, via, to, duration, weight }));
+            });
+            Promise.all(promises).then(() => {
+                writer.close().then(() => {
+                    callback();
+                });
+            });
+        });
+    });
+
 
     this.Given(/^the speed file$/, (data, callback) => {
         // TODO: Don't overwrite if it exists

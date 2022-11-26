@@ -4,7 +4,8 @@
   "private": false,
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++ designed to run on OpenStreetMap data.",
   "dependencies": {
-    "@mapbox/node-pre-gyp": "^1.0.10"
+    "@mapbox/node-pre-gyp": "^1.0.10",
+    "parquetjs": "^0.11.2"
   },
   "browserify": {
     "transform": [
@@ -58,6 +59,7 @@
     "jsonpath": "^1.1.1",
     "mkdirp": "^0.5.6",
     "node-addon-api": "^5.0.0",
+    "node-cmake": "^2.5.1",
     "node-timeout": "0.0.4",
     "polyline": "^0.2.0",
     "request": "^2.88.2",
@@ -65,12 +67,13 @@
     "tape": "^4.16.0",
     "turf": "^3.0.14",
     "uglify-js": "^3.17.0",
-    "xmlbuilder": "^4.2.1",
-    "node-cmake": "^2.5.1"
+    "xmlbuilder": "^4.2.1"
   },
   "main": "lib/index.js",
   "binary": {
-    "napi_versions": [8],
+    "napi_versions": [
+      8
+    ],
     "module_name": "node_osrm",
     "module_path": "./lib/binding_napi_v{napi_build_version}/",
     "host": "https://github.com",

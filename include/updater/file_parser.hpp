@@ -41,16 +41,6 @@ template <typename Key, typename Value> struct FilesParser
     // Operator returns a lambda function that maps input Key to boost::optional<Value>.
     auto operator()(const std::vector<std::string> &csv_filenames) const
     {
-
-// std::shared_ptr<arrow::io::ReadableFile> infile;
-
-//    PARQUET_ASSIGN_OR_THROW(
-//       infile,
-//       arrow::io::ReadableFile::Open("test.parquet"));
-
-//    parquet::StreamReader os{parquet::ParquetFileReader::Open(infile)};
-//     (void)os;
-
         try
         {
             tbb::spin_mutex mutex;
@@ -59,7 +49,7 @@ template <typename Key, typename Value> struct FilesParser
                 // TODO: do we need this `1 + ` here?
                 auto local = ParseFile(csv_filenames[idx], 1 + idx);
 
-                { // Merge local CSV results into a flat global vector
+                { // Merge local results into a flat global vector
                     tbb::spin_mutex::scoped_lock _{mutex};
                     lookup.insert(end(lookup),
                                   std::make_move_iterator(begin(local)),
