@@ -1,5 +1,8 @@
 #ifndef OSRM_UPDATER_CSV_FILE_PARSER_HPP
 #define OSRM_UPDATER_CSV_FILE_PARSER_HPP
+#include <parquet/arrow/reader.h>
+#include <parquet/stream_reader.h>
+#include <arrow/io/file.h>
 
 #include "updater/source.hpp"
 
@@ -44,6 +47,16 @@ template <typename Key, typename Value> struct CSVFilesParser
     // Operator returns a lambda function that maps input Key to boost::optional<Value>.
     auto operator()(const std::vector<std::string> &csv_filenames) const
     {
+
+std::shared_ptr<arrow::io::ReadableFile> infile;
+
+   PARQUET_ASSIGN_OR_THROW(
+      infile,
+      arrow::io::ReadableFile::Open("test.parquet"));
+
+   parquet::StreamReader os{parquet::ParquetFileReader::Open(infile)};
+    (void)os;
+
         try
         {
             tbb::spin_mutex mutex;

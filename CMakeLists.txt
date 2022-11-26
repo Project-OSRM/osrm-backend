@@ -507,6 +507,7 @@ if(ENABLE_CONAN)
     OPTIONS boost:filesystem_version=3 # https://stackoverflow.com/questions/73392648/error-with-boost-filesystem-version-in-cmake
             onetbb:shared=${TBB_SHARED}
             boost:without_stacktrace=True # Apple Silicon cross-compilation fails without it
+            arrow:parquet=True
     BUILD missing
   )
   # explicitly say Conan to use x86 dependencies if build for x86 platforms (https://github.com/conan-io/cmake-conan/issues/141)
@@ -524,6 +525,8 @@ if(ENABLE_CONAN)
   add_dependency_includes(${CONAN_INCLUDE_DIRS_EXPAT})
   add_dependency_includes(${CONAN_INCLUDE_DIRS_LUA})
   add_dependency_includes(${CONAN_INCLUDE_DIRS_TBB})
+  add_dependency_includes(${CONAN_INCLUDE_DIRS_ARROW})
+ # message(FATAL_ERROR "SDSDF ${CONAN_INCLUDE_DIRS_ARROW}")
 
   set(Boost_USE_STATIC_LIBS ON)
   find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
@@ -545,6 +548,9 @@ if(ENABLE_CONAN)
   set(LUA_LIBRARIES ${lua_LIBRARIES})
 
   find_package(TBB REQUIRED)
+  #find_package(Parquet REQUIRED)
+  find_package(Arrow REQUIRED)
+  set(ARROW_LIBRARIES ${arrow_LIBRARIES})
 
 
   # note: we avoid calling find_package(Osmium ...) here to ensure that the
@@ -678,7 +684,9 @@ set(UPDATER_LIBRARIES
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES}
-    ${ZLIB_LIBRARY})
+    ${ZLIB_LIBRARY}
+    ${ARROW_LIBRARIES}
+    )
 set(CONTRACTOR_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
