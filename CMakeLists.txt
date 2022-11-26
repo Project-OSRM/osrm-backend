@@ -551,7 +551,7 @@ if(ENABLE_CONAN)
   set(LUA_LIBRARIES ${lua_LIBRARIES})
 
   find_package(TBB REQUIRED)
-  #find_package(Parquet REQUIRED)
+  
   find_package(Arrow REQUIRED)
   set(ARROW_LIBRARIES ${arrow_LIBRARIES})
 
@@ -568,12 +568,14 @@ else()
   endif()
   add_dependency_includes(${Boost_INCLUDE_DIRS})
 
+  find_package(Parquet CONFIG REQUIRED)
+  set(ARROW_LIBRARIES Parquet::parquet_shared)
+
+
   find_package(TBB REQUIRED)
   add_dependency_includes(${TBB_INCLUDE_DIR})
   set(TBB_LIBRARIES TBB::tbb)
 
-  find_package(Parquet REQUIRED)
-  set(ARROW_LIBRARIES Parquet::parquet_shared)
 
   find_package(EXPAT REQUIRED)
   add_dependency_includes(${EXPAT_INCLUDE_DIRS})
