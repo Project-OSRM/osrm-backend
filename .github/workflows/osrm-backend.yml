@@ -430,6 +430,13 @@ jobs:
         if [ "${TARGET_ARCH}" != "i686" ] && [ "${ENABLE_CONAN}" != "ON" ]; then
           sudo apt-get update -y
           sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev libboost-all-dev
+
+          wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+          sudo apt-get install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+          sudo apt-get update -y
+          sudo apt-get install -y -V libarrow-dev # For C++
+
+
           if [[ "${CCOMPILER}" != clang-* ]]; then
             sudo apt-get install -y ${CXXCOMPILER}
           fi
