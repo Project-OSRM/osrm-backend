@@ -216,7 +216,7 @@ template <int N, typename T = std::string> struct FixedGroupBlock
             std::numeric_limits<std::make_unsigned_t<ValueType>>::max();
 
         auto index = 0;
-        std::array<ValueType, BLOCK_SIZE> prefix;
+        std::array<ValueType, BLOCK_SIZE> prefix{};
 
         for (OffsetIterator curr = first, next = std::next(first); curr != last; ++curr, ++next)
         {
