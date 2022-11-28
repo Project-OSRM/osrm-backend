@@ -268,7 +268,7 @@ jobs:
             build_node_package: true
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             BUILD_TYPE: Release
             CCOMPILER: clang-14
             CXXCOMPILER: clang++-14
