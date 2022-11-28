@@ -141,7 +141,7 @@ jobs:
   #         docker stop osrm-container
 
   build-test-publish:
-    needs: format-taginfo-docs
+   # needs: format-taginfo-docs
     strategy:
       matrix:
         include:
