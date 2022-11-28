@@ -223,15 +223,15 @@ jobs:
           #   ENABLE_BENCHMARKS: ON
           #   CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: gcc-11-release
-            continue-on-error: false
-            node: 16
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-11
-            CXXCOMPILER: g++-11
-            ENABLE_BENCHMARKS: ON
+          # - name: gcc-11-release
+          #   continue-on-error: false
+          #   node: 16
+          #   runs-on: ubuntu-20.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-11
+          #   CXXCOMPILER: g++-11
+          #   ENABLE_BENCHMARKS: ON
 
           # - name: gcc-10-release
           #   continue-on-error: false
@@ -309,18 +309,18 @@ jobs:
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
 
-          - name: conan-macos-arm64-release-node
-            build_node_package: true
-            continue-on-error: true
-            node: 18
-            runs-on: macos-11
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_ASSERTIONS: ON
-            ENABLE_CONAN: ON
-            ENABLE_APPLE_SILICON: ON
+          # - name: conan-macos-arm64-release-node
+          #   build_node_package: true
+          #   continue-on-error: true
+          #   node: 18
+          #   runs-on: macos-11
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang
+          #   CXXCOMPILER: clang++
+          #   CUCUMBER_TIMEOUT: 60000
+          #   ENABLE_ASSERTIONS: ON
+          #   ENABLE_CONAN: ON
+          #   ENABLE_APPLE_SILICON: ON
 
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
@@ -412,7 +412,7 @@ jobs:
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
           sudo apt-get update -y && sudo apt-get install ccache
         elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-          brew install ccache
+          brew install ccache apache-arrow
         fi
 
         # clang
