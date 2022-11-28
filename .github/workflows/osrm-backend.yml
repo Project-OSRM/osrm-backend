@@ -309,18 +309,18 @@ jobs:
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
 
-          # - name: conan-macos-arm64-release-node
-          #   build_node_package: true
-          #   continue-on-error: true
-          #   node: 18
-          #   runs-on: macos-11
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang
-          #   CXXCOMPILER: clang++
-          #   CUCUMBER_TIMEOUT: 60000
-          #   ENABLE_ASSERTIONS: ON
-          #   ENABLE_CONAN: ON
-          #   ENABLE_APPLE_SILICON: ON
+          - name: conan-macos-arm64-release-node
+            build_node_package: true
+            continue-on-error: true
+            node: 18
+            runs-on: macos-11
+            BUILD_TYPE: Release
+            CCOMPILER: clang
+            CXXCOMPILER: clang++
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_ASSERTIONS: ON
+            ENABLE_CONAN: ON
+            ENABLE_APPLE_SILICON: ON
 
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
