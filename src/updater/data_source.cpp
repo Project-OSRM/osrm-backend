@@ -52,7 +52,8 @@ makeSegmentParser(SpeedAndTurnPenaltyFormat format)
     case SpeedAndTurnPenaltyFormat::PARQUET:
         return std::make_unique<ParquetFilesParser<Segment, SpeedSource>>();
     }
-    BOOST_UNREACHABLE_RETURN(nullptr);
+    BOOST_ASSERT(false && "unreachable");
+    return {};
 }
 
 std::unique_ptr<FilesParser<Turn, PenaltySource>> makeTurnParser(SpeedAndTurnPenaltyFormat format)
