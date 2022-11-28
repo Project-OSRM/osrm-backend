@@ -275,16 +275,16 @@ jobs:
           #   CXXCOMPILER: g++-8
           #   CXXFLAGS: -Wno-cast-function-type
 
-          - name: conan-linux-release-node
-            build_node_package: true
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-22.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-14
-            CXXCOMPILER: clang++-14
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
+          # - name: conan-linux-release-node
+          #   build_node_package: true
+          #   continue-on-error: false
+          #   node: 18
+          #   runs-on: ubuntu-22.04
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-14
+          #   CXXCOMPILER: clang++-14
+          #   ENABLE_CONAN: ON
+          #   NODE_PACKAGE_TESTS_ONLY: ON
 
           # - name: conan-linux-debug-node
           #   build_node_package: true
@@ -297,17 +297,17 @@ jobs:
           #   ENABLE_CONAN: ON
           #   NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: conan-macos-x64-release-node
-            build_node_package: true
-            continue-on-error: true
-            node: 18
-            runs-on: macos-11
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_ASSERTIONS: ON
-            ENABLE_CONAN: ON
+          # - name: conan-macos-x64-release-node
+          #   build_node_package: true
+          #   continue-on-error: true
+          #   node: 18
+          #   runs-on: macos-11
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang
+          #   CXXCOMPILER: clang++
+          #   CUCUMBER_TIMEOUT: 60000
+          #   ENABLE_ASSERTIONS: ON
+          #   ENABLE_CONAN: ON
 
           - name: conan-macos-arm64-release-node
             build_node_package: true
@@ -579,7 +579,12 @@ jobs:
       run: |
         node --version
         npm run nodejs-tests
-
+    - name: upload logs
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: log
+        path: /Users/runner/.conan/data/thrift/0.17.0/_/_/build/fde1b93e705741d306ab254e0a17e03b1a163c12/build/Release/CMakeFiles/CMakeOutput.log
     - name: Upload test logs
       uses: actions/upload-artifact@v3
       if: failure()
