@@ -212,6 +212,17 @@ jobs:
             CXXCOMPILER: clang++-6.0
             ENABLE_CONAN: ON
 
+          - name: gcc-12-release
+            continue-on-error: false
+            node: 16
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-12
+            CXXCOMPILER: g++-12
+            ENABLE_BENCHMARKS: ON
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+
           - name: gcc-11-release
             continue-on-error: false
             node: 16
