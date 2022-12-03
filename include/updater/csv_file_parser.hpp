@@ -78,7 +78,7 @@ template <typename Key, typename Value> struct CSVFilesParser
             util::Log() << "In total loaded " << csv_filenames.size() << " file(s) with a total of "
                         << lookup.size() << " unique values";
 
-            return LookupTable<Key, Value>{lookup};
+            return LookupTable<Key, Value>{std::move(lookup)};
         }
         catch (const std::exception &e)
         // TBB should capture to std::exception_ptr and automatically rethrow in this thread.
