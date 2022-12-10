@@ -219,7 +219,7 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(8) Uint64Pair FLATBUFFERS_FINAL_CLASS {
 FLATBUFFERS_STRUCT_END(Uint64Pair, 16);
 
 struct WaypointT : public flatbuffers::NativeTable {
-  typedef Waypoint TableType;
+  using TableType = Waypoint;
   std::string hint;
   float distance;
   std::string name;
@@ -239,7 +239,7 @@ struct WaypointT : public flatbuffers::NativeTable {
 };
 
 struct Waypoint FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef WaypointT NativeTableType;
+  using NativeTableType = WaypointT;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_HINT = 4,
     VT_DISTANCE = 6,
@@ -393,14 +393,14 @@ inline flatbuffers::Offset<Waypoint> CreateWaypointDirect(
 flatbuffers::Offset<Waypoint> CreateWaypoint(flatbuffers::FlatBufferBuilder &_fbb, const WaypointT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct MetadataT : public flatbuffers::NativeTable {
-  typedef Metadata TableType;
+  using TableType = Metadata;
   std::vector<std::string> datasource_names;
   MetadataT() {
   }
 };
 
 struct Metadata FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef MetadataT NativeTableType;
+  using NativeTableType = MetadataT;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_DATASOURCE_NAMES = 4
   };
@@ -457,7 +457,7 @@ inline flatbuffers::Offset<Metadata> CreateMetadataDirect(
 flatbuffers::Offset<Metadata> CreateMetadata(flatbuffers::FlatBufferBuilder &_fbb, const MetadataT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct AnnotationT : public flatbuffers::NativeTable {
-  typedef Annotation TableType;
+  using TableType = Annotation;
   std::vector<uint32_t> distance;
   std::vector<uint32_t> duration;
   std::vector<uint32_t> datasources;
@@ -470,7 +470,7 @@ struct AnnotationT : public flatbuffers::NativeTable {
 };
 
 struct Annotation FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef AnnotationT NativeTableType;
+  using NativeTableType = AnnotationT;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_DISTANCE = 4,
     VT_DURATION = 6,
@@ -609,7 +609,7 @@ inline flatbuffers::Offset<Annotation> CreateAnnotationDirect(
 flatbuffers::Offset<Annotation> CreateAnnotation(flatbuffers::FlatBufferBuilder &_fbb, const AnnotationT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct StepManeuverT : public flatbuffers::NativeTable {
-  typedef StepManeuver TableType;
+  using TableType = StepManeuver;
   std::unique_ptr<osrm::engine::api::fbresult::Position> location;
   uint16_t bearing_before;
   uint16_t bearing_after;
@@ -626,7 +626,7 @@ struct StepManeuverT : public flatbuffers::NativeTable {
 };
 
 struct StepManeuver FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef StepManeuverT NativeTableType;
+  using NativeTableType = StepManeuverT;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_LOCATION = 4,
     VT_BEARING_BEFORE = 6,
@@ -722,7 +722,7 @@ inline flatbuffers::Offset<StepManeuver> CreateStepManeuver(
 flatbuffers::Offset<StepManeuver> CreateStepManeuver(flatbuffers::FlatBufferBuilder &_fbb, const StepManeuverT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct LaneT : public flatbuffers::NativeTable {
-  typedef Lane TableType;
+  using TableType = Lane;
   std::vector<osrm::engine::api::fbresult::Turn> indications;
   bool valid;
   LaneT()
@@ -731,7 +731,7 @@ struct LaneT : public flatbuffers::NativeTable {
 };
 
 struct Lane FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef LaneT NativeTableType;
+  using NativeTableType = LaneT;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_INDICATIONS = 4,
     VT_VALID = 6
@@ -799,7 +799,7 @@ inline flatbuffers::Offset<Lane> CreateLaneDirect(
 flatbuffers::Offset<Lane> CreateLane(flatbuffers::FlatBufferBuilder &_fbb, const LaneT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct IntersectionT : public flatbuffers::NativeTable {
-  typedef Intersection TableType;
+  using TableType = Intersection;
   std::unique_ptr<osrm::engine::api::fbresult::Position> location;
   std::vector<int16_t> bearings;
   std::vector<std::string> classes;
@@ -814,7 +814,7 @@ struct IntersectionT : public flatbuffers::NativeTable {
 };
 
 struct Intersection FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef IntersectionT NativeTableType;
+  using NativeTableType = IntersectionT;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_LOCATION = 4,
     VT_BEARINGS = 6,
@@ -950,7 +950,7 @@ inline flatbuffers::Offset<Intersection> CreateIntersectionDirect(
 flatbuffers::Offset<Intersection> CreateIntersection(flatbuffers::FlatBufferBuilder &_fbb, const IntersectionT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct StepT : public flatbuffers::NativeTable {
-  typedef Step TableType;
+  using TableType = Step;
   float distance;
   float duration;
   std::string polyline;
@@ -976,7 +976,7 @@ struct StepT : public flatbuffers::NativeTable {
 };
 
 struct Step FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef StepT NativeTableType;
+  using NativeTableType = StepT;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_DISTANCE = 4,
     VT_DURATION = 6,
@@ -1234,7 +1234,7 @@ inline flatbuffers::Offset<Step> CreateStepDirect(
 flatbuffers::Offset<Step> CreateStep(flatbuffers::FlatBufferBuilder &_fbb, const StepT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct LegT : public flatbuffers::NativeTable {
-  typedef Leg TableType;
+  using TableType = Leg;
   double distance;
   double duration;
   double weight;
@@ -1249,7 +1249,7 @@ struct LegT : public flatbuffers::NativeTable {
 };
 
 struct Leg FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef LegT NativeTableType;
+  using NativeTableType = LegT;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_DISTANCE = 4,
     VT_DURATION = 6,
@@ -1369,7 +1369,7 @@ inline flatbuffers::Offset<Leg> CreateLegDirect(
 flatbuffers::Offset<Leg> CreateLeg(flatbuffers::FlatBufferBuilder &_fbb, const LegT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct RouteObjectT : public flatbuffers::NativeTable {
-  typedef RouteObject TableType;
+  using TableType = RouteObject;
   float distance;
   float duration;
   float weight;
@@ -1387,7 +1387,7 @@ struct RouteObjectT : public flatbuffers::NativeTable {
 };
 
 struct RouteObject FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef RouteObjectT NativeTableType;
+  using NativeTableType = RouteObjectT;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_DISTANCE = 4,
     VT_DURATION = 6,
@@ -1534,7 +1534,7 @@ inline flatbuffers::Offset<RouteObject> CreateRouteObjectDirect(
 flatbuffers::Offset<RouteObject> CreateRouteObject(flatbuffers::FlatBufferBuilder &_fbb, const RouteObjectT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct TableT : public flatbuffers::NativeTable {
-  typedef Table TableType;
+  using TableType = Table;
   std::vector<float> durations;
   uint16_t rows;
   uint16_t cols;
@@ -1548,7 +1548,7 @@ struct TableT : public flatbuffers::NativeTable {
 };
 
 struct Table FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef TableT NativeTableType;
+  using NativeTableType = TableT;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_DURATIONS = 4,
     VT_ROWS = 6,
@@ -1671,7 +1671,7 @@ inline flatbuffers::Offset<Table> CreateTableDirect(
 flatbuffers::Offset<Table> CreateTable(flatbuffers::FlatBufferBuilder &_fbb, const TableT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct ErrorT : public flatbuffers::NativeTable {
-  typedef Error TableType;
+  using TableType = Error;
   std::string code;
   std::string message;
   ErrorT() {
@@ -1679,7 +1679,7 @@ struct ErrorT : public flatbuffers::NativeTable {
 };
 
 struct Error FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef ErrorT NativeTableType;
+  using NativeTableType = ErrorT;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_CODE = 4,
     VT_MESSAGE = 6
@@ -1749,7 +1749,7 @@ inline flatbuffers::Offset<Error> CreateErrorDirect(
 flatbuffers::Offset<Error> CreateError(flatbuffers::FlatBufferBuilder &_fbb, const ErrorT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct FBResultT : public flatbuffers::NativeTable {
-  typedef FBResult TableType;
+  using TableType = FBResult;
   bool error;
   std::unique_ptr<osrm::engine::api::fbresult::ErrorT> code;
   std::string data_version;
@@ -1762,7 +1762,7 @@ struct FBResultT : public flatbuffers::NativeTable {
 };
 
 struct FBResult FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef FBResultT NativeTableType;
+  using NativeTableType = FBResultT;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ERROR = 4,
     VT_CODE = 6,

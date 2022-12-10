@@ -34,8 +34,7 @@ namespace lanes
 
 namespace
 {
-typedef enum TurnLaneScenario
-{
+using TurnLaneScenario = enum TurnLaneScenario {
     SIMPLE,             // a straightforward assignment
     PARTITION_LOCAL,    // an assignment that requires partitioning, using local turns
     SIMPLE_PREVIOUS,    // an assignemtnn using the turns specified at the previous road (e.g.
@@ -50,7 +49,7 @@ typedef enum TurnLaneScenario
     INVALID,  // some error might have occurred
     UNKNOWN,  // UNKNOWN describes all cases that we are currently not able to handle
     NUM_SCENARIOS
-} TurnLaneScenario;
+};
 
 } // namespace
 
@@ -61,7 +60,7 @@ class TurnLaneHandler
     using ScopedWriterLock = boost::interprocess::scoped_lock<UpgradableMutex>;
 
   public:
-    typedef std::vector<TurnLaneData> LaneDataVector;
+    using LaneDataVector = std::vector<TurnLaneData>;
 
     TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                     const extractor::EdgeBasedNodeDataContainer &node_data_container,

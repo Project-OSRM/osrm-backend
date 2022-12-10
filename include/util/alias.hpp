@@ -171,8 +171,8 @@ namespace std
 {
 template <typename From, typename Tag> struct hash<osrm::Alias<From, Tag>>
 {
-    typedef osrm::Alias<From, Tag> argument_type;
-    typedef std::size_t result_type;
+    using argument_type = osrm::Alias<From, Tag>;
+    using result_type = std::size_t;
     result_type operator()(argument_type const &s) const
     {
         return std::hash<From>()(static_cast<const From>(s));

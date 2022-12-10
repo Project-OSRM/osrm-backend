@@ -336,17 +336,16 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
                                         boost::random_access_traversal_tag,
                                         ReferenceT>
     {
-        typedef boost::iterator_facade<iterator_impl<DataT, ContainerT, ReferenceT>,
-                                       DataT,
-                                       boost::random_access_traversal_tag,
-                                       ReferenceT>
-            base_t;
+        using base_t = boost::iterator_facade<iterator_impl<DataT, ContainerT, ReferenceT>,
+                                              DataT,
+                                              boost::random_access_traversal_tag,
+                                              ReferenceT>;
 
       public:
-        typedef typename base_t::value_type value_type;
-        typedef typename base_t::difference_type difference_type;
-        typedef typename base_t::reference reference;
-        typedef std::random_access_iterator_tag iterator_category;
+        using value_type = typename base_t::value_type;
+        using difference_type = typename base_t::difference_type;
+        using reference = typename base_t::reference;
+        using iterator_category = std::random_access_iterator_tag;
 
         explicit iterator_impl()
             : container(nullptr), index(std::numeric_limits<std::size_t>::max())

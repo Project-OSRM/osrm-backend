@@ -73,7 +73,7 @@ class Log
         return *this;
     }
 
-    typedef std::ostream &(manip)(std::ostream &);
+    using manip = std::ostream &(std::ostream &);
 
     inline Log &operator<<(manip &m)
     {

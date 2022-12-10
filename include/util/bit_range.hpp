@@ -49,17 +49,16 @@ class BitIterator : public boost::iterator_facade<BitIterator<DataT>,
                                                   boost::forward_traversal_tag,
                                                   const std::size_t>
 {
-    typedef boost::iterator_facade<BitIterator<DataT>,
-                                   const std::size_t,
-                                   boost::forward_traversal_tag,
-                                   const std::size_t>
-        base_t;
+    using base_t = boost::iterator_facade<BitIterator<DataT>,
+                                          const std::size_t,
+                                          boost::forward_traversal_tag,
+                                          const std::size_t>;
 
   public:
-    typedef typename base_t::value_type value_type;
-    typedef typename base_t::difference_type difference_type;
-    typedef typename base_t::reference reference;
-    typedef std::random_access_iterator_tag iterator_category;
+    using value_type = typename base_t::value_type;
+    using difference_type = typename base_t::difference_type;
+    using reference = typename base_t::reference;
+    using iterator_category = std::random_access_iterator_tag;
 
     explicit BitIterator() : m_value(0) {}
     explicit BitIterator(const DataT x) : m_value(std::move(x)) {}

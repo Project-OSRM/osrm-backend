@@ -17,10 +17,10 @@ struct TestData
     EdgeID id;
 };
 
-typedef StaticGraph<TestData> TestStaticGraph;
-typedef TestStaticGraph::NodeArrayEntry TestNodeArrayEntry;
-typedef TestStaticGraph::EdgeArrayEntry TestEdgeArrayEntry;
-typedef static_graph_details::SortableEdgeWithData<TestData> TestInputEdge;
+using TestStaticGraph = StaticGraph<TestData>;
+using TestNodeArrayEntry = TestStaticGraph::NodeArrayEntry;
+using TestEdgeArrayEntry = TestStaticGraph::EdgeArrayEntry;
+using TestInputEdge = static_graph_details::SortableEdgeWithData<TestData>;
 
 static_assert(traits::HasDataMember<TestInputEdge>::value, "TestInputEdge needs to have data");
 
@@ -76,7 +76,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomArrayEntryFixture
     std::vector<unsigned> order;
 };
 
-typedef RandomArrayEntryFixture<TEST_NUM_NODES, TEST_NUM_EDGES> TestRandomArrayEntryFixture;
+using TestRandomArrayEntryFixture = RandomArrayEntryFixture<TEST_NUM_NODES, TEST_NUM_EDGES>;
 
 BOOST_FIXTURE_TEST_CASE(array_test, TestRandomArrayEntryFixture)
 {

@@ -83,10 +83,10 @@ using FloatLine = std::vector<FloatPoint>;
 // We use boost::geometry to clip lines/points that are outside or cross the boundary
 // of the tile we're rendering.  We need these types defined to use boosts clipping
 // logic
-typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian> point_t;
-typedef boost::geometry::model::linestring<point_t> linestring_t;
-typedef boost::geometry::model::box<point_t> box_t;
-typedef boost::geometry::model::multi_linestring<linestring_t> multi_linestring_t;
+using point_t = boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian>;
+using linestring_t = boost::geometry::model::linestring<point_t>;
+using box_t = boost::geometry::model::box<point_t>;
+using multi_linestring_t = boost::geometry::model::multi_linestring<linestring_t>;
 const static box_t clip_box(point_t(-util::vector_tile::BUFFER, -util::vector_tile::BUFFER),
                             point_t(util::vector_tile::EXTENT + util::vector_tile::BUFFER,
                                     util::vector_tile::EXTENT + util::vector_tile::BUFFER));

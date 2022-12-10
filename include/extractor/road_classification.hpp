@@ -20,7 +20,7 @@ namespace extractor
 // guidance constants.
 namespace RoadPriorityClass
 {
-typedef std::uint8_t Enum;
+using Enum = std::uint8_t;
 // Top priority Road
 const constexpr Enum MOTORWAY = 0;
 const constexpr Enum MOTORWAY_LINK = 1;
