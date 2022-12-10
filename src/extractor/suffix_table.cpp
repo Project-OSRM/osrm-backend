@@ -19,16 +19,16 @@ SuffixTable::SuffixTable(ScriptingEnvironment &scripting_environment)
         boost::algorithm::to_lower(suffix);
 
     auto into = std::inserter(suffix_set, end(suffix_set));
-    auto to_view = [](const auto &s) { return util::StringView{s}; };
+    auto to_view = [](const auto &s) { return std::string_view{s}; };
     std::transform(begin(suffixes), end(suffixes), into, to_view);
 }
 
 bool SuffixTable::isSuffix(const std::string &possible_suffix) const
 {
-    return isSuffix(util::StringView{possible_suffix});
+    return isSuffix(std::string_view{possible_suffix});
 }
 
-bool SuffixTable::isSuffix(util::StringView possible_suffix) const
+bool SuffixTable::isSuffix(std::string_view possible_suffix) const
 {
     return suffix_set.count(possible_suffix) > 0;
 }

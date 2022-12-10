@@ -142,7 +142,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     extractor::Datasources *m_datasources;
 
     std::uint32_t m_check_sum;
-    StringView m_data_timestamp;
+    std::string_view m_data_timestamp;
     util::vector_view<util::Coordinate> m_coordinate_list;
     extractor::PackedOSMIDsView m_osmnodeid_list;
     util::vector_view<std::uint32_t> m_lane_description_offsets;
@@ -408,32 +408,32 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return edge_based_node_data.GetNameID(edge_based_node_id);
     }
 
-    StringView GetNameForID(const NameID id) const override final
+    std::string_view GetNameForID(const NameID id) const override final
     {
         return m_name_table.GetNameForID(id);
     }
 
-    StringView GetRefForID(const NameID id) const override final
+    std::string_view GetRefForID(const NameID id) const override final
     {
         return m_name_table.GetRefForID(id);
     }
 
-    StringView GetPronunciationForID(const NameID id) const override final
+    std::string_view GetPronunciationForID(const NameID id) const override final
     {
         return m_name_table.GetPronunciationForID(id);
     }
 
-    StringView GetDestinationsForID(const NameID id) const override final
+    std::string_view GetDestinationsForID(const NameID id) const override final
     {
         return m_name_table.GetDestinationsForID(id);
     }
 
-    StringView GetExitsForID(const NameID id) const override final
+    std::string_view GetExitsForID(const NameID id) const override final
     {
         return m_name_table.GetExitsForID(id);
     }
 
-    StringView GetDatasourceName(const DatasourceID id) const override final
+    std::string_view GetDatasourceName(const DatasourceID id) const override final
     {
         return m_datasources->GetSourceName(id);
     }

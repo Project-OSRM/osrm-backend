@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(check_string_view)
     std::string name_data = "hellostringview";
     std::vector<std::uint32_t> name_offsets = {0, 5, 11, 15};
 
-    IndexedData<VariableGroupBlock<16, StringView>> indexed_data(
+    IndexedData<VariableGroupBlock<16, std::string_view>> indexed_data(
         name_offsets.begin(), name_offsets.end(), name_data.begin());
 
     BOOST_CHECK_EQUAL(indexed_data.at(0), "hello");

@@ -263,7 +263,7 @@ inline auto make_partition_view(const SharedDataIndex &index, const std::string 
 
 inline auto make_timestamp_view(const SharedDataIndex &index, const std::string &name)
 {
-    return util::StringView(index.GetBlockPtr<char>(name), index.GetBlockEntries(name));
+    return std::string_view(index.GetBlockPtr<char>(name), index.GetBlockEntries(name));
 }
 
 inline auto make_cell_storage_view(const SharedDataIndex &index, const std::string &name)
