@@ -26,7 +26,10 @@ class filtered_integer_iterator
                                     boost::single_pass_traversal_tag,
                                     Integer>
 {
-    using base_t = boost::iterator_facade<filtered_integer_iterator<Integer, Filter>, Integer, boost::single_pass_traversal_tag, Integer>;
+    using base_t = boost::iterator_facade<filtered_integer_iterator<Integer, Filter>,
+                                          Integer,
+                                          boost::single_pass_traversal_tag,
+                                          Integer>;
 
   public:
     using value_type = typename base_t::value_type;

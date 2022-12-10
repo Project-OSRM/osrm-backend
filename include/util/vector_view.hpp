@@ -30,7 +30,10 @@ class VectorViewIterator : public boost::iterator_facade<VectorViewIterator<Data
                                                          boost::random_access_traversal_tag,
                                                          DataT &>
 {
-    using base_t = boost::iterator_facade<VectorViewIterator<DataT>, DataT, boost::random_access_traversal_tag, DataT &>;
+    using base_t = boost::iterator_facade<VectorViewIterator<DataT>,
+                                          DataT,
+                                          boost::random_access_traversal_tag,
+                                          DataT &>;
 
   public:
     using value_type = typename base_t::value_type;

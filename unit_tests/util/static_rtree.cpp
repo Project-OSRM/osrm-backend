@@ -174,11 +174,18 @@ struct GraphFixture
     std::vector<TestData> edges;
 };
 
-using TestRandomGraphFixture_LeafHalfFull = RandomGraphFixture<TEST_LEAF_NODE_SIZE * 3, TEST_LEAF_NODE_SIZE / 2>;
-using TestRandomGraphFixture_LeafFull = RandomGraphFixture<TEST_LEAF_NODE_SIZE * 5, TEST_LEAF_NODE_SIZE>;
-using TestRandomGraphFixture_TwoLeaves = RandomGraphFixture<TEST_LEAF_NODE_SIZE * 10, TEST_LEAF_NODE_SIZE * 2>;
-using TestRandomGraphFixture_Branch = RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3, TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR>;
-using TestRandomGraphFixture_MultipleLevels = RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3, TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 2>;
+using TestRandomGraphFixture_LeafHalfFull =
+    RandomGraphFixture<TEST_LEAF_NODE_SIZE * 3, TEST_LEAF_NODE_SIZE / 2>;
+using TestRandomGraphFixture_LeafFull =
+    RandomGraphFixture<TEST_LEAF_NODE_SIZE * 5, TEST_LEAF_NODE_SIZE>;
+using TestRandomGraphFixture_TwoLeaves =
+    RandomGraphFixture<TEST_LEAF_NODE_SIZE * 10, TEST_LEAF_NODE_SIZE * 2>;
+using TestRandomGraphFixture_Branch =
+    RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
+                       TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR>;
+using TestRandomGraphFixture_MultipleLevels =
+    RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
+                       TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 2>;
 using TestRandomGraphFixture_10_30 = RandomGraphFixture<10, 30>;
 
 template <typename RTreeT>

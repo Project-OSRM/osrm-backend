@@ -49,7 +49,10 @@ class BitIterator : public boost::iterator_facade<BitIterator<DataT>,
                                                   boost::forward_traversal_tag,
                                                   const std::size_t>
 {
-    using base_t = boost::iterator_facade<BitIterator<DataT>, const std::size_t, boost::forward_traversal_tag, const std::size_t>;
+    using base_t = boost::iterator_facade<BitIterator<DataT>,
+                                          const std::size_t,
+                                          boost::forward_traversal_tag,
+                                          const std::size_t>;
 
   public:
     using value_type = typename base_t::value_type;

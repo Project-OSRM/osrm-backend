@@ -100,7 +100,8 @@ template <storage::Ownership Ownership> class CellStorageImpl
         {
 
             using ValueT = decltype(*std::declval<ValuePtrT>());
-            using base_t = boost::iterator_facade<ColumnIterator<ValueT>, ValueT, boost::random_access_traversal_tag>;
+            using base_t = boost::
+                iterator_facade<ColumnIterator<ValueT>, ValueT, boost::random_access_traversal_tag>;
 
           public:
             using value_type = typename base_t::value_type;

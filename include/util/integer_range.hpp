@@ -22,7 +22,10 @@ class integer_iterator : public boost::iterator_facade<integer_iterator<Integer>
                                                        boost::random_access_traversal_tag,
                                                        Integer>
 {
-    using base_t = boost::iterator_facade<integer_iterator<Integer>, Integer, boost::random_access_traversal_tag, Integer>;
+    using base_t = boost::iterator_facade<integer_iterator<Integer>,
+                                          Integer,
+                                          boost::random_access_traversal_tag,
+                                          Integer>;
 
   public:
     using value_type = typename base_t::value_type;
