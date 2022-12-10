@@ -432,11 +432,6 @@ include_directories(SYSTEM ${RAPIDJSON_INCLUDE_DIR})
 set(MICROTAR_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src")
 include_directories(SYSTEM ${MICROTAR_INCLUDE_DIR})
 
-set(MBXGEOM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/geometry.hpp-0.9.2/include")
-include_directories(SYSTEM ${MBXGEOM_INCLUDE_DIR})
-set(CHEAPRULER_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/cheap-ruler-cpp-2778eb8/include")
-include_directories(SYSTEM ${CHEAPRULER_INCLUDE_DIR})
-
 add_library(MICROTAR OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src/microtar.c")
 set_property(TARGET MICROTAR PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_no_warning(MICROTAR unused-variable)
