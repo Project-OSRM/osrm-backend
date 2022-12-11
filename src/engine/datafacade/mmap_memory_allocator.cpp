@@ -26,7 +26,7 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
         std::unique_ptr<storage::BaseDataLayout> fake_layout =
             std::make_unique<storage::TarDataLayout>();
 
-        // Convert the boost::filesystem::path object into a plain string
+        // Convert the std::filesystem::path object into a plain string
         // that's stored as a member of this allocator object
         rtree_filename = storage.PopulateLayoutWithRTree(*fake_layout);
 
@@ -48,7 +48,7 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
 
     for (const auto &file : files)
     {
-        if (boost::filesystem::exists(file.second))
+        if (std::filesystem::exists(file.second))
         {
             std::unique_ptr<storage::BaseDataLayout> layout =
                 std::make_unique<storage::TarDataLayout>();

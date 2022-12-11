@@ -9,7 +9,7 @@
 
 #include "storage/shared_memory_ownership.hpp"
 
-#include <boost/filesystem/path.hpp>
+#include <filesystem>
 
 namespace osrm
 {

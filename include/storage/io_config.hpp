@@ -5,8 +5,7 @@
 
 #include <array>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/path.hpp>
+#include <filesystem>
 #include <string>
 
 namespace osrm
@@ -15,9 +14,9 @@ namespace storage
 {
 struct IOConfig
 {
-    IOConfig(std::vector<boost::filesystem::path> required_input_files_,
-             std::vector<boost::filesystem::path> optional_input_files_,
-             std::vector<boost::filesystem::path> output_files_)
+    IOConfig(std::vector<std::filesystem::path> required_input_files_,
+             std::vector<std::filesystem::path> optional_input_files_,
+             std::vector<std::filesystem::path> output_files_)
         : required_input_files(std::move(required_input_files_)),
           optional_input_files(std::move(optional_input_files_)),
           output_files(std::move(output_files_))
@@ -26,7 +25,7 @@ struct IOConfig
 
     bool IsValid() const;
     std::vector<std::string> GetMissingFiles() const;
-    boost::filesystem::path GetPath(const std::string &fileName) const
+    std::filesystem::path GetPath(const std::string &fileName) const
     {
         if (!IsConfigured(fileName, required_input_files) &&
             !IsConfigured(fileName, optional_input_files) && !IsConfigured(fileName, output_files))
@@ -37,11 +36,11 @@ struct IOConfig
         return {base_path.string() + fileName};
     }
 
-    boost::filesystem::path base_path;
+    std::filesystem::path base_path;
 
   protected:
     // Infer the base path from the path of the .osrm file
-    void UseDefaultOutputNames(const boost::filesystem::path &base)
+    void UseDefaultOutputNames(const std::filesystem::path &base)
     {
         // potentially strip off the .osrm (or other) extensions for
         // determining the base path=
@@ -64,7 +63,7 @@ struct IOConfig
 
   private:
     static bool IsConfigured(const std::string &fileName,
-                             const std::vector<boost::filesystem::path> &paths)
+                             const std::vector<std::filesystem::path> &paths)
     {
         for (auto &path : paths)
         {
@@ -77,9 +76,9 @@ struct IOConfig
         return false;
     }
 
-    std::vector<boost::filesystem::path> required_input_files;
-    std::vector<boost::filesystem::path> optional_input_files;
-    std::vector<boost::filesystem::path> output_files;
+    std::vector<std::filesystem::path> required_input_files;
+    std::vector<std::filesystem::path> optional_input_files;
+    std::vector<std::filesystem::path> output_files;
 };
 } // namespace storage
 } // namespace osrm

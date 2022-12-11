@@ -72,7 +72,7 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
 
     explicit Sol2ScriptingEnvironment(
         const std::string &file_name,
-        const std::vector<boost::filesystem::path> &location_dependent_data_paths);
+        const std::vector<std::filesystem::path> &location_dependent_data_paths);
     ~Sol2ScriptingEnvironment() override = default;
 
     const ProfileProperties &GetProfileProperties() override;

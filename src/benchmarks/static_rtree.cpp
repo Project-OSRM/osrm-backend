@@ -11,10 +11,8 @@
 #include "util/serialization.hpp"
 #include "util/timing_util.hpp"
 
-#include <iostream>
+#include <filesystem>
 #include <random>
-
-#include <boost/filesystem/fstream.hpp>
 
 namespace osrm
 {

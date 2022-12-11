@@ -14,7 +14,7 @@ namespace files
 
 // read .osrm.partition file
 template <typename MultiLevelPartitionT>
-inline void readPartition(const boost::filesystem::path &path, MultiLevelPartitionT &mlp)
+inline void readPartition(const std::filesystem::path &path, MultiLevelPartitionT &mlp)
 {
     static_assert(std::is_same<MultiLevelPartitionView, MultiLevelPartitionT>::value ||
                       std::is_same<MultiLevelPartition, MultiLevelPartitionT>::value,
@@ -28,7 +28,7 @@ inline void readPartition(const boost::filesystem::path &path, MultiLevelPartiti
 
 // writes .osrm.partition file
 template <typename MultiLevelPartitionT>
-inline void writePartition(const boost::filesystem::path &path, const MultiLevelPartitionT &mlp)
+inline void writePartition(const std::filesystem::path &path, const MultiLevelPartitionT &mlp)
 {
     static_assert(std::is_same<MultiLevelPartitionView, MultiLevelPartitionT>::value ||
                       std::is_same<MultiLevelPartition, MultiLevelPartitionT>::value,
@@ -42,7 +42,7 @@ inline void writePartition(const boost::filesystem::path &path, const MultiLevel
 
 // reads .osrm.cells file
 template <typename CellStorageT>
-inline void readCells(const boost::filesystem::path &path, CellStorageT &storage)
+inline void readCells(const std::filesystem::path &path, CellStorageT &storage)
 {
     static_assert(std::is_same<CellStorageView, CellStorageT>::value ||
                       std::is_same<CellStorage, CellStorageT>::value,
@@ -56,7 +56,7 @@ inline void readCells(const boost::filesystem::path &path, CellStorageT &storage
 
 // writes .osrm.cells file
 template <typename CellStorageT>
-inline void writeCells(const boost::filesystem::path &path, CellStorageT &storage)
+inline void writeCells(const std::filesystem::path &path, CellStorageT &storage)
 {
     static_assert(std::is_same<CellStorageView, CellStorageT>::value ||
                       std::is_same<CellStorage, CellStorageT>::value,
@@ -70,7 +70,7 @@ inline void writeCells(const boost::filesystem::path &path, CellStorageT &storag
 
 // reads .osrm.mldgr file
 template <typename MultiLevelGraphT>
-inline void readGraph(const boost::filesystem::path &path,
+inline void readGraph(const std::filesystem::path &path,
                       MultiLevelGraphT &graph,
                       std::uint32_t &connectivity_checksum)
 {
@@ -84,7 +84,7 @@ inline void readGraph(const boost::filesystem::path &path,
 
 // writes .osrm.mldgr file
 template <typename MultiLevelGraphT>
-inline void writeGraph(const boost::filesystem::path &path,
+inline void writeGraph(const std::filesystem::path &path,
                        const MultiLevelGraphT &graph,
                        const std::uint32_t connectivity_checksum)
 {

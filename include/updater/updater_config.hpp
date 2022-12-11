@@ -28,9 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_UPDATER_UPDATER_CONFIG_HPP
 #define OSRM_UPDATER_UPDATER_CONFIG_HPP
 
-#include <boost/filesystem/path.hpp>
-
 #include <chrono>
+#include <filesystem>
 #include <string>
 
 #include "storage/io_config.hpp"
@@ -61,7 +60,7 @@ struct UpdaterConfig final : storage::IOConfig
     {
     }
 
-    void UseDefaultOutputNames(const boost::filesystem::path &base)
+    void UseDefaultOutputNames(const std::filesystem::path &base)
     {
         IOConfig::UseDefaultOutputNames(base);
     }

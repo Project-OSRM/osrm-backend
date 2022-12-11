@@ -5,8 +5,9 @@
 #include "util/exception_utils.hpp"
 #include "util/vector_view.hpp"
 
-#include <boost/filesystem/path.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
+
+#include <filesystem>
 
 namespace osrm
 {
@@ -16,7 +17,7 @@ namespace util
 namespace detail
 {
 template <typename T, typename MmapContainerT>
-util::vector_view<T> mmapFile(const boost::filesystem::path &file, MmapContainerT &mmap_container)
+util::vector_view<T> mmapFile(const std::filesystem::path &file, MmapContainerT &mmap_container)
 {
     try
     {
@@ -35,9 +36,8 @@ util::vector_view<T> mmapFile(const boost::filesystem::path &file, MmapContainer
 }
 
 template <typename T, typename MmapContainerT>
-util::vector_view<T> mmapFile(const boost::filesystem::path &file,
-                              MmapContainerT &mmap_container,
-                              const std::size_t size)
+util::vector_view<T>
+mmapFile(const std::filesystem::path &file, MmapContainerT &mmap_container, const std::size_t size)
 {
     try
     {
@@ -63,21 +63,21 @@ util::vector_view<T> mmapFile(const boost::filesystem::path &file,
 } // namespace detail
 
 template <typename T>
-util::vector_view<const T> mmapFile(const boost::filesystem::path &file,
+util::vector_view<const T> mmapFile(const std::filesystem::path &file,
                                     boost::iostreams::mapped_file_source &mmap_container)
 {
     return detail::mmapFile<const T>(file, mmap_container);
 }
 
 template <typename T>
-util::vector_view<T> mmapFile(const boost::filesystem::path &file,
+util::vector_view<T> mmapFile(const std::filesystem::path &file,
                               boost::iostreams::mapped_file &mmap_container)
 {
     return detail::mmapFile<T>(file, mmap_container);
 }
 
 template <typename T>
-util::vector_view<T> mmapFile(const boost::filesystem::path &file,
+util::vector_view<T> mmapFile(const std::filesystem::path &file,
                               boost::iostreams::mapped_file &mmap_container,
                               std::size_t size)
 {

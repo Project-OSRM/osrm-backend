@@ -95,7 +95,7 @@ struct to_lua_object : public boost::static_visitor<sol::object>
 
 Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(
     const std::string &file_name,
-    const std::vector<boost::filesystem::path> &location_dependent_data_paths)
+    const std::vector<std::filesystem::path> &location_dependent_data_paths)
     : file_name(file_name), location_dependent_data(location_dependent_data_paths)
 {
     util::Log() << "Using script " << file_name;

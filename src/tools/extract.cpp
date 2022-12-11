@@ -4,11 +4,11 @@
 #include "util/log.hpp"
 #include "util/version.hpp"
 
-#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 #include <cstdlib>
 #include <exception>
+#include <filesystem>
 #include <new>
 #include <thread>
 
@@ -39,7 +39,7 @@ return_code parseArguments(int argc,
     boost::program_options::options_description config_options("Configuration");
     config_options.add_options()(
         "profile,p",
-        boost::program_options::value<boost::filesystem::path>(&extractor_config.profile_path)
+        boost::program_options::value<std::filesystem::path>(&extractor_config.profile_path)
             ->default_value("profiles/car.lua"),
         "Path to LUA routing profile")(
         "data_version,d",
@@ -66,7 +66,7 @@ return_code parseArguments(int argc,
             ->default_value(false),
         "Save conditional restrictions found during extraction to disk for use "
         "during contraction")("location-dependent-data",
-                              boost::program_options::value<std::vector<boost::filesystem::path>>(
+                              boost::program_options::value<std::vector<std::filesystem::path>>(
                                   &extractor_config.location_dependent_data_paths)
                                   ->composing(),
                               "GeoJSON files with location-dependent data")(
@@ -87,7 +87,7 @@ return_code parseArguments(int argc,
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
         "input,i",
-        boost::program_options::value<boost::filesystem::path>(&extractor_config.input_path),
+        boost::program_options::value<std::filesystem::path>(&extractor_config.input_path),
         "Input file in .osm, .osm.bz2 or .osm.pbf format")(
         "generate-edge-lookup",
         boost::program_options::bool_switch(&dummy)->implicit_value(true)->default_value(false),
@@ -103,7 +103,7 @@ return_code parseArguments(int argc,
 
     const auto *executable = argv[0];
     boost::program_options::options_description visible_options(
-        boost::filesystem::path(executable).filename().string() +
+        std::filesystem::path(executable).filename().string() +
         " <input.osm/.osm.bz2/.osm.pbf> [options]");
     visible_options.add(generic_options).add(config_options);
 
@@ -175,14 +175,14 @@ try
         return EXIT_FAILURE;
     }
 
-    if (!boost::filesystem::is_regular_file(extractor_config.input_path))
+    if (!std::filesystem::is_regular_file(extractor_config.input_path))
     {
         util::Log(logERROR) << "Input file " << extractor_config.input_path.string()
                             << " not found!";
         return EXIT_FAILURE;
     }
 
-    if (!boost::filesystem::is_regular_file(extractor_config.profile_path))
+    if (!std::filesystem::is_regular_file(extractor_config.profile_path))
     {
         util::Log(logERROR) << "Profile " << extractor_config.profile_path.string()
                             << " not found!";

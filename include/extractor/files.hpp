@@ -27,7 +27,7 @@ namespace files
 
 // writes the .osrm.icd file
 template <typename IntersectionBearingsT, typename EntryClassVectorT>
-inline void writeIntersections(const boost::filesystem::path &path,
+inline void writeIntersections(const std::filesystem::path &path,
                                const IntersectionBearingsT &intersection_bearings,
                                const EntryClassVectorT &entry_classes)
 {
@@ -43,7 +43,7 @@ inline void writeIntersections(const boost::filesystem::path &path,
 
 // read the .osrm.icd file
 template <typename IntersectionBearingsT, typename EntryClassVectorT>
-inline void readIntersections(const boost::filesystem::path &path,
+inline void readIntersections(const std::filesystem::path &path,
                               IntersectionBearingsT &intersection_bearings,
                               EntryClassVectorT &entry_classes)
 {
@@ -58,8 +58,7 @@ inline void readIntersections(const boost::filesystem::path &path,
 }
 
 // reads .osrm.properties
-inline void readProfileProperties(const boost::filesystem::path &path,
-                                  ProfileProperties &properties)
+inline void readProfileProperties(const std::filesystem::path &path, ProfileProperties &properties)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
@@ -68,7 +67,7 @@ inline void readProfileProperties(const boost::filesystem::path &path,
 }
 
 // writes .osrm.properties
-inline void writeProfileProperties(const boost::filesystem::path &path,
+inline void writeProfileProperties(const std::filesystem::path &path,
                                    const ProfileProperties &properties)
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
@@ -78,7 +77,7 @@ inline void writeProfileProperties(const boost::filesystem::path &path,
 }
 
 template <typename EdgeBasedEdgeVector>
-void writeEdgeBasedGraph(const boost::filesystem::path &path,
+void writeEdgeBasedGraph(const std::filesystem::path &path,
                          EdgeID const number_of_edge_based_nodes,
                          const EdgeBasedEdgeVector &edge_based_edge_list,
                          const std::uint32_t connectivity_checksum)
@@ -96,7 +95,7 @@ void writeEdgeBasedGraph(const boost::filesystem::path &path,
 
 // reads .osrm.ebg file
 template <typename EdgeBasedEdgeVector>
-void readEdgeBasedGraph(const boost::filesystem::path &path,
+void readEdgeBasedGraph(const std::filesystem::path &path,
                         EdgeID &number_of_edge_based_nodes,
                         EdgeBasedEdgeVector &edge_based_edge_list,
                         std::uint32_t &connectivity_checksum)
@@ -112,9 +111,8 @@ void readEdgeBasedGraph(const boost::filesystem::path &path,
 
 // reads .osrm.nbg_nodes
 template <typename CoordinatesT, typename PackedOSMIDsT>
-inline void readNodes(const boost::filesystem::path &path,
-                      CoordinatesT &coordinates,
-                      PackedOSMIDsT &osm_node_ids)
+inline void
+readNodes(const std::filesystem::path &path, CoordinatesT &coordinates, PackedOSMIDsT &osm_node_ids)
 {
     static_assert(std::is_same<typename CoordinatesT::value_type, util::Coordinate>::value, "");
     static_assert(std::is_same<typename PackedOSMIDsT::value_type, OSMNodeID>::value, "");
@@ -128,7 +126,7 @@ inline void readNodes(const boost::filesystem::path &path,
 
 // reads only coordinates from .osrm.nbg_nodes
 template <typename CoordinatesT>
-inline void readNodeCoordinates(const boost::filesystem::path &path, CoordinatesT &coordinates)
+inline void readNodeCoordinates(const std::filesystem::path &path, CoordinatesT &coordinates)
 {
     static_assert(std::is_same<typename CoordinatesT::value_type, util::Coordinate>::value, "");
 
@@ -140,7 +138,7 @@ inline void readNodeCoordinates(const boost::filesystem::path &path, Coordinates
 
 // writes .osrm.nbg_nodes
 template <typename CoordinatesT, typename PackedOSMIDsT>
-inline void writeNodes(const boost::filesystem::path &path,
+inline void writeNodes(const std::filesystem::path &path,
                        const CoordinatesT &coordinates,
                        const PackedOSMIDsT &osm_node_ids)
 {
@@ -155,7 +153,7 @@ inline void writeNodes(const boost::filesystem::path &path,
 }
 
 // reads .osrm.cnbg_to_ebg
-inline void readNBGMapping(const boost::filesystem::path &path, std::vector<NBGToEBG> &mapping)
+inline void readNBGMapping(const std::filesystem::path &path, std::vector<NBGToEBG> &mapping)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
@@ -164,8 +162,7 @@ inline void readNBGMapping(const boost::filesystem::path &path, std::vector<NBGT
 }
 
 // writes .osrm.cnbg_to_ebg
-inline void writeNBGMapping(const boost::filesystem::path &path,
-                            const std::vector<NBGToEBG> &mapping)
+inline void writeNBGMapping(const std::filesystem::path &path, const std::vector<NBGToEBG> &mapping)
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
@@ -174,7 +171,7 @@ inline void writeNBGMapping(const boost::filesystem::path &path,
 }
 
 // reads .osrm.datasource_names
-inline void readDatasources(const boost::filesystem::path &path, Datasources &sources)
+inline void readDatasources(const std::filesystem::path &path, Datasources &sources)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
@@ -183,7 +180,7 @@ inline void readDatasources(const boost::filesystem::path &path, Datasources &so
 }
 
 // writes .osrm.datasource_names
-inline void writeDatasources(const boost::filesystem::path &path, Datasources &sources)
+inline void writeDatasources(const std::filesystem::path &path, Datasources &sources)
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
@@ -193,7 +190,7 @@ inline void writeDatasources(const boost::filesystem::path &path, Datasources &s
 
 // reads .osrm.geometry
 template <typename SegmentDataT>
-inline void readSegmentData(const boost::filesystem::path &path, SegmentDataT &segment_data)
+inline void readSegmentData(const std::filesystem::path &path, SegmentDataT &segment_data)
 {
     static_assert(std::is_same<SegmentDataContainer, SegmentDataT>::value ||
                       std::is_same<SegmentDataView, SegmentDataT>::value,
@@ -206,7 +203,7 @@ inline void readSegmentData(const boost::filesystem::path &path, SegmentDataT &s
 
 // writes .osrm.geometry
 template <typename SegmentDataT>
-inline void writeSegmentData(const boost::filesystem::path &path, const SegmentDataT &segment_data)
+inline void writeSegmentData(const std::filesystem::path &path, const SegmentDataT &segment_data)
 {
     static_assert(std::is_same<SegmentDataContainer, SegmentDataT>::value ||
                       std::is_same<SegmentDataView, SegmentDataT>::value,
@@ -219,7 +216,7 @@ inline void writeSegmentData(const boost::filesystem::path &path, const SegmentD
 
 // reads .osrm.ebg_nodes
 template <typename NodeDataT>
-inline void readNodeData(const boost::filesystem::path &path, NodeDataT &node_data)
+inline void readNodeData(const std::filesystem::path &path, NodeDataT &node_data)
 {
     static_assert(std::is_same<EdgeBasedNodeDataContainer, NodeDataT>::value ||
                       std::is_same<EdgeBasedNodeDataView, NodeDataT>::value ||
@@ -233,7 +230,7 @@ inline void readNodeData(const boost::filesystem::path &path, NodeDataT &node_da
 
 // writes .osrm.ebg_nodes
 template <typename NodeDataT>
-inline void writeNodeData(const boost::filesystem::path &path, const NodeDataT &node_data)
+inline void writeNodeData(const std::filesystem::path &path, const NodeDataT &node_data)
 {
     static_assert(std::is_same<EdgeBasedNodeDataContainer, NodeDataT>::value ||
                       std::is_same<EdgeBasedNodeDataView, NodeDataT>::value ||
@@ -247,7 +244,7 @@ inline void writeNodeData(const boost::filesystem::path &path, const NodeDataT &
 
 // reads .osrm.tls
 template <typename OffsetsT, typename MaskT>
-inline void readTurnLaneDescriptions(const boost::filesystem::path &path,
+inline void readTurnLaneDescriptions(const std::filesystem::path &path,
                                      OffsetsT &turn_offsets,
                                      MaskT &turn_masks)
 {
@@ -264,7 +261,7 @@ inline void readTurnLaneDescriptions(const boost::filesystem::path &path,
 
 // writes .osrm.tls
 template <typename OffsetsT, typename MaskT>
-inline void writeTurnLaneDescriptions(const boost::filesystem::path &path,
+inline void writeTurnLaneDescriptions(const std::filesystem::path &path,
                                       const OffsetsT &turn_offsets,
                                       const MaskT &turn_masks)
 {
@@ -281,7 +278,7 @@ inline void writeTurnLaneDescriptions(const boost::filesystem::path &path,
 
 // reads .osrm.tld
 template <typename TurnLaneDataT>
-inline void readTurnLaneData(const boost::filesystem::path &path, TurnLaneDataT &turn_lane_data)
+inline void readTurnLaneData(const std::filesystem::path &path, TurnLaneDataT &turn_lane_data)
 {
     static_assert(
         std::is_same<typename TurnLaneDataT::value_type, util::guidance::LaneTupleIdPair>::value,
@@ -295,7 +292,7 @@ inline void readTurnLaneData(const boost::filesystem::path &path, TurnLaneDataT 
 
 // writes .osrm.tld
 template <typename TurnLaneDataT>
-inline void writeTurnLaneData(const boost::filesystem::path &path,
+inline void writeTurnLaneData(const std::filesystem::path &path,
                               const TurnLaneDataT &turn_lane_data)
 {
     static_assert(
@@ -310,7 +307,7 @@ inline void writeTurnLaneData(const boost::filesystem::path &path,
 
 // reads .osrm.timestamp
 template <typename TimestampDataT>
-inline void readTimestamp(const boost::filesystem::path &path, TimestampDataT &timestamp)
+inline void readTimestamp(const std::filesystem::path &path, TimestampDataT &timestamp)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
@@ -320,7 +317,7 @@ inline void readTimestamp(const boost::filesystem::path &path, TimestampDataT &t
 
 // writes .osrm.timestamp
 template <typename TimestampDataT>
-inline void writeTimestamp(const boost::filesystem::path &path, const TimestampDataT &timestamp)
+inline void writeTimestamp(const std::filesystem::path &path, const TimestampDataT &timestamp)
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
@@ -330,7 +327,7 @@ inline void writeTimestamp(const boost::filesystem::path &path, const TimestampD
 
 // reads .osrm.maneuver_overrides
 template <typename StorageManeuverOverrideT, typename NodeSequencesT>
-inline void readManeuverOverrides(const boost::filesystem::path &path,
+inline void readManeuverOverrides(const std::filesystem::path &path,
                                   StorageManeuverOverrideT &maneuver_overrides,
                                   NodeSequencesT &node_sequences)
 {
@@ -344,7 +341,7 @@ inline void readManeuverOverrides(const boost::filesystem::path &path,
 }
 
 // writes .osrm.maneuver_overrides
-inline void writeManeuverOverrides(const boost::filesystem::path &path,
+inline void writeManeuverOverrides(const std::filesystem::path &path,
                                    const std::vector<StorageManeuverOverride> &maneuver_overrides,
                                    const std::vector<NodeID> &node_sequences)
 {
@@ -359,7 +356,7 @@ inline void writeManeuverOverrides(const boost::filesystem::path &path,
 
 // writes .osrm.turn_weight_penalties
 template <typename TurnPenaltyT>
-inline void writeTurnWeightPenalty(const boost::filesystem::path &path,
+inline void writeTurnWeightPenalty(const std::filesystem::path &path,
                                    const TurnPenaltyT &turn_penalty)
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
@@ -370,7 +367,7 @@ inline void writeTurnWeightPenalty(const boost::filesystem::path &path,
 
 // read .osrm.turn_weight_penalties
 template <typename TurnPenaltyT>
-inline void readTurnWeightPenalty(const boost::filesystem::path &path, TurnPenaltyT &turn_penalty)
+inline void readTurnWeightPenalty(const std::filesystem::path &path, TurnPenaltyT &turn_penalty)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
@@ -380,7 +377,7 @@ inline void readTurnWeightPenalty(const boost::filesystem::path &path, TurnPenal
 
 // writes .osrm.turn_duration_penalties
 template <typename TurnPenaltyT>
-inline void writeTurnDurationPenalty(const boost::filesystem::path &path,
+inline void writeTurnDurationPenalty(const std::filesystem::path &path,
                                      const TurnPenaltyT &turn_penalty)
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
@@ -391,7 +388,7 @@ inline void writeTurnDurationPenalty(const boost::filesystem::path &path,
 
 // read .osrm.turn_weight_penalties
 template <typename TurnPenaltyT>
-inline void readTurnDurationPenalty(const boost::filesystem::path &path, TurnPenaltyT &turn_penalty)
+inline void readTurnDurationPenalty(const std::filesystem::path &path, TurnPenaltyT &turn_penalty)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
@@ -401,7 +398,7 @@ inline void readTurnDurationPenalty(const boost::filesystem::path &path, TurnPen
 
 // writes .osrm.turn_penalties_index
 template <typename TurnIndexT>
-inline void writeTurnPenaltiesIndex(const boost::filesystem::path &path,
+inline void writeTurnPenaltiesIndex(const std::filesystem::path &path,
                                     const TurnIndexT &turn_penalties_index)
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
@@ -412,7 +409,7 @@ inline void writeTurnPenaltiesIndex(const boost::filesystem::path &path,
 
 // read .osrm.turn_penalties_index
 template <typename TurnIndexT>
-inline void readTurnPenaltiesIndex(const boost::filesystem::path &path,
+inline void readTurnPenaltiesIndex(const std::filesystem::path &path,
                                    TurnIndexT &turn_penalties_index)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
@@ -423,7 +420,7 @@ inline void readTurnPenaltiesIndex(const boost::filesystem::path &path,
 
 // writes .osrm.restrictions
 template <typename ConditionalRestrictionsT>
-inline void writeConditionalRestrictions(const boost::filesystem::path &path,
+inline void writeConditionalRestrictions(const std::filesystem::path &path,
                                          const ConditionalRestrictionsT &conditional_restrictions)
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
@@ -434,7 +431,7 @@ inline void writeConditionalRestrictions(const boost::filesystem::path &path,
 
 // read .osrm.restrictions
 template <typename ConditionalRestrictionsT>
-inline void readConditionalRestrictions(const boost::filesystem::path &path,
+inline void readConditionalRestrictions(const std::filesystem::path &path,
                                         ConditionalRestrictionsT &conditional_restrictions)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
@@ -445,7 +442,7 @@ inline void readConditionalRestrictions(const boost::filesystem::path &path,
 
 // reads .osrm file which is a temporary file of osrm-extract
 template <typename PackedOSMIDsT>
-void readRawNBGraph(const boost::filesystem::path &path,
+void readRawNBGraph(const std::filesystem::path &path,
                     std::vector<util::Coordinate> &coordinates,
                     PackedOSMIDsT &osm_node_ids,
                     std::vector<extractor::NodeBasedEdge> &edge_list)
@@ -469,8 +466,7 @@ void readRawNBGraph(const boost::filesystem::path &path,
     storage::serialization::read(reader, "/extractor/edges", edge_list);
 }
 
-template <typename NameTableT>
-void readNames(const boost::filesystem::path &path, NameTableT &table)
+template <typename NameTableT> void readNames(const std::filesystem::path &path, NameTableT &table)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
@@ -479,7 +475,7 @@ void readNames(const boost::filesystem::path &path, NameTableT &table)
 }
 
 template <typename NameTableT>
-void writeNames(const boost::filesystem::path &path, const NameTableT &table)
+void writeNames(const std::filesystem::path &path, const NameTableT &table)
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
@@ -488,7 +484,7 @@ void writeNames(const boost::filesystem::path &path, const NameTableT &table)
 }
 
 template <typename NodeWeightsVectorT>
-void readEdgeBasedNodeWeights(const boost::filesystem::path &path, NodeWeightsVectorT &weights)
+void readEdgeBasedNodeWeights(const std::filesystem::path &path, NodeWeightsVectorT &weights)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
@@ -497,8 +493,7 @@ void readEdgeBasedNodeWeights(const boost::filesystem::path &path, NodeWeightsVe
 }
 
 template <typename NodeDistancesVectorT>
-void readEdgeBasedNodeDistances(const boost::filesystem::path &path,
-                                NodeDistancesVectorT &distances)
+void readEdgeBasedNodeDistances(const std::filesystem::path &path, NodeDistancesVectorT &distances)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
@@ -507,7 +502,7 @@ void readEdgeBasedNodeDistances(const boost::filesystem::path &path,
 }
 
 template <typename NodeWeightsVectorT, typename NodeDurationsVectorT, typename NodeDistancesVectorT>
-void writeEdgeBasedNodeWeightsDurationsDistances(const boost::filesystem::path &path,
+void writeEdgeBasedNodeWeightsDurationsDistances(const std::filesystem::path &path,
                                                  const NodeWeightsVectorT &weights,
                                                  const NodeDurationsVectorT &durations,
                                                  const NodeDistancesVectorT &distances)
@@ -521,7 +516,7 @@ void writeEdgeBasedNodeWeightsDurationsDistances(const boost::filesystem::path &
 }
 
 template <typename NodeWeightsVectorT, typename NodeDurationsVectorT>
-void readEdgeBasedNodeWeightsDurations(const boost::filesystem::path &path,
+void readEdgeBasedNodeWeightsDurations(const std::filesystem::path &path,
                                        NodeWeightsVectorT &weights,
                                        NodeDurationsVectorT &durations)
 {
@@ -533,7 +528,7 @@ void readEdgeBasedNodeWeightsDurations(const boost::filesystem::path &path,
 }
 
 template <typename NodeWeightsVectorT, typename NodeDurationsVectorT>
-void writeEdgeBasedNodeWeightsDurations(const boost::filesystem::path &path,
+void writeEdgeBasedNodeWeightsDurations(const std::filesystem::path &path,
                                         const NodeWeightsVectorT &weights,
                                         const NodeDurationsVectorT &durations)
 {
@@ -545,7 +540,7 @@ void writeEdgeBasedNodeWeightsDurations(const boost::filesystem::path &path,
 }
 
 template <typename RTreeT>
-void writeRamIndex(const boost::filesystem::path &path, const RTreeT &rtree)
+void writeRamIndex(const std::filesystem::path &path, const RTreeT &rtree)
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
@@ -553,7 +548,7 @@ void writeRamIndex(const boost::filesystem::path &path, const RTreeT &rtree)
     util::serialization::write(writer, "/common/rtree", rtree);
 }
 
-template <typename RTreeT> void readRamIndex(const boost::filesystem::path &path, RTreeT &rtree)
+template <typename RTreeT> void readRamIndex(const std::filesystem::path &path, RTreeT &rtree)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
@@ -562,7 +557,7 @@ template <typename RTreeT> void readRamIndex(const boost::filesystem::path &path
 }
 
 template <typename EdgeListT>
-void writeCompressedNodeBasedGraph(const boost::filesystem::path &path, const EdgeListT &edge_list)
+void writeCompressedNodeBasedGraph(const std::filesystem::path &path, const EdgeListT &edge_list)
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
@@ -571,7 +566,7 @@ void writeCompressedNodeBasedGraph(const boost::filesystem::path &path, const Ed
 }
 
 template <typename EdgeListT>
-void readCompressedNodeBasedGraph(const boost::filesystem::path &path, EdgeListT &edge_list)
+void readCompressedNodeBasedGraph(const std::filesystem::path &path, EdgeListT &edge_list)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};

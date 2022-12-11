@@ -28,12 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTOR_CONFIG_HPP
 #define EXTRACTOR_CONFIG_HPP
 
-#include <boost/filesystem/path.hpp>
+#include "storage/io_config.hpp"
 
 #include <array>
+#include <filesystem>
 #include <string>
-
-#include "storage/io_config.hpp"
 
 namespace osrm
 {
@@ -73,14 +72,14 @@ struct ExtractorConfig final : storage::IOConfig
     {
     }
 
-    void UseDefaultOutputNames(const boost::filesystem::path &base)
+    void UseDefaultOutputNames(const std::filesystem::path &base)
     {
         IOConfig::UseDefaultOutputNames(base);
     }
 
-    boost::filesystem::path input_path;
-    boost::filesystem::path profile_path;
-    std::vector<boost::filesystem::path> location_dependent_data_paths;
+    std::filesystem::path input_path;
+    std::filesystem::path profile_path;
+    std::vector<std::filesystem::path> location_dependent_data_paths;
     std::string data_version;
 
     unsigned requested_num_threads = 0;

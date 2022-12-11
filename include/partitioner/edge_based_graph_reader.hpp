@@ -185,7 +185,7 @@ graphToEdges(const DynamicEdgeBasedGraph &edge_based_graph)
     return edges;
 }
 
-inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const boost::filesystem::path &path)
+inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const std::filesystem::path &path)
 {
     EdgeID number_of_edge_based_nodes;
     std::vector<extractor::EdgeBasedEdge> edges;

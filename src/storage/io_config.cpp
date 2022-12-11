@@ -2,16 +2,14 @@
 
 #include "util/log.hpp"
 
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
+#include <filesystem>
 
 namespace osrm
 {
 namespace storage
 {
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 bool IOConfig::IsValid() const
 {

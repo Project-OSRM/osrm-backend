@@ -11,7 +11,6 @@
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/any.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 #include <cstdlib>
@@ -20,6 +19,7 @@
 
 #include <chrono>
 #include <exception>
+#include <filesystem>
 #include <future>
 #include <iostream>
 #include <memory>
@@ -76,15 +76,15 @@ std::istream &operator>>(std::istream &in, EngineConfig::Algorithm &algorithm)
 // generate boost::program_options object for the routing part
 inline unsigned generateServerProgramOptions(const int argc,
                                              const char *argv[],
-                                             boost::filesystem::path &base_path,
+                                             std::filesystem::path &base_path,
                                              std::string &ip_address,
                                              int &ip_port,
                                              bool &trial,
                                              EngineConfig &config,
                                              int &requested_thread_num)
 {
-    using boost::filesystem::path;
     using boost::program_options::value;
+    using std::filesystem::path;
 
     const auto hardware_threads = std::max<int>(1, std::thread::hardware_concurrency());
 
@@ -118,7 +118,7 @@ inline unsigned generateServerProgramOptions(const int argc,
          value<bool>(&config.use_shared_memory)->implicit_value(true)->default_value(false),
          "Load data from shared memory") //
         ("memory_file",
-         value<boost::filesystem::path>(&config.memory_file),
+         value<std::filesystem::path>(&config.memory_file),
          "DEPRECATED: Will behave the same as --mmap.")(
             "mmap,m",
             value<bool>(&config.use_mmap)->implicit_value(true)->default_value(false),
@@ -155,7 +155,7 @@ inline unsigned generateServerProgramOptions(const int argc,
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
-        "base,b", value<boost::filesystem::path>(&base_path), "base path to .osrm file");
+        "base,b", value<std::filesystem::path>(&base_path), "base path to .osrm file");
 
     // positional option
     boost::program_options::positional_options_description positional_options;
@@ -167,7 +167,7 @@ inline unsigned generateServerProgramOptions(const int argc,
 
     const auto *executable = argv[0];
     boost::program_options::options_description visible_options(
-        boost::filesystem::path(executable).filename().string() + " <base.osrm> [<options>]");
+        std::filesystem::path(executable).filename().string() + " <base.osrm> [<options>]");
     visible_options.add(generic_options).add(config_options);
 
     // parse command line options
@@ -230,7 +230,7 @@ try
     int ip_port;
 
     EngineConfig config;
-    boost::filesystem::path base_path;
+    std::filesystem::path base_path;
 
     int requested_thread_num = 1;
     const unsigned init_result = generateServerProgramOptions(

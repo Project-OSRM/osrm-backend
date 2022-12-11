@@ -19,6 +19,7 @@
 #include <cstdlib>
 
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <ostream>
@@ -121,7 +122,7 @@ int main(int argc, char *argv[])
     const std::string inpath{argv[1]};
     const std::string outpath{argv[2]};
 
-    if (boost::filesystem::exists(outpath))
+    if (std::filesystem::exists(outpath))
     {
         util::Log(logWARNING) << "Components file " << outpath << " already exists";
         return EXIT_FAILURE;

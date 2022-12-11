@@ -105,8 +105,8 @@ int RasterContainer::LoadRasterSource(const std::string &path_string,
     util::Log() << "[source loader] Loading from " << path_string << "  ... ";
     TIMER_START(loading_source);
 
-    boost::filesystem::path filepath(path_string);
-    if (!boost::filesystem::exists(filepath))
+    std::filesystem::path filepath(path_string);
+    if (!std::filesystem::exists(filepath))
     {
         throw util::RuntimeError(
             path_string, ErrorCode::FileOpenError, SOURCE_REF, "File not found");

@@ -2,8 +2,9 @@
 #include "util/geojson_validation.hpp"
 #include "util/timezones.hpp"
 
-#include <boost/filesystem/path.hpp>
 #include <boost/test/unit_test.hpp>
+
+#include <filesystem>
 
 BOOST_AUTO_TEST_SUITE(timezoner)
 
@@ -22,7 +23,7 @@ BOOST_AUTO_TEST_CASE(timezoner_test)
     std::time_t now = time(0);
     BOOST_CHECK_NO_THROW(Timezoner tz(json, now));
 
-    boost::filesystem::path test_path(TEST_DATA_DIR "/test.geojson");
+    std::filesystem::path test_path(TEST_DATA_DIR "/test.geojson");
     BOOST_CHECK_NO_THROW(Timezoner tz(test_path, now));
 
     // missing opening bracket

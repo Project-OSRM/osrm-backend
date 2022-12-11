@@ -9,11 +9,11 @@
 #include "util/typedefs.hpp"
 #include "util/version.hpp"
 
-#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 #include <csignal>
 #include <cstdlib>
+#include <filesystem>
 
 using namespace osrm;
 
@@ -95,7 +95,7 @@ void springClean()
 bool generateDataStoreOptions(const int argc,
                               const char *argv[],
                               std::string &verbosity,
-                              boost::filesystem::path &base_path,
+                              std::filesystem::path &base_path,
                               int &max_wait,
                               std::string &dataset_name,
                               bool &list_datasets,
@@ -146,7 +146,7 @@ bool generateDataStoreOptions(const int argc,
     // hidden options, will be allowed on command line but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()("base,b",
-                                 boost::program_options::value<boost::filesystem::path>(&base_path),
+                                 boost::program_options::value<std::filesystem::path>(&base_path),
                                  "base path to .osrm file");
 
     // positional option
@@ -159,7 +159,7 @@ bool generateDataStoreOptions(const int argc,
 
     const auto *executable = argv[0];
     boost::program_options::options_description visible_options(
-        boost::filesystem::path(executable).filename().string() + " [<options>] <configuration>");
+        std::filesystem::path(executable).filename().string() + " [<options>] <configuration>");
     visible_options.add(generic_options).add(config_options);
 
     // print help options if no infile is specified
@@ -233,7 +233,7 @@ try
     util::LogPolicy::GetInstance().Unmute();
 
     std::string verbosity;
-    boost::filesystem::path base_path;
+    std::filesystem::path base_path;
     int max_wait = -1;
     std::string dataset_name;
     bool list_datasets = false;

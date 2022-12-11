@@ -23,13 +23,11 @@
 #endif
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 
 #include <cstdint>
-
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -167,7 +165,7 @@ bool swapData(Monitor &monitor,
 }
 } // namespace
 
-void populateLayoutFromFile(const boost::filesystem::path &path, storage::BaseDataLayout &layout)
+void populateLayoutFromFile(const std::filesystem::path &path, storage::BaseDataLayout &layout)
 {
     tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
 
@@ -193,11 +191,11 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
 
     util::LogPolicy::GetInstance().Unmute();
 
-    boost::filesystem::path lock_path =
-        boost::filesystem::temp_directory_path() / "osrm-datastore.lock";
-    if (!boost::filesystem::exists(lock_path))
+    std::filesystem::path lock_path =
+        std::filesystem::temp_directory_path() / "osrm-datastore.lock";
+    if (!std::filesystem::exists(lock_path))
     {
-        boost::filesystem::ofstream ofs(lock_path);
+        std::ofstream ofs(lock_path);
     }
 
     boost::interprocess::file_lock file_lock(lock_path.string().c_str());
@@ -260,7 +258,7 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
         std::unique_ptr<storage::BaseDataLayout> static_layout =
             std::make_unique<storage::ContiguousDataLayout>();
         Storage::PopulateLayoutWithRTree(*static_layout);
-        std::vector<std::pair<bool, boost::filesystem::path>> files = Storage::GetStaticFiles();
+        std::vector<std::pair<bool, std::filesystem::path>> files = Storage::GetStaticFiles();
         Storage::PopulateLayout(*static_layout, files);
         auto static_handle = setupRegion(shared_register, *static_layout);
         regions.push_back({static_handle.data_ptr, std::move(static_layout)});
@@ -269,7 +267,7 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
 
     std::unique_ptr<storage::BaseDataLayout> updatable_layout =
         std::make_unique<storage::ContiguousDataLayout>();
-    std::vector<std::pair<bool, boost::filesystem::path>> files = Storage::GetUpdatableFiles();
+    std::vector<std::pair<bool, std::filesystem::path>> files = Storage::GetUpdatableFiles();
     Storage::PopulateLayout(*updatable_layout, files);
     auto updatable_handle = setupRegion(shared_register, *updatable_layout);
     regions.push_back({updatable_handle.data_ptr, std::move(updatable_layout)});
@@ -288,12 +286,12 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
     return EXIT_SUCCESS;
 }
 
-std::vector<std::pair<bool, boost::filesystem::path>> Storage::GetStaticFiles()
+std::vector<std::pair<bool, std::filesystem::path>> Storage::GetStaticFiles()
 {
     constexpr bool IS_REQUIRED = true;
     constexpr bool IS_OPTIONAL = false;
 
-    std::vector<std::pair<bool, boost::filesystem::path>> files = {
+    std::vector<std::pair<bool, std::filesystem::path>> files = {
         {IS_OPTIONAL, config.GetPath(".osrm.cells")},
         {IS_OPTIONAL, config.GetPath(".osrm.partition")},
         {IS_REQUIRED, config.GetPath(".osrm.icd")},
@@ -310,7 +308,7 @@ std::vector<std::pair<bool, boost::filesystem::path>> Storage::GetStaticFiles()
 
     for (const auto &file : files)
     {
-        if (file.first == IS_REQUIRED && !boost::filesystem::exists(file.second))
+        if (file.first == IS_REQUIRED && !std::filesystem::exists(file.second))
         {
             throw util::exception("Could not find required file(s): " + std::get<1>(file).string());
         }
@@ -319,12 +317,12 @@ std::vector<std::pair<bool, boost::filesystem::path>> Storage::GetStaticFiles()
     return files;
 }
 
-std::vector<std::pair<bool, boost::filesystem::path>> Storage::GetUpdatableFiles()
+std::vector<std::pair<bool, std::filesystem::path>> Storage::GetUpdatableFiles()
 {
     constexpr bool IS_REQUIRED = true;
     constexpr bool IS_OPTIONAL = false;
 
-    std::vector<std::pair<bool, boost::filesystem::path>> files = {
+    std::vector<std::pair<bool, std::filesystem::path>> files = {
         {IS_OPTIONAL, config.GetPath(".osrm.mldgr")},
         {IS_OPTIONAL, config.GetPath(".osrm.cell_metrics")},
         {IS_OPTIONAL, config.GetPath(".osrm.hsgr")},
@@ -335,7 +333,7 @@ std::vector<std::pair<bool, boost::filesystem::path>> Storage::GetUpdatableFiles
 
     for (const auto &file : files)
     {
-        if (file.first == IS_REQUIRED && !boost::filesystem::exists(file.second))
+        if (file.first == IS_REQUIRED && !std::filesystem::exists(file.second))
         {
             throw util::exception("Could not find required file(s): " + std::get<1>(file).string());
         }
@@ -347,9 +345,9 @@ std::vector<std::pair<bool, boost::filesystem::path>> Storage::GetUpdatableFiles
 std::string Storage::PopulateLayoutWithRTree(storage::BaseDataLayout &layout)
 {
     // Figure out the path to the rtree file (it's not a tar file)
-    auto absolute_file_index_path = boost::filesystem::absolute(config.GetPath(".osrm.fileIndex"));
+    auto absolute_file_index_path = std::filesystem::absolute(config.GetPath(".osrm.fileIndex"));
 
-    // Convert the boost::filesystem::path object into a plain string
+    // Convert the std::filesystem::path object into a plain string
     // that can then be stored as a member of an allocator object
     auto rtree_filename = absolute_file_index_path.string();
 
@@ -366,11 +364,11 @@ std::string Storage::PopulateLayoutWithRTree(storage::BaseDataLayout &layout)
  * in that big block.  It updates the fields in the layout parameter.
  */
 void Storage::PopulateLayout(storage::BaseDataLayout &layout,
-                             const std::vector<std::pair<bool, boost::filesystem::path>> &files)
+                             const std::vector<std::pair<bool, std::filesystem::path>> &files)
 {
     for (const auto &file : files)
     {
-        if (boost::filesystem::exists(file.second))
+        if (std::filesystem::exists(file.second))
         {
             populateLayoutFromFile(file.second, layout);
         }
@@ -389,7 +387,7 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
                   file_index_path_ptr + index.GetBlockSize("/common/rtree/file_index_path"),
                   0);
         const auto absolute_file_index_path =
-            boost::filesystem::absolute(config.GetPath(".osrm.fileIndex")).string();
+            std::filesystem::absolute(config.GetPath(".osrm.fileIndex")).string();
         BOOST_ASSERT(static_cast<std::size_t>(index.GetBlockSize(
                          "/common/rtree/file_index_path")) >= absolute_file_index_path.size());
         std::copy(
@@ -477,13 +475,13 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
             config.GetPath(".osrm.icd"), intersection_bearings_view, entry_classes);
     }
 
-    if (boost::filesystem::exists(config.GetPath(".osrm.partition")))
+    if (std::filesystem::exists(config.GetPath(".osrm.partition")))
     {
         auto mlp = make_partition_view(index, "/mld/multilevelpartition");
         partitioner::files::readPartition(config.GetPath(".osrm.partition"), mlp);
     }
 
-    if (boost::filesystem::exists(config.GetPath(".osrm.cells")))
+    if (std::filesystem::exists(config.GetPath(".osrm.cells")))
     {
         auto storage = make_cell_storage_view(index, "/mld/cellstorage");
         partitioner::files::readCells(config.GetPath(".osrm.cells"), storage);
@@ -536,7 +534,7 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
         metric_name = properties.GetWeightName();
     }
 
-    if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
+    if (std::filesystem::exists(config.GetPath(".osrm.hsgr")))
     {
         const std::string metric_prefix = "/ch/metrics/" + metric_name;
         auto contracted_metric = make_contracted_metric_view(index, metric_prefix);
@@ -559,7 +557,7 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
         }
     }
 
-    if (boost::filesystem::exists(config.GetPath(".osrm.cell_metrics")))
+    if (std::filesystem::exists(config.GetPath(".osrm.cell_metrics")))
     {
         auto exclude_metrics = make_cell_metric_view(index, "/mld/metrics/" + metric_name);
         std::unordered_map<std::string, std::vector<customizer::CellMetricView>> metrics = {
@@ -568,7 +566,7 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
         customizer::files::readCellMetrics(config.GetPath(".osrm.cell_metrics"), metrics);
     }
 
-    if (boost::filesystem::exists(config.GetPath(".osrm.mldgr")))
+    if (std::filesystem::exists(config.GetPath(".osrm.mldgr")))
     {
         auto graph_view = make_multi_level_graph_view(index, "/mld/multilevelgraph");
         std::uint32_t graph_connectivity_checksum = 0;

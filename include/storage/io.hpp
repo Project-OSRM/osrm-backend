@@ -10,14 +10,14 @@
 #include "util/log.hpp"
 #include "util/version.hpp"
 
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/seek.hpp>
 #include <boost/iostreams/stream.hpp>
 
 #include <cerrno>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <tuple>
 #include <type_traits>
 
@@ -38,11 +38,11 @@ class FileReader
     };
 
     FileReader(const std::string &filename, const FingerprintFlag flag)
-        : FileReader(boost::filesystem::path(filename), flag)
+        : FileReader(std::filesystem::path(filename), flag)
     {
     }
 
-    FileReader(const boost::filesystem::path &filepath_, const FingerprintFlag flag)
+    FileReader(const std::filesystem::path &filepath_, const FingerprintFlag flag)
         : filepath(filepath_), fingerprint(flag)
     {
         input_stream.open(filepath, std::ios::binary);
@@ -61,14 +61,14 @@ class FileReader
 
     std::size_t GetSize()
     {
-        const boost::filesystem::path path(filepath);
+        const std::filesystem::path path(filepath);
         try
         {
-            return std::size_t(boost::filesystem::file_size(path)) -
+            return std::size_t(std::filesystem::file_size(path)) -
                    ((fingerprint == FingerprintFlag::VerifyFingerprint) ? sizeof(util::FingerPrint)
                                                                         : 0);
         }
-        catch (const boost::filesystem::filesystem_error &ex)
+        catch (const std::filesystem::filesystem_error &ex)
         {
             std::cout << ex.what() << std::endl;
             throw;
@@ -199,8 +199,8 @@ class FileReader
     }
 
   private:
-    const boost::filesystem::path filepath;
-    boost::filesystem::ifstream input_stream;
+    const std::filesystem::path filepath;
+    std::ifstream input_stream;
     FingerprintFlag fingerprint;
 };
 
@@ -214,11 +214,11 @@ class FileWriter
     };
 
     FileWriter(const std::string &filename, const FingerprintFlag flag)
-        : FileWriter(boost::filesystem::path(filename), flag)
+        : FileWriter(std::filesystem::path(filename), flag)
     {
     }
 
-    FileWriter(const boost::filesystem::path &filepath_, const FingerprintFlag flag)
+    FileWriter(const std::filesystem::path &filepath_, const FingerprintFlag flag)
         : filepath(filepath_), fingerprint(flag)
     {
         output_stream.open(filepath, std::ios::binary);
@@ -287,8 +287,8 @@ class FileWriter
     }
 
   private:
-    const boost::filesystem::path filepath;
-    boost::filesystem::ofstream output_stream;
+    const std::filesystem::path filepath;
+    std::ofstream output_stream;
     FingerprintFlag fingerprint;
 };
 

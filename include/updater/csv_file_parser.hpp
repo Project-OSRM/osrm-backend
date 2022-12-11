@@ -12,12 +12,12 @@
 #include <tbb/spin_mutex.h>
 
 #include <boost/exception/diagnostic_information.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 #include <exception>
+#include <filesystem>
 #include <stdexcept>
 #include <vector>
 
@@ -97,7 +97,7 @@ template <typename Key, typename Value> struct CSVFilesParser
         std::vector<std::pair<Key, Value>> result;
         try
         {
-            if (boost::filesystem::file_size(filename) == 0)
+            if (std::filesystem::file_size(filename) == 0)
                 return result;
 
             boost::iostreams::mapped_file_source mmap(filename);

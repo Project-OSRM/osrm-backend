@@ -204,7 +204,7 @@ inline auto make_search_tree_view(const SharedDataIndex &index, const std::strin
 
     const char *path = index.template GetBlockPtr<char>(name + "/file_index_path");
 
-    if (!boost::filesystem::exists(boost::filesystem::path{path}))
+    if (!std::filesystem::exists(std::filesystem::path{path}))
     {
         throw util::exception("Could not load " + std::string(path) + "Does the leaf file exist?" +
                               SOURCE_REF);
