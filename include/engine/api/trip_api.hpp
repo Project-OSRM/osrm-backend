@@ -10,11 +10,7 @@
 
 #include "util/integer_range.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 class TripAPI final : public RouteAPI
@@ -180,8 +176,6 @@ class TripAPI final : public RouteAPI
     const TripParameters &parameters;
 };
 
-} // namespace api
-} // namespace engine
 } // namespace osrm
 
 #endif

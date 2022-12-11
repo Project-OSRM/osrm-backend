@@ -3,9 +3,7 @@
 
 #include "traffic_lights.hpp"
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 struct ExtractionNode
@@ -19,7 +17,6 @@ struct ExtractionNode
     TrafficLightClass::Direction traffic_lights;
     bool barrier;
 };
-} // namespace extractor
 } // namespace osrm
 
 #endif // EXTRACTION_NODE_HPP

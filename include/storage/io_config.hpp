@@ -9,9 +9,7 @@
 #include <boost/filesystem/path.hpp>
 #include <string>
 
-namespace osrm
-{
-namespace storage
+namespace osrm::storage
 {
 struct IOConfig
 {
@@ -81,7 +79,6 @@ struct IOConfig
     std::vector<boost::filesystem::path> optional_input_files;
     std::vector<boost::filesystem::path> output_files;
 };
-} // namespace storage
 } // namespace osrm
 
 #endif

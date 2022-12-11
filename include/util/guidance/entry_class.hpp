@@ -8,15 +8,9 @@
 
 #include <bitset>
 
-namespace osrm
-{
-namespace util
-{
-namespace guidance
+namespace osrm::util::guidance
 {
 class EntryClass;
-} // namespace guidance
-} // namespace util
 } // namespace osrm
 
 namespace std
@@ -29,9 +23,7 @@ template <> struct hash<::osrm::util::guidance::EntryClass>
 
 namespace osrm
 {
-namespace util
-{
-namespace guidance
+namespace util::guidance
 {
 
 class EntryClass
@@ -71,7 +63,6 @@ static_assert(std::is_trivially_copyable<EntryClass>::value,
               "requires trivially copyable type");
 #endif
 
-} // namespace guidance
 } // namespace util
 
 constexpr const util::guidance::EntryClass EMPTY_ENTRY_CLASS{};

@@ -9,9 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 namespace detail
 {
@@ -130,7 +128,6 @@ struct ExtractionWay
     std::uint8_t highway_turn_classification : 4;
     std::uint8_t access_turn_classification : 4;
 };
-} // namespace extractor
 } // namespace osrm
 
 #endif // EXTRACTION_WAY_HPP

@@ -9,11 +9,7 @@
 
 #include <unordered_map>
 
-namespace osrm
-{
-namespace customizer
-{
-namespace files
+namespace osrm::customizer::files
 {
 
 // reads .osrm.cell_metrics file
@@ -106,8 +102,6 @@ inline void writeGraph(const boost::filesystem::path &path,
     writer.WriteFrom("/mld/connectivity_checksum", connectivity_checksum);
     serialization::write(writer, "/mld/multilevelgraph", graph);
 }
-} // namespace files
-} // namespace customizer
 } // namespace osrm
 
 #endif

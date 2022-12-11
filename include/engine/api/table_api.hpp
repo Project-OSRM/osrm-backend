@@ -22,11 +22,7 @@
 
 #include <iterator>
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 class TableAPI final : public BaseAPI
@@ -422,8 +418,6 @@ class TableAPI final : public BaseAPI
     const TableParameters &parameters;
 };
 
-} // namespace api
-} // namespace engine
 } // namespace osrm
 
 #endif

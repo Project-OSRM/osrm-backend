@@ -17,11 +17,7 @@
 #include <cstdint>
 #include <tuple>
 
-namespace osrm
-{
-namespace storage
-{
-namespace serialization
+namespace osrm::storage::serialization
 {
 
 namespace detail
@@ -268,8 +264,6 @@ inline void write(io::BufferWriter &writer, const BaseDataLayout &layout)
 {
     write(writer, layout.blocks);
 }
-} // namespace serialization
-} // namespace storage
 } // namespace osrm
 
 #endif

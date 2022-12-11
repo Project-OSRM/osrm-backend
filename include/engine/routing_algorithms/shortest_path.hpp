@@ -6,11 +6,7 @@
 #include "engine/search_engine_data.hpp"
 #include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 template <typename Algorithm>
@@ -20,8 +16,6 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
                    const std::vector<PhantomNodeCandidates> &waypoint_candidates,
                    const boost::optional<bool> continue_straight_at_waypoint);
 
-} // namespace routing_algorithms
-} // namespace engine
 } // namespace osrm
 
 #endif /* OSRM_SHORTEST_PATH_HPP */

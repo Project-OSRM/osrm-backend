@@ -10,9 +10,7 @@
 
 #include <vector>
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 // Make sure to move in the input edge list!
@@ -177,7 +175,6 @@ template <class Edge, typename GraphT> inline std::vector<Edge> toEdges(GraphT g
     return edges;
 }
 
-} // namespace contractor
 } // namespace osrm
 
 #endif // OSRM_CONTRACTOR_GRAPH_CONTRACTION_ADAPTORS_HPP_

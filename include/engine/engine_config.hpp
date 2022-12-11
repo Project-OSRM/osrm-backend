@@ -34,10 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
-namespace osrm
-{
-
-namespace engine
+namespace osrm::engine
 {
 
 /**
@@ -94,7 +91,6 @@ struct EngineConfig final
     std::string verbosity;
     std::string dataset_name;
 };
-} // namespace engine
 } // namespace osrm
 
 #endif // SERVER_CONFIG_HPP

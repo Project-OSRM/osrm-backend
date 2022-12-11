@@ -14,9 +14,7 @@
 #include <memory>
 #include <vector>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 struct EdgeBasedGraphEdgeData : extractor::EdgeBasedEdge::EdgeData
@@ -53,7 +51,6 @@ struct DynamicEdgeBasedGraphEdge : DynamicEdgeBasedGraph::InputEdge
     using Base = DynamicEdgeBasedGraph::InputEdge;
     using Base::Base;
 };
-} // namespace partitioner
 } // namespace osrm
 
 #endif

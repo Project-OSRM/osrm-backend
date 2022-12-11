@@ -4,11 +4,7 @@
 #include <boost/assert.hpp>
 #include <iterator>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 using namespace osrm::guidance;
 
@@ -85,6 +81,4 @@ std::vector<RouteStep> suppressShortNameSegments(std::vector<RouteStep> steps)
     return removeNoTurnInstructions(std::move(steps));
 }
 
-} // namespace guidance
-} // namespace engine
 } // namespace osrm

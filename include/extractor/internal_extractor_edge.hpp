@@ -10,9 +10,7 @@
 #include <mapbox/variant.hpp>
 #include <utility>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 namespace detail
@@ -86,7 +84,6 @@ struct InternalExtractorEdge
     // coordinate of the source node
     util::Coordinate source_coordinate;
 };
-} // namespace extractor
 } // namespace osrm
 
 #endif // INTERNAL_EXTRACTOR_EDGE_HPP

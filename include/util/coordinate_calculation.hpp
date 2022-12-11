@@ -12,11 +12,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace util
-{
-namespace coordinate_calculation
+namespace osrm::util::coordinate_calculation
 {
 
 namespace detail
@@ -377,8 +373,6 @@ bool areParallel(const iterator_type lhs_begin,
 
 double computeArea(const std::vector<Coordinate> &polygon);
 
-} // namespace coordinate_calculation
-} // namespace util
 } // namespace osrm
 
 #endif // COORDINATE_CALCULATION

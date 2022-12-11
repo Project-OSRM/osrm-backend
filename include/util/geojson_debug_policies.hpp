@@ -11,9 +11,7 @@
 
 #include <boost/optional.hpp>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 struct NodeIdVectorToLineString
@@ -52,7 +50,6 @@ struct CoordinateVectorToMultiPoint
                                   const boost::optional<json::Object> &properties = {}) const;
 };
 
-} /* namespace util */
 } /* namespace osrm */
 
 #endif /* OSRM_GEOJSON_DEBUG_POLICIES */

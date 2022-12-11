@@ -9,11 +9,7 @@
 
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 
 // passed as none-reference to modify in-place and move out again
@@ -58,8 +54,6 @@ void applyOverrides(const datafacade::BaseDataFacade &facade,
                     std::vector<RouteStep> &steps,
                     const LegGeometry &geometry);
 
-} // namespace guidance
-} // namespace engine
 } // namespace osrm
 
 #endif // ENGINE_GUIDANCE_POST_PROCESSING_HPP

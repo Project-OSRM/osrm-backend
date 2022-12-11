@@ -3,11 +3,7 @@
 #include "engine/routing_algorithms/routing_base_ch.hpp"
 #include "engine/routing_algorithms/routing_base_mld.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 /// This is a stripped down version of the general shortest path algorithm.
@@ -91,6 +87,4 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<mld::Algorithm> &e
     return extractRoute(facade, weight, endpoint_candidates, unpacked_nodes, unpacked_edges);
 }
 
-} // namespace routing_algorithms
-} // namespace engine
 } // namespace osrm

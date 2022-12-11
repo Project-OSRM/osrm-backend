@@ -7,9 +7,7 @@
 
 #include <unordered_map>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 /**
@@ -74,7 +72,6 @@ struct ConcurrentIDMap
     }
 };
 
-} // namespace util
 } // namespace osrm
 
 #endif // CONCURRENT_ID_MAP_HPP

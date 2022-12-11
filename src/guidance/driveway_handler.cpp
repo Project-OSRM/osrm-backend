@@ -2,9 +2,7 @@
 
 #include "util/assert.hpp"
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 DrivewayHandler::DrivewayHandler(const util::NodeBasedDynamicGraph &node_based_graph,
@@ -91,5 +89,4 @@ Intersection DrivewayHandler::operator()(const NodeID nid,
     return intersection;
 }
 
-} // namespace guidance
 } // namespace osrm

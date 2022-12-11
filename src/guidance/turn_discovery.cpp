@@ -7,11 +7,7 @@
 
 using osrm::util::angularDeviation;
 
-namespace osrm
-{
-namespace guidance
-{
-namespace lanes
+namespace osrm::guidance::lanes
 {
 
 bool findPreviousIntersection(const NodeID node_v,
@@ -145,6 +141,4 @@ bool findPreviousIntersection(const NodeID node_v,
     return true;
 }
 
-} // namespace lanes
-} // namespace guidance
 } // namespace osrm

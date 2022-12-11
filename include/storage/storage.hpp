@@ -37,9 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace storage
+namespace osrm::storage
 {
 
 void populateLayoutFromFile(const boost::filesystem::path &path, storage::BaseDataLayout &layout);
@@ -61,7 +59,6 @@ class Storage
   private:
     StorageConfig config;
 };
-} // namespace storage
 } // namespace osrm
 
 #endif

@@ -36,9 +36,7 @@
 #include "util/vector_view.hpp"
 
 #include "util/filtered_graph.hpp"
-namespace osrm
-{
-namespace storage
+namespace osrm::storage
 {
 
 template <typename T>
@@ -364,7 +362,6 @@ inline auto make_filtered_graph_view(const SharedDataIndex &index,
 
     return util::FilteredGraphView<contractor::QueryGraphView>({node_list, edge_list}, edge_filter);
 }
-} // namespace storage
 } // namespace osrm
 
 #endif

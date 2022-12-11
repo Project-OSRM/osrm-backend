@@ -15,11 +15,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
 class ViaRoutePlugin final : public BasePlugin
@@ -35,8 +31,6 @@ class ViaRoutePlugin final : public BasePlugin
                          const api::RouteParameters &route_parameters,
                          osrm::engine::api::ResultT &json_result) const;
 };
-} // namespace plugins
-} // namespace engine
 } // namespace osrm
 
 #endif // VIA_ROUTE_HPP

@@ -9,11 +9,7 @@
 
 #include "util/attributes.hpp"
 
-namespace osrm
-{
-namespace extractor
-{
-namespace guidance
+namespace osrm::extractor::guidance
 {
 
 // Public service vehicle lanes and similar can introduce additional lanes into the lane string that
@@ -105,8 +101,6 @@ inline std::string applyAccessTokens(std::string lane_string, const std::string 
     return result_string;
 }
 
-} // namespace guidance
-} // namespace extractor
 } // namespace osrm
 
 #endif // OSRM_GUIDANCE_PARSING_TOOLKIT_HPP_

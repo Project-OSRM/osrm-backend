@@ -23,9 +23,7 @@
 #include <memory>
 #include <vector>
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 namespace
 {
@@ -768,5 +766,4 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     return std::move(node_data.is_core);
 }
 
-} // namespace contractor
 } // namespace osrm

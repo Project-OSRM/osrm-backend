@@ -8,9 +8,7 @@
 #include <chrono>
 #include <vector>
 
-namespace osrm
-{
-namespace updater
+namespace osrm::updater
 {
 class Updater
 {
@@ -37,7 +35,6 @@ class Updater
   private:
     UpdaterConfig config;
 };
-} // namespace updater
 } // namespace osrm
 
 #endif

@@ -15,10 +15,7 @@
 #include <boost/iterator/permutation_iterator.hpp>
 #include <boost/range/combine.hpp>
 
-namespace osrm
-{
-
-namespace partitioner
+namespace osrm::partitioner
 {
 template <typename EdgeDataT, storage::Ownership Ownership> class MultiLevelGraph;
 
@@ -236,7 +233,6 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
 
 using MultiLevelEdgeBasedGraph =
     MultiLevelGraph<EdgeBasedGraphEdgeData, storage::Ownership::Container>;
-} // namespace partitioner
 } // namespace osrm
 
 #endif

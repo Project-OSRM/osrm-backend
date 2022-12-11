@@ -6,11 +6,7 @@
 #include <cmath>
 #include <limits>
 
-namespace osrm
-{
-namespace util
-{
-namespace json
+namespace osrm::util::json
 {
 // Make sure we don't have inf and NaN values
 template <typename T> T clamp_float(T d)
@@ -26,8 +22,6 @@ template <typename T> T clamp_float(T d)
 
     return d;
 }
-} // namespace json
-} // namespace util
 } // namespace osrm
 
 #endif // JSON_UTIL_HPP

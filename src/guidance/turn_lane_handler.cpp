@@ -15,11 +15,7 @@
 
 using osrm::util::angularDeviation;
 
-namespace osrm
-{
-namespace guidance
-{
-namespace lanes
+namespace osrm::guidance::lanes
 {
 namespace TurnLaneType = extractor::TurnLaneType;
 using TurnLaneDescription = extractor::TurnLaneDescription;
@@ -813,6 +809,4 @@ Intersection TurnLaneHandler::handleSliproadTurn(Intersection intersection,
     return simpleMatchTuplesToTurns(std::move(intersection), lane_data, combined_id);
 }
 
-} // namespace lanes
-} // namespace guidance
 } // namespace osrm

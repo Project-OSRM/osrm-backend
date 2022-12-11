@@ -11,9 +11,7 @@
 #include "util/json_renderer.hpp"
 #include "util/log.hpp"
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 // in case we want to do scenario-based logging, we can specify a dedicated logging scenario to be
@@ -183,7 +181,6 @@ std::ofstream GeojsonLogger<geojson_conversion_policy, scenario>::ofs;
 template <class geojson_conversion_policy, LoggingScenario scenario>
 geojson_conversion_policy *GeojsonLogger<geojson_conversion_policy, scenario>::policy;
 
-} // namespace util
 } // namespace osrm
 
 #endif /* OSRM_GEOJSON_DEBUG_LOGGER_HPP */

@@ -29,9 +29,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 class TurnAnalysis
@@ -75,7 +73,6 @@ class TurnAnalysis
     setTurnTypes(const NodeID from, const EdgeID via_edge, Intersection intersection) const;
 }; // class TurnAnalysis
 
-} // namespace guidance
 } // namespace osrm
 
 #endif // OSRM_GUIDANCE_TURN_ANALYSIS

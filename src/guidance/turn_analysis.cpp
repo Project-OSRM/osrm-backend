@@ -10,9 +10,7 @@
 #include <unordered_set>
 #include <utility>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
@@ -199,5 +197,4 @@ Intersection TurnAnalysis::setTurnTypes(const NodeID node_prior_to_intersection,
     return intersection;
 }
 
-} // namespace guidance
 } // namespace osrm

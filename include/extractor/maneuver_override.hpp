@@ -13,9 +13,7 @@
 #include <boost/functional/hash.hpp>
 #include <mapbox/variant.hpp>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 // Data that is loaded from the OSM datafile directly
@@ -143,7 +141,6 @@ struct UnresolvedManeuverOverride
 
     static std::string Name() { return "maneuver override"; };
 };
-} // namespace extractor
 } // namespace osrm
 
 // custom specialization of std::hash can be injected in namespace std

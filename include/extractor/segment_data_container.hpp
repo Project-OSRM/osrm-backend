@@ -17,9 +17,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class CompressedEdgeContainer;
@@ -225,7 +223,6 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
 using SegmentDataView = detail::SegmentDataContainerImpl<storage::Ownership::View>;
 using SegmentDataContainer = detail::SegmentDataContainerImpl<storage::Ownership::Container>;
-} // namespace extractor
 } // namespace osrm
 
 #endif

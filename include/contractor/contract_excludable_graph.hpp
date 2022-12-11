@@ -7,9 +7,7 @@
 #include "contractor/graph_contractor_adaptors.hpp"
 #include "contractor/query_graph.hpp"
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 using GraphAndFilter = std::tuple<QueryGraph, std::vector<std::vector<bool>>>;
@@ -94,7 +92,6 @@ inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
     return GraphAndFilter{QueryGraph{num_nodes, edge_container.edges},
                           edge_container.MakeEdgeFilters()};
 }
-} // namespace contractor
 } // namespace osrm
 
 #endif

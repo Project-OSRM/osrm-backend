@@ -12,11 +12,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
 ViaRoutePlugin::ViaRoutePlugin(int max_locations_viaroute, int max_alternatives)
@@ -186,6 +182,4 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
 
     return Status::Ok;
 }
-} // namespace plugins
-} // namespace engine
 } // namespace osrm

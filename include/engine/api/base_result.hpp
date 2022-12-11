@@ -8,16 +8,10 @@
 
 #include "util/json_container.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 using ResultT =
     mapbox::util::variant<util::json::Object, std::string, flatbuffers::FlatBufferBuilder>;
-} // namespace api
-} // namespace engine
 } // namespace osrm
 
 #endif

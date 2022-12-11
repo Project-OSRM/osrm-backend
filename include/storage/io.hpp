@@ -21,11 +21,7 @@
 #include <tuple>
 #include <type_traits>
 
-namespace osrm
-{
-namespace storage
-{
-namespace io
+namespace osrm::storage::io
 {
 
 class FileReader
@@ -388,8 +384,6 @@ class BufferWriter
   private:
     std::ostringstream output_stream;
 };
-} // namespace io
-} // namespace storage
 } // namespace osrm
 
 #endif

@@ -18,9 +18,7 @@
 #include <boost/optional.hpp>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 struct PathData
@@ -152,7 +150,6 @@ inline InternalRouteResult CollapseInternalRouteResult(const InternalRouteResult
     BOOST_ASSERT(collapsed.leg_endpoints.size() == collapsed.unpacked_path_segments.size());
     return collapsed;
 }
-} // namespace engine
 } // namespace osrm
 
 #endif // RAW_ROUTE_DATA_H

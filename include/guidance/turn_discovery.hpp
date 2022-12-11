@@ -20,10 +20,7 @@ namespace extractor
 class CompressedEdgeContainer;
 }
 
-namespace guidance
-{
-
-namespace lanes
+namespace guidance::lanes
 {
 
 // OSRM processes edges by looking at a via_edge, coming into an intersection. For turn lanes, we
@@ -45,7 +42,6 @@ bool findPreviousIntersection(
     EdgeID &result_via_edge,
     extractor::intersection::IntersectionView &result_intersection);
 
-} // namespace lanes
 } // namespace guidance
 } // namespace osrm
 

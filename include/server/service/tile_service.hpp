@@ -10,11 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace server
-{
-namespace service
+namespace osrm::server::service
 {
 
 class TileService final : public BaseService
@@ -28,8 +24,6 @@ class TileService final : public BaseService
 
     unsigned GetVersion() final override { return 1; }
 };
-} // namespace service
-} // namespace server
 } // namespace osrm
 
 #endif

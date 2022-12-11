@@ -8,9 +8,7 @@
 #include <cstddef>
 #include <vector>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 class RecursiveBisection
@@ -32,7 +30,6 @@ class RecursiveBisection
     RecursiveBisectionState internal_state;
 };
 
-} // namespace partitioner
 } // namespace osrm
 
 #endif // OSRM_PARTITIONER_RECURSIVE_BISECTION_HPP_

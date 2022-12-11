@@ -32,11 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 /**
@@ -98,8 +94,6 @@ struct MatchParameters : public RouteParameters
                (timestamps.empty() || timestamps.size() == coordinates.size());
     }
 };
-} // namespace api
-} // namespace engine
 } // namespace osrm
 
 #endif

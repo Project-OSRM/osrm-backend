@@ -16,9 +16,7 @@
 #include <string_view>
 #include <type_traits>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 namespace detail
 {
@@ -389,6 +387,5 @@ template <typename GroupBlockPolicy>
 using IndexedData = detail::IndexedDataImpl<GroupBlockPolicy, storage::Ownership::Container>;
 template <typename GroupBlockPolicy>
 using IndexedDataView = detail::IndexedDataImpl<GroupBlockPolicy, storage::Ownership::View>;
-} // namespace util
 } // namespace osrm
 #endif // OSRM_INDEXED_DATA_HPP

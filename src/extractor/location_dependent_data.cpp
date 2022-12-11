@@ -14,9 +14,7 @@
 #include <fstream>
 #include <string>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 LocationDependentData::LocationDependentData(const std::vector<boost::filesystem::path> &file_paths)
@@ -275,5 +273,4 @@ std::vector<std::size_t> LocationDependentData::GetPropertyIndexes(const point_t
 
     return result;
 }
-} // namespace extractor
 } // namespace osrm

@@ -37,9 +37,7 @@ template <> struct hash<std::tuple<std::string, std::string, std::string, std::s
 };
 } // namespace std
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class ExtractionContainers;
@@ -95,7 +93,6 @@ class ExtractorCallbacks
     // warning: caller needs to take care of synchronization!
     void ProcessManeuverOverride(const InputManeuverOverride &override);
 };
-} // namespace extractor
 } // namespace osrm
 
 #endif /* EXTRACTOR_CALLBACKS_HPP */

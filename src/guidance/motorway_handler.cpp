@@ -13,9 +13,7 @@
 
 using osrm::util::angularDeviation;
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 namespace
 {
@@ -562,5 +560,4 @@ Intersection MotorwayHandler::fallback(Intersection intersection) const
     return intersection;
 }
 
-} // namespace guidance
 } // namespace osrm

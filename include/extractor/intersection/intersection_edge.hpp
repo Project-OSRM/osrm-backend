@@ -5,11 +5,7 @@
 
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
-{
-namespace intersection
+namespace osrm::extractor::intersection
 {
 
 // IntersectionEdge is an alias for incoming and outgoing node-based graph edges of an intersection
@@ -42,8 +38,6 @@ struct IntersectionEdgeGeometry
 };
 
 using IntersectionEdgeGeometries = std::vector<IntersectionEdgeGeometry>;
-} // namespace intersection
-} // namespace extractor
 } // namespace osrm
 
 #endif

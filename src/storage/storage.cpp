@@ -36,9 +36,7 @@
 #include <new>
 #include <string>
 
-namespace osrm
-{
-namespace storage
+namespace osrm::storage
 {
 namespace
 {
@@ -587,5 +585,4 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
         }
     }
 }
-} // namespace storage
 } // namespace osrm

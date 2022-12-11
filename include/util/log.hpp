@@ -14,9 +14,7 @@ enum LogLevel
     logDEBUG
 };
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 class LogPolicy
@@ -104,7 +102,6 @@ class UnbufferedLog : public Log
   public:
     UnbufferedLog(LogLevel level_ = logINFO);
 };
-} // namespace util
 } // namespace osrm
 
 #endif /* LOG_HPP */

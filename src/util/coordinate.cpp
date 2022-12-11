@@ -12,9 +12,7 @@
 #include <iostream>
 #include <limits>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 bool Coordinate::IsValid() const
@@ -42,5 +40,4 @@ bool operator==(const FloatCoordinate lhs, const FloatCoordinate rhs)
 
 bool operator!=(const Coordinate lhs, const Coordinate rhs) { return !(lhs == rhs); }
 bool operator!=(const FloatCoordinate lhs, const FloatCoordinate rhs) { return !(lhs == rhs); }
-} // namespace util
 } // namespace osrm

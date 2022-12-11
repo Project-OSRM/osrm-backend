@@ -2,9 +2,7 @@
 
 #include "util/permutation.hpp"
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 namespace
 {
@@ -66,5 +64,4 @@ std::vector<std::uint32_t> makePermutation(const DynamicEdgeBasedGraph &graph,
 
     return util::orderingToPermutation(ordering);
 }
-} // namespace partitioner
 } // namespace osrm

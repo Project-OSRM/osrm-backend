@@ -7,9 +7,7 @@
 #include <mutex>
 #include <string>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 namespace
@@ -163,5 +161,4 @@ UnbufferedLog::UnbufferedLog(LogLevel level_)
 {
     stream.flags(std::ios_base::unitbuf);
 }
-} // namespace util
 } // namespace osrm

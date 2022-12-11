@@ -19,9 +19,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 // Turn the output of the extraction process into a graph that represents junctions as nodes and
@@ -104,7 +102,6 @@ class NodeBasedGraphFactory
     extractor::CompressedEdgeContainer compressed_edge_container;
 };
 
-} // namespace extractor
 } // namespace osrm
 
 #endif // OSRM_EXTRACTOR_NODE_BASED_GRAPH_FACTORY_HPP_

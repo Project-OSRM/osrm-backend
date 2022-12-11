@@ -21,13 +21,7 @@
 
 using TurnInstruction = osrm::guidance::TurnInstruction;
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
-{
-namespace json
+namespace osrm::engine::api::json
 {
 namespace detail
 {
@@ -294,7 +288,4 @@ util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
     }
     return json_legs;
 }
-} // namespace json
-} // namespace api
-} // namespace engine
 } // namespace osrm

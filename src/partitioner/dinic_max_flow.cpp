@@ -8,9 +8,7 @@
 #include <set>
 #include <stack>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 namespace
@@ -309,5 +307,4 @@ bool DinicMaxFlow::Validate(const BisectionGraphView &view,
     return separated && in_range_source && in_range_sink;
 }
 
-} // namespace partitioner
 } // namespace osrm

@@ -9,11 +9,7 @@
 
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 // Used to accumulate all the information we want in the tile about a turn.
@@ -37,8 +33,6 @@ std::vector<TurnData> getTileTurns(const DataFacade<mld::Algorithm> &facade,
                                    const std::vector<RTreeLeaf> &edges,
                                    const std::vector<std::size_t> &sorted_edge_indexes);
 
-} // namespace routing_algorithms
-} // namespace engine
 } // namespace osrm
 
 #endif

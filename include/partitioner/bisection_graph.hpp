@@ -14,9 +14,7 @@
 #include <iterator>
 #include <utility>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 // Node in the bisection graph. We require the original node id (since we remap the nodes all the
@@ -111,7 +109,6 @@ std::vector<BisectionInputEdge> adaptToBisectionEdge(std::vector<InputEdge> edge
     return result;
 }
 
-} // namespace partitioner
 } // namespace osrm
 
 #endif // OSRM_PARTITIONER_BISECTION_GRAPH_HPP_

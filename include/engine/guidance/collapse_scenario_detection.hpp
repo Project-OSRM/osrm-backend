@@ -4,11 +4,7 @@
 #include "engine/guidance/collapsing_utility.hpp"
 #include "engine/guidance/route_step.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 
 // check basic collapse preconditions (mode ok, no roundabout types);
@@ -87,8 +83,6 @@ bool doubleChoiceless(const RouteStepIterator step_entering_intersection,
 bool straightTurnFollowedByChoiceless(const RouteStepIterator step_entering_intersection,
                                       const RouteStepIterator step_leaving_intersection);
 
-} /* namespace guidance */
-} /* namespace engine */
 } /* namespace osrm */
 
 #endif /* OSRM_ENGINE_GUIDANCE_COLLAPSE_SCENARIO_DETECTION_HPP_ */

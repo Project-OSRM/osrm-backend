@@ -7,11 +7,7 @@
 #include <iterator>
 #include <utility>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 
 // Runs fn on RouteStep sub-ranges determined to be roundabouts.
@@ -46,8 +42,6 @@ template <typename Iter, typename Fn> inline Fn forEachRoundabout(Iter first, It
     return fn;
 }
 
-} // namespace guidance
-} // namespace engine
 } // namespace osrm
 
 #endif /* OSRM_ENGINE_GUIDANCE_POSTPROCESSING_TOOLKIT_HPP_ */

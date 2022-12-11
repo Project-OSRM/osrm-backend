@@ -38,11 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 /**
@@ -124,8 +120,6 @@ struct BaseParameters
                            });
     }
 };
-} // namespace api
-} // namespace engine
 } // namespace osrm
 
 #endif // ROUTE_PARAMETERS_HPP

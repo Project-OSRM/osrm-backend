@@ -17,9 +17,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 // Intersection handlers deal with all issues related to intersections.
@@ -111,7 +109,6 @@ class TurnHandler final : public IntersectionHandler
                                   const std::size_t up_to) const;
 };
 
-} // namespace guidance
 } // namespace osrm
 
 #endif /*OSRM_GUIDANCE_TURN_HANDLER_HPP_*/

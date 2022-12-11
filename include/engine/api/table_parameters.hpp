@@ -36,11 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iterator>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 /**
@@ -166,8 +162,6 @@ inline TableParameters::AnnotationsType &operator|=(TableParameters::Annotations
 {
     return lhs = lhs | rhs;
 }
-} // namespace api
-} // namespace engine
 } // namespace osrm
 
 #endif // ENGINE_API_TABLE_PARAMETERS_HPP

@@ -14,11 +14,7 @@
 #include <limits>
 #include <string>
 
-namespace osrm
-{
-namespace server
-{
-namespace api
+namespace osrm::server::api
 {
 
 namespace
@@ -235,8 +231,6 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::symbols<char, engine::Approach> approach_type;
     qi::symbols<char, engine::api::BaseParameters::SnappingType> snapping_type;
 };
-} // namespace api
-} // namespace server
 } // namespace osrm
 
 #endif

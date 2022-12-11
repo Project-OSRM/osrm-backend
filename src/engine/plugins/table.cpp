@@ -11,11 +11,7 @@
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
 TablePlugin::TablePlugin(const int max_locations_distance_table)
@@ -157,6 +153,4 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     return Status::Ok;
 }
-} // namespace plugins
-} // namespace engine
 } // namespace osrm

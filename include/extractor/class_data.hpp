@@ -7,9 +7,7 @@
 #include <cctype>
 #include <cstdint>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 using ClassData = std::uint8_t;
@@ -33,7 +31,6 @@ inline bool isValidClassName(const std::string &name)
                return std::isalnum(c);
            }) == name.end();
 }
-} // namespace extractor
 } // namespace osrm
 
 #endif

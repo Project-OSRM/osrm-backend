@@ -10,11 +10,7 @@
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace datafacade
+namespace osrm::engine::datafacade
 {
 
 MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
@@ -67,6 +63,4 @@ MMapMemoryAllocator::~MMapMemoryAllocator() {}
 
 const storage::SharedDataIndex &MMapMemoryAllocator::GetIndex() { return index; }
 
-} // namespace datafacade
-} // namespace engine
 } // namespace osrm

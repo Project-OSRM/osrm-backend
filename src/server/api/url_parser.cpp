@@ -62,11 +62,7 @@ struct URLParser final : qi::grammar<Iterator, Into>
 
 } // namespace
 
-namespace osrm
-{
-namespace server
-{
-namespace api
+namespace osrm::server::api
 {
 
 boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::string::iterator end)
@@ -93,6 +89,4 @@ boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::stri
     return boost::none;
 }
 
-} // namespace api
-} // namespace server
 } // namespace osrm

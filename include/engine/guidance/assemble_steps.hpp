@@ -22,11 +22,7 @@
 #include <guidance/turn_bearing.hpp>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 namespace detail
 {
@@ -365,8 +361,6 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     return steps;
 }
 
-} // namespace guidance
-} // namespace engine
 } // namespace osrm
 
 #endif // ENGINE_GUIDANCE_SEGMENT_LIST_HPP_

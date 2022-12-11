@@ -12,9 +12,7 @@ namespace osmium
 class Relation;
 } // namespace osmium
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class ScriptingEnvironment;
@@ -59,7 +57,6 @@ class ManeuverOverrideRelationParser
     ManeuverOverrideRelationParser();
     boost::optional<InputManeuverOverride> TryParse(const osmium::Relation &relation) const;
 };
-} // namespace extractor
 } // namespace osrm
 
 #endif /* RESTRICTION_PARSER_HPP */

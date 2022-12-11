@@ -9,11 +9,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 namespace mld
@@ -676,6 +672,4 @@ manyToManySearch(SearchEngineData<mld::Algorithm> &engine_working_data,
                                                     calculate_distance);
 }
 
-} // namespace routing_algorithms
-} // namespace engine
 } // namespace osrm

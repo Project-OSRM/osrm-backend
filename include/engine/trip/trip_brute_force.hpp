@@ -15,11 +15,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace trip
+namespace osrm::engine::trip
 {
 
 // computes the distance of a given permutation
@@ -93,8 +89,6 @@ inline std::vector<NodeID> BruteForceTrip(const std::size_t number_of_locations,
     return route;
 }
 
-} // namespace trip
-} // namespace engine
 } // namespace osrm
 
 #endif // TRIP_BRUTE_FORCE_HPP

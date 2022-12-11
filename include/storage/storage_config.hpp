@@ -32,9 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "storage/io_config.hpp"
 
-namespace osrm
-{
-namespace storage
+namespace osrm::storage
 {
 
 /**
@@ -75,7 +73,6 @@ struct StorageConfig final : IOConfig
     {
     }
 };
-} // namespace storage
 } // namespace osrm
 
 #endif

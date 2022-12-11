@@ -13,9 +13,7 @@
 
 #include <thread>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
@@ -349,5 +347,4 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                 << bearing_class_hash.data.size() << " Bearing Classes";
 }
 
-} // namespace guidance
 } // namespace osrm

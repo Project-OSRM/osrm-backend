@@ -8,9 +8,7 @@
 
 #include <cmath>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 RasterSource::RasterSource(RasterGrid _raster_data,
@@ -169,5 +167,4 @@ RasterContainer::GetRasterInterpolateFromSource(unsigned int source_id, double l
 }
 
 RasterCache *RasterCache::g_instance = NULL;
-} // namespace extractor
 } // namespace osrm

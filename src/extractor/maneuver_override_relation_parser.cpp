@@ -11,9 +11,7 @@
 #include <algorithm>
 #include <iterator>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 ManeuverOverrideRelationParser::ManeuverOverrideRelationParser() {}
@@ -136,5 +134,4 @@ ManeuverOverrideRelationParser::TryParse(const osmium::Relation &relation) const
     }
     return maneuver_override;
 }
-} // namespace extractor
 } // namespace osrm

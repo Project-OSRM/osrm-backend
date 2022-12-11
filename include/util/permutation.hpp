@@ -5,9 +5,7 @@
 
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 namespace permutation_detail
@@ -67,7 +65,6 @@ std::vector<IndexT> orderingToPermutation(const std::vector<IndexT> &ordering)
 
     return permutation;
 }
-} // namespace util
 } // namespace osrm
 
 #endif

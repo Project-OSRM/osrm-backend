@@ -36,9 +36,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class ScriptingEnvironment;
@@ -173,7 +171,6 @@ class EdgeBasedGraphFactory
     // mapping of node-based edges to edge-based nodes
     std::vector<NodeID> nbe_to_ebn_mapping;
 };
-} // namespace extractor
 } // namespace osrm
 
 #endif /* EDGE_BASED_GRAPH_FACTORY_HPP_ */

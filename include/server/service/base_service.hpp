@@ -10,11 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace server
-{
-namespace service
+namespace osrm::server::service
 {
 
 class BaseService
@@ -31,8 +27,6 @@ class BaseService
   protected:
     OSRM &routing_machine;
 };
-} // namespace service
-} // namespace server
 } // namespace osrm
 
 #endif

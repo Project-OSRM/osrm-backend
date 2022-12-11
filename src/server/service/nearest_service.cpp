@@ -8,11 +8,7 @@
 
 #include <boost/format.hpp>
 
-namespace osrm
-{
-namespace server
-{
-namespace service
+namespace osrm::server::service
 {
 
 namespace
@@ -72,6 +68,4 @@ engine::Status NearestService::RunQuery(std::size_t prefix_length,
     }
     return BaseService::routing_machine.Nearest(*parameters, result);
 }
-} // namespace service
-} // namespace server
 } // namespace osrm

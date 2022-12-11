@@ -10,11 +10,7 @@
 #include <functional>
 #include <set>
 
-namespace osrm
-{
-namespace util
-{
-namespace json
+namespace osrm::util::json
 {
 
 struct Comparator
@@ -158,8 +154,6 @@ inline bool compare(const Value &reference, const Value &result, std::string &re
     return mapbox::util::apply_visitor(
         Comparator(reason, "reference", "result"), reference, result);
 }
-} // namespace json
-} // namespace util
 } // namespace osrm
 
 #endif

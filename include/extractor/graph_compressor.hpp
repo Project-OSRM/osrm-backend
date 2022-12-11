@@ -11,9 +11,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class CompressedEdgeContainer;
@@ -39,7 +37,6 @@ class GraphCompressor
                          unsigned original_number_of_edges,
                          const util::NodeBasedDynamicGraph &graph) const;
 };
-} // namespace extractor
 } // namespace osrm
 
 #endif

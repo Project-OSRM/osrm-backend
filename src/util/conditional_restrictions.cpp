@@ -4,9 +4,7 @@
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 #ifndef NDEBUG
@@ -16,15 +14,12 @@ inline std::ostream &operator<<(std::ostream &stream, const ConditionalRestricti
     return stream << restriction.value << "=" << restriction.condition;
 }
 #endif
-} // namespace util
 } // namespace osrm
 
 BOOST_FUSION_ADAPT_STRUCT(osrm::util::ConditionalRestriction,
                           (std::string, value)(std::string, condition))
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 namespace detail
 {
@@ -91,5 +86,4 @@ std::vector<ConditionalRestriction> ParseConditionalRestrictions(const std::stri
     return result;
 }
 
-} // namespace util
 } // namespace osrm

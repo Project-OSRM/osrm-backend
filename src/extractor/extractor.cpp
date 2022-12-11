@@ -58,9 +58,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 namespace
@@ -911,5 +909,4 @@ void Extractor::ProcessGuidanceTurns(
     util::Log() << "ok, after " << TIMER_SEC(write_guidance_data) << "s";
 }
 
-} // namespace extractor
 } // namespace osrm

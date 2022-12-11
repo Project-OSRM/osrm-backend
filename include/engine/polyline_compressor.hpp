@@ -8,9 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 namespace detail
 {
@@ -80,7 +78,6 @@ std::vector<util::Coordinate> decodePolyline(const std::string &polyline)
     }
     return coordinates;
 }
-} // namespace engine
 } // namespace osrm
 
 #endif /* POLYLINECOMPRESSOR_H_ */

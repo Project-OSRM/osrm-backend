@@ -15,11 +15,7 @@
 
 #include <boost/iterator/function_output_iterator.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 // Unqualified calls below are from the mld namespace.
@@ -960,6 +956,4 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     return InternalManyRoutesResult{std::move(routes)};
 }
 
-} // namespace routing_algorithms
-} // namespace engine
 } // namespace osrm

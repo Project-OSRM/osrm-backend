@@ -18,9 +18,7 @@
 #include <memory>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 inline std::pair<bool, bool> operator&&(const std::pair<bool, bool> &a,
@@ -583,7 +581,6 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     const CoordinateList &coordinates;
     DataFacadeT &datafacade;
 };
-} // namespace engine
 } // namespace osrm
 
 #endif

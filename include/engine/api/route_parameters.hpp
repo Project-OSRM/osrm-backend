@@ -32,11 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 /**
@@ -211,8 +207,6 @@ inline RouteParameters::AnnotationsType operator|=(RouteParameters::AnnotationsT
 {
     return lhs = lhs | rhs;
 }
-} // namespace api
-} // namespace engine
 } // namespace osrm
 
 #endif

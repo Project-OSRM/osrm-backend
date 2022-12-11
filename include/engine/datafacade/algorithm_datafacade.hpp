@@ -12,11 +12,7 @@
 #include "util/filtered_graph.hpp"
 #include "util/integer_range.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace datafacade
+namespace osrm::engine::datafacade
 {
 
 // Namespace local aliases for algorithms
@@ -109,8 +105,6 @@ template <> class AlgorithmDataFacade<MLD>
     virtual EdgeID FindEdge(const NodeID edge_based_node_from,
                             const NodeID edge_based_node_to) const = 0;
 };
-} // namespace datafacade
-} // namespace engine
 } // namespace osrm
 
 #endif

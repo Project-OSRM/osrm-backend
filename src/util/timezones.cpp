@@ -21,9 +21,7 @@
 // Function loads time zone shape polygons, computes a zone local time for utc_time,
 // creates a lookup R-tree and returns a lambda function that maps a point
 // to the corresponding local time
-namespace osrm
-{
-namespace updater
+namespace osrm::updater
 {
 
 Timezoner::Timezoner(const char geojson[], std::time_t utc_time_now)
@@ -171,5 +169,4 @@ boost::optional<struct tm> Timezoner::operator()(const point_t &point) const
     }
     return boost::none;
 }
-} // namespace updater
 } // namespace osrm

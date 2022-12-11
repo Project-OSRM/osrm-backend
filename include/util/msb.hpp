@@ -7,9 +7,7 @@
 #include <cstdint>
 #include <utility>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 // get the msb of an integer
@@ -47,7 +45,6 @@ inline std::size_t msb(unsigned int v)
     return MSB_INDEX - __builtin_clz(v);
 }
 #endif
-} // namespace util
 } // namespace osrm
 
 #endif

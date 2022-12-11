@@ -18,11 +18,7 @@
 #include <memory>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 static const constexpr char *INTERSECTION_DELIMITER = " / ";
@@ -170,8 +166,6 @@ class BaseAPI
     const BaseParameters &parameters;
 };
 
-} // namespace api
-} // namespace engine
 } // namespace osrm
 
 #endif

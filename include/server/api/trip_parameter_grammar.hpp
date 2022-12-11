@@ -7,11 +7,7 @@
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
-namespace osrm
-{
-namespace server
-{
-namespace api
+namespace osrm::server::api
 {
 
 namespace
@@ -60,8 +56,6 @@ struct TripParametersGrammar final : public RouteParametersGrammar<Iterator, Sig
     qi::symbols<char, engine::api::TripParameters::SourceType> source_type;
     qi::symbols<char, engine::api::TripParameters::DestinationType> destination_type;
 };
-} // namespace api
-} // namespace server
 } // namespace osrm
 
 #endif

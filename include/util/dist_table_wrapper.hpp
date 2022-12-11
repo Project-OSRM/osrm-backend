@@ -9,9 +9,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 // This Wrapper provides an easier access to a distance table that is given as an linear vector
@@ -77,7 +75,6 @@ template <typename T> class DistTableWrapper
     std::vector<T> table_;
     const std::size_t number_of_nodes_;
 };
-} // namespace util
 } // namespace osrm
 
 #endif // DIST_TABLE_WRAPPER_H

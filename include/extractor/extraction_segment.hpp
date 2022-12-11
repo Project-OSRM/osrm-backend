@@ -3,9 +3,7 @@
 
 #include <util/coordinate.hpp>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 struct ExtractionSegment
@@ -26,7 +24,6 @@ struct ExtractionSegment
     double weight;
     double duration;
 };
-} // namespace extractor
 } // namespace osrm
 
 #endif

@@ -14,9 +14,7 @@
 
 using osrm::util::angularDeviation;
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 SliproadHandler::SliproadHandler(const util::NodeBasedDynamicGraph &node_based_graph,
@@ -876,5 +874,4 @@ SliproadHandler::scaledThresholdByRoadClass(const double max_threshold,
     return scaled;
 }
 
-} // namespace guidance
 } // namespace osrm

@@ -1,10 +1,6 @@
 #include "engine/routing_algorithms/routing_base.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 bool requiresForwardLoop(const PhantomNode &source, const PhantomNode &target)
@@ -107,6 +103,4 @@ PhantomEndpoints endpointsFromCandidates(const PhantomEndpointCandidates &candid
     return PhantomEndpoints{*source_it, *target_it};
 }
 
-} // namespace routing_algorithms
-} // namespace engine
 } // namespace osrm

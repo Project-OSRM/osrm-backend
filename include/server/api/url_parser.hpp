@@ -7,11 +7,7 @@
 
 #include <string>
 
-namespace osrm
-{
-namespace server
-{
-namespace api
+namespace osrm::server::api
 {
 
 // Starts parsing and iter and modifies it until iter == end or parsing failed
@@ -22,8 +18,6 @@ inline boost::optional<ParsedURL> parseURL(std::string url_string)
     auto iter = url_string.begin();
     return parseURL(iter, url_string.end());
 }
-} // namespace api
-} // namespace server
 } // namespace osrm
 
 #endif

@@ -35,9 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 struct ContractorConfig final : storage::IOConfig
@@ -71,7 +69,6 @@ struct ContractorConfig final : storage::IOConfig
     //(e.g. 0.8 contracts 80 percent of the hierarchy, leaving a core of 20%)
     double core_factor = 1.0;
 };
-} // namespace contractor
 } // namespace osrm
 
 #endif // EXTRACTOR_OPTIONS_HPP

@@ -10,9 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 // Non-owning immutable sub-graph view into a base graph.
@@ -64,7 +62,6 @@ class BisectionGraphView
     const BisectionGraph::ConstNodeIterator end;
 };
 
-} // namespace partitioner
 } // namespace osrm
 
 #endif // OSRM_PARTITIONER_GRAPHVIEW_HPP_

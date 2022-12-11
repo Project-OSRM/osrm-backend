@@ -10,9 +10,7 @@
 
 #include "extractor/road_classification.hpp"
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 // Flags describing the class of the road. This data is used during creation of graphs/guidance
@@ -207,7 +205,6 @@ static_assert(sizeof(extractor::NodeBasedEdge) == 32,
               "bigger than expected. This will influence "
               "memory consumption.");
 
-} // namespace extractor
 } // namespace osrm
 
 #endif /* NODE_BASED_EDGE_HPP */

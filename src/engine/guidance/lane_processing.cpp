@@ -9,11 +9,7 @@
 #include <unordered_set>
 #include <utility>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 using namespace osrm::guidance;
 
@@ -209,6 +205,4 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
     return steps;
 }
 
-} // namespace guidance
-} // namespace engine
 } // namespace osrm

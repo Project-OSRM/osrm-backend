@@ -21,9 +21,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace osrm
-{
-namespace updater
+namespace osrm::updater
 {
 
 // Functor to parse a list of CSV files using "key,value,comment" grammar.
@@ -138,7 +136,6 @@ template <typename Key, typename Value> struct CSVFilesParser
     const KeyRule key_rule;
     const ValueRule value_rule;
 };
-} // namespace updater
 } // namespace osrm
 
 #endif

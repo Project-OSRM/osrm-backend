@@ -5,9 +5,7 @@
 
 #include <tuple>
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 struct QueryEdge
@@ -77,7 +75,6 @@ struct QueryEdge
                 data.distance == right.data.distance);
     }
 };
-} // namespace contractor
 } // namespace osrm
 
 #endif // QUERYEDGE_HPP

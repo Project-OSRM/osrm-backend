@@ -10,9 +10,7 @@
 #include "util/typedefs.hpp"
 #include <boost/range/iterator_range.hpp>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 // forward declaration to allow finding friends
@@ -156,7 +154,6 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
     std::vector<EdgeT> edges;
 };
 
-} // namespace partitioner
 } // namespace osrm
 
 #endif // OSRM_PARTITIONER_GRAPH_HPP_

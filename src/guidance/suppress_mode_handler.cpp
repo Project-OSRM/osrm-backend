@@ -4,9 +4,7 @@
 #include <algorithm>
 #include <iterator>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 SuppressModeHandler::SuppressModeHandler(
@@ -77,5 +75,4 @@ SuppressModeHandler::operator()(const NodeID, const EdgeID, Intersection interse
 
     return intersection;
 }
-} // namespace guidance
 } // namespace osrm

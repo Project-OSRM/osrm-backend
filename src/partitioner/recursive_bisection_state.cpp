@@ -8,9 +8,7 @@
 #include <set>
 #include <unordered_map>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 RecursiveBisectionState::RecursiveBisectionState(BisectionGraph &bisection_graph_)
@@ -181,5 +179,4 @@ const std::vector<BisectionID> &RecursiveBisectionState::BisectionIDs() const
 
 std::uint32_t RecursiveBisectionState::SCCDepth() const { return scc_levels; }
 
-} // namespace partitioner
 } // namespace osrm

@@ -9,9 +9,7 @@
 #include "storage/io_config.hpp"
 #include "updater/updater_config.hpp"
 
-namespace osrm
-{
-namespace customizer
+namespace osrm::customizer
 {
 
 struct CustomizationConfig final : storage::IOConfig
@@ -39,7 +37,6 @@ struct CustomizationConfig final : storage::IOConfig
 
     updater::UpdaterConfig updater_config;
 };
-} // namespace customizer
 } // namespace osrm
 
 #endif // OSRM_CUSTOMIZE_CUSTOMIZER_CONFIG_HPP

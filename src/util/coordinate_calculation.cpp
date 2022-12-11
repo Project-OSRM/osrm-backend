@@ -12,12 +12,7 @@
 #include <limits>
 #include <utility>
 
-namespace osrm
-{
-namespace util
-{
-
-namespace coordinate_calculation
+namespace osrm::util::coordinate_calculation
 {
 
 namespace
@@ -419,6 +414,4 @@ double computeArea(const std::vector<Coordinate> &polygon)
     return area / 2.;
 }
 
-} // namespace coordinate_calculation
-} // namespace util
 } // namespace osrm

@@ -11,9 +11,7 @@
 #include "engine/routing_algorithms/shortest_path.hpp"
 #include "engine/routing_algorithms/tile_turns.hpp"
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 class RoutingAlgorithmsInterface
@@ -232,7 +230,6 @@ inline std::vector<routing_algorithms::TurnData> RoutingAlgorithms<Algorithm>::G
     return routing_algorithms::getTileTurns(*facade, edges, sorted_edge_indexes);
 }
 
-} // namespace engine
 } // namespace osrm
 
 #endif

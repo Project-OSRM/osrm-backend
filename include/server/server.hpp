@@ -24,9 +24,7 @@
 #include <thread>
 #include <vector>
 
-namespace osrm
-{
-namespace server
+namespace osrm::server
 {
 
 class Server
@@ -113,7 +111,6 @@ class Server
     boost::asio::ip::tcp::acceptor acceptor;
     std::shared_ptr<Connection> new_connection;
 };
-} // namespace server
 } // namespace osrm
 
 #endif // SERVER_HPP

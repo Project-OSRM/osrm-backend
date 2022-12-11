@@ -6,11 +6,7 @@
 
 #include "util/json_container.hpp"
 
-namespace osrm
-{
-namespace server
-{
-namespace service
+namespace osrm::server::service
 {
 namespace
 {
@@ -76,6 +72,4 @@ engine::Status RouteService::RunQuery(std::size_t prefix_length,
     }
     return BaseService::routing_machine.Route(*parameters, result);
 }
-} // namespace service
-} // namespace server
 } // namespace osrm

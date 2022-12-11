@@ -27,9 +27,7 @@
 #include <string>
 #include <thread>
 
-namespace osrm
-{
-namespace server
+namespace osrm::server
 {
 
 void RequestHandler::RegisterServiceHandler(
@@ -177,5 +175,4 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
                               << ", uri: " << current_request.uri;
     }
 }
-} // namespace server
 } // namespace osrm

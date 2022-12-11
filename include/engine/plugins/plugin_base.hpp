@@ -21,11 +21,7 @@
 
 #include <util/log.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
 class BasePlugin
@@ -325,8 +321,6 @@ class BasePlugin
                std::to_string(missing_index);
     }
 };
-} // namespace plugins
-} // namespace engine
 } // namespace osrm
 
 #endif /* BASE_PLUGIN_HPP */

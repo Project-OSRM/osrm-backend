@@ -9,9 +9,7 @@
 #include "turn_path.hpp"
 #include <limits>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 // External (OSM) representation of restriction
@@ -63,7 +61,6 @@ struct TurnRestriction
 
     static std::string Name() { return "turn restriction"; };
 };
-} // namespace extractor
 } // namespace osrm
 
 #endif // RESTRICTION_HPP

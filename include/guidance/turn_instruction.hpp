@@ -8,9 +8,7 @@
 #include "util/attributes.hpp"
 #include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 // direction modifiers based on angle
@@ -393,7 +391,6 @@ inline std::string instructionModifierToString(const DirectionModifier::Enum mod
     return detail::modifier_names[static_cast<std::size_t>(modifier)];
 }
 
-} // namespace guidance
 } // namespace osrm
 
 #endif // OSRM_GUIDANCE_TURN_INSTRUCTION_HPP_

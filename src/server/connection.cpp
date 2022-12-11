@@ -9,9 +9,7 @@
 
 #include <vector>
 
-namespace osrm
-{
-namespace server
+namespace osrm::server
 {
 
 Connection::Connection(boost::asio::io_context &io_context, RequestHandler &handler)
@@ -220,5 +218,4 @@ std::vector<char> Connection::compress_buffers(const std::vector<char> &uncompre
 
     return compressed_data;
 }
-} // namespace server
 } // namespace osrm

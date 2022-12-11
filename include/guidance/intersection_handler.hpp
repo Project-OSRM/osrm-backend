@@ -20,9 +20,7 @@
 
 #include <boost/optional.hpp>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 // Intersection handlers deal with all issues related to intersections.
@@ -660,7 +658,6 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
     return 0;
 }
 
-} // namespace guidance
 } // namespace osrm
 
 #endif /*OSRM_GUIDANCE_INTERSECTION_HANDLER_HPP_*/

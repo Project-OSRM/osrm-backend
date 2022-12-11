@@ -8,11 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 
 enum class WaypointType : std::uint8_t
@@ -44,7 +40,5 @@ inline StepManeuver getInvalidStepManeuver()
             0};
 }
 
-} // namespace guidance
-} // namespace engine
 } // namespace osrm
 #endif

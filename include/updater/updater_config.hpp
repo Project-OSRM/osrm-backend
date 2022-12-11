@@ -36,9 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "storage/io_config.hpp"
 #include "storage/storage_config.hpp"
 
-namespace osrm
-{
-namespace updater
+namespace osrm::updater
 {
 
 struct UpdaterConfig final : storage::IOConfig
@@ -73,7 +71,6 @@ struct UpdaterConfig final : storage::IOConfig
     std::vector<std::string> turn_penalty_lookup_paths;
     std::string tz_file_path;
 };
-} // namespace updater
 } // namespace osrm
 
 #endif // EXTRACTOR_OPTIONS_HPP

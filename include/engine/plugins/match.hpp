@@ -9,11 +9,7 @@
 
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
 class MatchPlugin : public BasePlugin
@@ -38,8 +34,6 @@ class MatchPlugin : public BasePlugin
     const int max_locations_map_matching;
     const double max_radius_map_matching;
 };
-} // namespace plugins
-} // namespace engine
 } // namespace osrm
 
 #endif // MATCH_HPP

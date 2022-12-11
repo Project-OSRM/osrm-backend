@@ -12,16 +12,10 @@
 
 #include <boost/functional/hash.hpp>
 
-namespace osrm
-{
-namespace util
-{
-namespace guidance
+namespace osrm::util::guidance
 {
 class LaneTuple;
 class LaneTupleIdPair;
-} // namespace guidance
-} // namespace util
 } // namespace osrm
 
 namespace std
@@ -37,11 +31,7 @@ template <> struct hash<::osrm::util::guidance::LaneTupleIdPair>
 };
 } // namespace std
 
-namespace osrm
-{
-namespace util
-{
-namespace guidance
+namespace osrm::util::guidance
 {
 
 // The mapping of turn lanes can be done two values. We describe every turn by the number of
@@ -100,8 +90,6 @@ class LaneTupleIdPair
 
 using LaneDataIdMap = ConcurrentIDMap<LaneTupleIdPair, LaneDataID, boost::hash<LaneTupleIdPair>>;
 
-} // namespace guidance
-} // namespace util
 } // namespace osrm
 
 #endif /* OSRM_UTIL_GUIDANCE_TURN_LANES_HPP */

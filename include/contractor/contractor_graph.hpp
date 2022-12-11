@@ -4,9 +4,7 @@
 #include "util/dynamic_graph.hpp"
 #include <algorithm>
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 struct ContractorEdgeData
@@ -42,7 +40,6 @@ struct ContractorEdgeData
 using ContractorGraph = util::DynamicGraph<ContractorEdgeData>;
 using ContractorEdge = ContractorGraph::InputEdge;
 
-} // namespace contractor
 } // namespace osrm
 
 #endif // OSRM_CONTRACTOR_CONTRACTOR_GRAPH_HPP_

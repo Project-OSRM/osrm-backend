@@ -10,15 +10,7 @@
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-
-namespace routing_algorithms
-{
-
-namespace ch
+namespace osrm::engine::routing_algorithms::ch
 {
 
 // Stalling
@@ -522,9 +514,6 @@ std::tuple<EdgeMetric, EdgeDistance> getLoopMetric(const DataFacade<Algorithm> &
     }
     return std::make_tuple(loop_metric, loop_distance);
 }
-} // namespace ch
-} // namespace routing_algorithms
-} // namespace engine
 } // namespace osrm
 
 #endif // OSRM_ENGINE_ROUTING_BASE_CH_HPP

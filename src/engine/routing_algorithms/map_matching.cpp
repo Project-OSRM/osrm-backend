@@ -17,11 +17,7 @@
 #include <numeric>
 #include <utility>
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 namespace
@@ -457,8 +453,6 @@ mapMatching(SearchEngineData<mld::Algorithm> &engine_working_data,
             const std::vector<boost::optional<double>> &trace_gps_precision,
             const bool allow_splitting);
 
-} // namespace routing_algorithms
-} // namespace engine
 } // namespace osrm
 
 //[1] "Hidden Markov Map Matching Through Noise and Sparseness"; P. Newson and J. Krumm; 2009; ACM

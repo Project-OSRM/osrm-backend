@@ -12,11 +12,7 @@
 
 using osrm::util::angularDeviation;
 
-namespace osrm
-{
-namespace extractor
-{
-namespace intersection
+namespace osrm::extractor::intersection
 {
 
 namespace
@@ -616,6 +612,4 @@ bool MergableRoadDetector::IsLinkRoad(const NodeID intersection_node,
                        .annotation_data));
 }
 
-} // namespace intersection
-} // namespace extractor
 } // namespace osrm

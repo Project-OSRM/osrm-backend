@@ -9,9 +9,7 @@
 #include <sstream>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 namespace detail
 {
@@ -88,7 +86,6 @@ template <std::size_t TimeBinSize = 1000, std::size_t IndexBinSize = 1000> class
     std::vector<std::uint32_t> frame_offsets;
     std::vector<std::uint32_t> frame_counters;
 };
-} // namespace util
 } // namespace osrm
 
 #endif

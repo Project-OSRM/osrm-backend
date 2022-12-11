@@ -10,15 +10,9 @@
 
 #include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace util
-{
-namespace guidance
+namespace osrm::util::guidance
 {
 class BearingClass;
-} // namespace guidance
-} // namespace util
 } // namespace osrm
 
 namespace std
@@ -29,11 +23,7 @@ template <> struct hash<::osrm::util::guidance::BearingClass>
 };
 } // namespace std
 
-namespace osrm
-{
-namespace util
-{
-namespace guidance
+namespace osrm::util::guidance
 {
 
 class BearingClass
@@ -64,8 +54,6 @@ class BearingClass
     friend std::size_t std::hash<BearingClass>::operator()(const BearingClass &) const;
 };
 
-} // namespace guidance
-} // namespace util
 } // namespace osrm
 
 // make Bearing Class hasbable

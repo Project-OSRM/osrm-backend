@@ -8,11 +8,7 @@
 
 #include <type_traits>
 
-namespace osrm
-{
-namespace server
-{
-namespace api
+namespace osrm::server::api
 {
 
 // Note: this file provides only the interface for the generic parseParameters function.
@@ -43,8 +39,6 @@ boost::optional<ParameterT> parseParameters(std::string options_string)
     return parseParameters<ParameterT>(first, last);
 }
 
-} // namespace api
-} // namespace server
 } // namespace osrm
 
 #endif

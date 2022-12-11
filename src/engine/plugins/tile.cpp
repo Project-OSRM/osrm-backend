@@ -26,11 +26,7 @@
 #include <cmath>
 #include <cstdint>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
 constexpr const static int MIN_ZOOM_FOR_TURNS = 15;
@@ -695,6 +691,4 @@ Status TilePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     return Status::Ok;
 }
-} // namespace plugins
-} // namespace engine
 } // namespace osrm

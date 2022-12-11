@@ -14,11 +14,7 @@ extern "C"
 #include "microtar.h"
 }
 
-namespace osrm
-{
-namespace storage
-{
-namespace tar
+namespace osrm::storage::tar
 {
 namespace detail
 {
@@ -312,8 +308,6 @@ class FileWriter
     boost::filesystem::path path;
     mtar_t handle;
 };
-} // namespace tar
-} // namespace storage
 } // namespace osrm
 
 #endif

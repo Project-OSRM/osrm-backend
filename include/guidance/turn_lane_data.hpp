@@ -6,11 +6,7 @@
 #include "util/typedefs.hpp"
 #include <vector>
 
-namespace osrm
-{
-namespace guidance
-{
-namespace lanes
+namespace osrm::guidance::lanes
 {
 
 struct TurnLaneData
@@ -37,9 +33,6 @@ LaneDataVector::iterator findTag(const extractor::TurnLaneType::Mask tag, LaneDa
 
 // Returns true if any of the queried tags is contained
 bool hasTag(const extractor::TurnLaneType::Mask tag, const LaneDataVector &data);
-} // namespace lanes
-
-} // namespace guidance
 } // namespace osrm
 
 #endif /* OSRM_GUIDANCE_TURN_LANE_DATA_HPP_ */

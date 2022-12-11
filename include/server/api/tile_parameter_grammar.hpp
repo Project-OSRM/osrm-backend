@@ -11,11 +11,7 @@
 
 #include <string>
 
-namespace osrm
-{
-namespace server
-{
-namespace api
+namespace osrm::server::api
 {
 
 namespace
@@ -40,8 +36,6 @@ struct TileParametersGrammar final : boost::spirit::qi::grammar<Iterator, Signat
   private:
     qi::rule<Iterator, Signature> root_rule;
 };
-} // namespace api
-} // namespace server
 } // namespace osrm
 
 #endif

@@ -8,9 +8,7 @@
 
 #include <boost/math/constants/constants.hpp>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 constexpr unsigned short atan_table[4096] = {
@@ -431,7 +429,6 @@ inline double atan2_lookup(double y, double x)
     }
     return angle;
 }
-} // namespace util
 } // namespace osrm
 
 #endif // TRIGONOMETRY_TABLE_HPP

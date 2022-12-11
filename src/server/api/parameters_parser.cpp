@@ -9,11 +9,7 @@
 
 #include <type_traits>
 
-namespace osrm
-{
-namespace server
-{
-namespace api
+namespace osrm::server::api
 {
 
 namespace detail
@@ -110,6 +106,4 @@ boost::optional<engine::api::TileParameters> parseParameters(std::string::iterat
     return detail::parseParameters<engine::api::TileParameters, TileParametersGrammar<>>(iter, end);
 }
 
-} // namespace api
-} // namespace server
 } // namespace osrm

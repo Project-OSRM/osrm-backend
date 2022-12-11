@@ -18,11 +18,7 @@
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace extractor
-{
-namespace files
+namespace osrm::extractor::files
 {
 
 // writes the .osrm.icd file
@@ -578,8 +574,6 @@ void readCompressedNodeBasedGraph(const boost::filesystem::path &path, EdgeListT
 
     storage::serialization::read(reader, "/extractor/cnbg", edge_list);
 }
-} // namespace files
-} // namespace extractor
 } // namespace osrm
 
 #endif

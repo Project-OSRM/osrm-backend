@@ -11,9 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 template <typename ElementT> struct ConstDeallocatingVectorIteratorState
 {
@@ -348,7 +346,6 @@ template <typename T> void swap(DeallocatingVector<T> &lhs, DeallocatingVector<T
 {
     lhs.swap(rhs);
 }
-} // namespace util
 } // namespace osrm
 
 #endif /* DEALLOCATING_VECTOR_HPP */

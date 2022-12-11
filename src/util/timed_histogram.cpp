@@ -1,12 +1,6 @@
 #include "util/timed_histogram.hpp"
 
-namespace osrm
-{
-namespace util
-{
-namespace detail
+namespace osrm::util::detail
 {
 std::atomic_uint operation = {0};
-}
-} // namespace util
 } // namespace osrm

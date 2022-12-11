@@ -16,9 +16,7 @@
 #include <memory>
 #include <unordered_map>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 // This class selects the right facade for
 template <template <typename A> class FacadeT, typename AlgorithmT> class DataFacadeFactory
@@ -152,7 +150,6 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
     std::unordered_map<std::string, extractor::ClassData> name_to_class;
     const extractor::ProfileProperties *properties = nullptr;
 };
-} // namespace engine
 } // namespace osrm
 
 #endif

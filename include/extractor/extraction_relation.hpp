@@ -11,9 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 struct ExtractionRelation
@@ -199,7 +197,6 @@ class ExtractionRelationContainer
     RelationRefMap rel_refs;
 };
 
-} // namespace extractor
 } // namespace osrm
 
 #endif // EXTRACTION_RELATION_HPP

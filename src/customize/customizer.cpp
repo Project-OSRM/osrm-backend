@@ -23,9 +23,7 @@
 
 #include <tbb/global_control.h>
 
-namespace osrm
-{
-namespace customizer
+namespace osrm::customizer
 {
 
 namespace
@@ -183,5 +181,4 @@ int Customizer::Run(const CustomizationConfig &config)
     return 0;
 }
 
-} // namespace customizer
 } // namespace osrm

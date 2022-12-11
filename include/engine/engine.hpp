@@ -23,9 +23,7 @@
 #include <memory>
 #include <string>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 class EngineInterface
@@ -130,7 +128,6 @@ template <typename Algorithm> class Engine final : public EngineInterface
     const plugins::MatchPlugin match_plugin;
     const plugins::TilePlugin tile_plugin;
 };
-} // namespace engine
 } // namespace osrm
 
 #endif // OSRM_IMPL_HPP

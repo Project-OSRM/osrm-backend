@@ -16,11 +16,7 @@
 
 #include <fmt/compile.h>
 
-namespace osrm
-{
-namespace util
-{
-namespace json
+namespace osrm::util::json
 {
 
 template <typename Out> struct Renderer
@@ -165,8 +161,6 @@ inline void render(std::vector<char> &out, const Object &object)
     renderer(object);
 }
 
-} // namespace json
-} // namespace util
 } // namespace osrm
 
 #endif // JSON_RENDERER_HPP

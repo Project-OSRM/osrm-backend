@@ -8,11 +8,7 @@
 
 #include <boost/format.hpp>
 
-namespace osrm
-{
-namespace server
-{
-namespace service
+namespace osrm::server::service
 {
 namespace
 {
@@ -78,6 +74,4 @@ engine::Status MatchService::RunQuery(std::size_t prefix_length,
     }
     return BaseService::routing_machine.Match(*parameters, result);
 }
-} // namespace service
-} // namespace server
 } // namespace osrm

@@ -10,9 +10,7 @@
 #include <iomanip>
 #include <iterator>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 #ifndef NDEBUG
@@ -431,5 +429,4 @@ bool CheckOpeningHours(const std::vector<OpeningHours> &input, const struct tm &
     return is_open;
 }
 
-} // namespace util
 } // namespace osrm

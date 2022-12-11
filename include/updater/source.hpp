@@ -7,9 +7,7 @@
 
 #include <vector>
 
-namespace osrm
-{
-namespace updater
+namespace osrm::updater
 {
 
 template <typename Key, typename Value> struct LookupTable
@@ -88,7 +86,6 @@ struct PenaltySource final
 
 using SegmentLookupTable = LookupTable<Segment, SpeedSource>;
 using TurnLookupTable = LookupTable<Turn, PenaltySource>;
-} // namespace updater
 } // namespace osrm
 
 #endif

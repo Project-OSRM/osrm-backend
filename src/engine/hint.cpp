@@ -9,9 +9,7 @@
 #include <tuple>
 #include <unordered_set>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 bool SegmentHint::IsValid(const util::Coordinate new_input_coordinates,
@@ -124,5 +122,4 @@ bool Hint::IsValid(const util::Coordinate new_input_coordinates,
     return true;
 }
 
-} // namespace engine
 } // namespace osrm

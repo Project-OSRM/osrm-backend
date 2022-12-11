@@ -17,9 +17,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 RecursiveBisection::RecursiveBisection(BisectionGraph &bisection_graph_,
@@ -107,5 +105,4 @@ const std::vector<BisectionID> &RecursiveBisection::BisectionIDs() const
 
 std::uint32_t RecursiveBisection::SCCDepth() const { return internal_state.SCCDepth(); }
 
-} // namespace partitioner
 } // namespace osrm

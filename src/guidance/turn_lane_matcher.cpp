@@ -8,11 +8,7 @@
 
 using osrm::util::angularDeviation;
 
-namespace osrm
-{
-namespace guidance
-{
-namespace lanes
+namespace osrm::guidance::lanes
 {
 namespace TurnLaneType = extractor::TurnLaneType;
 
@@ -272,6 +268,4 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
     return intersection;
 }
 
-} // namespace lanes
-} // namespace guidance
 } // namespace osrm

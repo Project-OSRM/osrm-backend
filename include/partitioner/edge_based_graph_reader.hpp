@@ -21,9 +21,7 @@
 #include <memory>
 #include <vector>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 // Bidirectional (s,t) to (s,t) and (t,s)
@@ -198,7 +196,6 @@ inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const boost::filesystem::path &p
     return DynamicEdgeBasedGraph(number_of_edge_based_nodes, tidied, checksum);
 }
 
-} // namespace partitioner
 } // namespace osrm
 
 #endif

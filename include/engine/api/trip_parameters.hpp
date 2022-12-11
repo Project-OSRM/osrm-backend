@@ -33,11 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/optional.hpp>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 /**
@@ -76,8 +72,6 @@ struct TripParameters : public RouteParameters
 
     bool IsValid() const { return RouteParameters::IsValid(); }
 };
-} // namespace api
-} // namespace engine
 } // namespace osrm
 
 #endif

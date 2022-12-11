@@ -7,9 +7,7 @@
 #include <mapbox/variant.hpp>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 // Outside view of the variant, these are equal to the `which()` results
@@ -264,6 +262,5 @@ struct TurnPath
     };
 };
 
-} // namespace extractor
 } // namespace osrm
 #endif // OSRM_TURN_PATH_HPP

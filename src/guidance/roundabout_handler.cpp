@@ -15,9 +15,7 @@
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 RoundaboutHandler::RoundaboutHandler(
@@ -500,5 +498,4 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
     return intersection;
 }
 
-} // namespace guidance
 } // namespace osrm

@@ -7,11 +7,7 @@
 #include <cstddef>
 #include <cstdlib>
 
-namespace osrm
-{
-namespace engine
-{
-namespace detail // anonymous to keep TU local
+namespace osrm::engine::detail // anonymous to keep TU local
 {
 
 std::string encode(int number_to_encode)
@@ -75,6 +71,4 @@ std::int32_t decode_polyline_integer(std::string::const_iterator &first,
     result = ((result & 1) == 1) ? ~(result >> 1) : (result >> 1);
     return static_cast<std::int32_t>(result);
 }
-} // namespace detail
-} // namespace engine
 } // namespace osrm

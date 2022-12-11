@@ -23,11 +23,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 namespace detail
 {
@@ -232,8 +228,6 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
                     {}};
 }
 
-} // namespace guidance
-} // namespace engine
 } // namespace osrm
 
 #endif // ENGINE_GUIDANCE_SEGMENT_LIST_HPP_

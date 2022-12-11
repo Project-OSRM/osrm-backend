@@ -3,9 +3,7 @@
 #include "contractor/contractor_graph.hpp"
 #include "contractor/contractor_heap.hpp"
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 namespace
@@ -85,5 +83,4 @@ void search(ContractorHeap &heap,
         relaxNode(heap, graph, node, node_weight, forbidden_node);
     }
 }
-} // namespace contractor
 } // namespace osrm
