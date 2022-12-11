@@ -1,6 +1,4 @@
-# node-cmake requires CMake 3.1 features; for the osrm project we only
-# require CMake 2.8.11 so that we can build e.g. on Trusty by default.
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.18)
 
 message(STATUS "Building node_osrm")
 

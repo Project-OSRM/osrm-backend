@@ -1,7 +1,7 @@
 # https://github.com/sbellus/json-cmake/blob/9913da8800b95322d393894d3525d634568f305e/JSONParser.cmake
 # MIT Licensed - https://github.com/sbellus/json-cmake/blob/master/LICENSE
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.18)
 
 if (DEFINED JSonParserGuard)
     return()

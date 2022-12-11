@@ -1,11 +1,10 @@
 #include "util/coordinate_calculation.hpp"
+#include "util/cheap_ruler.hpp"
 #include "util/coordinate.hpp"
 #include "util/trigonometry_table.hpp"
 #include "util/web_mercator.hpp"
 
 #include <boost/assert.hpp>
-
-#include <mapbox/cheap_ruler.hpp>
 
 #include <algorithm>
 #include <iterator>
@@ -26,8 +25,8 @@ class CheapRulerContainer
     {
         for (int n = 0; n < number_of_rulers; n++)
         {
-            cheap_ruler_cache[n] = mapbox::cheap_ruler::CheapRuler(
-                step * (n + 0.5) / COORDINATE_PRECISION, mapbox::cheap_ruler::CheapRuler::Meters);
+            cheap_ruler_cache[n] =
+                mapbox::cheap_ruler::CheapRuler(step * (n + 0.5) / COORDINATE_PRECISION);
         }
     };
 

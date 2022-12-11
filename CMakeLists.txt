@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.18)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR AND NOT MSVC_IDE)
   message(FATAL_ERROR "In-source builds are not allowed.
@@ -33,7 +33,6 @@ option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 option(ENABLE_LTO "Use LTO if available" OFF)
 option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
-option(ENABLE_GOLD_LINKER "Use GNU gold linker if available" ON)
 option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
 option(ENABLE_CLANG_TIDY "Enables clang-tidy checks" OFF)
 
@@ -113,27 +112,10 @@ include(CheckCXXCompilerFlag)
 include(FindPackageHandleStandardArgs)
 include(GNUInstallDirs)
 
-set(bitness 32)
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  set(bitness 64)
   message(STATUS "Building on a 64 bit system")
 else()
   message(STATUS "Building on a 32 bit system")
-endif()
-
-if(WIN32 AND MSVC_VERSION LESS 1900)
-  message(FATAL_ERROR "Building with Microsoft compiler needs Latest Visual Studio 2015 (Community or better)")
-endif()
-
-# Strictly require GCC>=5.0 and Clang>=3.4 - GCC 4.8 is already too old for C++14.
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
-    message(FATAL_ERROR "GCC>=5.0 required. In case you are on Ubuntu upgrade via ppa:ubuntu-toolchain-r/test")
-  endif()
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.4)
-    message(FATAL_ERROR "Clang>=3.4 required. In case you are on Ubuntu upgrade via http://apt.llvm.org")
-  endif()
 endif()
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
@@ -190,26 +172,6 @@ add_library(osrm_customize src/osrm/customizer.cpp $<TARGET_OBJECTS:CUSTOMIZER> 
 add_library(osrm_update $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
 
-if(ENABLE_GOLD_LINKER)
-    execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
-    if("${LD_VERSION}" MATCHES "GNU gold")
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
-        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
-        set(OSRM_LDFLAGS "${OSRM_LDFLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
-        message(STATUS "Using GNU gold as linker.")
-
-        # Issue 2785: check gold binutils version and don't use gc-sections for versions prior 2.25
-        string(REGEX REPLACE ".*\\(GNU Binutils[^\\)0-9]+([0-9]+\\.[0-9]+)[^\\)]*\\).*" "\\1" GOLD_BINUTILS_VERSION "${LD_VERSION}")
-        if ("${GOLD_BINUTILS_VERSION}" VERSION_LESS "2.26")
-          message(STATUS "Disabling gc-sections on gold binutils < 2.26, see: https://sourceware.org/bugzilla/show_bug.cgi?id=17639")
-          set(LD_AVOID_GC_SECTIONS TRUE)
-        endif()
-    else()
-        message(WARNING "GNU gold linker isn't available.")
-        set(ENABLE_GOLD_LINKER OFF)
-    endif()
-endif()
-
 # Explicitly set the build type to Release if no other type is specified
 # on the command line.  Without this, cmake defaults to an unoptimized,
 # non-debug build, which almost nobody wants.
@@ -247,72 +209,15 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og -ggdb")
 endif()
 
-
-if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
-  message(STATUS "Configuring release mode optimizations")
-  # Check if LTO is available
-  check_cxx_compiler_flag("-Wl,-flto" LTO_AVAILABLE)
-
-  if(ENABLE_LTO AND LTO_AVAILABLE)
-    set(OLD_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-    # GCC in addition allows parallelizing LTO
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-      include(ProcessorCount)
-      ProcessorCount(NPROC)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=${NPROC}")
-    else()
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
-    endif()
-    set(CHECK_LTO_SRC "int main(){return 0;}")
-    check_cxx_source_compiles("${CHECK_LTO_SRC}" LTO_WORKS)
-    if(LTO_WORKS)
-      message(STATUS "LTO working")
-      set(OSRM_CXXFLAGS "${OSRM_CXXFLAGS} -flto")
-      set(OSRM_LDFLAGS "${OSRM_LDFLAGS} -flto")
-      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
-      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -flto")
-      set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -flto")
-    else()
-      message(STATUS "LTO broken")
-      set(CMAKE_CXX_FLAGS "${OLD_CXX_FLAGS}")
-      set(ENABLE_LTO Off)
-    endif()
-
-    # Since gcc 4.9 the LTO format is non-standart ('slim'), so we need to use the build-in tools
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT MINGW)
-      find_program(GCC_AR gcc-ar)
-      find_program(GCC_RANLIB gcc-ranlib)
-      if ("${GCC_AR}" STREQUAL "GCC_AR-NOTFOUND" OR "${GCC_RANLIB}" STREQUAL "GCC_RANLIB-NOTFOUND")
-        message(WARNING "GCC specific binutils not found. In case of linker issues export env vars: AR=gcc-ar, NM=gcc-nm, RANLIB=gcc-ranlib")
-      else()
-        message(STATUS "Using GCC specific binutils for LTO:")
-        message(STATUS " ${GCC_AR}")
-        message(STATUS " ${GCC_RANLIB}")
-        set(CMAKE_AR ${GCC_AR})
-        set(CMAKE_RANLIB ${GCC_RANLIB})
-      endif()
-    endif()
-
-    # Same for clang LTO requires their own toolchain
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-      find_program(LLVM_AR llvm-ar)
-      find_program(LLVM_RANLIB llvm-ranlib)
-      if ("${LLVM_AR}" STREQUAL "LLVM_AR-NOTFOUND" OR "${LLVM_RANLIB}" STREQUAL "LLVM_RANLIB-NOTFOUND")
-        message(WARNING "LLVM specific binutils not found.")
-      else()
-        message(STATUS "Using LLVM specific binutils for LTO:")
-        message(STATUS " ${LLVM_AR}")
-        message(STATUS " ${LLVM_RANLIB}")
-        set(CMAKE_AR ${LLVM_AR})
-        set(CMAKE_RANLIB ${LLVM_RANLIB})
-      endif()
-    endif()
+if(ENABLE_LTO AND (CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT LTO_SUPPORTED OUTPUT error)
+  if(LTO_SUPPORTED)
+      message(STATUS "IPO / LTO enabled")
+      set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+  else()
+      message(WARNING "IPO / LTO not supported: <${error}>")
   endif()
-endif()
-
-# TODO: this was added for Mason, we are not sure if it is true after migration to Conan
-if(UNIX AND NOT APPLE AND ENABLE_CONAN AND (LTO_WORKS OR ENABLE_GOLD_LINKER))
-  message(WARNING "ENABLE_CONAN and ENABLE_LTO/ENABLE_GOLD_LINKER may not work on all linux systems currently")
 endif()
 
 set(MAYBE_COVERAGE_LIBRARIES "")
@@ -352,14 +257,6 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_dependency_defines(-DWIN32)
     set(OPTIONAL_SOCKET_LIBS ws2_32 wsock32)
   endif()
-
-  # -fpermissive is required for parallel_do Intel TBB internal issue with GCC < 5
-  # https://github.com/Project-OSRM/osrm-backend/pull/3603#issuecomment-277688589
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
-    message(STATUS "Adding -fpermissive for GCC version < 5 bug (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=51048). See #3603.")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
-  endif()
-
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
   # using Intel C++
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-intel -wd10237 -Wall -ipo -fPIC")
@@ -377,48 +274,6 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   target_link_libraries(osrm-extract wsock32 ws2_32)
 endif()
 
-# Configuring linker
-execute_process(COMMAND ${CMAKE_CXX_COMPILER} "-Wl,--version" ERROR_QUIET OUTPUT_VARIABLE LINKER_VERSION)
-# For ld.gold and ld.bfs (the GNU linkers) we optimize hard
-if("${LINKER_VERSION}" MATCHES "GNU gold" OR "${LINKER_VERSION}" MATCHES "GNU ld")
-  message(STATUS "Setting linker optimizations")
-  if(NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR "${LD_AVOID_GC_SECTIONS}"))
-    # Tell compiler to put every function in separate section, linker can then match sections and functions
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
-    # Tell linker to do dead code and data eminination during link time discarding sections
-    set(LINKER_FLAGS "${LINKER_FLAGS} -Wl,--gc-sections")
-  endif()
-  # Default linker optimization flags
-  set(LINKER_FLAGS "${LINKER_FLAGS} -Wl,-O1 -Wl,--hash-style=gnu -Wl,--sort-common")
-
-else()
-  message(STATUS "Using unknown linker, not setting linker optimizations")
-endif ()
-set(OSRM_LDFLAGS "${OSRM_LDFLAGS} ${LINKER_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
-set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
-
-# Activate C++1y
-if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-  set(OSRM_CXXFLAGS "${OSRM_CXXFLAGS} -std=c++17")
-endif()
-
-# Configuring other platform dependencies
-if(APPLE)
-  execute_process(COMMAND xcrun --sdk macosx --show-sdk-path OUTPUT_VARIABLE CMAKE_OSX_SYSROOT OUTPUT_STRIP_TRAILING_WHITESPACE)
-  exec_program(uname ARGS -v  OUTPUT_VARIABLE DARWIN_VERSION)
-  string(REGEX MATCH "[0-9]+" DARWIN_VERSION ${DARWIN_VERSION})
-  if(OSXLIBSTD)
-    message(STATUS "linking against ${OSXLIBSTD}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=${OSXLIBSTD}")
-  elseif(DARWIN_VERSION GREATER 12)
-    message(STATUS "linking against libc++")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-  endif()
-endif()
-
 if(UNIX AND NOT APPLE)
   set(MAYBE_RT_LIBRARY -lrt)
 endif()
@@ -431,11 +286,6 @@ include_directories(SYSTEM ${RAPIDJSON_INCLUDE_DIR})
 
 set(MICROTAR_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src")
 include_directories(SYSTEM ${MICROTAR_INCLUDE_DIR})
-
-set(MBXGEOM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/geometry.hpp-0.9.2/include")
-include_directories(SYSTEM ${MBXGEOM_INCLUDE_DIR})
-set(CHEAPRULER_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/cheap-ruler-cpp-2778eb8/include")
-include_directories(SYSTEM ${CHEAPRULER_INCLUDE_DIR})
 
 add_library(MICROTAR OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src/microtar.c")
 set_property(TARGET MICROTAR PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -550,12 +400,7 @@ if(ENABLE_CONAN)
   # expat and bzip2 are used from conan rather than the system
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
 else()
-  if (BUILD_ROUTED)
-    # osrm-routed requires newer boost:asio 
-    find_package(Boost 1.70 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
-  else()
-    find_package(Boost 1.60 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
-  endif()
+  find_package(Boost 1.70 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
   add_dependency_includes(${Boost_INCLUDE_DIRS})
 
   find_package(TBB REQUIRED)
@@ -602,7 +447,6 @@ if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILE
     message(STATUS "Using ccache to speed up incremental builds")
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-    set(ENV{CCACHE_CPP2} "true")
   endif()
 endif()
 
