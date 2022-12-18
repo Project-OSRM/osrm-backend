@@ -32,7 +32,11 @@
 
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
+#if TBB_VERSION_MAJOR == 2020
+#include <tbb/pipeline.h>
+#else
 #include <tbb/parallel_pipeline.h>
+#endif
 
 namespace osrm
 {
@@ -569,8 +573,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         const constexpr unsigned GRAINSIZE = 100;
 
         // First part of the pipeline generates iterator ranges of IDs in sets of GRAINSIZE
+#if TBB_VERSION_MAJOR == 2020
+        tbb::filter_t<void, tbb::blocked_range<NodeID>> generator_stage(
+            tbb::filter::serial_in_order, [&](tbb::flow_control &fc) {
+#else
         tbb::filter<void, tbb::blocked_range<NodeID>> generator_stage(
             tbb::filter_mode::serial_in_order, [&](tbb::flow_control &fc) {
+#endif
                 if (current_node < node_count)
                 {
                     auto next_node = std::min(current_node + GRAINSIZE, node_count);
@@ -709,8 +718,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         //
         // Edge-based-graph stage
         //
+#if TBB_VERSION_MAJOR == 2020
+        tbb::filter_t<tbb::blocked_range<NodeID>, EdgesPipelineBufferPtr> processor_stage(
+            tbb::filter::parallel,
+#else
         tbb::filter<tbb::blocked_range<NodeID>, EdgesPipelineBufferPtr> processor_stage(
             tbb::filter_mode::parallel,
+#endif
             [&](const tbb::blocked_range<NodeID> &intersection_node_range) {
                 auto buffer = std::make_shared<EdgesPipelineBuffer>();
                 buffer->nodes_processed = intersection_node_range.size();
@@ -1120,8 +1134,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         util::UnbufferedLog log;
         util::Percent routing_progress(log, node_count);
         std::vector<EdgeWithData> delayed_data;
+#if TBB_VERSION_MAJOR == 2020
+        tbb::filter_t<EdgesPipelineBufferPtr, void> output_stage(
+            tbb::filter::serial_in_order, [&](auto buffer) {
+#else
         tbb::filter<EdgesPipelineBufferPtr, void> output_stage(
             tbb::filter_mode::serial_in_order, [&](auto buffer) {
+#endif
                 routing_progress.PrintAddition(buffer->nodes_processed);
 
                 m_connectivity_checksum = buffer->checksum.update_checksum(m_connectivity_checksum);

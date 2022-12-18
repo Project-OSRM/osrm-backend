@@ -44,7 +44,11 @@
 #include <osmium/thread/pool.hpp>
 #include <osmium/visitor.hpp>
 #include <tbb/global_control.h>
+#if TBB_VERSION_MAJOR == 2020
+#include <tbb/pipeline.h>
+#else
 #include <tbb/parallel_pipeline.h>
+#endif
 
 #include <algorithm>
 #include <atomic>
@@ -445,8 +449,13 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
     ExtractionRelationContainer relations;
 
     const auto buffer_reader = [](osmium::io::Reader &reader) {
+#if TBB_VERSION_MAJOR == 2020
+        return tbb::filter_t<void, SharedBuffer>(
+            tbb::filter::serial_in_order, [&reader](tbb::flow_control &fc) {
+#else
         return tbb::filter<void, SharedBuffer>(
             tbb::filter_mode::serial_in_order, [&reader](tbb::flow_control &fc) {
+#endif
                 if (auto buffer = reader.read())
                 {
                     return std::make_shared<osmium::memory::Buffer>(std::move(buffer));
@@ -467,15 +476,25 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
     osmium_index_type location_cache;
     osmium_location_handler_type location_handler(location_cache);
 
+#if TBB_VERSION_MAJOR == 2020
+    tbb::filter_t<SharedBuffer, SharedBuffer> location_cacher(
+        tbb::filter::serial_in_order, [&location_handler](SharedBuffer buffer) {
+#else
     tbb::filter<SharedBuffer, SharedBuffer> location_cacher(
         tbb::filter_mode::serial_in_order, [&location_handler](SharedBuffer buffer) {
+#endif
             osmium::apply(buffer->begin(), buffer->end(), location_handler);
             return buffer;
         });
 
     // OSM elements Lua parser
+#if TBB_VERSION_MAJOR == 2020
+    tbb::filter_t<SharedBuffer, ParsedBuffer> buffer_transformer(
+        tbb::filter::parallel,
+#else
     tbb::filter<SharedBuffer, ParsedBuffer> buffer_transformer(
         tbb::filter_mode::parallel,
+#endif
         // NOLINTNEXTLINE(performance-unnecessary-value-param)
         [&](const SharedBuffer buffer) {
             ParsedBuffer parsed_buffer;
@@ -496,8 +515,13 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
     unsigned number_of_ways = 0;
     unsigned number_of_restrictions = 0;
     unsigned number_of_maneuver_overrides = 0;
+#if TBB_VERSION_MAJOR == 2020
+    tbb::filter_t<ParsedBuffer, void> buffer_storage(
+        tbb::filter::serial_in_order, [&](const ParsedBuffer &parsed_buffer) {
+#else
     tbb::filter<ParsedBuffer, void> buffer_storage(
         tbb::filter_mode::serial_in_order, [&](const ParsedBuffer &parsed_buffer) {
+#endif
             number_of_nodes += parsed_buffer.resulting_nodes.size();
             // put parsed objects thru extractor callbacks
             for (const auto &result : parsed_buffer.resulting_nodes)
@@ -523,8 +547,13 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
             }
         });
 
+#if TBB_VERSION_MAJOR == 2020
+    tbb::filter_t<SharedBuffer, std::shared_ptr<ExtractionRelationContainer>> buffer_relation_cache(
+        tbb::filter::parallel,
+#else
     tbb::filter<SharedBuffer, std::shared_ptr<ExtractionRelationContainer>> buffer_relation_cache(
         tbb::filter_mode::parallel,
+#endif
         // NOLINTNEXTLINE(performance-unnecessary-value-param)
         [&](const SharedBuffer buffer) {
             if (!buffer)
@@ -561,8 +590,13 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
         });
 
     unsigned number_of_relations = 0;
+#if TBB_VERSION_MAJOR == 2020
+    tbb::filter_t<std::shared_ptr<ExtractionRelationContainer>, void> buffer_storage_relation(
+        tbb::filter::serial_in_order,
+#else
     tbb::filter<std::shared_ptr<ExtractionRelationContainer>, void> buffer_storage_relation(
         tbb::filter_mode::serial_in_order,
+#endif
         // NOLINTNEXTLINE(performance-unnecessary-value-param)
         [&](const std::shared_ptr<ExtractionRelationContainer> parsed_relations) {
             number_of_relations += parsed_relations->GetRelationsNum();

@@ -64,12 +64,20 @@ RecursiveBisection::RecursiveBisection(BisectionGraph &bisection_graph_,
         return TreeNode{std::move(graph), internal_state.SCCDepth()};
     });
 
+#if TBB_VERSION_MAJOR == 2020
+    using Feeder = tbb::parallel_do_feeder<TreeNode>;
+#else
     using Feeder = tbb::feeder<TreeNode>;
+#endif
 
     TIMER_START(bisection);
 
     // Bisect graph into two parts. Get partition point and recurse left and right in parallel.
+#if TBB_VERSION_MAJOR == 2020
+    tbb::parallel_do(begin(forest), end(forest), [&](const TreeNode &node, Feeder &feeder) {
+#else
     tbb::parallel_for_each(begin(forest), end(forest), [&](const TreeNode &node, Feeder &feeder) {
+#endif
         const auto cut =
             computeInertialFlowCut(node.graph, num_optimizing_cuts, balance, boundary_factor);
         const auto center = internal_state.ApplyBisection(
