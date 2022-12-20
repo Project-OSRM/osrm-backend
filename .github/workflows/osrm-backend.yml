@@ -301,7 +301,7 @@ jobs:
             build_node_package: true
             continue-on-error: true
             node: 18
-            runs-on: macos-11
+            runs-on: macos-12
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
@@ -313,7 +313,7 @@ jobs:
             build_node_package: true
             continue-on-error: true
             node: 18
-            runs-on: macos-11
+            runs-on: macos-12
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
