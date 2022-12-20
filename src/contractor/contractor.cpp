@@ -123,4 +123,4 @@ int Contractor::Run()
     return 0;
 }
 
-} // namespace osrm
+} // namespace osrm::contractor

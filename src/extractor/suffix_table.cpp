@@ -31,4 +31,4 @@ bool SuffixTable::isSuffix(std::string_view possible_suffix) const
     return suffix_set.count(possible_suffix) > 0;
 }
 
-} /* namespace osrm */
+} // namespace osrm::extractor

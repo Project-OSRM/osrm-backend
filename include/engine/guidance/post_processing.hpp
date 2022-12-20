@@ -54,6 +54,6 @@ void applyOverrides(const datafacade::BaseDataFacade &facade,
                     std::vector<RouteStep> &steps,
                     const LegGeometry &geometry);
 
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif // ENGINE_GUIDANCE_POST_PROCESSING_HPP

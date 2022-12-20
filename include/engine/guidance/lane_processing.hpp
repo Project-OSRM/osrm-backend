@@ -18,6 +18,6 @@ OSRM_ATTR_WARN_UNUSED
 std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
                                             const double min_distance_needed_for_lane_change = 200);
 
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif /* OSRM_ENGINE_GUIDANCE_LANE_PROCESSING_HPP_ */

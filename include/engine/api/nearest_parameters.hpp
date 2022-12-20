@@ -48,6 +48,6 @@ struct NearestParameters : public BaseParameters
 
     bool IsValid() const { return BaseParameters::IsValid() && number_of_results >= 1; }
 };
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif // ENGINE_API_NEAREST_PARAMETERS_HPP

@@ -20,4 +20,4 @@ NodeID TarjanGraphWrapper::GetTarget(const EdgeID eid) const
     return bisection_graph.Edge(eid).target;
 }
 
-} // namespace osrm
+} // namespace osrm::partitioner

@@ -40,6 +40,6 @@ enum class Status
     Ok,
     Error
 };
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

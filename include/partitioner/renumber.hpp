@@ -91,6 +91,6 @@ inline void renumber(std::vector<extractor::StorageManeuverOverride> &maneuver_o
     }
 }
 
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif

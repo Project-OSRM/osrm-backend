@@ -17,6 +17,6 @@ template <storage::Ownership Ownership> struct ContractedMetric
 
 using ContractedMetric = detail::ContractedMetric<storage::Ownership::Container>;
 using ContractedMetricView = detail::ContractedMetric<storage::Ownership::View>;
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif

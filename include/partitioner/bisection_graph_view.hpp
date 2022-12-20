@@ -62,6 +62,6 @@ class BisectionGraphView
     const BisectionGraph::ConstNodeIterator end;
 };
 
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif // OSRM_PARTITIONER_GRAPHVIEW_HPP_

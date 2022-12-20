@@ -89,6 +89,6 @@ inline std::vector<NodeID> BruteForceTrip(const std::size_t number_of_locations,
     return route;
 }
 
-} // namespace osrm
+} // namespace osrm::engine::trip
 
 #endif // TRIP_BRUTE_FORCE_HPP

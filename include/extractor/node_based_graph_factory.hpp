@@ -102,6 +102,6 @@ class NodeBasedGraphFactory
     extractor::CompressedEdgeContainer compressed_edge_container;
 };
 
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_NODE_BASED_GRAPH_FACTORY_HPP_

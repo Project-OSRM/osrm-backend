@@ -265,4 +265,4 @@ std::vector<TurnData> getTileTurns(const DataFacade<mld::Algorithm> &facade,
     return generateTurns(facade, edges, sorted_edge_indexes, edge_finder);
 }
 
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms

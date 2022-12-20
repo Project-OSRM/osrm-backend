@@ -233,6 +233,6 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
 
 using MultiLevelEdgeBasedGraph =
     MultiLevelGraph<EdgeBasedGraphEdgeData, storage::Ownership::Container>;
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif

@@ -105,6 +105,6 @@ template <> class AlgorithmDataFacade<MLD>
     virtual EdgeID FindEdge(const NodeID edge_based_node_from,
                             const NodeID edge_based_node_to) const = 0;
 };
-} // namespace osrm
+} // namespace osrm::engine::datafacade
 
 #endif

@@ -72,7 +72,7 @@ void benchmark(BenchStaticRTree &rtree, unsigned num_queries)
         return rtree.Nearest(q, 10);
     });
 }
-} // namespace osrm
+} // namespace osrm::benchmarks
 
 int main(int argc, char **argv)
 {

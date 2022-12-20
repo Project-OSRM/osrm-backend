@@ -89,4 +89,4 @@ Intersection DrivewayHandler::operator()(const NodeID nid,
     return intersection;
 }
 
-} // namespace osrm
+} // namespace osrm::guidance

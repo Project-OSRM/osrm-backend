@@ -129,6 +129,6 @@ struct RestrictionGraph
 
 RestrictionGraph constructRestrictionGraph(const std::vector<TurnRestriction> &turn_restrictions);
 
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_RESTRICTION_GRAPH_HPP_

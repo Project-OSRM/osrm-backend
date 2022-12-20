@@ -809,4 +809,4 @@ Intersection TurnLaneHandler::handleSliproadTurn(Intersection intersection,
     return simpleMatchTuplesToTurns(std::move(intersection), lane_data, combined_id);
 }
 
-} // namespace osrm
+} // namespace osrm::guidance::lanes

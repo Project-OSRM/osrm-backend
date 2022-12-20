@@ -361,6 +361,6 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     return steps;
 }
 
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif // ENGINE_GUIDANCE_SEGMENT_LIST_HPP_

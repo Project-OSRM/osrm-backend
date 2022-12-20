@@ -38,6 +38,6 @@ class TripPlugin final : public BasePlugin
                          const api::TripParameters &parameters,
                          osrm::engine::api::ResultT &json_result) const;
 };
-} // namespace osrm
+} // namespace osrm::engine::plugins
 
 #endif // TRIP_HPP

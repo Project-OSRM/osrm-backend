@@ -230,6 +230,6 @@ inline auto RouteStep::LanesToTheRight() const
     return boost::make_iterator_range(description.end() - num_lanes_right, description.end());
 }
 
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif

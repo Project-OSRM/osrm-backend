@@ -22,6 +22,6 @@ template <typename T> T clamp_float(T d)
 
     return d;
 }
-} // namespace osrm
+} // namespace osrm::util::json
 
 #endif // JSON_UTIL_HPP

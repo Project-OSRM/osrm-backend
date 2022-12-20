@@ -60,7 +60,7 @@ inline std::ostream &operator<<(std::ostream &out, const RouteStep &step)
 
     return out;
 }
-} // namespace engine
+} // namespace engine::guidance
 
 namespace guidance
 {

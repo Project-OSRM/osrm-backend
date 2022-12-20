@@ -181,4 +181,4 @@ int Customizer::Run(const CustomizationConfig &config)
     return 0;
 }
 
-} // namespace osrm
+} // namespace osrm::customizer

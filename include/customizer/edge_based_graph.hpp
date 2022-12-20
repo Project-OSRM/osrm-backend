@@ -124,6 +124,6 @@ using MultiLevelEdgeBasedGraph =
     MultiLevelGraph<EdgeBasedGraphEdgeData, storage::Ownership::Container>;
 using MultiLevelEdgeBasedGraphView =
     MultiLevelGraph<EdgeBasedGraphEdgeData, storage::Ownership::View>;
-} // namespace osrm
+} // namespace osrm::customizer
 
 #endif

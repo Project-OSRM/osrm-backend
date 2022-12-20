@@ -9,6 +9,6 @@ namespace osrm::engine
 using DataFacadeBase = datafacade::ContiguousInternalMemoryDataFacadeBase;
 template <typename AlgorithmT>
 using DataFacade = datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT>;
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

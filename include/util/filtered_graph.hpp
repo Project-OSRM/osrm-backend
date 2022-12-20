@@ -157,6 +157,6 @@ template <typename GraphT>
 using FilteredGraphContainer = detail::FilteredGraphImpl<GraphT, storage::Ownership::Container>;
 template <typename GraphT>
 using FilteredGraphView = detail::FilteredGraphImpl<GraphT, storage::Ownership::View>;
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

@@ -196,6 +196,6 @@ inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const boost::filesystem::path &p
     return DynamicEdgeBasedGraph(number_of_edge_based_nodes, tidied, checksum);
 }
 
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif

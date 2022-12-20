@@ -228,6 +228,6 @@ struct IntersectionView final : std::vector<IntersectionViewData>,      //
     using Base = std::vector<IntersectionViewData>;
 };
 
-} // namespace osrm
+} // namespace osrm::extractor::intersection
 
 #endif /* OSRM_EXTRACTOR_INTERSECTION_INTERSECTION_VIEW_HPP_*/

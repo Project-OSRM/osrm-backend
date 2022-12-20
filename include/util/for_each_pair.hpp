@@ -37,6 +37,6 @@ void for_each_pair(ContainerT &container, Function &&function)
     for_each_pair(begin(container), end(container), std::forward<Function>(function));
 }
 
-} // namespace osrm
+} // namespace osrm::util
 
 #endif /* FOR_EACH_PAIR_HPP */

@@ -956,4 +956,4 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     return InternalManyRoutesResult{std::move(routes)};
 }
 
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms

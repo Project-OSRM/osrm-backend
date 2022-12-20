@@ -658,6 +658,6 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
     return 0;
 }
 
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /*OSRM_GUIDANCE_INTERSECTION_HANDLER_HPP_*/

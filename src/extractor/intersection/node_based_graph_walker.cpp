@@ -285,4 +285,4 @@ void IntersectionFinderAccumulator::update(const NodeID from_node,
                                                          {from_node, via_edge});
 }
 
-} // namespace osrm
+} // namespace osrm::extractor::intersection

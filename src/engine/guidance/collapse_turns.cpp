@@ -663,4 +663,4 @@ RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
     return steps;
 }
 
-} // namespace osrm
+} // namespace osrm::engine::guidance

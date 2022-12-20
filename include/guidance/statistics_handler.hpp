@@ -105,6 +105,6 @@ class StatisticsHandler final : public IntersectionHandler
     mutable std::map<DirectionModifier::Enum, std::uint64_t> modifier_hist;
 };
 
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif // OSRM_GUIDANCE_VALIDATION_HANDLER_HPP_

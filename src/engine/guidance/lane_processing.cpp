@@ -205,4 +205,4 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
     return steps;
 }
 
-} // namespace osrm
+} // namespace osrm::engine::guidance

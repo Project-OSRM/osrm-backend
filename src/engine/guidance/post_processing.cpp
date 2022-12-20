@@ -714,4 +714,4 @@ void applyOverrides(const datafacade::BaseDataFacade &facade,
     }
 }
 
-} // namespace osrm
+} // namespace osrm::engine::guidance

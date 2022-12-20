@@ -3,4 +3,4 @@
 namespace osrm::util::detail
 {
 std::atomic_uint operation = {0};
-} // namespace osrm
+} // namespace osrm::util::detail

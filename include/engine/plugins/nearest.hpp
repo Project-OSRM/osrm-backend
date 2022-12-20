@@ -22,6 +22,6 @@ class NearestPlugin final : public BasePlugin
   private:
     const int max_results;
 };
-} // namespace osrm
+} // namespace osrm::engine::plugins
 
 #endif /* NEAREST_HPP */

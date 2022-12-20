@@ -429,6 +429,6 @@ inline double atan2_lookup(double y, double x)
     }
     return angle;
 }
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // TRIGONOMETRY_TABLE_HPP

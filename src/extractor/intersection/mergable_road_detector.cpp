@@ -612,4 +612,4 @@ bool MergableRoadDetector::IsLinkRoad(const NodeID intersection_node,
                        .annotation_data));
 }
 
-} // namespace osrm
+} // namespace osrm::extractor::intersection

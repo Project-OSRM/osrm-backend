@@ -82,6 +82,6 @@ struct ConnectivityChecksum
     std::size_t byte_number;
     unsigned char bit_number;
 };
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

@@ -165,6 +165,6 @@ inline void xyzToMercator(
     maxx = static_cast<double>(clamp(util::FloatLongitude{maxx})) * DEGREE_TO_PX;
     maxy = latToY(util::FloatLatitude{maxy}) * DEGREE_TO_PX;
 }
-} // namespace osrm
+} // namespace osrm::util::web_mercator
 
 #endif

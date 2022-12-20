@@ -27,6 +27,6 @@ class BaseService
   protected:
     OSRM &routing_machine;
 };
-} // namespace osrm
+} // namespace osrm::server::service
 
 #endif

@@ -81,6 +81,6 @@ constexpr std::size_t ENCODED_SEGMENT_HINT_SIZE = 112;
 static_assert(ENCODED_SEGMENT_HINT_SIZE / 4 * 3 >= sizeof(SegmentHint),
               "ENCODED_SEGMENT_HINT_SIZE does not match size of SegmentHint");
 
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

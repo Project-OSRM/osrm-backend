@@ -362,6 +362,6 @@ inline auto make_filtered_graph_view(const SharedDataIndex &index,
 
     return util::FilteredGraphView<contractor::QueryGraphView>({node_list, edge_list}, edge_filter);
 }
-} // namespace osrm
+} // namespace osrm::storage
 
 #endif

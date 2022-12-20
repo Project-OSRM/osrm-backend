@@ -296,4 +296,4 @@ bool RequestParser::is_digit(const int character) const
 {
     return character >= '0' && character <= '9';
 }
-} // namespace osrm
+} // namespace osrm::server

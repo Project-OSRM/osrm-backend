@@ -413,4 +413,4 @@ double computeArea(const std::vector<Coordinate> &polygon)
     return area / 2.;
 }
 
-} // namespace osrm
+} // namespace osrm::util::coordinate_calculation

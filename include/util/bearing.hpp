@@ -142,6 +142,6 @@ inline double restrictAngleToValidRange(const double angle)
         return angle;
 }
 
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // BEARING_HPP

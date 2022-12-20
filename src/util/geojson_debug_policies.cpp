@@ -66,4 +66,4 @@ CoordinateVectorToLineString::operator()(const std::vector<util::Coordinate> &in
     return makeFeature("LineString", std::move(coordinates), properties);
 }
 
-} /* namespace osrm */
+} // namespace osrm::util

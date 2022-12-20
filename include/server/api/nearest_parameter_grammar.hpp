@@ -36,6 +36,6 @@ struct NearestParametersGrammar final : public BaseParametersGrammar<Iterator, S
     qi::rule<Iterator, Signature> root_rule;
     qi::rule<Iterator, Signature> nearest_rule;
 };
-} // namespace osrm
+} // namespace osrm::server::api
 
 #endif

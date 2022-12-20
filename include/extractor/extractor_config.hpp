@@ -89,6 +89,6 @@ struct ExtractorConfig final : storage::IOConfig
     bool use_locations_cache = true;
     bool dump_nbg_graph = false;
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // EXTRACTOR_CONFIG_HPP

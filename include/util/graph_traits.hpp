@@ -44,6 +44,6 @@ struct HasFirstEdgeMember<T, decltype((void)(sizeof(std::declval<T>().first_edge
 {
 };
 
-} // namespace osrm
+} // namespace osrm::util::traits
 
 #endif // STATIC_GRAPH_TRAITS_HPP

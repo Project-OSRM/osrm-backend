@@ -33,6 +33,6 @@ std::vector<TurnData> getTileTurns(const DataFacade<mld::Algorithm> &facade,
                                    const std::vector<RTreeLeaf> &edges,
                                    const std::vector<std::size_t> &sorted_edge_indexes);
 
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms
 
 #endif

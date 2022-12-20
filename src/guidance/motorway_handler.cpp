@@ -560,4 +560,4 @@ Intersection MotorwayHandler::fallback(Intersection intersection) const
     return intersection;
 }
 
-} // namespace osrm
+} // namespace osrm::guidance

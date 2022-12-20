@@ -107,6 +107,6 @@ template <> struct HasGetTileTurns<mld::Algorithm> final : std::true_type
 template <> struct HasExcludeFlags<mld::Algorithm> final : std::true_type
 {
 };
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms
 
 #endif

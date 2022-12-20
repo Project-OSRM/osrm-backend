@@ -94,6 +94,6 @@ struct MatchParameters : public RouteParameters
                (timestamps.empty() || timestamps.size() == coordinates.size());
     }
 };
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

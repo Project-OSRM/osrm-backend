@@ -179,4 +179,4 @@ const std::vector<BisectionID> &RecursiveBisectionState::BisectionIDs() const
 
 std::uint32_t RecursiveBisectionState::SCCDepth() const { return scc_levels; }
 
-} // namespace osrm
+} // namespace osrm::partitioner

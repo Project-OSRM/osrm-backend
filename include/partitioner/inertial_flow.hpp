@@ -12,6 +12,6 @@ DinicMaxFlow::MinCut computeInertialFlowCut(const BisectionGraphView &view,
                                             const double balance,
                                             const double source_sink_rate);
 
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif // OSRM_PARTITIONER_INERTIAL_FLOW_HPP_

@@ -32,4 +32,4 @@ bool EntryClass::operator<(const EntryClass &other) const
     return enabled_entries_flags < other.enabled_entries_flags;
 }
 
-} // namespace osrm
+} // namespace osrm::util::guidance

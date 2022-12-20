@@ -689,6 +689,6 @@ class ContiguousInternalMemoryDataFacade<MLD> final
     {
     }
 };
-} // namespace osrm
+} // namespace osrm::engine::datafacade
 
 #endif // CONTIGUOUS_INTERNALMEM_DATAFACADE_HPP

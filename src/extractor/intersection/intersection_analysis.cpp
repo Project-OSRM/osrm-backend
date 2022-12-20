@@ -852,4 +852,4 @@ IntersectionEdge skipDegreeTwoNodes(const util::NodeBasedDynamicGraph &graph, In
 
     return road;
 }
-} // namespace osrm
+} // namespace osrm::extractor::intersection

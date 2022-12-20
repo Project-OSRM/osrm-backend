@@ -56,6 +56,6 @@ class MotorwayHandler final : public IntersectionHandler
     Intersection fallback(Intersection intersection) const;
 };
 
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /*OSRM_GUIDANCE_MOTORWAY_HANDLER_HPP_*/

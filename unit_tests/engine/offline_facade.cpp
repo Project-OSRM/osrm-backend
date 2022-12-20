@@ -12,7 +12,7 @@ namespace routing_algorithms::offline
 struct Algorithm final
 {
 };
-} // namespace routing_algorithms
+} // namespace routing_algorithms::offline
 
 // Define engine data for offline data facade
 template <> struct SearchEngineData<routing_algorithms::offline::Algorithm>
@@ -361,9 +361,9 @@ void unpackPath(const FacadeT &facade,
     mld::unpackPath(facade, packed_path_begin, packed_path_end, endpoints, unpacked_path);
 }
 
-} // namespace routing_algorithms
+} // namespace routing_algorithms::offline
 
-} // namespace osrm
+} // namespace osrm::engine
 
 BOOST_AUTO_TEST_SUITE(offline_facade)
 

@@ -72,6 +72,6 @@ struct UnconditionalOnly
 using RestrictionMap = NodeRestrictionMap<UnconditionalOnly>;
 using ConditionalRestrictionMap = NodeRestrictionMap<ConditionalOnly>;
 
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_NODE_RESTRICTION_MAP_HPP_

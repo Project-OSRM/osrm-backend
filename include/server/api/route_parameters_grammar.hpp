@@ -109,6 +109,6 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
     qi::symbols<char, engine::api::RouteParameters::OverviewType> overview_type;
     qi::symbols<char, engine::api::RouteParameters::AnnotationsType> annotations_type;
 };
-} // namespace osrm
+} // namespace osrm::server::api
 
 #endif

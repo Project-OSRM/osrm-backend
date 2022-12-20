@@ -48,6 +48,6 @@ struct NodesOfWay
         return node_ids[node_ids.size() - 1];
     }
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* NODES_OF_WAY_HPP */

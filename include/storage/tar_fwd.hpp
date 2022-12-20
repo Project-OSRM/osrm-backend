@@ -7,6 +7,6 @@ namespace osrm::storage::tar
 class FileReader;
 class FileWriter;
 
-} // namespace osrm
+} // namespace osrm::storage::tar
 
 #endif

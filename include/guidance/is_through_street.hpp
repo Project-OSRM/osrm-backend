@@ -58,6 +58,6 @@ inline bool isThroughStreet(const std::size_t index,
     return false;
 }
 
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /*OSRM_GUIDANCE_IS_THROUGH_STREET_HPP_*/

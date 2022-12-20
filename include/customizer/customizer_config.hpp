@@ -37,6 +37,6 @@ struct CustomizationConfig final : storage::IOConfig
 
     updater::UpdaterConfig updater_config;
 };
-} // namespace osrm
+} // namespace osrm::customizer
 
 #endif // OSRM_CUSTOMIZE_CUSTOMIZER_CONFIG_HPP

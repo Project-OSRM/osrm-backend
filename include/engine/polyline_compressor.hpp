@@ -78,6 +78,6 @@ std::vector<util::Coordinate> decodePolyline(const std::string &polyline)
     }
     return coordinates;
 }
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif /* POLYLINECOMPRESSOR_H_ */

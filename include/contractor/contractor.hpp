@@ -47,6 +47,6 @@ class Contractor
   private:
     ContractorConfig config;
 };
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif // PROCESSING_CHAIN_HPP

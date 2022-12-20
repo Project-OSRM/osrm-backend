@@ -73,4 +73,4 @@ std::size_t BearingClass::findMatchingBearing(const double bearing) const
     return std::distance(available_bearings.begin(), max_element);
 }
 
-} // namespace osrm
+} // namespace osrm::util::guidance

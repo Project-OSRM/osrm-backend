@@ -198,4 +198,4 @@ int Partitioner::Run(const PartitionerConfig &config)
     return 0;
 }
 
-} // namespace osrm
+} // namespace osrm::partitioner

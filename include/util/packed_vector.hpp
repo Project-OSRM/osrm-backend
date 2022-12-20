@@ -599,6 +599,6 @@ template <typename T, std::size_t Bits>
 using PackedVector = detail::PackedVector<T, Bits, storage::Ownership::Container>;
 template <typename T, std::size_t Bits>
 using PackedVectorView = detail::PackedVector<T, Bits, storage::Ownership::View>;
-} // namespace osrm
+} // namespace osrm::util
 
 #endif /* PACKED_VECTOR_HPP */

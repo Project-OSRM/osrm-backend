@@ -307,4 +307,4 @@ bool DinicMaxFlow::Validate(const BisectionGraphView &view,
     return separated && in_range_source && in_range_sink;
 }
 
-} // namespace osrm
+} // namespace osrm::partitioner

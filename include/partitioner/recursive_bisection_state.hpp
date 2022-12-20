@@ -48,6 +48,6 @@ class RecursiveBisectionState
     std::vector<BisectionID> bisection_ids;
 };
 
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif // OSRM_PARTITIONER_RECURSIVE_BISECTION_STATE_HPP_

@@ -649,6 +649,6 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
     return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
 }
 
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms::mld
 
 #endif // OSRM_ENGINE_ROUTING_BASE_MLD_HPP

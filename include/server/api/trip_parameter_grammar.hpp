@@ -56,6 +56,6 @@ struct TripParametersGrammar final : public RouteParametersGrammar<Iterator, Sig
     qi::symbols<char, engine::api::TripParameters::SourceType> source_type;
     qi::symbols<char, engine::api::TripParameters::DestinationType> destination_type;
 };
-} // namespace osrm
+} // namespace osrm::server::api
 
 #endif

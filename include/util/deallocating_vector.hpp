@@ -346,6 +346,6 @@ template <typename T> void swap(DeallocatingVector<T> &lhs, DeallocatingVector<T
 {
     lhs.swap(rhs);
 }
-} // namespace osrm
+} // namespace osrm::util
 
 #endif /* DEALLOCATING_VECTOR_HPP */

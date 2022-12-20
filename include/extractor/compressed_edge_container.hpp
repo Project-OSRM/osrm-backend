@@ -80,6 +80,6 @@ class CompressedEdgeContainer
     std::unordered_map<EdgeID, unsigned> m_reverse_edge_id_to_zipped_index_map;
     std::unique_ptr<SegmentDataContainer> segment_data;
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // GEOMETRY_COMPRESSOR_HPP_

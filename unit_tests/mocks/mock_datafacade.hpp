@@ -258,6 +258,6 @@ class MockDataFacade final : public MockBaseDataFacade, public MockAlgorithmData
 {
 };
 
-} // namespace osrm
+} // namespace osrm::test
 
 #endif // MOCK_DATAFACADE_HPP

@@ -271,6 +271,6 @@ struct PhantomEndpoints
     PhantomNode target_phantom;
 };
 
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif // OSRM_ENGINE_PHANTOM_NODE_H

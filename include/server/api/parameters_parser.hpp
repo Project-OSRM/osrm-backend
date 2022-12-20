@@ -39,6 +39,6 @@ boost::optional<ParameterT> parseParameters(std::string options_string)
     return parseParameters<ParameterT>(first, last);
 }
 
-} // namespace osrm
+} // namespace osrm::server::api
 
 #endif

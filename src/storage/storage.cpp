@@ -585,4 +585,4 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
         }
     }
 }
-} // namespace osrm
+} // namespace osrm::storage

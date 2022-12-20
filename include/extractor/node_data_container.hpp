@@ -127,6 +127,6 @@ using EdgeBasedNodeDataExternalContainer =
 using EdgeBasedNodeDataContainer =
     detail::EdgeBasedNodeDataContainerImpl<storage::Ownership::Container>;
 using EdgeBasedNodeDataView = detail::EdgeBasedNodeDataContainerImpl<storage::Ownership::View>;
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

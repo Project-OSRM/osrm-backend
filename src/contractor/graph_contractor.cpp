@@ -766,4 +766,4 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     return std::move(node_data.is_core);
 }
 
-} // namespace osrm
+} // namespace osrm::contractor

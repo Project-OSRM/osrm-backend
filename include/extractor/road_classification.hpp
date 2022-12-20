@@ -221,6 +221,6 @@ inline bool obviousByRoadClass(const RoadClassification in_classification,
             compare_candidate.IsLowPriorityRoadClass());
 }
 
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_CLASSIFICATION_DATA_HPP_

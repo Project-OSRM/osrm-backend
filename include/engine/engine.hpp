@@ -128,6 +128,6 @@ template <typename Algorithm> class Engine final : public EngineInterface
     const plugins::MatchPlugin match_plugin;
     const plugins::TilePlugin tile_plugin;
 };
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif // OSRM_IMPL_HPP

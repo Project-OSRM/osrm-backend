@@ -23,6 +23,6 @@ void for_each_indexed(ContainerT &container, Function function)
     for_each_indexed(std::begin(container), std::end(container), function);
 }
 
-} // namespace osrm
+} // namespace osrm::util
 
 #endif /* FOR_EACH_INDEXED_HPP */

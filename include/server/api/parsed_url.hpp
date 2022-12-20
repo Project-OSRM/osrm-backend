@@ -18,6 +18,6 @@ struct ParsedURL final
     std::size_t prefix_length;
 };
 
-} // namespace osrm
+} // namespace osrm::server::api
 
 #endif

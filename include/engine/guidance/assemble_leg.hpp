@@ -228,6 +228,6 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
                     {}};
 }
 
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif // ENGINE_GUIDANCE_SEGMENT_LIST_HPP_

@@ -72,6 +72,6 @@ struct TripParameters : public RouteParameters
 
     bool IsValid() const { return RouteParameters::IsValid(); }
 };
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

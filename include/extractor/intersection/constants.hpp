@@ -26,6 +26,6 @@ const auto constexpr ASSUMED_LANE_WIDTH = 3.25;
 // how far apart can roads be at the most, when thinking about merging them?
 const auto constexpr MERGABLE_ANGLE_DIFFERENCE = 95.0;
 
-} // namespace osrm
+} // namespace osrm::extractor::intersection
 
 #endif // OSRM_EXTRACTOR_INTERSECTION_CONSTANTS_HPP_

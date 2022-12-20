@@ -30,6 +30,6 @@ class RecursiveBisection
     RecursiveBisectionState internal_state;
 };
 
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif // OSRM_PARTITIONER_RECURSIVE_BISECTION_HPP_

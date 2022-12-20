@@ -308,6 +308,6 @@ class FileWriter
     boost::filesystem::path path;
     mtar_t handle;
 };
-} // namespace osrm
+} // namespace osrm::storage::tar
 
 #endif

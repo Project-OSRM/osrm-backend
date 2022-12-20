@@ -141,7 +141,7 @@ struct UnresolvedManeuverOverride
 
     static std::string Name() { return "maneuver override"; };
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 // custom specialization of std::hash can be injected in namespace std
 namespace std

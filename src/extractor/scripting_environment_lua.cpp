@@ -1249,4 +1249,4 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way,
     }
 }
 
-} // namespace osrm
+} // namespace osrm::extractor

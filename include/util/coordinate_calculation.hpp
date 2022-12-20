@@ -373,6 +373,6 @@ bool areParallel(const iterator_type lhs_begin,
 
 double computeArea(const std::vector<Coordinate> &polygon);
 
-} // namespace osrm
+} // namespace osrm::util::coordinate_calculation
 
 #endif // COORDINATE_CALCULATION

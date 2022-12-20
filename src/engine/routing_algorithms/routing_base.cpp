@@ -103,4 +103,4 @@ PhantomEndpoints endpointsFromCandidates(const PhantomEndpointCandidates &candid
     return PhantomEndpoints{*source_it, *target_it};
 }
 
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms

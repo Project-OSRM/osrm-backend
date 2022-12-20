@@ -68,4 +68,4 @@ engine::Status NearestService::RunQuery(std::size_t prefix_length,
     }
     return BaseService::routing_machine.Nearest(*parameters, result);
 }
-} // namespace osrm
+} // namespace osrm::server::service

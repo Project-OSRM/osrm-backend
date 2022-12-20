@@ -154,6 +154,6 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
     std::vector<EdgeT> edges;
 };
 
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif // OSRM_PARTITIONER_GRAPH_HPP_

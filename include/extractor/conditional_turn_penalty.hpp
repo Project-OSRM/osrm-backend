@@ -19,6 +19,6 @@ struct ConditionalTurnPenalty
     std::vector<util::OpeningHours> conditions;
 };
 
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_CONDITIONAL_TURN_PENALTY_HPP_

@@ -194,6 +194,6 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
     return result;
 }
 
-} // namespace osrm
+} // namespace osrm::engine::api::tidy
 
 #endif

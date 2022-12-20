@@ -46,6 +46,6 @@ class TurnPathCompressor
     std::unordered_multimap<NodeID, TurnPath *> ends;
 };
 
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_TURN_PATH_COMPRESSOR_HPP_

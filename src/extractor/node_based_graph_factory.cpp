@@ -236,4 +236,4 @@ void NodeBasedGraphFactory::ReleaseOsmNodes()
     extractor::PackedOSMIDs().swap(osm_node_ids);
 }
 
-} // namespace osrm
+} // namespace osrm::extractor

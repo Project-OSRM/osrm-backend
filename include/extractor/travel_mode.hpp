@@ -101,6 +101,6 @@ inline std::string travelModeToString(const TravelMode mode)
     return token;
 }
 
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* TRAVEL_MODE_HPP */

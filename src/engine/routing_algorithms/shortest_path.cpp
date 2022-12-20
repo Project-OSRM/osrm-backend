@@ -17,4 +17,4 @@ shortestPathSearch(SearchEngineData<mld::Algorithm> &engine_working_data,
                    const std::vector<PhantomNodeCandidates> &waypoint_candidates,
                    const boost::optional<bool> continue_straight_at_waypoint);
 
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms

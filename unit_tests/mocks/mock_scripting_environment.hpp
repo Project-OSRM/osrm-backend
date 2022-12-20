@@ -47,6 +47,6 @@ class MockScriptingEnvironment : public extractor::ScriptingEnvironment
     bool HasLocationDependentData() const override { return false; };
 };
 
-} // namespace osrm
+} // namespace osrm::test
 
 #endif // MOCK_SCRIPTING_ENVIRONMENT_HPP_

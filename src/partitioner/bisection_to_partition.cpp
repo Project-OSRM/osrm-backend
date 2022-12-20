@@ -138,4 +138,4 @@ bisectionToPartition(const std::vector<BisectionID> &node_to_bisection_id,
 
     return std::make_tuple(std::move(partitions), std::move(num_cells));
 }
-} // namespace osrm
+} // namespace osrm::partitioner

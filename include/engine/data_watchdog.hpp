@@ -147,6 +147,6 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
 // once a new dataset arrives.
 template <typename AlgorithmT, template <typename A> class FacadeT>
 using DataWatchdog = detail::DataWatchdogImpl<AlgorithmT, FacadeT<AlgorithmT>>;
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

@@ -74,4 +74,4 @@ engine::Status MatchService::RunQuery(std::size_t prefix_length,
     }
     return BaseService::routing_machine.Match(*parameters, result);
 }
-} // namespace osrm
+} // namespace osrm::server::service

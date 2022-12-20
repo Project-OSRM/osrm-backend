@@ -321,6 +321,6 @@ class BasePlugin
                std::to_string(missing_index);
     }
 };
-} // namespace osrm
+} // namespace osrm::engine::plugins
 
 #endif /* BASE_PLUGIN_HPP */

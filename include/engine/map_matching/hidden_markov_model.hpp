@@ -133,6 +133,6 @@ template <class CandidateLists> struct HiddenMarkovModel
         return initial_timestamp;
     }
 };
-} // namespace osrm
+} // namespace osrm::engine::map_matching
 
 #endif // HIDDEN_MARKOV_MODEL

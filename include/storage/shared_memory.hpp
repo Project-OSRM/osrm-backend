@@ -309,6 +309,6 @@ std::unique_ptr<SharedMemory> makeSharedMemory(const IdentifierT &id, const uint
         throw util::exception(e.what() + SOURCE_REF);
     }
 }
-} // namespace osrm
+} // namespace osrm::storage
 
 #endif // SHARED_MEMORY_HPP

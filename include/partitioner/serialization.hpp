@@ -61,6 +61,6 @@ inline void write(storage::tar::FileWriter &writer,
     storage::serialization::write(
         writer, name + "/level_to_cell_offset", storage.level_to_cell_offset);
 }
-} // namespace osrm
+} // namespace osrm::partitioner::serialization
 
 #endif

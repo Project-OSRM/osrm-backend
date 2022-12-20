@@ -101,6 +101,6 @@ template <typename AlgorithmT>
 using ImmutableProvider = detail::ImmutableProvider<AlgorithmT, DataFacade>;
 template <typename AlgorithmT>
 using ExternalProvider = detail::ExternalProvider<AlgorithmT, DataFacade>;
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

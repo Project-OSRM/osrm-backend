@@ -25,4 +25,4 @@ bool EngineConfig::IsValid() const
             storage_config.IsValid()) &&
            limits_valid;
 }
-} // namespace osrm
+} // namespace osrm::engine

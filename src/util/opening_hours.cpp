@@ -429,4 +429,4 @@ bool CheckOpeningHours(const std::vector<OpeningHours> &input, const struct tm &
     return is_open;
 }
 
-} // namespace osrm
+} // namespace osrm::util

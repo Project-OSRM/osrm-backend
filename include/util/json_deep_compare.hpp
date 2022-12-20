@@ -154,6 +154,6 @@ inline bool compare(const Value &reference, const Value &result, std::string &re
     return mapbox::util::apply_visitor(
         Comparator(reason, "reference", "result"), reference, result);
 }
-} // namespace osrm
+} // namespace osrm::util::json
 
 #endif

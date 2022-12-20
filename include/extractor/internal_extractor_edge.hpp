@@ -84,6 +84,6 @@ struct InternalExtractorEdge
     // coordinate of the source node
     util::Coordinate source_coordinate;
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // INTERNAL_EXTRACTOR_EDGE_HPP

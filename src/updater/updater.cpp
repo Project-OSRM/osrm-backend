@@ -841,4 +841,4 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     util::Log() << "Done reading edges in " << TIMER_MSEC(load_edges) << "ms.";
     return number_of_edge_based_nodes;
 }
-} // namespace osrm
+} // namespace osrm::updater

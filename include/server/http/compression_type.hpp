@@ -10,6 +10,6 @@ enum compression_type
     gzip_rfc1952,
     deflate_rfc1951
 };
-} // namespace osrm
+} // namespace osrm::server::http
 
 #endif // COMPRESSION_TYPE_HPP

@@ -264,6 +264,6 @@ inline void write(io::BufferWriter &writer, const BaseDataLayout &layout)
 {
     write(writer, layout.blocks);
 }
-} // namespace osrm
+} // namespace osrm::storage::serialization
 
 #endif

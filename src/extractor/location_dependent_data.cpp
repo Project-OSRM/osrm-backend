@@ -273,4 +273,4 @@ std::vector<std::size_t> LocationDependentData::GetPropertyIndexes(const point_t
 
     return result;
 }
-} // namespace osrm
+} // namespace osrm::extractor

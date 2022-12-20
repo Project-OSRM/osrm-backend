@@ -31,6 +31,6 @@ class ViaRoutePlugin final : public BasePlugin
                          const api::RouteParameters &route_parameters,
                          osrm::engine::api::ResultT &json_result) const;
 };
-} // namespace osrm
+} // namespace osrm::engine::plugins
 
 #endif // VIA_ROUTE_HPP

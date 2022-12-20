@@ -28,6 +28,6 @@ const double constexpr INCREASES_BY_FOURTY_PERCENT = 1.4;
 
 const int constexpr MAX_SLIPROAD_THRESHOLD = 250;
 
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif // OSRM_GUIDANCE_CONSTANTS_HPP_

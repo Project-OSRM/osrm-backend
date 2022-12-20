@@ -498,4 +498,4 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
     return intersection;
 }
 
-} // namespace osrm
+} // namespace osrm::guidance

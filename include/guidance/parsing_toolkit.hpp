@@ -101,6 +101,6 @@ inline std::string applyAccessTokens(std::string lane_string, const std::string 
     return result_string;
 }
 
-} // namespace osrm
+} // namespace osrm::extractor::guidance
 
 #endif // OSRM_GUIDANCE_PARSING_TOOLKIT_HPP_

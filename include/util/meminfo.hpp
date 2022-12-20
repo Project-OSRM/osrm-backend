@@ -26,6 +26,6 @@ inline void DumpMemoryStats()
     util::Log() << "RAM: peak bytes used: <not implemented on Windows>";
 #endif // _WIN32
 }
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

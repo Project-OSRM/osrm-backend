@@ -15,6 +15,6 @@ struct SubMatching
     std::vector<unsigned> alternatives_count;
     double confidence;
 };
-} // namespace osrm
+} // namespace osrm::engine::map_matching
 
 #endif

@@ -12,6 +12,6 @@ namespace osrm::engine::api
 {
 using ResultT =
     mapbox::util::variant<util::json::Object, std::string, flatbuffers::FlatBufferBuilder>;
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

@@ -161,4 +161,4 @@ UnbufferedLog::UnbufferedLog(LogLevel level_)
 {
     stream.flags(std::ios_base::unitbuf);
 }
-} // namespace osrm
+} // namespace osrm::util

@@ -16,6 +16,6 @@ namespace osrm::engine::guidance
 OSRM_ATTR_WARN_UNUSED
 std::vector<RouteStep> suppressShortNameSegments(std::vector<RouteStep> steps);
 
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif /* OSRM_ENGINE_GUIDANCE_VERBOSITY_REDUCTION_HPP_ */

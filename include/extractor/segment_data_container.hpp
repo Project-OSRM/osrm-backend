@@ -223,6 +223,6 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
 using SegmentDataView = detail::SegmentDataContainerImpl<storage::Ownership::View>;
 using SegmentDataContainer = detail::SegmentDataContainerImpl<storage::Ownership::Container>;
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

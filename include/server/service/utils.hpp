@@ -20,4 +20,4 @@ bool constrainParamSize(const char *msg_template,
     }
     return false;
 }
-} // namespace osrm
+} // namespace osrm::server::service

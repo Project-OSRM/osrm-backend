@@ -91,4 +91,4 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
     return std::make_pair(entry_class, bearing_class);
 }
 
-} // namespace osrm
+} // namespace osrm::guidance

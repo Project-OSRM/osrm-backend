@@ -171,6 +171,6 @@ class RasterCache
     // the instance
     static RasterCache *g_instance;
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* RASTER_SOURCE_HPP */

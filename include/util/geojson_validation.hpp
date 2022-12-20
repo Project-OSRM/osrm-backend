@@ -83,5 +83,5 @@ inline void validateFeature(const rapidjson::Value &feature)
         }
     }
 }
-} // namespace osrm
+} // namespace osrm::util
 #endif // OSRM_GEOJSON_VALIDATION_HPP

@@ -16,6 +16,6 @@ bool HaveIdenticalNames(const NameID lhs,
                         const NameTable &name_table,
                         const SuffixTable &street_name_suffix_table);
 
-} // namespace osrm
+} // namespace osrm::extractor::intersection
 
 #endif /*OSRM_EXTRACTOR_INTERSECTION_HAVE_IDENTICAL_NAMES_HPP_*/

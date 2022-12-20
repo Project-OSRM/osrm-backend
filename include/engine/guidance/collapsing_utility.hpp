@@ -298,6 +298,6 @@ inline bool hasStraightestTurn(const RouteStep &step)
     return false;
 }
 
-} /* namespace osrm */
+} // namespace osrm::engine::guidance
 
 #endif /* OSRM_ENGINE_GUIDANCE_COLLAPSING_UTILITY_HPP_ */

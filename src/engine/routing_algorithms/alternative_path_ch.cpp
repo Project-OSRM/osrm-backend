@@ -850,4 +850,4 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engi
     return InternalManyRoutesResult{{std::move(primary_route), std::move(secondary_route)}};
 }
 
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms

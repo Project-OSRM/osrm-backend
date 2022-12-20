@@ -134,6 +134,6 @@ inline std::string canonicalizeStringList(std::string strlist, const std::string
     return strlist;
 }
 
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // EXTRACTION_HELPER_FUNCTIONS_HPP

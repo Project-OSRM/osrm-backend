@@ -95,6 +95,6 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                  const std::vector<std::size_t> &target_indices,
                  const bool calculate_distance);
 
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms
 
 #endif

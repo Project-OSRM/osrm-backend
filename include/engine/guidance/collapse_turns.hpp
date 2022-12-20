@@ -158,6 +158,6 @@ void combineRouteSteps(RouteStep &step_at_turn_location,
 // alias for suppressing a step, using CombineRouteStep with NoModificationStrategy only
 void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_location);
 
-} /* namespace osrm */
+} // namespace osrm::engine::guidance
 
 #endif /* OSRM_ENGINE_GUIDANCE_COLLAPSE_HPP_ */

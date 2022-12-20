@@ -10,6 +10,6 @@ enum class RoundaboutType
     Rotary,                // traffic circle (large roundabout) with dedicated name
     RoundaboutIntersection // small roundabout with distinct turns, handled as intersection
 };
-} /* namespace osrm */
+} // namespace osrm::guidance
 
 #endif /* OSRM_EXTRACTOR_GUIDANCE_ROUNDABOUT_TYPES_HPP_ */

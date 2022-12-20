@@ -141,4 +141,4 @@ bool findPreviousIntersection(const NodeID node_v,
     return true;
 }
 
-} // namespace osrm
+} // namespace osrm::guidance::lanes

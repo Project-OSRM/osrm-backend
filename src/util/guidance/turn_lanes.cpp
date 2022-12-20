@@ -32,4 +32,4 @@ bool LaneTupleIdPair::operator==(const LaneTupleIdPair &other) const
     return other.first == first && other.second == second;
 }
 
-} // namespace osrm
+} // namespace osrm::util::guidance

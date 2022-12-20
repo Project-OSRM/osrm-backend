@@ -54,6 +54,6 @@ class RestrictionParser
     std::set<std::string> restrictions;
     osmium::tags::KeyFilter filter;
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* RESTRICTION_PARSER_HPP */

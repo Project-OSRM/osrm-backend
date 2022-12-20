@@ -93,6 +93,6 @@ class SharedDataIndex
     std::vector<AllocatedRegion> regions;
     std::unordered_map<std::string, std::uint32_t> block_to_region;
 };
-} // namespace osrm
+} // namespace osrm::storage
 
 #endif

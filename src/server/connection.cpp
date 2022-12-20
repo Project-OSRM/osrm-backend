@@ -218,4 +218,4 @@ std::vector<char> Connection::compress_buffers(const std::vector<char> &uncompre
 
     return compressed_data;
 }
-} // namespace osrm
+} // namespace osrm::server

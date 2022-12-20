@@ -874,4 +874,4 @@ SliproadHandler::scaledThresholdByRoadClass(const double max_threshold,
     return scaled;
 }
 
-} // namespace osrm
+} // namespace osrm::guidance

@@ -21,4 +21,4 @@ bool HaveIdenticalNames(const NameID lhs,
            !util::guidance::requiresNameAnnounced(rhs, lhs, name_table, street_name_suffix_table);
 }
 
-} // namespace osrm
+} // namespace osrm::extractor::intersection

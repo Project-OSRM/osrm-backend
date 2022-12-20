@@ -93,6 +93,6 @@ class ExtractorCallbacks
     // warning: caller needs to take care of synchronization!
     void ProcessManeuverOverride(const InputManeuverOverride &override);
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* EXTRACTOR_CALLBACKS_HPP */

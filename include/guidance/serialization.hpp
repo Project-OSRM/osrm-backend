@@ -45,6 +45,6 @@ inline void write(storage::tar::FileWriter &writer,
     storage::serialization::write(
         writer, name + "/post_turn_bearings", turn_data_container.post_turn_bearings);
 }
-} // namespace osrm
+} // namespace osrm::guidance::serialization
 
 #endif

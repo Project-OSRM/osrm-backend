@@ -176,6 +176,6 @@ class TripAPI final : public RouteAPI
     const TripParameters &parameters;
 };
 
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

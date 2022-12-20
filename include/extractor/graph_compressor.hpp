@@ -37,6 +37,6 @@ class GraphCompressor
                          unsigned original_number_of_edges,
                          const util::NodeBasedDynamicGraph &graph) const;
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

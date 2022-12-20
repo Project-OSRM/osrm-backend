@@ -171,6 +171,6 @@ class EdgeBasedGraphFactory
     // mapping of node-based edges to edge-based nodes
     std::vector<NodeID> nbe_to_ebn_mapping;
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* EDGE_BASED_GRAPH_FACTORY_HPP_ */

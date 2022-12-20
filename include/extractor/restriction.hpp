@@ -61,6 +61,6 @@ struct TurnRestriction
 
     static std::string Name() { return "turn restriction"; };
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // RESTRICTION_HPP

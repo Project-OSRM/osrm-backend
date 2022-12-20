@@ -40,4 +40,4 @@ bool operator==(const FloatCoordinate lhs, const FloatCoordinate rhs)
 
 bool operator!=(const Coordinate lhs, const Coordinate rhs) { return !(lhs == rhs); }
 bool operator!=(const FloatCoordinate lhs, const FloatCoordinate rhs) { return !(lhs == rhs); }
-} // namespace osrm
+} // namespace osrm::util

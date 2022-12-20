@@ -672,4 +672,4 @@ manyToManySearch(SearchEngineData<mld::Algorithm> &engine_working_data,
                                                     calculate_distance);
 }
 
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms

@@ -221,6 +221,6 @@ std::vector<OpeningHours> ParseOpeningHours(const std::string &str);
 
 bool CheckOpeningHours(const std::vector<OpeningHours> &input, const struct tm &time);
 
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // OSRM_OPENING_HOURS_HPP

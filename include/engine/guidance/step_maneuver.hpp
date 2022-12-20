@@ -40,5 +40,5 @@ inline StepManeuver getInvalidStepManeuver()
             0};
 }
 
-} // namespace osrm
+} // namespace osrm::engine::guidance
 #endif

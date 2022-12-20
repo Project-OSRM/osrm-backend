@@ -33,4 +33,4 @@ std::string toString(const IntersectionViewData &view)
     return result;
 }
 
-} // namespace osrm
+} // namespace osrm::extractor::intersection

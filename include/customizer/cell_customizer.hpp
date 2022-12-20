@@ -233,6 +233,6 @@ class CellCustomizer
 
     const partitioner::MultiLevelPartition &partition;
 };
-} // namespace osrm
+} // namespace osrm::customizer
 
 #endif // OSRM_CELLS_CUSTOMIZER_HPP

@@ -387,5 +387,5 @@ template <typename GroupBlockPolicy>
 using IndexedData = detail::IndexedDataImpl<GroupBlockPolicy, storage::Ownership::Container>;
 template <typename GroupBlockPolicy>
 using IndexedDataView = detail::IndexedDataImpl<GroupBlockPolicy, storage::Ownership::View>;
-} // namespace osrm
+} // namespace osrm::util
 #endif // OSRM_INDEXED_DATA_HPP

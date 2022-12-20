@@ -122,6 +122,6 @@ class RuntimeError : public exception
         return result;
     }
 };
-} // namespace osrm
+} // namespace osrm::util
 
 #endif /* OSRM_EXCEPTION_HPP */

@@ -38,4 +38,4 @@ std::vector<std::string> IOConfig::GetMissingFiles() const
     }
     return missingFiles;
 }
-} // namespace osrm
+} // namespace osrm::storage

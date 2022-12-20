@@ -24,6 +24,6 @@ class RouteService final : public BaseService
 
     unsigned GetVersion() final override { return 1; }
 };
-} // namespace osrm
+} // namespace osrm::server::service
 
 #endif

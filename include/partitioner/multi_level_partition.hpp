@@ -342,6 +342,6 @@ inline MultiLevelPartitionImpl<storage::Ownership::View>::MultiLevelPartitionImp
 {
 }
 } // namespace detail
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif

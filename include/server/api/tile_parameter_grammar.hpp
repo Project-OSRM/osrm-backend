@@ -36,6 +36,6 @@ struct TileParametersGrammar final : boost::spirit::qi::grammar<Iterator, Signat
   private:
     qi::rule<Iterator, Signature> root_rule;
 };
-} // namespace osrm
+} // namespace osrm::server::api
 
 #endif

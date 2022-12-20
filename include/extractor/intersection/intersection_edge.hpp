@@ -38,6 +38,6 @@ struct IntersectionEdgeGeometry
 };
 
 using IntersectionEdgeGeometries = std::vector<IntersectionEdgeGeometry>;
-} // namespace osrm
+} // namespace osrm::extractor::intersection
 
 #endif

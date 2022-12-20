@@ -310,4 +310,4 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     return Status::Ok;
 }
-} // namespace osrm
+} // namespace osrm::engine::plugins

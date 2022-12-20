@@ -79,6 +79,6 @@ struct IOConfig
     std::vector<boost::filesystem::path> optional_input_files;
     std::vector<boost::filesystem::path> output_files;
 };
-} // namespace osrm
+} // namespace osrm::storage
 
 #endif

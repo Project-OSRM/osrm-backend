@@ -58,6 +58,6 @@ inline std::ostream &operator<<(std::ostream &out, Approach approach)
     out << static_cast<int>(approach);
     return out;
 }
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

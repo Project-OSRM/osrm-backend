@@ -22,6 +22,6 @@ using ContractorHeap = util::QueryHeap<NodeID,
                                        ContractorHeapData,
                                        util::XORFastHashStorage<NodeID, NodeID>>;
 
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif // OSRM_CONTRACTOR_CONTRACTOR_HEAP_HPP_

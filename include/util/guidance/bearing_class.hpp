@@ -13,7 +13,7 @@
 namespace osrm::util::guidance
 {
 class BearingClass;
-} // namespace osrm
+} // namespace osrm::util::guidance
 
 namespace std
 {
@@ -54,7 +54,7 @@ class BearingClass
     friend std::size_t std::hash<BearingClass>::operator()(const BearingClass &) const;
 };
 
-} // namespace osrm
+} // namespace osrm::util::guidance
 
 // make Bearing Class hasbable
 namespace std

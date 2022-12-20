@@ -89,6 +89,6 @@ class ExtractionContainers
     void PrepareData(ScriptingEnvironment &scripting_environment,
                      const std::string &names_data_path);
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* EXTRACTION_CONTAINERS_HPP */

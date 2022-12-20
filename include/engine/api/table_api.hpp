@@ -418,6 +418,6 @@ class TableAPI final : public BaseAPI
     const TableParameters &parameters;
 };
 
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

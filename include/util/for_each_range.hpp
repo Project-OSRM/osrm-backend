@@ -18,6 +18,6 @@ template <typename Iter, typename Func> void for_each_range(Iter begin, Iter end
         f(begin_range, iter);
     }
 }
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

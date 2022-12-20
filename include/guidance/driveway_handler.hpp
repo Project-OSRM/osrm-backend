@@ -33,6 +33,6 @@ class DrivewayHandler final : public IntersectionHandler
                             Intersection intersection) const override final;
 };
 
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /* OSRM_GUIDANCE_DRIVEWAY_HANDLER_HPP */

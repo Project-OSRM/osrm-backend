@@ -1289,4 +1289,4 @@ EdgeBasedGraphFactory::IndexConditionals(std::vector<Conditional> &&conditionals
     return indexed_restrictions;
 }
 
-} // namespace osrm
+} // namespace osrm::extractor

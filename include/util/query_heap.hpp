@@ -370,6 +370,6 @@ class QueryHeap
     HeapContainer heap;
     IndexStorage node_index;
 };
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // OSRM_UTIL_QUERY_HEAP_HPP

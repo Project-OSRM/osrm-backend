@@ -213,6 +213,6 @@ unsigned RangeTable<BLOCK_SIZE, Ownership>::PrefixSumAtIndex(int index, const Bl
 
     return sum;
 }
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // RANGE_TABLE_HPP

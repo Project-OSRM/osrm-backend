@@ -175,6 +175,6 @@ template <class Edge, typename GraphT> inline std::vector<Edge> toEdges(GraphT g
     return edges;
 }
 
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif // OSRM_CONTRACTOR_GRAPH_CONTRACTION_ADAPTORS_HPP_

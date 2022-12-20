@@ -50,6 +50,6 @@ struct CoordinateVectorToMultiPoint
                                   const boost::optional<json::Object> &properties = {}) const;
 };
 
-} /* namespace osrm */
+} // namespace osrm::util
 
 #endif /* OSRM_GEOJSON_DEBUG_POLICIES */

@@ -40,6 +40,6 @@ struct ContractorEdgeData
 using ContractorGraph = util::DynamicGraph<ContractorEdgeData>;
 using ContractorEdge = ContractorGraph::InputEdge;
 
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif // OSRM_CONTRACTOR_CONTRACTOR_GRAPH_HPP_

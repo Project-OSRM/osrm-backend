@@ -92,6 +92,6 @@ filtered_range<Integer, Filter> filtered_irange(
 {
     return filtered_range<Integer, Filter>(first, last, filter);
 }
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // INTEGER_RANGE_HPP

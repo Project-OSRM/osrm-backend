@@ -37,7 +37,7 @@ namespace osrm
 namespace util::json
 {
 struct Object;
-} // namespace util
+} // namespace util::json
 
 namespace engine
 {

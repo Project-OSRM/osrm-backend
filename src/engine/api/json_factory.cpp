@@ -288,4 +288,4 @@ util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
     }
     return json_legs;
 }
-} // namespace osrm
+} // namespace osrm::engine::api::json

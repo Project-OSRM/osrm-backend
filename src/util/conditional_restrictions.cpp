@@ -14,7 +14,7 @@ inline std::ostream &operator<<(std::ostream &stream, const ConditionalRestricti
     return stream << restriction.value << "=" << restriction.condition;
 }
 #endif
-} // namespace osrm
+} // namespace osrm::util
 
 BOOST_FUSION_ADAPT_STRUCT(osrm::util::ConditionalRestriction,
                           (std::string, value)(std::string, condition))
@@ -86,4 +86,4 @@ std::vector<ConditionalRestriction> ParseConditionalRestrictions(const std::stri
     return result;
 }
 
-} // namespace osrm
+} // namespace osrm::util

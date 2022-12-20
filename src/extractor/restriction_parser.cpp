@@ -282,4 +282,4 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
     }
     return restrictions.find(current_string) != restrictions.end();
 }
-} // namespace osrm
+} // namespace osrm::extractor

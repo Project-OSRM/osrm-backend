@@ -109,6 +109,6 @@ class TurnHandler final : public IntersectionHandler
                                   const std::size_t up_to) const;
 };
 
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /*OSRM_GUIDANCE_TURN_HANDLER_HPP_*/

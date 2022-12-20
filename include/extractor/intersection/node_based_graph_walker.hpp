@@ -307,6 +307,6 @@ struct DistanceToNextIntersectionAccumulator
     double distance = 0.;
 };
 
-} // namespace osrm
+} // namespace osrm::extractor::intersection
 
 #endif

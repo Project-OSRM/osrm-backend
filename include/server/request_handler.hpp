@@ -29,6 +29,6 @@ class RequestHandler
   private:
     std::unique_ptr<ServiceHandlerInterface> service_handler;
 };
-} // namespace osrm
+} // namespace osrm::server
 
 #endif // REQUEST_HANDLER_HPP

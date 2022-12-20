@@ -158,4 +158,4 @@ void TurnPathCompressor::Compress(const NodeID from, const NodeID via, const Nod
     vias.erase(via);
 }
 
-} // namespace osrm
+} // namespace osrm::extractor

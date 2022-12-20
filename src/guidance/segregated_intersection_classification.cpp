@@ -286,4 +286,4 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
     return segregated_edges;
 }
 
-} // namespace osrm
+} // namespace osrm::guidance

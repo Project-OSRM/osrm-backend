@@ -12,6 +12,6 @@ struct CompressedNodeBasedGraphEdge
     NodeID source;
     NodeID target;
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_COMPRESSED_NODE_BASED_GRAPH_EDGE_HPP

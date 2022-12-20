@@ -1308,4 +1308,4 @@ void ExtractionContainers::PrepareRestrictions(const ReferencedWays &restriction
     }
 }
 
-} // namespace osrm
+} // namespace osrm::extractor

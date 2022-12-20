@@ -11,7 +11,7 @@
 namespace osrm::util::guidance
 {
 class EntryClass;
-} // namespace osrm
+} // namespace osrm::util::guidance
 
 namespace std
 {
@@ -63,7 +63,7 @@ static_assert(std::is_trivially_copyable<EntryClass>::value,
               "requires trivially copyable type");
 #endif
 
-} // namespace util
+} // namespace util::guidance
 
 constexpr const util::guidance::EntryClass EMPTY_ENTRY_CLASS{};
 } // namespace osrm

@@ -16,7 +16,7 @@ namespace osrm::util::guidance
 {
 class LaneTuple;
 class LaneTupleIdPair;
-} // namespace osrm
+} // namespace osrm::util::guidance
 
 namespace std
 {
@@ -90,6 +90,6 @@ class LaneTupleIdPair
 
 using LaneDataIdMap = ConcurrentIDMap<LaneTupleIdPair, LaneDataID, boost::hash<LaneTupleIdPair>>;
 
-} // namespace osrm
+} // namespace osrm::util::guidance
 
 #endif /* OSRM_UTIL_GUIDANCE_TURN_LANES_HPP */

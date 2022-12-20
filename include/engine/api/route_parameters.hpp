@@ -207,6 +207,6 @@ inline RouteParameters::AnnotationsType operator|=(RouteParameters::AnnotationsT
 {
     return lhs = lhs | rhs;
 }
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

@@ -89,4 +89,4 @@ boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::stri
     return boost::none;
 }
 
-} // namespace osrm
+} // namespace osrm::server::api

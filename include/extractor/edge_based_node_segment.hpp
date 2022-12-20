@@ -46,6 +46,6 @@ struct EdgeBasedNodeSegment
     unsigned short fwd_segment_position : 15; // segment id in a compressed geometry
     bool is_startpoint : 1;
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACT_EDGE_BASED_NODE_SEGMENT_HPP

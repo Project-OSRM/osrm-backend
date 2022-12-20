@@ -124,6 +124,6 @@ struct Array
     std::vector<Value> values;
 };
 
-} // namespace osrm
+} // namespace osrm::util::json
 
 #endif // JSON_CONTAINER_HPP

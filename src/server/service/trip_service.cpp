@@ -76,4 +76,4 @@ engine::Status TripService::RunQuery(std::size_t prefix_length,
     }
     return BaseService::routing_machine.Trip(*parameters, result);
 }
-} // namespace osrm
+} // namespace osrm::server::service

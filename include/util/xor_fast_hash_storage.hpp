@@ -76,6 +76,6 @@ class XORFastHashStorage
     XORFastHash<MaxNumElements> fast_hasher;
     unsigned current_timestamp;
 };
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // XOR_FAST_HASH_STORAGE_HPP

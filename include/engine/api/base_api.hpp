@@ -166,6 +166,6 @@ class BaseAPI
     const BaseParameters &parameters;
 };
 
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

@@ -35,6 +35,6 @@ inline auto contractGraph(ContractorGraph &graph,
         graph, {}, std::move(node_is_contractable), std::move(node_weights), core_factor);
 }
 
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif // OSRM_CONTRACTOR_GRAPH_CONTRACTOR_HPP

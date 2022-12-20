@@ -74,6 +74,6 @@ class Connection : public std::enable_shared_from_this<Connection>
     short processed_requests = 512;
     short keepalive_timeout = 5; // In seconds
 };
-} // namespace osrm
+} // namespace osrm::server
 
 #endif // CONNECTION_HPP

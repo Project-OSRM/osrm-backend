@@ -82,4 +82,4 @@ template std::vector<UnresolvedManeuverOverride>
 removeInvalidTurnPaths<>(std::vector<UnresolvedManeuverOverride>,
                          const util::NodeBasedDynamicGraph &);
 
-} // namespace osrm
+} // namespace osrm::extractor

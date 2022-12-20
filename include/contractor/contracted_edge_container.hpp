@@ -162,6 +162,6 @@ struct ContractedEdgeContainer
     std::vector<MergedFlags> flags;
     std::vector<QueryEdge> edges;
 };
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif

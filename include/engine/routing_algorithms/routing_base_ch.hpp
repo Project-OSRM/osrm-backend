@@ -514,6 +514,6 @@ std::tuple<EdgeMetric, EdgeDistance> getLoopMetric(const DataFacade<Algorithm> &
     }
     return std::make_tuple(loop_metric, loop_distance);
 }
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms::ch
 
 #endif // OSRM_ENGINE_ROUTING_BASE_CH_HPP

@@ -83,6 +83,6 @@ bool doubleChoiceless(const RouteStepIterator step_entering_intersection,
 bool straightTurnFollowedByChoiceless(const RouteStepIterator step_entering_intersection,
                                       const RouteStepIterator step_leaving_intersection);
 
-} /* namespace osrm */
+} // namespace osrm::engine::guidance
 
 #endif /* OSRM_ENGINE_GUIDANCE_COLLAPSE_SCENARIO_DETECTION_HPP_ */

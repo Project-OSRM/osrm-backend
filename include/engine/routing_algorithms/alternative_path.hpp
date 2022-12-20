@@ -22,6 +22,6 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<mld::Algorithm> 
                                                const PhantomEndpointCandidates &endpoint_candidates,
                                                unsigned number_of_alternatives);
 
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms
 
 #endif

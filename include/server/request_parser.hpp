@@ -67,6 +67,6 @@ class RequestParser
     http::header current_header;
     http::compression_type selected_compression;
 };
-} // namespace osrm
+} // namespace osrm::server
 
 #endif // REQUEST_PARSER_HPP

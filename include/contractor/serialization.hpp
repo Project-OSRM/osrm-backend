@@ -42,6 +42,6 @@ void read(storage::tar::FileReader &reader,
                                      metric.edge_filter[index]);
     }
 }
-} // namespace osrm
+} // namespace osrm::contractor::serialization
 
 #endif

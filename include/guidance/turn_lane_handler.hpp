@@ -133,6 +133,6 @@ class TurnLaneHandler
                          LaneDataVector &lane_data) const;
 };
 
-} // namespace osrm
+} // namespace osrm::guidance::lanes
 
 #endif // OSRM_EXTRACTOR_GUIDANCE_TURN_LANE_HANDLER_HPP_

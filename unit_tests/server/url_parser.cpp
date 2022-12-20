@@ -11,7 +11,7 @@ std::ostream &operator<<(std::ostream &out, const osrm::server::api::ParsedURL &
 
     return out;
 }
-} // namespace osrm
+} // namespace osrm::server::api
 
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test.hpp>

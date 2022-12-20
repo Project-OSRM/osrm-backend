@@ -23,6 +23,6 @@ inline std::string toOSMLink(const util::Coordinate &c)
          << toFloating(c.lat) << "&mlon=" << toFloating(c.lon);
     return link.str();
 }
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

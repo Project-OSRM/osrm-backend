@@ -27,6 +27,6 @@ class TurnBearing
 };
 #pragma pack(pop)
 
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /* OSRM_INCLUDE_GUIDANCE_TURN_BEARING_HPP_ */

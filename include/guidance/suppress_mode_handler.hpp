@@ -38,6 +38,6 @@ class SuppressModeHandler final : public IntersectionHandler
                             Intersection intersection) const override final;
 };
 
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /* OSRM_GUIDANCE_SUPPRESS_MODE_HANDLER_HPP_ */

@@ -95,6 +95,6 @@ NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
 
     return NodeBasedDynamicGraph(number_of_nodes, edges_list);
 }
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // NODE_BASED_GRAPH_HPP

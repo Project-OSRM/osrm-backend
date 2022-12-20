@@ -282,4 +282,4 @@ RestrictionGraph::EdgeRange RestrictionGraph::GetEdges(RestrictionID id) const
                                       edges.begin() + node.edges_begin_idx + node.num_edges);
 }
 
-} // namespace osrm
+} // namespace osrm::extractor

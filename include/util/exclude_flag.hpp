@@ -27,6 +27,6 @@ excludeFlagsToNodeFilter(const NodeID number_of_nodes,
     }
     return filters;
 }
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

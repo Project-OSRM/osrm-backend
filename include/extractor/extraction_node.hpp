@@ -17,6 +17,6 @@ struct ExtractionNode
     TrafficLightClass::Direction traffic_lights;
     bool barrier;
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // EXTRACTION_NODE_HPP

@@ -415,4 +415,4 @@ bool straightTurnFollowedByChoiceless(const RouteStepIterator step_entering_inte
            noIntermediaryIntersections(*step_entering_intersection);
 }
 
-} /* namespace osrm */
+} // namespace osrm::engine::guidance

@@ -23,4 +23,4 @@ Route assembleRoute(const std::vector<RouteLeg> &route_legs)
     return Route{distance, duration, weight};
 }
 
-} // namespace osrm
+} // namespace osrm::engine::guidance

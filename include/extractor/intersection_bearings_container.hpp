@@ -104,6 +104,6 @@ template <storage::Ownership Ownership> class IntersectionBearingsContainer
 using IntersectionBearingsContainer =
     detail::IntersectionBearingsContainer<storage::Ownership::Container>;
 using IntersectionBearingsView = detail::IntersectionBearingsContainer<storage::Ownership::View>;
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

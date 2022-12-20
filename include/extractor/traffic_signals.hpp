@@ -20,6 +20,6 @@ struct TrafficSignals
         return bidirectional_nodes.count(to) > 0 || unidirectional_segments.count({from, to}) > 0;
     }
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_TRAFFIC_SIGNALS_HPP

@@ -50,4 +50,4 @@ const BisectionGraphView::EdgeT &BisectionGraphView::Edge(const EdgeID eid) cons
     return bisection_graph.Edge(eid);
 }
 
-} // namespace osrm
+} // namespace osrm::partitioner

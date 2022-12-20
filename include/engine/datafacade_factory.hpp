@@ -150,6 +150,6 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
     std::unordered_map<std::string, extractor::ClassData> name_to_class;
     const extractor::ProfileProperties *properties = nullptr;
 };
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

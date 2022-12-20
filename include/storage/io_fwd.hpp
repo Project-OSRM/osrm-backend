@@ -7,6 +7,6 @@ namespace osrm::storage::io
 class FileReader;
 class FileWriter;
 
-} // namespace osrm
+} // namespace osrm::storage::io
 
 #endif

@@ -64,4 +64,4 @@ std::vector<std::uint32_t> makePermutation(const DynamicEdgeBasedGraph &graph,
 
     return util::orderingToPermutation(ordering);
 }
-} // namespace osrm
+} // namespace osrm::partitioner

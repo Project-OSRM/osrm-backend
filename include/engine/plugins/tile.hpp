@@ -26,6 +26,6 @@ class TilePlugin final : public BasePlugin
                          const api::TileParameters &parameters,
                          osrm::engine::api::ResultT &pbf_buffer) const;
 };
-} // namespace osrm
+} // namespace osrm::engine::plugins
 
 #endif /* TILEPLUGIN_HPP */

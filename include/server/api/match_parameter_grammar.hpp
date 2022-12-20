@@ -58,6 +58,6 @@ struct MatchParametersGrammar final : public RouteParametersGrammar<Iterator, Si
 
     qi::symbols<char, engine::api::MatchParameters::GapsType> gaps_type;
 };
-} // namespace osrm
+} // namespace osrm::server::api
 
 #endif

@@ -108,6 +108,6 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     tbb::enumerable_thread_specific<std::unique_ptr<LuaScriptingContext>> script_contexts;
     const LocationDependentData location_dependent_data;
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* SCRIPTING_ENVIRONMENT_LUA_HPP */

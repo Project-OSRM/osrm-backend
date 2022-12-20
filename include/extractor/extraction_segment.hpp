@@ -24,6 +24,6 @@ struct ExtractionSegment
     double weight;
     double duration;
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

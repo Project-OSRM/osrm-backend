@@ -268,4 +268,4 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
     return intersection;
 }
 
-} // namespace osrm
+} // namespace osrm::guidance::lanes

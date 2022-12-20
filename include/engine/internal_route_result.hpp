@@ -150,6 +150,6 @@ inline InternalRouteResult CollapseInternalRouteResult(const InternalRouteResult
     BOOST_ASSERT(collapsed.leg_endpoints.size() == collapsed.unpacked_path_segments.size());
     return collapsed;
 }
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif // RAW_ROUTE_DATA_H

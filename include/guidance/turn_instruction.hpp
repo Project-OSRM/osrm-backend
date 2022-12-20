@@ -391,6 +391,6 @@ inline std::string instructionModifierToString(const DirectionModifier::Enum mod
     return detail::modifier_names[static_cast<std::size_t>(modifier)];
 }
 
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif // OSRM_GUIDANCE_TURN_INSTRUCTION_HPP_

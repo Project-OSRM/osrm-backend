@@ -120,6 +120,6 @@ inline std::string toString(const ConnectedRoad &road)
     return result;
 }
 
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /* OSRM_GUIDANCE_INTERSECTION_HPP_*/

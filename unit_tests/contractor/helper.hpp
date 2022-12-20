@@ -36,6 +36,6 @@ inline contractor::ContractorGraph makeGraph(const std::vector<TestEdge> &edges)
 
     return contractor::ContractorGraph{max_id + 1, input_edges};
 }
-} // namespace osrm
+} // namespace osrm::unit_test
 
 #endif

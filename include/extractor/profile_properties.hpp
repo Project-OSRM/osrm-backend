@@ -136,6 +136,6 @@ struct ProfileProperties
     bool force_split_edges = false;
     bool call_tagless_node_function = true;
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

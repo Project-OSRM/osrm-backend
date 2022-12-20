@@ -18,6 +18,6 @@ void search(ContractorHeap &heap,
             const EdgeWeight weight_limit,
             const NodeID forbidden_node);
 
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif // OSRM_CONTRACTOR_DIJKSTRA_HPP

@@ -197,6 +197,6 @@ class ExtractionRelationContainer
     RelationRefMap rel_refs;
 };
 
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // EXTRACTION_RELATION_HPP

@@ -167,4 +167,4 @@ RasterContainer::GetRasterInterpolateFromSource(unsigned int source_id, double l
 }
 
 RasterCache *RasterCache::g_instance = NULL;
-} // namespace osrm
+} // namespace osrm::extractor

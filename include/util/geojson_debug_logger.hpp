@@ -181,6 +181,6 @@ std::ofstream GeojsonLogger<geojson_conversion_policy, scenario>::ofs;
 template <class geojson_conversion_policy, LoggingScenario scenario>
 geojson_conversion_policy *GeojsonLogger<geojson_conversion_policy, scenario>::policy;
 
-} // namespace osrm
+} // namespace osrm::util
 
 #endif /* OSRM_GEOJSON_DEBUG_LOGGER_HPP */

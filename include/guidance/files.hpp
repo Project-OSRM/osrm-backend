@@ -47,6 +47,6 @@ inline void writeTurnData(const boost::filesystem::path &path,
     writer.WriteFrom("/common/connectivity_checksum", connectivity_checksum);
     serialization::write(writer, "/common/turn_data", turn_data);
 }
-} // namespace osrm
+} // namespace osrm::guidance::files
 
 #endif

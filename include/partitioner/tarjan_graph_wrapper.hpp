@@ -21,6 +21,6 @@ class TarjanGraphWrapper
     const BisectionGraph &bisection_graph;
 };
 
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif // OSRM_PARTITIONER_TARJAN_GRAPH_WRAPPER_HPP_

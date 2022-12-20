@@ -44,6 +44,6 @@ template <typename T> class MatrixGraphWrapper
     const std::vector<T> table_;
     const std::size_t number_of_nodes_;
 };
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // MATRIX_GRAPH_WRAPPER_H

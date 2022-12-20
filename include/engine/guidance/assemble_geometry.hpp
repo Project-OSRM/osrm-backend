@@ -168,6 +168,6 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
 
     return geometry;
 }
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif

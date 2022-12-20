@@ -119,4 +119,4 @@ NodeID WayRestrictionMap::RemapIfRestrictionVia(const NodeID edge_based_target_n
     return edge_based_target_node;
 }
 
-} // namespace osrm
+} // namespace osrm::extractor

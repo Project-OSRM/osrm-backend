@@ -86,6 +86,6 @@ struct PenaltySource final
 
 using SegmentLookupTable = LookupTable<Segment, SpeedSource>;
 using TurnLookupTable = LookupTable<Turn, PenaltySource>;
-} // namespace osrm
+} // namespace osrm::updater
 
 #endif

@@ -42,7 +42,7 @@ bool findPreviousIntersection(
     EdgeID &result_via_edge,
     extractor::intersection::IntersectionView &result_intersection);
 
-} // namespace guidance
+} // namespace guidance::lanes
 } // namespace osrm
 
 #endif /*OSRM_GUIDANCE_TURN_DISCOVERY_HPP_*/

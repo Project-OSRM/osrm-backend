@@ -33,6 +33,6 @@ class MMapMemoryAllocator final : public ContiguousBlockAllocator
     std::string rtree_filename;
 };
 
-} // namespace osrm
+} // namespace osrm::engine::datafacade
 
 #endif // OSRM_ENGINE_DATAFACADE_SHARED_MEMORY_ALLOCATOR_HPP_

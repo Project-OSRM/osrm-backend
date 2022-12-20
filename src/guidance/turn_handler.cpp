@@ -843,4 +843,4 @@ void TurnHandler::handleDistinctConflict(const EdgeID via_edge,
     }
 }
 
-} // namespace osrm
+} // namespace osrm::guidance

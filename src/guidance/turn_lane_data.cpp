@@ -150,4 +150,4 @@ bool hasTag(const TurnLaneType::Mask tag, const LaneDataVector &data)
     return findTag(tag, data) != data.cend();
 }
 
-} // namespace osrm
+} // namespace osrm::guidance::lanes

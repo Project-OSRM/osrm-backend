@@ -103,4 +103,4 @@ engine::Status TableService::RunQuery(std::size_t prefix_length,
     }
     return BaseService::routing_machine.Table(*parameters, result);
 }
-} // namespace osrm
+} // namespace osrm::server::service

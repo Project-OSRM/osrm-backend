@@ -39,5 +39,5 @@ enum class Approach : std::uint8_t
     UNRESTRICTED = 1
 
 };
-} // namespace osrm
+} // namespace osrm::engine
 #endif

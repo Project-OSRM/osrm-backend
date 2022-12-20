@@ -73,6 +73,6 @@ class TurnAnalysis
     setTurnTypes(const NodeID from, const EdgeID via_edge, Intersection intersection) const;
 }; // class TurnAnalysis
 
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif // OSRM_GUIDANCE_TURN_ANALYSIS

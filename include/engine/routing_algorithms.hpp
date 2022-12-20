@@ -230,6 +230,6 @@ inline std::vector<routing_algorithms::TurnData> RoutingAlgorithms<Algorithm>::G
     return routing_algorithms::getTileTurns(*facade, edges, sorted_edge_indexes);
 }
 
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

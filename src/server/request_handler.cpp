@@ -175,4 +175,4 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
                               << ", uri: " << current_request.uri;
     }
 }
-} // namespace osrm
+} // namespace osrm::server

@@ -136,6 +136,6 @@ template <typename Key, typename Value> struct CSVFilesParser
     const KeyRule key_rule;
     const ValueRule value_rule;
 };
-} // namespace osrm
+} // namespace osrm::updater
 
 #endif

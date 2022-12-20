@@ -161,6 +161,6 @@ inline void render(std::vector<char> &out, const Object &object)
     renderer(object);
 }
 
-} // namespace osrm
+} // namespace osrm::util::json
 
 #endif // JSON_RENDERER_HPP

@@ -122,4 +122,4 @@ bool Hint::IsValid(const util::Coordinate new_input_coordinates,
     return true;
 }
 
-} // namespace osrm
+} // namespace osrm::engine

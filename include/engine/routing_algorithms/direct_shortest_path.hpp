@@ -22,6 +22,6 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<Algorithm> &engine
                                              const DataFacade<Algorithm> &facade,
                                              const PhantomEndpointCandidates &endpoint_candidates);
 
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms
 
 #endif /* DIRECT_SHORTEST_PATH_HPP */

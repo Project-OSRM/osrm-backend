@@ -90,6 +90,6 @@ template <typename T> auto makeBitRange(const T value)
 {
     return boost::make_iterator_range(BitIterator<T>{value}, BitIterator<T>{});
 }
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

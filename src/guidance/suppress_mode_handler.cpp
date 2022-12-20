@@ -75,4 +75,4 @@ SuppressModeHandler::operator()(const NodeID, const EdgeID, Intersection interse
 
     return intersection;
 }
-} // namespace osrm
+} // namespace osrm::guidance

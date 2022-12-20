@@ -102,6 +102,6 @@ struct TableParametersGrammar : public BaseParametersGrammar<Iterator, Signature
         fallback_coordinate_type;
     qi::real_parser<double, json_policy> double_;
 };
-} // namespace osrm
+} // namespace osrm::server::api
 
 #endif

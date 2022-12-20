@@ -13,6 +13,6 @@ class Partitioner
     int Run(const PartitionerConfig &config);
 };
 
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif // OSRM_PARTITIONER_PARTITIONER_HPP_

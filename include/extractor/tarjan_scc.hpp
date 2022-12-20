@@ -178,6 +178,6 @@ template <typename GraphT> class TarjanSCC
 
     unsigned GetComponentID(const NodeID node) const { return components_index[node]; }
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* TARJAN_SCC_HPP */

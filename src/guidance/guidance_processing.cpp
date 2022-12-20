@@ -347,4 +347,4 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                 << bearing_class_hash.data.size() << " Bearing Classes";
 }
 
-} // namespace osrm
+} // namespace osrm::guidance

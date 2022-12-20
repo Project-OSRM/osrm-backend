@@ -128,6 +128,6 @@ struct ExtractionWay
     std::uint8_t highway_turn_classification : 4;
     std::uint8_t access_turn_classification : 4;
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // EXTRACTION_WAY_HPP

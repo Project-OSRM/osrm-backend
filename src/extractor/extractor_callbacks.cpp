@@ -490,4 +490,4 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     external_memory.way_node_id_offsets.push_back(external_memory.used_node_id_list.size());
 }
 
-} // namespace osrm
+} // namespace osrm::extractor

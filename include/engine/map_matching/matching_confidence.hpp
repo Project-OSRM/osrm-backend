@@ -47,6 +47,6 @@ struct MatchingConfidence
   private:
     ClassifierT classifier;
 };
-} // namespace osrm
+} // namespace osrm::engine::map_matching
 
 #endif

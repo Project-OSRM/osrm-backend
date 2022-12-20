@@ -416,6 +416,6 @@ template <typename FacadeT> EdgeDistance computeEdgeDistance(const FacadeT &faca
     return total_distance;
 }
 
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms
 
 #endif // OSRM_ENGINE_ROUTING_BASE_HPP

@@ -247,6 +247,6 @@ class CoordinateExtractor
                         const std::uint8_t considered_lanes) const;
 };
 
-} // namespace osrm
+} // namespace osrm::extractor::intersection
 
 #endif // OSRM_EXTRACTOR_INTERSECTION_COORDINATE_EXTRACTOR_HPP_

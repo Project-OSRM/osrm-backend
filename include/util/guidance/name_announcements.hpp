@@ -236,6 +236,6 @@ inline bool requiresNameAnnounced(const NameID from_name_id,
                                      suffix_table);
 }
 
-} // namespace osrm
+} // namespace osrm::util::guidance
 
 #endif /* OSRM_UTIL_GUIDANCE_NAME_ANNOUNCEMENT_HPP_ */

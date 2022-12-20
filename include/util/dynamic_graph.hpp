@@ -466,6 +466,6 @@ template <typename EdgeDataT> class DynamicGraph
     std::vector<Node> node_array;
     DeallocatingVector<Edge> edge_list;
 };
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // DYNAMICGRAPH_HPP

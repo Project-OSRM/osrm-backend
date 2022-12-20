@@ -318,6 +318,6 @@ class StaticGraph
     Vector<EdgeArrayEntry> edge_array;
 };
 
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // STATIC_GRAPH_HPP

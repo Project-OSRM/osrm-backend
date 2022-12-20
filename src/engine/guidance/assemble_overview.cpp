@@ -86,4 +86,4 @@ std::vector<util::Coordinate> assembleOverview(const std::vector<LegGeometry> &l
     return overview_geometry;
 }
 
-} // namespace osrm
+} // namespace osrm::engine::guidance

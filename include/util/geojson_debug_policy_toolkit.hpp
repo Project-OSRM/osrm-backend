@@ -107,6 +107,6 @@ inline util::json::Array makeJsonArray(const std::vector<util::Coordinate> &inpu
                    CoordinateToJsonArray());
     return coordinates;
 }
-} // namespace osrm
+} // namespace osrm::util
 
 #endif /* OSRM_GEOJSON_DEBUG_POLICY_TOOLKIT_HPP */

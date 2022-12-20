@@ -118,6 +118,6 @@ class Extractor
                               LaneDescriptionMap lane_description_map,
                               ScriptingEnvironment &scripting_environment);
 };
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* EXTRACTOR_HPP */

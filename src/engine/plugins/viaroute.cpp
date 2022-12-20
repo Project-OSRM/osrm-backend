@@ -182,4 +182,4 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
 
     return Status::Ok;
 }
-} // namespace osrm
+} // namespace osrm::engine::plugins

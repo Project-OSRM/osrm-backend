@@ -11,6 +11,6 @@ namespace osrm::engine::guidance
 
 Route assembleRoute(const std::vector<RouteLeg> &route_legs);
 
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif

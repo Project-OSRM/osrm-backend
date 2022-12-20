@@ -24,6 +24,6 @@ namespace osrm::util
 //   output is redirected to a logfile
 inline bool IsStdoutATTY() { return isatty(fileno(stdout)); }
 
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

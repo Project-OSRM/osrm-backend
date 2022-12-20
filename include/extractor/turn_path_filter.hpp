@@ -14,6 +14,6 @@ namespace osrm::extractor
 // `restrictions = removeInvalidRestrictions(std::move(restrictions))`
 template <typename T>
 std::vector<T> removeInvalidTurnPaths(std::vector<T>, const util::NodeBasedDynamicGraph &);
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_TURN_PATH_FILTER_HPP_

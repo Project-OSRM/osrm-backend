@@ -345,4 +345,4 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
     return lane_data;
 }
 
-} // namespace osrm
+} // namespace osrm::guidance::lanes

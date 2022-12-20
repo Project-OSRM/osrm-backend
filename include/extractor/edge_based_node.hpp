@@ -14,6 +14,6 @@ struct EdgeBasedNode
     std::uint32_t segregated : 1;
 };
 
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_EDGE_BASED_NODE_HPP_

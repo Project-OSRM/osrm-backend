@@ -197,4 +197,4 @@ Intersection TurnAnalysis::setTurnTypes(const NodeID node_prior_to_intersection,
     return intersection;
 }
 
-} // namespace osrm
+} // namespace osrm::guidance

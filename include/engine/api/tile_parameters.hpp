@@ -66,6 +66,6 @@ struct TileParameters final
         return valid_x && valid_y && valid_z;
     }
 };
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

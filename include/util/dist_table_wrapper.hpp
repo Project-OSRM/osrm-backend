@@ -75,6 +75,6 @@ template <typename T> class DistTableWrapper
     std::vector<T> table_;
     const std::size_t number_of_nodes_;
 };
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // DIST_TABLE_WRAPPER_H

@@ -384,6 +384,6 @@ class BufferWriter
   private:
     std::ostringstream output_stream;
 };
-} // namespace osrm
+} // namespace osrm::storage::io
 
 #endif

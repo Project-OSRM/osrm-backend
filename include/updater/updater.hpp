@@ -35,6 +35,6 @@ class Updater
   private:
     UpdaterConfig config;
 };
-} // namespace osrm
+} // namespace osrm::updater
 
 #endif

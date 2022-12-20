@@ -12,6 +12,6 @@ class Customizer
     int Run(const CustomizationConfig &config);
 };
 
-} // namespace osrm
+} // namespace osrm::customizer
 
 #endif // OSRM_CUSTOMIZE_CUSTOMIZER_HPP

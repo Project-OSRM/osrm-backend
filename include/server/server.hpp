@@ -111,6 +111,6 @@ class Server
     boost::asio::ip::tcp::acceptor acceptor;
     std::shared_ptr<Connection> new_connection;
 };
-} // namespace osrm
+} // namespace osrm::server
 
 #endif // SERVER_HPP

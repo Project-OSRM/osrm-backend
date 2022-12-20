@@ -40,6 +40,6 @@ inline unsigned getFittedZoom(util::Coordinate south_west, util::Coordinate nort
     else
         return detail::MIN_ZOOM;
 }
-} // namespace osrm
+} // namespace osrm::util::viewport
 
 #endif

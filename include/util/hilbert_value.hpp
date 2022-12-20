@@ -67,6 +67,6 @@ inline std::uint64_t GetHilbertCode(const Coordinate &coordinate)
                             static_cast<std::int32_t>(90 * COORDINATE_PRECISION);
     return HilbertToLinear(x, y);
 }
-} // namespace osrm
+} // namespace osrm::util
 
 #endif /* HILBERT_VALUE_HPP */

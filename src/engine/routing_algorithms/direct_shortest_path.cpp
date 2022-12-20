@@ -87,4 +87,4 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<mld::Algorithm> &e
     return extractRoute(facade, weight, endpoint_candidates, unpacked_nodes, unpacked_edges);
 }
 
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms

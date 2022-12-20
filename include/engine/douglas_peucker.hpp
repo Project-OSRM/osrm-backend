@@ -73,6 +73,6 @@ inline std::vector<util::Coordinate> douglasPeucker(const std::vector<util::Coor
 {
     return douglasPeucker(begin(geometry), end(geometry), zoom_level);
 }
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif /* DOUGLAS_PEUCKER_HPP_ */

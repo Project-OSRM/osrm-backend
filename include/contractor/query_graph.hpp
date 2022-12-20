@@ -17,6 +17,6 @@ using QueryGraph = util::StaticGraph<typename QueryEdge::EdgeData, Ownership>;
 
 using QueryGraph = detail::QueryGraph<storage::Ownership::Container>;
 using QueryGraphView = detail::QueryGraph<storage::Ownership::View>;
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif // QUERYEDGE_HPP

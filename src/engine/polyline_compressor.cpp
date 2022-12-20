@@ -71,4 +71,4 @@ std::int32_t decode_polyline_integer(std::string::const_iterator &first,
     result = ((result & 1) == 1) ? ~(result >> 1) : (result >> 1);
     return static_cast<std::int32_t>(result);
 }
-} // namespace osrm
+} // namespace osrm::engine::detail

@@ -19,6 +19,6 @@ struct RouteLeg
     std::string summary;
     std::vector<RouteStep> steps;
 };
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif

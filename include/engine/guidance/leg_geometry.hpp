@@ -60,6 +60,6 @@ struct LegGeometry
         return segment_offsets.size() - 1;
     }
 };
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif

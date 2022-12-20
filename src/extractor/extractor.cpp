@@ -909,4 +909,4 @@ void Extractor::ProcessGuidanceTurns(
     util::Log() << "ok, after " << TIMER_SEC(write_guidance_data) << "s";
 }
 
-} // namespace osrm
+} // namespace osrm::extractor

@@ -81,4 +81,4 @@ std::vector<RouteStep> suppressShortNameSegments(std::vector<RouteStep> steps)
     return removeNoTurnInstructions(std::move(steps));
 }
 
-} // namespace osrm
+} // namespace osrm::engine::guidance

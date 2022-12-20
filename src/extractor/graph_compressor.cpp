@@ -417,4 +417,4 @@ void GraphCompressor::PrintStatistics(unsigned original_number_of_nodes,
     util::Log() << "Node compression ratio: " << new_node_count / (double)original_number_of_nodes;
     util::Log() << "Edge compression ratio: " << new_edge_count / (double)original_number_of_edges;
 }
-} // namespace osrm
+} // namespace osrm::extractor

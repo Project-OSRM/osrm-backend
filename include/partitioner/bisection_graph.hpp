@@ -109,6 +109,6 @@ std::vector<BisectionInputEdge> adaptToBisectionEdge(std::vector<InputEdge> edge
     return result;
 }
 
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif // OSRM_PARTITIONER_BISECTION_GRAPH_HPP_

@@ -157,4 +157,4 @@ DinicMaxFlow::MinCut computeInertialFlowCut(const BisectionGraphView &view,
     return bestMinCut(view, num_slopes, source_sink_rate, balance);
 }
 
-} // namespace osrm
+} // namespace osrm::partitioner

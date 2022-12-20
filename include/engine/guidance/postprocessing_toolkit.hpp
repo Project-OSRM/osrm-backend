@@ -42,6 +42,6 @@ template <typename Iter, typename Fn> inline Fn forEachRoundabout(Iter first, It
     return fn;
 }
 
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif /* OSRM_ENGINE_GUIDANCE_POSTPROCESSING_TOOLKIT_HPP_ */

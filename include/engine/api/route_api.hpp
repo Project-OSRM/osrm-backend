@@ -997,6 +997,6 @@ class RouteAPI : public BaseAPI
     }
 };
 
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

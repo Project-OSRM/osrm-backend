@@ -486,4 +486,4 @@ bool IntersectionHandler::isSameName(const EdgeID source_edge_id, const EdgeID t
                                                   street_name_suffix_table); //
 }
 
-} // namespace osrm
+} // namespace osrm::guidance

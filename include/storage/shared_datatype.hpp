@@ -296,6 +296,6 @@ struct SharedRegionRegister
     std::array<SharedRegion, MAX_SHARED_REGIONS> regions;
     std::array<bool, MAX_SHM_KEYS> shm_key_in_use;
 };
-} // namespace osrm
+} // namespace osrm::storage
 
 #endif /* SHARED_DATA_TYPE_HPP */

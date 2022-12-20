@@ -12,6 +12,6 @@ enum Direction
     DIRECTION_FORWARD = 2,
     DIRECTION_REVERSE = 3
 };
-} // namespace osrm
+} // namespace osrm::extractor::TrafficLightClass
 
 #endif // OSRM_EXTRACTOR_TRAFFIC_LIGHTS_DATA_HPP_

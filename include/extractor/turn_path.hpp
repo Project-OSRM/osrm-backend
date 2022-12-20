@@ -262,5 +262,5 @@ struct TurnPath
     };
 };
 
-} // namespace osrm
+} // namespace osrm::extractor
 #endif // OSRM_TURN_PATH_HPP

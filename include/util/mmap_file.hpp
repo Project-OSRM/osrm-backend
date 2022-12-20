@@ -81,6 +81,6 @@ util::vector_view<T> mmapFile(const boost::filesystem::path &file,
 {
     return detail::mmapFile<T>(file, mmap_container, size);
 }
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

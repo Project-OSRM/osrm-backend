@@ -67,6 +67,6 @@ class WayRestrictionMap
     const RestrictionGraph &restriction_graph;
 };
 
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_WAY_RESTRICTION_MAP_HPP_

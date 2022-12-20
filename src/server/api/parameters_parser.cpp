@@ -106,4 +106,4 @@ boost::optional<engine::api::TileParameters> parseParameters(std::string::iterat
     return detail::parseParameters<engine::api::TileParameters, TileParametersGrammar<>>(iter, end);
 }
 
-} // namespace osrm
+} // namespace osrm::server::api

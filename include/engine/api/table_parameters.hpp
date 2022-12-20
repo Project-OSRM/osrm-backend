@@ -162,6 +162,6 @@ inline TableParameters::AnnotationsType &operator|=(TableParameters::Annotations
 {
     return lhs = lhs | rhs;
 }
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif // ENGINE_API_TABLE_PARAMETERS_HPP
