@@ -5,11 +5,7 @@
 
 #include <unordered_map>
 
-namespace osrm
-{
-namespace contractor
-{
-namespace files
+namespace osrm::contractor::files
 {
 // reads .osrm.hsgr file
 template <typename ContractedMetricT>
@@ -52,8 +48,6 @@ inline void writeGraph(const boost::filesystem::path &path,
         serialization::write(writer, "/ch/metrics/" + pair.first, pair.second);
     }
 }
-} // namespace files
-} // namespace contractor
-} // namespace osrm
+} // namespace osrm::contractor::files
 
 #endif

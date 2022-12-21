@@ -7,11 +7,7 @@
 
 #include <boost/optional/optional_io.hpp>
 
-namespace osrm
-{
-namespace extractor
-{
-namespace intersection
+namespace osrm::extractor::intersection
 {
 
 IntersectionEdges getIncomingEdges(const util::NodeBasedDynamicGraph &graph,
@@ -856,6 +852,4 @@ IntersectionEdge skipDegreeTwoNodes(const util::NodeBasedDynamicGraph &graph, In
 
     return road;
 }
-} // namespace intersection
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor::intersection

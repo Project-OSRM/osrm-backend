@@ -37,9 +37,7 @@
 #include <boost/assert.hpp>
 #include <tbb/global_control.h>
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 int Contractor::Run()
@@ -125,5 +123,4 @@ int Contractor::Run()
     return 0;
 }
 
-} // namespace contractor
-} // namespace osrm
+} // namespace osrm::contractor

@@ -13,9 +13,7 @@
 #include <array>
 #include <cstdint>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 const constexpr auto DEFAULT_MAX_SPEED = 180 / 3.6; // 180kmph -> m/s
@@ -138,7 +136,6 @@ struct ProfileProperties
     bool force_split_edges = false;
     bool call_tagless_node_function = true;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

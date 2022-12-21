@@ -7,11 +7,7 @@
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
-namespace osrm
-{
-namespace server
-{
-namespace api
+namespace osrm::server::api
 {
 
 namespace
@@ -62,8 +58,6 @@ struct MatchParametersGrammar final : public RouteParametersGrammar<Iterator, Si
 
     qi::symbols<char, engine::api::MatchParameters::GapsType> gaps_type;
 };
-} // namespace api
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server::api
 
 #endif

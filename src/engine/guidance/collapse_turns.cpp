@@ -10,11 +10,7 @@
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 using osrm::util::angularDeviation;
 using namespace osrm::guidance;
@@ -667,6 +663,4 @@ RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
     return steps;
 }
 
-} // namespace guidance
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::guidance

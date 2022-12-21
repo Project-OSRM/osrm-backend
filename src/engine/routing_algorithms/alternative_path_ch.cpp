@@ -11,11 +11,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 // Unqualified calls below are from the ch namespace.
@@ -854,6 +850,4 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engi
     return InternalManyRoutesResult{{std::move(primary_route), std::move(secondary_route)}};
 }
 
-} // namespace routing_algorithms
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms

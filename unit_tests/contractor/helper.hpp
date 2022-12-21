@@ -3,9 +3,7 @@
 
 #include "contractor/contractor_graph.hpp"
 
-namespace osrm
-{
-namespace unit_test
+namespace osrm::unit_test
 {
 
 using TestEdge = std::tuple<unsigned, unsigned, int>;
@@ -38,7 +36,6 @@ inline contractor::ContractorGraph makeGraph(const std::vector<TestEdge> &edges)
 
     return contractor::ContractorGraph{max_id + 1, input_edges};
 }
-} // namespace unit_test
-} // namespace osrm
+} // namespace osrm::unit_test
 
 #endif

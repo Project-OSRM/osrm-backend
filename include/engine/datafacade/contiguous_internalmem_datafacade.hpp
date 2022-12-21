@@ -28,11 +28,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace datafacade
+namespace osrm::engine::datafacade
 {
 
 template <typename AlgorithmT> class ContiguousInternalMemoryAlgorithmDataFacade;
@@ -693,8 +689,6 @@ class ContiguousInternalMemoryDataFacade<MLD> final
     {
     }
 };
-} // namespace datafacade
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::datafacade
 
 #endif // CONTIGUOUS_INTERNALMEM_DATAFACADE_HPP

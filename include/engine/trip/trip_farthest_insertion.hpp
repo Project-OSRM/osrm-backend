@@ -13,11 +13,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace trip
+namespace osrm::engine::trip
 {
 
 // given a route and a new location, find the best place of insertion and
@@ -175,8 +171,6 @@ FarthestInsertionTrip(const std::size_t number_of_locations,
     return FindRoute(number_of_locations, dist_table, max_from, max_to);
 }
 
-} // namespace trip
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::trip
 
 #endif // TRIP_FARTHEST_INSERTION_HPP

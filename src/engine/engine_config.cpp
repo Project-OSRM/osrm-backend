@@ -1,8 +1,6 @@
 #include "engine/engine_config.hpp"
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 bool EngineConfig::IsValid() const
@@ -27,5 +25,4 @@ bool EngineConfig::IsValid() const
             storage_config.IsValid()) &&
            limits_valid;
 }
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine

@@ -11,9 +11,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 struct LocationDependentData
@@ -48,7 +46,6 @@ struct LocationDependentData
     std::vector<std::pair<polygon_bands_t, std::size_t>> polygons;
     std::vector<properties_t> properties;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

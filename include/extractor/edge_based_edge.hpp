@@ -5,9 +5,7 @@
 #include "util/typedefs.hpp"
 #include <tuple>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 struct EdgeBasedEdge
@@ -96,7 +94,6 @@ inline bool EdgeBasedEdge::operator<(const EdgeBasedEdge &other) const
     return std::tie(source, target, data.weight, unidirectional) <
            std::tie(other.source, other.target, other.data.weight, other_is_unidirectional);
 }
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* EDGE_BASED_EDGE_HPP */

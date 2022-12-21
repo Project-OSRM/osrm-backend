@@ -34,9 +34,7 @@
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_pipeline.h>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 // Configuration to find representative candidate for turn angle calculations
@@ -1291,5 +1289,4 @@ EdgeBasedGraphFactory::IndexConditionals(std::vector<Conditional> &&conditionals
     return indexed_restrictions;
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

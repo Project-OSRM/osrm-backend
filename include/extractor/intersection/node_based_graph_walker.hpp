@@ -15,11 +15,7 @@
 #include <cstdint>
 #include <utility>
 
-namespace osrm
-{
-namespace extractor
-{
-namespace intersection
+namespace osrm::extractor::intersection
 {
 
 /*
@@ -311,8 +307,6 @@ struct DistanceToNextIntersectionAccumulator
     double distance = 0.;
 };
 
-} // namespace intersection
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor::intersection
 
 #endif

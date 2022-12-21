@@ -7,9 +7,7 @@
 #include <string>
 #include <string_view>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 namespace detail
@@ -115,7 +113,6 @@ template <storage::Ownership Ownership> class NameTableImpl
 
 using NameTable = detail::NameTableImpl<storage::Ownership::Container>;
 using NameTableView = detail::NameTableImpl<storage::Ownership::View>;
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_NAME_TABLE_HPP

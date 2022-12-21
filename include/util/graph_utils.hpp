@@ -6,9 +6,7 @@
 #include <boost/assert.hpp>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 /// This function checks if the graph (consisting of directed edges) is undirected
@@ -96,7 +94,6 @@ std::vector<OutputEdgeT> directedEdgesFromCompressed(const std::vector<InputEdge
 
     return output_edge_list;
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

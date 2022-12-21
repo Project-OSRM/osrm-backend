@@ -3,16 +3,10 @@
 
 #include "updater/source.hpp"
 
-namespace osrm
-{
-namespace updater
-{
-namespace csv
+namespace osrm::updater::csv
 {
 SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths);
 TurnLookupTable readTurnValues(const std::vector<std::string> &paths);
-} // namespace csv
-} // namespace updater
-} // namespace osrm
+} // namespace osrm::updater::csv
 
 #endif

@@ -11,9 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 // Allows easy check for whether a node restriction is present at a given intersection
@@ -74,7 +72,6 @@ struct UnconditionalOnly
 using RestrictionMap = NodeRestrictionMap<UnconditionalOnly>;
 using ConditionalRestrictionMap = NodeRestrictionMap<ConditionalOnly>;
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_NODE_RESTRICTION_MAP_HPP_

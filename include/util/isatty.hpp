@@ -16,9 +16,7 @@
 
 #include <cstdio>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 // Returns true if stdout is a tty, false otherwise
@@ -26,7 +24,6 @@ namespace util
 //   output is redirected to a logfile
 inline bool IsStdoutATTY() { return isatty(fileno(stdout)); }
 
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

@@ -10,13 +10,10 @@
 
 namespace osrm
 {
-namespace util
-{
-namespace json
+namespace util::json
 {
 struct Object;
-}
-} // namespace util
+} // namespace util::json
 namespace server
 {
 namespace api

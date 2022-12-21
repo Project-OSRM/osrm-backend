@@ -31,11 +31,7 @@
 #include <map>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 class RouteAPI : public BaseAPI
@@ -1001,8 +997,6 @@ class RouteAPI : public BaseAPI
     }
 };
 
-} // namespace api
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

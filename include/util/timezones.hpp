@@ -12,9 +12,7 @@
 
 #include <chrono>
 
-namespace osrm
-{
-namespace updater
+namespace osrm::updater
 {
 
 // Time zone shape polygons loaded in R-tree
@@ -44,7 +42,6 @@ class Timezoner
     rtree_t rtree;
     std::vector<local_time_t> local_times;
 };
-} // namespace updater
-} // namespace osrm
+} // namespace osrm::updater
 
 #endif

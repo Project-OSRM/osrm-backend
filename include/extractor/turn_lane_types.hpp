@@ -13,9 +13,7 @@
 #include <numeric> //partial_sum
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 namespace TurnLaneType
@@ -100,7 +98,6 @@ inline TurnLanesIndexedArray transformTurnLaneMapIntoArrays(const LaneDescriptio
     return std::make_tuple(std::move(turn_lane_offsets), std::move(turn_lane_masks));
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* OSRM_GUIDANCE_TURN_LANE_TYPES_HPP_ */

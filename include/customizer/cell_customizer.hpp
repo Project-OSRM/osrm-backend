@@ -10,9 +10,7 @@
 
 #include <unordered_set>
 
-namespace osrm
-{
-namespace customizer
+namespace osrm::customizer
 {
 
 class CellCustomizer
@@ -235,7 +233,6 @@ class CellCustomizer
 
     const partitioner::MultiLevelPartition &partition;
 };
-} // namespace customizer
-} // namespace osrm
+} // namespace osrm::customizer
 
 #endif // OSRM_CELLS_CUSTOMIZER_HPP

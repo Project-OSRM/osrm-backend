@@ -6,9 +6,7 @@
 #include <boost/functional/hash.hpp>
 #include <unordered_set>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 struct TrafficSignals
@@ -22,7 +20,6 @@ struct TrafficSignals
         return bidirectional_nodes.count(to) > 0 || unidirectional_segments.count({from, to}) > 0;
     }
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_TRAFFIC_SIGNALS_HPP

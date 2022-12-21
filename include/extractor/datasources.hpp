@@ -8,9 +8,7 @@
 #include <cstdint>
 #include <string_view>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class Datasources
@@ -45,7 +43,6 @@ class Datasources
     std::array<std::uint32_t, MAX_NUM_SOURES> lengths;
     std::array<char, MAX_LENGTH_NAME * MAX_NUM_SOURES> sources;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

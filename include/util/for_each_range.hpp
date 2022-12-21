@@ -1,9 +1,7 @@
 #ifndef OSRM_UTIL_FOR_EACH_RANGE_HPP
 #define OSRM_UTIL_FOR_EACH_RANGE_HPP
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 template <typename Iter, typename Func> void for_each_range(Iter begin, Iter end, Func f)
@@ -20,7 +18,6 @@ template <typename Iter, typename Func> void for_each_range(Iter begin, Iter end
         f(begin_range, iter);
     }
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

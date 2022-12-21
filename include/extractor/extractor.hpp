@@ -46,9 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "traffic_signals.hpp"
 #include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class ScriptingEnvironment;
@@ -120,7 +118,6 @@ class Extractor
                               LaneDescriptionMap lane_description_map,
                               ScriptingEnvironment &scripting_environment);
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* EXTRACTOR_HPP */

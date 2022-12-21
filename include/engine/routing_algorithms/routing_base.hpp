@@ -27,12 +27,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 namespace details
@@ -421,8 +416,6 @@ template <typename FacadeT> EdgeDistance computeEdgeDistance(const FacadeT &faca
     return total_distance;
 }
 
-} // namespace routing_algorithms
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms
 
 #endif // OSRM_ENGINE_ROUTING_BASE_HPP

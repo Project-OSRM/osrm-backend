@@ -6,9 +6,7 @@
 #include <cmath>
 #include <string>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 namespace bearing
 {
@@ -144,7 +142,6 @@ inline double restrictAngleToValidRange(const double angle)
         return angle;
 }
 
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // BEARING_HPP

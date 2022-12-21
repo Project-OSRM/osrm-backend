@@ -7,9 +7,7 @@
 #include <algorithm>
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 template <typename T>
@@ -84,5 +82,4 @@ template std::vector<UnresolvedManeuverOverride>
 removeInvalidTurnPaths<>(std::vector<UnresolvedManeuverOverride>,
                          const util::NodeBasedDynamicGraph &);
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

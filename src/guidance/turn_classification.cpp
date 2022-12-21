@@ -6,9 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 std::pair<util::guidance::EntryClass, util::guidance::BearingClass>
@@ -93,5 +91,4 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
     return std::make_pair(entry_class, bearing_class);
 }
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance

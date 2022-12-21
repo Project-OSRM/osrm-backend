@@ -3,9 +3,7 @@
 
 #include "extractor/intersection/constants.hpp"
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 // what angle is interpreted as going straight
@@ -30,7 +28,6 @@ const double constexpr INCREASES_BY_FOURTY_PERCENT = 1.4;
 
 const int constexpr MAX_SLIPROAD_THRESHOLD = 250;
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif // OSRM_GUIDANCE_CONSTANTS_HPP_

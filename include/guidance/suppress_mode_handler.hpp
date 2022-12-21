@@ -8,9 +8,7 @@
 
 #include "util/node_based_graph.hpp"
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 // Suppresses instructions for certain modes.
@@ -40,7 +38,6 @@ class SuppressModeHandler final : public IntersectionHandler
                             Intersection intersection) const override final;
 };
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /* OSRM_GUIDANCE_SUPPRESS_MODE_HANDLER_HPP_ */

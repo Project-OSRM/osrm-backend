@@ -6,11 +6,7 @@
 
 #include "boost/assert.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace datafacade
+namespace osrm::engine::datafacade
 {
 
 SharedMemoryAllocator::SharedMemoryAllocator(
@@ -41,6 +37,4 @@ SharedMemoryAllocator::~SharedMemoryAllocator() {}
 
 const storage::SharedDataIndex &SharedMemoryAllocator::GetIndex() { return index; }
 
-} // namespace datafacade
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::datafacade

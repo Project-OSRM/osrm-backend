@@ -11,9 +11,7 @@
 
 #include <boost/filesystem/path.hpp>
 
-namespace osrm
-{
-namespace customizer
+namespace osrm::customizer
 {
 
 struct EdgeBasedGraphEdgeData
@@ -126,7 +124,6 @@ using MultiLevelEdgeBasedGraph =
     MultiLevelGraph<EdgeBasedGraphEdgeData, storage::Ownership::Container>;
 using MultiLevelEdgeBasedGraphView =
     MultiLevelGraph<EdgeBasedGraphEdgeData, storage::Ownership::View>;
-} // namespace customizer
-} // namespace osrm
+} // namespace osrm::customizer
 
 #endif

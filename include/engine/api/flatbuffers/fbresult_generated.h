@@ -6,10 +6,7 @@
 
 #include "flatbuffers/flatbuffers.h"
 
-namespace osrm {
-namespace engine {
-namespace api {
-namespace fbresult {
+namespace osrm::engine::api::fbresult {
 
 struct Position;
 
@@ -2431,9 +2428,6 @@ inline std::unique_ptr<osrm::engine::api::fbresult::FBResultT> UnPackSizePrefixe
   return std::unique_ptr<osrm::engine::api::fbresult::FBResultT>(GetSizePrefixedFBResult(buf)->UnPack(res));
 }
 
-}  // namespace fbresult
-}  // namespace api
-}  // namespace engine
 }  // namespace osrm
 
 #endif  // FLATBUFFERS_GENERATED_FBRESULT_OSRM_ENGINE_API_FBRESULT_H_

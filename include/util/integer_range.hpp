@@ -8,9 +8,7 @@
 
 #include <cstdint>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 // Ported from Boost.Range 1.56 due to required fix
@@ -89,7 +87,6 @@ irange(const Integer first,
 {
     return range<Integer>(first, last);
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // INTEGER_RANGE_HPP

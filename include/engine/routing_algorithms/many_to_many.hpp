@@ -9,11 +9,7 @@
 
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 namespace
 {
@@ -99,8 +95,6 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                  const std::vector<std::size_t> &target_indices,
                  const bool calculate_distance);
 
-} // namespace routing_algorithms
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms
 
 #endif

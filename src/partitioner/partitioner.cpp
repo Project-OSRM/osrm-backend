@@ -31,9 +31,7 @@
 
 #include "util/timing_util.hpp"
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 auto getGraphBisection(const PartitionerConfig &config)
 {
@@ -200,5 +198,4 @@ int Partitioner::Run(const PartitionerConfig &config)
     return 0;
 }
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner

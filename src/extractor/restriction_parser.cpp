@@ -13,9 +13,7 @@
 
 #include <algorithm>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 RestrictionParser::RestrictionParser(bool use_turn_restrictions_,
@@ -284,5 +282,4 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
     }
     return restrictions.find(current_string) != restrictions.end();
 }
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

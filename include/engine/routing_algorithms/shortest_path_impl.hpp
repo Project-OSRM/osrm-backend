@@ -6,11 +6,7 @@
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 namespace
@@ -789,8 +785,6 @@ shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
     }
 }
 
-} // namespace routing_algorithms
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms
 
 #endif /* OSRM_SHORTEST_PATH_IMPL_HPP */

@@ -16,13 +16,7 @@
 #include <tuple>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
-{
-namespace mld
+namespace osrm::engine::routing_algorithms::mld
 {
 
 namespace
@@ -655,9 +649,6 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
     return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
 }
 
-} // namespace mld
-} // namespace routing_algorithms
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms::mld
 
 #endif // OSRM_ENGINE_ROUTING_BASE_MLD_HPP

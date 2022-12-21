@@ -6,9 +6,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 SuffixTable::SuffixTable(ScriptingEnvironment &scripting_environment)
@@ -33,5 +31,4 @@ bool SuffixTable::isSuffix(std::string_view possible_suffix) const
     return suffix_set.count(possible_suffix) > 0;
 }
 
-} /* namespace extractor */
-} /* namespace osrm */
+} // namespace osrm::extractor

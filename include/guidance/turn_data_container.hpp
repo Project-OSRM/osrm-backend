@@ -12,9 +12,7 @@
 
 #include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 namespace detail
 {
@@ -116,7 +114,6 @@ template <storage::Ownership Ownership> class TurnDataContainerImpl
 using TurnDataExternalContainer = detail::TurnDataContainerImpl<storage::Ownership::External>;
 using TurnDataContainer = detail::TurnDataContainerImpl<storage::Ownership::Container>;
 using TurnDataView = detail::TurnDataContainerImpl<storage::Ownership::View>;
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif

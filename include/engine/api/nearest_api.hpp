@@ -12,11 +12,7 @@
 
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 class NearestAPI final : public BaseAPI
@@ -164,8 +160,6 @@ class NearestAPI final : public BaseAPI
     }
 };
 
-} // namespace api
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

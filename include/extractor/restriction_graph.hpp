@@ -9,9 +9,7 @@
 
 #include <unordered_map>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 struct TurnRestriction;
@@ -131,7 +129,6 @@ struct RestrictionGraph
 
 RestrictionGraph constructRestrictionGraph(const std::vector<TurnRestriction> &turn_restrictions);
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_RESTRICTION_GRAPH_HPP_

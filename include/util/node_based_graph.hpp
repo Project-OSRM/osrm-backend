@@ -13,9 +13,7 @@
 #include <memory>
 #include <utility>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 struct NodeBasedEdgeData
@@ -97,7 +95,6 @@ NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
 
     return NodeBasedDynamicGraph(number_of_nodes, edges_list);
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // NODE_BASED_GRAPH_HPP

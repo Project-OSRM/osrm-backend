@@ -7,9 +7,7 @@
 
 #include <boost/thread/tss.hpp>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 // Algorithm-dependent heaps
@@ -120,7 +118,6 @@ template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
     void InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes,
                                                        unsigned number_of_boundary_nodes);
 };
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif // SEARCH_ENGINE_DATA_HPP

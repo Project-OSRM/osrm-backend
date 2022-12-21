@@ -1,12 +1,6 @@
 #include "engine/routing_algorithms/routing_base_ch.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
-{
-namespace ch
+namespace osrm::engine::routing_algorithms::ch
 {
 
 /**
@@ -208,8 +202,4 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
 
     return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
 }
-} // namespace ch
-
-} // namespace routing_algorithms
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms::ch

@@ -22,14 +22,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace guidance
-{
-
-// Given an Intersection, the graph to access the data and the turn lanes, the turn lane matcher
-// assigns appropriate turn tupels to the different turns.
-namespace lanes
+namespace osrm::guidance::lanes
 {
 
 namespace
@@ -140,8 +133,6 @@ class TurnLaneHandler
                          LaneDataVector &lane_data) const;
 };
 
-} // namespace lanes
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance::lanes
 
 #endif // OSRM_EXTRACTOR_GUIDANCE_TURN_LANE_HANDLER_HPP_

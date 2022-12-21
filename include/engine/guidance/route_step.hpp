@@ -16,11 +16,7 @@
 
 #include <boost/range/iterator_range.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 // Given the following turn from a,b to b,c over b:
 //  a --> b --> c
@@ -234,8 +230,6 @@ inline auto RouteStep::LanesToTheRight() const
     return boost::make_iterator_range(description.end() - num_lanes_right, description.end());
 }
 
-} // namespace guidance
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif

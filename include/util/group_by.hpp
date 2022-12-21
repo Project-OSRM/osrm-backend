@@ -4,9 +4,7 @@
 #include <algorithm>
 #include <utility>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 // Runs fn on consecutive items in sub-ranges determined by pred.
@@ -34,7 +32,6 @@ Fn group_by(Iter first, Iter last, Pred pred, Fn fn)
     return fn;
 }
 
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

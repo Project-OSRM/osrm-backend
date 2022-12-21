@@ -24,9 +24,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 namespace detail
 {
@@ -448,7 +446,6 @@ template <storage::Ownership Ownership> class CellStorageImpl
     Vector<std::uint64_t> level_to_cell_offset;
 };
 } // namespace detail
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif // OSRM_PARTITIONER_CUSTOMIZE_CELL_STORAGE_HPP

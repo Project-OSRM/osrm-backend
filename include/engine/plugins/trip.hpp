@@ -18,11 +18,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
 class TripPlugin final : public BasePlugin
@@ -42,8 +38,6 @@ class TripPlugin final : public BasePlugin
                          const api::TripParameters &parameters,
                          osrm::engine::api::ResultT &json_result) const;
 };
-} // namespace plugins
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::plugins
 
 #endif // TRIP_HPP

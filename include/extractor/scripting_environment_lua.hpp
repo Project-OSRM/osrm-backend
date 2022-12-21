@@ -14,9 +14,7 @@
 
 #include <sol/sol.hpp>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 struct LuaScriptingContext final
@@ -110,7 +108,6 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     tbb::enumerable_thread_specific<std::unique_ptr<LuaScriptingContext>> script_contexts;
     const LocationDependentData location_dependent_data;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* SCRIPTING_ENVIRONMENT_LUA_HPP */

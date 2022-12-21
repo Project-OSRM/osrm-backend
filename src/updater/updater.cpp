@@ -61,9 +61,7 @@ template <typename T1, typename T2> struct hash<std::tuple<T1, T2>>
 };
 } // namespace std
 
-namespace osrm
-{
-namespace updater
+namespace osrm::updater
 {
 namespace
 {
@@ -843,5 +841,4 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     util::Log() << "Done reading edges in " << TIMER_MSEC(load_edges) << "ms.";
     return number_of_edge_based_nodes;
 }
-} // namespace updater
-} // namespace osrm
+} // namespace osrm::updater

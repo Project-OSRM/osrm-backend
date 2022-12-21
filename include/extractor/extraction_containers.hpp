@@ -14,9 +14,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 /**
@@ -91,7 +89,6 @@ class ExtractionContainers
     void PrepareData(ScriptingEnvironment &scripting_environment,
                      const std::string &names_data_path);
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* EXTRACTION_CONTAINERS_HPP */

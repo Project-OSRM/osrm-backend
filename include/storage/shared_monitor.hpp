@@ -16,9 +16,7 @@
 // #define USE_BOOST_INTERPROCESS_CONDITION 1
 #endif
 
-namespace osrm
-{
-namespace storage
+namespace osrm::storage
 {
 
 namespace
@@ -234,8 +232,7 @@ template <typename Data> struct SharedMonitor
     bi::shared_memory_object shmem;
     bi::mapped_region region;
 };
-} // namespace storage
-} // namespace osrm
+} // namespace osrm::storage
 
 #undef USE_BOOST_INTERPROCESS_CONDITION
 

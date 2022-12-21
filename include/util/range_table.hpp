@@ -10,9 +10,7 @@
 #include <fstream>
 #include <utility>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 /*
  * These pre-declarations are needed because parsing C++ is hard
@@ -215,7 +213,6 @@ unsigned RangeTable<BLOCK_SIZE, Ownership>::PrefixSumAtIndex(int index, const Bl
 
     return sum;
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // RANGE_TABLE_HPP

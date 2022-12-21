@@ -5,11 +5,7 @@
 
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace map_matching
+namespace osrm::engine::map_matching
 {
 
 struct SubMatching
@@ -19,8 +15,6 @@ struct SubMatching
     std::vector<unsigned> alternatives_count;
     double confidence;
 };
-} // namespace map_matching
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::map_matching
 
 #endif

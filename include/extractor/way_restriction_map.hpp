@@ -11,9 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 // Given the compressed representation of via-way turn restrictions, we provide a fast access into
@@ -69,7 +67,6 @@ class WayRestrictionMap
     const RestrictionGraph &restriction_graph;
 };
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_WAY_RESTRICTION_MAP_HPP_

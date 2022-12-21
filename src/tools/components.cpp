@@ -25,9 +25,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace tools
+namespace osrm::tools
 {
 
 using TarjanGraph = util::StaticGraph<void>;
@@ -103,8 +101,7 @@ struct FeatureWriter
 };
 
 //
-} // namespace tools
-} // namespace osrm
+} // namespace osrm::tools
 
 int main(int argc, char *argv[])
 {

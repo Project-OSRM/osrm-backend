@@ -1,11 +1,7 @@
 #ifndef OSRM_EXTRACTOR_INTERSECTION_CONSTANTS_HPP_
 #define OSRM_EXTRACTOR_INTERSECTION_CONSTANTS_HPP_
 
-namespace osrm
-{
-namespace extractor
-{
-namespace intersection
+namespace osrm::extractor::intersection
 {
 
 // what angle is interpreted as going straight
@@ -30,8 +26,6 @@ const auto constexpr ASSUMED_LANE_WIDTH = 3.25;
 // how far apart can roads be at the most, when thinking about merging them?
 const auto constexpr MERGABLE_ANGLE_DIFFERENCE = 95.0;
 
-} // namespace intersection
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor::intersection
 
 #endif // OSRM_EXTRACTOR_INTERSECTION_CONSTANTS_HPP_

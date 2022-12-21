@@ -3,9 +3,7 @@
 
 #include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 struct EdgeBasedNode
@@ -16,7 +14,6 @@ struct EdgeBasedNode
     std::uint32_t segregated : 1;
 };
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_EDGE_BASED_NODE_HPP_

@@ -17,9 +17,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 namespace detail
@@ -84,7 +82,6 @@ class RoundaboutHandler final : public IntersectionHandler
     const extractor::intersection::CoordinateExtractor coordinate_extractor;
 };
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /*OSRM_GUIDANCE_ROUNDABOUT_HANDLER_HPP_*/

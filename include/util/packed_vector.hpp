@@ -20,9 +20,7 @@
 #include <windows.h>
 #endif
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 namespace detail
 {
@@ -601,7 +599,6 @@ template <typename T, std::size_t Bits>
 using PackedVector = detail::PackedVector<T, Bits, storage::Ownership::Container>;
 template <typename T, std::size_t Bits>
 using PackedVectorView = detail::PackedVector<T, Bits, storage::Ownership::View>;
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif /* PACKED_VECTOR_HPP */

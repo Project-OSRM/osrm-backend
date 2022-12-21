@@ -28,9 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ENGINE_STATUS_HPP
 #define ENGINE_STATUS_HPP
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 /**
@@ -42,7 +40,6 @@ enum class Status
     Ok,
     Error
 };
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

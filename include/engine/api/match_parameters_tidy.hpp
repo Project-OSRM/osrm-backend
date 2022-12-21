@@ -11,13 +11,7 @@
 #include <boost/assert.hpp>
 #include <boost/dynamic_bitset.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
-{
-namespace tidy
+namespace osrm::engine::api::tidy
 {
 
 struct Thresholds
@@ -200,9 +194,6 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
     return result;
 }
 
-} // namespace tidy
-} // namespace api
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::api::tidy
 
 #endif

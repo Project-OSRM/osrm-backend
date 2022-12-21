@@ -14,9 +14,7 @@
 
 #include "guidance/parsing_toolkit.hpp"
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 namespace detail
@@ -136,7 +134,6 @@ inline std::string canonicalizeStringList(std::string strlist, const std::string
     return strlist;
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // EXTRACTION_HELPER_FUNCTIONS_HPP

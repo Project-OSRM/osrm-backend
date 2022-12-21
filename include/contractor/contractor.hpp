@@ -30,9 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "contractor/contractor_config.hpp"
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 /// Base class of osrm-contract
@@ -49,7 +47,6 @@ class Contractor
   private:
     ContractorConfig config;
 };
-} // namespace contractor
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif // PROCESSING_CHAIN_HPP

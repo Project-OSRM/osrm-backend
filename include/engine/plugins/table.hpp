@@ -8,11 +8,7 @@
 
 #include "util/json_container.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
 class TablePlugin final : public BasePlugin
@@ -27,8 +23,6 @@ class TablePlugin final : public BasePlugin
   private:
     const int max_locations_distance_table;
 };
-} // namespace plugins
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::plugins
 
 #endif // TABLE_HPP

@@ -7,9 +7,7 @@
 using namespace osrm;
 using namespace osrm::contractor;
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 bool operator!=(const QueryEdge &lhs, const QueryEdge &rhs) { return !(lhs == rhs); }
@@ -27,8 +25,7 @@ std::ostream &operator<<(std::ostream &out, const QueryEdge &edge)
     out << "{" << edge.source << ", " << edge.target << ", " << edge.data << "}";
     return out;
 }
-} // namespace contractor
-} // namespace osrm
+} // namespace osrm::contractor
 
 BOOST_AUTO_TEST_SUITE(contracted_edge_container)
 

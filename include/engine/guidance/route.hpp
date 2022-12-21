@@ -1,11 +1,7 @@
 #ifndef ROUTE_HPP
 #define ROUTE_HPP
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 
 struct Route
@@ -14,8 +10,6 @@ struct Route
     double duration;
     double weight;
 };
-} // namespace guidance
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif

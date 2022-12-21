@@ -5,9 +5,7 @@
 #include <algorithm>
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 TurnPathCompressor::TurnPathCompressor(std::vector<TurnRestriction> &restrictions,
@@ -160,5 +158,4 @@ void TurnPathCompressor::Compress(const NodeID from, const NodeID via, const Nod
     vias.erase(via);
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

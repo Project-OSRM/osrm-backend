@@ -11,9 +11,7 @@
 
 #include <cstdint>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 struct RectangleInt2D
@@ -171,7 +169,6 @@ struct RectangleInt2D
                max_lat != FixedLatitude{std::numeric_limits<std::int32_t>::min()};
     }
 };
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

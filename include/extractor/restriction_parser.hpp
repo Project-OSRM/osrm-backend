@@ -15,9 +15,7 @@ namespace osmium
 class Relation;
 } // namespace osmium
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class ScriptingEnvironment;
@@ -56,7 +54,6 @@ class RestrictionParser
     std::set<std::string> restrictions;
     osmium::tags::KeyFilter filter;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* RESTRICTION_PARSER_HPP */

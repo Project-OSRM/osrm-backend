@@ -4,11 +4,7 @@
 #include <algorithm>
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace util
-{
-namespace guidance
+namespace osrm::util::guidance
 {
 
 BearingClass::BearingClass() { available_bearings.reserve(10); }
@@ -77,6 +73,4 @@ std::size_t BearingClass::findMatchingBearing(const double bearing) const
     return std::distance(available_bearings.begin(), max_element);
 }
 
-} // namespace guidance
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util::guidance

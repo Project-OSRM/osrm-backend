@@ -36,9 +36,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 template <class EdgeDataT,
           storage::Ownership Ownership = storage::Ownership::Container,
@@ -774,7 +772,6 @@ class StaticRTree
 //[2] "Nearest Neighbor Queries", N. Roussopulos et al; 1995; DOI: 10.1145/223784.223794
 //[3] "Distance Browsing in Spatial Databases"; G. Hjaltason, H. Samet; 1999; ACM Trans. DB Sys
 // Vol.24 No.2, pp.265-318
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // STATIC_RTREE_HPP

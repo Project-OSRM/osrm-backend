@@ -26,9 +26,7 @@ template <class T> T *get_pointer(std::shared_ptr<T> &p) { return p.get(); }
 
 #endif
 
-namespace osrm
-{
-namespace server
+namespace osrm::server
 {
 
 class RequestHandler;
@@ -76,7 +74,6 @@ class Connection : public std::enable_shared_from_this<Connection>
     short processed_requests = 512;
     short keepalive_timeout = 5; // In seconds
 };
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server
 
 #endif // CONNECTION_HPP

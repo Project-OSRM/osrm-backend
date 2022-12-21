@@ -14,9 +14,7 @@
 #include <boost/assert.hpp>
 #include <unordered_set>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 static constexpr int SECOND_TO_DECISECOND = 10;
@@ -419,5 +417,4 @@ void GraphCompressor::PrintStatistics(unsigned original_number_of_nodes,
     util::Log() << "Node compression ratio: " << new_node_count / (double)original_number_of_nodes;
     util::Log() << "Edge compression ratio: " << new_edge_count / (double)original_number_of_edges;
 }
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

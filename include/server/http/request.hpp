@@ -5,11 +5,7 @@
 
 #include <string>
 
-namespace osrm
-{
-namespace server
-{
-namespace http
+namespace osrm::server::http
 {
 
 struct request
@@ -20,8 +16,6 @@ struct request
     std::string connection;
     boost::asio::ip::address endpoint;
 };
-} // namespace http
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server::http
 
 #endif // REQUEST_HPP

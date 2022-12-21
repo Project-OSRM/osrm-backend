@@ -18,11 +18,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
-namespace osrm
-{
-namespace util
-{
-namespace guidance
+namespace osrm::util::guidance
 {
 // Name Change Logic
 // Used both during Extraction as well as during Post-Processing
@@ -240,8 +236,6 @@ inline bool requiresNameAnnounced(const NameID from_name_id,
                                      suffix_table);
 }
 
-} // namespace guidance
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util::guidance
 
 #endif /* OSRM_UTIL_GUIDANCE_NAME_ANNOUNCEMENT_HPP_ */

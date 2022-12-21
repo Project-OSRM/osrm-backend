@@ -1,8 +1,6 @@
 #include "engine/search_engine_data.hpp"
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 // CH heaps
@@ -130,5 +128,4 @@ void SearchEngineData<MLD>::InitializeOrClearManyToManyThreadLocalStorage(
         many_to_many_heap.reset(new ManyToManyQueryHeap(number_of_nodes, number_of_boundary_nodes));
     }
 }
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine

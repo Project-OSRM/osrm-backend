@@ -35,9 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "storage/io_config.hpp"
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 struct ExtractorConfig final : storage::IOConfig
@@ -91,7 +89,6 @@ struct ExtractorConfig final : storage::IOConfig
     bool use_locations_cache = true;
     bool dump_nbg_graph = false;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // EXTRACTOR_CONFIG_HPP

@@ -40,9 +40,7 @@ const ByEdgeOrByMeterValue::ValueByMeter ByEdgeOrByMeterValue::by_meter;
 #endif
 #endif
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers_,
                                        std::unordered_map<std::string, ClassData> &classes_map,
@@ -492,5 +490,4 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     external_memory.way_node_id_offsets.push_back(external_memory.used_node_id_list.size());
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

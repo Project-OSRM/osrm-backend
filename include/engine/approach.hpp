@@ -30,9 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdint>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 enum class Approach : std::uint8_t
@@ -41,6 +39,5 @@ enum class Approach : std::uint8_t
     UNRESTRICTED = 1
 
 };
-}
-} // namespace osrm
+} // namespace osrm::engine
 #endif

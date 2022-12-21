@@ -19,9 +19,7 @@
 #include "util/guidance/entry_class.hpp"
 #include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace test
+namespace osrm::test
 {
 
 class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
@@ -260,7 +258,6 @@ class MockDataFacade final : public MockBaseDataFacade, public MockAlgorithmData
 {
 };
 
-} // namespace test
-} // namespace osrm
+} // namespace osrm::test
 
 #endif // MOCK_DATAFACADE_HPP

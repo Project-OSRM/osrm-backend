@@ -8,9 +8,7 @@
 #include "engine/datafacade/process_memory_allocator.hpp"
 #include "engine/datafacade_factory.hpp"
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 namespace detail
 {
@@ -103,7 +101,6 @@ template <typename AlgorithmT>
 using ImmutableProvider = detail::ImmutableProvider<AlgorithmT, DataFacade>;
 template <typename AlgorithmT>
 using ExternalProvider = detail::ExternalProvider<AlgorithmT, DataFacade>;
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

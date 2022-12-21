@@ -20,9 +20,7 @@
 
 #include <boost/range/adaptor/reversed.hpp>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 namespace detail
 {
@@ -344,7 +342,6 @@ inline MultiLevelPartitionImpl<storage::Ownership::View>::MultiLevelPartitionImp
 {
 }
 } // namespace detail
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif

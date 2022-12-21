@@ -30,11 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "engine/api/base_parameters.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 /**
@@ -52,8 +48,6 @@ struct NearestParameters : public BaseParameters
 
     bool IsValid() const { return BaseParameters::IsValid() && number_of_results >= 1; }
 };
-} // namespace api
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif // ENGINE_API_NEAREST_PARAMETERS_HPP

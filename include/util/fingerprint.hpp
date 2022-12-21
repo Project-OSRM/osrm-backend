@@ -6,9 +6,7 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 // implements a singleton, i.e. there is one and only one conviguration object
@@ -36,7 +34,6 @@ struct FingerPrint
 static_assert(sizeof(FingerPrint) == 8, "FingerPrint has unexpected size");
 static_assert(std::is_trivial<FingerPrint>::value, "FingerPrint needs to be trivial.");
 static_assert(std::is_pod<FingerPrint>::value, "FingerPrint needs to be a POD.");
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif /* FingerPrint_H */

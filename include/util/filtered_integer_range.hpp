@@ -8,9 +8,7 @@
 
 #include <cstdint>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 // This implements a single-pass integer range.
@@ -94,7 +92,6 @@ filtered_range<Integer, Filter> filtered_irange(
 {
     return filtered_range<Integer, Filter>(first, last, filter);
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // INTEGER_RANGE_HPP

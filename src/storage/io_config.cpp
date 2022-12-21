@@ -6,9 +6,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
-namespace osrm
-{
-namespace storage
+namespace osrm::storage
 {
 
 namespace fs = boost::filesystem;
@@ -40,5 +38,4 @@ std::vector<std::string> IOConfig::GetMissingFiles() const
     }
     return missingFiles;
 }
-} // namespace storage
-} // namespace osrm
+} // namespace osrm::storage

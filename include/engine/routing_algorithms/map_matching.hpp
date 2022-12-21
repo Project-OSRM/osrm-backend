@@ -8,11 +8,7 @@
 
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 using CandidateList = std::vector<PhantomNodeWithDistance>;
@@ -31,8 +27,6 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                             const std::vector<boost::optional<double>> &trace_gps_precision,
                             const bool allow_splitting);
 
-} // namespace routing_algorithms
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms
 
 #endif /* MAP_MATCHING_HPP */

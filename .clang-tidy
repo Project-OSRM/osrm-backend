@@ -49,6 +49,8 @@ Checks: >
     -misc-misplaced-const,
     -misc-definitions-in-headers,
     -misc-unused-parameters,
+    modernize-concat-nested-namespaces,
+    modernize-use-using,
     performance-*,
     -performance-noexcept-move-constructor,
     -performance-no-int-to-ptr,

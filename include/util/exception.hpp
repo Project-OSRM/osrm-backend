@@ -37,9 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "osrm/error_codes.hpp"
 #include <boost/format.hpp>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 class exception : public std::exception
@@ -124,7 +122,6 @@ class RuntimeError : public exception
         return result;
     }
 };
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif /* OSRM_EXCEPTION_HPP */

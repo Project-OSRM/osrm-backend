@@ -7,11 +7,7 @@
 
 #include <vector>
 
-namespace osrm
-{
-namespace server
-{
-namespace http
+namespace osrm::server::http
 {
 
 class reply
@@ -38,8 +34,6 @@ class reply
     std::string status_to_string(reply::status_type status);
     boost::asio::const_buffer status_to_buffer(reply::status_type status);
 };
-} // namespace http
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server::http
 
 #endif // REPLY_HPP

@@ -39,9 +39,7 @@ template <> struct is_container<osmium::Relation> : std::false_type
 };
 } // namespace sol
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 namespace
@@ -1251,5 +1249,4 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way,
     }
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

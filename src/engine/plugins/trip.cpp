@@ -13,11 +13,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
 bool IsStronglyConnectedComponent(const util::DistTableWrapper<EdgeDuration> &result_table)
@@ -297,6 +293,4 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     return Status::Ok;
 }
-} // namespace plugins
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::plugins

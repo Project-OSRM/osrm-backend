@@ -10,11 +10,7 @@
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <cstddef>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 
 using RouteSteps = std::vector<RouteStep>;
@@ -302,8 +298,6 @@ inline bool hasStraightestTurn(const RouteStep &step)
     return false;
 }
 
-} /* namespace guidance */
-} /* namespace engine */
-} /* namespace osrm */
+} // namespace osrm::engine::guidance
 
 #endif /* OSRM_ENGINE_GUIDANCE_COLLAPSING_UTILITY_HPP_ */

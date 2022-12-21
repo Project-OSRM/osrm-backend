@@ -8,13 +8,7 @@
 #include <cmath>
 #include <cstddef>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
-{
-namespace detail
+namespace osrm::engine::guidance::detail
 {
 
 std::pair<short, short> getDepartBearings(const LegGeometry &leg_geometry,
@@ -50,7 +44,4 @@ std::pair<short, short> getArriveBearings(const LegGeometry &leg_geometry,
     return std::make_pair<short, short>(
         std::round(util::coordinate_calculation::bearing(pre_turn_coordinate, turn_coordinate)), 0);
 }
-} // namespace detail
-} // namespace guidance
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::guidance::detail

@@ -378,9 +378,7 @@ get_via_node_path_from_OSM_ids(const std::string &turn_relation_type,
 
 } // namespace
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 ExtractionContainers::ExtractionContainers()
@@ -1310,5 +1308,4 @@ void ExtractionContainers::PrepareRestrictions(const ReferencedWays &restriction
     }
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

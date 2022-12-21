@@ -7,11 +7,7 @@
 
 #include <boost/format.hpp>
 
-namespace osrm
-{
-namespace server
-{
-namespace service
+namespace osrm::server::service
 {
 
 namespace
@@ -107,6 +103,4 @@ engine::Status TableService::RunQuery(std::size_t prefix_length,
     }
     return BaseService::routing_machine.Table(*parameters, result);
 }
-} // namespace service
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server::service

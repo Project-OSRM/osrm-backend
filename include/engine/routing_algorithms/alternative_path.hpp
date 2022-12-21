@@ -9,11 +9,7 @@
 
 #include "util/exception.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 InternalManyRoutesResult alternativePathSearch(SearchEngineData<ch::Algorithm> &search_engine_data,
@@ -26,8 +22,6 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<mld::Algorithm> 
                                                const PhantomEndpointCandidates &endpoint_candidates,
                                                unsigned number_of_alternatives);
 
-} // namespace routing_algorithms
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms
 
 #endif

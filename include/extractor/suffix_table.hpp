@@ -6,9 +6,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class ScriptingEnvironment;
@@ -39,7 +37,6 @@ class SuffixTable final
     std::unordered_set<std::string_view> suffix_set;
 };
 
-} /* namespace extractor */
-} /* namespace osrm */
+} // namespace osrm::extractor
 
 #endif /* OSRM_EXTRACTOR_SUFFIX_LIST_HPP_ */

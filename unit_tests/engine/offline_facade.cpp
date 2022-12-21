@@ -5,22 +5,14 @@
 
 #include <boost/test/unit_test.hpp>
 
-namespace osrm
+namespace osrm::engine
 {
-namespace engine
-{
-namespace routing_algorithms
-{
-
-// Declare offline data facade algorithm
-namespace offline
+namespace routing_algorithms::offline
 {
 struct Algorithm final
 {
 };
-} // namespace offline
-
-} // namespace routing_algorithms
+} // namespace routing_algorithms::offline
 
 // Define engine data for offline data facade
 template <> struct SearchEngineData<routing_algorithms::offline::Algorithm>
@@ -332,9 +324,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
 } // namespace datafacade
 
 // Fallback to MLD algorithm: requires from data facade MLD specific members
-namespace routing_algorithms
-{
-namespace offline
+namespace routing_algorithms::offline
 {
 
 template <typename PhantomT>
@@ -371,11 +361,9 @@ void unpackPath(const FacadeT &facade,
     mld::unpackPath(facade, packed_path_begin, packed_path_end, endpoints, unpacked_path);
 }
 
-} // namespace offline
-} // namespace routing_algorithms
+} // namespace routing_algorithms::offline
 
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 BOOST_AUTO_TEST_SUITE(offline_facade)
 

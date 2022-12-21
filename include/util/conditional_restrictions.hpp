@@ -4,9 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 // Helper functions for OSM conditional restrictions
@@ -21,7 +19,6 @@ struct ConditionalRestriction
 
 std::vector<ConditionalRestriction> ParseConditionalRestrictions(const std::string &str);
 
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // OSRM_CONDITIONAL_RESTRICTIONS_HPP

@@ -52,9 +52,7 @@ const static unsigned INIT_OK_START_ENGINE = 0;
 const static unsigned INIT_OK_DO_NOT_START_ENGINE = 1;
 const static unsigned INIT_FAILED = -1;
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 std::istream &operator>>(std::istream &in, EngineConfig::Algorithm &algorithm)
 {
@@ -70,8 +68,7 @@ std::istream &operator>>(std::istream &in, EngineConfig::Algorithm &algorithm)
         throw util::RuntimeError(token, ErrorCode::UnknownAlgorithm, SOURCE_REF);
     return in;
 }
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 // generate boost::program_options object for the routing part
 inline unsigned generateServerProgramOptions(const int argc,

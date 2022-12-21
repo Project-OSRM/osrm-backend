@@ -6,9 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 struct TurnPath;
@@ -48,7 +46,6 @@ class TurnPathCompressor
     std::unordered_multimap<NodeID, TurnPath *> ends;
 };
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_TURN_PATH_COMPRESSOR_HPP_

@@ -9,9 +9,7 @@
 #include <cstdlib>
 #include <string>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 // Priorities are used to distinguish between how likely a turn is in comparison to a different
@@ -223,7 +221,6 @@ inline bool obviousByRoadClass(const RoadClassification in_classification,
             compare_candidate.IsLowPriorityRoadClass());
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_CLASSIFICATION_DATA_HPP_

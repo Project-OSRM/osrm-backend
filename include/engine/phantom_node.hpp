@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_ENGINE_PHANTOM_NODES_H
-#define OSRM_ENGINE_PHANTOM_NODES_H
+#ifndef OSRM_ENGINE_PHANTOM_NODE_H
+#define OSRM_ENGINE_PHANTOM_NODE_H
 
 #include <vector>
 
@@ -38,9 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 struct PhantomNode
@@ -273,7 +271,6 @@ struct PhantomEndpoints
     PhantomNode target_phantom;
 };
 
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
-#endif // PHANTOM_NODES_H
+#endif // OSRM_ENGINE_PHANTOM_NODE_H

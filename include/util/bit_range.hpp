@@ -6,9 +6,7 @@
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/range/iterator_range.hpp>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 namespace detail
@@ -92,7 +90,6 @@ template <typename T> auto makeBitRange(const T value)
 {
     return boost::make_iterator_range(BitIterator<T>{value}, BitIterator<T>{});
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

@@ -11,9 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 template <typename NodeID, typename Key> class GenerationArrayStorage
@@ -372,7 +370,6 @@ class QueryHeap
     HeapContainer heap;
     IndexStorage node_index;
 };
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // OSRM_UTIL_QUERY_HEAP_HPP

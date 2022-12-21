@@ -1,10 +1,6 @@
 #include "engine/routing_algorithms/tile_turns.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 namespace
@@ -269,6 +265,4 @@ std::vector<TurnData> getTileTurns(const DataFacade<mld::Algorithm> &facade,
     return generateTurns(facade, edges, sorted_edge_indexes, edge_finder);
 }
 
-} // namespace routing_algorithms
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms
