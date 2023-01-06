@@ -560,6 +560,10 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
                 {
                     params->approaches.push_back(osrm::Approach::CURB);
                 }
+                else if (approach_str == "opposite")
+                {
+                    params->approaches.push_back(osrm::Approach::OPPOSITE);
+                }
                 else if (approach_str == "unrestricted")
                 {
                     params->approaches.push_back(osrm::Approach::UNRESTRICTED);
@@ -567,13 +571,13 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
                 else
                 {
                     ThrowError(args.Env(),
-                               "'approaches' param must be one of [curb, unrestricted]");
+                               "'approaches' param must be one of [curb, opposite, unrestricted]");
                     return false;
                 }
             }
             else
             {
-                ThrowError(args.Env(), "Approach must be a string: [curb, unrestricted] or null");
+                ThrowError(args.Env(), "Approach must be a string: [curb, opposite, unrestricted] or null");
                 return false;
             }
         }

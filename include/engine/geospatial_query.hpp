@@ -558,7 +558,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     {
         bool isOnewaySegment =
             !(segment.data.forward_segment_id.enabled && segment.data.reverse_segment_id.enabled);
-        if (!isOnewaySegment && approach == Approach::CURB)
+        if (!isOnewaySegment && (approach == Approach::CURB || approach == Approach::OPPOSITE))
         {
             // Check the counter clockwise
             //
@@ -571,6 +571,9 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                 coordinates[segment.data.u], coordinates[segment.data.v], input_coordinate);
 
             if (datafacade.IsLeftHandDriving(segment.data.forward_segment_id.id))
+                input_coordinate_is_at_right = !input_coordinate_is_at_right;
+
+            if (approach == Approach::OPPOSITE)
                 input_coordinate_is_at_right = !input_coordinate_is_at_right;
 
             return std::make_pair(input_coordinate_is_at_right, (!input_coordinate_is_at_right));

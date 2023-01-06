@@ -52,7 +52,8 @@ namespace osrm::engine::api
  *              optional per coordinate
  *  - bearings: limits the search for segments in the road network to given bearing(s) in degree
  *              towards true north in clockwise direction, optional per coordinate
- *  - approaches: force the phantom node to start towards the node with the road country side.
+ *  - approaches: force the phantom node to start towards the node with the road country side or
+ *                its opposite
  *
  * \see OSRM, Coordinate, Hint, Bearing, RouteParameters, TableParameters,
  *      NearestParameters, TripParameters, MatchParameters and TileParameters
