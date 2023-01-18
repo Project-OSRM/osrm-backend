@@ -1,6 +1,6 @@
 #include "util/opening_hours.hpp"
 
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 #include <boost/io/ios_state.hpp>

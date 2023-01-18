@@ -4,7 +4,7 @@
 #include "server/api/base_parameters_grammar.hpp"
 #include "engine/api/nearest_parameters.hpp"
 
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 namespace osrm::server::api

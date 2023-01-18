@@ -8,7 +8,7 @@
 #include "engine/polyline_compressor.hpp"
 
 #include <boost/optional.hpp>
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 #include <limits>
