@@ -1,7 +1,7 @@
 #include "util/conditional_restrictions.hpp"
 
 #include <boost/fusion/include/adapt_struct.hpp>
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 namespace osrm::util

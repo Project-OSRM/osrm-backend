@@ -4,7 +4,7 @@
 #include "server/api/route_parameters_grammar.hpp"
 #include "engine/api/match_parameters.hpp"
 
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 namespace osrm::server::api
