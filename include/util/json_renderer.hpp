@@ -56,7 +56,10 @@ template <typename Out> struct Renderer
         size_t decimalpos = std::find(buffer.begin(), buffer.end(), '.') - buffer.begin();
         if (buffer.size() > (decimalpos + 10))
         {
-            buffer.resize(decimalpos + 10);
+            buffer.clear();
+            fmt::format_to(std::back_inserter(buffer), FMT_COMPILE("{0:.10f}"), number.value);
+
+            // buffer.resize(decimalpos + 10);
         }
 
         write(buffer.data(), buffer.size());
