@@ -14,6 +14,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/assert.hpp>
+
 #include <fmt/compile.h>
 
 namespace osrm::util::json
