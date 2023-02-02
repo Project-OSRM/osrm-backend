@@ -14,6 +14,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/assert.hpp>
+
 #include <fmt/compile.h>
 
 namespace osrm::util::json
@@ -47,17 +49,12 @@ template <typename Out> struct Renderer
 
     void operator()(const Number &number)
     {
+        // we don't want to print NaN or Infinity
+        BOOST_ASSERT(std::isfinite(number.value));
         // `fmt::memory_buffer` stores first 500 bytes in the object itself(i.e. on stack in this
         // case) and then grows using heap if needed
         fmt::memory_buffer buffer;
-        fmt::format_to(std::back_inserter(buffer), FMT_COMPILE("{}"), number.value);
-
-        // Truncate to 10 decimal places
-        size_t decimalpos = std::find(buffer.begin(), buffer.end(), '.') - buffer.begin();
-        if (buffer.size() > (decimalpos + 10))
-        {
-            buffer.resize(decimalpos + 10);
-        }
+        fmt::format_to(std::back_inserter(buffer), FMT_COMPILE("{:.10g}"), number.value);
 
         write(buffer.data(), buffer.size());
     }
