@@ -586,7 +586,7 @@ Feature: Car - Turn restrictions
         When I route I should get
             | from | to | route                                      | turns                                         |
             | a    | e  | cap south,florida ne,florida ne            | depart,turn left,arrive                       |
-            | f    | d  | cap north,florida nw,florida nw | depart,turn left,arrive |
+            | f    | d  | cap north,florida ne,florida ne,florida nw | depart,turn sharp right,continue uturn,arrive |
             | e    | c  | florida ne,cap south,cap south             | depart,turn left,arrive                       |
 
     @only_turning @conditionals
