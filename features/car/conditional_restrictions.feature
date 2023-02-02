@@ -538,9 +538,9 @@ Feature: Car - Turn restrictions
 
         When I route I should get
             | from | to | route                                      | turns                                       |
-            | a    | e  | cap south,florida nw,florida nw,florida ne | depart,turn right,continue uturn,arrive     |
+            | a    | e  | cap south,florida ne,florida ne | depart,turn left,arrive     |
             | f    | d  | cap north,florida nw,florida nw            | depart,turn left,arrive                     |
-            | e    | c  | florida ne,florida nw,cap south,cap south  | depart,continue uturn,turn right,arrive     |
+            | e    | c  | florida ne,cap south,cap south  | depart,turn left,arrive     |
 
     @no_turning @conditionals
     Scenario: Car - DC North capitol situation, one on two off
@@ -586,7 +586,7 @@ Feature: Car - Turn restrictions
         When I route I should get
             | from | to | route                                      | turns                                         |
             | a    | e  | cap south,florida ne,florida ne            | depart,turn left,arrive                       |
-            | f    | d  | cap north,florida ne,florida ne,florida nw | depart,turn sharp right,continue uturn,arrive |
+            | f    | d  | cap north,florida nw,florida nw | depart,turn left,arrive |
             | e    | c  | florida ne,cap south,cap south             | depart,turn left,arrive                       |
 
     @only_turning @conditionals
