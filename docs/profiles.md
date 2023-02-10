@@ -113,7 +113,7 @@ excludable                           | Sequence of Sets | Determines which class
 classes                              | Sequence         | Determines the allowed classes that can be referenced using `{forward,backward}_classes` on the way in the `process_way` function.
 restrictions                         | Sequence         | Determines which turn restrictions will be used for this profile.
 suffix_list                          | Set              | List of name suffixes needed for determining if "Highway 101 NW" the same road as "Highway 101 ES".
-relation_types                       | Sequence         | Determines wich relations should be cached for processing in this profile. It contains relations types
+relation_types                       | Sequence         | Determines which relations should be cached for processing in this profile. It contains relations types
 
 ### process_node(profile, node, result, relations)
 Process an OSM node to determine whether this node is a barrier or can be passed and whether passing it incurs a delay.
@@ -349,7 +349,7 @@ The input data must an ASCII file with rows of integers. e.g.:
 
 In your `segment_function` you can then access the raster source and use `raster:query()` to query to find the nearest data point, or `raster:interpolate()` to interpolate a value based on nearby data points.
 
-You must check whether the result is valid before use it.
+You must check whether the result is valid before using it.
 
 Example:
 
