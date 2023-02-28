@@ -1,7 +1,7 @@
 # Unreleased
   - Changes from 5.27.1
     - Build:
-      - CHANGED: Bump Conan to version 1.59.0. [#6559](https://github.com/Project-OSRM/osrm-backend/pull/6559)
+      - CHANGED: Always install the latest Conan 1.x on CI. [#6559](https://github.com/Project-OSRM/osrm-backend/pull/6559)
       - ADDED: Add CI job which builds OSRM with gcc 12. [#6455](https://github.com/Project-OSRM/osrm-backend/pull/6455)
       - CHANGED: Upgrade to clang-tidy 15. [#6439](https://github.com/Project-OSRM/osrm-backend/pull/6439)
       - CHANGED: Update actions/cache to v3. [#6420](https://github.com/Project-OSRM/osrm-backend/pull/6420)
