@@ -29,7 +29,7 @@ jobs:
       ENABLE_APPLE_SILICON: "OFF"
     steps:
     - uses: actions/checkout@v3
-    - run: pip install conan==1.53.0
+    - run: pip install conan==1.59.0
     - run: conan --version
     - run: cmake --version
     - uses: actions/setup-node@v3
@@ -400,7 +400,7 @@ jobs:
 
     - name: Install dev dependencies
       run: |
-        python3 -m pip install conan==1.53.0
+        python3 -m pip install conan==1.59.0
 
         # workaround for issue that GitHub Actions seems to not adding it to PATH after https://github.com/actions/runner-images/pull/6499
         # and that's why CI cannot find conan executable installed above
