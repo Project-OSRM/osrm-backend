@@ -22,7 +22,7 @@
 #include <stack>
 #include <vector>
 
-namespace osrm::extractor
+namespace osrm::util
 {
 
 template <typename GraphT> class TarjanSCC
