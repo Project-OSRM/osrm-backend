@@ -864,12 +864,10 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         BOOST_ASSERT(context.properties.GetTrafficSignalPenalty() == 0);
 
         // call source_function if present
-        sol::protected_function source_function = context.state["source_function"];
+        sol::function source_function = context.state["source_function"];
         if (source_function.valid())
         {
-            auto luares = source_function();
-            if (!luares.valid())
-                handle_lua_error(luares);
+            source_function();
         }
 
         break;
@@ -982,12 +980,10 @@ Sol2ScriptingEnvironment::GetStringListFromFunction(const std::string &function_
     auto &context = GetSol2Context();
     BOOST_ASSERT(context.state.lua_state());
     std::vector<std::string> strings;
-    sol::protected_function function = context.state[function_name];
+    sol::function function = context.state[function_name];
     if (function.valid())
     {
-        auto luares = function(strings);
-        if (!luares.valid())
-            handle_lua_error(luares);
+        function(strings);
     }
     return strings;
 }
