@@ -1,42 +1,47 @@
 #include <boost/test/unit_test.hpp>
 
+#include "osrm/exception.hpp"
 #include "osrm/extractor.hpp"
 #include "osrm/extractor_config.hpp"
-#include "osrm/exception.hpp"
 
-#include <thread>
 #include <boost/algorithm/string.hpp>
+#include <thread>
 
-bool file_contains_string(std::string filename, std::string test) {
+bool file_contains_string(std::string filename, std::string test)
+{
     std::ifstream inp(filename);
 
-    if (inp.is_open()) {
+    if (inp.is_open())
+    {
         std::string contents;
         inp >> contents;
 
-        return(boost::algorithm::contains(contents, test));
-    } else {
+        return (boost::algorithm::contains(contents, test));
+    }
+    else
+    {
         return false; // just fail the boost assert (shouldn't happen)
     }
 }
 
 // utility class to redirect stderr so we can test it
 // inspired by https://stackoverflow.com/questions/5405016
-class redirect_stderr {
+class redirect_stderr
+{
     // constructor: accept a pointer to a buffer where stderr will be redirected
-    public: redirect_stderr(std::streambuf * buf)
+  public:
+    redirect_stderr(std::streambuf *buf)
         // store the original buffer for later (original buffer returned by rdbuf)
         : old(std::cerr.rdbuf(buf))
-        { }
-
-    // destructor: restore the original cerr, regardless of how this class gets destroyed
-    ~redirect_stderr ()
     {
-        std::cerr.rdbuf(old);
     }
 
+    // destructor: restore the original cerr, regardless of how this class gets destroyed
+    ~redirect_stderr() { std::cerr.rdbuf(old); }
+
     // place to store the buffer
-    private: std::streambuf * old;
+  private:
+    std::streambuf *old;
 };
 
 BOOST_AUTO_TEST_SUITE(library_extract)
@@ -72,13 +77,14 @@ BOOST_AUTO_TEST_CASE(test_setup_runtime_error)
     std::stringstream output;
 
     {
-        redirect_stderr redir (output.rdbuf());
+        redirect_stderr redir(output.rdbuf());
         BOOST_CHECK_THROW(osrm::extract(config), osrm::util::exception);
     }
 
-    // We just look for the line number, file name, and error message. This avoids portability issues
-    // since the output contains the full path to the file, which may change between systems
-    BOOST_CHECK(boost::algorithm::contains(output.str(), "bad_setup.lua:6: attempt to compare number with nil"));
+    // We just look for the line number, file name, and error message. This avoids portability
+    // issues since the output contains the full path to the file, which may change between systems
+    BOOST_CHECK(boost::algorithm::contains(output.str(),
+                                           "bad_setup.lua:6: attempt to compare number with nil"));
 }
 
 BOOST_AUTO_TEST_CASE(test_way_runtime_error)
@@ -93,13 +99,14 @@ BOOST_AUTO_TEST_CASE(test_way_runtime_error)
     std::stringstream output;
 
     {
-        redirect_stderr redir (output.rdbuf());
+        redirect_stderr redir(output.rdbuf());
         BOOST_CHECK_THROW(osrm::extract(config), osrm::util::exception);
     }
 
-    // We just look for the line number, file name, and error message. This avoids portability issues
-    // since the output contains the full path to the file, which may change between systems
-    BOOST_CHECK(boost::algorithm::contains(output.str(), "bad_way.lua:41: attempt to compare number with nil"));
+    // We just look for the line number, file name, and error message. This avoids portability
+    // issues since the output contains the full path to the file, which may change between systems
+    BOOST_CHECK(boost::algorithm::contains(output.str(),
+                                           "bad_way.lua:41: attempt to compare number with nil"));
 }
 
 BOOST_AUTO_TEST_CASE(test_node_runtime_error)
@@ -114,13 +121,14 @@ BOOST_AUTO_TEST_CASE(test_node_runtime_error)
     std::stringstream output;
 
     {
-        redirect_stderr redir (output.rdbuf());
+        redirect_stderr redir(output.rdbuf());
         BOOST_CHECK_THROW(osrm::extract(config), osrm::util::exception);
     }
 
-    // We just look for the line number, file name, and error message. This avoids portability issues
-    // since the output contains the full path to the file, which may change between systems
-    BOOST_CHECK(boost::algorithm::contains(output.str(), "bad_node.lua:36: attempt to compare number with nil"));
+    // We just look for the line number, file name, and error message. This avoids portability
+    // issues since the output contains the full path to the file, which may change between systems
+    BOOST_CHECK(boost::algorithm::contains(output.str(),
+                                           "bad_node.lua:36: attempt to compare number with nil"));
 }
 
 BOOST_AUTO_TEST_CASE(test_segment_runtime_error)
@@ -135,13 +143,14 @@ BOOST_AUTO_TEST_CASE(test_segment_runtime_error)
     std::stringstream output;
 
     {
-        redirect_stderr redir (output.rdbuf());
+        redirect_stderr redir(output.rdbuf());
         BOOST_CHECK_THROW(osrm::extract(config), osrm::util::exception);
     }
 
-    // We just look for the line number, file name, and error message. This avoids portability issues
-    // since the output contains the full path to the file, which may change between systems
-    BOOST_CHECK(boost::algorithm::contains(output.str(), "bad_segment.lua:132: attempt to compare number with nil"));
+    // We just look for the line number, file name, and error message. This avoids portability
+    // issues since the output contains the full path to the file, which may change between systems
+    BOOST_CHECK(boost::algorithm::contains(
+        output.str(), "bad_segment.lua:132: attempt to compare number with nil"));
 }
 
 BOOST_AUTO_TEST_CASE(test_turn_runtime_error)
@@ -156,13 +165,14 @@ BOOST_AUTO_TEST_CASE(test_turn_runtime_error)
     std::stringstream output;
 
     {
-        redirect_stderr redir (output.rdbuf());
+        redirect_stderr redir(output.rdbuf());
         BOOST_CHECK_THROW(osrm::extract(config), osrm::util::exception);
     }
 
-    // We just look for the line number, file name, and error message. This avoids portability issues
-    // since the output contains the full path to the file, which may change between systems
-    BOOST_CHECK(boost::algorithm::contains(output.str(), "bad_turn.lua:122: attempt to compare number with nil"));
+    // We just look for the line number, file name, and error message. This avoids portability
+    // issues since the output contains the full path to the file, which may change between systems
+    BOOST_CHECK(boost::algorithm::contains(output.str(),
+                                           "bad_turn.lua:122: attempt to compare number with nil"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
