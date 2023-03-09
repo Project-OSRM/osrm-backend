@@ -16,7 +16,6 @@
 #include "extractor/restriction_graph.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
-#include "extractor/tarjan_scc.hpp"
 #include "extractor/turn_path_filter.hpp"
 #include "extractor/way_restriction_map.hpp"
 
@@ -31,6 +30,7 @@
 #include "util/log.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
+#include "util/tarjan_scc.hpp"
 #include "util/timing_util.hpp"
 
 // Keep debug include to make sure the debug header is in sync with types.
@@ -699,7 +699,7 @@ void Extractor::FindComponents(unsigned number_of_edge_based_nodes,
 
     auto uncontracted_graph = UncontractedGraph(number_of_edge_based_nodes, edges);
 
-    TarjanSCC<UncontractedGraph> component_search(uncontracted_graph);
+    util::TarjanSCC<UncontractedGraph> component_search(uncontracted_graph);
     component_search.Run();
 
     for (NodeID node_id = 0; node_id < number_of_edge_based_nodes; ++node_id)
