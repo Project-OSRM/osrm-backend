@@ -7,23 +7,6 @@
 #include <boost/algorithm/string.hpp>
 #include <thread>
 
-bool file_contains_string(std::string filename, std::string test)
-{
-    std::ifstream inp(filename);
-
-    if (inp.is_open())
-    {
-        std::string contents;
-        inp >> contents;
-
-        return (boost::algorithm::contains(contents, test));
-    }
-    else
-    {
-        return false; // just fail the boost assert (shouldn't happen)
-    }
-}
-
 // utility class to redirect stderr so we can test it
 // inspired by https://stackoverflow.com/questions/5405016
 class redirect_stderr
