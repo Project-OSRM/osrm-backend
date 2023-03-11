@@ -387,4 +387,34 @@ BOOST_AUTO_TEST_CASE(test_table_serialiaze_fb_no_waypoints)
     BOOST_CHECK(fb->waypoints() == nullptr);
 }
 
+void test_table_bearings_without_radius(bool use_json_only_api)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    TableParameters params;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.bearings.push_back(engine::Bearing{100, 100});
+    params.bearings.push_back(engine::Bearing{100, 100});
+
+    json::Object json_result;
+    const auto rc = run_table_json(osrm, params, json_result, use_json_only_api);
+
+    BOOST_CHECK(rc == Status::Error);
+    const auto code = json_result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "InvalidOptions");
+    const auto message = json_result.values.at("message").get<json::String>().value;
+    BOOST_CHECK_EQUAL(message, "Number of radiuses does not match number of bearings");
+}
+BOOST_AUTO_TEST_CASE(test_table_bearings_without_radius_old_api)
+{
+    test_table_bearings_without_radius(true);
+}
+BOOST_AUTO_TEST_CASE(test_table_bearings_without_radius_new_api)
+{
+    test_table_bearings_without_radius(false);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

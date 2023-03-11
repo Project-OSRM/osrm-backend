@@ -70,6 +70,7 @@ Feature: Car - Allowed start/end modes
         Given the query options
             | snapping  | any          |
             | bearings  | 90,180;      |
+            | radiuses  | unlimited;   |
 
         And the ways
             | nodes | highway | access  |
@@ -112,6 +113,7 @@ Feature: Car - Allowed start/end modes
         Given the query options
             | snapping  | any            |
             | bearings  | 90,180;0,180;; |
+            | radiuses  | unlimited;;;   |
 
         And the ways
             | nodes | highway | access  |
