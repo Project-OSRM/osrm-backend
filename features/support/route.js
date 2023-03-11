@@ -66,6 +66,9 @@ module.exports = function () {
                 if (bs.length === 2) return b;
                 else return b += ',10';
             }).join(';');
+            params.radiuses = bearings.map(() => {
+                return 'unlimited';
+            }).join(';');
         }
 
         if (approaches.length) {
