@@ -16,7 +16,8 @@ bool constrainParamSize(const char *msg_template,
 {
     if (param.size() > 0 && param.size() != target_size)
     {
-        help = (boost::format(msg_template) % param_name % param.size() % target_name % target_size).str();
+        help = (boost::format(msg_template) % param_name % param.size() % target_name % target_size)
+                   .str();
         return true;
     }
     return false;

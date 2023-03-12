@@ -42,7 +42,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error(
             "InvalidOptions", "Number of bearings does not match number of coordinates", result);
     }
-    
+
     if (!params.bearings.empty() && params.radiuses.size() != params.bearings.size())
     {
         return Error(
