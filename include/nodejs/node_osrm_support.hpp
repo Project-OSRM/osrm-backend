@@ -522,6 +522,11 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
         if (bearings.IsEmpty())
             return false;
 
+        if (!obj.Has("radiuses")) {
+            ThrowError(args.Env(), "Bearings must be accompanied with radiuses");
+            return false;
+        }
+
         if (!bearings.IsArray())
         {
             ThrowError(args.Env(), "Bearings must be an array of arrays of numbers");

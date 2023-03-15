@@ -424,6 +424,7 @@ test('route: integer bearing values no longer supported', function(assert) {
     var options = {
         coordinates: two_test_coordinates,
         bearings: [200, 250],
+        radiuses: [null],
     };
     assert.throws(function() { osrm.route(options, function(err, route) {}); },
         /Bearing must be an array of \[bearing, range\] or null/);
@@ -435,6 +436,7 @@ test('route: valid bearing values', function(assert) {
     var options = {
         coordinates: two_test_coordinates,
         bearings: [[200, 180], [250, 180]],
+        radiuses: [null, null],
     };
     osrm.route(options, function(err, route) {
         assert.ifError(err);
@@ -448,38 +450,49 @@ test('route: valid bearing values', function(assert) {
 });
 
 test('route: invalid bearing values', function(assert) {
-    assert.plan(6);
+    assert.plan(7);
     var osrm = new OSRM(monaco_path);
     assert.throws(function() { osrm.route({
         coordinates: two_test_coordinates,
         bearings: [[400, 180], [-250, 180]],
+        radiuses: [null, null],
     }, function(err, route) {}) },
         /Bearing values need to be in range 0..360, 0..180/);
     assert.throws(function() { osrm.route({
         coordinates: two_test_coordinates,
         bearings: [[200], [250, 180]],
+        radiuses: [null, null],
     }, function(err, route) {}) },
         /Bearing must be an array of/);
     assert.throws(function() { osrm.route({
         coordinates: two_test_coordinates,
         bearings: [[400, 109], [100, 720]],
+        radiuses: [null, null],
     }, function(err, route) {}) },
         /Bearing values need to be in range 0..360, 0..180/);
     assert.throws(function() { osrm.route({
         coordinates: two_test_coordinates,
         bearings: 400,
+        radiuses: [null],
     }, function(err, route) {}) },
         /Bearings must be an array of arrays of numbers/);
     assert.throws(function() { osrm.route({
         coordinates: two_test_coordinates,
         bearings: [[100, 100]],
+        radiuses: [null, null],
     }, function(err, route) {}) },
         /Bearings array must have the same length as coordinates array/);
     assert.throws(function() { osrm.route({
         coordinates: two_test_coordinates,
         bearings: [Infinity, Infinity],
+        radiuses: [null, null],
     }, function(err, route) {}) },
         /Bearing must be an array of \[bearing, range\] or null/);
+    assert.throws(function() { osrm.route({
+        coordinates: two_test_coordinates,
+        bearings: [[0, 180], [0, 180]],
+    }, function(err, route) {}) },
+        /Bearings must be accompanied with radiuses/);
 });
 
 test('route: routes Monaco with hints', function(assert) {

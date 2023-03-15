@@ -111,7 +111,8 @@ var osrm = new OSRM('network.osrm');
 var options = {
   coordinates: [[13.388860,52.517037]],
   number: 3,
-  bearings: [[0,20]]
+  bearings: [[0,20]],
+  radiuses: [null]
 };
 osrm.nearest(options, function(err, response) {
   console.log(response.waypoints); // array of Waypoint objects
