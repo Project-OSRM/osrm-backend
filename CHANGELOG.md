@@ -1,5 +1,7 @@
 # Unreleased
   - Changes from 5.27.1
+    - Features
+      - ADDED: Added support for a default_bearing_radius flag. [#]()
     - Build:
       - ADDED: Add CI job which builds OSRM with gcc 12. [#6455](https://github.com/Project-OSRM/osrm-backend/pull/6455)
       - CHANGED: Upgrade to clang-tidy 15. [#6439](https://github.com/Project-OSRM/osrm-backend/pull/6439)
