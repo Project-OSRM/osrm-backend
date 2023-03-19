@@ -112,6 +112,12 @@ test('constructor: throws if dataset_name is not a string', function(assert) {
     assert.throws(function() { new OSRM({dataset_name: "unsued_name___", shared_memory: true}); }, /Could not find shared memory region/, 'Does not accept wrong name');
 });
 
+test('constructor: takes a default_bearing_radius argument', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({default_bearing_radius: 1});
+    assert.ok(osrm);
+});
+
 test('constructor: parses custom limits', function(assert) {
     assert.plan(1);
     var osrm = new OSRM({

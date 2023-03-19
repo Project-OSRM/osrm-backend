@@ -25,7 +25,7 @@ class ViaRoutePlugin final : public BasePlugin
     const int max_alternatives;
 
   public:
-    explicit ViaRoutePlugin(int max_locations_viaroute, int max_alternatives);
+    explicit ViaRoutePlugin(int max_locations_viaroute, int max_alternatives, const boost::optional<double> default_bearing_radius);
 
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::RouteParameters &route_parameters,
