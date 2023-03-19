@@ -32,8 +32,11 @@ class TripPlugin final : public BasePlugin
                                      const bool roundtrip) const;
 
   public:
-    explicit TripPlugin(const int max_locations_trip_, const boost::optional<double> default_bearing_radius) : max_locations_trip(max_locations_trip_) {
-      this->default_bearing_radius = default_bearing_radius;
+    explicit TripPlugin(const int max_locations_trip_,
+                        const boost::optional<double> default_bearing_radius)
+        : max_locations_trip(max_locations_trip_)
+    {
+        this->default_bearing_radius = default_bearing_radius;
     }
 
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,

@@ -10,7 +10,10 @@
 namespace osrm::engine::plugins
 {
 
-NearestPlugin::NearestPlugin(const int max_results_, const boost::optional<double> default_bearing_radius_) : max_results{max_results_} {
+NearestPlugin::NearestPlugin(const int max_results_,
+                             const boost::optional<double> default_bearing_radius_)
+    : max_results{max_results_}
+{
     this->default_bearing_radius = default_bearing_radius_;
 }
 

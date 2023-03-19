@@ -14,7 +14,8 @@ namespace osrm::engine::plugins
 class TablePlugin final : public BasePlugin
 {
   public:
-    explicit TablePlugin(const int max_locations_distance_table, const boost::optional<double> default_bearing_radius);
+    explicit TablePlugin(const int max_locations_distance_table,
+                         const boost::optional<double> default_bearing_radius);
 
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::TableParameters &params,

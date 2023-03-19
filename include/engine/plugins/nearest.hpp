@@ -13,7 +13,8 @@ namespace osrm::engine::plugins
 class NearestPlugin final : public BasePlugin
 {
   public:
-    explicit NearestPlugin(const int max_results, const boost::optional<double> default_bearing_radius);
+    explicit NearestPlugin(const int max_results,
+                           const boost::optional<double> default_bearing_radius);
 
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::NearestParameters &params,
