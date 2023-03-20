@@ -52,7 +52,7 @@ template <typename Algorithm> class Engine final : public EngineInterface
           match_plugin(config.max_locations_map_matching,
                        config.max_radius_map_matching,
                        config.default_radius), //
-          tile_plugin()                                //
+          tile_plugin()                        //
 
     {
         if (config.use_shared_memory)
