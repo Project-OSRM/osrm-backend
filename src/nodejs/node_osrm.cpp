@@ -81,7 +81,7 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
  * @param {Number} [options.max_radius_map_matching] Max. radius size supported in map matching query (default: 5).
  * @param {Number} [options.max_results_nearest] Max. results supported in nearest query (default: unlimited).
  * @param {Number} [options.max_alternatives] Max. number of alternatives supported in alternative routes query (default: 3).
- * @param {Number} [options.default_bearing_radius] Default radius for queries containing a bearings parameter (default: unlimited).
+ * @param {Number} [options.default_radius] Default radius for queries (default: unlimited).
  *
  * @class OSRM
  *

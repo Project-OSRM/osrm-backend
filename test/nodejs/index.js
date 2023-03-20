@@ -112,16 +112,16 @@ test('constructor: throws if dataset_name is not a string', function(assert) {
     assert.throws(function() { new OSRM({dataset_name: "unsued_name___", shared_memory: true}); }, /Could not find shared memory region/, 'Does not accept wrong name');
 });
 
-// test('constructor: takes a default_bearing_radius argument', function(assert) {
+// test('constructor: takes a default_radius argument', function(assert) {
 //     assert.plan(1);
-//     var osrm = new OSRM({default_bearing_radius: 1});
+//     var osrm = new OSRM({default_radius: 1});
 //     assert.ok(osrm);
 // });
 
-// test('constructor: throws if default_bearing_radius is not a number', function(assert) {
+// test('constructor: throws if default_radius is not a number', function(assert) {
 //     assert.plan(2);
-//     assert.throws(function() { new OSRM({default_bearing_radius: 'abc'}); }, /default_bearing_radius must be an integral number/, 'Does not accept string');
-//     assert.ok(new OSRM({default_bearing_radius: 1}), 'Does accept number');
+//     assert.throws(function() { new OSRM({default_radius: 'abc'}); }, /default_radius must be an integral number/, 'Does not accept string');
+//     assert.ok(new OSRM({default_radius: 1}), 'Does accept number');
 // });
 
 test('constructor: parses custom limits', function(assert) {

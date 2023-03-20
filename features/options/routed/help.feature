@@ -22,7 +22,7 @@ Feature: osrm-routed command line options: help
         And stdout should contain "--max-trip-size"
         And stdout should contain "--max-table-size"
         And stdout should contain "--max-matching-size"
-        And stdout should contain "--default-bearings-radius"
+        And stdout should contain "--default-radius"
         And it should exit successfully
 
     Scenario: osrm-routed - Help, short
@@ -43,7 +43,7 @@ Feature: osrm-routed command line options: help
         And stdout should contain "--max-trip-size"
         And stdout should contain "--max-table-size"
         And stdout should contain "--max-matching-size"
-        And stdout should contain "--default-bearings-radius"
+        And stdout should contain "--default-radius"
         And it should exit successfully
 
     Scenario: osrm-routed - Help, long
@@ -64,5 +64,5 @@ Feature: osrm-routed command line options: help
         And stdout should contain "--max-table-size"
         And stdout should contain "--max-table-size"
         And stdout should contain "--max-matching-size"
-        And stdout should contain "--default-bearings-radius"
+        And stdout should contain "--default-radius"
         And it should exit successfully

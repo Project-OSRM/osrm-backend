@@ -148,9 +148,9 @@ inline unsigned generateServerProgramOptions(const int argc,
         ("max-matching-radius",
          value<double>(&config.max_radius_map_matching)->default_value(-1.0),
          "Max. radius size supported in map matching query. Default: unlimited.") //
-        ("default-bearings-radius",
-         value<boost::optional<double>>(&config.default_bearing_radius),
-         "Default radius size for queries with bearings. Default: unlimited.");
+        ("default-radius",
+         value<boost::optional<double>>(&config.default_radius),
+         "Default radius size for queries. Default: unlimited.");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");

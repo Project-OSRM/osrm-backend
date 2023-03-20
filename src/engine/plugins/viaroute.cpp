@@ -17,10 +17,10 @@ namespace osrm::engine::plugins
 
 ViaRoutePlugin::ViaRoutePlugin(int max_locations_viaroute,
                                int max_alternatives,
-                               const boost::optional<double> default_bearing_radius)
+                               const boost::optional<double> default_radius)
     : max_locations_viaroute(max_locations_viaroute), max_alternatives(max_alternatives)
 {
-    this->default_bearing_radius = default_bearing_radius;
+    this->default_radius = default_radius;
 }
 
 Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,

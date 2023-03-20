@@ -14,7 +14,7 @@ class NearestPlugin final : public BasePlugin
 {
   public:
     explicit NearestPlugin(const int max_results,
-                           const boost::optional<double> default_bearing_radius);
+                           const boost::optional<double> default_radius);
 
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::NearestParameters &params,

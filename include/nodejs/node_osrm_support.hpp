@@ -285,7 +285,7 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
     auto max_results_nearest = params.Get("max_results_nearest");
     auto max_alternatives = params.Get("max_alternatives");
     auto max_radius_map_matching = params.Get("max_radius_map_matching");
-    auto default_bearing_radius = params.Get("default_bearing_radius");
+    auto default_radius = params.Get("default_radius");
 
     if (!max_locations_trip.IsUndefined() && !max_locations_trip.IsNumber())
     {
@@ -317,9 +317,9 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
         ThrowError(args.Env(), "max_alternatives must be an integral number");
         return engine_config_ptr();
     }
-    if (!default_bearing_radius.IsUndefined() && !default_bearing_radius.IsNumber())
+    if (!default_radius.IsUndefined() && !default_radius.IsNumber())
     {
-        ThrowError(args.Env(), "default_bearing_radius must be an integral number");
+        ThrowError(args.Env(), "default_radius must be an integral number");
         return engine_config_ptr();
     }
 
@@ -339,8 +339,8 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
         engine_config->max_alternatives = max_alternatives.ToNumber().Int32Value();
     if (max_radius_map_matching.IsNumber())
         engine_config->max_radius_map_matching = max_radius_map_matching.ToNumber().DoubleValue();
-    if (default_bearing_radius.IsNumber())
-        engine_config->default_bearing_radius = default_bearing_radius.ToNumber().DoubleValue();
+    if (default_radius.IsNumber())
+        engine_config->default_radius = default_radius.ToNumber().DoubleValue();
 
     return engine_config;
 }
