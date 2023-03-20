@@ -118,6 +118,12 @@ test('constructor: takes a default_bearing_radius argument', function(assert) {
     assert.ok(osrm);
 });
 
+test('constructor: throws if default_bearing_radius is not a number', function(assert) {
+    assert.plan(2);
+    assert.throws(function() { new OSRM({default_bearing_radius: 'abc'}); }, /default_bearing_radius must be an integral number/, 'Does not accept string');
+    assert.ok(new OSRM({default_bearing_radius: 1}), 'Does accept number');
+});
+
 test('constructor: parses custom limits', function(assert) {
     assert.plan(1);
     var osrm = new OSRM({
