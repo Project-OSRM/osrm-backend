@@ -29,9 +29,7 @@ class BasePlugin
   protected:
     BasePlugin() = default;
 
-    BasePlugin(const boost::optional<double> default_radius_) : default_radius(default_radius_)
-    {
-    }
+    BasePlugin(const boost::optional<double> default_radius_) : default_radius(default_radius_) {}
 
     bool CheckAllCoordinates(const std::vector<util::Coordinate> &coordinates) const
     {
