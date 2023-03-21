@@ -33,7 +33,7 @@ class TripPlugin final : public BasePlugin
 
   public:
     explicit TripPlugin(const int max_locations_trip_, boost::optional<double> default_radius)
-        : BasePlugin(std::move(default_radius)), max_locations_trip(max_locations_trip_)
+        : BasePlugin(default_radius), max_locations_trip(max_locations_trip_)
     {
     }
 

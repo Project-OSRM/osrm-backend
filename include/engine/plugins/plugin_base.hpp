@@ -29,7 +29,7 @@ class BasePlugin
   protected:
     BasePlugin() = default;
 
-    BasePlugin(boost::optional<double> default_radius_) : default_radius(std::move(default_radius_))
+    BasePlugin(const boost::optional<double> default_radius_) : default_radius(default_radius_)
     {
     }
 

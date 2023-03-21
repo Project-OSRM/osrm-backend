@@ -15,8 +15,8 @@ namespace osrm::engine::plugins
 {
 
 TablePlugin::TablePlugin(const int max_locations_distance_table,
-                         boost::optional<double> default_radius)
-    : BasePlugin(std::move(default_radius)),
+                         const boost::optional<double> default_radius)
+    : BasePlugin(default_radius),
       max_locations_distance_table(max_locations_distance_table)
 {
 }
