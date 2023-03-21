@@ -18,8 +18,8 @@ namespace osrm::engine::plugins
 ViaRoutePlugin::ViaRoutePlugin(int max_locations_viaroute,
                                int max_alternatives,
                                boost::optional<double> default_radius)
-    : BasePlugin(std::move(default_radius))
-    , max_locations_viaroute(max_locations_viaroute), max_alternatives(max_alternatives) 
+    : BasePlugin(std::move(default_radius)), max_locations_viaroute(max_locations_viaroute),
+      max_alternatives(max_alternatives)
 {
 }
 
