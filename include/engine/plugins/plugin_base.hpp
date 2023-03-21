@@ -27,6 +27,13 @@ namespace osrm::engine::plugins
 class BasePlugin
 {
   protected:
+    BasePlugin() = default;
+    
+    BasePlugin(boost::optional<double> default_radius_) 
+        : default_radius(std::move(default_radius_))
+    {
+    }
+
     bool CheckAllCoordinates(const std::vector<util::Coordinate> &coordinates) const
     {
         return !std::any_of(
@@ -321,7 +328,7 @@ class BasePlugin
                std::to_string(missing_index);
     }
 
-    boost::optional<double> default_radius;
+    const boost::optional<double> default_radius;
 };
 } // namespace osrm::engine::plugins
 

@@ -15,10 +15,10 @@ namespace osrm::engine::plugins
 {
 
 TablePlugin::TablePlugin(const int max_locations_distance_table,
-                         const boost::optional<double> default_radius)
-    : max_locations_distance_table(max_locations_distance_table)
+                         boost::optional<double> default_radius)
+    : BasePlugin(std::move(default_radius))
+    , max_locations_distance_table(max_locations_distance_table)
 {
-    this->default_radius = default_radius;
 }
 
 Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,

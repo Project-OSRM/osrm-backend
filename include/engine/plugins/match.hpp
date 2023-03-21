@@ -22,11 +22,11 @@ class MatchPlugin : public BasePlugin
 
     MatchPlugin(const int max_locations_map_matching,
                 const double max_radius_map_matching,
-                const boost::optional<double> default_radius)
-        : max_locations_map_matching(max_locations_map_matching),
+                boost::optional<double> default_radius)
+        : BasePlugin(std::move(default_radius))
+        , max_locations_map_matching(max_locations_map_matching),
           max_radius_map_matching(max_radius_map_matching)
     {
-        this->default_radius = default_radius;
     }
 
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
