@@ -143,6 +143,18 @@ test('constructor: throws on invalid custom limits', function(assert) {
     });
 });
 
+test('constructor: takes a default_radius argument', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({max_alternatives: 1});
+    assert.ok(osrm);
+});
+
+test('constructor: throws if default_radius is not a number', function(assert) {
+    assert.plan(2);
+    assert.throws(function() { new OSRM({max_alternatives: 'abc'}); }, /default_radius must be an integral number/, 'Does not accept string');
+    assert.ok(new OSRM({max_alternatives: 1}), 'Does accept number');
+});
+
 require('./route.js');
 require('./trip.js');
 require('./match.js');
