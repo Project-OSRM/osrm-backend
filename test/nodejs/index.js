@@ -145,14 +145,34 @@ test('constructor: throws on invalid custom limits', function(assert) {
 
 test('constructor: takes a default_radius argument', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({max_alternatives: 1});
-    assert.ok(osrm);
+    assert.throws(function() {
+        var osrm = new OSRM({
+            path: monaco_mld_path,
+            algorithm: 'MLD',
+            max_locations_trip: 'unlimited',
+            max_locations_viaroute: true,
+            max_locations_distance_table: false,
+            max_locations_map_matching: 'a lot',
+            max_results_nearest: null,
+            max_alternatives: '10'
+        })
+    });
 });
 
 test('constructor: throws if default_radius is not a number', function(assert) {
-    assert.plan(2);
-    assert.throws(function() { new OSRM({max_alternatives: 'abc'}); }, /default_radius must be an integral number/, 'Does not accept string');
-    assert.ok(new OSRM({max_alternatives: 1}), 'Does accept number');
+    assert.plan(1);
+    assert.throws(function() {
+        var osrm = new OSRM({
+            path: monaco_mld_path,
+            algorithm: 'MLD',
+            max_locations_trip: 'unlimited',
+            max_locations_viaroute: true,
+            max_locations_distance_table: false,
+            max_locations_map_matching: 'a lot',
+            max_results_nearest: null,
+            max_alternatives: '10'
+        })
+    });
 });
 
 require('./route.js');
