@@ -515,7 +515,7 @@ jobs:
     - name: Run all tests
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
       run: |
-        ulimit -n 10240
+        # ulimit -n 10240
         
         make -C test/data benchmark
 
