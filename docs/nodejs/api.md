@@ -38,6 +38,7 @@ var osrm = new OSRM('network.osrm');
     -   `options.max_radius_map_matching` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. radius size supported in map matching query (default: 5).
     -   `options.max_results_nearest` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. results supported in nearest query (default: unlimited).
     -   `options.max_alternatives` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. number of alternatives supported in alternative routes query (default: 3).
+    -   `options.default_radius` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Default radius for queries (default: unlimited).
 
 ### route
 

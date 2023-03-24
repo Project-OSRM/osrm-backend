@@ -20,8 +20,10 @@ class MatchPlugin : public BasePlugin
     using CandidateLists = routing_algorithms::CandidateLists;
     static const constexpr double RADIUS_MULTIPLIER = 3;
 
-    MatchPlugin(const int max_locations_map_matching, const double max_radius_map_matching)
-        : max_locations_map_matching(max_locations_map_matching),
+    MatchPlugin(const int max_locations_map_matching,
+                const double max_radius_map_matching,
+                const boost::optional<double> default_radius)
+        : BasePlugin(default_radius), max_locations_map_matching(max_locations_map_matching),
           max_radius_map_matching(max_radius_map_matching)
     {
     }

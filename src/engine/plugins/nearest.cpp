@@ -10,7 +10,10 @@
 namespace osrm::engine::plugins
 {
 
-NearestPlugin::NearestPlugin(const int max_results_) : max_results{max_results_} {}
+NearestPlugin::NearestPlugin(const int max_results_, const boost::optional<double> default_radius_)
+    : BasePlugin(default_radius_), max_results{max_results_}
+{
+}
 
 Status NearestPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                     const api::NearestParameters &params,
