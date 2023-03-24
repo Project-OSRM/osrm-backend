@@ -152,7 +152,7 @@ test('constructor: takes a default_radius argument', function(assert) {
 test('constructor: throws if default_radius is not a number', function(assert) {
     assert.plan(2);
     assert.throws(function() { new OSRM({path: monaco_mld_path, algorithm: 'MLD', max_alternatives: 'abc'}); }, /default_radius must be an integral number/, 'Does not accept string');
-    assert.ok(new OSRM({max_alternatives: 1}), 'Does accept number');
+    assert.ok(new OSRM({path: monaco_mld_path, algorithm: 'MLD', max_alternatives: 1}), 'Does accept number');
 });
 
 require('./route.js');
