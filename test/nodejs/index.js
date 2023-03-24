@@ -114,14 +114,14 @@ test('constructor: throws if dataset_name is not a string', function(assert) {
 
 test('constructor: takes a default_radius argument', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({default_radius: 1});
+    var osrm = new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 1});
     assert.ok(osrm);
 });
 
 test('constructor: throws if default_radius is not a number', function(assert) {
     assert.plan(2);
-    assert.throws(function() { new OSRM({default_radius: 'abc'}); }, /default_radius must be an integral number/, 'Does not accept string');
-    assert.ok(new OSRM({default_radius: 1}), 'Does accept number');
+    assert.throws(function() { new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 'abc'}); }, /default_radius must be an integral number/, 'Does not accept string');
+    assert.ok(new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 1}), 'Does accept number');
 });
 
 test('constructor: parses custom limits', function(assert) {
