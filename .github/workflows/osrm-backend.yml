@@ -395,7 +395,7 @@ jobs:
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
           echo "JOBS=$((`nproc` + 1))" >>  $GITHUB_ENV
         elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-          echo "JOBS=$((`ulimit -n 1024 && sysctl -n hw.ncpu` + 1))" >>  $GITHUB_ENV
+          echo "JOBS=$((`sysctl -n hw.ncpu` + 1))" >>  $GITHUB_ENV
         fi
 
     - name: Install dev dependencies
