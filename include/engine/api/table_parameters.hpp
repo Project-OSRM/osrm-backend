@@ -81,7 +81,7 @@ struct TableParameters : public BaseParameters
     template <typename... Args>
     TableParameters(std::vector<std::size_t> sources_,
                     std::vector<std::size_t> destinations_,
-                    Args &&... args_)
+                    Args &&...args_)
         : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
           destinations{std::move(destinations_)}
     {
@@ -91,7 +91,7 @@ struct TableParameters : public BaseParameters
     TableParameters(std::vector<std::size_t> sources_,
                     std::vector<std::size_t> destinations_,
                     const AnnotationsType annotations_,
-                    Args &&... args_)
+                    Args &&...args_)
         : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
           destinations{std::move(destinations_)}, annotations{annotations_}
     {
@@ -104,7 +104,7 @@ struct TableParameters : public BaseParameters
                     double fallback_speed_,
                     FallbackCoordinateType fallback_coordinate_type_,
                     double scale_factor_,
-                    Args &&... args_)
+                    Args &&...args_)
         : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
           destinations{std::move(destinations_)}, fallback_speed{fallback_speed_},
           fallback_coordinate_type{fallback_coordinate_type_}, annotations{annotations_},

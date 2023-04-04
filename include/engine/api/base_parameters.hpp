@@ -111,7 +111,8 @@ struct BaseParameters
                (approaches.empty() || approaches.size() == coordinates.size()) &&
                std::all_of(bearings.begin(),
                            bearings.end(),
-                           [](const boost::optional<Bearing> &bearing_and_range) {
+                           [](const boost::optional<Bearing> &bearing_and_range)
+                           {
                                if (bearing_and_range)
                                {
                                    return bearing_and_range->IsValid();

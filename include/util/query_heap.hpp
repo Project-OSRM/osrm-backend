@@ -3,11 +3,11 @@
 
 #include <boost/assert.hpp>
 #include <boost/heap/d_ary_heap.hpp>
-#include <boost/optional.hpp>
 
 #include <algorithm>
 #include <limits>
 #include <map>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -289,7 +289,7 @@ class QueryHeap
         return inserted_nodes[index].node == node;
     }
 
-    boost::optional<HeapNode &> GetHeapNodeIfWasInserted(const NodeID node)
+    std::optional<HeapNode> GetHeapNodeIfWasInserted(NodeID node)
     {
         const auto index = node_index.peek_index(node);
         if (index >= static_cast<decltype(index)>(inserted_nodes.size()) ||
@@ -300,7 +300,7 @@ class QueryHeap
         return inserted_nodes[index];
     }
 
-    boost::optional<const HeapNode &> GetHeapNodeIfWasInserted(const NodeID node) const
+    std::optional<HeapNode> GetHeapNodeIfWasInserted(const NodeID node) const
     {
         const auto index = node_index.peek_index(node);
         if (index >= static_cast<decltype(index)>(inserted_nodes.size()) ||
@@ -344,9 +344,9 @@ class QueryHeap
     void DeleteAll()
     {
         auto const none_handle = heap.s_handle_from_iterator(heap.end());
-        std::for_each(inserted_nodes.begin(), inserted_nodes.end(), [&none_handle](auto &node) {
-            node.handle = none_handle;
-        });
+        std::for_each(inserted_nodes.begin(),
+                      inserted_nodes.end(),
+                      [&none_handle](auto &node) { node.handle = none_handle; });
         heap.clear();
     }
 
@@ -356,13 +356,13 @@ class QueryHeap
         const auto index = node_index.peek_index(node);
         auto &reference = inserted_nodes[index];
         reference.weight = weight;
-        heap.increase(reference.handle, std::make_pair(weight, index));
+        heap.decrease(reference.handle, std::make_pair(weight, index));
     }
 
     void DecreaseKey(const HeapNode &heapNode)
     {
         BOOST_ASSERT(!WasRemoved(heapNode.node));
-        heap.increase(heapNode.handle, std::make_pair(heapNode.weight, (*heapNode.handle).second));
+        heap.decrease(heapNode.handle, std::make_pair(heapNode.weight, (*heapNode.handle).second));
     }
 
   private:

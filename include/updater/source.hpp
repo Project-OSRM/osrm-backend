@@ -15,10 +15,11 @@ template <typename Key, typename Value> struct LookupTable
     boost::optional<Value> operator()(const Key &key) const
     {
         using Result = boost::optional<Value>;
-        const auto it = std::lower_bound(
-            lookup.begin(), lookup.end(), key, [](const auto &lhs, const auto &rhs) {
-                return rhs < lhs.first;
-            });
+        const auto it =
+            std::lower_bound(lookup.begin(),
+                             lookup.end(),
+                             key,
+                             [](const auto &lhs, const auto &rhs) { return rhs < lhs.first; });
         return it != std::end(lookup) && !(it->first < key) ? Result(it->second) : Result();
     }
 

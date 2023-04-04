@@ -254,7 +254,7 @@ template <typename ElementT> class DeallocatingVector
         ++current_size;
     }
 
-    template <typename... Ts> void emplace_back(Ts &&... element)
+    template <typename... Ts> void emplace_back(Ts &&...element)
     {
         const std::size_t current_capacity = capacity();
         if (current_size == current_capacity)

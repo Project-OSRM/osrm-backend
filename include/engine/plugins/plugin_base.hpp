@@ -33,10 +33,10 @@ class BasePlugin
 
     bool CheckAllCoordinates(const std::vector<util::Coordinate> &coordinates) const
     {
-        return !std::any_of(
-            std::begin(coordinates), std::end(coordinates), [](const util::Coordinate coordinate) {
-                return !coordinate.IsValid();
-            });
+        return !std::any_of(std::begin(coordinates),
+                            std::end(coordinates),
+                            [](const util::Coordinate coordinate)
+                            { return !coordinate.IsValid(); });
     }
 
     bool CheckAlgorithms(const api::BaseParameters &params,
@@ -105,45 +105,45 @@ class BasePlugin
     {
         // are all phantoms from a tiny cc?
         const auto all_in_same_tiny_component =
-            [](const std::vector<PhantomCandidateAlternatives> &alts_list) {
-                return std::any_of(
-                    alts_list.front().first.begin(),
-                    alts_list.front().first.end(),
-                    // For each of the first possible phantoms, check if all other
-                    // positions in the list have a phantom from the same small component.
-                    [&](const PhantomNode &phantom) {
-                        if (!phantom.component.is_tiny)
-                        {
-                            return false;
-                        }
-                        const auto component_id = phantom.component.id;
-                        return std::all_of(
-                            std::next(alts_list.begin()),
-                            std::end(alts_list),
-                            [component_id](const PhantomCandidateAlternatives &alternatives) {
-                                return candidatesHaveComponent(alternatives.first, component_id);
-                            });
-                    });
-            };
+            [](const std::vector<PhantomCandidateAlternatives> &alts_list)
+        {
+            return std::any_of(
+                alts_list.front().first.begin(),
+                alts_list.front().first.end(),
+                // For each of the first possible phantoms, check if all other
+                // positions in the list have a phantom from the same small component.
+                [&](const PhantomNode &phantom)
+                {
+                    if (!phantom.component.is_tiny)
+                    {
+                        return false;
+                    }
+                    const auto component_id = phantom.component.id;
+                    return std::all_of(
+                        std::next(alts_list.begin()),
+                        std::end(alts_list),
+                        [component_id](const PhantomCandidateAlternatives &alternatives)
+                        { return candidatesHaveComponent(alternatives.first, component_id); });
+                });
+        };
 
         // Move the alternative into the final list
-        const auto fallback_to_big_component = [](PhantomCandidateAlternatives &alternatives) {
+        const auto fallback_to_big_component = [](PhantomCandidateAlternatives &alternatives)
+        {
             auto no_big_alternative = alternatives.second.empty();
             return no_big_alternative ? std::move(alternatives.first)
                                       : std::move(alternatives.second);
         };
 
         // Move the alternative into the final list
-        const auto use_closed_phantom = [](PhantomCandidateAlternatives &alternatives) {
-            return std::move(alternatives.first);
-        };
+        const auto use_closed_phantom = [](PhantomCandidateAlternatives &alternatives)
+        { return std::move(alternatives.first); };
 
         const auto no_alternatives =
             std::all_of(alternatives_list.begin(),
                         alternatives_list.end(),
-                        [](const PhantomCandidateAlternatives &alternatives) {
-                            return alternatives.second.empty();
-                        });
+                        [](const PhantomCandidateAlternatives &alternatives)
+                        { return alternatives.second.empty(); });
 
         std::vector<PhantomNodeCandidates> snapped_phantoms;
         snapped_phantoms.reserve(alternatives_list.size());
@@ -313,12 +313,12 @@ class BasePlugin
                           alternatives.end(),
                           coordinates.begin(),
                           coordinates.end(),
-                          [](const auto &candidates_pair, const auto &coordinate) {
+                          [](const auto &candidates_pair, const auto &coordinate)
+                          {
                               return std::any_of(candidates_pair.first.begin(),
                                                  candidates_pair.first.end(),
-                                                 [&](const auto &phantom) {
-                                                     return phantom.input_location == coordinate;
-                                                 });
+                                                 [&](const auto &phantom)
+                                                 { return phantom.input_location == coordinate; });
                           });
         std::size_t missing_index = std::distance(alternatives.begin(), mismatch.first);
         return std::string("Could not find a matching segment for coordinate ") +

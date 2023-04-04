@@ -21,11 +21,13 @@ BOOST_AUTO_TEST_CASE(horizontal_cut_between_two_grids)
     const int cols = 10;
 
     // build a small grid (10*10) and a (100 * 10) below (to make the different steps unique)
-    auto graph = [&]() {
+    auto graph = [&]()
+    {
         std::vector<Coordinate> grid_coordinates;
         std::vector<EdgeWithSomeAdditionalData> grid_edges;
 
-        const auto connect = [&grid_edges](const NodeID from, const NodeID to) {
+        const auto connect = [&grid_edges](const NodeID from, const NodeID to)
+        {
             grid_edges.push_back({from, to, 1});
             grid_edges.push_back({to, from, 1});
         };

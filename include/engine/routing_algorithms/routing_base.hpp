@@ -190,8 +190,10 @@ void annotatePath(const FacadeT &facade,
     std::vector<SegmentDuration> duration_vector;
     std::vector<DatasourceID> datasource_vector;
 
-    const auto get_segment_geometry = [&](const auto geometry_index) {
-        const auto copy = [](auto &vector, const auto range) {
+    const auto get_segment_geometry = [&](const auto geometry_index)
+    {
+        const auto copy = [](auto &vector, const auto range)
+        {
             vector.resize(range.size());
             std::copy(range.begin(), range.end(), vector.begin());
         };

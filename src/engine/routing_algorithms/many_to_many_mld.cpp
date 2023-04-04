@@ -70,20 +70,20 @@ void relaxBorderEdges(const DataFacade<mld::Algorithm> &facade,
             const auto to_distance = distance + node_distance;
 
             // New Node discovered -> Add to Heap + Node Info Storage
-            const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
+            auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
             if (!toHeapNode)
             {
                 query_heap.Insert(to, to_weight, {node, false, to_duration, to_distance});
             }
             // Found a shorter Path -> Update weight and set new parent
             else if (std::tie(to_weight, to_duration, to_distance, node) <
-                     std::tie(toHeapNode->weight,
-                              toHeapNode->data.duration,
-                              toHeapNode->data.distance,
-                              toHeapNode->data.parent))
+                     std::tie(toHeapNode.value().weight,
+                              toHeapNode.value().data.duration,
+                              toHeapNode.value().data.distance,
+                              toHeapNode.value().data.parent))
             {
-                toHeapNode->data = {node, false, to_duration, to_distance};
-                toHeapNode->weight = to_weight;
+                toHeapNode.value().data = {node, false, to_duration, to_distance};
+                toHeapNode.value().weight = to_weight;
                 query_heap.DecreaseKey(*toHeapNode);
             }
         }
@@ -95,7 +95,7 @@ void relaxOutgoingEdges(
     const DataFacade<mld::Algorithm> &facade,
     const typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap::HeapNode &heapNode,
     typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
-    const Args &... args)
+    const Args &...args)
 {
     BOOST_ASSERT(!facade.ExcludeNode(heapNode.node));
 
@@ -130,20 +130,20 @@ void relaxOutgoingEdges(
                     const auto to_weight = heapNode.weight + shortcut_weight;
                     const auto to_duration = heapNode.data.duration + shortcut_durations.front();
                     const auto to_distance = heapNode.data.distance + shortcut_distances.front();
-                    const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
+                    auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
                         query_heap.Insert(
                             to, to_weight, {heapNode.node, true, to_duration, to_distance});
                     }
                     else if (std::tie(to_weight, to_duration, to_distance, heapNode.node) <
-                             std::tie(toHeapNode->weight,
-                                      toHeapNode->data.duration,
-                                      toHeapNode->data.distance,
-                                      toHeapNode->data.parent))
+                             std::tie(toHeapNode.value().weight,
+                                      toHeapNode.value().data.duration,
+                                      toHeapNode.value().data.distance,
+                                      toHeapNode.value().data.parent))
                     {
-                        toHeapNode->data = {heapNode.node, true, to_duration, to_distance};
-                        toHeapNode->weight = to_weight;
+                        toHeapNode.value().data = {heapNode.node, true, to_duration, to_distance};
+                        toHeapNode.value().weight = to_weight;
                         query_heap.DecreaseKey(*toHeapNode);
                     }
                 }
@@ -171,20 +171,20 @@ void relaxOutgoingEdges(
                     const auto to_weight = heapNode.weight + shortcut_weight;
                     const auto to_duration = heapNode.data.duration + shortcut_durations.front();
                     const auto to_distance = heapNode.data.distance + shortcut_distances.front();
-                    const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
+                    auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
                         query_heap.Insert(
                             to, to_weight, {heapNode.node, true, to_duration, to_distance});
                     }
                     else if (std::tie(to_weight, to_duration, to_distance, heapNode.node) <
-                             std::tie(toHeapNode->weight,
-                                      toHeapNode->data.duration,
-                                      toHeapNode->data.distance,
-                                      toHeapNode->data.parent))
+                             std::tie(toHeapNode.value().weight,
+                                      toHeapNode.value().data.duration,
+                                      toHeapNode.value().data.distance,
+                                      toHeapNode.value().data.parent))
                     {
-                        toHeapNode->data = {heapNode.node, true, to_duration, to_distance};
-                        toHeapNode->weight = to_weight;
+                        toHeapNode.value().data = {heapNode.node, true, to_duration, to_distance};
+                        toHeapNode.value().weight = to_weight;
                         query_heap.DecreaseKey(*toHeapNode);
                     }
                 }
@@ -280,49 +280,51 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
 
     // Check if node is in the destinations list and update weights/durations
     auto update_values =
-        [&](NodeID node, EdgeWeight weight, EdgeDuration duration, EdgeDistance distance) {
-            auto candidates = target_nodes_index.equal_range(node);
-            for (auto it = candidates.first; it != candidates.second;)
+        [&](NodeID node, EdgeWeight weight, EdgeDuration duration, EdgeDistance distance)
+    {
+        auto candidates = target_nodes_index.equal_range(node);
+        for (auto it = candidates.first; it != candidates.second;)
+        {
+            std::size_t index;
+            EdgeWeight target_weight;
+            EdgeDuration target_duration;
+            EdgeDistance target_distance;
+            std::tie(index, target_weight, target_duration, target_distance) = it->second;
+
+            const auto path_weight = weight + target_weight;
+            if (path_weight >= EdgeWeight{0})
             {
-                std::size_t index;
-                EdgeWeight target_weight;
-                EdgeDuration target_duration;
-                EdgeDistance target_distance;
-                std::tie(index, target_weight, target_duration, target_distance) = it->second;
+                const auto path_duration = duration + target_duration;
+                const auto path_distance = distance + target_distance;
 
-                const auto path_weight = weight + target_weight;
-                if (path_weight >= EdgeWeight{0})
+                EdgeDistance nulldistance = {0};
+                auto &current_distance =
+                    distances_table.empty() ? nulldistance : distances_table[index];
+
+                if (std::tie(path_weight, path_duration, path_distance) <
+                    std::tie(weights_table[index], durations_table[index], current_distance))
                 {
-                    const auto path_duration = duration + target_duration;
-                    const auto path_distance = distance + target_distance;
-
-                    EdgeDistance nulldistance = {0};
-                    auto &current_distance =
-                        distances_table.empty() ? nulldistance : distances_table[index];
-
-                    if (std::tie(path_weight, path_duration, path_distance) <
-                        std::tie(weights_table[index], durations_table[index], current_distance))
-                    {
-                        weights_table[index] = path_weight;
-                        durations_table[index] = path_duration;
-                        current_distance = path_distance;
-                        middle_nodes_table[index] = node;
-                    }
-
-                    // Remove node from destinations list
-                    it = target_nodes_index.erase(it);
+                    weights_table[index] = path_weight;
+                    durations_table[index] = path_duration;
+                    current_distance = path_distance;
+                    middle_nodes_table[index] = node;
                 }
-                else
-                {
-                    ++it;
-                }
+
+                // Remove node from destinations list
+                it = target_nodes_index.erase(it);
             }
-        };
+            else
+            {
+                ++it;
+            }
+        }
+    };
 
     auto insert_node = [&](NodeID node,
                            EdgeWeight initial_weight,
                            EdgeDuration initial_duration,
-                           EdgeDistance initial_distance) {
+                           EdgeDistance initial_distance)
+    {
         if (target_nodes_index.count(node))
         {
             // Source and target on the same edge node. If target is not reachable directly via
