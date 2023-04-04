@@ -4,8 +4,8 @@
 #include "util/coordinate.hpp"
 
 #include <boost/math/constants/constants.hpp>
-#include <boost/optional.hpp>
 
+#include <optional>
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -102,7 +102,7 @@ double bearing(const Coordinate first_coordinate, const Coordinate second_coordi
 double computeAngle(const Coordinate first, const Coordinate second, const Coordinate third);
 
 // find the center of a circle through three coordinates
-boost::optional<Coordinate> circleCenter(const Coordinate first_coordinate,
+std::optional<Coordinate> circleCenter(const Coordinate first_coordinate,
                                          const Coordinate second_coordinate,
                                          const Coordinate third_coordinate);
 

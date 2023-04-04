@@ -5,10 +5,9 @@
 #include "util/coordinate.hpp"
 #include "util/json_container.hpp"
 
+#include <optional>
 #include <algorithm>
 #include <iterator>
-
-#include <boost/optional.hpp>
 
 namespace osrm::util
 {
@@ -84,7 +83,7 @@ struct NodeIdToCoordinate
 
 inline util::json::Object makeFeature(std::string type,
                                       util::json::Array coordinates,
-                                      const boost::optional<util::json::Object> &properties = {})
+                                      const std::optional<util::json::Object> &properties = {})
 {
     util::json::Object result;
     result.values["type"] = "Feature";
