@@ -72,7 +72,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             [this, &max_distance, &max_results, input_coordinate](const std::size_t num_results,
                                                                   const CandidateSegment &segment) {
                 return (max_results && num_results >= *max_results) ||
-                       (max_distance &&
+                       (max_distance && max_distance != -1.0 &&
                         CheckSegmentDistance(input_coordinate, segment, *max_distance));
             });
 
@@ -163,7 +163,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                 auto distance = GetSegmentDistance(input_coordinate, segment);
                 auto further_than_big_component = distance > big_component_distance;
                 auto no_more_candidates = has_big_component && further_than_big_component;
-                auto too_far_away = max_distance && distance > *max_distance;
+                auto too_far_away =
+                    max_distance && max_distance != -1.0 && distance > *max_distance;
 
                 // Time to terminate the search when:
                 // 1. We've found a node from a big component and the next candidate is further away

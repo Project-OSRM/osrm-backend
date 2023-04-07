@@ -12,6 +12,7 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/optional/optional_io.hpp>
 #include <boost/program_options.hpp>
 
 #include <cstdlib>
@@ -149,7 +150,7 @@ inline unsigned generateServerProgramOptions(const int argc,
          value<double>(&config.max_radius_map_matching)->default_value(-1.0),
          "Max. radius size supported in map matching query. Default: unlimited.") //
         ("default-radius",
-         value<boost::optional<double>>(&config.default_radius),
+         value<boost::optional<double>>(&config.default_radius)->default_value(-1.0),
          "Default radius size for queries. Default: unlimited.");
 
     // hidden options, will be allowed on command line, but will not be shown to the user

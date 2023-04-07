@@ -181,7 +181,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     if (tidied.parameters.radiuses.empty())
     {
         search_radiuses.resize(tidied.parameters.coordinates.size(),
-                               default_radius.has_value()
+                               default_radius.has_value() && *default_radius != -1.0
                                    ? *default_radius
                                    : routing_algorithms::DEFAULT_GPS_PRECISION * RADIUS_MULTIPLIER);
     }
@@ -199,7 +199,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                 }
                 else
                 {
-                    return default_radius.has_value()
+                    return default_radius.has_value() && *default_radius != -1.0
                                ? *default_radius
                                : routing_algorithms::DEFAULT_GPS_PRECISION * RADIUS_MULTIPLIER;
                 }
