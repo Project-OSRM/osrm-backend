@@ -71,6 +71,33 @@ std::istream &operator>>(std::istream &in, EngineConfig::Algorithm &algorithm)
 }
 } // namespace osrm::engine
 
+// overload validate for the double type to allow "unlimited" as an input
+namespace boost
+{
+void validate(boost::any &v, const std::vector<std::string> &values, double *, double)
+{
+    boost::program_options::validators::check_first_occurrence(v);
+    const std::string &s = boost::program_options::validators::get_single_string(values);
+
+    if (s == "unlimited")
+    {
+        v = -1.0;
+    }
+    else
+    {
+        try
+        {
+            v = std::stod(s);
+        }
+        catch (const std::invalid_argument &)
+        {
+            throw boost::program_options::validation_error(
+                boost::program_options::validation_error::invalid_option_value);
+        }
+    }
+}
+} // namespace boost
+
 // generate boost::program_options object for the routing part
 inline unsigned generateServerProgramOptions(const int argc,
                                              const char *argv[],
