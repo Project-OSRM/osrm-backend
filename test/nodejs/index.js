@@ -125,9 +125,10 @@ test('constructor: takes a default_radius unlimited argument', function(assert) 
 });
 
 test('constructor: throws if default_radius is not a number', function(assert) {
-    assert.plan(2);
-    assert.throws(function() { new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 'abc'}); }, /default_radius must be an integral number/, 'Does not accept string');
+    assert.plan(3);
+    assert.throws(function() { new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 'abc'}); }, /default_radius must be unlimited or an integral number/, 'Does not accept invalid string');
     assert.ok(new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 1}), 'Does accept number');
+    assert.ok(new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 'unlimited'}), 'Does accept unlimited');
 });
 
 test('constructor: parses custom limits', function(assert) {
