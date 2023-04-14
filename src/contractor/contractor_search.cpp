@@ -30,7 +30,7 @@ void relaxNode(ContractorHeap &heap,
         }
         const EdgeWeight to_weight = node_weight + data.weight;
 
-        auto toHeapNode = heap.GetHeapNodeIfWasInserted(to);
+        const auto toHeapNode = heap.GetHeapNodeIfWasInserted(to);
         // New Node discovered -> Add to Heap + Node Info Storage
         if (!toHeapNode)
         {

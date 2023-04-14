@@ -68,7 +68,7 @@ void relaxOutgoingEdges(
             const auto to_duration = heapNode.data.duration + to_alias<EdgeDuration>(edge_duration);
             const auto to_distance = heapNode.data.distance + edge_distance;
 
-            auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
+            const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!toHeapNode)
             {
@@ -76,10 +76,10 @@ void relaxOutgoingEdges(
             }
             // Found a shorter Path -> Update weight and set new parent
             else if (std::tie(to_weight, to_duration) <
-                     std::tie(toHeapNode.value().weight, toHeapNode.value().data.duration))
+                     std::tie(toHeapNode->weight, toHeapNode->data.duration))
             {
-                toHeapNode.value().data = {heapNode.node, to_duration, to_distance};
-                toHeapNode.value().weight = to_weight;
+                toHeapNode->data = {heapNode.node, to_duration, to_distance};
+                toHeapNode->weight = to_weight;
                 query_heap.DecreaseKey(*toHeapNode);
             }
         }
@@ -158,7 +158,7 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
 {
     // Take a copy (no ref &) of the extracted node because otherwise could be modified later if
     // toHeapNode is the same
-    auto heapNode = query_heap.DeleteMinGetHeapNode();
+    const auto heapNode = query_heap.DeleteMinGetHeapNode();
 
     // Store settled nodes in search space bucket
     search_space_with_buckets.emplace_back(heapNode.node,

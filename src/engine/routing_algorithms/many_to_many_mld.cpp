@@ -70,20 +70,20 @@ void relaxBorderEdges(const DataFacade<mld::Algorithm> &facade,
             const auto to_distance = distance + node_distance;
 
             // New Node discovered -> Add to Heap + Node Info Storage
-            auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
+            const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
             if (!toHeapNode)
             {
                 query_heap.Insert(to, to_weight, {node, false, to_duration, to_distance});
             }
             // Found a shorter Path -> Update weight and set new parent
             else if (std::tie(to_weight, to_duration, to_distance, node) <
-                     std::tie(toHeapNode.value().weight,
-                              toHeapNode.value().data.duration,
-                              toHeapNode.value().data.distance,
-                              toHeapNode.value().data.parent))
+                     std::tie(toHeapNode->weight,
+                              toHeapNode->data.duration,
+                              toHeapNode->data.distance,
+                              toHeapNode->data.parent))
             {
-                toHeapNode.value().data = {node, false, to_duration, to_distance};
-                toHeapNode.value().weight = to_weight;
+                toHeapNode->data = {node, false, to_duration, to_distance};
+                toHeapNode->weight = to_weight;
                 query_heap.DecreaseKey(*toHeapNode);
             }
         }
@@ -130,20 +130,20 @@ void relaxOutgoingEdges(
                     const auto to_weight = heapNode.weight + shortcut_weight;
                     const auto to_duration = heapNode.data.duration + shortcut_durations.front();
                     const auto to_distance = heapNode.data.distance + shortcut_distances.front();
-                    auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
+                    const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
                         query_heap.Insert(
                             to, to_weight, {heapNode.node, true, to_duration, to_distance});
                     }
                     else if (std::tie(to_weight, to_duration, to_distance, heapNode.node) <
-                             std::tie(toHeapNode.value().weight,
-                                      toHeapNode.value().data.duration,
-                                      toHeapNode.value().data.distance,
-                                      toHeapNode.value().data.parent))
+                             std::tie(toHeapNode->weight,
+                                      toHeapNode->data.duration,
+                                      toHeapNode->data.distance,
+                                      toHeapNode->data.parent))
                     {
-                        toHeapNode.value().data = {heapNode.node, true, to_duration, to_distance};
-                        toHeapNode.value().weight = to_weight;
+                        toHeapNode->data = {heapNode.node, true, to_duration, to_distance};
+                        toHeapNode->weight = to_weight;
                         query_heap.DecreaseKey(*toHeapNode);
                     }
                 }
@@ -171,20 +171,20 @@ void relaxOutgoingEdges(
                     const auto to_weight = heapNode.weight + shortcut_weight;
                     const auto to_duration = heapNode.data.duration + shortcut_durations.front();
                     const auto to_distance = heapNode.data.distance + shortcut_distances.front();
-                    auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
+                    const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
                         query_heap.Insert(
                             to, to_weight, {heapNode.node, true, to_duration, to_distance});
                     }
                     else if (std::tie(to_weight, to_duration, to_distance, heapNode.node) <
-                             std::tie(toHeapNode.value().weight,
-                                      toHeapNode.value().data.duration,
-                                      toHeapNode.value().data.distance,
-                                      toHeapNode.value().data.parent))
+                             std::tie(toHeapNode->weight,
+                                      toHeapNode->data.duration,
+                                      toHeapNode->data.distance,
+                                      toHeapNode->data.parent))
                     {
-                        toHeapNode.value().data = {heapNode.node, true, to_duration, to_distance};
-                        toHeapNode.value().weight = to_weight;
+                        toHeapNode->data = {heapNode.node, true, to_duration, to_distance};
+                        toHeapNode->weight = to_weight;
                         query_heap.DecreaseKey(*toHeapNode);
                     }
                 }

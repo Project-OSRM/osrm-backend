@@ -27,7 +27,7 @@ bool stallAtNode(const DataFacade<Algorithm> &facade,
             const NodeID to = facade.GetTarget(edge);
             const EdgeWeight edge_weight = data.weight;
             BOOST_ASSERT_MSG(edge_weight > EdgeWeight{0}, "edge_weight invalid");
-            auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
+            const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
             if (toHeapNode)
             {
                 if (toHeapNode->weight + edge_weight < heapNode.weight)
@@ -56,7 +56,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             BOOST_ASSERT_MSG(edge_weight > EdgeWeight{0}, "edge_weight invalid");
             const EdgeWeight to_weight = heapNode.weight + edge_weight;
 
-            auto toHeapNode = heap.GetHeapNodeIfWasInserted(to);
+            const auto toHeapNode = heap.GetHeapNodeIfWasInserted(to);
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!toHeapNode)
             {
@@ -67,7 +67,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             {
                 // new parent
                 toHeapNode->data.parent = heapNode.node;
-                toHeapNode.value().weight = to_weight;
+                toHeapNode->weight = to_weight;
                 heap.DecreaseKey(*toHeapNode);
             }
         }

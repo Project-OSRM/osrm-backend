@@ -112,19 +112,19 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
             BOOST_ASSERT(edge_weight > EdgeWeight{0});
             const EdgeWeight to_weight = heapNode.weight + edge_weight;
 
-            auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
+            const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!toHeapNode)
             {
                 forward_heap.Insert(to, to_weight, heapNode.node);
             }
             // Found a shorter Path -> Update weight
-            else if (to_weight < toHeapNode.value().weight)
+            else if (to_weight < toHeapNode->weight)
             {
                 // new parent
-                toHeapNode.value().data.parent = heapNode.node;
+                toHeapNode->data.parent = heapNode.node;
                 // decreased weight
-                toHeapNode.value().weight = to_weight;
+                toHeapNode->weight = to_weight;
                 forward_heap.DecreaseKey(*toHeapNode);
             }
         }

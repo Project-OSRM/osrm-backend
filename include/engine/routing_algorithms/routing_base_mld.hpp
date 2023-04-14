@@ -291,7 +291,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 {
                     const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
                     BOOST_ASSERT(to_weight >= heapNode.weight);
-                    auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
+                    const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
                         forward_heap.Insert(to, to_weight, {heapNode.node, true});
@@ -300,7 +300,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                     {
                         toHeapNode->data = {heapNode.node, true};
                         toHeapNode->weight = to_weight;
-                        forward_heap.DecreaseKey(heapNode);
+                        forward_heap.DecreaseKey(*toHeapNode);
                     }
                 }
                 ++destination;
@@ -321,7 +321,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 {
                     const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
                     BOOST_ASSERT(to_weight >= heapNode.weight);
-                    auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
+                    const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
                         forward_heap.Insert(to, to_weight, {heapNode.node, true});
@@ -360,16 +360,16 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 const EdgeWeight to_weight =
                     heapNode.weight + node_weight + alias_cast<EdgeWeight>(turn_penalty);
 
-                auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
+                const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
                 if (!toHeapNode)
                 {
                     forward_heap.Insert(to, to_weight, {heapNode.node, false});
                 }
-                else if (to_weight < toHeapNode.value().weight)
+                else if (to_weight < toHeapNode->weight)
                 {
-                    toHeapNode.value().data = {heapNode.node, false};
-                    toHeapNode.value().weight = to_weight;
-                    forward_heap.DecreaseKey(toHeapNode.value());
+                    toHeapNode->data = {heapNode.node, false};
+                    toHeapNode->weight = to_weight;
+                    forward_heap.DecreaseKey(*toHeapNode);
                 }
             }
         }

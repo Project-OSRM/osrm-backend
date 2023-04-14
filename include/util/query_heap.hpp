@@ -289,26 +289,26 @@ class QueryHeap
         return inserted_nodes[index].node == node;
     }
 
-    std::optional<HeapNode> GetHeapNodeIfWasInserted(NodeID node)
+    HeapNode *GetHeapNodeIfWasInserted(const NodeID node)
     {
         const auto index = node_index.peek_index(node);
         if (index >= static_cast<decltype(index)>(inserted_nodes.size()) ||
             inserted_nodes[index].node != node)
         {
-            return {};
+            return nullptr;
         }
-        return inserted_nodes[index];
+        return &inserted_nodes[index];
     }
 
-    std::optional<HeapNode> GetHeapNodeIfWasInserted(const NodeID node) const
+    const HeapNode *GetHeapNodeIfWasInserted(const NodeID node) const
     {
         const auto index = node_index.peek_index(node);
         if (index >= static_cast<decltype(index)>(inserted_nodes.size()) ||
             inserted_nodes[index].node != node)
         {
-            return {};
+            return 0;
         }
-        return inserted_nodes[index];
+        return &inserted_nodes[index];
     }
 
     NodeID Min() const
