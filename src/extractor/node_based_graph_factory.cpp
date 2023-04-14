@@ -210,8 +210,8 @@ void NodeBasedGraphFactory::CompressAnnotationData()
     // remove unreferenced entries, shifting other entries to the front
     const auto new_end =
         std::remove_if(annotation_data.begin(), annotation_data.end(), [&](auto const &data) {
-            // both elements are considered equal (to remove the
-            // second one) if the annotation mapping of the second one is
+            // both elements are considered equal (to remove the second
+            // one) if the annotation mapping of the second one is
             // invalid
             return data.name_id == INVALID_NAMEID;
         });
