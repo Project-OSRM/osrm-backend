@@ -96,13 +96,10 @@ MotorwayHandler::operator()(const NodeID, const EdgeID via_eid, Intersection int
     if (isMotorwayClass(via_eid, node_based_graph))
     {
         intersection = fromMotorway(via_eid, std::move(intersection));
-        std::for_each(intersection.begin(),
-                      intersection.end(),
-                      [](ConnectedRoad &road)
-                      {
-                          if (road.instruction.type == TurnType::OnRamp)
-                              road.instruction.type = TurnType::OffRamp;
-                      });
+        std::for_each(intersection.begin(), intersection.end(), [](ConnectedRoad &road) {
+            if (road.instruction.type == TurnType::OnRamp)
+                road.instruction.type = TurnType::OffRamp;
+        });
         return intersection;
     }
     else // coming from a ramp
@@ -119,8 +116,7 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
     BOOST_ASSERT(isMotorwayClass(via_eid, node_based_graph));
 
     // find the angle that continues on our current highway
-    const auto getContinueAngle = [this, in_data](const Intersection &intersection)
-    {
+    const auto getContinueAngle = [this, in_data](const Intersection &intersection) {
         for (const auto &road : intersection)
         {
             if (!road.entry_allowed)
@@ -140,8 +136,7 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
         return intersection[0].angle;
     };
 
-    const auto getMostLikelyContinue = [this](const Intersection &intersection)
-    {
+    const auto getMostLikelyContinue = [this](const Intersection &intersection) {
         double angle = intersection[0].angle;
         double best = 180;
         for (const auto &road : intersection)
@@ -156,8 +151,7 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
         return angle;
     };
 
-    const auto findBestContinue = [&]()
-    {
+    const auto findBestContinue = [&]() {
         const double continue_angle = getContinueAngle(intersection);
         if (continue_angle != intersection[0].angle)
             return continue_angle;
@@ -215,11 +209,10 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
         const auto valid_exits = std::count_if(intersection.begin(),
                                                intersection.end(),
                                                [](const auto &road) { return road.entry_allowed; });
-        const auto exiting_motorways = std::count_if(
-            intersection.begin(),
-            intersection.end(),
-            [this](const auto &road)
-            { return road.entry_allowed && isMotorwayClass(road.eid, node_based_graph); });
+        const auto exiting_motorways =
+            std::count_if(intersection.begin(), intersection.end(), [this](const auto &road) {
+                return road.entry_allowed && isMotorwayClass(road.eid, node_based_graph);
+            });
 
         if (exiting_motorways == 0)
         {

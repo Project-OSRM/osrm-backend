@@ -35,8 +35,9 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
     // it saves us a bunch of re-allocations during iteration.
     directed_graph.reserve(edges.size() * 2);
 
-    const auto get_geometry_id = [&facade](auto edge)
-    { return facade.GetGeometryIndex(edge.forward_segment_id.id).id; };
+    const auto get_geometry_id = [&facade](auto edge) {
+        return facade.GetGeometryIndex(edge.forward_segment_id.id).id;
+    };
 
     // To build a tile, we can only rely on the r-tree to quickly find all data visible within the
     // tile itself. The Rtree returns a series of segments that may or may not offer turns
@@ -214,10 +215,10 @@ std::vector<TurnData> getTileTurns(const DataFacade<ch::Algorithm> &facade,
             //
             // would offer a backward edge at `b` to `a` (due to the oneway from a to b)
             // but could also offer a shortcut (b-c-a) from `b` to `a` which is longer.
-            EdgeID edge_id = facade.FindSmallestEdge(approach_node,
-                                                     exit_node,
-                                                     [](const contractor::QueryEdge::EdgeData &data)
-                                                     { return data.forward && !data.shortcut; });
+            EdgeID edge_id = facade.FindSmallestEdge(
+                approach_node, exit_node, [](const contractor::QueryEdge::EdgeData &data) {
+                    return data.forward && !data.shortcut;
+                });
 
             // Depending on how the graph is constructed, we might have to look for
             // a backwards edge instead.  They're equivalent, just one is available for
@@ -226,10 +227,10 @@ std::vector<TurnData> getTileTurns(const DataFacade<ch::Algorithm> &facade,
             // If we didn't find a forward edge, try for a backward one
             if (SPECIAL_EDGEID == edge_id)
             {
-                edge_id = facade.FindSmallestEdge(exit_node,
-                                                  approach_node,
-                                                  [](const contractor::QueryEdge::EdgeData &data)
-                                                  { return data.backward && !data.shortcut; });
+                edge_id = facade.FindSmallestEdge(
+                    exit_node, approach_node, [](const contractor::QueryEdge::EdgeData &data) {
+                        return data.backward && !data.shortcut;
+                    });
             }
 
             BOOST_ASSERT_MSG(edge_id == SPECIAL_EDGEID || !facade.GetEdgeData(edge_id).shortcut,

@@ -6,8 +6,8 @@
 
 #include <algorithm>
 #include <limits>
-#include <utility>
 #include <optional>
+#include <utility>
 
 #include <boost/assert.hpp>
 
@@ -223,12 +223,10 @@ bool TurnHandler::isObviousOfTwo(const EdgeID via_edge,
 
 bool TurnHandler::hasObvious(const EdgeID &via_edge, const Fork &fork) const
 {
-    auto obvious_road = std::adjacent_find(fork.begin,
-                                           fork.end,
-                                           [&, this](const auto &a, const auto &b) {
-                                               return this->isObviousOfTwo(via_edge, a, b) ||
-                                                      this->isObviousOfTwo(via_edge, b, a);
-                                           });
+    auto obvious_road =
+        std::adjacent_find(fork.begin, fork.end, [&, this](const auto &a, const auto &b) {
+            return this->isObviousOfTwo(via_edge, a, b) || this->isObviousOfTwo(via_edge, b, a);
+        });
     // return whether an obvious road was found
     return obvious_road != fork.end;
 }
@@ -248,11 +246,10 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                OOOOOOO
      */
 
-    const auto all_links = std::all_of(
-        intersection.begin(),
-        intersection.end(),
-        [this](const auto &road)
-        { return node_based_graph.GetEdgeData(road.eid).flags.road_classification.IsLinkClass(); });
+    const auto all_links =
+        std::all_of(intersection.begin(), intersection.end(), [this](const auto &road) {
+            return node_based_graph.GetEdgeData(road.eid).flags.road_classification.IsLinkClass();
+        });
 
     auto fork = findFork(via_edge, intersection);
     if (fork && (all_links || obvious_index == 0))
@@ -441,8 +438,7 @@ Intersection TurnHandler::assignLeftTurns(const EdgeID via_edge,
                                           const std::size_t starting_at) const
 {
     BOOST_ASSERT(starting_at < intersection.size());
-    const auto switch_left_and_right = [](Intersection &intersection)
-    {
+    const auto switch_left_and_right = [](Intersection &intersection) {
         BOOST_ASSERT(!intersection.empty());
 
         for (auto &road : intersection)
@@ -466,8 +462,7 @@ Intersection TurnHandler::assignRightTurns(const EdgeID via_edge,
                                            const std::size_t up_to) const
 {
     BOOST_ASSERT(up_to <= intersection.size());
-    const auto count_valid = [&intersection, up_to]()
-    {
+    const auto count_valid = [&intersection, up_to]() {
         std::size_t count = 0;
         for (std::size_t i = 1; i < up_to; ++i)
             if (intersection[i].entry_allowed)
@@ -661,42 +656,30 @@ bool TurnHandler::isCompatibleByRoadClass(const Intersection &intersection, cons
     // except if rightmost fork candidate is also a link road
     const auto is_right_link_class =
         node_based_graph.GetEdgeData(fork.getRight().eid).flags.road_classification.IsLinkClass();
-    if (!std::all_of(fork.begin + 1,
-                     fork.end,
-                     [&](ConnectedRoad &road)
-                     {
-                         return is_right_link_class == node_based_graph.GetEdgeData(road.eid)
-                                                           .flags.road_classification.IsLinkClass();
-                     }))
+    if (!std::all_of(fork.begin + 1, fork.end, [&](ConnectedRoad &road) {
+            return is_right_link_class ==
+                   node_based_graph.GetEdgeData(road.eid).flags.road_classification.IsLinkClass();
+        }))
     {
         return false;
     }
 
-    return std::all_of(
-        fork.begin,
-        fork.end,
-        [&](ConnectedRoad &base)
-        {
-            const auto base_class =
-                node_based_graph.GetEdgeData(base.eid).flags.road_classification;
-            // check that there is no turn obvious == check that all turns are non-onvious
-            return std::all_of(
-                fork.begin,
-                fork.end,
-                [&](ConnectedRoad &compare)
-                {
-                    const auto compare_class =
-                        node_based_graph.GetEdgeData(compare.eid).flags.road_classification;
-                    return compare.eid == base.eid ||
-                           !(obviousByRoadClass(via_class, base_class, compare_class));
-                });
+    return std::all_of(fork.begin, fork.end, [&](ConnectedRoad &base) {
+        const auto base_class = node_based_graph.GetEdgeData(base.eid).flags.road_classification;
+        // check that there is no turn obvious == check that all turns are non-onvious
+        return std::all_of(fork.begin, fork.end, [&](ConnectedRoad &compare) {
+            const auto compare_class =
+                node_based_graph.GetEdgeData(compare.eid).flags.road_classification;
+            return compare.eid == base.eid ||
+                   !(obviousByRoadClass(via_class, base_class, compare_class));
         });
+    });
 }
 
 // Checks whether a three-way-intersection coming from `via_edge` is a fork
 // with `intersection` as described as in #IntersectionExplanation@intersection_handler.hpp
 std::optional<TurnHandler::Fork> TurnHandler::findFork(const EdgeID via_edge,
-                                                         Intersection &intersection) const
+                                                       Intersection &intersection) const
 {
     auto fork = findForkCandidatesByGeometry(intersection);
     if (fork)
@@ -720,11 +703,8 @@ std::optional<TurnHandler::Fork> TurnHandler::findFork(const EdgeID via_edge,
         // check if all entries in the fork range allow entry
         const bool only_valid_entries = intersection.hasAllValidEntries(fork->begin, fork->end);
 
-        const auto has_compatible_modes = std::all_of(
-            fork->begin,
-            fork->end,
-            [&](const auto &road)
-            {
+        const auto has_compatible_modes =
+            std::all_of(fork->begin, fork->end, [&](const auto &road) {
                 return node_data_container
                            .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
                            .travel_mode ==
@@ -740,7 +720,7 @@ std::optional<TurnHandler::Fork> TurnHandler::findFork(const EdgeID via_edge,
         }
     }
 
- 	return {};
+    return {};
 }
 
 void TurnHandler::handleDistinctConflict(const EdgeID via_edge,

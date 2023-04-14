@@ -61,8 +61,8 @@ template <typename DataT> class LinearSearchNN
         std::vector<DataT> local_edges(edges);
 
         auto projected_input = web_mercator::fromWGS84(input_coordinate);
-        const auto segment_comparator = [this, &projected_input](const DataT &lhs, const DataT &rhs)
-        {
+        const auto segment_comparator = [this, &projected_input](const DataT &lhs,
+                                                                 const DataT &rhs) {
             using web_mercator::fromWGS84;
             const auto lhs_result = coordinate_calculation::projectPointOnSegment(
                 fromWGS84(coords[lhs.u]), fromWGS84(coords[lhs.v]), projected_input);

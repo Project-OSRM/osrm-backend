@@ -18,8 +18,7 @@ std::vector<T> removeInvalidTurnPaths(std::vector<T> turn_relations,
     log << "Removing invalid " << T::Name() << "s...";
     TIMER_START(remove_invalid_turn_paths);
 
-    const auto is_valid_edge = [&node_based_graph](const auto from, const auto to)
-    {
+    const auto is_valid_edge = [&node_based_graph](const auto from, const auto to) {
         const auto eid = node_based_graph.FindEdge(from, to);
         if (eid == SPECIAL_EDGEID)
         {
@@ -36,29 +35,26 @@ std::vector<T> removeInvalidTurnPaths(std::vector<T> turn_relations,
         return true;
     };
 
-    const auto is_valid_node = [is_valid_edge](const auto &via_node_path)
-    {
+    const auto is_valid_node = [is_valid_edge](const auto &via_node_path) {
         return is_valid_edge(via_node_path.from, via_node_path.via) &&
                is_valid_edge(via_node_path.via, via_node_path.to);
     };
 
-    const auto is_valid_way = [is_valid_edge](const auto &via_way_path)
-    {
+    const auto is_valid_way = [is_valid_edge](const auto &via_way_path) {
         if (!is_valid_edge(via_way_path.from, via_way_path.via.front()))
             return false;
 
-        const auto invalid_it = std::adjacent_find(via_way_path.via.begin(),
-                                                   via_way_path.via.end(),
-                                                   [&](auto via_from, auto via_to)
-                                                   { return !is_valid_edge(via_from, via_to); });
+        const auto invalid_it = std::adjacent_find(
+            via_way_path.via.begin(), via_way_path.via.end(), [&](auto via_from, auto via_to) {
+                return !is_valid_edge(via_from, via_to);
+            });
         if (invalid_it != via_way_path.via.end())
             return false;
 
         return is_valid_edge(via_way_path.via.back(), via_way_path.to);
     };
 
-    const auto is_invalid = [is_valid_way, is_valid_node](const auto &turn_relation)
-    {
+    const auto is_invalid = [is_valid_way, is_valid_node](const auto &turn_relation) {
         if (turn_relation.turn_path.Type() == TurnPathType::VIA_NODE_TURN_PATH)
         {
             return !is_valid_node(turn_relation.turn_path.AsViaNodePath());

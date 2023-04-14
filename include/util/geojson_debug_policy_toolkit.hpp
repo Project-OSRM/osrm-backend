@@ -5,9 +5,9 @@
 #include "util/coordinate.hpp"
 #include "util/json_container.hpp"
 
-#include <optional>
 #include <algorithm>
 #include <iterator>
+#include <optional>
 
 namespace osrm::util
 {

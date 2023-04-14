@@ -10,8 +10,8 @@
 #include <rapidjson/error/en.h>
 #include <rapidjson/istreamwrapper.h>
 
-#include <optional>
 #include <fstream>
+#include <optional>
 #include <regex>
 #include <string>
 #include <unordered_map>
@@ -79,8 +79,7 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
     // Lambda function that returns local time in the tzname time zone
     // Thread safety: MT-Unsafe const:env
     std::unordered_map<std::string, struct tm> local_time_memo;
-    auto get_local_time_in_tz = [utc_time, &local_time_memo](const char *tzname)
-    {
+    auto get_local_time_in_tz = [utc_time, &local_time_memo](const char *tzname) {
         auto it = local_time_memo.find(tzname);
         if (it == local_time_memo.end())
         {

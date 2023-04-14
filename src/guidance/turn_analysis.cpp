@@ -105,8 +105,7 @@ Intersection TurnAnalysis::AssignTurnTypes(
     std::transform(intersection_view.begin(),
                    intersection_view.end(),
                    std::back_inserter(intersection),
-                   [&](const extractor::intersection::IntersectionViewData &data)
-                   {
+                   [&](const extractor::intersection::IntersectionViewData &data) {
                        return ConnectedRoad(data,
                                             {TurnType::Invalid, DirectionModifier::UTurn},
                                             INVALID_LANE_DATAID);
@@ -162,13 +161,10 @@ Intersection TurnAnalysis::AssignTurnTypes(
     // Turn On Ramps Into Off Ramps, if we come from a motorway-like road
     if (node_based_graph.GetEdgeData(entering_via_edge).flags.road_classification.IsMotorwayClass())
     {
-        std::for_each(intersection.begin(),
-                      intersection.end(),
-                      [](ConnectedRoad &road)
-                      {
-                          if (road.instruction.type == TurnType::OnRamp)
-                              road.instruction.type = TurnType::OffRamp;
-                      });
+        std::for_each(intersection.begin(), intersection.end(), [](ConnectedRoad &road) {
+            if (road.instruction.type == TurnType::OnRamp)
+                road.instruction.type = TurnType::OffRamp;
+        });
     }
 
     // After we ran all handlers and determined instruction type

@@ -9,8 +9,9 @@ bool EngineConfig::IsValid() const
     // leads to an empty path
     const bool all_path_are_empty = storage_config.GetPath("").empty();
 
-    const auto unlimited_or_more_than = [](const auto v, const auto limit)
-    { return v == -1 || v > limit; };
+    const auto unlimited_or_more_than = [](const auto v, const auto limit) {
+        return v == -1 || v > limit;
+    };
 
     const bool limits_valid = unlimited_or_more_than(max_locations_distance_table, 2) &&
                               unlimited_or_more_than(max_locations_map_matching, 2) &&

@@ -91,8 +91,7 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
     }
 
     // Link-check for (bc) and later on (cd) which both are getting shortcutted by Sliproad
-    const auto is_potential_link = [this, main_road](const ConnectedRoad &road)
-    {
+    const auto is_potential_link = [this, main_road](const ConnectedRoad &road) {
         if (!road.entry_allowed)
         {
             return false;
@@ -189,8 +188,7 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
         const auto is_left_sliproad_turn = road_index > *obvious;
 
         // Road at the intersection the main road leads onto which the sliproad arrives onto
-        const auto crossing_road = [&]
-        {
+        const auto crossing_road = [&] {
             if (is_left_sliproad_turn)
                 return main_road_intersection->intersection.getLeftmostRoad();
 
@@ -268,8 +266,7 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
         if (target_intersection.isDeadEnd())
             continue;
 
-        const auto find_valid = [](const extractor::intersection::IntersectionView &view)
-        {
+        const auto find_valid = [](const extractor::intersection::IntersectionView &view) {
             // according to our current sliproad idea, there should only be one valid turn
             auto itr = std::find_if(
                 view.begin(), view.end(), [](const auto &road) { return road.entry_allowed; });
@@ -329,19 +326,16 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
                 is_left_sliproad_turn ? main_road_intersection->intersection.size() - 2 : 2;
             auto next_to_crossing_road = main_road_intersection->intersection[next_to_crossing_idx];
             auto next_to_crossing_node = node_based_graph.GetTarget(next_to_crossing_road.eid);
-            auto found_common_node =
-                std::find_if(begin(target_intersection),
-                             end(target_intersection),
-                             [&](const auto &road)
-                             {
-                                 if (next_to_crossing_node == node_based_graph.GetTarget(road.eid))
-                                 {
-                                     auto direction = getTurnDirection(road.angle);
-                                     return direction == DirectionModifier::SharpRight ||
-                                            direction == DirectionModifier::SharpLeft;
-                                 }
-                                 return false;
-                             });
+            auto found_common_node = std::find_if(
+                begin(target_intersection), end(target_intersection), [&](const auto &road) {
+                    if (next_to_crossing_node == node_based_graph.GetTarget(road.eid))
+                    {
+                        auto direction = getTurnDirection(road.angle);
+                        return direction == DirectionModifier::SharpRight ||
+                               direction == DirectionModifier::SharpLeft;
+                    }
+                    return false;
+                });
             if (found_common_node == target_intersection.end())
                 continue;
         }
@@ -505,8 +499,7 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
                 node_based_graph.GetEdgeData(candidate_road.eid).annotation_data);
 
             // Name mismatch: check roads at `c` and `d` for same name
-            const auto name_mismatch = [&](const NameID road_name_id)
-            {
+            const auto name_mismatch = [&](const NameID road_name_id) {
                 return util::guidance::requiresNameAnnounced(road_name_id,              //
                                                              candidate_data.name_id,    //
                                                              name_table,                //
@@ -673,7 +666,7 @@ std::optional<std::size_t> SliproadHandler::getObviousIndexWithSliproads(
 
     if (first->intersection.isDeadEnd() || second->intersection.isDeadEnd())
     {
-      	return {};
+        return {};
     }
 
     // In case of loops at the end of the road, we will arrive back at the intersection

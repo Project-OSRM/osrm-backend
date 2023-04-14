@@ -356,8 +356,7 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
                                      ConnectedRoad &right) const
 {
     // TODO handle low priority road classes in a reasonable way
-    const auto suppressed_type = [&](const ConnectedRoad &road)
-    {
+    const auto suppressed_type = [&](const ConnectedRoad &road) {
         const auto in_mode =
             node_data_container
                 .GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data)
@@ -468,8 +467,7 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
         return {};
     }
 
-    return std::make_optional(
-        IntersectionViewAndNode{std::move(intersection), intersection_node});
+    return std::make_optional(IntersectionViewAndNode{std::move(intersection), intersection_node});
 }
 
 bool IntersectionHandler::isSameName(const EdgeID source_edge_id, const EdgeID target_edge_id) const

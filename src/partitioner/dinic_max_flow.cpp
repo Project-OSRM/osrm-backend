@@ -19,10 +19,10 @@ const auto constexpr INVALID_LEVEL = std::numeric_limits<DinicMaxFlow::Level>::m
 auto makeHasNeighborNotInCheck(const DinicMaxFlow::SourceSinkNodes &set,
                                const BisectionGraphView &view)
 {
-    return [&](const NodeID nid)
-    {
-        const auto is_not_contained = [&set](const BisectionEdge &edge)
-        { return set.count(edge.target) == 0; };
+    return [&](const NodeID nid) {
+        const auto is_not_contained = [&set](const BisectionEdge &edge) {
+            return set.count(edge.target) == 0;
+        };
         return view.EndEdges(nid) !=
                std::find_if(view.BeginEdges(nid), view.EndEdges(nid), is_not_contained);
     };
@@ -132,12 +132,12 @@ DinicMaxFlow::ComputeLevelGraph(const BisectionGraphView &view,
                 levels[edge.target] = 0;
     }
     // check if there is flow present on an edge
-    const auto has_flow = [&](const NodeID from, const NodeID to)
-    { return flow[from].find(to) != flow[from].end(); };
+    const auto has_flow = [&](const NodeID from, const NodeID to) {
+        return flow[from].find(to) != flow[from].end();
+    };
 
     // perform a relaxation step in the BFS algorithm
-    const auto relax_node = [&](const NodeID node_id)
-    {
+    const auto relax_node = [&](const NodeID node_id) {
         // don't relax sink nodes
         if (sink_nodes.count(node_id))
             return;
@@ -180,11 +180,9 @@ std::size_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
     std::size_t flow_increase = 0;
 
     // augment the flow along a path in the level graph
-    const auto augment_flow = [&flow](const std::vector<NodeID> &path)
-    {
+    const auto augment_flow = [&flow](const std::vector<NodeID> &path) {
         // add/remove flow edges from the current residual graph
-        const auto augment_one = [&flow](const NodeID from, const NodeID to)
-        {
+        const auto augment_one = [&flow](const NodeID from, const NodeID to) {
             // check if there is flow in the opposite direction
             auto existing_edge = flow[to].find(from);
             if (existing_edge != flow[to].end())
@@ -200,8 +198,7 @@ std::size_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
         std::adjacent_find(path.begin(), path.end(), augment_one);
     };
 
-    const auto augment_all_paths = [&](const NodeID sink_node_id)
-    {
+    const auto augment_all_paths = [&](const NodeID sink_node_id) {
         // only augment sinks
         if (levels[sink_node_id] == INVALID_LEVEL)
             return;
@@ -296,10 +293,10 @@ bool DinicMaxFlow::Validate(const BisectionGraphView &view,
                             const SourceSinkNodes &sink_nodes) const
 {
     // sink and source cannot share a common node
-    const auto separated = std::find_if(source_nodes.begin(),
-                                        source_nodes.end(),
-                                        [&sink_nodes](const auto node)
-                                        { return sink_nodes.count(node); }) == source_nodes.end();
+    const auto separated =
+        std::find_if(source_nodes.begin(), source_nodes.end(), [&sink_nodes](const auto node) {
+            return sink_nodes.count(node);
+        }) == source_nodes.end();
 
     const auto invalid_id = [&view](const NodeID nid) { return nid >= view.NumberOfNodes(); };
     const auto in_range_source =

@@ -95,7 +95,7 @@ void relaxOutgoingEdges(
     const DataFacade<mld::Algorithm> &facade,
     const typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap::HeapNode &heapNode,
     typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
-    const Args &...args)
+    const Args &... args)
 {
     BOOST_ASSERT(!facade.ExcludeNode(heapNode.node));
 
@@ -280,51 +280,49 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
 
     // Check if node is in the destinations list and update weights/durations
     auto update_values =
-        [&](NodeID node, EdgeWeight weight, EdgeDuration duration, EdgeDistance distance)
-    {
-        auto candidates = target_nodes_index.equal_range(node);
-        for (auto it = candidates.first; it != candidates.second;)
-        {
-            std::size_t index;
-            EdgeWeight target_weight;
-            EdgeDuration target_duration;
-            EdgeDistance target_distance;
-            std::tie(index, target_weight, target_duration, target_distance) = it->second;
-
-            const auto path_weight = weight + target_weight;
-            if (path_weight >= EdgeWeight{0})
+        [&](NodeID node, EdgeWeight weight, EdgeDuration duration, EdgeDistance distance) {
+            auto candidates = target_nodes_index.equal_range(node);
+            for (auto it = candidates.first; it != candidates.second;)
             {
-                const auto path_duration = duration + target_duration;
-                const auto path_distance = distance + target_distance;
+                std::size_t index;
+                EdgeWeight target_weight;
+                EdgeDuration target_duration;
+                EdgeDistance target_distance;
+                std::tie(index, target_weight, target_duration, target_distance) = it->second;
 
-                EdgeDistance nulldistance = {0};
-                auto &current_distance =
-                    distances_table.empty() ? nulldistance : distances_table[index];
-
-                if (std::tie(path_weight, path_duration, path_distance) <
-                    std::tie(weights_table[index], durations_table[index], current_distance))
+                const auto path_weight = weight + target_weight;
+                if (path_weight >= EdgeWeight{0})
                 {
-                    weights_table[index] = path_weight;
-                    durations_table[index] = path_duration;
-                    current_distance = path_distance;
-                    middle_nodes_table[index] = node;
-                }
+                    const auto path_duration = duration + target_duration;
+                    const auto path_distance = distance + target_distance;
 
-                // Remove node from destinations list
-                it = target_nodes_index.erase(it);
+                    EdgeDistance nulldistance = {0};
+                    auto &current_distance =
+                        distances_table.empty() ? nulldistance : distances_table[index];
+
+                    if (std::tie(path_weight, path_duration, path_distance) <
+                        std::tie(weights_table[index], durations_table[index], current_distance))
+                    {
+                        weights_table[index] = path_weight;
+                        durations_table[index] = path_duration;
+                        current_distance = path_distance;
+                        middle_nodes_table[index] = node;
+                    }
+
+                    // Remove node from destinations list
+                    it = target_nodes_index.erase(it);
+                }
+                else
+                {
+                    ++it;
+                }
             }
-            else
-            {
-                ++it;
-            }
-        }
-    };
+        };
 
     auto insert_node = [&](NodeID node,
                            EdgeWeight initial_weight,
                            EdgeDuration initial_duration,
-                           EdgeDistance initial_distance)
-    {
+                           EdgeDistance initial_distance) {
         if (target_nodes_index.count(node))
         {
             // Source and target on the same edge node. If target is not reachable directly via

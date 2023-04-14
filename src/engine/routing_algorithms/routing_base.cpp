@@ -25,8 +25,9 @@ std::vector<NodeID> getForwardLoopNodes(const PhantomEndpointCandidates &endpoin
         auto requires_loop =
             std::any_of(endpoint_candidates.target_phantoms.begin(),
                         endpoint_candidates.target_phantoms.end(),
-                        [&](const auto &target_phantom)
-                        { return requiresForwardLoop(source_phantom, target_phantom); });
+                        [&](const auto &target_phantom) {
+                            return requiresForwardLoop(source_phantom, target_phantom);
+                        });
         if (requires_loop)
         {
             res.push_back(source_phantom.forward_segment_id.id);
@@ -56,8 +57,9 @@ std::vector<NodeID> getBackwardLoopNodes(const PhantomEndpointCandidates &endpoi
         auto requires_loop =
             std::any_of(endpoint_candidates.target_phantoms.begin(),
                         endpoint_candidates.target_phantoms.end(),
-                        [&](const auto &target_phantom)
-                        { return requiresBackwardLoop(source_phantom, target_phantom); });
+                        [&](const auto &target_phantom) {
+                            return requiresBackwardLoop(source_phantom, target_phantom);
+                        });
         if (requires_loop)
         {
             res.push_back(source_phantom.reverse_segment_id.id);
@@ -84,8 +86,7 @@ PhantomEndpoints endpointsFromCandidates(const PhantomEndpointCandidates &candid
 {
     auto source_it = std::find_if(candidates.source_phantoms.begin(),
                                   candidates.source_phantoms.end(),
-                                  [&path](const auto &source_phantom)
-                                  {
+                                  [&path](const auto &source_phantom) {
                                       return path.front() == source_phantom.forward_segment_id.id ||
                                              path.front() == source_phantom.reverse_segment_id.id;
                                   });
@@ -93,8 +94,7 @@ PhantomEndpoints endpointsFromCandidates(const PhantomEndpointCandidates &candid
 
     auto target_it = std::find_if(candidates.target_phantoms.begin(),
                                   candidates.target_phantoms.end(),
-                                  [&path](const auto &target_phantom)
-                                  {
+                                  [&path](const auto &target_phantom) {
                                       return path.back() == target_phantom.forward_segment_id.id ||
                                              path.back() == target_phantom.reverse_segment_id.id;
                                   });

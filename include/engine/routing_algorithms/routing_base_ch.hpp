@@ -294,9 +294,9 @@ EdgeDistance calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
 
             // Look for an edge on the forward CH graph (.forward)
             EdgeID smaller_edge_id =
-                facade.FindSmallestEdge(std::get<0>(edge),
-                                        std::get<1>(edge),
-                                        [](const auto &data) { return data.forward; });
+                facade.FindSmallestEdge(std::get<0>(edge), std::get<1>(edge), [](const auto &data) {
+                    return data.forward;
+                });
 
             // If we didn't find one there, the we might be looking at a part of the path that
             // was found using the backward search.  Here, we flip the node order (.second,
@@ -381,8 +381,7 @@ void unpackPath(const FacadeT &facade,
         unpackPath(facade,
                    packed_path_begin,
                    packed_path_end,
-                   [&](std::pair<NodeID, NodeID> &edge, const auto &edge_id)
-                   {
+                   [&](std::pair<NodeID, NodeID> &edge, const auto &edge_id) {
                        BOOST_ASSERT(edge.first == unpacked_nodes.back());
                        unpacked_nodes.push_back(edge.second);
                        unpacked_edges.push_back(edge_id);

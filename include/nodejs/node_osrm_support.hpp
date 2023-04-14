@@ -22,10 +22,10 @@
 
 #include <boost/assert.hpp>
 
-#include <optional>
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>

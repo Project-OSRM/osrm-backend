@@ -1,8 +1,8 @@
 #ifndef OSRM_GEOJSON_DEBUG_POLICIES
 #define OSRM_GEOJSON_DEBUG_POLICIES
 
-#include <vector>
 #include <optional>
+#include <vector>
 
 #include "extractor/query_node.hpp"
 #include "util/coordinate.hpp"

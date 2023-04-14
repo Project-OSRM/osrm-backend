@@ -6,10 +6,10 @@
 
 #include <boost/assert.hpp>
 
-#include <optional>
 #include <algorithm>
 #include <iterator>
 #include <limits>
+#include <optional>
 #include <utility>
 
 namespace osrm::util::coordinate_calculation
@@ -180,7 +180,7 @@ circleCenter(const Coordinate C1, const Coordinate C2, const Coordinate C3)
     // free after http://paulbourke.net/geometry/circlesphere/
     // require three distinct points
     if (C1 == C2 || C2 == C3 || C1 == C3)
-  	{
+    {
         return {};
     }
 
@@ -248,7 +248,7 @@ circleCenter(const Coordinate C1, const Coordinate C2, const Coordinate C3)
                            (2 * (C3C2_slope - C2C1_slope));
         const double lat = (0.5 * (C1_x + C2_x) - lon) / C2C1_slope + 0.5 * (C1_y + C2_y);
         if (lon < -180.0 || lon > 180.0 || lat < -90.0 || lat > 90.0)
-        	return {};
+            return {};
         else
             return Coordinate(FloatLongitude{lon}, FloatLatitude{lat});
     }
@@ -318,8 +318,7 @@ double findClosestDistance(const std::vector<Coordinate> &lhs, const std::vector
 {
     double current_min = std::numeric_limits<double>::max();
 
-    const auto compute_minimum_distance_in_rhs = [&current_min, &rhs](const Coordinate coordinate)
-    {
+    const auto compute_minimum_distance_in_rhs = [&current_min, &rhs](const Coordinate coordinate) {
         current_min =
             std::min(current_min, findClosestDistance(coordinate, rhs.begin(), rhs.end()));
         return false;
@@ -332,8 +331,9 @@ double findClosestDistance(const std::vector<Coordinate> &lhs, const std::vector
 std::vector<double> getDeviations(const std::vector<Coordinate> &from,
                                   const std::vector<Coordinate> &to)
 {
-    auto find_deviation = [&to](const Coordinate coordinate)
-    { return findClosestDistance(coordinate, to.begin(), to.end()); };
+    auto find_deviation = [&to](const Coordinate coordinate) {
+        return findClosestDistance(coordinate, to.begin(), to.end());
+    };
 
     std::vector<double> deviations_from;
     deviations_from.reserve(from.size());
@@ -385,9 +385,9 @@ double computeArea(const std::vector<Coordinate> &polygon)
     // ⚠ ref_latitude is the standard parallel for the equirectangular projection
     // that is not an area-preserving projection
     const auto ref_point =
-        std::min_element(polygon.begin(),
-                         polygon.end(),
-                         [](const auto &lhs, const auto &rhs) { return lhs.lat < rhs.lat; });
+        std::min_element(polygon.begin(), polygon.end(), [](const auto &lhs, const auto &rhs) {
+            return lhs.lat < rhs.lat;
+        });
     const auto ref_latitude = ref_point->lat;
 
     // Compute area of under a curve and a line that is parallel the equator with ref_latitude

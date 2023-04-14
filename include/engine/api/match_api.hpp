@@ -52,10 +52,9 @@ class MatchAPI final : public RouteAPI
             data_version_string = fb_result.CreateString(data_timestamp);
         }
 
-        auto response = MakeFBResponse(sub_routes,
-                                       fb_result,
-                                       [this, &fb_result, &sub_matchings]()
-                                       { return MakeTracepoints(fb_result, sub_matchings); });
+        auto response = MakeFBResponse(sub_routes, fb_result, [this, &fb_result, &sub_matchings]() {
+            return MakeTracepoints(fb_result, sub_matchings);
+        });
 
         if (!data_timestamp.empty())
         {

@@ -50,8 +50,7 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
         // sort by forward id, then by reverse id and then by distance
         std::sort(candidates.begin(),
                   candidates.end(),
-                  [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs)
-                  {
+                  [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs) {
                       return lhs.phantom_node.forward_segment_id.id <
                                  rhs.phantom_node.forward_segment_id.id ||
                              (lhs.phantom_node.forward_segment_id.id ==
@@ -66,8 +65,7 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
         auto new_end =
             std::unique(candidates.begin(),
                         candidates.end(),
-                        [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs)
-                        {
+                        [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs) {
                             return lhs.phantom_node.forward_segment_id.id ==
                                        rhs.phantom_node.forward_segment_id.id &&
                                    lhs.phantom_node.reverse_segment_id.id ==
@@ -97,8 +95,9 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
         // sort by distance to make pruning effective
         std::sort(candidates.begin(),
                   candidates.end(),
-                  [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs)
-                  { return lhs.distance < rhs.distance; });
+                  [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs) {
+                      return lhs.distance < rhs.distance;
+                  });
     }
 }
 
@@ -134,8 +133,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     if (max_radius_map_matching > 0 && std::any_of(parameters.radiuses.begin(),
                                                    parameters.radiuses.end(),
-                                                   [&](const auto &radius)
-                                                   {
+                                                   [&](const auto &radius) {
                                                        if (!radius)
                                                            return false;
                                                        return *radius > max_radius_map_matching;
@@ -194,8 +192,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             tidied.parameters.radiuses.begin(),
             tidied.parameters.radiuses.end(),
             search_radiuses.begin(),
-            [default_radius = this->default_radius](const boost::optional<double> &maybe_radius)
-            {
+            [default_radius = this->default_radius](const boost::optional<double> &maybe_radius) {
                 if (maybe_radius)
                 {
                     return *maybe_radius * RADIUS_MULTIPLIER;
@@ -215,8 +212,9 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     filterCandidates(tidied.parameters.coordinates, candidates_lists);
     if (std::all_of(candidates_lists.begin(),
                     candidates_lists.end(),
-                    [](const std::vector<PhantomNodeWithDistance> &candidates)
-                    { return candidates.empty(); }))
+                    [](const std::vector<PhantomNodeWithDistance> &candidates) {
+                        return candidates.empty();
+                    }))
     {
         return Error("NoSegment",
                      std::string("Could not find a matching segment for any coordinate."),

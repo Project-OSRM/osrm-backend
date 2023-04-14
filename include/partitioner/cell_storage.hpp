@@ -298,8 +298,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
                                                                    auto set_num_nodes_fn,
                                                                    auto set_boundary_offset_fn,
                                                                    auto begin,
-                                                                   auto end)
-            {
+                                                                   auto end) {
                 BOOST_ASSERT(std::distance(begin, end) > 0);
 
                 const auto cell_id = begin->first;
@@ -317,8 +316,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
             util::for_each_range(
                 level_source_boundary.begin(),
                 level_source_boundary.end(),
-                [this, insert_cell_boundary](auto begin, auto end)
-                {
+                [this, insert_cell_boundary](auto begin, auto end) {
                     insert_cell_boundary(
                         source_boundary,
                         [](auto &cell, auto value) { cell.num_source_nodes = value; },
@@ -329,8 +327,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
             util::for_each_range(
                 level_destination_boundary.begin(),
                 level_destination_boundary.end(),
-                [this, insert_cell_boundary](auto begin, auto end)
-                {
+                [this, insert_cell_boundary](auto begin, auto end) {
                     insert_cell_boundary(
                         destination_boundary,
                         [](auto &cell, auto value) { cell.num_destination_nodes = value; },

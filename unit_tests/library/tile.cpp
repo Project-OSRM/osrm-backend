@@ -87,9 +87,9 @@ void validate_feature_layer(vtzero::layer layer)
     }
 
     auto number_of_uint_values =
-        std::count_if(layer.value_table().begin(),
-                      layer.value_table().end(),
-                      [](auto v) { return v.type() == vtzero::property_value_type::uint_value; });
+        std::count_if(layer.value_table().begin(), layer.value_table().end(), [](auto v) {
+            return v.type() == vtzero::property_value_type::uint_value;
+        });
     BOOST_CHECK_EQUAL(number_of_uint_values, 79);
 }
 
@@ -129,9 +129,9 @@ void validate_turn_layer(vtzero::layer layer)
     }
 
     auto number_of_float_values =
-        std::count_if(layer.value_table().begin(),
-                      layer.value_table().end(),
-                      [](auto v) { return v.type() == vtzero::property_value_type::float_value; });
+        std::count_if(layer.value_table().begin(), layer.value_table().end(), [](auto v) {
+            return v.type() == vtzero::property_value_type::float_value;
+        });
 
     BOOST_CHECK_EQUAL(number_of_float_values, 73);
 }

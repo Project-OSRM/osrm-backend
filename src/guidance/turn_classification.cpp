@@ -17,14 +17,14 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
 
     std::sort(intersection.begin(),
               intersection.end(),
-              [](const ConnectedRoad &left, const ConnectedRoad &right)
-              { return left.perceived_bearing < right.perceived_bearing; });
+              [](const ConnectedRoad &left, const ConnectedRoad &right) {
+                  return left.perceived_bearing < right.perceived_bearing;
+              });
 
     util::guidance::EntryClass entry_class;
     util::guidance::BearingClass bearing_class;
 
-    const bool canBeDiscretized = [&]()
-    {
+    const bool canBeDiscretized = [&]() {
         if (intersection.size() <= 1)
             return true;
 

@@ -11,8 +11,8 @@
 #include "util/attributes.hpp"
 #include "util/node_based_graph.hpp"
 
-#include <optional>
 #include <cstddef>
+#include <optional>
 #include <utility>
 #include <vector>
 

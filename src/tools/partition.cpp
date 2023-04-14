@@ -53,8 +53,7 @@ void validate(boost::any &v, const std::vector<std::string> &values, MaxCellSize
     std::transform(std::sregex_token_iterator(s.begin(), s.end(), re, -1),
                    std::sregex_token_iterator(),
                    std::back_inserter(output),
-                   [](const auto &x)
-                   {
+                   [](const auto &x) {
                        try
                        {
                            return boost::lexical_cast<std::size_t>(x);
@@ -216,8 +215,7 @@ try
         return EXIT_FAILURE;
     }
 
-    auto check_file = [](const boost::filesystem::path &path)
-    {
+    auto check_file = [](const boost::filesystem::path &path) {
         if (!boost::filesystem::is_regular_file(path))
         {
             util::Log(logERROR) << "Input file " << path << " not found!";

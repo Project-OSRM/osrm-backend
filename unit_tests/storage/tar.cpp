@@ -201,8 +201,7 @@ BOOST_AUTO_TEST_CASE(write_huge_tar_file, *boost::unit_test::disabled())
     {
         storage::tar::FileWriter writer(tmp.path, storage::tar::FileWriter::GenerateFingerprint);
         std::uint64_t value = 0;
-        const std::function<std::uint64_t()> encode_function = [&]() -> std::uint64_t
-        {
+        const std::function<std::uint64_t()> encode_function = [&]() -> std::uint64_t {
             reference_checksum += value;
             return value++;
         };

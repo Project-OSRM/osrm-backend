@@ -54,9 +54,8 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
 #endif
         using AnnotationsType = engine::api::RouteParameters::AnnotationsType;
 
-        const auto add_annotation =
-            [](engine::api::RouteParameters &route_parameters, AnnotationsType route_param)
-        {
+        const auto add_annotation = [](engine::api::RouteParameters &route_parameters,
+                                       AnnotationsType route_param) {
             route_parameters.annotations_type = route_parameters.annotations_type | route_param;
             route_parameters.annotations =
                 route_parameters.annotations_type != AnnotationsType::None;

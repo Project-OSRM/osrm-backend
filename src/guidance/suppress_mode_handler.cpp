@@ -50,15 +50,11 @@ bool SuppressModeHandler::canProcess(const NodeID,
     const auto first = begin(intersection);
     const auto last = end(intersection);
 
-    const auto all_share_mode = std::all_of(
-        first,
-        last,
-        [this, &in_mode](const auto &road)
-        {
-            return node_data_container
-                       .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
-                       .travel_mode == in_mode;
-        });
+    const auto all_share_mode = std::all_of(first, last, [this, &in_mode](const auto &road) {
+        return node_data_container
+                   .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+                   .travel_mode == in_mode;
+    });
 
     return (suppress_in_mode != end(suppressed)) && all_share_mode;
 }
@@ -69,16 +65,13 @@ SuppressModeHandler::operator()(const NodeID, const EdgeID, Intersection interse
     const auto first = begin(intersection);
     const auto last = end(intersection);
 
-    std::for_each(first,
-                  last,
-                  [&](auto &road)
-                  {
-                      const auto modifier = road.instruction.direction_modifier;
-                      // use NoTurn, to not even have it as an IntermediateIntersection
-                      const auto type = TurnType::NoTurn;
+    std::for_each(first, last, [&](auto &road) {
+        const auto modifier = road.instruction.direction_modifier;
+        // use NoTurn, to not even have it as an IntermediateIntersection
+        const auto type = TurnType::NoTurn;
 
-                      road.instruction = {type, modifier};
-                  });
+        road.instruction = {type, modifier};
+    });
 
     return intersection;
 }

@@ -79,8 +79,7 @@ NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
     auto edges_list = directedEdgesFromCompressed<NodeBasedDynamicGraph::InputEdge>(
         input_edge_list,
         [](NodeBasedDynamicGraph::InputEdge &output_edge,
-           const extractor::NodeBasedEdge &input_edge)
-        {
+           const extractor::NodeBasedEdge &input_edge) {
             output_edge.data.weight = input_edge.weight;
             output_edge.data.duration = input_edge.duration;
             output_edge.data.distance = input_edge.distance;

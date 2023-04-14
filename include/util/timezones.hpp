@@ -9,8 +9,8 @@
 
 #include <rapidjson/document.h>
 
-#include <optional>
 #include <chrono>
+#include <optional>
 
 namespace osrm::updater
 {
