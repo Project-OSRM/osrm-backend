@@ -11,6 +11,7 @@
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
       - FIXED: Partial fix migration from boost::optional to std::optional [#6551](https://github.com/Project-OSRM/osrm-backend/issues/6551), see also [#6592](https://github.com/Project-OSRM/osrm-backend/issues/6592)
+      - CHANGED: keep libosrm* in the docker image for downstream linking [#6602](https://github.com/Project-OSRM/osrm-backend/pull/6602)
       - CHANGED: Move vector in CSVFilesParser instead copying it. [#6470](https://github.com/Project-OSRM/osrm-backend/pull/6470)
       - REMOVED: Get rid of unused functions in util/json_util.hpp. [#6446](https://github.com/Project-OSRM/osrm-backend/pull/6446)
       - FIXED: Apply workaround for Conan installation issue on CI. [#6442](https://github.com/Project-OSRM/osrm-backend/pull/6442)
