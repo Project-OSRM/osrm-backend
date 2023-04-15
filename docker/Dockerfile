@@ -36,8 +36,7 @@ RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
     make -j${NPROC} install && \
     cd ../profiles && \
     cp -r * /opt && \
-    strip /usr/local/bin/* && \
-    rm -rf /src /usr/local/lib/libosrm*
+    strip /usr/local/bin/*
 
 
 # Multistage build to reduce image size - https://docs.docker.com/engine/userguide/eng-image/multistage-build/#use-multi-stage-builds
