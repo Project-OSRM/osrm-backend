@@ -83,6 +83,7 @@ template <unsigned BLOCK_SIZE, storage::Ownership Ownership> class RangeTable
 #ifndef BOOST_ASSERT_IS_VOID
         unsigned block_counter = 0;
         unsigned block_sum = 0;
+        unsigned block_counter = 0;
 #endif
         for (const unsigned l : lengths)
         {
