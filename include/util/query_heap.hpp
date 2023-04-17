@@ -306,7 +306,7 @@ class QueryHeap
         if (index >= static_cast<decltype(index)>(inserted_nodes.size()) ||
             inserted_nodes[index].node != node)
         {
-            return 0;
+            return nullptr;
         }
         return &inserted_nodes[index];
     }
@@ -356,13 +356,13 @@ class QueryHeap
         const auto index = node_index.peek_index(node);
         auto &reference = inserted_nodes[index];
         reference.weight = weight;
-        heap.decrease(reference.handle, std::make_pair(weight, index));
+        heap.increase(reference.handle, std::make_pair(weight, index));
     }
 
     void DecreaseKey(const HeapNode &heapNode)
     {
         BOOST_ASSERT(!WasRemoved(heapNode.node));
-        heap.decrease(heapNode.handle, std::make_pair(heapNode.weight, (*heapNode.handle).second));
+        heap.increase(heapNode.handle, std::make_pair(heapNode.weight, (*heapNode.handle).second));
     }
 
   private:
