@@ -21,11 +21,11 @@
 #include <napi.h>
 
 #include <boost/assert.hpp>
-#include <boost/optional.hpp>
 
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -345,11 +345,11 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
     return engine_config;
 }
 
-inline boost::optional<std::vector<osrm::Coordinate>>
+inline std::optional<std::vector<osrm::Coordinate>>
 parseCoordinateArray(const Napi::Array &coordinates_array)
 {
     Napi::HandleScope scope(coordinates_array.Env());
-    boost::optional<std::vector<osrm::Coordinate>> resulting_coordinates;
+    std::optional<std::vector<osrm::Coordinate>> resulting_coordinates;
     std::vector<osrm::Coordinate> temp_coordinates;
 
     for (uint32_t i = 0; i < coordinates_array.Length(); ++i)
@@ -968,7 +968,7 @@ inline bool parseCommonParameters(const Napi::Object &obj, ParamType &params)
 
 inline PluginParameters argumentsToPluginParameters(
     const Napi::CallbackInfo &args,
-    const boost::optional<osrm::engine::api::BaseParameters::OutputFormatType> &output_format = {})
+    const std::optional<osrm::engine::api::BaseParameters::OutputFormatType> &output_format = {})
 {
     if (args.Length() < 3 || !args[1].IsObject())
     {
