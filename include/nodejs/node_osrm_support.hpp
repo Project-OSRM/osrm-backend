@@ -400,7 +400,7 @@ parseCoordinateArray(const Napi::Array &coordinates_array)
                                       osrm::util::FloatLatitude{std::move(lat)});
     }
 
-    resulting_coordinates = boost::make_optional(std::move(temp_coordinates));
+    resulting_coordinates = std::make_optional(std::move(temp_coordinates));
     return resulting_coordinates;
 }
 
