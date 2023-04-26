@@ -39,7 +39,7 @@ template <typename Key, typename Value> struct CSVFilesParser
     {
     }
 
-    // Operator returns a lambda function that maps input Key to boost::optional<Value>.
+    // Operator returns a lambda function that maps input Key to std::optional<Value>.
     auto operator()(const std::vector<std::string> &csv_filenames) const
     {
         try

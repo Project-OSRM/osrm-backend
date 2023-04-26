@@ -15,10 +15,9 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <optional>
 #include <utility>
 #include <vector>
-
-#include <boost/optional.hpp>
 
 namespace osrm::guidance
 {
@@ -129,7 +128,7 @@ class IntersectionHandler
     //     ^ via
     //
     // For this scenario returns intersection at `b` and `b`.
-    boost::optional<IntersectionHandler::IntersectionViewAndNode>
+    std::optional<IntersectionHandler::IntersectionViewAndNode>
     getNextIntersection(const NodeID at, const EdgeID via) const;
 
     bool isSameName(const EdgeID source_edge_id, const EdgeID target_edge_id) const;

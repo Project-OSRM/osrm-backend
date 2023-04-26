@@ -6,10 +6,10 @@
 
 #include <algorithm>
 #include <limits>
+#include <optional>
 #include <utility>
 
 #include <boost/assert.hpp>
-#include <boost/optional.hpp>
 
 using osrm::util::angularDeviation;
 
@@ -585,7 +585,7 @@ Intersection TurnHandler::assignRightTurns(const EdgeID via_edge,
 }
 
 // finds a fork candidate by just looking at the geometry and angle of an intersection
-boost::optional<TurnHandler::Fork>
+std::optional<TurnHandler::Fork>
 TurnHandler::findForkCandidatesByGeometry(Intersection &intersection) const
 {
     if (intersection.size() >= 3)
@@ -642,7 +642,7 @@ TurnHandler::findForkCandidatesByGeometry(Intersection &intersection) const
             }
         }
     }
-    return boost::none;
+    return {};
 }
 
 // check if the fork candidates (all roads between left and right) and the
@@ -678,8 +678,8 @@ bool TurnHandler::isCompatibleByRoadClass(const Intersection &intersection, cons
 
 // Checks whether a three-way-intersection coming from `via_edge` is a fork
 // with `intersection` as described as in #IntersectionExplanation@intersection_handler.hpp
-boost::optional<TurnHandler::Fork> TurnHandler::findFork(const EdgeID via_edge,
-                                                         Intersection &intersection) const
+std::optional<TurnHandler::Fork> TurnHandler::findFork(const EdgeID via_edge,
+                                                       Intersection &intersection) const
 {
     auto fork = findForkCandidatesByGeometry(intersection);
     if (fork)
@@ -720,7 +720,7 @@ boost::optional<TurnHandler::Fork> TurnHandler::findFork(const EdgeID via_edge,
         }
     }
 
-    return boost::none;
+    return {};
 }
 
 void TurnHandler::handleDistinctConflict(const EdgeID via_edge,
