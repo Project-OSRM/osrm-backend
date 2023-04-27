@@ -538,7 +538,9 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
 
         if (!obj.Has("radiuses") && default_radius.IsUndefined())
         {
-            ThrowError(args.Env(), "Bearings must be accompanied with radiuses or a default_radius must be set.");
+            ThrowError(
+                args.Env(),
+                "Bearings must be accompanied with radiuses or a default_radius must be set.");
             return false;
         }
 

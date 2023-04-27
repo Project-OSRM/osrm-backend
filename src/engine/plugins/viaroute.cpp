@@ -82,7 +82,8 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
     if (!CheckAlgorithms(route_parameters, algorithms, result))
         return Status::Error;
 
-    if(!route_parameters.bearings.empty() && !default_radius.has_value() && route_parameters.radiuses.size() != route_parameters.bearings.size()) 
+    if (!route_parameters.bearings.empty() && !default_radius.has_value() &&
+        route_parameters.radiuses.size() != route_parameters.bearings.size())
     {
         return Error(
             "InvalidOptions", "Number of radiuses does not match number of bearings", result);

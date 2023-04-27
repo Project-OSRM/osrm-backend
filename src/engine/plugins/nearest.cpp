@@ -43,7 +43,8 @@ Status NearestPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms
         return Error("InvalidOptions", "Only one input coordinate is supported", result);
     }
 
-    if(!params.bearings.empty() && !default_radius.has_value() && params.radiuses.size() != params.bearings.size()) 
+    if (!params.bearings.empty() && !default_radius.has_value() &&
+        params.radiuses.size() != params.bearings.size())
     {
         return Error(
             "InvalidOptions", "Number of radiuses does not match number of bearings", result);

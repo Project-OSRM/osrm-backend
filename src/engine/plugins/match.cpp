@@ -131,7 +131,8 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error("InvalidValue", "Invalid coordinate value.", result);
     }
 
-    if(!parameters.bearings.empty() && !default_radius.has_value() && parameters.radiuses.size() != parameters.bearings.size()) 
+    if (!parameters.bearings.empty() && !default_radius.has_value() &&
+        parameters.radiuses.size() != parameters.bearings.size())
     {
         return Error(
             "InvalidOptions", "Number of radiuses does not match number of bearings", result);
