@@ -1,5 +1,7 @@
 # Unreleased
   - Changes from 5.27.1
+    - API:
+      - CHANGED: Require a `radius` parameter when using `bearings`. [#6572](https://github.com/Project-OSRM/osrm-backend/pull/6572)
     - Features
       - ADDED: Add support for a default_radius flag. [#6575](https://github.com/Project-OSRM/osrm-backend/pull/6575)
     - Build:
