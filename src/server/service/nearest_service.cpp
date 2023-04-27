@@ -6,8 +6,11 @@
 
 #include "util/json_container.hpp"
 
+#include <boost/format.hpp>
+
 namespace osrm::server::service
 {
+
 namespace
 {
 std::string getWrongOptionHelp(const engine::api::NearestParameters &parameters)
@@ -15,34 +18,14 @@ std::string getWrongOptionHelp(const engine::api::NearestParameters &parameters)
     std::string help;
 
     const auto coord_size = parameters.coordinates.size();
-    const auto bearings_size = parameters.bearings.size();
 
+    constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG, "hints", parameters.hints, coord_size, help);
     constrainParamSize(
-        PARAMETER_SIZE_MISMATCH_MSG, "hints", parameters.hints, "coordinates", coord_size, help);
-    constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG,
-                       "bearings",
-                       parameters.bearings,
-                       "coordinates",
-                       coord_size,
-                       help);
-    constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG,
-                       "radiuses",
-                       parameters.radiuses,
-                       "bearings",
-                       bearings_size,
-                       help);
-    constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG,
-                       "radiuses",
-                       parameters.radiuses,
-                       "coordinates",
-                       coord_size,
-                       help);
-    constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG,
-                       "approaches",
-                       parameters.approaches,
-                       "coordinates",
-                       coord_size,
-                       help);
+        PARAMETER_SIZE_MISMATCH_MSG, "bearings", parameters.bearings, coord_size, help);
+    constrainParamSize(
+        PARAMETER_SIZE_MISMATCH_MSG, "radiuses", parameters.radiuses, coord_size, help);
+    constrainParamSize(
+        PARAMETER_SIZE_MISMATCH_MSG, "approaches", parameters.approaches, coord_size, help);
 
     return help;
 }

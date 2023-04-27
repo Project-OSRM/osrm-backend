@@ -1,52 +1,51 @@
 #include "server/service/table_service.hpp"
-#include "server/service/utils.hpp"
 
 #include "server/api/parameters_parser.hpp"
 #include "engine/api/table_parameters.hpp"
 
 #include "util/json_container.hpp"
 
+#include <boost/format.hpp>
+
 namespace osrm::server::service
 {
+
 namespace
 {
+
+const constexpr char PARAMETER_SIZE_MISMATCH_MSG[] =
+    "Number of elements in %1% size %2% does not match coordinate size %3%";
+
+template <typename ParamT>
+bool constrainParamSize(const char *msg_template,
+                        const char *name,
+                        const ParamT &param,
+                        const std::size_t target_size,
+                        std::string &help)
+{
+    if (param.size() > 0 && param.size() != target_size)
+    {
+        help = (boost::format(msg_template) % name % param.size() % target_size).str();
+        return true;
+    }
+    return false;
+}
+
 std::string getWrongOptionHelp(const engine::api::TableParameters &parameters)
 {
     std::string help;
 
     const auto coord_size = parameters.coordinates.size();
-    const auto bearings_size = parameters.bearings.size();
 
-    const bool param_size_mismatch = constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG,
-                                                        "hints",
-                                                        parameters.hints,
-                                                        "coordinates",
-                                                        coord_size,
-                                                        help) ||
-                                     constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG,
-                                                        "bearings",
-                                                        parameters.bearings,
-                                                        "coordinates",
-                                                        coord_size,
-                                                        help) ||
-                                     constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG,
-                                                        "radiuses",
-                                                        parameters.radiuses,
-                                                        "bearings",
-                                                        bearings_size,
-                                                        help) ||
-                                     constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG,
-                                                        "radiuses",
-                                                        parameters.radiuses,
-                                                        "coordinates",
-                                                        coord_size,
-                                                        help) ||
-                                     constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG,
-                                                        "approaches",
-                                                        parameters.approaches,
-                                                        "coordinates",
-                                                        coord_size,
-                                                        help);
+    const bool param_size_mismatch =
+        constrainParamSize(
+            PARAMETER_SIZE_MISMATCH_MSG, "hints", parameters.hints, coord_size, help) ||
+        constrainParamSize(
+            PARAMETER_SIZE_MISMATCH_MSG, "bearings", parameters.bearings, coord_size, help) ||
+        constrainParamSize(
+            PARAMETER_SIZE_MISMATCH_MSG, "radiuses", parameters.radiuses, coord_size, help) ||
+        constrainParamSize(
+            PARAMETER_SIZE_MISMATCH_MSG, "approaches", parameters.approaches, coord_size, help);
 
     if (!param_size_mismatch && parameters.coordinates.size() < 2)
     {

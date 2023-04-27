@@ -106,7 +106,7 @@ struct BaseParameters
     bool IsValid() const
     {
         return (hints.empty() || hints.size() == coordinates.size()) &&
-               (bearings.empty() || bearings.size() == radiuses.size()) &&
+               (bearings.empty() || bearings.size() == coordinates.size()) &&
                (radiuses.empty() || radiuses.size() == coordinates.size()) &&
                (approaches.empty() || approaches.size() == coordinates.size()) &&
                std::all_of(bearings.begin(),

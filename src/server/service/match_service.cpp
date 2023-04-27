@@ -1,10 +1,12 @@
 #include "server/service/match_service.hpp"
-#include "server/service/utils.hpp"
 
 #include "server/api/parameters_parser.hpp"
+#include "server/service/utils.hpp"
 #include "engine/api/match_parameters.hpp"
 
 #include "util/json_container.hpp"
+
+#include <boost/format.hpp>
 
 namespace osrm::server::service
 {
@@ -15,38 +17,16 @@ std::string getWrongOptionHelp(const engine::api::MatchParameters &parameters)
     std::string help;
 
     const auto coord_size = parameters.coordinates.size();
-    const auto bearings_size = parameters.bearings.size();
 
-    const bool param_size_mismatch = constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG,
-                                                        "hints",
-                                                        parameters.hints,
-                                                        "coordinates",
-                                                        coord_size,
-                                                        help) ||
-                                     constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG,
-                                                        "bearings",
-                                                        parameters.bearings,
-                                                        "coordinates",
-                                                        coord_size,
-                                                        help) ||
-                                     constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG,
-                                                        "radiuses",
-                                                        parameters.radiuses,
-                                                        "bearings",
-                                                        bearings_size,
-                                                        help) ||
-                                     constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG,
-                                                        "radiuses",
-                                                        parameters.radiuses,
-                                                        "coordinates",
-                                                        coord_size,
-                                                        help) ||
-                                     constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG,
-                                                        "timestamps",
-                                                        parameters.timestamps,
-                                                        "coordinates",
-                                                        coord_size,
-                                                        help);
+    const bool param_size_mismatch =
+        constrainParamSize(
+            PARAMETER_SIZE_MISMATCH_MSG, "hints", parameters.hints, coord_size, help) ||
+        constrainParamSize(
+            PARAMETER_SIZE_MISMATCH_MSG, "bearings", parameters.bearings, coord_size, help) ||
+        constrainParamSize(
+            PARAMETER_SIZE_MISMATCH_MSG, "radiuses", parameters.radiuses, coord_size, help) ||
+        constrainParamSize(
+            PARAMETER_SIZE_MISMATCH_MSG, "timestamps", parameters.timestamps, coord_size, help);
 
     if (!param_size_mismatch && parameters.coordinates.size() < 2)
     {

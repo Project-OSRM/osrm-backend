@@ -112,8 +112,7 @@ Feature: Annotations
         And the query options
           | annotations | speed,distance,duration,nodes |
           | bearings    | 90,5;180,5                    |
-          | radiuses    | unlimited;unlimited           |
 
         When I route I should get
-            | from | to | route    | a:speed | a:distance             | a:duration | a:nodes |
+            | from | to | route    | a:speed | a:distance            | a:duration | a:nodes |
             | a    | c  | abc,abc  | 10:10   | 249.9876189:299.962882 | 25:30      | 1:2:3   |
