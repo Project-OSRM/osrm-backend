@@ -1,5 +1,7 @@
 # Unreleased
   - Changes from 5.27.1
+    - Features
+      - ADDED: Add support for a default_radius flag. [#6575](https://github.com/Project-OSRM/osrm-backend/pull/6575)
     - Build:
       - ADDED: Add CI job which builds OSRM with gcc 12. [#6455](https://github.com/Project-OSRM/osrm-backend/pull/6455)
       - CHANGED: Upgrade to clang-tidy 15. [#6439](https://github.com/Project-OSRM/osrm-backend/pull/6439)
@@ -8,6 +10,7 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: keep libosrm* in the docker image for downstream linking [#6602](https://github.com/Project-OSRM/osrm-backend/pull/6602)
       - CHANGED: Move vector in CSVFilesParser instead copying it. [#6470](https://github.com/Project-OSRM/osrm-backend/pull/6470)
       - REMOVED: Get rid of unused functions in util/json_util.hpp. [#6446](https://github.com/Project-OSRM/osrm-backend/pull/6446)
       - FIXED: Apply workaround for Conan installation issue on CI. [#6442](https://github.com/Project-OSRM/osrm-backend/pull/6442)
@@ -18,6 +21,8 @@
       - CHANGED: Make edge metrics strongly typed [#6420](https://github.com/Project-OSRM/osrm-backend/pull/6420)
       - FIXED: Typo in file name src/util/timed_historgram.cpp -> src/util/timed_histogram.cpp [#6428](https://github.com/Project-OSRM/osrm-backend/issues/6428)
       - CHANGED: Replace boost::string_ref with std::string_view [#6433](https://github.com/Project-OSRM/osrm-backend/pull/6433)
+      - ADDED: Print tracebacks for Lua runtime errors [#6564](https://github.com/Project-OSRM/osrm-backend/pull/6564)
+      - FIXED: Added a variable to preprocessor guard in file osrm-backend/include/util/range_table.hpp to solve build error. [#6596](https://github.com/Project-OSRM/osrm-backend/pull/6596)
     - Routing:
       - FIXED: Fix adding traffic signal penalties during compression [#6419](https://github.com/Project-OSRM/osrm-backend/pull/6419)
 # 5.27.1

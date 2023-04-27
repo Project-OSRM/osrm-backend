@@ -27,6 +27,10 @@ namespace osrm::engine::plugins
 class BasePlugin
 {
   protected:
+    BasePlugin() = default;
+
+    BasePlugin(const boost::optional<double> default_radius_) : default_radius(default_radius_) {}
+
     bool CheckAllCoordinates(const std::vector<util::Coordinate> &coordinates) const
     {
         return !std::any_of(
@@ -237,7 +241,7 @@ class BasePlugin
             phantom_nodes[i] = facade.NearestPhantomNodes(
                 parameters.coordinates[i],
                 number_of_results,
-                use_radiuses ? parameters.radiuses[i] : boost::none,
+                use_radiuses ? parameters.radiuses[i] : default_radius,
                 use_bearings ? parameters.bearings[i] : boost::none,
                 use_approaches && parameters.approaches[i] ? parameters.approaches[i].get()
                                                            : engine::Approach::UNRESTRICTED);
@@ -279,7 +283,7 @@ class BasePlugin
 
             alternatives[i] = facade.NearestCandidatesWithAlternativeFromBigComponent(
                 parameters.coordinates[i],
-                use_radiuses ? parameters.radiuses[i] : boost::none,
+                use_radiuses ? parameters.radiuses[i] : default_radius,
                 use_bearings ? parameters.bearings[i] : boost::none,
                 use_approaches && parameters.approaches[i] ? parameters.approaches[i].get()
                                                            : engine::Approach::UNRESTRICTED,
@@ -320,6 +324,8 @@ class BasePlugin
         return std::string("Could not find a matching segment for coordinate ") +
                std::to_string(missing_index);
     }
+
+    const boost::optional<double> default_radius;
 };
 } // namespace osrm::engine::plugins
 

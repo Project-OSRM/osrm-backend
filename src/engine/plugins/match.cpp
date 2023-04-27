@@ -181,24 +181,29 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     if (tidied.parameters.radiuses.empty())
     {
         search_radiuses.resize(tidied.parameters.coordinates.size(),
-                               routing_algorithms::DEFAULT_GPS_PRECISION * RADIUS_MULTIPLIER);
+                               default_radius.has_value()
+                                   ? *default_radius
+                                   : routing_algorithms::DEFAULT_GPS_PRECISION * RADIUS_MULTIPLIER);
     }
     else
     {
         search_radiuses.resize(tidied.parameters.coordinates.size());
-        std::transform(tidied.parameters.radiuses.begin(),
-                       tidied.parameters.radiuses.end(),
-                       search_radiuses.begin(),
-                       [](const boost::optional<double> &maybe_radius) {
-                           if (maybe_radius)
-                           {
-                               return *maybe_radius * RADIUS_MULTIPLIER;
-                           }
-                           else
-                           {
-                               return routing_algorithms::DEFAULT_GPS_PRECISION * RADIUS_MULTIPLIER;
-                           }
-                       });
+        std::transform(
+            tidied.parameters.radiuses.begin(),
+            tidied.parameters.radiuses.end(),
+            search_radiuses.begin(),
+            [default_radius = this->default_radius](const boost::optional<double> &maybe_radius) {
+                if (maybe_radius)
+                {
+                    return *maybe_radius * RADIUS_MULTIPLIER;
+                }
+                else
+                {
+                    return default_radius.has_value()
+                               ? *default_radius
+                               : routing_algorithms::DEFAULT_GPS_PRECISION * RADIUS_MULTIPLIER;
+                }
+            });
     }
 
     auto candidates_lists =
