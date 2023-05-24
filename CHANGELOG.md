@@ -12,6 +12,7 @@
     - Misc:
       - ADDED: Add support for "unlimited" to be passed as a value for the default-radius and max-matching-radius flags. [#6599](https://github.com/Project-OSRM/osrm-backend/pull/6599)
       - CHANGED: Allow -1.0 as unlimited for default_radius value. [#6599](https://github.com/Project-OSRM/osrm-backend/pull/6599)
+      - CHANGED: keep libosrm* in the docker image for downstream linking [#6602](https://github.com/Project-OSRM/osrm-backend/pull/6602)
       - CHANGED: Move vector in CSVFilesParser instead copying it. [#6470](https://github.com/Project-OSRM/osrm-backend/pull/6470)
       - REMOVED: Get rid of unused functions in util/json_util.hpp. [#6446](https://github.com/Project-OSRM/osrm-backend/pull/6446)
       - FIXED: Apply workaround for Conan installation issue on CI. [#6442](https://github.com/Project-OSRM/osrm-backend/pull/6442)
@@ -23,6 +24,7 @@
       - FIXED: Typo in file name src/util/timed_historgram.cpp -> src/util/timed_histogram.cpp [#6428](https://github.com/Project-OSRM/osrm-backend/issues/6428)
       - CHANGED: Replace boost::string_ref with std::string_view [#6433](https://github.com/Project-OSRM/osrm-backend/pull/6433)
       - ADDED: Print tracebacks for Lua runtime errors [#6564](https://github.com/Project-OSRM/osrm-backend/pull/6564)
+      - FIXED: Added a variable to preprocessor guard in file osrm-backend/include/util/range_table.hpp to solve build error. [#6596](https://github.com/Project-OSRM/osrm-backend/pull/6596)
     - Routing:
       - FIXED: Fix adding traffic signal penalties during compression [#6419](https://github.com/Project-OSRM/osrm-backend/pull/6419)
 # 5.27.1
