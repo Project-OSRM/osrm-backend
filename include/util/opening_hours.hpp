@@ -3,6 +3,7 @@
 
 #include <boost/date_time/gregorian/gregorian.hpp>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
