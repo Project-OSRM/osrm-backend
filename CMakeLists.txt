@@ -275,7 +275,10 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 endif()
 
 if(UNIX AND NOT APPLE)
-  set(MAYBE_RT_LIBRARY -lrt)
+  find_library(RT_LIB rt)
+  if (RT_LIB)
+    set(MAYBE_RT_LIBRARY -lrt)
+  endif()
 endif()
 
 find_package(Threads REQUIRED)
