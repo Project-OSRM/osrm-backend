@@ -648,12 +648,12 @@ Represents a route between two waypoints.
 - `distance`: The distance traveled by this route leg, in `float` meters.
 - `duration`: The estimated travel time, in `float` number of seconds.
 - `weight`: The calculated weight of the route leg.
-- `summary`: Summary of the route taken as `string`. Depends on the `summary` parameter:
+- `summary`: Summary of the route taken as `string`. Depends on the `steps` parameter:
 
-| summary      |                                                                       |
-|--------------|-----------------------------------------------------------------------|
-| true         | Names of the two major roads used. Can be empty if the route is too short.|
-| false        | empty `string`                                                        |
+| steps |                                                                       |
+|-------|-----------------------------------------------------------------------|
+| true  | Names of the two major roads used. Can be empty if the route is too short.|
+| false | empty `string`                                                        |
 
 - `steps`: Depends on the `steps` parameter.
 
