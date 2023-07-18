@@ -12,9 +12,10 @@ struct ExtractionSegment
                       const osrm::util::Coordinate target_,
                       double distance_,
                       double weight_,
-                      double duration_)
+                      double duration_,
+                      const osrm::extractor::NodeBasedEdgeClassification flags_)
         : source(source_), target(target_), distance(distance_), weight(weight_),
-          duration(duration_)
+          duration(duration_), flags(flags_)
     {
     }
 
@@ -23,6 +24,7 @@ struct ExtractionSegment
     const double distance;
     double weight;
     double duration;
+    const osrm::extractor::NodeBasedEdgeClassification flags;
 };
 } // namespace osrm::extractor
 

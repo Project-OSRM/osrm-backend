@@ -706,7 +706,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             const auto accurate_distance =
                 util::coordinate_calculation::greatCircleDistance(source_coord, target_coord);
 
-            ExtractionSegment segment(source_coord, target_coord, distance, weight, duration);
+            ExtractionSegment segment(source_coord, target_coord, distance, weight, duration, edge_iterator->result.flags);
             scripting_environment.ProcessSegment(segment);
 
             auto &edge = edge_iterator->result;
