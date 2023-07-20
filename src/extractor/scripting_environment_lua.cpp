@@ -471,29 +471,35 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         [](ExtractionRelationContainer &cont, const ExtractionRelation::OsmIDTyped &rel_id)
             -> const ExtractionRelation & { return cont.GetRelationData(rel_id); });
 
-    context.state.new_usertype<NodeBasedEdgeClassification>("NodeBasedEdgeClassification",
-                                                            "forward",
-                                                            // can't just do &NodeBasedEdgeClassification::forward with bitfields
-                                                            sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.forward; }),
-                                                            "backward",
-                                                            sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.backward; }),
-                                                            "is_split",
-                                                            sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.is_split; }),
-                                                            "roundabout",
-                                                            sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.roundabout; }),
-                                                            "circular",
-                                                            sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.circular; }),
-                                                            "startpoint",
-                                                            sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.startpoint; }),
-                                                            "restricted",
-                                                            sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.restricted; }),
-                                                            "road_classification",
-                                                            sol::property([](NodeBasedEdgeClassification &c) -> RoadClassification { return c.road_classification; }),
-                                                            "highway_turn_classification",
-                                                            sol::property([](NodeBasedEdgeClassification &c) -> uint8_t { return c.highway_turn_classification; }),
-                                                            "access_turn_classification",
-                                                            sol::property([](NodeBasedEdgeClassification &c) -> uint8_t { return c.access_turn_classification; })
-    );
+    context.state.new_usertype<NodeBasedEdgeClassification>(
+        "NodeBasedEdgeClassification",
+        "forward",
+        // can't just do &NodeBasedEdgeClassification::forward with bitfields
+        sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.forward; }),
+        "backward",
+        sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.backward; }),
+        "is_split",
+        sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.is_split; }),
+        "roundabout",
+        sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.roundabout; }),
+        "circular",
+        sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.circular; }),
+        "startpoint",
+        sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.startpoint; }),
+        "restricted",
+        sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.restricted; }),
+        "road_classification",
+        sol::property([](NodeBasedEdgeClassification &c) -> RoadClassification {
+            return c.road_classification;
+        }),
+        "highway_turn_classification",
+        sol::property([](NodeBasedEdgeClassification &c) -> uint8_t {
+            return c.highway_turn_classification;
+        }),
+        "access_turn_classification",
+        sol::property([](NodeBasedEdgeClassification &c) -> uint8_t {
+            return c.access_turn_classification;
+        }));
 
     context.state.new_usertype<ExtractionSegment>("ExtractionSegment",
                                                   "source",
@@ -508,7 +514,6 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                   &ExtractionSegment::duration,
                                                   "flags",
                                                   &ExtractionSegment::flags);
-
 
     // Keep in mind .location is available only if .pbf is preprocessed to set the location with the
     // ref using osmium command "osmium add-locations-to-ways"
