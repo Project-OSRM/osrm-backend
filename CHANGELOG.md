@@ -7,6 +7,7 @@
       - CHANGED: Upgrade to clang-tidy 15. [#6439](https://github.com/Project-OSRM/osrm-backend/pull/6439)
       - CHANGED: Update actions/cache to v3. [#6420](https://github.com/Project-OSRM/osrm-backend/pull/6420)
       - REMOVED: Drop support of Node 12 & 14. [#6431](https://github.com/Project-OSRM/osrm-backend/pull/6431)
+      - ADDED: Add 'load directly' mode to default Cucumber test suite. [#6663](https://github.com/Project-OSRM/osrm-backend/pull/6663)
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
