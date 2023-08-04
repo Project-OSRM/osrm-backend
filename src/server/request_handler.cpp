@@ -9,21 +9,16 @@
 #include "util/log.hpp"
 #include "util/string_util.hpp"
 #include "util/timing_util.hpp"
-#include "util/typedefs.hpp"
 
 #include "engine/status.hpp"
 #include "osrm/osrm.hpp"
 #include "util/json_container.hpp"
 
 #include <boost/iostreams/copy.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
-#include <boost/iostreams/filtering_streambuf.hpp>
 
 #include <ctime>
 
 #include <algorithm>
-#include <iostream>
-#include <iterator>
 #include <string>
 #include <thread>
 
@@ -34,6 +29,48 @@ void RequestHandler::RegisterServiceHandler(
     std::unique_ptr<ServiceHandlerInterface> service_handler_)
 {
     service_handler = std::move(service_handler_);
+}
+
+void SendResponse(ServiceHandler::ResultT &result, http::reply &current_reply)
+{
+
+    current_reply.headers.emplace_back("Access-Control-Allow-Origin", "*");
+    current_reply.headers.emplace_back("Access-Control-Allow-Methods", "GET");
+    current_reply.headers.emplace_back("Access-Control-Allow-Headers",
+                                       "X-Requested-With, Content-Type");
+    if (result.is<util::json::Object>())
+    {
+        current_reply.headers.emplace_back("Content-Type", "application/json; charset=UTF-8");
+        current_reply.headers.emplace_back("Content-Disposition",
+                                           "inline; filename=\"response.json\"");
+
+        util::json::render(current_reply.content, result.get<util::json::Object>());
+    }
+    else if (result.is<flatbuffers::FlatBufferBuilder>())
+    {
+        auto &buffer = result.get<flatbuffers::FlatBufferBuilder>();
+        current_reply.content.resize(buffer.GetSize());
+        std::copy(buffer.GetBufferPointer(),
+                  buffer.GetBufferPointer() + buffer.GetSize(),
+                  current_reply.content.begin());
+
+        current_reply.headers.emplace_back(
+            "Content-Type", "application/x-flatbuffers;schema=osrm.engine.api.fbresult");
+    }
+    else
+    {
+        BOOST_ASSERT(result.is<std::string>());
+        current_reply.content.resize(result.get<std::string>().size());
+        std::copy(result.get<std::string>().cbegin(),
+                  result.get<std::string>().cend(),
+                  current_reply.content.begin());
+
+        current_reply.headers.emplace_back("Content-Type", "application/x-protobuf");
+    }
+
+    // set headers
+    current_reply.headers.emplace_back("Content-Length",
+                                       std::to_string(current_reply.content.size()));
 }
 
 void RequestHandler::HandleRequest(const http::request &current_request, http::reply &current_reply)
@@ -96,43 +133,7 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
                                             std::to_string(position) + ": \"" + context + "\"";
         }
 
-        current_reply.headers.emplace_back("Access-Control-Allow-Origin", "*");
-        current_reply.headers.emplace_back("Access-Control-Allow-Methods", "GET");
-        current_reply.headers.emplace_back("Access-Control-Allow-Headers",
-                                           "X-Requested-With, Content-Type");
-        if (result.is<util::json::Object>())
-        {
-            current_reply.headers.emplace_back("Content-Type", "application/json; charset=UTF-8");
-            current_reply.headers.emplace_back("Content-Disposition",
-                                               "inline; filename=\"response.json\"");
-
-            util::json::render(current_reply.content, result.get<util::json::Object>());
-        }
-        else if (result.is<flatbuffers::FlatBufferBuilder>())
-        {
-            auto &buffer = result.get<flatbuffers::FlatBufferBuilder>();
-            current_reply.content.resize(buffer.GetSize());
-            std::copy(buffer.GetBufferPointer(),
-                      buffer.GetBufferPointer() + buffer.GetSize(),
-                      current_reply.content.begin());
-
-            current_reply.headers.emplace_back(
-                "Content-Type", "application/x-flatbuffers;schema=osrm.engine.api.fbresult");
-        }
-        else
-        {
-            BOOST_ASSERT(result.is<std::string>());
-            current_reply.content.resize(result.get<std::string>().size());
-            std::copy(result.get<std::string>().cbegin(),
-                      result.get<std::string>().cend(),
-                      current_reply.content.begin());
-
-            current_reply.headers.emplace_back("Content-Type", "application/x-protobuf");
-        }
-
-        // set headers
-        current_reply.headers.emplace_back("Content-Length",
-                                           std::to_string(current_reply.content.size()));
+        SendResponse(result, current_reply);
 
         if (!std::getenv("DISABLE_ACCESS_LOGGING"))
         {
@@ -167,6 +168,19 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
                         << current_reply.status << " " //
                         << request_string;
         }
+    }
+    catch (const util::DisabledDatasetException &e)
+    {
+        current_reply.status = http::reply::bad_request;
+
+        ServiceHandler::ResultT result = util::json::Object();
+        auto &json_result = result.get<util::json::Object>();
+        json_result.values["code"] = "DisabledDataset";
+        json_result.values["message"] = e.what();
+        SendResponse(result, current_reply);
+
+        util::Log(logWARNING) << "[disabled dataset error][" << tid << "] code: DisabledDataset_"
+                              << e.Dataset() << ", uri: " << current_request.uri;
     }
     catch (const std::exception &e)
     {

@@ -205,9 +205,50 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
         }
     }
 
+    auto disable_feature_dataset = params.Get("disable_feature_dataset");
+    if (disable_feature_dataset.IsArray())
+    {
+        Napi::Array datasets = disable_feature_dataset.As<Napi::Array>();
+        for (uint32_t i = 0; i < datasets.Length(); ++i)
+        {
+            Napi::Value dataset = datasets.Get(i);
+            if (!dataset.IsString())
+            {
+                ThrowError(args.Env(), "disable_feature_dataset list option must be a string");
+                return engine_config_ptr();
+            }
+            auto dataset_str = dataset.ToString().Utf8Value();
+            if (dataset_str == "ROUTE_GEOMETRY")
+            {
+                engine_config->disable_feature_dataset.push_back(
+                    osrm::storage::FeatureDataset::ROUTE_GEOMETRY);
+            }
+            else if (dataset_str == "ROUTE_STEPS")
+            {
+                engine_config->disable_feature_dataset.push_back(
+                    osrm::storage::FeatureDataset::ROUTE_STEPS);
+            }
+            else
+            {
+                ThrowError(
+                    args.Env(),
+                    "disable_feature_dataset array can include 'ROUTE_GEOMETRY', 'ROUTE_STEPS'.");
+                return engine_config_ptr();
+            }
+        }
+    }
+    else if (!disable_feature_dataset.IsUndefined())
+    {
+        ThrowError(args.Env(),
+                   "disable_feature_dataset option must be an array and can include the string "
+                   "values 'ROUTE_GEOMETRY', 'ROUTE_STEPS'.");
+        return engine_config_ptr();
+    }
+
     if (!path.IsUndefined())
     {
-        engine_config->storage_config = osrm::StorageConfig(path.ToString().Utf8Value());
+        engine_config->storage_config = osrm::StorageConfig(path.ToString().Utf8Value(),
+                                                            engine_config->disable_feature_dataset);
 
         engine_config->use_shared_memory = false;
     }

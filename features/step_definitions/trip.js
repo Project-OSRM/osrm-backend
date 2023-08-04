@@ -91,7 +91,7 @@ module.exports = function () {
 
                     var encodedResult = '';
 
-                    if (json.trips) row.trips.split(',').forEach((sub, si) => {
+                    if (json.trips && row.trips) row.trips.split(',').forEach((sub, si) => {
                         if (si >= subTrips.length) {
                             ok = false;
                         } else {
@@ -134,7 +134,6 @@ module.exports = function () {
                 } else {
                     var params = this.queryParams,
                         waypoints = [];
-                    params['steps'] = 'true';
                     if (row.from && row.to) {
                         var fromNode = this.findNodeByName(row.from);
                         if (!fromNode) throw new Error(util.format('*** unknown from-node "%s"', row.from));

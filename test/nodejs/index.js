@@ -163,6 +163,43 @@ test('constructor: throws on invalid custom limits', function(assert) {
         })
     });
 });
+test('constructor: throws on invalid disable_feature_dataset option', function(assert) {
+    assert.plan(1);
+    assert.throws(function() {
+        var osrm = new OSRM({
+            path: monaco_path,
+            disable_feature_dataset: ['NOT_EXIST'],
+        })
+    });
+});
+
+test('constructor: throws on non-array disable_feature_dataset', function(assert) {
+    assert.plan(1);
+    assert.throws(function() {
+        var osrm = new OSRM({
+            path: monaco_path,
+            disable_feature_dataset: 'ROUTE_GEOMETRY',
+        })
+    });
+});
+
+test('constructor: ok on valid disable_feature_dataset option', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({
+        path: monaco_path,
+        disable_feature_dataset: ['ROUTE_GEOMETRY'],
+    });
+    assert.ok(osrm);
+});
+
+test('constructor: ok on multiple overlapping disable_feature_dataset options', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({
+        path: monaco_path,
+        disable_feature_dataset: ['ROUTE_GEOMETRY', 'ROUTE_STEPS'],
+    });
+    assert.ok(osrm);
+});
 
 require('./route.js');
 require('./trip.js');

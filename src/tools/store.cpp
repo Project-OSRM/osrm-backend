@@ -2,6 +2,7 @@
 #include "storage/shared_memory.hpp"
 #include "storage/shared_monitor.hpp"
 #include "storage/storage.hpp"
+#include "osrm/storage_config.hpp"
 
 #include "osrm/exception.hpp"
 #include "util/log.hpp"
@@ -9,6 +10,7 @@
 #include "util/typedefs.hpp"
 #include "util/version.hpp"
 
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
@@ -100,7 +102,8 @@ bool generateDataStoreOptions(const int argc,
                               std::string &dataset_name,
                               bool &list_datasets,
                               bool &list_blocks,
-                              bool &only_metric)
+                              bool &only_metric,
+                              std::vector<storage::FeatureDataset> &disable_feature_dataset)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
@@ -125,6 +128,12 @@ bool generateDataStoreOptions(const int argc,
          boost::program_options::value<std::string>(&dataset_name)->default_value(""),
          "Name of the dataset to load into memory. This allows having multiple datasets in memory "
          "at the same time.") //
+        ("disable-feature-dataset",
+         boost::program_options::value<std::vector<storage::FeatureDataset>>(
+             &disable_feature_dataset)
+             ->multitoken(),
+         "Disables a feature dataset from being loaded into memory if not needed. Options: "
+         "ROUTE_STEPS, ROUTE_GEOMETRY") //
         ("list",
          boost::program_options::value<bool>(&list_datasets)
              ->default_value(false)
@@ -239,6 +248,7 @@ try
     bool list_datasets = false;
     bool list_blocks = false;
     bool only_metric = false;
+    std::vector<storage::FeatureDataset> disable_feature_dataset;
     if (!generateDataStoreOptions(argc,
                                   argv,
                                   verbosity,
@@ -247,7 +257,8 @@ try
                                   dataset_name,
                                   list_datasets,
                                   list_blocks,
-                                  only_metric))
+                                  only_metric,
+                                  disable_feature_dataset))
     {
         return EXIT_SUCCESS;
     }
@@ -260,7 +271,7 @@ try
         return EXIT_SUCCESS;
     }
 
-    storage::StorageConfig config(base_path);
+    storage::StorageConfig config(base_path, disable_feature_dataset);
     if (!config.IsValid())
     {
         util::Log(logERROR) << "Config contains invalid file paths. Exiting!";

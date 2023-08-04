@@ -294,17 +294,20 @@ std::vector<std::pair<bool, boost::filesystem::path>> Storage::GetStaticFiles()
     std::vector<std::pair<bool, boost::filesystem::path>> files = {
         {IS_OPTIONAL, config.GetPath(".osrm.cells")},
         {IS_OPTIONAL, config.GetPath(".osrm.partition")},
-        {IS_REQUIRED, config.GetPath(".osrm.icd")},
-        {IS_REQUIRED, config.GetPath(".osrm.properties")},
-        {IS_REQUIRED, config.GetPath(".osrm.nbg_nodes")},
         {IS_REQUIRED, config.GetPath(".osrm.ebg_nodes")},
-        {IS_REQUIRED, config.GetPath(".osrm.tls")},
-        {IS_REQUIRED, config.GetPath(".osrm.tld")},
-        {IS_REQUIRED, config.GetPath(".osrm.timestamp")},
         {IS_REQUIRED, config.GetPath(".osrm.maneuver_overrides")},
-        {IS_REQUIRED, config.GetPath(".osrm.edges")},
-        {IS_REQUIRED, config.GetPath(".osrm.names")},
-        {IS_REQUIRED, config.GetPath(".osrm.ramIndex")}};
+        {IS_REQUIRED, config.GetPath(".osrm.nbg_nodes")},
+        {IS_REQUIRED, config.GetPath(".osrm.ramIndex")},
+        {IS_REQUIRED, config.GetPath(".osrm.properties")},
+        {IS_REQUIRED, config.GetPath(".osrm.timestamp")}};
+
+    for (const auto &file : {".osrm.edges", ".osrm.names", ".osrm.icd", ".osrm.tls", ".osrm.tld"})
+    {
+        if (config.IsRequiredConfiguredInput(file))
+        {
+            files.push_back({IS_REQUIRED, config.GetPath(file)});
+        }
+    }
 
     for (const auto &file : files)
     {
@@ -394,12 +397,6 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
             absolute_file_index_path.begin(), absolute_file_index_path.end(), file_index_path_ptr);
     }
 
-    // Name data
-    {
-        auto name_table = make_name_table_view(index, "/common/names");
-        extractor::files::readNames(config.GetPath(".osrm.names"), name_table);
-    }
-
     // Timestamp mark
     {
         auto timestamp_ref = make_timestamp_view(index, "/common/timestamp");
@@ -412,25 +409,39 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
     }
 
     // Turn lane data
+    if (config.IsRequiredConfiguredInput(".osrm.tld"))
     {
         auto turn_lane_data = make_lane_data_view(index, "/common/turn_lanes");
         extractor::files::readTurnLaneData(config.GetPath(".osrm.tld"), turn_lane_data);
     }
 
     // Turn lane descriptions
+    if (config.IsRequiredConfiguredInput(".osrm.tls"))
     {
         auto views = make_turn_lane_description_views(index, "/common/turn_lanes");
         extractor::files::readTurnLaneDescriptions(
             config.GetPath(".osrm.tls"), std::get<0>(views), std::get<1>(views));
     }
 
-    // Load edge-based nodes data
+    // Load intersection data
+    if (config.IsRequiredConfiguredInput(".osrm.icd"))
     {
-        auto node_data = make_ebn_data_view(index, "/common/ebg_node_data");
-        extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
+        auto intersection_bearings_view =
+            make_intersection_bearings_view(index, "/common/intersection_bearings");
+        auto entry_classes = make_entry_classes_view(index, "/common/entry_classes");
+        extractor::files::readIntersections(
+            config.GetPath(".osrm.icd"), intersection_bearings_view, entry_classes);
+    }
+
+    // Name data
+    if (config.IsRequiredConfiguredInput(".osrm.names"))
+    {
+        auto name_table = make_name_table_view(index, "/common/names");
+        extractor::files::readNames(config.GetPath(".osrm.names"), name_table);
     }
 
     // Load original edge data
+    if (config.IsRequiredConfiguredInput(".osrm.edges"))
     {
         auto turn_data = make_turn_data_view(index, "/common/turn_data");
 
@@ -439,6 +450,12 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
 
         guidance::files::readTurnData(
             config.GetPath(".osrm.edges"), turn_data, *connectivity_checksum_ptr);
+    }
+
+    // Load edge-based nodes data
+    {
+        auto node_data = make_ebn_data_view(index, "/common/ebg_node_data");
+        extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
     }
 
     // Loading list of coordinates
@@ -464,15 +481,6 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
                                                 *profile_properties_ptr);
 
         metric_name = profile_properties_ptr->GetWeightName();
-    }
-
-    // Load intersection data
-    {
-        auto intersection_bearings_view =
-            make_intersection_bearings_view(index, "/common/intersection_bearings");
-        auto entry_classes = make_entry_classes_view(index, "/common/entry_classes");
-        extractor::files::readIntersections(
-            config.GetPath(".osrm.icd"), intersection_bearings_view, entry_classes);
     }
 
     if (boost::filesystem::exists(config.GetPath(".osrm.partition")))
@@ -545,15 +553,18 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
         contractor::files::readGraph(
             config.GetPath(".osrm.hsgr"), metrics, graph_connectivity_checksum);
 
-        auto turns_connectivity_checksum =
-            *index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum");
-        if (turns_connectivity_checksum != graph_connectivity_checksum)
+        if (config.IsRequiredConfiguredInput("osrm.edges"))
         {
-            throw util::exception(
-                "Connectivity checksum " + std::to_string(graph_connectivity_checksum) + " in " +
-                config.GetPath(".osrm.hsgr").string() + " does not equal to checksum " +
-                std::to_string(turns_connectivity_checksum) + " in " +
-                config.GetPath(".osrm.edges").string());
+            auto turns_connectivity_checksum =
+                *index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum");
+            if (turns_connectivity_checksum != graph_connectivity_checksum)
+            {
+                throw util::exception(
+                    "Connectivity checksum " + std::to_string(graph_connectivity_checksum) +
+                    " in " + config.GetPath(".osrm.hsgr").string() +
+                    " does not equal to checksum " + std::to_string(turns_connectivity_checksum) +
+                    " in " + config.GetPath(".osrm.edges").string());
+            }
         }
     }
 
@@ -573,15 +584,18 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
         customizer::files::readGraph(
             config.GetPath(".osrm.mldgr"), graph_view, graph_connectivity_checksum);
 
-        auto turns_connectivity_checksum =
-            *index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum");
-        if (turns_connectivity_checksum != graph_connectivity_checksum)
+        if (config.IsRequiredConfiguredInput("osrm.edges"))
         {
-            throw util::exception(
-                "Connectivity checksum " + std::to_string(graph_connectivity_checksum) + " in " +
-                config.GetPath(".osrm.hsgr").string() + " does not equal to checksum " +
-                std::to_string(turns_connectivity_checksum) + " in " +
-                config.GetPath(".osrm.edges").string());
+            auto turns_connectivity_checksum =
+                *index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum");
+            if (turns_connectivity_checksum != graph_connectivity_checksum)
+            {
+                throw util::exception(
+                    "Connectivity checksum " + std::to_string(graph_connectivity_checksum) +
+                    " in " + config.GetPath(".osrm.mldgr").string() +
+                    " does not equal to checksum " + std::to_string(turns_connectivity_checksum) +
+                    " in " + config.GetPath(".osrm.edges").string());
+            }
         }
     }
 }

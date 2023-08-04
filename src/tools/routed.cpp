@@ -4,6 +4,7 @@
 #include "util/meminfo.hpp"
 #include "util/version.hpp"
 
+#include "osrm/datasets.hpp"
 #include "osrm/engine_config.hpp"
 #include "osrm/exception.hpp"
 #include "osrm/osrm.hpp"
@@ -23,7 +24,6 @@
 #include <exception>
 #include <future>
 #include <iostream>
-#include <memory>
 #include <new>
 #include <string>
 #include <thread>
@@ -69,6 +69,7 @@ std::istream &operator>>(std::istream &in, EngineConfig::Algorithm &algorithm)
         throw util::RuntimeError(token, ErrorCode::UnknownAlgorithm, SOURCE_REF);
     return in;
 }
+
 } // namespace osrm::engine
 
 // overload validate for the double type to allow "unlimited" as an input
@@ -155,6 +156,10 @@ inline unsigned generateServerProgramOptions(const int argc,
          value<EngineConfig::Algorithm>(&config.algorithm)
              ->default_value(EngineConfig::Algorithm::CH, "CH"),
          "Algorithm to use for the data. Can be CH, CoreCH, MLD.") //
+        ("disable-feature-dataset",
+         value<std::vector<storage::FeatureDataset>>(&config.disable_feature_dataset)->multitoken(),
+         "Disables a feature dataset from being loaded into memory if not needed. Options: "
+         "ROUTE_STEPS, ROUTE_GEOMETRY") //
         ("max-viaroute-size",
          value<int>(&config.max_locations_viaroute)->default_value(500),
          "Max. locations supported in viaroute query") //
@@ -276,7 +281,7 @@ try
 
     if (!base_path.empty())
     {
-        config.storage_config = storage::StorageConfig(base_path);
+        config.storage_config = storage::StorageConfig(base_path, config.disable_feature_dataset);
     }
     if (!config.use_shared_memory && !config.storage_config.IsValid())
     {

@@ -33,6 +33,11 @@ module.exports = function () {
         callback();
     });
 
+    this.Given(/^the data load extra arguments "(.*?)"$/, (args, callback) => {
+        this.loaderArgs = this.expandOptions(args);
+        callback();
+    });
+
     this.Given(/^a grid size of ([0-9.]+) meters$/, (meters, callback) => {
         this.setGridSize(meters);
         callback();
