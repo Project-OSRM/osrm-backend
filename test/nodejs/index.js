@@ -131,6 +131,18 @@ test('constructor: throws if default_radius is not a number', function(assert) {
     assert.ok(new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 'unlimited'}), 'Does accept unlimited');
 });
 
+test('constructor: takes a keepalive_timeout argument', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({algorithm: 'MLD', path: monaco_mld_path, keepalive_timeout: 10});
+    assert.ok(osrm);
+});
+
+test('constructor: throws if keepalive_timeout is not a number', function(assert) {
+    assert.plan(2);
+    assert.throws(function() { new OSRM({algorithm: 'MLD', path: monaco_mld_path, keepalive_timeout: 'abc'}); }, /keepalive_timeout must be an integral number/, 'Does not accept invalid string');
+    assert.ok(new OSRM({algorithm: 'MLD', path: monaco_mld_path, keepalive_timeout: 1}), 'Does accept number');
+});
+
 test('constructor: parses custom limits', function(assert) {
     assert.plan(1);
     var osrm = new OSRM({
