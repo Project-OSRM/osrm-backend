@@ -12,6 +12,7 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - FIXED: Fix an error in a RouteParameters AnnotationsType operator overload. [#6646](https://github.com/Project-OSRM/osrm-backend/pull/6646)
       - ADDED: Add support for "unlimited" to be passed as a value for the default-radius and max-matching-radius flags. [#6599](https://github.com/Project-OSRM/osrm-backend/pull/6599)
       - CHANGED: Allow -1.0 as unlimited for default_radius value. [#6599](https://github.com/Project-OSRM/osrm-backend/pull/6599)
       - CHANGED: keep libosrm* in the docker image for downstream linking [#6602](https://github.com/Project-OSRM/osrm-backend/pull/6602)
