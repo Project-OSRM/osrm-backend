@@ -202,8 +202,8 @@ inline RouteParameters::AnnotationsType operator|(RouteParameters::AnnotationsTy
         static_cast<std::underlying_type_t<RouteParameters::AnnotationsType>>(rhs));
 }
 
-inline RouteParameters::AnnotationsType operator|=(RouteParameters::AnnotationsType lhs,
-                                                   RouteParameters::AnnotationsType rhs)
+inline RouteParameters::AnnotationsType &operator|=(RouteParameters::AnnotationsType &lhs,
+                                                    RouteParameters::AnnotationsType rhs)
 {
     return lhs = lhs | rhs;
 }

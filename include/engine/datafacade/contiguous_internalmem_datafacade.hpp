@@ -31,6 +31,26 @@
 namespace osrm::engine::datafacade
 {
 
+static const std::string DATASET_TURN_DATA = "TurnData";
+static const std::string DATASET_TURN_LANE_DATA = "NameLaneData";
+static const std::string DATASET_NAME_DATA = "NameData";
+static const std::string DATASET_INTERSECTION_BEARINGS = "IntersectionBearings";
+static const std::string DATASET_ENTRY_CLASS = "EntryClass";
+
+/**
+ * Macro is not ideal. But without it we either have to:
+ * a) Write this boiler-plate for every usage of an optional dataset.
+ * b) Convert to a function and add lots of polluting NOLINT(bugprone-unchecked-optional-access)
+ * comments. This macro keeps the API code readable.
+ */
+#define CHECK_DATASET_DISABLED(val, dataset)                                                       \
+    {                                                                                              \
+        if (!(val))                                                                                \
+        {                                                                                          \
+            throw osrm::util::DisabledDatasetException((dataset));                                 \
+        }                                                                                          \
+    }
+
 template <typename AlgorithmT> class ContiguousInternalMemoryAlgorithmDataFacade;
 
 template <>
@@ -141,18 +161,15 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     std::string_view m_data_timestamp;
     util::vector_view<util::Coordinate> m_coordinate_list;
     extractor::PackedOSMIDsView m_osmnodeid_list;
-    util::vector_view<std::uint32_t> m_lane_description_offsets;
-    util::vector_view<extractor::TurnLaneType::Mask> m_lane_description_masks;
+    std::optional<util::vector_view<std::uint32_t>> m_lane_description_offsets;
+    std::optional<util::vector_view<extractor::TurnLaneType::Mask>> m_lane_description_masks;
     util::vector_view<TurnPenalty> m_turn_weight_penalties;
     util::vector_view<TurnPenalty> m_turn_duration_penalties;
     extractor::SegmentDataView segment_data;
     extractor::EdgeBasedNodeDataView edge_based_node_data;
-    guidance::TurnDataView turn_data;
+    std::optional<guidance::TurnDataView> turn_data;
 
-    util::vector_view<char> m_datasource_name_data;
-    util::vector_view<std::size_t> m_datasource_name_offsets;
-    util::vector_view<std::size_t> m_datasource_name_lengths;
-    util::vector_view<util::guidance::LaneTupleIdPair> m_lane_tupel_id_pairs;
+    std::optional<util::vector_view<util::guidance::LaneTupleIdPair>> m_lane_tuple_id_pairs;
 
     util::vector_view<extractor::StorageManeuverOverride> m_maneuver_overrides;
     util::vector_view<NodeID> m_maneuver_override_node_sequences;
@@ -161,15 +178,23 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     std::unique_ptr<SharedGeospatialQuery> m_geospatial_query;
     boost::filesystem::path file_index_path;
 
-    extractor::IntersectionBearingsView intersection_bearings_view;
+    std::optional<extractor::IntersectionBearingsView> intersection_bearings_view;
 
-    extractor::NameTableView m_name_table;
+    std::optional<extractor::NameTableView> m_name_table;
     // the look-up table for entry classes. An entry class lists the possibility of entry for all
     // available turns. Such a class id is stored with every edge.
-    util::vector_view<util::guidance::EntryClass> m_entry_class_table;
+    std::optional<util::vector_view<util::guidance::EntryClass>> m_entry_class_table;
 
     // allocator that keeps the allocation data
     std::shared_ptr<ContiguousBlockAllocator> allocator;
+
+    bool isIndexed(const storage::SharedDataIndex &index, const std::string &name)
+    {
+        bool result = false;
+        index.List(name,
+                   boost::make_function_output_iterator([&](const auto &) { result = true; }));
+        return result;
+    }
 
     void InitializeInternalPointers(const storage::SharedDataIndex &index,
                                     const std::string &metric_name,
@@ -183,7 +208,17 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
         exclude_mask = m_profile_properties->excludable_classes[exclude_index];
 
-        m_check_sum = *index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum");
+        // We no longer use "/common/connectivity_checksum", as osrm.edges is an optional dataset.
+        // Instead, we load the value from the MLD or CH graph, whichever is loaded.
+        if (isIndexed(index, "/mld/connectivity_checksum"))
+        {
+            m_check_sum = *index.GetBlockPtr<std::uint32_t>("/mld/connectivity_checksum");
+        }
+        else
+        {
+            BOOST_ASSERT(isIndexed(index, "/ch/connectivity_checksum"));
+            m_check_sum = *index.GetBlockPtr<std::uint32_t>("/ch/connectivity_checksum");
+        }
 
         m_data_timestamp = make_timestamp_view(index, "/common/timestamp");
 
@@ -196,13 +231,23 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
         edge_based_node_data = make_ebn_data_view(index, "/common/ebg_node_data");
 
-        turn_data = make_turn_data_view(index, "/common/turn_data");
+        if (isIndexed(index, "/common/turn_data"))
+        {
+            turn_data = make_turn_data_view(index, "/common/turn_data");
+        }
 
-        m_name_table = make_name_table_view(index, "/common/names");
+        if (isIndexed(index, "/common/names"))
+        {
+            m_name_table = make_name_table_view(index, "/common/names");
+        }
 
-        std::tie(m_lane_description_offsets, m_lane_description_masks) =
-            make_turn_lane_description_views(index, "/common/turn_lanes");
-        m_lane_tupel_id_pairs = make_lane_data_view(index, "/common/turn_lanes");
+        if (isIndexed(index, "/common/turn_lanes"))
+        {
+            std::tie(m_lane_description_offsets, m_lane_description_masks) =
+                make_turn_lane_description_views(index, "/common/turn_lanes");
+
+            m_lane_tuple_id_pairs = make_lane_data_view(index, "/common/turn_lanes");
+        }
 
         m_turn_weight_penalties = make_turn_weight_view(index, "/common/turn_penalty");
         m_turn_duration_penalties = make_turn_duration_view(index, "/common/turn_penalty");
@@ -211,10 +256,12 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
         m_datasources = index.GetBlockPtr<extractor::Datasources>("/common/data_sources_names");
 
-        intersection_bearings_view =
-            make_intersection_bearings_view(index, "/common/intersection_bearings");
-
-        m_entry_class_table = make_entry_classes_view(index, "/common/entry_classes");
+        if (isIndexed(index, "/common/intersection_bearings"))
+        {
+            intersection_bearings_view =
+                make_intersection_bearings_view(index, "/common/intersection_bearings");
+            m_entry_class_table = make_entry_classes_view(index, "/common/entry_classes");
+        }
 
         std::tie(m_maneuver_overrides, m_maneuver_override_node_sequences) =
             make_maneuver_overrides_views(index, "/common/maneuver_overrides");
@@ -305,7 +352,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     osrm::guidance::TurnInstruction
     GetTurnInstructionForEdgeID(const EdgeID edge_based_edge_id) const override final
     {
-        return turn_data.GetTurnInstruction(edge_based_edge_id);
+        CHECK_DATASET_DISABLED(turn_data, DATASET_TURN_DATA);
+        return turn_data->GetTurnInstruction(edge_based_edge_id);
     }
 
     std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,
@@ -406,27 +454,32 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     std::string_view GetNameForID(const NameID id) const override final
     {
-        return m_name_table.GetNameForID(id);
+        CHECK_DATASET_DISABLED(m_name_table, DATASET_NAME_DATA);
+        return m_name_table->GetNameForID(id);
     }
 
     std::string_view GetRefForID(const NameID id) const override final
     {
-        return m_name_table.GetRefForID(id);
+        CHECK_DATASET_DISABLED(m_name_table, DATASET_NAME_DATA);
+        return m_name_table->GetRefForID(id);
     }
 
     std::string_view GetPronunciationForID(const NameID id) const override final
     {
-        return m_name_table.GetPronunciationForID(id);
+        CHECK_DATASET_DISABLED(m_name_table, DATASET_NAME_DATA);
+        return m_name_table->GetPronunciationForID(id);
     }
 
     std::string_view GetDestinationsForID(const NameID id) const override final
     {
-        return m_name_table.GetDestinationsForID(id);
+        CHECK_DATASET_DISABLED(m_name_table, DATASET_NAME_DATA);
+        return m_name_table->GetDestinationsForID(id);
     }
 
     std::string_view GetExitsForID(const NameID id) const override final
     {
-        return m_name_table.GetExitsForID(id);
+        CHECK_DATASET_DISABLED(m_name_table, DATASET_NAME_DATA);
+        return m_name_table->GetExitsForID(id);
     }
 
     std::string_view GetDatasourceName(const DatasourceID id) const override final
@@ -459,46 +512,60 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     util::guidance::BearingClass
     GetBearingClass(const NodeID node_based_node_id) const override final
     {
-        return intersection_bearings_view.GetBearingClass(node_based_node_id);
+        CHECK_DATASET_DISABLED(intersection_bearings_view, DATASET_INTERSECTION_BEARINGS);
+        return intersection_bearings_view->GetBearingClass(node_based_node_id);
     }
 
     guidance::TurnBearing PreTurnBearing(const EdgeID edge_based_edge_id) const override final
     {
-        return turn_data.GetPreTurnBearing(edge_based_edge_id);
+        CHECK_DATASET_DISABLED(turn_data, DATASET_TURN_DATA);
+        return turn_data->GetPreTurnBearing(edge_based_edge_id);
     }
     guidance::TurnBearing PostTurnBearing(const EdgeID edge_based_edge_id) const override final
     {
-        return turn_data.GetPostTurnBearing(edge_based_edge_id);
+        CHECK_DATASET_DISABLED(turn_data, DATASET_TURN_DATA);
+        return turn_data->GetPostTurnBearing(edge_based_edge_id);
     }
 
     util::guidance::EntryClass GetEntryClass(const EdgeID edge_based_edge_id) const override final
     {
-        auto entry_class_id = turn_data.GetEntryClassID(edge_based_edge_id);
-        return m_entry_class_table.at(entry_class_id);
+        CHECK_DATASET_DISABLED(m_entry_class_table, DATASET_ENTRY_CLASS);
+        CHECK_DATASET_DISABLED(turn_data, DATASET_TURN_DATA);
+
+        auto entry_class_id = turn_data->GetEntryClassID(edge_based_edge_id);
+        return m_entry_class_table->at(entry_class_id);
     }
 
     bool HasLaneData(const EdgeID edge_based_edge_id) const override final
     {
-        return turn_data.HasLaneData(edge_based_edge_id);
+        CHECK_DATASET_DISABLED(turn_data, DATASET_TURN_DATA);
+        return turn_data->HasLaneData(edge_based_edge_id);
     }
 
     util::guidance::LaneTupleIdPair
     GetLaneData(const EdgeID edge_based_edge_id) const override final
     {
+        CHECK_DATASET_DISABLED(turn_data, DATASET_TURN_DATA);
+        CHECK_DATASET_DISABLED(m_lane_tuple_id_pairs, DATASET_TURN_LANE_DATA);
+
         BOOST_ASSERT(HasLaneData(edge_based_edge_id));
-        return m_lane_tupel_id_pairs.at(turn_data.GetLaneDataID(edge_based_edge_id));
+        return m_lane_tuple_id_pairs->at(turn_data->GetLaneDataID(edge_based_edge_id));
     }
 
     extractor::TurnLaneDescription
     GetTurnDescription(const LaneDescriptionID lane_description_id) const override final
     {
+        CHECK_DATASET_DISABLED(m_lane_description_offsets, DATASET_TURN_LANE_DATA);
+        CHECK_DATASET_DISABLED(m_lane_description_masks, DATASET_TURN_LANE_DATA);
+
         if (lane_description_id == INVALID_LANE_DESCRIPTIONID)
             return {};
         else
             return extractor::TurnLaneDescription(
-                m_lane_description_masks.begin() + m_lane_description_offsets[lane_description_id],
-                m_lane_description_masks.begin() +
-                    m_lane_description_offsets[lane_description_id + 1]);
+                m_lane_description_masks->begin() +
+                    m_lane_description_offsets->at(lane_description_id),
+                m_lane_description_masks->begin() +
+                    m_lane_description_offsets->at(lane_description_id + 1));
     }
 
     bool IsLeftHandDriving(const NodeID edge_based_node_id) const override final

@@ -280,10 +280,11 @@ module.exports = function () {
     };
 
     this.reprocessAndLoadData = (callback) => {
+        let p = {loaderArgs: this.loaderArgs, inputFile: this.processedCacheFile};
         let queue = d3.queue(1);
         queue.defer(this.writeAndLinkOSM.bind(this));
         queue.defer(this.extractContractPartitionAndCustomize.bind(this));
-        queue.defer(this.osrmLoader.load.bind(this.osrmLoader), this.processedCacheFile);
+        queue.defer(this.osrmLoader.load.bind(this.osrmLoader), p);
         queue.awaitAll(callback);
     };
 

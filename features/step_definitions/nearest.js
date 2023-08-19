@@ -12,35 +12,43 @@ module.exports = function () {
                 var inNode = this.findNodeByName(row.in);
                 if (!inNode) throw new Error(util.format('*** unknown in-node "%s"', row.in));
 
-                var outNode = this.findNodeByName(row.out);
-                if (!outNode) throw new Error(util.format('*** unknown out-node "%s"', row.out));
-
                 this.requestNearest(inNode, this.queryParams, (err, response) => {
                     if (err) return cb(err);
                     var coord;
                     var headers = new Set(table.raw()[0]);
 
-                    if (response.statusCode === 200 && response.body.length) {
+                    var got = { in: row.in};
+
+                    if (response.body.length) {
                         var json = JSON.parse(response.body);
+                        got.code = json.code;
 
-                        coord = json.waypoints[0].location;
+                        if (response.statusCode === 200) {
 
-                        var got = { in: row.in, out: row.out };
-
-                        if (headers.has('data_version')) {
-                            got.data_version = json.data_version || '';
-                        }
-
-                        Object.keys(row).forEach((key) => {
-                            if (key === 'out') {
-                                if (this.FuzzyMatch.matchLocation(coord, outNode)) {
-                                    got[key] = row[key];
-                                } else {
-                                    row[key] = util.format('%s [%d,%d]', row[key], outNode.lat, outNode.lon);
-                                }
+                            if (headers.has('data_version')) {
+                                got.data_version = json.data_version || '';
                             }
-                        });
 
+                            if (json.waypoints && json.waypoints.length && row.out) {
+                                coord = json.waypoints[0].location;
+
+                                got.out = row.out;
+
+                                var outNode = this.findNodeByName(row.out);
+                                if (!outNode) throw new Error(util.format('*** unknown out-node "%s"', row.out));
+
+                                Object.keys(row).forEach((key) => {
+                                    if (key === 'out') {
+                                        if (this.FuzzyMatch.matchLocation(coord, outNode)) {
+                                            got[key] = row[key];
+                                        } else {
+                                            row[key] = util.format('%s [%d,%d]', row[key], outNode.lat, outNode.lon);
+                                        }
+                                    }
+                                });
+                            }
+
+                        }
                         cb(null, got);
                     }
                     else {

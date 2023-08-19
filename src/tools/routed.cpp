@@ -4,6 +4,7 @@
 #include "util/meminfo.hpp"
 #include "util/version.hpp"
 
+#include "osrm/datasets.hpp"
 #include "osrm/engine_config.hpp"
 #include "osrm/exception.hpp"
 #include "osrm/osrm.hpp"
@@ -12,6 +13,7 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/optional/optional_io.hpp>
 #include <boost/program_options.hpp>
 
 #include <cstdlib>
@@ -22,7 +24,6 @@
 #include <exception>
 #include <future>
 #include <iostream>
-#include <memory>
 #include <new>
 #include <string>
 #include <thread>
@@ -68,7 +69,35 @@ std::istream &operator>>(std::istream &in, EngineConfig::Algorithm &algorithm)
         throw util::RuntimeError(token, ErrorCode::UnknownAlgorithm, SOURCE_REF);
     return in;
 }
+
 } // namespace osrm::engine
+
+// overload validate for the double type to allow "unlimited" as an input
+namespace boost
+{
+void validate(boost::any &v, const std::vector<std::string> &values, double *, double)
+{
+    boost::program_options::validators::check_first_occurrence(v);
+    const std::string &s = boost::program_options::validators::get_single_string(values);
+
+    if (s == "unlimited")
+    {
+        v = -1.0;
+    }
+    else
+    {
+        try
+        {
+            v = std::stod(s);
+        }
+        catch (const std::invalid_argument &)
+        {
+            throw boost::program_options::validation_error(
+                boost::program_options::validation_error::invalid_option_value);
+        }
+    }
+}
+} // namespace boost
 
 // generate boost::program_options object for the routing part
 inline unsigned generateServerProgramOptions(const int argc,
@@ -127,6 +156,10 @@ inline unsigned generateServerProgramOptions(const int argc,
          value<EngineConfig::Algorithm>(&config.algorithm)
              ->default_value(EngineConfig::Algorithm::CH, "CH"),
          "Algorithm to use for the data. Can be CH, CoreCH, MLD.") //
+        ("disable-feature-dataset",
+         value<std::vector<storage::FeatureDataset>>(&config.disable_feature_dataset)->multitoken(),
+         "Disables a feature dataset from being loaded into memory if not needed. Options: "
+         "ROUTE_STEPS, ROUTE_GEOMETRY") //
         ("max-viaroute-size",
          value<int>(&config.max_locations_viaroute)->default_value(500),
          "Max. locations supported in viaroute query") //
@@ -149,7 +182,7 @@ inline unsigned generateServerProgramOptions(const int argc,
          value<double>(&config.max_radius_map_matching)->default_value(-1.0),
          "Max. radius size supported in map matching query. Default: unlimited.") //
         ("default-radius",
-         value<boost::optional<double>>(&config.default_radius),
+         value<boost::optional<double>>(&config.default_radius)->default_value(-1.0),
          "Default radius size for queries. Default: unlimited.");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
@@ -248,7 +281,7 @@ try
 
     if (!base_path.empty())
     {
-        config.storage_config = storage::StorageConfig(base_path);
+        config.storage_config = storage::StorageConfig(base_path, config.disable_feature_dataset);
     }
     if (!config.use_shared_memory && !config.storage_config.IsValid())
     {

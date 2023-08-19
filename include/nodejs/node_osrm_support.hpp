@@ -205,9 +205,50 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
         }
     }
 
+    auto disable_feature_dataset = params.Get("disable_feature_dataset");
+    if (disable_feature_dataset.IsArray())
+    {
+        Napi::Array datasets = disable_feature_dataset.As<Napi::Array>();
+        for (uint32_t i = 0; i < datasets.Length(); ++i)
+        {
+            Napi::Value dataset = datasets.Get(i);
+            if (!dataset.IsString())
+            {
+                ThrowError(args.Env(), "disable_feature_dataset list option must be a string");
+                return engine_config_ptr();
+            }
+            auto dataset_str = dataset.ToString().Utf8Value();
+            if (dataset_str == "ROUTE_GEOMETRY")
+            {
+                engine_config->disable_feature_dataset.push_back(
+                    osrm::storage::FeatureDataset::ROUTE_GEOMETRY);
+            }
+            else if (dataset_str == "ROUTE_STEPS")
+            {
+                engine_config->disable_feature_dataset.push_back(
+                    osrm::storage::FeatureDataset::ROUTE_STEPS);
+            }
+            else
+            {
+                ThrowError(
+                    args.Env(),
+                    "disable_feature_dataset array can include 'ROUTE_GEOMETRY', 'ROUTE_STEPS'.");
+                return engine_config_ptr();
+            }
+        }
+    }
+    else if (!disable_feature_dataset.IsUndefined())
+    {
+        ThrowError(args.Env(),
+                   "disable_feature_dataset option must be an array and can include the string "
+                   "values 'ROUTE_GEOMETRY', 'ROUTE_STEPS'.");
+        return engine_config_ptr();
+    }
+
     if (!path.IsUndefined())
     {
-        engine_config->storage_config = osrm::StorageConfig(path.ToString().Utf8Value());
+        engine_config->storage_config = osrm::StorageConfig(path.ToString().Utf8Value(),
+                                                            engine_config->disable_feature_dataset);
 
         engine_config->use_shared_memory = false;
     }
@@ -317,9 +358,16 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
         ThrowError(args.Env(), "max_alternatives must be an integral number");
         return engine_config_ptr();
     }
-    if (!default_radius.IsUndefined() && !default_radius.IsNumber())
+    if (!max_radius_map_matching.IsUndefined() && max_radius_map_matching.IsString() &&
+        max_radius_map_matching.ToString().Utf8Value() != "unlimited")
     {
-        ThrowError(args.Env(), "default_radius must be an integral number");
+        ThrowError(args.Env(), "max_radius_map_matching must be unlimited or an integral number");
+        return engine_config_ptr();
+    }
+    if (!default_radius.IsUndefined() && default_radius.IsString() &&
+        default_radius.ToString().Utf8Value() != "unlimited")
+    {
+        ThrowError(args.Env(), "default_radius must be unlimited or an integral number");
         return engine_config_ptr();
     }
 
@@ -337,10 +385,17 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
         engine_config->max_results_nearest = max_results_nearest.ToNumber().Int32Value();
     if (max_alternatives.IsNumber())
         engine_config->max_alternatives = max_alternatives.ToNumber().Int32Value();
+
     if (max_radius_map_matching.IsNumber())
         engine_config->max_radius_map_matching = max_radius_map_matching.ToNumber().DoubleValue();
+    else if (max_radius_map_matching.IsString() &&
+             max_radius_map_matching.ToString().Utf8Value() == "unlimited")
+        engine_config->max_radius_map_matching = -1.0;
+
     if (default_radius.IsNumber())
         engine_config->default_radius = default_radius.ToNumber().DoubleValue();
+    else if (default_radius.IsString() && default_radius.ToString().Utf8Value() == "unlimited")
+        engine_config->default_radius = -1.0;
 
     return engine_config;
 }

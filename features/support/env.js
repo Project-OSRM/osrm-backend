@@ -27,7 +27,8 @@ module.exports = function () {
         this.DEFAULT_ENVIRONMENT = process.env;
         this.DEFAULT_PROFILE = 'bicycle';
         this.DEFAULT_INPUT_FORMAT = 'osm';
-        this.DEFAULT_LOAD_METHOD = process.argv[process.argv.indexOf('-m') +1].match('mmap') ? 'mmap' : 'datastore';
+        let loadMethod = process.argv[process.argv.indexOf('-m') +1];
+        this.DEFAULT_LOAD_METHOD = loadMethod.match('mmap') ? 'mmap' : loadMethod.match('directly') ? 'directly' : 'datastore';
         this.DEFAULT_ORIGIN = [1,1];
         this.OSM_USER = 'osrm';
         this.OSM_UID = 1;
@@ -42,7 +43,7 @@ module.exports = function () {
         this.OSRM_IP = process.env.OSRM_IP || '127.0.0.1';
         this.OSRM_CONNECTION_RETRIES = process.env.OSRM_CONNECTION_RETRIES && parseInt(process.env.OSRM_CONNECTION_RETRIES) || 10;
         this.OSRM_CONNECTION_EXP_BACKOFF_COEF = process.env.OSRM_CONNECTION_EXP_BACKOFF_COEF && parseFloat(process.env.OSRM_CONNECTION_EXP_BACKOFF_COEF) || 1.0;
-        
+
         this.HOST = `http://${this.OSRM_IP}:${this.OSRM_PORT}`;
 
         this.OSRM_PROFILE = process.env.OSRM_PROFILE;
