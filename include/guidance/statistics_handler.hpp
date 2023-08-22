@@ -15,9 +15,7 @@
 
 #include <cstdint>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 // Unconditionally runs over all intersections and gathers statistics for
@@ -107,7 +105,6 @@ class StatisticsHandler final : public IntersectionHandler
     mutable std::map<DirectionModifier::Enum, std::uint64_t> modifier_hist;
 };
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif // OSRM_GUIDANCE_VALIDATION_HANDLER_HPP_

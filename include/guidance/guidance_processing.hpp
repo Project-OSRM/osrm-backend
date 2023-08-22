@@ -19,9 +19,7 @@
 
 #include <unordered_set>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 using BearingClassesVector = std::vector<BearingClassID>;
 using BearingClassesMap = util::ConcurrentIDMap<util::guidance::BearingClass, BearingClassID>;
@@ -45,7 +43,6 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                    EntryClassesMap &entry_class_hash,
                    std::uint32_t &connectivity_checksum);
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif

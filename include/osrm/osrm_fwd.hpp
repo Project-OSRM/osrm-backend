@@ -34,13 +34,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace osrm
 {
 
-namespace util
-{
-namespace json
+namespace util::json
 {
 struct Object;
-} // namespace json
-} // namespace util
+} // namespace util::json
 
 namespace engine
 {

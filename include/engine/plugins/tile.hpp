@@ -16,11 +16,7 @@
  * OSRM is routing.  This is very useful for debugging routing
  * errors
  */
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
 class TilePlugin final : public BasePlugin
@@ -30,8 +26,6 @@ class TilePlugin final : public BasePlugin
                          const api::TileParameters &parameters,
                          osrm::engine::api::ResultT &pbf_buffer) const;
 };
-} // namespace plugins
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::plugins
 
 #endif /* TILEPLUGIN_HPP */

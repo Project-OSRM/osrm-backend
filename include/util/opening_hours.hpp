@@ -3,12 +3,11 @@
 
 #include <boost/date_time/gregorian/gregorian.hpp>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 // Helper classes for "opening hours" format http://wiki.openstreetmap.org/wiki/Key:opening_hours
@@ -223,7 +222,6 @@ std::vector<OpeningHours> ParseOpeningHours(const std::string &str);
 
 bool CheckOpeningHours(const std::vector<OpeningHours> &input, const struct tm &time);
 
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // OSRM_OPENING_HOURS_HPP

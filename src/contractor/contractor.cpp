@@ -37,9 +37,7 @@
 #include <boost/assert.hpp>
 #include <tbb/global_control.h>
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 int Contractor::Run()
@@ -78,7 +76,8 @@ int Contractor::Run()
     // Convert node weights for oneway streets to INVALID_EDGE_WEIGHT
     for (auto &weight : node_weights)
     {
-        weight = (weight & 0x80000000) ? INVALID_EDGE_WEIGHT : weight;
+        weight = (from_alias<EdgeWeight::value_type>(weight) & 0x80000000) ? INVALID_EDGE_WEIGHT
+                                                                           : weight;
     }
 
     // Contracting the edge-expanded graph
@@ -124,5 +123,4 @@ int Contractor::Run()
     return 0;
 }
 
-} // namespace contractor
-} // namespace osrm
+} // namespace osrm::contractor

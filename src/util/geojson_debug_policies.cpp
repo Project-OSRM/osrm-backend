@@ -4,9 +4,7 @@
 
 #include <algorithm>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 //----------------------------------------------------------------
@@ -68,5 +66,4 @@ CoordinateVectorToLineString::operator()(const std::vector<util::Coordinate> &in
     return makeFeature("LineString", std::move(coordinates), properties);
 }
 
-} /* namespace util */
-} /* namespace osrm */
+} // namespace osrm::util

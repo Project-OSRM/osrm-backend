@@ -13,9 +13,7 @@
 
 #include <boost/optional.hpp>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 // Intersection handlers deal with all issues related to intersections.
@@ -81,7 +79,6 @@ class SliproadHandler final : public IntersectionHandler
     const extractor::intersection::CoordinateExtractor coordinate_extractor;
 };
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /*OSRM_GUIDANCE_SLIPROAD_HANDLER_HPP_*/

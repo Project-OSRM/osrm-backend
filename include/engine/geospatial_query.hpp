@@ -18,9 +18,7 @@
 #include <memory>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 inline std::pair<bool, bool> operator&&(const std::pair<bool, bool> &a,
@@ -74,7 +72,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             [this, &max_distance, &max_results, input_coordinate](const std::size_t num_results,
                                                                   const CandidateSegment &segment) {
                 return (max_results && num_results >= *max_results) ||
-                       (max_distance &&
+                       (max_distance && max_distance != -1.0 &&
                         CheckSegmentDistance(input_coordinate, segment, *max_distance));
             });
 
@@ -165,7 +163,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                 auto distance = GetSegmentDistance(input_coordinate, segment);
                 auto further_than_big_component = distance > big_component_distance;
                 auto no_more_candidates = has_big_component && further_than_big_component;
-                auto too_far_away = max_distance && distance > *max_distance;
+                auto too_far_away =
+                    max_distance && max_distance != -1.0 && distance > *max_distance;
 
                 // Time to terminate the search when:
                 // 1. We've found a node from a big component and the next candidate is further away
@@ -320,75 +319,84 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 
         const auto forward_weight_offset =
             // NOLINTNEXTLINE(bugprone-fold-init-type)
-            std::accumulate(forward_weights.begin(),
-                            forward_weights.begin() + data.fwd_segment_position,
-                            EdgeWeight{0});
+            alias_cast<EdgeWeight>(
+                std::accumulate(forward_weights.begin(),
+                                forward_weights.begin() + data.fwd_segment_position,
+                                SegmentWeight{0}));
 
         const auto forward_duration_offset =
             // NOLINTNEXTLINE(bugprone-fold-init-type)
-            std::accumulate(forward_durations.begin(),
-                            forward_durations.begin() + data.fwd_segment_position,
-                            EdgeDuration{0});
+            alias_cast<EdgeDuration>(
+                std::accumulate(forward_durations.begin(),
+                                forward_durations.begin() + data.fwd_segment_position,
+                                SegmentDuration{0}));
 
-        EdgeDistance forward_distance_offset = 0;
+        EdgeDistance forward_distance_offset = {0};
         // Sum up the distance from the start to the fwd_segment_position
         for (auto current = forward_geometry.begin();
              current < forward_geometry.begin() + data.fwd_segment_position;
              ++current)
         {
-            forward_distance_offset += util::coordinate_calculation::greatCircleDistance(
-                datafacade.GetCoordinateOfNode(*current),
-                datafacade.GetCoordinateOfNode(*std::next(current)));
+            forward_distance_offset +=
+                to_alias<EdgeDistance>(util::coordinate_calculation::greatCircleDistance(
+                    datafacade.GetCoordinateOfNode(*current),
+                    datafacade.GetCoordinateOfNode(*std::next(current))));
         }
 
         BOOST_ASSERT(data.fwd_segment_position <
                      std::distance(forward_durations.begin(), forward_durations.end()));
 
-        EdgeWeight forward_weight = forward_weights[data.fwd_segment_position];
-        EdgeDuration forward_duration = forward_durations[data.fwd_segment_position];
-        EdgeDistance forward_distance = util::coordinate_calculation::greatCircleDistance(
-            datafacade.GetCoordinateOfNode(forward_geometry(data.fwd_segment_position)),
-            point_on_segment);
+        EdgeWeight forward_weight =
+            alias_cast<EdgeWeight>(forward_weights[data.fwd_segment_position]);
+        EdgeDuration forward_duration =
+            alias_cast<EdgeDuration>(forward_durations[data.fwd_segment_position]);
+        EdgeDistance forward_distance =
+            to_alias<EdgeDistance>(util::coordinate_calculation::greatCircleDistance(
+                datafacade.GetCoordinateOfNode(forward_geometry(data.fwd_segment_position)),
+                point_on_segment));
 
-        const auto reverse_weight_offset =
+        const auto reverse_weight_offset = alias_cast<EdgeWeight>(
             std::accumulate(reverse_weights.begin(),
                             reverse_weights.end() - data.fwd_segment_position - 1,
-                            EdgeWeight{0});
+                            SegmentWeight{0}));
 
-        const auto reverse_duration_offset =
+        const auto reverse_duration_offset = alias_cast<EdgeDuration>(
             std::accumulate(reverse_durations.begin(),
                             reverse_durations.end() - data.fwd_segment_position - 1,
-                            EdgeDuration{0});
+                            SegmentDuration{0}));
 
-        EdgeDistance reverse_distance_offset = 0;
+        EdgeDistance reverse_distance_offset = {0};
         // Sum up the distance from just after the fwd_segment_position to the end
         for (auto current = forward_geometry.begin() + data.fwd_segment_position + 1;
              current != std::prev(forward_geometry.end());
              ++current)
         {
-            reverse_distance_offset += util::coordinate_calculation::greatCircleDistance(
-                datafacade.GetCoordinateOfNode(*current),
-                datafacade.GetCoordinateOfNode(*std::next(current)));
+            reverse_distance_offset +=
+                to_alias<EdgeDistance>(util::coordinate_calculation::greatCircleDistance(
+                    datafacade.GetCoordinateOfNode(*current),
+                    datafacade.GetCoordinateOfNode(*std::next(current))));
         }
 
-        EdgeWeight reverse_weight =
-            reverse_weights[reverse_weights.size() - data.fwd_segment_position - 1];
-        EdgeDuration reverse_duration =
-            reverse_durations[reverse_durations.size() - data.fwd_segment_position - 1];
-        EdgeDistance reverse_distance = util::coordinate_calculation::greatCircleDistance(
-            point_on_segment,
-            datafacade.GetCoordinateOfNode(forward_geometry(data.fwd_segment_position + 1)));
+        EdgeWeight reverse_weight = alias_cast<EdgeWeight>(
+            reverse_weights[reverse_weights.size() - data.fwd_segment_position - 1]);
+        EdgeDuration reverse_duration = alias_cast<EdgeDuration>(
+            reverse_durations[reverse_durations.size() - data.fwd_segment_position - 1]);
+        EdgeDistance reverse_distance =
+            to_alias<EdgeDistance>(util::coordinate_calculation::greatCircleDistance(
+                point_on_segment,
+                datafacade.GetCoordinateOfNode(forward_geometry(data.fwd_segment_position + 1))));
 
         ratio = std::min(1.0, std::max(0.0, ratio));
         if (data.forward_segment_id.id != SPECIAL_SEGMENTID)
         {
-            forward_weight = static_cast<EdgeWeight>(forward_weight * ratio);
-            forward_duration = static_cast<EdgeDuration>(forward_duration * ratio);
+            forward_weight = to_alias<EdgeWeight>(from_alias<double>(forward_weight) * ratio);
+            forward_duration = to_alias<EdgeDuration>(from_alias<double>(forward_duration) * ratio);
         }
         if (data.reverse_segment_id.id != SPECIAL_SEGMENTID)
         {
-            reverse_weight -= static_cast<EdgeWeight>(reverse_weight * ratio);
-            reverse_duration -= static_cast<EdgeDuration>(reverse_duration * ratio);
+            reverse_weight -= to_alias<EdgeWeight>(from_alias<double>(reverse_weight) * ratio);
+            reverse_duration -=
+                to_alias<EdgeDuration>(from_alias<double>(reverse_duration) * ratio);
         }
 
         // check phantom node segments validity
@@ -574,7 +582,6 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     const CoordinateList &coordinates;
     DataFacadeT &datafacade;
 };
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

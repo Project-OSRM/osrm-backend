@@ -7,14 +7,13 @@
 #include <boost/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
-NearestPlugin::NearestPlugin(const int max_results_) : max_results{max_results_} {}
+NearestPlugin::NearestPlugin(const int max_results_, const boost::optional<double> default_radius_)
+    : BasePlugin(default_radius_), max_results{max_results_}
+{
+}
 
 Status NearestPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                     const api::NearestParameters &params,
@@ -57,6 +56,4 @@ Status NearestPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms
 
     return Status::Ok;
 }
-} // namespace plugins
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::plugins

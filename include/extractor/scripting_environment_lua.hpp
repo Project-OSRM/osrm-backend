@@ -14,9 +14,7 @@
 
 #include <sol/sol.hpp>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 struct LuaScriptingContext final
@@ -43,10 +41,10 @@ struct LuaScriptingContext final
     bool has_way_function = false;
     bool has_segment_function = false;
 
-    sol::function turn_function;
-    sol::function way_function;
-    sol::function node_function;
-    sol::function segment_function;
+    sol::protected_function turn_function;
+    sol::protected_function way_function;
+    sol::protected_function node_function;
+    sol::protected_function segment_function;
 
     int api_version = 4;
     sol::table profile_table;
@@ -110,7 +108,6 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     tbb::enumerable_thread_specific<std::unique_ptr<LuaScriptingContext>> script_contexts;
     const LocationDependentData location_dependent_data;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* SCRIPTING_ENVIRONMENT_LUA_HPP */

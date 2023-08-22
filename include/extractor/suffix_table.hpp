@@ -2,13 +2,11 @@
 #define OSRM_EXTRACTOR_SUFFIX_LIST_HPP_
 
 #include <string>
+#include <string_view>
 #include <unordered_set>
+#include <vector>
 
-#include "util/string_view.hpp"
-
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class ScriptingEnvironment;
@@ -23,7 +21,7 @@ class SuffixTable final
 
     // check whether a string is part of the know suffix list
     bool isSuffix(const std::string &possible_suffix) const;
-    bool isSuffix(util::StringView possible_suffix) const;
+    bool isSuffix(std::string_view possible_suffix) const;
 
   private:
     // Store lower-cased strings in SuffixTable and a set of StringViews for quick membership
@@ -36,10 +34,9 @@ class SuffixTable final
     // require us to first convert StringViews into strings (allocation), do the membership,
     // and destroy the StringView again.
     std::vector<std::string> suffixes;
-    std::unordered_set<util::StringView> suffix_set;
+    std::unordered_set<std::string_view> suffix_set;
 };
 
-} /* namespace extractor */
-} /* namespace osrm */
+} // namespace osrm::extractor
 
 #endif /* OSRM_EXTRACTOR_SUFFIX_LIST_HPP_ */

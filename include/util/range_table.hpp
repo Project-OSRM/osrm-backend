@@ -10,9 +10,7 @@
 #include <fstream>
 #include <utility>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 /*
  * These pre-declarations are needed because parsing C++ is hard
@@ -81,10 +79,10 @@ template <unsigned BLOCK_SIZE, storage::Ownership Ownership> class RangeTable
         unsigned last_length = 0;
         unsigned lengths_prefix_sum = 0;
         unsigned block_idx = 0;
-        unsigned block_counter = 0;
         BlockT block;
 #ifndef BOOST_ASSERT_IS_VOID
         unsigned block_sum = 0;
+        unsigned block_counter = 0;
 #endif
         for (const unsigned l : lengths)
         {
@@ -111,7 +109,9 @@ template <unsigned BLOCK_SIZE, storage::Ownership Ownership> class RangeTable
             if (BLOCK_SIZE == block_idx)
             {
                 diff_blocks.push_back(block);
+#ifndef BOOST_ASSERT_IS_VOID
                 block_counter++;
+#endif
             }
 
             // we can only store strings with length 255
@@ -215,7 +215,6 @@ unsigned RangeTable<BLOCK_SIZE, Ownership>::PrefixSumAtIndex(int index, const Bl
 
     return sum;
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // RANGE_TABLE_HPP

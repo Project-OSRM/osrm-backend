@@ -11,11 +11,7 @@
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
 
-namespace osrm
-{
-namespace util
-{
-namespace serialization
+namespace osrm::util::serialization
 {
 
 template <unsigned BlockSize, storage::Ownership Ownership>
@@ -143,8 +139,6 @@ void write(storage::tar::FileWriter &writer,
     storage::serialization::write(
         writer, name + "/search_tree_level_starts", rtree.m_tree_level_starts);
 }
-} // namespace serialization
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util::serialization
 
 #endif

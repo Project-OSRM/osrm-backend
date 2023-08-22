@@ -14,11 +14,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
-{
-namespace intersection
+namespace osrm::extractor::intersection
 {
 
 IntersectionEdges getIncomingEdges(const util::NodeBasedDynamicGraph &graph,
@@ -89,8 +85,6 @@ getConnectedRoadsForEdgeGeometries(const util::NodeBasedDynamicGraph &graph,
 // for getConnectedRoads.
 IntersectionEdge skipDegreeTwoNodes(const util::NodeBasedDynamicGraph &graph,
                                     IntersectionEdge road);
-} // namespace intersection
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor::intersection
 
 #endif

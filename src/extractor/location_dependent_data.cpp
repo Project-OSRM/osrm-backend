@@ -8,15 +8,13 @@
 #include <rapidjson/istreamwrapper.h>
 
 #include <boost/filesystem.hpp>
-#include <boost/function_output_iterator.hpp>
 #include <boost/geometry/algorithms/equals.hpp>
+#include <boost/iterator/function_output_iterator.hpp>
 
 #include <fstream>
 #include <string>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 LocationDependentData::LocationDependentData(const std::vector<boost::filesystem::path> &file_paths)
@@ -275,5 +273,4 @@ std::vector<std::size_t> LocationDependentData::GetPropertyIndexes(const point_t
 
     return result;
 }
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

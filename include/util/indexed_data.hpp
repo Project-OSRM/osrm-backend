@@ -4,21 +4,19 @@
 #include "storage/tar_fwd.hpp"
 
 #include "util/exception.hpp"
-#include "util/string_view.hpp"
 #include "util/vector_view.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/function_output_iterator.hpp>
+#include <boost/iterator/function_output_iterator.hpp>
 
 #include <array>
 #include <iterator>
 #include <limits>
 #include <string>
+#include <string_view>
 #include <type_traits>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 namespace detail
 {
@@ -216,7 +214,7 @@ template <int N, typename T = std::string> struct FixedGroupBlock
             std::numeric_limits<std::make_unsigned_t<ValueType>>::max();
 
         auto index = 0;
-        std::array<ValueType, BLOCK_SIZE> prefix;
+        std::array<ValueType, BLOCK_SIZE> prefix{};
 
         for (OffsetIterator curr = first, next = std::next(first); curr != last; ++curr, ++next)
         {
@@ -365,14 +363,14 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
         std::enable_if_t<std::is_same<T, typename std::iterator_traits<Iter>::value_type>::value>;
 
     template <typename T = ResultType, typename Iter, typename = IsValueIterator<Iter, ValueType>>
-    typename std::enable_if<!std::is_same<T, StringView>::value, T>::type
+    typename std::enable_if<!std::is_same<T, std::string_view>::value, T>::type
     adapt(const Iter first, const Iter last) const
     {
         return ResultType(first, last);
     }
 
     template <typename T = ResultType, typename Iter, typename = IsValueIterator<Iter, ValueType>>
-    typename std::enable_if<std::is_same<T, StringView>::value, T>::type
+    typename std::enable_if<std::is_same<T, std::string_view>::value, T>::type
     adapt(const Iter first, const Iter last) const
     {
         auto diff = std::distance(first, last);
@@ -389,6 +387,5 @@ template <typename GroupBlockPolicy>
 using IndexedData = detail::IndexedDataImpl<GroupBlockPolicy, storage::Ownership::Container>;
 template <typename GroupBlockPolicy>
 using IndexedDataView = detail::IndexedDataImpl<GroupBlockPolicy, storage::Ownership::View>;
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 #endif // OSRM_INDEXED_DATA_HPP

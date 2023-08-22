@@ -16,11 +16,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 // Extracts the geometry for each segment and calculates the traveled distance
 // Combines the geometry form the phantom node with the PathData
@@ -95,8 +91,9 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
                 //       the duration_of_turn/weight_of_turn value, which is 0 for
                 //       non-preceeding-turn segments, but contains the turn value
                 //       for segments before a turn.
-                (path_point.duration_until_turn - path_point.duration_of_turn) / 10.,
-                (path_point.weight_until_turn - path_point.weight_of_turn) /
+                from_alias<double>(path_point.duration_until_turn - path_point.duration_of_turn) /
+                    10.,
+                from_alias<double>(path_point.weight_until_turn - path_point.weight_of_turn) /
                     facade.GetWeightMultiplier(),
                 path_point.datasource_id});
             geometry.locations.push_back(coordinate);
@@ -121,14 +118,15 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     if (geometry.annotations.empty())
     {
         auto duration =
-            std::abs(
+            std::abs(from_alias<EdgeDuration::value_type>(
                 (reversed_target ? target_node.reverse_duration : target_node.forward_duration) -
-                (reversed_source ? source_node.reverse_duration : source_node.forward_duration)) /
+                (reversed_source ? source_node.reverse_duration : source_node.forward_duration))) /
             10.;
         BOOST_ASSERT(duration >= 0);
         auto weight =
-            std::abs((reversed_target ? target_node.reverse_weight : target_node.forward_weight) -
-                     (reversed_source ? source_node.reverse_weight : source_node.forward_weight)) /
+            std::abs(from_alias<EdgeWeight::value_type>(
+                (reversed_target ? target_node.reverse_weight : target_node.forward_weight) -
+                (reversed_source ? source_node.reverse_weight : source_node.forward_weight))) /
             facade.GetWeightMultiplier();
         BOOST_ASSERT(weight >= 0);
 
@@ -142,8 +140,11 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     {
         geometry.annotations.emplace_back(LegGeometry::Annotation{
             current_distance,
-            (reversed_target ? target_node.reverse_duration : target_node.forward_duration) / 10.,
-            (reversed_target ? target_node.reverse_weight : target_node.forward_weight) /
+            from_alias<double>(reversed_target ? target_node.reverse_duration
+                                               : target_node.forward_duration) /
+                10.,
+            from_alias<double>(reversed_target ? target_node.reverse_weight
+                                               : target_node.forward_weight) /
                 facade.GetWeightMultiplier(),
             forward_datasources(target_node.fwd_segment_position)});
     }
@@ -167,8 +168,6 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
 
     return geometry;
 }
-} // namespace guidance
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif

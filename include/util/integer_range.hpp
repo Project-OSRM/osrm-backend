@@ -8,9 +8,7 @@
 
 #include <cstdint>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 // Ported from Boost.Range 1.56 due to required fix
@@ -22,17 +20,16 @@ class integer_iterator : public boost::iterator_facade<integer_iterator<Integer>
                                                        boost::random_access_traversal_tag,
                                                        Integer>
 {
-    typedef boost::iterator_facade<integer_iterator<Integer>,
-                                   Integer,
-                                   boost::random_access_traversal_tag,
-                                   Integer>
-        base_t;
+    using base_t = boost::iterator_facade<integer_iterator<Integer>,
+                                          Integer,
+                                          boost::random_access_traversal_tag,
+                                          Integer>;
 
   public:
-    typedef typename base_t::value_type value_type;
-    typedef typename base_t::difference_type difference_type;
-    typedef typename base_t::reference reference;
-    typedef std::random_access_iterator_tag iterator_category;
+    using value_type = typename base_t::value_type;
+    using difference_type = typename base_t::difference_type;
+    using reference = typename base_t::reference;
+    using iterator_category = std::random_access_iterator_tag;
 
     integer_iterator() : m_value() {}
     explicit integer_iterator(value_type x) : m_value(x) {}
@@ -65,8 +62,8 @@ class integer_iterator : public boost::iterator_facade<integer_iterator<Integer>
 template <typename Integer> class range
 {
   public:
-    typedef integer_iterator<Integer> const_iterator;
-    typedef integer_iterator<Integer> iterator;
+    using const_iterator = integer_iterator<Integer>;
+    using iterator = integer_iterator<Integer>;
 
     range(Integer begin, Integer end) : iter(begin), last(end) {}
 
@@ -90,7 +87,6 @@ irange(const Integer first,
 {
     return range<Integer>(first, last);
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // INTEGER_RANGE_HPP

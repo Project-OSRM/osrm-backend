@@ -7,9 +7,7 @@
 
 #include <boost/range/algorithm/copy.hpp>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 namespace restriction_graph_details
@@ -284,5 +282,4 @@ RestrictionGraph::EdgeRange RestrictionGraph::GetEdges(RestrictionID id) const
                                       edges.begin() + node.edges_begin_idx + node.num_edges);
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

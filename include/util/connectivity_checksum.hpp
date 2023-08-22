@@ -9,9 +9,7 @@
 #include <climits>
 #include <cstdint>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 struct ConnectivityChecksum
@@ -84,7 +82,6 @@ struct ConnectivityChecksum
     std::size_t byte_number;
     unsigned char bit_number;
 };
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

@@ -1,23 +1,17 @@
 #include "util/coordinate_calculation.hpp"
+#include "util/cheap_ruler.hpp"
 #include "util/coordinate.hpp"
 #include "util/trigonometry_table.hpp"
 #include "util/web_mercator.hpp"
 
 #include <boost/assert.hpp>
 
-#include <mapbox/cheap_ruler.hpp>
-
 #include <algorithm>
 #include <iterator>
 #include <limits>
 #include <utility>
 
-namespace osrm
-{
-namespace util
-{
-
-namespace coordinate_calculation
+namespace osrm::util::coordinate_calculation
 {
 
 namespace
@@ -31,8 +25,8 @@ class CheapRulerContainer
     {
         for (int n = 0; n < number_of_rulers; n++)
         {
-            cheap_ruler_cache[n] = mapbox::cheap_ruler::CheapRuler(
-                step * (n + 0.5) / COORDINATE_PRECISION, mapbox::cheap_ruler::CheapRuler::Meters);
+            cheap_ruler_cache[n] =
+                mapbox::cheap_ruler::CheapRuler(step * (n + 0.5) / COORDINATE_PRECISION);
         }
     };
 
@@ -419,6 +413,4 @@ double computeArea(const std::vector<Coordinate> &polygon)
     return area / 2.;
 }
 
-} // namespace coordinate_calculation
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util::coordinate_calculation

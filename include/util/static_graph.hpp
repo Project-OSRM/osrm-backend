@@ -19,9 +19,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 template <typename EdgeDataT, storage::Ownership Ownership> class StaticGraph;
 
@@ -320,7 +318,6 @@ class StaticGraph
     Vector<EdgeArrayEntry> edge_array;
 };
 
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // STATIC_GRAPH_HPP

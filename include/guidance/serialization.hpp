@@ -8,11 +8,7 @@
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace guidance
-{
-namespace serialization
+namespace osrm::guidance::serialization
 {
 
 // read/write for turn data file
@@ -49,8 +45,6 @@ inline void write(storage::tar::FileWriter &writer,
     storage::serialization::write(
         writer, name + "/post_turn_bearings", turn_data_container.post_turn_bearings);
 }
-} // namespace serialization
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance::serialization
 
 #endif

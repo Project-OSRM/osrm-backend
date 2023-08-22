@@ -17,9 +17,7 @@
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 namespace
 {
@@ -159,5 +157,4 @@ DinicMaxFlow::MinCut computeInertialFlowCut(const BisectionGraphView &view,
     return bestMinCut(view, num_slopes, source_sink_rate, balance);
 }
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner

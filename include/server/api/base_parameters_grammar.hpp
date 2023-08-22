@@ -8,17 +8,13 @@
 #include "engine/polyline_compressor.hpp"
 
 #include <boost/optional.hpp>
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 #include <limits>
 #include <string>
 
-namespace osrm
-{
-namespace server
-{
-namespace api
+namespace osrm::server::api
 {
 
 namespace
@@ -235,8 +231,6 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::symbols<char, engine::Approach> approach_type;
     qi::symbols<char, engine::api::BaseParameters::SnappingType> snapping_type;
 };
-} // namespace api
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server::api
 
 #endif

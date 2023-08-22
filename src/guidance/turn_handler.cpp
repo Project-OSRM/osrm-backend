@@ -69,9 +69,7 @@ InputIt findOutermostForkCandidate(const InputIt begin, const InputIt end)
 }
 } // namespace
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 // a wrapper to handle road indices of forks at intersections
@@ -845,5 +843,4 @@ void TurnHandler::handleDistinctConflict(const EdgeID via_edge,
     }
 }
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance

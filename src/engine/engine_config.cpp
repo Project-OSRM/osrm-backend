@@ -1,8 +1,6 @@
 #include "engine/engine_config.hpp"
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 bool EngineConfig::IsValid() const
@@ -15,17 +13,18 @@ bool EngineConfig::IsValid() const
         return v == -1 || v > limit;
     };
 
-    const bool limits_valid = unlimited_or_more_than(max_locations_distance_table, 2) &&
-                              unlimited_or_more_than(max_locations_map_matching, 2) &&
-                              unlimited_or_more_than(max_radius_map_matching, 0) &&
-                              unlimited_or_more_than(max_locations_trip, 2) &&
-                              unlimited_or_more_than(max_locations_viaroute, 2) &&
-                              unlimited_or_more_than(max_results_nearest, 0) &&
-                              max_alternatives >= 0;
+    const bool limits_valid =
+        unlimited_or_more_than(max_locations_distance_table, 2) &&
+        unlimited_or_more_than(max_locations_map_matching, 2) &&
+        unlimited_or_more_than(max_radius_map_matching, 0) &&
+        unlimited_or_more_than(max_locations_trip, 2) &&
+        unlimited_or_more_than(max_locations_viaroute, 2) &&
+        unlimited_or_more_than(max_results_nearest, 0) &&
+        (!default_radius.has_value() || unlimited_or_more_than(*default_radius, 0)) &&
+        max_alternatives >= 0;
 
     return ((use_shared_memory && all_path_are_empty) || (use_mmap && storage_config.IsValid()) ||
             storage_config.IsValid()) &&
            limits_valid;
 }
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine

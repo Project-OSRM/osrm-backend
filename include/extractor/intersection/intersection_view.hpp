@@ -21,11 +21,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
-{
-namespace intersection
+namespace osrm::extractor::intersection
 {
 
 inline auto makeCompareAngularDeviation(const double angle)
@@ -232,8 +228,6 @@ struct IntersectionView final : std::vector<IntersectionViewData>,      //
     using Base = std::vector<IntersectionViewData>;
 };
 
-} // namespace intersection
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor::intersection
 
 #endif /* OSRM_EXTRACTOR_INTERSECTION_INTERSECTION_VIEW_HPP_*/

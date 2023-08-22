@@ -25,11 +25,7 @@ namespace
 namespace qi = boost::spirit::qi;
 }
 
-namespace osrm
-{
-namespace updater
-{
-namespace csv
+namespace osrm::updater::csv
 {
 SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths)
 {
@@ -63,6 +59,4 @@ TurnLookupTable readTurnValues(const std::vector<std::string> &paths)
                                                qi::double_ >> -(',' >> qi::double_));
     return parser(paths);
 }
-} // namespace csv
-} // namespace updater
-} // namespace osrm
+} // namespace osrm::updater::csv

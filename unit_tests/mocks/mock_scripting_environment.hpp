@@ -11,10 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-
-namespace test
+namespace osrm::test
 {
 
 // a mock implementation of the scripting environment doing exactly nothing
@@ -50,7 +47,6 @@ class MockScriptingEnvironment : public extractor::ScriptingEnvironment
     bool HasLocationDependentData() const override { return false; };
 };
 
-} // namespace test
-} // namespace osrm
+} // namespace osrm::test
 
 #endif // MOCK_SCRIPTING_ENVIRONMENT_HPP_

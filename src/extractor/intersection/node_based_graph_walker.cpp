@@ -7,11 +7,7 @@
 
 using osrm::util::angularDeviation;
 
-namespace osrm
-{
-namespace extractor
-{
-namespace intersection
+namespace osrm::extractor::intersection
 {
 
 // ---------------------------------------------------------------------------------
@@ -289,6 +285,4 @@ void IntersectionFinderAccumulator::update(const NodeID from_node,
                                                          {from_node, via_edge});
 }
 
-} // namespace intersection
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor::intersection

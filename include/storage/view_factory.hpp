@@ -36,9 +36,7 @@
 #include "util/vector_view.hpp"
 
 #include "util/filtered_graph.hpp"
-namespace osrm
-{
-namespace storage
+namespace osrm::storage
 {
 
 template <typename T>
@@ -263,7 +261,7 @@ inline auto make_partition_view(const SharedDataIndex &index, const std::string 
 
 inline auto make_timestamp_view(const SharedDataIndex &index, const std::string &name)
 {
-    return util::StringView(index.GetBlockPtr<char>(name), index.GetBlockEntries(name));
+    return std::string_view(index.GetBlockPtr<char>(name), index.GetBlockEntries(name));
 }
 
 inline auto make_cell_storage_view(const SharedDataIndex &index, const std::string &name)
@@ -364,7 +362,6 @@ inline auto make_filtered_graph_view(const SharedDataIndex &index,
 
     return util::FilteredGraphView<contractor::QueryGraphView>({node_list, edge_list}, edge_filter);
 }
-} // namespace storage
-} // namespace osrm
+} // namespace osrm::storage
 
 #endif

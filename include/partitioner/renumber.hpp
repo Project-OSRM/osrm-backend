@@ -12,9 +12,7 @@
 #include "util/dynamic_graph.hpp"
 #include "util/static_graph.hpp"
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 std::vector<std::uint32_t> makePermutation(const DynamicEdgeBasedGraph &graph,
                                            const std::vector<Partition> &partitions);
@@ -93,7 +91,6 @@ inline void renumber(std::vector<extractor::StorageManeuverOverride> &maneuver_o
     }
 }
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif

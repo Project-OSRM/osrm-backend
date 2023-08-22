@@ -8,9 +8,7 @@
 
 #include <cstdint>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 // This implements a single-pass integer range.
@@ -26,17 +24,16 @@ class filtered_integer_iterator
                                     boost::single_pass_traversal_tag,
                                     Integer>
 {
-    typedef boost::iterator_facade<filtered_integer_iterator<Integer, Filter>,
-                                   Integer,
-                                   boost::single_pass_traversal_tag,
-                                   Integer>
-        base_t;
+    using base_t = boost::iterator_facade<filtered_integer_iterator<Integer, Filter>,
+                                          Integer,
+                                          boost::single_pass_traversal_tag,
+                                          Integer>;
 
   public:
-    typedef typename base_t::value_type value_type;
-    typedef typename base_t::difference_type difference_type;
-    typedef typename base_t::reference reference;
-    typedef std::random_access_iterator_tag iterator_category;
+    using value_type = typename base_t::value_type;
+    using difference_type = typename base_t::difference_type;
+    using reference = typename base_t::reference;
+    using iterator_category = std::random_access_iterator_tag;
 
     filtered_integer_iterator() : value(), filter(nullptr) {}
     explicit filtered_integer_iterator(value_type x, value_type end_value, const Filter *filter)
@@ -64,8 +61,8 @@ class filtered_integer_iterator
 template <typename Integer, typename Filter> class filtered_range
 {
   public:
-    typedef filtered_integer_iterator<Integer, Filter> const_iterator;
-    typedef filtered_integer_iterator<Integer, Filter> iterator;
+    using const_iterator = filtered_integer_iterator<Integer, Filter>;
+    using iterator = filtered_integer_iterator<Integer, Filter>;
 
     filtered_range(Integer begin, Integer end, const Filter &filter) : last(end, end, &filter)
     {
@@ -95,7 +92,6 @@ filtered_range<Integer, Filter> filtered_irange(
 {
     return filtered_range<Integer, Filter>(first, last, filter);
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // INTEGER_RANGE_HPP

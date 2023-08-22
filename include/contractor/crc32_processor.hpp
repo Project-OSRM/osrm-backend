@@ -9,9 +9,7 @@
 
 #include <iterator>
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 class IteratorbasedCRC32
@@ -125,7 +123,6 @@ struct RangebasedCRC32
   private:
     IteratorbasedCRC32 crc32;
 };
-} // namespace contractor
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif /* ITERATOR_BASED_CRC32_H */

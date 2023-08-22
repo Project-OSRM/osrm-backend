@@ -6,9 +6,7 @@
 #include "util/coordinate_calculation.hpp"
 #include <set>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 // Maximum length in meters of an internal intersection edge
@@ -24,7 +22,7 @@ struct EdgeInfo
 
     NodeID node;
 
-    util::StringView name;
+    std::string_view name;
 
     bool reversed;
 
@@ -288,5 +286,4 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
     return segregated_edges;
 }
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance

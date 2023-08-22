@@ -36,9 +36,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class ScriptingEnvironment;
@@ -91,7 +89,7 @@ class EdgeBasedGraphFactory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
     void GetEdgeBasedNodeSegments(std::vector<EdgeBasedNodeSegment> &nodes);
     void GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights);
-    void GetEdgeBasedNodeDurations(std::vector<EdgeWeight> &output_node_durations);
+    void GetEdgeBasedNodeDurations(std::vector<EdgeDuration> &output_node_durations);
     void GetEdgeBasedNodeDistances(std::vector<EdgeDistance> &output_node_distances);
     std::uint32_t GetConnectivityChecksum() const;
 
@@ -173,7 +171,6 @@ class EdgeBasedGraphFactory
     // mapping of node-based edges to edge-based nodes
     std::vector<NodeID> nbe_to_ebn_mapping;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* EDGE_BASED_GRAPH_FACTORY_HPP_ */

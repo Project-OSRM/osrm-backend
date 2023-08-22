@@ -4,7 +4,6 @@
 #include "engine/plugins/tile.hpp"
 
 #include "util/coordinate_calculation.hpp"
-#include "util/string_view.hpp"
 #include "util/vector_tile.hpp"
 #include "util/web_mercator.hpp"
 
@@ -20,17 +19,14 @@
 #include <algorithm>
 #include <numeric>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
 #include <cmath>
 #include <cstdint>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
 constexpr const static int MIN_ZOOM_FOR_TURNS = 15;
@@ -83,10 +79,10 @@ using FloatLine = std::vector<FloatPoint>;
 // We use boost::geometry to clip lines/points that are outside or cross the boundary
 // of the tile we're rendering.  We need these types defined to use boosts clipping
 // logic
-typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian> point_t;
-typedef boost::geometry::model::linestring<point_t> linestring_t;
-typedef boost::geometry::model::box<point_t> box_t;
-typedef boost::geometry::model::multi_linestring<linestring_t> multi_linestring_t;
+using point_t = boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian>;
+using linestring_t = boost::geometry::model::linestring<point_t>;
+using box_t = boost::geometry::model::box<point_t>;
+using multi_linestring_t = boost::geometry::model::multi_linestring<linestring_t>;
 const static box_t clip_box(point_t(-util::vector_tile::BUFFER, -util::vector_tile::BUFFER),
                             point_t(util::vector_tile::EXTENT + util::vector_tile::BUFFER,
                                     util::vector_tile::EXTENT + util::vector_tile::BUFFER));
@@ -340,7 +336,7 @@ class SpeedLayerFeatureBuilder : public vtzero::linestring_feature_builder
         add_property(m_layer.key_duration, m_layer.double_index(value));
     }
 
-    void set_name(const boost::string_ref &value)
+    void set_name(const std::string_view value)
     {
         add_property(
             m_layer.key_name,
@@ -497,17 +493,17 @@ void encodeVectorTile(const DataFacadeBase &facade,
                     auto name = facade.GetNameForID(name_id);
 
                     // If this is a valid forward edge, go ahead and add it to the tile
-                    if (forward_duration != 0 && edge.forward_segment_id.enabled)
+                    if (forward_duration != SegmentDuration{0} && edge.forward_segment_id.enabled)
                     {
                         // Calculate the speed for this line
-                        std::uint32_t speed_kmh_idx =
-                            static_cast<std::uint32_t>(round(length / forward_duration * 10 * 3.6));
+                        std::uint32_t speed_kmh_idx = static_cast<std::uint32_t>(
+                            round(length / from_alias<double>(forward_duration) * 10 * 3.6));
 
                         // Rate values are in meters per weight-unit - and similar to speeds, we
                         // present 1 decimal place of precision (these values are added as
                         // double/10) lower down
-                        std::uint32_t forward_rate =
-                            static_cast<std::uint32_t>(round(length / forward_weight * 10.));
+                        std::uint32_t forward_rate = static_cast<std::uint32_t>(
+                            round(length / from_alias<double>(forward_weight) * 10.));
 
                         auto tile_line = coordinatesToTileLine(a, b, tile_bbox);
                         if (!tile_line.empty())
@@ -518,9 +514,9 @@ void encodeVectorTile(const DataFacadeBase &facade,
                             fbuilder.set_speed(speed_kmh_idx);
                             fbuilder.set_is_small(component_id.is_tiny);
                             fbuilder.set_datasource(
-                                facade.GetDatasourceName(forward_datasource_idx).to_string());
-                            fbuilder.set_weight(forward_weight / 10.0);
-                            fbuilder.set_duration(forward_duration / 10.0);
+                                std::string(facade.GetDatasourceName(forward_datasource_idx)));
+                            fbuilder.set_weight(from_alias<double>(forward_weight) / 10.0);
+                            fbuilder.set_duration(from_alias<double>(forward_duration) / 10.0);
                             fbuilder.set_name(name);
                             fbuilder.set_rate(forward_rate / 10.0);
                             fbuilder.set_is_startpoint(is_startpoint);
@@ -531,17 +527,17 @@ void encodeVectorTile(const DataFacadeBase &facade,
 
                     // Repeat the above for the coordinates reversed and using the `reverse`
                     // properties
-                    if (reverse_duration != 0 && edge.reverse_segment_id.enabled)
+                    if (reverse_duration != SegmentDuration{0} && edge.reverse_segment_id.enabled)
                     {
                         // Calculate the speed for this line
-                        std::uint32_t speed_kmh_idx =
-                            static_cast<std::uint32_t>(round(length / reverse_duration * 10 * 3.6));
+                        std::uint32_t speed_kmh_idx = static_cast<std::uint32_t>(
+                            round(length / from_alias<double>(reverse_duration) * 10 * 3.6));
 
                         // Rate values are in meters per weight-unit - and similar to speeds, we
                         // present 1 decimal place of precision (these values are added as
                         // double/10) lower down
-                        std::uint32_t reverse_rate =
-                            static_cast<std::uint32_t>(round(length / reverse_weight * 10.));
+                        std::uint32_t reverse_rate = static_cast<std::uint32_t>(
+                            round(length / from_alias<double>(reverse_weight) * 10.));
 
                         auto tile_line = coordinatesToTileLine(b, a, tile_bbox);
                         if (!tile_line.empty())
@@ -552,9 +548,9 @@ void encodeVectorTile(const DataFacadeBase &facade,
                             fbuilder.set_speed(speed_kmh_idx);
                             fbuilder.set_is_small(component_id.is_tiny);
                             fbuilder.set_datasource(
-                                facade.GetDatasourceName(reverse_datasource_idx).to_string());
-                            fbuilder.set_weight(reverse_weight / 10.0);
-                            fbuilder.set_duration(reverse_duration / 10.0);
+                                std::string(facade.GetDatasourceName(reverse_datasource_idx)));
+                            fbuilder.set_weight(from_alias<double>(reverse_weight) / 10.0);
+                            fbuilder.set_duration(from_alias<double>(reverse_duration) / 10.0);
                             fbuilder.set_name(name);
                             fbuilder.set_rate(reverse_rate / 10.0);
                             fbuilder.set_is_startpoint(is_startpoint);
@@ -582,8 +578,8 @@ void encodeVectorTile(const DataFacadeBase &facade,
 
                     fbuilder.set_bearing_in(turn_data.in_angle);
                     fbuilder.set_turn_angle(turn_data.turn_angle);
-                    fbuilder.set_cost(turn_data.duration / 10.0);
-                    fbuilder.set_weight(turn_data.weight / 10.0);
+                    fbuilder.set_cost(from_alias<double>(turn_data.duration) / 10.0);
+                    fbuilder.set_weight(from_alias<double>(turn_data.weight) / 10.0);
                     fbuilder.set_turn(turn_data.turn_instruction);
 
                     fbuilder.commit();
@@ -695,6 +691,4 @@ Status TilePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     return Status::Ok;
 }
-} // namespace plugins
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::plugins

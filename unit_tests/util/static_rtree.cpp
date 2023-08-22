@@ -93,8 +93,8 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
 {
     struct TupleHash
     {
-        typedef std::pair<unsigned, unsigned> argument_type;
-        typedef std::size_t result_type;
+        using argument_type = std::pair<unsigned int, unsigned int>;
+        using result_type = std::size_t;
 
         result_type operator()(const argument_type &t) const
         {
@@ -174,19 +174,19 @@ struct GraphFixture
     std::vector<TestData> edges;
 };
 
-typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * 3, TEST_LEAF_NODE_SIZE / 2>
-    TestRandomGraphFixture_LeafHalfFull;
-typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * 5, TEST_LEAF_NODE_SIZE>
-    TestRandomGraphFixture_LeafFull;
-typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * 10, TEST_LEAF_NODE_SIZE * 2>
-    TestRandomGraphFixture_TwoLeaves;
-typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
-                           TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR>
-    TestRandomGraphFixture_Branch;
-typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
-                           TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 2>
-    TestRandomGraphFixture_MultipleLevels;
-typedef RandomGraphFixture<10, 30> TestRandomGraphFixture_10_30;
+using TestRandomGraphFixture_LeafHalfFull =
+    RandomGraphFixture<TEST_LEAF_NODE_SIZE * 3, TEST_LEAF_NODE_SIZE / 2>;
+using TestRandomGraphFixture_LeafFull =
+    RandomGraphFixture<TEST_LEAF_NODE_SIZE * 5, TEST_LEAF_NODE_SIZE>;
+using TestRandomGraphFixture_TwoLeaves =
+    RandomGraphFixture<TEST_LEAF_NODE_SIZE * 10, TEST_LEAF_NODE_SIZE * 2>;
+using TestRandomGraphFixture_Branch =
+    RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
+                       TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR>;
+using TestRandomGraphFixture_MultipleLevels =
+    RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
+                       TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 2>;
+using TestRandomGraphFixture_10_30 = RandomGraphFixture<10, 30>;
 
 template <typename RTreeT>
 void simple_verify_rtree(RTreeT &rtree,

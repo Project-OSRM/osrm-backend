@@ -2,7 +2,7 @@
 #include "engine/polyline_compressor.hpp"
 
 #include <boost/fusion/include/adapt_struct.hpp>
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/repository/include/qi_iter_pos.hpp>
 
@@ -62,11 +62,7 @@ struct URLParser final : qi::grammar<Iterator, Into>
 
 } // namespace
 
-namespace osrm
-{
-namespace server
-{
-namespace api
+namespace osrm::server::api
 {
 
 boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::string::iterator end)
@@ -93,6 +89,4 @@ boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::stri
     return boost::none;
 }
 
-} // namespace api
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server::api

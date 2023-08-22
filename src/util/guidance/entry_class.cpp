@@ -4,11 +4,7 @@
 
 #include <climits>
 
-namespace osrm
-{
-namespace util
-{
-namespace guidance
+namespace osrm::util::guidance
 {
 
 bool EntryClass::activate(std::uint32_t index)
@@ -36,6 +32,4 @@ bool EntryClass::operator<(const EntryClass &other) const
     return enabled_entries_flags < other.enabled_entries_flags;
 }
 
-} // namespace guidance
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util::guidance

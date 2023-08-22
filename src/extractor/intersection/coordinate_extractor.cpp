@@ -11,11 +11,7 @@
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 
-namespace osrm
-{
-namespace extractor
-{
-namespace intersection
+namespace osrm::extractor::intersection
 {
 
 namespace
@@ -1171,6 +1167,4 @@ CoordinateExtractor::RegressionLine(const std::vector<util::Coordinate> &coordin
     return {coord_between_front, coord_between_back};
 }
 
-} // namespace intersection
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor::intersection

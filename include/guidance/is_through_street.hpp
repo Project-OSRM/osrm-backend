@@ -12,9 +12,7 @@
 
 #include "util/guidance/name_announcements.hpp"
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 template <typename IntersectionType>
@@ -60,7 +58,6 @@ inline bool isThroughStreet(const std::size_t index,
     return false;
 }
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /*OSRM_GUIDANCE_IS_THROUGH_STREET_HPP_*/

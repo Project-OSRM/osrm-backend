@@ -1,6 +1,6 @@
 #include "partitioner/recursive_bisection_state.hpp"
-#include "extractor/tarjan_scc.hpp"
 #include "partitioner/tarjan_graph_wrapper.hpp"
+#include "util/tarjan_scc.hpp"
 
 #include <algorithm>
 #include <climits> // for CHAR_BIT
@@ -8,9 +8,7 @@
 #include <set>
 #include <unordered_map>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 RecursiveBisectionState::RecursiveBisectionState(BisectionGraph &bisection_graph_)
@@ -91,7 +89,7 @@ RecursiveBisectionState::PrePartitionWithSCC(const std::size_t small_component_s
     // since our graphs are unidirectional, we don't realy need the scc. But tarjan is so nice and
     // assigns IDs and counts sizes
     TarjanGraphWrapper wrapped_graph(bisection_graph);
-    extractor::TarjanSCC<TarjanGraphWrapper> scc_algo(wrapped_graph);
+    util::TarjanSCC<TarjanGraphWrapper> scc_algo(wrapped_graph);
     scc_algo.Run();
 
     // Map Edges to Sccs
@@ -181,5 +179,4 @@ const std::vector<BisectionID> &RecursiveBisectionState::BisectionIDs() const
 
 std::uint32_t RecursiveBisectionState::SCCDepth() const { return scc_levels; }
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner

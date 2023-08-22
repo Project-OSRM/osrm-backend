@@ -12,9 +12,7 @@
 
 #include <memory>
 
-namespace osrm
-{
-namespace server
+namespace osrm::server
 {
 ServiceHandler::ServiceHandler(osrm::EngineConfig &config) : routing_machine(config)
 {
@@ -51,5 +49,4 @@ engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,
 
     return service->RunQuery(parsed_url.prefix_length, parsed_url.query, result);
 }
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server

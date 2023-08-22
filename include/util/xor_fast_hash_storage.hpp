@@ -6,9 +6,7 @@
 #include <limits>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 template <typename NodeID, typename Key, std::size_t MaxNumElements = (1u << 16u)>
@@ -78,7 +76,6 @@ class XORFastHashStorage
     XORFastHash<MaxNumElements> fast_hasher;
     unsigned current_timestamp;
 };
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // XOR_FAST_HASH_STORAGE_HPP

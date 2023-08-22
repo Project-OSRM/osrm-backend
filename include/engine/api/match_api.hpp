@@ -12,11 +12,7 @@
 
 #include "util/integer_range.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 class MatchAPI final : public RouteAPI
@@ -253,8 +249,6 @@ class MatchAPI final : public RouteAPI
     const tidy::Result &tidy_result;
 };
 
-} // namespace api
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

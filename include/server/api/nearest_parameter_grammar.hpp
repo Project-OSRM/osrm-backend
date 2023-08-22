@@ -4,14 +4,10 @@
 #include "server/api/base_parameters_grammar.hpp"
 #include "engine/api/nearest_parameters.hpp"
 
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
-namespace osrm
-{
-namespace server
-{
-namespace api
+namespace osrm::server::api
 {
 
 namespace
@@ -40,8 +36,6 @@ struct NearestParametersGrammar final : public BaseParametersGrammar<Iterator, S
     qi::rule<Iterator, Signature> root_rule;
     qi::rule<Iterator, Signature> nearest_rule;
 };
-} // namespace api
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server::api
 
 #endif

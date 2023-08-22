@@ -4,14 +4,10 @@
 #include "server/api/base_parameters_grammar.hpp"
 #include "engine/api/table_parameters.hpp"
 
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
-namespace osrm
-{
-namespace server
-{
-namespace api
+namespace osrm::server::api
 {
 
 namespace
@@ -106,8 +102,6 @@ struct TableParametersGrammar : public BaseParametersGrammar<Iterator, Signature
         fallback_coordinate_type;
     qi::real_parser<double, json_policy> double_;
 };
-} // namespace api
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server::api
 
 #endif

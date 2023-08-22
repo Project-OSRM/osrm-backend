@@ -9,9 +9,7 @@
 #include <boost/filesystem/path.hpp>
 #include <string>
 
-namespace osrm
-{
-namespace storage
+namespace osrm::storage
 {
 struct IOConfig
 {
@@ -35,6 +33,11 @@ struct IOConfig
         }
 
         return {base_path.string() + fileName};
+    }
+
+    bool IsRequiredConfiguredInput(const std::string &fileName) const
+    {
+        return IsConfigured(fileName, required_input_files);
     }
 
     boost::filesystem::path base_path;
@@ -81,7 +84,6 @@ struct IOConfig
     std::vector<boost::filesystem::path> optional_input_files;
     std::vector<boost::filesystem::path> output_files;
 };
-} // namespace storage
-} // namespace osrm
+} // namespace osrm::storage
 
 #endif

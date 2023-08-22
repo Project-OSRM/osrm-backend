@@ -8,11 +8,7 @@
 
 #include <boost/math/constants/constants.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace map_matching
+namespace osrm::engine::map_matching
 {
 
 struct NormalDistribution
@@ -98,8 +94,6 @@ class BayesClassifier
     double positive_apriori_probability;
     double negative_apriori_probability;
 };
-} // namespace map_matching
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::map_matching
 
 #endif // BAYES_CLASSIFIER_HPP

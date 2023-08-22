@@ -8,9 +8,7 @@
 #include <cstdint>
 #include <limits>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 struct QueryNode
@@ -48,7 +46,6 @@ struct QueryNode
                          MAX_OSM_NODEID);
     }
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // QUERY_NODE_HPP

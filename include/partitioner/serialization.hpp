@@ -12,11 +12,7 @@
 #include "storage/shared_memory_ownership.hpp"
 #include "storage/tar.hpp"
 
-namespace osrm
-{
-namespace partitioner
-{
-namespace serialization
+namespace osrm::partitioner::serialization
 {
 
 template <storage::Ownership Ownership>
@@ -65,8 +61,6 @@ inline void write(storage::tar::FileWriter &writer,
     storage::serialization::write(
         writer, name + "/level_to_cell_offset", storage.level_to_cell_offset);
 }
-} // namespace serialization
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner::serialization
 
 #endif

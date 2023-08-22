@@ -7,9 +7,7 @@
 
 #include <boost/thread/tss.hpp>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 // Algorithm-dependent heaps
@@ -29,9 +27,9 @@ struct HeapData
 
 struct ManyToManyHeapData : HeapData
 {
-    EdgeWeight duration;
+    EdgeDuration duration;
     EdgeDistance distance;
-    ManyToManyHeapData(NodeID p, EdgeWeight duration, EdgeDistance distance)
+    ManyToManyHeapData(NodeID p, EdgeDuration duration, EdgeDistance distance)
         : HeapData(p), duration(duration), distance(distance)
     {
     }
@@ -78,15 +76,15 @@ struct MultiLayerDijkstraHeapData
 
 struct ManyToManyMultiLayerDijkstraHeapData : MultiLayerDijkstraHeapData
 {
-    EdgeWeight duration;
+    EdgeDuration duration;
     EdgeDistance distance;
-    ManyToManyMultiLayerDijkstraHeapData(NodeID p, EdgeWeight duration, EdgeDistance distance)
+    ManyToManyMultiLayerDijkstraHeapData(NodeID p, EdgeDuration duration, EdgeDistance distance)
         : MultiLayerDijkstraHeapData(p), duration(duration), distance(distance)
     {
     }
     ManyToManyMultiLayerDijkstraHeapData(NodeID p,
                                          bool from,
-                                         EdgeWeight duration,
+                                         EdgeDuration duration,
                                          EdgeDistance distance)
         : MultiLayerDijkstraHeapData(p, from), duration(duration), distance(distance)
     {
@@ -120,7 +118,6 @@ template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
     void InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes,
                                                        unsigned number_of_boundary_nodes);
 };
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif // SEARCH_ENGINE_DATA_HPP

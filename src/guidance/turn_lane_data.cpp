@@ -8,11 +8,7 @@
 #include <unordered_map>
 #include <utility>
 
-namespace osrm
-{
-namespace guidance
-{
-namespace lanes
+namespace osrm::guidance::lanes
 {
 namespace TurnLaneType = extractor::TurnLaneType;
 using TurnLaneDescription = extractor::TurnLaneDescription;
@@ -154,6 +150,4 @@ bool hasTag(const TurnLaneType::Mask tag, const LaneDataVector &data)
     return findTag(tag, data) != data.cend();
 }
 
-} // namespace lanes
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance::lanes

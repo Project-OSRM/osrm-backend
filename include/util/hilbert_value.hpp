@@ -6,9 +6,7 @@
 #include <climits>
 #include <cstdint>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 // Transform x and y to Hilbert SFC linear coordinate
@@ -69,7 +67,6 @@ inline std::uint64_t GetHilbertCode(const Coordinate &coordinate)
                             static_cast<std::int32_t>(90 * COORDINATE_PRECISION);
     return HilbertToLinear(x, y);
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif /* HILBERT_VALUE_HPP */

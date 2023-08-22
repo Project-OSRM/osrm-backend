@@ -10,11 +10,7 @@
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace guidance
-{
-namespace files
+namespace osrm::guidance::files
 {
 
 // reads .osrm.edges
@@ -51,8 +47,6 @@ inline void writeTurnData(const boost::filesystem::path &path,
     writer.WriteFrom("/common/connectivity_checksum", connectivity_checksum);
     serialization::write(writer, "/common/turn_data", turn_data);
 }
-} // namespace files
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance::files
 
 #endif

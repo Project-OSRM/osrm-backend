@@ -7,9 +7,7 @@
 #include <cstddef>
 #include <iterator>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 // Reorders the first n elements in the range to satisfy the comparator,
@@ -49,7 +47,6 @@ void reorderFirstLast(RandomAccessRange &rng, std::size_t n, Compare comp)
     return reorderFirstLast(begin(rng), end(rng), n, comp);
 }
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif

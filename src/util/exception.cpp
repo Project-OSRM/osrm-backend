@@ -1,5 +1,7 @@
 #include "util/exception.hpp"
 
+#include <utility>
+
 // This function exists to 'anchor' the class, and stop the compiler from
 // copying vtable and RTTI info into every object file that includes
 // this header. (Caught by -Wweak-vtables under Clang.)
@@ -11,12 +13,10 @@
 // this, the compiler will copy the vtable and RTTI into every .o file that
 // #includes the header, bloating .o file sizes and increasing link times.
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 void exception::anchor() const {}
 void RuntimeError::anchor() const {}
-} // namespace util
-} // namespace osrm
+void DisabledDatasetException::anchor() const {}
+} // namespace osrm::util

@@ -6,16 +6,12 @@
 #include "engine/hint.hpp"
 #include "engine/polyline_compressor.hpp"
 
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 #include <string>
 
-namespace osrm
-{
-namespace server
-{
-namespace api
+namespace osrm::server::api
 {
 
 namespace
@@ -40,8 +36,6 @@ struct TileParametersGrammar final : boost::spirit::qi::grammar<Iterator, Signat
   private:
     qi::rule<Iterator, Signature> root_rule;
 };
-} // namespace api
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server::api
 
 #endif

@@ -6,11 +6,7 @@
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 using namespace osrm::guidance;
 
@@ -419,6 +415,4 @@ bool straightTurnFollowedByChoiceless(const RouteStepIterator step_entering_inte
            noIntermediaryIntersections(*step_entering_intersection);
 }
 
-} /* namespace guidance */
-} /* namespace engine */
-} /* namespace osrm */
+} // namespace osrm::engine::guidance

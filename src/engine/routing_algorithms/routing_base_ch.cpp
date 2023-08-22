@@ -1,12 +1,6 @@
 #include "engine/routing_algorithms/routing_base_ch.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
-{
-namespace ch
+namespace osrm::engine::routing_algorithms::ch
 {
 
 /**
@@ -109,10 +103,10 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
     weight = weight_upper_bound;
 
     // get offset to account for offsets on phantom nodes on compressed edges
-    const auto min_edge_offset = std::min(0, forward_heap.MinKey());
-    BOOST_ASSERT(min_edge_offset <= 0);
+    const auto min_edge_offset = std::min<EdgeWeight>({0}, forward_heap.MinKey());
+    BOOST_ASSERT(min_edge_offset <= EdgeWeight{0});
     // we only every insert negative offsets for nodes in the forward heap
-    BOOST_ASSERT(reverse_heap.MinKey() >= 0);
+    BOOST_ASSERT(reverse_heap.MinKey() >= EdgeWeight{0});
 
     // run two-Target Dijkstra routing step.
     while (0 < (forward_heap.Size() + reverse_heap.Size()))
@@ -208,8 +202,4 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
 
     return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
 }
-} // namespace ch
-
-} // namespace routing_algorithms
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms::ch

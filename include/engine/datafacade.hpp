@@ -3,15 +3,12 @@
 
 #include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 using DataFacadeBase = datafacade::ContiguousInternalMemoryDataFacadeBase;
 template <typename AlgorithmT>
 using DataFacade = datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT>;
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

@@ -10,9 +10,7 @@
 
 #include <numeric>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 namespace detail
 {
@@ -106,7 +104,6 @@ template <storage::Ownership Ownership> class IntersectionBearingsContainer
 using IntersectionBearingsContainer =
     detail::IntersectionBearingsContainer<storage::Ownership::Container>;
 using IntersectionBearingsView = detail::IntersectionBearingsContainer<storage::Ownership::View>;
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

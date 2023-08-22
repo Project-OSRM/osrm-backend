@@ -11,11 +11,7 @@
 #include "util/coordinate.hpp"
 #include "util/node_based_graph.hpp"
 
-namespace osrm
-{
-namespace extractor
-{
-namespace intersection
+namespace osrm::extractor::intersection
 {
 
 class CoordinateExtractor
@@ -251,8 +247,6 @@ class CoordinateExtractor
                         const std::uint8_t considered_lanes) const;
 };
 
-} // namespace intersection
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor::intersection
 
 #endif // OSRM_EXTRACTOR_INTERSECTION_COORDINATE_EXTRACTOR_HPP_

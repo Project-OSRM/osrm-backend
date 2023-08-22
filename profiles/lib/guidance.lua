@@ -85,7 +85,7 @@ function Guidance.set_classification (highway, result, input_way)
       if service_type ~= nil and service_type == 'alley' then
         result.road_classification.road_priority_class = road_priority_class.alley
       else
-        if serice_type == nil then
+        if service_type == nil then
           result.road_classification.road_priority_class = road_priority_class.alley
         else
           result.road_classification.road_priority_class = highway_classes[highway]

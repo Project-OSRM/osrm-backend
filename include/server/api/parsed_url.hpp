@@ -6,11 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace server
-{
-namespace api
+namespace osrm::server::api
 {
 
 struct ParsedURL final
@@ -22,8 +18,6 @@ struct ParsedURL final
     std::size_t prefix_length;
 };
 
-} // namespace api
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server::api
 
 #endif

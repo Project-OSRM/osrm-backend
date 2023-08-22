@@ -39,9 +39,7 @@ template <> struct is_container<osmium::Relation> : std::false_type
 };
 } // namespace sol
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 namespace
@@ -92,6 +90,19 @@ struct to_lua_object : public boost::static_visitor<sol::object>
     sol::state &state;
 };
 } // namespace
+
+// Handle a lua error thrown in a protected function by printing the traceback and bubbling
+// exception up to caller. Lua errors are generally unrecoverable, so this exception should not be
+// caught but instead should terminate the process. The point of having this error handler rather
+// than just using unprotected Lua functions which terminate the process automatically is that this
+// function provides more useful error messages including Lua tracebacks and line numbers.
+void handle_lua_error(sol::protected_function_result &luares)
+{
+    sol::error luaerr = luares;
+    std::string msg = luaerr.what();
+    std::cerr << msg << std::endl;
+    throw util::exception("Lua error (see stderr for traceback)");
+}
 
 Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(
     const std::string &file_name,
@@ -549,13 +560,19 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                "precision",
                                COORDINATE_PRECISION,
                                "max_turn_weight",
-                               std::numeric_limits<TurnPenalty>::max());
+                               std::numeric_limits<TurnPenalty::value_type>::max());
 
         // call initialize function
-        sol::function setup_function = function_table.value()["setup"];
+        sol::protected_function setup_function = function_table.value()["setup"];
         if (!setup_function.valid())
             throw util::exception("Profile must have an setup() function.");
-        sol::optional<sol::table> profile_table = setup_function();
+
+        auto setup_result = setup_function();
+
+        if (!setup_result.valid())
+            handle_lua_error(setup_result);
+
+        sol::optional<sol::table> profile_table = setup_result;
         if (profile_table == sol::nullopt)
             throw util::exception("Profile setup() must return a table.");
         else
@@ -1125,7 +1142,9 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
     case 2:
         if (context.has_turn_penalty_function)
         {
-            context.turn_function(context.profile_table, std::ref(turn));
+            auto luares = context.turn_function(context.profile_table, std::ref(turn));
+            if (!luares.valid())
+                handle_lua_error(luares);
 
             // Turn weight falls back to the duration value in deciseconds
             // or uses the extracted unit-less weight value
@@ -1140,7 +1159,9 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
     case 1:
         if (context.has_turn_penalty_function)
         {
-            context.turn_function(std::ref(turn));
+            auto luares = context.turn_function(std::ref(turn));
+            if (!luares.valid())
+                handle_lua_error(luares);
 
             // Turn weight falls back to the duration value in deciseconds
             // or uses the extracted unit-less weight value
@@ -1186,24 +1207,28 @@ void Sol2ScriptingEnvironment::ProcessSegment(ExtractionSegment &segment)
 
     if (context.has_segment_function)
     {
+        sol::protected_function_result luares;
         switch (context.api_version)
         {
         case 4:
         case 3:
         case 2:
-            context.segment_function(context.profile_table, std::ref(segment));
+            luares = context.segment_function(context.profile_table, std::ref(segment));
             break;
         case 1:
-            context.segment_function(std::ref(segment));
+            luares = context.segment_function(std::ref(segment));
             break;
         case 0:
-            context.segment_function(std::ref(segment.source),
-                                     std::ref(segment.target),
-                                     segment.distance,
-                                     segment.duration);
+            luares = context.segment_function(std::ref(segment.source),
+                                              std::ref(segment.target),
+                                              segment.distance,
+                                              segment.duration);
             segment.weight = segment.duration; // back-compatibility fallback to duration
             break;
         }
+
+        if (!luares.valid())
+            handle_lua_error(luares);
     }
 }
 
@@ -1213,20 +1238,27 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node,
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 
+    sol::protected_function_result luares;
+
+    // TODO check for api version, make sure luares is always set
     switch (api_version)
     {
     case 4:
     case 3:
-        node_function(profile_table, std::cref(node), std::ref(result), std::cref(relations));
+        luares =
+            node_function(profile_table, std::cref(node), std::ref(result), std::cref(relations));
         break;
     case 2:
-        node_function(profile_table, std::cref(node), std::ref(result));
+        luares = node_function(profile_table, std::cref(node), std::ref(result));
         break;
     case 1:
     case 0:
-        node_function(std::cref(node), std::ref(result));
+        luares = node_function(std::cref(node), std::ref(result));
         break;
     }
+
+    if (!luares.valid())
+        handle_lua_error(luares);
 }
 
 void LuaScriptingContext::ProcessWay(const osmium::Way &way,
@@ -1235,21 +1267,27 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way,
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 
+    sol::protected_function_result luares;
+
+    // TODO check for api version, make sure luares is always set
     switch (api_version)
     {
     case 4:
     case 3:
-        way_function(profile_table, std::cref(way), std::ref(result), std::cref(relations));
+        luares =
+            way_function(profile_table, std::cref(way), std::ref(result), std::cref(relations));
         break;
     case 2:
-        way_function(profile_table, std::cref(way), std::ref(result));
+        luares = way_function(profile_table, std::cref(way), std::ref(result));
         break;
     case 1:
     case 0:
-        way_function(std::cref(way), std::ref(result));
+        luares = way_function(std::cref(way), std::ref(result));
         break;
     }
+
+    if (!luares.valid())
+        handle_lua_error(luares);
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

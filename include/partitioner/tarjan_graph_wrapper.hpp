@@ -5,9 +5,7 @@
 #include "util/integer_range.hpp"
 #include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 class TarjanGraphWrapper
@@ -23,7 +21,6 @@ class TarjanGraphWrapper
     const BisectionGraph &bisection_graph;
 };
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif // OSRM_PARTITIONER_TARJAN_GRAPH_WRAPPER_HPP_

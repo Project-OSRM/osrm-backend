@@ -1,10 +1,9 @@
 ## Open Source Routing Machine
 
-| Linux / macOS / Windows | Code Coverage |
-| ----------------------- | ------------- |
-| [![osrm-backend CI](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml/badge.svg)](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml) | [![Codecov](https://codecov.io/gh/Project-OSRM/osrm-backend/branch/master/graph/badge.svg)](https://codecov.io/gh/Project-OSRM/osrm-backend) |
 
-High performance routing engine written in C++14 designed to run on OpenStreetMap data.
+[![osrm-backend CI](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml/badge.svg)](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml) [![Codecov](https://codecov.io/gh/Project-OSRM/osrm-backend/branch/master/graph/badge.svg)](https://codecov.io/gh/Project-OSRM/osrm-backend) [![Discord](https://img.shields.io/discord/1034487840219860992)](https://discord.gg/es9CdcCXcb)
+
+High performance routing engine written in C++ designed to run on OpenStreetMap data.
 
 The following services are available via HTTP API, C++ library interface and NodeJs wrapper:
 - Nearest - Snaps coordinates to the street network and returns the nearest matches
@@ -33,6 +32,7 @@ Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 
 ## Contact
 
+- Discord: [join](https://discord.gg/es9CdcCXcb)
 - IRC: `irc.oftc.net`, channel: `#osrm` ([Webchat](https://webchat.oftc.net))
 - Mailinglist: `https://lists.openstreetmap.org/listinfo/osrm-talk`
 
@@ -58,12 +58,12 @@ Download OpenStreetMap extracts for example from [Geofabrik](http://download.geo
 
 Pre-process the extract with the car profile and start a routing engine HTTP server on port 5000
 
-    docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-extract -p /opt/car.lua /data/berlin-latest.osm.pbf
+    docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-extract -p /opt/car.lua /data/berlin-latest.osm.pbf || echo "osrm-extract failed"
 
 The flag `-v "${PWD}:/data"` creates the directory `/data` inside the docker container and makes the current working directory `"${PWD}"` available there. The file `/data/berlin-latest.osm.pbf` inside the container is referring to `"${PWD}/berlin-latest.osm.pbf"` on the host.
 
-    docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-partition /data/berlin-latest.osrm
-    docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-customize /data/berlin-latest.osrm
+    docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-partition /data/berlin-latest.osrm || echo "osrm-partition failed"
+    docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-customize /data/berlin-latest.osrm || echo "osrm-customize failed"
 
 Note there is no `berlin-latest.osrm` file, but multiple `berlin-latest.osrm.*` files, i.e. `berlin-latest.osrm` is not file path, but "base" path referring to set of files and there is an option to omit this `.osrm` suffix completely(e.g. `osrm-partition /data/berlin-latest`).
 

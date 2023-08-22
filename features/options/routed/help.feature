@@ -23,6 +23,7 @@ Feature: osrm-routed command line options: help
         And stdout should contain "--max-trip-size"
         And stdout should contain "--max-table-size"
         And stdout should contain "--max-matching-size"
+        And stdout should contain "--default-radius"
         And it should exit successfully
 
     @skip_on_routed_js
@@ -44,6 +45,7 @@ Feature: osrm-routed command line options: help
         And stdout should contain "--max-trip-size"
         And stdout should contain "--max-table-size"
         And stdout should contain "--max-matching-size"
+        And stdout should contain "--default-radius"
         And it should exit successfully
 
 
@@ -66,4 +68,5 @@ Feature: osrm-routed command line options: help
         And stdout should contain "--max-table-size"
         And stdout should contain "--max-table-size"
         And stdout should contain "--max-matching-size"
+        And stdout should contain "--default-radius"
         And it should exit successfully

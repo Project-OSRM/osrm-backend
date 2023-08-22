@@ -14,16 +14,14 @@
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 #include <exception>
 #include <stdexcept>
 #include <vector>
 
-namespace osrm
-{
-namespace updater
+namespace osrm::updater
 {
 
 // Functor to parse a list of CSV files using "key,value,comment" grammar.
@@ -78,7 +76,7 @@ template <typename Key, typename Value> struct CSVFilesParser
             util::Log() << "In total loaded " << csv_filenames.size() << " file(s) with a total of "
                         << lookup.size() << " unique values";
 
-            return LookupTable<Key, Value>{lookup};
+            return LookupTable<Key, Value>{std::move(lookup)};
         }
         catch (const std::exception &e)
         // TBB should capture to std::exception_ptr and automatically rethrow in this thread.
@@ -138,7 +136,6 @@ template <typename Key, typename Value> struct CSVFilesParser
     const KeyRule key_rule;
     const ValueRule value_rule;
 };
-} // namespace updater
-} // namespace osrm
+} // namespace osrm::updater
 
 #endif

@@ -5,7 +5,7 @@ RUN mkdir -p /src  && mkdir -p /opt
 
 RUN apt-get update && \
     apt-get -y --no-install-recommends install ca-certificates cmake make git gcc g++ libbz2-dev libxml2-dev wget \
-    libzip-dev libboost1.74-all-dev lua5.4 liblua5.4-dev -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
+    libzip-dev libboost1.74-all-dev lua5.4 liblua5.4-dev pkg-config -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
 
 RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
     ldconfig /usr/local/lib && \
@@ -37,7 +37,7 @@ RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
     cd ../profiles && \
     cp -r * /opt && \
     strip /usr/local/bin/* && \
-    rm -rf /src /usr/local/lib/libosrm*
+    rm -rf /src
 
 
 # Multistage build to reduce image size - https://docs.docker.com/engine/userguide/eng-image/multistage-build/#use-multi-stage-builds

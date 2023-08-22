@@ -10,18 +10,14 @@
 #include "storage/tar.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/function_output_iterator.hpp>
 #include <boost/iterator/function_input_iterator.hpp>
+#include <boost/iterator/function_output_iterator.hpp>
 
 #include <cmath>
 #include <cstdint>
 #include <tuple>
 
-namespace osrm
-{
-namespace storage
-{
-namespace serialization
+namespace osrm::storage::serialization
 {
 
 namespace detail
@@ -268,8 +264,6 @@ inline void write(io::BufferWriter &writer, const BaseDataLayout &layout)
 {
     write(writer, layout.blocks);
 }
-} // namespace serialization
-} // namespace storage
-} // namespace osrm
+} // namespace osrm::storage::serialization
 
 #endif

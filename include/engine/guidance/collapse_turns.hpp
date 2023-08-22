@@ -6,11 +6,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 
 // Multiple possible reasons can result in unnecessary/confusing instructions
@@ -162,8 +158,6 @@ void combineRouteSteps(RouteStep &step_at_turn_location,
 // alias for suppressing a step, using CombineRouteStep with NoModificationStrategy only
 void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_location);
 
-} /* namespace guidance */
-} // namespace engine
-} /* namespace osrm */
+} // namespace osrm::engine::guidance
 
 #endif /* OSRM_ENGINE_GUIDANCE_COLLAPSE_HPP_ */

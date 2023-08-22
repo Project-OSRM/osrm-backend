@@ -1,7 +1,7 @@
 #ifndef EXTRACTION_HELPER_FUNCTIONS_HPP
 #define EXTRACTION_HELPER_FUNCTIONS_HPP
 
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -14,9 +14,7 @@
 
 #include "guidance/parsing_toolkit.hpp"
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 namespace detail
@@ -136,7 +134,6 @@ inline std::string canonicalizeStringList(std::string strlist, const std::string
     return strlist;
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // EXTRACTION_HELPER_FUNCTIONS_HPP

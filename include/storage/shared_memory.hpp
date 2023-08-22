@@ -27,9 +27,7 @@
 
 #include "storage/shared_memory_ownership.hpp"
 
-namespace osrm
-{
-namespace storage
+namespace osrm::storage
 {
 
 struct OSRMLockFile
@@ -311,7 +309,6 @@ std::unique_ptr<SharedMemory> makeSharedMemory(const IdentifierT &id, const uint
         throw util::exception(e.what() + SOURCE_REF);
     }
 }
-} // namespace storage
-} // namespace osrm
+} // namespace osrm::storage
 
 #endif // SHARED_MEMORY_HPP

@@ -4,9 +4,7 @@
 #include "util/packed_vector.hpp"
 #include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 namespace detail
 {
@@ -16,7 +14,6 @@ using PackedOSMIDs = util::detail::PackedVector<OSMNodeID, 34, Ownership>;
 
 using PackedOSMIDsView = detail::PackedOSMIDs<storage::Ownership::View>;
 using PackedOSMIDs = detail::PackedOSMIDs<storage::Ownership::Container>;
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

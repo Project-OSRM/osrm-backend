@@ -10,9 +10,7 @@
 
 #include <set>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 NodeBasedGraphFactory::NodeBasedGraphFactory(
@@ -238,5 +236,4 @@ void NodeBasedGraphFactory::ReleaseOsmNodes()
     extractor::PackedOSMIDs().swap(osm_node_ids);
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

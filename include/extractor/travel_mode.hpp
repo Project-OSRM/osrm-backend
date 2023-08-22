@@ -31,9 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdint>
 #include <string>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 // This is a char instead of a typed enum, so that we can
@@ -103,7 +101,6 @@ inline std::string travelModeToString(const TravelMode mode)
     return token;
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* TRAVEL_MODE_HPP */

@@ -5,11 +5,7 @@
 
 #include <boost/math/constants/constants.hpp>
 
-namespace osrm
-{
-namespace util
-{
-namespace web_mercator
+namespace osrm::util::web_mercator
 {
 namespace detail
 {
@@ -169,8 +165,6 @@ inline void xyzToMercator(
     maxx = static_cast<double>(clamp(util::FloatLongitude{maxx})) * DEGREE_TO_PX;
     maxy = latToY(util::FloatLatitude{maxy}) * DEGREE_TO_PX;
 }
-} // namespace web_mercator
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util::web_mercator
 
 #endif

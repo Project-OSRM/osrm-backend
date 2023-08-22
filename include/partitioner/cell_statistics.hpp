@@ -6,9 +6,7 @@
 
 #include <unordered_set>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 template <typename Partition, typename CellStorage>
 void printCellStatistics(const Partition &partition, const CellStorage &storage)
@@ -48,7 +46,6 @@ void printCellStatistics(const Partition &partition, const CellStorage &storage)
                     << (2 * entries * sizeof(EdgeWeight)) << " bytes)";
     }
 }
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif

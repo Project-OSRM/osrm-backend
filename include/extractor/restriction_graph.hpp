@@ -2,14 +2,14 @@
 #define OSRM_EXTRACTOR_RESTRICTION_GRAPH_HPP_
 
 #include <boost/assert.hpp>
-#include <boost/unordered_map.hpp>
 
 #include "util/node_based_graph.hpp"
+#include "util/std_hash.hpp"
 #include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace extractor
+#include <unordered_map>
+
+namespace osrm::extractor
 {
 
 struct TurnRestriction;
@@ -112,10 +112,10 @@ struct RestrictionGraph
     RestrictionRange GetRestrictions(RestrictionID id) const;
 
     // A compressed node-based edge can only have one start node in the restriction graph.
-    boost::unordered_map<EdgeKey, RestrictionID> start_edge_to_node{};
+    std::unordered_map<EdgeKey, RestrictionID> start_edge_to_node{};
     // A compressed node-based edge can have multiple via nodes in the restriction graph
     // (as the compressed edge can appear in paths with different prefixes).
-    boost::unordered_multimap<EdgeKey, RestrictionID> via_edge_to_node{};
+    std::unordered_multimap<EdgeKey, RestrictionID> via_edge_to_node{};
     std::vector<RestrictionNode> nodes;
     // TODO: Investigate reusing DynamicGraph. Currently it requires specific attributes
     // (e.g. reversed, weight) that would not make sense for restrictions.
@@ -129,7 +129,6 @@ struct RestrictionGraph
 
 RestrictionGraph constructRestrictionGraph(const std::vector<TurnRestriction> &turn_restrictions);
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_RESTRICTION_GRAPH_HPP_

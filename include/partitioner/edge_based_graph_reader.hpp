@@ -21,9 +21,7 @@
 #include <memory>
 #include <vector>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 // Bidirectional (s,t) to (s,t) and (t,s)
@@ -41,8 +39,8 @@ splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
         directed.emplace_back(edge.source,
                               edge.target,
                               edge.data.turn_id,
-                              std::max(edge.data.weight, 1),
-                              edge.data.duration,
+                              std::max(edge.data.weight, {1}),
+                              to_alias<EdgeDuration>(edge.data.duration),
                               edge.data.distance,
                               edge.data.forward,
                               edge.data.backward);
@@ -50,8 +48,8 @@ splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
         directed.emplace_back(edge.target,
                               edge.source,
                               edge.data.turn_id,
-                              std::max(edge.data.weight, 1),
-                              edge.data.duration,
+                              std::max(edge.data.weight, {1}),
+                              to_alias<EdgeDuration>(edge.data.duration),
                               edge.data.distance,
                               edge.data.backward,
                               edge.data.forward);
@@ -198,7 +196,6 @@ inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const boost::filesystem::path &p
     return DynamicEdgeBasedGraph(number_of_edge_based_nodes, tidied, checksum);
 }
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif

@@ -9,9 +9,7 @@
 #include <algorithm>
 #include <vector>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 using Partition = std::vector<CellID>;
 
@@ -109,7 +107,6 @@ std::size_t removeUnconnectedBoundaryNodes(const GraphT &edge_based_graph,
 
     return num_unconnected;
 }
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif

@@ -17,9 +17,7 @@
 #include <memory>
 #include <thread>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 namespace detail
@@ -149,7 +147,6 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
 // once a new dataset arrives.
 template <typename AlgorithmT, template <typename A> class FacadeT>
 using DataWatchdog = detail::DataWatchdogImpl<AlgorithmT, FacadeT<AlgorithmT>>;
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

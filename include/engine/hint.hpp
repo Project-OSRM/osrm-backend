@@ -36,9 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iosfwd>
 #include <string>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 // Fwd. decls.
@@ -83,7 +81,6 @@ constexpr std::size_t ENCODED_SEGMENT_HINT_SIZE = 112;
 static_assert(ENCODED_SEGMENT_HINT_SIZE / 4 * 3 >= sizeof(SegmentHint),
               "ENCODED_SEGMENT_HINT_SIZE does not match size of SegmentHint");
 
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

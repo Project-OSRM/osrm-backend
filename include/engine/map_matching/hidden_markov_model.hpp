@@ -11,11 +11,7 @@
 #include <limits>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace map_matching
+namespace osrm::engine::map_matching
 {
 
 static const double log_2_pi = std::log(2. * boost::math::constants::pi<double>());
@@ -137,8 +133,6 @@ template <class CandidateLists> struct HiddenMarkovModel
         return initial_timestamp;
     }
 };
-} // namespace map_matching
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::map_matching
 
 #endif // HIDDEN_MARKOV_MODEL

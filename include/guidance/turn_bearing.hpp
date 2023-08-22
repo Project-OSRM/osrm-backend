@@ -5,9 +5,7 @@
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 #pragma pack(push, 1)
@@ -29,7 +27,6 @@ class TurnBearing
 };
 #pragma pack(pop)
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /* OSRM_INCLUDE_GUIDANCE_TURN_BEARING_HPP_ */

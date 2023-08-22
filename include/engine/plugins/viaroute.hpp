@@ -15,11 +15,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
 class ViaRoutePlugin final : public BasePlugin
@@ -29,14 +25,14 @@ class ViaRoutePlugin final : public BasePlugin
     const int max_alternatives;
 
   public:
-    explicit ViaRoutePlugin(int max_locations_viaroute, int max_alternatives);
+    explicit ViaRoutePlugin(int max_locations_viaroute,
+                            int max_alternatives,
+                            boost::optional<double> default_radius);
 
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::RouteParameters &route_parameters,
                          osrm::engine::api::ResultT &json_result) const;
 };
-} // namespace plugins
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::plugins
 
 #endif // VIA_ROUTE_HPP

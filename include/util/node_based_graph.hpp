@@ -13,22 +13,20 @@
 #include <memory>
 #include <utility>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 struct NodeBasedEdgeData
 {
     NodeBasedEdgeData()
-        : weight(INVALID_EDGE_WEIGHT), duration(INVALID_EDGE_WEIGHT),
+        : weight(INVALID_EDGE_WEIGHT), duration(INVALID_EDGE_DURATION),
           distance(INVALID_EDGE_DISTANCE), geometry_id({0, false}), reversed(false),
           annotation_data(-1)
     {
     }
 
     NodeBasedEdgeData(EdgeWeight weight,
-                      EdgeWeight duration,
+                      EdgeDuration duration,
                       EdgeDistance distance,
                       GeometryID geometry_id,
                       bool reversed,
@@ -40,7 +38,7 @@ struct NodeBasedEdgeData
     }
 
     EdgeWeight weight;
-    EdgeWeight duration;
+    EdgeDuration duration;
     EdgeDistance distance;
     GeometryID geometry_id;
     bool reversed : 1;
@@ -88,16 +86,15 @@ NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
             output_edge.data.flags = input_edge.flags;
             output_edge.data.annotation_data = input_edge.annotation_data;
 
-            BOOST_ASSERT(output_edge.data.weight > 0);
-            BOOST_ASSERT(output_edge.data.duration > 0);
-            BOOST_ASSERT(output_edge.data.distance >= 0);
+            BOOST_ASSERT(output_edge.data.weight > EdgeWeight{0});
+            BOOST_ASSERT(output_edge.data.duration > EdgeDuration{0});
+            BOOST_ASSERT(output_edge.data.distance >= EdgeDistance{0});
         });
 
     tbb::parallel_sort(edges_list.begin(), edges_list.end());
 
     return NodeBasedDynamicGraph(number_of_nodes, edges_list);
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // NODE_BASED_GRAPH_HPP

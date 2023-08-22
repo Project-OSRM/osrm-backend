@@ -14,9 +14,7 @@
 #include <numeric>
 #include <vector>
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 struct ContractedEdgeContainer
@@ -164,7 +162,6 @@ struct ContractedEdgeContainer
     std::vector<MergedFlags> flags;
     std::vector<QueryEdge> edges;
 };
-} // namespace contractor
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif

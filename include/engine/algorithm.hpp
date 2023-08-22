@@ -3,11 +3,7 @@
 
 #include <type_traits>
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 // Contraction Hiearchy
@@ -111,8 +107,6 @@ template <> struct HasGetTileTurns<mld::Algorithm> final : std::true_type
 template <> struct HasExcludeFlags<mld::Algorithm> final : std::true_type
 {
 };
-} // namespace routing_algorithms
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms
 
 #endif

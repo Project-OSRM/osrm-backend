@@ -32,11 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 /**
@@ -206,13 +202,11 @@ inline RouteParameters::AnnotationsType operator|(RouteParameters::AnnotationsTy
         static_cast<std::underlying_type_t<RouteParameters::AnnotationsType>>(rhs));
 }
 
-inline RouteParameters::AnnotationsType operator|=(RouteParameters::AnnotationsType lhs,
-                                                   RouteParameters::AnnotationsType rhs)
+inline RouteParameters::AnnotationsType &operator|=(RouteParameters::AnnotationsType &lhs,
+                                                    RouteParameters::AnnotationsType rhs)
 {
     return lhs = lhs | rhs;
 }
-} // namespace api
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

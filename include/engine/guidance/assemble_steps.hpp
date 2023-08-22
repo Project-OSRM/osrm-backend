@@ -22,11 +22,7 @@
 #include <guidance/turn_bearing.hpp>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 namespace detail
 {
@@ -52,7 +48,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     const constexpr char *NO_ROTARY_NAME = "";
     const EdgeWeight source_weight =
         source_traversed_in_reverse ? source_node.reverse_weight : source_node.forward_weight;
-    const EdgeWeight source_duration =
+    const EdgeDuration source_duration =
         source_traversed_in_reverse ? source_node.reverse_duration : source_node.forward_duration;
     const auto source_node_id = source_traversed_in_reverse ? source_node.reverse_segment_id.id
                                                             : source_node.forward_segment_id.id;
@@ -61,7 +57,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     const auto source_mode = facade.GetTravelMode(source_node_id);
     auto source_classes = facade.GetClasses(facade.GetClassData(source_node_id));
 
-    const EdgeWeight target_duration =
+    const EdgeDuration target_duration =
         target_traversed_in_reverse ? target_node.reverse_duration : target_node.forward_duration;
     const EdgeWeight target_weight =
         target_traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight;
@@ -103,8 +99,8 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
         // but a RouteStep is with regard to the segment after the turn.
         // We need to skip the first segment because it is already covered by the
         // initial start of a route
-        EdgeWeight segment_duration = 0;
-        EdgeWeight segment_weight = 0;
+        EdgeDuration segment_duration = {0};
+        EdgeWeight segment_weight = {0};
 
         // some name changes are not announced in our processing. For these, we have to keep the
         // first name on the segment
@@ -121,7 +117,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                      : osrm::guidance::TurnInstruction::NO_TURN();
             if (turn_instruction.type != osrm::guidance::TurnType::NoTurn)
             {
-                BOOST_ASSERT(segment_weight >= 0);
+                BOOST_ASSERT(segment_weight >= EdgeWeight{0});
                 const auto name = facade.GetNameForID(step_name_id);
                 const auto ref = facade.GetRefForID(step_name_id);
                 const auto pronunciation = facade.GetPronunciationForID(step_name_id);
@@ -140,16 +136,16 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                 steps.push_back(RouteStep{path_point.from_edge_based_node,
                                           step_name_id,
                                           is_segregated,
-                                          name.to_string(),
-                                          ref.to_string(),
-                                          pronunciation.to_string(),
-                                          destinations.to_string(),
-                                          exits.to_string(),
+                                          std::string(name),
+                                          std::string(ref),
+                                          std::string(pronunciation),
+                                          std::string(destinations),
+                                          std::string(exits),
                                           NO_ROTARY_NAME,
                                           NO_ROTARY_NAME,
-                                          segment_duration / 10.,
+                                          from_alias<double>(segment_duration) / 10.,
                                           distance,
-                                          segment_weight / weight_multiplier,
+                                          from_alias<double>(segment_weight) / weight_multiplier,
                                           travel_mode,
                                           maneuver,
                                           leg_geometry.FrontIndex(segment_index),
@@ -228,29 +224,29 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                             WaypointType::None,
                             0};
                 segment_index++;
-                segment_duration = 0;
-                segment_weight = 0;
+                segment_duration = {0};
+                segment_weight = {0};
             }
         }
         const auto distance = leg_geometry.segment_distances[segment_index];
-        const EdgeWeight duration = segment_duration + target_duration;
+        const EdgeDuration duration = segment_duration + target_duration;
         const EdgeWeight weight = segment_weight + target_weight;
         // intersections contain the classes of exiting road
         intersection.classes = facade.GetClasses(facade.GetClassData(target_node_id));
-        BOOST_ASSERT(duration >= 0);
+        BOOST_ASSERT(duration >= EdgeDuration{0});
         steps.push_back(RouteStep{leg_data[leg_data.size() - 1].from_edge_based_node,
                                   step_name_id,
                                   is_segregated,
-                                  facade.GetNameForID(step_name_id).to_string(),
-                                  facade.GetRefForID(step_name_id).to_string(),
-                                  facade.GetPronunciationForID(step_name_id).to_string(),
-                                  facade.GetDestinationsForID(step_name_id).to_string(),
-                                  facade.GetExitsForID(step_name_id).to_string(),
+                                  std::string(facade.GetNameForID(step_name_id)),
+                                  std::string(facade.GetRefForID(step_name_id)),
+                                  std::string(facade.GetPronunciationForID(step_name_id)),
+                                  std::string(facade.GetDestinationsForID(step_name_id)),
+                                  std::string(facade.GetExitsForID(step_name_id)),
                                   NO_ROTARY_NAME,
                                   NO_ROTARY_NAME,
-                                  duration / 10.,
+                                  from_alias<double>(duration) / 10.,
                                   distance,
-                                  weight / weight_multiplier,
+                                  from_alias<double>(weight) / weight_multiplier,
                                   target_mode,
                                   maneuver,
                                   leg_geometry.FrontIndex(segment_index),
@@ -280,22 +276,23 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
 
         // use rectified linear unit function to avoid negative duration values
         // due to flooring errors in phantom snapping
-        BOOST_ASSERT(target_duration >= source_duration || weight == 0);
-        const EdgeWeight duration = std::max(0, target_duration - source_duration);
+        BOOST_ASSERT(target_duration >= source_duration || weight == EdgeWeight{0});
+        const EdgeDuration duration =
+            std::max<EdgeDuration>({0}, target_duration - source_duration);
 
         steps.push_back(RouteStep{source_node_id,
                                   source_name_id,
                                   is_segregated,
-                                  facade.GetNameForID(source_name_id).to_string(),
-                                  facade.GetRefForID(source_name_id).to_string(),
-                                  facade.GetPronunciationForID(source_name_id).to_string(),
-                                  facade.GetDestinationsForID(source_name_id).to_string(),
-                                  facade.GetExitsForID(source_name_id).to_string(),
+                                  std::string(facade.GetNameForID(source_name_id)),
+                                  std::string(facade.GetRefForID(source_name_id)),
+                                  std::string(facade.GetPronunciationForID(source_name_id)),
+                                  std::string(facade.GetDestinationsForID(source_name_id)),
+                                  std::string(facade.GetExitsForID(source_name_id)),
                                   NO_ROTARY_NAME,
                                   NO_ROTARY_NAME,
-                                  duration / 10.,
+                                  from_alias<double>(duration) / 10.,
                                   leg_geometry.segment_distances[segment_index],
-                                  weight / weight_multiplier,
+                                  from_alias<double>(weight) / weight_multiplier,
                                   source_mode,
                                   maneuver,
                                   leg_geometry.FrontIndex(segment_index),
@@ -329,11 +326,11 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     steps.push_back(RouteStep{target_node_id,
                               target_name_id,
                               facade.IsSegregated(target_node_id),
-                              facade.GetNameForID(target_name_id).to_string(),
-                              facade.GetRefForID(target_name_id).to_string(),
-                              facade.GetPronunciationForID(target_name_id).to_string(),
-                              facade.GetDestinationsForID(target_name_id).to_string(),
-                              facade.GetExitsForID(target_name_id).to_string(),
+                              std::string(facade.GetNameForID(target_name_id)),
+                              std::string(facade.GetRefForID(target_name_id)),
+                              std::string(facade.GetPronunciationForID(target_name_id)),
+                              std::string(facade.GetDestinationsForID(target_name_id)),
+                              std::string(facade.GetExitsForID(target_name_id)),
                               NO_ROTARY_NAME,
                               NO_ROTARY_NAME,
                               ZERO_DURATION,
@@ -364,8 +361,6 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     return steps;
 }
 
-} // namespace guidance
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif // ENGINE_GUIDANCE_SEGMENT_LIST_HPP_

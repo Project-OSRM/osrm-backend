@@ -7,9 +7,7 @@
 #include <sys/resource.h>
 #endif
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 inline void DumpMemoryStats()
@@ -28,7 +26,6 @@ inline void DumpMemoryStats()
     util::Log() << "RAM: peak bytes used: <not implemented on Windows>";
 #endif // _WIN32
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

@@ -17,8 +17,8 @@ struct TestData
     EdgeID id;
 };
 
-typedef DynamicGraph<TestData> TestDynamicGraph;
-typedef TestDynamicGraph::InputEdge TestInputEdge;
+using TestDynamicGraph = DynamicGraph<TestData>;
+using TestInputEdge = TestDynamicGraph::InputEdge;
 
 BOOST_AUTO_TEST_CASE(find_test)
 {

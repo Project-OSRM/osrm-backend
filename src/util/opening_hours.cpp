@@ -1,6 +1,6 @@
 #include "util/opening_hours.hpp"
 
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 #include <boost/io/ios_state.hpp>
@@ -10,9 +10,7 @@
 #include <iomanip>
 #include <iterator>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 #ifndef NDEBUG
@@ -431,5 +429,4 @@ bool CheckOpeningHours(const std::vector<OpeningHours> &input, const struct tm &
     return is_open;
 }
 
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util

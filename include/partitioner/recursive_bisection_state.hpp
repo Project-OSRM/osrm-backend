@@ -9,9 +9,7 @@
 #include "partitioner/bisection_graph_view.hpp"
 #include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 // Keeps track of the bisection ids, modifies the graph accordingly, splitting it into a left/right
@@ -50,7 +48,6 @@ class RecursiveBisectionState
     std::vector<BisectionID> bisection_ids;
 };
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif // OSRM_PARTITIONER_RECURSIVE_BISECTION_STATE_HPP_

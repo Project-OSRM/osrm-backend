@@ -6,9 +6,7 @@
 
 #include <vector>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 using Partition = std::vector<CellID>;
@@ -17,7 +15,6 @@ using Partition = std::vector<CellID>;
 std::tuple<std::vector<Partition>, std::vector<std::uint32_t>>
 bisectionToPartition(const std::vector<BisectionID> &node_to_bisection_id,
                      const std::vector<std::size_t> &max_cell_sizes);
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif

@@ -12,9 +12,7 @@
 #include <stack>
 #include <utility>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 // Normed to the thresholds table
@@ -119,5 +117,4 @@ std::vector<util::Coordinate> douglasPeucker(std::vector<util::Coordinate>::cons
 
     return simplified_geometry;
 }
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine

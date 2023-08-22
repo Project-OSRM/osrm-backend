@@ -5,11 +5,7 @@
 #include "extractor/suffix_table.hpp"
 #include "guidance/constants.hpp"
 
-namespace osrm
-{
-namespace extractor
-{
-namespace intersection
+namespace osrm::extractor::intersection
 {
 
 // check if two name ids can be seen as identical (in presence of refs/others)
@@ -20,8 +16,6 @@ bool HaveIdenticalNames(const NameID lhs,
                         const NameTable &name_table,
                         const SuffixTable &street_name_suffix_table);
 
-} // namespace intersection
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor::intersection
 
 #endif /*OSRM_EXTRACTOR_INTERSECTION_HAVE_IDENTICAL_NAMES_HPP_*/

@@ -15,9 +15,7 @@
 #include <numeric>
 #include <unordered_set>
 
-namespace osrm
-{
-namespace storage
+namespace osrm::storage
 {
 
 class BaseDataLayout;
@@ -298,7 +296,6 @@ struct SharedRegionRegister
     std::array<SharedRegion, MAX_SHARED_REGIONS> regions;
     std::array<bool, MAX_SHM_KEYS> shm_key_in_use;
 };
-} // namespace storage
-} // namespace osrm
+} // namespace osrm::storage
 
 #endif /* SHARED_DATA_TYPE_HPP */

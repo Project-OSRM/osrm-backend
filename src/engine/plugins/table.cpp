@@ -11,15 +11,12 @@
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
-TablePlugin::TablePlugin(const int max_locations_distance_table)
-    : max_locations_distance_table(max_locations_distance_table)
+TablePlugin::TablePlugin(const int max_locations_distance_table,
+                         const boost::optional<double> default_radius)
+    : BasePlugin(default_radius), max_locations_distance_table(max_locations_distance_table)
 {
 }
 
@@ -90,7 +87,8 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     std::vector<api::TableAPI::TableCellRef> estimated_pairs;
 
     // Scan table for null results - if any exist, replace with distance estimates
-    if (params.fallback_speed != INVALID_FALLBACK_SPEED || params.scale_factor != 1)
+    if (params.fallback_speed != from_alias<double>(INVALID_FALLBACK_SPEED) ||
+        params.scale_factor != 1)
     {
         for (std::size_t row = 0; row < num_sources; row++)
         {
@@ -98,7 +96,8 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             {
                 const auto &table_index = row * num_destinations + column;
                 BOOST_ASSERT(table_index < result_tables_pair.first.size());
-                if (params.fallback_speed != INVALID_FALLBACK_SPEED && params.fallback_speed > 0 &&
+                if (params.fallback_speed != from_alias<double>(INVALID_FALLBACK_SPEED) &&
+                    params.fallback_speed > 0 &&
                     result_tables_pair.first[table_index] == MAXIMAL_EDGE_DURATION)
                 {
                     const auto &source =
@@ -118,29 +117,32 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                   candidatesSnappedLocation(destination));
 
                     result_tables_pair.first[table_index] =
-                        distance_estimate / (double)params.fallback_speed;
+                        to_alias<EdgeDuration>(distance_estimate / params.fallback_speed);
                     if (!result_tables_pair.second.empty())
                     {
-                        result_tables_pair.second[table_index] = distance_estimate;
+                        result_tables_pair.second[table_index] =
+                            to_alias<EdgeDistance>(distance_estimate);
                     }
 
                     estimated_pairs.emplace_back(row, column);
                 }
                 if (params.scale_factor > 0 && params.scale_factor != 1 &&
                     result_tables_pair.first[table_index] != MAXIMAL_EDGE_DURATION &&
-                    result_tables_pair.first[table_index] != 0)
+                    result_tables_pair.first[table_index] != EdgeDuration{0})
                 {
                     EdgeDuration diff =
                         MAXIMAL_EDGE_DURATION / result_tables_pair.first[table_index];
 
-                    if (params.scale_factor >= diff)
+                    if (params.scale_factor >= from_alias<double>(diff))
                     {
-                        result_tables_pair.first[table_index] = MAXIMAL_EDGE_DURATION - 1;
+                        result_tables_pair.first[table_index] =
+                            MAXIMAL_EDGE_DURATION - EdgeDuration{1};
                     }
                     else
                     {
-                        result_tables_pair.first[table_index] = std::lround(
-                            result_tables_pair.first[table_index] * params.scale_factor);
+                        result_tables_pair.first[table_index] = to_alias<EdgeDuration>(
+                            std::lround(from_alias<double>(result_tables_pair.first[table_index]) *
+                                        params.scale_factor));
                     }
                 }
             }
@@ -152,6 +154,4 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     return Status::Ok;
 }
-} // namespace plugins
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::plugins

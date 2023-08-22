@@ -40,9 +40,7 @@ const ByEdgeOrByMeterValue::ValueByMeter ByEdgeOrByMeterValue::by_meter;
 #endif
 #endif
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers_,
                                        std::unordered_map<std::string, ClassData> &classes_map,
@@ -425,10 +423,10 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                 NodeBasedEdgeWithOSM edge = {
                     OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
                     OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
-                    0,  // weight
-                    0,  // duration
-                    0,  // distance
-                    {}, // geometry id
+                    {0}, // weight
+                    {0}, // duration
+                    {0}, // distance
+                    {},  // geometry id
                     static_cast<AnnotationID>(annotation_data_id),
                     {true,
                      in_backward_direction && !split_edge,
@@ -459,10 +457,10 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                 NodeBasedEdgeWithOSM edge = {
                     OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
                     OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
-                    0,  // weight
-                    0,  // duration
-                    0,  // distance
-                    {}, // geometry id
+                    {0}, // weight
+                    {0}, // duration
+                    {0}, // distance
+                    {},  // geometry id
                     static_cast<AnnotationID>(annotation_data_id),
                     {false,
                      true,
@@ -492,5 +490,4 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     external_memory.way_node_id_offsets.push_back(external_memory.used_node_id_list.size());
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

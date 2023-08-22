@@ -30,11 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cmath>
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 /**
@@ -70,8 +66,6 @@ struct TileParameters final
         return valid_x && valid_y && valid_z;
     }
 };
-} // namespace api
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

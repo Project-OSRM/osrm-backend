@@ -6,11 +6,7 @@
 #include "util/typedefs.hpp"
 #include <vector>
 
-namespace osrm
-{
-namespace guidance
-{
-namespace lanes
+namespace osrm::guidance::lanes
 {
 
 struct TurnLaneData
@@ -24,7 +20,7 @@ struct TurnLaneData
     // one-to-one mapping.
     bool operator<(const TurnLaneData &other) const;
 };
-typedef std::vector<TurnLaneData> LaneDataVector;
+using LaneDataVector = std::vector<TurnLaneData>;
 
 // convertes a string given in the OSM format into a TurnLaneData vector
 OSRM_ATTR_WARN_UNUSED
@@ -37,9 +33,6 @@ LaneDataVector::iterator findTag(const extractor::TurnLaneType::Mask tag, LaneDa
 
 // Returns true if any of the queried tags is contained
 bool hasTag(const extractor::TurnLaneType::Mask tag, const LaneDataVector &data);
-} // namespace lanes
-
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance::lanes
 
 #endif /* OSRM_GUIDANCE_TURN_LANE_DATA_HPP_ */

@@ -2,11 +2,7 @@
 
 #include "util/guidance/name_announcements.hpp"
 
-namespace osrm
-{
-namespace extractor
-{
-namespace intersection
+namespace osrm::extractor::intersection
 {
 
 // check if two name ids can be seen as identical (in presence of refs/others)
@@ -25,6 +21,4 @@ bool HaveIdenticalNames(const NameID lhs,
            !util::guidance::requiresNameAnnounced(rhs, lhs, name_table, street_name_suffix_table);
 }
 
-} // namespace intersection
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor::intersection

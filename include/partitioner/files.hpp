@@ -5,11 +5,7 @@
 
 #include "storage/io.hpp"
 
-namespace osrm
-{
-namespace partitioner
-{
-namespace files
+namespace osrm::partitioner::files
 {
 
 // read .osrm.partition file
@@ -96,8 +92,6 @@ inline void writeGraph(const boost::filesystem::path &path,
     writer.WriteFrom("/mld/connectivity_checksum", connectivity_checksum);
     serialization::write(writer, "/mld/multilevelgraph", graph);
 }
-} // namespace files
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner::files
 
 #endif

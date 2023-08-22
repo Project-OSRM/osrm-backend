@@ -3,9 +3,7 @@
 #include <tuple>
 #include <utility>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 WayRestrictionMap::WayRestrictionMap(const RestrictionGraph &restriction_graph)
@@ -121,5 +119,4 @@ NodeID WayRestrictionMap::RemapIfRestrictionVia(const NodeID edge_based_target_n
     return edge_based_target_node;
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

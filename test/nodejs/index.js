@@ -8,7 +8,7 @@ var monaco_corech_path = require('./constants').corech_data_path;
 test('constructor: throws if new keyword is not used', function(assert) {
     assert.plan(1);
     assert.throws(function() { OSRM(); },
-      /Cannot call constructor as function, you need to use 'new' keyword/);
+      /Class constructors cannot be invoked without 'new'/);
 });
 
 test('constructor: uses defaults with no parameter', function(assert) {
@@ -112,6 +112,25 @@ test('constructor: throws if dataset_name is not a string', function(assert) {
     assert.throws(function() { new OSRM({dataset_name: "unsued_name___", shared_memory: true}); }, /Could not find shared memory region/, 'Does not accept wrong name');
 });
 
+test('constructor: takes a default_radius argument', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 1});
+    assert.ok(osrm);
+});
+
+test('constructor: takes a default_radius unlimited argument', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 'unlimited'});
+    assert.ok(osrm);
+});
+
+test('constructor: throws if default_radius is not a number', function(assert) {
+    assert.plan(3);
+    assert.throws(function() { new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 'abc'}); }, /default_radius must be unlimited or an integral number/, 'Does not accept invalid string');
+    assert.ok(new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 1}), 'Does accept number');
+    assert.ok(new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 'unlimited'}), 'Does accept unlimited');
+});
+
 test('constructor: parses custom limits', function(assert) {
     assert.plan(1);
     var osrm = new OSRM({
@@ -123,6 +142,7 @@ test('constructor: parses custom limits', function(assert) {
         max_locations_map_matching: 1,
         max_results_nearest: 1,
         max_alternatives: 1,
+        default_radius: 1
     });
     assert.ok(osrm);
 });
@@ -138,9 +158,47 @@ test('constructor: throws on invalid custom limits', function(assert) {
             max_locations_distance_table: false,
             max_locations_map_matching: 'a lot',
             max_results_nearest: null,
-            max_alternatives: '10'
+            max_alternatives: '10',
+            default_radius: '10'
         })
     });
+});
+test('constructor: throws on invalid disable_feature_dataset option', function(assert) {
+    assert.plan(1);
+    assert.throws(function() {
+        var osrm = new OSRM({
+            path: monaco_path,
+            disable_feature_dataset: ['NOT_EXIST'],
+        })
+    });
+});
+
+test('constructor: throws on non-array disable_feature_dataset', function(assert) {
+    assert.plan(1);
+    assert.throws(function() {
+        var osrm = new OSRM({
+            path: monaco_path,
+            disable_feature_dataset: 'ROUTE_GEOMETRY',
+        })
+    });
+});
+
+test('constructor: ok on valid disable_feature_dataset option', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({
+        path: monaco_path,
+        disable_feature_dataset: ['ROUTE_GEOMETRY'],
+    });
+    assert.ok(osrm);
+});
+
+test('constructor: ok on multiple overlapping disable_feature_dataset options', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({
+        path: monaco_path,
+        disable_feature_dataset: ['ROUTE_GEOMETRY', 'ROUTE_STEPS'],
+    });
+    assert.ok(osrm);
 });
 
 require('./route.js');

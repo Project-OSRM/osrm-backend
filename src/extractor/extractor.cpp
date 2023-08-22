@@ -16,7 +16,6 @@
 #include "extractor/restriction_graph.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
-#include "extractor/tarjan_scc.hpp"
 #include "extractor/turn_path_filter.hpp"
 #include "extractor/way_restriction_map.hpp"
 
@@ -31,6 +30,7 @@
 #include "util/log.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
+#include "util/tarjan_scc.hpp"
 #include "util/timing_util.hpp"
 
 // Keep debug include to make sure the debug header is in sync with types.
@@ -58,9 +58,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 namespace
@@ -668,7 +666,7 @@ void Extractor::FindComponents(unsigned number_of_edge_based_nodes,
 
     for (const auto &edge : input_edge_list)
     {
-        BOOST_ASSERT_MSG(static_cast<unsigned int>(std::max(edge.data.weight, 1)) > 0,
+        BOOST_ASSERT_MSG((std::max(edge.data.weight, EdgeWeight{1})) > EdgeWeight{0},
                          "edge distance < 1");
         BOOST_ASSERT(edge.source < number_of_edge_based_nodes);
         BOOST_ASSERT(edge.target < number_of_edge_based_nodes);
@@ -701,7 +699,7 @@ void Extractor::FindComponents(unsigned number_of_edge_based_nodes,
 
     auto uncontracted_graph = UncontractedGraph(number_of_edge_based_nodes, edges);
 
-    TarjanSCC<UncontractedGraph> component_search(uncontracted_graph);
+    util::TarjanSCC<UncontractedGraph> component_search(uncontracted_graph);
     component_search.Run();
 
     for (NodeID node_id = 0; node_id < number_of_edge_based_nodes; ++node_id)
@@ -911,5 +909,4 @@ void Extractor::ProcessGuidanceTurns(
     util::Log() << "ok, after " << TIMER_SEC(write_guidance_data) << "s";
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

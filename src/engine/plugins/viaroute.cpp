@@ -12,15 +12,14 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
-ViaRoutePlugin::ViaRoutePlugin(int max_locations_viaroute, int max_alternatives)
-    : max_locations_viaroute(max_locations_viaroute), max_alternatives(max_alternatives)
+ViaRoutePlugin::ViaRoutePlugin(int max_locations_viaroute,
+                               int max_alternatives,
+                               boost::optional<double> default_radius)
+    : BasePlugin(default_radius), max_locations_viaroute(max_locations_viaroute),
+      max_alternatives(max_alternatives)
 {
 }
 
@@ -186,6 +185,4 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
 
     return Status::Ok;
 }
-} // namespace plugins
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::plugins

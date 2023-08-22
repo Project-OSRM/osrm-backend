@@ -23,18 +23,14 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 namespace detail
 {
 const constexpr std::size_t MAX_USED_SEGMENTS = 2;
 struct NamedSegment
 {
-    EdgeWeight duration;
+    EdgeDuration duration;
     std::uint32_t position;
     std::uint32_t name_id;
 };
@@ -88,7 +84,7 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const datafacade::BaseDa
         target_traversed_in_reverse ? target_node.reverse_duration : target_node.forward_duration;
     const auto target_node_id = target_traversed_in_reverse ? target_node.reverse_segment_id.id
                                                             : target_node.forward_segment_id.id;
-    if (target_duration > 1)
+    if (target_duration > EdgeDuration{1})
         segments.push_back({target_duration, index++, facade.GetNameIndex(target_node_id)});
     // this makes sure that the segment with the lowest position comes first
     std::sort(
@@ -145,11 +141,11 @@ inline std::string assembleSummary(const datafacade::BaseDataFacade &facade,
     const auto name_id_to_string = [&](const NameID name_id) {
         const auto name = facade.GetNameForID(name_id);
         if (!name.empty())
-            return name.to_string();
+            return std::string(name);
         else
         {
             const auto ref = facade.GetRefForID(name_id);
-            return ref.to_string();
+            return std::string(ref);
         }
     };
 
@@ -184,11 +180,11 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
 
     auto duration = std::accumulate(
         route_data.begin(), route_data.end(), 0, [](const double sum, const PathData &data) {
-            return sum + data.duration_until_turn;
+            return sum + from_alias<double>(data.duration_until_turn);
         });
     auto weight = std::accumulate(
         route_data.begin(), route_data.end(), 0, [](const double sum, const PathData &data) {
-            return sum + data.weight_until_turn;
+            return sum + from_alias<double>(data.weight_until_turn);
         });
 
     //                 s
@@ -212,14 +208,14 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
     // caputed by the phantom node. So we need to add the target duration here.
     // On local segments, the target duration is already part of the duration, however.
 
-    duration = duration + target_duration;
-    weight = weight + target_weight;
+    duration = duration + from_alias<double>(target_duration);
+    weight = weight + from_alias<double>(target_weight);
     if (route_data.empty())
     {
-        weight -=
-            (target_traversed_in_reverse ? source_node.reverse_weight : source_node.forward_weight);
-        duration -= (target_traversed_in_reverse ? source_node.reverse_duration
-                                                 : source_node.forward_duration);
+        weight -= from_alias<double>(target_traversed_in_reverse ? source_node.reverse_weight
+                                                                 : source_node.forward_weight);
+        duration -= from_alias<double>(target_traversed_in_reverse ? source_node.reverse_duration
+                                                                   : source_node.forward_duration);
         // use rectified linear unit function to avoid negative duration values
         // due to flooring errors in phantom snapping
         duration = std::max(0, duration);
@@ -232,8 +228,6 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
                     {}};
 }
 
-} // namespace guidance
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif // ENGINE_GUIDANCE_SEGMENT_LIST_HPP_

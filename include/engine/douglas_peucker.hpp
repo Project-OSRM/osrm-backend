@@ -6,9 +6,7 @@
 #include <iterator>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 namespace detail
 {
@@ -75,7 +73,6 @@ inline std::vector<util::Coordinate> douglasPeucker(const std::vector<util::Coor
 {
     return douglasPeucker(begin(geometry), end(geometry), zoom_level);
 }
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif /* DOUGLAS_PEUCKER_HPP_ */

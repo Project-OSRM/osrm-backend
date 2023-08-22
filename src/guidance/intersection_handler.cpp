@@ -14,9 +14,7 @@
 using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
 using osrm::util::angularDeviation;
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 namespace detail
@@ -488,5 +486,4 @@ bool IntersectionHandler::isSameName(const EdgeID source_edge_id, const EdgeID t
                                                   street_name_suffix_table); //
 }
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance

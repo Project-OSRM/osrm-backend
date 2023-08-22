@@ -11,9 +11,7 @@
 
 #include <boost/filesystem/path.hpp>
 
-namespace osrm
-{
-namespace customizer
+namespace osrm::customizer
 {
 
 struct EdgeBasedGraphEdgeData
@@ -97,7 +95,7 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
 
     EdgeWeight GetNodeWeight(NodeID node) const { return node_weights[node]; }
 
-    EdgeWeight GetNodeDuration(NodeID node) const { return node_durations[node]; }
+    EdgeDuration GetNodeDuration(NodeID node) const { return node_durations[node]; }
 
     EdgeDistance GetNodeDistance(NodeID node) const { return node_distances[node]; }
 
@@ -126,7 +124,6 @@ using MultiLevelEdgeBasedGraph =
     MultiLevelGraph<EdgeBasedGraphEdgeData, storage::Ownership::Container>;
 using MultiLevelEdgeBasedGraphView =
     MultiLevelGraph<EdgeBasedGraphEdgeData, storage::Ownership::View>;
-} // namespace customizer
-} // namespace osrm
+} // namespace osrm::customizer
 
 #endif

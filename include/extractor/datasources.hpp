@@ -1,13 +1,14 @@
 #ifndef OSRM_EXTRACT_DATASOURCES_HPP
 #define OSRM_EXTRACT_DATASOURCES_HPP
 
-#include <cstdint>
-#include <util/string_view.hpp>
-#include <util/typedefs.hpp>
+#include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace extractor
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <string_view>
+
+namespace osrm::extractor
 {
 
 class Datasources
@@ -22,11 +23,11 @@ class Datasources
         std::fill(sources.begin(), sources.end(), '\0');
     }
 
-    util::StringView GetSourceName(DatasourceID id) const
+    std::string_view GetSourceName(DatasourceID id) const
     {
         auto begin = sources.data() + (MAX_LENGTH_NAME * id);
 
-        return util::StringView{begin, lengths[id]};
+        return std::string_view{begin, lengths[id]};
     }
 
     void SetSourceName(DatasourceID id, const std::string &name)
@@ -42,7 +43,6 @@ class Datasources
     std::array<std::uint32_t, MAX_NUM_SOURES> lengths;
     std::array<char, MAX_LENGTH_NAME * MAX_NUM_SOURES> sources;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

@@ -28,9 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_ENGINE_BEARING_HPP
 #define OSRM_ENGINE_BEARING_HPP
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 struct Bearing
@@ -46,7 +44,6 @@ inline bool operator==(const Bearing lhs, const Bearing rhs)
     return lhs.bearing == rhs.bearing && lhs.range == rhs.range;
 }
 inline bool operator!=(const Bearing lhs, const Bearing rhs) { return !(lhs == rhs); }
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

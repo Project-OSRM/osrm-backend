@@ -3,11 +3,7 @@
 
 #include "boost/assert.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace datafacade
+namespace osrm::engine::datafacade
 {
 
 ProcessMemoryAllocator::ProcessMemoryAllocator(const storage::StorageConfig &config)
@@ -38,6 +34,4 @@ ProcessMemoryAllocator::~ProcessMemoryAllocator() {}
 
 const storage::SharedDataIndex &ProcessMemoryAllocator::GetIndex() { return index; }
 
-} // namespace datafacade
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::datafacade

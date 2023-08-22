@@ -7,9 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 // NodesOfWay contains the ordered nodes of a way and provides convenience functions for getting
@@ -50,7 +48,6 @@ struct NodesOfWay
         return node_ids[node_ids.size() - 1];
     }
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* NODES_OF_WAY_HPP */

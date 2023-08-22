@@ -1,8 +1,6 @@
 #include "partitioner/bisection_to_partition.hpp"
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 namespace
@@ -140,5 +138,4 @@ bisectionToPartition(const std::vector<BisectionID> &node_to_bisection_id,
 
     return std::make_tuple(std::move(partitions), std::move(num_cells));
 }
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner

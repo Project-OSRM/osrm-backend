@@ -21,11 +21,7 @@
 #include <limits>
 #include <utility>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 using namespace osrm::guidance;
 
@@ -718,6 +714,4 @@ void applyOverrides(const datafacade::BaseDataFacade &facade,
     }
 }
 
-} // namespace guidance
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::guidance

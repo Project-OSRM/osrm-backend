@@ -38,30 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-
-namespace util
-{
-
-/**
- * JSON types representing OSRM responses.
- *
- * The json::Value type represents the basic sum-type, implemented as a variant.
- *
- * There are two ways for destructuring such types:
- *  - Either provide a visitor and use the apply_visitor function or
- *  - use the get function and explicitely specify the type
- *
- * See the following documentations on variants:
- *  - https://github.com/mapbox/variant
- *  - http://www.boost.org/doc/libs/1_55_0/doc/html/variant.html
- *
- * And take a look at the example we provide.
- *
- * \see OSRM
- */
-namespace json
+namespace osrm::util::json
 {
 
 // fwd. decls.
@@ -147,8 +124,6 @@ struct Array
     std::vector<Value> values;
 };
 
-} // namespace json
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util::json
 
 #endif // JSON_CONTAINER_HPP

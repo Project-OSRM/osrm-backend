@@ -16,9 +16,7 @@
 
 #include <boost/filesystem/fstream.hpp>
 
-namespace osrm
-{
-namespace benchmarks
+namespace osrm::benchmarks
 {
 
 using namespace osrm::test;
@@ -74,8 +72,7 @@ void benchmark(BenchStaticRTree &rtree, unsigned num_queries)
         return rtree.Nearest(q, 10);
     });
 }
-} // namespace benchmarks
-} // namespace osrm
+} // namespace osrm::benchmarks
 
 int main(int argc, char **argv)
 {

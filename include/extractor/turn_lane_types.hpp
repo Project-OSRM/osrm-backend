@@ -13,9 +13,7 @@
 #include <numeric> //partial_sum
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 namespace TurnLaneType
@@ -38,7 +36,7 @@ inline auto laneTypeToName(const std::size_t type_id)
     return name[type_id];
 }
 
-typedef std::uint16_t Mask;
+using Mask = std::uint16_t;
 const constexpr Mask empty = 0u;
 const constexpr Mask none = 1u << 0u;
 const constexpr Mask straight = 1u << 1u;
@@ -54,7 +52,7 @@ const constexpr Mask merge_to_right = 1u << 10u;
 
 } // namespace TurnLaneType
 
-typedef std::vector<TurnLaneType::Mask> TurnLaneDescription;
+using TurnLaneDescription = std::vector<TurnLaneType::Mask>;
 
 // hash function for TurnLaneDescription
 struct TurnLaneDescription_hash
@@ -100,7 +98,6 @@ inline TurnLanesIndexedArray transformTurnLaneMapIntoArrays(const LaneDescriptio
     return std::make_tuple(std::move(turn_lane_offsets), std::move(turn_lane_masks));
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* OSRM_GUIDANCE_TURN_LANE_TYPES_HPP_ */

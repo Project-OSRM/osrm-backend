@@ -6,9 +6,7 @@
 
 #include "rapidjson/document.h"
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 inline void validateCoordinate(const rapidjson::Value &coordinate)
@@ -85,6 +83,5 @@ inline void validateFeature(const rapidjson::Value &feature)
         }
     }
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 #endif // OSRM_GEOJSON_VALIDATION_HPP

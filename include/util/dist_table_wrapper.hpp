@@ -9,9 +9,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 // This Wrapper provides an easier access to a distance table that is given as an linear vector
@@ -34,7 +32,7 @@ template <typename T> class DistTableWrapper
 
     std::size_t size() const { return table_.size(); }
 
-    EdgeWeight operator()(NodeID from, NodeID to) const
+    T operator()(NodeID from, NodeID to) const
     {
         BOOST_ASSERT_MSG(from < number_of_nodes_, "from ID is out of bound");
         BOOST_ASSERT_MSG(to < number_of_nodes_, "to ID is out of bound");
@@ -46,7 +44,7 @@ template <typename T> class DistTableWrapper
         return table_[index];
     }
 
-    void SetValue(NodeID from, NodeID to, EdgeWeight value)
+    void SetValue(NodeID from, NodeID to, T value)
     {
         BOOST_ASSERT_MSG(from < number_of_nodes_, "from ID is out of bound");
         BOOST_ASSERT_MSG(to < number_of_nodes_, "to ID is out of bound");
@@ -77,7 +75,6 @@ template <typename T> class DistTableWrapper
     std::vector<T> table_;
     const std::size_t number_of_nodes_;
 };
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // DIST_TABLE_WRAPPER_H

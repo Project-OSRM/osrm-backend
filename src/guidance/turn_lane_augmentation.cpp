@@ -8,11 +8,7 @@
 #include <cstddef>
 #include <utility>
 
-namespace osrm
-{
-namespace guidance
-{
-namespace lanes
+namespace osrm::guidance::lanes
 {
 
 namespace
@@ -349,6 +345,4 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
     return lane_data;
 }
 
-} // namespace lanes
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance::lanes

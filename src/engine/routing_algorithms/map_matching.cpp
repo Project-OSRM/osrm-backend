@@ -17,11 +17,7 @@
 #include <numeric>
 #include <utility>
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 namespace
@@ -217,8 +213,8 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
             const auto haversine_distance = util::coordinate_calculation::greatCircleDistance(
                 prev_coordinate, current_coordinate);
             // assumes minumum of 4 m/s
-            const EdgeWeight weight_upper_bound =
-                ((haversine_distance + max_distance_delta) / 4.) * facade.GetWeightMultiplier();
+            const EdgeWeight weight_upper_bound = to_alias<EdgeWeight>(
+                ((haversine_distance + max_distance_delta) / 4.) * facade.GetWeightMultiplier());
 
             // compute d_t for this timestamp and the next one
             for (const auto s : util::irange<std::size_t>(0UL, prev_viterbi.size()))
@@ -457,9 +453,7 @@ mapMatching(SearchEngineData<mld::Algorithm> &engine_working_data,
             const std::vector<boost::optional<double>> &trace_gps_precision,
             const bool allow_splitting);
 
-} // namespace routing_algorithms
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms
 
 //[1] "Hidden Markov Map Matching Through Noise and Sparseness"; P. Newson and J. Krumm; 2009; ACM
 // GIS

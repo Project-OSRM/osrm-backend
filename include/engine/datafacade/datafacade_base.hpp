@@ -26,7 +26,6 @@
 #include "util/integer_range.hpp"
 #include "util/packed_vector.hpp"
 #include "util/string_util.hpp"
-#include "util/string_view.hpp"
 #include "util/typedefs.hpp"
 
 #include "osrm/coordinate.hpp"
@@ -37,17 +36,12 @@
 
 #include <engine/bearing.hpp>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
-namespace osrm
+namespace osrm::engine::datafacade
 {
-namespace engine
-{
-namespace datafacade
-{
-
-using StringView = util::StringView;
 
 class BaseDataFacade
 {
@@ -113,7 +107,7 @@ class BaseDataFacade
     GetUncompressedReverseDatasources(const PackedGeometryID id) const = 0;
 
     // Gets the name of a datasource
-    virtual StringView GetDatasourceName(const DatasourceID id) const = 0;
+    virtual std::string_view GetDatasourceName(const DatasourceID id) const = 0;
 
     virtual osrm::guidance::TurnInstruction
     GetTurnInstructionForEdgeID(const EdgeID edge_based_edge_id) const = 0;
@@ -157,15 +151,15 @@ class BaseDataFacade
 
     virtual NameID GetNameIndex(const NodeID edge_based_node_id) const = 0;
 
-    virtual StringView GetNameForID(const NameID id) const = 0;
+    virtual std::string_view GetNameForID(const NameID id) const = 0;
 
-    virtual StringView GetRefForID(const NameID id) const = 0;
+    virtual std::string_view GetRefForID(const NameID id) const = 0;
 
-    virtual StringView GetPronunciationForID(const NameID id) const = 0;
+    virtual std::string_view GetPronunciationForID(const NameID id) const = 0;
 
-    virtual StringView GetDestinationsForID(const NameID id) const = 0;
+    virtual std::string_view GetDestinationsForID(const NameID id) const = 0;
 
-    virtual StringView GetExitsForID(const NameID id) const = 0;
+    virtual std::string_view GetExitsForID(const NameID id) const = 0;
 
     virtual bool GetContinueStraightDefault() const = 0;
 
@@ -191,8 +185,6 @@ class BaseDataFacade
     virtual std::vector<extractor::ManeuverOverride>
     GetOverridesThatStartAt(const NodeID edge_based_node_id) const = 0;
 };
-} // namespace datafacade
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::datafacade
 
 #endif // DATAFACADE_BASE_HPP
