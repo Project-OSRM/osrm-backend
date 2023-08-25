@@ -31,8 +31,10 @@ class Server
 {
   public:
     // Note: returns a shared instead of a unique ptr as it is captured in a lambda somewhere else
-    static std::shared_ptr<Server>
-    CreateServer(std::string &ip_address, int ip_port, unsigned requested_num_threads, short keepalive_timeout)
+    static std::shared_ptr<Server> CreateServer(std::string &ip_address,
+                                                int ip_port,
+                                                unsigned requested_num_threads,
+                                                short keepalive_timeout)
     {
         util::Log() << "http 1.1 compression handled by zlib version " << zlibVersion();
         const unsigned hardware_threads = std::max(1u, std::thread::hardware_concurrency());
@@ -40,9 +42,13 @@ class Server
         return std::make_shared<Server>(ip_address, ip_port, real_num_threads, keepalive_timeout);
     }
 
-    explicit Server(const std::string &address, const int port, const unsigned thread_pool_size, const short keepalive_timeout)
-        : thread_pool_size(thread_pool_size), keepalive_timeout(keepalive_timeout), acceptor(io_context),
-          new_connection(std::make_shared<Connection>(io_context, request_handler, keepalive_timeout))
+    explicit Server(const std::string &address,
+                    const int port,
+                    const unsigned thread_pool_size,
+                    const short keepalive_timeout)
+        : thread_pool_size(thread_pool_size), keepalive_timeout(keepalive_timeout),
+          acceptor(io_context), new_connection(std::make_shared<Connection>(
+                                    io_context, request_handler, keepalive_timeout))
     {
         const auto port_string = std::to_string(port);
 
@@ -94,7 +100,8 @@ class Server
         if (!e)
         {
             new_connection->start();
-            new_connection = std::make_shared<Connection>(io_context, request_handler, keepalive_timeout);
+            new_connection =
+                std::make_shared<Connection>(io_context, request_handler, keepalive_timeout);
             acceptor.async_accept(
                 new_connection->socket(),
                 boost::bind(&Server::HandleAccept, this, boost::asio::placeholders::error));

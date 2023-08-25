@@ -271,8 +271,15 @@ try
 
     int requested_thread_num = 1;
     short keepalive_timeout = 5;
-    const unsigned init_result = generateServerProgramOptions(
-        argc, argv, base_path, ip_address, ip_port, trial_run, config, requested_thread_num, keepalive_timeout);
+    const unsigned init_result = generateServerProgramOptions(argc,
+                                                              argv,
+                                                              base_path,
+                                                              ip_address,
+                                                              ip_port,
+                                                              trial_run,
+                                                              config,
+                                                              requested_thread_num,
+                                                              keepalive_timeout);
     if (init_result == INIT_OK_DO_NOT_START_ENGINE)
     {
         return EXIT_SUCCESS;
@@ -325,7 +332,8 @@ try
 #endif
 
     auto service_handler = std::make_unique<server::ServiceHandler>(config);
-    auto routing_server = server::Server::CreateServer(ip_address, ip_port, requested_thread_num, keepalive_timeout);
+    auto routing_server =
+        server::Server::CreateServer(ip_address, ip_port, requested_thread_num, keepalive_timeout);
 
     routing_server->RegisterServiceHandler(std::move(service_handler));
 
