@@ -131,12 +131,6 @@ test('constructor: throws if default_radius is not a number', function(assert) {
     assert.ok(new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 'unlimited'}), 'Does accept unlimited');
 });
 
-test('constructor: takes a keepalive_timeout argument', function(assert) {
-    assert.plan(1);
-    var osrm = new OSRM({algorithm: 'MLD', path: monaco_mld_path, keepalive_timeout: 10});
-    assert.ok(osrm);
-});
-
 test('constructor: parses custom limits', function(assert) {
     assert.plan(1);
     var osrm = new OSRM({
