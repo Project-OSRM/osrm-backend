@@ -107,7 +107,8 @@ inline unsigned generateServerProgramOptions(const int argc,
                                              int &ip_port,
                                              bool &trial,
                                              EngineConfig &config,
-                                             int &requested_thread_num)
+                                             int &requested_thread_num,
+                                             short &keepalive_timeout)
 {
     using boost::filesystem::path;
     using boost::program_options::value;
@@ -140,6 +141,9 @@ inline unsigned generateServerProgramOptions(const int argc,
         ("threads,t",
          value<int>(&requested_thread_num)->default_value(hardware_threads),
          "Number of threads to use") //
+        ("keepalive-timeout,k",
+         value<short>(&keepalive_timeout)->default_value(5),
+         "Default keepalive-timeout. Default: 5 seconds.") //
         ("shared-memory,s",
          value<bool>(&config.use_shared_memory)->implicit_value(true)->default_value(false),
          "Load data from shared memory") //
@@ -266,8 +270,16 @@ try
     boost::filesystem::path base_path;
 
     int requested_thread_num = 1;
-    const unsigned init_result = generateServerProgramOptions(
-        argc, argv, base_path, ip_address, ip_port, trial_run, config, requested_thread_num);
+    short keepalive_timeout = 5;
+    const unsigned init_result = generateServerProgramOptions(argc,
+                                                              argv,
+                                                              base_path,
+                                                              ip_address,
+                                                              ip_port,
+                                                              trial_run,
+                                                              config,
+                                                              requested_thread_num,
+                                                              keepalive_timeout);
     if (init_result == INIT_OK_DO_NOT_START_ENGINE)
     {
         return EXIT_SUCCESS;
@@ -307,6 +319,7 @@ try
     util::Log() << "Threads: " << requested_thread_num;
     util::Log() << "IP address: " << ip_address;
     util::Log() << "IP port: " << ip_port;
+    util::Log() << "Keepalive timeout: " << keepalive_timeout;
 
 #ifndef _WIN32
     int sig = 0;
@@ -319,7 +332,8 @@ try
 #endif
 
     auto service_handler = std::make_unique<server::ServiceHandler>(config);
-    auto routing_server = server::Server::CreateServer(ip_address, ip_port, requested_thread_num);
+    auto routing_server =
+        server::Server::CreateServer(ip_address, ip_port, requested_thread_num, keepalive_timeout);
 
     routing_server->RegisterServiceHandler(std::move(service_handler));
 

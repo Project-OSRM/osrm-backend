@@ -1,6 +1,7 @@
 # Unreleased
   - Changes from 5.27.1
     - Features
+      - ADDED: Add support for a keepalive_timeout flag. [#6674](https://github.com/Project-OSRM/osrm-backend/pull/6674)
       - ADDED: Add support for a default_radius flag. [#6575](https://github.com/Project-OSRM/osrm-backend/pull/6575)
       - ADDED: Add support for disabling feature datasets. [#6666](https://github.com/Project-OSRM/osrm-backend/pull/6666)
     - Build:

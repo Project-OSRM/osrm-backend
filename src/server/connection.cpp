@@ -7,14 +7,17 @@
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
+#include <fmt/format.h>
 #include <vector>
 
 namespace osrm::server
 {
 
-Connection::Connection(boost::asio::io_context &io_context, RequestHandler &handler)
+Connection::Connection(boost::asio::io_context &io_context,
+                       RequestHandler &handler,
+                       short keepalive_timeout)
     : strand(boost::asio::make_strand(io_context)), TCP_socket(strand), timer(strand),
-      request_handler(handler)
+      request_handler(handler), keepalive_timeout(keepalive_timeout)
 {
 }
 
@@ -88,7 +91,9 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
         {
             keep_alive = true;
             current_reply.headers.emplace_back("Connection", "keep-alive");
-            current_reply.headers.emplace_back("Keep-Alive", "timeout=5, max=512");
+            current_reply.headers.emplace_back("Keep-Alive",
+                                               "timeout=" + fmt::to_string(keepalive_timeout) +
+                                                   ", max=" + fmt::to_string(processed_requests));
         }
 
         // compress the result w/ gzip/deflate if requested
