@@ -792,6 +792,10 @@ install(TARGETS osrm_guidance DESTINATION lib)
 set(DefaultProfilesDir profiles)
 install(DIRECTORY ${DefaultProfilesDir} DESTINATION share/osrm)
 
+# Install data geojson files to /usr/local/share/osrm/data by default
+set(DefaultProfilesDir data)
+install(DIRECTORY ${DefaultProfilesDir} DESTINATION share/osrm)
+
 # Setup exporting variables for pkgconfig and subproject
 #
 
