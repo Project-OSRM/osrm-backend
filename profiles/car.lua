@@ -274,6 +274,7 @@ function setup()
       ["be-bru:rural"] = 70,
       ["be-bru:urban"] = 30,
       ["be-vlg:rural"] = 70,
+      ["bg:motorway"] = 140,
       ["by:urban"] = 60,
       ["by:motorway"] = 110,
       ["ca-on:rural"] = 80,
