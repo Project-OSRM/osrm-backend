@@ -5,8 +5,10 @@ api_version = 4
 Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
+Tags = require('lib/tags')
 TrafficSignal = require("lib/traffic_signal")
 find_access_tag = require("lib/access").find_access_tag
+get_extra_speeds = require("lib/local_trunks").get_extra_speeds
 limit = require("lib/maxspeed").limit
 Measure = require("lib/measure")
 
@@ -216,8 +218,11 @@ function setup()
 
     avoid = Set {
       'impassable',
-      'construction',
-      'proposed'
+      'construction'
+    },
+
+    uselocationtags = Set {
+        'speeds',
     }
   }
 end
@@ -372,6 +377,16 @@ function speed_handler(profile,way,result,data)
     result.forward_speed = profile.default_speed
     result.backward_speed = profile.default_speed
     data.way_type_allows_pushing = true
+  elseif profile.uselocationtags.speeds then
+    local extra_speeds = get_extra_speeds(way, data, profile.default_speed)
+    if extra_speeds then
+        local key,value,speed = Tags.get_constant_by_key_value(way,extra_speeds)
+        if speed then
+            -- set speed by way type
+            result.forward_speed = speed
+            result.backward_speed = speed
+        end
+    end
   end
 end
 
