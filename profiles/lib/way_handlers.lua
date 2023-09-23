@@ -281,7 +281,7 @@ function WayHandlers.speed(profile,way,result,data)
     result.forward_speed = speed
     result.backward_speed = speed
   else 
-    if profile.uselocationtags.speeds then
+    if profile.uselocationtags and profile.uselocationtags.speeds then
         -- check for location tags to handle trunks 
         local extra_speeds = get_extra_speeds(way, data, profile.default_speed)
         if extra_speeds then
