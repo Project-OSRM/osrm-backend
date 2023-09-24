@@ -83,6 +83,8 @@ access.lua        | Function for finding relevant access tags
 destination.lua   | Function for finding relevant destination tags
 maxspeed.lua      | Function for determining maximum speed
 guidance.lua      | Function for processing guidance attributes
+local_trunks.lua  |Function to check trunk roads for access based on country 
+
 
 They all return a table of functions when you use `require` to load them. You can either store this table and reference its functions later, or if you need only a single function you can store that directly.
 
@@ -366,6 +368,35 @@ end
 ```
 
 See [rasterbot.lua](../profiles/rasterbot.lua) and [rasterbotinterp.lua](../profiles/rasterbotinterp.lua) for examples.
+
+### Local Trunks
+There are a number of countries that allow for foot or bicycle traffic on roads marked as highway="trunk".
+To use this feature add:
+
+```lua
+ uselocationtags = Set
+    {
+        'speeds',
+    }
+
+```
+  to the setup() function of the profile (foot.lua or bicycle.lua) .
+ Build your dataset with 
+ ```
+osrm-extract --location-dependent-data ../data/trunk_allowed.geojson
+```
+
+ The list of countries that allow such trunk access is:
+ ```
+   'AUS', 'BLR', 'BRA', 'CHN', 'HKG', 'ISL', 'ITA', 'IRL', 'NOR', 'NZL', 
+   'OMN', 'PHL', 'POL', 'ROU', 'SWE', 'THA', 'TUR', 'UKR', 'GBR', 'USA'.
+```
+ 
+ There is a further list that allows trunk access on ways that are not marked as 'motorroad'.
+ These are:
+ ```
+  'BEL', 'CHL', 'DEU', 'FIN', 'FRA', 'GRC', 'GBR', 'HRV', 'NLD', 'RUS'.
+```
 
 ### Helper functions
 There are a few helper functions defined in the global scope that profiles can use:
