@@ -126,21 +126,23 @@ function LocalMotorways.get_extra_speeds(way, data, thespeed)
       if trunk_nomotorroad_allowed_set[location] then 
         return get_nomotorroad_speeds(way, data, thespeed)
       end
-      speeds = {}
-      if thespeed == walking_speed then
-        speeds = all_speeds.walking_speed
-      else
-        if thespeed == bicycle_speed then
-          speeds = all_speeds.bicycle_speed
-        else  
-          if thespeed == default_speed then
-            speeds = all_speeds.default_speed
-          else
-            return set_speeds(thespeed)
+      if trunk_allowed_set[location] then
+        speeds = {}
+        if thespeed == walking_speed then
+          speeds = all_speeds.walking_speed
+        else
+          if thespeed == bicycle_speed then
+            speeds = all_speeds.bicycle_speed
+          else  
+            if thespeed == default_speed then
+              speeds = all_speeds.default_speed
+            else
+              return set_speeds(thespeed)
+            end
           end
         end
+        return speeds
       end
-      return speeds
     end
   end
   return false    
