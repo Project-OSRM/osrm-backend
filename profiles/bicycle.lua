@@ -378,7 +378,7 @@ function speed_handler(profile,way,result,data)
     result.forward_speed = profile.default_speed
     result.backward_speed = profile.default_speed
     data.way_type_allows_pushing = true
-  elseif profile.uselocationtags.speeds then
+  elseif profile.uselocationtags and profile.uselocationtags.speeds then
     local extra_speeds = get_extra_speeds(way, data, profile.default_speed)
     if extra_speeds then
         local key,value,speed = Tags.get_constant_by_key_value(way,extra_speeds)
