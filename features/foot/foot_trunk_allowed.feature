@@ -138,6 +138,9 @@ Feature: Testbot - trunk allowed
             
      Scenario: trunk allowed - - failure due to geojson not provided
 
+    # Countries that allow trunk access
+    # Use New Zealans coordinates.  
+    
     # By default The Foot profile does not allow access on highway="trunk"
 
         Given the origin -41.210555,173.395053
