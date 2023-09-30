@@ -136,6 +136,9 @@ Feature: Testbot - trunk allowed
             | c,b,a,d   |       | 400    | Impossible route between points  |
             | d,a,b,c   |       | 400    | Impossible route between points  |
             
+    # Countries that allow trunk access
+    # Use New Zealans coordinates.  
+    
      Scenario: trunk allowed - - failure due to geojson not provided
 
     # By default The Bicycle profile does not allow access on highway="trunk"
