@@ -637,6 +637,11 @@ function WayHandlers.blocked_ways(profile,way,result,data)
     return false
   end
 
+  -- motorroad
+  if profile.avoid.motorroad and way:get_value_by_key("motorroad") == "yes" then
+    return false
+  end
+
   -- don't route over steps
   if profile.avoid.steps and data.highway == "steps" then
     return false
