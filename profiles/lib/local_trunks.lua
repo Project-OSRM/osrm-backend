@@ -2,6 +2,7 @@
 -- based on reading https://wiki.openstreetmap.org/wiki/Key:motorroad
 -- and https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access_restrictions
 -- (esp #Alternative_ideas)
+-- We treat all cases of motorroad="yes" as no access.
 -- pass in way data and speed to set.
 -- 
 
@@ -31,6 +32,9 @@ local trunk_allowed_set = Set
   'GBR',
   'USA',
 }
+
+-- the set that has special mention of motorroad in wiki
+-- Keep the list in case differences are found 
 
 trunk_nomotorroad_allowed_set = Set
 {
@@ -95,38 +99,17 @@ local function  set_speeds(thespeed)
   return speeds
 end
 
-local function  get_nomotorroad_speeds(way, data, thespeed)
-  if way:get_value_by_key("motorroad") then
-    local motorroad = way:get_value_by_key("motorroad")
-    if motorroad and motorroad == "yes" then
-      return false
-    end
-  end
-  speeds = {}
-  if thespeed == walking_speed then
-    speeds = all_speeds.walking_speed
-  else
-    if thespeed == bicycle_speed then
-      speeds = all_speeds.bicycle_speed
-    else  
-      if thespeed == default_speed then
-        speeds = all_speeds.default_speed
-      else
-        return set_speeds(thespeed)
-      end
-    end
-  end
-  return speeds
-end  
-
 function LocalMotorways.get_extra_speeds(way, data, thespeed)
   if data.highway == "trunk" or data.highway == "trunk_link" then
+    if way:get_value_by_key("motorroad") then
+      local motorroad = way:get_value_by_key("motorroad")
+      if motorroad and motorroad == "yes" then
+        return false
+      end
+    end    
     if way:get_location_tag('ISO3166-1:alpha3') then
       location = way:get_location_tag('ISO3166-1:alpha3')
-      if trunk_nomotorroad_allowed_set[location] then 
-        return get_nomotorroad_speeds(way, data, thespeed)
-      end
-      if trunk_allowed_set[location] then
+      if trunk_allowed_set[location] or trunk_nomotorroad_allowed_set[location] then
         speeds = {}
         if thespeed == walking_speed then
           speeds = all_speeds.walking_speed
