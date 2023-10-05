@@ -204,13 +204,10 @@ Feature: Testbot - trunk allowed
             | c,b,a,d   | bc,bc,ab,ab,ad,ad |
             | d,a,b,c   | ad,ad,ab,ab,bc,bc |
             
-     Scenario: trunk allowed - success ignoring motorroad
+          Scenario: trunk allowed - success crossing border
 
-    # By default The Foot profile does not allow access on highway="trunk"
 
-        Given the origin -41.210555,173.395053
-        
-        And the extract extra arguments "--location-dependent-data data/trunk_allowed.geojson"
+        Given the extract extra arguments "--location-dependent-data data/trunk_allowed.geojson"
         And the partition extra arguments "--threads 1"
         And the customize extra arguments "--threads 1"
 
@@ -220,21 +217,78 @@ Feature: Testbot - trunk allowed
         """
         
         And the node locations
+        # a and b are in DEU - in the trunk allowed set
+        # c is on the edge (i.e. in DEU)
+        # d,e and f are in Denmark which does not allow trunk access
+        
             | node | lat          | lon        | 
-            | a    | -41.210555   | 173.395053 |
-            | b    | -41.211099   | 173.394173 |
-            | c    | -41.211192   | 173.382834 |
-            | d    | -41.211997   | 173.382812 |
+            | a    | 54.800000    | 9.3491964  |
+            | b    | 54.807000    | 9.3491964  |
+            | c    | 54.8090937   | 9.3491964  |
+            | d    | 54.809999    | 9.3491964  |
+            | e    | 54.823217    | 9.3491964  |
+            | f    | 54.834827    | 9.3491964  |
             
         And the ways
-            | nodes | highway | motorroad |
-            | ad    | primary | no        |
-            | bc    | primary | no        |
-            | ab    | trunk   | yes       |
+            | nodes | highway |
+            | ab    | trunk   |
+            | bc    | trunk   |
+            | cd    | primary |
+            | de    | primary |
+            | ef    | primary |
 
         When I route I should get
-            | waypoints | route             |
-            | c,b,a,d   | bc,bc,ab,ab,ad,ad |
-            | d,a,b,c   | ad,ad,ab,ab,bc,bc |
+            | waypoints | route             | status | message |
+            | a,b       | ab,ab             | 200    |         |
+            | a,b,c     | ab,ab,bc,bc       | 200    |         |
+            | a,b,c,d   | ab,ab,bc,bc,cd,cd | 200    |         |
+            | d,c,b,a   | cd,cd,bc,bc,ab,ab | 200    |         |
+            | c,b,a     | bc,bc,ab,ab       | 200    |         |
+            | d,e,f     | de,de,ef,ef       | 200    |         |
+
+     Scenario: foot trunk allowed - failure crossing border
+
+
+        Given the extract extra arguments "--location-dependent-data data/trunk_allowed.geojson"
+        And the partition extra arguments "--threads 1"
+        And the customize extra arguments "--threads 1"
+
+        And the profile file "foot" initialized with
+        """
+        profile.uselocationtags.speeds = true
+        """
+        
+        And the node locations
+        # a and b are in DEU - in the trunk allowed set
+        # c is on the edge (i.e. in DEU)
+        # d,e and f are in Denmark which does not allow trunk access
+        
+            | node | lat          | lon        | 
+            | a    | 54.800000    | 9.3491964  |
+            | b    | 54.807000    | 9.3491964  |
+            | c    | 54.8090937   | 9.3491964  |
+            | d    | 54.809999    | 9.3491964  |
+            | e    | 54.823217    | 9.3491964  |
+            | f    | 54.834827    | 9.3491964  |
             
-           
+        And the ways
+            | nodes | highway |
+            | ab    | trunk   |
+            | bc    | trunk   |
+            | cd    | trunk   |
+            | de    | primary |
+            | ef    | primary |
+
+        When I route I should get
+            | from | to | route       | status | message                          | # |
+            | a    | b  | ab,ab       | 200    |                                  |   |
+            | a    | c  | ab,bc,bc    | 200    |                                  |   |
+            | a    | d  |             | 400    | Impossible route between points  |   |
+            | a    | e  |             | 400    | Impossible route between points  |   |
+            | c    | d  |             | 400    | Impossible route between points  |   |
+            | d    | e  | de,de       | 200    |                                  |   |
+            | e    | f  | ef,ef       | 200    |                                  |   |
+            | c    | a  | bc,ab,ab    | 200    |                                  |   |
+            | d    | a  |             | 400    | Impossible route between points  |   |
+            | d    | c  |             | 400    | Impossible route between points  |   |
+ 
