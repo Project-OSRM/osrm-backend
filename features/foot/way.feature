@@ -42,3 +42,9 @@ Feature: Foot - Accessability of different way types
             | footway  |       |          | x    |
             | proposed |       |          |      |
             | proposed | yes   | yes      |      |
+
+    Scenario: Foot - Motorroad
+        Then routability should be
+            | highway | motorroad  | forw |
+            | (nil)   | (nil)      | x    |
+            | (nil)   | yes        |      |
