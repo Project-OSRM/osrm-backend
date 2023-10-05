@@ -70,7 +70,8 @@ function setup()
 
     avoid = Set {
       'impassable',
-      'proposed'
+      'proposed',
+      'motorroad'
     },
 
     speeds = Sequence {

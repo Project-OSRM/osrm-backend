@@ -634,6 +634,11 @@ function WayHandlers.blocked_ways(profile,way,result,data)
     return false
   end
 
+  -- motorroad
+  if profile.avoid.motorroad and way:get_value_by_key("motorroad") == "yes" then
+    return false
+  end
+
   -- In addition to the highway=construction tag above handle the construction=* tag
   -- http://wiki.openstreetmap.org/wiki/Key:construction
   -- https://taginfo.openstreetmap.org/keys/construction#values

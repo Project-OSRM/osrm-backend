@@ -33,6 +33,7 @@
       - FIXED: Correct HTTP docs to reflect summary output dependency on steps parameter. [#6655](https://github.com/Project-OSRM/osrm-backend/pull/6655)
     - Profiles:
       - FIXED: Bicycle and foot profiles now don't route on proposed ways [#6615](https://github.com/Project-OSRM/osrm-backend/pull/6615)
+      - FIXED: Bicycle and foot profiles now don't route on motor roads [#6697](https://github.com/Project-OSRM/osrm-backend/pull/6697)
     - Routing:
       - FIXED: Fix adding traffic signal penalties during compression [#6419](https://github.com/Project-OSRM/osrm-backend/pull/6419)
 # 5.27.1
