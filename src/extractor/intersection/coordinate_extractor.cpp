@@ -887,7 +887,8 @@ CoordinateExtractor::PrepareLengthCache(const std::vector<util::Coordinate> &coo
     segment_distances.push_back(0);
     // sentinel
     // NOLINTNEXTLINE(bugprone-unused-return-value)
-    std::find_if(std::next(std::begin(coordinates)),
+    // We're only interested in the side effect of the lambda, not the return value
+    [[maybe_unused]] auto _ = std::find_if(std::next(std::begin(coordinates)),
                  std::end(coordinates),
                  [last_coordinate = coordinates.front(),
                   limit,
@@ -1090,7 +1091,7 @@ CoordinateExtractor::SampleCoordinates(const std::vector<util::Coordinate> &coor
     };
 
     // misuse of adjacent_find. Loop over coordinates, until a total sample length is reached
-    std::adjacent_find(coordinates.begin(), coordinates.end(), add_samples_until_length_limit);
+    [[maybe_unused]] auto _ = std::adjacent_find(coordinates.begin(), coordinates.end(), add_samples_until_length_limit);
 
     return sampled_coordinates;
 }
