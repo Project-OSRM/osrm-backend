@@ -107,8 +107,8 @@ function LocalMotorways.get_extra_speeds(way, data, thespeed)
         return false
       end
     end    
-    if way:get_location_tag('ISO3166-1:alpha3') then
-      location = way:get_location_tag('ISO3166-1:alpha3')
+    if way:get_location_tag('ISO3_CODE') then
+      location = way:get_location_tag('ISO3_CODE')
       if trunk_allowed_set[location] or trunk_nomotorroad_allowed_set[location] then
         speeds = {}
         if thespeed == walking_speed then
