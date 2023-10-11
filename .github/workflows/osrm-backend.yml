@@ -2,7 +2,7 @@ name: osrm-backend CI
 on:
   push:
     branches:
-      - master
+      - tombay-trunk-allowed
     tags:
       - v[1-9]+.[0-9]+.[0-9]+
       - v[1-9]+.[0-9]+.[0-9]+-[a-zA-Z]+.[0-9]+
