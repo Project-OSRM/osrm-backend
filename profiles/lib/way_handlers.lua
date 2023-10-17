@@ -116,24 +116,6 @@ function WayHandlers.destinations(profile,way,result,data)
   end
 end
 
--- handling ferries and piers
-function WayHandlers.ferries(profile,way,result,data)
-  local route = data.route
-  if route then
-    local route_speed = profile.route_speeds[route]
-    if route_speed and route_speed > 0 then
-     local duration  = way:get_value_by_key("duration")
-     if duration and durationIsValid(duration) then
-       result.duration = math.max( parseDuration(duration), 1 )
-     end
-     result.forward_mode = mode.ferry
-     result.backward_mode = mode.ferry
-     result.forward_speed = route_speed
-     result.backward_speed = route_speed
-    end
-  end
-end
-
 -- handling movable bridges
 function WayHandlers.movables(profile,way,result,data)
   local bridge = data.bridge
@@ -151,6 +133,76 @@ function WayHandlers.movables(profile,way,result,data)
           result.forward_speed = bridge_speed
           result.backward_speed = bridge_speed
         end
+      end
+    end
+  end
+end
+
+-- handling routes with durations, including ferries and railway
+function WayHandlers.routes(profile,way,result,data)
+
+  function select_first_value(values)
+    for i=1,#values, 1
+    do
+      local v = values[i]
+       if v ~= nil then
+        return v
+      end
+    end
+  end
+
+  local default_mode = profile.routes.mode or profile.default_mode
+  local default_speed = profile.routes.speed or profile.default_speed
+  local default_rate = profile.routes.rate or 1
+  local default_access_required = profile.routes.access_required or false
+
+  for k,k_settings in pairs(profile.routes.keys) do
+    local k_mode = k_settings.mode
+    local k_speed = k_settings.speed
+    local k_rate = k_settings.rate
+    local k_access_required = k_settings.access_required
+
+    for v,v_settings in pairs(k_settings.values) do
+      if type(v_settings) == "table" then
+        v_mode = v_settings.mode
+        v_speed = v_settings.speed
+        v_rate = v_settings.rate
+        v_access_required = v_settings.access_required
+      end
+
+      if way:get_value_by_key(k) == v then
+        local access_required = select_first_value( {v_access_required, k_access_required, default_access_required} )
+
+        if access_required then
+          if data.backward_access ~= "yes" or data.backward_access ~= "yes" then
+            return
+          end
+        end
+
+        local speed
+
+        local duration  = way:get_value_by_key("duration")
+        if duration and durationIsValid(duration) then
+          result.duration = math.max( parseDuration(duration), 1 )
+          result.weight = result.duration
+          speed = 0
+        else
+          speed = select_first_value( {v_speed, k_speed, default_speed } )
+          result.forward_rate = 1
+          result.backward_rate = 1
+        end
+        result.forward_speed = speed
+        result.backward_speed = speed
+
+        local mode = select_first_value( {v_mode, k_mode, default_mode} )
+        result.forward_mode = mode
+        result.backward_mode = mode
+
+        local rate = select_first_value( {v_rate, k_rate, default_rate} )
+        result.forward_rate = rate
+        result.backward_rate = rate
+
+        return true
       end
     end
   end
