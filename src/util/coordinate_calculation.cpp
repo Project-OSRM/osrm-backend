@@ -323,7 +323,8 @@ double findClosestDistance(const std::vector<Coordinate> &lhs, const std::vector
         return false;
     };
     // NOLINTNEXTLINE(bugprone-unused-return-value)
-    std::find_if(std::begin(lhs), std::end(lhs), compute_minimum_distance_in_rhs);
+    [[maybe_unused]] auto _ =
+        std::find_if(std::begin(lhs), std::end(lhs), compute_minimum_distance_in_rhs);
     return current_min;
 }
 

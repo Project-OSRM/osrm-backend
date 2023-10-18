@@ -195,7 +195,9 @@ std::size_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
         };
 
         // augment all adjacent edges
-        std::adjacent_find(path.begin(), path.end(), augment_one);
+        // We're only interested in the side-effect of the augment_one function, the return
+        // value is ignored
+        [[maybe_unused]] auto _ = std::adjacent_find(path.begin(), path.end(), augment_one);
     };
 
     const auto augment_all_paths = [&](const NodeID sink_node_id) {

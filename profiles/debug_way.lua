@@ -21,7 +21,7 @@ local https = require('ssl.https')
 Debug.load_profile(arg[1])
 
 -- load way from the OSM API
-local url = 'https://www.openstreetmap.org/api/0.6/way/'..arg[2]
+local url = 'https://api.openstreetmap.org/api/0.6/way/'..arg[2]
 local body, statusCode, headers, statusText = https.request(url)
 
 -- parse way tags
