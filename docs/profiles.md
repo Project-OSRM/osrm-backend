@@ -83,7 +83,7 @@ access.lua        | Function for finding relevant access tags
 destination.lua   | Function for finding relevant destination tags
 maxspeed.lua      | Function for determining maximum speed
 guidance.lua      | Function for processing guidance attributes
-local_trunks.lua  |Function to check trunk roads for access based on country 
+local_trunks.lua  | Function to check trunk roads for access based on country 
 
 
 They all return a table of functions when you use `require` to load them. You can either store this table and reference its functions later, or if you need only a single function you can store that directly.
