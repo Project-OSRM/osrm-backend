@@ -397,7 +397,7 @@ osrm-extract --location-dependent-data ../data/trunk_allowed.geojson
  ```
   'BEL', 'CHL', 'DEU', 'FIN', 'FRA', 'GRC', 'GBR', 'HRV', 'NLD', 'RUS'.
 ```
-[if the changes in bicycle.lua are are included this comment can be removed]
+[if the changes in bicycle.lua are included this comment can be removed]
 The bicycle.lua profile implements its own procedure for speed tests.
 This profile should include get_extra_speeds = require("lib/local_trunks").get_extra_speeds.
 The following check should be included at the end of the speed_handler method:
