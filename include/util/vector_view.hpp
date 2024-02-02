@@ -41,6 +41,7 @@ class VectorViewIterator : public boost::iterator_facade<VectorViewIterator<Data
 
     explicit VectorViewIterator() : m_value(nullptr) {}
     explicit VectorViewIterator(DataT *x) : m_value(x) {}
+    DataT * get_ptr(){return m_value;}
 
   private:
     void increment() { ++m_value; }
