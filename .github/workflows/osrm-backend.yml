@@ -369,9 +369,9 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.conan
-        key: v6-conan-${{ matrix.name }}-${{ github.sha }}
+        key: v7-conan-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
-          v6-conan-${{ matrix.name }}-
+          v7-conan-${{ matrix.name }}-
     - name: Enable test cache
       uses: actions/cache@v3
       with:
@@ -462,6 +462,12 @@ jobs:
         fi
         echo "CC=${CCOMPILER}" >> $GITHUB_ENV
         echo "CXX=${CXXCOMPILER}" >> $GITHUB_ENV
+        if [[ "${RUNNER_OS}" == "macOS" ]]; then
+          # missing from GCC path, needed for conan builds of libiconv, for example.
+          sudo xcode-select --switch /Library/Developer/CommandLineTools
+          echo "LIBRARY_PATH=${LIBRARY_PATH}:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib" >> $GITHUB_ENV
+          echo "CPATH=${CPATH}:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include" >> $GITHUB_ENV
+        fi
 
     - name: Build and install OSRM
       run: |
