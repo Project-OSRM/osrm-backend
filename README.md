@@ -20,7 +20,7 @@ For a quick introduction about how the road network is represented in OpenStreet
 Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 - [osrm-frontend](https://github.com/Project-OSRM/osrm-frontend) - User-facing frontend with map. The demo server runs this on top of the backend
 - [osrm-text-instructions](https://github.com/Project-OSRM/osrm-text-instructions) - Text instructions from OSRM route response
-- [osrm-backend-docker](https://hub.docker.com/r/osrm/osrm-backend/) - Ready to use Docker images
+- [osrm-backend-docker](https://github.com/project-osrm/osrm-backend/pkgs/container/osrm-backend) - Ready to use Docker images
 
 ## Documentation
 
