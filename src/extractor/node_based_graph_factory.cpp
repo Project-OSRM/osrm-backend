@@ -17,7 +17,7 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
     ScriptingEnvironment &scripting_environment,
     std::vector<TurnRestriction> &turn_restrictions,
     std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
-    const TrafficSignals &traffic_signals,
+    TrafficSignals &traffic_signals,
     std::unordered_set<NodeID> &&barriers,
     std::vector<util::Coordinate> &&coordinates,
     extractor::PackedOSMIDs &&osm_node_ids,
@@ -72,7 +72,7 @@ void NodeBasedGraphFactory::BuildCompressedOutputGraph(const std::vector<NodeBas
 void NodeBasedGraphFactory::Compress(ScriptingEnvironment &scripting_environment,
                                      std::vector<TurnRestriction> &turn_restrictions,
                                      std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
-                                     const TrafficSignals &traffic_signals)
+                                     TrafficSignals &traffic_signals)
 {
     GraphCompressor graph_compressor;
     graph_compressor.Compress(barriers,

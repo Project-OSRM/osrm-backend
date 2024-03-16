@@ -608,26 +608,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             BOOST_ASSERT(!edge_data1.reversed);
             BOOST_ASSERT(!edge_data2.reversed);
 
-            // We write out the mapping between the edge-expanded edges and the original nodes.
-            // Since each edge represents a possible maneuver, external programs can use this to
-            // quickly perform updates to edge weights in order to penalize certain turns.
-
-            // If this edge is 'trivial' -- where the compressed edge corresponds exactly to an
-            // original OSM segment -- we can pull the turn's preceding node ID directly with
-            // `node_along_road_entering`;
-            // otherwise, we need to look up the node immediately preceding the turn from the
-            // compressed edge container.
-            const bool isTrivial = m_compressed_edge_container.IsTrivial(node_based_edge_from);
-
-            const auto &from_node =
-                isTrivial ? node_along_road_entering
-                          : m_compressed_edge_container.GetLastEdgeSourceID(node_based_edge_from);
-
             // compute weight and duration penalties
             // In theory we shouldn't get a directed traffic light on a turn, as it indicates that
             // the traffic signal direction was potentially ambiguously annotated on the junction
             // node But we'll check anyway.
-            const auto is_traffic_light = m_traffic_signals.HasSignal(from_node, intersection_node);
+            const auto is_traffic_light =
+                m_traffic_signals.HasSignal(node_along_road_entering, intersection_node);
             const auto is_uturn =
                 guidance::getTurnDirection(turn_angle) == guidance::DirectionModifier::UTurn;
 
@@ -693,6 +679,21 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                              distance,
                                              true,
                                              false};
+
+            // We write out the mapping between the edge-expanded edges and the original nodes.
+            // Since each edge represents a possible maneuver, external programs can use this to
+            // quickly perform updates to edge weights in order to penalize certain turns.
+
+            // If this edge is 'trivial' -- where the compressed edge corresponds exactly to an
+            // original OSM segment -- we can pull the turn's preceding node ID directly with
+            // `node_along_road_entering`;
+            // otherwise, we need to look up the node immediately preceding the turn from the
+            // compressed edge container.
+            const bool isTrivial = m_compressed_edge_container.IsTrivial(node_based_edge_from);
+
+            const auto &from_node =
+                isTrivial ? node_along_road_entering
+                          : m_compressed_edge_container.GetLastEdgeSourceID(node_based_edge_from);
 
             const auto &to_node =
                 m_compressed_edge_container.GetFirstEdgeTargetID(node_based_edge_to);
