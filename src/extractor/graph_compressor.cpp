@@ -20,7 +20,7 @@ namespace osrm::extractor
 static constexpr int SECOND_TO_DECISECOND = 10;
 
 void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
-                               const TrafficSignals &traffic_signals,
+                               TrafficSignals &traffic_signals,
                                ScriptingEnvironment &scripting_environment,
                                std::vector<TurnRestriction> &turn_restrictions,
                                std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
@@ -337,6 +337,9 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
 
                 // update any involved turn relations
                 turn_path_compressor.Compress(node_u, node_v, node_w);
+
+                // Update traffic signal paths containing compressed node.
+                traffic_signals.Compress(node_u, node_v, node_w);
 
                 // Forward and reversed compressed edge lengths need to match.
                 // Set a dummy empty penalty weight if opposite value exists.
