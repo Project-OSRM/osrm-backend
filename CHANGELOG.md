@@ -43,6 +43,8 @@
       - FIXED: Fix bug with large HTTP requests leading to Bad Request in osrm-routed. [#6403](https://github.com/Project-OSRM/osrm-backend/pull/6403)
     - Routing:
       - CHANGED: Add support for surface=metal,grass_paver,woodchips in bicyle profile. [#6395](https://github.com/Project-OSRM/osrm-backend/pull/6395)
+    - Tools:
+      - FIXED: Always use original weights when handling `--parse-conditionals-from-now` option. [#6399](https://github.com/Project-OSRM/osrm-backend/pull/6399)
 
 # 5.27.0
   - Changes from 5.26.0

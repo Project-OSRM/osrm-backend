@@ -353,6 +353,28 @@ Feature: Car - Turn restrictions
             | b    | a  | bj,jc,jc,aj,aj |
             | b    | d  | bj,jd,jd       |
 
+        # here we check that conditional restrictions can be updated via re-run of `contract`/`customize` with updated `--parse-conditionals-from-now`
+        # 10am utc, sat 
+        When I run "osrm-contract  {osm_file} --time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1494064800"
+        When I run "osrm-customize {osm_file} --time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1494064800"
+
+        When I route I should get
+            | from | to | route          |
+            | b    | c  | bj,jc,jc       |
+            | b    | a  | bj,aj,aj       |
+            | b    | d  | bj,jd,jd       |
+
+        #  10am utc, wed
+        When I run "osrm-contract  {osm_file} --time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493805600"
+        When I run "osrm-customize {osm_file} --time-zone-file=test/data/tz/{timezone_names}/guinea.geojson --parse-conditionals-from-now=1493805600"
+        
+        When I route I should get
+            | from | to | route          |
+            | b    | c  | bj,jc,jc       |
+            | b    | a  | bj,jc,jc,aj,aj |
+            | b    | d  | bj,jd,jd       |
+
+
     @no_turning @conditionals
     Scenario: Car - Conditional restriction with multiple time windows
         Given the extract extra arguments "--parse-conditional-restrictions"

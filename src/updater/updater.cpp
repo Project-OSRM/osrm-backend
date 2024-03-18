@@ -593,8 +593,17 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
             [&] { extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data); },
 
             [&] {
-                extractor::files::readTurnWeightPenalty(
-                    config.GetPath(".osrm.turn_weight_penalties"), turn_weight_penalties);
+                // we are going to overwrite this `.turn_weight_penalties` afterwards,
+                // so here we backup the original turn penalties if we didn't do that yet in order
+                // to guarantee that subsequent runs of this code will work on top of original
+                // weights
+                auto path = config.GetPath(".osrm.turn_weight_penalties").string() + ".original";
+                if (!boost::filesystem::exists(path))
+                {
+                    boost::filesystem::copy_file(config.GetPath(".osrm.turn_weight_penalties"),
+                                                 path);
+                }
+                extractor::files::readTurnWeightPenalty(path, turn_weight_penalties);
             },
             [&] {
                 extractor::files::readTurnDurationPenalty(
