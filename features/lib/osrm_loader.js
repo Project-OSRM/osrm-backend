@@ -188,11 +188,16 @@ class OSRMLoader {
             this.loader = {shutdown: (cb) => cb() };
         }
         if (this.method === 'datastore') {
-            this.loader.shutdown((err) => {
-              if (err) return callback(err);
-              this.loader = this.sharedLoader;
-              this.sharedLoader.load(inputFile, callback);
-            });
+            // shutdown only if we are switching from another loader type
+            if (this.loader !== this.sharedLoader) {
+                this.loader.shutdown((err) => {
+                    if (err) return callback(err);
+                    this.loader = this.sharedLoader;
+                    this.sharedLoader.load(inputFile, callback);
+                });
+            } else {
+                this.sharedLoader.load(inputFile, callback);
+            }
         } else if (this.method === 'directly') {
             this.loader.shutdown((err) => {
               if (err) return callback(err);
@@ -201,12 +206,12 @@ class OSRMLoader {
             });
         } else if (this.method === 'mmap') {
             this.loader.shutdown((err) => {
-              if (err) return callback(err);
-              this.loader = this.mmapLoader;
-              this.mmapLoader.load(inputFile, callback);
+                if (err) return callback(err);
+                this.loader = this.mmapLoader;
+                this.mmapLoader.load(inputFile, callback);
             });
         } else {
-            callback(new Error('*** Unknown load method ' + method));
+            callback(new Error('*** Unknown load method ' + this.method));
         }
     }
 

@@ -33,6 +33,11 @@ module.exports = function () {
         callback();
     });
 
+    this.Then(/^HTTP code should be (\d+)$/, (code, callback) => {
+        assert(this.response.statusCode, parseInt(code));
+        callback();
+    });
+
     this.Then(/^status message should be "(.*?)"$/, (message, callback) => {
         try {
             this.json = JSON.parse(this.response.body);

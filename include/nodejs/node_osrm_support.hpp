@@ -99,7 +99,6 @@ inline void ParseResult(const osrm::Status &result_status, osrm::json::Object &r
         throw std::logic_error(code_iter->second.get<osrm::json::String>().value.c_str());
     }
 
-    result.values.erase(code_iter);
     const auto message_iter = result.values.find("message");
     if (message_iter != end_iter)
     {

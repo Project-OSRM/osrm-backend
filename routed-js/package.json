@@ -1,0 +1,44 @@
+{
+    "name": "@project-osrm/osrm-routed",
+    "version": "5.28.0-unreleased",
+    "private": false,
+    "description": "API for OSRM",
+    "dependencies": {
+        "@fastify/compress": "^6.1.1",
+        "fastify": "^4.9.2",
+        "mkdirp": "^0.5.6",
+        "nan": "^2.17.0",
+        "node-cmake": "^2.5.1",
+        "rimraf": "^2.7.1"
+    },
+    "browserify": {
+        "transform": [
+            "babelify",
+            "brfs"
+        ]
+    },
+    "bin": {
+        "osrm-routed-js": "./routed.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Project-OSRM/osrm-backend.git"
+    },
+    "author": "Project OSRM Team",
+    "license": "BSD-2-Clause",
+    "bugs": {
+        "url": "https://github.com/Project-OSRM/osrm-backend/issues"
+    },
+    "homepage": "https://github.com/Project-OSRM/osrm-backend",
+    "engines": {
+        "node": ">=4.0.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "devDependencies": {
+        "@types/node": "^18.11.3",
+        "@types/yargs": "^17.0.13",
+        "typescript": "^4.8.4"
+    }
+}

@@ -4,7 +4,8 @@ Feature: Basic trip planning
     Background:
         Given the profile "testbot"
         Given a grid size of 10 meters
-
+    
+    @skip_on_routed_js
     Scenario: Testbot - Trip: Invalid options (like was in test suite for a long time)
         Given the node map
             """
@@ -222,7 +223,7 @@ Feature: Basic trip planning
             | waypoints               | trips         | roundtrip | durations |
             | a,b,c,d,e,f,g,h,i,j,k,l | lkjihgfedcbal | true      | 22        |
             | a,b,c,d,e,f,g,h,i,j,k,l | cbakjihgfedl  | false     | 19        |
-
+    @skip_on_routed_js
     Scenario: Testbot - Trip: Unroutable roundtrip with waypoints (less than 10)
         Given the node map
             """
@@ -240,7 +241,7 @@ Feature: Basic trip planning
             |  waypoints    | status         | message                                       |
             |  a,b,c,d      | NoTrips        | No trip visiting all destinations possible.  |
 
-
+    @skip_on_routed_js
     Scenario: Testbot - Trip: Unroutable roundtrip with waypoints (more than 10)
         Given the node map
             """
@@ -278,6 +279,7 @@ Feature: Basic trip planning
             | a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p | NoTrips        | No trip visiting all destinations possible.  |
 
 # Test TFSE
+    @skip_on_routed_js
     Scenario: Testbot - Trip: TFSE with errors
         Given the node map
             """
@@ -371,7 +373,7 @@ Feature: Basic trip planning
             |  waypoints  | source | destination | roundtrip | trips   |
             |  a,b,d,e,c  | first  | last        | true      | abedca  |
 
-
+    @skip_on_routed_js
     Scenario: Testbot - Trip: midway points in isolated roads should return no trips
         Given the node map
             """

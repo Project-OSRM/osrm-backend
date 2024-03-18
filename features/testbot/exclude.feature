@@ -80,7 +80,7 @@ Feature: Testbot - Exclude flags
             | a    | c  |          |
             | a    | f  |          |
             | f    | d  | fg,gd,gd |
-
+    @skip_on_routed_js
     Scenario: Testbot - exclude with unsupported exclude combination
         Given the query options
             | exclude | TwoWords2 |
@@ -88,7 +88,7 @@ Feature: Testbot - Exclude flags
         When I route I should get
             | from | to | status | message   |
             | a    | d  | 400    | Exclude flag combination is not supported. |
-
+    @skip_on_routed_js
     Scenario: Testbot - exclude with invalid exclude class name
         Given the query options
             | exclude | foo |

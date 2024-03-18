@@ -97,6 +97,29 @@ jobs:
         npm run docs && ./scripts/error_on_dirty.sh
         npm audit --production
 
+  routed-js:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 14
+    - name: Enable Node.js cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+    - name: Compile routed-js
+      run: |
+        pushd routed-js 
+        npm ci
+        npx tsc
+        popd
+        ./scripts/error_on_dirty.sh
+
   docker-image:
     needs: format-taginfo-docs
     runs-on: ubuntu-22.04
@@ -264,7 +287,7 @@ jobs:
             CXXFLAGS: "-m32 -msse2 -mfpmath=sse"
             TARGET_ARCH: i686
             ENABLE_CONAN: ON
-
+            
           - name: gcc-8-release
             continue-on-error: false
             node: 16
@@ -518,6 +541,9 @@ jobs:
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
         make --jobs=${JOBS}
         popd
+    - name: Install osrm-routed-js dependencies
+      if: ${{ matrix.node != 12 && matrix.ENABLE_APPLE_SILICON != 'ON' && matrix.TARGET_ARCH != 'i686' }}
+      run: cd routed-js && npm ci && npm link && osrm-routed-js --version
     - name: Run all tests
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
       run: |
@@ -628,6 +654,6 @@ jobs:
 
   ci-complete:
     runs-on: ubuntu-22.04
-    needs: [build-test-publish, docker-image, windows-release-node]
+    needs: [build-test-publish, docker-image, routed-js, windows-release-node]
     steps:
     - run: echo "CI complete"
