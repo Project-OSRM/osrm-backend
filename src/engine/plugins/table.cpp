@@ -44,6 +44,13 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             "InvalidOptions", "Number of bearings does not match number of coordinates", result);
     }
 
+    if (!params.bearings.empty() && !default_radius.has_value() &&
+        params.radiuses.size() != params.bearings.size())
+    {
+        return Error(
+            "InvalidOptions", "Number of radiuses does not match number of bearings", result);
+    }
+
     // Empty sources or destinations means the user wants all of them included, respectively
     // The ManyToMany routing algorithm we dispatch to below already handles this perfectly.
     const auto num_sources =

@@ -591,6 +591,14 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
             return false;
         }
 
+        if (!obj.Has("radiuses") && default_radius.IsUndefined())
+        {
+            ThrowError(
+                args.Env(),
+                "Bearings must be accompanied with radiuses or a default_radius must be set.");
+            return false;
+        }
+
         auto bearings_array = bearings.As<Napi::Array>();
 
         if (bearings_array.Length() != params->coordinates.size())
