@@ -31,6 +31,7 @@
       - FIXED: Added a variable to preprocessor guard in file osrm-backend/include/util/range_table.hpp to solve build error. [#6596](https://github.com/Project-OSRM/osrm-backend/pull/6596)
       - FIXED: Ensure required file check in osrm-routed is correctly enforced. [#6655](https://github.com/Project-OSRM/osrm-backend/pull/6655)
       - FIXED: Correct HTTP docs to reflect summary output dependency on steps parameter. [#6655](https://github.com/Project-OSRM/osrm-backend/pull/6655)
+      - ADDED: Extract prerelease/build information from package semver [#6839](https://github.com/Project-OSRM/osrm-backend/pull/6839)
     - Profiles:
       - FIXED: Bicycle and foot profiles now don't route on proposed ways [#6615](https://github.com/Project-OSRM/osrm-backend/pull/6615)
     - Routing:
