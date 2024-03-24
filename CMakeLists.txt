@@ -73,14 +73,17 @@ include(JSONParser)
 file(READ "package.json" packagejsonraw)
 sbeParseJson(packagejson packagejsonraw)
 
-if (packagejson.version MATCHES "^([0-9]+)\.([0-9]+)\.([0-9]+)")
-    set(OSRM_VERSION_MAJOR ${CMAKE_MATCH_1})
-    set(OSRM_VERSION_MINOR ${CMAKE_MATCH_2})
-    set(OSRM_VERSION_PATCH ${CMAKE_MATCH_3})
+# This regex is not strict enough, but the correct one is too complicated for cmake matching.
+# https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+if (packagejson.version MATCHES "^([0-9]+)\.([0-9]+)\.([0-9]+)([-+][0-9a-zA-Z.-]+)?$")
+    set(OSRM_VERSION_MAJOR            ${CMAKE_MATCH_1})
+    set(OSRM_VERSION_MINOR            ${CMAKE_MATCH_2})
+    set(OSRM_VERSION_PATCH            ${CMAKE_MATCH_3})
+    set(OSRM_VERSION_PRERELEASE_BUILD ${CMAKE_MATCH_4})
 
-    set(OSRM_VERSION "${OSRM_VERSION_MAJOR}.${OSRM_VERSION_MINOR}.${OSRM_VERSION_PATCH}")
+    set(OSRM_VERSION packagejson.version)
 else()
-    message(FATAL_ERROR "Version from package.json cannot be parsed, expected semver compatible X.Y.Z, but found ${packagejson.version}")
+    message(FATAL_ERROR "Version from package.json cannot be parsed, expected semver compatible label, but found ${packagejson.version}")
 endif()
 
 if (MSVC)
