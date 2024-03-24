@@ -37,6 +37,7 @@
     - Routing:
       - FIXED: Fix adding traffic signal penalties during compression [#6419](https://github.com/Project-OSRM/osrm-backend/pull/6419)
       - FIXED: Correctly handle compressed traffic signals. [#6724](https://github.com/Project-OSRM/osrm-backend/pull/6724)
+      - FIXED: Fix bug when searching for maneuver overrides [#6739](https://github.com/Project-OSRM/osrm-backend/pull/6739)
 # 5.27.1
   - Changes from 5.27.0
     - Misc:
