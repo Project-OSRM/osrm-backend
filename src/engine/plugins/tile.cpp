@@ -508,7 +508,7 @@ void encodeVectorTile(const DataFacadeBase &facade,
                         auto tile_line = coordinatesToTileLine(a, b, tile_bbox);
                         if (!tile_line.empty())
                         {
-                            SpeedLayerFeatureBuilder fbuilder{speeds_layer, id};
+                            SpeedLayerFeatureBuilder fbuilder{speeds_layer, id++};
                             fbuilder.add_linestring_from_container(tile_line);
 
                             fbuilder.set_speed(speed_kmh_idx);
@@ -542,7 +542,7 @@ void encodeVectorTile(const DataFacadeBase &facade,
                         auto tile_line = coordinatesToTileLine(b, a, tile_bbox);
                         if (!tile_line.empty())
                         {
-                            SpeedLayerFeatureBuilder fbuilder{speeds_layer, id};
+                            SpeedLayerFeatureBuilder fbuilder{speeds_layer, id++};
                             fbuilder.add_linestring_from_container(tile_line);
 
                             fbuilder.set_speed(speed_kmh_idx);
