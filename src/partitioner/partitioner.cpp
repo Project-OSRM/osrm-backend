@@ -163,12 +163,13 @@ int Partitioner::Run(const PartitionerConfig &config)
         renumber(maneuver_overrides, permutation);
         renumber(node_sequences, permutation);
 
-        // Although the vector is already sorted, the rename function changes the identifiers, so the order is not sorted now.
-        // So we sort by `from_node` again, so that later lookups can be done with a binary search.
+        // Although the vector is already sorted, the rename function changes the identifiers, so
+        // the order is not sorted now. So we sort by `from_node` again, so that later lookups can
+        // be done with a binary search.
         std::sort(maneuver_overrides.begin(),
-            maneuver_overrides.end(),
-            [](const auto &a, const auto &b) { return a.start_node < b.start_node; });
-            
+                  maneuver_overrides.end(),
+                  [](const auto &a, const auto &b) { return a.start_node < b.start_node; });
+
         extractor::files::writeManeuverOverrides(filename, maneuver_overrides, node_sequences);
     }
     if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
