@@ -40,7 +40,16 @@ template <typename Data> struct SharedMonitor
 
     SharedMonitor(const Data &initial_data)
     {
-        shmem = bi::shared_memory_object(bi::open_or_create, Data::name, bi::read_write);
+        try
+        {
+            shmem = bi::shared_memory_object(bi::open_or_create, Data::name, bi::read_write);
+        }
+        catch (const bi::interprocess_exception &exception)
+        {
+            auto message = boost::format("could not create for shared memory block '%1' the directory or file '%2%' \n") %
++                           (const char*)Data::name % exception.what();
+            throw util::exception(message.str() + SOURCE_REF);
+        }
 
         bi::offset_t size = 0;
         if (shmem.get_size(size) && size == 0)
@@ -124,6 +133,8 @@ template <typename Data> struct SharedMonitor
         }
         catch (const bi::interprocess_exception &)
         {
+            auto message = boost::format("could not create for shared memory block '%1' the directory or file '%2%' \n") %
++                           (const char*)Data::name % exception.what();
             return false;
         }
         return true;
