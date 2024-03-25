@@ -70,7 +70,8 @@ function setup()
 
     avoid = Set {
       'impassable',
-      'proposed'
+      'proposed',
+      'motorroad'
     },
 
     speeds = Sequence {
@@ -131,6 +132,11 @@ function setup()
     },
 
     smoothness_speeds = {
+    },
+    
+    uselocationtags = Set
+    {
+        'speeds',
     }
   }
 end

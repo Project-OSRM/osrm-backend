@@ -7,6 +7,7 @@
 local get_turn_lanes = require("lib/guidance").get_turn_lanes
 local set_classification = require("lib/guidance").set_classification
 local get_destination = require("lib/destination").get_destination
+local get_extra_speeds = require("lib/local_trunks").get_extra_speeds
 local Tags = require('lib/tags')
 local Measure = require("lib/measure")
 
@@ -277,10 +278,23 @@ function WayHandlers.speed(profile,way,result,data)
   local key,value,speed = Tags.get_constant_by_key_value(way,profile.speeds)
 
   if speed then
+    result.forward_speed = speed
+    result.backward_speed = speed
+  else 
+    if profile.uselocationtags and profile.uselocationtags.speeds then
+        -- check for location tags to handle trunks 
+        local extra_speeds = get_extra_speeds(way, data, profile.default_speed)
+        if extra_speeds then
+            key,value,speed = Tags.get_constant_by_key_value(way,extra_speeds)
+            if speed then
     -- set speed by way type
     result.forward_speed = speed
     result.backward_speed = speed
-  else
+            end
+        end
+    end
+  end
+  if not speed then
     -- Set the avg speed on ways that are marked accessible
     if profile.access_tag_whitelist[data.forward_access] then
       result.forward_speed = profile.default_speed
@@ -620,6 +634,11 @@ function WayHandlers.blocked_ways(profile,way,result,data)
 
   -- toll roads
   if profile.avoid.toll and way:get_value_by_key("toll") == "yes" then
+    return false
+  end
+
+  -- motorroad
+  if profile.avoid.motorroad and way:get_value_by_key("motorroad") == "yes" then
     return false
   end
 
