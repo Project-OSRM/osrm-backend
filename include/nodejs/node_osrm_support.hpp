@@ -577,7 +577,8 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
             }
             else
             {
-                ThrowError(args.Env(), "Approach must be a string: [curb, opposite, unrestricted] or null");
+                ThrowError(args.Env(),
+                           "Approach must be a string: [curb, opposite, unrestricted] or null");
                 return false;
             }
         }

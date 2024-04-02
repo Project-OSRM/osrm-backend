@@ -292,7 +292,7 @@ inline void asyncForTiles(const Napi::CallbackInfo &info,
  * @param {String} [options.geometries=polyline] Returned route geometry format (influences overview and per step). Can also be `geojson`.
  * @param {String} [options.overview=simplified] Add overview geometry either `full`, `simplified` according to highest zoom level it could be display on, or not at all (`false`).
  * @param {Boolean} [options.continue_straight] Forces the route to keep going straight at waypoints and don't do a uturn even if it would be faster. Default value depends on the profile.
- * @param {Array} [options.approaches] Keep waypoints on curb or opposite side of the road. Can be `null` (unrestricted, default), `curb` or `opposite`.
+ * @param {Array} [options.approaches] Restrict the direction on the road network at a waypoint, relative to the input coordinate. Can be `null` (unrestricted, default), `curb` or `opposite`.
  *                  `null`/`true`/`false`
  * @param {Array} [options.waypoints] Indices to coordinates to treat as waypoints. If not supplied, all coordinates are waypoints.  Must include first and last coordinate index.
  * @param {String} [options.format] Which output format to use, either `json`, or [`flatbuffers`](https://github.com/Project-OSRM/osrm-backend/tree/master/include/engine/api/flatbuffers).
@@ -337,7 +337,7 @@ Napi::Value Engine::route(const Napi::CallbackInfo &info)
  * @param {Boolean} [options.generate_hints=true]  Whether or not adds a Hint to the response which can be used in subsequent requests.
  * @param {Number} [options.number=1] Number of nearest segments that should be returned.
  * Must be an integer greater than or equal to `1`.
- * @param {Array} [options.approaches] Keep waypoints on curb or opposite side of the road. Can be `null` (unrestricted, default), `curb` or `opposite`.
+ * @param {Array} [options.approaches] Restrict the direction on the road network at a waypoint, relative to the input coordinate. Can be `null` (unrestricted, default), `curb` or `opposite`.
  * @param {String} [options.format] Which output format to use, either `json`, or [`flatbuffers`](https://github.com/Project-OSRM/osrm-backend/tree/master/include/engine/api/flatbuffers).
  * @param {String} [options.snapping] Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
  * @param {Function} callback
@@ -384,7 +384,7 @@ Napi::Value Engine::nearest(const Napi::CallbackInfo &info)
  * @param {Array} [options.sources] An array of `index` elements (`0 <= integer < #coordinates`) to use
  *                                  location with given index as source. Default is to use all.
  * @param {Array} [options.destinations] An array of `index` elements (`0 <= integer < #coordinates`) to use location with given index as destination. Default is to use all.
- * @param {Array} [options.approaches] Keep waypoints on curb or opposite side of the road. Can be `null` (unrestricted, default), `curb` or `opposite`.
+ * @param {Array} [options.approaches] Restrict the direction on the road network at a waypoint, relative to the input coordinate.. Can be `null` (unrestricted, default), `curb` or `opposite`.
  * @param {Number} [options.fallback_speed] Replace `null` responses in result with as-the-crow-flies estimates based on `fallback_speed`.  Value is in metres/second.
  * @param {String} [options.fallback_coordinate] Either `input` (default) or `snapped`.  If using a `fallback_speed`, use either the user-supplied coordinate (`input`), or the snapped coordinate (`snapped`) for calculating the as-the-crow-flies distance between two points.
  * @param {Number} [options.scale_factor] Multiply the table duration values in the table by this number for more controlled input into a route optimization solver.
@@ -565,7 +565,7 @@ Napi::Value Engine::match(const Napi::CallbackInfo &info)
  * @param {Boolean} [options.roundtrip=true] Return route is a roundtrip.
  * @param {String} [options.source=any] Return route starts at `any` or `first` coordinate.
  * @param {String} [options.destination=any] Return route ends at `any` or `last` coordinate.
- * @param {Array} [options.approaches] Keep waypoints on curb or opposite side of the road. Can be `null` (unrestricted, default), `curb` or `opposite`.
+ * @param {Array} [options.approaches] Restrict the direction on the road network at a waypoint, relative to the input coordinate. Can be `null` (unrestricted, default), `curb` or `opposite`.
  * @param {String} [options.snapping] Which edges can be snapped to, either `default`, or `any`. `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
  *
  * @returns {Object} containing `waypoints` and `trips`.
