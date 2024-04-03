@@ -166,8 +166,9 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
             qi::lit("bearings=") >
             (-(qi::short_ > ',' > qi::short_))[ph::bind(add_bearing, qi::_r1, qi::_1)] % ';';
 
-        approach_type.add("unrestricted", engine::Approach::UNRESTRICTED)("curb",
-                                                                          engine::Approach::CURB);
+        approach_type.add("unrestricted", engine::Approach::UNRESTRICTED)(
+            "curb", engine::Approach::CURB)("opposite", engine::Approach::OPPOSITE);
+
         approach_rule = qi::lit("approaches=") >
                         (-approach_type %
                          ';')[ph::bind(&engine::api::BaseParameters::approaches, qi::_r1) = qi::_1];

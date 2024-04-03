@@ -451,7 +451,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
         boost::none,
         engine::Approach::CURB,
         engine::Approach::UNRESTRICTED,
-        engine::Approach::CURB,
+        engine::Approach::OPPOSITE,
     };
     RouteParameters reference_18{false,
                                  false,
@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                  approaches_18};
 
     auto result_18 = parseParameters<RouteParameters>(
-        "1,2;3,4;5,6;7,8?steps=false&approaches=;curb;unrestricted;curb");
+        "1,2;3,4;5,6;7,8?steps=false&approaches=;curb;unrestricted;opposite");
     BOOST_CHECK(result_18);
     BOOST_CHECK_EQUAL(reference_18.steps, result_18->steps);
     BOOST_CHECK_EQUAL(reference_18.alternatives, result_18->alternatives);

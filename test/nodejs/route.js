@@ -573,7 +573,7 @@ test('route: throws on bad radiuses', function(assert) {
 });
 
 test('route: routes Monaco with valid approaches values', function(assert) {
-    assert.plan(3);
+    assert.plan(4);
     var osrm = new OSRM(monaco_path);
     var options = {
         coordinates: two_test_coordinates,
@@ -583,6 +583,10 @@ test('route: routes Monaco with valid approaches values', function(assert) {
         assert.ifError(err);
     });
     options.approaches = [null, null];
+    osrm.route(options, function(err, route) {
+        assert.ifError(err);
+    });
+    options.approaches = ['opposite', 'opposite'];
     osrm.route(options, function(err, route) {
         assert.ifError(err);
     });
@@ -609,12 +613,12 @@ test('route: throws on bad approaches', function(assert) {
         coordinates: two_test_coordinates,
         approaches: ['curb', 'test']
     }, function(err, route) {}) },
-        /'approaches' param must be one of \[curb, unrestricted\]/);
+        /'approaches' param must be one of \[curb, opposite, unrestricted\]/);
     assert.throws(function() { osrm.route({
         coordinates: two_test_coordinates,
         approaches: [10, 15]
     }, function(err, route) {}) },
-        /Approach must be a string: \[curb, unrestricted\] or null/);
+        /Approach must be a string: \[curb, opposite, unrestricted\] or null/);
 });
 
 test('route: routes Monaco with custom limits on MLD', function(assert) {
