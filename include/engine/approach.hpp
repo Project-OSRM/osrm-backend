@@ -36,8 +36,8 @@ namespace osrm::engine
 enum class Approach : std::uint8_t
 {
     CURB = 0,
-    OPPOSITE = 1,
-    UNRESTRICTED = 2
+    UNRESTRICTED = 1,
+    OPPOSITE = 2
 
 };
 } // namespace osrm::engine
