@@ -1,6 +1,7 @@
 #ifndef OSRM_EXTRACTION_SEGMENT_HPP
 #define OSRM_EXTRACTION_SEGMENT_HPP
 
+#include <extractor/node_based_edge.hpp>
 #include <util/coordinate.hpp>
 
 namespace osrm::extractor
