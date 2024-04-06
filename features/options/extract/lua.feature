@@ -154,3 +154,27 @@ Feature: osrm-extract lua ways:get_nodes()
         Then it should exit successfully
         And stdout should contain "node 42"
         And stdout should contain "way 42"
+
+    Scenario: osrm-extract flags accessible in process_segment function
+        Given the profile file
+        """
+        functions = require('testbot')
+
+        functions.process_segment = function (profile, segment)
+            print('segment forward ' .. tostring(segment.flags.forward) .. ' backward ' .. tostring(segment.flags.backward))
+        end
+
+        return functions
+        """
+
+        And the node map
+            """
+            a b
+            """
+        And the ways
+            | nodes | oneway |
+            | ab    | yes    |
+        And the data has been saved to disk
+        When I run "osrm-extract --profile {profile_file} {osm_file}"
+        Then it should exit successfully
+        And stdout should contain "segment forward true backward false"
