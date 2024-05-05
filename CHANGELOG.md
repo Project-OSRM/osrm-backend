@@ -12,6 +12,7 @@
       - CHANGED: Update actions/cache to v3. [#6420](https://github.com/Project-OSRM/osrm-backend/pull/6420)
       - REMOVED: Drop support of Node 12 & 14. [#6431](https://github.com/Project-OSRM/osrm-backend/pull/6431)
       - ADDED: Add 'load directly' mode to default Cucumber test suite. [#6663](https://github.com/Project-OSRM/osrm-backend/pull/6663)
+      - CHANGED: Fix compilation for Boost 1.85.0 [6856](https://github.com/Project-OSRM/osrm-backend/pull/6856)
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
