@@ -19,8 +19,7 @@ void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
                      typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                      typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                      const PhantomEndpointCandidates &candidates,
-                     const EdgeWeight &total_weight,
-                     EdgeWeight &new_total_weight,
+                     EdgeWeight &leg_weight,
                      std::vector<NodeID> &leg_packed_path)
 {
     forward_heap.Clear();
@@ -31,14 +30,14 @@ void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
         if (source.IsValidForwardSource())
         {
             forward_heap.Insert(source.forward_segment_id.id,
-                                total_weight - source.GetForwardWeightPlusOffset(),
+                                EdgeWeight{0} - source.GetForwardWeightPlusOffset(),
                                 source.forward_segment_id.id);
         }
 
         if (source.IsValidReverseSource())
         {
             forward_heap.Insert(source.reverse_segment_id.id,
-                                total_weight - source.GetReverseWeightPlusOffset(),
+                                EdgeWeight{0} - source.GetReverseWeightPlusOffset(),
                                 source.reverse_segment_id.id);
         }
     }
@@ -62,10 +61,10 @@ void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
            facade,
            forward_heap,
            reverse_heap,
-           new_total_weight,
+           leg_weight,
            leg_packed_path,
-           getForwardLoopNodes(candidates),
-           getBackwardLoopNodes(candidates),
+           {},
+           {},
            candidates);
 }
 
@@ -302,7 +301,7 @@ shortestPathWithWaypointUTurns(SearchEngineData<Algorithm> &engine_working_data,
         PhantomEndpointCandidates search_candidates{waypoint_candidates[i],
                                                     waypoint_candidates[i + 1]};
         std::vector<NodeID> packed_leg;
-        EdgeWeight new_total_weight = INVALID_EDGE_WEIGHT;
+        EdgeWeight leg_weight = INVALID_EDGE_WEIGHT;
 
         // We have a valid path up to this leg
         BOOST_ASSERT(total_weight != INVALID_EDGE_WEIGHT);
@@ -311,16 +310,15 @@ shortestPathWithWaypointUTurns(SearchEngineData<Algorithm> &engine_working_data,
                         forward_heap,
                         reverse_heap,
                         search_candidates,
-                        total_weight,
-                        new_total_weight,
+                        leg_weight,
                         packed_leg);
 
-        if (new_total_weight == INVALID_EDGE_WEIGHT)
+        if (leg_weight == INVALID_EDGE_WEIGHT)
             return {};
 
         packed_leg_begin.push_back(total_packed_path.size());
         total_packed_path.insert(total_packed_path.end(), packed_leg.begin(), packed_leg.end());
-        total_weight = new_total_weight;
+        total_weight += leg_weight;
     };
 
     // Add sentinel
