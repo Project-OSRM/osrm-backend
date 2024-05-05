@@ -591,15 +591,16 @@ jobs:
         lcov --directory . --capture --output-file coverage.info # capture coverage info
         lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter out system
         lcov --list coverage.info #debug info
-        # Uploading report to CodeCov
-    - name: Upload code coverage
-      if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
-      uses: codecov/codecov-action@v1
-      with:
-        files: coverage.info
-        name: codecov-osrm-backend
-        fail_ci_if_error: true
-        verbose: true
+    
+    # # Uploading report to CodeCov
+    # - name: Upload code coverage
+    #   if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
+    #   uses: codecov/codecov-action@v1
+    #   with:
+    #     files: coverage.info
+    #     name: codecov-osrm-backend
+    #     fail_ci_if_error: true
+    #     verbose: true
     - name: Check Apple Silicon binary
       if: ${{  matrix.ENABLE_APPLE_SILICON == 'ON' }}
       run: |
