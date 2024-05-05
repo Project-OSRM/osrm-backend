@@ -8,8 +8,6 @@ extern "C"
 #include <lualib.h>
 }
 
-#include <boost/filesystem/convenience.hpp>
-
 #include <iostream>
 #include <string>
 
