@@ -343,10 +343,12 @@ try
     }
     else
     {
-        std::packaged_task<int()> server_task([&] {
-            routing_server->Run();
-            return 0;
-        });
+        std::packaged_task<int()> server_task(
+            [&]
+            {
+                routing_server->Run();
+                return 0;
+            });
         auto future = server_task.get_future();
         std::thread server_thread(std::move(server_task));
 

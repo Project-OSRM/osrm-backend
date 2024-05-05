@@ -46,7 +46,7 @@ template <typename From, typename Tag> struct Alias final
     static_assert(std::is_arithmetic<From>::value, "Needs to be based on an arithmetic type");
 
     From __value;
-    friend std::ostream &operator<<<From, Tag>(std::ostream &stream, const Alias &inst);
+    friend std::ostream &operator<< <From, Tag>(std::ostream &stream, const Alias &inst);
 
     explicit operator From &() { return __value; }
     explicit operator From() const { return __value; }

@@ -159,10 +159,11 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
     auto GetHighestBorderLevel(const MultiLevelPartition &mlp, const ContainerT &edges) const
     {
         std::vector<LevelID> highest_border_level(edges.size());
-        std::transform(
-            edges.begin(), edges.end(), highest_border_level.begin(), [&mlp](const auto &edge) {
-                return mlp.GetHighestDifferentLevel(edge.source, edge.target);
-            });
+        std::transform(edges.begin(),
+                       edges.end(),
+                       highest_border_level.begin(),
+                       [&mlp](const auto &edge)
+                       { return mlp.GetHighestDifferentLevel(edge.source, edge.target); });
         return highest_border_level;
     }
 
@@ -175,7 +176,8 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
         tbb::parallel_sort(
             permutation.begin(),
             permutation.end(),
-            [&edges, &highest_border_level](const auto &lhs, const auto &rhs) {
+            [&edges, &highest_border_level](const auto &lhs, const auto &rhs)
+            {
                 // sort by source node and then by level in ascending order
                 return std::tie(edges[lhs].source, highest_border_level[lhs], edges[lhs].target) <
                        std::tie(edges[rhs].source, highest_border_level[rhs], edges[rhs].target);
@@ -201,11 +203,12 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
             auto level_begin = iter;
             for (auto level : util::irange<LevelID>(0, mlp.GetNumberOfLevels()))
             {
-                iter = std::find_if(
-                    iter, edge_and_level_end, [node, level](const auto &edge_and_level) {
-                        return boost::get<0>(edge_and_level).source != node ||
-                               boost::get<1>(edge_and_level) != level;
-                    });
+                iter = std::find_if(iter,
+                                    edge_and_level_end,
+                                    [node, level](const auto &edge_and_level) {
+                                        return boost::get<0>(edge_and_level).source != node ||
+                                               boost::get<1>(edge_and_level) != level;
+                                    });
                 EdgeOffset offset = std::distance(level_begin, iter);
                 node_to_edge_offset.push_back(offset);
             }

@@ -21,7 +21,7 @@ template <typename Base> class NodeEntryWrapper : public Base
 {
   public:
     template <typename... Args>
-    NodeEntryWrapper(std::size_t edges_begin_, std::size_t edges_end_, Args &&... args)
+    NodeEntryWrapper(std::size_t edges_begin_, std::size_t edges_end_, Args &&...args)
         : Base(std::forward<Args>(args)...), edges_begin(edges_begin_), edges_end(edges_end_)
     {
     }
@@ -41,7 +41,7 @@ template <typename Base> class GraphConstructionWrapper : public Base
 {
   public:
     template <typename... Args>
-    GraphConstructionWrapper(const NodeID source_, Args &&... args)
+    GraphConstructionWrapper(const NodeID source_, Args &&...args)
         : Base(std::forward<Args>(args)...), source(source_)
     {
     }
