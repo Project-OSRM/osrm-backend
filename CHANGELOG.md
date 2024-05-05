@@ -40,6 +40,7 @@
       - FIXED: Fix adding traffic signal penalties during compression [#6419](https://github.com/Project-OSRM/osrm-backend/pull/6419)
       - FIXED: Correctly handle compressed traffic signals. [#6724](https://github.com/Project-OSRM/osrm-backend/pull/6724)
       - FIXED: Fix bug when searching for maneuver overrides [#6739](https://github.com/Project-OSRM/osrm-backend/pull/6739)
+      - FIXED: Remove force-loop checks for routes with u-turns [#6858](https://github.com/Project-OSRM/osrm-backend/pull/6858)
     - Debug tiles:
       - FIXED: Ensure speed layer features have unique ids. [#6726](https://github.com/Project-OSRM/osrm-backend/pull/6726)
 
