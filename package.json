@@ -4,7 +4,7 @@
   "private": false,
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++ designed to run on OpenStreetMap data.",
   "dependencies": {
-    "@mapbox/node-pre-gyp": "^1.0.10"
+    "@mapbox/node-pre-gyp": "^1.0.11"
   },
   "browserify": {
     "transform": [
@@ -31,7 +31,7 @@
   },
   "homepage": "https://github.com/Project-OSRM/osrm-backend",
   "engines": {
-    "node": ">=4.0.0"
+    "node": ">=18.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.18.10",
