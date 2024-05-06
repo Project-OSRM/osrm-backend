@@ -42,7 +42,7 @@ if (ENABLE_CLANG_TIDY)
     message(FATAL_ERROR "ENABLE_CLANG_TIDY is ON but clang-tidy is not found!")
   else()
     message(STATUS "Found clang-tidy at ${CLANG_TIDY_COMMAND}")
-    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};--warnings-as-errors=*")
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};--warnings-as-errors=*;--header-filter=.*")
   endif()
 endif()
 
