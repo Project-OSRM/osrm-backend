@@ -128,7 +128,7 @@ std::pair<bool, double> findMergedBearing(const util::NodeBasedDynamicGraph &gra
     {
         // In some intersections, turning roads can introduce artificial turns if we merge here.
         // Consider a scenario like:
-        // 
+        //  
         //  a     .  g - f
         //  |   .
         //  | .
@@ -136,7 +136,7 @@ std::pair<bool, double> findMergedBearing(const util::NodeBasedDynamicGraph &gra
         // d-b--------e
         //  |
         //  c
-        // 
+        //  
         // Merging `bgf` and `be` would introduce an angle, even though d-b-e is perfectly straight
         // We don't change the angle, if such an opposite road exists
         return {false, entry.perceived_bearing};
