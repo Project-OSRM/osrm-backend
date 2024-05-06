@@ -115,7 +115,7 @@ include(GNUInstallDirs)
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
   message(STATUS "Building on a 64 bit system")
 else()
-  message(STATUS "Building on a 32 bit system")
+  message(FATAL_ERROR "Building on a 32 bit system is not supported")
 endif()
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
