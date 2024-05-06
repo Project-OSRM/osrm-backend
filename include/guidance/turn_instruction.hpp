@@ -1,12 +1,13 @@
 #ifndef OSRM_GUIDANCE_TURN_INSTRUCTION_HPP_
 #define OSRM_GUIDANCE_TURN_INSTRUCTION_HPP_
 
-#include <algorithm>
-#include <cstdint>
-
 #include "guidance/roundabout_type.hpp"
 #include "util/attributes.hpp"
 #include "util/typedefs.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cstdint>
 
 namespace osrm::guidance
 {
