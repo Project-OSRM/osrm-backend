@@ -129,7 +129,8 @@ util::json::Object makeIntersection(const guidance::IntermediateIntersection &in
     std::transform(intersection.entry.begin(),
                    intersection.entry.end(),
                    std::back_inserter(entry.values),
-                   [](const bool has_entry) -> util::json::Value {
+                   [](const bool has_entry) -> util::json::Value
+                   {
                        if (has_entry)
                            return util::json::True();
                        else
@@ -151,11 +152,11 @@ util::json::Object makeIntersection(const guidance::IntermediateIntersection &in
     {
         util::json::Array classes;
         classes.values.reserve(intersection.classes.size());
-        std::transform(
-            intersection.classes.begin(),
-            intersection.classes.end(),
-            std::back_inserter(classes.values),
-            [](const std::string &class_name) { return util::json::String{class_name}; });
+        std::transform(intersection.classes.begin(),
+                       intersection.classes.end(),
+                       std::back_inserter(classes.values),
+                       [](const std::string &class_name)
+                       { return util::json::String{class_name}; });
         result.values["classes"] = std::move(classes);
     }
 

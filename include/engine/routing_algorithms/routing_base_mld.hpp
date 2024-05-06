@@ -30,7 +30,8 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                                  const PhantomNode &source,
                                  const PhantomNode &target)
 {
-    auto level = [&partition, node](const SegmentID &source, const SegmentID &target) {
+    auto level = [&partition, node](const SegmentID &source, const SegmentID &target)
+    {
         if (source.enabled && target.enabled)
             return partition.GetQueryLevel(source.id, target.id, node);
         return INVALID_LEVEL_ID;
@@ -59,7 +60,8 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
         endpoint_candidates.source_phantoms.begin(),
         endpoint_candidates.source_phantoms.end(),
         INVALID_LEVEL_ID,
-        [&](LevelID current_level, const PhantomNode &source) {
+        [&](LevelID current_level, const PhantomNode &source)
+        {
             return std::min(
                 current_level,
                 getNodeQueryLevel(partition, node, source, endpoint_candidates.target_phantom));
@@ -76,7 +78,8 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
         endpoint_candidates.source_phantoms.begin(),
         endpoint_candidates.source_phantoms.end(),
         INVALID_LEVEL_ID,
-        [&](LevelID level_1, const PhantomNode &source) {
+        [&](LevelID level_1, const PhantomNode &source)
+        {
             return std::min(
                 level_1,
                 std::accumulate(endpoint_candidates.target_phantoms.begin(),
@@ -119,7 +122,8 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                                  const NodeID node,
                                  const PhantomNodeCandidates &candidates)
 {
-    auto highest_different_level = [&partition, node](const SegmentID &segment) {
+    auto highest_different_level = [&partition, node](const SegmentID &segment)
+    {
         return segment.enabled ? partition.GetHighestDifferentLevel(segment.id, node)
                                : INVALID_LEVEL_ID;
     };
@@ -128,7 +132,8 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
         std::accumulate(candidates.begin(),
                         candidates.end(),
                         INVALID_LEVEL_ID,
-                        [&](LevelID current_level, const PhantomNode &phantom_node) {
+                        [&](LevelID current_level, const PhantomNode &phantom_node)
+                        {
                             auto highest_level =
                                 std::min(highest_different_level(phantom_node.forward_segment_id),
                                          highest_different_level(phantom_node.reverse_segment_id));
@@ -151,9 +156,11 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
     // This is equivalent to min_{∀ source, target} partition.GetQueryLevel(source, node, target)
     auto init = getNodeQueryLevel(partition, node, candidates_list[phantom_index]);
     auto result = std::accumulate(
-        phantom_indices.begin(), phantom_indices.end(), init, [&](LevelID level, size_t index) {
-            return std::min(level, getNodeQueryLevel(partition, node, candidates_list[index]));
-        });
+        phantom_indices.begin(),
+        phantom_indices.end(),
+        init,
+        [&](LevelID level, size_t index)
+        { return std::min(level, getNodeQueryLevel(partition, node, candidates_list[index])); });
     return result;
 }
 } // namespace
@@ -266,7 +273,7 @@ template <bool DIRECTION, typename Algorithm, typename... Args>
 void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                         typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                         const typename SearchEngineData<Algorithm>::QueryHeap::HeapNode &heapNode,
-                        const Args &... args)
+                        const Args &...args)
 {
     const auto &partition = facade.GetMultiLevelPartition();
     const auto &cells = facade.GetCellStorage();
@@ -384,7 +391,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
                  EdgeWeight &path_upper_bound,
                  const std::vector<NodeID> &force_loop_forward_nodes,
                  const std::vector<NodeID> &force_loop_reverse_nodes,
-                 const Args &... args)
+                 const Args &...args)
 {
     const auto heapNode = forward_heap.DeleteMinGetHeapNode();
     const auto weight = heapNode.weight;
@@ -434,7 +441,7 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
                     const std::vector<NodeID> &force_loop_forward_nodes,
                     const std::vector<NodeID> &force_loop_reverse_nodes,
                     EdgeWeight weight_upper_bound,
-                    const Args &... args)
+                    const Args &...args)
 {
     if (forward_heap.Empty() || reverse_heap.Empty())
     {
@@ -601,7 +608,8 @@ void unpackPath(const FacadeT &facade,
         util::for_each_pair(
             packed_path_begin,
             packed_path_end,
-            [&facade, &unpacked_nodes, &unpacked_edges](const auto from, const auto to) {
+            [&facade, &unpacked_nodes, &unpacked_edges](const auto from, const auto to)
+            {
                 unpacked_nodes.push_back(to);
                 unpacked_edges.push_back(facade.FindEdge(from, to));
             });
