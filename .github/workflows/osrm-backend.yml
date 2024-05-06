@@ -145,26 +145,26 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: gcc-9-debug-cov
+          - name: gcc-13-debug-cov
             continue-on-error: false
-            node: 18
-            runs-on: ubuntu-20.04
+            node: 20
+            runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: gcc-9
+            CCOMPILER: gcc-13
             CUCUMBER_TIMEOUT: 20000
-            CXXCOMPILER: g++-9
+            CXXCOMPILER: g++-13
             ENABLE_COVERAGE: ON
 
-          - name: gcc-9-debug-asan-ubsan
+          - name: gcc-13-debug-asan-ubsan
             continue-on-error: false
-            node: 18
-            runs-on: ubuntu-20.04
+            node: 20
+            runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: gcc-9
+            CCOMPILER: gcc-13
             CUCUMBER_TIMEOUT: 20000
-            CXXCOMPILER: g++-9
+            CXXCOMPILER: g++-13
             ENABLE_SANITIZER: ON
             TARGET_ARCH: x86_64-asan-ubsan
             OSRM_CONNECTION_RETRIES: 10
@@ -242,9 +242,20 @@ jobs:
             CXXCOMPILER: clang++-15
             ENABLE_CONAN: ON
 
-          - name: gcc-12-release
+            - name: gcc-13-release
             continue-on-error: false
-            node: 18
+            node: 20
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-13
+            CXXCOMPILER: g++-13
+            ENABLE_BENCHMARKS: ON
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+
+            - name: gcc-12-release
+            continue-on-error: false
+            node: 20
             runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
@@ -255,55 +266,13 @@ jobs:
 
           - name: gcc-11-release
             continue-on-error: false
-            node: 18
-            runs-on: ubuntu-20.04
+            node: 20
+            runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: gcc-11
             CXXCOMPILER: g++-11
             ENABLE_BENCHMARKS: ON
-
-          - name: gcc-10-release
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-10
-            CXXCOMPILER: g++-10
-
-          - name: gcc-9-release
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-9
-            CXXCOMPILER: g++-9
-            CXXFLAGS: -Wno-cast-function-type
-
-          - name: gcc-9-conan-release-i686
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-9
-            CFLAGS: "-m32 -msse2 -mfpmath=sse"
-            CXXCOMPILER: g++-9
-            CXXFLAGS: "-m32 -msse2 -mfpmath=sse"
-            TARGET_ARCH: i686
-            ENABLE_CONAN: ON
-
-          - name: gcc-8-release
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-8
-            CXXCOMPILER: g++-8
-            CXXFLAGS: -Wno-cast-function-type
 
           - name: conan-linux-release-node
             build_node_package: true
