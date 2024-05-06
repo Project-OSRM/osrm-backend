@@ -169,7 +169,7 @@ inline bool hasRoundaboutType(const TurnInstruction instruction)
         TurnType::ExitRoundaboutIntersection,
         TurnType::StayOnRoundabout};
 
-    return std::find(valid_types.cbegin(), valid_types.cend(), instruction.type);
+    return std::find(valid_types.cbegin(), valid_types.cend(), instruction.type) != valid_types.cend();
 }
 
 inline bool entersRoundabout(const guidance::TurnInstruction instruction)
