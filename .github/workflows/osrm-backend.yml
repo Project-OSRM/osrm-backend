@@ -242,7 +242,7 @@ jobs:
             CXXCOMPILER: clang++-15
             ENABLE_CONAN: ON
 
-            - name: gcc-13-release
+          - name: gcc-13-release
             continue-on-error: false
             node: 20
             runs-on: ubuntu-22.04
@@ -253,7 +253,7 @@ jobs:
             ENABLE_BENCHMARKS: ON
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-            - name: gcc-12-release
+          - name: gcc-12-release
             continue-on-error: false
             node: 20
             runs-on: ubuntu-22.04
