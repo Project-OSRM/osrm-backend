@@ -154,19 +154,20 @@ inline bool operator==(const TurnInstruction lhs, const TurnInstruction rhs)
 inline bool hasRoundaboutType(const TurnInstruction instruction)
 {
     using namespace guidance::TurnType;
-    const constexpr std::array<TurnType::Enum, 13> valid_types = {TurnType::EnterRoundabout,
-                                                   TurnType::EnterAndExitRoundabout,
-                                                   TurnType::EnterRotary,
-                                                   TurnType::EnterAndExitRotary,
-                                                   TurnType::EnterRoundaboutIntersection,
-                                                   TurnType::EnterAndExitRoundaboutIntersection,
-                                                   TurnType::EnterRoundaboutAtExit,
-                                                   TurnType::ExitRoundabout,
-                                                   TurnType::EnterRotaryAtExit,
-                                                   TurnType::ExitRotary,
-                                                   TurnType::EnterRoundaboutIntersectionAtExit,
-                                                   TurnType::ExitRoundaboutIntersection,
-                                                   TurnType::StayOnRoundabout};
+    const constexpr std::array<TurnType::Enum, 13> valid_types = {
+        TurnType::EnterRoundabout,
+        TurnType::EnterAndExitRoundabout,
+        TurnType::EnterRotary,
+        TurnType::EnterAndExitRotary,
+        TurnType::EnterRoundaboutIntersection,
+        TurnType::EnterAndExitRoundaboutIntersection,
+        TurnType::EnterRoundaboutAtExit,
+        TurnType::ExitRoundabout,
+        TurnType::EnterRotaryAtExit,
+        TurnType::ExitRotary,
+        TurnType::EnterRoundaboutIntersectionAtExit,
+        TurnType::ExitRoundaboutIntersection,
+        TurnType::StayOnRoundabout};
 
     return std::find(valid_types.cbegin(), valid_types.cend(), instruction.type);
 }
