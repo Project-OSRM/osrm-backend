@@ -71,7 +71,7 @@ trimLaneString(std::string lane_string, std::int32_t count_left, std::int32_t co
 OSRM_ATTR_WARN_UNUSED
 inline std::string applyAccessTokens(std::string lane_string, const std::string &access_tokens)
 {
-    typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
+    using tokenizer = boost::tokenizer<boost::char_separator<char>>;
     boost::char_separator<char> sep("|", "", boost::keep_empty_tokens);
     tokenizer tokens(lane_string, sep);
     tokenizer access(access_tokens, sep);
