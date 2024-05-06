@@ -151,7 +151,8 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
 
     NodeID current_edge_source_coordinate_id = node_u;
 
-    const auto edge_id_to_segment_id = [](const NodeID edge_based_node_id) {
+    const auto edge_id_to_segment_id = [](const NodeID edge_based_node_id)
+    {
         if (edge_based_node_id == SPECIAL_NODEID)
         {
             return SegmentID{SPECIAL_SEGMENTID, false};
@@ -409,7 +410,8 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
             NodeID current_edge_source_coordinate_id = node_u;
             const EdgeData &forward_data = m_node_based_graph.GetEdgeData(eid);
 
-            const auto edge_id_to_segment_id = [](const NodeID edge_based_node_id) {
+            const auto edge_id_to_segment_id = [](const NodeID edge_based_node_id)
+            {
                 if (edge_based_node_id == SPECIAL_NODEID)
                 {
                     return SegmentID{SPECIAL_SEGMENTID, false};
@@ -532,7 +534,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             TurnPenalty turn_duration_penalty;
         };
 
-        auto const transfer_data = [&](const EdgeWithData &edge_with_data) {
+        auto const transfer_data = [&](const EdgeWithData &edge_with_data)
+        {
             m_edge_based_edge_list.push_back(edge_with_data.edge);
             turn_weight_penalties.push_back(edge_with_data.turn_weight_penalty);
             turn_duration_penalties.push_back(edge_with_data.turn_duration_penalty);
@@ -568,7 +571,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
         // First part of the pipeline generates iterator ranges of IDs in sets of GRAINSIZE
         tbb::filter<void, tbb::blocked_range<NodeID>> generator_stage(
-            tbb::filter_mode::serial_in_order, [&](tbb::flow_control &fc) {
+            tbb::filter_mode::serial_in_order,
+            [&](tbb::flow_control &fc)
+            {
                 if (current_node < node_count)
                 {
                     auto next_node = std::min(current_node + GRAINSIZE, node_count);
@@ -599,7 +604,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                        const auto &turn_angle,
                                        const auto &road_legs_on_the_right,
                                        const auto &road_legs_on_the_left,
-                                       const auto &edge_geometries) {
+                                       const auto &edge_geometries)
+        {
             const auto &edge_data1 = m_node_based_graph.GetEdgeData(node_based_edge_from);
             const auto &edge_data2 = m_node_based_graph.GetEdgeData(node_based_edge_to);
 
@@ -608,26 +614,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             BOOST_ASSERT(!edge_data1.reversed);
             BOOST_ASSERT(!edge_data2.reversed);
 
-            // We write out the mapping between the edge-expanded edges and the original nodes.
-            // Since each edge represents a possible maneuver, external programs can use this to
-            // quickly perform updates to edge weights in order to penalize certain turns.
-
-            // If this edge is 'trivial' -- where the compressed edge corresponds exactly to an
-            // original OSM segment -- we can pull the turn's preceding node ID directly with
-            // `node_along_road_entering`;
-            // otherwise, we need to look up the node immediately preceding the turn from the
-            // compressed edge container.
-            const bool isTrivial = m_compressed_edge_container.IsTrivial(node_based_edge_from);
-
-            const auto &from_node =
-                isTrivial ? node_along_road_entering
-                          : m_compressed_edge_container.GetLastEdgeSourceID(node_based_edge_from);
-
             // compute weight and duration penalties
             // In theory we shouldn't get a directed traffic light on a turn, as it indicates that
             // the traffic signal direction was potentially ambiguously annotated on the junction
             // node But we'll check anyway.
-            const auto is_traffic_light = m_traffic_signals.HasSignal(from_node, intersection_node);
+            const auto is_traffic_light =
+                m_traffic_signals.HasSignal(node_along_road_entering, intersection_node);
             const auto is_uturn =
                 guidance::getTurnDirection(turn_angle) == guidance::DirectionModifier::UTurn;
 
@@ -694,6 +686,21 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                              true,
                                              false};
 
+            // We write out the mapping between the edge-expanded edges and the original nodes.
+            // Since each edge represents a possible maneuver, external programs can use this to
+            // quickly perform updates to edge weights in order to penalize certain turns.
+
+            // If this edge is 'trivial' -- where the compressed edge corresponds exactly to an
+            // original OSM segment -- we can pull the turn's preceding node ID directly with
+            // `node_along_road_entering`;
+            // otherwise, we need to look up the node immediately preceding the turn from the
+            // compressed edge container.
+            const bool isTrivial = m_compressed_edge_container.IsTrivial(node_based_edge_from);
+
+            const auto &from_node =
+                isTrivial ? node_along_road_entering
+                          : m_compressed_edge_container.GetLastEdgeSourceID(node_based_edge_from);
+
             const auto &to_node =
                 m_compressed_edge_container.GetFirstEdgeTargetID(node_based_edge_to);
 
@@ -709,7 +716,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         //
         tbb::filter<tbb::blocked_range<NodeID>, EdgesPipelineBufferPtr> processor_stage(
             tbb::filter_mode::parallel,
-            [&](const tbb::blocked_range<NodeID> &intersection_node_range) {
+            [&](const tbb::blocked_range<NodeID> &intersection_node_range)
+            {
                 auto buffer = std::make_shared<EdgesPipelineBuffer>();
                 buffer->nodes_processed = intersection_node_range.size();
 
@@ -794,16 +802,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             const auto turn =
                                 std::find_if(connected_roads.begin(),
                                              connected_roads.end(),
-                                             [edge = outgoing_edge.edge](const auto &road) {
-                                                 return road.eid == edge;
-                                             });
+                                             [edge = outgoing_edge.edge](const auto &road)
+                                             { return road.eid == edge; });
                             OSRM_ASSERT(turn != connected_roads.end(),
                                         m_coordinates[intersection_node]);
 
                             std::vector<ExtractionTurnLeg> road_legs_on_the_right;
                             std::vector<ExtractionTurnLeg> road_legs_on_the_left;
 
-                            auto get_connected_road_info = [&](const auto &connected_edge) {
+                            auto get_connected_road_info = [&](const auto &connected_edge)
+                            {
                                 const auto &edge_data =
                                     m_node_based_graph.GetEdgeData(connected_edge.eid);
 
@@ -1011,9 +1019,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                         auto const has_unconditional =
                                             std::any_of(restrictions.begin(),
                                                         restrictions.end(),
-                                                        [](const auto &restriction) {
-                                                            return restriction->IsUnconditional();
-                                                        });
+                                                        [](const auto &restriction)
+                                                        { return restriction->IsUnconditional(); });
                                         if (has_unconditional)
                                             continue;
 
@@ -1119,7 +1126,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         util::Percent routing_progress(log, node_count);
         std::vector<EdgeWithData> delayed_data;
         tbb::filter<EdgesPipelineBufferPtr, void> output_stage(
-            tbb::filter_mode::serial_in_order, [&](auto buffer) {
+            tbb::filter_mode::serial_in_order,
+            [&](auto buffer)
+            {
                 routing_progress.PrintAddition(buffer->nodes_processed);
 
                 m_connectivity_checksum = buffer->checksum.update_checksum(m_connectivity_checksum);
@@ -1139,7 +1148,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                 std::for_each(buffer->turn_to_ebn_map.begin(),
                               buffer->turn_to_ebn_map.end(),
-                              [&global_turn_to_ebn_map](const auto &p) {
+                              [&global_turn_to_ebn_map](const auto &p)
+                              {
                                   // TODO: log conflicts here
                                   global_turn_to_ebn_map.insert(p);
                               });
@@ -1177,26 +1187,32 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     return std::vector<NodeID>{turn_edges.second.first, turn_edges.second.second};
                 });
 
-            std::for_each(std::next(turns.begin()), turns.end(), [&](const auto &turn) {
-                std::vector<std::vector<NodeID>> next_node_sequences;
-                const auto next_turn_edges = global_turn_to_ebn_map.equal_range(turn);
-                for (auto &node_sequence : node_sequences)
-                {
-                    const auto found_it = std::find_if(
-                        next_turn_edges.first, next_turn_edges.second, [&](const auto &turn_edges) {
-                            const auto pre_turn_edge = turn_edges.second.first;
-                            return (node_sequence.back() == pre_turn_edge);
-                        });
+            std::for_each(std::next(turns.begin()),
+                          turns.end(),
+                          [&](const auto &turn)
+                          {
+                              std::vector<std::vector<NodeID>> next_node_sequences;
+                              const auto next_turn_edges = global_turn_to_ebn_map.equal_range(turn);
+                              for (auto &node_sequence : node_sequences)
+                              {
+                                  const auto found_it = std::find_if(
+                                      next_turn_edges.first,
+                                      next_turn_edges.second,
+                                      [&](const auto &turn_edges)
+                                      {
+                                          const auto pre_turn_edge = turn_edges.second.first;
+                                          return (node_sequence.back() == pre_turn_edge);
+                                      });
 
-                    if (found_it != next_turn_edges.second)
-                    {
-                        const auto post_turn_edge = found_it->second.second;
-                        node_sequence.push_back(post_turn_edge);
-                        next_node_sequences.push_back(std::move(node_sequence));
-                    }
-                }
-                node_sequences = std::move(next_node_sequences);
-            });
+                                  if (found_it != next_turn_edges.second)
+                                  {
+                                      const auto post_turn_edge = found_it->second.second;
+                                      node_sequence.push_back(post_turn_edge);
+                                      next_node_sequences.push_back(std::move(node_sequence));
+                                  }
+                              }
+                              node_sequences = std::move(next_node_sequences);
+                          });
 
             for (const auto &node_sequence : node_sequences)
             {
@@ -1236,7 +1252,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // Now, update the turn_id property on every EdgeBasedEdge - it will equal the position in the
     // m_edge_based_edge_list array for each object.
     tbb::parallel_for(tbb::blocked_range<NodeID>(0, m_edge_based_edge_list.size()),
-                      [this](const tbb::blocked_range<NodeID> &range) {
+                      [this](const tbb::blocked_range<NodeID> &range)
+                      {
                           for (auto x = range.begin(), end = range.end(); x != end; ++x)
                           {
                               m_edge_based_edge_list[x].data.turn_id = x;

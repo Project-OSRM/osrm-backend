@@ -453,7 +453,8 @@ void readRawNBGraph(const boost::filesystem::path &path,
     coordinates.resize(number_of_nodes);
     osm_node_ids.reserve(number_of_nodes);
     auto index = 0;
-    auto decode = [&](const auto &current_node) {
+    auto decode = [&](const auto &current_node)
+    {
         coordinates[index].lon = current_node.lon;
         coordinates[index].lat = current_node.lat;
         osm_node_ids.push_back(current_node.node_id);

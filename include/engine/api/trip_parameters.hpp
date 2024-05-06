@@ -60,7 +60,7 @@ struct TripParameters : public RouteParameters
     TripParameters(SourceType source_,
                    DestinationType destination_,
                    bool roundtrip_,
-                   Args &&... args_)
+                   Args &&...args_)
         : RouteParameters{std::forward<Args>(args_)...}, source{source_},
           destination{destination_}, roundtrip{roundtrip_}
     {

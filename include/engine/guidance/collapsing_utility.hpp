@@ -122,9 +122,8 @@ inline bool haveSameMode(const RouteStep &first, const RouteStep &second, const 
 // alias for readability
 inline bool haveSameName(const RouteStep &lhs, const RouteStep &rhs)
 {
-    const auto has_name_or_ref = [](auto const &step) {
-        return !step.name.empty() || !step.ref.empty();
-    };
+    const auto has_name_or_ref = [](auto const &step)
+    { return !step.name.empty() || !step.ref.empty(); };
 
     // make sure empty is not involved
     if (!has_name_or_ref(lhs) || !has_name_or_ref(rhs))
@@ -151,12 +150,14 @@ inline bool haveSameName(const RouteStep &lhs, const RouteStep &rhs)
 // alias for readability, both turn right | left
 inline bool areSameSide(const RouteStep &lhs, const RouteStep &rhs)
 {
-    const auto is_left = [](const RouteStep &step) {
+    const auto is_left = [](const RouteStep &step)
+    {
         return hasModifier(step, osrm::guidance::DirectionModifier::Straight) ||
                hasLeftModifier(step.maneuver.instruction);
     };
 
-    const auto is_right = [](const RouteStep &step) {
+    const auto is_right = [](const RouteStep &step)
+    {
         return hasModifier(step, osrm::guidance::DirectionModifier::Straight) ||
                hasRightModifier(step.maneuver.instruction);
     };
@@ -174,7 +175,8 @@ inline std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> st
     // Two valid NO_TURNs exist in each leg in the form of Depart/Arrive
 
     // keep valid instructions
-    const auto not_is_valid = [](const RouteStep &step) {
+    const auto not_is_valid = [](const RouteStep &step)
+    {
         return step.maneuver.instruction == osrm::guidance::TurnInstruction::NO_TURN() &&
                step.maneuver.waypoint_type == WaypointType::None;
     };
@@ -225,7 +227,8 @@ inline double totalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_
 inline bool bearingsAreReversed(const double bearing_in, const double bearing_out)
 {
     // Nearly perfectly reversed angles have a difference close to 180 degrees (straight)
-    const double left_turn_angle = [&]() {
+    const double left_turn_angle = [&]()
+    {
         if (0 <= bearing_out && bearing_out <= bearing_in)
             return bearing_in - bearing_out;
         return bearing_in + 360 - bearing_out;

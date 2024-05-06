@@ -4,7 +4,7 @@
   "private": false,
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++ designed to run on OpenStreetMap data.",
   "dependencies": {
-    "@mapbox/node-pre-gyp": "^1.0.10"
+    "@mapbox/node-pre-gyp": "^1.0.11"
   },
   "browserify": {
     "transform": [
@@ -14,7 +14,7 @@
   },
   "scripts": {
     "lint": "node ./node_modules/eslint/bin/eslint.js -c ./.eslintrc features/step_definitions/ features/support/",
-    "test": "npm run lint && node ./node_modules/cucumber/bin/cucumber.js features/ -p verify && node ./node_modules/cucumber/bin/cucumber.js features/ -p verify -m mmap && node ./node_modules/cucumber/bin/cucumber.js features/ -p mld && node ./node_modules/cucumber/bin/cucumber.js features/ -p mld -m mmap",
+    "test": "npm run lint && ./scripts/cucumber_test_matrix.sh",
     "clean": "rm -rf test/cache",
     "docs": "./scripts/build_api_docs.sh",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh",
@@ -31,7 +31,7 @@
   },
   "homepage": "https://github.com/Project-OSRM/osrm-backend",
   "engines": {
-    "node": ">=4.0.0"
+    "node": ">=18.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.18.10",
@@ -40,7 +40,6 @@
     "@babel/preset-react": "^7.18.6",
     "acorn": "^8.8.0",
     "ansi-escape-sequences": "^5.1.2",
-    "aws-sdk": "~2.0.31",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "babelify": "^10.0.0",
     "browserify": "^17.0.0",

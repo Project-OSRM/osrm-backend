@@ -61,10 +61,12 @@ inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
         // Add all non-core edges to container
         {
             auto non_core_edges = toEdges<QueryEdge>(contractor_graph);
-            auto new_end =
-                std::remove_if(non_core_edges.begin(), non_core_edges.end(), [&](const auto &edge) {
-                    return is_shared_core[edge.source] && is_shared_core[edge.target];
-                });
+            auto new_end = std::remove_if(non_core_edges.begin(),
+                                          non_core_edges.end(),
+                                          [&](const auto &edge) {
+                                              return is_shared_core[edge.source] &&
+                                                     is_shared_core[edge.target];
+                                          });
             non_core_edges.resize(new_end - non_core_edges.begin());
             edge_container.Insert(std::move(non_core_edges));
 
@@ -75,8 +77,8 @@ inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
         }
 
         // Extract core graph for further contraction
-        shared_core_graph = contractor_graph.Filter(
-            [&is_shared_core](const NodeID node) { return is_shared_core[node]; });
+        shared_core_graph = contractor_graph.Filter([&is_shared_core](const NodeID node)
+                                                    { return is_shared_core[node]; });
     }
 
     for (const auto &filter : filters)

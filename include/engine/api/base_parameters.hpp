@@ -52,7 +52,8 @@ namespace osrm::engine::api
  *              optional per coordinate
  *  - bearings: limits the search for segments in the road network to given bearing(s) in degree
  *              towards true north in clockwise direction, optional per coordinate
- *  - approaches: force the phantom node to start towards the node with the road country side.
+ *  - approaches: force the phantom node to start towards the node with the road country side or
+ *                its opposite
  *
  * \see OSRM, Coordinate, Hint, Bearing, RouteParameters, TableParameters,
  *      NearestParameters, TripParameters, MatchParameters and TileParameters
@@ -111,7 +112,8 @@ struct BaseParameters
                (approaches.empty() || approaches.size() == coordinates.size()) &&
                std::all_of(bearings.begin(),
                            bearings.end(),
-                           [](const boost::optional<Bearing> &bearing_and_range) {
+                           [](const boost::optional<Bearing> &bearing_and_range)
+                           {
                                if (bearing_and_range)
                                {
                                    return bearing_and_range->IsValid();

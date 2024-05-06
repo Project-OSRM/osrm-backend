@@ -1,16 +1,27 @@
 # Unreleased
   - Changes from 5.27.1
     - Features
+      - ADDED: Add support for a keepalive_timeout flag. [#6674](https://github.com/Project-OSRM/osrm-backend/pull/6674)
       - ADDED: Add support for a default_radius flag. [#6575](https://github.com/Project-OSRM/osrm-backend/pull/6575)
+      - ADDED: Add support for disabling feature datasets. [#6666](https://github.com/Project-OSRM/osrm-backend/pull/6666)
+      - ADDED: Add support for opposite approach request parameter. [#6842](https://github.com/Project-OSRM/osrm-backend/pull/6842)
+      - ADDED: Add support for accessing edge flags in `process_segment` [#6658](https://github.com/Project-OSRM/osrm-backend/pull/6658)
     - Build:
       - ADDED: Add CI job which builds OSRM with gcc 12. [#6455](https://github.com/Project-OSRM/osrm-backend/pull/6455)
       - CHANGED: Upgrade to clang-tidy 15. [#6439](https://github.com/Project-OSRM/osrm-backend/pull/6439)
       - CHANGED: Update actions/cache to v3. [#6420](https://github.com/Project-OSRM/osrm-backend/pull/6420)
       - REMOVED: Drop support of Node 12 & 14. [#6431](https://github.com/Project-OSRM/osrm-backend/pull/6431)
+      - ADDED: Add 'load directly' mode to default Cucumber test suite. [#6663](https://github.com/Project-OSRM/osrm-backend/pull/6663)
+      - CHANGED: Drop support for Node 16 [#6855](https://github.com/Project-OSRM/osrm-backend/pull/6855)
+      - REMOVED: Remove unused AppVeyor files [#6860](https://github.com/Project-OSRM/osrm-backend/pull/6860)
+      - CHANGED: Upgrade clang-format to version 15 [#6859](https://github.com/Project-OSRM/osrm-backend/pull/6859)
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
       - FIXED: Partial fix migration from boost::optional to std::optional [#6551](https://github.com/Project-OSRM/osrm-backend/issues/6551), see also [#6592](https://github.com/Project-OSRM/osrm-backend/issues/6592)
+      - FIXED: Fix an error in a RouteParameters AnnotationsType operator overload. [#6646](https://github.com/Project-OSRM/osrm-backend/pull/6646)
+      - ADDED: Add support for "unlimited" to be passed as a value for the default-radius and max-matching-radius flags. [#6599](https://github.com/Project-OSRM/osrm-backend/pull/6599)
+      - CHANGED: Allow -1.0 as unlimited for default_radius value. [#6599](https://github.com/Project-OSRM/osrm-backend/pull/6599)
       - CHANGED: keep libosrm* in the docker image for downstream linking [#6602](https://github.com/Project-OSRM/osrm-backend/pull/6602)
       - CHANGED: Move vector in CSVFilesParser instead copying it. [#6470](https://github.com/Project-OSRM/osrm-backend/pull/6470)
       - REMOVED: Get rid of unused functions in util/json_util.hpp. [#6446](https://github.com/Project-OSRM/osrm-backend/pull/6446)
@@ -24,8 +35,19 @@
       - CHANGED: Replace boost::string_ref with std::string_view [#6433](https://github.com/Project-OSRM/osrm-backend/pull/6433)
       - ADDED: Print tracebacks for Lua runtime errors [#6564](https://github.com/Project-OSRM/osrm-backend/pull/6564)
       - FIXED: Added a variable to preprocessor guard in file osrm-backend/include/util/range_table.hpp to solve build error. [#6596](https://github.com/Project-OSRM/osrm-backend/pull/6596)
+      - FIXED: Ensure required file check in osrm-routed is correctly enforced. [#6655](https://github.com/Project-OSRM/osrm-backend/pull/6655)
+      - FIXED: Correct HTTP docs to reflect summary output dependency on steps parameter. [#6655](https://github.com/Project-OSRM/osrm-backend/pull/6655)
+      - ADDED: Extract prerelease/build information from package semver [#6839](https://github.com/Project-OSRM/osrm-backend/pull/6839)
+    - Profiles:
+      - FIXED: Bicycle and foot profiles now don't route on proposed ways [#6615](https://github.com/Project-OSRM/osrm-backend/pull/6615)
     - Routing:
       - FIXED: Fix adding traffic signal penalties during compression [#6419](https://github.com/Project-OSRM/osrm-backend/pull/6419)
+      - FIXED: Correctly handle compressed traffic signals. [#6724](https://github.com/Project-OSRM/osrm-backend/pull/6724)
+      - FIXED: Fix bug when searching for maneuver overrides [#6739](https://github.com/Project-OSRM/osrm-backend/pull/6739)
+      - FIXED: Remove force-loop checks for routes with u-turns [#6858](https://github.com/Project-OSRM/osrm-backend/pull/6858)
+    - Debug tiles:
+      - FIXED: Ensure speed layer features have unique ids. [#6726](https://github.com/Project-OSRM/osrm-backend/pull/6726)
+
 # 5.27.1
   - Changes from 5.27.0
     - Misc:

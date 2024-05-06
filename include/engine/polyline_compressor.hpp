@@ -39,7 +39,8 @@ std::string encodePolyline(CoordVectorForwardIter begin, CoordVectorForwardIter 
         begin,
         end,
         [&delta_numbers, &current_lat, &current_lon, coordinate_to_polyline](
-            const util::Coordinate loc) {
+            const util::Coordinate loc)
+        {
             const int lat_diff =
                 std::round(static_cast<int>(loc.lat) * coordinate_to_polyline) - current_lat;
             const int lon_diff =

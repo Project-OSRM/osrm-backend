@@ -573,7 +573,7 @@ test('route: throws on bad radiuses', function(assert) {
 });
 
 test('route: routes Monaco with valid approaches values', function(assert) {
-    assert.plan(3);
+    assert.plan(4);
     var osrm = new OSRM(monaco_path);
     var options = {
         coordinates: two_test_coordinates,
@@ -583,6 +583,10 @@ test('route: routes Monaco with valid approaches values', function(assert) {
         assert.ifError(err);
     });
     options.approaches = [null, null];
+    osrm.route(options, function(err, route) {
+        assert.ifError(err);
+    });
+    options.approaches = ['opposite', 'opposite'];
     osrm.route(options, function(err, route) {
         assert.ifError(err);
     });
@@ -609,12 +613,12 @@ test('route: throws on bad approaches', function(assert) {
         coordinates: two_test_coordinates,
         approaches: ['curb', 'test']
     }, function(err, route) {}) },
-        /'approaches' param must be one of \[curb, unrestricted\]/);
+        /'approaches' param must be one of \[curb, opposite, unrestricted\]/);
     assert.throws(function() { osrm.route({
         coordinates: two_test_coordinates,
         approaches: [10, 15]
     }, function(err, route) {}) },
-        /Approach must be a string: \[curb, unrestricted\] or null/);
+        /Approach must be a string: \[curb, opposite, unrestricted\] or null/);
 });
 
 test('route: routes Monaco with custom limits on MLD', function(assert) {
@@ -760,5 +764,67 @@ test('route: snapping parameter passed through OK', function(assert) {
     osrm.route({snapping: "any", coordinates: [[7.448205209414596,43.754001097311544],[7.447122039202185,43.75306156811368]]}, function(err, route) {
         assert.ifError(err);
         assert.equal(Math.round(route.routes[0].distance * 10), 1315); // Round it to nearest 0.1m to eliminate floating point comparison error
+    });
+});
+
+test('route: throws on disabled geometry', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM({'path': monaco_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    var options = {
+        coordinates: three_test_coordinates,
+    };
+    osrm.route(options, function(err, route) {
+        console.log(err)
+        assert.match(err.message, /DisabledDatasetException/);
+    });
+});
+
+test('route: ok on disabled geometry', function (assert) {
+    assert.plan(2);
+    var osrm = new OSRM({'path': monaco_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    var options = {
+        steps: false,
+        overview: 'false',
+        annotations: false,
+        skip_waypoints: true,
+        coordinates: three_test_coordinates,
+    };
+    osrm.route(options, function(err, response) {
+        assert.ifError(err);
+        assert.equal(response.routes.length, 1);
+    });
+});
+
+test('route: throws on disabled steps', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM({'path': monaco_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+    };
+    osrm.route(options, function(err, route) {
+        console.log(err)
+        assert.match(err.message, /DisabledDatasetException/);
+    });
+});
+
+test('route: ok on disabled steps', function (assert) {
+    assert.plan(8);
+    var osrm = new OSRM({'path': monaco_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    var options = {
+        steps: false,
+        overview: 'simplified',
+        annotations: true,
+        coordinates: three_test_coordinates,
+    };
+    osrm.route(options, function(err, response) {
+        assert.ifError(err);
+        assert.ok(response.waypoints);
+        assert.ok(response.routes);
+        assert.equal(response.routes.length, 1);
+        assert.ok(response.routes[0].geometry, "the route has geometry");
+        assert.ok(response.routes[0].legs, "the route has legs");
+        assert.notok(response.routes[0].legs.every(l => { return l.steps.length > 0; }), 'every leg has steps');
+        assert.ok(response.routes[0].legs.every(l => { return l.annotation;}), 'every leg has annotations');
     });
 });

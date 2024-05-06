@@ -179,12 +179,14 @@ template <class BinaryOperation, typename iterator_type>
 double getLength(iterator_type begin, const iterator_type end, BinaryOperation op)
 {
     double result = 0;
-    const auto functor = [&result, op](const Coordinate lhs, const Coordinate rhs) {
+    const auto functor = [&result, op](const Coordinate lhs, const Coordinate rhs)
+    {
         result += op(lhs, rhs);
         return false;
     };
     // side-effect find adding up distances
-    std::adjacent_find(begin, end, functor);
+    // Ignore return value, we are only interested in the side-effect
+    [[maybe_unused]] auto _ = std::adjacent_find(begin, end, functor);
 
     return result;
 }
@@ -196,13 +198,15 @@ findClosestDistance(const Coordinate coordinate, const iterator_type begin, cons
     double current_min = std::numeric_limits<double>::max();
 
     // comparator updating current_min without ever finding an element
-    const auto compute_minimum_distance = [&current_min, coordinate](const Coordinate lhs,
-                                                                     const Coordinate rhs) {
+    const auto compute_minimum_distance =
+        [&current_min, coordinate](const Coordinate lhs, const Coordinate rhs)
+    {
         current_min = std::min(current_min, findClosestDistance(coordinate, lhs, rhs));
         return false;
     };
 
-    std::adjacent_find(begin, end, compute_minimum_distance);
+    // Ignore return value, we are only interested in the side-effect
+    [[maybe_unused]] auto _ = std::adjacent_find(begin, end, compute_minimum_distance);
     return current_min;
 }
 
@@ -214,8 +218,9 @@ double findClosestDistance(const iterator_type lhs_begin,
 {
     double current_min = std::numeric_limits<double>::max();
 
-    const auto compute_minimum_distance_in_rhs = [&current_min, rhs_begin, rhs_end](
-                                                     const Coordinate coordinate) {
+    const auto compute_minimum_distance_in_rhs =
+        [&current_min, rhs_begin, rhs_end](const Coordinate coordinate)
+    {
         current_min = std::min(current_min, findClosestDistance(coordinate, rhs_begin, rhs_end));
         return false;
     };
@@ -231,13 +236,11 @@ std::pair<Coordinate, Coordinate> leastSquareRegression(const iterator_type begi
     // following the formulas of https://faculty.elgin.edu/dkernler/statistics/ch04/4-2.html
     const auto number_of_coordinates = std::distance(begin, end);
     BOOST_ASSERT(number_of_coordinates >= 2);
-    const auto extract_lon = [](const Coordinate coordinate) {
-        return static_cast<double>(toFloating(coordinate.lon));
-    };
+    const auto extract_lon = [](const Coordinate coordinate)
+    { return static_cast<double>(toFloating(coordinate.lon)); };
 
-    const auto extract_lat = [](const Coordinate coordinate) {
-        return static_cast<double>(toFloating(coordinate.lat));
-    };
+    const auto extract_lat = [](const Coordinate coordinate)
+    { return static_cast<double>(toFloating(coordinate.lat)); };
 
     double min_lon = extract_lon(*begin);
     double max_lon = extract_lon(*begin);
@@ -260,19 +263,21 @@ std::pair<Coordinate, Coordinate> leastSquareRegression(const iterator_type begi
     {
         std::vector<util::Coordinate> rotated_coordinates(number_of_coordinates);
         // rotate all coordinates to the right
-        std::transform(begin, end, rotated_coordinates.begin(), [](const auto coordinate) {
-            return rotateCCWAroundZero(coordinate, detail::degToRad(-90));
-        });
+        std::transform(begin,
+                       end,
+                       rotated_coordinates.begin(),
+                       [](const auto coordinate)
+                       { return rotateCCWAroundZero(coordinate, detail::degToRad(-90)); });
         const auto rotated_regression =
             leastSquareRegression(rotated_coordinates.begin(), rotated_coordinates.end());
         return {rotateCCWAroundZero(rotated_regression.first, detail::degToRad(90)),
                 rotateCCWAroundZero(rotated_regression.second, detail::degToRad(90))};
     }
 
-    const auto make_accumulate = [](const auto extraction_function) {
-        return [extraction_function](const double sum_so_far, const Coordinate coordinate) {
-            return sum_so_far + extraction_function(coordinate);
-        };
+    const auto make_accumulate = [](const auto extraction_function)
+    {
+        return [extraction_function](const double sum_so_far, const Coordinate coordinate)
+        { return sum_so_far + extraction_function(coordinate); };
     };
 
     const auto accumulated_lon = std::accumulate(begin, end, 0., make_accumulate(extract_lon));
@@ -281,8 +286,10 @@ std::pair<Coordinate, Coordinate> leastSquareRegression(const iterator_type begi
 
     const auto mean_lon = accumulated_lon / number_of_coordinates;
     const auto mean_lat = accumulated_lat / number_of_coordinates;
-    const auto make_variance = [](const auto mean, const auto extraction_function) {
-        return [extraction_function, mean](const double sum_so_far, const Coordinate coordinate) {
+    const auto make_variance = [](const auto mean, const auto extraction_function)
+    {
+        return [extraction_function, mean](const double sum_so_far, const Coordinate coordinate)
+        {
             const auto difference = extraction_function(coordinate) - mean;
             return sum_so_far + difference * difference;
         };
@@ -310,7 +317,8 @@ std::pair<Coordinate, Coordinate> leastSquareRegression(const iterator_type begi
         std::accumulate(begin,
                         end,
                         0.,
-                        [&](const auto sum_so_far, const auto current_coordinate) {
+                        [&](const auto sum_so_far, const auto current_coordinate)
+                        {
                             return sum_so_far + (extract_lon(current_coordinate) - mean_lon) *
                                                     (extract_lat(current_coordinate) - mean_lat) /
                                                     (sample_variance_lon * sample_variance_lat);
@@ -321,9 +329,8 @@ std::pair<Coordinate, Coordinate> leastSquareRegression(const iterator_type begi
     const auto intercept = mean_lat - slope * mean_lon;
 
     const auto GetLatAtLon = [intercept,
-                              slope](const util::FloatLongitude longitude) -> util::FloatLatitude {
-        return {intercept + slope * static_cast<double>((longitude))};
-    };
+                              slope](const util::FloatLongitude longitude) -> util::FloatLatitude
+    { return {intercept + slope * static_cast<double>((longitude))}; };
 
     const double offset = 0.00001;
     const Coordinate regression_first = {
@@ -357,7 +364,8 @@ bool areParallel(const iterator_type lhs_begin,
     const auto rotation_angle_radians = detail::degToRad(bearing_lhs - 90);
     const auto rotated_difference_rhs = rotateCCWAroundZero(difference_rhs, rotation_angle_radians);
 
-    const auto get_slope = [](const Coordinate from, const Coordinate to) {
+    const auto get_slope = [](const Coordinate from, const Coordinate to)
+    {
         const auto diff_lat = static_cast<int>(from.lat) - static_cast<int>(to.lat);
         const auto diff_lon = static_cast<int>(from.lon) - static_cast<int>(to.lon);
         if (diff_lon == 0)

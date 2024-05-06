@@ -259,10 +259,10 @@ inline util::Coordinate candidatesInputLocation(const PhantomNodeCandidates &can
 
 inline bool candidatesHaveComponent(const PhantomNodeCandidates &candidates, uint32_t component_id)
 {
-    return std::any_of(
-        candidates.begin(), candidates.end(), [component_id](const PhantomNode &node) {
-            return node.component.id == component_id;
-        });
+    return std::any_of(candidates.begin(),
+                       candidates.end(),
+                       [component_id](const PhantomNode &node)
+                       { return node.component.id == component_id; });
 }
 
 struct PhantomEndpoints

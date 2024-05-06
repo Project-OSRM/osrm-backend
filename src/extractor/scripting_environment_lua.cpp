@@ -245,7 +245,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                  "valid",
                                                  &osmium::Location::valid);
 
-    auto get_location_tag = [](auto &context, const auto &location, const char *key) {
+    auto get_location_tag = [](auto &context, const auto &location, const char *key)
+    {
         if (context.location_dependent_data.empty())
             return sol::object(context.state);
 
@@ -272,7 +273,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "get_nodes",
         [](const osmium::Way &way) { return sol::as_table(&way.nodes()); },
         "get_location_tag",
-        [&context, &get_location_tag](const osmium::Way &way, const char *key) {
+        [&context, &get_location_tag](const osmium::Way &way, const char *key)
+        {
             // HEURISTIC: use a single node (last) of the way to localize the way
             // For more complicated scenarios a proper merging of multiple tags
             // at one or many locations must be provided
@@ -292,9 +294,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "version",
         &osmium::Node::version,
         "get_location_tag",
-        [&context, &get_location_tag](const osmium::Node &node, const char *key) {
-            return get_location_tag(context, node.location(), key);
-        });
+        [&context, &get_location_tag](const osmium::Node &node, const char *key)
+        { return get_location_tag(context, node.location(), key); });
 
     context.state.new_enum("traffic_lights",
                            "none",
@@ -310,7 +311,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "ResultNode",
         "traffic_lights",
         sol::property([](const ExtractionNode &node) { return node.traffic_lights; },
-                      [](ExtractionNode &node, const sol::object &obj) {
+                      [](ExtractionNode &node, const sol::object &obj)
+                      {
                           if (obj.is<bool>())
                           {
                               // The old approach of assigning a boolean traffic light
@@ -361,7 +363,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         sol::property(&ExtractionWay::GetName, &ExtractionWay::SetName),
         "ref", // backward compatibility
         sol::property(&ExtractionWay::GetForwardRef,
-                      [](ExtractionWay &way, const char *ref) {
+                      [](ExtractionWay &way, const char *ref)
+                      {
                           way.SetForwardRef(ref);
                           way.SetBackwardRef(ref);
                       }),
@@ -420,7 +423,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         sol::property([](const ExtractionWay &way) { return way.access_turn_classification; },
                       [](ExtractionWay &way, int flag) { way.access_turn_classification = flag; }));
 
-    auto getTypedRefBySol = [](const sol::object &obj) -> ExtractionRelation::OsmIDTyped {
+    auto getTypedRefBySol = [](const sol::object &obj) -> ExtractionRelation::OsmIDTyped
+    {
         if (obj.is<osmium::Way>())
         {
             osmium::Way *way = obj.as<osmium::Way *>();
@@ -456,20 +460,46 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "get_value_by_key",
         [](ExtractionRelation &rel, const char *key) -> const char * { return rel.GetAttr(key); },
         "get_role",
-        [&getTypedRefBySol](ExtractionRelation &rel, const sol::object &obj) -> const char * {
-            return rel.GetRole(getTypedRefBySol(obj));
-        });
+        [&getTypedRefBySol](ExtractionRelation &rel, const sol::object &obj) -> const char *
+        { return rel.GetRole(getTypedRefBySol(obj)); });
 
     context.state.new_usertype<ExtractionRelationContainer>(
         "ExtractionRelationContainer",
         "get_relations",
         [&getTypedRefBySol](ExtractionRelationContainer &cont, const sol::object &obj)
-            -> const ExtractionRelationContainer::RelationIDList & {
-            return cont.GetRelations(getTypedRefBySol(obj));
-        },
+            -> const ExtractionRelationContainer::RelationIDList &
+        { return cont.GetRelations(getTypedRefBySol(obj)); },
         "relation",
-        [](ExtractionRelationContainer &cont, const ExtractionRelation::OsmIDTyped &rel_id)
-            -> const ExtractionRelation & { return cont.GetRelationData(rel_id); });
+        [](ExtractionRelationContainer &cont,
+           const ExtractionRelation::OsmIDTyped &rel_id) -> const ExtractionRelation &
+        { return cont.GetRelationData(rel_id); });
+
+    context.state.new_usertype<NodeBasedEdgeClassification>(
+        "NodeBasedEdgeClassification",
+        "forward",
+        // can't just do &NodeBasedEdgeClassification::forward with bitfields
+        sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.forward; }),
+        "backward",
+        sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.backward; }),
+        "is_split",
+        sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.is_split; }),
+        "roundabout",
+        sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.roundabout; }),
+        "circular",
+        sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.circular; }),
+        "startpoint",
+        sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.startpoint; }),
+        "restricted",
+        sol::property([](NodeBasedEdgeClassification &c) -> bool { return c.restricted; }),
+        "road_classification",
+        sol::property([](NodeBasedEdgeClassification &c) -> RoadClassification
+                      { return c.road_classification; }),
+        "highway_turn_classification",
+        sol::property([](NodeBasedEdgeClassification &c) -> uint8_t
+                      { return c.highway_turn_classification; }),
+        "access_turn_classification",
+        sol::property([](NodeBasedEdgeClassification &c) -> uint8_t
+                      { return c.access_turn_classification; }));
 
     context.state.new_usertype<ExtractionSegment>("ExtractionSegment",
                                                   "source",
@@ -481,14 +511,18 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                   "weight",
                                                   &ExtractionSegment::weight,
                                                   "duration",
-                                                  &ExtractionSegment::duration);
+                                                  &ExtractionSegment::duration,
+                                                  "flags",
+                                                  &ExtractionSegment::flags);
 
     // Keep in mind .location is available only if .pbf is preprocessed to set the location with the
     // ref using osmium command "osmium add-locations-to-ways"
-    context.state.new_usertype<osmium::NodeRef>(
-        "NodeRef", "id", &osmium::NodeRef::ref, "location", [](const osmium::NodeRef &nref) {
-            return nref.location();
-        });
+    context.state.new_usertype<osmium::NodeRef>("NodeRef",
+                                                "id",
+                                                &osmium::NodeRef::ref,
+                                                "location",
+                                                [](const osmium::NodeRef &nref)
+                                                { return nref.location(); });
 
     context.state.new_usertype<InternalExtractorEdge>("EdgeSource",
                                                       "source_coordinate",
@@ -544,7 +578,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
     util::Log() << "Using profile api version " << context.api_version;
 
     // version-dependent parts of the api
-    auto initV2Context = [&]() {
+    auto initV2Context = [&]()
+    {
         // clear global not used in v2
         context.state["properties"] = sol::nullopt;
 
@@ -635,26 +670,31 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         }
     };
 
-    auto initialize_V3_extraction_turn = [&]() {
+    auto initialize_V3_extraction_turn = [&]()
+    {
         context.state.new_usertype<ExtractionTurn>(
             "ExtractionTurn",
             "angle",
             &ExtractionTurn::angle,
             "turn_type",
-            sol::property([](const ExtractionTurn &turn) {
-                if (turn.number_of_roads > 2 || turn.source_mode != turn.target_mode ||
-                    turn.is_u_turn)
-                    return osrm::guidance::TurnType::Turn;
-                else
-                    return osrm::guidance::TurnType::NoTurn;
-            }),
+            sol::property(
+                [](const ExtractionTurn &turn)
+                {
+                    if (turn.number_of_roads > 2 || turn.source_mode != turn.target_mode ||
+                        turn.is_u_turn)
+                        return osrm::guidance::TurnType::Turn;
+                    else
+                        return osrm::guidance::TurnType::NoTurn;
+                }),
             "direction_modifier",
-            sol::property([](const ExtractionTurn &turn) {
-                if (turn.is_u_turn)
-                    return osrm::guidance::DirectionModifier::UTurn;
-                else
-                    return osrm::guidance::DirectionModifier::Straight;
-            }),
+            sol::property(
+                [](const ExtractionTurn &turn)
+                {
+                    if (turn.is_u_turn)
+                        return osrm::guidance::DirectionModifier::UTurn;
+                    else
+                        return osrm::guidance::DirectionModifier::Straight;
+                }),
             "has_traffic_light",
             &ExtractionTurn::has_traffic_light,
             "weight",

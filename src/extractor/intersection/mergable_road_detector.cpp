@@ -27,7 +27,8 @@ inline auto makeCheckRoadForName(const NameID name_id,
                                  const SuffixTable &suffix_table)
 {
     return [name_id, &node_based_graph, &node_data_container, &name_table, &suffix_table](
-               const MergableRoadDetector::MergableRoadData &road) {
+               const MergableRoadDetector::MergableRoadData &road)
+    {
         // since we filter here, we don't want any other name than the one we are looking for
         const auto road_name_id =
             node_data_container
@@ -89,9 +90,8 @@ bool MergableRoadDetector::CanMergeRoad(const NodeID intersection_node,
      *          / -- \
      * a ---- b - - /
      */
-    const auto road_target = [this](const MergableRoadData &road) {
-        return node_based_graph.GetTarget(road.eid);
-    };
+    const auto road_target = [this](const MergableRoadData &road)
+    { return node_based_graph.GetTarget(road.eid); };
 
     // TODO might have to skip over trivial intersections
     if (road_target(lhs) == intersection_node || road_target(rhs) == intersection_node)
@@ -262,7 +262,8 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
     if (angularDeviation(connector_turn->angle, ORTHOGONAL_ANGLE) > NARROW_TURN_ANGLE)
         return false;
 
-    const auto num_lanes = [this](const MergableRoadData &road) {
+    const auto num_lanes = [this](const MergableRoadData &road)
+    {
         return std::max<std::uint8_t>(
             node_based_graph.GetEdgeData(road.eid).flags.road_classification.GetNumberOfLanes(), 1);
     };
@@ -308,7 +309,8 @@ bool MergableRoadDetector::IsCircularShape(const NodeID intersection_node,
                                       node_restriction_map,
                                       barrier_nodes,
                                       turn_lanes_data);
-    const auto getCoordinatesAlongWay = [&](const EdgeID edge_id, const double max_length) {
+    const auto getCoordinatesAlongWay = [&](const EdgeID edge_id, const double max_length)
+    {
         LengthLimitedCoordinateAccumulator accumulator(coordinate_extractor, max_length);
         SelectStraightmostRoadByNameAndOnlyChoice selector(
             node_data_container.GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
@@ -380,7 +382,8 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
                                       node_restriction_map,
                                       barrier_nodes,
                                       turn_lanes_data);
-    const auto getCoordinatesAlongWay = [&](const EdgeID edge_id, const double max_length) {
+    const auto getCoordinatesAlongWay = [&](const EdgeID edge_id, const double max_length)
+    {
         LengthLimitedCoordinateAccumulator accumulator(coordinate_extractor, max_length);
         SelectStraightmostRoadByNameAndOnlyChoice selector(
             node_data_container.GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
@@ -424,7 +427,8 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
     /* extract the number of lanes for a road
      * restricts a vector to the last two thirds of the length
      */
-    const auto prune = [](auto &data_vector) {
+    const auto prune = [](auto &data_vector)
+    {
         BOOST_ASSERT(data_vector.size() >= 3);
         // erase the first third of the vector
         data_vector.erase(data_vector.begin(), data_vector.begin() + data_vector.size() / 3);
@@ -493,7 +497,8 @@ bool MergableRoadDetector::IsTrafficIsland(const NodeID intersection_node,
         return false;
 
     // check if all entries at the destination or at the source are the same
-    const auto all_same_name_and_degree_three = [this](const NodeID nid) {
+    const auto all_same_name_and_degree_three = [this](const NodeID nid)
+    {
         // check if the intersection found has degree three
         if (node_based_graph.GetOutDegree(nid) != 3)
             return false;
@@ -505,7 +510,8 @@ bool MergableRoadDetector::IsTrafficIsland(const NodeID intersection_node,
                 .GetAnnotation(node_based_graph.GetEdgeData(range.front()).annotation_data)
                 .name_id;
 
-        const auto has_required_name = [this, required_name_id](const auto edge_id) {
+        const auto has_required_name = [this, required_name_id](const auto edge_id)
+        {
             const auto road_name_id =
                 node_data_container
                     .GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
@@ -562,7 +568,8 @@ bool MergableRoadDetector::IsLinkRoad(const NodeID intersection_node,
                                                barrier_nodes,
                                                turn_lanes_data,
                                                next_intersection_parameters);
-    const auto extract_name_id = [this](const MergableRoadData &road) {
+    const auto extract_name_id = [this](const MergableRoadData &road)
+    {
         return node_data_container
             .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
             .name_id;

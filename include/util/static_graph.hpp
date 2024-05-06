@@ -94,7 +94,7 @@ template <typename EdgeDataT> struct SortableEdgeWithData : SortableEdgeWithData
     SortableEdgeWithData() = default;
 
     template <typename... Ts>
-    SortableEdgeWithData(NodeIterator source, NodeIterator target, Ts &&... data)
+    SortableEdgeWithData(NodeIterator source, NodeIterator target, Ts &&...data)
         : Base{source, target}, data{std::forward<Ts>(data)...}
     {
     }
@@ -304,10 +304,14 @@ class StaticGraph
         BOOST_ASSERT(node_array.size() == number_of_nodes + 1);
 
         edge_array.resize(number_of_edges);
-        std::transform(begin, end, edge_array.begin(), [](const auto &from) {
-            return static_graph_details::edgeToEntry<EdgeArrayEntry>(
-                from, traits::HasDataMember<EdgeArrayEntry>{});
-        });
+        std::transform(begin,
+                       end,
+                       edge_array.begin(),
+                       [](const auto &from)
+                       {
+                           return static_graph_details::edgeToEntry<EdgeArrayEntry>(
+                               from, traits::HasDataMember<EdgeArrayEntry>{});
+                       });
     }
 
   protected:

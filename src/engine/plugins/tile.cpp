@@ -251,7 +251,8 @@ std::vector<std::size_t> getEdgeIndex(const std::vector<RTreeLeaf> &edges)
     // as the sort condition
     std::sort(sorted_edge_indexes.begin(),
               sorted_edge_indexes.end(),
-              [&edges](const std::size_t &left, const std::size_t &right) -> bool {
+              [&edges](const std::size_t &left, const std::size_t &right) -> bool
+              {
                   return (edges[left].u != edges[right].u) ? edges[left].u < edges[right].u
                                                            : edges[left].v < edges[right].v;
               });
@@ -430,9 +431,8 @@ void encodeVectorTile(const DataFacadeBase &facade,
 {
     vtzero::tile_builder tile;
 
-    const auto get_geometry_id = [&facade](auto edge) {
-        return facade.GetGeometryIndex(edge.forward_segment_id.id).id;
-    };
+    const auto get_geometry_id = [&facade](auto edge)
+    { return facade.GetGeometryIndex(edge.forward_segment_id.id).id; };
 
     // Convert tile coordinates into mercator coordinates
     double min_mercator_lon, min_mercator_lat, max_mercator_lon, max_mercator_lat;
@@ -508,7 +508,7 @@ void encodeVectorTile(const DataFacadeBase &facade,
                         auto tile_line = coordinatesToTileLine(a, b, tile_bbox);
                         if (!tile_line.empty())
                         {
-                            SpeedLayerFeatureBuilder fbuilder{speeds_layer, id};
+                            SpeedLayerFeatureBuilder fbuilder{speeds_layer, id++};
                             fbuilder.add_linestring_from_container(tile_line);
 
                             fbuilder.set_speed(speed_kmh_idx);
@@ -542,7 +542,7 @@ void encodeVectorTile(const DataFacadeBase &facade,
                         auto tile_line = coordinatesToTileLine(b, a, tile_bbox);
                         if (!tile_line.empty())
                         {
-                            SpeedLayerFeatureBuilder fbuilder{speeds_layer, id};
+                            SpeedLayerFeatureBuilder fbuilder{speeds_layer, id++};
                             fbuilder.add_linestring_from_container(tile_line);
 
                             fbuilder.set_speed(speed_kmh_idx);

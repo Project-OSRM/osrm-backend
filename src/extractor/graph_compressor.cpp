@@ -20,7 +20,7 @@ namespace osrm::extractor
 static constexpr int SECOND_TO_DECISECOND = 10;
 
 void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
-                               const TrafficSignals &traffic_signals,
+                               TrafficSignals &traffic_signals,
                                ScriptingEnvironment &scripting_environment,
                                std::vector<TurnRestriction> &turn_restrictions,
                                std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
@@ -37,7 +37,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
     // restriction path.
     std::unordered_set<NodeID> incompressible_via_nodes;
 
-    const auto remember_via_nodes = [&](const auto &restriction) {
+    const auto remember_via_nodes = [&](const auto &restriction)
+    {
         if (restriction.turn_path.Type() == TurnPathType::VIA_NODE_TURN_PATH)
         {
             incompressible_via_nodes.insert(restriction.turn_path.AsViaNodePath().via);
@@ -186,16 +187,17 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                  */
                 const auto selectAnnotation =
                     [&node_data_container](const AnnotationID front_annotation,
-                                           const AnnotationID back_annotation) {
-                        // A lane has tags: u - (front) - v - (back) - w
-                        // During contraction, we keep only one of the tags. Usually the one closer
-                        // to the intersection is preferred. If its empty, however, we keep the
-                        // non-empty one
-                        if (node_data_container[back_annotation].lane_description_id ==
-                            INVALID_LANE_DESCRIPTIONID)
-                            return front_annotation;
-                        return back_annotation;
-                    };
+                                           const AnnotationID back_annotation)
+                {
+                    // A lane has tags: u - (front) - v - (back) - w
+                    // During contraction, we keep only one of the tags. Usually the one closer
+                    // to the intersection is preferred. If its empty, however, we keep the
+                    // non-empty one
+                    if (node_data_container[back_annotation].lane_description_id ==
+                        INVALID_LANE_DESCRIPTIONID)
+                        return front_annotation;
+                    return back_annotation;
+                };
 
                 graph.GetEdgeData(forward_e1).annotation_data = selectAnnotation(
                     fwd_edge_data1.annotation_data, fwd_edge_data2.annotation_data);
@@ -250,10 +252,10 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                                    roads_on_the_left);
                     scripting_environment.ProcessTurn(extraction_turn);
 
-                    auto update_direction_penalty = [&extraction_turn, weight_multiplier](
-                                                        bool signal,
-                                                        EdgeDuration &duration_penalty,
-                                                        EdgeWeight &weight_penalty) {
+                    auto update_direction_penalty =
+                        [&extraction_turn, weight_multiplier](
+                            bool signal, EdgeDuration &duration_penalty, EdgeWeight &weight_penalty)
+                    {
                         if (signal)
                         {
                             duration_penalty = to_alias<EdgeDuration>(extraction_turn.duration *
@@ -303,7 +305,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 auto apply_e2_to_e1 = [&graph](EdgeID edge1,
                                                EdgeID edge2,
                                                EdgeWeight &weight_penalty,
-                                               EdgeDuration &duration_penalty) {
+                                               EdgeDuration &duration_penalty)
+                {
                     auto &edge1_data = graph.GetEdgeData(edge1);
                     const auto &edge2_data = graph.GetEdgeData(edge2);
                     edge1_data.weight += edge2_data.weight;
@@ -338,11 +341,15 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 // update any involved turn relations
                 turn_path_compressor.Compress(node_u, node_v, node_w);
 
+                // Update traffic signal paths containing compressed node.
+                traffic_signals.Compress(node_u, node_v, node_w);
+
                 // Forward and reversed compressed edge lengths need to match.
                 // Set a dummy empty penalty weight if opposite value exists.
                 auto set_dummy_penalty = [](EdgeWeight &weight_penalty,
                                             EdgeDuration &duration_penalty,
-                                            EdgeWeight &other_weight_penalty) {
+                                            EdgeWeight &other_weight_penalty)
+                {
                     if (weight_penalty == INVALID_EDGE_WEIGHT &&
                         other_weight_penalty != INVALID_EDGE_WEIGHT)
                     {

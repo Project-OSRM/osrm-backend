@@ -49,9 +49,6 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # be compatible with version handling before cmake 3.x
-if (POLICY CMP0048)
-  cmake_policy(SET CMP0048 OLD)
-endif()
 if (POLICY CMP0057)
   cmake_policy(SET CMP0057 NEW)
 endif()
@@ -73,14 +70,17 @@ include(JSONParser)
 file(READ "package.json" packagejsonraw)
 sbeParseJson(packagejson packagejsonraw)
 
-if (packagejson.version MATCHES "^([0-9]+)\.([0-9]+)\.([0-9]+)")
-    set(OSRM_VERSION_MAJOR ${CMAKE_MATCH_1})
-    set(OSRM_VERSION_MINOR ${CMAKE_MATCH_2})
-    set(OSRM_VERSION_PATCH ${CMAKE_MATCH_3})
+# This regex is not strict enough, but the correct one is too complicated for cmake matching.
+# https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+if (packagejson.version MATCHES "^([0-9]+)\.([0-9]+)\.([0-9]+)([-+][0-9a-zA-Z.-]+)?$")
+    set(OSRM_VERSION_MAJOR            ${CMAKE_MATCH_1})
+    set(OSRM_VERSION_MINOR            ${CMAKE_MATCH_2})
+    set(OSRM_VERSION_PATCH            ${CMAKE_MATCH_3})
+    set(OSRM_VERSION_PRERELEASE_BUILD ${CMAKE_MATCH_4})
 
-    set(OSRM_VERSION "${OSRM_VERSION_MAJOR}.${OSRM_VERSION_MINOR}.${OSRM_VERSION_PATCH}")
+    set(OSRM_VERSION packagejson.version)
 else()
-    message(FATAL_ERROR "Version from package.json cannot be parsed, expected semver compatible X.Y.Z, but found ${packagejson.version}")
+    message(FATAL_ERROR "Version from package.json cannot be parsed, expected semver compatible label, but found ${packagejson.version}")
 endif()
 
 if (MSVC)
@@ -151,7 +151,7 @@ add_library(UPDATER OBJECT ${UpdaterGlob})
 add_library(STORAGE OBJECT ${StorageGlob})
 add_library(ENGINE OBJECT ${EngineGlob})
 
-if (BUILD_ROUTED) 
+if (BUILD_ROUTED)
   add_library(SERVER OBJECT ${ServerGlob})
   add_executable(osrm-routed src/tools/routed.cpp $<TARGET_OBJECTS:SERVER> $<TARGET_OBJECTS:UTIL>)
 endif()
@@ -275,7 +275,10 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 endif()
 
 if(UNIX AND NOT APPLE)
-  set(MAYBE_RT_LIBRARY -lrt)
+  find_library(RT_LIB rt)
+  if (RT_LIB)
+    set(MAYBE_RT_LIBRARY -lrt)
+  endif()
 endif()
 
 find_package(Threads REQUIRED)
@@ -309,7 +312,7 @@ add_subdirectory(${FLATBUFFERS_SRC_DIR}
 set(FMT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt-9.1.0/include")
 add_compile_definitions(FMT_HEADER_ONLY)
 include_directories(SYSTEM ${FMT_INCLUDE_DIR})
-        
+
 
 # see https://stackoverflow.com/questions/70898030/boost-link-error-using-conan-find-package
 if (MSVC)
@@ -319,22 +322,24 @@ endif()
 if(ENABLE_CONAN)
   message(STATUS "Installing dependencies via Conan")
 
-  # Conan will generate Find*.cmake files to build directory, so we use them with the highest priority 
+  # Conan will generate Find*.cmake files to build directory, so we use them with the highest priority
   list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_BINARY_DIR})
   list(INSERT CMAKE_PREFIX_PATH 0 ${CMAKE_BINARY_DIR})
 
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/conan.cmake)
 
-  set(CONAN_BOOST_VERSION "1.79.0#96e4902111a2e343a8ba0aa95391bb58")
-  set(CONAN_BZIP2_VERSION "1.0.8#d1b2d5816f25865acf978501dff1f897")
-  set(CONAN_EXPAT_VERSION "2.2.10#916908d4a570ad839edd25322c3268cd")
-  set(CONAN_LUA_VERSION "5.4.4#3ec62efc37cd0a5d80b9e5cb35277360")
-  set(CONAN_TBB_VERSION "2021.3.0#507ec17cbd51a84167e143b20d170eea")
-  
+  conan_check(REQUIRED)
+
+  set(CONAN_BOOST_VERSION "1.79.0@#96e4902111a2e343a8ba0aa95391bb58")
+  set(CONAN_BZIP2_VERSION "1.0.8@#d1b2d5816f25865acf978501dff1f897")
+  set(CONAN_EXPAT_VERSION "2.2.10@#916908d4a570ad839edd25322c3268cd")
+  set(CONAN_LUA_VERSION "5.4.4@#3ec62efc37cd0a5d80b9e5cb35277360")
+  set(CONAN_TBB_VERSION "2021.3.0@#507ec17cbd51a84167e143b20d170eea")
+
   set(CONAN_SYSTEM_INCLUDES ON)
 
-  # TODO: 
-  # if we link TBB dynamically osrm-extract.exe finishes on the first access to any TBB symbol 
+  # TODO:
+  # if we link TBB dynamically osrm-extract.exe finishes on the first access to any TBB symbol
   # with exit code = -1073741515, which means that program cannot load required DLL.
   if (MSVC)
     set(TBB_SHARED False)
@@ -342,14 +347,14 @@ if(ENABLE_CONAN)
     set(TBB_SHARED True)
   endif()
 
-  set(CONAN_ARGS       
-    REQUIRES 
+  set(CONAN_ARGS
+    REQUIRES
     "boost/${CONAN_BOOST_VERSION}"
     "bzip2/${CONAN_BZIP2_VERSION}"
     "expat/${CONAN_EXPAT_VERSION}"
     "lua/${CONAN_LUA_VERSION}"
     "onetbb/${CONAN_TBB_VERSION}"
-    BASIC_SETUP 
+    BASIC_SETUP
     GENERATORS cmake_find_package json  # json generator generates a conanbuildinfo.json in the build folder so (non-CMake) projects can easily parse OSRM's dependencies
     KEEP_RPATHS
     NO_OUTPUT_DIRS
@@ -358,6 +363,13 @@ if(ENABLE_CONAN)
             boost:without_stacktrace=True # Apple Silicon cross-compilation fails without it
     BUILD missing
   )
+
+  # Enable revisions in the conan config
+  execute_process(COMMAND ${CONAN_CMD} config set general.revisions_enabled=1 RESULT_VARIABLE RET_CODE)
+  if(NOT "${RET_CODE}" STREQUAL "0")
+    message(FATAL_ERROR "Error setting revisions for Conan: '${RET_CODE}'")
+  endif()
+
   # explicitly say Conan to use x86 dependencies if build for x86 platforms (https://github.com/conan-io/cmake-conan/issues/141)
   if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     conan_cmake_run("${CONAN_ARGS};ARCH;x86")
@@ -386,7 +398,7 @@ if(ENABLE_CONAN)
   set(Boost_ZLIB_LIBRARY "${Boost_zlib_LIB_TARGETS}")
   set(Boost_REGEX_LIBRARY "${Boost_regex_LIB_TARGETS}")
   set(Boost_UNIT_TEST_FRAMEWORK_LIBRARY "${Boost_unit_test_framework_LIB_TARGETS}")
-  
+
 
   find_package(BZip2 REQUIRED)
   find_package(EXPAT REQUIRED)
@@ -458,6 +470,9 @@ add_dependency_includes(${ZLIB_INCLUDE_DIRS})
 add_dependency_defines(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_dependency_defines(-DBOOST_RESULT_OF_USE_DECLTYPE)
 add_dependency_defines(-DBOOST_FILESYSTEM_NO_DEPRECATED)
+
+# Workaround for https://github.com/boostorg/phoenix/issues/111
+add_dependency_defines(-DBOOST_PHOENIX_STL_TUPLE_H_)
 
 add_definitions(${OSRM_DEFINES})
 include_directories(SYSTEM ${DEPENDENCIES_INCLUDE_DIRS})
@@ -636,6 +651,10 @@ install(TARGETS osrm_guidance DESTINATION lib)
 set(DefaultProfilesDir profiles)
 install(DIRECTORY ${DefaultProfilesDir} DESTINATION share/osrm)
 
+# Install data geojson files to /usr/local/share/osrm/data by default
+set(DefaultProfilesDir data)
+install(DIRECTORY ${DefaultProfilesDir} DESTINATION share/osrm)
+
 # Setup exporting variables for pkgconfig and subproject
 #
 
@@ -730,23 +749,23 @@ if (ENABLE_FUZZING)
   add_subdirectory(fuzz)
 endif ()
 
-# add headers sanity check target that includes all headers independently	
-set(check_headers_dir "${PROJECT_BINARY_DIR}/check-headers")	
-file(GLOB_RECURSE headers_to_check	
-  ${PROJECT_BINARY_DIR}/*.hpp	
-  ${PROJECT_SOURCE_DIR}/include/*.hpp)	
-foreach(header ${headers_to_check})	
+# add headers sanity check target that includes all headers independently
+set(check_headers_dir "${PROJECT_BINARY_DIR}/check-headers")
+file(GLOB_RECURSE headers_to_check
+  ${PROJECT_BINARY_DIR}/*.hpp
+  ${PROJECT_SOURCE_DIR}/include/*.hpp)
+foreach(header ${headers_to_check})
   if ("${header}" MATCHES ".*/include/nodejs/.*")
     # we do not check NodeJS bindings headers
     continue()
   endif()
-  get_filename_component(filename ${header} NAME_WE)	
-  set(filename "${check_headers_dir}/${filename}.cpp")	
-  if (NOT EXISTS ${filename})	
-    file(WRITE ${filename} "#include \"${header}\"\n")	
-  endif()	
-  list(APPEND sources ${filename})	
-endforeach()	
-add_library(check-headers STATIC EXCLUDE_FROM_ALL ${sources})	
-set_target_properties(check-headers PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${check_headers_dir})	
+  get_filename_component(filename ${header} NAME_WE)
+  set(filename "${check_headers_dir}/${filename}.cpp")
+  if (NOT EXISTS ${filename})
+    file(WRITE ${filename} "#include \"${header}\"\n")
+  endif()
+  list(APPEND sources ${filename})
+endforeach()
+add_library(check-headers STATIC EXCLUDE_FROM_ALL ${sources})
+set_target_properties(check-headers PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${check_headers_dir})
 

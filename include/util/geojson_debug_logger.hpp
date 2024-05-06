@@ -58,7 +58,7 @@ class GeojsonLogger
     }
 
     // writes a single feature into the Geojson file
-    template <typename... Args> static bool Write(Args &&... args)
+    template <typename... Args> static bool Write(Args &&...args)
     {
         // make sure to syncronize logging output, our writing should be sequential
         std::lock_guard<std::mutex> guard(lock);
@@ -146,7 +146,7 @@ class ScopedGeojsonLoggerGuard
 {
   public:
     template <typename... Args>
-    ScopedGeojsonLoggerGuard(const std::string &logfile, Args &&... args)
+    ScopedGeojsonLoggerGuard(const std::string &logfile, Args &&...args)
         : policy(std::forward<Args>(args)...)
     {
         GeojsonLogger<geojson_conversion_policy, scenario>::Open(logfile);
@@ -159,7 +159,7 @@ class ScopedGeojsonLoggerGuard
         GeojsonLogger<geojson_conversion_policy, scenario>::SetPolicy(nullptr);
     }
 
-    template <typename... Args> static bool Write(Args &&... args)
+    template <typename... Args> static bool Write(Args &&...args)
     {
         return GeojsonLogger<geojson_conversion_policy, scenario>::Write(
             std::forward<Args>(args)...);

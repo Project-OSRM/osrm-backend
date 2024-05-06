@@ -21,7 +21,8 @@ BOOST_AUTO_TEST_CASE(graph_views_on_components)
 
     const int num_components = 10;
 
-    auto graph = [&]() {
+    auto graph = [&]()
+    {
         std::vector<Coordinate> grid_coordinates;
         std::vector<EdgeWithSomeAdditionalData> grid_edges;
 
@@ -56,14 +57,14 @@ BOOST_AUTO_TEST_CASE(graph_views_on_components)
         const auto &view = views[comp];
         BOOST_CHECK(views[comp].NumberOfNodes() == 10);
 
-        const auto to_component_id = [&](const auto &node) {
-            return node.original_id / (rows * cols + 1);
-        };
+        const auto to_component_id = [&](const auto &node)
+        { return node.original_id / (rows * cols + 1); };
 
         std::size_t expected_component_id = to_component_id(view.Node(0));
-        BOOST_CHECK(std::all_of(view.Begin(), view.End(), [&](const auto &node) {
-            return to_component_id(node) == expected_component_id;
-        }));
+        BOOST_CHECK(std::all_of(view.Begin(),
+                                view.End(),
+                                [&](const auto &node)
+                                { return to_component_id(node) == expected_component_id; }));
 
         for (const auto &node : view.Nodes())
         {

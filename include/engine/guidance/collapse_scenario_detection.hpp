@@ -16,7 +16,7 @@ bool basicCollapsePreconditions(const RouteStepIterator first,
 
 // Staggered intersection are very short zig-zags of a few meters.
 // We do not want to announce these short left-rights or right-lefts:
-// 
+//  
 //      * -> b      a -> *
 //      |       or       |       becomes  a   ->   b
 // a -> *                * -> b
@@ -26,7 +26,7 @@ bool isStaggeredIntersection(const RouteStepIterator step_prior_to_intersection,
 
 // Two two turns following close after another, we can announce them as a U-Turn if both end up
 // involving the same (segregated) road.
-// 
+//  
 // b < - y
 //       |      will be represented by at x, turn around instead of turn left at x, turn left at y
 // a - > x
@@ -42,11 +42,11 @@ bool isNameOszillation(const RouteStepIterator step_prior_to_intersection,
 
 // Sometimes, segments names don't match the perceived turns. We try to detect these additional
 // name changes and issue a combined turn.
-// 
+//  
 //  |  e  |
 // a - b - c
 //         d
-// 
+//  
 // can have `a-b` as one name, `b-c-d` as a second. At `b` we would issue a new name, even though
 // the road turns right after. The offset would only be there due to the broad road at `e`
 bool maneuverPreceededByNameChange(const RouteStepIterator step_prior_to_intersection,
@@ -73,11 +73,11 @@ bool doubleChoiceless(const RouteStepIterator step_entering_intersection,
 
 // Due to obvious detection, sometimes we can have straight turns followed by a different turn right
 // next to each other. We combine both turns into one, if the second turn is without choice
-// 
-//         e
+//  
+//          e
 // a - b - c
 //       ' d
-// 
+//  
 // with a main road `abd`, the turn `continue straight` at `b` and `turn left at `c` will become a
 // `turn left` at `b`
 bool straightTurnFollowedByChoiceless(const RouteStepIterator step_entering_intersection,

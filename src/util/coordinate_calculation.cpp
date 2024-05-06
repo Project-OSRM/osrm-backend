@@ -318,22 +318,23 @@ double findClosestDistance(const std::vector<Coordinate> &lhs, const std::vector
 {
     double current_min = std::numeric_limits<double>::max();
 
-    const auto compute_minimum_distance_in_rhs = [&current_min, &rhs](const Coordinate coordinate) {
+    const auto compute_minimum_distance_in_rhs = [&current_min, &rhs](const Coordinate coordinate)
+    {
         current_min =
             std::min(current_min, findClosestDistance(coordinate, rhs.begin(), rhs.end()));
         return false;
     };
     // NOLINTNEXTLINE(bugprone-unused-return-value)
-    std::find_if(std::begin(lhs), std::end(lhs), compute_minimum_distance_in_rhs);
+    [[maybe_unused]] auto _ =
+        std::find_if(std::begin(lhs), std::end(lhs), compute_minimum_distance_in_rhs);
     return current_min;
 }
 
 std::vector<double> getDeviations(const std::vector<Coordinate> &from,
                                   const std::vector<Coordinate> &to)
 {
-    auto find_deviation = [&to](const Coordinate coordinate) {
-        return findClosestDistance(coordinate, to.begin(), to.end());
-    };
+    auto find_deviation = [&to](const Coordinate coordinate)
+    { return findClosestDistance(coordinate, to.begin(), to.end()); };
 
     std::vector<double> deviations_from;
     deviations_from.reserve(from.size());
@@ -385,9 +386,9 @@ double computeArea(const std::vector<Coordinate> &polygon)
     // ⚠ ref_latitude is the standard parallel for the equirectangular projection
     // that is not an area-preserving projection
     const auto ref_point =
-        std::min_element(polygon.begin(), polygon.end(), [](const auto &lhs, const auto &rhs) {
-            return lhs.lat < rhs.lat;
-        });
+        std::min_element(polygon.begin(),
+                         polygon.end(),
+                         [](const auto &lhs, const auto &rhs) { return lhs.lat < rhs.lat; });
     const auto ref_latitude = ref_point->lat;
 
     // Compute area of under a curve and a line that is parallel the equator with ref_latitude

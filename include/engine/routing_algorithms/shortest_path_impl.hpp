@@ -19,8 +19,7 @@ void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
                      typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                      typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                      const PhantomEndpointCandidates &candidates,
-                     const EdgeWeight &total_weight,
-                     EdgeWeight &new_total_weight,
+                     EdgeWeight &leg_weight,
                      std::vector<NodeID> &leg_packed_path)
 {
     forward_heap.Clear();
@@ -31,14 +30,14 @@ void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
         if (source.IsValidForwardSource())
         {
             forward_heap.Insert(source.forward_segment_id.id,
-                                total_weight - source.GetForwardWeightPlusOffset(),
+                                EdgeWeight{0} - source.GetForwardWeightPlusOffset(),
                                 source.forward_segment_id.id);
         }
 
         if (source.IsValidReverseSource())
         {
             forward_heap.Insert(source.reverse_segment_id.id,
-                                total_weight - source.GetReverseWeightPlusOffset(),
+                                EdgeWeight{0} - source.GetReverseWeightPlusOffset(),
                                 source.reverse_segment_id.id);
         }
     }
@@ -62,10 +61,10 @@ void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
            facade,
            forward_heap,
            reverse_heap,
-           new_total_weight,
+           leg_weight,
            leg_packed_path,
-           getForwardLoopNodes(candidates),
-           getBackwardLoopNodes(candidates),
+           {},
+           {},
            candidates);
 }
 
@@ -248,7 +247,8 @@ constructRouteResult(const DataFacade<Algorithm> &facade,
         auto source_it =
             std::find_if(source_candidates.begin(),
                          source_candidates.end(),
-                         [&start_node](const auto &source_phantom) {
+                         [&start_node](const auto &source_phantom)
+                         {
                              return (start_node == source_phantom.forward_segment_id.id ||
                                      start_node == source_phantom.reverse_segment_id.id);
                          });
@@ -257,7 +257,8 @@ constructRouteResult(const DataFacade<Algorithm> &facade,
         auto target_it =
             std::find_if(target_candidates.begin(),
                          target_candidates.end(),
-                         [&end_node](const auto &target_phantom) {
+                         [&end_node](const auto &target_phantom)
+                         {
                              return (end_node == target_phantom.forward_segment_id.id ||
                                      end_node == target_phantom.reverse_segment_id.id);
                          });
@@ -302,7 +303,7 @@ shortestPathWithWaypointUTurns(SearchEngineData<Algorithm> &engine_working_data,
         PhantomEndpointCandidates search_candidates{waypoint_candidates[i],
                                                     waypoint_candidates[i + 1]};
         std::vector<NodeID> packed_leg;
-        EdgeWeight new_total_weight = INVALID_EDGE_WEIGHT;
+        EdgeWeight leg_weight = INVALID_EDGE_WEIGHT;
 
         // We have a valid path up to this leg
         BOOST_ASSERT(total_weight != INVALID_EDGE_WEIGHT);
@@ -311,16 +312,15 @@ shortestPathWithWaypointUTurns(SearchEngineData<Algorithm> &engine_working_data,
                         forward_heap,
                         reverse_heap,
                         search_candidates,
-                        total_weight,
-                        new_total_weight,
+                        leg_weight,
                         packed_leg);
 
-        if (new_total_weight == INVALID_EDGE_WEIGHT)
+        if (leg_weight == INVALID_EDGE_WEIGHT)
             return {};
 
         packed_leg_begin.push_back(total_packed_path.size());
         total_packed_path.insert(total_packed_path.end(), packed_leg.begin(), packed_leg.end());
-        total_weight = new_total_weight;
+        total_weight += leg_weight;
     };
 
     // Add sentinel
@@ -466,16 +466,16 @@ struct route_state
         last.total_weight_to_forward.resize(init_candidates.size(), {0});
         last.total_weight_to_reverse.resize(init_candidates.size(), {0});
         // Initialize routability from source validity.
-        std::transform(
-            init_candidates.begin(),
-            init_candidates.end(),
-            std::back_inserter(last.reached_forward_node_target),
-            [](const PhantomNode &phantom_node) { return phantom_node.IsValidForwardSource(); });
-        std::transform(
-            init_candidates.begin(),
-            init_candidates.end(),
-            std::back_inserter(last.reached_reverse_node_target),
-            [](const PhantomNode &phantom_node) { return phantom_node.IsValidReverseSource(); });
+        std::transform(init_candidates.begin(),
+                       init_candidates.end(),
+                       std::back_inserter(last.reached_forward_node_target),
+                       [](const PhantomNode &phantom_node)
+                       { return phantom_node.IsValidForwardSource(); });
+        std::transform(init_candidates.begin(),
+                       init_candidates.end(),
+                       std::back_inserter(last.reached_reverse_node_target),
+                       [](const PhantomNode &phantom_node)
+                       { return phantom_node.IsValidReverseSource(); });
     }
 
     bool completeLeg()
@@ -613,15 +613,21 @@ struct route_state
     {
         // Find the segment from final leg with the shortest path
         auto forward_range = util::irange<std::size_t>(0UL, last.total_weight_to_forward.size());
-        auto forward_min =
-            std::min_element(forward_range.begin(), forward_range.end(), [&](size_t a, size_t b) {
+        auto forward_min = std::min_element(
+            forward_range.begin(),
+            forward_range.end(),
+            [&](size_t a, size_t b)
+            {
                 return (last.total_weight_to_forward[a] < last.total_weight_to_forward[b] ||
                         (last.total_weight_to_forward[a] == last.total_weight_to_forward[b] &&
                          last.total_nodes_to_forward[a] < last.total_nodes_to_forward[b]));
             });
         auto reverse_range = util::irange<std::size_t>(0UL, last.total_weight_to_reverse.size());
-        auto reverse_min =
-            std::min_element(reverse_range.begin(), reverse_range.end(), [&](size_t a, size_t b) {
+        auto reverse_min = std::min_element(
+            reverse_range.begin(),
+            reverse_range.end(),
+            [&](size_t a, size_t b)
+            {
                 return (last.total_weight_to_reverse[a] < last.total_weight_to_reverse[b] ||
                         (last.total_weight_to_reverse[a] == last.total_weight_to_reverse[b] &&
                          last.total_nodes_to_reverse[a] < last.total_nodes_to_reverse[b]));

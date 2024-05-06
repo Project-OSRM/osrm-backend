@@ -38,9 +38,10 @@ bool WayRestrictionMap::IsRestricted(DuplicatedNodeID duplicated_node, const Nod
     // Checks if a turn to 'to' is restricted
     BOOST_ASSERT(duplicated_node < restriction_graph.num_via_nodes);
     const auto &restrictions = restriction_graph.GetRestrictions(duplicated_node);
-    return std::any_of(restrictions.begin(), restrictions.end(), [&to](const auto &restriction) {
-        return restriction->IsTurnRestricted(to);
-    });
+    return std::any_of(restrictions.begin(),
+                       restrictions.end(),
+                       [&to](const auto &restriction)
+                       { return restriction->IsTurnRestricted(to); });
 }
 
 std::vector<const TurnRestriction *>

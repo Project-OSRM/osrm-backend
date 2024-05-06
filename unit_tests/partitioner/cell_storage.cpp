@@ -40,7 +40,8 @@ BOOST_AUTO_TEST_SUITE(cell_storage_tests)
 
 BOOST_AUTO_TEST_CASE(mutable_cell_storage)
 {
-    const auto fill_range = [](auto range, const std::vector<EdgeWeight> &values) {
+    const auto fill_range = [](auto range, const std::vector<EdgeWeight> &values)
+    {
         auto iter = range.begin();
         for (auto v : values)
             *iter++ = v;

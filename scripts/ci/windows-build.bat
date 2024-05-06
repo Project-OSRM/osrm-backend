@@ -21,7 +21,7 @@ msbuild OSRM.sln ^
 /p:BuildInParallel=true ^
 /m:%NUMBER_OF_PROCESSORS% ^
 /toolsversion:Current ^
-/clp:Verbosity=normal ^
+/clp:Verbosity=quiet ^
 /nologo
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 

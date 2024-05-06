@@ -5,6 +5,7 @@
 #include <boost/heap/d_ary_heap.hpp>
 
 #include <algorithm>
+#include <cstdint>
 #include <limits>
 #include <map>
 #include <optional>
@@ -344,9 +345,9 @@ class QueryHeap
     void DeleteAll()
     {
         auto const none_handle = heap.s_handle_from_iterator(heap.end());
-        std::for_each(inserted_nodes.begin(), inserted_nodes.end(), [&none_handle](auto &node) {
-            node.handle = none_handle;
-        });
+        std::for_each(inserted_nodes.begin(),
+                      inserted_nodes.end(),
+                      [&none_handle](auto &node) { node.handle = none_handle; });
         heap.clear();
     }
 

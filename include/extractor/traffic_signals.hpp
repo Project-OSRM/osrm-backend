@@ -19,6 +19,21 @@ struct TrafficSignals
     {
         return bidirectional_nodes.count(to) > 0 || unidirectional_segments.count({from, to}) > 0;
     }
+
+    void Compress(NodeID from, NodeID via, NodeID to)
+    {
+        bidirectional_nodes.erase(via);
+        if (unidirectional_segments.count({via, to}))
+        {
+            unidirectional_segments.erase({via, to});
+            unidirectional_segments.insert({from, to});
+        }
+        if (unidirectional_segments.count({via, from}))
+        {
+            unidirectional_segments.erase({via, from});
+            unidirectional_segments.insert({to, from});
+        }
+    }
 };
 } // namespace osrm::extractor
 

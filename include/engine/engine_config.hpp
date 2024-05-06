@@ -29,9 +29,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ENGINE_CONFIG_HPP
 
 #include "storage/storage_config.hpp"
+#include "osrm/datasets.hpp"
 
 #include <boost/filesystem/path.hpp>
 
+#include <set>
 #include <string>
 
 namespace osrm::engine
@@ -83,12 +85,13 @@ struct EngineConfig final
     int max_locations_map_matching = -1;
     double max_radius_map_matching = -1.0;
     int max_results_nearest = -1;
-    boost::optional<double> default_radius;
+    boost::optional<double> default_radius = -1.0;
     int max_alternatives = 3; // set an arbitrary upper bound; can be adjusted by user
     bool use_shared_memory = true;
     boost::filesystem::path memory_file;
     bool use_mmap = true;
     Algorithm algorithm = Algorithm::CH;
+    std::vector<storage::FeatureDataset> disable_feature_dataset;
     std::string verbosity;
     std::string dataset_name;
 };
