@@ -326,11 +326,11 @@ jobs:
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: conan-macos-x64-release-node
+          - name: conan-macos-14-x64-release-node
             build_node_package: true
             continue-on-error: true
             node: 20
-            runs-on: macos-latest-large
+            runs-on: macos-14-large
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
@@ -338,11 +338,11 @@ jobs:
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
 
-          - name: conan-macos-arm64-release-node
+          - name: conan-macos-14-arm64-release-node
             build_node_package: true
             continue-on-error: true
             node: 20
-            runs-on: macos-latest-large
+            runs-on: macos-14
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
