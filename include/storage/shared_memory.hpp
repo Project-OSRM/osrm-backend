@@ -113,7 +113,8 @@ class SharedMemory
     {
         auto shmid = shm.get_shmid();
         ::shmid_ds xsi_ds;
-        const auto errorToMessage = [](int error) -> std::string {
+        const auto errorToMessage = [](int error) -> std::string
+        {
             switch (error)
             {
             case EPERM:

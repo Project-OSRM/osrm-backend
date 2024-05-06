@@ -56,14 +56,12 @@ void checkInstructions(RestrictionGraph::RestrictionRange restrictions,
                    });
     std::sort(actual_instructions.begin(),
               actual_instructions.end(),
-              [](const auto &lhs, const auto &rhs) {
-                  return (lhs.to < rhs.to) || (lhs.to == rhs.to && lhs.is_only);
-              });
+              [](const auto &lhs, const auto &rhs)
+              { return (lhs.to < rhs.to) || (lhs.to == rhs.to && lhs.is_only); });
     std::sort(expected_instructions.begin(),
               expected_instructions.end(),
-              [](const auto &lhs, const auto &rhs) {
-                  return (lhs.to < rhs.to) || (lhs.to == rhs.to && lhs.is_only);
-              });
+              [](const auto &lhs, const auto &rhs)
+              { return (lhs.to < rhs.to) || (lhs.to == rhs.to && lhs.is_only); });
 
     BOOST_REQUIRE_EQUAL_COLLECTIONS(actual_instructions.begin(),
                                     actual_instructions.end(),
@@ -88,10 +86,11 @@ void checkEdges(RestrictionGraph::EdgeRange edges, std::vector<NodeID> expected_
 std::map<NodeID, size_t> nextEdges(RestrictionGraph::EdgeRange edges)
 {
     std::map<NodeID, size_t> res;
-    std::transform(
-        edges.begin(), edges.end(), std::inserter(res, res.end()), [&](const auto &edge) {
-            return std::make_pair(edge.node_based_to, edge.target);
-        });
+    std::transform(edges.begin(),
+                   edges.end(),
+                   std::inserter(res, res.end()),
+                   [&](const auto &edge)
+                   { return std::make_pair(edge.node_based_to, edge.target); });
     return res;
 }
 
@@ -132,12 +131,12 @@ validateViaRestrictionNode(RestrictionGraph &graph,
     BOOST_REQUIRE_GE(graph.via_edge_to_node.count({from, to}), 1);
     auto node_match_it = graph.via_edge_to_node.equal_range({from, to});
 
-    BOOST_REQUIRE_MESSAGE(
-        std::any_of(node_match_it.first,
-                    node_match_it.second,
-                    [&](const auto node_match) { return node_match.second == via_node_idx; }),
-        "Could not find expected via_node_idx " << via_node_idx << " for graph edge " << from << ","
-                                                << to);
+    BOOST_REQUIRE_MESSAGE(std::any_of(node_match_it.first,
+                                      node_match_it.second,
+                                      [&](const auto node_match)
+                                      { return node_match.second == via_node_idx; }),
+                          "Could not find expected via_node_idx "
+                              << via_node_idx << " for graph edge " << from << "," << to);
 
     BOOST_REQUIRE_LT(via_node_idx, graph.num_via_nodes);
     return checkNode(

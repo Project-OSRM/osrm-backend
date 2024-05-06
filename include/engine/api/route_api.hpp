@@ -77,9 +77,10 @@ class RouteAPI : public BaseAPI
         }
 
         auto response =
-            MakeFBResponse(raw_routes, fb_result, [this, &waypoint_candidates, &fb_result]() {
-                return BaseAPI::MakeWaypoints(&fb_result, waypoint_candidates);
-            });
+            MakeFBResponse(raw_routes,
+                           fb_result,
+                           [this, &waypoint_candidates, &fb_result]()
+                           { return BaseAPI::MakeWaypoints(&fb_result, waypoint_candidates); });
 
         if (!data_timestamp.empty())
         {
@@ -171,10 +172,15 @@ class RouteAPI : public BaseAPI
         }
         std::vector<fbresult::Position> coordinates;
         coordinates.resize(std::distance(begin, end));
-        std::transform(begin, end, coordinates.begin(), [](const Coordinate &c) {
-            return fbresult::Position{static_cast<float>(util::toFloating(c.lon).__value),
-                                      static_cast<float>(util::toFloating(c.lat).__value)};
-        });
+        std::transform(begin,
+                       end,
+                       coordinates.begin(),
+                       [](const Coordinate &c)
+                       {
+                           return fbresult::Position{
+                               static_cast<float>(util::toFloating(c.lon).__value),
+                               static_cast<float>(util::toFloating(c.lat).__value)};
+                       });
         return builder.CreateVectorOfStructs(coordinates);
     }
 
@@ -354,9 +360,8 @@ class RouteAPI : public BaseAPI
                 std::transform(leg.steps.begin(),
                                leg.steps.end(),
                                legSteps.begin(),
-                               [this, &fb_result, &leg_geometry](auto &step) {
-                                   return this->MakeFBStep(fb_result, leg_geometry, step);
-                               });
+                               [this, &fb_result, &leg_geometry](auto &step)
+                               { return this->MakeFBStep(fb_result, leg_geometry, step); });
             }
             auto steps_vector = fb_result.CreateVector(legSteps);
 
@@ -441,7 +446,8 @@ class RouteAPI : public BaseAPI
             speed =
                 GetAnnotations<float>(fb_result,
                                       leg_geometry,
-                                      [&prev_speed](const guidance::LegGeometry::Annotation &anno) {
+                                      [&prev_speed](const guidance::LegGeometry::Annotation &anno)
+                                      {
                                           if (anno.duration < std::numeric_limits<float>::min())
                                           {
                                               return prev_speed;
@@ -459,37 +465,37 @@ class RouteAPI : public BaseAPI
         flatbuffers::Offset<flatbuffers::Vector<uint32_t>> duration;
         if (requested_annotations & RouteParameters::AnnotationsType::Duration)
         {
-            duration = GetAnnotations<uint32_t>(
-                fb_result, leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
-                    return anno.duration;
-                });
+            duration = GetAnnotations<uint32_t>(fb_result,
+                                                leg_geometry,
+                                                [](const guidance::LegGeometry::Annotation &anno)
+                                                { return anno.duration; });
         }
 
         flatbuffers::Offset<flatbuffers::Vector<uint32_t>> distance;
         if (requested_annotations & RouteParameters::AnnotationsType::Distance)
         {
-            distance = GetAnnotations<uint32_t>(
-                fb_result, leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
-                    return anno.distance;
-                });
+            distance = GetAnnotations<uint32_t>(fb_result,
+                                                leg_geometry,
+                                                [](const guidance::LegGeometry::Annotation &anno)
+                                                { return anno.distance; });
         }
 
         flatbuffers::Offset<flatbuffers::Vector<uint32_t>> weight;
         if (requested_annotations & RouteParameters::AnnotationsType::Weight)
         {
-            weight = GetAnnotations<uint32_t>(
-                fb_result, leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
-                    return anno.weight;
-                });
+            weight = GetAnnotations<uint32_t>(fb_result,
+                                              leg_geometry,
+                                              [](const guidance::LegGeometry::Annotation &anno)
+                                              { return anno.weight; });
         }
 
         flatbuffers::Offset<flatbuffers::Vector<uint32_t>> datasources;
         if (requested_annotations & RouteParameters::AnnotationsType::Datasources)
         {
-            datasources = GetAnnotations<uint32_t>(
-                fb_result, leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
-                    return anno.datasource;
-                });
+            datasources = GetAnnotations<uint32_t>(fb_result,
+                                                   leg_geometry,
+                                                   [](const guidance::LegGeometry::Annotation &anno)
+                                                   { return anno.datasource; });
         }
         std::vector<uint32_t> nodes;
         if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
@@ -653,7 +659,8 @@ class RouteAPI : public BaseAPI
             step.intersections.begin(),
             step.intersections.end(),
             intersections.begin(),
-            [&fb_result, this](const guidance::IntermediateIntersection &intersection) {
+            [&fb_result, this](const guidance::IntermediateIntersection &intersection)
+            {
                 std::vector<flatbuffers::Offset<fbresult::Lane>> lanes;
                 if (json::detail::hasValidLanes(intersection))
                 {
@@ -681,11 +688,11 @@ class RouteAPI : public BaseAPI
                 auto bearings_vector = fb_result.CreateVector(intersection.bearings);
                 std::vector<flatbuffers::Offset<flatbuffers::String>> classes;
                 classes.resize(intersection.classes.size());
-                std::transform(
-                    intersection.classes.begin(),
-                    intersection.classes.end(),
-                    classes.begin(),
-                    [&fb_result](const std::string &cls) { return fb_result.CreateString(cls); });
+                std::transform(intersection.classes.begin(),
+                               intersection.classes.end(),
+                               classes.begin(),
+                               [&fb_result](const std::string &cls)
+                               { return fb_result.CreateString(cls); });
                 auto classes_vector = fb_result.CreateVector(classes);
                 auto entry_vector = fb_result.CreateVector(intersection.entry);
 
@@ -720,9 +727,10 @@ class RouteAPI : public BaseAPI
 
         std::vector<util::json::Value> step_geometries;
         const auto total_step_count =
-            std::accumulate(legs.begin(), legs.end(), 0, [](const auto &v, const auto &leg) {
-                return v + leg.steps.size();
-            });
+            std::accumulate(legs.begin(),
+                            legs.end(),
+                            0,
+                            [](const auto &v, const auto &leg) { return v + leg.steps.size(); });
         step_geometries.reserve(total_step_count);
 
         for (const auto idx : util::irange<std::size_t>(0UL, legs.size()))
@@ -733,7 +741,8 @@ class RouteAPI : public BaseAPI
                 legs[idx].steps.begin(),
                 legs[idx].steps.end(),
                 std::back_inserter(step_geometries),
-                [this, &leg_geometry](const guidance::RouteStep &step) {
+                [this, &leg_geometry](const guidance::RouteStep &step)
+                {
                     if (parameters.geometries == RouteParameters::GeometriesType::Polyline)
                     {
                         return static_cast<util::json::Value>(json::makePolyline<100000>(
@@ -778,7 +787,9 @@ class RouteAPI : public BaseAPI
                 {
                     double prev_speed = 0;
                     annotation.values["speed"] = GetAnnotations(
-                        leg_geometry, [&prev_speed](const guidance::LegGeometry::Annotation &anno) {
+                        leg_geometry,
+                        [&prev_speed](const guidance::LegGeometry::Annotation &anno)
+                        {
                             if (anno.duration < std::numeric_limits<double>::min())
                             {
                                 return prev_speed;
@@ -794,17 +805,17 @@ class RouteAPI : public BaseAPI
 
                 if (requested_annotations & RouteParameters::AnnotationsType::Duration)
                 {
-                    annotation.values["duration"] = GetAnnotations(
-                        leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
-                            return anno.duration;
-                        });
+                    annotation.values["duration"] =
+                        GetAnnotations(leg_geometry,
+                                       [](const guidance::LegGeometry::Annotation &anno)
+                                       { return anno.duration; });
                 }
                 if (requested_annotations & RouteParameters::AnnotationsType::Distance)
                 {
-                    annotation.values["distance"] = GetAnnotations(
-                        leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
-                            return anno.distance;
-                        });
+                    annotation.values["distance"] =
+                        GetAnnotations(leg_geometry,
+                                       [](const guidance::LegGeometry::Annotation &anno)
+                                       { return anno.distance; });
                 }
                 if (requested_annotations & RouteParameters::AnnotationsType::Weight)
                 {
@@ -814,10 +825,10 @@ class RouteAPI : public BaseAPI
                 }
                 if (requested_annotations & RouteParameters::AnnotationsType::Datasources)
                 {
-                    annotation.values["datasources"] = GetAnnotations(
-                        leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
-                            return anno.datasource;
-                        });
+                    annotation.values["datasources"] =
+                        GetAnnotations(leg_geometry,
+                                       [](const guidance::LegGeometry::Annotation &anno)
+                                       { return anno.datasource; });
                 }
                 if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
                 {

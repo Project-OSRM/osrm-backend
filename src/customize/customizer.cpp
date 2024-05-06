@@ -47,17 +47,18 @@ void printUnreachableStatistics(const Partition &partition,
             for (auto node : cell.GetSourceNodes())
             {
                 const auto &weights = cell.GetOutWeight(node);
-                invalid_sources += std::all_of(weights.begin(), weights.end(), [](auto weight) {
-                    return weight == INVALID_EDGE_WEIGHT;
-                });
+                invalid_sources +=
+                    std::all_of(weights.begin(),
+                                weights.end(),
+                                [](auto weight) { return weight == INVALID_EDGE_WEIGHT; });
             }
             for (auto node : cell.GetDestinationNodes())
             {
                 const auto &weights = cell.GetInWeight(node);
                 invalid_destinations +=
-                    std::all_of(weights.begin(), weights.end(), [](auto weight) {
-                        return weight == INVALID_EDGE_WEIGHT;
-                    });
+                    std::all_of(weights.begin(),
+                                weights.end(),
+                                [](auto weight) { return weight == INVALID_EDGE_WEIGHT; });
             }
         }
 

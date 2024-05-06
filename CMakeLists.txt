@@ -49,9 +49,6 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # be compatible with version handling before cmake 3.x
-if (POLICY CMP0048)
-  cmake_policy(SET CMP0048 OLD)
-endif()
 if (POLICY CMP0057)
   cmake_policy(SET CMP0057 NEW)
 endif()

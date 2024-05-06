@@ -14,6 +14,8 @@
       - ADDED: Add 'load directly' mode to default Cucumber test suite. [#6663](https://github.com/Project-OSRM/osrm-backend/pull/6663)
       - CHANGED: Fix compilation for Boost 1.85.0 [#6856](https://github.com/Project-OSRM/osrm-backend/pull/6856)
       - CHANGED: Drop support for Node 16 [#6855](https://github.com/Project-OSRM/osrm-backend/pull/6855)
+      - REMOVED: Remove unused AppVeyor files [#6860](https://github.com/Project-OSRM/osrm-backend/pull/6860)
+      - CHANGED: Upgrade clang-format to version 15 [#6859](https://github.com/Project-OSRM/osrm-backend/pull/6859)
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
@@ -42,6 +44,7 @@
       - FIXED: Fix adding traffic signal penalties during compression [#6419](https://github.com/Project-OSRM/osrm-backend/pull/6419)
       - FIXED: Correctly handle compressed traffic signals. [#6724](https://github.com/Project-OSRM/osrm-backend/pull/6724)
       - FIXED: Fix bug when searching for maneuver overrides [#6739](https://github.com/Project-OSRM/osrm-backend/pull/6739)
+      - FIXED: Remove force-loop checks for routes with u-turns [#6858](https://github.com/Project-OSRM/osrm-backend/pull/6858)
     - Debug tiles:
       - FIXED: Ensure speed layer features have unique ids. [#6726](https://github.com/Project-OSRM/osrm-backend/pull/6726)
 

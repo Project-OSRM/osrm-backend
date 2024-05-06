@@ -127,9 +127,8 @@ bool findPreviousIntersection(const NodeID node_v,
         result_intersection.end() !=
         std::find_if(result_intersection.begin(),
                      result_intersection.end(),
-                     [via_edge](const extractor::intersection::IntersectionViewData &road) {
-                         return road.eid == via_edge;
-                     });
+                     [via_edge](const extractor::intersection::IntersectionViewData &road)
+                     { return road.eid == via_edge; });
 
     if (!check_via_edge)
     {

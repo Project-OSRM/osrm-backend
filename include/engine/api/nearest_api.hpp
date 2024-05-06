@@ -57,20 +57,20 @@ class NearestAPI final : public BaseAPI
         {
             std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
             waypoints.resize(phantom_nodes.front().size());
-            std::transform(
-                phantom_nodes.front().begin(),
-                phantom_nodes.front().end(),
-                waypoints.begin(),
-                [this, &fb_result](const PhantomNodeWithDistance &phantom_with_distance) {
-                    auto &phantom_node = phantom_with_distance.phantom_node;
+            std::transform(phantom_nodes.front().begin(),
+                           phantom_nodes.front().end(),
+                           waypoints.begin(),
+                           [this, &fb_result](const PhantomNodeWithDistance &phantom_with_distance)
+                           {
+                               auto &phantom_node = phantom_with_distance.phantom_node;
 
-                    auto node_values = MakeNodes(phantom_node);
-                    fbresult::Uint64Pair nodes{node_values.first, node_values.second};
+                               auto node_values = MakeNodes(phantom_node);
+                               fbresult::Uint64Pair nodes{node_values.first, node_values.second};
 
-                    auto waypoint = MakeWaypoint(&fb_result, {phantom_node});
-                    waypoint->add_nodes(&nodes);
-                    return waypoint->Finish();
-                });
+                               auto waypoint = MakeWaypoint(&fb_result, {phantom_node});
+                               waypoint->add_nodes(&nodes);
+                               return waypoint->Finish();
+                           });
 
             waypoints_vector = fb_result.CreateVector(waypoints);
         }
@@ -94,7 +94,8 @@ class NearestAPI final : public BaseAPI
             std::transform(phantom_nodes.front().begin(),
                            phantom_nodes.front().end(),
                            waypoints.values.begin(),
-                           [this](const PhantomNodeWithDistance &phantom_with_distance) {
+                           [this](const PhantomNodeWithDistance &phantom_with_distance)
+                           {
                                auto &phantom_node = phantom_with_distance.phantom_node;
                                auto waypoint = MakeWaypoint({phantom_node});
 

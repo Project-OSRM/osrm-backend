@@ -281,7 +281,8 @@ class StaticRTree
         tbb::parallel_for(
             tbb::blocked_range<uint64_t>(0, element_count),
             [&input_data_vector, &input_wrapper_vector, this](
-                const tbb::blocked_range<uint64_t> &range) {
+                const tbb::blocked_range<uint64_t> &range)
+            {
                 for (uint64_t element_counter = range.begin(), end = range.end();
                      element_counter != end;
                      ++element_counter)
@@ -560,9 +561,8 @@ class StaticRTree
         return Nearest(
             input_coordinate,
             [](const CandidateSegment &) { return std::make_pair(true, true); },
-            [max_results](const std::size_t num_results, const CandidateSegment &) {
-                return num_results >= max_results;
-            });
+            [max_results](const std::size_t num_results, const CandidateSegment &)
+            { return num_results >= max_results; });
     }
 
     // Return edges in distance order with the coordinate of the closest point on the edge.

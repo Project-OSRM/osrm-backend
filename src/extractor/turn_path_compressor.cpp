@@ -12,7 +12,8 @@ TurnPathCompressor::TurnPathCompressor(std::vector<TurnRestriction> &restriction
                                        std::vector<UnresolvedManeuverOverride> &maneuver_overrides)
 {
     // Track all turn paths by their respective start/via/end nodes.
-    auto index = [&](auto &element) {
+    auto index = [&](auto &element)
+    {
         starts.insert({element.From(), &element});
         ends.insert({element.To(), &element});
         if (element.Type() == TurnPathType::VIA_WAY_TURN_PATH)
@@ -44,7 +45,8 @@ void TurnPathCompressor::Compress(const NodeID from, const NodeID via, const Nod
                    std::back_inserter(start_ptrs),
                    [](const auto pair) { return pair.second; });
 
-    const auto update_start = [&](auto ptr) {
+    const auto update_start = [&](auto ptr)
+    {
         if (ptr->Type() == TurnPathType::VIA_NODE_TURN_PATH)
         {
 
@@ -97,7 +99,8 @@ void TurnPathCompressor::Compress(const NodeID from, const NodeID via, const Nod
                    std::back_inserter(end_ptrs),
                    [](const auto pair) { return pair.second; });
 
-    const auto update_end = [&](auto ptr) {
+    const auto update_end = [&](auto ptr)
+    {
         if (ptr->Type() == TurnPathType::VIA_NODE_TURN_PATH)
         {
             auto &node_ptr = ptr->AsViaNodePath();
@@ -145,7 +148,8 @@ void TurnPathCompressor::Compress(const NodeID from, const NodeID via, const Nod
     // remove compressed node from all via paths
     auto all_vias_range = vias.equal_range(via);
 
-    const auto update_via = [&](auto restriction_pair) {
+    const auto update_via = [&](auto restriction_pair)
+    {
         BOOST_ASSERT(restriction_pair.second->Type() == TurnPathType::VIA_WAY_TURN_PATH);
         auto &way_ptr = restriction_pair.second->AsViaWayPath();
         BOOST_ASSERT(std::find(way_ptr.via.begin(), way_ptr.via.end(), via) != way_ptr.via.end());

@@ -245,9 +245,8 @@ class TableAPI final : public BaseAPI
 
         boost::range::transform(candidates,
                                 std::back_inserter(waypoints),
-                                [this, &builder](const PhantomNodeCandidates &candidates) {
-                                    return BaseAPI::MakeWaypoint(&builder, candidates)->Finish();
-                                });
+                                [this, &builder](const PhantomNodeCandidates &candidates)
+                                { return BaseAPI::MakeWaypoint(&builder, candidates)->Finish(); });
         return builder.CreateVector(waypoints);
     }
 
@@ -261,7 +260,8 @@ class TableAPI final : public BaseAPI
         boost::range::transform(
             indices,
             std::back_inserter(waypoints),
-            [this, &builder, &candidates](const std::size_t idx) {
+            [this, &builder, &candidates](const std::size_t idx)
+            {
                 BOOST_ASSERT(idx < candidates.size());
                 return BaseAPI::MakeWaypoint(&builder, candidates[idx])->Finish();
             });
@@ -274,14 +274,17 @@ class TableAPI final : public BaseAPI
     {
         std::vector<float> distance_table;
         distance_table.resize(values.size());
-        std::transform(
-            values.begin(), values.end(), distance_table.begin(), [](const EdgeDuration duration) {
-                if (duration == MAXIMAL_EDGE_DURATION)
-                {
-                    return 0.;
-                }
-                return from_alias<double>(duration) / 10.;
-            });
+        std::transform(values.begin(),
+                       values.end(),
+                       distance_table.begin(),
+                       [](const EdgeDuration duration)
+                       {
+                           if (duration == MAXIMAL_EDGE_DURATION)
+                           {
+                               return 0.;
+                           }
+                           return from_alias<double>(duration) / 10.;
+                       });
         return builder.CreateVector(distance_table);
     }
 
@@ -291,14 +294,17 @@ class TableAPI final : public BaseAPI
     {
         std::vector<float> duration_table;
         duration_table.resize(values.size());
-        std::transform(
-            values.begin(), values.end(), duration_table.begin(), [](const EdgeDistance distance) {
-                if (distance == INVALID_EDGE_DISTANCE)
-                {
-                    return 0.;
-                }
-                return std::round(from_alias<double>(distance) * 10) / 10.;
-            });
+        std::transform(values.begin(),
+                       values.end(),
+                       duration_table.begin(),
+                       [](const EdgeDistance distance)
+                       {
+                           if (distance == INVALID_EDGE_DISTANCE)
+                           {
+                               return 0.;
+                           }
+                           return std::round(from_alias<double>(distance) * 10) / 10.;
+                       });
         return builder.CreateVector(duration_table);
     }
 
@@ -308,11 +314,13 @@ class TableAPI final : public BaseAPI
     {
         std::vector<uint32_t> fb_table;
         fb_table.reserve(fallback_speed_cells.size());
-        std::for_each(
-            fallback_speed_cells.begin(), fallback_speed_cells.end(), [&](const auto &cell) {
-                fb_table.push_back(cell.row);
-                fb_table.push_back(cell.column);
-            });
+        std::for_each(fallback_speed_cells.begin(),
+                      fallback_speed_cells.end(),
+                      [&](const auto &cell)
+                      {
+                          fb_table.push_back(cell.row);
+                          fb_table.push_back(cell.column);
+                      });
         return builder.CreateVector(fb_table);
     }
 
@@ -325,9 +333,8 @@ class TableAPI final : public BaseAPI
 
         boost::range::transform(candidates,
                                 std::back_inserter(json_waypoints.values),
-                                [this](const PhantomNodeCandidates &candidates) {
-                                    return BaseAPI::MakeWaypoint(candidates);
-                                });
+                                [this](const PhantomNodeCandidates &candidates)
+                                { return BaseAPI::MakeWaypoint(candidates); });
         return json_waypoints;
     }
 
@@ -338,7 +345,8 @@ class TableAPI final : public BaseAPI
         json_waypoints.values.reserve(indices.size());
         boost::range::transform(indices,
                                 std::back_inserter(json_waypoints.values),
-                                [this, &candidates](const std::size_t idx) {
+                                [this, &candidates](const std::size_t idx)
+                                {
                                     BOOST_ASSERT(idx < candidates.size());
                                     return BaseAPI::MakeWaypoint(candidates[idx]);
                                 });
@@ -359,7 +367,8 @@ class TableAPI final : public BaseAPI
             std::transform(row_begin_iterator,
                            row_end_iterator,
                            json_row.values.begin(),
-                           [](const EdgeDuration duration) {
+                           [](const EdgeDuration duration)
+                           {
                                if (duration == MAXIMAL_EDGE_DURATION)
                                {
                                    return util::json::Value(util::json::Null());
@@ -387,7 +396,8 @@ class TableAPI final : public BaseAPI
             std::transform(row_begin_iterator,
                            row_end_iterator,
                            json_row.values.begin(),
-                           [](const EdgeDistance distance) {
+                           [](const EdgeDistance distance)
+                           {
                                if (distance == INVALID_EDGE_DISTANCE)
                                {
                                    return util::json::Value(util::json::Null());
@@ -405,13 +415,15 @@ class TableAPI final : public BaseAPI
     MakeEstimatesTable(const std::vector<TableCellRef> &fallback_speed_cells) const
     {
         util::json::Array json_table;
-        std::for_each(
-            fallback_speed_cells.begin(), fallback_speed_cells.end(), [&](const auto &cell) {
-                util::json::Array row;
-                row.values.push_back(util::json::Number(cell.row));
-                row.values.push_back(util::json::Number(cell.column));
-                json_table.values.push_back(std::move(row));
-            });
+        std::for_each(fallback_speed_cells.begin(),
+                      fallback_speed_cells.end(),
+                      [&](const auto &cell)
+                      {
+                          util::json::Array row;
+                          row.values.push_back(util::json::Number(cell.row));
+                          row.values.push_back(util::json::Number(cell.column));
+                          json_table.values.push_back(std::move(row));
+                      });
         return json_table;
     }
 
