@@ -19,9 +19,8 @@ void unpackEdge(const DataFacade<Algorithm> &facade,
     unpackPath(facade,
                path.begin(),
                path.end(),
-               [&unpacked_path](const std::pair<NodeID, NodeID> &edge, const auto & /* data */) {
-                   unpacked_path.emplace_back(edge.first);
-               });
+               [&unpacked_path](const std::pair<NodeID, NodeID> &edge, const auto & /* data */)
+               { unpacked_path.emplace_back(edge.first); });
     unpacked_path.emplace_back(to);
 }
 

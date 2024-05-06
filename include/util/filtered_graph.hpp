@@ -37,9 +37,9 @@ class FilteredGraphImpl<util::StaticGraph<EdgeDataT, Ownership>, Ownership>
     unsigned GetOutDegree(const NodeIterator n) const
     {
         auto range = graph.GetAdjacentEdgeRange(n);
-        return std::count_if(range.begin(), range.end(), [this](const EdgeIterator edge) {
-            return edge_filter[edge];
-        });
+        return std::count_if(range.begin(),
+                             range.end(),
+                             [this](const EdgeIterator edge) { return edge_filter[edge]; });
     }
 
     inline NodeIterator GetTarget(const EdgeIterator e) const

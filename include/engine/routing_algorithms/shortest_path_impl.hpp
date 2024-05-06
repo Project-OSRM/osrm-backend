@@ -247,7 +247,8 @@ constructRouteResult(const DataFacade<Algorithm> &facade,
         auto source_it =
             std::find_if(source_candidates.begin(),
                          source_candidates.end(),
-                         [&start_node](const auto &source_phantom) {
+                         [&start_node](const auto &source_phantom)
+                         {
                              return (start_node == source_phantom.forward_segment_id.id ||
                                      start_node == source_phantom.reverse_segment_id.id);
                          });
@@ -256,7 +257,8 @@ constructRouteResult(const DataFacade<Algorithm> &facade,
         auto target_it =
             std::find_if(target_candidates.begin(),
                          target_candidates.end(),
-                         [&end_node](const auto &target_phantom) {
+                         [&end_node](const auto &target_phantom)
+                         {
                              return (end_node == target_phantom.forward_segment_id.id ||
                                      end_node == target_phantom.reverse_segment_id.id);
                          });
@@ -464,16 +466,16 @@ struct route_state
         last.total_weight_to_forward.resize(init_candidates.size(), {0});
         last.total_weight_to_reverse.resize(init_candidates.size(), {0});
         // Initialize routability from source validity.
-        std::transform(
-            init_candidates.begin(),
-            init_candidates.end(),
-            std::back_inserter(last.reached_forward_node_target),
-            [](const PhantomNode &phantom_node) { return phantom_node.IsValidForwardSource(); });
-        std::transform(
-            init_candidates.begin(),
-            init_candidates.end(),
-            std::back_inserter(last.reached_reverse_node_target),
-            [](const PhantomNode &phantom_node) { return phantom_node.IsValidReverseSource(); });
+        std::transform(init_candidates.begin(),
+                       init_candidates.end(),
+                       std::back_inserter(last.reached_forward_node_target),
+                       [](const PhantomNode &phantom_node)
+                       { return phantom_node.IsValidForwardSource(); });
+        std::transform(init_candidates.begin(),
+                       init_candidates.end(),
+                       std::back_inserter(last.reached_reverse_node_target),
+                       [](const PhantomNode &phantom_node)
+                       { return phantom_node.IsValidReverseSource(); });
     }
 
     bool completeLeg()
@@ -611,15 +613,21 @@ struct route_state
     {
         // Find the segment from final leg with the shortest path
         auto forward_range = util::irange<std::size_t>(0UL, last.total_weight_to_forward.size());
-        auto forward_min =
-            std::min_element(forward_range.begin(), forward_range.end(), [&](size_t a, size_t b) {
+        auto forward_min = std::min_element(
+            forward_range.begin(),
+            forward_range.end(),
+            [&](size_t a, size_t b)
+            {
                 return (last.total_weight_to_forward[a] < last.total_weight_to_forward[b] ||
                         (last.total_weight_to_forward[a] == last.total_weight_to_forward[b] &&
                          last.total_nodes_to_forward[a] < last.total_nodes_to_forward[b]));
             });
         auto reverse_range = util::irange<std::size_t>(0UL, last.total_weight_to_reverse.size());
-        auto reverse_min =
-            std::min_element(reverse_range.begin(), reverse_range.end(), [&](size_t a, size_t b) {
+        auto reverse_min = std::min_element(
+            reverse_range.begin(),
+            reverse_range.end(),
+            [&](size_t a, size_t b)
+            {
                 return (last.total_weight_to_reverse[a] < last.total_weight_to_reverse[b] ||
                         (last.total_weight_to_reverse[a] == last.total_weight_to_reverse[b] &&
                          last.total_nodes_to_reverse[a] < last.total_nodes_to_reverse[b]));

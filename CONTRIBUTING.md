@@ -10,7 +10,7 @@ You can add a :+1: emoji reaction to the issue if you want to express interest i
 
 # Developer
 
-We use `clang-format` version `3.8` to consistently format the code base. There is a helper script under `scripts/format.sh`.
+We use `clang-format` version `15` to consistently format the code base. There is a helper script under `scripts/format.sh`.
 The format is automatically checked by the `mason-linux-release` job of a Travis CI build.
 To save development time a local hook `.git/hooks/pre-push`
 ```

@@ -50,10 +50,10 @@ class TripAPI final : public RouteAPI
             data_version_string = fb_result.CreateString(data_timestamp);
         }
 
-        auto response =
-            MakeFBResponse(sub_routes, fb_result, [this, &fb_result, &sub_trips, &candidates]() {
-                return MakeWaypoints(fb_result, sub_trips, candidates);
-            });
+        auto response = MakeFBResponse(sub_routes,
+                                       fb_result,
+                                       [this, &fb_result, &sub_trips, &candidates]()
+                                       { return MakeWaypoints(fb_result, sub_trips, candidates); });
 
         if (!data_timestamp.empty())
         {
