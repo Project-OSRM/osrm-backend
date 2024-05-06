@@ -170,14 +170,24 @@ jobs:
             OSRM_CONNECTION_RETRIES: 10
             OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
-          - name: clang-6.0-debug
+          - name: clang-15.0-release
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-15.0
+            CXXCOMPILER: clang++-15.0
+            CUCUMBER_TIMEOUT: 60000
+
+          - name: clang-15.0-debug
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: clang-6.0
-            CXXCOMPILER: clang++-6.0
+            CCOMPILER: clang-15.0
+            CXXCOMPILER: clang++-15.0
             CUCUMBER_TIMEOUT: 60000
 
           - name: clang-15.0-debug-clang-tidy
@@ -191,25 +201,45 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_CLANG_TIDY: ON
 
+          - name: clang-14.0-release
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-14.0
+            CXXCOMPILER: clang++-14.0
+            CUCUMBER_TIMEOUT: 60000
+
+          - name: clang-13.0-release
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-13.0
+            CXXCOMPILER: clang++-13.0
+            CUCUMBER_TIMEOUT: 60000
+
           - name: conan-linux-debug-asan-ubsan
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-11
-            CXXCOMPILER: clang++-11
+            CCOMPILER: clang-15
+            CXXCOMPILER: clang++-15
             ENABLE_CONAN: ON
             ENABLE_SANITIZER: ON
 
           - name: conan-linux-release
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-6.0
-            CXXCOMPILER: clang++-6.0
+            CCOMPILER: clang-15.0
+            CXXCOMPILER: clang++-15.0
             ENABLE_CONAN: ON
 
           - name: gcc-12-release
@@ -279,10 +309,10 @@ jobs:
             build_node_package: true
             continue-on-error: false
             node: 20
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             BUILD_TYPE: Release
-            CCOMPILER: clang-6.0
-            CXXCOMPILER: clang++-6.0
+            CCOMPILER: clang-13.0
+            CXXCOMPILER: clang++-13.0
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -290,10 +320,10 @@ jobs:
             build_node_package: true
             continue-on-error: false
             node: 20
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             BUILD_TYPE: Debug
-            CCOMPILER: clang-6.0
-            CXXCOMPILER: clang++-6.0
+            CCOMPILER: clang-13.0
+            CXXCOMPILER: clang++-13.0
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -413,17 +443,6 @@ jobs:
           sudo apt-get update -y && sudo apt-get install ccache
         elif [[ "${RUNNER_OS}" == "macOS" ]]; then
           brew install ccache
-        fi
-
-        # clang
-        if [[ "${CCOMPILER}" == "clang-6.0" ]]; then
-          sudo apt-get update -y && sudo apt-get install clang++-6
-        elif [[ "${CCOMPILER}" == "clang-15" ]]; then
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo apt-get update -y && sudo apt-get install software-properties-common
-          sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-15 main'
-          sudo apt-get update -y && sudo apt-get install clang++-15 clang-tidy-15
-          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-15 100000
         fi
 
         # Linux dev packages
