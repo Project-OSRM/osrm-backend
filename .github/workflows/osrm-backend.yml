@@ -170,27 +170,27 @@ jobs:
             OSRM_CONNECTION_RETRIES: 10
             OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
-          - name: clang-15.0-release
+          - name: clang-15-release
             continue-on-error: false
             node: 18
             runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-15.0
-            CXXCOMPILER: clang++-15.0
+            CCOMPILER: clang-15
+            CXXCOMPILER: clang++-15
             CUCUMBER_TIMEOUT: 60000
 
-          - name: clang-15.0-debug
+          - name: clang-15-debug
             continue-on-error: false
             node: 18
             runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: clang-15.0
-            CXXCOMPILER: clang++-15.0
+            CCOMPILER: clang-15
+            CXXCOMPILER: clang++-15
             CUCUMBER_TIMEOUT: 60000
 
-          - name: clang-15.0-debug-clang-tidy
+          - name: clang-15-debug-clang-tidy
             continue-on-error: false
             node: 18
             runs-on: ubuntu-22.04
@@ -201,24 +201,24 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_CLANG_TIDY: ON
 
-          - name: clang-14.0-release
+          - name: clang-14-release
             continue-on-error: false
             node: 18
             runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-14.0
-            CXXCOMPILER: clang++-14.0
+            CCOMPILER: clang-14
+            CXXCOMPILER: clang++-14
             CUCUMBER_TIMEOUT: 60000
 
-          - name: clang-13.0-release
+          - name: clang-13-release
             continue-on-error: false
             node: 18
             runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-13.0
-            CXXCOMPILER: clang++-13.0
+            CCOMPILER: clang-13
+            CXXCOMPILER: clang++-13
             CUCUMBER_TIMEOUT: 60000
 
           - name: conan-linux-debug-asan-ubsan
@@ -238,8 +238,8 @@ jobs:
             runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-15.0
-            CXXCOMPILER: clang++-15.0
+            CCOMPILER: clang-15
+            CXXCOMPILER: clang++-15
             ENABLE_CONAN: ON
 
           - name: gcc-12-release
@@ -311,8 +311,8 @@ jobs:
             node: 20
             runs-on: ubuntu-22.04
             BUILD_TYPE: Release
-            CCOMPILER: clang-13.0
-            CXXCOMPILER: clang++-13.0
+            CCOMPILER: clang-13
+            CXXCOMPILER: clang++-13
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -322,8 +322,8 @@ jobs:
             node: 20
             runs-on: ubuntu-22.04
             BUILD_TYPE: Debug
-            CCOMPILER: clang-13.0
-            CXXCOMPILER: clang++-13.0
+            CCOMPILER: clang-13
+            CXXCOMPILER: clang++-13
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
