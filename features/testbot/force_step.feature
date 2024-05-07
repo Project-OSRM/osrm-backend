@@ -1,6 +1,5 @@
 @routing @testbot @via
-Feature: Via points
-
+Feature: Force routing steps
     Background:
         Given the profile "testbot"
 
