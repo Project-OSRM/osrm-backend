@@ -389,6 +389,7 @@ jobs:
           # We can only set this after checkout once we know the workspace directory
           echo "LSAN_OPTIONS=print_suppressions=0:suppressions=${GITHUB_WORKSPACE}/scripts/ci/leaksanitizer.conf" >> $GITHUB_ENV
           echo "UBSAN_OPTIONS=symbolize=1:halt_on_error=1:print_stacktrace=1:suppressions=${GITHUB_WORKSPACE}/scripts/ci/undefinedsanitizer.conf" >> $GITHUB_ENV
+          echo "ASAN_OPTION="print_suppressions=0:suppressions=${GITHUB_WORKSPACE}/scripts/ci/addressanitizer.conf" >> $GITHUB_ENV
         fi
 
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
@@ -518,7 +519,7 @@ jobs:
         # All tests assume to be run from the build directory
         pushd ${OSRM_BUILD_DIR}
         for i in ./unit_tests/*-tests ; do echo Running $i ; $i ; done
-        if [ -z "${ENABLE_SANITIZER}" ] && [ "$TARGET_ARCH" != "i686" ]; then
+        if [ -z "${ENABLE_SANITIZER}" ]; then
           npm run nodejs-tests
         fi
         popd
