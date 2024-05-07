@@ -431,7 +431,7 @@ jobs:
 
     - name: Install dev dependencies
       run: |
-        python3 -m pip install "conan<2.0.0" --break-system-packages
+        python3 -m pip install "conan<2.0.0" || python3 -m pip install "conan<2.0.0" --break-system-packages
 
         # workaround for issue that GitHub Actions seems to not adding it to PATH after https://github.com/actions/runner-images/pull/6499
         # and that's why CI cannot find conan executable installed above
