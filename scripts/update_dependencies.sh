@@ -30,6 +30,9 @@ PROTOZERO_TAG=v1.6.2
 VTZERO_PATH="mapbox/vtzero"
 VTZERO_TAG=v1.0.1
 
+FMT_PATH="fmtlib/fmt"
+FMT_TAG=v9.1.0
+
 function update_subtree () {
     name=${1^^}
     path=$(tmpvar=${name}_PATH && echo ${!tmpvar})
@@ -53,6 +56,6 @@ function update_subtree () {
 }
 
 ## Update dependencies
-for dep in osmium variant sol rapidjson microtar protozero vtzero ; do
+for dep in osmium variant sol rapidjson microtar protozero vtzero fmt; do
     update_subtree $dep
 done
