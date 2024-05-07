@@ -19,6 +19,10 @@ env:
   CMAKE_VERSION: 3.21.2
   ENABLE_NODE_BINDINGS: "ON"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   windows-release-node:
     needs: format-taginfo-docs
