@@ -140,7 +140,7 @@ you can create your own overload of this function. See the
 
 ### Adding a multipoint geometry
 
-Call `add_points()` with the number of points in the geometry as only argument.
+Call `add_points()` with the number of points in the geometry as the only argument.
 After that call `set_point()` for each of those points. `set_point()` has
 multiple overloads just like the `add_point()` method described above.
 
@@ -536,4 +536,30 @@ sense then in others. The derived classes make it easy for you to mix your
 own functions (for instance when you need to convert from your own types to
 vtzero types like with the `mylocation` and `stars` types above) or just use
 the functions in the base classes.
+
+## Using a custom buffer type
+
+Usually `std::string` is used as a buffer type:
+
+```cpp
+std::string buffer;
+tbuilder.serialize(buffer);
+```
+
+But you can also use other buffer types supported by Protozero, like
+`std::vector<char>`:
+
+```cpp
+#include <protozero/buffer_vector.hpp>
+
+std::vector<char> buffer;
+tbuilder.serialize(buffer);
+```
+
+Or you can use your own buffer types and write special adaptors for it.
+See the Protozero documentation for details.
+
+Note that while in theory this allows you to also use fixed-sized buffers
+through the `protozero::fixed_sized_buffer_adaptor` class, vtzero will still
+use `std::string` for additional buffers internally.
 

@@ -15,8 +15,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 project(vtzero)
 
 set(VTZERO_VERSION_MAJOR 1)
-set(VTZERO_VERSION_MINOR 0)
-set(VTZERO_VERSION_PATCH 1)
+set(VTZERO_VERSION_MINOR 1)
+set(VTZERO_VERSION_PATCH 0)
 
 set(VTZERO_VERSION
     "${VTZERO_VERSION_MAJOR}.${VTZERO_VERSION_MINOR}.${VTZERO_VERSION_PATCH}")
@@ -62,7 +62,7 @@ endif()
 #
 #-----------------------------------------------------------------------------
 
-find_package(Protozero 1.6.0 REQUIRED)
+find_package(Protozero 1.7.0 REQUIRED)
 
 include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
 
@@ -75,7 +75,7 @@ find_package(Boost)
 #
 #-----------------------------------------------------------------------------
 message(STATUS "Looking for clang-tidy")
-find_program(CLANG_TIDY NAMES clang-tidy clang-tidy-6.0 clang-tidy-5.0)
+find_program(CLANG_TIDY NAMES clang-tidy clang-tidy-10 clang-tidy-9 clang-tidy-8 clang-tidy-7 clang-tidy-6.0 clang-tidy-5.0)
 
 if(CLANG_TIDY)
     message(STATUS "Looking for clang-tidy - found ${CLANG_TIDY}")
