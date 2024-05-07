@@ -389,7 +389,7 @@ jobs:
           # We can only set this after checkout once we know the workspace directory
           echo "LSAN_OPTIONS=print_suppressions=0:suppressions=${GITHUB_WORKSPACE}/scripts/ci/leaksanitizer.conf" >> $GITHUB_ENV
           echo "UBSAN_OPTIONS=symbolize=1:halt_on_error=1:print_stacktrace=1:suppressions=${GITHUB_WORKSPACE}/scripts/ci/undefinedsanitizer.conf" >> $GITHUB_ENV
-          echo "ASAN_OPTION="print_suppressions=0:suppressions=${GITHUB_WORKSPACE}/scripts/ci/addresssanitizer.conf" >> $GITHUB_ENV
+          echo "ASAN_OPTIONS=print_suppressions=0:suppressions=${GITHUB_WORKSPACE}/scripts/ci/addresssanitizer.conf" >> $GITHUB_ENV
         fi
 
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
