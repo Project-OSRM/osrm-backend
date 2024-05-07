@@ -1,3 +1,0 @@
-[submodule "test/mvt-fixtures"]
-	path = test/mvt-fixtures
-	url = https://github.com/mapbox/mvt-fixtures.git
