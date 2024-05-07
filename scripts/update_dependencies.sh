@@ -28,10 +28,10 @@ PROTOZERO_PATH="mapbox/protozero"
 PROTOZERO_TAG=v1.6.2
 
 VTZERO_PATH="mapbox/vtzero"
-VTZERO_TAG=v1.0.1
+VTZERO_TAG=v1.1.0
 
 FMT_PATH="fmtlib/fmt"
-FMT_TAG=v9.1.0
+FMT_TAG=v10.2.1
 
 function update_subtree () {
     name=${1^^}

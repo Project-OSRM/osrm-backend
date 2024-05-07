@@ -52,10 +52,5 @@ build_script:
         build-appveyor.bat
     )
 
-# remove garbage VS messages
-# https://help.appveyor.com/discussions/problems/4569-the-target-_convertpdbfiles-listed-in-a-beforetargets-attribute-at-c-does-not-exist-in-the-project-and-will-be-ignored
-before_build:
-  - del "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets"
-
 
 #-----------------------------------------------------------------------------
