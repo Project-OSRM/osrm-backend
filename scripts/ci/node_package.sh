@@ -12,11 +12,6 @@ if [[ ${BUILD_TYPE} == "Debug" ]]; then
     NPM_FLAGS='--debug'
 fi
 
-# append --target_arch in order to handle cross-compilation for Apple Silicon
-if [[ "$ENABLE_APPLE_SILICON" == "ON" ]]; then
-    NPM_FLAGS="${NPM_FLAGS} --target_arch=arm64"
-fi
-
 echo "dumping binary meta..."
 ./node_modules/.bin/node-pre-gyp reveal $NPM_FLAGS
 

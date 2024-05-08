@@ -26,7 +26,6 @@ jobs:
     continue-on-error: false
     env:
       BUILD_TYPE: Release
-      ENABLE_APPLE_SILICON: "OFF"
     steps:
     - uses: actions/checkout@v3
     - run: pip install "conan<2.0.0"
@@ -331,7 +330,7 @@ jobs:
             build_node_package: true
             continue-on-error: true
             node: 20
-            runs-on: macos-13 # x86_64
+            runs-on: macos-14-large # x86_64
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
@@ -350,7 +349,6 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
-            ENABLE_APPLE_SILICON: ON
 
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
@@ -370,7 +368,6 @@ jobs:
       ENABLE_CONAN: ${{ matrix.ENABLE_CONAN }}
       ENABLE_SANITIZER: ${{ matrix.ENABLE_SANITIZER }}
       NODE_PACKAGE_TESTS_ONLY: ${{ matrix.NODE_PACKAGE_TESTS_ONLY }}
-      ENABLE_APPLE_SILICON: ${{ matrix.ENABLE_APPLE_SILICON }}
       TARGET_ARCH: ${{ matrix.TARGET_ARCH }}
       OSRM_CONNECTION_RETRIES: ${{ matrix.OSRM_CONNECTION_RETRIES }}
       OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
@@ -609,15 +606,6 @@ jobs:
     #     name: codecov-osrm-backend
     #     fail_ci_if_error: true
     #     verbose: true
-    - name: Check Apple Silicon binary
-      if: ${{  matrix.ENABLE_APPLE_SILICON == 'ON' }}
-      run: |
-        ARCH=$(file ./lib/binding/node_osrm.node | awk '{printf $NF}')
-        if [[ "$ARCH" != "arm64" ]]; then
-          file ./lib/binding/node_osrm.node
-          >&2 echo "Wrong architecture!"
-          exit 1
-        fi
     - name: Build Node package
       if: ${{ matrix.build_node_package }}
       run: ./scripts/ci/node_package.sh
