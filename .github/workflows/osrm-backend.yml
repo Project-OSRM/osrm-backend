@@ -330,7 +330,7 @@ jobs:
             build_node_package: true
             continue-on-error: true
             node: 20
-            runs-on: macos-14-large # x86_64
+            runs-on: macos-13 # x86_64
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
