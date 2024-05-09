@@ -309,7 +309,7 @@ add_subdirectory(${FLATBUFFERS_SRC_DIR}
         ${CMAKE_CURRENT_BINARY_DIR}/flatbuffers-build
         EXCLUDE_FROM_ALL)
 
-set(FMT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt-9.1.0/include")
+set(FMT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt/include")
 add_compile_definitions(FMT_HEADER_ONLY)
 include_directories(SYSTEM ${FMT_INCLUDE_DIR})
 
@@ -330,7 +330,7 @@ if(ENABLE_CONAN)
 
   conan_check(REQUIRED)
 
-  set(CONAN_BOOST_VERSION "1.79.0@#96e4902111a2e343a8ba0aa95391bb58")
+  set(CONAN_BOOST_VERSION "1.85.0@#14265ec82b25d91305bbb3b30d3357f8")
   set(CONAN_BZIP2_VERSION "1.0.8@#d1b2d5816f25865acf978501dff1f897")
   set(CONAN_EXPAT_VERSION "2.2.10@#916908d4a570ad839edd25322c3268cd")
   set(CONAN_LUA_VERSION "5.4.4@#3ec62efc37cd0a5d80b9e5cb35277360")

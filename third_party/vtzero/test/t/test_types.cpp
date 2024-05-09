@@ -22,7 +22,7 @@ TEST_CASE("default constructed float_value_type") {
 }
 
 TEST_CASE("float_value_type with value") {
-    float x = 2.7f;
+    float x = 2.7F;
     vtzero::float_value_type v{x};
     REQUIRE(v.value == Approx(x));
 }

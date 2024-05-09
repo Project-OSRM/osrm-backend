@@ -12,12 +12,15 @@ struct assert_error : public std::runtime_error {
     }
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define vtzero_assert(x) if (!(x)) { throw assert_error{#x}; }
 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define vtzero_assert_in_noexcept_function(x) if (!(x)) { got_an_assert = true; }
 
 extern bool got_an_assert;
 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define REQUIRE_ASSERT(x) x; REQUIRE(got_an_assert); got_an_assert = false;
 
 #include <vtzero/output.hpp>

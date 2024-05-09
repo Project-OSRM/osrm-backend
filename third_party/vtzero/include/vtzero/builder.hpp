@@ -22,11 +22,12 @@ documentation.
 #include "types.hpp"
 #include "vector_tile.hpp"
 
-#include <protozero/pbf_builder.hpp>
+#include <protozero/basic_pbf_builder.hpp>
 
 #include <cstdlib>
 #include <iostream>
 #include <memory>
+#include <numeric>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -53,7 +54,7 @@ namespace vtzero {
 
         friend class layer_builder;
 
-        std::vector<std::unique_ptr<detail::layer_builder_base>> m_layers;
+        std::vector<std::unique_ptr<detail::layer_builder_impl>> m_layers;
 
         /**
          * Add a new layer to the vector tile based on an existing layer. The
@@ -63,7 +64,7 @@ namespace vtzero {
          * existing layer.
          */
         detail::layer_builder_impl* add_layer(const layer& layer) {
-            const auto ptr = new detail::layer_builder_impl{layer.name(), layer.version(), layer.extent()};
+            auto* ptr = new detail::layer_builder_impl{layer.name(), layer.version(), layer.extent()};
             m_layers.emplace_back(ptr);
             return ptr;
         }
@@ -82,7 +83,7 @@ namespace vtzero {
          */
         template <typename TString>
         detail::layer_builder_impl* add_layer(TString&& name, uint32_t version, uint32_t extent) {
-            const auto ptr = new detail::layer_builder_impl{std::forward<TString>(name), version, extent};
+            auto* ptr = new detail::layer_builder_impl{std::forward<TString>(name), version, extent};
             m_layers.emplace_back(ptr);
             return ptr;
         }
@@ -116,7 +117,7 @@ namespace vtzero {
          *        layer.
          */
         void add_existing_layer(data_view&& data) {
-            m_layers.emplace_back(new detail::layer_builder_existing{std::forward<data_view>(data)});
+            m_layers.emplace_back(new detail::layer_builder_impl{std::forward<data_view>(data)});
         }
 
         /**
@@ -135,17 +136,18 @@ namespace vtzero {
          * The data will be appended to the specified buffer. The buffer
          * doesn't have to be empty.
          *
+         * @tparam TBuffer Type of buffer. Must be std:string or other buffer
+         *         type supported by protozero.
          * @param buffer Buffer to append the encoded vector tile to.
          */
-        void serialize(std::string& buffer) const {
-            std::size_t estimated_size = 0;
-            for (const auto& layer : m_layers) {
-                estimated_size += layer->estimated_size();
-            }
+        template <typename TBuffer>
+        void serialize(TBuffer& buffer) const {
+            const std::size_t estimated_size = std::accumulate(m_layers.cbegin(), m_layers.cend(), 0ULL, [](std::size_t sum, const std::unique_ptr<detail::layer_builder_impl>& layer) {
+                return sum + layer->estimated_size();
+            });
 
-            buffer.reserve(buffer.size() + estimated_size);
-
-            protozero::pbf_builder<detail::pbf_tile> pbf_tile_builder{buffer};
+            protozero::basic_pbf_builder<TBuffer, detail::pbf_tile> pbf_tile_builder{buffer};
+            pbf_tile_builder.reserve(estimated_size);
             for (const auto& layer : m_layers) {
                 layer->build(pbf_tile_builder);
             }
@@ -156,7 +158,7 @@ namespace vtzero {
          * and return it.
          *
          * If you want to use an existing buffer instead, use the serialize()
-         * method taking a std::string& as parameter.
+         * member function taking a TBuffer& as parameter.
          *
          * @returns std::string Buffer with encoded vector_tile data.
          */
@@ -373,7 +375,7 @@ namespace vtzero {
         /// Helper function to check size isn't too large
         template <typename T>
         uint32_t check_num_points(T size) {
-            if (size >= (1ul << 29u)) {
+            if (size >= (1UL << 29U)) {
                 throw geometry_exception{"Maximum of 2^29 - 1 points allowed in geometry"};
             }
             return static_cast<uint32_t>(size);
@@ -420,7 +422,7 @@ namespace vtzero {
          * Set the ID of this feature.
          *
          * You can only call this method once and it must be before calling
-         * any other method manipulating the geometry.
+         * any method manipulating the geometry.
          *
          * @param id The ID.
          */
@@ -430,7 +432,27 @@ namespace vtzero {
             vtzero_assert(!m_pbf_geometry.valid() &&
                           !m_pbf_tags.valid() &&
                           "Call set_id() before setting the geometry or adding properties");
-            m_feature_writer.add_uint64(detail::pbf_feature::id, id);
+            set_id_impl(id);
+        }
+
+        /**
+         * Copy the ID of an existing feature to this feature. If the
+         * feature doesn't have an ID, no ID is set.
+         *
+         * You can only call this method once and it must be before calling
+         * any method manipulating the geometry.
+         *
+         * @param feature The feature to copy the ID from.
+         */
+        void copy_id(const feature& feature) {
+            vtzero_assert(m_feature_writer.valid() &&
+                          "Can not call copy_id() after commit() or rollback()");
+            vtzero_assert(!m_pbf_geometry.valid() &&
+                          !m_pbf_tags.valid() &&
+                          "Call copy_id() before setting the geometry or adding properties");
+            if (feature.has_id()) {
+                set_id_impl(feature.id());
+            }
         }
 
         /**
@@ -446,6 +468,41 @@ namespace vtzero {
                           "Can not call add_property() after commit() or rollback()");
             prepare_to_add_property();
             add_property_impl(std::forward<TProp>(prop));
+        }
+
+        /**
+         * Copy all properties of an existing feature to the one being built.
+         *
+         * @param feature The feature to copy the properties from.
+         */
+        void copy_properties(const feature& feature) {
+            vtzero_assert(m_feature_writer.valid() &&
+                          "Can not call copy_properties() after commit() or rollback()");
+            prepare_to_add_property();
+            feature.for_each_property([this](const property& prop) {
+                add_property_impl(prop);
+                return true;
+            });
+        }
+
+        /**
+         * Copy all properties of an existing feature to the one being built
+         * using a property_mapper.
+         *
+         * @tparam TMapper Must be the property_mapper class or something
+         *                 equivalent.
+         * @param feature The feature to copy the properties from.
+         * @param mapper Instance of the property_mapper class.
+         */
+        template <typename TMapper>
+        void copy_properties(const feature& feature, TMapper& mapper) {
+            vtzero_assert(m_feature_writer.valid() &&
+                          "Can not call copy_properties() after commit() or rollback()");
+            prepare_to_add_property();
+            feature.for_each_property_indexes([this, &mapper](const index_value_pair& idxs) {
+                add_property_impl(mapper(idxs));
+                return true;
+            });
         }
 
         /**
@@ -607,7 +664,7 @@ namespace vtzero {
                           "can not call add_points() twice or mix with add_point()");
             vtzero_assert(!m_pbf_tags.valid() &&
                           "add_points() has to be called before properties are added");
-            vtzero_assert(count > 0 && count < (1ul << 29u) && "add_points() must be called with 0 < count < 2^29");
+            vtzero_assert(count > 0 && count < (1UL << 29U) && "add_points() must be called with 0 < count < 2^29");
             m_num_points.set(count);
             m_pbf_geometry = {m_feature_writer, detail::pbf_feature::geometry};
             m_pbf_geometry.add_element(detail::command_move_to(count));
@@ -750,7 +807,7 @@ namespace vtzero {
                           "Can not add geometry after commit() or rollback()");
             vtzero_assert(!m_pbf_tags.valid() &&
                           "add_linestring() has to be called before properties are added");
-            vtzero_assert(count > 1 && count < (1ul << 29u) && "add_linestring() must be called with 1 < count < 2^29");
+            vtzero_assert(count > 1 && count < (1UL << 29U) && "add_linestring() must be called with 1 < count < 2^29");
             m_num_points.assert_is_zero();
             if (!m_pbf_geometry.valid()) {
                 m_pbf_geometry = {m_feature_writer, detail::pbf_feature::geometry};
@@ -924,7 +981,7 @@ namespace vtzero {
                           "Can not add geometry after commit() or rollback()");
             vtzero_assert(!m_pbf_tags.valid() &&
                           "add_ring() has to be called before properties are added");
-            vtzero_assert(count > 3 && count < (1ul << 29u) && "add_ring() must be called with 3 < count < 2^29");
+            vtzero_assert(count > 3 && count < (1UL << 29U) && "add_ring() must be called with 3 < count < 2^29");
             m_num_points.assert_is_zero();
             if (!m_pbf_geometry.valid()) {
                 m_pbf_geometry = {m_feature_writer, detail::pbf_feature::geometry};
@@ -1152,7 +1209,25 @@ namespace vtzero {
             vtzero_assert(m_feature_writer.valid() &&
                           "Can not call set_id() after commit() or rollback()");
             vtzero_assert(!m_pbf_tags.valid());
-            m_feature_writer.add_uint64(detail::pbf_feature::id, id);
+            set_id_impl(id);
+        }
+
+        /**
+         * Copy the ID of an existing feature to this feature. If the
+         * feature doesn't have an ID, no ID is set.
+         *
+         * You can only call this function once and it must be before calling
+         * set_geometry().
+         *
+         * @param feature The feature to copy the ID from.
+         */
+        void copy_id(const feature& feature) {
+            vtzero_assert(m_feature_writer.valid() &&
+                          "Can not call copy_id() after commit() or rollback()");
+            vtzero_assert(!m_pbf_tags.valid());
+            if (feature.has_id()) {
+                set_id_impl(feature.id());
+            }
         }
 
         /**
@@ -1205,6 +1280,39 @@ namespace vtzero {
         }
 
         /**
+         * Copy all properties of an existing feature to the one being built.
+         *
+         * @param feature The feature to copy the properties from.
+         */
+        void copy_properties(const feature& feature) {
+            vtzero_assert(m_feature_writer.valid() &&
+                          "Can not call copy_properties() after commit() or rollback()");
+            feature.for_each_property([this](const property& prop) {
+                add_property_impl(prop);
+                return true;
+            });
+        }
+
+        /**
+         * Copy all properties of an existing feature to the one being built
+         * using a property_mapper.
+         *
+         * @tparam TMapper Must be the property_mapper class or something
+         *                 equivalent.
+         * @param feature The feature to copy the properties from.
+         * @param mapper Instance of the property_mapper class.
+         */
+        template <typename TMapper>
+        void copy_properties(const feature& feature, TMapper& mapper) {
+            vtzero_assert(m_feature_writer.valid() &&
+                          "Can not call copy_properties() after commit() or rollback()");
+            feature.for_each_property_indexes([this, &mapper](const index_value_pair& idxs) {
+                add_property_impl(mapper(idxs));
+                return true;
+            });
+        }
+
+        /**
          * Commit this feature. Call this after all the details of this
          * feature have been added. If this is not called, the feature
          * will be rolled back when the destructor of the feature_builder is
@@ -1249,6 +1357,7 @@ namespace vtzero {
             feature_builder.add_property(p);
             return true;
         });
+        feature_builder.commit();
     }
 
 } // namespace vtzero

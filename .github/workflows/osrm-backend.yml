@@ -19,6 +19,10 @@ env:
   CMAKE_VERSION: 3.21.2
   ENABLE_NODE_BINDINGS: "ON"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   windows-release-node:
     needs: format-taginfo-docs
@@ -26,7 +30,6 @@ jobs:
     continue-on-error: false
     env:
       BUILD_TYPE: Release
-      ENABLE_APPLE_SILICON: "OFF"
     steps:
     - uses: actions/checkout@v3
     - run: pip install "conan<2.0.0"
@@ -300,7 +303,7 @@ jobs:
             build_node_package: true
             continue-on-error: true
             node: 20
-            runs-on: macos-11
+            runs-on: macos-13 # x86_64
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
@@ -312,14 +315,13 @@ jobs:
             build_node_package: true
             continue-on-error: true
             node: 20
-            runs-on: macos-11
+            runs-on: macos-14 # arm64 
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
-            ENABLE_APPLE_SILICON: ON
 
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
@@ -339,13 +341,13 @@ jobs:
       ENABLE_CONAN: ${{ matrix.ENABLE_CONAN }}
       ENABLE_SANITIZER: ${{ matrix.ENABLE_SANITIZER }}
       NODE_PACKAGE_TESTS_ONLY: ${{ matrix.NODE_PACKAGE_TESTS_ONLY }}
-      ENABLE_APPLE_SILICON: ${{ matrix.ENABLE_APPLE_SILICON }}
       TARGET_ARCH: ${{ matrix.TARGET_ARCH }}
       OSRM_CONNECTION_RETRIES: ${{ matrix.OSRM_CONNECTION_RETRIES }}
       OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
     steps:
     - uses: actions/checkout@v3
-
+    - name: Build machine architecture
+      run: uname -m
     - name: Use Node.js
       uses: actions/setup-node@v3
       with:
@@ -368,9 +370,9 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.conan
-        key: v7-conan-${{ matrix.name }}-${{ github.sha }}
+        key: v9-conan-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
-          v7-conan-${{ matrix.name }}-
+          v9-conan-${{ matrix.name }}-
     - name: Enable test cache
       uses: actions/cache@v3
       with:
@@ -400,7 +402,7 @@ jobs:
 
     - name: Install dev dependencies
       run: |
-        python3 -m pip install "conan<2.0.0"
+        python3 -m pip install "conan<2.0.0" || python3 -m pip install "conan<2.0.0" --break-system-packages
 
         # workaround for issue that GitHub Actions seems to not adding it to PATH after https://github.com/actions/runner-images/pull/6499
         # and that's why CI cannot find conan executable installed above
@@ -463,16 +465,6 @@ jobs:
         echo "Using ${JOBS} jobs"
         pushd ${OSRM_BUILD_DIR}
 
-        # handle Apple Silicon cross compilation
-        if [[ "${ENABLE_APPLE_SILICON}" == "ON" ]]; then
-          ARCH=arm64
-          TARGET="${ARCH}-apple-darwin"
-          CFLAGS="$CFLAGS --target=$TARGET"
-          CXXFLAGS="$CXXFLAGS --target=$TARGET"
-          APPLE_SILICON_FLAGS=(-DCMAKE_C_COMPILER_TARGET="$TARGET" -DCMAKE_CXX_COMPILER_TARGET="$TARGET" -DCMAKE_SYSTEM_PROCESSOR="${ARCH}" -DCMAKE_SYSTEM_NAME="Darwin" -DCMAKE_C_FLAGS="$CFLAGS" -DCMAKE_CXX_FLAGS="$CXXFLAGS")
-        else
-          APPLE_SILICON_FLAGS=()
-        fi
 
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                  -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
@@ -484,12 +476,10 @@ jobs:
                  -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
                  -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
                  -DENABLE_CCACHE=ON \
-                 -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
-                 "${APPLE_SILICON_FLAGS[@]}"
-
+                 -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
         make --jobs=${JOBS}
 
-        if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" && "${ENABLE_APPLE_SILICON}" != "ON" ]]; then
+        if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
           make tests --jobs=${JOBS}
           make benchmarks --jobs=${JOBS}
           ccache -s
@@ -501,14 +491,14 @@ jobs:
         fi
         popd
     - name: Build example
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
       run: |
         mkdir example/build && pushd example/build
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
         make --jobs=${JOBS}
         popd
     - name: Run all tests
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
       run: |
         make -C test/data benchmark
 
@@ -537,32 +527,32 @@ jobs:
         popd
 
     - name: Use Node 18
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       uses: actions/setup-node@v3
       with:
         node-version: 18
     - name: Run Node package tests on Node 18
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       run: |
         node --version
         npm run nodejs-tests
     - name: Use Node 20
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       uses: actions/setup-node@v3
       with:
         node-version: 20
     - name: Run Node package tests on Node 20
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       run: |
         node --version
         npm run nodejs-tests
     - name: Use Node latest
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       uses: actions/setup-node@v3
       with:
         node-version: latest
     - name: Run Node package tests on Node-latest
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_APPLE_SILICON != 'ON' }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       run: |
         node --version
         npm run nodejs-tests
@@ -590,15 +580,6 @@ jobs:
     #     name: codecov-osrm-backend
     #     fail_ci_if_error: true
     #     verbose: true
-    - name: Check Apple Silicon binary
-      if: ${{  matrix.ENABLE_APPLE_SILICON == 'ON' }}
-      run: |
-        ARCH=$(file ./lib/binding/node_osrm.node | awk '{printf $NF}')
-        if [[ "$ARCH" != "arm64" ]]; then
-          file ./lib/binding/node_osrm.node
-          >&2 echo "Wrong architecture!"
-          exit 1
-        fi
     - name: Build Node package
       if: ${{ matrix.build_node_package }}
       run: ./scripts/ci/node_package.sh
