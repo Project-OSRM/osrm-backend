@@ -3,21 +3,29 @@
 namespace osrm::engine::routing_algorithms
 {
 
-bool requiresForwardLoop(const PhantomNode &source, const PhantomNode &target)
+bool requiresForwardForce(const PhantomNode &source, const PhantomNode &target)
 {
+    // Conditions to force a routing step:
+    // - Valid source and target.
+    // - Source and target on same segment.
+    // - Source is "downstream" of target in the direction of the edge.
     return source.IsValidForwardSource() && target.IsValidForwardTarget() &&
            source.forward_segment_id.id == target.forward_segment_id.id &&
            source.GetForwardWeightPlusOffset() > target.GetForwardWeightPlusOffset();
 }
 
-bool requiresBackwardLoop(const PhantomNode &source, const PhantomNode &target)
+bool requiresBackwardForce(const PhantomNode &source, const PhantomNode &target)
 {
+    // Conditions to force a routing step:
+    // - Valid source and target.
+    // - Source and target on same segment.
+    // - Source is "downstream" of target in the direction of the edge.
     return source.IsValidReverseSource() && target.IsValidReverseTarget() &&
            source.reverse_segment_id.id == target.reverse_segment_id.id &&
            source.GetReverseWeightPlusOffset() > target.GetReverseWeightPlusOffset();
 }
 
-std::vector<NodeID> getForwardLoopNodes(const PhantomEndpointCandidates &endpoint_candidates)
+std::vector<NodeID> getForwardForceNodes(const PhantomEndpointCandidates &endpoint_candidates)
 {
     std::vector<NodeID> res;
     for (const auto &source_phantom : endpoint_candidates.source_phantoms)
@@ -26,7 +34,7 @@ std::vector<NodeID> getForwardLoopNodes(const PhantomEndpointCandidates &endpoin
             std::any_of(endpoint_candidates.target_phantoms.begin(),
                         endpoint_candidates.target_phantoms.end(),
                         [&](const auto &target_phantom)
-                        { return requiresForwardLoop(source_phantom, target_phantom); });
+                        { return requiresForwardForce(source_phantom, target_phantom); });
         if (requires_loop)
         {
             res.push_back(source_phantom.forward_segment_id.id);
@@ -35,12 +43,12 @@ std::vector<NodeID> getForwardLoopNodes(const PhantomEndpointCandidates &endpoin
     return res;
 }
 
-std::vector<NodeID> getForwardLoopNodes(const PhantomCandidatesToTarget &endpoint_candidates)
+std::vector<NodeID> getForwardForceNodes(const PhantomCandidatesToTarget &endpoint_candidates)
 {
     std::vector<NodeID> res;
     for (const auto &source_phantom : endpoint_candidates.source_phantoms)
     {
-        if (requiresForwardLoop(source_phantom, endpoint_candidates.target_phantom))
+        if (requiresForwardForce(source_phantom, endpoint_candidates.target_phantom))
         {
             res.push_back(source_phantom.forward_segment_id.id);
         }
@@ -48,7 +56,7 @@ std::vector<NodeID> getForwardLoopNodes(const PhantomCandidatesToTarget &endpoin
     return res;
 }
 
-std::vector<NodeID> getBackwardLoopNodes(const PhantomEndpointCandidates &endpoint_candidates)
+std::vector<NodeID> getBackwardForceNodes(const PhantomEndpointCandidates &endpoint_candidates)
 {
     std::vector<NodeID> res;
     for (const auto &source_phantom : endpoint_candidates.source_phantoms)
@@ -57,7 +65,7 @@ std::vector<NodeID> getBackwardLoopNodes(const PhantomEndpointCandidates &endpoi
             std::any_of(endpoint_candidates.target_phantoms.begin(),
                         endpoint_candidates.target_phantoms.end(),
                         [&](const auto &target_phantom)
-                        { return requiresBackwardLoop(source_phantom, target_phantom); });
+                        { return requiresBackwardForce(source_phantom, target_phantom); });
         if (requires_loop)
         {
             res.push_back(source_phantom.reverse_segment_id.id);
@@ -66,12 +74,12 @@ std::vector<NodeID> getBackwardLoopNodes(const PhantomEndpointCandidates &endpoi
     return res;
 }
 
-std::vector<NodeID> getBackwardLoopNodes(const PhantomCandidatesToTarget &endpoint_candidates)
+std::vector<NodeID> getBackwardForceNodes(const PhantomCandidatesToTarget &endpoint_candidates)
 {
     std::vector<NodeID> res;
     for (const auto &source_phantom : endpoint_candidates.source_phantoms)
     {
-        if (requiresBackwardLoop(source_phantom, endpoint_candidates.target_phantom))
+        if (requiresBackwardForce(source_phantom, endpoint_candidates.target_phantom))
         {
             res.push_back(source_phantom.reverse_segment_id.id);
         }
