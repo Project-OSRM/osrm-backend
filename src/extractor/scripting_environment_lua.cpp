@@ -96,11 +96,18 @@ struct to_lua_object : public boost::static_visitor<sol::object>
 // caught but instead should terminate the process. The point of having this error handler rather
 // than just using unprotected Lua functions which terminate the process automatically is that this
 // function provides more useful error messages including Lua tracebacks and line numbers.
-void handle_lua_error(sol::protected_function_result &luares)
+void handle_lua_error(const sol::protected_function_result &luares)
 {
     sol::error luaerr = luares;
-    std::string msg = luaerr.what();
-    std::cerr << msg << std::endl;
+    const auto msg = luaerr.what();
+    if (msg != nullptr)
+    {
+        std::cerr << msg << "\n";
+    }
+    else
+    {
+        std::cerr << "unknown error\n";
+    }
     throw util::exception("Lua error (see stderr for traceback)");
 }
 
@@ -1080,7 +1087,7 @@ Sol2ScriptingEnvironment::GetStringListsFromTable(const std::string &table_name)
 
     for (const auto &pair : *table)
     {
-        sol::table inner_table = pair.second;
+        const sol::table &inner_table = pair.second;
         if (!inner_table.valid())
         {
             throw util::exception("Expected a sub-table at " + table_name + "[" +

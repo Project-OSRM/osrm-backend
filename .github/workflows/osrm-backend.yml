@@ -148,26 +148,26 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: gcc-9-debug-cov
+          - name: gcc-13-debug-cov
             continue-on-error: false
-            node: 18
-            runs-on: ubuntu-20.04
+            node: 20
+            runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: gcc-9
+            CCOMPILER: gcc-13
             CUCUMBER_TIMEOUT: 20000
-            CXXCOMPILER: g++-9
+            CXXCOMPILER: g++-13
             ENABLE_COVERAGE: ON
 
-          - name: gcc-9-debug-asan-ubsan
+          - name: clang-15-debug-asan-ubsan
             continue-on-error: false
-            node: 18
-            runs-on: ubuntu-20.04
+            node: 20
+            runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: gcc-9
+            CCOMPILER: clang-15
             CUCUMBER_TIMEOUT: 20000
-            CXXCOMPILER: g++-9
+            CXXCOMPILER: clang++-15
             ENABLE_SANITIZER: ON
             TARGET_ARCH: x86_64-asan-ubsan
             OSRM_CONNECTION_RETRIES: 10
@@ -245,9 +245,20 @@ jobs:
             CXXCOMPILER: clang++-15
             ENABLE_CONAN: ON
 
+          - name: gcc-13-release
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-13
+            CXXCOMPILER: g++-13
+            ENABLE_BENCHMARKS: ON
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+
           - name: gcc-12-release
             continue-on-error: false
-            node: 18
+            node: 20
             runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
@@ -258,55 +269,13 @@ jobs:
 
           - name: gcc-11-release
             continue-on-error: false
-            node: 18
-            runs-on: ubuntu-20.04
+            node: 20
+            runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: gcc-11
             CXXCOMPILER: g++-11
             ENABLE_BENCHMARKS: ON
-
-          - name: gcc-10-release
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-10
-            CXXCOMPILER: g++-10
-
-          - name: gcc-9-release
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-9
-            CXXCOMPILER: g++-9
-            CXXFLAGS: -Wno-cast-function-type
-
-          - name: gcc-9-conan-release-i686
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-9
-            CFLAGS: "-m32 -msse2 -mfpmath=sse"
-            CXXCOMPILER: g++-9
-            CXXFLAGS: "-m32 -msse2 -mfpmath=sse"
-            TARGET_ARCH: i686
-            ENABLE_CONAN: ON
-
-          - name: gcc-8-release
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-20.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-8
-            CXXCOMPILER: g++-8
-            CXXFLAGS: -Wno-cast-function-type
 
           - name: conan-linux-release-node
             build_node_package: true
@@ -422,6 +391,7 @@ jobs:
           # We can only set this after checkout once we know the workspace directory
           echo "LSAN_OPTIONS=print_suppressions=0:suppressions=${GITHUB_WORKSPACE}/scripts/ci/leaksanitizer.conf" >> $GITHUB_ENV
           echo "UBSAN_OPTIONS=symbolize=1:halt_on_error=1:print_stacktrace=1:suppressions=${GITHUB_WORKSPACE}/scripts/ci/undefinedsanitizer.conf" >> $GITHUB_ENV
+          echo "ASAN_OPTIONS=print_suppressions=0:suppressions=${GITHUB_WORKSPACE}/scripts/ci/addresssanitizer.conf" >> $GITHUB_ENV
         fi
 
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
@@ -448,7 +418,7 @@ jobs:
         fi
 
         # Linux dev packages
-        if [ "${TARGET_ARCH}" != "i686" ] && [ "${ENABLE_CONAN}" != "ON" ]; then
+        if [ "${ENABLE_CONAN}" != "ON" ]; then
           sudo apt-get update -y
           sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev libboost-all-dev
           if [[ "${CCOMPILER}" != clang-* ]]; then
@@ -457,9 +427,6 @@ jobs:
           if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
             sudo apt-get install -y lcov
           fi
-        elif [[ $TARGET_ARCH == "i686" ]]; then
-          source ./scripts/ci/before_install.${TARGET_ARCH}.sh
-          echo "PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig:${PKG_CONFIG_PATH}" >> $GITHUB_ENV
         fi
 
         # TBB
@@ -539,7 +506,7 @@ jobs:
         # All tests assume to be run from the build directory
         pushd ${OSRM_BUILD_DIR}
         for i in ./unit_tests/*-tests ; do echo Running $i ; $i ; done
-        if [ -z "${ENABLE_SANITIZER}" ] && [ "$TARGET_ARCH" != "i686" ]; then
+        if [ -z "${ENABLE_SANITIZER}" ]; then
           npm run nodejs-tests
         fi
         popd
@@ -594,12 +561,12 @@ jobs:
         name: logs
         path: test/logs/
 
-    - name: Generate code coverage
-      if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
-      run: |
-        lcov --directory . --capture --output-file coverage.info # capture coverage info
-        lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter out system
-        lcov --list coverage.info #debug info
+    # - name: Generate code coverage
+    #   if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
+    #   run: |
+    #     lcov --directory . --capture --output-file coverage.info # capture coverage info
+    #     lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter out system
+    #     lcov --list coverage.info #debug info
     
     # # Uploading report to CodeCov
     # - name: Upload code coverage
