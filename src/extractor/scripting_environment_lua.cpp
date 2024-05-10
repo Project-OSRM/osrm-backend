@@ -96,7 +96,7 @@ struct to_lua_object : public boost::static_visitor<sol::object>
 // caught but instead should terminate the process. The point of having this error handler rather
 // than just using unprotected Lua functions which terminate the process automatically is that this
 // function provides more useful error messages including Lua tracebacks and line numbers.
-void handle_lua_error(sol::protected_function_result &luares)
+void handle_lua_error(const sol::protected_function_result &luares)
 {
     sol::error luaerr = luares;
     const auto msg = luaerr.what();
