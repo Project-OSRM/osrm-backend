@@ -100,9 +100,12 @@ void handle_lua_error(sol::protected_function_result &luares)
 {
     sol::error luaerr = luares;
     const auto msg = luaerr.what();
-    if (msg != nullptr) {
+    if (msg != nullptr) 
+    {
         std::cerr << msg << "\n";
-    } else {
+    }
+    else
+    {
         std::cerr << "unknown error\n";
     }
     throw util::exception("Lua error (see stderr for traceback)");
