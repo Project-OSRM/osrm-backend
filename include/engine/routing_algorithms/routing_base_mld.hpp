@@ -495,9 +495,7 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
 
     for (auto const &packed_edge : packed_path)
     {
-        NodeID source, target;
-        bool overlay_edge;
-        std::tie(source, target, overlay_edge) = packed_edge;
+        auto [source, target, overlay_edge] = packed_edge;
         if (!overlay_edge)
         { // a base graph edge
             unpacked_nodes.push_back(target);
@@ -517,19 +515,14 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
             forward_heap.Insert(source, {0}, {source});
             reverse_heap.Insert(target, {0}, {target});
 
-            // TODO: when structured bindings will be allowed change to
-            // auto [subpath_weight, subpath_source, subpath_target, subpath] = ...
-            EdgeWeight subpath_weight;
-            std::vector<NodeID> subpath_nodes;
-            std::vector<EdgeID> subpath_edges;
-            std::tie(subpath_weight, subpath_nodes, subpath_edges) = search(engine_working_data,
-                                                                            facade,
-                                                                            forward_heap,
-                                                                            reverse_heap,
-                                                                            force_step_nodes,
-                                                                            INVALID_EDGE_WEIGHT,
-                                                                            sublevel,
-                                                                            parent_cell_id);
+            auto [subpath_weight, subpath_nodes, subpath_edges] = search(engine_working_data,
+                                                                         facade,
+                                                                         forward_heap,
+                                                                         reverse_heap,
+                                                                         force_step_nodes,
+                                                                         INVALID_EDGE_WEIGHT,
+                                                                         sublevel,
+                                                                         parent_cell_id);
             BOOST_ASSERT(!subpath_edges.empty());
             BOOST_ASSERT(subpath_nodes.size() > 1);
             BOOST_ASSERT(subpath_nodes.front() == source);
@@ -612,10 +605,7 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
     const PhantomEndpoints endpoints{source_phantom, target_phantom};
     insertNodesInHeaps(forward_heap, reverse_heap, endpoints);
 
-    EdgeWeight weight = INVALID_EDGE_WEIGHT;
-    std::vector<NodeID> unpacked_nodes;
-    std::vector<EdgeID> unpacked_edges;
-    std::tie(weight, unpacked_nodes, unpacked_edges) = search(
+    auto [weight, unpacked_nodes, unpacked_edges] = search(
         engine_working_data, facade, forward_heap, reverse_heap, {}, weight_upper_bound, endpoints);
 
     if (weight == INVALID_EDGE_WEIGHT)
