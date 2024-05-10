@@ -418,7 +418,7 @@ jobs:
         fi
 
         # Linux dev packages
-        if [ "${TARGET_ARCH}" != "i686" ] && [ "${ENABLE_CONAN}" != "ON" ]; then
+        if [ "${ENABLE_CONAN}" != "ON" ]; then
           sudo apt-get update -y
           sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev libboost-all-dev
           if [[ "${CCOMPILER}" != clang-* ]]; then
@@ -427,9 +427,6 @@ jobs:
           if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
             sudo apt-get install -y lcov
           fi
-        elif [[ $TARGET_ARCH == "i686" ]]; then
-          source ./scripts/ci/before_install.${TARGET_ARCH}.sh
-          echo "PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig:${PKG_CONFIG_PATH}" >> $GITHUB_ENV
         fi
 
         # TBB
@@ -564,12 +561,12 @@ jobs:
         name: logs
         path: test/logs/
 
-    - name: Generate code coverage
-      if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
-      run: |
-        lcov --directory . --capture --output-file coverage.info # capture coverage info
-        lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter out system
-        lcov --list coverage.info #debug info
+    # - name: Generate code coverage
+    #   if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
+    #   run: |
+    #     lcov --directory . --capture --output-file coverage.info # capture coverage info
+    #     lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter out system
+    #     lcov --list coverage.info #debug info
     
     # # Uploading report to CodeCov
     # - name: Upload code coverage
