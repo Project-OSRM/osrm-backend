@@ -518,7 +518,8 @@ jobs:
         make --jobs=${JOBS} benchmarks
         ./src/benchmarks/alias-bench
         ./src/benchmarks/json-render-bench ../src/benchmarks/portugal_to_korea.json
-        ./src/benchmarks/match-bench ../test/data/ch/monaco.osrm
+        ./src/benchmarks/match-bench ../test/data/ch/monaco.osrm ch
+        ./src/benchmarks/match-bench ../test/data/ch/monaco.osrm mld
         ./src/benchmarks/packedvector-bench
         ./src/benchmarks/rtree-bench ../test/data/monaco.osrm.ramIndex ../test/data/monaco.osrm.fileIndex ../test/data/monaco.osrm.nbg_nodes
         popd
