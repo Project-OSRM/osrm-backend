@@ -650,25 +650,26 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
         return std::numeric_limits<double>::max();
     }
 
-
+    BOOST_ASSERT(unpacked_nodes.size() >= 1);
 
     EdgeDistance distance = {0.0};
 
-    if (source_phantom.forward_segment_id.id == unpacked_nodes[0])
+    if (source_phantom.forward_segment_id.id == unpacked_nodes.front())
     {
         BOOST_ASSERT(source_phantom.forward_segment_id.enabled);
         distance = EdgeDistance{0} - source_phantom.GetForwardDistance();
     }
-    else if (source_phantom.reverse_segment_id.id == unpacked_nodes[0])
+    else if (source_phantom.reverse_segment_id.id == unpacked_nodes.front())
     {
         BOOST_ASSERT(source_phantom.reverse_segment_id.enabled);
         distance = EdgeDistance{0} - source_phantom.GetReverseDistance();
     }
-    
-    for (size_t index = 0; index < unpacked_nodes.size() - 1; ++index) {
+
+    for (size_t index = 0; index < unpacked_nodes.size() - 1; ++index)
+    {
         distance += facade.GetNodeDistance(unpacked_nodes[index]);
     }
-    
+
     if (target_phantom.forward_segment_id.id == unpacked_nodes.back())
     {
         BOOST_ASSERT(target_phantom.forward_segment_id.enabled);

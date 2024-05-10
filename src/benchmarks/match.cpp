@@ -33,7 +33,8 @@ try
     // Configure based on a .osrm base path, and no datasets in shared mem from osrm-datastore
     EngineConfig config;
     config.storage_config = {argv[1]};
-    config.algorithm = (argc > 2 && std::string{argv[2]} == "mld") ? EngineConfig::Algorithm::MLD : EngineConfig::Algorithm::CH;
+    config.algorithm = (argc > 2 && std::string{argv[2]} == "mld") ? EngineConfig::Algorithm::MLD
+                                                                   : EngineConfig::Algorithm::CH;
     config.use_shared_memory = false;
 
     // Routing machine with several services (such as Route, Table, Nearest, Trip, Match)
