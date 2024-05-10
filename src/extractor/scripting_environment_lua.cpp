@@ -99,7 +99,7 @@ struct to_lua_object : public boost::static_visitor<sol::object>
 void handle_lua_error(sol::protected_function_result &luares)
 {
     sol::error luaerr = luares;
-    const sol::table &inner_table = pair.second;
+    const auto msg = luaerr.what();
     std::cerr << msg << std::endl;
     throw util::exception("Lua error (see stderr for traceback)");
 }
@@ -1080,7 +1080,7 @@ Sol2ScriptingEnvironment::GetStringListsFromTable(const std::string &table_name)
 
     for (const auto &pair : *table)
     {
-        const sol::table& inner_table = pair.second;
+        const sol::table &inner_table = pair.second;
         if (!inner_table.valid())
         {
             throw util::exception("Expected a sub-table at " + table_name + "[" +
