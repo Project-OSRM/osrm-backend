@@ -99,7 +99,7 @@ struct to_lua_object : public boost::static_visitor<sol::object>
 void handle_lua_error(sol::protected_function_result &luares)
 {
     sol::error luaerr = luares;
-    const auto msg = luaerr.what();
+    const sol::table &inner_table = pair.second;
     std::cerr << msg << std::endl;
     throw util::exception("Lua error (see stderr for traceback)");
 }
