@@ -100,7 +100,7 @@ void handle_lua_error(sol::protected_function_result &luares)
 {
     sol::error luaerr = luares;
     const auto msg = luaerr.what();
-    if (msg != nullptr) 
+    if (msg != nullptr)
     {
         std::cerr << msg << "\n";
     }
