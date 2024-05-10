@@ -1080,7 +1080,7 @@ Sol2ScriptingEnvironment::GetStringListsFromTable(const std::string &table_name)
 
     for (const auto &pair : *table)
     {
-        sol::table inner_table = pair.second;
+        const sol::table& inner_table = pair.second;
         if (!inner_table.valid())
         {
             throw util::exception("Expected a sub-table at " + table_name + "[" +
