@@ -33,7 +33,7 @@ mld/$(DATA_NAME).osrm: $(DATA_NAME).osrm
 	cp $(DATA_NAME).osrm.* mld/
 
 $(DATA_NAME).osrm: $(DATA_NAME).osm.pbf $(DATA_NAME).poly $(PROFILE) $(OSRM_EXTRACT)
-	@echo "Verifiyng data file integrity..."
+	@echo "Verifying data file integrity..."
 	$(MD5SUM) -c data.md5sum
 	@echo "Running osrm-extract..."
 	$(TIMER) "osrm-extract\t$@" $(OSRM_EXTRACT) $< -p $(PROFILE)
