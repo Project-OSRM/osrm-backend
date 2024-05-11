@@ -44,8 +44,8 @@ void benchmarkQuery(const std::vector<util::Coordinate> &queries,
     }
     TIMER_STOP(query);
 
-    std::cout << TIMER_MSEC(query) << "ms"
-              << "  ->  " << TIMER_MSEC(query) / queries.size() << " ms/query "
+    std::cout << name << " " << TIMER_MSEC(query) << "ms"
+              << ")  ->  " << TIMER_MSEC(query) / queries.size() << " ms/query "
               << "(" << TIMER_MSEC(query) << "ms"
               << ")" << std::endl;
 }
