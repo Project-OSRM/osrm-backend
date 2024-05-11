@@ -631,7 +631,7 @@ jobs:
           ref: ${{ github.head_ref }}
           path: pr
       - run: python3 -m pip install "conan<2.0.0" "requests==2.31.0"
-      - name: Build
+      - name: Build PR Branch
         run: |
           mkdir -p pr/build
           cd pr/build
@@ -640,15 +640,12 @@ jobs:
           make -j$(nproc) benchmarks
           cd ..
           make -C test/data 
-      - name: Run Benchmark on Master Branch
-        run: |
-          ./pr/build/src/benchmarks/match-bench ./pr/test/data/mld/monaco.osrm mld > pr/match.bench
       - name: Checkout Master Branch
         uses: actions/checkout@v3
         with:
           ref: master
           path: master
-      - name: Build
+      - name: Build Master Branch
         run: |
           mkdir master/build
           cd master/build
