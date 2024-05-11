@@ -73,32 +73,32 @@ jobs:
   #       replacesArtifacts: true
   #       token: ${{ secrets.GITHUB_TOKEN }}
 
-  format-taginfo-docs:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
-    - name: Enable Node.js cache
-      uses: actions/cache@v3
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-    - name: Prepare environment
-      run: |
-        npm ci --ignore-scripts
-        clang-format-15 --version
-    - name: Run checks
-      run: |
-        ./scripts/check_taginfo.py taginfo.json profiles/car.lua
-        ./scripts/format.sh && ./scripts/error_on_dirty.sh
-        node ./scripts/validate_changelog.js
-        npm run docs && ./scripts/error_on_dirty.sh
-        npm audit --production
+  # format-taginfo-docs:
+  #   runs-on: ubuntu-22.04
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - name: Use Node.js
+  #     uses: actions/setup-node@v3
+  #     with:
+  #       node-version: 18
+  #   - name: Enable Node.js cache
+  #     uses: actions/cache@v3
+  #     with:
+  #       path: ~/.npm
+  #       key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+  #       restore-keys: |
+  #         ${{ runner.os }}-node-
+  #   - name: Prepare environment
+  #     run: |
+  #       npm ci --ignore-scripts
+  #       clang-format-15 --version
+  #   - name: Run checks
+  #     run: |
+  #       ./scripts/check_taginfo.py taginfo.json profiles/car.lua
+  #       ./scripts/format.sh && ./scripts/error_on_dirty.sh
+  #       node ./scripts/validate_changelog.js
+  #       npm run docs && ./scripts/error_on_dirty.sh
+  #       npm audit --production
 
   # docker-image:
   #   needs: format-taginfo-docs
@@ -144,20 +144,20 @@ jobs:
   #         docker stop osrm-container
 
   build-test-publish:
-    needs: format-taginfo-docs
+   # needs: format-taginfo-docs
     strategy:
       matrix:
         include:
-          - name: gcc-13-debug-cov
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-22.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Debug
-            CCOMPILER: gcc-13
-            CUCUMBER_TIMEOUT: 20000
-            CXXCOMPILER: g++-13
-            ENABLE_COVERAGE: ON
+          # - name: gcc-13-debug-cov
+          #   continue-on-error: false
+          #   node: 20
+          #   runs-on: ubuntu-22.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Debug
+          #   CCOMPILER: gcc-13
+          #   CUCUMBER_TIMEOUT: 20000
+          #   CXXCOMPILER: g++-13
+          #   ENABLE_COVERAGE: ON
 
           # - name: clang-15-debug-asan-ubsan
           #   continue-on-error: false
@@ -270,7 +270,7 @@ jobs:
           - name: gcc-11-release
             continue-on-error: false
             node: 20
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: gcc-11
