@@ -204,15 +204,16 @@ jobs:
           #   CUCUMBER_TIMEOUT: 60000
           #   ENABLE_CLANG_TIDY: ON
 
-          - name: clang-14-release
+          - name: clang-16-release
             continue-on-error: false
             node: 18
             runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-14
-            CXXCOMPILER: clang++-14
+            CCOMPILER: clang-16
+            CXXCOMPILER: clang++-16
             CUCUMBER_TIMEOUT: 60000
+            CLANG_VERSION: 16
 
           # - name: clang-13-release
           #   continue-on-error: false
@@ -346,9 +347,11 @@ jobs:
       OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
     steps:
     # workaround for broken clang on ubuntu runner until https://github.com/actions/runner-images/issues/8659 get fixed
-    - uses: mjp41/workaround8649@7929373c0fe5caf844d8115adccef39e3b5362e7
-      with:
-        os: ${{ matrix.os }}
+    - name: Install newer Clang
+      run: |
+       wget https://apt.llvm.org/llvm.sh
+       chmod +x ./llvm.sh
+       sudo ./llvm.sh ${{ matrix.CLANG_VERSION }}
     - uses: actions/checkout@v3
     - name: Build machine architecture
       run: uname -m
