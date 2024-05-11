@@ -14,9 +14,9 @@ def create_markdown_table(results):
     header = "| Benchmark | Base | PR |\n|-----------|------|----|"
     rows = []
     for result in results:
-        base = result['base'].replace('\n', '<br>')
-        pr = result['pr'].replace('\n', '<br>')
-        row = f"| {result['name']} | ```{base}``` | ```{pr}``` |"
+        base = result['base']
+        pr = result['pr']
+        row = f"| {result['name']} | ```\n{base}\n``` | ```\n{pr}\n``` |"
         rows.append(row)
     return f"{header}\n" + "\n".join(rows)
 

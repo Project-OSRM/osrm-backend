@@ -72,10 +72,10 @@ int main(int, char **)
 
     auto write_slowdown = result_packed.random_write_ms / result_plain.random_write_ms;
     auto read_slowdown = result_packed.random_read_ms / result_plain.random_read_ms;
-    util::Log() << "random write: std::vector " << result_plain.random_write_ms
+    std::cout << "random write: std::vector " << result_plain.random_write_ms
                 << " ms, util::packed_vector " << result_packed.random_write_ms << " ms. "
-                << write_slowdown;
-    util::Log() << "random read: std::vector " << result_plain.random_read_ms
+                << write_slowdown << std::endl;
+    std::cout << "random read: std::vector " << result_plain.random_read_ms
                 << " ms, util::packed_vector " << result_packed.random_read_ms << " ms. "
-                << read_slowdown;
+                << read_slowdown << std::endl;
 }
