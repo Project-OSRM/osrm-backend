@@ -681,7 +681,7 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
         distance += target_phantom.GetReverseDistance();
     }
 
-    return static_cast<double>(static_cast<float>(distance));
+    return from_alias<double>(distance);
 }
 
 } // namespace osrm::engine::routing_algorithms::mld
