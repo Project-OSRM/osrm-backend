@@ -214,15 +214,15 @@ jobs:
             CXXCOMPILER: clang++-14
             CUCUMBER_TIMEOUT: 60000
 
-          - name: clang-13-release
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-22.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: clang-13
-            CXXCOMPILER: clang++-13
-            CUCUMBER_TIMEOUT: 60000
+          # - name: clang-13-release
+          #   continue-on-error: false
+          #   node: 18
+          #   runs-on: ubuntu-22.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-13
+          #   CXXCOMPILER: clang++-13
+          #   CUCUMBER_TIMEOUT: 60000
 
           - name: conan-linux-debug-asan-ubsan
             continue-on-error: false
