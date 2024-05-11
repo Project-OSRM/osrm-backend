@@ -659,8 +659,8 @@ jobs:
           ./scripts/ci/run_benchmarks.sh master pr
       - name: Compare Benchmarks
         run: |
-          cat pr_results/match.bench
-          cat master_results/match.bench
+          cat pr_results/match_mld.bench
+          cat master_results/match_mld.bench
       - name: Post Benchmark Results
         run: |
           python3 pr/scripts/ci/post_benchmark_results.py master_results pr_results
