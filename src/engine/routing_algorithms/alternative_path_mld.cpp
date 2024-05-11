@@ -631,7 +631,6 @@ void unpackPackedPaths(InputIt first,
                                                                                 forward_heap,
                                                                                 reverse_heap,
                                                                                 {},
-                                                                                {},
                                                                                 INVALID_EDGE_WEIGHT,
                                                                                 sublevel,
                                                                                 parent_cell_id);
@@ -720,7 +719,6 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
                                            overlap_via,
                                            overlap_weight,
                                            {},
-                                           {},
                                            endpoint_candidates);
 
             if (!forward_heap.Empty())
@@ -745,7 +743,6 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
                                            forward_heap,
                                            overlap_via,
                                            overlap_weight,
-                                           {},
                                            {},
                                            endpoint_candidates);
 
