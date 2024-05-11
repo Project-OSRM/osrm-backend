@@ -603,8 +603,10 @@ jobs:
   benchmarks:
     runs-on: ubuntu-22.04
     env:
-      CFLAGS: clang-13
+      CCOMPILER: clang-13
       CXXCOMPILER: clang++-13
+      CC: clang-13
+      CXX: clang++-13
     steps: 
       - name: Checkout PR Branch
         uses: actions/checkout@v3
