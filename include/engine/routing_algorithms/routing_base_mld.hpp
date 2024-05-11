@@ -613,11 +613,38 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
         return std::numeric_limits<double>::max();
     }
 
-    std::vector<PathData> unpacked_path;
+    BOOST_ASSERT(unpacked_nodes.size() >= 1);
 
-    annotatePath(facade, endpoints, unpacked_nodes, unpacked_edges, unpacked_path);
+    EdgeDistance distance = {0.0};
 
-    return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
+    if (source_phantom.forward_segment_id.id == unpacked_nodes.front())
+    {
+        BOOST_ASSERT(source_phantom.forward_segment_id.enabled);
+        distance = EdgeDistance{0} - source_phantom.GetForwardDistance();
+    }
+    else if (source_phantom.reverse_segment_id.id == unpacked_nodes.front())
+    {
+        BOOST_ASSERT(source_phantom.reverse_segment_id.enabled);
+        distance = EdgeDistance{0} - source_phantom.GetReverseDistance();
+    }
+
+    for (size_t index = 0; index < unpacked_nodes.size() - 1; ++index)
+    {
+        distance += facade.GetNodeDistance(unpacked_nodes[index]);
+    }
+
+    if (target_phantom.forward_segment_id.id == unpacked_nodes.back())
+    {
+        BOOST_ASSERT(target_phantom.forward_segment_id.enabled);
+        distance += target_phantom.GetForwardDistance();
+    }
+    else if (target_phantom.reverse_segment_id.id == unpacked_nodes.back())
+    {
+        BOOST_ASSERT(target_phantom.reverse_segment_id.enabled);
+        distance += target_phantom.GetReverseDistance();
+    }
+
+    return from_alias<double>(distance);
 }
 
 } // namespace osrm::engine::routing_algorithms::mld

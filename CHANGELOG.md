@@ -47,6 +47,8 @@
       - FIXED: Fix bug when searching for maneuver overrides [#6739](https://github.com/Project-OSRM/osrm-backend/pull/6739)
       - FIXED: Remove force-loop checks for routes with u-turns [#6858](https://github.com/Project-OSRM/osrm-backend/pull/6858)
       - FIXED: Correctly check runtime search conditions for forcing routing steps [#6866](https://github.com/Project-OSRM/osrm-backend/pull/6866)
+    - Map Matching:
+      - CHANGED: Optimise path distance calculation in MLD map matching. [#6876](https://github.com/Project-OSRM/osrm-backend/pull/6876)
     - Debug tiles:
       - FIXED: Ensure speed layer features have unique ids. [#6726](https://github.com/Project-OSRM/osrm-backend/pull/6726)
 
