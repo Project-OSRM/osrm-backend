@@ -601,7 +601,6 @@ jobs:
           key: v1-ccache-benchmarks-${{ github.sha }}
           restore-keys: |
             v1-ccache-benchmarks-
-      - name: mkdir -p ~/.ccache
       - name: Enable Conan cache
         uses: actions/cache@v3
         with:
