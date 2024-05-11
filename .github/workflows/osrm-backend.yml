@@ -658,10 +658,6 @@ jobs:
       - name: Run Benchmarks
         run: |
           ./pr/scripts/ci/run_benchmarks.sh base pr
-      - name: Compare Benchmarks
-        run: |
-          cat pr_results/match_mld.bench
-          cat base_results/match_mld.bench
       - name: Post Benchmark Results
         run: |
           python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results

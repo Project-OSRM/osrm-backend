@@ -36,6 +36,7 @@ def collect_benchmark_results(base_folder, pr_folder):
     results_index = {}
 
     for file in os.listdir(base_folder):
+        print('base file:', file)
         if not file.endswith('.bench'): continue
         with open(f"{base_folder}/{file}") as f:
             result = f.read().strip()
@@ -43,6 +44,7 @@ def collect_benchmark_results(base_folder, pr_folder):
             results_index[file] = len(results) - 1
 
     for file in os.listdir(pr_folder):
+        print('pr file:', file)
         if not file.endswith('.bench'): continue
         with open(f"{pr_folder}/{file}") as f:
             result = f.read().strip()
@@ -50,6 +52,8 @@ def collect_benchmark_results(base_folder, pr_folder):
                 results[results_index[file]]['pr'] = result
             else:
                 results.append({'base': None, 'pr': result, 'name': os.path.splitext(file)[0]})
+
+    return results
 
 def main():
     if len(sys.argv) != 3:
