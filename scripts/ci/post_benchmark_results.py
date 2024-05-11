@@ -43,7 +43,6 @@ def collect_benchmark_results(base_folder, pr_folder):
     results_index = {}
 
     for file in os.listdir(base_folder):
-        print('base file:', file)
         if not file.endswith('.bench'): continue
         with open(f"{base_folder}/{file}") as f:
             result = f.read().strip()
@@ -51,7 +50,6 @@ def collect_benchmark_results(base_folder, pr_folder):
             results_index[file] = len(results) - 1
 
     for file in os.listdir(pr_folder):
-        print('pr file:', file)
         if not file.endswith('.bench'): continue
         with open(f"{pr_folder}/{file}") as f:
             result = f.read().strip()
@@ -71,8 +69,6 @@ def main():
     pr_folder = sys.argv[2]
 
     benchmark_results = collect_benchmark_results(base_folder, pr_folder)
-
-    print(json.dumps(benchmark_results, indent=2))
 
     pr_details = get_pr_details(REPO_OWNER, REPO_NAME, PR_NUMBER)
     pr_body = pr_details.get('body', '')
