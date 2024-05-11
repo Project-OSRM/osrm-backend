@@ -148,16 +148,16 @@ jobs:
     strategy:
       matrix:
         include:
-          # - name: gcc-13-debug-cov
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Debug
-          #   CCOMPILER: gcc-13
-          #   CUCUMBER_TIMEOUT: 20000
-          #   CXXCOMPILER: g++-13
-          #   ENABLE_COVERAGE: ON
+          - name: gcc-13-debug-cov
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CCOMPILER: gcc-13
+            CUCUMBER_TIMEOUT: 20000
+            CXXCOMPILER: g++-13
+            ENABLE_COVERAGE: ON
 
           # - name: clang-15-debug-asan-ubsan
           #   continue-on-error: false
@@ -245,27 +245,27 @@ jobs:
           #   CXXCOMPILER: clang++-15
           #   ENABLE_CONAN: ON
 
-          # - name: gcc-13-release
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: gcc-13
-          #   CXXCOMPILER: g++-13
-          #   ENABLE_BENCHMARKS: ON
-          #   CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+          - name: gcc-13-release
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-13
+            CXXCOMPILER: g++-13
+            ENABLE_BENCHMARKS: ON
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          # - name: gcc-12-release
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: gcc-12
-          #   CXXCOMPILER: g++-12
-          #   ENABLE_BENCHMARKS: ON
-          #   CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+          - name: gcc-12-release
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-12
+            CXXCOMPILER: g++-12
+            ENABLE_BENCHMARKS: ON
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
           - name: gcc-11-release
             continue-on-error: false
