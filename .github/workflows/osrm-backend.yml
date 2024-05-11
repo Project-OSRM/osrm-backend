@@ -601,6 +601,7 @@ jobs:
   #   - run: echo "CI complete"
 
   benchmarks:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-22.04
     env:
       CCOMPILER: clang-13

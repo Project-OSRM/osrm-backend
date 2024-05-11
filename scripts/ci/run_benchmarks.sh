@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e pipefail
 
 function run_benchmarks_for_folder {
