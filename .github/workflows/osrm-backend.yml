@@ -610,6 +610,7 @@ jobs:
       - run: pip install "conan<2.0.0"
       - name: Build
         run: |
+          rm -rf build
           mkdir build
           cd build
           cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
@@ -623,6 +624,7 @@ jobs:
           ref: master
       - name: Build
         run: |
+          rm -rf build
           mkdir build
           cd build
           cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
