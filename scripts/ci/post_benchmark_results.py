@@ -11,8 +11,13 @@ PR_NUMBER = os.getenv('PR_NUMBER')
 REPO_OWNER, REPO_NAME = REPO.split('/')
 
 def create_markdown_table(results):
-    header = "| Benchmark | Base | PR |\n|--------|----|"
-    rows = [f"| {result['name']} | {result['base']} | {result['pr']} |" for result in results]
+    header = "| Benchmark | Base | PR |\n|-----------|------|----|"
+    rows = []
+    for result in results:
+        base = result['base'].replace('\n', '<br>')
+        pr = result['pr'].replace('\n', '<br>')
+        row = f"| {result['name']} | ```{base}``` | ```{pr}``` |"
+        rows.append(row)
     return f"{header}\n" + "\n".join(rows)
 
 def get_pr_details(repo_owner, repo_name, pr_number):
