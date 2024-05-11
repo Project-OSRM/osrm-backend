@@ -609,6 +609,7 @@ jobs:
       CXX: clang++-13
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
     steps: 
       - name: Checkout PR Branch
         uses: actions/checkout@v3
