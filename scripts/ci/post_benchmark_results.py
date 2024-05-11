@@ -1,10 +1,10 @@
 import requests
 import os
+import re
 
-# GitHub token and repository details
-GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')  # Ensure this token has repo and workflow permissions
-REPO = os.getenv('GITHUB_REPOSITORY')
-PR_NUMBER = os.getenv('PR_NUMBER')  # Ensure this is set in the GitHub Actions environment
+GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
+REPO = os.getenv('GITHUB_REPOSITORY')  
+PR_NUMBER = os.getenv('PR_NUMBER')
 
 REPO_OWNER, REPO_NAME = REPO.split('/')
 
@@ -36,11 +36,22 @@ def update_comment(comment_id, repo_owner, repo_name, body):
 
 def main():
     comments = get_pr_comments(REPO_OWNER, REPO_NAME, PR_NUMBER)
-    if comments:
+    if comments and len(comments) > 0:
         first_comment = comments[0]
         markdown_table = create_markdown_table(benchmark_results)
-        new_body = f"{first_comment['body']}\n\n### Benchmark Results\n{markdown_table}"
-        update_comment(first_comment['id'], REPO_OWNER, REPO_NAME, new_body)
+        new_benchmark_section = f"<!-- BENCHMARK_RESULTS_START -->\n## Benchmark Results\n{markdown_table}\n<!-- BENCHMARK_RESULTS_END -->"
+
+        if re.search(r'<!-- BENCHMARK_RESULTS_START -->.*<!-- BENCHMARK_RESULTS_END -->', first_comment['body'], re.DOTALL):
+            updated_body = re.sub(
+                r'<!-- BENCHMARK_RESULTS_START -->.*<!-- BENCHMARK_RESULTS_END -->',
+                new_benchmark_section,
+                first_comment['body'],
+                flags=re.DOTALL
+            )
+        else:
+            updated_body = f"{first_comment['body']}\n\n{new_benchmark_section}"
+        
+        update_comment(first_comment['id'], REPO_OWNER, REPO_NAME, updated_body)
         print("PR comment updated successfully.")
     else:
         print("No comments found on this PR.")
