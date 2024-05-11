@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e pipefail
+set -eou pipefail
 
 function run_benchmarks_for_folder {
     echo "Running benchmarks for $1"
