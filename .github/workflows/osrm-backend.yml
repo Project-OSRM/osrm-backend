@@ -642,7 +642,7 @@ jobs:
           make -C test/data 
       - name: Run Benchmark on Master Branch
         run: |
-          ./pr/build/src/benchmarks/match-bench ./pr/test/data/mld/monaco.osrm mld > pr_bench.txt
+          ./pr/build/src/benchmarks/match-bench ./pr/test/data/mld/monaco.osrm mld > pr/match.bench
       - name: Checkout Master Branch
         uses: actions/checkout@v3
         with:
@@ -657,14 +657,13 @@ jobs:
           make -j$(nproc) benchmarks
           cd ..
           make -C test/data 
-      - name: Run Benchmark on Master Branch
+      - name: Run Benchmarks
         run: |
-          ./master/build/src/benchmarks/match-bench ./master/test/data/mld/monaco.osrm mld > master_bench.txt
+          ./scripts/ci/run_benchmarks.sh master pr
       - name: Compare Benchmarks
         run: |
-          cat pr_bench.txt
-          cat master_bench.txt
-            - name: Run benchmark and update PR
+          cat pr_results/match.bench
+          cat master_results/match.bench
       - name: Post Benchmark Results
         run: |
-          python3 scripts/ci/post_benchmark_results.py
+          python3 pr/scripts/ci/post_benchmark_results.py master_results pr_results

@@ -1,6 +1,7 @@
 import requests
 import os
 import re
+import sys
 
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
 REPO = os.getenv('GITHUB_REPOSITORY')  
@@ -8,15 +9,9 @@ PR_NUMBER = os.getenv('PR_NUMBER')
 
 REPO_OWNER, REPO_NAME = REPO.split('/')
 
-benchmark_results = [
-  {'master': '0.002s', 'pr': '0.0018s'},
-  {'master': '0.003s', 'pr': '0.0025s'},
-  {'master': '0.004s', 'pr': '0.0038s'}
-]
-
 def create_markdown_table(results):
-    header = "| Master | PR |\n|--------|----|"
-    rows = [f"| {result['master']} | {result['pr']} |" for result in results]
+    header = "| Benchmark | Master | PR |\n|--------|----|"
+    rows = [f"| {result['name']} | {result['master']} | {result['pr']} |" for result in results]
     return f"{header}\n" + "\n".join(rows)
 
 def get_pr_comments(repo_owner, repo_name, pr_number):
@@ -34,7 +29,37 @@ def update_comment(comment_id, repo_owner, repo_name, body):
     response.raise_for_status()
     return response.json()
 
+
+def collect_benchmark_results(master_folder, pr_folder):
+    results = []
+    results_index = {}
+
+    for file in os.listdir(master_folder):
+        if not file.endswith('.bench'): continue
+        with open(f"{master_folder}/{file}") as f:
+            result = f.read().strip()
+            results.append({'master': result, 'pr': None, 'name': os.path.splitext(file)[0]})
+            results_index[file] = len(results) - 1
+
+    for file in os.listdir(pr_folder):
+        if not file.endswith('.bench'): continue
+        with open(f"{pr_folder}/{file}") as f:
+            result = f.read().strip()
+            if file in results_index:
+                results[results_index[file]]['pr'] = result
+            else:
+                results.append({'master': None, 'pr': result, 'name': os.path.splitext(file)[0]})
+
 def main():
+    if len(sys.argv) != 3:
+        print("Usage: python post_benchmark_results.py <master_folder> <pr_folder>")
+        exit(1)
+
+    master_folder = sys.argv[1]
+    pr_folder = sys.argv[2]
+
+    benchmark_results = collect_benchmark_results(master_folder, pr_folder)
+
     comments = get_pr_comments(REPO_OWNER, REPO_NAME, PR_NUMBER)
     if comments and len(comments) > 0:
         first_comment = comments[0]
