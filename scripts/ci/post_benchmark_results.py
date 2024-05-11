@@ -18,7 +18,7 @@ def create_markdown_table(results):
         name = result['name']
         base = result['base'].replace('\n', '<br/>')
         pr = result['pr'].replace('\n', '<br/>')
-        row = f"| `{name}` | <pre>{base}</pre> | <pre>{pr}</pre> |"
+        row = f"| {name} | {base} | {pr} |"
         rows.append(row)
     return f"{header}\n" + "\n".join(rows)
 
