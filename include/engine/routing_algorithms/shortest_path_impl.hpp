@@ -64,7 +64,6 @@ void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
            leg_weight,
            leg_packed_path,
            {},
-           {},
            candidates);
 }
 
@@ -124,8 +123,7 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                reverse_heap,
                new_total_weight_to_forward,
                leg_packed_path_forward,
-               getForwardLoopNodes(candidates),
-               {},
+               getForwardForceNodes(candidates),
                candidates);
     }
 
@@ -164,8 +162,7 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                reverse_heap,
                new_total_weight_to_reverse,
                leg_packed_path_reverse,
-               {},
-               getBackwardLoopNodes(candidates),
+               getBackwardForceNodes(candidates),
                candidates);
     }
 }
