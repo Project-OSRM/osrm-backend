@@ -620,6 +620,7 @@ jobs:
           cd build
           cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
           make -j$(nproc) benchmarks
+          make -C test/data 
       - name: Run Benchmark on Master Branch
         run: |
           ./build/src/benchmarks/match-bench ../test/data/mld/monaco.osrm mld > pr_bench.txt
@@ -634,6 +635,7 @@ jobs:
           cd build
           cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
           make -j$(nproc) benchmarks
+          make -C test/data 
       - name: Run Benchmark on Master Branch
         run: |
           ./build/src/benchmarks/match-bench ../test/data/mld/monaco.osrm mld > master_bench.txt
