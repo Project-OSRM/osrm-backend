@@ -611,20 +611,20 @@ jobs:
       PR_NUMBER: ${{ github.event.pull_request.number }}
       GITHUB_REPOSITORY: ${{ github.repository }}
     steps: 
-    - name: Enable compiler cache
-      uses: actions/cache@v3
-      with:
-        path: ~/.ccache
-        key: v1-ccache-benchmarks-${{ github.sha }}
-        restore-keys: |
-          v1-ccache-benchmarks-
-    - name: Enable Conan cache
-      uses: actions/cache@v3
-      with:
-        path: ~/.conan
-        key: v1-conan-benchmarks-${{ github.sha }}
-        restore-keys: |
-          v1-conan-benchmarks-
+      - name: Enable compiler cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.ccache
+          key: v1-ccache-benchmarks-${{ github.sha }}
+          restore-keys: |
+            v1-ccache-benchmarks-
+      - name: Enable Conan cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.conan
+          key: v1-conan-benchmarks-${{ github.sha }}
+          restore-keys: |
+            v1-conan-benchmarks-
       - name: Checkout PR Branch
         uses: actions/checkout@v3
         with:
