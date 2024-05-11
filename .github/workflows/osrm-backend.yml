@@ -640,15 +640,15 @@ jobs:
           make -j$(nproc) benchmarks
           cd ..
           make -C test/data 
-      - name: Checkout Master Branch
+      - name: Checkout Base Branch
         uses: actions/checkout@v3
         with:
-          ref: master
-          path: master
-      - name: Build Master Branch
+          ref: ${{ github.event.pull_request.base.ref }}
+          path: base
+      - name: Build Base Branch
         run: |
-          mkdir master/build
-          cd master/build
+          mkdir base/build
+          cd base/build
           cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
           make -j$(nproc)
           make -j$(nproc) benchmarks
@@ -656,11 +656,11 @@ jobs:
           make -C test/data 
       - name: Run Benchmarks
         run: |
-          ./scripts/ci/run_benchmarks.sh master pr
+          ./pr/scripts/ci/run_benchmarks.sh base pr
       - name: Compare Benchmarks
         run: |
           cat pr_results/match_mld.bench
-          cat master_results/match_mld.bench
+          cat base_results/match_mld.bench
       - name: Post Benchmark Results
         run: |
-          python3 pr/scripts/ci/post_benchmark_results.py master_results pr_results
+          python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
