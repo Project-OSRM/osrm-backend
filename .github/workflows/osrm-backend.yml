@@ -437,7 +437,7 @@ jobs:
           sudo ./bootstrap.sh
           sudo ./b2 install
           cd ..
-          rm -rf boost_${BOOST_VERSION_UNDERSCORE}*
+          sudo rm -rf boost_${BOOST_VERSION_UNDERSCORE}*
         fi
 
         # TBB
