@@ -607,41 +607,49 @@ jobs:
       CXXCOMPILER: clang++-13
       CC: clang-13
       CXX: clang++-13
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
     steps: 
       - name: Checkout PR Branch
         uses: actions/checkout@v3
         with:
           ref: ${{ github.head_ref }}
+          path: pr
       - run: pip install "conan<2.0.0"
       - name: Build
         run: |
-          rm -rf build
-          mkdir build
-          cd build
+          mkdir -p pr/build
+          cd pr/build
           cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          make -j$(nproc) 
           make -j$(nproc) benchmarks
           cd ..
           make -C test/data 
       - name: Run Benchmark on Master Branch
         run: |
-          ./build/src/benchmarks/match-bench ../test/data/mld/monaco.osrm mld > pr_bench.txt
+          ./pr/build/src/benchmarks/match-bench ../test/data/mld/monaco.osrm mld > pr_bench.txt
       - name: Checkout Master Branch
         uses: actions/checkout@v3
         with:
           ref: master
+          path: master
       - name: Build
         run: |
-          rm -rf build
-          mkdir build
-          cd build
+          mkdir master/build
+          cd master/build
           cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          make -j$(nproc)
           make -j$(nproc) benchmarks
           cd ..
           make -C test/data 
       - name: Run Benchmark on Master Branch
         run: |
-          ./build/src/benchmarks/match-bench ../test/data/mld/monaco.osrm mld > master_bench.txt
+          ./master/build/src/benchmarks/match-bench ../test/data/mld/monaco.osrm mld > master_bench.txt
       - name: Compare Benchmarks
         run: |
           cat pr_bench.txt
           cat master_bench.txt
+            - name: Run benchmark and update PR
+      - name: Post Benchmark Results
+        run: |
+          python3 scripts/ci/post_benchmark_results.py
