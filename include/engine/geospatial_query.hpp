@@ -74,11 +74,6 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                 {
                     return std::pair<bool, bool>{false, false};
                 }
-                (void)approach;
-                (void)use_all_edges;
-                (void)bearing_with_range;
-                (void)use_all_edges;
-
                 auto valid = CheckSegmentExclude(segment) &&
                              CheckApproach(input_coordinate, segment, approach) &&
                              (use_all_edges ? HasValidEdge(segment, *use_all_edges)
