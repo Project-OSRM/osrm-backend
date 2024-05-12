@@ -2,7 +2,6 @@
 #define STATIC_RTREE_HPP
 
 #include "storage/tar_fwd.hpp"
-
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/deallocating_vector.hpp"
@@ -11,6 +10,7 @@
 #include "util/integer_range.hpp"
 #include "util/mmap_file.hpp"
 #include "util/rectangle.hpp"
+#include "util/timing_util.hpp"
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 #include "util/web_mercator.hpp"
@@ -565,6 +565,57 @@ class StaticRTree
             { return num_results >= max_results; });
     }
 
+    inline double GetSegmentDistance(const Coordinate input_coordinate,
+                                     const CandidateSegment &segment) const
+    {
+        BOOST_ASSERT(segment.data.forward_segment_id.id != SPECIAL_SEGMENTID ||
+                     !segment.data.forward_segment_id.enabled);
+        BOOST_ASSERT(segment.data.reverse_segment_id.id != SPECIAL_SEGMENTID ||
+                     !segment.data.reverse_segment_id.enabled);
+
+        Coordinate wsg84_coordinate =
+            util::web_mercator::toWGS84(segment.fixed_projected_coordinate);
+
+        return util::coordinate_calculation::greatCircleDistance(input_coordinate,
+                                                                 wsg84_coordinate);
+    }
+
+    template <typename FilterT>
+    std::vector<CandidateSegment> SearchInRange(const Coordinate input_coordinate,
+                                                double maxDistanceMeters,
+                                                const FilterT filter) const
+    {
+        (void)filter;
+        auto projected_coordinate = web_mercator::fromWGS84(input_coordinate);
+        Coordinate fixed_projected_coordinate{projected_coordinate};
+
+        auto bbox = Rectangle::ExpandMeters(input_coordinate, maxDistanceMeters);
+        auto results_in_bbox = SearchInBox(bbox);
+        std::vector<CandidateSegment> results;
+        for (const auto &current_edge : results_in_bbox)
+        {
+            const auto projected_u = web_mercator::fromWGS84(m_coordinate_list[current_edge.u]);
+            const auto projected_v = web_mercator::fromWGS84(m_coordinate_list[current_edge.v]);
+
+            FloatCoordinate projected_nearest;
+            std::tie(std::ignore, projected_nearest) =
+                coordinate_calculation::projectPointOnSegment(
+                    projected_u, projected_v, fixed_projected_coordinate);
+
+            CandidateSegment current_candidate{projected_nearest, current_edge};
+            auto use_segment = filter(current_candidate);
+            if (!use_segment.first && !use_segment.second)
+            {
+                continue;
+            }
+            current_candidate.data.forward_segment_id.enabled &= use_segment.first;
+            current_candidate.data.reverse_segment_id.enabled &= use_segment.second;
+
+            results.push_back(std::move(current_candidate));
+        }
+        return results;
+    }
+
     // Return edges in distance order with the coordinate of the closest point on the edge.
     template <typename FilterT, typename TerminationT>
     std::vector<CandidateSegment> Nearest(const Coordinate input_coordinate,
@@ -572,8 +623,10 @@ class StaticRTree
                                           const TerminationT terminate) const
     {
         std::vector<CandidateSegment> results;
+
         auto projected_coordinate = web_mercator::fromWGS84(input_coordinate);
         Coordinate fixed_projected_coordinate{projected_coordinate};
+
         // initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
         traversal_queue.push(QueryCandidate{0, TreeIndex{}});

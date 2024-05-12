@@ -224,6 +224,7 @@ try
         if (rc != Status::Ok ||
             json_result.values.at("matchings").get<json::Array>().values.size() != 1)
         {
+            std::cerr << "Failure\n";
             return EXIT_FAILURE;
         }
     }

@@ -47,6 +47,50 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         return rtree.SearchInBox(bbox);
     }
 
+    std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
+                        const Approach approach,
+                        const double max_distance,
+                        const boost::optional<Bearing> bearing_with_range,
+                        const boost::optional<bool> use_all_edges) const
+    {
+#if 0
+        return NearestPhantomNodes(input_coordinate,
+                                   approach,
+                                   boost::optional<size_t>{},
+                                   max_distance,
+                                   bearing_with_range,
+                                   use_all_edges);
+#else
+        auto results = rtree.SearchInRange(
+            input_coordinate,
+            max_distance,
+            [this, approach, &input_coordinate, &bearing_with_range, &use_all_edges, max_distance](
+                const CandidateSegment &segment)
+            {
+                auto invalidDistance =
+                    CheckSegmentDistance(input_coordinate, segment, max_distance);
+                if (invalidDistance)
+                {
+                    return std::pair<bool, bool>{false, false};
+                }
+                (void)approach;
+                (void)use_all_edges;
+                (void)bearing_with_range;
+                (void)use_all_edges;
+
+                auto valid = CheckSegmentExclude(segment) &&
+                             CheckApproach(input_coordinate, segment, approach) &&
+                             (use_all_edges ? HasValidEdge(segment, *use_all_edges)
+                                            : HasValidEdge(segment)) &&
+                             (bearing_with_range ? CheckSegmentBearing(segment, *bearing_with_range)
+                                                 : std::make_pair(true, true));
+                return valid;
+            });
+        return MakePhantomNodes(input_coordinate, results);
+#endif
+    }
+
     // Returns max_results nearest PhantomNodes that are valid within the provided parameters.
     // Does not filter by small/big component!
     std::vector<PhantomNodeWithDistance>
@@ -294,6 +338,11 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                        distance_and_phantoms.begin(),
                        [this, &input_coordinate](const CandidateSegment &segment)
                        { return MakePhantomNode(input_coordinate, segment.data); });
+        std::sort(distance_and_phantoms.begin(), distance_and_phantoms.end(), [](const auto &lhs,
+                                                                                const auto &rhs)
+                  {
+                      return lhs.distance < rhs.distance;
+                  });
         return distance_and_phantoms;
     }
 
