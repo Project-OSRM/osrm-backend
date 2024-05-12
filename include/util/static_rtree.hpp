@@ -565,21 +565,9 @@ class StaticRTree
             { return num_results >= max_results; });
     }
 
-    inline double GetSegmentDistance(const Coordinate input_coordinate,
-                                     const CandidateSegment &segment) const
-    {
-        BOOST_ASSERT(segment.data.forward_segment_id.id != SPECIAL_SEGMENTID ||
-                     !segment.data.forward_segment_id.enabled);
-        BOOST_ASSERT(segment.data.reverse_segment_id.id != SPECIAL_SEGMENTID ||
-                     !segment.data.reverse_segment_id.enabled);
-
-        Coordinate wsg84_coordinate =
-            util::web_mercator::toWGS84(segment.fixed_projected_coordinate);
-
-        return util::coordinate_calculation::greatCircleDistance(input_coordinate,
-                                                                 wsg84_coordinate);
-    }
-
+    // NB 1: results are not guaranteed to be sorted by distance
+    // NB 2: maxDistanceMeters is not a hard limit, it's just a way to reduce the number of edges
+    // returned
     template <typename FilterT>
     std::vector<CandidateSegment> SearchInRange(const Coordinate input_coordinate,
                                                 double maxDistanceMeters,

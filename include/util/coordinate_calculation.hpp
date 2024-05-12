@@ -36,6 +36,13 @@ inline double radToDeg(const double radian)
 }
 } // namespace detail
 
+const constexpr static double METERS_PER_DEGREE_LAT = 110567.0;
+
+inline double metersPerLngDegree(const FixedLatitude lat)
+{
+    return std::cos(detail::degToRad(static_cast<double>(toFloating(lat)))) * METERS_PER_DEGREE_LAT;
+}
+
 //! Takes the squared euclidean distance of the input coordinates. Does not return meters!
 std::uint64_t squaredEuclideanDistance(const Coordinate lhs, const Coordinate rhs);
 

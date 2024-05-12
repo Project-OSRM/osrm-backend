@@ -4,8 +4,8 @@
 #include "coordinate.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
-
 #include <boost/assert.hpp>
+#include <boost/math/constants/constants.hpp>
 
 #include <limits>
 #include <utility>
@@ -170,19 +170,11 @@ struct RectangleInt2D
                max_lat != FixedLatitude{std::numeric_limits<std::int32_t>::min()};
     }
 
-    static double MetersPerLngDegree(const FixedLatitude lat)
-    {
-        constexpr static double kMetersPerDegreeLat = 110567.0f;
-
-        constexpr float kRadPerDeg = (3.14 /* TODO */ / 180.0f);
-
-        return std::cos(kRadPerDeg * static_cast<double>(toFloating(lat))) * kMetersPerDegreeLat;
-    }
     static RectangleInt2D ExpandMeters(const Coordinate &coordinate, const double meters)
     {
-        constexpr static double kMetersPerDegreeLat = 110567.0f;
-        const double lat_offset = meters / kMetersPerDegreeLat;
-        const double lon_offset = meters / MetersPerLngDegree(coordinate.lat);
+        const double lat_offset = meters / coordinate_calculation::METERS_PER_DEGREE_LAT;
+        const double lon_offset =
+            meters / coordinate_calculation::metersPerLngDegree(coordinate.lat);
 
         return RectangleInt2D{coordinate.lon - toFixed(FloatLongitude{lon_offset}),
                               coordinate.lon + toFixed(FloatLongitude{lon_offset}),
