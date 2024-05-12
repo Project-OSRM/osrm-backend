@@ -87,7 +87,15 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                                                  : std::make_pair(true, true));
                 return valid;
             });
-        return MakePhantomNodes(input_coordinate, results);
+        auto phantom_nodes = MakePhantomNodes(input_coordinate, results);
+        // there is no guarantee that `SearchInRange` will return results sorted by distance, 
+        // but we may rely on it somewhere
+        std::sort(phantom_nodes.begin(), phantom_nodes.end(), [](const auto &lhs,
+                                                                        const auto &rhs)
+            {
+                return lhs.distance < rhs.distance;
+            });
+        return phantom_nodes;
 #endif
     }
 
@@ -338,11 +346,6 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                        distance_and_phantoms.begin(),
                        [this, &input_coordinate](const CandidateSegment &segment)
                        { return MakePhantomNode(input_coordinate, segment.data); });
-        std::sort(distance_and_phantoms.begin(), distance_and_phantoms.end(), [](const auto &lhs,
-                                                                                const auto &rhs)
-                  {
-                      return lhs.distance < rhs.distance;
-                  });
         return distance_and_phantoms;
     }
 
