@@ -159,47 +159,47 @@ jobs:
           #   CXXCOMPILER: g++-13
           #   ENABLE_COVERAGE: ON
 
-          # - name: clang-15-debug-asan-ubsan
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Debug
-          #   CCOMPILER: clang-15
-          #   CUCUMBER_TIMEOUT: 20000
-          #   CXXCOMPILER: clang++-15
-          #   ENABLE_SANITIZER: ON
-          #   TARGET_ARCH: x86_64-asan-ubsan
-          #   OSRM_CONNECTION_RETRIES: 10
-          #   OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
+          - name: clang-18-debug-asan-ubsan
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-18
+            CUCUMBER_TIMEOUT: 20000
+            CXXCOMPILER: clang++-18
+            ENABLE_SANITIZER: ON
+            TARGET_ARCH: x86_64-asan-ubsan
+            OSRM_CONNECTION_RETRIES: 10
+            OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
-          # - name: clang-15-release
+          - name: clang-18-release
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
+            CUCUMBER_TIMEOUT: 60000
+
+          - name: clang-18-debug
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
+            CUCUMBER_TIMEOUT: 60000
+
+          # - name: clang-18-debug-clang-tidy
           #   continue-on-error: false
           #   node: 18
           #   runs-on: ubuntu-22.04
           #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-15
-          #   CXXCOMPILER: clang++-15
-          #   CUCUMBER_TIMEOUT: 60000
-
-          # - name: clang-15-debug
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
           #   BUILD_TYPE: Debug
-          #   CCOMPILER: clang-15
-          #   CXXCOMPILER: clang++-15
-          #   CUCUMBER_TIMEOUT: 60000
-
-          # - name: clang-15-debug-clang-tidy
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Debug
-          #   CCOMPILER: clang-15
+          #   CCOMPILER: clang-18
           #   CXXCOMPILER: clang++-15
           #   CUCUMBER_TIMEOUT: 60000
           #   ENABLE_CLANG_TIDY: ON
@@ -213,15 +213,14 @@ jobs:
             CCOMPILER: clang-16
             CXXCOMPILER: clang++-16
             CUCUMBER_TIMEOUT: 60000
-            CLANG_VERSION: 16
 
-          # - name: clang-13-release
+          # - name: clang-16-release
           #   continue-on-error: false
           #   node: 18
           #   runs-on: ubuntu-22.04
           #   BUILD_TOOLS: ON
           #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-13
+          #   CCOMPILER: clang-16
           #   CXXCOMPILER: clang++-13
           #   CUCUMBER_TIMEOUT: 60000
 
@@ -231,7 +230,7 @@ jobs:
           #   runs-on: ubuntu-22.04
           #   BUILD_TOOLS: ON
           #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-15
+          #   CCOMPILER: clang-18
           #   CXXCOMPILER: clang++-15
           #   ENABLE_CONAN: ON
           #   ENABLE_SANITIZER: ON
@@ -242,7 +241,7 @@ jobs:
           #   runs-on: ubuntu-22.04
           #   BUILD_TOOLS: ON
           #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-15
+          #   CCOMPILER: clang-18
           #   CXXCOMPILER: clang++-15
           #   ENABLE_CONAN: ON
 
@@ -284,7 +283,7 @@ jobs:
           #   node: 20
           #   runs-on: ubuntu-22.04
           #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-13
+          #   CCOMPILER: clang-16
           #   CXXCOMPILER: clang++-13
           #   ENABLE_CONAN: ON
           #   NODE_PACKAGE_TESTS_ONLY: ON
@@ -295,7 +294,7 @@ jobs:
           #   node: 20
           #   runs-on: ubuntu-22.04
           #   BUILD_TYPE: Debug
-          #   CCOMPILER: clang-13
+          #   CCOMPILER: clang-16
           #   CXXCOMPILER: clang++-13
           #   ENABLE_CONAN: ON
           #   NODE_PACKAGE_TESTS_ONLY: ON
@@ -349,9 +348,14 @@ jobs:
     # workaround for broken clang on ubuntu runner until https://github.com/actions/runner-images/issues/8659 get fixed
     - name: Install newer Clang
       run: |
-       wget https://apt.llvm.org/llvm.sh
-       chmod +x ./llvm.sh
-       sudo ./llvm.sh ${{ matrix.CLANG_VERSION }}
+        if [[ $CCOMPILER == clang-* ]]; then
+          CLANG_VERSION=${CCOMPILER#clang-}
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x ./llvm.sh
+          sudo ./llvm.sh ${CLANG_VERSION}
+        else
+          echo "CCOMPILER is not clang. Skipping installation."
+        fi
     - uses: actions/checkout@v3
     - name: Build machine architecture
       run: uname -m
