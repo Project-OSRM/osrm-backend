@@ -12,8 +12,10 @@
 
 #include <boost/assert.hpp>
 
+#include <boost/optional/optional.hpp>
 #include <exception>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -213,26 +215,51 @@ try
         FloatCoordinate{FloatLongitude{7.415513992309569}, FloatLatitude{43.73347615145474}});
     params.coordinates.push_back(
         FloatCoordinate{FloatLongitude{7.415342330932617}, FloatLatitude{43.733251335381205}});
-
-    TIMER_START(routes);
-    auto NUM = 100;
-    for (int i = 0; i < NUM; ++i)
+    for (size_t index = 0; index < params.coordinates.size(); ++index)
     {
-        engine::api::ResultT result = json::Object();
-        const auto rc = osrm.Match(params, result);
-        auto &json_result = result.get<json::Object>();
-        if (rc != Status::Ok ||
-            json_result.values.at("matchings").get<json::Array>().values.size() != 1)
-        {
-            std::cerr << "Failure\n";
-            return EXIT_FAILURE;
-        }
+        params.radiuses.emplace_back();
     }
-    TIMER_STOP(routes);
-    std::cout << (TIMER_MSEC(routes) / NUM) << "ms/req at " << params.coordinates.size()
-              << " coordinate" << std::endl;
-    std::cout << (TIMER_MSEC(routes) / NUM / params.coordinates.size()) << "ms/coordinate"
-              << std::endl;
+
+    auto run_benchmark = [&](double radiusInMeters)
+    {
+        for (auto &radius : params.radiuses)
+        {
+            radius = radiusInMeters;
+        }
+
+        TIMER_START(routes);
+        auto NUM = 100;
+        for (int i = 0; i < NUM; ++i)
+        {
+            engine::api::ResultT result = json::Object();
+            const auto rc = osrm.Match(params, result);
+            auto &json_result = result.get<json::Object>();
+            if (rc != Status::Ok ||
+                json_result.values.at("matchings").get<json::Array>().values.size() != 1)
+            {
+                throw std::runtime_error{"Couldn't match"};
+            }
+        }
+        TIMER_STOP(routes);
+        std::cout << "Radius " << radiusInMeters << "m: " << std::endl;
+        std::cout << (TIMER_MSEC(routes) / NUM) << "ms/req at " << params.coordinates.size()
+                  << " coordinate" << std::endl;
+        std::cout << (TIMER_MSEC(routes) / NUM / params.coordinates.size()) << "ms/coordinate"
+                  << std::endl;
+    };
+
+    try
+    {
+        run_benchmark(5.0);
+        run_benchmark(10.0);
+        run_benchmark(15.0);
+        run_benchmark(30.0);
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }
