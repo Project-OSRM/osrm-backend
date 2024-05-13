@@ -229,7 +229,7 @@ jobs:
             node: 18
             runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
-            BUILD_TYPE: Release
+            BUILD_TYPE: Debug
             CCOMPILER: clang-15
             CXXCOMPILER: clang++-15
             ENABLE_CONAN: ON
@@ -245,6 +245,16 @@ jobs:
             CXXCOMPILER: clang++-15
             ENABLE_CONAN: ON
 
+          - name: conan-linux-debug
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-15
+            CXXCOMPILER: clang++-15
+            ENABLE_CONAN: ON
+          
           - name: gcc-13-release
             continue-on-error: false
             node: 20
