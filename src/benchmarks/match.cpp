@@ -220,11 +220,14 @@ try
         params.radiuses.emplace_back();
     }
 
-    auto run_benchmark = [&](double radiusInMeters)
+    auto run_benchmark = [&](std::optional<double> radiusInMeters)
     {
-        for (auto &radius : params.radiuses)
+        if (radiusInMeters)
         {
-            radius = radiusInMeters;
+            for (auto &radius : params.radiuses)
+            {
+                radius = *radiusInMeters;
+            }
         }
 
         TIMER_START(routes);
@@ -241,25 +244,25 @@ try
             }
         }
         TIMER_STOP(routes);
-        std::cout << "Radius " << radiusInMeters << "m: " << std::endl;
+        if (radiusInMeters)
+        {
+            std::cout << "Radius " << *radiusInMeters << "m: " << std::endl;
+        }
+        else
+        {
+            std::cout << "Default radius: " << std::endl;
+        }
         std::cout << (TIMER_MSEC(routes) / NUM) << "ms/req at " << params.coordinates.size()
                   << " coordinate" << std::endl;
         std::cout << (TIMER_MSEC(routes) / NUM / params.coordinates.size()) << "ms/coordinate"
                   << std::endl;
     };
 
-    try
-    {
-        run_benchmark(5.0);
-        run_benchmark(10.0);
-        run_benchmark(15.0);
-        run_benchmark(30.0);
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "Error: " << e.what() << std::endl;
-        return EXIT_FAILURE;
-    }
+    run_benchmark(std::nullopt);
+    run_benchmark(5.0);
+    run_benchmark(10.0);
+    run_benchmark(15.0);
+    run_benchmark(30.0);
 
     return EXIT_SUCCESS;
 }
