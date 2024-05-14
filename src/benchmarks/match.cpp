@@ -13,13 +13,13 @@
 #include <boost/assert.hpp>
 
 #include <boost/optional/optional.hpp>
+#include <cstdlib>
 #include <exception>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
-
-#include <cstdlib>
 
 int main(int argc, const char *argv[])
 try
