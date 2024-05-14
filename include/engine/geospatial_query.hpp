@@ -54,14 +54,6 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                         const boost::optional<Bearing> bearing_with_range,
                         const boost::optional<bool> use_all_edges) const
     {
-#if 0
-        return NearestPhantomNodes(input_coordinate,
-                                   approach,
-                                   boost::optional<size_t>{},
-                                   max_distance,
-                                   bearing_with_range,
-                                   use_all_edges);
-#else
         auto results = rtree.SearchInRange(
             input_coordinate,
             max_distance,
@@ -89,7 +81,6 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                   phantom_nodes.end(),
                   [](const auto &lhs, const auto &rhs) { return lhs.distance < rhs.distance; });
         return phantom_nodes;
-#endif
     }
 
     // Returns max_results nearest PhantomNodes that are valid within the provided parameters.
