@@ -74,13 +74,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                                                  : std::make_pair(true, true));
                 return valid;
             });
-        auto phantom_nodes = MakePhantomNodes(input_coordinate, results);
-        // there is no guarantee that `SearchInRange` will return results sorted by distance,
-        // but we may rely on it somewhere
-        std::sort(phantom_nodes.begin(),
-                  phantom_nodes.end(),
-                  [](const auto &lhs, const auto &rhs) { return lhs.distance < rhs.distance; });
-        return phantom_nodes;
+        return MakePhantomNodes(input_coordinate, results);
     }
 
     // Returns max_results nearest PhantomNodes that are valid within the provided parameters.
