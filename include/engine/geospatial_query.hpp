@@ -82,7 +82,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const Approach approach,
-                        const boost::optional<size_t> max_results,
+                        const size_t max_results,
                         const boost::optional<double> max_distance,
                         const boost::optional<Bearing> bearing_with_range,
                         const boost::optional<bool> use_all_edges) const
@@ -100,10 +100,10 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                                                  : std::make_pair(true, true));
                 return valid;
             },
-            [this, &max_distance, &max_results, input_coordinate](const std::size_t num_results,
-                                                                  const CandidateSegment &segment)
+            [this, &max_distance, max_results, input_coordinate](const std::size_t num_results,
+                                                                 const CandidateSegment &segment)
             {
-                return (max_results && num_results >= *max_results) ||
+                return (num_results >= max_results) ||
                        (max_distance && max_distance != -1.0 &&
                         CheckSegmentDistance(input_coordinate, segment, *max_distance));
             });
