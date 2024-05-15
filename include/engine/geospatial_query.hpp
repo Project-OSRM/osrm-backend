@@ -64,7 +64,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                     CheckSegmentDistance(input_coordinate, segment, max_distance);
                 if (invalidDistance)
                 {
-                    return std::pair<bool, bool>{false, false};
+                    return std::make_pair(false, false);
                 }
                 auto valid = CheckSegmentExclude(segment) &&
                              CheckApproach(input_coordinate, segment, approach) &&
