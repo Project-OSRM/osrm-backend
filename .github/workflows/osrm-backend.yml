@@ -151,7 +151,7 @@ jobs:
           - name: gcc-13-debug-cov
             continue-on-error: false
             node: 20
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-22.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
             CCOMPILER: gcc-13
