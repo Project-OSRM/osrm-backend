@@ -215,18 +215,15 @@ try
         FloatCoordinate{FloatLongitude{7.415513992309569}, FloatLatitude{43.73347615145474}});
     params.coordinates.push_back(
         FloatCoordinate{FloatLongitude{7.415342330932617}, FloatLatitude{43.733251335381205}});
-    for (size_t index = 0; index < params.coordinates.size(); ++index)
-    {
-        params.radiuses.emplace_back();
-    }
 
     auto run_benchmark = [&](std::optional<double> radiusInMeters)
     {
+        params.radiuses = {};
         if (radiusInMeters)
         {
-            for (auto &radius : params.radiuses)
+            for (size_t index = 0; index < params.coordinates.size(); ++index)
             {
-                radius = *radiusInMeters;
+                params.radiuses.emplace_back(*radiusInMeters);
             }
         }
 
