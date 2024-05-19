@@ -11,8 +11,6 @@
 #include "osrm/status.hpp"
 
 #include <boost/assert.hpp>
-
-#include <boost/optional/optional.hpp>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -255,11 +253,10 @@ try
                   << std::endl;
     };
 
-    run_benchmark(std::nullopt);
-    run_benchmark(5.0);
-    run_benchmark(10.0);
-    run_benchmark(15.0);
-    run_benchmark(30.0);
+    for (auto radius : std::vector<std::optional<double>>{std::nullopt, 5.0, 10.0, 15.0, 30.0})
+    {
+        run_benchmark(radius);
+    }
 
     return EXIT_SUCCESS;
 }
