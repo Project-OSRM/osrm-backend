@@ -151,7 +151,7 @@ jobs:
           - name: gcc-13-debug-cov
             continue-on-error: false
             node: 20
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
             CCOMPILER: gcc-13
@@ -342,9 +342,6 @@ jobs:
       OSRM_CONNECTION_RETRIES: ${{ matrix.OSRM_CONNECTION_RETRIES }}
       OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
     steps:
-    - run: gcc --version
-    - run: apt-cache search gcc | grep '^gcc-[0-9]'
-    - run: gcc-13 --version
     - uses: actions/checkout@v3
     - name: Build machine architecture
       run: uname -m
