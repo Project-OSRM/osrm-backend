@@ -34,9 +34,8 @@ util::vector_view<T> mmapFile(const std::filesystem::path &file, MmapContainerT 
 }
 
 template <typename T, typename MmapContainerT>
-util::vector_view<T> mmapFile(const std::filesystem::path &file,
-                              MmapContainerT &mmap_container,
-                              const std::size_t size)
+util::vector_view<T>
+mmapFile(const std::filesystem::path &file, MmapContainerT &mmap_container, const std::size_t size)
 {
     try
     {

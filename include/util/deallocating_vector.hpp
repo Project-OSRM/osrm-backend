@@ -267,9 +267,7 @@ template <typename ElementT> class DeallocatingVector
         ++current_size;
     }
 
-    void reserve(const std::size_t) const
-    { /* don't do anything */
-    }
+    void reserve(const std::size_t) const { /* don't do anything */ }
 
     void resize(const std::size_t new_size)
     {

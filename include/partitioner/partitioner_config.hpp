@@ -1,7 +1,6 @@
 #ifndef OSRM_PARTITIONER_CONFIG_HPP
 #define OSRM_PARTITIONER_CONFIG_HPP
 
-
 #include <array>
 #include <filesystem>
 #include <string>

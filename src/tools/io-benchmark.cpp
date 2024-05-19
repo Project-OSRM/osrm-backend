@@ -3,7 +3,6 @@
 #include "util/log.hpp"
 #include "util/timing_util.hpp"
 
-
 #include <cmath>
 #include <cstdio>
 #include <fcntl.h>
@@ -13,9 +12,9 @@
 
 #include <algorithm>
 #include <chrono>
-#include <iomanip>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <numeric>
 #include <random>
 #include <vector>

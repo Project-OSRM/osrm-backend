@@ -7,8 +7,8 @@
 
 #include <boost/program_options.hpp>
 
-#include <iostream>
 #include <filesystem>
+#include <iostream>
 #include <thread>
 
 using namespace osrm;

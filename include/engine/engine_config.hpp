@@ -31,8 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "storage/storage_config.hpp"
 #include "osrm/datasets.hpp"
 
-#include <set>
 #include <filesystem>
+#include <set>
 #include <string>
 
 namespace osrm::engine

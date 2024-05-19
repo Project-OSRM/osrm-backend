@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef STORAGE_CONFIG_HPP
 #define STORAGE_CONFIG_HPP
 
-
 #include "storage/io_config.hpp"
 #include "osrm/datasets.hpp"
 

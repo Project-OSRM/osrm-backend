@@ -24,8 +24,8 @@ namespace osrm::extractor::files
 // writes the .osrm.icd file
 template <typename IntersectionBearingsT, typename EntryClassVectorT>
 void writeIntersections(const std::filesystem::path &path,
-                               const IntersectionBearingsT &intersection_bearings,
-                               const EntryClassVectorT &entry_classes)
+                        const IntersectionBearingsT &intersection_bearings,
+                        const EntryClassVectorT &entry_classes)
 {
     static_assert(std::is_same<IntersectionBearingsContainer, IntersectionBearingsT>::value ||
                       std::is_same<IntersectionBearingsView, IntersectionBearingsT>::value,
@@ -40,8 +40,8 @@ void writeIntersections(const std::filesystem::path &path,
 // read the .osrm.icd file
 template <typename IntersectionBearingsT, typename EntryClassVectorT>
 void readIntersections(const std::filesystem::path &path,
-                              IntersectionBearingsT &intersection_bearings,
-                              EntryClassVectorT &entry_classes)
+                       IntersectionBearingsT &intersection_bearings,
+                       EntryClassVectorT &entry_classes)
 {
     static_assert(std::is_same<IntersectionBearingsContainer, IntersectionBearingsT>::value ||
                       std::is_same<IntersectionBearingsView, IntersectionBearingsT>::value,
@@ -54,8 +54,7 @@ void readIntersections(const std::filesystem::path &path,
 }
 
 // reads .osrm.properties
-inline void readProfileProperties(const std::filesystem::path &path,
-                                  ProfileProperties &properties)
+inline void readProfileProperties(const std::filesystem::path &path, ProfileProperties &properties)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
@@ -109,8 +108,8 @@ void readEdgeBasedGraph(const std::filesystem::path &path,
 // reads .osrm.nbg_nodes
 template <typename CoordinatesT, typename PackedOSMIDsT>
 void readNodes(const std::filesystem::path &path,
-                      CoordinatesT &coordinates,
-                      PackedOSMIDsT &osm_node_ids)
+               CoordinatesT &coordinates,
+               PackedOSMIDsT &osm_node_ids)
 {
     static_assert(std::is_same<typename CoordinatesT::value_type, util::Coordinate>::value, "");
     static_assert(std::is_same<typename PackedOSMIDsT::value_type, OSMNodeID>::value, "");
@@ -137,8 +136,8 @@ void readNodeCoordinates(const std::filesystem::path &path, CoordinatesT &coordi
 // writes .osrm.nbg_nodes
 template <typename CoordinatesT, typename PackedOSMIDsT>
 void writeNodes(const std::filesystem::path &path,
-                       const CoordinatesT &coordinates,
-                       const PackedOSMIDsT &osm_node_ids)
+                const CoordinatesT &coordinates,
+                const PackedOSMIDsT &osm_node_ids)
 {
     static_assert(std::is_same<typename CoordinatesT::value_type, util::Coordinate>::value, "");
     static_assert(std::is_same<typename PackedOSMIDsT::value_type, OSMNodeID>::value, "");
@@ -160,8 +159,7 @@ inline void readNBGMapping(const std::filesystem::path &path, std::vector<NBGToE
 }
 
 // writes .osrm.cnbg_to_ebg
-inline void writeNBGMapping(const std::filesystem::path &path,
-                            const std::vector<NBGToEBG> &mapping)
+inline void writeNBGMapping(const std::filesystem::path &path, const std::vector<NBGToEBG> &mapping)
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
@@ -466,8 +464,7 @@ void readRawNBGraph(const std::filesystem::path &path,
     storage::serialization::read(reader, "/extractor/edges", edge_list);
 }
 
-template <typename NameTableT>
-void readNames(const std::filesystem::path &path, NameTableT &table)
+template <typename NameTableT> void readNames(const std::filesystem::path &path, NameTableT &table)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
@@ -494,8 +491,7 @@ void readEdgeBasedNodeWeights(const std::filesystem::path &path, NodeWeightsVect
 }
 
 template <typename NodeDistancesVectorT>
-void readEdgeBasedNodeDistances(const std::filesystem::path &path,
-                                NodeDistancesVectorT &distances)
+void readEdgeBasedNodeDistances(const std::filesystem::path &path, NodeDistancesVectorT &distances)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
