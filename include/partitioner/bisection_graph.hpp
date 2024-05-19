@@ -105,7 +105,9 @@ std::vector<BisectionInputEdge> adaptToBisectionEdge(std::vector<InputEdge> edge
     std::transform(begin(edges),
                    end(edges),
                    std::back_inserter(result),
-                   [](const auto &edge) { return BisectionInputEdge{edge.source, edge.target}; });
+                   [](const auto &edge) {
+                       return BisectionInputEdge{edge.source, edge.target};
+                   });
 
     return result;
 }

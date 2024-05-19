@@ -141,8 +141,8 @@ struct RouteParameters : public BaseParameters
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{annotations_},
           annotations_type{annotations_ ? AnnotationsType::All : AnnotationsType::None},
-          geometries{geometries_}, overview{overview_}, continue_straight{continue_straight_},
-          waypoints{std::move(waypoints_)}
+          geometries{geometries_}, overview{overview_},
+          continue_straight{continue_straight_}, waypoints{std::move(waypoints_)}
     {
     }
 
@@ -157,10 +157,10 @@ struct RouteParameters : public BaseParameters
                     std::vector<std::size_t> waypoints_,
                     Args &&...args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
-          number_of_alternatives{alternatives_ ? 1u : 0u},
-          annotations{annotations_ != AnnotationsType::None}, annotations_type{annotations_},
-          geometries{geometries_}, overview{overview_}, continue_straight{continue_straight_},
-          waypoints{std::move(waypoints_)}
+          number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{annotations_ !=
+                                                                       AnnotationsType::None},
+          annotations_type{annotations_}, geometries{geometries_}, overview{overview_},
+          continue_straight{continue_straight_}, waypoints{std::move(waypoints_)}
     {
     }
 

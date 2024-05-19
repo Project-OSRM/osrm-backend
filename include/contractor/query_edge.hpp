@@ -15,8 +15,8 @@ struct QueryEdge
     struct EdgeData
     {
         explicit EdgeData()
-            : turn_id(0), shortcut(false), weight{0}, duration(0), forward(false), backward(false),
-              distance{0}
+            : turn_id(0), shortcut(false), weight{0}, duration(0), forward(false),
+              backward(false), distance{0}
         {
         }
 
