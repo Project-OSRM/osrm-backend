@@ -2,14 +2,14 @@
 #include "util/log.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
+#include <fstream>
+#include <filesystem>
+#include <iostream>
 #include <limits>
 #include <string>
 
-#include <iostream>
 
 namespace osrm::extractor
 {

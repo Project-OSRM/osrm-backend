@@ -4,8 +4,9 @@
 
 #include <osrm/coordinate.hpp>
 
-#include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
+
+#include <filesystem>
 
 BOOST_AUTO_TEST_SUITE(raster_source)
 

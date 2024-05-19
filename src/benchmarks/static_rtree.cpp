@@ -12,9 +12,9 @@
 #include "util/timing_util.hpp"
 
 #include <iostream>
+#include <fstream>
 #include <random>
 
-#include <boost/filesystem/fstream.hpp>
 
 namespace osrm::benchmarks
 {

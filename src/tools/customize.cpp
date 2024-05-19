@@ -5,10 +5,10 @@
 #include "util/meminfo.hpp"
 #include "util/version.hpp"
 
-#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 #include <iostream>
+#include <filesystem>
 #include <thread>
 
 using namespace osrm;
@@ -76,7 +76,7 @@ return_code parseArguments(int argc,
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
         "input,i",
-        boost::program_options::value<boost::filesystem::path>(&customization_config.base_path),
+        boost::program_options::value<std::filesystem::path>(&customization_config.base_path),
         "Input base file path");
 
     // positional option
@@ -89,7 +89,7 @@ return_code parseArguments(int argc,
 
     const auto *executable = argv[0];
     boost::program_options::options_description visible_options(
-        boost::filesystem::path(executable).filename().string() + " <input.osrm> [options]");
+        std::filesystem::path(executable).filename().string() + " <input.osrm> [options]");
     visible_options.add(generic_options).add(config_options);
 
     // parse command line options
