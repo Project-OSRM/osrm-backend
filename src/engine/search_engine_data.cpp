@@ -24,7 +24,7 @@ void SearchEngineData<CH>::InitializeOrClearMapMatchingThreadLocalStorage(unsign
     }
     else
     {
-        map_matching_forward_heap_1.reset(new QueryHeap(number_of_nodes));
+        map_matching_forward_heap_1.reset(new MapMatchingQueryHeap(number_of_nodes));
     }
 
     if (map_matching_reverse_heap_1.get())
@@ -33,7 +33,7 @@ void SearchEngineData<CH>::InitializeOrClearMapMatchingThreadLocalStorage(unsign
     }
     else
     {
-        map_matching_reverse_heap_1.reset(new QueryHeap(number_of_nodes));
+        map_matching_reverse_heap_1.reset(new MapMatchingQueryHeap(number_of_nodes));
     }
 }
 
