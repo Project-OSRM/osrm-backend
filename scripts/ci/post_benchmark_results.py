@@ -71,9 +71,9 @@ def main():
     benchmark_results = collect_benchmark_results(base_folder, pr_folder)
 
     pr_details = get_pr_details(REPO_OWNER, REPO_NAME, PR_NUMBER)
-    pr_body = pr_details.get('body', '')
+    # in both cases when there is no PR body or PR body is None fallback to empty string
+    pr_body = pr_details.get('body', '') or ''
 
-    
     markdown_table = create_markdown_table(benchmark_results)
     new_benchmark_section = f"<!-- BENCHMARK_RESULTS_START -->\n## Benchmark Results\n{markdown_table}\n<!-- BENCHMARK_RESULTS_END -->"
 
@@ -85,7 +85,7 @@ def main():
             flags=re.DOTALL
         )
     else:
-        updated_body = f"{pr_body}\n\n{new_benchmark_section}"
+        updated_body = f"{pr_body}\n\n{new_benchmark_section}" if len(pr_body) > 0 else new_benchmark_section
     
     update_pr_description(REPO_OWNER, REPO_NAME, PR_NUMBER, updated_body)
     print("PR description updated successfully.")

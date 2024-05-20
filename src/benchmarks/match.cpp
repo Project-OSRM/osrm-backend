@@ -12,7 +12,6 @@
 
 #include <boost/assert.hpp>
 
-#include <boost/optional/optional.hpp>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -215,18 +214,15 @@ try
         FloatCoordinate{FloatLongitude{7.415513992309569}, FloatLatitude{43.73347615145474}});
     params.coordinates.push_back(
         FloatCoordinate{FloatLongitude{7.415342330932617}, FloatLatitude{43.733251335381205}});
-    for (size_t index = 0; index < params.coordinates.size(); ++index)
-    {
-        params.radiuses.emplace_back();
-    }
 
     auto run_benchmark = [&](std::optional<double> radiusInMeters)
     {
+        params.radiuses = {};
         if (radiusInMeters)
         {
-            for (auto &radius : params.radiuses)
+            for (size_t index = 0; index < params.coordinates.size(); ++index)
             {
-                radius = *radiusInMeters;
+                params.radiuses.emplace_back(*radiusInMeters);
             }
         }
 
@@ -258,11 +254,10 @@ try
                   << std::endl;
     };
 
-    run_benchmark(std::nullopt);
-    run_benchmark(5.0);
-    run_benchmark(10.0);
-    run_benchmark(15.0);
-    run_benchmark(30.0);
+    for (auto radius : std::vector<std::optional<double>>{std::nullopt, 5.0, 10.0, 15.0, 30.0})
+    {
+        run_benchmark(radius);
+    }
 
     return EXIT_SUCCESS;
 }
