@@ -269,10 +269,10 @@ retrievePackedPathFromHeap(const SearchEngineData<Algorithm>::QueryHeap &forward
     return packed_path;
 }
 
-template <bool DIRECTION, typename Algorithm, typename... Args>
+template <bool DIRECTION, typename Algorithm, typename Heap, typename... Args>
 void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
-                        typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                        const typename SearchEngineData<Algorithm>::QueryHeap::HeapNode &heapNode,
+                        Heap &forward_heap,
+                        const typename Heap::HeapNode &heapNode,
                         const Args &...args)
 {
     const auto &partition = facade.GetMultiLevelPartition();
@@ -281,121 +281,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
 
     const auto level = getNodeQueryLevel(partition, heapNode.node, args...);
 
-    if (level >= 1 && !heapNode.data.from_clique_arc)
-    {
-        if (DIRECTION == FORWARD_DIRECTION)
-        {
-            // Shortcuts in forward direction
-            const auto &cell =
-                cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
-            auto destination = cell.GetDestinationNodes().begin();
-            for (auto shortcut_weight : cell.GetOutWeight(heapNode.node))
-            {
-                BOOST_ASSERT(destination != cell.GetDestinationNodes().end());
-                const NodeID to = *destination;
-
-                if (shortcut_weight != INVALID_EDGE_WEIGHT && heapNode.node != to)
-                {
-                    const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
-                    BOOST_ASSERT(to_weight >= heapNode.weight);
-                    const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
-                    if (!toHeapNode)
-                    {
-                        forward_heap.Insert(to, to_weight, {heapNode.node, true});
-                    }
-                    else if (to_weight < toHeapNode->weight)
-                    {
-                        toHeapNode->data = {heapNode.node, true};
-                        toHeapNode->weight = to_weight;
-                        forward_heap.DecreaseKey(*toHeapNode);
-                    }
-                }
-                ++destination;
-            }
-        }
-        else
-        {
-            // Shortcuts in backward direction
-            const auto &cell =
-                cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
-            auto source = cell.GetSourceNodes().begin();
-            for (auto shortcut_weight : cell.GetInWeight(heapNode.node))
-            {
-                BOOST_ASSERT(source != cell.GetSourceNodes().end());
-                const NodeID to = *source;
-
-                if (shortcut_weight != INVALID_EDGE_WEIGHT && heapNode.node != to)
-                {
-                    const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
-                    BOOST_ASSERT(to_weight >= heapNode.weight);
-                    const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
-                    if (!toHeapNode)
-                    {
-                        forward_heap.Insert(to, to_weight, {heapNode.node, true});
-                    }
-                    else if (to_weight < toHeapNode->weight)
-                    {
-                        toHeapNode->data = {heapNode.node, true};
-                        toHeapNode->weight = to_weight;
-                        forward_heap.DecreaseKey(*toHeapNode);
-                    }
-                }
-                ++source;
-            }
-        }
-    }
-
-    // Boundary edges
-    for (const auto edge : facade.GetBorderEdgeRange(level, heapNode.node))
-    {
-        const auto &edge_data = facade.GetEdgeData(edge);
-
-        if ((DIRECTION == FORWARD_DIRECTION) ? facade.IsForwardEdge(edge)
-                                             : facade.IsBackwardEdge(edge))
-        {
-            const NodeID to = facade.GetTarget(edge);
-
-            if (!facade.ExcludeNode(to) &&
-                checkParentCellRestriction(partition.GetCell(level + 1, to), args...))
-            {
-                const auto node_weight =
-                    facade.GetNodeWeight(DIRECTION == FORWARD_DIRECTION ? heapNode.node : to);
-                const auto turn_penalty = facade.GetWeightPenaltyForEdgeID(edge_data.turn_id);
-
-                // TODO: BOOST_ASSERT(edge_data.weight == node_weight + turn_penalty);
-
-                const EdgeWeight to_weight =
-                    heapNode.weight + node_weight + alias_cast<EdgeWeight>(turn_penalty);
-
-                const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
-                if (!toHeapNode)
-                {
-                    forward_heap.Insert(to, to_weight, {heapNode.node, false});
-                }
-                else if (to_weight < toHeapNode->weight)
-                {
-                    toHeapNode->data = {heapNode.node, false};
-                    toHeapNode->weight = to_weight;
-                    forward_heap.DecreaseKey(*toHeapNode);
-                }
-            }
-        }
-    }
-}
-
-template <bool DIRECTION, typename Algorithm, typename... Args>
-void relaxOutgoingEdges(
-    const DataFacade<Algorithm> &facade,
-    typename SearchEngineData<Algorithm>::MapMatchingQueryHeap &forward_heap,
-    const typename SearchEngineData<Algorithm>::MapMatchingQueryHeap::HeapNode &heapNode,
-    const Args &...args)
-{
-    const auto &partition = facade.GetMultiLevelPartition();
-    const auto &cells = facade.GetCellStorage();
-    const auto &metric = facade.GetCellMetric();
-
-    const auto level = getNodeQueryLevel(partition, heapNode.node, args...);
-
+    // SearchEngineData<Algorithm>::MapMatchingQueryHeap
     if (level >= 1 && !heapNode.data.from_clique_arc)
     {
         if constexpr (DIRECTION == FORWARD_DIRECTION)
@@ -413,16 +299,35 @@ void relaxOutgoingEdges(
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && heapNode.node != to)
                 {
                     const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
-                    const EdgeDistance to_distance = heapNode.data.distance + *distance;
                     BOOST_ASSERT(to_weight >= heapNode.weight);
                     const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
-                        forward_heap.Insert(to, to_weight, {heapNode.node, true, to_distance});
+                        if constexpr (std::is_same_v<typename SearchEngineData<
+                                                         Algorithm>::MapMatchingQueryHeap,
+                                                     Heap>)
+                        {
+                            const EdgeDistance to_distance = heapNode.data.distance + *distance;
+                            forward_heap.Insert(to, to_weight, {heapNode.node, true, to_distance});
+                        }
+                        else
+                        {
+                            forward_heap.Insert(to, to_weight, {heapNode.node, true});
+                        }
                     }
                     else if (to_weight < toHeapNode->weight)
                     {
-                        toHeapNode->data = {heapNode.node, true, to_distance};
+                        if constexpr (std::is_same_v<typename SearchEngineData<
+                                                         Algorithm>::MapMatchingQueryHeap,
+                                                     Heap>)
+                        {
+                            const EdgeDistance to_distance = heapNode.data.distance + *distance;
+                            toHeapNode->data = {heapNode.node, true, to_distance};
+                        }
+                        else
+                        {
+                            toHeapNode->data = {heapNode.node, true};
+                        }
                         toHeapNode->weight = to_weight;
                         forward_heap.DecreaseKey(*toHeapNode);
                     }
@@ -446,16 +351,35 @@ void relaxOutgoingEdges(
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && heapNode.node != to)
                 {
                     const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
-                    const EdgeDistance to_distance = heapNode.data.distance + *distance;
                     BOOST_ASSERT(to_weight >= heapNode.weight);
                     const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
-                        forward_heap.Insert(to, to_weight, {heapNode.node, true, to_distance});
+                        if constexpr (std::is_same_v<typename SearchEngineData<
+                                                         Algorithm>::MapMatchingQueryHeap,
+                                                     Heap>)
+                        {
+                            const EdgeDistance to_distance = heapNode.data.distance + *distance;
+                            forward_heap.Insert(to, to_weight, {heapNode.node, true, to_distance});
+                        }
+                        else
+                        {
+                            forward_heap.Insert(to, to_weight, {heapNode.node, true});
+                        }
                     }
                     else if (to_weight < toHeapNode->weight)
                     {
-                        toHeapNode->data = {heapNode.node, true, to_distance};
+                        if constexpr (std::is_same_v<typename SearchEngineData<
+                                                         Algorithm>::MapMatchingQueryHeap,
+                                                     Heap>)
+                        {
+                            const EdgeDistance to_distance = heapNode.data.distance + *distance;
+                            toHeapNode->data = {heapNode.node, true, to_distance};
+                        }
+                        else
+                        {
+                            toHeapNode->data = {heapNode.node, true};
+                        }
                         toHeapNode->weight = to_weight;
                         forward_heap.DecreaseKey(*toHeapNode);
                     }
@@ -490,16 +414,35 @@ void relaxOutgoingEdges(
 
                 const EdgeWeight to_weight =
                     heapNode.weight + node_weight + alias_cast<EdgeWeight>(turn_penalty);
-                const EdgeDistance to_distance = heapNode.data.distance + node_distance;
 
                 const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
                 if (!toHeapNode)
                 {
-                    forward_heap.Insert(to, to_weight, {heapNode.node, false, to_distance});
+                    if constexpr (std::is_same_v<
+                                      typename SearchEngineData<Algorithm>::MapMatchingQueryHeap,
+                                      Heap>)
+                    {
+                        const EdgeDistance to_distance = heapNode.data.distance + node_distance;
+                        forward_heap.Insert(to, to_weight, {heapNode.node, false, to_distance});
+                    }
+                    else
+                    {
+                        forward_heap.Insert(to, to_weight, {heapNode.node, false});
+                    }
                 }
                 else if (to_weight < toHeapNode->weight)
                 {
-                    toHeapNode->data = {heapNode.node, false, to_distance};
+                    if constexpr (std::is_same_v<
+                                      typename SearchEngineData<Algorithm>::MapMatchingQueryHeap,
+                                      Heap>)
+                    {
+                        const EdgeDistance to_distance = heapNode.data.distance + node_distance;
+                        toHeapNode->data = {heapNode.node, false, to_distance};
+                    }
+                    else
+                    {
+                        toHeapNode->data = {heapNode.node, false};
+                    }
                     toHeapNode->weight = to_weight;
                     forward_heap.DecreaseKey(*toHeapNode);
                 }
