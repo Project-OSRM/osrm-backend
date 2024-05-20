@@ -49,6 +49,7 @@
       - FIXED: Correctly check runtime search conditions for forcing routing steps [#6866](https://github.com/Project-OSRM/osrm-backend/pull/6866)
     - Map Matching:
       - CHANGED: Optimise path distance calculation in MLD map matching. [#6876](https://github.com/Project-OSRM/osrm-backend/pull/6876)
+      - CHANGED: Optimise R-tree queries in the case of map matching. [#6881](https://github.com/Project-OSRM/osrm-backend/pull/6876)
     - Debug tiles:
       - FIXED: Ensure speed layer features have unique ids. [#6726](https://github.com/Project-OSRM/osrm-backend/pull/6726)
 
