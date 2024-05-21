@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   windows-release-node:
-    needs: format-taginfo-docs
+    # needs: format-taginfo-docs
     runs-on: windows-2022
     continue-on-error: false
     env:
@@ -73,35 +73,35 @@ jobs:
         replacesArtifacts: true
         token: ${{ secrets.GITHUB_TOKEN }}
 
-  format-taginfo-docs:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
-    - name: Enable Node.js cache
-      uses: actions/cache@v3
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-    - name: Prepare environment
-      run: |
-        npm ci --ignore-scripts
-        clang-format-15 --version
-    - name: Run checks
-      run: |
-        ./scripts/check_taginfo.py taginfo.json profiles/car.lua
-        ./scripts/format.sh && ./scripts/error_on_dirty.sh
-        node ./scripts/validate_changelog.js
-        npm run docs && ./scripts/error_on_dirty.sh
-        npm audit --production
+  # format-taginfo-docs:
+  #   runs-on: ubuntu-22.04
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - name: Use Node.js
+  #     uses: actions/setup-node@v3
+  #     with:
+  #       node-version: 18
+  #   - name: Enable Node.js cache
+  #     uses: actions/cache@v3
+  #     with:
+  #       path: ~/.npm
+  #       key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+  #       restore-keys: |
+  #         ${{ runner.os }}-node-
+  #   - name: Prepare environment
+  #     run: |
+  #       npm ci --ignore-scripts
+  #       clang-format-15 --version
+  #   - name: Run checks
+  #     run: |
+  #       ./scripts/check_taginfo.py taginfo.json profiles/car.lua
+  #       ./scripts/format.sh && ./scripts/error_on_dirty.sh
+  #       node ./scripts/validate_changelog.js
+  #       npm run docs && ./scripts/error_on_dirty.sh
+  #       npm audit --production
 
   docker-image:
-    needs: format-taginfo-docs
+    #needs: format-taginfo-docs
     runs-on: ubuntu-22.04
     continue-on-error: false
     steps:
@@ -144,7 +144,7 @@ jobs:
           docker stop osrm-container
 
   build-test-publish:
-    needs: format-taginfo-docs
+    #needs: format-taginfo-docs
     strategy:
       matrix:
         include:

@@ -290,7 +290,16 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const auto &cell =
                 cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
             auto destination = cell.GetDestinationNodes().begin();
-            auto distance = cell.GetOutDistance(heapNode.node).begin();
+            auto distance = [&heapNode]() -> auto {
+                 if constexpr (std::is_same_v<typename SearchEngineData<
+                                                        mld::Algorithm>::MapMatchingQueryHeap,
+                                                     Heap>) {
+
+                return cell.GetOutDistance(heapNode.node).begin();
+                                                     } else {
+                                                        return 0;
+                                                     }
+            } ;
             for (auto shortcut_weight : cell.GetOutWeight(heapNode.node))
             {
                 BOOST_ASSERT(destination != cell.GetDestinationNodes().end());
@@ -342,7 +351,16 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const auto &cell =
                 cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
             auto source = cell.GetSourceNodes().begin();
-            auto distance = cell.GetInDistance(heapNode.node).begin();
+             auto distance = [&heapNode]() -> auto {
+                 if constexpr (std::is_same_v<typename SearchEngineData<
+                                                        mld::Algorithm>::MapMatchingQueryHeap,
+                                                     Heap>) {
+
+                return cell.GetOutDistance(heapNode.node).begin();
+                                                     } else {
+                                                        return 0;
+                                                     }
+            } ;
             for (auto shortcut_weight : cell.GetInWeight(heapNode.node))
             {
                 BOOST_ASSERT(source != cell.GetSourceNodes().end());
@@ -405,9 +423,6 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             {
                 const auto node_weight =
                     facade.GetNodeWeight(DIRECTION == FORWARD_DIRECTION ? heapNode.node : to);
-                const auto node_distance =
-                    facade.GetNodeDistance(DIRECTION == FORWARD_DIRECTION ? heapNode.node : to);
-
                 const auto turn_penalty = facade.GetWeightPenaltyForEdgeID(edge_data.turn_id);
 
                 // TODO: BOOST_ASSERT(edge_data.weight == node_weight + turn_penalty);
@@ -422,6 +437,10 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                                       typename SearchEngineData<Algorithm>::MapMatchingQueryHeap,
                                       Heap>)
                     {
+                         const auto node_distance =
+                    facade.GetNodeDistance(DIRECTION == FORWARD_DIRECTION ? heapNode.node : to);
+
+               
                         const EdgeDistance to_distance = heapNode.data.distance + node_distance;
                         forward_heap.Insert(to, to_weight, {heapNode.node, false, to_distance});
                     }
@@ -436,6 +455,10 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                                       typename SearchEngineData<Algorithm>::MapMatchingQueryHeap,
                                       Heap>)
                     {
+                         const auto node_distance =
+                    facade.GetNodeDistance(DIRECTION == FORWARD_DIRECTION ? heapNode.node : to);
+
+               
                         const EdgeDistance to_distance = heapNode.data.distance + node_distance;
                         toHeapNode->data = {heapNode.node, false, to_distance};
                     }
