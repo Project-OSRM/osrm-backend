@@ -187,7 +187,6 @@ void computeWeightAndSharingOfViaPath(SearchEngineData<Algorithm> &engine_workin
                                        s_v_middle,
                                        upper_bound_s_v_path_weight,
                                        min_edge_offset,
-                                       {},
                                        {});
     }
     // compute path <v,..,t> by reusing backward search from node t
@@ -202,7 +201,6 @@ void computeWeightAndSharingOfViaPath(SearchEngineData<Algorithm> &engine_workin
                                        v_t_middle,
                                        upper_bound_of_v_t_path_weight,
                                        min_edge_offset,
-                                       {},
                                        {});
     }
     *real_weight_of_via_path = upper_bound_s_v_path_weight + upper_bound_of_v_t_path_weight;
@@ -348,7 +346,6 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
                                        *s_v_middle,
                                        upper_bound_s_v_path_weight,
                                        min_edge_offset,
-                                       {},
                                        {});
     }
 
@@ -369,7 +366,6 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
                                        *v_t_middle,
                                        upper_bound_of_v_t_path_weight,
                                        min_edge_offset,
-                                       {},
                                        {});
     }
 
@@ -538,12 +534,12 @@ bool viaNodeCandidatePassesTTest(SearchEngineData<Algorithm> &engine_working_dat
         if (!forward_heap3.Empty())
         {
             routingStep<FORWARD_DIRECTION>(
-                facade, forward_heap3, reverse_heap3, middle, upper_bound, min_edge_offset, {}, {});
+                facade, forward_heap3, reverse_heap3, middle, upper_bound, min_edge_offset, {});
         }
         if (!reverse_heap3.Empty())
         {
             routingStep<REVERSE_DIRECTION>(
-                facade, reverse_heap3, forward_heap3, middle, upper_bound, min_edge_offset, {}, {});
+                facade, reverse_heap3, forward_heap3, middle, upper_bound, min_edge_offset, {});
         }
     }
     return (upper_bound <= t_test_path_weight);

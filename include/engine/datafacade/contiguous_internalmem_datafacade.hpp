@@ -375,7 +375,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(
-            input_coordinate, approach, boost::none, max_distance, bearing, use_all_edges);
+            input_coordinate, approach, max_distance, bearing, use_all_edges);
     }
 
     std::vector<PhantomNodeWithDistance>

@@ -96,19 +96,19 @@ TEST_CASE("Calling add_ring() with bad values throws assert") {
     vtzero::polygon_feature_builder fbuilder{lbuilder};
 
     SECTION("0") {
-        REQUIRE_THROWS_AS(fbuilder.add_ring(0), const assert_error&);
+        REQUIRE_THROWS_AS(fbuilder.add_ring(0), assert_error);
     }
     SECTION("1") {
-        REQUIRE_THROWS_AS(fbuilder.add_ring(1), const assert_error&);
+        REQUIRE_THROWS_AS(fbuilder.add_ring(1), assert_error);
     }
     SECTION("2") {
-        REQUIRE_THROWS_AS(fbuilder.add_ring(2), const assert_error&);
+        REQUIRE_THROWS_AS(fbuilder.add_ring(2), assert_error);
     }
     SECTION("3") {
-        REQUIRE_THROWS_AS(fbuilder.add_ring(3), const assert_error&);
+        REQUIRE_THROWS_AS(fbuilder.add_ring(3), assert_error);
     }
     SECTION("2^29") {
-        REQUIRE_THROWS_AS(fbuilder.add_ring(1ul << 29u), const assert_error&);
+        REQUIRE_THROWS_AS(fbuilder.add_ring(1UL << 29U), assert_error);
     }
 }
 
@@ -198,10 +198,10 @@ TEST_CASE("Calling polygon_feature_builder::set_point()/close_ring() throws asse
     vtzero::polygon_feature_builder fbuilder{lbuilder};
 
     SECTION("set_point") {
-        REQUIRE_THROWS_AS(fbuilder.set_point(10, 10), const assert_error&);
+        REQUIRE_THROWS_AS(fbuilder.set_point(10, 10), assert_error);
     }
     SECTION("close_ring") {
-        REQUIRE_THROWS_AS(fbuilder.close_ring(), const assert_error&);
+        REQUIRE_THROWS_AS(fbuilder.close_ring(), assert_error);
     }
 }
 
@@ -217,10 +217,10 @@ TEST_CASE("Calling polygon_feature_builder::set_point()/close_ring() too often t
     fbuilder.set_point(10, 20);
 
     SECTION("set_point") {
-        REQUIRE_THROWS_AS(fbuilder.set_point(50, 20), const assert_error&);
+        REQUIRE_THROWS_AS(fbuilder.set_point(50, 20), assert_error);
     }
     SECTION("close_ring") {
-        REQUIRE_THROWS_AS(fbuilder.close_ring(), const assert_error&);
+        REQUIRE_THROWS_AS(fbuilder.close_ring(), assert_error);
     }
 }
 
@@ -231,7 +231,7 @@ TEST_CASE("Calling polygon_feature_builder::set_point() with same point throws")
 
     fbuilder.add_ring(4);
     fbuilder.set_point(10, 10);
-    REQUIRE_THROWS_AS(fbuilder.set_point(10, 10), const vtzero::geometry_exception&);
+    REQUIRE_THROWS_AS(fbuilder.set_point(10, 10), vtzero::geometry_exception);
 }
 
 TEST_CASE("Calling polygon_feature_builder::set_point() creating unclosed ring throws") {
@@ -243,7 +243,7 @@ TEST_CASE("Calling polygon_feature_builder::set_point() creating unclosed ring t
     fbuilder.set_point(10, 10);
     fbuilder.set_point(10, 20);
     fbuilder.set_point(20, 20);
-    REQUIRE_THROWS_AS(fbuilder.set_point(20, 30), const vtzero::geometry_exception&);
+    REQUIRE_THROWS_AS(fbuilder.set_point(20, 30), vtzero::geometry_exception);
 }
 
 TEST_CASE("Add polygon from container") {

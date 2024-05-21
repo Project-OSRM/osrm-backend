@@ -14,13 +14,13 @@ TEST_CASE("add keys to layer using key index built into layer") {
     vtzero::tile_builder tbuilder;
     vtzero::layer_builder lbuilder{tbuilder, "test"};
 
-    for (int n = 0; n < max_keys; ++n) {
+    for (uint32_t n = 0; n < max_keys; ++n) {
         const auto key = std::to_string(n);
         const auto idx = lbuilder.add_key(key);
         REQUIRE(n == idx.value());
     }
 
-    for (int n = 0; n < max_keys; n += 2) {
+    for (uint32_t n = 0; n < max_keys; n += 2) {
         const auto key = std::to_string(n);
         const auto idx = lbuilder.add_key(key);
         REQUIRE(n == idx.value());
@@ -33,13 +33,13 @@ TEST_CASE("add values to layer using value index built into layer") {
     vtzero::tile_builder tbuilder;
     vtzero::layer_builder lbuilder{tbuilder, "test"};
 
-    for (int n = 0; n < max_values; ++n) {
+    for (uint32_t n = 0; n < max_values; ++n) {
         const auto value = std::to_string(n);
         const auto idx = lbuilder.add_value(vtzero::encoded_property_value{value});
         REQUIRE(n == idx.value());
     }
 
-    for (int n = 0; n < max_values; n += 2) {
+    for (uint32_t n = 0; n < max_values; n += 2) {
         const auto value = std::to_string(n);
         const auto idx = lbuilder.add_value(vtzero::encoded_property_value{value});
         REQUIRE(n == idx.value());
