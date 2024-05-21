@@ -225,6 +225,8 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                     continue;
                 }
 
+                forward_heap.Clear();
+
                 for (const auto s_prime : util::irange<std::size_t>(0UL, current_viterbi.size()))
                 {
                     const double emission_pr = emission_log_probabilities[t][s_prime];
@@ -264,6 +266,8 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                         model.breakage[t] = false;
                     }
                 }
+
+                forward_heap.Clear();
             }
 
             if (model.breakage[t])

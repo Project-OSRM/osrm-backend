@@ -701,25 +701,27 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           const PhantomNode &target_phantom,
                           EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
 {
-    forward_heap.Clear();
     reverse_heap.Clear();
 
-    if (source_phantom.IsValidForwardSource())
+    if (forward_heap.Empty())
     {
-        forward_heap.Insert(source_phantom.forward_segment_id.id,
-                            EdgeWeight{0} - source_phantom.GetForwardWeightPlusOffset(),
-                            {source_phantom.forward_segment_id.id,
-                             false,
-                             EdgeDistance{0} - source_phantom.GetForwardDistance()});
-    }
+        if (source_phantom.IsValidForwardSource())
+        {
+            forward_heap.Insert(source_phantom.forward_segment_id.id,
+                                EdgeWeight{0} - source_phantom.GetForwardWeightPlusOffset(),
+                                {source_phantom.forward_segment_id.id,
+                                 false,
+                                 EdgeDistance{0} - source_phantom.GetForwardDistance()});
+        }
 
-    if (source_phantom.IsValidReverseSource())
-    {
-        forward_heap.Insert(source_phantom.reverse_segment_id.id,
-                            EdgeWeight{0} - source_phantom.GetReverseWeightPlusOffset(),
-                            {source_phantom.reverse_segment_id.id,
-                             false,
-                             EdgeDistance{0} - source_phantom.GetReverseDistance()});
+        if (source_phantom.IsValidReverseSource())
+        {
+            forward_heap.Insert(source_phantom.reverse_segment_id.id,
+                                EdgeWeight{0} - source_phantom.GetReverseWeightPlusOffset(),
+                                {source_phantom.reverse_segment_id.id,
+                                 false,
+                                 EdgeDistance{0} - source_phantom.GetReverseDistance()});
+        }
     }
 
     if (target_phantom.IsValidForwardTarget())
