@@ -532,21 +532,18 @@ using UnpackedNodes = std::vector<NodeID>;
 using UnpackedEdges = std::vector<EdgeID>;
 using UnpackedPath = std::tuple<EdgeWeight, UnpackedNodes, UnpackedEdges>;
 
-template <typename Algorithm, typename... Args>
-UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
-                    const DataFacade<Algorithm> &facade,
-                    typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                    typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                    const std::vector<NodeID> &force_step_nodes,
-                    EdgeWeight weight_upper_bound,
-                    const Args &...args)
+template <typename Algorithm, typename Heap, typename... Args>
+std::optional<std::pair<NodeID, EdgeWeight>> runSearch(const DataFacade<Algorithm> &facade,
+                                                       Heap &forward_heap,
+                                                       Heap &reverse_heap,
+                                                       const std::vector<NodeID> &force_step_nodes,
+                                                       EdgeWeight weight_upper_bound,
+                                                       const Args &...args)
 {
     if (forward_heap.Empty() || reverse_heap.Empty())
     {
-        return std::make_tuple(INVALID_EDGE_WEIGHT, std::vector<NodeID>(), std::vector<EdgeID>());
+        return {};
     }
-
-    const auto &partition = facade.GetMultiLevelPartition();
 
     BOOST_ASSERT(!forward_heap.Empty() && forward_heap.MinKey() < INVALID_EDGE_WEIGHT);
     BOOST_ASSERT(!reverse_heap.Empty() && reverse_heap.MinKey() < INVALID_EDGE_WEIGHT);
@@ -578,8 +575,31 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
     // No path found for both target nodes?
     if (weight >= weight_upper_bound || SPECIAL_NODEID == middle)
     {
+        return {};
+    }
+
+    return {{middle, weight}};
+}
+
+template <typename Algorithm, typename... Args>
+UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
+                    const DataFacade<Algorithm> &facade,
+                    typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                    typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                    const std::vector<NodeID> &force_step_nodes,
+                    EdgeWeight weight_upper_bound,
+                    const Args &...args)
+{
+    auto searchResult = runSearch(
+        facade, forward_heap, reverse_heap, force_step_nodes, weight_upper_bound, args...);
+    if (!searchResult)
+    {
         return std::make_tuple(INVALID_EDGE_WEIGHT, std::vector<NodeID>(), std::vector<EdgeID>());
     }
+
+    auto [middle, weight] = *searchResult;
+
+    const auto &partition = facade.GetMultiLevelPartition();
 
     // std::cerr << "Distance = " << forward_heap.GetData(middle).distance << " " <<
     // reverse_heap.GetData(middle).distance << std::endl;
@@ -652,45 +672,15 @@ searchDistance(SearchEngineData<Algorithm> &,
                EdgeWeight weight_upper_bound,
                const Args &...args)
 {
-    if (forward_heap.Empty() || reverse_heap.Empty())
+
+    auto searchResult = runSearch(
+        facade, forward_heap, reverse_heap, force_step_nodes, weight_upper_bound, args...);
+    if (!searchResult)
     {
         return INVALID_EDGE_DISTANCE;
     }
 
-    // const auto &partition = facade.GetMultiLevelPartition();
-
-    BOOST_ASSERT(!forward_heap.Empty() && forward_heap.MinKey() < INVALID_EDGE_WEIGHT);
-    BOOST_ASSERT(!reverse_heap.Empty() && reverse_heap.MinKey() < INVALID_EDGE_WEIGHT);
-
-    // run two-Target Dijkstra routing step.
-    NodeID middle = SPECIAL_NODEID;
-    EdgeWeight weight = weight_upper_bound;
-    EdgeWeight forward_heap_min = forward_heap.MinKey();
-    EdgeWeight reverse_heap_min = reverse_heap.MinKey();
-    while (forward_heap.Size() + reverse_heap.Size() > 0 &&
-           forward_heap_min + reverse_heap_min < weight)
-    {
-        if (!forward_heap.Empty())
-        {
-            routingStep<FORWARD_DIRECTION>(
-                facade, forward_heap, reverse_heap, middle, weight, force_step_nodes, args...);
-            if (!forward_heap.Empty())
-                forward_heap_min = forward_heap.MinKey();
-        }
-        if (!reverse_heap.Empty())
-        {
-            routingStep<REVERSE_DIRECTION>(
-                facade, reverse_heap, forward_heap, middle, weight, force_step_nodes, args...);
-            if (!reverse_heap.Empty())
-                reverse_heap_min = reverse_heap.MinKey();
-        }
-    };
-
-    // No path found for both target nodes?
-    if (weight >= weight_upper_bound || SPECIAL_NODEID == middle)
-    {
-        return INVALID_EDGE_DISTANCE;
-    }
+    auto [middle, _] = *searchResult;
 
     auto distance = forward_heap.GetData(middle).distance + reverse_heap.GetData(middle).distance;
 
