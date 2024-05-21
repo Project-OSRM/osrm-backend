@@ -151,7 +151,7 @@ jobs:
           - name: gcc-13-debug-cov
             continue-on-error: false
             node: 20
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
             CCOMPILER: gcc-13
@@ -248,12 +248,11 @@ jobs:
           - name: gcc-13-release
             continue-on-error: false
             node: 20
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: gcc-13
             CXXCOMPILER: g++-13
-            ENABLE_BENCHMARKS: ON
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
           - name: gcc-12-release
@@ -264,7 +263,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: gcc-12
             CXXCOMPILER: g++-12
-            ENABLE_BENCHMARKS: ON
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
           - name: gcc-11-release
@@ -275,7 +273,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: gcc-11
             CXXCOMPILER: g++-11
-            ENABLE_BENCHMARKS: ON
 
           - name: conan-linux-release-node
             build_node_package: true
@@ -533,17 +530,6 @@ jobs:
         fi
         popd
         npm test
-    - name: Run benchmarks
-      if: ${{ matrix.ENABLE_BENCHMARKS == 'ON' }}
-      run: |
-        pushd ${OSRM_BUILD_DIR}
-        make --jobs=${JOBS} benchmarks
-        ./src/benchmarks/alias-bench
-        ./src/benchmarks/json-render-bench ../src/benchmarks/portugal_to_korea.json
-        ./src/benchmarks/match-bench ../test/data/ch/monaco.osrm
-        ./src/benchmarks/packedvector-bench
-        ./src/benchmarks/rtree-bench ../test/data/monaco.osrm.ramIndex ../test/data/monaco.osrm.fileIndex ../test/data/monaco.osrm.nbg_nodes
-        popd
 
     - name: Use Node 18
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
@@ -616,8 +602,72 @@ jobs:
         replacesArtifacts: true
         token: ${{ secrets.GITHUB_TOKEN }}
 
+
+  benchmarks:
+    if: github.event_name == 'pull_request'
+    needs: [format-taginfo-docs]
+    runs-on: ubuntu-22.04
+    env:
+      CCOMPILER: clang-13
+      CXXCOMPILER: clang++-13
+      CC: clang-13
+      CXX: clang++-13
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+    steps: 
+      - name: Enable compiler cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.ccache
+          key: v1-ccache-benchmarks-${{ github.sha }}
+          restore-keys: |
+            v1-ccache-benchmarks-
+      - name: Enable Conan cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.conan
+          key: v1-conan-benchmarks-${{ github.sha }}
+          restore-keys: |
+            v1-conan-benchmarks-
+      - name: Checkout PR Branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+          path: pr
+      - run: python3 -m pip install "conan<2.0.0" "requests==2.31.0"
+      - name: Build PR Branch
+        run: |
+          mkdir -p pr/build
+          cd pr/build
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          make -j$(nproc) 
+          make -j$(nproc) benchmarks
+          cd ..
+          make -C test/data 
+      - name: Checkout Base Branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          path: base
+      - name: Build Base Branch
+        run: |
+          mkdir base/build
+          cd base/build
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          make -j$(nproc)
+          make -j$(nproc) benchmarks
+          cd ..
+          make -C test/data 
+      - name: Run Benchmarks
+        run: |
+          ./pr/scripts/ci/run_benchmarks.sh base pr
+      - name: Post Benchmark Results
+        run: |
+          python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
+
   ci-complete:
     runs-on: ubuntu-22.04
-    needs: [build-test-publish, docker-image, windows-release-node]
+    needs: [build-test-publish, docker-image, windows-release-node, benchmarks]
     steps:
     - run: echo "CI complete"

@@ -334,8 +334,7 @@ inline void search(SearchEngineData<Algorithm> &engine_working_data,
                    typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                    EdgeWeight &weight,
                    std::vector<NodeID> &packed_leg,
-                   const std::vector<NodeID> &forward_loop_nodes,
-                   const std::vector<NodeID> &reverse_loop_nodes,
+                   const std::vector<NodeID> &loop_nodes,
                    const PhantomT &endpoints,
                    const EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
 {
@@ -345,8 +344,7 @@ inline void search(SearchEngineData<Algorithm> &engine_working_data,
                 reverse_heap,
                 weight,
                 packed_leg,
-                forward_loop_nodes,
-                reverse_loop_nodes,
+                loop_nodes,
                 endpoints,
                 weight_upper_bound);
 }
