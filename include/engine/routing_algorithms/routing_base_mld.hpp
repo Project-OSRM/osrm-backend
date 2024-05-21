@@ -269,6 +269,25 @@ retrievePackedPathFromHeap(const SearchEngineData<Algorithm>::QueryHeap &forward
     return packed_path;
 }
 
+template <typename Heap>
+void insertOrUpdate(Heap &heap,
+                    const NodeID node,
+                    const EdgeWeight weight,
+                    const typename Heap::DataType &data)
+{
+    const auto heapNode = heap.GetHeapNodeIfWasInserted(node);
+    if (!heapNode)
+    {
+        heap.Insert(node, weight, data);
+    }
+    else if (weight < heapNode->weight)
+    {
+        heapNode->data = data;
+        heapNode->weight = weight;
+        heap.DecreaseKey(*heapNode);
+    }
+}
+
 template <bool DIRECTION, typename Algorithm, typename Heap, typename... Args>
 void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                         Heap &forward_heap,
@@ -316,36 +335,18 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 {
                     const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
                     BOOST_ASSERT(to_weight >= heapNode.weight);
-                    const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
-                    if (!toHeapNode)
+
+                    if constexpr (std::is_same_v<typename SearchEngineData<
+                                                     mld::Algorithm>::MapMatchingQueryHeap,
+                                                 Heap>)
                     {
-                        if constexpr (std::is_same_v<typename SearchEngineData<
-                                                         mld::Algorithm>::MapMatchingQueryHeap,
-                                                     Heap>)
-                        {
-                            const EdgeDistance to_distance = heapNode.data.distance + *distance;
-                            forward_heap.Insert(to, to_weight, {heapNode.node, true, to_distance});
-                        }
-                        else
-                        {
-                            forward_heap.Insert(to, to_weight, {heapNode.node, true});
-                        }
+                        const EdgeDistance to_distance = heapNode.data.distance + *distance;
+                        insertOrUpdate(
+                            forward_heap, to, to_weight, {heapNode.node, true, to_distance});
                     }
-                    else if (to_weight < toHeapNode->weight)
+                    else
                     {
-                        if constexpr (std::is_same_v<typename SearchEngineData<
-                                                         mld::Algorithm>::MapMatchingQueryHeap,
-                                                     Heap>)
-                        {
-                            const EdgeDistance to_distance = heapNode.data.distance + *distance;
-                            toHeapNode->data = {heapNode.node, true, to_distance};
-                        }
-                        else
-                        {
-                            toHeapNode->data = {heapNode.node, true};
-                        }
-                        toHeapNode->weight = to_weight;
-                        forward_heap.DecreaseKey(*toHeapNode);
+                        insertOrUpdate(forward_heap, to, to_weight, {heapNode.node, true});
                     }
                 }
                 ++destination;
@@ -384,36 +385,17 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 {
                     const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
                     BOOST_ASSERT(to_weight >= heapNode.weight);
-                    const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
-                    if (!toHeapNode)
+                    if constexpr (std::is_same_v<typename SearchEngineData<
+                                                     mld::Algorithm>::MapMatchingQueryHeap,
+                                                 Heap>)
                     {
-                        if constexpr (std::is_same_v<typename SearchEngineData<
-                                                         mld::Algorithm>::MapMatchingQueryHeap,
-                                                     Heap>)
-                        {
-                            const EdgeDistance to_distance = heapNode.data.distance + *distance;
-                            forward_heap.Insert(to, to_weight, {heapNode.node, true, to_distance});
-                        }
-                        else
-                        {
-                            forward_heap.Insert(to, to_weight, {heapNode.node, true});
-                        }
+                        const EdgeDistance to_distance = heapNode.data.distance + *distance;
+                        insertOrUpdate(
+                            forward_heap, to, to_weight, {heapNode.node, true, to_distance});
                     }
-                    else if (to_weight < toHeapNode->weight)
+                    else
                     {
-                        if constexpr (std::is_same_v<typename SearchEngineData<
-                                                         mld::Algorithm>::MapMatchingQueryHeap,
-                                                     Heap>)
-                        {
-                            const EdgeDistance to_distance = heapNode.data.distance + *distance;
-                            toHeapNode->data = {heapNode.node, true, to_distance};
-                        }
-                        else
-                        {
-                            toHeapNode->data = {heapNode.node, true};
-                        }
-                        toHeapNode->weight = to_weight;
-                        forward_heap.DecreaseKey(*toHeapNode);
+                        insertOrUpdate(forward_heap, to, to_weight, {heapNode.node, true});
                     }
                 }
                 ++source;
@@ -444,42 +426,20 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 const EdgeWeight to_weight =
                     heapNode.weight + node_weight + alias_cast<EdgeWeight>(turn_penalty);
 
-                const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
-                if (!toHeapNode)
+                if constexpr (std::is_same_v<
+                                  typename SearchEngineData<mld::Algorithm>::MapMatchingQueryHeap,
+                                  Heap>)
                 {
-                    if constexpr (std::is_same_v<typename SearchEngineData<
-                                                     mld::Algorithm>::MapMatchingQueryHeap,
-                                                 Heap>)
-                    {
-                        const auto node_distance = facade.GetNodeDistance(
-                            DIRECTION == FORWARD_DIRECTION ? heapNode.node : to);
+                    const auto node_distance =
+                        facade.GetNodeDistance(DIRECTION == FORWARD_DIRECTION ? heapNode.node : to);
 
-                        const EdgeDistance to_distance = heapNode.data.distance + node_distance;
-                        forward_heap.Insert(to, to_weight, {heapNode.node, false, to_distance});
-                    }
-                    else
-                    {
-                        forward_heap.Insert(to, to_weight, {heapNode.node, false});
-                    }
+                    const EdgeDistance to_distance = heapNode.data.distance + node_distance;
+                    insertOrUpdate(
+                        forward_heap, to, to_weight, {heapNode.node, false, to_distance});
                 }
-                else if (to_weight < toHeapNode->weight)
+                else
                 {
-                    if constexpr (std::is_same_v<typename SearchEngineData<
-                                                     mld::Algorithm>::MapMatchingQueryHeap,
-                                                 Heap>)
-                    {
-                        const auto node_distance = facade.GetNodeDistance(
-                            DIRECTION == FORWARD_DIRECTION ? heapNode.node : to);
-
-                        const EdgeDistance to_distance = heapNode.data.distance + node_distance;
-                        toHeapNode->data = {heapNode.node, false, to_distance};
-                    }
-                    else
-                    {
-                        toHeapNode->data = {heapNode.node, false};
-                    }
-                    toHeapNode->weight = to_weight;
-                    forward_heap.DecreaseKey(*toHeapNode);
+                    insertOrUpdate(forward_heap, to, to_weight, {heapNode.node, false});
                 }
             }
         }
@@ -600,9 +560,6 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
     auto [middle, weight] = *searchResult;
 
     const auto &partition = facade.GetMultiLevelPartition();
-
-    // std::cerr << "Distance = " << forward_heap.GetData(middle).distance << " " <<
-    // reverse_heap.GetData(middle).distance << std::endl;
 
     // Get packed path as edges {from node ID, to node ID, from_clique_arc}
     auto packed_path = retrievePackedPathFromHeap(forward_heap, reverse_heap, middle);
