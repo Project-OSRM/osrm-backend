@@ -300,9 +300,8 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
 
     const auto level = getNodeQueryLevel(partition, heapNode.node, args...);
 
-    static constexpr auto IS_MAP_MATCHING = std::is_same_v<typename SearchEngineData<
-                                                     mld::Algorithm>::MapMatchingQueryHeap,
-                                                 Heap>;
+    static constexpr auto IS_MAP_MATCHING =
+        std::is_same_v<typename SearchEngineData<mld::Algorithm>::MapMatchingQueryHeap, Heap>;
 
     // SearchEngineData<Algorithm>::MapMatchingQueryHeap
     if (level >= 1 && !heapNode.data.from_clique_arc)
@@ -348,7 +347,8 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                     }
                 }
                 ++destination;
-                if (IS_MAP_MATCHING) {
+                if (IS_MAP_MATCHING)
+                {
                     ++distance;
                 }
             }
@@ -393,7 +393,8 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                     }
                 }
                 ++source;
-                if (IS_MAP_MATCHING) {
+                if (IS_MAP_MATCHING)
+                {
                     ++distance;
                 }
             }
