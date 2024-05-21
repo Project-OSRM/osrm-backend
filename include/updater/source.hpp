@@ -14,7 +14,6 @@ template <typename Key, typename Value> struct LookupTable
     std::optional<Value> operator()(const Key &key) const
     {
         using Result = std::optional<Value>;
-        using Result = boost::optional<Value>;
         const auto it =
             std::lower_bound(lookup.begin(),
                              lookup.end(),

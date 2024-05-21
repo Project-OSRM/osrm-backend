@@ -408,7 +408,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
         auto reverse_weight = reverseHeapNode->weight;
         auto path_weight = weight + reverse_weight;
 
-        if (!shouldForceStep(force_step_nodes, heapNode, reverseHeapNode.get()) &&
+        if (!shouldForceStep(force_step_nodes, heapNode, *reverseHeapNode) &&
             (path_weight >= EdgeWeight{0}) && (path_weight < path_upper_bound))
         {
             middle_node = heapNode.node;
