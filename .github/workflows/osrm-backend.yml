@@ -616,8 +616,8 @@ jobs:
         replacesArtifacts: true
         token: ${{ secrets.GITHUB_TOKEN }}
 
-  # ci-complete:
-  #   runs-on: ubuntu-22.04
-  #   needs: [build-test-publish, docker-image, windows-release-node]
-  #   steps:
-  #   - run: echo "CI complete"
+  ci-complete:
+    runs-on: ubuntu-22.04
+    needs: [build-test-publish, docker-image, windows-release-node]
+    steps:
+    - run: echo "CI complete"
