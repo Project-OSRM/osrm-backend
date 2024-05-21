@@ -583,7 +583,7 @@ jobs:
 
   benchmarks:
     if: github.event_name == 'pull_request'
-    needs: [format-taginfo-docs]
+    # needs: [format-taginfo-docs]
     runs-on: ubuntu-22.04
     env:
       CCOMPILER: clang-13
