@@ -365,7 +365,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                                   Heap>)
                 {
 
-                    return cell.GetOutDistance(heapNode.node).begin();
+                    return cell.GetInDistance(heapNode.node).begin();
                 }
                 else
                 {
