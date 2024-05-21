@@ -12,13 +12,15 @@
       - CHANGED: Update actions/cache to v3. [#6420](https://github.com/Project-OSRM/osrm-backend/pull/6420)
       - REMOVED: Drop support of Node 12 & 14. [#6431](https://github.com/Project-OSRM/osrm-backend/pull/6431)
       - ADDED: Add 'load directly' mode to default Cucumber test suite. [#6663](https://github.com/Project-OSRM/osrm-backend/pull/6663)
+      - CHANGED: Fix compilation for Boost 1.85.0 [#6856](https://github.com/Project-OSRM/osrm-backend/pull/6856)
       - CHANGED: Drop support for Node 16 [#6855](https://github.com/Project-OSRM/osrm-backend/pull/6855)
       - REMOVED: Remove unused AppVeyor files [#6860](https://github.com/Project-OSRM/osrm-backend/pull/6860)
       - CHANGED: Upgrade clang-format to version 15 [#6859](https://github.com/Project-OSRM/osrm-backend/pull/6859)
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
-      - FIXED: Partial fix migration from boost::optional to std::optional [#6551](https://github.com/Project-OSRM/osrm-backend/issues/6551), see also [#6592](https://github.com/Project-OSRM/osrm-backend/issues/6592)
+      - CHANGED: Partial fix migration from boost::optional to std::optional [#6551](https://github.com/Project-OSRM/osrm-backend/issues/6551)
+      - CHANGED: Update Conan Boost version to 1.85.0. [#6868](https://github.com/Project-OSRM/osrm-backend/pull/6868)
       - FIXED: Fix an error in a RouteParameters AnnotationsType operator overload. [#6646](https://github.com/Project-OSRM/osrm-backend/pull/6646)
       - ADDED: Add support for "unlimited" to be passed as a value for the default-radius and max-matching-radius flags. [#6599](https://github.com/Project-OSRM/osrm-backend/pull/6599)
       - CHANGED: Allow -1.0 as unlimited for default_radius value. [#6599](https://github.com/Project-OSRM/osrm-backend/pull/6599)
@@ -45,6 +47,10 @@
       - FIXED: Correctly handle compressed traffic signals. [#6724](https://github.com/Project-OSRM/osrm-backend/pull/6724)
       - FIXED: Fix bug when searching for maneuver overrides [#6739](https://github.com/Project-OSRM/osrm-backend/pull/6739)
       - FIXED: Remove force-loop checks for routes with u-turns [#6858](https://github.com/Project-OSRM/osrm-backend/pull/6858)
+      - FIXED: Correctly check runtime search conditions for forcing routing steps [#6866](https://github.com/Project-OSRM/osrm-backend/pull/6866)
+    - Map Matching:
+      - CHANGED: Optimise path distance calculation in MLD map matching. [#6876](https://github.com/Project-OSRM/osrm-backend/pull/6876)
+      - CHANGED: Optimise R-tree queries in the case of map matching. [#6881](https://github.com/Project-OSRM/osrm-backend/pull/6876)
     - Debug tiles:
       - FIXED: Ensure speed layer features have unique ids. [#6726](https://github.com/Project-OSRM/osrm-backend/pull/6726)
 

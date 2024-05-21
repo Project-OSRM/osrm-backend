@@ -89,7 +89,7 @@ namespace vtzero {
         };
 
         inline constexpr uint32_t command_integer(CommandId id, const uint32_t count) noexcept {
-            return (static_cast<uint32_t>(id) & 0x7u) | (count << 3u);
+            return (static_cast<uint32_t>(id) & 0x7U) | (count << 3U);
         }
 
         inline constexpr uint32_t command_move_to(const uint32_t count) noexcept {
@@ -105,11 +105,11 @@ namespace vtzero {
         }
 
         inline constexpr uint32_t get_command_id(const uint32_t command_integer) noexcept {
-            return command_integer & 0x7u;
+            return command_integer & 0x7U;
         }
 
         inline constexpr uint32_t get_command_count(const uint32_t command_integer) noexcept {
-            return command_integer >> 3u;
+            return command_integer >> 3U;
         }
 
         // The maximum value for the command count according to the spec.

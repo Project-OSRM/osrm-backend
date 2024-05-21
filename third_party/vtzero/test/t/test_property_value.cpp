@@ -69,7 +69,7 @@ struct string_conv {
         s(std::to_string(value)) {
     }
 
-    explicit operator std::string() {
+    explicit operator std::string() const {
         return s;
     }
 
@@ -94,11 +94,11 @@ TEST_CASE("default constructed property_value") {
 }
 
 TEST_CASE("empty property_value") {
-    char x[1] = {0};
-    vtzero::data_view dv{x, 0};
+    char x = 0;
+    vtzero::data_view dv{&x, 0};
     vtzero::property_value pv{dv};
     REQUIRE(pv.valid());
-    REQUIRE_THROWS_AS(pv.type(), const vtzero::format_exception&);
+    REQUIRE_THROWS_AS(pv.type(), vtzero::format_exception);
 }
 
 TEST_CASE("string value") {
@@ -128,7 +128,7 @@ TEST_CASE("string value") {
 }
 
 TEST_CASE("float value") {
-    vtzero::encoded_property_value epv{1.2f};
+    vtzero::encoded_property_value epv{1.2F};
     vtzero::property_value pv{epv.data()};
     REQUIRE(pv.float_value() == Approx(1.2));
 
@@ -318,8 +318,8 @@ TEST_CASE("create encoded property values from different string types") {
 }
 
 TEST_CASE("create encoded property values from different floating point types") {
-    vtzero::encoded_property_value f1{vtzero::float_value_type{3.2f}};
-    vtzero::encoded_property_value f2{3.2f};
+    vtzero::encoded_property_value f1{vtzero::float_value_type{3.2F}};
+    vtzero::encoded_property_value f2{3.2F};
     vtzero::encoded_property_value d1{vtzero::double_value_type{3.2}};
     vtzero::encoded_property_value d2{3.2};
 
@@ -361,7 +361,7 @@ TEST_CASE("create encoded property values from different integer types") {
     vtzero::property_value pvu{u1.data()};
     vtzero::property_value pvs{s1.data()};
 
-    REQUIRE(pvi.int_value() == pvu.uint_value());
+    REQUIRE(pvi.int_value() == static_cast<int64_t>(pvu.uint_value()));
     REQUIRE(pvi.int_value() == pvs.sint_value());
 }
 

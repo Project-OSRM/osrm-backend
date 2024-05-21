@@ -36,8 +36,6 @@ void benchmarkQuery(const std::vector<util::Coordinate> &queries,
                     const std::string &name,
                     QueryT query)
 {
-    std::cout << "Running " << name << " with " << queries.size() << " coordinates: " << std::flush;
-
     TIMER_START(query);
     for (const auto &q : queries)
     {
@@ -46,11 +44,9 @@ void benchmarkQuery(const std::vector<util::Coordinate> &queries,
     }
     TIMER_STOP(query);
 
-    std::cout << "Took " << TIMER_SEC(query) << " seconds "
-              << "(" << TIMER_MSEC(query) << "ms"
-              << ")  ->  " << TIMER_MSEC(query) / queries.size() << " ms/query "
-              << "(" << TIMER_MSEC(query) << "ms"
-              << ")" << std::endl;
+    std::cout << name << ":\n"
+              << TIMER_MSEC(query) << "ms"
+              << " ->  " << TIMER_MSEC(query) / queries.size() << " ms/query" << std::endl;
 }
 
 void benchmark(BenchStaticRTree &rtree, unsigned num_queries)
@@ -65,11 +61,10 @@ void benchmark(BenchStaticRTree &rtree, unsigned num_queries)
                              util::FixedLatitude{lat_udist(mt_rand)});
     }
 
+    benchmarkQuery(
+        queries, "1 result", [&rtree](const util::Coordinate &q) { return rtree.Nearest(q, 1); });
     benchmarkQuery(queries,
-                   "raw RTree queries (1 result)",
-                   [&rtree](const util::Coordinate &q) { return rtree.Nearest(q, 1); });
-    benchmarkQuery(queries,
-                   "raw RTree queries (10 results)",
+                   "10 results",
                    [&rtree](const util::Coordinate &q) { return rtree.Nearest(q, 10); });
 }
 } // namespace osrm::benchmarks

@@ -48,6 +48,10 @@ namespace vtzero {
      * @code
      *   layer.get_feature_by_id(7);
      * @endcode
+     *
+     * Note that the layer class uses mutable members inside to cache the
+     * key and value tables. It can not be used safely in several threads
+     * at once!
      */
     class layer {
 
@@ -465,13 +469,37 @@ namespace vtzero {
                 throw out_of_range_exception{ki};
             }
 
-            assert(m_property_iterator != m_properties.end());
+            assert(it != m_properties.end());
             const uint32_t vi = *it++;
             if (!index_value{vi}.valid()) {
                 throw out_of_range_exception{vi};
             }
 
             if (!std::forward<TFunc>(func)(property{m_layer->key(ki), m_layer->value(vi)})) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    template <typename TFunc>
+    bool feature::for_each_property_indexes(TFunc&& func) const {
+        vtzero_assert(valid());
+
+        for (auto it = m_properties.begin(); it != m_properties.end();) {
+            const uint32_t ki = *it++;
+            if (!index_value{ki}.valid()) {
+                throw out_of_range_exception{ki};
+            }
+
+            assert(it != m_properties.end());
+            const uint32_t vi = *it++;
+            if (!index_value{vi}.valid()) {
+                throw out_of_range_exception{vi};
+            }
+
+            if (!std::forward<TFunc>(func)(index_value_pair{ki, vi})) {
                 return false;
             }
         }

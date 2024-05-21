@@ -389,8 +389,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
                  typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                  NodeID &middle_node,
                  EdgeWeight &path_upper_bound,
-                 const std::vector<NodeID> &force_loop_forward_nodes,
-                 const std::vector<NodeID> &force_loop_reverse_nodes,
+                 const std::vector<NodeID> &force_step_nodes,
                  const Args &...args)
 {
     const auto heapNode = forward_heap.DeleteMinGetHeapNode();
@@ -409,11 +408,8 @@ void routingStep(const DataFacade<Algorithm> &facade,
         auto reverse_weight = reverseHeapNode->weight;
         auto path_weight = weight + reverse_weight;
 
-        // MLD uses loops forcing only to prune single node paths in forward and/or
-        // backward direction (there is no need to force loops in MLD but in CH)
-        if (!force_loop(force_loop_forward_nodes, heapNode) &&
-            !force_loop(force_loop_reverse_nodes, heapNode) && (path_weight >= EdgeWeight{0}) &&
-            (path_weight < path_upper_bound))
+        if (!shouldForceStep(force_step_nodes, heapNode, reverseHeapNode.get()) &&
+            (path_weight >= EdgeWeight{0}) && (path_weight < path_upper_bound))
         {
             middle_node = heapNode.node;
             path_upper_bound = path_weight;
@@ -438,8 +434,7 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
                     const DataFacade<Algorithm> &facade,
                     typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                     typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                    const std::vector<NodeID> &force_loop_forward_nodes,
-                    const std::vector<NodeID> &force_loop_reverse_nodes,
+                    const std::vector<NodeID> &force_step_nodes,
                     EdgeWeight weight_upper_bound,
                     const Args &...args)
 {
@@ -463,27 +458,15 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
     {
         if (!forward_heap.Empty())
         {
-            routingStep<FORWARD_DIRECTION>(facade,
-                                           forward_heap,
-                                           reverse_heap,
-                                           middle,
-                                           weight,
-                                           force_loop_forward_nodes,
-                                           force_loop_reverse_nodes,
-                                           args...);
+            routingStep<FORWARD_DIRECTION>(
+                facade, forward_heap, reverse_heap, middle, weight, force_step_nodes, args...);
             if (!forward_heap.Empty())
                 forward_heap_min = forward_heap.MinKey();
         }
         if (!reverse_heap.Empty())
         {
-            routingStep<REVERSE_DIRECTION>(facade,
-                                           reverse_heap,
-                                           forward_heap,
-                                           middle,
-                                           weight,
-                                           force_loop_reverse_nodes,
-                                           force_loop_forward_nodes,
-                                           args...);
+            routingStep<REVERSE_DIRECTION>(
+                facade, reverse_heap, forward_heap, middle, weight, force_step_nodes, args...);
             if (!reverse_heap.Empty())
                 reverse_heap_min = reverse_heap.MinKey();
         }
@@ -512,9 +495,7 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
 
     for (auto const &packed_edge : packed_path)
     {
-        NodeID source, target;
-        bool overlay_edge;
-        std::tie(source, target, overlay_edge) = packed_edge;
+        auto [source, target, overlay_edge] = packed_edge;
         if (!overlay_edge)
         { // a base graph edge
             unpacked_nodes.push_back(target);
@@ -534,21 +515,14 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
             forward_heap.Insert(source, {0}, {source});
             reverse_heap.Insert(target, {0}, {target});
 
-            // TODO: when structured bindings will be allowed change to
-            // auto [subpath_weight, subpath_source, subpath_target, subpath] = ...
-            EdgeWeight subpath_weight;
-            std::vector<NodeID> subpath_nodes;
-            std::vector<EdgeID> subpath_edges;
-            std::tie(subpath_weight, subpath_nodes, subpath_edges) =
-                search(engine_working_data,
-                       facade,
-                       forward_heap,
-                       reverse_heap,
-                       force_loop_forward_nodes,
-                       force_loop_reverse_nodes,
-                       INVALID_EDGE_WEIGHT,
-                       sublevel,
-                       parent_cell_id);
+            auto [subpath_weight, subpath_nodes, subpath_edges] = search(engine_working_data,
+                                                                         facade,
+                                                                         forward_heap,
+                                                                         reverse_heap,
+                                                                         force_step_nodes,
+                                                                         INVALID_EDGE_WEIGHT,
+                                                                         sublevel,
+                                                                         parent_cell_id);
             BOOST_ASSERT(!subpath_edges.empty());
             BOOST_ASSERT(subpath_nodes.size() > 1);
             BOOST_ASSERT(subpath_nodes.front() == source);
@@ -570,8 +544,7 @@ inline void search(SearchEngineData<Algorithm> &engine_working_data,
                    typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                    EdgeWeight &weight,
                    std::vector<NodeID> &unpacked_nodes,
-                   const std::vector<NodeID> &force_loop_forward_node,
-                   const std::vector<NodeID> &force_loop_reverse_node,
+                   const std::vector<NodeID> &force_step_nodes,
                    const PhantomEndpointT &endpoints,
                    const EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
 {
@@ -580,8 +553,7 @@ inline void search(SearchEngineData<Algorithm> &engine_working_data,
                                                            facade,
                                                            forward_heap,
                                                            reverse_heap,
-                                                           force_loop_forward_node,
-                                                           force_loop_reverse_node,
+                                                           force_step_nodes,
                                                            weight_upper_bound,
                                                            endpoints);
 }
@@ -633,28 +605,46 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
     const PhantomEndpoints endpoints{source_phantom, target_phantom};
     insertNodesInHeaps(forward_heap, reverse_heap, endpoints);
 
-    EdgeWeight weight = INVALID_EDGE_WEIGHT;
-    std::vector<NodeID> unpacked_nodes;
-    std::vector<EdgeID> unpacked_edges;
-    std::tie(weight, unpacked_nodes, unpacked_edges) = search(engine_working_data,
-                                                              facade,
-                                                              forward_heap,
-                                                              reverse_heap,
-                                                              {},
-                                                              {},
-                                                              weight_upper_bound,
-                                                              endpoints);
+    auto [weight, unpacked_nodes, unpacked_edges] = search(
+        engine_working_data, facade, forward_heap, reverse_heap, {}, weight_upper_bound, endpoints);
 
     if (weight == INVALID_EDGE_WEIGHT)
     {
         return std::numeric_limits<double>::max();
     }
 
-    std::vector<PathData> unpacked_path;
+    BOOST_ASSERT(unpacked_nodes.size() >= 1);
 
-    annotatePath(facade, endpoints, unpacked_nodes, unpacked_edges, unpacked_path);
+    EdgeDistance distance = {0.0};
 
-    return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
+    if (source_phantom.forward_segment_id.id == unpacked_nodes.front())
+    {
+        BOOST_ASSERT(source_phantom.forward_segment_id.enabled);
+        distance = EdgeDistance{0} - source_phantom.GetForwardDistance();
+    }
+    else if (source_phantom.reverse_segment_id.id == unpacked_nodes.front())
+    {
+        BOOST_ASSERT(source_phantom.reverse_segment_id.enabled);
+        distance = EdgeDistance{0} - source_phantom.GetReverseDistance();
+    }
+
+    for (size_t index = 0; index < unpacked_nodes.size() - 1; ++index)
+    {
+        distance += facade.GetNodeDistance(unpacked_nodes[index]);
+    }
+
+    if (target_phantom.forward_segment_id.id == unpacked_nodes.back())
+    {
+        BOOST_ASSERT(target_phantom.forward_segment_id.enabled);
+        distance += target_phantom.GetForwardDistance();
+    }
+    else if (target_phantom.reverse_segment_id.id == unpacked_nodes.back())
+    {
+        BOOST_ASSERT(target_phantom.reverse_segment_id.enabled);
+        distance += target_phantom.GetReverseDistance();
+    }
+
+    return from_alias<double>(distance);
 }
 
 } // namespace osrm::engine::routing_algorithms::mld

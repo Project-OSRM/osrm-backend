@@ -47,12 +47,42 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         return rtree.SearchInBox(bbox);
     }
 
+    std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
+                        const Approach approach,
+                        const double max_distance,
+                        const boost::optional<Bearing> bearing_with_range,
+                        const boost::optional<bool> use_all_edges) const
+    {
+        auto results = rtree.SearchInRange(
+            input_coordinate,
+            max_distance,
+            [this, approach, &input_coordinate, &bearing_with_range, &use_all_edges, max_distance](
+                const CandidateSegment &segment)
+            {
+                auto invalidDistance =
+                    CheckSegmentDistance(input_coordinate, segment, max_distance);
+                if (invalidDistance)
+                {
+                    return std::make_pair(false, false);
+                }
+                auto valid = CheckSegmentExclude(segment) &&
+                             CheckApproach(input_coordinate, segment, approach) &&
+                             (use_all_edges ? HasValidEdge(segment, *use_all_edges)
+                                            : HasValidEdge(segment)) &&
+                             (bearing_with_range ? CheckSegmentBearing(segment, *bearing_with_range)
+                                                 : std::make_pair(true, true));
+                return valid;
+            });
+        return MakePhantomNodes(input_coordinate, results);
+    }
+
     // Returns max_results nearest PhantomNodes that are valid within the provided parameters.
     // Does not filter by small/big component!
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const Approach approach,
-                        const boost::optional<size_t> max_results,
+                        const size_t max_results,
                         const boost::optional<double> max_distance,
                         const boost::optional<Bearing> bearing_with_range,
                         const boost::optional<bool> use_all_edges) const
@@ -70,10 +100,10 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                                                  : std::make_pair(true, true));
                 return valid;
             },
-            [this, &max_distance, &max_results, input_coordinate](const std::size_t num_results,
-                                                                  const CandidateSegment &segment)
+            [this, &max_distance, max_results, input_coordinate](const std::size_t num_results,
+                                                                 const CandidateSegment &segment)
             {
-                return (max_results && num_results >= *max_results) ||
+                return (num_results >= max_results) ||
                        (max_distance && max_distance != -1.0 &&
                         CheckSegmentDistance(input_coordinate, segment, *max_distance));
             });

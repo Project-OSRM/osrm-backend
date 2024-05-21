@@ -1,12 +1,13 @@
 #ifndef OSRM_GUIDANCE_TURN_INSTRUCTION_HPP_
 #define OSRM_GUIDANCE_TURN_INSTRUCTION_HPP_
 
-#include <algorithm>
-#include <cstdint>
-
 #include "guidance/roundabout_type.hpp"
 #include "util/attributes.hpp"
 #include "util/typedefs.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cstdint>
 
 namespace osrm::guidance
 {
@@ -154,24 +155,23 @@ inline bool operator==(const TurnInstruction lhs, const TurnInstruction rhs)
 inline bool hasRoundaboutType(const TurnInstruction instruction)
 {
     using namespace guidance::TurnType;
-    const constexpr TurnType::Enum valid_types[] = {TurnType::EnterRoundabout,
-                                                    TurnType::EnterAndExitRoundabout,
-                                                    TurnType::EnterRotary,
-                                                    TurnType::EnterAndExitRotary,
-                                                    TurnType::EnterRoundaboutIntersection,
-                                                    TurnType::EnterAndExitRoundaboutIntersection,
-                                                    TurnType::EnterRoundaboutAtExit,
-                                                    TurnType::ExitRoundabout,
-                                                    TurnType::EnterRotaryAtExit,
-                                                    TurnType::ExitRotary,
-                                                    TurnType::EnterRoundaboutIntersectionAtExit,
-                                                    TurnType::ExitRoundaboutIntersection,
-                                                    TurnType::StayOnRoundabout};
+    const constexpr std::array<TurnType::Enum, 13> valid_types = {
+        TurnType::EnterRoundabout,
+        TurnType::EnterAndExitRoundabout,
+        TurnType::EnterRotary,
+        TurnType::EnterAndExitRotary,
+        TurnType::EnterRoundaboutIntersection,
+        TurnType::EnterAndExitRoundaboutIntersection,
+        TurnType::EnterRoundaboutAtExit,
+        TurnType::ExitRoundabout,
+        TurnType::EnterRotaryAtExit,
+        TurnType::ExitRotary,
+        TurnType::EnterRoundaboutIntersectionAtExit,
+        TurnType::ExitRoundaboutIntersection,
+        TurnType::StayOnRoundabout};
 
-    const auto *first = valid_types;
-    const auto *last = first + sizeof(valid_types) / sizeof(valid_types[0]);
-
-    return std::find(first, last, instruction.type) != last;
+    return std::find(valid_types.cbegin(), valid_types.cend(), instruction.type) !=
+           valid_types.cend();
 }
 
 inline bool entersRoundabout(const guidance::TurnInstruction instruction)
