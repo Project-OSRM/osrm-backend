@@ -1,5 +1,5 @@
 ---
-Checks: '*,-cert-dcl21-cpp,-cert-err60-cpp,-clang-analyzer-core.CallAndMessage,-cppcoreguidelines-owning-memory,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-fuchsia-*,-google-runtime-references,-hicpp-no-array-decay,-readability-avoid-const-params-in-decls,-readability-implicit-bool-cast,-readability-implicit-bool-conversion'
+Checks: '*,-cert-dcl21-cpp,-cert-err60-cpp,-clang-analyzer-core.CallAndMessage,-cppcoreguidelines-avoid-magic-numbers,-cppcoreguidelines-non-private-member-variables-in-classes,-cppcoreguidelines-owning-memory,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-fuchsia-*,-google-runtime-references,-hicpp-no-array-decay,-hicpp-vararg,-misc-non-private-member-variables-in-classes,-modernize-use-trailing-return-type,-readability-avoid-const-params-in-decls,-readability-implicit-bool-cast,-readability-implicit-bool-conversion,-readability-magic-numbers'
 #
 #  Disabled checks:
 #
@@ -11,6 +11,14 @@ Checks: '*,-cert-dcl21-cpp,-cert-err60-cpp,-clang-analyzer-core.CallAndMessage,-
 #
 #  clang-analyzer-core.CallAndMessage
 #    Produces false positives
+#
+#  cppcoreguidelines-avoid-magic-numbers
+#  readability-magic-numbers
+#    Not wrong, but many tests just have those
+#
+#  cppcoreguidelines-non-private-member-variables-in-classes
+#  misc-non-private-member-variables-in-classes
+#    Can be useful, we use it for some mock classes in tests for instance
 #
 #  cppcoreguidelines-owning-memory
 #    Don't want to add dependency on gsl library.
@@ -30,6 +38,12 @@ Checks: '*,-cert-dcl21-cpp,-cert-err60-cpp,-clang-analyzer-core.CallAndMessage,-
 #
 #  hicpp-no-array-decay
 #    Limited use and many false positives including for all asserts.
+#
+#  hicpp-vararg
+#    False positives from Catch2
+#
+#  modernize-use-trailing-return-type
+#    We are not that modern.
 #
 #  readability-avoid-const-params-in-decls
 #    Inconsistently complaines about some cases but not others. It is nice

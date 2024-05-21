@@ -8,8 +8,6 @@ language: generic
 
 sudo: false
 
-dist: trusty
-
 #-----------------------------------------------------------------------------
 
 # Save common build configurations as shortcuts, so we can reference them later.
@@ -33,11 +31,20 @@ addons_shortcuts:
   addons_clang50: &clang50
     apt:
       sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-5.0' ]
-      packages: [ 'libboost1.55-dev', 'clang-5.0', 'clang-tidy-5.0' ]
+      packages: [ 'libboost1.55-dev', 'clang-5.0' ]
   addons_clang60: &clang60
     apt:
       sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-6.0' ]
-      packages: [ 'libboost1.55-dev', 'clang-6.0', 'clang-tidy-6.0' ]
+      packages: [ 'libboost1.55-dev', 'clang-6.0' ]
+  addons_clang7: &clang7
+    apt:
+      packages: [ 'libboost-dev', 'clang-7' ]
+  addons_clang8: &clang8
+    apt:
+      packages: [ 'libboost-dev', 'clang-8' ]
+  addons_clang9: &clang9
+    apt:
+      packages: [ 'libboost-dev', 'clang-9', 'clang-tidy-9' ]
   addons_gcc48: &gcc48
     apt:
       sources: [ 'ubuntu-toolchain-r-test' ]
@@ -54,99 +61,192 @@ addons_shortcuts:
     apt:
       sources: [ 'ubuntu-toolchain-r-test' ]
       packages: [ 'libboost1.55-dev', 'g++-6', 'gcc-6' ]
+  addons_gcc7: &gcc7
+    apt:
+      packages: [ 'libboost-dev' ]
+  addons_gcc8: &gcc8
+    apt:
+      packages: [ 'libboost-dev', 'g++-8', 'gcc-8' ]
+
 
 #-----------------------------------------------------------------------------
 
-matrix:
+jobs:
   include:
     - os: linux
+      dist: trusty
       compiler: "clang-3.5"
       env: BUILD='Debug' CC=clang-3.5 CXX=clang++-3.5
       addons: *clang35
     - os: linux
+      dist: trusty
       compiler: "clang-3.8"
       env: BUILD='Debug' CC=clang-3.8 CXX=clang++-3.8
       addons: *clang38
     - os: linux
+      dist: trusty
       compiler: "clang-3.9"
       env: BUILD='Debug' CC=clang-3.9 CXX=clang++-3.9
       addons: *clang39
     - os: linux
+      dist: trusty
       compiler: "clang-4.0"
       env: BUILD='Debug' CC=clang-4.0 CXX=clang++-4.0
       addons: *clang40
     - os: linux
+      dist: trusty
       compiler: "clang-5.0"
       env: BUILD='Debug' CC=clang-5.0 CXX=clang++-5.0
-           CLANG_TIDY=clang-tidy-5.0
       addons: *clang50
     - os: linux
-      compiler: "clang-5.0"
-      env: BUILD='Release' CC=clang-5.0 CXX=clang++-5.0
-      addons: *clang50
-    - os: linux
-      compiler: "clang-5.0"
-      env: BUILD='Debug' CC=clang-5.0 CXX=clang++-5.0
-           CXXFLAGS="-fsanitize=address,undefined,integer -fno-sanitize-recover=all -fno-omit-frame-pointer"
-           LDFLAGS="-fsanitize=address,undefined,integer"
-      # LSAN doesn't work on container-based system
-      sudo: required
-      addons: *clang50
-    - os: linux
+      dist: trusty
       compiler: "clang-6.0"
       env: BUILD='Debug' CC=clang-6.0 CXX=clang++-6.0
       addons: *clang60
     - os: linux
+      dist: bionic
+      compiler: "clang-7"
+      env: BUILD='Debug' CC=clang-7 CXX=clang++-7
+      addons: *clang7
+    - os: linux
+      dist: bionic
+      compiler: "clang-8"
+      env: BUILD='Debug' CC=clang-8 CXX=clang++-8
+      addons: *clang8
+    - os: linux
+      dist: bionic
+      compiler: "clang-9"
+      env: BUILD='Debug' CC=clang-9 CXX=clang++-9
+           CLANG_TIDY=clang-tidy-9
+      addons: *clang9
+    - os: linux
+      dist: bionic
+      compiler: "clang-9"
+      env: BUILD='Release' CC=clang-9 CXX=clang++-9
+      addons: *clang9
+    - os: linux
+      dist: bionic
+      compiler: "clang-9"
+      env: BUILD='Debug' CC=clang-9 CXX=clang++-9
+           CXXFLAGS="-fsanitize=address,undefined,integer -fno-sanitize-recover=all -fno-omit-frame-pointer"
+           LDFLAGS="-fsanitize=address,undefined,integer"
+      # LSAN doesn't work on container-based system
+      sudo: required
+      addons: *clang9
+
+    - os: linux
+      arch: arm64
+      dist: bionic
+      compiler: "clang-9"
+      env: BUILD='Debug' CC=clang-9 CXX=clang++-9
+           CXXFLAGS="-fsanitize=address,undefined,integer -fno-sanitize-recover=all -fno-omit-frame-pointer"
+           LDFLAGS="-fsanitize=address,undefined,integer"
+      # LSAN doesn't work on container-based system
+      sudo: required
+      addons: *clang9
+    - os: linux
+      arch: ppc64le
+      dist: bionic
+      compiler: "clang-9"
+      env: BUILD='Debug' CC=clang-9 CXX=clang++-9
+           CXXFLAGS="-fsanitize=address,undefined,integer -fno-sanitize-recover=all -fno-omit-frame-pointer"
+           LDFLAGS="-fsanitize=address,undefined,integer"
+      # LSAN doesn't work on container-based system
+      sudo: required
+      addons: *clang9
+    - os: linux
+      arch: s390x
+      dist: bionic
+      compiler: "clang-9"
+      env: BUILD='Debug' CC=clang-9 CXX=clang++-9
+           CXXFLAGS="-fsanitize=address,undefined,integer -fno-sanitize-recover=all -fno-omit-frame-pointer"
+           LDFLAGS="-fsanitize=address,undefined,integer"
+      # LSAN doesn't work on container-based system
+      sudo: required
+      addons: *clang9
+
+    - os: linux
+      dist: trusty
       compiler: "gcc-4.8"
       env: BUILD='Debug' CC=gcc-4.8 CXX=g++-4.8
       addons: *gcc48
     - os: linux
-      compiler: "gcc-4.9"
-      env: BUILD='Debug' CC=gcc-4.9 CXX=g++-4.9
-           COVERAGE=gcov-4.9
-           CXXFLAGS="--coverage" LDFLAGS="--coverage"
-      addons: *gcc49
-    - os: linux
+      dist: trusty
       compiler: "gcc-5"
       env: BUILD='Debug' CC=gcc-5 CXX=g++-5
            CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
       addons: *gcc5
     - os: linux
+      dist: trusty
       compiler: "gcc-5"
       env: BUILD='Debug' CC=gcc-5 CXX=g++-5
            CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=1"
       addons: *gcc5
     - os: linux
+      dist: trusty
       compiler: "gcc-6"
       env: BUILD='Debug' CC=gcc-6 CXX=g++-6
       addons: *gcc6
     - os: linux
-      compiler: "gcc-6"
-      env: BUILD='Debug' CC=gcc-6 CXX=g++-6
+      dist: bionic
+      compiler: "gcc-7"
+      env: BUILD='Debug' CC=gcc-7 CXX=g++-7
+      addons: *gcc7
+    - os: linux
+      dist: bionic
+      compiler: "gcc-8"
+      env: BUILD='Debug' CC=gcc-8 CXX=g++-8
+           COVERAGE=gcov-8
+           CXXFLAGS="--coverage" LDFLAGS="--coverage"
+      addons: *gcc8
+    - os: linux
+      dist: bionic
+      compiler: "gcc-8"
+      env: BUILD='Debug' CC=gcc-8 CXX=g++-8
            PROTOZERO_DATA_VIEW=std::experimental::string_view
-      addons: *gcc6
+      addons: *gcc8
     - os: linux
-      compiler: "gcc-6"
-      env: BUILD='Release' CC=gcc-6 CXX=g++-6
-      addons: *gcc6
+      dist: bionic
+      compiler: "gcc-8"
+      env: BUILD='Release' CC=gcc-8 CXX=g++-8
+      addons: *gcc8
+
+    - os: linux
+      arch: arm64
+      dist: bionic
+      compiler: "gcc-8"
+      env: BUILD='Debug' CC=gcc-8 CXX=g++-8
+      addons: *gcc8
+
+    - os: linux
+      arch: ppc64le
+      dist: bionic
+      compiler: "gcc-8"
+      env: BUILD='Debug' CC=gcc-8 CXX=g++-8
+      addons: *gcc8
+
+# Fails with out of memory error
+#    - os: linux
+#      arch: s390x
+#      dist: bionic
+#      compiler: "gcc-8"
+#      env: BUILD='Debug' CC=gcc-8 CXX=g++-8
+#      addons: *gcc8
+
     - os: osx
-      osx_image: xcode6.4
+      osx_image: xcode9.4
       compiler: clang
       env: BUILD='Debug'
     - os: osx
-      osx_image: xcode7.3
+      osx_image: xcode10.3
       compiler: clang
       env: BUILD='Debug'
     - os: osx
-      osx_image: xcode8.3
+      osx_image: xcode11.4
       compiler: clang
       env: BUILD='Debug'
     - os: osx
-      osx_image: xcode9.1
-      compiler: clang
-      env: BUILD='Debug'
-    - os: osx
-      osx_image: xcode9.1
+      osx_image: xcode11.4
       compiler: clang
       env: BUILD='Release'
 

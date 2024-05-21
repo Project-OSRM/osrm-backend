@@ -62,7 +62,7 @@ bool TurnLaneData::operator<(const TurnLaneData &other) const
 
 LaneDataVector laneDataFromDescription(const TurnLaneDescription &turn_lane_description)
 {
-    typedef std::unordered_map<TurnLaneType::Mask, std::pair<LaneID, LaneID>> LaneMap;
+    using LaneMap = std::unordered_map<TurnLaneType::Mask, std::pair<LaneID, LaneID>>;
     // TODO need to handle cases that have none-in between two identical values
     const auto num_lanes = boost::numeric_cast<LaneID>(turn_lane_description.size());
 
