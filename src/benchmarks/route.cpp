@@ -42,12 +42,23 @@ try
     // Routing machine with several services (such as Route, Table, Nearest, Trip, Match)
     OSRM osrm{config};
 
-    auto run_benchmark = [&](const std::vector<util::Coordinate> &coordinates)
+    struct Benchmark
+    {
+        std::string name;
+        std::vector<util::Coordinate> coordinates;
+        std::optional<size_t> alternatives = std::nullopt;
+    };
+
+    auto run_benchmark = [&](const Benchmark &benchmark)
     {
         RouteParameters params;
         params.overview = RouteParameters::OverviewType::Full;
         params.steps = true;
-        params.coordinates = coordinates;
+        params.coordinates = benchmark.coordinates;
+        if (benchmark.alternatives)
+        {
+            params.alternatives = *benchmark.alternatives;
+        }
 
         TIMER_START(routes);
         auto NUM = 1000;
@@ -62,21 +73,29 @@ try
             }
         }
         TIMER_STOP(routes);
-        std::cout << NUM << " routes with " << coordinates.size() << " coordinates: " << std::endl;
+        std::cout << benchmark.name << std::endl;
         std::cout << TIMER_MSEC(routes) << "ms" << std::endl;
         std::cout << TIMER_MSEC(routes) / NUM << "ms/req" << std::endl;
     };
 
-    std::vector<std::vector<util::Coordinate>> routes = {
-        {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
-         {FloatLongitude{7.421844922513342}, FloatLatitude{43.73690777888953}},
-         {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
-        {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
-         {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}}};
+    std::vector<Benchmark> benchmarks = {
+        {"1000 routes, 3 coordinates, no alternatives",
+         {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
+          {FloatLongitude{7.421844922513342}, FloatLatitude{43.73690777888953}},
+          {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
+         std::nullopt},
+        {"1000 routes, 2 coordinates, no alternatives",
+         {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
+          {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
+         std::nullopt},
+        {"1000 routes, 2 coordinates, 3 alternatives",
+         {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
+          {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
+         3}};
 
-    for (const auto &route : routes)
+    for (const auto &benchmark : benchmarks)
     {
-        run_benchmark(route);
+        run_benchmark(benchmark);
     }
 
     return EXIT_SUCCESS;
