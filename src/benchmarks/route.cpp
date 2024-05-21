@@ -46,14 +46,16 @@ try
     {
         std::string name;
         std::vector<util::Coordinate> coordinates;
+        RouteParameters::OverviewType overview;
+        bool steps = false;
         std::optional<size_t> alternatives = std::nullopt;
     };
 
     auto run_benchmark = [&](const Benchmark &benchmark)
     {
         RouteParameters params;
-        params.overview = RouteParameters::OverviewType::Full;
-        params.steps = true;
+        params.overview = benchmark.overview;
+        params.steps = benchmark.steps;
         params.coordinates = benchmark.coordinates;
         if (benchmark.alternatives)
         {
@@ -79,19 +81,46 @@ try
     };
 
     std::vector<Benchmark> benchmarks = {
-        {"1000 routes, 3 coordinates, no alternatives",
+        {"1000 routes, 3 coordinates, no alternatives, overview=full, steps=true",
          {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
           {FloatLongitude{7.421844922513342}, FloatLatitude{43.73690777888953}},
           {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
+            RouteParameters::OverviewType::Full,
+            true,
          std::nullopt},
-        {"1000 routes, 2 coordinates, no alternatives",
+        {"1000 routes, 2 coordinates, no alternatives, overview=full, steps=true",
          {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
           {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
+                      RouteParameters::OverviewType::Full,
+            true,
          std::nullopt},
-        {"1000 routes, 2 coordinates, 3 alternatives",
+        {"1000 routes, 2 coordinates, 3 alternatives, overview=full, steps=true",
          {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
           {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
-         3}};
+        RouteParameters::OverviewType::Full,
+            true,
+         3},
+         {"1000 routes, 3 coordinates, no alternatives, overview=false, steps=false",
+         {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
+          {FloatLongitude{7.421844922513342}, FloatLatitude{43.73690777888953}},
+          {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
+            RouteParameters::OverviewType::False,
+            false,
+         std::nullopt},
+        {"1000 routes, 2 coordinates, no alternatives, overview=false, steps=false",
+         {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
+          {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
+                      RouteParameters::OverviewType::False,
+            false,
+         std::nullopt},
+        {"1000 routes, 2 coordinates, 3 alternatives, overview=false, steps=false",
+         {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
+          {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
+        RouteParameters::OverviewType::False,
+            false,
+         3}
+         
+         };
 
     for (const auto &benchmark : benchmarks)
     {
