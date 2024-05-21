@@ -647,7 +647,7 @@ TurnHandler::findForkCandidatesByGeometry(Intersection &intersection) const
             }
         }
     }
-    return {};
+    return std::nullopt;
 }
 
 // check if the fork candidates (all roads between left and right) and the
@@ -740,7 +740,7 @@ std::optional<TurnHandler::Fork> TurnHandler::findFork(const EdgeID via_edge,
         }
     }
 
-    return {};
+    return std::nullopt;
 }
 
 void TurnHandler::handleDistinctConflict(const EdgeID via_edge,

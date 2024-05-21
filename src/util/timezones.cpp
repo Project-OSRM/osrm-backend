@@ -168,6 +168,6 @@ std::optional<struct tm> Timezoner::operator()(const point_t &point) const
         if (boost::geometry::within(point, local_times[index].first))
             return local_times[index].second;
     }
-    return {};
+    return std::nullopt;
 }
 } // namespace osrm::updater

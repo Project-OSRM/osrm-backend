@@ -450,7 +450,7 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
     if (intersection_parameters.node == SPECIAL_NODEID ||
         intersection_parameters.edge == SPECIAL_EDGEID)
     {
-        return {};
+        return std::nullopt;
     }
 
     auto intersection = extractor::intersection::getConnectedRoads<false>(node_based_graph,
@@ -465,7 +465,7 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
 
     if (intersection.size() <= 2 || intersection.isTrafficSignalOrBarrier())
     {
-        return {};
+        return std::nullopt;
     }
 
     return std::make_optional(IntersectionViewAndNode{std::move(intersection), intersection_node});

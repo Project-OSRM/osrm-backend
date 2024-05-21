@@ -652,7 +652,7 @@ std::optional<std::size_t> SliproadHandler::getObviousIndexWithSliproads(
     // then the non-Sliproad is the obvious one.
     if (intersection.size() != 3)
     {
-        return {};
+        return std::nullopt;
     }
 
     const auto forking = intersection[1].instruction.type == TurnType::Fork &&
@@ -660,7 +660,7 @@ std::optional<std::size_t> SliproadHandler::getObviousIndexWithSliproads(
 
     if (!forking)
     {
-        return {};
+        return std::nullopt;
     }
 
     const auto first = getNextIntersection(at, intersection.getRightmostRoad().eid);
@@ -668,12 +668,12 @@ std::optional<std::size_t> SliproadHandler::getObviousIndexWithSliproads(
 
     if (!first || !second)
     {
-        return {};
+        return std::nullopt;
     }
 
     if (first->intersection.isDeadEnd() || second->intersection.isDeadEnd())
     {
-        return {};
+        return std::nullopt;
     }
 
     // In case of loops at the end of the road, we will arrive back at the intersection
@@ -688,7 +688,7 @@ std::optional<std::size_t> SliproadHandler::getObviousIndexWithSliproads(
         return std::make_optional(std::size_t{1});
     }
 
-    return {};
+    return std::nullopt;
 }
 
 bool SliproadHandler::nextIntersectionIsTooFarAway(const NodeID start, const EdgeID onto) const
