@@ -50,9 +50,6 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
 
     using ManyToManyHeapPtr = boost::thread_specific_ptr<ManyToManyQueryHeap>;
 
-    using MapMatchingQueryHeap = QueryHeap;
-    using MapMatchingQueryHeapPtr = boost::thread_specific_ptr<QueryHeap>;
-
     static SearchEngineHeapPtr forward_heap_1;
     static SearchEngineHeapPtr reverse_heap_1;
     static SearchEngineHeapPtr forward_heap_2;
@@ -60,8 +57,8 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
     static SearchEngineHeapPtr forward_heap_3;
     static SearchEngineHeapPtr reverse_heap_3;
     static ManyToManyHeapPtr many_to_many_heap;
-    static MapMatchingQueryHeapPtr map_matching_forward_heap_1;
-    static MapMatchingQueryHeapPtr map_matching_reverse_heap_1;
+    static SearchEngineHeapPtr map_matching_forward_heap_1;
+    static SearchEngineHeapPtr map_matching_reverse_heap_1;
 
     void InitializeOrClearMapMatchingThreadLocalStorage(unsigned number_of_nodes);
 

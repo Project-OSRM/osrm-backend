@@ -303,7 +303,6 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
     static constexpr auto IS_MAP_MATCHING =
         std::is_same_v<typename SearchEngineData<mld::Algorithm>::MapMatchingQueryHeap, Heap>;
 
-    // SearchEngineData<Algorithm>::MapMatchingQueryHeap
     if (level >= 1 && !heapNode.data.from_clique_arc)
     {
         if constexpr (DIRECTION == FORWARD_DIRECTION)
