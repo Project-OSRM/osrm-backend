@@ -300,6 +300,10 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
 
     const auto level = getNodeQueryLevel(partition, heapNode.node, args...);
 
+    static constexpr auto IS_MAP_MATCHING = std::is_same_v<typename SearchEngineData<
+                                                     mld::Algorithm>::MapMatchingQueryHeap,
+                                                 Heap>;
+
     // SearchEngineData<Algorithm>::MapMatchingQueryHeap
     if (level >= 1 && !heapNode.data.from_clique_arc)
     {
@@ -309,19 +313,15 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const auto &cell =
                 cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
             auto destination = cell.GetDestinationNodes().begin();
-            auto distance = [&heapNode, &cell ]() -> auto
+            auto distance = [&]() -> auto
             {
-                if constexpr (std::is_same_v<
-                                  typename SearchEngineData<mld::Algorithm>::MapMatchingQueryHeap,
-                                  Heap>)
+                if constexpr (IS_MAP_MATCHING)
                 {
 
                     return cell.GetOutDistance(heapNode.node).begin();
                 }
                 else
                 {
-                    (void)cell;
-                    (void)heapNode;
                     return 0;
                 }
             }
@@ -336,9 +336,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                     const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
                     BOOST_ASSERT(to_weight >= heapNode.weight);
 
-                    if constexpr (std::is_same_v<typename SearchEngineData<
-                                                     mld::Algorithm>::MapMatchingQueryHeap,
-                                                 Heap>)
+                    if constexpr (IS_MAP_MATCHING)
                     {
                         const EdgeDistance to_distance = heapNode.data.distance + *distance;
                         insertOrUpdate(
@@ -350,7 +348,9 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                     }
                 }
                 ++destination;
-                ++distance;
+                if (IS_MAP_MATCHING) {
+                    ++distance;
+                }
             }
         }
         else
@@ -359,19 +359,15 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const auto &cell =
                 cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
             auto source = cell.GetSourceNodes().begin();
-            auto distance = [&heapNode, &cell ]() -> auto
+            auto distance = [&]() -> auto
             {
-                if constexpr (std::is_same_v<
-                                  typename SearchEngineData<mld::Algorithm>::MapMatchingQueryHeap,
-                                  Heap>)
+                if constexpr (IS_MAP_MATCHING)
                 {
 
                     return cell.GetInDistance(heapNode.node).begin();
                 }
                 else
                 {
-                    (void)cell;
-                    (void)heapNode;
                     return 0;
                 }
             }
@@ -385,9 +381,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 {
                     const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
                     BOOST_ASSERT(to_weight >= heapNode.weight);
-                    if constexpr (std::is_same_v<typename SearchEngineData<
-                                                     mld::Algorithm>::MapMatchingQueryHeap,
-                                                 Heap>)
+                    if constexpr (IS_MAP_MATCHING)
                     {
                         const EdgeDistance to_distance = heapNode.data.distance + *distance;
                         insertOrUpdate(
@@ -399,7 +393,9 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                     }
                 }
                 ++source;
-                ++distance;
+                if (IS_MAP_MATCHING) {
+                    ++distance;
+                }
             }
         }
     }
@@ -426,9 +422,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 const EdgeWeight to_weight =
                     heapNode.weight + node_weight + alias_cast<EdgeWeight>(turn_penalty);
 
-                if constexpr (std::is_same_v<
-                                  typename SearchEngineData<mld::Algorithm>::MapMatchingQueryHeap,
-                                  Heap>)
+                if constexpr (IS_MAP_MATCHING)
                 {
                     const auto node_distance =
                         facade.GetNodeDistance(DIRECTION == FORWARD_DIRECTION ? heapNode.node : to);
