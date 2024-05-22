@@ -11,6 +11,7 @@
 #include <boost/assert.hpp>
 
 #include <algorithm>
+#include <boost/core/ignore_unused.hpp>
 #include <iterator>
 #include <limits>
 #include <tuple>
@@ -311,15 +312,16 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const auto &cell =
                 cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
             auto destination = cell.GetDestinationNodes().begin();
-            auto distance = [&]() -> auto
+            auto distance = [&cell, node = heapNode.node ]() -> auto
             {
                 if constexpr (IS_MAP_MATCHING)
                 {
 
-                    return cell.GetOutDistance(heapNode.node).begin();
+                    return cell.GetOutDistance(node).begin();
                 }
                 else
                 {
+                    boost::ignore_unused(cell, node);
                     return 0;
                 }
             }
@@ -346,7 +348,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                     }
                 }
                 ++destination;
-                if (IS_MAP_MATCHING)
+                if constexpr (IS_MAP_MATCHING)
                 {
                     ++distance;
                 }
@@ -358,15 +360,16 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const auto &cell =
                 cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
             auto source = cell.GetSourceNodes().begin();
-            auto distance = [&]() -> auto
+            auto distance = [&cell, node = heapNode.node ]() -> auto
             {
                 if constexpr (IS_MAP_MATCHING)
                 {
 
-                    return cell.GetInDistance(heapNode.node).begin();
+                    return cell.GetInDistance(node).begin();
                 }
                 else
                 {
+                    boost::ignore_unused(cell, node);
                     return 0;
                 }
             }
@@ -392,7 +395,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                     }
                 }
                 ++source;
-                if (IS_MAP_MATCHING)
+                if constexpr (IS_MAP_MATCHING)
                 {
                     ++distance;
                 }
