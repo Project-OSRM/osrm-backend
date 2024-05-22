@@ -56,8 +56,11 @@ boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::stri
             return boost::make_optional(out);
         }
     }
-    catch (const x3::expectation_failure<std::string::iterator> &)
+    catch (const x3::expectation_failure<std::string::iterator> &failure)
     {
+        // The grammar above using expectation parsers ">" does not automatically increment the
+        // iterator to the failing position. Extract the position from the exception ourselves.
+        iter = failure.where();
     }
 
     return boost::none;
