@@ -13,6 +13,7 @@
 
 #include <boost/assert.hpp>
 
+#include <boost/optional/optional.hpp>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -49,6 +50,7 @@ try
         RouteParameters::OverviewType overview;
         bool steps = false;
         std::optional<size_t> alternatives = std::nullopt;
+        std::optional<double> radius = std::nullopt;
     };
 
     auto run_benchmark = [&](const Benchmark &benchmark)
@@ -60,6 +62,12 @@ try
         if (benchmark.alternatives)
         {
             params.alternatives = *benchmark.alternatives;
+        }
+
+        if (benchmark.radius)
+        {
+            params.radiuses = std::vector<boost::optional<double>>(
+                params.coordinates.size(), boost::make_optional(*benchmark.radius));
         }
 
         TIMER_START(routes);
@@ -118,7 +126,29 @@ try
           {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
          RouteParameters::OverviewType::False,
          false,
-         3}
+         3},
+        {"1000 routes, 3 coordinates, no alternatives, overview=false, steps=false, radius=750",
+         {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
+          {FloatLongitude{7.421844922513342}, FloatLatitude{43.73690777888953}},
+          {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
+         RouteParameters::OverviewType::False,
+         false,
+         std::nullopt,
+         750},
+        {"1000 routes, 2 coordinates, no alternatives, overview=false, steps=false, radius=750",
+         {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
+          {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
+         RouteParameters::OverviewType::False,
+         false,
+         std::nullopt,
+         750},
+        {"1000 routes, 2 coordinates, 3 alternatives, overview=false, steps=false, radius=750",
+         {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
+          {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
+         RouteParameters::OverviewType::False,
+         false,
+         3,
+         750}
 
     };
 
