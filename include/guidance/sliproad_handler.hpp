@@ -9,9 +9,8 @@
 
 #include "util/node_based_graph.hpp"
 
+#include <optional>
 #include <vector>
-
-#include <boost/optional.hpp>
 
 namespace osrm::guidance
 {
@@ -43,9 +42,9 @@ class SliproadHandler final : public IntersectionHandler
                             Intersection intersection) const override final;
 
   private:
-    boost::optional<std::size_t> getObviousIndexWithSliproads(const EdgeID from,
-                                                              const Intersection &intersection,
-                                                              const NodeID at) const;
+    std::optional<std::size_t> getObviousIndexWithSliproads(const EdgeID from,
+                                                            const Intersection &intersection,
+                                                            const NodeID at) const;
 
     // Next intersection from `start` onto `onto` is too far away for a Siproad scenario
     bool nextIntersectionIsTooFarAway(const NodeID start, const EdgeID onto) const;

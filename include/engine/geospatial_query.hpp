@@ -12,6 +12,8 @@
 
 #include "osrm/coordinate.hpp"
 
+#include <boost/optional.hpp>
+
 #include <algorithm>
 #include <cmath>
 #include <iterator>
