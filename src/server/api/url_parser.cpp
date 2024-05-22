@@ -2,91 +2,65 @@
 #include "engine/polyline_compressor.hpp"
 
 #include <boost/fusion/include/adapt_struct.hpp>
-#include <boost/phoenix.hpp>
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/repository/include/qi_iter_pos.hpp>
+#include <boost/spirit/home/x3.hpp>
+#include <boost/spirit/home/x3/support/utility/annotate_on_success.hpp>
+#include <boost/spirit/home/x3/support/ast/position_tagged.hpp>
+#include <boost/optional.hpp>
 
 #include <string>
-#include <type_traits>
 
 BOOST_FUSION_ADAPT_STRUCT(osrm::server::api::ParsedURL,
-                          (std::string, service)(unsigned, version)(std::string,
-                                                                    profile)(std::string, query))
-
-// Keep impl. TU local
-namespace
-{
-namespace ph = boost::phoenix;
-namespace qi = boost::spirit::qi;
-
-template <typename Iterator, typename Into> //
-struct URLParser final : qi::grammar<Iterator, Into>
-{
-    URLParser() : URLParser::base_type(start)
-    {
-        using boost::spirit::repository::qi::iter_pos;
-
-        identifier = qi::char_("a-zA-Z0-9_.~:-");
-        percent_encoding =
-            qi::char_('%') > qi::uint_parser<unsigned char, 16, 2, 2>()[qi::_val = qi::_1];
-        polyline_chars = qi::char_("a-zA-Z0-9_[]{}@?|\\~`^") | percent_encoding;
-        all_chars = polyline_chars | qi::char_("=,;:&().-");
-
-        service = +identifier;
-        version = qi::uint_;
-        profile = +identifier;
-        query = +all_chars;
-
-        // Example input: /route/v1/driving/7.416351,43.731205;7.420363,43.736189
-
-        start = qi::lit('/') > service > qi::lit('/') > qi::lit('v') > version > qi::lit('/') >
-                profile > qi::lit('/') >
-                qi::omit[iter_pos[ph::bind(&osrm::server::api::ParsedURL::prefix_length, qi::_val) =
-                                      qi::_1 - qi::_r1]] > query;
-
-        BOOST_SPIRIT_DEBUG_NODES((start)(service)(version)(profile)(query))
-    }
-
-    qi::rule<Iterator, Into> start;
-
-    qi::rule<Iterator, std::string()> service;
-    qi::rule<Iterator, unsigned()> version;
-    qi::rule<Iterator, std::string()> profile;
-    qi::rule<Iterator, std::string()> query;
-
-    qi::rule<Iterator, char()> identifier;
-    qi::rule<Iterator, char()> all_chars;
-    qi::rule<Iterator, char()> polyline_chars;
-    qi::rule<Iterator, char()> percent_encoding;
-};
-
-} // namespace
+                          (std::string, service)
+                          (unsigned, version)
+                          (std::string, profile)
+                          (std::string, query))
 
 namespace osrm::server::api
 {
+    namespace x3 = boost::spirit::x3;
 
-boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::string::iterator end)
-{
-    using It = std::decay<decltype(iter)>::type;
+    struct ParsedURLClass : x3::annotate_on_success {};
+    const x3::rule<struct Service, std::string> service = "service";
+    const x3::rule<struct Version, unsigned> version = "version";
+    const x3::rule<struct Profile, std::string> profile = "profile";
+    const x3::rule<struct Query, std::string> query = "query";
+    const x3::rule<struct ParsedURL, ParsedURL> start = "start";
 
-    static URLParser<It, ParsedURL(It)> const parser;
-    ParsedURL out;
+    const auto identifier = x3::char_("a-zA-Z0-9_.~:-");
+    const auto percent_encoding = x3::char_('%') >> x3::uint_parser<unsigned char, 16, 2, 2>();
+    const auto polyline_chars = x3::char_("a-zA-Z0-9_[]{}@?|\\~`^") | percent_encoding;
+    const auto all_chars = polyline_chars | x3::char_("=,;:&().-");
 
-    try
+    const auto service_def = +identifier;
+    const auto version_def = x3::uint_;
+    const auto profile_def = +identifier;
+    const auto query_def = +all_chars;
+
+    const auto start_def =
+        x3::lit('/') > service > x3::lit('/') > x3::lit('v') > version > x3::lit('/') > profile > x3::lit('/') > query;
+
+    BOOST_SPIRIT_DEFINE(service, version, profile, query, start)
+
+    boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::string::iterator end)
     {
-        const auto ok = boost::spirit::qi::parse(iter, end, parser(boost::phoenix::val(iter)), out);
+        ParsedURL out;
 
-        if (ok && iter == end)
-            return boost::make_optional(out);
-    }
-    catch (const qi::expectation_failure<It> &failure)
-    {
-        // The grammar above using expectation parsers ">" does not automatically increment the
-        // iterator to the failing position. Extract the position from the exception ourselves.
-        iter = failure.first;
-    }
+        try
+        {
+            auto iter_copy = iter;
+            bool r = x3::phrase_parse(iter_copy, end, start, x3::space, out);
 
-    return boost::none;
-}
+            if (r && iter_copy == end)
+            {
+                iter = iter_copy;
+                return boost::make_optional(out);
+            }
+        }
+        catch (const x3::expectation_failure<std::string::iterator> &)
+        {
+        }
+
+        return boost::none;
+    }
 
 } // namespace osrm::server::api
