@@ -53,6 +53,9 @@ boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::stri
         if (r && iter_copy == end)
         {
             iter = iter_copy;
+            // TODO: find a way to do it more effective
+            std::string parsed_part = "/" + out.service + "/v" + std::to_string(out.version) + "/" + out.profile + "/";
+            out.prefix_length = parsed_part.length();
             return boost::make_optional(out);
         }
     }
