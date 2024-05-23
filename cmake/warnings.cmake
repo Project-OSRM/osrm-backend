@@ -77,10 +77,5 @@ add_warning(sizeof-array-argument)
 add_warning(switch-bool)
 add_warning(tautological-compare)
 add_warning(trampolines)
-# TODO: these warnings are not enabled by default, but we consider them as useful and good to enable in the future
-no_warning(old-style-cast)
-no_warning(non-virtual-dtor)
-no_warning(float-conversion)
-no_warning(sign-conversion)
-no_warning(padded)
-no_warning(missing-noreturn)
+# these warnings are not enabled by default
+# no_warning(name-of-warning)
