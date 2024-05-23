@@ -47,7 +47,7 @@ jobs:
         echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
     - run: npm install --ignore-scripts
     - run: npm link --ignore-scripts
-    - uses: microsoft/setup-msbuild@v1.1
+    - uses: microsoft/setup-msbuild@v2
     - name: Build
       run: |
         .\scripts\ci\windows-build.bat
@@ -541,7 +541,7 @@ jobs:
         npm run nodejs-tests
 
     - name: Upload test logs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: logs
@@ -557,7 +557,7 @@ jobs:
     # # Uploading report to CodeCov
     # - name: Upload code coverage
     #   if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
-    #   uses: codecov/codecov-action@v1
+    #   uses: codecov/codecov-action@v4
     #   with:
     #     files: coverage.info
     #     name: codecov-osrm-backend
