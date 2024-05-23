@@ -364,7 +364,6 @@ const constexpr double SCALING_FACTOR = 4. / boost::math::constants::pi<double>(
 
 inline double atan2_lookup(double y, double x)
 {
-
     using namespace boost::math::constants;
 
     if (std::abs(x) < std::numeric_limits<double>::epsilon())
