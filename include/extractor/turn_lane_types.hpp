@@ -3,9 +3,8 @@
 
 #include "util/concurrent_id_map.hpp"
 #include "util/integer_range.hpp"
+#include "util/std_hash.hpp"
 #include "util/typedefs.hpp"
-
-#include <boost/functional/hash.hpp>
 
 #include <bitset>
 #include <cstddef>
@@ -54,19 +53,7 @@ const constexpr Mask merge_to_right = 1u << 10u;
 
 using TurnLaneDescription = std::vector<TurnLaneType::Mask>;
 
-// hash function for TurnLaneDescription
-struct TurnLaneDescription_hash
-{
-    std::size_t operator()(const TurnLaneDescription &lane_description) const
-    {
-        std::size_t seed = 0;
-        boost::hash_range(seed, lane_description.begin(), lane_description.end());
-        return seed;
-    }
-};
-
-using LaneDescriptionMap =
-    util::ConcurrentIDMap<TurnLaneDescription, LaneDescriptionID, TurnLaneDescription_hash>;
+using LaneDescriptionMap = util::ConcurrentIDMap<TurnLaneDescription, LaneDescriptionID>;
 
 using TurnLanesIndexedArray =
     std::tuple<std::vector<std::uint32_t>, std::vector<TurnLaneType::Mask>>;

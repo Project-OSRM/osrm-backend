@@ -5,12 +5,12 @@
 #include "util/coordinate_calculation.hpp"
 #include "util/exception.hpp"
 #include "util/rectangle.hpp"
+#include "util/std_hash.hpp"
 #include "util/typedefs.hpp"
 
 #include "../common/temporary_file.hpp"
 #include "mocks/mock_datafacade.hpp"
 
-#include <boost/functional/hash.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <cmath>
@@ -91,20 +91,6 @@ template <typename DataT> class LinearSearchNN
 
 template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
 {
-    struct TupleHash
-    {
-        using argument_type = std::pair<unsigned int, unsigned int>;
-        using result_type = std::size_t;
-
-        result_type operator()(const argument_type &t) const
-        {
-            std::size_t val{0};
-            boost::hash_combine(val, t.first);
-            boost::hash_combine(val, t.second);
-            return val;
-        }
-    };
-
     RandomGraphFixture()
     {
         std::mt19937 g(RANDOM_SEED);
@@ -121,7 +107,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
 
         std::uniform_int_distribution<> edge_udist(0, coords.size() - 1);
 
-        std::unordered_set<std::pair<unsigned, unsigned>, TupleHash> used_edges;
+        std::unordered_set<std::pair<unsigned, unsigned>> used_edges;
 
         while (edges.size() < NUM_EDGES)
         {
