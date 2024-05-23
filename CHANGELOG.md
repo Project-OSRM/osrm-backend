@@ -8,6 +8,7 @@
       - ADDED: Add support for accessing edge flags in `process_segment` [#6658](https://github.com/Project-OSRM/osrm-backend/pull/6658)
     - Build:
       - CHANGED: Upgrade CI actions to latest versions [#6893](https://github.com/Project-OSRM/osrm-backend/pull/6893)
+      - CHANGED:  Remove outdated warnings #6894 [#6894](https://github.com/Project-OSRM/osrm-backend/pull/6894)
       - ADDED: Add CI job which builds OSRM with gcc 12. [#6455](https://github.com/Project-OSRM/osrm-backend/pull/6455)
       - CHANGED: Upgrade to clang-tidy 15. [#6439](https://github.com/Project-OSRM/osrm-backend/pull/6439)
       - CHANGED: Update actions/cache to v3. [#6420](https://github.com/Project-OSRM/osrm-backend/pull/6420)
