@@ -54,6 +54,7 @@ Checks: >
     performance-*,
     -performance-noexcept-move-constructor,
     -performance-no-int-to-ptr,
+    -performance-type-promotion-in-math-fn,
     readability-*,
     -readability-avoid-const-params-in-decls,
     -readability-braces-around-statements,
