@@ -49,7 +49,7 @@ inline void initializeHeap(SearchEngineData<Algorithm> &engine_working_data,
 {
 
     const auto nodes_number = facade.GetNumberOfNodes();
-    engine_working_data.InitializeOrClearFirstThreadLocalStorage(nodes_number);
+    engine_working_data.InitializeOrClearMapMatchingThreadLocalStorage(nodes_number);
 }
 
 template <>
@@ -59,7 +59,8 @@ inline void initializeHeap<mld::Algorithm>(SearchEngineData<mld::Algorithm> &eng
 
     const auto nodes_number = facade.GetNumberOfNodes();
     const auto border_nodes_number = facade.GetMaxBorderNodeID() + 1;
-    engine_working_data.InitializeOrClearFirstThreadLocalStorage(nodes_number, border_nodes_number);
+    engine_working_data.InitializeOrClearMapMatchingThreadLocalStorage(nodes_number,
+                                                                       border_nodes_number);
 }
 } // namespace
 
@@ -144,8 +145,8 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
     }
 
     initializeHeap(engine_working_data, facade);
-    auto &forward_heap = *engine_working_data.forward_heap_1;
-    auto &reverse_heap = *engine_working_data.reverse_heap_1;
+    auto &forward_heap = *engine_working_data.map_matching_forward_heap_1;
+    auto &reverse_heap = *engine_working_data.map_matching_reverse_heap_1;
 
     std::size_t breakage_begin = map_matching::INVALID_STATE;
     std::vector<std::size_t> split_points;
