@@ -238,9 +238,10 @@ class MockAlgorithmDataFacade<engine::datafacade::CH>
         return SPECIAL_EDGEID;
     }
 
-    EdgeID FindSmallestEdge(const NodeID /* from */,
-                            const NodeID /* to */,
-                            std::function<bool(EdgeData)> /* filter */) const override
+    EdgeID
+    FindSmallestEdge(const NodeID /* from */,
+                     const NodeID /* to */,
+                     const std::function<bool(const EdgeData &)> & /* filter */) const override
     {
         return SPECIAL_EDGEID;
     }
