@@ -130,9 +130,10 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
             edge_based_node_from, edge_based_node_to, result);
     }
 
-    EdgeID FindSmallestEdge(const NodeID edge_based_node_from,
-                            const NodeID edge_based_node_to,
-                            const std::function<bool(const EdgeData&)> &filter) const override final
+    EdgeID
+    FindSmallestEdge(const NodeID edge_based_node_from,
+                     const NodeID edge_based_node_to,
+                     const std::function<bool(const EdgeData &)> &filter) const override final
     {
         return m_query_graph.FindSmallestEdge(edge_based_node_from, edge_based_node_to, filter);
     }
