@@ -20,6 +20,7 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: Avoid copy of std::function-based callback in path unpacking [#6895](https://github.com/Project-OSRM/osrm-backend/pull/6895)
       - CHANGED: Replace boost::hash by std::hash [#6892](https://github.com/Project-OSRM/osrm-backend/pull/6892)
       - CHANGED: Partial fix migration from boost::optional to std::optional [#6551](https://github.com/Project-OSRM/osrm-backend/issues/6551)
       - CHANGED: Update Conan Boost version to 1.85.0. [#6868](https://github.com/Project-OSRM/osrm-backend/pull/6868)

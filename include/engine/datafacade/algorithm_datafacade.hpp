@@ -55,7 +55,7 @@ template <> class AlgorithmDataFacade<CH>
 
     virtual EdgeID FindSmallestEdge(const NodeID edge_based_node_from,
                                     const NodeID edge_based_node_to,
-                                    const std::function<bool(EdgeData)> filter) const = 0;
+                                    const std::function<bool(const EdgeData &)> &filter) const = 0;
 };
 
 template <> class AlgorithmDataFacade<MLD>
