@@ -19,7 +19,6 @@
 #include "util/timing_util.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/functional/hash.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
 #include <algorithm>
