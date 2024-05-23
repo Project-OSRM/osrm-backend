@@ -52,6 +52,7 @@
       - FIXED: Remove force-loop checks for routes with u-turns [#6858](https://github.com/Project-OSRM/osrm-backend/pull/6858)
       - FIXED: Correctly check runtime search conditions for forcing routing steps [#6866](https://github.com/Project-OSRM/osrm-backend/pull/6866)
     - Map Matching:
+      - CHANGED: Optimise path distance calculation in MLD map matching even more. [#6884](https://github.com/Project-OSRM/osrm-backend/pull/6884)
       - CHANGED: Optimise path distance calculation in MLD map matching. [#6876](https://github.com/Project-OSRM/osrm-backend/pull/6876)
       - CHANGED: Optimise R-tree queries in the case of map matching. [#6881](https://github.com/Project-OSRM/osrm-backend/pull/6876)
     - Debug tiles:
