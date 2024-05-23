@@ -31,11 +31,11 @@ jobs:
     env:
       BUILD_TYPE: Release
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: pip install "conan<2.0.0"
     - run: conan --version
     - run: cmake --version
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
         node-version: 18
     - run: node --version
@@ -76,13 +76,13 @@ jobs:
   format-taginfo-docs:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Use Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: 18
     - name: Enable Node.js cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.npm
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -106,9 +106,9 @@ jobs:
     continue-on-error: false
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Enable osm.pbf cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: berlin-latest.osm.pbf
           key: v1-berlin-osm-pbf
@@ -342,36 +342,36 @@ jobs:
       OSRM_CONNECTION_RETRIES: ${{ matrix.OSRM_CONNECTION_RETRIES }}
       OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Build machine architecture
       run: uname -m
     - name: Use Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node }}
     - name: Enable Node.js cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.npm
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
     - name: Enable compiler cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.ccache
         key: ccache-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
           ccache-${{ matrix.name }}-
     - name: Enable Conan cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.conan
         key: v9-conan-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
           v9-conan-${{ matrix.name }}-
     - name: Enable test cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{github.workspace}}/test/cache
         key: v4-test-${{ matrix.name }}-${{ github.sha }}
@@ -511,7 +511,7 @@ jobs:
 
     - name: Use Node 18
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: 18
     - name: Run Node package tests on Node 18
@@ -521,7 +521,7 @@ jobs:
         npm run nodejs-tests
     - name: Use Node 20
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: 20
     - name: Run Node package tests on Node 20
@@ -531,7 +531,7 @@ jobs:
         npm run nodejs-tests
     - name: Use Node latest
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: latest
     - name: Run Node package tests on Node-latest
@@ -595,21 +595,21 @@ jobs:
       GITHUB_REPOSITORY: ${{ github.repository }}
     steps: 
       - name: Enable compiler cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.ccache
           key: v1-ccache-benchmarks-${{ github.sha }}
           restore-keys: |
             v1-ccache-benchmarks-
       - name: Enable Conan cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.conan
           key: v1-conan-benchmarks-${{ github.sha }}
           restore-keys: |
             v1-conan-benchmarks-
       - name: Checkout PR Branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
           path: pr
@@ -624,7 +624,7 @@ jobs:
           cd ..
           make -C test/data 
       - name: Checkout Base Branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           path: base
