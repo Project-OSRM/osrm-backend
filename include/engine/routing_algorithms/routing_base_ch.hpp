@@ -122,7 +122,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
         const EdgeWeight new_weight = reverseHeapNode->weight + heapNode.weight;
         if (new_weight < upper_bound)
         {
-            if (shouldForceStep(force_step_nodes, heapNode, reverseHeapNode.get()) ||
+            if (shouldForceStep(force_step_nodes, heapNode, *reverseHeapNode) ||
                 // in this case we are looking at a bi-directional way where the source
                 // and target phantom are on the same edge based node
                 new_weight < EdgeWeight{0})

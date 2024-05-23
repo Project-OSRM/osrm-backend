@@ -66,7 +66,7 @@ SelectRoadByNameOnlyChoiceAndStraightness::SelectRoadByNameOnlyChoiceAndStraight
 {
 }
 
-boost::optional<EdgeID> SelectRoadByNameOnlyChoiceAndStraightness::operator()(
+std::optional<EdgeID> SelectRoadByNameOnlyChoiceAndStraightness::operator()(
     const NodeID /*nid*/,
     const EdgeID /*via_edge_id*/,
     const IntersectionView &intersection,
@@ -118,7 +118,7 @@ SelectStraightmostRoadByNameAndOnlyChoice::SelectStraightmostRoadByNameAndOnlyCh
 {
 }
 
-boost::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
+std::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
     const NodeID /*nid*/,
     const EdgeID /*via_edge_id*/,
     const IntersectionView &intersection,
@@ -241,7 +241,7 @@ boost::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
             return {};
     }
 
-    return is_only_choice_with_same_name ? boost::optional<EdgeID>(min_element->eid) : boost::none;
+    return is_only_choice_with_same_name ? std::optional<EdgeID>(min_element->eid) : std::nullopt;
 }
 
 // ---------------------------------------------------------------------------------

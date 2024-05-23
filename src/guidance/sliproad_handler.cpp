@@ -634,7 +634,7 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
 
 // Implementation details
 
-boost::optional<std::size_t> SliproadHandler::getObviousIndexWithSliproads(
+std::optional<std::size_t> SliproadHandler::getObviousIndexWithSliproads(
     const EdgeID from, const Intersection &intersection, const NodeID at) const
 {
     BOOST_ASSERT(from != SPECIAL_EDGEID);
@@ -645,14 +645,14 @@ boost::optional<std::size_t> SliproadHandler::getObviousIndexWithSliproads(
 
     if (index != 0)
     {
-        return boost::make_optional(index);
+        return std::make_optional(index);
     }
 
     // Otherwise check if the road is forking into two and one of them is a Sliproad;
     // then the non-Sliproad is the obvious one.
     if (intersection.size() != 3)
     {
-        return boost::none;
+        return std::nullopt;
     }
 
     const auto forking = intersection[1].instruction.type == TurnType::Fork &&
@@ -660,7 +660,7 @@ boost::optional<std::size_t> SliproadHandler::getObviousIndexWithSliproads(
 
     if (!forking)
     {
-        return boost::none;
+        return std::nullopt;
     }
 
     const auto first = getNextIntersection(at, intersection.getRightmostRoad().eid);
@@ -668,27 +668,27 @@ boost::optional<std::size_t> SliproadHandler::getObviousIndexWithSliproads(
 
     if (!first || !second)
     {
-        return boost::none;
+        return std::nullopt;
     }
 
     if (first->intersection.isDeadEnd() || second->intersection.isDeadEnd())
     {
-        return boost::none;
+        return std::nullopt;
     }
 
     // In case of loops at the end of the road, we will arrive back at the intersection
     // itself. If that is the case, the road is obviously not a sliproad.
     if (canBeTargetOfSliproad(first->intersection) && at != second->node)
     {
-        return boost::make_optional(std::size_t{2});
+        return std::make_optional(std::size_t{2});
     }
 
     if (canBeTargetOfSliproad(second->intersection) && at != first->node)
     {
-        return boost::make_optional(std::size_t{1});
+        return std::make_optional(std::size_t{1});
     }
 
-    return boost::none;
+    return std::nullopt;
 }
 
 bool SliproadHandler::nextIntersectionIsTooFarAway(const NodeID start, const EdgeID onto) const
