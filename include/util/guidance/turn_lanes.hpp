@@ -17,7 +17,6 @@ class LaneTuple;
 class LaneTupleIdPair;
 } // namespace osrm::util::guidance
 
-
 namespace osrm::util::guidance
 {
 
@@ -63,10 +62,12 @@ using LaneDataIdMap = ConcurrentIDMap<LaneTupleIdPair, LaneDataID>;
 
 } // namespace osrm::util::guidance
 
-namespace std {
-    template <> struct hash<::osrm::util::guidance::LaneTuple>
+namespace std
 {
-    inline std::size_t operator()(const ::osrm::util::guidance::LaneTuple &lane_tuple) const {
+template <> struct hash<::osrm::util::guidance::LaneTuple>
+{
+    inline std::size_t operator()(const ::osrm::util::guidance::LaneTuple &lane_tuple) const
+    {
         std::size_t seed{0};
         hash_combine(seed, lane_tuple.lanes_in_turn);
         hash_combine(seed, lane_tuple.first_lane_from_the_right);
@@ -77,14 +78,14 @@ namespace std {
 template <> struct hash<::osrm::util::guidance::LaneTupleIdPair>
 {
     inline std::size_t
-    operator()(const ::osrm::util::guidance::LaneTupleIdPair &lane_tuple_id_pair) const {
-                std::size_t seed{0};
+    operator()(const ::osrm::util::guidance::LaneTupleIdPair &lane_tuple_id_pair) const
+    {
+        std::size_t seed{0};
         hash_combine(seed, lane_tuple_id_pair.first);
         hash_combine(seed, lane_tuple_id_pair.second);
         return seed;
     }
 };
 } // namespace std
-
 
 #endif /* OSRM_UTIL_GUIDANCE_TURN_LANES_HPP */

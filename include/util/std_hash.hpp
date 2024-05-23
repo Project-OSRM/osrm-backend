@@ -15,9 +15,9 @@ template <typename T> void hash_combine(std::size_t &seed, const T &val)
     seed ^= std::hash<T>()(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
-template<typename It> void hash_range(std::size_t& seed, It first, const It last)
+template <typename It> void hash_range(std::size_t &seed, It first, const It last)
 {
-    for(; first != last; ++first)
+    for (; first != last; ++first)
     {
         hash_combine(seed, *first);
     }
@@ -41,10 +41,9 @@ template <typename... Types> std::size_t hash_val(const Types &...args)
 
 namespace std
 {
-template <typename ...T>
-struct hash<std::tuple<T...>>
+template <typename... T> struct hash<std::tuple<T...>>
 {
-    template <std::size_t ...I>
+    template <std::size_t... I>
     static auto apply_tuple(const std::tuple<T...> &t, std::index_sequence<I...>)
     {
         std::size_t seed = 0;

@@ -1,8 +1,8 @@
 #ifndef OSRM_EXTRACTOR_TRAFFIC_SIGNALS_HPP
 #define OSRM_EXTRACTOR_TRAFFIC_SIGNALS_HPP
 
-#include "util/typedefs.hpp"
 #include "util/std_hash.hpp"
+#include "util/typedefs.hpp"
 
 #include <unordered_set>
 #include <utility>

@@ -62,7 +62,8 @@ inline size_t hash<::osrm::util::guidance::BearingClass>::operator()(
     const ::osrm::util::guidance::BearingClass &bearing_class) const
 {
     std::size_t value = 0;
-    hash_range(value, bearing_class.available_bearings.cbegin(), bearing_class.available_bearings.cend());
+    hash_range(
+        value, bearing_class.available_bearings.cbegin(), bearing_class.available_bearings.cend());
     return value;
 }
 } // namespace std

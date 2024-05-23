@@ -3,8 +3,8 @@
 
 #include "extractor/class_data.hpp"
 #include "extractor/turn_lane_types.hpp"
-#include "util/typedefs.hpp"
 #include "util/std_hash.hpp"
+#include "util/typedefs.hpp"
 
 #include <string>
 #include <unordered_map>
