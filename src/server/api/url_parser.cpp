@@ -7,27 +7,16 @@
 #include <boost/spirit/home/x3/support/ast/position_tagged.hpp>
 #include <boost/spirit/home/x3/support/utility/annotate_on_success.hpp>
 #include <iostream>
-#include <string>
 #include <sstream>
+#include <string>
 
 BOOST_FUSION_ADAPT_STRUCT(osrm::server::api::ParsedURL,
-                          (std::string, service)(unsigned, version)(std::string, profile)(std::string, query))
+                          (std::string, service)(unsigned, version)(std::string,
+                                                                    profile)(std::string, query))
 
 namespace osrm::server::api
 {
 namespace x3 = boost::spirit::x3;
-
-struct percent_decode
-{
-    template <typename Context>
-    void operator()(Context const &ctx) const
-    {
-        unsigned hex_str = x3::_attr(ctx);
-        std::cerr << hex_str << std::endl;
-        // unsigned char hex_value = std::stoul(hex_str, nullptr, 16);
-        // x3::_val(ctx) += static_cast<char>(hex_value);
-    }
-};
 
 struct ParsedURLClass : x3::annotate_on_success
 {
@@ -40,16 +29,15 @@ const x3::rule<struct ParsedURL, ParsedURL> start = "start";
 
 const auto identifier = x3::char_("a-zA-Z0-9_.~:-");
 
-const auto percent_encoding = 
-    x3::lit('%') >> x3::uint_parser<unsigned char, 16, 2, 2>()[percent_decode()];
-
-const auto polyline_chars = x3::char_("a-zA-Z0-9_[]{}@?|\\~`^") | percent_encoding;
-const auto all_chars = polyline_chars | x3::char_("=,;:&().-");
-
 const auto service_def = +identifier;
 const auto version_def = x3::uint_;
 const auto profile_def = +identifier;
-const auto query_def = +(all_chars[percent_decode()]);
+
+const auto percent_encoding = x3::lit('%') >> x3::uint_parser<unsigned char, 16, 2, 2>();
+
+const auto query_char = percent_encoding | x3::char_("a-zA-Z0-9_[]{}@?|\\~`^=,;:&().-");
+
+const auto query_def = +query_char;
 
 const auto start_def = x3::lit('/') > service > x3::lit('/') > x3::lit('v') > version
                        > x3::lit('/') > profile > x3::lit('/') > query;

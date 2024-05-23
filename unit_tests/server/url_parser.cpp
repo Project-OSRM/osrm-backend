@@ -107,40 +107,38 @@ BOOST_AUTO_TEST_CASE(valid_urls)
     CHECK_EQUAL_RANGE(reference_7.query, result_7->query);
     BOOST_CHECK_EQUAL(reference_7.prefix_length, result_7->prefix_length);
 
+    // polyline with %HEX
     api::ParsedURL reference_8{
-        "match", 1, "car", "polyline ", 14UL};
+        "match", 1, "car", "polyline(}jmwFz~ubMyCa@`@yDJqE)?你好&\n \"%~", 14UL};
     auto result_8 = api::parseURL(
-        "/match/v1/car/polyline%20");
+        "/match/v1/car/polyline(%7DjmwFz~ubMyCa@%60@yDJqE)?%e4%bd%a0%e5%a5%bd&%0A%20%22%25%7e");
     BOOST_CHECK(result_8);
     BOOST_CHECK_EQUAL(reference_8.service, result_8->service);
     BOOST_CHECK_EQUAL(reference_8.version, result_8->version);
     BOOST_CHECK_EQUAL(reference_8.profile, result_8->profile);
     CHECK_EQUAL_RANGE(reference_8.query, result_8->query);
-    // BOOST_CHECK_EQUAL(reference_8.prefix_length, result_8->prefix_length);
+    BOOST_CHECK_EQUAL(reference_8.prefix_length, result_8->prefix_length);
 
-    // polyline with %HEX
-    // api::ParsedURL reference_8{
-    //     "match", 1, "car", "polyline(}jmwFz~ubMyCa@`@yDJqE)?你好&\n \"%~", 14UL};
-    // auto result_8 = api::parseURL(
-    //     "/match/v1/car/polyline(%7DjmwFz~ubMyCa@%60@yDJqE)?%e4%bd%a0%e5%a5%bd&%0A%20%22%25%7e");
-    // BOOST_CHECK(result_8);
-    // BOOST_CHECK_EQUAL(reference_8.service, result_8->service);
-    // BOOST_CHECK_EQUAL(reference_8.version, result_8->version);
-    // BOOST_CHECK_EQUAL(reference_8.profile, result_8->profile);
-    // CHECK_EQUAL_RANGE(reference_8.query, result_8->query);
-    // BOOST_CHECK_EQUAL(reference_8.prefix_length, result_8->prefix_length);
+    // profile with special characters
+    api::ParsedURL reference_9{
+        "route", 1, "foo-bar_baz.profile", "0,1;2,3;4,5?options=value&foo=bar", 30UL};
+    auto result_9 =
+        api::parseURL("/route/v1/foo-bar_baz.profile/0,1;2,3;4,5?options=value&foo=bar");
+    BOOST_CHECK(result_9);
+    BOOST_CHECK_EQUAL(reference_9.service, result_9->service);
+    BOOST_CHECK_EQUAL(reference_9.version, result_9->version);
+    BOOST_CHECK_EQUAL(reference_9.profile, result_9->profile);
+    CHECK_EQUAL_RANGE(reference_9.query, result_9->query);
+    BOOST_CHECK_EQUAL(reference_9.prefix_length, result_9->prefix_length);
 
-    // // profile with special characters
-    // api::ParsedURL reference_9{
-    //     "route", 1, "foo-bar_baz.profile", "0,1;2,3;4,5?options=value&foo=bar", 30UL};
-    // auto result_9 =
-    //     api::parseURL("/route/v1/foo-bar_baz.profile/0,1;2,3;4,5?options=value&foo=bar");
-    // BOOST_CHECK(result_9);
-    // BOOST_CHECK_EQUAL(reference_9.service, result_9->service);
-    // BOOST_CHECK_EQUAL(reference_9.version, result_9->version);
-    // BOOST_CHECK_EQUAL(reference_9.profile, result_9->profile);
-    // CHECK_EQUAL_RANGE(reference_9.query, result_9->query);
-    // BOOST_CHECK_EQUAL(reference_9.prefix_length, result_9->prefix_length);
+    api::ParsedURL reference_10{"match", 1, "car", "poly line ", 14UL};
+    auto result_10 = api::parseURL("/match/v1/car/poly%20line%20");
+    BOOST_CHECK(result_10);
+    BOOST_CHECK_EQUAL(reference_10.service, result_10->service);
+    BOOST_CHECK_EQUAL(reference_10.version, result_10->version);
+    BOOST_CHECK_EQUAL(reference_10.profile, result_10->profile);
+    CHECK_EQUAL_RANGE(reference_10.query, result_10->query);
+    BOOST_CHECK_EQUAL(reference_10.prefix_length, result_10->prefix_length);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
