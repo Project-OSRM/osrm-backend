@@ -3,6 +3,9 @@
 #include "util/exception_utils.hpp"
 #include <boost/algorithm/string/case_conv.hpp>
 
+#include <istream>
+#include <string>
+
 namespace osrm::storage
 {
 std::istream &operator>>(std::istream &in, FeatureDataset &datasets)
