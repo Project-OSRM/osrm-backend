@@ -323,6 +323,10 @@ if (MSVC)
   add_definitions(-DBOOST_ALL_NO_LIB)
 endif()
 
+if (MSVC)
+  add_compile_options(/Zc:__cplusplus)
+endif()
+
 if(ENABLE_CONAN)
   message(STATUS "Installing dependencies via Conan")
 
