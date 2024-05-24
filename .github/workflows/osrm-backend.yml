@@ -417,7 +417,7 @@ jobs:
         # Linux dev packages
         if [ "${ENABLE_CONAN}" != "ON" ]; then
           sudo apt-get update -y
-          sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev libboost-all-dev
+          sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev
           if [[ "${CCOMPILER}" != clang-* ]]; then
             sudo apt-get install -y ${CXXCOMPILER}
           fi
