@@ -34,7 +34,7 @@ FMT_PATH="fmtlib/fmt"
 FMT_TAG=v10.2.1
 
 function update_subtree () {
-    name=${1^^}
+    name=$(echo "$1" | tr '[:lower:]' '[:upper:]')
     path=$(tmpvar=${name}_PATH && echo ${!tmpvar})
     tag=$(tmpvar=${name}_TAG && echo ${!tmpvar})
     dir=$(basename $path)
