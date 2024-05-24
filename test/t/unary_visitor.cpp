@@ -1,8 +1,8 @@
 
 #include "catch.hpp"
 
-#include "variant.hpp"
-#include "variant_io.hpp"
+#include <mapbox/variant.hpp>
+#include <mapbox/variant_io.hpp>
 
 #include <string>
 

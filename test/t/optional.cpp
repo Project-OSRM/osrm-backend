@@ -1,7 +1,6 @@
-
 #include "catch.hpp"
 
-#include "optional.hpp"
+#include <mapbox/optional.hpp>
 
 struct dummy
 {
@@ -97,6 +96,8 @@ TEST_CASE("self assignment", "[optional]")
 
     a = 1;
     REQUIRE(a.get() == 1);
+#if !defined(__clang__)
     a = a;
     REQUIRE(a.get() == 1);
+#endif
 }

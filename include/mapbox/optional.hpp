@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "variant.hpp"
+#include <mapbox/variant.hpp>
 
 namespace mapbox {
 namespace util {
@@ -22,7 +22,7 @@ class optional
 
     variant<none_type, T> variant_;
 
-  public:
+public:
     optional() = default;
 
     optional(optional const& rhs)

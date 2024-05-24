@@ -1,13 +1,12 @@
-
 #include <cstdlib>
 #include <iostream>
 #include <string>
 #include <typeinfo>
 #include <utility>
 
-#include <boost/timer/timer.hpp>
+#include "auto_cpu_timer.hpp"
 
-#include "variant.hpp"
+#include <mapbox/variant.hpp>
 
 using namespace mapbox;
 
@@ -64,12 +63,12 @@ struct calculator
 
     int operator()(binary_op<add> const& binary) const
     {
-        return util::apply_visitor(calculator(), binary.left) + util::apply_visitor(calculator(), binary.right);
+        return util::apply_visitor(*this, binary.left) + util::apply_visitor(*this, binary.right);
     }
 
     int operator()(binary_op<sub> const& binary) const
     {
-        return util::apply_visitor(calculator(), binary.left) - util::apply_visitor(calculator(), binary.right);
+        return util::apply_visitor(*this, binary.left) - util::apply_visitor(*this, binary.right);
     }
 };
 
@@ -83,12 +82,12 @@ struct to_string
 
     std::string operator()(binary_op<add> const& binary) const
     {
-        return util::apply_visitor(to_string(), binary.left) + std::string("+") + util::apply_visitor(to_string(), binary.right);
+        return util::apply_visitor(*this, binary.left) + std::string("+") + util::apply_visitor(*this, binary.right);
     }
 
     std::string operator()(binary_op<sub> const& binary) const
     {
-        return util::apply_visitor(to_string(), binary.left) + std::string("-") + util::apply_visitor(to_string(), binary.right);
+        return util::apply_visitor(*this, binary.left) + std::string("-") + util::apply_visitor(*this, binary.right);
     }
 };
 
@@ -111,7 +110,7 @@ int main(int argc, char** argv)
 
     int total = 0;
     {
-        boost::timer::auto_cpu_timer t;
+        auto_cpu_timer t;
         for (std::size_t i = 0; i < NUM_ITER; ++i)
         {
             total += util::apply_visitor(test::calculator(), result);

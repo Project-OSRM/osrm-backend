@@ -1,0 +1,10 @@
+{
+    "name": "variant",
+    "version": "1.1.6",
+    "description": "C++11/C++14 variant",
+    "main": "./package.json",
+    "repository"   :  {
+      "type" : "git",
+      "url"  : "git://github.com/mapbox/variant.git"
+    }
+}

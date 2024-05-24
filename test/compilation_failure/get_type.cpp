@@ -1,7 +1,6 @@
+// @EXPECTED: no matching .*\<function for call to .*\<get\>
 
-// @EXPECTED: enable_if
-
-#include <variant.hpp>
+#include <mapbox/variant.hpp>
 
 int main()
 {

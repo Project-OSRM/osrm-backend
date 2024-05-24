@@ -1,7 +1,6 @@
+// @EXPECTED: no matching function for call to .*\<apply_visitor\>
 
-// @EXPECTED: const int
-
-#include <variant.hpp>
+#include <mapbox/variant.hpp>
 
 struct mutating_visitor
 {
