@@ -2,7 +2,6 @@
 
 using namespace osrm::util;
 
-#include <boost/functional/hash.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <iostream>

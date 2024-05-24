@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <iterator>
 #include <limits>
+#include <optional>
 #include <utility>
 
 namespace osrm::util::coordinate_calculation
@@ -173,14 +174,14 @@ double computeAngle(const Coordinate first, const Coordinate second, const Coord
     return angle;
 }
 
-boost::optional<Coordinate>
+std::optional<Coordinate>
 circleCenter(const Coordinate C1, const Coordinate C2, const Coordinate C3)
 {
     // free after http://paulbourke.net/geometry/circlesphere/
     // require three distinct points
     if (C1 == C2 || C2 == C3 || C1 == C3)
     {
-        return boost::none;
+        return std::nullopt;
     }
 
     // define line through c1, c2 and c2,c3
@@ -195,7 +196,7 @@ circleCenter(const Coordinate C1, const Coordinate C2, const Coordinate C3)
         (std::abs(C2C1_lat) < std::numeric_limits<double>::epsilon() &&
          std::abs(C3C2_lat) < std::numeric_limits<double>::epsilon()))
     {
-        return boost::none;
+        return std::nullopt;
     }
     else if (std::abs(C2C1_lon) < std::numeric_limits<double>::epsilon())
     {
@@ -233,7 +234,7 @@ circleCenter(const Coordinate C1, const Coordinate C2, const Coordinate C3)
 
         // can this ever happen?
         if (std::abs(C2C1_slope - C3C2_slope) < std::numeric_limits<double>::epsilon())
-            return boost::none;
+            return std::nullopt;
 
         const double C1_y = static_cast<double>(toFloating(C1.lat));
         const double C1_x = static_cast<double>(toFloating(C1.lon));
@@ -247,7 +248,7 @@ circleCenter(const Coordinate C1, const Coordinate C2, const Coordinate C3)
                            (2 * (C3C2_slope - C2C1_slope));
         const double lat = (0.5 * (C1_x + C2_x) - lon) / C2C1_slope + 0.5 * (C1_y + C2_y);
         if (lon < -180.0 || lon > 180.0 || lat < -90.0 || lat > 90.0)
-            return boost::none;
+            return std::nullopt;
         else
             return Coordinate(FloatLongitude{lon}, FloatLatitude{lat});
     }

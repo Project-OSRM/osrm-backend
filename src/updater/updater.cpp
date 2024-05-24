@@ -18,6 +18,7 @@
 #include "util/mmap_tar.hpp"
 #include "util/opening_hours.hpp"
 #include "util/static_rtree.hpp"
+#include "util/std_hash.hpp"
 #include "util/string_util.hpp"
 #include "util/timezones.hpp"
 #include "util/timing_util.hpp"
@@ -41,25 +42,6 @@
 #include <memory>
 #include <tuple>
 #include <vector>
-
-namespace std
-{
-template <typename T1, typename T2, typename T3> struct hash<std::tuple<T1, T2, T3>>
-{
-    size_t operator()(const std::tuple<T1, T2, T3> &t) const
-    {
-        return hash_val(std::get<0>(t), std::get<1>(t), std::get<2>(t));
-    }
-};
-
-template <typename T1, typename T2> struct hash<std::tuple<T1, T2>>
-{
-    size_t operator()(const std::tuple<T1, T2> &t) const
-    {
-        return hash_val(std::get<0>(t), std::get<1>(t));
-    }
-};
-} // namespace std
 
 namespace osrm::updater
 {

@@ -13,6 +13,7 @@
 #include "util/for_each_indexed.hpp"
 #include "util/for_each_pair.hpp"
 #include "util/log.hpp"
+#include "util/std_hash.hpp"
 #include "util/timing_util.hpp"
 
 #include <boost/assert.hpp>
@@ -955,8 +956,7 @@ void ExtractionContainers::PrepareTrafficSignals(
     TIMER_START(prepare_traffic_signals);
 
     std::unordered_set<NodeID> bidirectional;
-    std::unordered_set<std::pair<NodeID, NodeID>, boost::hash<std::pair<NodeID, NodeID>>>
-        unidirectional;
+    std::unordered_set<std::pair<NodeID, NodeID>> unidirectional;
 
     for (const auto &osm_node : bidirectional_signal_nodes)
     {

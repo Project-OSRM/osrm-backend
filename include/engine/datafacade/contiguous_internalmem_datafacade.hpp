@@ -130,9 +130,10 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
             edge_based_node_from, edge_based_node_to, result);
     }
 
-    EdgeID FindSmallestEdge(const NodeID edge_based_node_from,
-                            const NodeID edge_based_node_to,
-                            std::function<bool(EdgeData)> filter) const override final
+    EdgeID
+    FindSmallestEdge(const NodeID edge_based_node_from,
+                     const NodeID edge_based_node_to,
+                     const std::function<bool(const EdgeData &)> &filter) const override final
     {
         return m_query_graph.FindSmallestEdge(edge_based_node_from, edge_based_node_to, filter);
     }
@@ -375,7 +376,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(
-            input_coordinate, approach, boost::none, max_distance, bearing, use_all_edges);
+            input_coordinate, approach, max_distance, bearing, use_all_edges);
     }
 
     std::vector<PhantomNodeWithDistance>
