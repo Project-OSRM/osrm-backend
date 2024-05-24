@@ -404,14 +404,14 @@ jobs:
     - name: Cache Boost
       if: steps.cache-boost.outputs.cache-hit != 'true' && runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
       id: cache-boost
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: |
           /usr/local/include/boost
           /usr/local/lib/libboost*
-        key: boost-${{ runner.os }}-${{ env.BOOST_VERSION }}
+        key: v1-boost-${{ runner.os }}-${{ runner.arch }}
         restore-keys: |
-          boost-${{ runner.os }}-
+          v1-boost-${{ runner.os }}-${{ runner.arch }}
 
     - name: Install Boost
       if: steps.cache-boost.outputs.cache-hit != 'true' && runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
