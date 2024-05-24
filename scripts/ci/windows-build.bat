@@ -17,6 +17,7 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 msbuild OSRM.sln ^
 /p:Configuration=%CONFIGURATION% ^
 /p:Platform=x64 ^
+/p:nowarn="4244;4267;4365;4456;4514;4625;4626;4710;4711;4820;5026;5027" ^
 /t:rebuild ^
 /p:BuildInParallel=true ^
 /m:%NUMBER_OF_PROCESSORS% ^
