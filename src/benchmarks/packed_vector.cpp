@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <iomanip>
+#include <iostream>
 #include <numeric>
 #include <random>
 #include <string>
