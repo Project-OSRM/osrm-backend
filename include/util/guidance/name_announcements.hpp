@@ -6,17 +6,15 @@
 #include "extractor/name_table.hpp"
 #include "extractor/suffix_table.hpp"
 
-#include "util/attributes.hpp"
 #include "util/typedefs.hpp"
+
+#include <boost/algorithm/string.hpp>
 
 #include <algorithm>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 
 namespace osrm::util::guidance
 {

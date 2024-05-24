@@ -9,12 +9,12 @@ An header-only alternative to `boost::variant` for C++11 and C++14
 ## Introduction
 
 Variant's basic building blocks are:
+
 - `variant<Ts...>` - a type-safe representation for sum-types / discriminated unions
 - `recursive_wrapper<T>` - a helper type to represent recursive "tree-like" variants
 - `apply_visitor(visitor, myVariant)` - to invoke a custom visitor on the variant's underlying type
 - `get<T>()` - a function to directly unwrap a variant's underlying type
 - `.match([](Type){})` - a variant convenience member function taking an arbitrary number of lambdas creating a visitor behind the scenes and applying it to the variant
-
 
 ### Basic Usage - HTTP API Example
 
@@ -46,7 +46,7 @@ Response ret = makeRequest();
 To see which type the `Response` holds you pattern match on the variant unwrapping the underlying value:
 
 ```c++
-ret.match([] (Result r) { print(r.object); }
+ret.match([] (Result r) { print(r.object); },
           [] (Error e)  { print(e.message); });
 ```
 
@@ -69,11 +69,9 @@ apply_visitor(visitor, ret);
 
 In both cases the compiler makes sure you handle all types the variant can represent at compile.
 
-
 ### Recursive Variants - JSON Example
 
 [JSON](http://www.json.org/) consists of types `String`, `Number`, `True`, `False`, `Null`, `Array` and `Object`.
-
 
 ```c++
 struct String { string value; };
@@ -111,7 +109,7 @@ struct Object {
 };
 ```
 
-For walkig the JSON representation you can again either create a `JSONVisitor`:
+For walking the JSON representation you can again either create a `JSONVisitor`:
 
 ```c++
 struct JSONVisitor {
@@ -146,6 +144,7 @@ struct Node {
   uint64_t value;
 }
 ```
+
 ### Advanced Usage Tips
 
 Creating type aliases for variants is a great way to reduce repetition.
@@ -164,7 +163,6 @@ struct APIResult : variant<Error, Result> {
 }
 ```
 
-
 ## Why use Mapbox Variant?
 
 Mapbox variant has the same speedy performance of `boost::variant` but is
@@ -179,7 +177,6 @@ Size of simple program linking variant (release / debug)     | 8/24 K           
 Time to compile header     | 185 ms             |  675 ms
 
 (Numbers from an older version of Mapbox variant.)
-
 
 ## Goals
 
@@ -206,24 +203,22 @@ Want to know more about the upcoming standard? Have a look at our
 Most modern high-level languages provide ways to express sum types directly.
 If you're curious have a look at Haskell's pattern matching or Rust's and Swift's enums.
 
-
 ## Depends
 
- - Compiler supporting `-std=c++11` or `-std=c++14`
+- Compiler supporting `-std=c++11` or `-std=c++14`
 
 Tested with:
 
- - g++-4.7
- - g++-4.8
- - g++-4.9
- - g++-5.2
- - clang++-3.5
- - clang++-3.6
- - clang++-3.7
- - clang++-3.8
- - clang++-3.9
- - Visual Studio 2015
-
+- g++-4.7
+- g++-4.8
+- g++-4.9
+- g++-5.2
+- clang++-3.5
+- clang++-3.6
+- clang++-3.7
+- clang++-3.8
+- clang++-3.9
+- Visual Studio 2015
 
 ## Unit Tests
 
@@ -231,28 +226,23 @@ On Unix systems compile and run the unit tests with `make test`.
 
 On Windows run `scripts/build-local.bat`.
 
-
 ## Limitations
 
-* The `variant` can not hold references (something like `variant<int&>` is
+- The `variant` can not hold references (something like `variant<int&>` is
   not possible). You might want to try `std::reference_wrapper` instead.
-
 
 ## Deprecations
 
-* The included implementation of `optional` is deprecated and will be removed
-  in a future version. See https://github.com/mapbox/variant/issues/64.
-* Old versions of the code needed visitors to derive from `static_visitor`.
+- The included implementation of `optional` is deprecated and will be removed
+  in a future version. See [issue #64](https://github.com/mapbox/variant/issues/64).
+- Old versions of the code needed visitors to derive from `static_visitor`.
   This is not needed any more and marked as deprecated. The `static_visitor`
   class will be removed in future versions.
-
 
 ## Benchmarks
 
     make bench
 
-
 ## Check object sizes
 
     make sizes /path/to/boost/variant.hpp
-

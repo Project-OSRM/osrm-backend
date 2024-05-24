@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_UTIL_ALIAS_HPP
 #define OSRM_UTIL_ALIAS_HPP
 
-#include <boost/numeric/conversion/cast.hpp>
+#include <cstddef>
 #include <functional>
-#include <iostream>
+#include <ostream>
 #include <type_traits>
 
 namespace osrm

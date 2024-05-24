@@ -1,4 +1,4 @@
-// @EXPECTED: const int
+// @EXPECTED: no matching function for call to .*\<apply_visitor\>
 
 #include <mapbox/variant.hpp>
 
