@@ -11,6 +11,7 @@
 #include <boost/assert.hpp>
 
 #include <algorithm>
+#include <boost/core/ignore_unused.hpp>
 #include <iterator>
 #include <limits>
 #include <tuple>
@@ -269,10 +270,29 @@ retrievePackedPathFromHeap(const SearchEngineData<Algorithm>::QueryHeap &forward
     return packed_path;
 }
 
-template <bool DIRECTION, typename Algorithm, typename... Args>
+template <typename Heap>
+void insertOrUpdate(Heap &heap,
+                    const NodeID node,
+                    const EdgeWeight weight,
+                    const typename Heap::DataType &data)
+{
+    const auto heapNode = heap.GetHeapNodeIfWasInserted(node);
+    if (!heapNode)
+    {
+        heap.Insert(node, weight, data);
+    }
+    else if (weight < heapNode->weight)
+    {
+        heapNode->data = data;
+        heapNode->weight = weight;
+        heap.DecreaseKey(*heapNode);
+    }
+}
+
+template <bool DIRECTION, typename Algorithm, typename Heap, typename... Args>
 void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
-                        typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                        const typename SearchEngineData<Algorithm>::QueryHeap::HeapNode &heapNode,
+                        Heap &forward_heap,
+                        const typename Heap::HeapNode &heapNode,
                         const Args &...args)
 {
     const auto &partition = facade.GetMultiLevelPartition();
@@ -281,14 +301,31 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
 
     const auto level = getNodeQueryLevel(partition, heapNode.node, args...);
 
+    static constexpr auto IS_MAP_MATCHING =
+        std::is_same_v<typename SearchEngineData<mld::Algorithm>::MapMatchingQueryHeap, Heap>;
+
     if (level >= 1 && !heapNode.data.from_clique_arc)
     {
-        if (DIRECTION == FORWARD_DIRECTION)
+        if constexpr (DIRECTION == FORWARD_DIRECTION)
         {
             // Shortcuts in forward direction
             const auto &cell =
                 cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
             auto destination = cell.GetDestinationNodes().begin();
+            auto distance = [&cell, node = heapNode.node ]() -> auto
+            {
+                if constexpr (IS_MAP_MATCHING)
+                {
+
+                    return cell.GetOutDistance(node).begin();
+                }
+                else
+                {
+                    boost::ignore_unused(cell, node);
+                    return 0;
+                }
+            }
+            ();
             for (auto shortcut_weight : cell.GetOutWeight(heapNode.node))
             {
                 BOOST_ASSERT(destination != cell.GetDestinationNodes().end());
@@ -298,19 +335,23 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 {
                     const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
                     BOOST_ASSERT(to_weight >= heapNode.weight);
-                    const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
-                    if (!toHeapNode)
+
+                    if constexpr (IS_MAP_MATCHING)
                     {
-                        forward_heap.Insert(to, to_weight, {heapNode.node, true});
+                        const EdgeDistance to_distance = heapNode.data.distance + *distance;
+                        insertOrUpdate(
+                            forward_heap, to, to_weight, {heapNode.node, true, to_distance});
                     }
-                    else if (to_weight < toHeapNode->weight)
+                    else
                     {
-                        toHeapNode->data = {heapNode.node, true};
-                        toHeapNode->weight = to_weight;
-                        forward_heap.DecreaseKey(*toHeapNode);
+                        insertOrUpdate(forward_heap, to, to_weight, {heapNode.node, true});
                     }
                 }
                 ++destination;
+                if constexpr (IS_MAP_MATCHING)
+                {
+                    ++distance;
+                }
             }
         }
         else
@@ -319,6 +360,20 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const auto &cell =
                 cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
             auto source = cell.GetSourceNodes().begin();
+            auto distance = [&cell, node = heapNode.node ]() -> auto
+            {
+                if constexpr (IS_MAP_MATCHING)
+                {
+
+                    return cell.GetInDistance(node).begin();
+                }
+                else
+                {
+                    boost::ignore_unused(cell, node);
+                    return 0;
+                }
+            }
+            ();
             for (auto shortcut_weight : cell.GetInWeight(heapNode.node))
             {
                 BOOST_ASSERT(source != cell.GetSourceNodes().end());
@@ -328,19 +383,22 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 {
                     const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
                     BOOST_ASSERT(to_weight >= heapNode.weight);
-                    const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
-                    if (!toHeapNode)
+                    if constexpr (IS_MAP_MATCHING)
                     {
-                        forward_heap.Insert(to, to_weight, {heapNode.node, true});
+                        const EdgeDistance to_distance = heapNode.data.distance + *distance;
+                        insertOrUpdate(
+                            forward_heap, to, to_weight, {heapNode.node, true, to_distance});
                     }
-                    else if (to_weight < toHeapNode->weight)
+                    else
                     {
-                        toHeapNode->data = {heapNode.node, true};
-                        toHeapNode->weight = to_weight;
-                        forward_heap.DecreaseKey(*toHeapNode);
+                        insertOrUpdate(forward_heap, to, to_weight, {heapNode.node, true});
                     }
                 }
                 ++source;
+                if constexpr (IS_MAP_MATCHING)
+                {
+                    ++distance;
+                }
             }
         }
     }
@@ -367,26 +425,28 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 const EdgeWeight to_weight =
                     heapNode.weight + node_weight + alias_cast<EdgeWeight>(turn_penalty);
 
-                const auto toHeapNode = forward_heap.GetHeapNodeIfWasInserted(to);
-                if (!toHeapNode)
+                if constexpr (IS_MAP_MATCHING)
                 {
-                    forward_heap.Insert(to, to_weight, {heapNode.node, false});
+                    const auto node_distance =
+                        facade.GetNodeDistance(DIRECTION == FORWARD_DIRECTION ? heapNode.node : to);
+
+                    const EdgeDistance to_distance = heapNode.data.distance + node_distance;
+                    insertOrUpdate(
+                        forward_heap, to, to_weight, {heapNode.node, false, to_distance});
                 }
-                else if (to_weight < toHeapNode->weight)
+                else
                 {
-                    toHeapNode->data = {heapNode.node, false};
-                    toHeapNode->weight = to_weight;
-                    forward_heap.DecreaseKey(*toHeapNode);
+                    insertOrUpdate(forward_heap, to, to_weight, {heapNode.node, false});
                 }
             }
         }
     }
 }
 
-template <bool DIRECTION, typename Algorithm, typename... Args>
+template <bool DIRECTION, typename Algorithm, typename Heap, typename... Args>
 void routingStep(const DataFacade<Algorithm> &facade,
-                 typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                 typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                 Heap &forward_heap,
+                 Heap &reverse_heap,
                  NodeID &middle_node,
                  EdgeWeight &path_upper_bound,
                  const std::vector<NodeID> &force_step_nodes,
@@ -429,21 +489,18 @@ using UnpackedNodes = std::vector<NodeID>;
 using UnpackedEdges = std::vector<EdgeID>;
 using UnpackedPath = std::tuple<EdgeWeight, UnpackedNodes, UnpackedEdges>;
 
-template <typename Algorithm, typename... Args>
-UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
-                    const DataFacade<Algorithm> &facade,
-                    typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                    typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                    const std::vector<NodeID> &force_step_nodes,
-                    EdgeWeight weight_upper_bound,
-                    const Args &...args)
+template <typename Algorithm, typename Heap, typename... Args>
+std::optional<std::pair<NodeID, EdgeWeight>> runSearch(const DataFacade<Algorithm> &facade,
+                                                       Heap &forward_heap,
+                                                       Heap &reverse_heap,
+                                                       const std::vector<NodeID> &force_step_nodes,
+                                                       EdgeWeight weight_upper_bound,
+                                                       const Args &...args)
 {
     if (forward_heap.Empty() || reverse_heap.Empty())
     {
-        return std::make_tuple(INVALID_EDGE_WEIGHT, std::vector<NodeID>(), std::vector<EdgeID>());
+        return {};
     }
-
-    const auto &partition = facade.GetMultiLevelPartition();
 
     BOOST_ASSERT(!forward_heap.Empty() && forward_heap.MinKey() < INVALID_EDGE_WEIGHT);
     BOOST_ASSERT(!reverse_heap.Empty() && reverse_heap.MinKey() < INVALID_EDGE_WEIGHT);
@@ -475,8 +532,31 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
     // No path found for both target nodes?
     if (weight >= weight_upper_bound || SPECIAL_NODEID == middle)
     {
+        return {};
+    }
+
+    return {{middle, weight}};
+}
+
+template <typename Algorithm, typename... Args>
+UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
+                    const DataFacade<Algorithm> &facade,
+                    typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                    typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                    const std::vector<NodeID> &force_step_nodes,
+                    EdgeWeight weight_upper_bound,
+                    const Args &...args)
+{
+    auto searchResult = runSearch(
+        facade, forward_heap, reverse_heap, force_step_nodes, weight_upper_bound, args...);
+    if (!searchResult)
+    {
         return std::make_tuple(INVALID_EDGE_WEIGHT, std::vector<NodeID>(), std::vector<EdgeID>());
     }
+
+    auto [middle, weight] = *searchResult;
+
+    const auto &partition = facade.GetMultiLevelPartition();
 
     // Get packed path as edges {from node ID, to node ID, from_clique_arc}
     auto packed_path = retrievePackedPathFromHeap(forward_heap, reverse_heap, middle);
@@ -536,6 +616,31 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
     return std::make_tuple(weight, std::move(unpacked_nodes), std::move(unpacked_edges));
 }
 
+template <typename Algorithm, typename... Args>
+EdgeDistance
+searchDistance(SearchEngineData<Algorithm> &,
+               const DataFacade<Algorithm> &facade,
+               typename SearchEngineData<Algorithm>::MapMatchingQueryHeap &forward_heap,
+               typename SearchEngineData<Algorithm>::MapMatchingQueryHeap &reverse_heap,
+               const std::vector<NodeID> &force_step_nodes,
+               EdgeWeight weight_upper_bound,
+               const Args &...args)
+{
+
+    auto searchResult = runSearch(
+        facade, forward_heap, reverse_heap, force_step_nodes, weight_upper_bound, args...);
+    if (!searchResult)
+    {
+        return INVALID_EDGE_DISTANCE;
+    }
+
+    auto [middle, _] = *searchResult;
+
+    auto distance = forward_heap.GetData(middle).distance + reverse_heap.GetData(middle).distance;
+
+    return distance;
+}
+
 // Alias to be compatible with the CH-based search
 template <typename Algorithm, typename PhantomEndpointT>
 inline void search(SearchEngineData<Algorithm> &engine_working_data,
@@ -593,8 +698,8 @@ void unpackPath(const FacadeT &facade,
 template <typename Algorithm>
 double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           const DataFacade<Algorithm> &facade,
-                          typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                          typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                          typename SearchEngineData<Algorithm>::MapMatchingQueryHeap &forward_heap,
+                          typename SearchEngineData<Algorithm>::MapMatchingQueryHeap &reverse_heap,
                           const PhantomNode &source_phantom,
                           const PhantomNode &target_phantom,
                           EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
@@ -602,48 +707,49 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
     forward_heap.Clear();
     reverse_heap.Clear();
 
-    const PhantomEndpoints endpoints{source_phantom, target_phantom};
-    insertNodesInHeaps(forward_heap, reverse_heap, endpoints);
+    if (source_phantom.IsValidForwardSource())
+    {
+        forward_heap.Insert(source_phantom.forward_segment_id.id,
+                            EdgeWeight{0} - source_phantom.GetForwardWeightPlusOffset(),
+                            {source_phantom.forward_segment_id.id,
+                             false,
+                             EdgeDistance{0} - source_phantom.GetForwardDistance()});
+    }
 
-    auto [weight, unpacked_nodes, unpacked_edges] = search(
+    if (source_phantom.IsValidReverseSource())
+    {
+        forward_heap.Insert(source_phantom.reverse_segment_id.id,
+                            EdgeWeight{0} - source_phantom.GetReverseWeightPlusOffset(),
+                            {source_phantom.reverse_segment_id.id,
+                             false,
+                             EdgeDistance{0} - source_phantom.GetReverseDistance()});
+    }
+
+    if (target_phantom.IsValidForwardTarget())
+    {
+        reverse_heap.Insert(
+            target_phantom.forward_segment_id.id,
+            target_phantom.GetForwardWeightPlusOffset(),
+            {target_phantom.forward_segment_id.id, false, target_phantom.GetForwardDistance()});
+    }
+
+    if (target_phantom.IsValidReverseTarget())
+    {
+        reverse_heap.Insert(
+            target_phantom.reverse_segment_id.id,
+            target_phantom.GetReverseWeightPlusOffset(),
+            {target_phantom.reverse_segment_id.id, false, target_phantom.GetReverseDistance()});
+    }
+
+    const PhantomEndpoints endpoints{source_phantom, target_phantom};
+
+    auto distance = searchDistance(
         engine_working_data, facade, forward_heap, reverse_heap, {}, weight_upper_bound, endpoints);
 
-    if (weight == INVALID_EDGE_WEIGHT)
+    if (distance == INVALID_EDGE_DISTANCE)
     {
         return std::numeric_limits<double>::max();
     }
-
-    BOOST_ASSERT(unpacked_nodes.size() >= 1);
-
-    EdgeDistance distance = {0.0};
-
-    if (source_phantom.forward_segment_id.id == unpacked_nodes.front())
-    {
-        BOOST_ASSERT(source_phantom.forward_segment_id.enabled);
-        distance = EdgeDistance{0} - source_phantom.GetForwardDistance();
-    }
-    else if (source_phantom.reverse_segment_id.id == unpacked_nodes.front())
-    {
-        BOOST_ASSERT(source_phantom.reverse_segment_id.enabled);
-        distance = EdgeDistance{0} - source_phantom.GetReverseDistance();
-    }
-
-    for (size_t index = 0; index < unpacked_nodes.size() - 1; ++index)
-    {
-        distance += facade.GetNodeDistance(unpacked_nodes[index]);
-    }
-
-    if (target_phantom.forward_segment_id.id == unpacked_nodes.back())
-    {
-        BOOST_ASSERT(target_phantom.forward_segment_id.enabled);
-        distance += target_phantom.GetForwardDistance();
-    }
-    else if (target_phantom.reverse_segment_id.id == unpacked_nodes.back())
-    {
-        BOOST_ASSERT(target_phantom.reverse_segment_id.enabled);
-        distance += target_phantom.GetReverseDistance();
-    }
-
     return from_alias<double>(distance);
 }
 

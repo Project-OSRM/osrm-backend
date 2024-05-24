@@ -8,6 +8,7 @@
       - ADDED: Add support for accessing edge flags in `process_segment` [#6658](https://github.com/Project-OSRM/osrm-backend/pull/6658)
     - Build:
       - CHANGED: Upgrade CI actions to latest versions [#6893](https://github.com/Project-OSRM/osrm-backend/pull/6893)
+      - CHANGED:  Remove outdated warnings #6894 [#6894](https://github.com/Project-OSRM/osrm-backend/pull/6894)
       - ADDED: Add CI job which builds OSRM with gcc 12. [#6455](https://github.com/Project-OSRM/osrm-backend/pull/6455)
       - CHANGED: Upgrade to clang-tidy 15. [#6439](https://github.com/Project-OSRM/osrm-backend/pull/6439)
       - CHANGED: Update actions/cache to v3. [#6420](https://github.com/Project-OSRM/osrm-backend/pull/6420)
@@ -52,6 +53,7 @@
       - FIXED: Remove force-loop checks for routes with u-turns [#6858](https://github.com/Project-OSRM/osrm-backend/pull/6858)
       - FIXED: Correctly check runtime search conditions for forcing routing steps [#6866](https://github.com/Project-OSRM/osrm-backend/pull/6866)
     - Map Matching:
+      - CHANGED: Optimise path distance calculation in MLD map matching even more. [#6884](https://github.com/Project-OSRM/osrm-backend/pull/6884)
       - CHANGED: Optimise path distance calculation in MLD map matching. [#6876](https://github.com/Project-OSRM/osrm-backend/pull/6876)
       - CHANGED: Optimise R-tree queries in the case of map matching. [#6881](https://github.com/Project-OSRM/osrm-backend/pull/6876)
     - Debug tiles:
