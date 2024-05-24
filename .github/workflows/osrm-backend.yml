@@ -396,7 +396,9 @@ jobs:
         elif [[ "${RUNNER_OS}" == "macOS" ]]; then
           echo "JOBS=$((`sysctl -n hw.ncpu` + 1))" >>  $GITHUB_ENV
         fi
-    - name: Give tar root ownership # https://github.com/actions/toolkit/issues/946#issuecomment-1590016041
+    # See: https://github.com/actions/toolkit/issues/946#issuecomment-1590016041
+    # We need it to be able to access system folders while restoring cached Boost below
+    - name: Give tar root ownership 
       if: runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
       run: sudo chown root /bin/tar && sudo chmod u+s /bin/tar
     - name: Cache Boost
@@ -423,11 +425,6 @@ jobs:
         sudo ./b2 install
         cd ..
         sudo rm -rf boost_${BOOST_VERSION_UNDERSCORE}*
-        
-    - name: Verify Boost installation
-      run: |
-        ls /usr/local/include/boost
-        ls /usr/local/lib/libboost*
     
     - name: Install dev dependencies
       run: |
