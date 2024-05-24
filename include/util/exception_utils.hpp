@@ -1,6 +1,7 @@
 #ifndef SOURCE_MACROS_HPP
 #define SOURCE_MACROS_HPP
-#include <cstring>
+
+#include <string>
 
 // Helper macros, don't use these ones
 // STRIP the OSRM_PROJECT_DIR from the front of a filename.  Expected to come
