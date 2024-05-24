@@ -1,7 +1,6 @@
 #ifndef OSRM_ENGINE_GUIDANCE_COLLAPSE_HPP
 
 #include "engine/guidance/route_step.hpp"
-#include "util/attributes.hpp"
 
 #include <type_traits>
 #include <vector>
@@ -12,7 +11,7 @@ namespace osrm::engine::guidance
 // Multiple possible reasons can result in unnecessary/confusing instructions
 // Collapsing such turns into a single turn instruction, we give a clearer
 // set of instructions that is not cluttered by unnecessary turns/name changes.
-OSRM_ATTR_WARN_UNUSED
+[[nodiscard]]
 std::vector<RouteStep> collapseTurnInstructions(std::vector<RouteStep> steps);
 
 // Multiple possible reasons can result in unnecessary/confusing instructions
@@ -20,7 +19,7 @@ std::vector<RouteStep> collapseTurnInstructions(std::vector<RouteStep> steps);
 // intersection would result in two instructions to turn left.
 // Collapsing such turns into a single turn instruction, we give a clearer
 // set of instructions that is not cluttered by unnecessary turns/name changes.
-OSRM_ATTR_WARN_UNUSED
+[[nodiscard]]
 std::vector<RouteStep> collapseSegregatedTurnInstructions(std::vector<RouteStep> steps);
 
 // A combined turn is a set of two instructions that actually form a single turn, as far as we

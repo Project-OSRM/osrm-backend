@@ -9,7 +9,6 @@
 #include "guidance/turn_analysis.hpp"
 #include "guidance/turn_lane_data.hpp"
 
-#include "util/attributes.hpp"
 #include "util/guidance/turn_lanes.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
@@ -68,7 +67,7 @@ class TurnLaneHandler
 
     ~TurnLaneHandler();
 
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     Intersection assignTurnLanes(const NodeID at, const EdgeID via_edge, Intersection intersection);
 
   private:
@@ -108,20 +107,20 @@ class TurnLaneHandler
                               const Intersection &intersection) const;
 
     // in case of a simple intersection, assign the lane entries
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     Intersection simpleMatchTuplesToTurns(Intersection intersection,
                                           const LaneDataVector &lane_data,
                                           const LaneDescriptionID lane_string_id);
 
     // partition lane data into lane data relevant at current turn and at next turn
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     std::pair<TurnLaneHandler::LaneDataVector, TurnLaneHandler::LaneDataVector> partitionLaneData(
         const NodeID at, LaneDataVector turn_lane_data, const Intersection &intersection) const;
 
     // Sliproad turns have a separated lane to the right/left of other depicted lanes. These lanes
     // are not necessarily separated clearly from the rest of the way. As a result, we combine both
     // lane entries for our output, while performing the matching with the separated lanes only.
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     Intersection handleSliproadTurn(Intersection intersection,
                                     const LaneDescriptionID lane_description_id,
                                     LaneDataVector lane_data,

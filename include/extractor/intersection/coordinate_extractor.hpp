@@ -1,15 +1,14 @@
 #ifndef OSRM_EXTRACTOR_INTERSECTION_COORDINATE_EXTRACTOR_HPP_
 #define OSRM_EXTRACTOR_INTERSECTION_COORDINATE_EXTRACTOR_HPP_
 
-#include <utility>
-#include <vector>
-
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/query_node.hpp"
 
-#include "util/attributes.hpp"
 #include "util/coordinate.hpp"
 #include "util/node_based_graph.hpp"
+
+#include <utility>
+#include <vector>
 
 namespace osrm::extractor::intersection
 {
@@ -27,7 +26,7 @@ class CoordinateExtractor
      * Note: The segment between intersection and turn coordinate can be zero, if the OSM modelling
      * is unfortunate. See https://github.com/Project-OSRM/osrm-backend/issues/3470
      */
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     util::Coordinate GetCoordinateAlongRoad(const NodeID intersection_node,
                                             const EdgeID turn_edge,
                                             const bool traversed_in_reverse,
@@ -36,7 +35,7 @@ class CoordinateExtractor
 
     // Given a set of precomputed coordinates, select the representative coordinate along the road
     // that best describes the turn
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     util::Coordinate
     ExtractRepresentativeCoordinate(const NodeID intersection_node,
                                     const EdgeID turn_edge,
@@ -47,7 +46,7 @@ class CoordinateExtractor
 
     // instead of finding only a single coordinate, we can also list all coordinates along a
     // road.
-    OSRM_ATTR_WARN_UNUSED std::vector<util::Coordinate>
+    [[nodiscard]] std::vector<util::Coordinate>
     GetCoordinatesAlongRoad(const NodeID intersection_node,
                             const EdgeID turn_edge,
                             const bool traversed_in_reverse,
@@ -55,7 +54,7 @@ class CoordinateExtractor
 
     // wrapper in case of normal forward edges (traversed_in_reverse = false, to_node =
     // node_based_graph.GetTarget(turn_edge)
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     std::vector<util::Coordinate> GetForwardCoordinatesAlongRoad(const NodeID from,
                                                                  const EdgeID turn_edge) const;
 
@@ -64,7 +63,7 @@ class CoordinateExtractor
     // to check for available connections in order, or find (with room for error) the straightmost
     // turn. This function will offer a bit more error potential but allow for much higher
     // performance
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     util::Coordinate GetCoordinateCloseToTurn(const NodeID from_node,
                                               const EdgeID turn_edge,
                                               const bool traversed_in_reverse,
@@ -90,13 +89,13 @@ class CoordinateExtractor
      * The optional length cache needs to store the accumulated distance up to the respective
      * coordinate index [0,d(0,1),...]
      */
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     std::vector<util::Coordinate>
     TrimCoordinatesToLength(std::vector<util::Coordinate> coordinates,
                             const double desired_length,
                             const std::vector<double> &length_cache = {}) const;
 
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     std::vector<double> PrepareLengthCache(const std::vector<util::Coordinate> &coordinates,
                                            const double limit) const;
 
@@ -104,7 +103,7 @@ class CoordinateExtractor
      * only containing coordinates up to a given distance along the path. The last coordinate might
      * be interpolated
      */
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     std::vector<util::Coordinate>
     TrimCoordinatesByLengthFront(std::vector<util::Coordinate> coordinates,
                                  const double desired_length) const;
@@ -130,7 +129,7 @@ class CoordinateExtractor
      *
      * for fixpoint `b`, vector_base `d` and vector_head `e`
      */
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     util::Coordinate GetCorrectedCoordinate(const util::Coordinate fixpoint,
                                             const util::Coordinate vector_base,
                                             const util::Coordinate vector_head) const;
@@ -143,7 +142,7 @@ class CoordinateExtractor
      * Into:
      * x -- x -- x -- x -- x - x
      */
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     std::vector<util::Coordinate>
     SampleCoordinates(const std::vector<util::Coordinate> &coordinates,
                       const double length,

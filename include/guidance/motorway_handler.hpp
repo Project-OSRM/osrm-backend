@@ -7,7 +7,6 @@
 #include "guidance/intersection_handler.hpp"
 #include "guidance/is_through_street.hpp"
 
-#include "util/attributes.hpp"
 #include "util/node_based_graph.hpp"
 
 #include <vector>
@@ -42,17 +41,17 @@ class MotorwayHandler final : public IntersectionHandler
                             Intersection intersection) const override final;
 
   private:
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     Intersection handleSliproads(const NodeID intersection_node_id,
                                  Intersection intersection) const;
 
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     Intersection fromMotorway(const EdgeID via_edge, Intersection intersection) const;
 
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     Intersection fromRamp(const EdgeID via_edge, Intersection intersection) const;
 
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     Intersection fallback(Intersection intersection) const;
 };
 

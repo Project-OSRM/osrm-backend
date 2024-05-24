@@ -3,7 +3,6 @@
 
 #include "guidance/turn_instruction.hpp"
 #include "engine/guidance/route_step.hpp"
-#include "util/attributes.hpp"
 #include "util/bearing.hpp"
 #include "util/guidance/name_announcements.hpp"
 
@@ -166,7 +165,7 @@ inline bool areSameSide(const RouteStep &lhs, const RouteStep &rhs)
 }
 
 // do this after invalidating any steps to compress the step array again
-OSRM_ATTR_WARN_UNUSED
+[[nodiscard]]
 inline std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps)
 {
     // finally clean up the post-processed instructions.

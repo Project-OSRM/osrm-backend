@@ -433,7 +433,7 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
 }
 
 // OTHER IMPLEMENTATIONS
-OSRM_ATTR_WARN_UNUSED
+[[nodiscard]]
 RouteSteps collapseTurnInstructions(RouteSteps steps)
 {
     // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)
@@ -589,7 +589,7 @@ RouteSteps collapseTurnInstructions(RouteSteps steps)
 }
 
 // OTHER IMPLEMENTATIONS
-OSRM_ATTR_WARN_UNUSED
+[[nodiscard]]
 RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
 {
     // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)

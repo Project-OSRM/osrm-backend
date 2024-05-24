@@ -8,7 +8,6 @@
 #include "guidance/intersection_handler.hpp"
 #include "guidance/is_through_street.hpp"
 
-#include "util/attributes.hpp"
 #include "util/node_based_graph.hpp"
 
 #include <cstddef>
@@ -76,19 +75,19 @@ class TurnHandler final : public IntersectionHandler
     bool isCompatibleByRoadClass(const Intersection &intersection, const Fork fork) const;
 
     // Dead end.
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     Intersection handleOneWayTurn(Intersection intersection) const;
 
     // Mode Changes, new names...
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     Intersection handleTwoWayTurn(const EdgeID via_edge, Intersection intersection) const;
 
     // Forks, T intersections and similar
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     Intersection handleThreeWayTurn(const EdgeID via_edge, Intersection intersection) const;
 
     // Handling of turns larger then degree three
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     Intersection handleComplexTurn(const EdgeID via_edge, Intersection intersection) const;
 
     void
@@ -97,12 +96,12 @@ class TurnHandler final : public IntersectionHandler
     // Classification
     std::optional<Fork> findFork(const EdgeID via_edge, Intersection &intersection) const;
 
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     Intersection assignLeftTurns(const EdgeID via_edge,
                                  Intersection intersection,
                                  const std::size_t starting_at) const;
 
-    OSRM_ATTR_WARN_UNUSED
+    [[nodiscard]]
     Intersection assignRightTurns(const EdgeID via_edge,
                                   Intersection intersection,
                                   const std::size_t up_to) const;
