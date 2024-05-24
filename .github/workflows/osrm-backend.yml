@@ -402,16 +402,16 @@ jobs:
       if: runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
       run: sudo chown root /bin/tar && sudo chmod u+s /bin/tar
     - name: Cache Boost
-      if: steps.cache-boost.outputs.cache-hit != 'true' && runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
+      if: runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
       id: cache-boost
       uses: actions/cache@v4
       with:
         path: |
           /usr/local/include/boost
           /usr/local/lib/libboost*
-        key: v1-boost-${{ runner.os }}-${{ runner.arch }}
+        key: v1-boost-${{ runner.os }}-${{ runner.arch }}-${{ matrix.run-on }}
         restore-keys: |
-          v1-boost-${{ runner.os }}-${{ runner.arch }}
+          v1-boost-${{ runner.os }}-${{ runner.arch }}-${{ matrix.run-on }}
 
     - name: Install Boost
       if: steps.cache-boost.outputs.cache-hit != 'true' && runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
