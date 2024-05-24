@@ -13,7 +13,7 @@ OSMIUM_PATH="osmcode/libosmium"
 OSMIUM_TAG=v2.14.0
 
 VARIANT_PATH="mapbox/variant"
-VARIANT_TAG=v1.1.3
+VARIANT_TAG=v1.2.0
 
 SOL_PATH="ThePhD/sol2"
 SOL_TAG=v2.17.5
