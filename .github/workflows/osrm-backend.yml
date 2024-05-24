@@ -148,30 +148,30 @@ jobs:
     strategy:
       matrix:
         include:
-          # - name: gcc-13-debug-cov
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-24.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Debug
-          #   CCOMPILER: gcc-13
-          #   CUCUMBER_TIMEOUT: 20000
-          #   CXXCOMPILER: g++-13
-          #   ENABLE_COVERAGE: ON
+          - name: gcc-13-debug-cov
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-24.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CCOMPILER: gcc-13
+            CUCUMBER_TIMEOUT: 20000
+            CXXCOMPILER: g++-13
+            ENABLE_COVERAGE: ON
 
-          # - name: clang-15-debug-asan-ubsan
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Debug
-          #   CCOMPILER: clang-15
-          #   CUCUMBER_TIMEOUT: 20000
-          #   CXXCOMPILER: clang++-15
-          #   ENABLE_SANITIZER: ON
-          #   TARGET_ARCH: x86_64-asan-ubsan
-          #   OSRM_CONNECTION_RETRIES: 10
-          #   OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
+          - name: clang-15-debug-asan-ubsan
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-15
+            CUCUMBER_TIMEOUT: 20000
+            CXXCOMPILER: clang++-15
+            ENABLE_SANITIZER: ON
+            TARGET_ARCH: x86_64-asan-ubsan
+            OSRM_CONNECTION_RETRIES: 10
+            OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
           - name: clang-15-release
             continue-on-error: false
@@ -183,142 +183,142 @@ jobs:
             CXXCOMPILER: clang++-15
             CUCUMBER_TIMEOUT: 60000
 
-          # - name: clang-15-debug
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Debug
-          #   CCOMPILER: clang-15
-          #   CXXCOMPILER: clang++-15
-          #   CUCUMBER_TIMEOUT: 60000
+          - name: clang-15-debug
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-15
+            CXXCOMPILER: clang++-15
+            CUCUMBER_TIMEOUT: 60000
 
-          # - name: clang-15-debug-clang-tidy
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Debug
-          #   CCOMPILER: clang-15
-          #   CXXCOMPILER: clang++-15
-          #   CUCUMBER_TIMEOUT: 60000
-          #   ENABLE_CLANG_TIDY: ON
+          - name: clang-15-debug-clang-tidy
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-15
+            CXXCOMPILER: clang++-15
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_CLANG_TIDY: ON
 
-          # - name: clang-14-release
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-14
-          #   CXXCOMPILER: clang++-14
-          #   CUCUMBER_TIMEOUT: 60000
+          - name: clang-14-release
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-14
+            CXXCOMPILER: clang++-14
+            CUCUMBER_TIMEOUT: 60000
 
-          # - name: clang-13-release
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-13
-          #   CXXCOMPILER: clang++-13
-          #   CUCUMBER_TIMEOUT: 60000
+          - name: clang-13-release
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-13
+            CXXCOMPILER: clang++-13
+            CUCUMBER_TIMEOUT: 60000
 
-          # - name: conan-linux-debug-asan-ubsan
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-15
-          #   CXXCOMPILER: clang++-15
-          #   ENABLE_CONAN: ON
-          #   ENABLE_SANITIZER: ON
+          - name: conan-linux-debug-asan-ubsan
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-15
+            CXXCOMPILER: clang++-15
+            ENABLE_CONAN: ON
+            ENABLE_SANITIZER: ON
 
-          # - name: conan-linux-release
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-15
-          #   CXXCOMPILER: clang++-15
-          #   ENABLE_CONAN: ON
+          - name: conan-linux-release
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-15
+            CXXCOMPILER: clang++-15
+            ENABLE_CONAN: ON
 
-          # - name: gcc-13-release
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-24.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: gcc-13
-          #   CXXCOMPILER: g++-13
-          #   CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+          - name: gcc-13-release
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-24.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-13
+            CXXCOMPILER: g++-13
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          # - name: gcc-12-release
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: gcc-12
-          #   CXXCOMPILER: g++-12
-          #   CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+          - name: gcc-12-release
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-12
+            CXXCOMPILER: g++-12
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          # - name: gcc-11-release
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: gcc-11
-          #   CXXCOMPILER: g++-11
+          - name: gcc-11-release
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-11
+            CXXCOMPILER: g++-11
 
-          # - name: conan-linux-release-node
-          #   build_node_package: true
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-13
-          #   CXXCOMPILER: clang++-13
-          #   ENABLE_CONAN: ON
-          #   NODE_PACKAGE_TESTS_ONLY: ON
+          - name: conan-linux-release-node
+            build_node_package: true
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-22.04
+            BUILD_TYPE: Release
+            CCOMPILER: clang-13
+            CXXCOMPILER: clang++-13
+            ENABLE_CONAN: ON
+            NODE_PACKAGE_TESTS_ONLY: ON
 
-          # - name: conan-linux-debug-node
-          #   build_node_package: true
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TYPE: Debug
-          #   CCOMPILER: clang-13
-          #   CXXCOMPILER: clang++-13
-          #   ENABLE_CONAN: ON
-          #   NODE_PACKAGE_TESTS_ONLY: ON
+          - name: conan-linux-debug-node
+            build_node_package: true
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-22.04
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-13
+            CXXCOMPILER: clang++-13
+            ENABLE_CONAN: ON
+            NODE_PACKAGE_TESTS_ONLY: ON
 
-          # - name: conan-macos-x64-release-node
-          #   build_node_package: true
-          #   continue-on-error: true
-          #   node: 20
-          #   runs-on: macos-13 # x86_64
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang
-          #   CXXCOMPILER: clang++
-          #   CUCUMBER_TIMEOUT: 60000
-          #   ENABLE_ASSERTIONS: ON
-          #   ENABLE_CONAN: ON
+          - name: conan-macos-x64-release-node
+            build_node_package: true
+            continue-on-error: true
+            node: 20
+            runs-on: macos-13 # x86_64
+            BUILD_TYPE: Release
+            CCOMPILER: clang
+            CXXCOMPILER: clang++
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_ASSERTIONS: ON
+            ENABLE_CONAN: ON
 
-          # - name: conan-macos-arm64-release-node
-          #   build_node_package: true
-          #   continue-on-error: true
-          #   node: 20
-          #   runs-on: macos-14 # arm64 
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang
-          #   CXXCOMPILER: clang++
-          #   CUCUMBER_TIMEOUT: 60000
-          #   ENABLE_ASSERTIONS: ON
-          #   ENABLE_CONAN: ON
+          - name: conan-macos-arm64-release-node
+            build_node_package: true
+            continue-on-error: true
+            node: 20
+            runs-on: macos-14 # arm64 
+            BUILD_TYPE: Release
+            CCOMPILER: clang
+            CXXCOMPILER: clang++
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_ASSERTIONS: ON
+            ENABLE_CONAN: ON
 
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
@@ -396,8 +396,11 @@ jobs:
         elif [[ "${RUNNER_OS}" == "macOS" ]]; then
           echo "JOBS=$((`sysctl -n hw.ncpu` + 1))" >>  $GITHUB_ENV
         fi
-
+    - name: Give tar root ownership # https://github.com/actions/toolkit/issues/946#issuecomment-1590016041
+      if: runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
+      run: sudo chown root:wheel /bin/tar && sudo chmod u+s /bin/tar
     - name: Cache Boost
+      if: steps.cache-boost.outputs.cache-hit != 'true' && runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
       id: cache-boost
       uses: actions/cache@v2
       with:
@@ -409,7 +412,7 @@ jobs:
           boost-${{ runner.os }}-
 
     - name: Install Boost
-      if: steps.cache-boost.outputs.cache-hit != 'true'
+      if: steps.cache-boost.outputs.cache-hit != 'true' && runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
       run: |
         BOOST_VERSION="1.85.0"
         BOOST_VERSION_UNDERSCORE="${BOOST_VERSION//./_}"
