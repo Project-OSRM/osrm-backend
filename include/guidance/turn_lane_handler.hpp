@@ -67,8 +67,8 @@ class TurnLaneHandler
 
     ~TurnLaneHandler();
 
-    [[nodiscard]]
-    Intersection assignTurnLanes(const NodeID at, const EdgeID via_edge, Intersection intersection);
+    [[nodiscard]] Intersection
+    assignTurnLanes(const NodeID at, const EdgeID via_edge, Intersection intersection);
 
   private:
     mutable std::atomic<std::size_t> count_handled;
@@ -107,24 +107,23 @@ class TurnLaneHandler
                               const Intersection &intersection) const;
 
     // in case of a simple intersection, assign the lane entries
-    [[nodiscard]]
-    Intersection simpleMatchTuplesToTurns(Intersection intersection,
-                                          const LaneDataVector &lane_data,
-                                          const LaneDescriptionID lane_string_id);
+    [[nodiscard]] Intersection simpleMatchTuplesToTurns(Intersection intersection,
+                                                        const LaneDataVector &lane_data,
+                                                        const LaneDescriptionID lane_string_id);
 
     // partition lane data into lane data relevant at current turn and at next turn
-    [[nodiscard]]
-    std::pair<TurnLaneHandler::LaneDataVector, TurnLaneHandler::LaneDataVector> partitionLaneData(
-        const NodeID at, LaneDataVector turn_lane_data, const Intersection &intersection) const;
+    [[nodiscard]] std::pair<TurnLaneHandler::LaneDataVector, TurnLaneHandler::LaneDataVector>
+    partitionLaneData(const NodeID at,
+                      LaneDataVector turn_lane_data,
+                      const Intersection &intersection) const;
 
     // Sliproad turns have a separated lane to the right/left of other depicted lanes. These lanes
     // are not necessarily separated clearly from the rest of the way. As a result, we combine both
     // lane entries for our output, while performing the matching with the separated lanes only.
-    [[nodiscard]]
-    Intersection handleSliproadTurn(Intersection intersection,
-                                    const LaneDescriptionID lane_description_id,
-                                    LaneDataVector lane_data,
-                                    const Intersection &previous_intersection);
+    [[nodiscard]] Intersection handleSliproadTurn(Intersection intersection,
+                                                  const LaneDescriptionID lane_description_id,
+                                                  LaneDataVector lane_data,
+                                                  const Intersection &previous_intersection);
 
     // get the lane data for an intersection
     void extractLaneData(const EdgeID via_edge,

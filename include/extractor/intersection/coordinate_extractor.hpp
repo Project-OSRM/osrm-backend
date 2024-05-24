@@ -26,17 +26,16 @@ class CoordinateExtractor
      * Note: The segment between intersection and turn coordinate can be zero, if the OSM modelling
      * is unfortunate. See https://github.com/Project-OSRM/osrm-backend/issues/3470
      */
-    [[nodiscard]]
-    util::Coordinate GetCoordinateAlongRoad(const NodeID intersection_node,
-                                            const EdgeID turn_edge,
-                                            const bool traversed_in_reverse,
-                                            const NodeID to_node,
-                                            const std::uint8_t number_of_in_lanes) const;
+    [[nodiscard]] util::Coordinate
+    GetCoordinateAlongRoad(const NodeID intersection_node,
+                           const EdgeID turn_edge,
+                           const bool traversed_in_reverse,
+                           const NodeID to_node,
+                           const std::uint8_t number_of_in_lanes) const;
 
     // Given a set of precomputed coordinates, select the representative coordinate along the road
     // that best describes the turn
-    [[nodiscard]]
-    util::Coordinate
+    [[nodiscard]] util::Coordinate
     ExtractRepresentativeCoordinate(const NodeID intersection_node,
                                     const EdgeID turn_edge,
                                     const bool traversed_in_reverse,
@@ -54,20 +53,18 @@ class CoordinateExtractor
 
     // wrapper in case of normal forward edges (traversed_in_reverse = false, to_node =
     // node_based_graph.GetTarget(turn_edge)
-    [[nodiscard]]
-    std::vector<util::Coordinate> GetForwardCoordinatesAlongRoad(const NodeID from,
-                                                                 const EdgeID turn_edge) const;
+    [[nodiscard]] std::vector<util::Coordinate>
+    GetForwardCoordinatesAlongRoad(const NodeID from, const EdgeID turn_edge) const;
 
     // a less precise way to compute coordinates along a route. Due to the heavy interaction of
     // graph traversal and turn instructions, we often don't care for high precision. We only want
     // to check for available connections in order, or find (with room for error) the straightmost
     // turn. This function will offer a bit more error potential but allow for much higher
     // performance
-    [[nodiscard]]
-    util::Coordinate GetCoordinateCloseToTurn(const NodeID from_node,
-                                              const EdgeID turn_edge,
-                                              const bool traversed_in_reverse,
-                                              const NodeID to_node) const;
+    [[nodiscard]] util::Coordinate GetCoordinateCloseToTurn(const NodeID from_node,
+                                                            const EdgeID turn_edge,
+                                                            const bool traversed_in_reverse,
+                                                            const NodeID to_node) const;
 
     /* When extracting the coordinates, we first extract all coordinates. We don't care about most
      * of them, though.
@@ -89,22 +86,19 @@ class CoordinateExtractor
      * The optional length cache needs to store the accumulated distance up to the respective
      * coordinate index [0,d(0,1),...]
      */
-    [[nodiscard]]
-    std::vector<util::Coordinate>
+    [[nodiscard]] std::vector<util::Coordinate>
     TrimCoordinatesToLength(std::vector<util::Coordinate> coordinates,
                             const double desired_length,
                             const std::vector<double> &length_cache = {}) const;
 
-    [[nodiscard]]
-    std::vector<double> PrepareLengthCache(const std::vector<util::Coordinate> &coordinates,
-                                           const double limit) const;
+    [[nodiscard]] std::vector<double>
+    PrepareLengthCache(const std::vector<util::Coordinate> &coordinates, const double limit) const;
 
     /* when looking at a set of coordinates, this function allows trimming the vector to a smaller,
      * only containing coordinates up to a given distance along the path. The last coordinate might
      * be interpolated
      */
-    [[nodiscard]]
-    std::vector<util::Coordinate>
+    [[nodiscard]] std::vector<util::Coordinate>
     TrimCoordinatesByLengthFront(std::vector<util::Coordinate> coordinates,
                                  const double desired_length) const;
 
@@ -129,10 +123,9 @@ class CoordinateExtractor
      *
      * for fixpoint `b`, vector_base `d` and vector_head `e`
      */
-    [[nodiscard]]
-    util::Coordinate GetCorrectedCoordinate(const util::Coordinate fixpoint,
-                                            const util::Coordinate vector_base,
-                                            const util::Coordinate vector_head) const;
+    [[nodiscard]] util::Coordinate GetCorrectedCoordinate(const util::Coordinate fixpoint,
+                                                          const util::Coordinate vector_base,
+                                                          const util::Coordinate vector_head) const;
 
     /* generate a uniform vector of coordinates in same range distances
      *
@@ -142,8 +135,7 @@ class CoordinateExtractor
      * Into:
      * x -- x -- x -- x -- x - x
      */
-    [[nodiscard]]
-    std::vector<util::Coordinate>
+    [[nodiscard]] std::vector<util::Coordinate>
     SampleCoordinates(const std::vector<util::Coordinate> &coordinates,
                       const double length,
                       const double rate) const;

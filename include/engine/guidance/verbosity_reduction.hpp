@@ -12,8 +12,7 @@ namespace osrm::engine::guidance
 // to announce them. All these that are not collapsed into a single turn (think segregated
 // intersection) have to be checked for the length they are active in. If they are active for a
 // short distance only, we don't announce them
-[[nodiscard]]
-std::vector<RouteStep> suppressShortNameSegments(std::vector<RouteStep> steps);
+[[nodiscard]] std::vector<RouteStep> suppressShortNameSegments(std::vector<RouteStep> steps);
 
 } // namespace osrm::engine::guidance
 

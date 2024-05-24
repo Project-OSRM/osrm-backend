@@ -75,20 +75,19 @@ class TurnHandler final : public IntersectionHandler
     bool isCompatibleByRoadClass(const Intersection &intersection, const Fork fork) const;
 
     // Dead end.
-    [[nodiscard]]
-    Intersection handleOneWayTurn(Intersection intersection) const;
+    [[nodiscard]] Intersection handleOneWayTurn(Intersection intersection) const;
 
     // Mode Changes, new names...
-    [[nodiscard]]
-    Intersection handleTwoWayTurn(const EdgeID via_edge, Intersection intersection) const;
+    [[nodiscard]] Intersection handleTwoWayTurn(const EdgeID via_edge,
+                                                Intersection intersection) const;
 
     // Forks, T intersections and similar
-    [[nodiscard]]
-    Intersection handleThreeWayTurn(const EdgeID via_edge, Intersection intersection) const;
+    [[nodiscard]] Intersection handleThreeWayTurn(const EdgeID via_edge,
+                                                  Intersection intersection) const;
 
     // Handling of turns larger then degree three
-    [[nodiscard]]
-    Intersection handleComplexTurn(const EdgeID via_edge, Intersection intersection) const;
+    [[nodiscard]] Intersection handleComplexTurn(const EdgeID via_edge,
+                                                 Intersection intersection) const;
 
     void
     handleDistinctConflict(const EdgeID via_edge, ConnectedRoad &left, ConnectedRoad &right) const;
@@ -96,15 +95,13 @@ class TurnHandler final : public IntersectionHandler
     // Classification
     std::optional<Fork> findFork(const EdgeID via_edge, Intersection &intersection) const;
 
-    [[nodiscard]]
-    Intersection assignLeftTurns(const EdgeID via_edge,
-                                 Intersection intersection,
-                                 const std::size_t starting_at) const;
+    [[nodiscard]] Intersection assignLeftTurns(const EdgeID via_edge,
+                                               Intersection intersection,
+                                               const std::size_t starting_at) const;
 
-    [[nodiscard]]
-    Intersection assignRightTurns(const EdgeID via_edge,
-                                  Intersection intersection,
-                                  const std::size_t up_to) const;
+    [[nodiscard]] Intersection assignRightTurns(const EdgeID via_edge,
+                                                Intersection intersection,
+                                                const std::size_t up_to) const;
 };
 
 } // namespace osrm::guidance

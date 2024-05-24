@@ -433,8 +433,7 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
 }
 
 // OTHER IMPLEMENTATIONS
-[[nodiscard]]
-RouteSteps collapseTurnInstructions(RouteSteps steps)
+[[nodiscard]] RouteSteps collapseTurnInstructions(RouteSteps steps)
 {
     // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)
     BOOST_ASSERT(!hasTurnType(steps.front()) && !hasTurnType(steps.back()));
@@ -589,8 +588,7 @@ RouteSteps collapseTurnInstructions(RouteSteps steps)
 }
 
 // OTHER IMPLEMENTATIONS
-[[nodiscard]]
-RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
+[[nodiscard]] RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
 {
     // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)
     BOOST_ASSERT(!hasTurnType(steps.front()) && !hasTurnType(steps.back()));

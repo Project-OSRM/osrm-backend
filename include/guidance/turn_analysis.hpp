@@ -46,13 +46,11 @@ class TurnAnalysis
 
     /* Full Analysis Process for a single node/edge combination. Use with caution, as the process is
      * relatively expensive */
-    [[nodiscard]]
-    Intersection operator()(const NodeID node_prior_to_intersection,
-                            const EdgeID entering_via_edge) const;
+    [[nodiscard]] Intersection operator()(const NodeID node_prior_to_intersection,
+                                          const EdgeID entering_via_edge) const;
 
     // Select turn types based on the intersection shape
-    [[nodiscard]]
-    Intersection
+    [[nodiscard]] Intersection
     AssignTurnTypes(const NodeID from_node,
                     const EdgeID via_eid,
                     const extractor::intersection::IntersectionView &intersection) const;

@@ -33,12 +33,12 @@ findBestMatchForReverse(const extractor::TurnLaneType::Mask leftmost_tag,
 bool canMatchTrivially(const Intersection &intersection, const LaneDataVector &lane_data);
 
 // perform a trivial match on the turn lanes
-[[nodiscard]]
-Intersection triviallyMatchLanesToTurns(Intersection intersection,
-                                        const LaneDataVector &lane_data,
-                                        const util::NodeBasedDynamicGraph &node_based_graph,
-                                        const LaneDescriptionID lane_string_id,
-                                        util::guidance::LaneDataIdMap &lane_data_to_id);
+[[nodiscard]] Intersection
+triviallyMatchLanesToTurns(Intersection intersection,
+                           const LaneDataVector &lane_data,
+                           const util::NodeBasedDynamicGraph &node_based_graph,
+                           const LaneDescriptionID lane_string_id,
+                           util::guidance::LaneDataIdMap &lane_data_to_id);
 
 } // namespace osrm::guidance::lanes
 

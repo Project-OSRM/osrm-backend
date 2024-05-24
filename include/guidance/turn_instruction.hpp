@@ -242,8 +242,7 @@ inline guidance::DirectionModifier::Enum getTurnDirection(const double angle)
 }
 
 // swaps left <-> right modifier types
-[[nodiscard]]
-inline guidance::DirectionModifier::Enum
+[[nodiscard]] inline guidance::DirectionModifier::Enum
 mirrorDirectionModifier(const guidance::DirectionModifier::Enum modifier)
 {
     const constexpr guidance::DirectionModifier::Enum results[] = {

@@ -7,9 +7,8 @@
 namespace osrm::guidance::lanes
 {
 
-[[nodiscard]]
-LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
-                                           const Intersection &intersection);
+[[nodiscard]] LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
+                                                         const Intersection &intersection);
 
 } // namespace osrm::guidance::lanes
 

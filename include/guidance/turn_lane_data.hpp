@@ -22,8 +22,8 @@ struct TurnLaneData
 using LaneDataVector = std::vector<TurnLaneData>;
 
 // convertes a string given in the OSM format into a TurnLaneData vector
-[[nodiscard]]
-LaneDataVector laneDataFromDescription(const extractor::TurnLaneDescription &turn_lane_description);
+[[nodiscard]] LaneDataVector
+laneDataFromDescription(const extractor::TurnLaneDescription &turn_lane_description);
 
 // Locate A Tag in a lane data vector (if multiple tags are set, the first one found is returned)
 LaneDataVector::const_iterator findTag(const extractor::TurnLaneType::Mask tag,

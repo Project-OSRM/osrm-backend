@@ -41,18 +41,14 @@ class MotorwayHandler final : public IntersectionHandler
                             Intersection intersection) const override final;
 
   private:
-    [[nodiscard]]
-    Intersection handleSliproads(const NodeID intersection_node_id,
-                                 Intersection intersection) const;
+    [[nodiscard]] Intersection handleSliproads(const NodeID intersection_node_id,
+                                               Intersection intersection) const;
 
-    [[nodiscard]]
-    Intersection fromMotorway(const EdgeID via_edge, Intersection intersection) const;
+    [[nodiscard]] Intersection fromMotorway(const EdgeID via_edge, Intersection intersection) const;
 
-    [[nodiscard]]
-    Intersection fromRamp(const EdgeID via_edge, Intersection intersection) const;
+    [[nodiscard]] Intersection fromRamp(const EdgeID via_edge, Intersection intersection) const;
 
-    [[nodiscard]]
-    Intersection fallback(Intersection intersection) const;
+    [[nodiscard]] Intersection fallback(Intersection intersection) const;
 };
 
 } // namespace osrm::guidance
