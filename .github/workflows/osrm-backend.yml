@@ -466,7 +466,6 @@ jobs:
         tar zxvf onetbb.tgz
         sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
         sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
-    - run: ls -R $(conda info --base)/envs/boost_conda
     - name: Prepare build
       run: |
         mkdir ${OSRM_BUILD_DIR}
