@@ -1,78 +1,62 @@
 # Unofficial and incomplete build file using Boost build system.
 # You should use make unless you know what you are doing.
 
-local BOOST_DIR = "/usr/local" ;
+import os ;
+
+local boost_dir = [ os.environ BOOST_DIR ] ;
+if ! $(boost_dir)
+{
+    boost_dir = "/usr/local" ;
+}
 
 #using clang : : ;
 
-lib system : : <name>boost_system <search>$(BOOST_DIR)/lib ;
-lib timer : chrono : <name>boost_timer <search>$(BOOST_DIR)/lib ;
-lib chrono : system : <name>boost_chrono <search>$(BOOST_DIR)/lib ;
+local cxx_std = [ os.environ CXX_STD ] ;
+if ! $(cxx_std)
+{
+    cxx_std = c++11 ;
+}
 
-exe variant-test
-    :
-    test/bench_variant.cpp
-    .//system
-    .//timer
-    .//chrono
-    :
-    <include>$(BOOST_DIR)/include
-    <include>./include
-    <include>./test/include
-    #<define>SINGLE_THREADED
-    <variant>release:<cxxflags>"-march=native -Wweak-vtables"
+project mapbox_variant
+    : requirements
+      <cxxflags>-std=$(cxx_std)
+      <include>$(boost_dir)/include
+      <include>include
+      <include>test/include
+      <variant>release:<cxxflags>-march=native
+      <threading>single:<define>SINGLE_THREADED
+    : default-build
+      <variant>release
+      <optimization>speed
+      <threading>single
     ;
 
+rule exe-test ( name : reqs * : deps * )
+{
+    exe $(name)
+        : test/$(name).cpp
+        : $(reqs)
+        : $(deps)
+        ;
+    explicit $(name) ;
+}
 
-exe binary-visitor-test
-    :
-    test/binary_visitor_test.cpp
-    .//system
-    .//timer
-    .//chrono
-    :
-    <include>$(BOOST_DIR)/include
-    <include>./include
-    <include>./test/include
-    <variant>release:<cxxflags>-march=native
+exe-test bench_variant
+    : <variant>release:<cxxflags>-Wweak-vtables
     ;
 
-exe recursive-wrapper-test
-    :
-    test/recursive_wrapper_test.cpp
-    .//system
-    .//timer
-    .//chrono
-    :
-    <include>$(BOOST_DIR)/include
-    <include>./include
-    <include>./test/include
-    <variant>release:<cxxflags>-march=native
-    ;
+exe-test binary_visitor_test ;
+exe-test recursive_wrapper_test ;
+exe-test unique_ptr_test ;
+exe-test reference_wrapper_test ;
+exe-test lambda_overload_test ;
+exe-test hashable_test ;
 
-exe unique-ptr-test
-    :
-    test/unique_ptr_test.cpp
-    .//system
-    .//timer
-    .//chrono
-    :
-    <include>$(BOOST_DIR)/include
-    <include>./include
-    <include>./test/include
-    <variant>release:<cxxflags>-march=native
-    ;
-
-
-exe reference_wrapper_test
-    :
-    test/reference_wrapper_test.cpp
-    .//system
-    .//timer
-    .//chrono
-    :
-    <include>$(BOOST_DIR)/include
-    <include>./include
-    <include>./test/include
-    <variant>release:<cxxflags>-march=native
-    ;
+install out
+    : bench_variant
+      binary_visitor_test
+      unique_ptr_test
+      reference_wrapper_test
+      lambda_overload_test
+      hashable_test
+    ;   
