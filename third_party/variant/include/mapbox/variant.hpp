@@ -163,7 +163,11 @@ struct enable_if_type
 template <typename F, typename V, typename Enable = void>
 struct result_of_unary_visit
 {
+#if __cplusplus >= 201703L
     using type = std::invoke_result_t<F, V&>;
+#else
+    using type = std::result_of_t<F(V&)>;
+#endif
 };
 
 template <typename F, typename V>
@@ -175,7 +179,11 @@ struct result_of_unary_visit<F, V, typename enable_if_type<typename F::result_ty
 template <typename F, typename V, typename Enable = void>
 struct result_of_binary_visit
 {
+#if __cplusplus >= 201703L
     using type = std::invoke_result_t<F, V&, V&>;
+#else
+    using type = std::result_of_t<F(V&, V&)>;
+#endif
 };
 
 template <typename F, typename V>
