@@ -1,4 +1,3 @@
-
 #include "catch.hpp"
 
 #include <mapbox/optional.hpp>
@@ -97,6 +96,8 @@ TEST_CASE("self assignment", "[optional]")
 
     a = 1;
     REQUIRE(a.get() == 1);
+#if !defined(__clang__)
     a = a;
     REQUIRE(a.get() == 1);
+#endif
 }

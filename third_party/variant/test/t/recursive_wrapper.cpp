@@ -1,6 +1,6 @@
-
 #include "catch.hpp"
 
+#include <mapbox/variant.hpp>
 #include <mapbox/recursive_wrapper.hpp>
 
 #include <type_traits>
@@ -153,6 +153,33 @@ TEST_CASE("recursive wrapper of pair<int, int>")
         b = std::move(c);
         REQUIRE(b.get().first == 5);
         REQUIRE(b.get().second == 6);
-        //        REQUIRE(c.get_pointer() == nullptr);
+        //REQUIRE(c.get_pointer() == nullptr);
+    }
+
+    SECTION("Multiple recurssive wrappers of polymorphic types")
+    {
+        // https://github.com/mapbox/variant/issues/146
+        // (Visual Studio 2015 update 3)
+        using namespace mapbox::util;
+        struct Base;
+        struct Derived;
+        using Variant = variant<recursive_wrapper<Base>, recursive_wrapper<Derived>>;
+        struct Base { };
+        struct Derived : public Base { };
+        {
+            Base base;
+            Derived derived;
+            Variant v;
+            v = base;
+            v = derived; // compile error prior https://github.com/mapbox/variant/pull/147
+            CHECK(v.is<Derived>());
+        }
+        {
+            Derived derived;
+            Variant v(derived); // compile error prior https://github.com/mapbox/variant/pull/147
+            CHECK(v.is<Derived>());
+        }
+
+
     }
 }

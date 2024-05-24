@@ -1,4 +1,4 @@
-// @EXPECTED: enable_if
+// @EXPECTED: no matching .*\<function for call to .*\<get\>
 
 #include <mapbox/variant.hpp>
 

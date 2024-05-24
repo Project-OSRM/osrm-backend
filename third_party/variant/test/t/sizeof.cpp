@@ -1,4 +1,3 @@
-
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -15,7 +14,7 @@ struct some_struct
     std::string c;
 };
 
-using variant_internal_index_type = size_t;
+using variant_internal_index_type = mapbox::util::type_index_t;
 
 TEST_CASE("size of variants")
 {
