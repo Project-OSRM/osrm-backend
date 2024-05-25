@@ -15,7 +15,7 @@ RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
     mkdir build && \
     cd build && \
     cmake -DTBB_TEST=OFF -DCMAKE_BUILD_TYPE=Release ..  && \
-    cmake -j${NPROC} --build . && \
+    cmake --build . && \
     cmake --install .
 
 COPY . /src
