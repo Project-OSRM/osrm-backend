@@ -377,7 +377,7 @@ class TableAPI final : public BaseAPI
                                return util::json::Value(
                                    util::json::Number(from_alias<double>(duration) / 10.));
                            });
-            json_table.values.push_back(std::move(json_row));
+            json_table.values.emplace_back(util::json::Value{std::move(json_row)});
         }
         return json_table;
     }
@@ -406,7 +406,7 @@ class TableAPI final : public BaseAPI
                                return util::json::Value(util::json::Number(
                                    std::round(from_alias<double>(distance) * 10) / 10.));
                            });
-            json_table.values.push_back(std::move(json_row));
+            json_table.values.emplace_back(util::json::Value{std::move(json_row)});
         }
         return json_table;
     }
@@ -420,9 +420,9 @@ class TableAPI final : public BaseAPI
                       [&](const auto &cell)
                       {
                           util::json::Array row;
-                          row.values.push_back(util::json::Number(cell.row));
-                          row.values.push_back(util::json::Number(cell.column));
-                          json_table.values.push_back(std::move(row));
+                          row.values.emplace_back(util::json::Number(cell.row));
+                          row.values.emplace_back(util::json::Number(cell.column));
+                          json_table.values.emplace_back(util::json::Value{std::move(row)});
                       });
         return json_table;
     }
