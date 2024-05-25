@@ -409,9 +409,9 @@ jobs:
         path: |
           /usr/local/include/boost
           /usr/local/lib/libboost*
-        key: v1-boost-${{ runner.os }}-${{ runner.arch }}-${{ matrix.run-on }}
+        key: v1-boost-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}
         restore-keys: |
-          v1-boost-${{ runner.os }}-${{ runner.arch }}-${{ matrix.run-on }}
+          v1-boost-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}
 
     - name: Install Boost
       if: steps.cache-boost.outputs.cache-hit != 'true' && runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
