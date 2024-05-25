@@ -103,7 +103,6 @@ inline util::json::Array makeJsonArray(const std::vector<util::Coordinate> &inpu
 {
     util::json::Array coordinates;
 
-
     std::transform(input_coordinates.begin(),
                    input_coordinates.end(),
                    std::back_inserter(coordinates.values),

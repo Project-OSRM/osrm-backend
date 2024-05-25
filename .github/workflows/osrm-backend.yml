@@ -245,16 +245,6 @@ jobs:
           #   CXXCOMPILER: clang++-15
           #   ENABLE_CONAN: ON
 
-          - name: gcc-14-release
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-14
-            CXXCOMPILER: g++-14
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
-
           # - name: gcc-13-release
           #   continue-on-error: false
           #   node: 20
@@ -274,6 +264,15 @@ jobs:
           #   CCOMPILER: gcc-12
           #   CXXCOMPILER: g++-12
           #   CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+
+          - name: gcc-11-release
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-11
+            CXXCOMPILER: g++-11
 
           # - name: conan-linux-release-node
           #   build_node_package: true
