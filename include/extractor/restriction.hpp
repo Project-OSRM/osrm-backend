@@ -4,8 +4,6 @@
 #include "util/coordinate.hpp"
 #include "util/opening_hours.hpp"
 #include "util/typedefs.hpp"
-
-#include "mapbox/variant.hpp"
 #include "turn_path.hpp"
 #include <limits>
 
