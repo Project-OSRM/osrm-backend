@@ -58,8 +58,10 @@ struct CoordinateToJsonArray
     util::json::Array operator()(const util::Coordinate coordinate)
     {
         util::json::Array json_coordinate;
-        json_coordinate.values.emplace_back(util::json::Number{static_cast<double>(toFloating(coordinate.lon))});
-        json_coordinate.values.emplace_back(util::json::Number{static_cast<double>(toFloating(coordinate.lat))});
+        json_coordinate.values.emplace_back(
+            util::json::Number{static_cast<double>(toFloating(coordinate.lon))});
+        json_coordinate.values.emplace_back(
+            util::json::Number{static_cast<double>(toFloating(coordinate.lat))});
         return json_coordinate;
     }
 };

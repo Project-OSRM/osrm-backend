@@ -673,8 +673,8 @@ jobs:
         run: |
           python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
 
-  ci-complete:
-    runs-on: ubuntu-22.04
-    needs: [build-test-publish, docker-image, windows-release-node, benchmarks]
-    steps:
-    - run: echo "CI complete"
+  # ci-complete:
+  #   runs-on: ubuntu-22.04
+  #   needs: [build-test-publish, docker-image, windows-release-node, benchmarks]
+  #   steps:
+  #   - run: echo "CI complete"
