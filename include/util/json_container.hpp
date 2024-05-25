@@ -31,8 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JSON_CONTAINER_HPP
 #define JSON_CONTAINER_HPP
 
-#include <mapbox/variant.hpp>
-
+#include <variant>
+#include <boost/variant/recursive_wrapper.hpp>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -96,10 +96,10 @@ struct Null
  *
  * Dispatch on its type by either by using apply_visitor or its get function.
  */
-using Value = mapbox::util::variant<String,
-                                    Number,
-                                    mapbox::util::recursive_wrapper<Object>,
-                                    mapbox::util::recursive_wrapper<Array>,
+using Value = std::variant<String,
+                           Number,
+                                    boost::recursive_wrapper<Object>,
+                                    boost::recursive_wrapper<Array>,
                                     True,
                                     False,
                                     Null>;

@@ -24,7 +24,7 @@ osrm::Status run_match_json(const osrm::OSRM &osrm,
     }
     engine::api::ResultT result = json::Object();
     auto rc = osrm.Match(params, result);
-    json_result = result.get<json::Object>();
+    json_result = std::get<json::Object>(result);
     return rc;
 }
 
@@ -45,7 +45,7 @@ void test_match(bool use_json_only_api)
     const auto rc = run_match_json(osrm, params, json_result, use_json_only_api);
 
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
     const auto &tracepoints = json_result.values.at("tracepoints").get<json::Array>().values;
@@ -58,7 +58,7 @@ void test_match(bool use_json_only_api)
         if (waypoint.is<mapbox::util::recursive_wrapper<util::json::Object>>())
         {
             BOOST_CHECK(waypoint_check(waypoint));
-            const auto &waypoint_object = waypoint.get<json::Object>();
+            const auto &waypoint_object = std::get<json::Object>(waypoint);
             const auto matchings_index =
                 waypoint_object.values.at("matchings_index").get<json::Number>().value;
             const auto waypoint_index =
@@ -96,7 +96,7 @@ void test_match_skip_waypoints(bool use_json_only_api)
     const auto rc = run_match_json(osrm, params, json_result, use_json_only_api);
 
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
     BOOST_CHECK(json_result.values.find("tracepoints") == json_result.values.end());
@@ -118,7 +118,7 @@ void test_match_split(bool use_json_only_api)
     const auto rc = run_match_json(osrm, params, json_result, use_json_only_api);
 
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
     const auto &tracepoints = json_result.values.at("tracepoints").get<json::Array>().values;
@@ -133,7 +133,7 @@ void test_match_split(bool use_json_only_api)
         if (waypoint.is<mapbox::util::recursive_wrapper<util::json::Object>>())
         {
             BOOST_CHECK(waypoint_check(waypoint));
-            const auto &waypoint_object = waypoint.get<json::Object>();
+            const auto &waypoint_object = std::get<json::Object>(waypoint);
             const auto matchings_index =
                 waypoint_object.values.at("matchings_index").get<json::Number>().value;
             const auto waypoint_index =
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(test_match_fb_serialization)
     const auto rc = osrm.Match(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(result);
     auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
 
     BOOST_CHECK(!fb->error());
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(test_match_fb_serialization_skip_waypoints)
     const auto rc = osrm.Match(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(result);
     auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
 
     BOOST_CHECK(!fb->error());

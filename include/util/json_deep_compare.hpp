@@ -81,7 +81,7 @@ struct Comparator
 
             const auto &rhs_child = rhs.values.find(key)->second;
             const auto &lhs_child = lhs.values.find(key)->second;
-            auto is_same = mapbox::util::apply_visitor(
+            auto is_same = std::visit(
                 Comparator(reason, lhs_path + "." + key, rhs_path + "." + key),
                 lhs_child,
                 rhs_child);
@@ -105,7 +105,7 @@ struct Comparator
         for (auto i = 0UL; i < lhs.values.size(); ++i)
         {
             auto is_same =
-                mapbox::util::apply_visitor(Comparator(reason,
+                std::visit(Comparator(reason,
                                                        lhs_path + "[" + std::to_string(i) + "]",
                                                        rhs_path + "[" + std::to_string(i) + "]"),
                                             lhs.values[i],
@@ -151,7 +151,7 @@ struct Comparator
 
 inline bool compare(const Value &reference, const Value &result, std::string &reason)
 {
-    return mapbox::util::apply_visitor(
+    return std::visit(
         Comparator(reason, "reference", "result"), reference, result);
 }
 } // namespace osrm::util::json

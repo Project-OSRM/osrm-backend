@@ -57,7 +57,7 @@ int main(int argc, const char *argv[])
     // Execute routing request, this does the heavy lifting
     const auto status = osrm.Route(params, result);
 
-    auto &json_result = result.get<json::Object>();
+    auto &json_result = std::get<json::Object>(result);
     if (status == Status::Ok)
     {
         auto &routes = json_result.values["routes"].get<json::Array>();
@@ -80,7 +80,7 @@ int main(int argc, const char *argv[])
     }
     else if (status == Status::Error)
     {
-        const auto code = json_result.values["code"].get<json::String>().value;
+        const auto code = std::get<json::String>(json_result.values["code"]).value;
         const auto message = json_result.values["message"].get<json::String>().value;
 
         std::cout << "Code: " << code << "\n";

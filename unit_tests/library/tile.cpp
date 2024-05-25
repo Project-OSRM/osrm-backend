@@ -29,7 +29,7 @@ osrm::Status run_tile(const osrm::OSRM &osrm,
     }
     osrm::engine::api::ResultT result = std::string();
     auto rc = osrm.Tile(params, result);
-    string_result = result.get<std::string>();
+    string_result = std::get<std::string>(result);
     return rc;
 }
 

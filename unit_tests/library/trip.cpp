@@ -44,10 +44,10 @@ void test_roundtrip_response_for_locations_in_small_component(bool use_json_only
     const auto rc = run_trip_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = std::get<json::Array>(json_result.values.at("waypoints")).values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     const auto &trips = json_result.values.at("trips").get<json::Array>().values;
@@ -55,11 +55,11 @@ void test_roundtrip_response_for_locations_in_small_component(bool use_json_only
 
     for (const auto &waypoint : waypoints)
     {
-        const auto &waypoint_object = waypoint.get<json::Object>();
+        const auto &waypoint_object = std::get<json::Object>(waypoint);
 
-        const auto location = waypoint_object.values.at("location").get<json::Array>().values;
-        const auto longitude = location[0].get<json::Number>().value;
-        const auto latitude = location[1].get<json::Number>().value;
+        const auto location = std::get<json::Array>(waypoint_object.values.at("location")).values;
+        const auto longitude = std::get<json::Number>(location[0]).value;
+        const auto latitude = std::get<json::Number>(location[1]).value;
         BOOST_CHECK(longitude >= -180. && longitude <= 180.);
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
 
@@ -95,7 +95,7 @@ void test_roundtrip_response_for_locations_in_small_component_skip_waypoints(boo
     const auto rc = run_trip_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
     BOOST_CHECK(json_result.values.find("waypoints") == json_result.values.end());
@@ -127,10 +127,10 @@ void test_roundtrip_response_for_locations_in_big_component(bool use_json_only_a
     const auto rc = run_trip_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = std::get<json::Array>(json_result.values.at("waypoints")).values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     const auto &trips = json_result.values.at("trips").get<json::Array>().values;
@@ -138,11 +138,11 @@ void test_roundtrip_response_for_locations_in_big_component(bool use_json_only_a
 
     for (const auto &waypoint : waypoints)
     {
-        const auto &waypoint_object = waypoint.get<json::Object>();
+        const auto &waypoint_object = std::get<json::Object>(waypoint);
 
-        const auto location = waypoint_object.values.at("location").get<json::Array>().values;
-        const auto longitude = location[0].get<json::Number>().value;
-        const auto latitude = location[1].get<json::Number>().value;
+        const auto location = std::get<json::Array>(waypoint_object.values.at("location")).values;
+        const auto longitude = std::get<json::Number>(location[0]).value;
+        const auto latitude = std::get<json::Number>(location[1]).value;
         BOOST_CHECK(longitude >= -180. && longitude <= 180.);
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
 
@@ -179,10 +179,10 @@ void test_roundtrip_response_for_locations_across_components(bool use_json_only_
     const auto rc = run_trip_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = std::get<json::Array>(json_result.values.at("waypoints")).values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     const auto &trips = json_result.values.at("trips").get<json::Array>().values;
@@ -192,11 +192,11 @@ void test_roundtrip_response_for_locations_across_components(bool use_json_only_
 
     for (const auto &waypoint : waypoints)
     {
-        const auto &waypoint_object = waypoint.get<json::Object>();
+        const auto &waypoint_object = std::get<json::Object>(waypoint);
 
-        const auto location = waypoint_object.values.at("location").get<json::Array>().values;
-        const auto longitude = location[0].get<json::Number>().value;
-        const auto latitude = location[1].get<json::Number>().value;
+        const auto location = std::get<json::Array>(waypoint_object.values.at("location")).values;
+        const auto longitude = std::get<json::Number>(location[0]).value;
+        const auto latitude = std::get<json::Number>(location[1]).value;
         BOOST_CHECK(longitude >= -180. && longitude <= 180.);
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
 
@@ -235,10 +235,10 @@ void test_tfse_1(bool use_json_only_api)
     const auto rc = run_trip_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = std::get<json::Array>(json_result.values.at("waypoints")).values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     const auto &trips = json_result.values.at("trips").get<json::Array>().values;
@@ -246,11 +246,11 @@ void test_tfse_1(bool use_json_only_api)
 
     for (const auto &waypoint : waypoints)
     {
-        const auto &waypoint_object = waypoint.get<json::Object>();
+        const auto &waypoint_object = std::get<json::Object>(waypoint);
 
-        const auto location = waypoint_object.values.at("location").get<json::Array>().values;
-        const auto longitude = location[0].get<json::Number>().value;
-        const auto latitude = location[1].get<json::Number>().value;
+        const auto location = std::get<json::Array>(waypoint_object.values.at("location")).values;
+        const auto longitude = std::get<json::Number>(location[0]).value;
+        const auto latitude = std::get<json::Number>(location[1]).value;
         BOOST_CHECK(longitude >= -180. && longitude <= 180.);
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
 
@@ -283,10 +283,10 @@ void test_tfse_2(bool use_json_only_api)
     const auto rc = run_trip_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = std::get<json::Array>(json_result.values.at("waypoints")).values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     const auto &trips = json_result.values.at("trips").get<json::Array>().values;
@@ -294,11 +294,11 @@ void test_tfse_2(bool use_json_only_api)
 
     for (const auto &waypoint : waypoints)
     {
-        const auto &waypoint_object = waypoint.get<json::Object>();
+        const auto &waypoint_object = std::get<json::Object>(waypoint);
 
-        const auto location = waypoint_object.values.at("location").get<json::Array>().values;
-        const auto longitude = location[0].get<json::Number>().value;
-        const auto latitude = location[1].get<json::Number>().value;
+        const auto location = std::get<json::Array>(waypoint_object.values.at("location")).values;
+        const auto longitude = std::get<json::Number>(location[0]).value;
+        const auto latitude = std::get<json::Number>(location[1]).value;
         BOOST_CHECK(longitude >= -180. && longitude <= 180.);
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
 
@@ -512,7 +512,7 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_fb_serialization)
     const auto rc = osrm.Trip(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(result);
     auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
 
     BOOST_CHECK(!fb->error());
@@ -556,7 +556,7 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_fb_serialization_skip_waypoints)
     const auto rc = osrm.Trip(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(result);
     auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
 
     BOOST_CHECK(!fb->error());

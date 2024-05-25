@@ -46,7 +46,7 @@ void test_table_three_coords_one_source_one_dest_matrix(bool use_json_only_api)
     const auto rc = run_table_json(osrm, params, json_result, use_json_only_api);
 
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
     // check that returned durations error is expected size and proportions
@@ -115,7 +115,7 @@ void test_table_three_coords_one_source_one_dest_matrix_no_waypoints(bool use_js
     const auto rc = run_table_json(osrm, params, json_result, use_json_only_api);
 
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
     // check that returned durations error is expected size and proportions
@@ -170,7 +170,7 @@ void test_table_three_coords_one_source_matrix(bool use_json_only_api)
     const auto rc = run_table_json(osrm, params, json_result, use_json_only_api);
 
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
     // check that returned durations error is expected size and proportions
@@ -225,7 +225,7 @@ void test_table_three_coordinates_matrix(bool use_json_only_api)
     const auto rc = run_table_json(osrm, params, json_result, use_json_only_api);
 
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
     // check that returned durations error is expected size and proportions
@@ -278,7 +278,7 @@ void test_table_no_segment_for_some_coordinates(bool use_json_only_api)
     const auto rc = run_table_json(osrm, params, json_result, use_json_only_api);
 
     BOOST_CHECK(rc == Status::Error);
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "NoSegment");
     const auto message = json_result.values.at("message").get<json::String>().value;
     BOOST_CHECK_EQUAL(message, "Could not find a matching segment for coordinate 0");
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(test_table_serialiaze_fb)
 
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(result);
     auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
     BOOST_CHECK(!fb->error());
     BOOST_CHECK(fb->table() != nullptr);
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(test_table_serialiaze_fb_no_waypoints)
 
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(result);
     auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
     BOOST_CHECK(!fb->error());
     BOOST_CHECK(fb->table() != nullptr);

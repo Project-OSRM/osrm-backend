@@ -232,7 +232,7 @@ try
         {
             engine::api::ResultT result = json::Object();
             const auto rc = osrm.Match(params, result);
-            auto &json_result = result.get<json::Object>();
+            auto &json_result = std::get<json::Object>(result);
             if (rc != Status::Ok ||
                 json_result.values.at("matchings").get<json::Array>().values.size() != 1)
             {

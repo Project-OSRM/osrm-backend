@@ -50,14 +50,14 @@ class TableAPI final : public BaseAPI
                  const std::vector<TableCellRef> &fallback_speed_cells,
                  osrm::engine::api::ResultT &response) const
     {
-        if (response.is<flatbuffers::FlatBufferBuilder>())
+        if (std::holds_alternative<flatbuffers::FlatBufferBuilder>(response))
         {
-            auto &fb_result = response.get<flatbuffers::FlatBufferBuilder>();
+            auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(response);
             MakeResponse(tables, candidates, fallback_speed_cells, fb_result);
         }
         else
         {
-            auto &json_result = response.get<util::json::Object>();
+            auto &json_result = std::get<util::json::Object>(response);
             MakeResponse(tables, candidates, fallback_speed_cells, json_result);
         }
     }

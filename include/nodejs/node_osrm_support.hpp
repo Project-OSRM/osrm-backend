@@ -72,7 +72,7 @@ template <> Napi::Value inline render(const Napi::Env &env, const ObjectOrString
     {
         // Return the string object as a node Buffer
         return Napi::Buffer<char>::Copy(
-            env, result.get<std::string>().data(), result.get<std::string>().size());
+            env, std::get<std::string>(result).data(), std::get<std::string>(result).size());
     }
 }
 

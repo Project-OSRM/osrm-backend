@@ -29,14 +29,14 @@ class NearestAPI final : public BaseAPI
         BOOST_ASSERT(phantom_nodes.size() == 1);
         BOOST_ASSERT(parameters.coordinates.size() == 1);
 
-        if (response.is<flatbuffers::FlatBufferBuilder>())
+        if (std::holds_alternative<flatbuffers::FlatBufferBuilder>(response))
         {
-            auto &fb_result = response.get<flatbuffers::FlatBufferBuilder>();
+            auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(response);
             MakeResponse(phantom_nodes, fb_result);
         }
         else
         {
-            auto &json_result = response.get<util::json::Object>();
+            auto &json_result = std::get<util::json::Object>(response);
             MakeResponse(phantom_nodes, json_result);
         }
     }

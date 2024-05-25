@@ -59,35 +59,35 @@ template <typename Out> struct Renderer
         write(buffer.data(), buffer.size());
     }
 
-    void operator()(const Object &object)
+    void operator()(const boost::recursive_wrapper<Object> &)
     {
-        write('{');
-        for (auto it = object.values.begin(), end = object.values.end(); it != end;)
-        {
-            write('\"');
-            write(it->first);
-            write<>("\":");
-            mapbox::util::apply_visitor(Renderer(out), it->second);
-            if (++it != end)
-            {
-                write(',');
-            }
-        }
-        write('}');
+        // write('{');
+        // for (auto it = object.values.begin(), end = object.values.end(); it != end;)
+        // {
+        //     write('\"');
+        //     write(it->first);
+        //     write<>("\":");
+        //     std::visit(Renderer(out), it->second);
+        //     if (++it != end)
+        //     {
+        //         write(',');
+        //     }
+        // }
+        // write('}');
     }
 
-    void operator()(const Array &array)
+    void operator()(const boost::recursive_wrapper<Array> &)
     {
-        write('[');
-        for (auto it = array.values.cbegin(), end = array.values.cend(); it != end;)
-        {
-            mapbox::util::apply_visitor(Renderer(out), *it);
-            if (++it != end)
-            {
-                write(',');
-            }
-        }
-        write(']');
+        // write('[');
+        // for (auto it = array.values.cbegin(), end = array.values.cend(); it != end;)
+        // {
+        //     std::visit(Renderer(out), *it);
+        //     if (++it != end)
+        //     {
+        //         write(',');
+        //     }
+        // }
+        // write(']');
     }
 
     void operator()(const True &) { write<>("true"); }
