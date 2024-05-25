@@ -3,12 +3,9 @@ ARG DOCKER_TAG
 ARG BUILD_CONCURRENCY
 RUN mkdir -p /src  && mkdir -p /opt
 
-# Add the testing repository
-RUN echo "deb http://deb.debian.org/debian testing main" > /etc/apt/sources.list.d/testing.list
-
 RUN apt-get update && \
     apt-get -y --no-install-recommends install ca-certificates cmake make git gcc g++ libbz2-dev libxml2-dev wget \
-    libzip-dev libboost1.83-all-dev lua5.4 liblua5.4-dev pkg-config -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
+    libzip-dev libboost1.81-all-dev lua5.4 liblua5.4-dev pkg-config -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
 
 RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
     ldconfig /usr/local/lib && \
@@ -51,13 +48,10 @@ FROM debian:bullseye-slim as runstage
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
 
-# Add the testing repository
-RUN echo "deb http://deb.debian.org/debian testing main" > /etc/apt/sources.list.d/testing.list
-
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libboost-program-options1.83.0 libboost-regex1.83.0 \
-        libboost-date-time1.83.0 libboost-chrono1.83.0 libboost-filesystem1.83.0 \
-        libboost-iostreams1.83.0 libboost-system1.83.0 libboost-thread1.83.0 \
+    apt-get install -y --no-install-recommends libboost-program-options1.81.0 libboost-regex1.81.0 \
+        libboost-date-time1.81.0 libboost-chrono1.81.0 libboost-filesystem1.81.0 \
+        libboost-iostreams1.81.0 libboost-system1.81.0 libboost-thread1.81.0 \
         expat liblua5.4-0 && \
     rm -rf /var/lib/apt/lists/* && \
 # add /usr/local/lib to ldconfig to allow loading libraries from there
