@@ -255,15 +255,15 @@ jobs:
             CXXCOMPILER: g++-13
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          # - name: gcc-12-release
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: gcc-12
-          #   CXXCOMPILER: g++-12
-          #   CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+          - name: gcc-12-release
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-12
+            CXXCOMPILER: g++-12
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
           # - name: gcc-11-release
           #   continue-on-error: false
