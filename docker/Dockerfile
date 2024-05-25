@@ -3,6 +3,9 @@ ARG DOCKER_TAG
 ARG BUILD_CONCURRENCY
 RUN mkdir -p /src  && mkdir -p /opt
 
+# Add the testing repository
+RUN echo "deb http://deb.debian.org/debian testing main" > /etc/apt/sources.list.d/testing.list
+
 RUN apt-get update && \
     apt-get -y --no-install-recommends install ca-certificates cmake make git gcc g++ libbz2-dev libxml2-dev wget \
     libzip-dev libboost1.83-all-dev lua5.4 liblua5.4-dev pkg-config -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
@@ -47,6 +50,9 @@ FROM debian:bullseye-slim as runstage
 
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
+
+# Add the testing repository
+RUN echo "deb http://deb.debian.org/debian testing main" > /etc/apt/sources.list.d/testing.list
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends libboost-program-options1.83.0 libboost-regex1.83.0 \
