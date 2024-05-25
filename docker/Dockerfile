@@ -8,9 +8,8 @@ RUN apt-get update && \
     libzip-dev libboost1.74-all-dev lua5.4 liblua5.4-dev pkg-config -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
 
 RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
-    export CXXFLAGS="-Wno-stringop-overflow" && \
     ldconfig /usr/local/lib && \
-    git clone --branch v2021.3.0 --single-branch https://github.com/oneapi-src/oneTBB.git && \
+    git clone --branch v2021.12.0 --single-branch https://github.com/oneapi-src/oneTBB.git && \
     cd oneTBB && \
     mkdir build && \
     cd build && \
