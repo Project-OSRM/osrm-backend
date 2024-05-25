@@ -159,7 +159,7 @@ class RouteAPI : public BaseAPI
 
     template <typename ForwardIter>
     std::variant<flatbuffers::Offset<flatbuffers::String>,
-                          flatbuffers::Offset<flatbuffers::Vector<const fbresult::Position *>>>
+                 flatbuffers::Offset<flatbuffers::Vector<const fbresult::Position *>>>
     MakeGeometry(flatbuffers::FlatBufferBuilder &builder, ForwardIter begin, ForwardIter end) const
     {
         if (parameters.geometries == RouteParameters::GeometriesType::Polyline)
@@ -409,7 +409,7 @@ class RouteAPI : public BaseAPI
         // Fill geometry
         auto overview = MakeOverview(leg_geometries);
         std::variant<flatbuffers::Offset<flatbuffers::String>,
-                              flatbuffers::Offset<flatbuffers::Vector<const fbresult::Position *>>>
+                     flatbuffers::Offset<flatbuffers::Vector<const fbresult::Position *>>>
             geometry;
         if (overview)
         {
@@ -426,8 +426,7 @@ class RouteAPI : public BaseAPI
         routeObject.add_legs(legs_vector);
         if (overview)
         {
-            std::visit(GeometryVisitor<fbresult::RouteObjectBuilder>(routeObject),
-                                        geometry);
+            std::visit(GeometryVisitor<fbresult::RouteObjectBuilder>(routeObject), geometry);
         }
 
         return routeObject.Finish();

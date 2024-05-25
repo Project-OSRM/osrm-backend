@@ -147,7 +147,7 @@ inline void async(const Napi::CallbackInfo &info,
                 osrm::engine::api::ResultT r;
                 r = osrm::util::json::Object();
                 const auto status = ((*osrm).*(service))(*params, r);
-                auto &json_result = r.get<osrm::json::Object>();
+                auto &json_result = std::get<osrm::json::Object>(r);
                 ParseResult(status, json_result);
                 if (pluginParams.renderToBuffer)
                 {

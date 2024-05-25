@@ -31,11 +31,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JSON_CONTAINER_HPP
 #define JSON_CONTAINER_HPP
 
-#include <variant>
 #include <boost/variant/recursive_wrapper.hpp>
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace osrm::util::json
@@ -96,13 +96,7 @@ struct Null
  *
  * Dispatch on its type by either by using apply_visitor or its get function.
  */
-using Value = std::variant<String,
-                           Number,
-                                    Object,
-                                    Array,
-                                    True,
-                                    False,
-                                    Null>;
+using Value = std::variant<String, Number, Object, Array, True, False, Null>;
 
 /**
  * Typed Object.

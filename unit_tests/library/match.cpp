@@ -64,11 +64,10 @@ void test_match(bool use_json_only_api)
                 std::get<json::Number>(waypoint_object.values.at("matchings_index")).value;
             const auto waypoint_index =
                 std::get<json::Number>(waypoint_object.values.at("waypoint_index")).value;
-            const auto &route_legs = std::get<json::Array>(std::get<json::Object>(matchings[matchings_index]
-                                         )
-                                         .values.at("legs")
-                                         )
-                                         .values;
+            const auto &route_legs =
+                std::get<json::Array>(
+                    std::get<json::Object>(matchings[matchings_index]).values.at("legs"))
+                    .values;
             BOOST_CHECK_LT(waypoint_index, route_legs.size() + 1);
             BOOST_CHECK_LT(matchings_index, number_of_matchings);
         }
@@ -122,7 +121,7 @@ void test_match_split(bool use_json_only_api)
     const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &tracepoints =std::get<json::Array>(json_result.values.at("tracepoints")).values;
+    const auto &tracepoints = std::get<json::Array>(json_result.values.at("tracepoints")).values;
     BOOST_CHECK_EQUAL(tracepoints.size(), params.coordinates.size());
 
     const auto &matchings = std::get<json::Array>(json_result.values.at("matchings")).values;
@@ -136,7 +135,7 @@ void test_match_split(bool use_json_only_api)
             BOOST_CHECK(waypoint_check(waypoint));
             const auto &waypoint_object = std::get<json::Object>(waypoint);
             const auto matchings_index =
-               std::get<json::Number>(waypoint_object.values.at("matchings_index")).value;
+                std::get<json::Number>(waypoint_object.values.at("matchings_index")).value;
             const auto waypoint_index =
                 std::get<json::Number>(waypoint_object.values.at("waypoint_index")).value;
 

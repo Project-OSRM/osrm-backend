@@ -54,8 +54,8 @@ void test_route_same_coordinates_fixture(bool use_json_only_api)
         std::get<json::Object>(itr).values["hint"] = "";
 
         // Round value to 6 decimal places for double comparison later
-        std::get<json::Object>(itr).values["distance"] =
-            round(std::get<json::Number>(std::get<json::Object>(itr).values["distance"]).value * 1000000);
+        std::get<json::Object>(itr).values["distance"] = round(
+            std::get<json::Number>(std::get<json::Object>(itr).values["distance"]).value * 1000000);
     }
 
     const auto location = json::Array{{{7.437070}, {43.749248}}};
@@ -221,14 +221,17 @@ void test_route_same_coordinates(bool use_json_only_api)
             {
                 const auto &step_object = std::get<json::Object>(step);
 
-                const auto distance = std::get<json::Number>(step_object.values.at("distance")).value;
+                const auto distance =
+                    std::get<json::Number>(step_object.values.at("distance")).value;
                 BOOST_CHECK_EQUAL(distance, 0);
 
-                const auto duration = std::get<json::Number>(step_object.values.at("duration")).value;
+                const auto duration =
+                    std::get<json::Number>(step_object.values.at("duration")).value;
                 BOOST_CHECK_EQUAL(duration, 0);
 
                 // geometries=polyline by default
-                const auto geometry = std::get<json::String>(step_object.values.at("geometry")).value;
+                const auto geometry =
+                    std::get<json::String>(step_object.values.at("geometry")).value;
                 BOOST_CHECK(!geometry.empty());
 
                 // nothing can be said about name, empty or contains way name
@@ -239,7 +242,8 @@ void test_route_same_coordinates(bool use_json_only_api)
                 const auto mode = std::get<json::String>(step_object.values.at("mode")).value;
                 BOOST_CHECK(!name.empty());
 
-                const auto &maneuver = std::get<json::Object>(step_object.values.at("maneuver")).values;
+                const auto &maneuver =
+                    std::get<json::Object>(step_object.values.at("maneuver")).values;
 
                 const auto type = std::get<json::String>(maneuver.at("type")).value;
                 BOOST_CHECK(!type.empty());
@@ -260,7 +264,8 @@ void test_route_same_coordinates(bool use_json_only_api)
                     const auto &bearings =
                         std::get<json::Array>(intersection_object.at("bearings")).values;
                     BOOST_CHECK(!bearings.empty());
-                    const auto &entries = std::get<json::Array>(intersection_object.at("entry")).values;
+                    const auto &entries =
+                        std::get<json::Array>(intersection_object.at("entry")).values;
                     BOOST_CHECK(bearings.size() == entries.size());
 
                     for (const auto &bearing : bearings)
@@ -274,7 +279,8 @@ void test_route_same_coordinates(bool use_json_only_api)
                     }
                     if (step_count + 1 < steps.size())
                     {
-                        const auto out = std::get<json::Number>(intersection_object.at("out")).value;
+                        const auto out =
+                            std::get<json::Number>(intersection_object.at("out")).value;
                         BOOST_CHECK(out < bearings.size());
                     }
                 }
@@ -523,7 +529,8 @@ void speed_annotation_matches_duration_and_distance(bool use_json_only_api)
     BOOST_CHECK(rc == Status::Ok);
 
     const auto &routes = std::get<json::Array>(json_result.values["routes"]).values;
-    const auto &legs = std::get<json::Array>(std::get<json::Object>(routes[0]).values.at("legs")).values;
+    const auto &legs =
+        std::get<json::Array>(std::get<json::Object>(routes[0]).values.at("legs")).values;
     const auto &annotation =
         std::get<json::Object>(std::get<json::Object>(legs[0]).values.at("annotation"));
     const auto &speeds = std::get<json::Array>(annotation.values.at("speed")).values;
@@ -573,16 +580,16 @@ void test_manual_setting_of_annotations_property(bool use_json_only_api)
     const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    auto annotations = std::get<json::Object>(
-    std::get<json::Object>(
-        std::get<json::Array>(
+    auto annotations =
+        std::get<json::Object>(
             std::get<json::Object>(
-                std::get<json::Array>(json_result.values["routes"])
-            .values[0])
-        .values["legs"])
-    .values[0])
-.values["annotation"])
-.values;
+                std::get<json::Array>(
+                    std::get<json::Object>(
+                        std::get<json::Array>(json_result.values["routes"]).values[0])
+                        .values["legs"])
+                    .values[0])
+                .values["annotation"])
+            .values;
     BOOST_CHECK_EQUAL(annotations.size(), 7);
 }
 BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property_old_api)

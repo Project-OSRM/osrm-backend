@@ -28,6 +28,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include <exception>
@@ -50,7 +51,7 @@ struct PluginParameters
     bool renderToBuffer = false;
 };
 
-using ObjectOrString = typename mapbox::util::variant<osrm::json::Object, std::string>;
+using ObjectOrString = typename std::variant<osrm::json::Object, std::string>;
 
 template <typename ResultT> inline Napi::Value render(const Napi::Env &env, const ResultT &result);
 
@@ -61,7 +62,7 @@ template <> Napi::Value inline render(const Napi::Env &env, const std::string &r
 
 template <> Napi::Value inline render(const Napi::Env &env, const ObjectOrString &result)
 {
-    if (result.is<osrm::json::Object>())
+    if (std::holds_alternative<osrm::json::Object>(result))
     {
         // Convert osrm::json object tree into matching v8 object tree
         Napi::Value value;
@@ -95,7 +96,7 @@ inline void ParseResult(const osrm::Status &result_status, osrm::json::Object &r
 
     if (result_status == osrm::Status::Error)
     {
-        throw std::logic_error(code_iter->second.get<osrm::json::String>().value.c_str());
+        throw std::logic_error(std::get<osrm::json::String>(code_iter->second).value.c_str());
     }
 
     result.values.erase(code_iter);

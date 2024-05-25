@@ -16,7 +16,8 @@ inline bool waypoint_check(osrm::json::Value waypoint)
         throw util::exception("Must pass in a waypoint object");
     }
     const auto waypoint_object = std::get<json::Object>(waypoint);
-    const auto waypoint_location = std::get<json::Array>(waypoint_object.values.at("location")).values;
+    const auto waypoint_location =
+        std::get<json::Array>(waypoint_object.values.at("location")).values;
     util::FloatLongitude lon{std::get<json::Number>(waypoint_location[0]).value};
     util::FloatLatitude lat{std::get<json::Number>(waypoint_location[1]).value};
     util::Coordinate location_coordinate(lon, lat);

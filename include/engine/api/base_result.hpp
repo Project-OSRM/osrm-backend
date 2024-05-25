@@ -10,8 +10,7 @@
 
 namespace osrm::engine::api
 {
-using ResultT =
-    std::variant<util::json::Object, std::string, flatbuffers::FlatBufferBuilder>;
+using ResultT = std::variant<util::json::Object, std::string, flatbuffers::FlatBufferBuilder>;
 } // namespace osrm::engine::api
 
 #endif

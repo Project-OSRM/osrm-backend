@@ -135,7 +135,7 @@ void test_table_three_coords_one_source_one_dest_matrix_no_waypoints(bool use_js
     BOOST_CHECK_EQUAL(distances_array.size(), params.sources.size());
     for (unsigned int i = 0; i < distances_array.size(); i++)
     {
-        const auto distances_matrix =std::get<json::Array>(distances_array[i]).values;
+        const auto distances_matrix = std::get<json::Array>(distances_array[i]).values;
         BOOST_CHECK_EQUAL(distances_matrix.size(),
                           params.sources.size() * params.destinations.size());
     }
