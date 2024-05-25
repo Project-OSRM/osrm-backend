@@ -21,6 +21,7 @@ COPY . /src
 WORKDIR /src
 
 RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
+    export CXXFLAGS="-Wno-array-bounds -Wno-uninitialized" && \
     echo "Building OSRM ${DOCKER_TAG}" && \
     git show --format="%H" | head -n1 > /opt/OSRM_GITSHA && \
     echo "Building OSRM gitsha $(cat /opt/OSRM_GITSHA)" && \
