@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JSON_CONTAINER_HPP
 #define JSON_CONTAINER_HPP
 
-#include <boost/variant/recursive_wrapper.hpp>
 #include <string>
 #include <unordered_map>
 #include <utility>
