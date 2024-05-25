@@ -1,6 +1,8 @@
-#ifndef SOURCE_MACROS_HPP
-#define SOURCE_MACROS_HPP
+#ifndef EXCEPTION_UTILS_HPP
+#define EXCEPTION_UTILS_HPP
+
 #include <cstring>
+#include <string>
 
 // Helper macros, don't use these ones
 // STRIP the OSRM_PROJECT_DIR from the front of a filename.  Expected to come
@@ -12,4 +14,4 @@
 // This is the macro to use
 #define SOURCE_REF (OSRM_SOURCE_FILE_ + ":" + std::to_string(__LINE__))
 
-#endif // SOURCE_MACROS_HPP
+#endif // EXCEPTION_UTILS_HPP

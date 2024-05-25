@@ -10,7 +10,6 @@ extern "C"
 
 #include <boost/filesystem.hpp>
 
-#include <iostream>
 #include <string>
 
 namespace osrm::util

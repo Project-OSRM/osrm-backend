@@ -9,8 +9,6 @@
 #include <limits>
 #include <string>
 
-#include <iostream>
-
 namespace osrm::extractor
 {
 
