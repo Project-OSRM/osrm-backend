@@ -102,10 +102,14 @@ inline util::json::Object makeFeature(std::string type,
 inline util::json::Array makeJsonArray(const std::vector<util::Coordinate> &input_coordinates)
 {
     util::json::Array coordinates;
+
+    CoordinateToJsonArray converter;
+
     std::transform(input_coordinates.begin(),
                    input_coordinates.end(),
                    std::back_inserter(coordinates.values),
-                   CoordinateToJsonArray());
+                   [&converter](const auto &coordinate)
+                   { return json::Value{converter(coordinate)}; });
     return coordinates;
 }
 } // namespace osrm::util
