@@ -55,7 +55,7 @@ inline util::json::Object makeStyle(const GeojsonStyleSize size_type,
 
 struct CoordinateToJsonArray
 {
-    util::json::Array operator()(const util::Coordinate coordinate)
+    util::json::Value operator()(const util::Coordinate coordinate)
     {
         util::json::Array json_coordinate;
         json_coordinate.values.emplace_back(
@@ -75,7 +75,7 @@ struct NodeIdToCoordinate
 
     const std::vector<util::Coordinate> &node_coordinates;
 
-    util::json::Array operator()(const NodeID nid)
+    util::json::Value operator()(const NodeID nid)
     {
         auto coordinate = node_coordinates[nid];
         CoordinateToJsonArray converter;
@@ -103,13 +103,11 @@ inline util::json::Array makeJsonArray(const std::vector<util::Coordinate> &inpu
 {
     util::json::Array coordinates;
 
-    CoordinateToJsonArray converter;
 
     std::transform(input_coordinates.begin(),
                    input_coordinates.end(),
                    std::back_inserter(coordinates.values),
-                   [&converter](const auto &coordinate)
-                   { return json::Value{converter(coordinate)}; });
+                   CoordinateToJsonArray());
     return coordinates;
 }
 } // namespace osrm::util
