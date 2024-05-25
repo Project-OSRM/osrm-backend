@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim as builder
+FROM debian:bookworm-slim as builder
 ARG DOCKER_TAG
 ARG BUILD_CONCURRENCY
 RUN mkdir -p /src  && mkdir -p /opt
