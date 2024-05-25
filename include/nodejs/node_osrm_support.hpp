@@ -65,7 +65,7 @@ template <> Napi::Value inline render(const Napi::Env &env, const ObjectOrString
     {
         // Convert osrm::json object tree into matching v8 object tree
         Napi::Value value;
-        renderToV8(env, value, result.get<osrm::json::Object>());
+        renderToV8(env, value, std::get<osrm::json::Object>(result));
         return value;
     }
     else

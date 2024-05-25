@@ -1,4 +1,5 @@
 #include <boost/test/unit_test.hpp>
+#include <variant>
 
 #include "coordinates.hpp"
 #include "fixture.hpp"
@@ -48,32 +49,32 @@ void test_match(bool use_json_only_api)
     const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &tracepoints = json_result.values.at("tracepoints").get<json::Array>().values;
+    const auto &tracepoints = std::get<json::Array>(json_result.values.at("tracepoints")).values;
     BOOST_CHECK_EQUAL(tracepoints.size(), params.coordinates.size());
 
-    const auto &matchings = json_result.values.at("matchings").get<json::Array>().values;
+    const auto &matchings = std::get<json::Array>(json_result.values.at("matchings")).values;
     const auto &number_of_matchings = matchings.size();
     for (const auto &waypoint : tracepoints)
     {
-        if (waypoint.is<mapbox::util::recursive_wrapper<util::json::Object>>())
+        if (std::holds_alternative<util::json::Object>(waypoint))
         {
             BOOST_CHECK(waypoint_check(waypoint));
             const auto &waypoint_object = std::get<json::Object>(waypoint);
             const auto matchings_index =
-                waypoint_object.values.at("matchings_index").get<json::Number>().value;
+                std::get<json::Number>(waypoint_object.values.at("matchings_index")).value;
             const auto waypoint_index =
-                waypoint_object.values.at("waypoint_index").get<json::Number>().value;
-            const auto &route_legs = matchings[matchings_index]
-                                         .get<json::Object>()
+                std::get<json::Number>(waypoint_object.values.at("waypoint_index")).value;
+            const auto &route_legs = std::get<json::Array>(std::get<json::Object>(matchings[matchings_index]
+                                         )
                                          .values.at("legs")
-                                         .get<json::Array>()
+                                         )
                                          .values;
             BOOST_CHECK_LT(waypoint_index, route_legs.size() + 1);
             BOOST_CHECK_LT(matchings_index, number_of_matchings);
         }
         else
         {
-            BOOST_CHECK(waypoint.is<json::Null>());
+            BOOST_CHECK(std::holds_alternative<json::Null>(waypoint));
         }
     }
 }
@@ -121,23 +122,23 @@ void test_match_split(bool use_json_only_api)
     const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &tracepoints = json_result.values.at("tracepoints").get<json::Array>().values;
+    const auto &tracepoints =std::get<json::Array>(json_result.values.at("tracepoints")).values;
     BOOST_CHECK_EQUAL(tracepoints.size(), params.coordinates.size());
 
-    const auto &matchings = json_result.values.at("matchings").get<json::Array>().values;
+    const auto &matchings = std::get<json::Array>(json_result.values.at("matchings")).values;
     const auto &number_of_matchings = matchings.size();
     BOOST_CHECK_EQUAL(number_of_matchings, 2);
     std::size_t current_matchings_index = 0, expected_waypoint_index = 0;
     for (const auto &waypoint : tracepoints)
     {
-        if (waypoint.is<mapbox::util::recursive_wrapper<util::json::Object>>())
+        if (std::holds_alternative<util::json::Object>(waypoint))
         {
             BOOST_CHECK(waypoint_check(waypoint));
             const auto &waypoint_object = std::get<json::Object>(waypoint);
             const auto matchings_index =
-                waypoint_object.values.at("matchings_index").get<json::Number>().value;
+               std::get<json::Number>(waypoint_object.values.at("matchings_index")).value;
             const auto waypoint_index =
-                waypoint_object.values.at("waypoint_index").get<json::Number>().value;
+                std::get<json::Number>(waypoint_object.values.at("waypoint_index")).value;
 
             BOOST_CHECK_LT(matchings_index, number_of_matchings);
 
@@ -150,7 +151,7 @@ void test_match_split(bool use_json_only_api)
         }
         else
         {
-            BOOST_CHECK(waypoint.is<json::Null>());
+            BOOST_CHECK(std::holds_alternative<json::Null>(waypoint));
         }
     }
 }

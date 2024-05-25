@@ -98,8 +98,8 @@ struct Null
  */
 using Value = std::variant<String,
                            Number,
-                                    boost::recursive_wrapper<Object>,
-                                    boost::recursive_wrapper<Array>,
+                                    Object,
+                                    Array,
                                     True,
                                     False,
                                     Null>;

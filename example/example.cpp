@@ -60,7 +60,7 @@ int main(int argc, const char *argv[])
     auto &json_result = std::get<json::Object>(result);
     if (status == Status::Ok)
     {
-        auto &routes = json_result.values["routes"].get<json::Array>();
+        auto &routes = std::get<json::Array>(json_result.values["routes"]);
 
         // Let's just use the first route
         auto &route = routes.values.at(0).get<json::Object>();

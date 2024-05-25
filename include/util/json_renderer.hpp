@@ -59,35 +59,35 @@ template <typename Out> struct Renderer
         write(buffer.data(), buffer.size());
     }
 
-    void operator()(const boost::recursive_wrapper<Object> &)
+    void operator()(const Object &object)
     {
-        // write('{');
-        // for (auto it = object.values.begin(), end = object.values.end(); it != end;)
-        // {
-        //     write('\"');
-        //     write(it->first);
-        //     write<>("\":");
-        //     std::visit(Renderer(out), it->second);
-        //     if (++it != end)
-        //     {
-        //         write(',');
-        //     }
-        // }
-        // write('}');
+        write('{');
+        for (auto it = object.values.begin(), end = object.values.end(); it != end;)
+        {
+            write('\"');
+            write(it->first);
+            write<>("\":");
+            std::visit(Renderer(out), it->second);
+            if (++it != end)
+            {
+                write(',');
+            }
+        }
+        write('}');
     }
 
-    void operator()(const boost::recursive_wrapper<Array> &)
+    void operator()(const Array &array)
     {
-        // write('[');
-        // for (auto it = array.values.cbegin(), end = array.values.cend(); it != end;)
-        // {
-        //     std::visit(Renderer(out), *it);
-        //     if (++it != end)
-        //     {
-        //         write(',');
-        //     }
-        // }
-        // write(']');
+        write('[');
+        for (auto it = array.values.cbegin(), end = array.values.cend(); it != end;)
+        {
+            std::visit(Renderer(out), *it);
+            if (++it != end)
+            {
+                write(',');
+            }
+        }
+        write(']');
     }
 
     void operator()(const True &) { write<>("true"); }
