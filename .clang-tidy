@@ -83,7 +83,6 @@ Checks: >
     -readability-make-member-function-const,
     -readability-redundant-string-init,
     -readability-non-const-parameter,
-    -readability-container-contains,
     -readability-static-accessed-through-instance
     
 WarningsAsErrors: '*'

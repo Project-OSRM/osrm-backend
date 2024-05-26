@@ -302,7 +302,7 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
     if (roundabout == circular)
         return RoundaboutType::None;
 
-    while (0 == roundabout_nodes.count(last_node))
+    while (!roundabout_nodes.contains(last_node))
     {
         // only count exits/entry locations
         if (node_based_graph.GetOutDegree(last_node) > 2)
@@ -346,7 +346,7 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
     // when we handle references separately or if the useage is more consistent
     const auto is_rotary = (1 == roundabout_name_ids.size()) &&
                            (circular ||                                                    //
-                            ((0 == connected_names.count(*roundabout_name_ids.begin())) && //
+                            ((!connected_names.contains(*roundabout_name_ids.begin())) && //
                              (radius > MAX_ROUNDABOUT_RADIUS)));
 
     if (is_rotary)
