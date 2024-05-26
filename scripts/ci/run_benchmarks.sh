@@ -30,7 +30,9 @@ function run_benchmarks_for_folder {
 
     # TODO: save results
     curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
-    locust -f locustfile.py --headless --users 10 --spawn-rate 1 --host http://localhost:5000 --run-time 1m
+    locust -f locustfile.py --headless --users 10 --spawn-rate 1 --host http://localhost:5000 --run-time 1m --csv=results
+
+    cat results_distribution.csv
 
     kill -0 $OSRM_ROUTED_PID
 }
