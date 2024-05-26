@@ -1,7 +1,7 @@
 import sys
 import csv
 
-def main(locust_csv_base_name, prefix, output_folder):
+def main(locust_csv_base_name, suffix, output_folder):
     with open(f"{locust_csv_base_name}_stats.csv", 'r') as file:
             reader = csv.DictReader(file)
             for row in reader:
@@ -10,6 +10,7 @@ def main(locust_csv_base_name, prefix, output_folder):
                 
                 statistics = f'''
 requests: {row['Request Count']}
+failures: {row['Failure Count']}
 req/s: {float(row['Requests/s']):.3f}req/s
 fail/s: {float(row['Failures/s']):.3f}fail/s
 avg: {float(row['Average Response Time']):.3f}ms
@@ -21,11 +22,11 @@ avg: {float(row['Average Response Time']):.3f}ms
 min: {float(row['Min Response Time']):.3f}ms
 max: {float(row['Max Response Time']):.3f}ms
 '''
-                with open(f"{output_folder}/{prefix}_{name}.bench", 'w') as f:
+                with open(f"{output_folder}/{name}_{suffix}.bench", 'w') as f:
                     f.write(statistics)
 
 if __name__ == '__main__':
     if len(sys.argv) != 4:
-        print(f"Usage: {sys.argv[0]} <locust csv base name> <prefix> <output folder>")
+        print(f"Usage: {sys.argv[0]} <locust csv base name> <suffix> <output folder>")
         sys.exit(1)
     main(sys.argv[1], sys.argv[2], sys.argv[3])
