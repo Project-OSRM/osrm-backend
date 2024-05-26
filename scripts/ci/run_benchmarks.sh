@@ -21,12 +21,12 @@ function run_benchmarks_for_folder {
     # ./$BENCHMARKS_FOLDER/rtree-bench "./$FOLDER/test/data/monaco.osrm.ramIndex" "./$FOLDER/test/data/monaco.osrm.fileIndex" "./$FOLDER/test/data/monaco.osrm.nbg_nodes" > "$RESULTS_FOLDER/rtree.bench"
 
     BINARIES_FOLDER="$FOLDER/build"
-    wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
     echo "PWD: $FOLDER"
-    $BINARIES_FOLDER/osrm-extract -p $FOLDER/profiles/car.lua $FOLDER/berlin-latest.osm.pbf
-    $BINARIES_FOLDER/osrm-partition $FOLDER/berlin-latest.osrm
-    $BINARIES_FOLDER/osrm-customize $FOLDER/berlin-latest.osrm
-    $BINARIES_FOLDER/osrm-routed --algorithm mld $FOLDER/berlin-latest.osrm &
+    cp ~/data.osm.pbf $FOLDER
+    $BINARIES_FOLDER/osrm-extract -p $FOLDER/profiles/car.lua $FOLDER/data.osm.pbf
+    $BINARIES_FOLDER/osrm-partition $FOLDER/data.osrm
+    $BINARIES_FOLDER/osrm-customize $FOLDER/data.osrm
+    $BINARIES_FOLDER/osrm-routed --algorithm mld $FOLDER/data.osrm &
     OSRM_ROUTED_PID=$!
 
     # TODO: save results

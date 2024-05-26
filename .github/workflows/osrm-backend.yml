@@ -640,13 +640,16 @@ jobs:
           key: v1-conan-benchmarks-${{ github.sha }}
           restore-keys: |
             v1-conan-benchmarks-
-      - run: pip install locust
+      - name: Prepare data
+        run: | 
+          wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
+      - name: Install dependencies
+        run: python3 -m pip install "conan<2.0.0" "requests==2.31.0" "locust==2.28.0"
       - name: Checkout PR Branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
           path: pr
-      - run: python3 -m pip install "conan<2.0.0" "requests==2.31.0"
       - name: Build PR Branch
         run: |
           mkdir -p pr/build
