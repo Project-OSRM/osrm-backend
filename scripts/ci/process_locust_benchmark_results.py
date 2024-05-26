@@ -32,6 +32,7 @@ avg: {float(row['Average Response Time']):.3f}ms
 95%: {row['95%']}ms
 98%: {row['98%']}ms
 99%: {row['99%']}ms   
+min: {float(row['Min Response Time']):.3f}ms
 max: {float(row['Max Response Time']):.3f}ms
 '''
                 with open(f"{output_folder}/{prefix}_{name}.bench", 'w') as f:
