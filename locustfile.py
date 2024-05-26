@@ -15,7 +15,7 @@ class OSRMTasks(TaskSet):
         with open(gps_traces_file_path, 'r') as file:
             reader = csv.DictReader(file)
             for row in reader:
-                coord = (row['Latitude'], row['Longitude'])
+                coord = (float(row['Latitude']), float(row['Longitude']))
                 self.coordinates.append(coord)
                 self.tracks[row['TrackID']].append(coord)
         self.track_ids = list(self.tracks.keys())
