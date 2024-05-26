@@ -12,7 +12,7 @@ on:
       - master
 
 env:
-  CCACHE_DIR: /home/runner/.ccache
+  CCACHE_DIR: ${{ env.HOME }}/.ccache
   CCACHE_TEMPDIR: /tmp/.ccache-temp
   CCACHE_COMPRESS: 1
   CASHER_TIME_OUT: 599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
@@ -607,10 +607,10 @@ jobs:
         omitNameDuringUpdate: true
         replacesArtifacts: true
         token: ${{ secrets.GITHUB_TOKEN }}
-     - name: Show CCache statistics
-       run: |
-          ccache -p
-          ccache -s
+    #  - name: Show CCache statistics
+    #    run: |
+    #       ccache -p
+    #       ccache -s
 
 
   benchmarks:
