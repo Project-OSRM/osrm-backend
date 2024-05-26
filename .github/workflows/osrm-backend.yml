@@ -101,7 +101,7 @@ jobs:
   #       npm audit --production
 
   docker-image:
-    needs: format-taginfo-docs
+    # needs: format-taginfo-docs
     runs-on: ubuntu-22.04
     continue-on-error: false
     steps:
