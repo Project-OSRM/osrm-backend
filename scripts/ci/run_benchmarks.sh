@@ -22,11 +22,11 @@ function run_benchmarks_for_folder {
 
     BINARIES_FOLDER="$FOLDER/build"
     wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
-    echo "PWD: $(pwd)"
-    $BINARIES_FOLDER/osrm-extract -p $(pwd)/profiles/car.lua $(pwd)/berlin-latest.osm.pbf
-    $BINARIES_FOLDER/osrm-partition $(pwd)/berlin-latest.osrm
-    $BINARIES_FOLDER/osrm-customize $(pwd)/berlin-latest.osrm
-    $BINARIES_FOLDER/osrm-routed --algorithm mld $(pwd)/berlin-latest.osrm &
+    echo "PWD: $FOLDER"
+    $BINARIES_FOLDER/osrm-extract -p $FOLDER/profiles/car.lua $FOLDER/berlin-latest.osm.pbf
+    $BINARIES_FOLDER/osrm-partition $FOLDER/berlin-latest.osrm
+    $BINARIES_FOLDER/osrm-customize $FOLDER/berlin-latest.osrm
+    $BINARIES_FOLDER/osrm-routed --algorithm mld $FOLDER/berlin-latest.osrm &
     OSRM_ROUTED_PID=$!
 
     # TODO: save results
