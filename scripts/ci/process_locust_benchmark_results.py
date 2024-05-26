@@ -7,12 +7,18 @@ def csv_is_empty(file_path):
         return len(lines) <= 1 
 
 def main(locust_csv_base_name, prefix, output_folder):
+    print(f"Processing locust benchmark results for {locust_csv_base_name}")
     if not csv_is_empty(f"{locust_csv_base_name}_exceptions.csv") or not csv_is_empty(f"{locust_csv_base_name}_failures.csv"):
         raise Exception("There are exceptions or failures in the locust benchmark")
-
+    print(f"Locust benchmark {locust_csv_base_name} has no exceptions or failures")
+    with open(f"{locust_csv_base_name}_stats.csv", 'r') as file:
+        print('Stats:', file.read())
+    
     with open(f"{locust_csv_base_name}_stats.csv", 'r') as file:
             reader = csv.DictReader(file)
             for row in reader:
+                print('Processing row:', row )
+
                 name = row['Name']
                 if name == 'Aggregated': continue
                 
