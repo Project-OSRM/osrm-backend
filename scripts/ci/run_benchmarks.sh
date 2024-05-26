@@ -11,7 +11,7 @@ function run_benchmarks_for_folder {
 
     BENCHMARKS_FOLDER="$FOLDER/build/src/benchmarks"
 
-    # ./$BENCHMARKS_FOLDER/match-bench "./$FOLDER/test/data/mld/monaco.osrm" mld > "$RESULTS_FOLDER/match_mld.bench"
+    ./$BENCHMARKS_FOLDER/match-bench "./$FOLDER/test/data/mld/monaco.osrm" mld > "$RESULTS_FOLDER/match_mld.bench"
     # ./$BENCHMARKS_FOLDER/match-bench "./$FOLDER/test/data/ch/monaco.osrm" ch > "$RESULTS_FOLDER/match_ch.bench"
     # ./$BENCHMARKS_FOLDER/route-bench "./$FOLDER/test/data/mld/monaco.osrm" mld > "$RESULTS_FOLDER/route_mld.bench"
     # ./$BENCHMARKS_FOLDER/route-bench "./$FOLDER/test/data/ch/monaco.osrm" ch > "$RESULTS_FOLDER/route_ch.bench"
@@ -42,20 +42,11 @@ function run_benchmarks_for_folder {
             --spawn-rate 1 \
             --host http://localhost:5000 \
             --run-time 1m \
-            --csv=results \
+            --csv=locust_results \
             --loglevel ERROR
 
-        echo "STATS: "
-        cat results_stats.csv
-        # echo "FAILURES: "
-        # cat results_failures.csv
-        # echo "EXCEPTIONS: "
-        # cat results_exceptions.csv
-        # echo "STATS HISTORY: "
-        # cat results_stats_history.csv
-# 2024-05-26T16:48:29.2826130Z Type,Name,Request Count,Failure Count,Median Response Time,Average Response Time,Min Response Time,Max Response Time,Average Content Size,Requests/s,Failures/s,50%,66%,75%,80%,90%,95%,98%,99%,99.9%,99.99%,100%
-# 2024-05-26T16:48:29.2827761Z GET,/route/v1/driving,7668,0,4,15.894057099894761,1.168323000001692,137.2044539999706,26387.300208659362,127.83539601258259,0.0,4,6,44,45,47,48,49,50,100,140,140
-# 2024-05-26T16:48:29.2829001Z ,Aggregated,7668,0,4,15.894057099894761,1.168323000001692,137.2044539999706,26387.300208659362,127.83539601258259,0.0,4,6,44,45,47,48,49,50,100,140,140
+        python3 $FOLDER/scripts/ci/process_locust_results.py locust_results mld $RESULTS_FOLDER
+
 
         kill -0 $OSRM_ROUTED_PID
     fi
