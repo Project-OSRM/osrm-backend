@@ -12,7 +12,7 @@ on:
       - master
 
 env:
-  CCACHE_DIR: ~/.ccache
+  CCACHE_DIR: /home/runner/.ccache
   CCACHE_TEMPDIR: /tmp/.ccache-temp
   CCACHE_COMPRESS: 1
   CASHER_TIME_OUT: 599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
@@ -359,7 +359,7 @@ jobs:
     - name: Enable compiler cache
       uses: actions/cache@v4
       with:
-        path: {{ env.CCACHE_DIR }}
+        path: ${{ env.CCACHE_DIR }}
         key: ccache-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
           ccache-${{ matrix.name }}-
@@ -629,7 +629,7 @@ jobs:
       - name: Enable compiler cache
         uses: actions/cache@v4
         with:
-          path: {{ env.CCACHE_DIR }}
+          path: ${{ env.CCACHE_DIR }}
           key: v1-ccache-benchmarks-${{ github.sha }}
           restore-keys: |
             v1-ccache-benchmarks-
