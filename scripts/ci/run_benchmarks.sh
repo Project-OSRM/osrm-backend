@@ -43,8 +43,8 @@ function run_benchmarks_for_folder {
         cat results_failures.csv
         echo "EXCEPTIONS: "
         cat results_exceptions.csv
-        echo "STATS HISTORY: "
-        cat results_stats_history.csv
+        # echo "STATS HISTORY: "
+        # cat results_stats_history.csv
 
 
         kill -0 $OSRM_ROUTED_PID
