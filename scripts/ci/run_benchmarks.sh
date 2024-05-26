@@ -34,6 +34,7 @@ function run_benchmarks_for_folder {
         $BINARIES_FOLDER/osrm-routed --algorithm mld $FOLDER/data.osrm &
         OSRM_ROUTED_PID=$!
 
+        # wait for osrm-routed to start
         curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
         locust -f $FOLDER/scripts/ci/locustfile.py \
             --headless \
@@ -45,13 +46,13 @@ function run_benchmarks_for_folder {
             --csv=locust_results \
             --loglevel ERROR
 
-        python3 $FOLDER/scripts/ci/process_locust_results.py locust_results mld $RESULTS_FOLDER
+        python3 $FOLDER/scripts/ci/process_locust_benchmark_results.py locust_results mld $RESULTS_FOLDER
 
 
         kill -0 $OSRM_ROUTED_PID
     fi
 }
 
-# run_benchmarks_for_folder $1 "${1}_results"
+run_benchmarks_for_folder $1 "${1}_results"
 run_benchmarks_for_folder $2 "${2}_results"
 

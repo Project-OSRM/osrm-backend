@@ -1,13 +1,13 @@
 import sys
 import csv
 
-def check_csv_is_empty(file_path):
+def csv_is_empty(file_path):
     with open(file_path, 'r') as file:
         lines = file.readlines()
         return len(lines) <= 1 
 
 def main(locust_csv_base_name, prefix, output_folder):
-    if not check_csv_is_empty(f"{locust_csv_base_name}_exceptions.csv") or not check_csv_is_empty(f"{locust_csv_base_name}_failures"):
+    if not csv_is_empty(f"{locust_csv_base_name}_exceptions.csv") or not csv_is_empty(f"{locust_csv_base_name}_failures.csv"):
         raise Exception("There are exceptions or failures in the locust benchmark")
 
     with open(f"{locust_csv_base_name}_stats.csv", 'r') as file:
@@ -17,9 +17,9 @@ def main(locust_csv_base_name, prefix, output_folder):
                 if name == 'Aggregated': continue
                 
                 statistics = f'''
-Request Count: {row['Request Count']}
-Requests/s: {row['Requests/s']}req/s
-Failures/s: {row['Failures/s']}fail/s
+requests: {row['Request Count']}
+req/s: {row['Requests/s']}req/s
+fail/s: {row['Failures/s']}fail/s
 avg: {row['Average Response Time']}ms
 50%: {row['50%']}
 75%: {row['75%']}ms
