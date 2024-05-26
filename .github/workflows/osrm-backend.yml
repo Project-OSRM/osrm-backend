@@ -641,8 +641,9 @@ jobs:
           restore-keys: |
             v1-conan-benchmarks-
       - name: Prepare data
-        run: | 
+        run: |
           wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
+          python3 scripts/ci/download_gps_traces.py 13.0884 52.3383 13.7611 52.6755 > ~/gps_traces.csv
       - name: Install dependencies
         run: python3 -m pip install "conan<2.0.0" "requests==2.31.0" "locust==2.28.0"
       - name: Checkout PR Branch
