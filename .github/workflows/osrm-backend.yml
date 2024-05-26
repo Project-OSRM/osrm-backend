@@ -12,10 +12,10 @@ on:
       - master
 
 env:
+  CCACHE_DIR: ~/.ccache
   CCACHE_TEMPDIR: /tmp/.ccache-temp
   CCACHE_COMPRESS: 1
   CASHER_TIME_OUT: 599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
-  CCACHE_VERSION: 3.3.1
   CMAKE_VERSION: 3.21.2
   ENABLE_NODE_BINDINGS: "ON"
 
@@ -359,10 +359,7 @@ jobs:
     - name: Enable compiler cache
       uses: actions/cache@v4
       with:
-        path: 
-          ~/.config/ccache
-          ~/.ccache
-          ~/Library/Caches/ccache
+        path: {{ env.CCACHE_DIR }}
         key: ccache-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
           ccache-${{ matrix.name }}-
@@ -491,7 +488,7 @@ jobs:
         echo "Using ${JOBS} jobs"
         pushd ${OSRM_BUILD_DIR}
 
-
+        ccache --zero-stats
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                  -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
                  -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
@@ -508,7 +505,6 @@ jobs:
         if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
           make tests --jobs=${JOBS}
           make benchmarks --jobs=${JOBS}
-          ccache -s
           sudo make install
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
             echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib" >> $GITHUB_ENV
@@ -611,6 +607,10 @@ jobs:
         omitNameDuringUpdate: true
         replacesArtifacts: true
         token: ${{ secrets.GITHUB_TOKEN }}
+     - name: Show CCache statistics
+       run: |
+          ccache -p
+          ccache -s
 
 
   benchmarks:
@@ -629,10 +629,7 @@ jobs:
       - name: Enable compiler cache
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.config/ccache
-            ~/.ccache
-            ~/Library/Caches/ccache
+          path: {{ env.CCACHE_DIR }}
           key: v1-ccache-benchmarks-${{ github.sha }}
           restore-keys: |
             v1-ccache-benchmarks-
