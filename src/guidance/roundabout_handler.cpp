@@ -345,7 +345,7 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
     // used with a reference and without. This will be fixed automatically
     // when we handle references separately or if the useage is more consistent
     const auto is_rotary = (1 == roundabout_name_ids.size()) &&
-                           (circular ||                                                    //
+                           (circular ||                                                   //
                             ((!connected_names.contains(*roundabout_name_ids.begin())) && //
                              (radius > MAX_ROUNDABOUT_RADIUS)));
 

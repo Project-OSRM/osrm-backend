@@ -300,8 +300,9 @@ bool DinicMaxFlow::Validate(const BisectionGraphView &view,
     // sink and source cannot share a common node
     const auto separated = std::find_if(source_nodes.begin(),
                                         source_nodes.end(),
-                                        [&sink_nodes](const auto node)
-                                        { return sink_nodes.contains(node); }) == source_nodes.end();
+                                        [&sink_nodes](const auto node) {
+                                            return sink_nodes.contains(node);
+                                        }) == source_nodes.end();
 
     const auto invalid_id = [&view](const NodeID nid) { return nid >= view.NumberOfNodes(); };
     const auto in_range_source =
