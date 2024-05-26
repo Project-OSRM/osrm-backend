@@ -615,6 +615,7 @@ jobs:
       run: |
         ccache -p
         ccache -s
+        ls ~
 
 
   # benchmarks:
