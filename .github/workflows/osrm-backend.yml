@@ -629,7 +629,7 @@ jobs:
       - name: Enable compiler cache
         uses: actions/cache@v4
         with:
-          path: ~/.ccache
+          path: ~/.config/ccache
           key: v1-ccache-benchmarks-${{ github.sha }}
           restore-keys: |
             v1-ccache-benchmarks-
