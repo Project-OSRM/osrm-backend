@@ -12,7 +12,6 @@ on:
       - master
 
 env:
-  CCACHE_DIR: /home/runner/.ccache
   CCACHE_TEMPDIR: /tmp/.ccache-temp
   CCACHE_COMPRESS: 1
   CASHER_TIME_OUT: 599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
@@ -380,6 +379,8 @@ jobs:
 
     - name: Prepare environment
       run: |
+        echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
+        
         PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
         echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
         echo "OSRM_INSTALL_DIR=${GITHUB_WORKSPACE}/install-osrm" >> $GITHUB_ENV
