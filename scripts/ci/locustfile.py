@@ -64,4 +64,4 @@ class OSRMTasks(TaskSet):
 
 class OSRMUser(HttpUser):
     tasks = [OSRMTasks]
-    wait_time = between(0.01, 0.1)
+   # wait_time = between(0.01, 0.1)
