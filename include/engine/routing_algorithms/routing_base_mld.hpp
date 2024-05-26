@@ -705,42 +705,134 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
 {
     reverse_heap.Clear();
+    // forward_heap.Clear();
 
-    if (forward_heap.empty()) {
-        if (source_phantom.IsValidForwardSource())
-        {
-            forward_heap.Insert(source_phantom.forward_segment_id.id,
-                                EdgeWeight{0} - source_phantom.GetForwardWeightPlusOffset(),
-                                {source_phantom.forward_segment_id.id,
-                                false,
-                                EdgeDistance{0} - source_phantom.GetForwardDistance()});
-        }
+    // if (forward_heap.Empty())
+    // {
+    //     if (source_phantom.IsValidForwardSource())
+    //     {
+    //         forward_heap.Insert(source_phantom.forward_segment_id.id,
+    //                             EdgeWeight{0} - source_phantom.GetForwardWeightPlusOffset(),
+    //                             {source_phantom.forward_segment_id.id,
+    //                              false,
+    //                              EdgeDistance{0} - source_phantom.GetForwardDistance()});
+    //     }
 
-        if (source_phantom.IsValidReverseSource())
+    //     if (source_phantom.IsValidReverseSource())
+    //     {
+    //         forward_heap.Insert(source_phantom.reverse_segment_id.id,
+    //                             EdgeWeight{0} - source_phantom.GetReverseWeightPlusOffset(),
+    //                             {source_phantom.reverse_segment_id.id,
+    //                              false,
+    //                              EdgeDistance{0} - source_phantom.GetReverseDistance()});
+    //     }
+    // } else {
+    //     const auto node =
+    //     forward_heap.GetHeapNodeIfWasInserted(target_phantom.forward_segment_id.id); if (node) {
+    //         std::cerr << "Found " << target_phantom.forward_segment_id.id << " in forward_heap "
+    //         << node->data.distance <<  std::endl;
+    //     }
+    // }
+
+    if (!forward_heap.Empty())
+    {
+        if (target_phantom.IsValidForwardTarget() && !target_phantom.IsValidReverseTarget())
         {
-            forward_heap.Insert(source_phantom.reverse_segment_id.id,
-                                EdgeWeight{0} - source_phantom.GetReverseWeightPlusOffset(),
-                                {source_phantom.reverse_segment_id.id,
-                                false,
-                                EdgeDistance{0} - source_phantom.GetReverseDistance()});
+            if (const auto node =
+                    forward_heap.GetHeapNodeIfWasInserted(target_phantom.forward_segment_id.id))
+            {
+                return from_alias<double>(node->data.distance);
+            }
         }
+        // if (target_phantom.IsValidReverseTarget()) {
+        //     if (const auto node =
+        //     forward_heap.GetHeapNodeIfWasInserted(target_phantom.reverse_segment_id.id)) {
+        //         return from_alias<double>(node->data.distance);
+        //     }
+        // }
     }
 
+    forward_heap.Clear();
+
+    if (source_phantom.IsValidForwardSource())
+    {
+        forward_heap.Insert(source_phantom.forward_segment_id.id,
+                            EdgeWeight{0},
+                            {source_phantom.forward_segment_id.id, false, EdgeDistance{0}});
+    }
+
+    if (source_phantom.IsValidReverseSource())
+    {
+        forward_heap.Insert(source_phantom.reverse_segment_id.id,
+                            EdgeWeight{0},
+                            {source_phantom.reverse_segment_id.id, false, EdgeDistance{0}});
+    }
 
     if (target_phantom.IsValidForwardTarget())
     {
-        reverse_heap.Insert(
-            target_phantom.forward_segment_id.id,
-            target_phantom.GetForwardWeightPlusOffset(),
-            {target_phantom.forward_segment_id.id, false, target_phantom.GetForwardDistance()});
+        reverse_heap.Insert(target_phantom.forward_segment_id.id,
+                            EdgeWeight{0},
+                            {target_phantom.forward_segment_id.id, false, EdgeDistance{0}});
     }
 
     if (target_phantom.IsValidReverseTarget())
     {
-        reverse_heap.Insert(
-            target_phantom.reverse_segment_id.id,
-            target_phantom.GetReverseWeightPlusOffset(),
-            {target_phantom.reverse_segment_id.id, false, target_phantom.GetReverseDistance()});
+        reverse_heap.Insert(target_phantom.reverse_segment_id.id,
+                            EdgeWeight{0},
+                            {target_phantom.reverse_segment_id.id, false, EdgeDistance{0}});
+    }
+
+    const PhantomEndpoints endpoints{source_phantom, target_phantom};
+
+    auto distance = searchDistance(
+        engine_working_data, facade, forward_heap, reverse_heap, {}, weight_upper_bound, endpoints);
+
+    if (distance == INVALID_EDGE_DISTANCE)
+    {
+        return std::numeric_limits<double>::max();
+    }
+    return from_alias<double>(distance);
+}
+
+template <typename Algorithm>
+double
+getNetworkDistanceOld(SearchEngineData<Algorithm> &engine_working_data,
+                      const DataFacade<Algorithm> &facade,
+                      typename SearchEngineData<Algorithm>::MapMatchingQueryHeap &forward_heap,
+                      typename SearchEngineData<Algorithm>::MapMatchingQueryHeap &reverse_heap,
+                      const PhantomNode &source_phantom,
+                      const PhantomNode &target_phantom,
+                      EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
+{
+    reverse_heap.Clear();
+    forward_heap.Clear();
+
+    if (source_phantom.IsValidForwardSource())
+    {
+        forward_heap.Insert(source_phantom.forward_segment_id.id,
+                            EdgeWeight{0},
+                            {source_phantom.forward_segment_id.id, false, EdgeDistance{0}});
+    }
+
+    if (source_phantom.IsValidReverseSource())
+    {
+        forward_heap.Insert(source_phantom.reverse_segment_id.id,
+                            EdgeWeight{0},
+                            {source_phantom.reverse_segment_id.id, false, EdgeDistance{0}});
+    }
+
+    if (target_phantom.IsValidForwardTarget())
+    {
+        reverse_heap.Insert(target_phantom.forward_segment_id.id,
+                            EdgeWeight{0},
+                            {target_phantom.forward_segment_id.id, false, EdgeDistance{0}});
+    }
+
+    if (target_phantom.IsValidReverseTarget())
+    {
+        reverse_heap.Insert(target_phantom.reverse_segment_id.id,
+                            EdgeWeight{0},
+                            {target_phantom.reverse_segment_id.id, false, EdgeDistance{0}});
     }
 
     const PhantomEndpoints endpoints{source_phantom, target_phantom};
