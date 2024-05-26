@@ -607,10 +607,10 @@ jobs:
         omitNameDuringUpdate: true
         replacesArtifacts: true
         token: ${{ secrets.GITHUB_TOKEN }}
-    #  - name: Show CCache statistics
-    #    run: |
-    #       ccache -p
-    #       ccache -s
+    - name: Show CCache statistics
+      run: |
+        ccache -p
+        ccache -s
 
 
   benchmarks:
