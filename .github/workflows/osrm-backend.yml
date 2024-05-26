@@ -660,20 +660,20 @@ jobs:
           make -j$(nproc) benchmarks
           cd ..
           make -C test/data 
-    - name: Checkout Base Branch
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ github.event.pull_request.base.ref }}
-        path: base
-    - name: Build Base Branch
-      run: |
-        mkdir base/build
-        cd base/build
-        cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
-        make -j$(nproc)
-        make -j$(nproc) benchmarks
-        cd ..
-        make -C test/data 
+      - name: Checkout Base Branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          path: base
+      - name: Build Base Branch
+        run: |
+          mkdir base/build
+          cd base/build
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          make -j$(nproc)
+          make -j$(nproc) benchmarks
+          cd ..
+          make -C test/data 
       - name: Run Benchmarks
         run: |
           ./pr/scripts/ci/run_benchmarks.sh base pr
