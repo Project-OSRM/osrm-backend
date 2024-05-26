@@ -34,7 +34,8 @@ avg: {row['Average Response Time']}ms
 99%: {row['99%']}ms   
 max: {row['Max Response Time']}ms
 '''
-                with open(f"{prefix}_{name}_{output_folder}.bench", 'w') as f:
+                with open(f"{output_folder}/{prefix}_{name}.bench", 'w') as f:
+                    print(f"Writing statistics to {output_folder}/{prefix}_{name}.bench")
                     f.write(statistics)
 
 if __name__ == '__main__':
