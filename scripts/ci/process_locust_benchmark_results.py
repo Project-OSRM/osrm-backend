@@ -24,15 +24,15 @@ def main(locust_csv_base_name, prefix, output_folder):
                 
                 statistics = f'''
 requests: {row['Request Count']}
-req/s: {row['Requests/s']}req/s
-fail/s: {row['Failures/s']}fail/s
-avg: {row['Average Response Time']}ms
-50%: {row['50%']}
+req/s: {float(row['Requests/s']):.3f}req/s
+fail/s: {float(row['Failures/s']):.3f}fail/s
+avg: {float(row['Average Response Time']):.3f}ms
+50%: {row['50%']}ms
 75%: {row['75%']}ms
 95%: {row['95%']}ms
 98%: {row['98%']}ms
 99%: {row['99%']}ms   
-max: {row['Max Response Time']}ms
+max: {float(row['Max Response Time']):.3f}ms
 '''
                 with open(f"{output_folder}/{prefix}_{name}.bench", 'w') as f:
                     print(f"Writing statistics to {output_folder}/{prefix}_{name}.bench")
