@@ -1,18 +1,36 @@
 from locust import HttpUser, TaskSet, task, between
+import csv
+import random
 
 class OSRMTasks(TaskSet):
+    def on_start(self):
+        random.seed(42)
+
+        self.coordinates = []
+        with open('~/gps_traces.csv', 'r') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                self.coordinates.append((row['Latitude'], row['Longitude']))
+
     @task
     def get_route(self):
-        start = "13.388860,52.517037"
-        end = "13.397634,52.529407"
+        start = random.choice(self.coordinates)
+        end = random.choice(self.coordinates)
         
-        self.client.get(f"/route/v1/driving/{start};{end}?overview=full&steps=true")
+        start_coord = f"{start[1]},{start[0]}"
+        end_coord = f"{end[1]},{end[0]}"
+        
+        self.client.get(f"/route/v1/driving/{start_coord};{end_coord}?overview=full&steps=true")
 
     @task
     def get_table(self):
-        coordinates = "13.388860,52.517037;13.397634,52.529407;13.428555,52.523219"
-        self.client.get(f"/table/v1/driving/{coordinates}")
+        num_coords = random.randint(3, 500)
+        selected_coords = random.sample(self.coordinates, num_coords)
+        coords_str = ";".join([f"{coord[1]},{coord[0]}" for coord in selected_coords])
+        
+        self.client.get(f"/table/v1/driving/{coords_str}")
 
 class OSRMUser(HttpUser):
     tasks = [OSRMTasks]
-    wait_time = between(1, 5)
+    wait_time = between(0.01, 0.1)
+
