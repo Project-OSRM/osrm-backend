@@ -741,7 +741,10 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
             if (const auto node =
                     forward_heap.GetHeapNodeIfWasInserted(target_phantom.forward_segment_id.id))
             {
-                return from_alias<double>(node->data.distance);
+                if (node->weight < weight_upper_bound) {
+                    return from_alias<double>(node->data.distance);
+                } 
+                return std::numeric_limits<double>::max();
             }
         }
         // if (target_phantom.IsValidReverseTarget()) {
