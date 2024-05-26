@@ -27,14 +27,15 @@ function run_benchmarks_for_folder {
     $BINARIES_FOLDER/osrm-extract -p $FOLDER/profiles/car.lua $FOLDER/data.osm.pbf
     $BINARIES_FOLDER/osrm-partition $FOLDER/data.osrm
     $BINARIES_FOLDER/osrm-customize $FOLDER/data.osrm
-    $BINARIES_FOLDER/osrm-routed --algorithm mld $FOLDER/data.osrm &
-    OSRM_ROUTED_PID=$!
-    
+    $BINARIES_FOLDER/osrm-contract $FOLDER/data.osrm
 
     # TODO: save results
-    if [ -f "$FOLDER/locustfile.py" ]; then
+    if [ -f "$FOLDER/scripts/ci/locustfile.py" ]; then
+        $BINARIES_FOLDER/osrm-routed --algorithm mld $FOLDER/data.osrm &
+        OSRM_ROUTED_PID=$!
+
         curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
-        locust -f $FOLDER/locustfile.py --headless --users 10 --spawn-rate 1 --host http://localhost:5000 --run-time 1m --csv=results
+        locust -f $FOLDER/scripts/ci/locustfile.py --headless --users 10 --spawn-rate 1 --host http://localhost:5000 --run-time 1m --csv=results --loglevel ERROR
 
         echo "STATS: "
         cat results_stats.csv
