@@ -54,8 +54,8 @@ void test_route_same_coordinates_fixture(bool use_json_only_api)
         itr.get<json::Object>().values["hint"] = "";
 
         // Round value to 6 decimal places for double comparison later
-        itr.get<json::Object>().values["distance"] =
-            round(itr.get<json::Object>().values["distance"].get<json::Number>().value * 1000000);
+        itr.get<json::Object>().values["distance"] = std::round(
+            itr.get<json::Object>().values["distance"].get<json::Number>().value * 1000000);
     }
 
     const auto location = json::Array{{{7.437070}, {43.749248}}};
@@ -65,11 +65,11 @@ void test_route_same_coordinates_fixture(bool use_json_only_api)
          {"waypoints",
           json::Array{{json::Object{{{"name", "Boulevard du Larvotto"},
                                      {"location", location},
-                                     {"distance", round(0.137249 * 1000000)},
+                                     {"distance", std::round(0.137249 * 1000000)},
                                      {"hint", ""}}},
                        json::Object{{{"name", "Boulevard du Larvotto"},
                                      {"location", location},
-                                     {"distance", round(0.137249 * 1000000)},
+                                     {"distance", std::round(0.137249 * 1000000)},
                                      {"hint", ""}}}}}},
          {"routes",
           json::Array{{json::Object{
