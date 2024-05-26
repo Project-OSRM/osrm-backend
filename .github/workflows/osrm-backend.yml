@@ -650,7 +650,7 @@ jobs:
       - name: Prepare data
         run: |
           wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
-          python3 ./pr/scripts/ci/download_gps_traces.py 13.1884 52.3883 13.6611 52.6255 > ~/gps_traces.csv
+          python3 ./pr/scripts/ci/download_gps_traces.py 13.2884 52.4383 13.5611 52.5755 > ~/gps_traces.csv
       - name: Build PR Branch
         run: |
           mkdir -p pr/build
