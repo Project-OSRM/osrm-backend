@@ -358,7 +358,9 @@ jobs:
     - name: Enable compiler cache
       uses: actions/cache@v4
       with:
-        path: ${{ env.CCACHE_DIR }}
+        path: 
+          /home/runner/.ccache
+          /Users/runner/.ccache
         key: ccache-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
           ccache-${{ matrix.name }}-
@@ -630,7 +632,9 @@ jobs:
       - name: Enable compiler cache
         uses: actions/cache@v4
         with:
-          path: ${{ env.CCACHE_DIR }}
+          path: |
+            /home/runner/.ccache
+            /Users/runner/.ccache
           key: v1-ccache-benchmarks-${{ github.sha }}
           restore-keys: |
             v1-ccache-benchmarks-
@@ -646,6 +650,9 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           path: pr
+      - name: Prepare environment
+        run: |
+          echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
       - run: python3 -m pip install "conan<2.0.0" "requests==2.31.0"
       - name: Build PR Branch
         run: |
