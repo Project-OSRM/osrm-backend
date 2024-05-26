@@ -29,6 +29,7 @@ function run_benchmarks_for_folder {
     $BINARIES_FOLDER/osrm-customize $FOLDER/data.osrm
     $BINARIES_FOLDER/osrm-routed --algorithm mld $FOLDER/data.osrm &
     OSRM_ROUTED_PID=$!
+    
 
     # TODO: save results
     if [ -f "$FOLDER/locustfile.py" ]; then
@@ -49,6 +50,6 @@ function run_benchmarks_for_folder {
     fi
 }
 
-run_benchmarks_for_folder $1 "${1}_results"
+# run_benchmarks_for_folder $1 "${1}_results"
 run_benchmarks_for_folder $2 "${2}_results"
 
