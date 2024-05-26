@@ -617,76 +617,76 @@ jobs:
         ccache -s
 
 
-  benchmarks:
-    if: github.event_name == 'pull_request'
-    needs: [format-taginfo-docs]
-    runs-on: ubuntu-22.04
-    env:
-      CCOMPILER: clang-13
-      CXXCOMPILER: clang++-13
-      CC: clang-13
-      CXX: clang++-13
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PR_NUMBER: ${{ github.event.pull_request.number }}
-      GITHUB_REPOSITORY: ${{ github.repository }}
-    steps: 
-      - name: Enable compiler cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            /home/runner/.ccache
-            /Users/runner/.ccache
-          key: v1-ccache-benchmarks-${{ github.sha }}
-          restore-keys: |
-            v1-ccache-benchmarks-
-      - name: Enable Conan cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.conan
-          key: v1-conan-benchmarks-${{ github.sha }}
-          restore-keys: |
-            v1-conan-benchmarks-
-      - name: Checkout PR Branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-          path: pr
-      - name: Prepare environment
-        run: |
-          echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
-      - run: python3 -m pip install "conan<2.0.0" "requests==2.31.0"
-      - name: Build PR Branch
-        run: |
-          mkdir -p pr/build
-          cd pr/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
-          make -j$(nproc) 
-          make -j$(nproc) benchmarks
-          cd ..
-          make -C test/data 
-      - name: Checkout Base Branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.base.ref }}
-          path: base
-      - name: Build Base Branch
-        run: |
-          mkdir base/build
-          cd base/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
-          make -j$(nproc)
-          make -j$(nproc) benchmarks
-          cd ..
-          make -C test/data 
-      - name: Run Benchmarks
-        run: |
-          ./pr/scripts/ci/run_benchmarks.sh base pr
-      - name: Post Benchmark Results
-        run: |
-          python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
-
-  # ci-complete:
+  # benchmarks:
+  #   if: github.event_name == 'pull_request'
+  #   needs: [format-taginfo-docs]
   #   runs-on: ubuntu-22.04
-  #   needs: [build-test-publish, docker-image, windows-release-node, benchmarks]
-  #   steps:
-  #   - run: echo "CI complete"
+  #   env:
+  #     CCOMPILER: clang-13
+  #     CXXCOMPILER: clang++-13
+  #     CC: clang-13
+  #     CXX: clang++-13
+  #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     PR_NUMBER: ${{ github.event.pull_request.number }}
+  #     GITHUB_REPOSITORY: ${{ github.repository }}
+  #   steps: 
+  #     - name: Enable compiler cache
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: |
+  #           /home/runner/.ccache
+  #           /Users/runner/.ccache
+  #         key: v1-ccache-benchmarks-${{ github.sha }}
+  #         restore-keys: |
+  #           v1-ccache-benchmarks-
+  #     - name: Enable Conan cache
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: ~/.conan
+  #         key: v1-conan-benchmarks-${{ github.sha }}
+  #         restore-keys: |
+  #           v1-conan-benchmarks-
+  #     - name: Checkout PR Branch
+  #       uses: actions/checkout@v4
+  #       with:
+  #         ref: ${{ github.head_ref }}
+  #         path: pr
+  #     - name: Prepare environment
+  #       run: |
+  #         echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
+  #     - run: python3 -m pip install "conan<2.0.0" "requests==2.31.0"
+  #     - name: Build PR Branch
+  #       run: |
+  #         mkdir -p pr/build
+  #         cd pr/build
+  #         cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+  #         make -j$(nproc) 
+  #         make -j$(nproc) benchmarks
+  #         cd ..
+  #         make -C test/data 
+  #     - name: Checkout Base Branch
+  #       uses: actions/checkout@v4
+  #       with:
+  #         ref: ${{ github.event.pull_request.base.ref }}
+  #         path: base
+  #     - name: Build Base Branch
+  #       run: |
+  #         mkdir base/build
+  #         cd base/build
+  #         cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+  #         make -j$(nproc)
+  #         make -j$(nproc) benchmarks
+  #         cd ..
+  #         make -C test/data 
+  #     - name: Run Benchmarks
+  #       run: |
+  #         ./pr/scripts/ci/run_benchmarks.sh base pr
+  #     - name: Post Benchmark Results
+  #       run: |
+  #         python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
+
+  # # ci-complete:
+  # #   runs-on: ubuntu-22.04
+  # #   needs: [build-test-publish, docker-image, windows-release-node, benchmarks]
+  # #   steps:
+  # #   - run: echo "CI complete"
