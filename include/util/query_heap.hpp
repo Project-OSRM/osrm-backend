@@ -3,12 +3,12 @@
 
 #include <boost/assert.hpp>
 #include <boost/heap/d_ary_heap.hpp>
-#include <boost/optional.hpp>
 
 #include <algorithm>
 #include <cstdint>
 #include <limits>
 #include <map>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -290,26 +290,26 @@ class QueryHeap
         return inserted_nodes[index].node == node;
     }
 
-    boost::optional<HeapNode &> GetHeapNodeIfWasInserted(const NodeID node)
+    HeapNode *GetHeapNodeIfWasInserted(const NodeID node)
     {
         const auto index = node_index.peek_index(node);
         if (index >= static_cast<decltype(index)>(inserted_nodes.size()) ||
             inserted_nodes[index].node != node)
         {
-            return {};
+            return nullptr;
         }
-        return inserted_nodes[index];
+        return &inserted_nodes[index];
     }
 
-    boost::optional<const HeapNode &> GetHeapNodeIfWasInserted(const NodeID node) const
+    const HeapNode *GetHeapNodeIfWasInserted(const NodeID node) const
     {
         const auto index = node_index.peek_index(node);
         if (index >= static_cast<decltype(index)>(inserted_nodes.size()) ||
             inserted_nodes[index].node != node)
         {
-            return {};
+            return nullptr;
         }
-        return inserted_nodes[index];
+        return &inserted_nodes[index];
     }
 
     NodeID Min() const

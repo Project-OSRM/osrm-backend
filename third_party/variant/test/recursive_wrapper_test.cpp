@@ -1,4 +1,3 @@
-
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -64,12 +63,12 @@ struct calculator
 
     int operator()(binary_op<add> const& binary) const
     {
-        return util::apply_visitor(calculator(), binary.left) + util::apply_visitor(calculator(), binary.right);
+        return util::apply_visitor(*this, binary.left) + util::apply_visitor(*this, binary.right);
     }
 
     int operator()(binary_op<sub> const& binary) const
     {
-        return util::apply_visitor(calculator(), binary.left) - util::apply_visitor(calculator(), binary.right);
+        return util::apply_visitor(*this, binary.left) - util::apply_visitor(*this, binary.right);
     }
 };
 
@@ -83,12 +82,12 @@ struct to_string
 
     std::string operator()(binary_op<add> const& binary) const
     {
-        return util::apply_visitor(to_string(), binary.left) + std::string("+") + util::apply_visitor(to_string(), binary.right);
+        return util::apply_visitor(*this, binary.left) + std::string("+") + util::apply_visitor(*this, binary.right);
     }
 
     std::string operator()(binary_op<sub> const& binary) const
     {
-        return util::apply_visitor(to_string(), binary.left) + std::string("-") + util::apply_visitor(to_string(), binary.right);
+        return util::apply_visitor(*this, binary.left) + std::string("-") + util::apply_visitor(*this, binary.right);
     }
 };
 

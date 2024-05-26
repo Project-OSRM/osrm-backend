@@ -160,8 +160,8 @@ struct swap_visitor
     {
         using T = typename std::common_type<A, B>::type;
         T tmp = a;
-        a = b;
-        b = tmp;
+        a = static_cast<A>(b);
+        b = static_cast<B>(tmp);
     }
 };
 

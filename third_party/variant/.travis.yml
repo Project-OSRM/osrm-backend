@@ -2,102 +2,123 @@ language: generic
 
 sudo: false
 
-# Save common build configurations as shortcuts, so we can reference them later.
-addons_shortcuts:
-  addons_clang35: &clang35
-    apt:
-      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.5' ]
-      packages: [ 'clang-3.5', 'llvm-3.5-dev' ]
-  addons_clang36: &clang36
-    apt:
-      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.6' ]
-      packages: [ 'clang-3.6' ]
-  addons_clang37: &clang37
-    apt:
-      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7' ]
-      packages: [ 'clang-3.7' ]
-  addons_clang38: &clang38
-    apt:
-      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.8' ]
-      packages: [ 'clang-3.8']
-  addons_clang39: &clang39
-    apt:
-      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise' ]
-      packages: [ 'clang-3.9']
-  addons_gcc47: &gcc47
-    apt:
-      sources: [ 'ubuntu-toolchain-r-test' ]
-      packages: [ 'g++-4.7' ]
-  addons_gcc48: &gcc48
-    apt:
-      sources: [ 'ubuntu-toolchain-r-test' ]
-      packages: [ 'g++-4.8' ]
-  addons_gcc49: &gcc49
-    apt:
-      sources: [ 'ubuntu-toolchain-r-test' ]
-      packages: [ 'g++-4.9' ]
-  addons_gcc5: &gcc5
-    apt:
-      sources: [ 'ubuntu-toolchain-r-test' ]
-      packages: [ 'g++-5' ]
-
 matrix:
   include:
+    # clang++ 4.0 via mason with -flto and -fsanitize=cfi
+    - os: linux
+      compiler: "clang++-40-mason"
+      env: CXX=clang++-4.0 CXXFLAGS="-flto -fsanitize=cfi -fvisibility=hidden" LDFLAGS="-flto -fsanitize=cfi -fvisibility=hidden"
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'libstdc++-4.9-dev' ]
+      before_install:
+        - git submodule update --init
+        - ./.mason/mason install clang++ 4.0.1
+        - export PATH=$(./.mason/mason prefix clang++ 4.0.1)/bin:${PATH}
+        - ./.mason/mason install binutils 2.27
+        - export PATH=$(./.mason/mason prefix binutils 2.27)/bin:${PATH}
+    # clang++ 4.0 via mason with -fsanitize=address
+    - os: linux
+      compiler: "clang++-40-mason"
+      env: CXX=clang++-4.0 CXXFLAGS="-fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer -fno-common" LDFLAGS="-fsanitize=address" ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1
+      sudo: required
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'libstdc++-4.9-dev' ]
+      before_install:
+        - git submodule update --init
+        - ./.mason/mason install clang++ 4.0.1
+        - export PATH=$(./.mason/mason prefix clang++ 4.0.1)/bin:${PATH}
+    # clang++ 4.0 via mason with -fsanitize=undefined
+    - os: linux
+      compiler: "clang++-40-mason"
+      env: CXX=clang++-4.0 CXXFLAGS="-fsanitize=undefined" LDFLAGS="-fsanitize=undefined"
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'libstdc++-4.9-dev' ]
+      before_install:
+        - git submodule update --init
+        - ./.mason/mason install clang++ 4.0.1
+        - export PATH=$(./.mason/mason prefix clang++ 4.0.1)/bin:${PATH}
+    # clang++ 4.0 via mason with -fsanitize=integer
+    - os: linux
+      compiler: "clang++-40-mason"
+      env: CXX=clang++-4.0 CXXFLAGS="-fsanitize=integer" LDFLAGS="-fsanitize=integer"
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'libstdc++-4.9-dev' ]
+      before_install:
+        - git submodule update --init
+        - ./.mason/mason install clang++ 4.0.1
+        - export PATH=$(./.mason/mason prefix clang++ 4.0.1)/bin:${PATH}
+    # clang++ 4.0 via mason with -fsanitize=safe-stack
+    - os: linux
+      compiler: "clang++-40-mason"
+      env: CXX=clang++-4.0 CXXFLAGS="-fsanitize=safe-stack" LDFLAGS="-fsanitize=safe-stack"
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'libstdc++-4.9-dev' ]
+      before_install:
+        - git submodule update --init
+        - ./.mason/mason install clang++ 4.0.1
+        - export PATH=$(./.mason/mason prefix clang++ 4.0.1)/bin:${PATH}
     - os: osx
-      osx_image: xcode7
-      env: TEST_GYP_BUILD=True
+      osx_image: xcode8
+      env: OSX_OLDEST_SUPPORTED=10.7 TEST_GYP_BUILD=True
+      compiler: clang
+    - os: osx
+      osx_image: xcode8
+      env: OSX_OLDEST_SUPPORTED=10.12
       compiler: clang
     - os: linux
       compiler: "clang35"
       env: CXX=clang++-3.5 COVERAGE=True
-      addons: *clang35
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.5' ]
+          packages: [ 'clang-3.5', 'libstdc++-4.9-dev' ]
     - os: linux
       compiler: "clang36"
       env: CXX=clang++-3.6
-      addons: *clang36
-    - os: linux
-      compiler: "clang37"
-      env: CXX=clang++-3.7
-      addons: *clang37
-    - os: linux
-      compiler: "clang38"
-      env: CXX=clang++-3.8
-      addons: *clang38
-    - os: linux
-      compiler: "clang38"
-      env: CXX=clang++-3.8 CXX_STD=c++14
-      addons: *clang38
-    # not whitelisted yet: https://github.com/travis-ci/apt-package-whitelist/issues/2764
-    #- os: linux
-    #  compiler: "clang39"
-    #  env: CXX=clang++-3.9
-    #  addons: *clang39
-    - os: linux
-      compiler: "gcc47"
-      env: CXX=g++-4.7
-      addons: *gcc47
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.6' ]
+          packages: [ 'clang-3.6' ]
     - os: linux
       compiler: "gcc48"
       env: CXX=g++-4.8
-      addons: *gcc48
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-4.8' ]
     - os: linux
       compiler: "gcc49"
       env: CXX=g++-4.9
-      addons: *gcc49
-    - os: linux
-      compiler: "gcc49"
-      env: CXX=g++-4.9 CXX_STD=c++14
-      addons: *gcc49
-    - os: linux
-      compiler: "gcc5"
-      env: CXX=g++-5 CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
-      addons: *gcc5
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-4.9' ]
     - os: linux
       compiler: "gcc5"
-      env: CXX=g++-5 CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=1"
-      addons: *gcc5
+      env: CXX=g++-5
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-5' ]
+    - os: linux
+      compiler: "gcc6"
+      env: CXX=g++-6 CXX_STD=c++14
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-6' ]
 
-before_install:
+install:
  - echo ${CXX}
  - if [[ $(uname -s) == 'Linux' ]]; then
      export PYTHONPATH=$(pwd)/.local/lib/python2.7/site-packages;
@@ -108,7 +129,17 @@ before_install:
      PYTHONUSERBASE=$(pwd)/.local pip install --user cpp-coveralls;
    fi
 
-install:
+script:
+ # Build in Release
+ - make
+ - make test
+ - make bench
+ - make sizes
+ - scripts/run_compilation_failure_tests.sh
+ - make clean;
+ # Build in Debug
+ - export BUILDTYPE=Debug
+ - make
  - make test
  - make bench
  - make sizes
@@ -118,11 +149,11 @@ install:
      make gyp;
    fi
 
-script:
+after_script:
  - if [[ ${COVERAGE:-0} == 'True' ]]; then
     make clean;
     make coverage;
     ./out/cov-test;
     cp unit*gc* test/;
-    ./.local/bin/cpp-coveralls --gcov /usr/bin/llvm-cov-3.5 --gcov-options '\-lp' -i optional.hpp -i recursive_wrapper.hpp -i variant.hpp -i variant_io.hpp;
+    ./.local/bin/cpp-coveralls --gcov /usr/bin/llvm-cov-3.5 --gcov-options '\-lp' -i optional.hpp -i recursive_wrapper.hpp -i variant.hpp -i variant_io.hpp variant_cast.hpp;
    fi

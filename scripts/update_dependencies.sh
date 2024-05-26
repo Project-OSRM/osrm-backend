@@ -13,7 +13,7 @@ OSMIUM_PATH="osmcode/libosmium"
 OSMIUM_TAG=v2.14.0
 
 VARIANT_PATH="mapbox/variant"
-VARIANT_TAG=v1.1.3
+VARIANT_TAG=v1.2.0
 
 SOL_PATH="ThePhD/sol2"
 SOL_TAG=v2.17.5
@@ -34,7 +34,7 @@ FMT_PATH="fmtlib/fmt"
 FMT_TAG=v10.2.1
 
 function update_subtree () {
-    name=${1^^}
+    name=$(echo "$1" | tr '[:lower:]' '[:upper:]')
     path=$(tmpvar=${name}_PATH && echo ${!tmpvar})
     tag=$(tmpvar=${name}_TAG && echo ${!tmpvar})
     dir=$(basename $path)

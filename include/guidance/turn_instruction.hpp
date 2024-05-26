@@ -2,7 +2,6 @@
 #define OSRM_GUIDANCE_TURN_INSTRUCTION_HPP_
 
 #include "guidance/roundabout_type.hpp"
-#include "util/attributes.hpp"
 #include "util/typedefs.hpp"
 
 #include <algorithm>
@@ -243,8 +242,7 @@ inline guidance::DirectionModifier::Enum getTurnDirection(const double angle)
 }
 
 // swaps left <-> right modifier types
-OSRM_ATTR_WARN_UNUSED
-inline guidance::DirectionModifier::Enum
+[[nodiscard]] inline guidance::DirectionModifier::Enum
 mirrorDirectionModifier(const guidance::DirectionModifier::Enum modifier)
 {
     const constexpr guidance::DirectionModifier::Enum results[] = {

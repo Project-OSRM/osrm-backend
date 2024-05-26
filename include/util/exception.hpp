@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <array>
 #include <exception>
-#include <iostream>
 #include <string>
 #include <utility>
 

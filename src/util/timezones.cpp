@@ -5,13 +5,13 @@
 
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/optional.hpp>
 
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
 #include <rapidjson/istreamwrapper.h>
 
 #include <fstream>
+#include <optional>
 #include <regex>
 #include <string>
 #include <unordered_map>
@@ -158,7 +158,7 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
     rtree = rtree_t(polygons);
 }
 
-boost::optional<struct tm> Timezoner::operator()(const point_t &point) const
+std::optional<struct tm> Timezoner::operator()(const point_t &point) const
 {
     std::vector<rtree_t::value_type> result;
     rtree.query(boost::geometry::index::intersects(point), std::back_inserter(result));
@@ -168,6 +168,6 @@ boost::optional<struct tm> Timezoner::operator()(const point_t &point) const
         if (boost::geometry::within(point, local_times[index].first))
             return local_times[index].second;
     }
-    return boost::none;
+    return std::nullopt;
 }
 } // namespace osrm::updater

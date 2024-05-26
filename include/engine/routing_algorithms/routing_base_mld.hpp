@@ -11,6 +11,7 @@
 #include <boost/assert.hpp>
 
 #include <algorithm>
+#include <boost/core/ignore_unused.hpp>
 #include <iterator>
 #include <limits>
 #include <tuple>
@@ -311,15 +312,16 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const auto &cell =
                 cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
             auto destination = cell.GetDestinationNodes().begin();
-            auto distance = [&]() -> auto
+            auto distance = [&cell, node = heapNode.node ]() -> auto
             {
                 if constexpr (IS_MAP_MATCHING)
                 {
 
-                    return cell.GetOutDistance(heapNode.node).begin();
+                    return cell.GetOutDistance(node).begin();
                 }
                 else
                 {
+                    boost::ignore_unused(cell, node);
                     return 0;
                 }
             }
@@ -346,7 +348,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                     }
                 }
                 ++destination;
-                if (IS_MAP_MATCHING)
+                if constexpr (IS_MAP_MATCHING)
                 {
                     ++distance;
                 }
@@ -358,15 +360,16 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const auto &cell =
                 cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
             auto source = cell.GetSourceNodes().begin();
-            auto distance = [&]() -> auto
+            auto distance = [&cell, node = heapNode.node ]() -> auto
             {
                 if constexpr (IS_MAP_MATCHING)
                 {
 
-                    return cell.GetInDistance(heapNode.node).begin();
+                    return cell.GetInDistance(node).begin();
                 }
                 else
                 {
+                    boost::ignore_unused(cell, node);
                     return 0;
                 }
             }
@@ -392,7 +395,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                     }
                 }
                 ++source;
-                if (IS_MAP_MATCHING)
+                if constexpr (IS_MAP_MATCHING)
                 {
                     ++distance;
                 }
@@ -465,7 +468,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
         auto reverse_weight = reverseHeapNode->weight;
         auto path_weight = weight + reverse_weight;
 
-        if (!shouldForceStep(force_step_nodes, heapNode, reverseHeapNode.get()) &&
+        if (!shouldForceStep(force_step_nodes, heapNode, *reverseHeapNode) &&
             (path_weight >= EdgeWeight{0}) && (path_weight < path_upper_bound))
         {
             middle_node = heapNode.node;
@@ -703,15 +706,14 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
 {
     reverse_heap.Clear();
 
-    if (forward_heap.Empty())
-    {
+    if (forward_heap.empty()) {
         if (source_phantom.IsValidForwardSource())
         {
             forward_heap.Insert(source_phantom.forward_segment_id.id,
                                 EdgeWeight{0} - source_phantom.GetForwardWeightPlusOffset(),
                                 {source_phantom.forward_segment_id.id,
-                                 false,
-                                 EdgeDistance{0} - source_phantom.GetForwardDistance()});
+                                false,
+                                EdgeDistance{0} - source_phantom.GetForwardDistance()});
         }
 
         if (source_phantom.IsValidReverseSource())
@@ -719,10 +721,11 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
             forward_heap.Insert(source_phantom.reverse_segment_id.id,
                                 EdgeWeight{0} - source_phantom.GetReverseWeightPlusOffset(),
                                 {source_phantom.reverse_segment_id.id,
-                                 false,
-                                 EdgeDistance{0} - source_phantom.GetReverseDistance()});
+                                false,
+                                EdgeDistance{0} - source_phantom.GetReverseDistance()});
         }
     }
+
 
     if (target_phantom.IsValidForwardTarget())
     {

@@ -9,7 +9,6 @@
 
 #include <tbb/parallel_sort.h>
 
-#include <iostream>
 #include <memory>
 #include <utility>
 
