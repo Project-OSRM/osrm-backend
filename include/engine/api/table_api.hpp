@@ -378,7 +378,7 @@ class TableAPI final : public BaseAPI
                                    util::json::Number(from_alias<double>(duration) / 10.));
                            });
 
-            util::json::Value tmp{std::move(json_row)};
+            util::json::Value tmp{json_row};
             json_table.values.push_back(std::move(tmp));
         }
         return json_table;
