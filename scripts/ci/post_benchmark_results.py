@@ -82,7 +82,8 @@ def main():
 <details><summary>Benchmark Results</summary>
 {markdown_table}
 </details>
-<!-- BENCHMARK_RESULTS_END -->"
+<!-- BENCHMARK_RESULTS_END -->
+"""
 
     if re.search(r'<!-- BENCHMARK_RESULTS_START -->.*<!-- BENCHMARK_RESULTS_END -->', pr_body, re.DOTALL):
         updated_body = re.sub(
