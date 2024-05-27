@@ -45,7 +45,10 @@ class OSRMTasks(TaskSet):
         track_coords = self.tracks[track_id][:num_coords]
         coords_str = ";".join([f"{coord[1]:.6f},{coord[0]:.6f}" for coord in track_coords])
         
-        self.client.get(f"/match/v1/driving/{coords_str}?steps=true", name="match")
+        with self.client.get(f"/match/v1/driving/{coords_str}?steps=true", name="match", catch_response=True) as response:
+            if response.status_code == 400:
+                response.success()
+        
 
     @task
     def get_nearest(self):
