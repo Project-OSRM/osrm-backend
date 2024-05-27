@@ -420,9 +420,9 @@ class TableAPI final : public BaseAPI
                       [&](const auto &cell)
                       {
                           util::json::Array row;
-                          row.values.emplace_back(util::json::Value{util::json::Number(cell.row)});
+                          row.values.emplace_back(util::json::Value{util::json::Number(static_cast<double>(cell.row))});
                           row.values.emplace_back(
-                              util::json::Value{util::json::Number(cell.column)});
+                              util::json::Value{util::json::Number(static_cast<double>(cell.column))});
                           json_table.values.emplace_back(util::json::Value{std::move(row)});
                       });
         return json_table;
