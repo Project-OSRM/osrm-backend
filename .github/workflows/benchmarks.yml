@@ -1,0 +1,78 @@
+name: osrm-backend benchmarks
+on:
+  pull_request:
+    branches:
+      - master
+
+# permissions:
+#   pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number}}
+  cancel-in-progress: true
+
+jobs:
+  benchmarks:
+    runs-on: ubuntu-22.04
+    env:
+      CCOMPILER: clang-13
+      CXXCOMPILER: clang++-13
+      CC: clang-13
+      CXX: clang++-13
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+    steps: 
+      - name: Enable compiler cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.ccache
+          key: v1-ccache-benchmarks-${{ github.sha }}
+          restore-keys: |
+            v1-ccache-benchmarks-
+      - name: Enable Conan cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.conan
+          key: v1-conan-benchmarks-${{ github.sha }}
+          restore-keys: |
+            v1-conan-benchmarks-
+      - name: Checkout PR Branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+          path: pr
+      - run: python3 -m pip install "conan<2.0.0" "requests==2.31.0"
+      - name: Build PR Branch
+        run: |
+          mkdir -p pr/build
+          cd pr/build
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          make -j$(nproc) 
+          make -j$(nproc) benchmarks
+          cd ..
+          make -C test/data 
+      - name: Checkout Base Branch
+        uses: actions/checkout@v3
+        with:
+          ref: master
+          path: master
+      - name: Build Base Branch
+        run: |
+          mkdir master/build
+          cd master/build
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          make -j$(nproc)
+          make -j$(nproc) benchmarks
+          cd ..
+          make -C test/data 
+      - name: Run Benchmarks
+        run: |
+          ./pr/scripts/ci/run_benchmarks.sh base pr
+      - name: Compare Benchmarks
+        run: |
+          cat pr_results/match_mld.bench
+          cat master_results/match_mld.bench
+      - name: Post Benchmark Results
+        run: |
+          python3 pr/scripts/ci/post_benchmark_results.py master_results pr_results
