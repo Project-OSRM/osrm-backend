@@ -421,7 +421,8 @@ class TableAPI final : public BaseAPI
                       {
                           util::json::Array row;
                           row.values.emplace_back(util::json::Value{util::json::Number(cell.row)});
-                          row.values.emplace_back(util::json::Value{util::json::Number(cell.column)});
+                          row.values.emplace_back(
+                              util::json::Value{util::json::Number(cell.column)});
                           json_table.values.emplace_back(util::json::Value{std::move(row)});
                       });
         return json_table;
