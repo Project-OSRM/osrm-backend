@@ -1,4 +1,4 @@
-from locust import HttpUser, TaskSet, task, between, events
+from locust import HttpUser, TaskSet, task, between
 import csv
 import random
 from collections import defaultdict
@@ -40,14 +40,17 @@ class OSRMTasks(TaskSet):
 
     @task
     def get_match(self):
-        num_coords = random.randint(3, 50)
+        num_coords = random.randint(20, 50)
         track_id = random.choice(self.track_ids)
         track_coords = self.tracks[track_id][:num_coords]
         coords_str = ";".join([f"{coord[1]:.6f},{coord[0]:.6f}" for coord in track_coords])
         
         with self.client.get(f"/match/v1/driving/{coords_str}?steps=true", name="match", catch_response=True) as response:
             if response.status_code == 400:
-                response.success()
+                j = response.json()
+                # it is expected that some of requests will fail with such error: map matching fails sometimes
+                if j['code'] == 'NoSegment' or j['code'] == 'NoMatch':
+                    response.success()
         
 
     @task
