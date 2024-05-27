@@ -656,13 +656,16 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           path: pr
+      - name: Install dependencies
+        run: |
+          python3 -m pip install "conan<2.0.0" "requests==2.31.0"
+          sudo apt-get update -y && sudo apt-get install ccache
       - name: Prepare environment
         run: |
           echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
           mkdir -p $HOME/.ccache
           ccache --zero-stats
           ccache --max-size=256M
-      - run: python3 -m pip install "conan<2.0.0" "requests==2.31.0"
       - name: Build PR Branch
         run: |
           mkdir -p pr/build
