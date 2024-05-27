@@ -45,7 +45,7 @@ function run_benchmarks_for_folder {
                 --csv=locust_results_$ALGORITHM \
                 --loglevel ERROR || true
 
-            python3 $FOLDER/scripts/ci/process_locust_benchmark_results.py locust_results_$ALGORITHM $ALGORITHM $RESULTS_FOLDER
+            python3 $FOLDER/scripts/ci/process_locust_benchmark_results.py locust_results_$ALGORITHM e2e_$ALGORITHM $RESULTS_FOLDER
 
 
             kill -0 $OSRM_ROUTED_PID
