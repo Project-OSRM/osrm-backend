@@ -1,15 +1,15 @@
-FROM debian:bullseye-slim as builder
+FROM debian:bookworm-slim as builder
 ARG DOCKER_TAG
 ARG BUILD_CONCURRENCY
 RUN mkdir -p /src  && mkdir -p /opt
 
 RUN apt-get update && \
     apt-get -y --no-install-recommends install ca-certificates cmake make git gcc g++ libbz2-dev libxml2-dev wget \
-    libzip-dev libboost1.74-all-dev lua5.4 liblua5.4-dev pkg-config -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
+    libzip-dev libboost1.81-all-dev lua5.4 liblua5.4-dev pkg-config -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
 
 RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
     ldconfig /usr/local/lib && \
-    git clone --branch v2021.3.0 --single-branch https://github.com/oneapi-src/oneTBB.git && \
+    git clone --branch v2021.12.0 --single-branch https://github.com/oneapi-src/oneTBB.git && \
     cd oneTBB && \
     mkdir build && \
     cd build && \
@@ -21,6 +21,7 @@ COPY . /src
 WORKDIR /src
 
 RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
+    export CXXFLAGS="-Wno-array-bounds -Wno-uninitialized" && \
     echo "Building OSRM ${DOCKER_TAG}" && \
     git show --format="%H" | head -n1 > /opt/OSRM_GITSHA && \
     echo "Building OSRM gitsha $(cat /opt/OSRM_GITSHA)" && \
@@ -42,15 +43,15 @@ RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
 
 # Multistage build to reduce image size - https://docs.docker.com/engine/userguide/eng-image/multistage-build/#use-multi-stage-builds
 # Only the content below ends up in the image, this helps remove /src from the image (which is large)
-FROM debian:bullseye-slim as runstage
+FROM debian:bookworm-slim as runstage
 
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libboost-program-options1.74.0 libboost-regex1.74.0 \
-        libboost-date-time1.74.0 libboost-chrono1.74.0 libboost-filesystem1.74.0 \
-        libboost-iostreams1.74.0 libboost-system1.74.0 libboost-thread1.74.0 \
+    apt-get install -y --no-install-recommends libboost-program-options1.81.0 libboost-regex1.81.0 \
+        libboost-date-time1.81.0 libboost-chrono1.81.0 libboost-filesystem1.81.0 \
+        libboost-iostreams1.81.0 libboost-system1.81.0 libboost-thread1.81.0 \
         expat liblua5.4-0 && \
     rm -rf /var/lib/apt/lists/* && \
 # add /usr/local/lib to ldconfig to allow loading libraries from there

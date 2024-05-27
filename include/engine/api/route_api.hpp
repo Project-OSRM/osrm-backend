@@ -443,23 +443,22 @@ class RouteAPI : public BaseAPI
         if (requested_annotations & RouteParameters::AnnotationsType::Speed)
         {
             double prev_speed = 0;
-            speed =
-                GetAnnotations<float>(fb_result,
-                                      leg_geometry,
-                                      [&prev_speed](const guidance::LegGeometry::Annotation &anno)
-                                      {
-                                          if (anno.duration < std::numeric_limits<float>::min())
-                                          {
-                                              return prev_speed;
-                                          }
-                                          else
-                                          {
-                                              auto speed =
-                                                  round(anno.distance / anno.duration * 10.) / 10.;
-                                              prev_speed = speed;
-                                              return util::json::clamp_float(speed);
-                                          }
-                                      });
+            speed = GetAnnotations<float>(
+                fb_result,
+                leg_geometry,
+                [&prev_speed](const guidance::LegGeometry::Annotation &anno)
+                {
+                    if (anno.duration < std::numeric_limits<float>::min())
+                    {
+                        return prev_speed;
+                    }
+                    else
+                    {
+                        auto speed = std::round(anno.distance / anno.duration * 10.) / 10.;
+                        prev_speed = speed;
+                        return util::json::clamp_float(speed);
+                    }
+                });
         }
 
         flatbuffers::Offset<flatbuffers::Vector<uint32_t>> duration;

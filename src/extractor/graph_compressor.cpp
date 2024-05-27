@@ -83,7 +83,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
             }
 
             // check if v is an entry/exit via node for a turn restriction
-            if (incompressible_via_nodes.count(node_v) > 0)
+            if (incompressible_via_nodes.contains(node_v))
             {
                 continue;
             }

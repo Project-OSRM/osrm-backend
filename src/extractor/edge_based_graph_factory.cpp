@@ -167,7 +167,7 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
     m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_1]].annotation_id =
         forward_data.annotation_data;
     m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_1]].segregated =
-        segregated_edges.count(edge_id_1) > 0;
+        segregated_edges.contains(edge_id_1);
 
     if (nbe_to_ebn_mapping[edge_id_2] != SPECIAL_EDGEID)
     {
@@ -176,7 +176,7 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
         m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_2]].annotation_id =
             reverse_data.annotation_data;
         m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_2]].segregated =
-            segregated_edges.count(edge_id_2) > 0;
+            segregated_edges.contains(edge_id_2);
     }
 
     // Add segments of edge-based nodes
@@ -382,7 +382,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
             m_edge_based_node_container.nodes[edge_based_node_id].annotation_id =
                 edge_data.annotation_data;
             m_edge_based_node_container.nodes[edge_based_node_id].segregated =
-                segregated_edges.count(eid) > 0;
+                segregated_edges.contains(eid);
 
             const auto ebn_weight = m_edge_based_node_weights[nbe_to_ebn_mapping[eid]];
             BOOST_ASSERT((ebn_weight & EdgeWeight{0x7fffffff}) == edge_data.weight);
@@ -942,7 +942,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                             const auto turn_nodes = NodeBasedTurn{
                                 incoming_edge.node, intersection_node, outgoing_edge_target};
-                            const auto is_maneuver_turn = unresolved_turns.count(turn_nodes) > 0;
+                            const auto is_maneuver_turn = unresolved_turns.contains(turn_nodes);
 
                             if (is_maneuver_turn)
                             {
