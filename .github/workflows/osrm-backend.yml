@@ -684,9 +684,9 @@ jobs:
         run: |
           python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
       - name: Show CCache statistics
-      run: |
-        ccache -p
-        ccache -s
+        run: |
+          ccache -p
+          ccache -s
 
   ci-complete:
     runs-on: ubuntu-22.04
