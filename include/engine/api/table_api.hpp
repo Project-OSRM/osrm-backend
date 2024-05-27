@@ -412,19 +412,19 @@ class TableAPI final : public BaseAPI
     }
 
     virtual util::json::Array
-    MakeEstimatesTable(const std::vector<TableCellRef> &fallback_speed_cells) const
+    MakeEstimatesTable(const std::vector<TableCellRef> &/*fallback_speed_cells*/) const
     {
         util::json::Array json_table;
-        std::for_each(fallback_speed_cells.begin(),
-                      fallback_speed_cells.end(),
-                      [&](const auto &cell)
-                      {
-                          util::json::Array row;
-                          row.values.emplace_back(util::json::Value{util::json::Number(static_cast<double>(cell.row))});
-                          row.values.emplace_back(
-                              util::json::Value{util::json::Number(static_cast<double>(cell.column))});
-                          json_table.values.emplace_back(util::json::Value{std::move(row)});
-                      });
+        // std::for_each(fallback_speed_cells.begin(),
+        //               fallback_speed_cells.end(),
+        //               [&](const auto &cell)
+        //               {
+        //                   util::json::Array row;
+        //                   row.values.emplace_back(util::json::Value{util::json::Number(static_cast<double>(cell.row))});
+        //                   row.values.emplace_back(
+        //                       util::json::Value{util::json::Number(static_cast<double>(cell.column))});
+        //                   json_table.values.emplace_back(util::json::Value{std::move(row)});
+        //               });
         return json_table;
     }
 
