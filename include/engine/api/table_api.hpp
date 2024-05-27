@@ -418,13 +418,13 @@ class TableAPI final : public BaseAPI
         util::json::Array json_table;
         std::for_each(fallback_speed_cells.begin(),
                       fallback_speed_cells.end(),
-                      [&](const auto &cell)
+                      [&](const auto &)
                       {
                           util::json::Array row;
-                          row.values.push_back(
-                              util::json::Value{util::json::Number(static_cast<double>(cell.row))});
-                          row.values.push_back(util::json::Value{
-                              util::json::Number(static_cast<double>(cell.column))});
+                        //   row.values.push_back(
+                        //       util::json::Value{util::json::Number(static_cast<double>(cell.row))});
+                        //   row.values.push_back(util::json::Value{
+                        //       util::json::Number(static_cast<double>(cell.column))});
                           json_table.values.push_back(util::json::Value{row});
                       });
         return json_table;
