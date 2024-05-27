@@ -358,11 +358,7 @@ jobs:
     - name: Enable compiler cache
       uses: actions/cache@v4
       with:
-        path: 
-          /home/runner/.ccache
-          /Users/runner/.ccache
-          ~/.config/ccache
-          ~/.cache/ccache
+        path: ~/.ccache
         key: ccache-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
           ccache-${{ matrix.name }}-
@@ -383,8 +379,8 @@ jobs:
 
     - name: Prepare environment
       run: |
-       # echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
-       # mkdir -p $HOME/.ccache
+       echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
+       mkdir -p $HOME/.ccache
         
         PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
         echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
@@ -618,6 +614,8 @@ jobs:
         ccache -p
         ccache -s
         ls ~
+
+        ls ~/.ccache
 
 
   # benchmarks:
