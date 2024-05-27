@@ -422,9 +422,10 @@ class TableAPI final : public BaseAPI
                       {
                           util::json::Array row;
                           util::json::Value jCellRow{util::json::Number(static_cast<double>(cell.row))};
+                          util::json::Value jCellColumn{
+                              util::json::Number(static_cast<double>(cell.column))};
                           row.values.push_back(jCellRow);
-                        //   row.values.push_back(util::json::Value{
-                        //       util::json::Number(static_cast<double>(cell.column))});
+                          row.values.push_back(jCellColumn);
                           json_table.values.push_back(util::json::Value{row});
                       });
         return json_table;
