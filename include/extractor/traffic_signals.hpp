@@ -17,18 +17,18 @@ struct TrafficSignals
 
     inline bool HasSignal(NodeID from, NodeID to) const
     {
-        return bidirectional_nodes.count(to) > 0 || unidirectional_segments.count({from, to}) > 0;
+        return bidirectional_nodes.contains(to) || unidirectional_segments.contains({from, to});
     }
 
     void Compress(NodeID from, NodeID via, NodeID to)
     {
         bidirectional_nodes.erase(via);
-        if (unidirectional_segments.count({via, to}))
+        if (unidirectional_segments.contains({via, to}))
         {
             unidirectional_segments.erase({via, to});
             unidirectional_segments.insert({from, to});
         }
-        if (unidirectional_segments.count({via, from}))
+        if (unidirectional_segments.contains({via, from}))
         {
             unidirectional_segments.erase({via, from});
             unidirectional_segments.insert({to, from});

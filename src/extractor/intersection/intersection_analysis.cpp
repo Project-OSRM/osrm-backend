@@ -622,7 +622,7 @@ IntersectionView convertToIntersectionView(const util::NodeBasedDynamicGraph &gr
     for (const auto &outgoing_edge : outgoing_edges)
     {
         const auto edge_it = findEdge(edge_geometries, outgoing_edge.edge);
-        const auto is_merged = merged_edges.count(outgoing_edge.edge) != 0;
+        const auto is_merged = merged_edges.contains(outgoing_edge.edge);
         const auto is_turn_allowed = intersection::isTurnAllowed(graph,
                                                                  node_data_container,
                                                                  restriction_map,

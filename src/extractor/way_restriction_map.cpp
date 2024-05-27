@@ -18,7 +18,7 @@ std::size_t WayRestrictionMap::NumberOfDuplicatedNodes() const
 
 bool WayRestrictionMap::IsViaWayEdge(const NodeID from, const NodeID to) const
 {
-    return restriction_graph.via_edge_to_node.count({from, to}) > 0;
+    return restriction_graph.via_edge_to_node.contains({from, to});
 }
 
 std::vector<DuplicatedNodeID> WayRestrictionMap::DuplicatedNodeIDs(const NodeID from,

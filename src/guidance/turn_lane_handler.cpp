@@ -508,7 +508,7 @@ bool TurnLaneHandler::isSimpleIntersection(const LaneDataVector &lane_data,
         }();
         BOOST_ASSERT(best_match != intersection.end());
         std::size_t match_index = std::distance(intersection.begin(), best_match);
-        all_simple &= (matched_indices.count(match_index) == 0);
+        all_simple &= (!matched_indices.contains(match_index));
         matched_indices.insert(match_index);
         // in case of u-turns, we might need to activate them first
         all_simple &= (best_match->entry_allowed ||
