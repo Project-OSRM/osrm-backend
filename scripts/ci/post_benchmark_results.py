@@ -77,7 +77,12 @@ def main():
     pr_body = pr_details.get('body', '') or ''
 
     markdown_table = create_markdown_table(benchmark_results)
-    new_benchmark_section = f"<!-- BENCHMARK_RESULTS_START -->\n## Benchmark Results\n{markdown_table}\n<!-- BENCHMARK_RESULTS_END -->"
+    new_benchmark_section = f"""
+<!-- BENCHMARK_RESULTS_START -->
+<details><summary>Benchmark Results</summary>
+{markdown_table}
+</details>
+<!-- BENCHMARK_RESULTS_END -->"
 
     if re.search(r'<!-- BENCHMARK_RESULTS_START -->.*<!-- BENCHMARK_RESULTS_END -->', pr_body, re.DOTALL):
         updated_body = re.sub(

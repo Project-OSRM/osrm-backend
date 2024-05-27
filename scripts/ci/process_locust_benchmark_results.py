@@ -22,7 +22,7 @@ avg: {float(row['Average Response Time']):.3f}ms
 min: {float(row['Min Response Time']):.3f}ms
 max: {float(row['Max Response Time']):.3f}ms
 '''
-                with open(f"{output_folder}/{name}_{suffix}.bench", 'w') as f:
+                with open(f"{output_folder}/e2e_{name}_{suffix}.bench", 'w') as f:
                     f.write(statistics)
 
 if __name__ == '__main__':
