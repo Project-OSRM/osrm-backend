@@ -245,6 +245,16 @@ jobs:
             CXXCOMPILER: clang++-15
             ENABLE_CONAN: ON
 
+          - name: gcc-14-release
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-24.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-14
+            CXXCOMPILER: g++-14
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+
           - name: gcc-13-release
             continue-on-error: false
             node: 20
@@ -456,7 +466,7 @@ jobs:
         fi
 
         # TBB
-        TBB_VERSION=2021.3.0
+        TBB_VERSION=2021.12.0
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
           TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz"
         elif [[ "${RUNNER_OS}" == "macOS" ]]; then

@@ -248,7 +248,7 @@ filterViaCandidatesByViaNotOnPath(const WeightedViaNodePackedPath &path, RandIt 
     for (const auto &edge : path.path)
         nodes.insert(std::get<1>(edge));
 
-    const auto via_on_path = [&](const auto via) { return nodes.count(via.node) > 0; };
+    const auto via_on_path = [&](const auto via) { return nodes.contains(via.node); };
 
     return std::remove_if(first, last, via_on_path);
 }
@@ -308,7 +308,7 @@ RandIt filterPackedPathsByCellSharing(RandIt first,
         {
             const auto source_cell = get_cell(std::get<0>(edge));
             const auto target_cell = get_cell(std::get<1>(edge));
-            return cells.count(source_cell) < 1 && cells.count(target_cell) < 1;
+            return !cells.contains(source_cell) && !cells.contains(target_cell);
         };
 
         const auto different = std::count_if(begin(packed.path), end(packed.path), not_seen);
@@ -491,7 +491,7 @@ RandIt filterUnpackedPathsBySharing(RandIt first,
         {
             auto node_duration = facade.GetNodeDuration(node);
             total_duration += node_duration;
-            if (nodes.count(node) > 0)
+            if (nodes.contains(node))
             {
                 return duration + node_duration;
             }

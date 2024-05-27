@@ -7,6 +7,7 @@
       - ADDED: Add support for opposite approach request parameter. [#6842](https://github.com/Project-OSRM/osrm-backend/pull/6842)
       - ADDED: Add support for accessing edge flags in `process_segment` [#6658](https://github.com/Project-OSRM/osrm-backend/pull/6658)
     - Build:
+      - CHANGED: Use Debian Bookworm as base Docker image [#6904](https://github.com/Project-OSRM/osrm-backend/pull/6904)
       - CHANGED: Upgrade CI actions to latest versions [#6893](https://github.com/Project-OSRM/osrm-backend/pull/6893)
       - CHANGED:  Remove outdated warnings #6894 [#6894](https://github.com/Project-OSRM/osrm-backend/pull/6894)
       - ADDED: Add CI job which builds OSRM with gcc 12. [#6455](https://github.com/Project-OSRM/osrm-backend/pull/6455)
@@ -21,6 +22,7 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: Bump rapidjson to version f9d53419e912910fd8fa57d5705fa41425428c35 [#6906](https://github.com/Project-OSRM/osrm-backend/pull/6906)
       - CHANGED: Bump mapbox/variant to version 1.2.0 [#6898](https://github.com/Project-OSRM/osrm-backend/pull/6898)
       - CHANGED: Avoid copy of std::function-based callback in path unpacking [#6895](https://github.com/Project-OSRM/osrm-backend/pull/6895)
       - CHANGED: Replace boost::hash by std::hash [#6892](https://github.com/Project-OSRM/osrm-backend/pull/6892)
