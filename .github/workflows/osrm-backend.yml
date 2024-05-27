@@ -274,6 +274,15 @@ jobs:
             CXXCOMPILER: g++-12
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
+          - name: gcc-11-release
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-11
+            CXXCOMPILER: g++-11
+
           - name: conan-linux-release-node
             build_node_package: true
             continue-on-error: false
@@ -522,23 +531,23 @@ jobs:
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
         make --jobs=${JOBS}
         popd
-    # - name: Run all tests
-    #   if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
-    #   run: |
-    #     make -C test/data benchmark
+    - name: Run all tests
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
+      run: |
+        make -C test/data benchmark
 
-    #     # macOS SIP strips the linker path. Reset this inside the running shell
-    #     export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
-    #     ./example/build/osrm-example test/data/mld/monaco.osrm
+        # macOS SIP strips the linker path. Reset this inside the running shell
+        export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
+        ./example/build/osrm-example test/data/mld/monaco.osrm
 
-    #     # All tests assume to be run from the build directory
-    #     pushd ${OSRM_BUILD_DIR}
-    #     for i in ./unit_tests/*-tests ; do echo Running $i ; $i ; done
-    #     if [ -z "${ENABLE_SANITIZER}" ]; then
-    #       npm run nodejs-tests
-    #     fi
-    #     popd
-    #     npm test
+        # All tests assume to be run from the build directory
+        pushd ${OSRM_BUILD_DIR}
+        for i in ./unit_tests/*-tests ; do echo Running $i ; $i ; done
+        if [ -z "${ENABLE_SANITIZER}" ]; then
+          npm run nodejs-tests
+        fi
+        popd
+        npm test
 
     - name: Use Node 18
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
