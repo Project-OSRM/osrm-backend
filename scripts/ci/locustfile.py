@@ -71,4 +71,5 @@ class OSRMTasks(TaskSet):
 
 class OSRMUser(HttpUser):
     tasks = [OSRMTasks]
+    # random wait time between requests to not load server for 100%
     wait_time = between(0.05, 0.5)
