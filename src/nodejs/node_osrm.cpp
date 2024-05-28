@@ -147,7 +147,7 @@ inline void async(const Napi::CallbackInfo &info,
                 osrm::engine::api::ResultT r;
                 r = osrm::util::json::Object();
                 const auto status = ((*osrm).*(service))(*params, r);
-                auto &json_result = r.get<osrm::json::Object>();
+                auto &json_result = std::get<osrm::json::Object>(r);
                 ParseResult(status, json_result);
                 if (pluginParams.renderToBuffer)
                 {
@@ -165,7 +165,7 @@ inline void async(const Napi::CallbackInfo &info,
             {
                 osrm::engine::api::ResultT r = flatbuffers::FlatBufferBuilder();
                 const auto status = ((*osrm).*(service))(*params, r);
-                const auto &fbs_result = r.get<flatbuffers::FlatBufferBuilder>();
+                const auto &fbs_result = std::get<flatbuffers::FlatBufferBuilder>(r);
                 ParseResult(status, fbs_result);
                 BOOST_ASSERT(pluginParams.renderToBuffer);
                 std::string result_str(
@@ -240,7 +240,7 @@ inline void asyncForTiles(const Napi::CallbackInfo &info,
         {
             result = std::string();
             const auto status = ((*osrm).*(service))(*params, result);
-            auto str_result = result.get<std::string>();
+            auto str_result = std::get<std::string>(result);
             ParseResult(status, str_result);
         }
         catch (const std::exception &e)
@@ -252,7 +252,7 @@ inline void asyncForTiles(const Napi::CallbackInfo &info,
         {
             Napi::HandleScope scope{Env()};
 
-            Callback().Call({Env().Null(), render(Env(), result.get<std::string>())});
+            Callback().Call({Env().Null(), render(Env(), std::get<std::string>(result))});
         }
 
         // Keeps the OSRM object alive even after shutdown until we're done with callback

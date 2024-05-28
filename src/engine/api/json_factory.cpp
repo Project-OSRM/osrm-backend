@@ -74,12 +74,12 @@ std::string waypointTypeToString(const guidance::WaypointType waypoint_type)
     return waypoint_type_names[static_cast<std::size_t>(waypoint_type)];
 }
 
-util::json::Array coordinateToLonLat(const util::Coordinate &coordinate)
+util::json::Value coordinateToLonLat(const util::Coordinate &coordinate)
 {
     util::json::Array array;
     array.values.push_back(static_cast<double>(util::toFloating(coordinate.lon)));
     array.values.push_back(static_cast<double>(util::toFloating(coordinate.lat)));
-    return array;
+    return util::json::Value{std::move(array)};
 }
 
 } // namespace detail

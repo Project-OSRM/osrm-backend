@@ -50,14 +50,14 @@ class TableAPI final : public BaseAPI
                  const std::vector<TableCellRef> &fallback_speed_cells,
                  osrm::engine::api::ResultT &response) const
     {
-        if (response.is<flatbuffers::FlatBufferBuilder>())
+        if (std::holds_alternative<flatbuffers::FlatBufferBuilder>(response))
         {
-            auto &fb_result = response.get<flatbuffers::FlatBufferBuilder>();
+            auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(response);
             MakeResponse(tables, candidates, fallback_speed_cells, fb_result);
         }
         else
         {
-            auto &json_result = response.get<util::json::Object>();
+            auto &json_result = std::get<util::json::Object>(response);
             MakeResponse(tables, candidates, fallback_speed_cells, json_result);
         }
     }
@@ -377,7 +377,8 @@ class TableAPI final : public BaseAPI
                                return util::json::Value(
                                    util::json::Number(from_alias<double>(duration) / 10.));
                            });
-            json_table.values.push_back(std::move(json_row));
+
+            json_table.values.push_back(util::json::Value{json_row});
         }
         return json_table;
     }
@@ -406,7 +407,7 @@ class TableAPI final : public BaseAPI
                                return util::json::Value(util::json::Number(
                                    std::round(from_alias<double>(distance) * 10) / 10.));
                            });
-            json_table.values.push_back(std::move(json_row));
+            json_table.values.push_back(util::json::Value{json_row});
         }
         return json_table;
     }
@@ -415,15 +416,18 @@ class TableAPI final : public BaseAPI
     MakeEstimatesTable(const std::vector<TableCellRef> &fallback_speed_cells) const
     {
         util::json::Array json_table;
-        std::for_each(fallback_speed_cells.begin(),
-                      fallback_speed_cells.end(),
-                      [&](const auto &cell)
-                      {
-                          util::json::Array row;
-                          row.values.push_back(util::json::Number(cell.row));
-                          row.values.push_back(util::json::Number(cell.column));
-                          json_table.values.push_back(std::move(row));
-                      });
+        std::for_each(
+            fallback_speed_cells.begin(),
+            fallback_speed_cells.end(),
+            [&](const auto &cell)
+            {
+                util::json::Array row;
+                util::json::Value jCellRow{util::json::Number(static_cast<double>(cell.row))};
+                util::json::Value jCellColumn{util::json::Number(static_cast<double>(cell.column))};
+                row.values.push_back(jCellRow);
+                row.values.push_back(jCellColumn);
+                json_table.values.push_back(util::json::Value{row});
+            });
         return json_table;
     }
 

@@ -27,14 +27,14 @@ class TripAPI final : public RouteAPI
     {
         BOOST_ASSERT(sub_trips.size() == sub_routes.size());
 
-        if (response.is<flatbuffers::FlatBufferBuilder>())
+        if (std::holds_alternative<flatbuffers::FlatBufferBuilder>(response))
         {
-            auto &fb_result = response.get<flatbuffers::FlatBufferBuilder>();
+            auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(response);
             MakeResponse(sub_trips, sub_routes, candidates, fb_result);
         }
         else
         {
-            auto &json_result = response.get<util::json::Object>();
+            auto &json_result = std::get<util::json::Object>(response);
             MakeResponse(sub_trips, sub_routes, candidates, json_result);
         }
     }

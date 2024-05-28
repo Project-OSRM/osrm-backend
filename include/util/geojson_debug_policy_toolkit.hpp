@@ -55,12 +55,12 @@ inline util::json::Object makeStyle(const GeojsonStyleSize size_type,
 
 struct CoordinateToJsonArray
 {
-    util::json::Array operator()(const util::Coordinate coordinate)
+    util::json::Value operator()(const util::Coordinate coordinate)
     {
         util::json::Array json_coordinate;
         json_coordinate.values.push_back(static_cast<double>(toFloating(coordinate.lon)));
         json_coordinate.values.push_back(static_cast<double>(toFloating(coordinate.lat)));
-        return json_coordinate;
+        return util::json::Value{json_coordinate};
     }
 };
 
@@ -73,7 +73,7 @@ struct NodeIdToCoordinate
 
     const std::vector<util::Coordinate> &node_coordinates;
 
-    util::json::Array operator()(const NodeID nid)
+    util::json::Value operator()(const NodeID nid)
     {
         auto coordinate = node_coordinates[nid];
         CoordinateToJsonArray converter;

@@ -51,7 +51,7 @@ class GeojsonLogger
             if (!first)
                 ofs << ",\n\t\t";
 
-            util::json::render(ofs, object.get<util::json::Object>());
+            util::json::render(ofs, std::get<util::json::Object>(object));
 
             first = false;
         }
