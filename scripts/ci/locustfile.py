@@ -1,4 +1,4 @@
-from locust import FastHttpUser, TaskSet, task, between
+from locust import HttpUser, TaskSet, task, between
 import csv
 import random
 from collections import defaultdict
@@ -68,6 +68,6 @@ class OSRMTasks(TaskSet):
         
         self.client.get(f"/trip/v1/driving/{coords_str}?steps=true", name="trip")
 
-class OSRMUser(FastHttpUser):
+class OSRMUser(HttpUser):
     tasks = [OSRMTasks]
     wait_time = between(0.1, 1)
