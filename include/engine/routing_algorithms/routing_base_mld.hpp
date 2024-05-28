@@ -734,29 +734,9 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
     //     }
     // }
 
-    if (!forward_heap.Empty())
-    {
-        if (target_phantom.IsValidForwardTarget() && !target_phantom.IsValidReverseTarget())
-        {
-            if (const auto node =
-                    forward_heap.GetHeapNodeIfWasInserted(target_phantom.forward_segment_id.id))
-            {
-                if (node->weight < weight_upper_bound) {
-                    return from_alias<double>(node->data.distance);
-                } 
-                return std::numeric_limits<double>::max();
-            }
-        }
-        // if (target_phantom.IsValidReverseTarget()) {
-        //     if (const auto node =
-        //     forward_heap.GetHeapNodeIfWasInserted(target_phantom.reverse_segment_id.id)) {
-        //         return from_alias<double>(node->data.distance);
-        //     }
-        // }
-    }
 
-    forward_heap.Clear();
-
+  //  forward_heap.Clear();
+ if (forward_heap.Empty()) {
     if (source_phantom.IsValidForwardSource())
     {
         forward_heap.Insert(source_phantom.forward_segment_id.id,
@@ -770,6 +750,7 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                             EdgeWeight{0},
                             {source_phantom.reverse_segment_id.id, false, EdgeDistance{0}});
     }
+}
 
     if (target_phantom.IsValidForwardTarget())
     {
