@@ -106,7 +106,6 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
-      - run: pip install locust
       - name: Enable osm.pbf cache
         uses: actions/cache@v4
         with:
@@ -136,6 +135,12 @@ jobs:
 
           # removing `.osrm.nbg` to check that whole pipeline works without it
           rm -rf "${PWD}/berlin-latest.osrm.nbg"
+
+          docker run $MEMORY_ARGS -t -v "${PWD}:/data" "${TAG}" osrm-partition /data/berlin-latest.osrm
+          docker run $MEMORY_ARGS -t -v "${PWD}:/data" "${TAG}" osrm-customize /data/berlin-latest.osrm
+          docker run $MEMORY_ARGS --name=osrm-container -t -p 5000:5000 -v "${PWD}:/data" "${TAG}" osrm-routed --algorithm mld /data/berlin-latest.osrm &
+          curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
+          docker stop osrm-container
 
   build-test-publish:
     needs: format-taginfo-docs
@@ -238,6 +243,16 @@ jobs:
             CCOMPILER: clang-15
             CXXCOMPILER: clang++-15
             ENABLE_CONAN: ON
+
+          - name: gcc-14-release
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-24.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-14
+            CXXCOMPILER: g++-14
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
           - name: gcc-13-release
             continue-on-error: false
@@ -373,6 +388,9 @@ jobs:
           v4-test-${{ matrix.name }}-
     - name: Prepare environment
       run: |
+        echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
+        mkdir -p $HOME/.ccache
+
         PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
         echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
         echo "OSRM_INSTALL_DIR=${GITHUB_WORKSPACE}/install-osrm" >> $GITHUB_ENV
@@ -449,7 +467,7 @@ jobs:
         fi
 
         # TBB
-        TBB_VERSION=2021.3.0
+        TBB_VERSION=2021.12.0
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
           TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz"
         elif [[ "${RUNNER_OS}" == "macOS" ]]; then
@@ -479,8 +497,9 @@ jobs:
     - name: Build and install OSRM
       run: |
         echo "Using ${JOBS} jobs"
-        pushd ${OSRM_BUILD_DIR}
-
+        pushd ${OSRM_B
+        
+        ccache --zero-stats
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                  -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
                  -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
@@ -497,7 +516,7 @@ jobs:
         if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
           make tests --jobs=${JOBS}
           make benchmarks --jobs=${JOBS}
-          ccache -s
+
           sudo make install
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
             echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib" >> $GITHUB_ENV
@@ -600,7 +619,10 @@ jobs:
         omitNameDuringUpdate: true
         replacesArtifacts: true
         token: ${{ secrets.GITHUB_TOKEN }}
-
+    - name: Show CCache statistics
+      run: |
+        ccache -p
+        ccache -s
 
   benchmarks:
     if: github.event_name == 'pull_request'
@@ -618,7 +640,7 @@ jobs:
       - name: Enable compiler cache
         uses: actions/cache@v4
         with:
-          path: ~/.config/ccache
+          path: ~/.ccache
           key: v1-ccache-benchmarks-${{ github.sha }}
           restore-keys: |
             v1-ccache-benchmarks-
