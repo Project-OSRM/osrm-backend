@@ -44,8 +44,9 @@ class OSRMTasks(TaskSet):
         track_id = random.choice(self.track_ids)
         track_coords = self.tracks[track_id][:num_coords]
         coords_str = ";".join([f"{coord[1]:.6f},{coord[0]:.6f}" for coord in track_coords])
-        
-        with self.client.get(f"/match/v1/driving/{coords_str}?steps=true", name="match", catch_response=True) as response:
+        radiues_str = ";".join([f"{random.randint(10, 30)}" for _ in range(num_coords)])
+
+        with self.client.get(f"/match/v1/driving/{coords_str}?steps=true&radiuses={radiues_str}", name="match", catch_response=True) as response:
             if response.status_code == 400:
                 j = response.json()
                 # it is expected that some of requests will fail with such error: map matching fails sometimes
@@ -70,4 +71,4 @@ class OSRMTasks(TaskSet):
 
 class OSRMUser(HttpUser):
     tasks = [OSRMTasks]
-    wait_time = between(0.01, 0.1)
+    wait_time = between(0.05, 0.5)
