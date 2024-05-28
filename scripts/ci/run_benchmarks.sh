@@ -43,7 +43,7 @@ function run_benchmarks_for_folder {
                 --host http://localhost:5000 \
                 --run-time 1m \
                 --csv=locust_results_$ALGORITHM \
-                --loglevel ERROR || true
+                --loglevel ERROR
 
             python3 $FOLDER/scripts/ci/process_locust_benchmark_results.py locust_results_$ALGORITHM $ALGORITHM $RESULTS_FOLDER
 
