@@ -12,7 +12,6 @@ def main(locust_csv_base_name, suffix, output_folder):
 requests: {row['Request Count']}
 failures: {row['Failure Count']}
 req/s: {float(row['Requests/s']):.3f}req/s
-fail/s: {float(row['Failures/s']):.3f}fail/s
 avg: {float(row['Average Response Time']):.3f}ms
 50%: {row['50%']}ms
 75%: {row['75%']}ms
