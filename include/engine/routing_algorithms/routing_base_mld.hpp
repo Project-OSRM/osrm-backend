@@ -516,7 +516,8 @@ std::optional<std::pair<NodeID, EdgeWeight>> runSearch(const DataFacade<Algorith
     while (forward_heap.Size() + reverse_heap.Size() > 0 && (
            forward_heap_min < weight || reverse_heap_min < weight))
     #else
-        while (forward_heap.Size() > 0 && forward_heap_min < weight_upper_bound)
+        while (forward_heap.Size() + reverse_heap.Size() > 0 && (
+           forward_heap_min + reverse_heap_min < weight))
     #endif
     {
        // std::cerr << "F: " << forward_heap_min << " R: " << reverse_heap_min << " W: " << weight << std::endl;
@@ -528,13 +529,13 @@ std::optional<std::pair<NodeID, EdgeWeight>> runSearch(const DataFacade<Algorith
             if (!forward_heap.Empty())
                 forward_heap_min = forward_heap.MinKey();
         }
-        // if (!reverse_heap.Empty())
-        // {
-        //    routingStep<REVERSE_DIRECTION>(
-        //         facade, reverse_heap, forward_heap, middle, weight, force_step_nodes, args...);
-        //     if (!reverse_heap.Empty())
-        //         reverse_heap_min = reverse_heap.MinKey();
-        // }
+        if (!reverse_heap.Empty())
+        {
+           routingStep<REVERSE_DIRECTION>(
+                facade, reverse_heap, forward_heap, middle, weight, force_step_nodes, args...);
+            if (!reverse_heap.Empty())
+                reverse_heap_min = reverse_heap.MinKey();
+        }
     };
 
     if (!reverse_heap.Empty()) {
@@ -753,7 +754,7 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
 
 
   //  forward_heap.Clear();
- if (forward_heap.Empty()) {
+ //if (forward_heap.Empty()) {
     if (source_phantom.IsValidForwardSource())
     {
         forward_heap.Insert(source_phantom.forward_segment_id.id,
@@ -767,7 +768,7 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                             EdgeWeight{0},
                             {source_phantom.reverse_segment_id.id, false, EdgeDistance{0}});
     }
-}
+//}
 
     if (target_phantom.IsValidForwardTarget())
     {
