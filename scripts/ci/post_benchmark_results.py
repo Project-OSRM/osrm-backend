@@ -79,7 +79,8 @@ def main():
     markdown_table = create_markdown_table(benchmark_results)
     new_benchmark_section = f"""
 <!-- BENCHMARK_RESULTS_START -->
-<details><summary>Benchmark Results</summary>
+<details><summary><h2>Benchmark Results</h2></summary>
+
 {markdown_table}
 </details>
 <!-- BENCHMARK_RESULTS_END -->
