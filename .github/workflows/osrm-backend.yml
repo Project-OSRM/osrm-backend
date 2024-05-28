@@ -15,7 +15,6 @@ env:
   CCACHE_TEMPDIR: /tmp/.ccache-temp
   CCACHE_COMPRESS: 1
   CASHER_TIME_OUT: 599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
-  CCACHE_VERSION: 3.3.1
   CMAKE_VERSION: 3.21.2
   ENABLE_NODE_BINDINGS: "ON"
 
@@ -380,7 +379,6 @@ jobs:
   #       key: v4-test-${{ matrix.name }}-${{ github.sha }}
   #       restore-keys: |
   #         v4-test-${{ matrix.name }}-
-
   #   - name: Prepare environment
   #     run: |
   #       PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
@@ -490,7 +488,6 @@ jobs:
   #     run: |
   #       echo "Using ${JOBS} jobs"
   #       pushd ${OSRM_BUILD_DIR}
-
 
   #       cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
   #                -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
@@ -646,11 +643,19 @@ jobs:
           ref: ${{ github.head_ref }}
           path: pr
       - name: Install dependencies
-        run: python3 -m pip install "conan<2.0.0" "requests==2.31.0" "locust==2.28.0"
+        run: | 
+          python3 -m pip install "conan<2.0.0" "requests==2.31.0" "locust==2.28.0"
+          sudo apt-get update -y && sudo apt-get install ccache
       - name: Prepare data
         run: |
           wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
           python3 ./pr/scripts/ci/download_gps_traces.py 13.3384 52.4383 13.5611 52.5755 > ~/gps_traces.csv
+      - name: Prepare environment
+        run: |
+          echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
+          mkdir -p $HOME/.ccache
+          ccache --zero-stats
+          ccache --max-size=256M
       - name: Build PR Branch
         run: |
           mkdir -p pr/build
@@ -680,6 +685,10 @@ jobs:
       - name: Post Benchmark Results
         run: |
           python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
+      - name: Show CCache statistics
+        run: |
+          ccache -p
+          ccache -s
 
   # ci-complete:
   #   runs-on: ubuntu-22.04
