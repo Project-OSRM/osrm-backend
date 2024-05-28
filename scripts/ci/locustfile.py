@@ -40,7 +40,7 @@ class OSRMTasks(TaskSet):
 
     @task
     def get_match(self):
-        num_coords = random.randint(100, 150)
+        num_coords = random.randint(50, 100)
         track_id = random.choice(self.track_ids)
         track_coords = self.tracks[track_id][:num_coords]
         coords_str = ";".join([f"{coord[1]:.6f},{coord[0]:.6f}" for coord in track_coords])
