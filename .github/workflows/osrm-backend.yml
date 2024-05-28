@@ -15,7 +15,6 @@ env:
   CCACHE_TEMPDIR: /tmp/.ccache-temp
   CCACHE_COMPRESS: 1
   CASHER_TIME_OUT: 599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
-  CCACHE_VERSION: 3.3.1
   CMAKE_VERSION: 3.21.2
   ENABLE_NODE_BINDINGS: "ON"
 
@@ -390,6 +389,9 @@ jobs:
 
     - name: Prepare environment
       run: |
+        echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
+        mkdir -p $HOME/.ccache
+        
         PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
         echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
         echo "OSRM_INSTALL_DIR=${GITHUB_WORKSPACE}/install-osrm" >> $GITHUB_ENV
@@ -498,7 +500,7 @@ jobs:
         echo "Using ${JOBS} jobs"
         pushd ${OSRM_BUILD_DIR}
 
-
+        ccache --zero-stats
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                  -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
                  -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
@@ -515,7 +517,6 @@ jobs:
         if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
           make tests --jobs=${JOBS}
           make benchmarks --jobs=${JOBS}
-          ccache -s
           sudo make install
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
             echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib" >> $GITHUB_ENV
@@ -618,7 +619,10 @@ jobs:
         omitNameDuringUpdate: true
         replacesArtifacts: true
         token: ${{ secrets.GITHUB_TOKEN }}
-
+    - name: Show CCache statistics
+      run: |
+        ccache -p
+        ccache -s
 
   benchmarks:
     if: github.event_name == 'pull_request'
@@ -652,7 +656,16 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           path: pr
-      - run: python3 -m pip install "conan<2.0.0" "requests==2.31.0"
+      - name: Install dependencies
+        run: |
+          python3 -m pip install "conan<2.0.0" "requests==2.31.0"
+          sudo apt-get update -y && sudo apt-get install ccache
+      - name: Prepare environment
+        run: |
+          echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
+          mkdir -p $HOME/.ccache
+          ccache --zero-stats
+          ccache --max-size=256M
       - name: Build PR Branch
         run: |
           mkdir -p pr/build
@@ -682,6 +695,10 @@ jobs:
       - name: Post Benchmark Results
         run: |
           python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
+      - name: Show CCache statistics
+        run: |
+          ccache -p
+          ccache -s
 
   ci-complete:
     runs-on: ubuntu-22.04
