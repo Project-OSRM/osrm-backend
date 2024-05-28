@@ -497,7 +497,7 @@ jobs:
     - name: Build and install OSRM
       run: |
         echo "Using ${JOBS} jobs"
-        pushd ${OSRM_B
+        pushd ${OSRM_BUILD_DIR}
         
         ccache --zero-stats
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
