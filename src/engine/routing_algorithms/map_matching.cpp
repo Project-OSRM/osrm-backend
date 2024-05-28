@@ -220,7 +220,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                 ((haversine_distance + max_distance_delta) / 4.) * facade.GetWeightMultiplier());
 
           
-
+#if 0
             std::vector<PhantomNode> test_sources;
             std::vector<PhantomNode> test_targets;
 
@@ -258,24 +258,27 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
             test_targets[1].is_valid_reverse_target = true;
 
 
-            // std::vector<double> old_distances;
+        //    std::cerr << "OLD RUN: \n";
+            std::vector<double> old_distances;
 
-            // for (const auto& s: test_sources) {
-            //     for (const auto& t: test_targets) {
-            //         forward_heap.Clear();
-            //         double network_distance =
-            //             getNetworkDistanceOld(engine_working_data,
-            //                                facade,
-            //                                forward_heap,
-            //                                reverse_heap,
-            //                                s,
-            //                                t,
-            //                                weight_upper_bound);
-            //         old_distances.push_back(network_distance);
+            for (const auto& s: test_sources) {
+                for (const auto& t: test_targets) {
+                    forward_heap.Clear();
+                    double network_distance =
+                        getNetworkDistanceOld(engine_working_data,
+                                           facade,
+                                           forward_heap,
+                                           reverse_heap,
+                                           s,
+                                           t,
+                                           weight_upper_bound);
+                    old_distances.push_back(network_distance);
                 
-            //     }
-            // }
+                }
+            }
 
+
+          //  std::cerr << "NEW RUN: \n";
             std::vector<double> new_distances;
 
             for (const auto& s: test_sources) {
@@ -301,13 +304,90 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                 std::cerr << "New distances size is not equal to expected size" << std::endl;
                 std::exit(1);
             }
+            // for (size_t index = 0; index < new_distances.size(); index++) {
+            //     std::cerr << new_distances[index] << std::endl;
+            // }
             for (size_t index = 0; index < new_distances.size(); index++) {
+                
                 if (std::abs(new_distances[index] - expected[index]) > 1e-1) {
                     std::cerr << "New: " << new_distances[index] << " Expected: " << expected[index] << std::endl;
                     std::exit(1);
                 }
             }
+#else
+            std::vector<double> old_distances;
+              for (const auto s : util::irange<std::size_t>(0UL, prev_viterbi.size()))
+            {
+                if (prev_pruned[s])
+                {
+                    continue;
+                }
 
+                for (const auto s_prime : util::irange<std::size_t>(0UL, current_viterbi.size()))
+                {
+                    const double emission_pr = emission_log_probabilities[t][s_prime];
+                    double new_value = prev_viterbi[s] + emission_pr;
+                    if (current_viterbi[s_prime] > new_value)
+                    {
+                        continue;
+                    }
+
+                    forward_heap.Clear();
+                    double network_distance =
+                        getNetworkDistanceOld(engine_working_data,
+                                           facade,
+                                           forward_heap,
+                                           reverse_heap,
+                                           prev_unbroken_timestamps_list[s].phantom_node,
+                                           current_timestamps_list[s_prime].phantom_node,
+                                           weight_upper_bound);
+                    old_distances.push_back(network_distance);
+                }
+            }
+
+            std::vector<double> new_distances;
+            for (const auto s : util::irange<std::size_t>(0UL, prev_viterbi.size()))
+            {
+                if (prev_pruned[s])
+                {
+                    continue;
+                }
+
+                forward_heap.Clear();
+
+                for (const auto s_prime : util::irange<std::size_t>(0UL, current_viterbi.size()))
+                {
+                    const double emission_pr = emission_log_probabilities[t][s_prime];
+                    double new_value = prev_viterbi[s] + emission_pr;
+                    if (current_viterbi[s_prime] > new_value)
+                    {
+                        continue;
+                    }
+
+                    double network_distance =
+                        getNetworkDistance(engine_working_data,
+                                           facade,
+                                           forward_heap,
+                                           reverse_heap,
+                                           prev_unbroken_timestamps_list[s].phantom_node,
+                                           current_timestamps_list[s_prime].phantom_node,
+                                           weight_upper_bound);
+                    new_distances.push_back(network_distance);
+                }
+            }
+            if (new_distances.size() != old_distances.size()) {
+                std::cerr << "New distances size is not equal to expected size" << std::endl;
+                std::exit(1);
+            }
+
+              for (size_t index = 0; index < new_distances.size(); index++) {
+                
+                if (std::abs(new_distances[index] - old_distances[index]) > 1e-1) {
+                    std::cerr << "New: " << new_distances[index] << " Expected: " << old_distances[index] << std::endl;
+                    std::exit(1);
+                }
+            }
+#endif
 
             // compute d_t for this timestamp and the next one
             for (const auto s : util::irange<std::size_t>(0UL, prev_viterbi.size()))

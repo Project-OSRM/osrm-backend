@@ -510,8 +510,8 @@ std::optional<std::pair<NodeID, EdgeWeight>> runSearch(const DataFacade<Algorith
     EdgeWeight weight = weight_upper_bound;
     EdgeWeight forward_heap_min = forward_heap.MinKey();
     EdgeWeight reverse_heap_min = reverse_heap.MinKey();
-    while (forward_heap.Size() + reverse_heap.Size() > 0 &&
-           forward_heap_min + reverse_heap_min < weight)
+    while (forward_heap.Size() + reverse_heap.Size() > 0 /*&&
+           forward_heap_min + reverse_heap_min < weight*/)
     {
         if (!forward_heap.Empty())
         {
@@ -534,6 +534,8 @@ std::optional<std::pair<NodeID, EdgeWeight>> runSearch(const DataFacade<Algorith
     {
         return {};
     }
+
+   // std::cerr << "MIDDLE = " << middle << std::endl;
 
     return {{middle, weight}};
 }
@@ -634,8 +636,8 @@ searchDistance(SearchEngineData<Algorithm> &,
         return INVALID_EDGE_DISTANCE;
     }
 
-    auto [middle, _] = *searchResult;
-
+    auto [middle, weight] = *searchResult;
+    //std::cerr << "W: " << weight << std::endl;
     auto distance = forward_heap.GetData(middle).distance + reverse_heap.GetData(middle).distance;
 
     return distance;
