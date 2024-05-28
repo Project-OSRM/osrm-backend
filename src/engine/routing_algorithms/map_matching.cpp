@@ -220,7 +220,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                 ((haversine_distance + max_distance_delta) / 4.) * facade.GetWeightMultiplier());
 
           
-#if 0
+#if 1
             std::vector<PhantomNode> test_sources;
             std::vector<PhantomNode> test_targets;
 
@@ -259,23 +259,23 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
 
 
         //    std::cerr << "OLD RUN: \n";
-            std::vector<double> old_distances;
+            // std::vector<double> old_distances;
 
-            for (const auto& s: test_sources) {
-                for (const auto& t: test_targets) {
-                    forward_heap.Clear();
-                    double network_distance =
-                        getNetworkDistanceOld(engine_working_data,
-                                           facade,
-                                           forward_heap,
-                                           reverse_heap,
-                                           s,
-                                           t,
-                                           weight_upper_bound);
-                    old_distances.push_back(network_distance);
+            // for (const auto& s: test_sources) {
+            //     for (const auto& t: test_targets) {
+            //         forward_heap.Clear();
+            //         double network_distance =
+            //             getNetworkDistanceOld(engine_working_data,
+            //                                facade,
+            //                                forward_heap,
+            //                                reverse_heap,
+            //                                s,
+            //                                t,
+            //                                weight_upper_bound);
+            //         old_distances.push_back(network_distance);
                 
-                }
-            }
+            //     }
+            // }
 
 
           //  std::cerr << "NEW RUN: \n";
@@ -314,7 +314,8 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                     std::exit(1);
                 }
             }
-#else
+            std::exit(1);
+#elif 1
             std::vector<double> old_distances;
               for (const auto s : util::irange<std::size_t>(0UL, prev_viterbi.size()))
             {
@@ -409,7 +410,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                     }
 
                     double network_distance =
-                        getNetworkDistanceOld(engine_working_data,
+                        getNetworkDistance(engine_working_data,
                                            facade,
                                            forward_heap,
                                            reverse_heap,

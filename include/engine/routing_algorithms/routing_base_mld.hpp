@@ -497,7 +497,7 @@ std::optional<std::pair<NodeID, EdgeWeight>> runSearch(const DataFacade<Algorith
                                                        EdgeWeight weight_upper_bound,
                                                        const Args &...args)
 {
-    if (forward_heap.Empty() || reverse_heap.Empty())
+    if (forward_heap.Empty() && reverse_heap.Empty())
     {
         return {};
     }
@@ -510,9 +510,17 @@ std::optional<std::pair<NodeID, EdgeWeight>> runSearch(const DataFacade<Algorith
     EdgeWeight weight = weight_upper_bound;
     EdgeWeight forward_heap_min = forward_heap.MinKey();
     EdgeWeight reverse_heap_min = reverse_heap.MinKey();
-    while (forward_heap.Size() + reverse_heap.Size() > 0 /*&&
-           forward_heap_min + reverse_heap_min < weight*/)
+    // if (!reverse_heap.Empty())
+    //     reverse_heap_min = reverse_heap.MinKey();
+    #if 0
+    while (forward_heap.Size() + reverse_heap.Size() > 0 && (
+           forward_heap_min < weight || reverse_heap_min < weight))
+    #else
+        while (forward_heap.Size() > 0 && forward_heap_min < weight_upper_bound)
+    #endif
     {
+       // std::cerr << "F: " << forward_heap_min << " R: " << reverse_heap_min << " W: " << weight << std::endl;
+
         if (!forward_heap.Empty())
         {
             routingStep<FORWARD_DIRECTION>(
@@ -520,14 +528,21 @@ std::optional<std::pair<NodeID, EdgeWeight>> runSearch(const DataFacade<Algorith
             if (!forward_heap.Empty())
                 forward_heap_min = forward_heap.MinKey();
         }
-        if (!reverse_heap.Empty())
-        {
-            routingStep<REVERSE_DIRECTION>(
-                facade, reverse_heap, forward_heap, middle, weight, force_step_nodes, args...);
-            if (!reverse_heap.Empty())
-                reverse_heap_min = reverse_heap.MinKey();
-        }
+        // if (!reverse_heap.Empty())
+        // {
+        //    routingStep<REVERSE_DIRECTION>(
+        //         facade, reverse_heap, forward_heap, middle, weight, force_step_nodes, args...);
+        //     if (!reverse_heap.Empty())
+        //         reverse_heap_min = reverse_heap.MinKey();
+        // }
     };
+
+    if (!reverse_heap.Empty()) {
+        routingStep<REVERSE_DIRECTION>(
+            facade, reverse_heap, forward_heap, middle, weight, force_step_nodes, args...);
+        if (!reverse_heap.Empty())
+            reverse_heap_min = reverse_heap.MinKey();
+    }
 
     // No path found for both target nodes?
     if (weight >= weight_upper_bound || SPECIAL_NODEID == middle)
