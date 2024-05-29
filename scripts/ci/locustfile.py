@@ -52,11 +52,6 @@ class OSRMTasks(TaskSet):
                 # it is expected that some of requests will fail with such error: map matching fails sometimes
                 if j['code'] == 'NoSegment' or j['code'] == 'NoMatch':
                     response.success()
-                else:
-                    print(f"MATCH Unexpected error: {j}")
-            else:
-                print(f"MATCH Unexpected status code: {response.status_code}")
-        
 
     @task
     def get_nearest(self):
