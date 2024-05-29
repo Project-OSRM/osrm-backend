@@ -44,7 +44,7 @@ class OSRMTasks(TaskSet):
         track_id = random.choice(self.track_ids)
         track_coords = self.tracks[track_id][:num_coords]
         coords_str = ";".join([f"{coord[1]:.6f},{coord[0]:.6f}" for coord in track_coords])
-        radiues_str = ";".join([f"5" for _ in range(num_coords)])
+        radiues_str = ";".join([f"{random.randint(5, 20)}" for _ in range(len(track_coords))])
 
         with self.client.get(f"/match/v1/driving/{coords_str}?steps=true&radiuses={radiues_str}", name="match", catch_response=True) as response:
             if response.status_code == 400:
