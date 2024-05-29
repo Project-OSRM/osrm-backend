@@ -538,12 +538,12 @@ std::optional<std::pair<NodeID, EdgeWeight>> runSearch(const DataFacade<Algorith
         }
     };
 
-    if (!reverse_heap.Empty()) {
-        routingStep<REVERSE_DIRECTION>(
-            facade, reverse_heap, forward_heap, middle, weight, force_step_nodes, args...);
-        if (!reverse_heap.Empty())
-            reverse_heap_min = reverse_heap.MinKey();
-    }
+    // while (!reverse_heap.Empty() && (reverse_heap_min < weight)) {
+    //     routingStep<REVERSE_DIRECTION>(
+    //         facade, reverse_heap, forward_heap, middle, weight, force_step_nodes, args...);
+    //     if (!reverse_heap.Empty())
+    //         reverse_heap_min = reverse_heap.MinKey();
+    // }
 
     // No path found for both target nodes?
     if (weight >= weight_upper_bound || SPECIAL_NODEID == middle)
@@ -551,7 +551,7 @@ std::optional<std::pair<NodeID, EdgeWeight>> runSearch(const DataFacade<Algorith
         return {};
     }
 
-   // std::cerr << "MIDDLE = " << middle << std::endl;
+    std::cerr << "MIDDLE = " << middle << std::endl;
 
     return {{middle, weight}};
 }
@@ -754,7 +754,7 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
 
 
   //  forward_heap.Clear();
- //if (forward_heap.Empty()) {
+ if (forward_heap.Empty()) {
     if (source_phantom.IsValidForwardSource())
     {
         forward_heap.Insert(source_phantom.forward_segment_id.id,
@@ -768,7 +768,22 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                             EdgeWeight{0},
                             {source_phantom.reverse_segment_id.id, false, EdgeDistance{0}});
     }
-//}
+} else {
+    if (target_phantom.IsValidForwardTarget()) {
+        if (forward_heap.WasInserted(target_phantom.forward_segment_id.id)) {
+            std::cerr << "Found " << target_phantom.forward_segment_id.id << " in forward_heap" << std::endl;
+        } else {
+            std::cerr << "Not found " << target_phantom.forward_segment_id.id << " in forward_heap" << std::endl;
+        }
+    }
+    if (target_phantom.IsValidReverseTarget()) {
+        if (forward_heap.WasInserted(target_phantom.reverse_segment_id.id)) {
+            std::cerr << "Found " << target_phantom.reverse_segment_id.id << " in forward_heap" << std::endl;
+        } else {
+            std::cerr << "Not found " << target_phantom.reverse_segment_id.id << " in forward_heap" << std::endl;
+        }
+    }
+}
 
     if (target_phantom.IsValidForwardTarget())
     {
