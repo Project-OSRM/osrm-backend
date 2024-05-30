@@ -13,5 +13,5 @@ walkdir = "2.5.0"
 xml-builder = "0.5.2"
 
 [[test]]
-name = "end-to-end"
+name = "cucumber"
 harness = false
