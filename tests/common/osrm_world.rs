@@ -13,7 +13,7 @@ pub struct OSRMWorld {
     pub osm_id: u64,
     pub profile: String,
 
-    pub known_osm_nodes: HashSet<char>,
+    pub known_osm_nodes: HashMap<char, Point>,
     pub known_locations: HashMap<char, Point>,
 
     pub osm_db: OSMDb,
@@ -37,7 +37,7 @@ impl OSRMWorld {
     }
 
     pub fn add_osm_node(&mut self, name: char, location: Point, id: Option<u64>) {
-        if self.known_osm_nodes.contains(&name) {
+        if self.known_osm_nodes.contains_key(&name) {
             panic!("duplicate node: {name}");
         }
         let id = match id {
@@ -51,8 +51,17 @@ impl OSRMWorld {
             tags: HashMap::from([("name".to_string(), name.to_string())]),
         };
 
-        self.known_osm_nodes.insert(name);
+        self.known_osm_nodes.insert(name, location);
         self.osm_db.add_node(node);
+    }
+
+    pub fn get_location(&self, name: char) -> Point {
+        match name {
+            // TODO: move lookup to world
+            '0'..='9' => self.known_locations.get(&name).expect("test case specifies unknown location: {name}"),
+            'a'..='z' => self.known_osm_nodes.get(&name).expect("test case specifies unknown osm node: {name}"),
+            _ => unreachable!("nodes have to be name in [0-9][a-z]"),
+        }.clone()
     }
 
     pub fn add_location(&mut self, name: char, location: Point) {

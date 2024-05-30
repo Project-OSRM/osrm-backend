@@ -2,20 +2,21 @@ extern crate clap;
 
 mod common;
 
-use core::panic;
-use std::fmt::Display;
-use std::fs::{create_dir_all, File};
-use std::io::{Read, Write};
-use std::path::PathBuf;
-use std::{env, fs};
 use crate::common::osrm_world::OSRMWorld;
 use cheap_ruler::CheapRuler;
 use clap::Parser;
 use common::lexicographic_file_walker::LexicographicFileWalker;
 use common::osm::OSMWay;
+use core::panic;
 use cucumber::{self, gherkin::Step, given, when, World};
 use futures::{future, FutureExt};
 use geo_types::{point, Point};
+use std::fmt::Display;
+use std::fs::{create_dir_all, File};
+use std::io::{Read, Write};
+use std::path::PathBuf;
+use std::process::Command;
+use std::{env, fs};
 
 const DEFAULT_ORIGIN: [f64; 2] = [1., 1.]; // TODO: move to world?
 const DEFAULT_GRID_SIZE: f64 = 100.; // TODO: move to world?
@@ -90,8 +91,8 @@ fn set_ways(world: &mut OSRMWorld, step: &Step) {
                     );
                     way.tags.insert("name".into(), token.clone());
                     token.chars().for_each(|name| {
-                        if !world.known_osm_nodes.contains(&name) {
-                            // TODO: this check is probably not necessary since it is also checked below
+                        if !world.known_osm_nodes.contains_key(&name) {
+                            // TODO: this check is probably not necessary since it is also checked below implicitly
                             panic!("referenced unknown node {name} in way {token}");
                         }
                         if let Some((_, node)) = world.osm_db.find_node(name) {
@@ -161,7 +162,61 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
 
     // parse table from Step and build query list
     // run queries (in parallel) and validate results
-    todo!("nearest {step:?}");
+
+    let routed_path = path.join("build").join("osrm-routed");
+    if !routed_path.exists() {
+        panic!("osrm-routed binary not found");
+    }
+
+    // parse query data
+    let t = &step.table.as_ref().expect("no query table specified");
+    let test_cases: Vec<_> = t.rows.iter().skip(1).map(|row|{
+        assert_eq!(row.len(), 2, "test case broken: row needs to have two entries");
+        let query = row.get(0).unwrap();
+        let expected = row.get(1).unwrap();
+        assert_eq!(query.len(), 1);
+        assert_eq!(expected.len(), 1);
+        (query.chars().next().unwrap(), expected.chars().next().unwrap())
+    }).collect();
+
+    let data_path = cache_path.join(world.scenario_id.to_owned() + ".osrm");
+    println!("{routed_path:?} {}", data_path.to_str().unwrap());
+    // TODO: this should be a let statement to reduce nesting?
+    match Command::new(routed_path)
+        .arg(data_path.to_str().unwrap())
+        .spawn()
+    {
+        Ok(mut child) => {
+
+            for (query, expected) in test_cases {
+                let query_coord = world.get_location(query);
+                let expected_coord = world.get_location(expected);
+
+                println!("{query_coord:?} => {expected_coord:?}");
+            }
+            
+            if let Err(e) = child.kill() {
+                panic!("shutdown failed: {e}");
+            }
+        },
+        Err(e) => panic!("{e}"),
+    }
+
+    // parse expected results
+
+    // run queries
+
+    // check results
+
+    // match Command::new(routed_path)
+    //     .arg(data_path.to_str().unwrap().spawn();
+    //     .output()
+    // {
+    //     Ok(o) => println!("{o:?}"),
+    //     Err(e) => panic!("{e}"),
+    // }
+
+    // todo!("nearest {step:?}");
 }
 
 // TODO: move to different file
@@ -299,7 +354,7 @@ fn main() {
 
     futures::executor::block_on(
         OSRMWorld::cucumber()
-            .before(move |_feature, _rule, scenario, world| {
+            .before(move |feature, _rule, scenario, world| {
                 // TODO: move to function call below
                 // ports the following logic:
                 // let name = scenario.getName().toLowerCase().replace(/[/\-'=,():*#]/g, '')
@@ -324,7 +379,7 @@ fn main() {
                 s.truncate(64);
 
                 world.scenario_id = format!("{}_{}", scenario.position.line, s);
-                world.set_scenario_specific_paths_and_digests(_feature.path.clone());
+                world.set_scenario_specific_paths_and_digests(feature.path.clone());
                 world.osrm_digest = md5.digest().to_hex_lowercase();
 
                 // TODO: clean up cache if needed
