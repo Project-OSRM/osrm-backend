@@ -3,79 +3,19 @@ extern crate clap;
 mod common;
 
 use core::panic;
-use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use std::fs::{create_dir_all, File};
 use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::{env, fs};
-
+use crate::common::osrm_world::OSRMWorld;
 use cheap_ruler::CheapRuler;
 use clap::Parser;
 use common::lexicographic_file_walker::LexicographicFileWalker;
-use common::osm::{OSMDb, OSMNode, OSMWay};
+use common::osm::OSMWay;
 use cucumber::{self, gherkin::Step, given, when, World};
 use futures::{future, FutureExt};
 use geo_types::{point, Point};
-
-#[derive(Debug, Default, World)]
-struct OSRMWorld {
-    feature_path: Option<PathBuf>,
-    scenario_id: String,
-    feature_digest: String,
-    osrm_digest: String,
-    osm_id: u64,
-    profile: String,
-
-    known_osm_nodes: HashSet<char>,
-    known_locations: HashMap<char, Point>,
-
-    osm_db: OSMDb,
-}
-
-impl OSRMWorld {
-    fn set_scenario_specific_paths_and_digests(&mut self, path: Option<PathBuf>) {
-        self.feature_path.clone_from(&path);
-
-        let file = File::open(path.clone().unwrap())
-            .unwrap_or_else(|_| panic!("filesystem broken? can't open file {:?}", path));
-        self.feature_digest = chksum_md5::chksum(file)
-            .expect("md5 could not be computed")
-            .to_hex_lowercase();
-    }
-
-    fn make_osm_id(&mut self) -> u64 {
-        // number implicitly starts a 1. This is in line with previous implementations
-        self.osm_id += 1;
-        self.osm_id
-    }
-
-    fn add_osm_node(&mut self, name: char, location: Point, id: Option<u64>) {
-        if self.known_osm_nodes.contains(&name) {
-            panic!("duplicate node: {name}");
-        }
-        let id = match id {
-            Some(id) => id,
-            None => self.make_osm_id(),
-        };
-        let node = OSMNode {
-            id,
-            lat: location.y(),
-            lon: location.x(),
-            tags: HashMap::from([("name".to_string(), name.to_string())]),
-        };
-
-        self.known_osm_nodes.insert(name);
-        self.osm_db.add_node(node);
-    }
-
-    fn add_location(&mut self, name: char, location: Point) {
-        if self.known_locations.contains_key(&name) {
-            panic!("duplicate location: {name}")
-        }
-        self.known_locations.insert(name, location);
-    }
-}
 
 const DEFAULT_ORIGIN: [f64; 2] = [1., 1.]; // TODO: move to world?
 const DEFAULT_GRID_SIZE: f64 = 100.; // TODO: move to world?
