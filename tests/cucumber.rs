@@ -1,21 +1,21 @@
 extern crate clap;
 
+mod lexicographic_file_walker;
 mod osm;
 
 use core::panic;
-use std::collections::{HashMap, HashSet, VecDeque};
-use std::error::Error;
-use std::fs::{create_dir_all, DirEntry, File};
-use std::io::{self, Read, Write};
+use std::collections::{HashMap, HashSet};
+use std::fs::{create_dir_all, File};
+use std::io::{Read, Write};
 use std::path::PathBuf;
-use std::str::FromStr;
-use std::{env, fmt, fs};
+use std::{env, fs};
 
 use cheap_ruler::CheapRuler;
-use clap::{Arg, Parser};
+use clap::Parser;
 use cucumber::{self, gherkin::Step, given, when, World};
 use futures::{future, FutureExt};
 use geo_types::{point, Point};
+use lexicographic_file_walker::LexicographicFileWalker;
 use osm::{OSMDb, OSMNode, OSMWay};
 
 #[derive(Debug, Default, World)]
@@ -235,57 +235,7 @@ fn get_file_as_byte_vec(path: &PathBuf) -> Vec<u8> {
     buffer
 }
 
-// TODO: port into toolbox-rs
-struct LexicographicFileWalker {
-    dirs: VecDeque<PathBuf>,
-    files: VecDeque<PathBuf>,
-}
-
-impl LexicographicFileWalker {
-    pub fn new(path: &PathBuf) -> Self {
-        let mut dirs = VecDeque::new();
-
-        if path.is_dir() {
-            dirs.push_back(path.clone());
-        }
-
-        Self {
-            dirs,
-            files: VecDeque::new(),
-        }
-    }
-}
-
-impl Iterator for LexicographicFileWalker {
-    type Item = PathBuf;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.dirs.is_empty() && self.files.is_empty() {
-            return None;
-        }
-        while self.files.is_empty() && !self.dirs.is_empty() {
-            assert!(!self.dirs.is_empty());
-            let current_dir = self.dirs.pop_front().unwrap();
-            let mut temp_dirs = Vec::new();
-
-            for entry in fs::read_dir(current_dir).unwrap() {
-                let entry = entry.unwrap();
-                let path = entry.path();
-                if path.is_dir() {
-                    temp_dirs.push(path.clone());
-                } else {
-                    self.files.push_back(path.clone());
-                }
-            }
-            self.files.make_contiguous().sort();
-            temp_dirs.sort();
-            self.dirs.extend(temp_dirs.into_iter());
-        }
-        return self.files.pop_front();
-    }
-}
-
-#[derive( clap::ValueEnum, Clone, Default, Debug)]
+#[derive(clap::ValueEnum, Clone, Default, Debug)]
 enum LoadMethod {
     Mmap,
     #[default]
@@ -329,7 +279,6 @@ struct Args {
     #[arg(short, default_value_t = RoutingAlgorithm::CH)]
     p: RoutingAlgorithm,
 }
-
 
 fn main() {
     let args = Args::parse();
