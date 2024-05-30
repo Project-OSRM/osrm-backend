@@ -3,7 +3,6 @@ var test = require('tape');
 var monaco_path = require('./constants').data_path;
 var test_memory_file = require('./constants').test_memory_file;
 var monaco_mld_path = require('./constants').mld_data_path;
-var monaco_corech_path = require('./constants').corech_data_path;
 
 test('constructor: throws if new keyword is not used', function(assert) {
     assert.plan(1);
@@ -65,13 +64,13 @@ test('constructor: throws if given a non-string/obj argument', function(assert) 
 test('constructor: throws if given an unkown algorithm', function(assert) {
     assert.plan(1);
     assert.throws(function() { new OSRM({algorithm: 'Foo', shared_memory: true}); },
-        /algorithm option must be one of 'CH', 'CoreCH', or 'MLD'/);
+        /algorithm option must be one of 'CH', or 'MLD'/);
 });
 
 test('constructor: throws if given an invalid algorithm', function(assert) {
     assert.plan(1);
     assert.throws(function() { new OSRM({algorithm: 3, shared_memory: true}); },
-        /algorithm option must be a string and one of 'CH', 'CoreCH', or 'MLD'/);
+        /algorithm option must be a string and one of 'CH', or 'MLD'/);
 });
 
 test('constructor: loads MLD if given as algorithm', function(assert) {
@@ -86,22 +85,8 @@ test('constructor: loads CH if given as algorithm', function(assert) {
     assert.ok(osrm);
 });
 
-test('constructor: loads CoreCH if given as algorithm', function(assert) {
-    assert.plan(1);
-    var osrm = new OSRM({algorithm: 'CoreCH', path: monaco_corech_path});
-    assert.ok(osrm);
-});
-
-test('constructor: autoswitches to CoreCH for a CH dataset if capable', function(assert) {
-    assert.plan(1);
-    var osrm = new OSRM({algorithm: 'CH', path: monaco_corech_path});
-    assert.ok(osrm);
-});
-
 test('constructor: throws if data doesn\'t match algorithm', function(assert) {
-    assert.plan(3);
-    assert.throws(function() { new OSRM({algorithm: 'CoreCH', path: monaco_mld_path}); }, /Could not find any metrics for CH/, 'CoreCH with MLD data');
-    assert.ok(new OSRM({algorithm: 'CoreCH', path: monaco_path}), 'CoreCH with CH data');
+    assert.plan(1);
     assert.throws(function() { new OSRM({algorithm: 'MLD', path: monaco_path}); }, /Could not find any metrics for MLD/, 'MLD with CH data');
 });
 

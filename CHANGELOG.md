@@ -1,6 +1,7 @@
 # Unreleased
   - Changes from 5.27.1
     - Features
+      - REMOVED: Remove all core-CH left-overs [#6920](https://github.com/Project-OSRM/osrm-backend/pull/6920)
       - ADDED: Add support for a keepalive_timeout flag. [#6674](https://github.com/Project-OSRM/osrm-backend/pull/6674)
       - ADDED: Add support for a default_radius flag. [#6575](https://github.com/Project-OSRM/osrm-backend/pull/6575)
       - ADDED: Add support for disabling feature datasets. [#6666](https://github.com/Project-OSRM/osrm-backend/pull/6666)
@@ -23,6 +24,8 @@
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
       - CHANGED: Use custom struct instead of std::pair in QueryHeap. [#6921](https://github.com/Project-OSRM/osrm-backend/pull/6921)
+      - CHANGED: Use std::string_view::starts_with instead of boost::starts_with. [#6918](https://github.com/Project-OSRM/osrm-backend/pull/6918)
+      - CHANGED: Get rid of boost::math::constants::* and M_PI in favor of std::numbers. [#6916](https://github.com/Project-OSRM/osrm-backend/pull/6916)
       - CHANGED: Make constants in PackedVector constexpr. [#6917](https://github.com/Project-OSRM/osrm-backend/pull/6917)
       - CHANGED: Use std::variant instead of mapbox::util::variant. [#6903](https://github.com/Project-OSRM/osrm-backend/pull/6903)
       - CHANGED: Bump rapidjson to version f9d53419e912910fd8fa57d5705fa41425428c35 [#6906](https://github.com/Project-OSRM/osrm-backend/pull/6906)
