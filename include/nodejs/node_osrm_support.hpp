@@ -308,8 +308,7 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
     }
     else if (!algorithm.IsUndefined())
     {
-        ThrowError(args.Env(),
-                   "algorithm option must be a string and one of 'CH', or 'MLD'.");
+        ThrowError(args.Env(), "algorithm option must be a string and one of 'CH', or 'MLD'.");
         return engine_config_ptr();
     }
 
