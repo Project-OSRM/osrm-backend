@@ -207,6 +207,12 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
     }
 
     // if extracted file does not exist
+    let cache_path = cache_path.join(&world.osrm_digest);
+    if cache_path.exists() {
+        println!("{cache_path:?} exists");
+    } else {
+        println!("{cache_path:?} does not exist");
+    }
     //    extract osm file (partition, preprocess)
 
     // parse table from Step and build query list
