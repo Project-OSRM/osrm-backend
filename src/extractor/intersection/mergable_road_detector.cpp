@@ -351,7 +351,7 @@ bool MergableRoadDetector::IsCircularShape(const NodeID intersection_node,
     //      ----         ----
     //          \       /
     //           -------
-    const auto constexpr CIRCULAR_POLYGON_ISOPERIMETRIC_LOWER_BOUND = 0.85 / (4 * M_PI);
+    const auto constexpr CIRCULAR_POLYGON_ISOPERIMETRIC_LOWER_BOUND = 0.85 / (4 * std::numbers::pi);
     if (connect_again && coordinates_to_the_left.front() == coordinates_to_the_left.back())
     { // if the left and right roads connect again and are closed polygons ...
         const auto area = util::coordinate_calculation::computeArea(coordinates_to_the_left);
@@ -359,7 +359,7 @@ bool MergableRoadDetector::IsCircularShape(const NodeID intersection_node,
         const auto area_to_squared_perimeter_ratio = std::abs(area) / (perimeter * perimeter);
 
         // then don't merge roads if A/L² is greater than the lower bound
-        BOOST_ASSERT(area_to_squared_perimeter_ratio <= 1. / (4 * M_PI));
+        BOOST_ASSERT(area_to_squared_perimeter_ratio <= 1. / (4 * std::numbers::pi));
         if (area_to_squared_perimeter_ratio >= CIRCULAR_POLYGON_ISOPERIMETRIC_LOWER_BOUND)
             return true;
     }
