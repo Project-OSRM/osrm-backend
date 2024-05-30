@@ -146,7 +146,6 @@ double bearing(const Coordinate coordinate_1, const Coordinate coordinate_2)
 
 double computeAngle(const Coordinate first, const Coordinate second, const Coordinate third)
 {
-    using namespace boost::math::constants;
     using namespace coordinate_calculation;
 
     if (first == second || second == third)
@@ -163,7 +162,7 @@ double computeAngle(const Coordinate first, const Coordinate second, const Coord
     const double v2y =
         web_mercator::latToY(toFloating(third.lat)) - web_mercator::latToY(toFloating(second.lat));
 
-    double angle = (atan2_lookup(v2y, v2x) - atan2_lookup(v1y, v1x)) * 180. / pi<double>();
+    double angle = (atan2_lookup(v2y, v2x) - atan2_lookup(v1y, v1x)) * 180. / std::numbers::pi;
 
     while (angle < 0.)
     {

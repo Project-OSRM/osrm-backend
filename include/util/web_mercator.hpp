@@ -3,7 +3,7 @@
 
 #include "util/coordinate.hpp"
 
-#include <boost/math/constants/constants.hpp>
+#include <numbers>
 
 namespace osrm::util::web_mercator
 {
@@ -14,7 +14,7 @@ const constexpr double RAD_TO_DEGREE = 1. / DEGREE_TO_RAD;
 // radius used by WGS84
 const constexpr double EARTH_RADIUS_WGS84 = 6378137.0;
 // earth circumference devided by 2
-const constexpr double MAXEXTENT = EARTH_RADIUS_WGS84 * boost::math::constants::pi<double>();
+const constexpr double MAXEXTENT = EARTH_RADIUS_WGS84 * std::numbers::pi;
 // ^ math functions are not constexpr since they have side-effects (setting errno) :(
 const constexpr double EPSG3857_MAX_LATITUDE = 85.051128779806592378; // 90(4*atan(exp(pi))/pi-1)
 const constexpr double MAX_LONGITUDE = 180.0;
