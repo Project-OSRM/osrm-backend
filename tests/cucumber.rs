@@ -7,7 +7,10 @@ use cheap_ruler::CheapRuler;
 use clap::Parser;
 use common::lexicographic_file_walker::LexicographicFileWalker;
 use common::osm::OSMWay;
+use serde_json::Value;
+use ureq::Agent;
 use core::panic;
+use std::time::Duration;
 use cucumber::{self, gherkin::Step, given, when, World};
 use futures::{future, FutureExt};
 use geo_types::{point, Point};
@@ -197,14 +200,28 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
         panic!("{e}");
     }
 
+    let agent: Agent = ureq::AgentBuilder::new()
+    .timeout_read(Duration::from_secs(5))
+    .timeout_write(Duration::from_secs(5))
+    .build();
+
     // parse and run test cases
     for (query, expected) in test_cases {
-        let query_coord = world.get_location(query);
-        let expected_coord = world.get_location(expected);
+        let query_location = world.get_location(query);
+        let expected_location = world.get_location(expected);
 
-        println!("{query_coord:?} => {expected_coord:?}");
+        println!("{query_location:?} => {expected_location:?}");
         // run queries
+        // "http://localhost:5000/nearest/v1/testbot/1.0008984512067491,1.0"
+        let url = format!("http://localhost:5000/nearest/v1/{}/{},{}", world.profile, query_location.x(), query_location.y());
+        let body: String = agent.get(&url)
+        .call().unwrap()
+        .into_string().unwrap();
 
+        let v: Value = serde_json::from_str(&body).unwrap();
+        let result_location = point!{ x: v["location"][0].as_f64().unwrap(), y: v["location"][1].as_f64().unwrap()};
+        assert_eq!(result_location, expected_location)
+        // println!("{body}");
         // check results
     }
 

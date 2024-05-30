@@ -1,4 +1,4 @@
-@nearest
+@nearest @serial
 Feature: Locating Nearest node on a Way - pick closest way
 
     Background:
