@@ -22,6 +22,7 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: Make constants in PackedVector constexpr. [#6917](https://github.com/Project-OSRM/osrm-backend/pull/6917)
       - CHANGED: Use std::variant instead of mapbox::util::variant. [#6903](https://github.com/Project-OSRM/osrm-backend/pull/6903)
       - CHANGED: Bump rapidjson to version f9d53419e912910fd8fa57d5705fa41425428c35 [#6906](https://github.com/Project-OSRM/osrm-backend/pull/6906)
       - CHANGED: Bump mapbox/variant to version 1.2.0 [#6898](https://github.com/Project-OSRM/osrm-backend/pull/6898)
