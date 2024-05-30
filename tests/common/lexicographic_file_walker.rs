@@ -46,6 +46,6 @@ impl Iterator for LexicographicFileWalker {
             temp_dirs.sort();
             self.dirs.extend(temp_dirs.into_iter());
         }
-        return self.files.pop_front();
+        self.files.pop_front()
     }
 }

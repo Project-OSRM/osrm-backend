@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use xml_builder::{XMLBuilder, XMLElement, XMLVersion};
 
 static OSM_USER: &str = "osrm";
-static OSM_TIMESTAMP :&str = "2000-01-01T00:00:00Z";
+static OSM_TIMESTAMP: &str = "2000-01-01T00:00:00Z";
 static OSM_UID: &str = "1";
 
 #[derive(Clone, Debug, Default)]
@@ -19,25 +19,25 @@ pub struct OSMNode {
 }
 
 impl OSMNode {
-    pub fn add_tag(&mut self, key: &str, value: &str) {
-        self.tags.insert(key.into(), value.into());
-    }
+    // pub fn add_tag(&mut self, key: &str, value: &str) {
+    //     self.tags.insert(key.into(), value.into());
+    // }
 
-    pub fn set_id_(&mut self, id: u64) {
-        self.id = id;
-    }
+    // pub fn set_id_(&mut self, id: u64) {
+    //     self.id = id;
+    // }
 
-    pub fn set_tags(&mut self, tags: HashMap<String, String>) {
-        self.tags = tags
-    }
+    // pub fn set_tags(&mut self, tags: HashMap<String, String>) {
+    //     self.tags = tags
+    // }
 
     pub fn to_xml(&self) -> XMLElement {
         let mut node = XMLElement::new("node");
         node.add_attribute("id", &self.id.to_string());
         node.add_attribute("version", "1");
-        node.add_attribute("uid", &OSM_UID);
-        node.add_attribute("user", &OSM_USER);
-        node.add_attribute("timestamp", &OSM_TIMESTAMP);
+        node.add_attribute("uid", OSM_UID);
+        node.add_attribute("user", OSM_USER);
+        node.add_attribute("timestamp", OSM_TIMESTAMP);
         node.add_attribute("lon", &format!("{:?}", self.lon));
         node.add_attribute("lat", &format!("{:?}", self.lat));
 
@@ -67,17 +67,17 @@ impl OSMWay {
         self.nodes.push(node);
     }
 
-    pub fn set_tags(&mut self, tags: HashMap<String, String>) {
-        self.tags = tags;
-    }
+    // pub fn set_tags(&mut self, tags: HashMap<String, String>) {
+    //     self.tags = tags;
+    // }
 
     pub fn to_xml(&self) -> XMLElement {
         let mut way = XMLElement::new("way");
         way.add_attribute("id", &self.id.to_string());
         way.add_attribute("version", "1");
-        way.add_attribute("uid", &OSM_UID);
-        way.add_attribute("user", &OSM_USER);
-        way.add_attribute("timestamp", &OSM_TIMESTAMP);
+        way.add_attribute("uid", OSM_UID);
+        way.add_attribute("user", OSM_USER);
+        way.add_attribute("timestamp", OSM_TIMESTAMP);
 
         assert!(self.nodes.len() >= 2);
 
@@ -104,71 +104,72 @@ impl OSMWay {
     }
 }
 
-#[derive(Clone, Debug)]
-struct Member {
-    id: u64,
-    member_type: String,
-    member_role: String,
-}
+// #[derive(Clone, Debug)]
+// struct Member {
+//     id: u64,
+//     member_type: String,
+//     member_role: String,
+// }
 
-#[derive(Clone, Debug)]
-struct OSMRelation {
-    id: u64,
-    osm_user: String,
-    osm_time_stamp: String,
-    osm_uid: String,
-    members: Vec<Member>,
-    tags: HashMap<String, String>,
-}
+// #[derive(Clone, Debug)]
+// struct OSMRelation {
+//     id: u64,
+//     osm_user: String,
+//     osm_time_stamp: String,
+//     osm_uid: String,
+//     members: Vec<Member>,
+//     tags: HashMap<String, String>,
+// }
 
-impl OSMRelation {
-    fn add_member(&mut self, member_type: String, id: u64, member_role: String) {
-        self.members.push(Member {
-            id,
-            member_type,
-            member_role,
-        });
-    }
+// impl OSMRelation {
+//     fn add_member(&mut self, member_type: String, id: u64, member_role: String) {
+//         self.members.push(Member {
+//             id,
+//             member_type,
+//             member_role,
+//         });
+//     }
 
-    pub fn add_tag(&mut self, key: &str, value: &str) {
-        self.tags.insert(key.into(), value.into());
-    }
-}
+//     pub fn add_tag(&mut self, key: &str, value: &str) {
+//         self.tags.insert(key.into(), value.into());
+//     }
+// }
 
 #[derive(Debug, Default)]
 pub struct OSMDb {
     nodes: Vec<(char, OSMNode)>,
     ways: Vec<OSMWay>,
-    relations: Vec<OSMRelation>,
+    // relations: Vec<OSMRelation>,
 }
 
 impl OSMDb {
     pub fn add_node(&mut self, node: OSMNode) {
         let name = node.tags.get("name").unwrap();
-        assert!(name.len() == 1, "name needs to be of length 1, but was \"{name}\"");
-        self.nodes.push((name.chars().next().unwrap() as char, node));
+        assert!(
+            name.len() == 1,
+            "name needs to be of length 1, but was \"{name}\""
+        );
+        self.nodes.push((name.chars().next().unwrap(), node));
     }
 
     pub fn find_node(&self, search_name: char) -> Option<&(char, OSMNode)> {
         // TODO: this is a linear search.
-        self.nodes.iter().find(|(name, _node)| {
-            search_name == *name
-        })
+        self.nodes.iter().find(|(name, _node)| search_name == *name)
     }
 
     pub fn add_way(&mut self, way: OSMWay) {
         self.ways.push(way);
     }
 
-    pub fn add_relation(&mut self, relation: OSMRelation) {
-        self.relations.push(relation);
-    }
+    // pub fn add_relation(&mut self, relation: OSMRelation) {
+    //     self.relations.push(relation);
+    // }
 
-    pub fn clear(&mut self) {
-        self.nodes.clear();
-        self.ways.clear();
-        self.relations.clear();
-    }
+    // pub fn clear(&mut self) {
+    //     self.nodes.clear();
+    //     self.ways.clear();
+    //     // self.relations.clear();
+    // }
 
     pub fn to_xml(&self) -> String {
         let mut xml = XMLBuilder::new()
@@ -195,32 +196,33 @@ impl OSMDb {
         String::from_utf8(writer).unwrap()
     }
 
-    pub fn node_len(&self) -> usize {
-        self.nodes.len()
-    }
-    pub fn way_len(&self) -> usize {
-        self.ways.len()
-    }
-    pub fn relation_len(&self) -> usize {
-        self.relations.len()
-    }
+    // pub fn node_len(&self) -> usize {
+    //     self.nodes.len()
+    // }
+    // pub fn way_len(&self) -> usize {
+    //     self.ways.len()
+    // }
+    // pub fn relation_len(&self) -> usize {
+    //     self.relations.len()
+    // }
 }
 
 #[cfg(test)]
-mod test {
-    use super::{OSMNode, OSMWay};
+mod tests {
 
     #[test]
     fn empty_db_by_default() {
-        let osm_db = crate::OSMDb::default();
+        use super::*;
+        let osm_db = OSMDb::default();
         assert_eq!(0, osm_db.node_len());
         assert_eq!(0, osm_db.way_len());
-        assert_eq!(0, osm_db.relation_len());
+        // assert_eq!(0, osm_db.relation_len());
     }
 
     #[test]
     fn osm_db_with_single_node() {
-        let mut osm_db = crate::OSMDb::default();
+        use super::*;
+        let mut osm_db = OSMDb::default();
 
         let mut node1 = OSMNode {
             id: 123,

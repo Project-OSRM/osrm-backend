@@ -1,7 +1,6 @@
 extern crate clap;
 
-mod lexicographic_file_walker;
-mod osm;
+mod common;
 
 use core::panic;
 use std::collections::{HashMap, HashSet};
@@ -12,11 +11,11 @@ use std::{env, fs};
 
 use cheap_ruler::CheapRuler;
 use clap::Parser;
+use common::lexicographic_file_walker::LexicographicFileWalker;
+use common::osm::{OSMDb, OSMNode, OSMWay};
 use cucumber::{self, gherkin::Step, given, when, World};
 use futures::{future, FutureExt};
 use geo_types::{point, Point};
-use lexicographic_file_walker::LexicographicFileWalker;
-use osm::{OSMDb, OSMNode, OSMWay};
 
 #[derive(Debug, Default, World)]
 struct OSRMWorld {
@@ -35,10 +34,10 @@ struct OSRMWorld {
 
 impl OSRMWorld {
     fn set_scenario_specific_paths_and_digests(&mut self, path: Option<PathBuf>) {
-        self.feature_path = path.clone();
+        self.feature_path.clone_from(&path);
 
         let file = File::open(path.clone().unwrap())
-            .expect(&format!("filesystem broken? can't open file {:?}", path));
+            .unwrap_or_else(|_| panic!("filesystem broken? can't open file {:?}", path));
         self.feature_digest = chksum_md5::chksum(file)
             .expect("md5 could not be computed")
             .to_hex_lowercase();
@@ -227,8 +226,8 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
 // TODO: move to different file
 fn get_file_as_byte_vec(path: &PathBuf) -> Vec<u8> {
     println!("opening {path:?}");
-    let mut f = File::open(&path).expect("no file found");
-    let metadata = fs::metadata(&path).expect("unable to read metadata");
+    let mut f = File::open(path).expect("no file found");
+    let metadata = fs::metadata(path).expect("unable to read metadata");
     let mut buffer = vec![0; metadata.len() as usize];
     f.read(&mut buffer).expect("buffer overflow");
 
@@ -306,9 +305,8 @@ fn main() {
         "osrm_partition",
     ];
 
-    let files: Vec<PathBuf> = fs::read_dir(&build_path)
+    let files: Vec<PathBuf> = fs::read_dir(build_path)
         .unwrap()
-        .into_iter()
         .filter_map(|e| e.ok())
         .map(|dir_entry| dir_entry.path())
         .collect();
@@ -323,8 +321,7 @@ fn main() {
                     .to_str()
                     .unwrap()
                     .contains(name)
-            })
-            .map(|e| e.clone())
+            }).cloned()
             .expect("file exists and is usable")
     });
 
@@ -346,7 +343,7 @@ fn main() {
 
     for path_buf in dependencies {
         let data = get_file_as_byte_vec(&path_buf);
-        if data.len() == 0 {
+        if data.is_empty() {
             continue;
         }
         md5.update(data);
@@ -374,7 +371,7 @@ fn main() {
                         _ => x,
                     })
                     .collect::<String>()
-                    .replace(r"\", "_")
+                    .replace('\\', "_")
                     .replace("__", "_")
                     .replace("..", ".");
                 s.truncate(64);
