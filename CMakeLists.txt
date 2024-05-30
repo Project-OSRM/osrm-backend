@@ -300,6 +300,10 @@ include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
 set(VTZERO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/vtzero/include")
 include_directories(SYSTEM ${VTZERO_INCLUDE_DIR})
 
+set(ANKERL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/unordered_dense/include")
+include_directories(SYSTEM ${ANKERL_INCLUDE_DIR})
+
+
 set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "Disable the build of Flatbuffers tests and samples.")
 set(FLATBUFFERS_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/flatbuffers")
 set(FLATBUFFERS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/flatbuffers/include")
@@ -358,7 +362,7 @@ if(ENABLE_CONAN)
     KEEP_RPATHS
     NO_OUTPUT_DIRS
     OPTIONS boost:filesystem_version=3 # https://stackoverflow.com/questions/73392648/error-with-boost-filesystem-version-in-cmake
-            onetbb:shared=${TBB_SHARED}
+           # onetbb:shared=${TBB_SHARED}
             boost:without_stacktrace=True # Apple Silicon cross-compilation fails without it
     BUILD missing
   )
