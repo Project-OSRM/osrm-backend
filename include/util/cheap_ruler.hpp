@@ -4,9 +4,9 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
+#include <numbers>
 #include <tuple>
 #include <utility>
-#include <numbers>
 
 namespace mapbox
 {
