@@ -162,7 +162,7 @@ double computeAngle(const Coordinate first, const Coordinate second, const Coord
     const double v2y =
         web_mercator::latToY(toFloating(third.lat)) - web_mercator::latToY(toFloating(second.lat));
 
-    double angle = (atan2_lookup(v2y, v2x) - atan2_lookup(v1y, v1x)) * 180. / std::numbers::pi;
+    double angle = (atan2_lookup(v2y, v2x) - atan2_lookup(v1y, v1x)) * 180. * std::numbers::inv_pi;
 
     while (angle < 0.)
     {

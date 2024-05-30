@@ -25,7 +25,7 @@ const constexpr long double EARTH_RADIUS = 6372797.560856;
 
 inline double degToRad(const double degree) { return degree * (std::numbers::pi / 180.0); }
 
-inline double radToDeg(const double radian) { return radian * (180.0 * (1. / std::numbers::pi)); }
+inline double radToDeg(const double radian) { return radian * (180.0 * std::numbers::inv_pi); }
 } // namespace detail
 
 const constexpr static double METERS_PER_DEGREE_LAT = 110567.0;
