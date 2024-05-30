@@ -1,13 +1,18 @@
+extern crate clap;
+
 mod osm;
 
 use core::panic;
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::error::Error;
 use std::fs::{create_dir_all, DirEntry, File};
 use std::io::{self, Read, Write};
 use std::path::PathBuf;
-use std::{env, fs};
+use std::str::FromStr;
+use std::{env, fmt, fs};
 
 use cheap_ruler::CheapRuler;
+use clap::{Arg, Parser};
 use cucumber::{self, gherkin::Step, given, when, World};
 use futures::{future, FutureExt};
 use geo_types::{point, Point};
@@ -280,7 +285,56 @@ impl Iterator for LexicographicFileWalker {
     }
 }
 
+#[derive( clap::ValueEnum, Clone, Default, Debug)]
+enum LoadMethod {
+    Mmap,
+    #[default]
+    Datastore,
+    Directly,
+}
+impl ToString for LoadMethod {
+    fn to_string(&self) -> String {
+        match self {
+            LoadMethod::Mmap => "mmap".into(),
+            LoadMethod::Datastore => "datastore".into(),
+            LoadMethod::Directly => "directly".into(),
+        }
+    }
+}
+
+#[derive(clap::ValueEnum, Clone, Default, Debug)]
+enum RoutingAlgorithm {
+    #[default]
+    CH,
+    MLD,
+}
+
+impl ToString for RoutingAlgorithm {
+    fn to_string(&self) -> String {
+        match self {
+            RoutingAlgorithm::CH => "ch".into(),
+            RoutingAlgorithm::MLD => "mld".into(),
+        }
+    }
+}
+// TODO: move to external file
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    // underlying memory storage
+    #[arg(short, default_value_t = LoadMethod::Datastore)]
+    memory: LoadMethod,
+
+    // Number of times to greet
+    #[arg(short, default_value_t = RoutingAlgorithm::CH)]
+    p: RoutingAlgorithm,
+}
+
+
 fn main() {
+    let args = Args::parse();
+    println!("name: {:?}", args);
+
     // create OSRM digest before any tests are executed since cucumber-rs doesn't have @beforeAll
     let exe_path = env::current_exe().expect("failed to get current exe path");
     let path = exe_path
