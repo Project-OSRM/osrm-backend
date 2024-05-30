@@ -54,7 +54,9 @@ Checks: >
     modernize-use-using,
     performance-*,
     -performance-noexcept-move-constructor,
+    -performance-noexcept-swap,
     -performance-no-int-to-ptr,
+    -performance-enum-size,
     readability-*,
     -readability-avoid-const-params-in-decls,
     -readability-braces-around-statements,
@@ -83,6 +85,7 @@ Checks: >
     -readability-make-member-function-const,
     -readability-redundant-string-init,
     -readability-non-const-parameter,
+    -readability-redundant-inline-specifier,
     -readability-static-accessed-through-instance
     
 WarningsAsErrors: '*'
