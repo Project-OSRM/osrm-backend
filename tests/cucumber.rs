@@ -12,7 +12,6 @@ use cucumber::{self, gherkin::Step, given, when, World};
 use futures::{future, FutureExt};
 use geo_types::{point, Point};
 use osm::{OSMDb, OSMNode, OSMWay};
-use walkdir::WalkDir;
 
 #[derive(Debug, Default, World)]
 struct OSRMWorld {

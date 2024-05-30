@@ -657,7 +657,6 @@ dependencies = [
  "cucumber",
  "futures",
  "geo-types",
- "walkdir",
  "xml-builder",
 ]
 
