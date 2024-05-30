@@ -14,14 +14,6 @@ BOOST_AUTO_TEST_CASE(test_incompatible_with_mld)
         osrm::exception);
 }
 
-BOOST_AUTO_TEST_CASE(test_compatible_with_corech_fallback)
-{
-    // Note - this tests that given the CoreCH algorithm config option, configuration falls back to
-    // CH and is compatible with CH data
-    BOOST_CHECK_NO_THROW(
-        getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH));
-}
-
 BOOST_AUTO_TEST_CASE(test_incompatible_with_ch)
 {
     // Can't use the CH algorithm with MLD data

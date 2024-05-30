@@ -36,13 +36,6 @@ OSRM::OSRM(engine::EngineConfig &config)
 
     // Now, check that the algorithm requested can be used with the data
     // that's available.
-
-    if (config.algorithm == EngineConfig::Algorithm::CoreCH)
-    {
-        util::Log(logWARNING) << "Using CoreCH is deprecated. Falling back to CH";
-        config.algorithm = EngineConfig::Algorithm::CH;
-    }
-
     switch (config.algorithm)
     {
     case EngineConfig::Algorithm::CH:
