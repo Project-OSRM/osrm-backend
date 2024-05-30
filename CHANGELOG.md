@@ -23,6 +23,7 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: Use std::string_view::starts_with instead of boost::starts_with. [#6918](https://github.com/Project-OSRM/osrm-backend/pull/6918)
       - CHANGED: Get rid of boost::math::constants::* and M_PI in favor of std::numbers. [#6916](https://github.com/Project-OSRM/osrm-backend/pull/6916)
       - CHANGED: Make constants in PackedVector constexpr. [#6917](https://github.com/Project-OSRM/osrm-backend/pull/6917)
       - CHANGED: Use std::variant instead of mapbox::util::variant. [#6903](https://github.com/Project-OSRM/osrm-backend/pull/6903)
