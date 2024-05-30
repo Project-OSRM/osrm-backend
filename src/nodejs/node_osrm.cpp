@@ -64,7 +64,7 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
  * ```
  *
  * @param {Object|String} [options={shared_memory: true}] Options for creating an OSRM object or string to the `.osrm` file.
- * @param {String} [options.algorithm] The algorithm to use for routing. Can be 'CH', 'CoreCH' or 'MLD'. Default is 'CH'.
+ * @param {String} [options.algorithm] The algorithm to use for routing. Can be 'CH', or 'MLD'. Default is 'CH'.
  *        Make sure you prepared the dataset with the correct toolchain.
  * @param {Boolean} [options.shared_memory] Connects to the persistent shared memory datastore.
  *        This requires you to run `osrm-datastore` prior to creating an `OSRM` object.

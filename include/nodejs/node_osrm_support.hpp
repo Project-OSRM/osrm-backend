@@ -296,24 +296,20 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
         {
             engine_config->algorithm = osrm::EngineConfig::Algorithm::CH;
         }
-        else if (algorithm_str == "CoreCH")
-        {
-            engine_config->algorithm = osrm::EngineConfig::Algorithm::CH;
-        }
         else if (algorithm_str == "MLD")
         {
             engine_config->algorithm = osrm::EngineConfig::Algorithm::MLD;
         }
         else
         {
-            ThrowError(args.Env(), "algorithm option must be one of 'CH', 'CoreCH', or 'MLD'.");
+            ThrowError(args.Env(), "algorithm option must be one of 'CH', or 'MLD'.");
             return engine_config_ptr();
         }
     }
     else if (!algorithm.IsUndefined())
     {
         ThrowError(args.Env(),
-                   "algorithm option must be a string and one of 'CH', 'CoreCH', or 'MLD'.");
+                   "algorithm option must be a string and one of 'CH', or 'MLD'.");
         return engine_config_ptr();
     }
 
