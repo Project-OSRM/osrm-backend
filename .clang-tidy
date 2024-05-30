@@ -60,6 +60,7 @@ Checks: >
     -performance-noexcept-swap,
     -performance-no-int-to-ptr,
     -performance-enum-size,
+    -performance-avoid-endl,
     readability-*,
     -readability-avoid-const-params-in-decls,
     -readability-braces-around-statements,
