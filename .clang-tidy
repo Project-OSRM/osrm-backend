@@ -49,6 +49,7 @@ Checks: >
     -misc-misplaced-const,
     -misc-definitions-in-headers,
     -misc-unused-parameters,
+    -misc-include-cleaner,
     modernize-concat-nested-namespaces,
     modernize-use-using,
     performance-*,
