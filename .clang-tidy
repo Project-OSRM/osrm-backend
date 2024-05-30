@@ -91,6 +91,7 @@ Checks: >
     -readability-non-const-parameter,
     -readability-redundant-inline-specifier,
     -readability-avoid-nested-conditional-operator,
+    -readability-avoid-return-with-void-value,
     -readability-static-accessed-through-instance
     
 WarningsAsErrors: '*'
