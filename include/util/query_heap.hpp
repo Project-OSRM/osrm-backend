@@ -370,7 +370,7 @@ class QueryHeap
         const auto index = node_index.peek_index(node);
         auto &reference = inserted_nodes[index];
         reference.weight = weight;
-        heap.increase(reference.handle, HeapData{weight, index});
+        heap.increase(reference.handle, HeapData{weight, static_cast<Key>(index)});
     }
 
     void DecreaseKey(const HeapNode &heapNode)
