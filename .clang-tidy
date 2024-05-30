@@ -15,6 +15,7 @@ Checks: >
     -bugprone-throw-keyword-missing,
     -bugprone-unused-local-non-trivial-variable,
     -bugprone-incorrect-enable-if,
+    -bugprone-switch-missing-default-case,
     -clang-analyzer-*,
     -clang-diagnostic-deprecated-declarations,
     -clang-diagnostic-constant-conversion,
