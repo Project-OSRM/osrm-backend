@@ -57,9 +57,6 @@ impl OSMNode {
 #[derive(Clone, Debug, Default)]
 pub struct OSMWay {
     pub id: u64,
-    pub osm_user: String,
-    pub osm_time_stamp: String,
-    pub osm_uid: u64,
     pub tags: HashMap<String, String>,
     pub nodes: Vec<OSMNode>,
     pub add_locations: bool,
@@ -78,9 +75,9 @@ impl OSMWay {
         let mut way = XMLElement::new("way");
         way.add_attribute("id", &self.id.to_string());
         way.add_attribute("version", "1");
-        way.add_attribute("uid", &self.osm_uid.to_string());
-        way.add_attribute("user", &self.osm_user);
-        way.add_attribute("timestamp", &self.osm_time_stamp);
+        way.add_attribute("uid", &OSM_UID);
+        way.add_attribute("user", &OSM_USER);
+        way.add_attribute("timestamp", &OSM_TIMESTAMP);
 
         assert!(self.nodes.len() >= 2);
 
@@ -245,9 +242,6 @@ mod test {
 
         let mut way = OSMWay {
             id: 890,
-            osm_user: "osrm".into(),
-            osm_time_stamp: "2000-01-01T00:00:00Z".into(),
-            osm_uid: 1,
             ..Default::default()
         };
         way.nodes.push(node1);
