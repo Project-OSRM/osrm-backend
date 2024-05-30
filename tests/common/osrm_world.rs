@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, fs::File, path::PathBuf};
+use std::{collections::HashMap, fs::File, path::PathBuf};
 use crate::Point;
 use cucumber::World;
 

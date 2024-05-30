@@ -158,10 +158,6 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
     } else {
         println!("{cache_path:?} does not exist");
     }
-    //    extract osm file (partition, preprocess)
-
-    // parse table from Step and build query list
-    // run queries (in parallel) and validate results
 
     let routed_path = path.join("build").join("osrm-routed");
     if !routed_path.exists() {
@@ -170,53 +166,51 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
 
     // parse query data
     let t = &step.table.as_ref().expect("no query table specified");
-    let test_cases: Vec<_> = t.rows.iter().skip(1).map(|row|{
-        assert_eq!(row.len(), 2, "test case broken: row needs to have two entries");
-        let query = row.get(0).unwrap();
-        let expected = row.get(1).unwrap();
-        assert_eq!(query.len(), 1);
-        assert_eq!(expected.len(), 1);
-        (query.chars().next().unwrap(), expected.chars().next().unwrap())
-    }).collect();
+    let test_cases: Vec<_> = t
+        .rows
+        .iter()
+        .skip(1)
+        .map(|row| {
+            assert_eq!(
+                row.len(),
+                2,
+                "test case broken: row needs to have two entries"
+            );
+            let query = row.get(0).unwrap();
+            let expected = row.get(1).unwrap();
+            assert_eq!(query.len(), 1);
+            assert_eq!(expected.len(), 1);
+            (
+                query.chars().next().unwrap(),
+                expected.chars().next().unwrap(),
+            )
+        })
+        .collect();
 
     let data_path = cache_path.join(world.scenario_id.to_owned() + ".osrm");
     println!("{routed_path:?} {}", data_path.to_str().unwrap());
-    // TODO: this should be a let statement to reduce nesting?
-    match Command::new(routed_path)
+    let handle = Command::new(routed_path)
         .arg(data_path.to_str().unwrap())
-        .spawn()
-    {
-        Ok(mut child) => {
+        .spawn();
 
-            for (query, expected) in test_cases {
-                let query_coord = world.get_location(query);
-                let expected_coord = world.get_location(expected);
-
-                println!("{query_coord:?} => {expected_coord:?}");
-            }
-            
-            if let Err(e) = child.kill() {
-                panic!("shutdown failed: {e}");
-            }
-        },
-        Err(e) => panic!("{e}"),
+    if let Err(e) = handle {
+        panic!("{e}");
     }
 
-    // parse expected results
+    // parse and run test cases
+    for (query, expected) in test_cases {
+        let query_coord = world.get_location(query);
+        let expected_coord = world.get_location(expected);
 
-    // run queries
+        println!("{query_coord:?} => {expected_coord:?}");
+        // run queries
 
-    // check results
+        // check results
+    }
 
-    // match Command::new(routed_path)
-    //     .arg(data_path.to_str().unwrap().spawn();
-    //     .output()
-    // {
-    //     Ok(o) => println!("{o:?}"),
-    //     Err(e) => panic!("{e}"),
-    // }
-
-    // todo!("nearest {step:?}");
+    if let Err(e) = handle.expect("osrm-routed died unexpectedly").kill() {
+        panic!("shutdown failed: {e}");
+    }
 }
 
 // TODO: move to different file
