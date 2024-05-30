@@ -1,0 +1,17 @@
+[package]
+name = "osrm-backend"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cheap-ruler = "0.4.0"
+chksum-md5 = "0.0.0"
+cucumber = "0.21.0"
+futures = "0.3.30"
+geo-types = "0.7.13"
+walkdir = "2.5.0"
+xml-builder = "0.5.2"
+
+[[test]]
+name = "end-to-end"
+harness = false
