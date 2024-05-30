@@ -4,6 +4,7 @@ mod common;
 
 use core::panic;
 use std::collections::{HashMap, HashSet};
+use std::fmt::Display;
 use std::fs::{create_dir_all, File};
 use std::io::{Read, Write};
 use std::path::PathBuf;
@@ -229,7 +230,10 @@ fn get_file_as_byte_vec(path: &PathBuf) -> Vec<u8> {
     let mut f = File::open(path).expect("no file found");
     let metadata = fs::metadata(path).expect("unable to read metadata");
     let mut buffer = vec![0; metadata.len() as usize];
-    f.read(&mut buffer).expect("buffer overflow");
+    match f.read(&mut buffer) {
+        Ok(l) => assert_eq!(metadata.len() as usize, l, "data was not completely read"),
+        Err(e) => panic!("Error: {e}"),
+    }
 
     buffer
 }
@@ -241,29 +245,31 @@ enum LoadMethod {
     Datastore,
     Directly,
 }
-impl ToString for LoadMethod {
-    fn to_string(&self) -> String {
-        match self {
-            LoadMethod::Mmap => "mmap".into(),
-            LoadMethod::Datastore => "datastore".into(),
-            LoadMethod::Directly => "directly".into(),
-        }
+impl Display for LoadMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let result = match self {
+            LoadMethod::Mmap => "mmap",
+            LoadMethod::Datastore => "datastore",
+            LoadMethod::Directly => "directly",
+        };
+        write!(f, "{result}")
     }
 }
 
 #[derive(clap::ValueEnum, Clone, Default, Debug)]
 enum RoutingAlgorithm {
     #[default]
-    CH,
-    MLD,
+    Ch,
+    Mld,
 }
 
-impl ToString for RoutingAlgorithm {
-    fn to_string(&self) -> String {
-        match self {
-            RoutingAlgorithm::CH => "ch".into(),
-            RoutingAlgorithm::MLD => "mld".into(),
-        }
+impl Display for RoutingAlgorithm {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let result = match self {
+            RoutingAlgorithm::Ch => "ch",
+            RoutingAlgorithm::Mld => "mld",
+        };
+        write!(f, "{result}")
     }
 }
 // TODO: move to external file
@@ -275,7 +281,7 @@ struct Args {
     memory: LoadMethod,
 
     // Number of times to greet
-    #[arg(short, default_value_t = RoutingAlgorithm::CH)]
+    #[arg(short, default_value_t = RoutingAlgorithm::Ch)]
     p: RoutingAlgorithm,
 }
 
@@ -321,7 +327,8 @@ fn main() {
                     .to_str()
                     .unwrap()
                     .contains(name)
-            }).cloned()
+            })
+            .cloned()
             .expect("file exists and is usable")
     });
 

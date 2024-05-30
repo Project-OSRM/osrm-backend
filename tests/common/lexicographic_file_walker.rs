@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, fs, path::PathBuf};
+use std::{collections::VecDeque, fs, path::{Path, PathBuf}};
 
 // TODO: port into toolbox-rs
 pub struct LexicographicFileWalker {
@@ -7,11 +7,11 @@ pub struct LexicographicFileWalker {
 }
 
 impl LexicographicFileWalker {
-    pub fn new(path: &PathBuf) -> Self {
+    pub fn new(path: &Path) -> Self {
         let mut dirs = VecDeque::new();
 
         if path.is_dir() {
-            dirs.push_back(path.clone());
+            dirs.push_back(path.to_path_buf());
         }
 
         Self {
