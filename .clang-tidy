@@ -13,6 +13,8 @@ Checks: >
     -bugprone-forward-declaration-namespace,
     -bugprone-sizeof-expression,
     -bugprone-throw-keyword-missing,
+    -bugprone-unused-local-non-trivial-variable,
+    -bugprone-incorrect-enable-if,
     -clang-analyzer-*,
     -clang-diagnostic-deprecated-declarations,
     -clang-diagnostic-constant-conversion,
@@ -86,6 +88,7 @@ Checks: >
     -readability-redundant-string-init,
     -readability-non-const-parameter,
     -readability-redundant-inline-specifier,
+    -readability-avoid-nested-conditional-operator,
     -readability-static-accessed-through-instance
     
 WarningsAsErrors: '*'
