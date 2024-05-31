@@ -16,11 +16,11 @@ namespace osrm::util
 inline static constexpr std::array<uint8_t, 256> json_quotable_character = []() constexpr
 {
     std::array<uint8_t, 256> result{};
-    for (size_t i = 0; i < 32; i++)
+    for (auto i = 0; i < 32; i++)
     {
         result[i] = 1;
     }
-    for (size_t i : {'"', '\\'})
+    for (auto i : {'"', '\\'})
     {
         result[i] = 1;
     }
