@@ -10,26 +10,30 @@
 namespace osrm::util
 {
 
+// implements Lemire's table-based escape needs check
+// cf. https://lemire.me/blog/2024/05/31/quickly-checking-whether-a-string-needs-escaping/
+inline static constexpr std::array<uint8_t, 256> json_quotable_character = []() constexpr
+{
+    std::array<uint8_t, 256> result{};
+    for (size_t i = 0; i < 32; i++)
+    {
+        result[i] = 1;
+    }
+    for (size_t i : {'"', '\\'})
+    {
+        result[i] = 1;
+    }
+    return result;
+}();
+
 inline bool RequiresJSONStringEscaping(const std::string &string)
 {
-    for (const char letter : string)
+    uint8_t needs = 0;
+    for (uint8_t c : string)
     {
-        switch (letter)
-        {
-        case '\\':
-        case '"':
-        case '/':
-        case '\b':
-        case '\f':
-        case '\n':
-        case '\r':
-        case '\t':
-            return true;
-        default:
-            continue;
-        }
+        needs |= json_quotable_character[c];
     }
-    return false;
+    return needs;
 }
 
 inline void EscapeJSONString(const std::string &input, std::string &output)
