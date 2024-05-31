@@ -365,6 +365,7 @@ fn main() {
 
     futures::executor::block_on(
         OSRMWorld::cucumber()
+            .max_concurrent_scenarios(1)
             .before(move |feature, _rule, scenario, world| {
                 // TODO: move to function call below
                 // ports the following logic:
