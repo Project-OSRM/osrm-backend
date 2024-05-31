@@ -1,8 +1,9 @@
 #ifndef STRING_UTIL_HPP
 #define STRING_UTIL_HPP
 
+#include <array>
 #include <cctype>
-
+#include <cstddef>
 #include <random>
 #include <string>
 #include <vector>
