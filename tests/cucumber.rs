@@ -6,20 +6,20 @@ use crate::common::osrm_world::OSRMWorld;
 use cheap_ruler::CheapRuler;
 use clap::Parser;
 use common::lexicographic_file_walker::LexicographicFileWalker;
+use common::nearest_response::NearestResponse;
 use common::osm::OSMWay;
-use serde_json::Value;
-use ureq::Agent;
 use core::panic;
-use std::time::Duration;
 use cucumber::{self, gherkin::Step, given, when, World};
 use futures::{future, FutureExt};
 use geo_types::{point, Point};
-use std::fmt::Display;
+use std::fmt::{format, Display};
 use std::fs::{create_dir_all, File};
-use std::io::{Read, Write};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::time::Duration;
 use std::{env, fs};
+use ureq::Agent;
 
 const DEFAULT_ORIGIN: [f64; 2] = [1., 1.]; // TODO: move to world?
 const DEFAULT_GRID_SIZE: f64 = 100.; // TODO: move to world?
@@ -192,18 +192,38 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
 
     let data_path = cache_path.join(world.scenario_id.to_owned() + ".osrm");
     println!("{routed_path:?} {}", data_path.to_str().unwrap());
-    let handle = Command::new(routed_path)
+
+    // TODO: move the child handling into a convenience struct
+    let mut handle = Command::new(routed_path)
         .arg(data_path.to_str().unwrap())
+        .stdout(Stdio::piped())
         .spawn();
 
-    if let Err(e) = handle {
-        panic!("{e}");
+    let child = match &mut handle {
+        Ok(o) => o,
+        Err(e) => panic!("cannot access handle: {e}"),
+    };
+
+    let mut running = false;
+    if let Some(output) = &mut child.stdout {
+        let mut reader = BufReader::new(output);
+        let mut line = String::new();
+        while let Ok(count) = reader.read_line(&mut line) {
+            println!("count: {count} ->{line}");
+            if line.contains("running and waiting for requests") {
+                running = true;
+                break;
+            }
+        }
+    }
+    if !running {
+        panic! {"routed not started"}
     }
 
     let agent: Agent = ureq::AgentBuilder::new()
-    .timeout_read(Duration::from_secs(5))
-    .timeout_write(Duration::from_secs(5))
-    .build();
+        .timeout_read(Duration::from_secs(5))
+        .timeout_write(Duration::from_secs(5))
+        .build();
 
     // parse and run test cases
     for (query, expected) in test_cases {
@@ -213,21 +233,48 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
         println!("{query_location:?} => {expected_location:?}");
         // run queries
         // "http://localhost:5000/nearest/v1/testbot/1.0008984512067491,1.0"
-        let url = format!("http://localhost:5000/nearest/v1/{}/{},{}", world.profile, query_location.x(), query_location.y());
-        let body: String = agent.get(&url)
-        .call().unwrap()
-        .into_string().unwrap();
+        let url = format!(
+            "http://localhost:5000/nearest/v1/{}/{},{}",
+            world.profile,
+            query_location.x(),
+            query_location.y()
+        );
+        let call = agent.get(&url).call();
 
-        let v: Value = serde_json::from_str(&body).unwrap();
-        let result_location = point!{ x: v["location"][0].as_f64().unwrap(), y: v["location"][1].as_f64().unwrap()};
-        assert_eq!(result_location, expected_location)
+        let body = match call {
+            Ok(response) => response.into_string().expect("response not parseable"),
+            Err(e) => panic!("http error: {e}"),
+        };
+
+        println!("body: {body}");
+
+        let v: NearestResponse = match serde_json::from_str(&body) {
+            Ok(v) => v,
+            Err(e) => panic!("parsing error {e}"),
+        };
+
+        let result_location = v.waypoints[0].location();
+        // assert_eq!(result_location, expected_location)
+        assert!(approx_equal(result_location.x(), expected_location.x(), 5));
+        assert!(approx_equal(result_location.y(), expected_location.y(), 5));
         // println!("{body}");
         // check results
     }
 
-    if let Err(e) = handle.expect("osrm-routed died unexpectedly").kill() {
+    if let Err(e) = child.kill() {
         panic!("shutdown failed: {e}");
     }
+}
+
+// matchLocation (got, want) {
+//     if (got == null || want == null) return false;
+//     return this.match(got[0], util.format('%d ~0.0025%', want.lon)) &&
+//         this.match(got[1], util.format('%d ~0.0025%', want.lat));
+// }
+
+pub fn approx_equal(a: f64, b: f64, dp: u8) -> bool {
+    let p = 10f64.powi(-(dp as i32));
+    (a - b).abs() < p
 }
 
 // TODO: move to different file

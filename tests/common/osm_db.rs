@@ -1,5 +1,5 @@
-use xml_builder::{XMLBuilder, XMLElement, XMLVersion};
 use super::osm::{OSMNode, OSMWay};
+use xml_builder::{XMLBuilder, XMLElement, XMLVersion};
 
 // TODO: better error handling in XML creation
 #[derive(Debug, Default)]

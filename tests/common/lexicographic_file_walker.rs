@@ -1,4 +1,8 @@
-use std::{collections::VecDeque, fs, path::{Path, PathBuf}};
+use std::{
+    collections::VecDeque,
+    fs,
+    path::{Path, PathBuf},
+};
 
 // TODO: port into toolbox-rs
 pub struct LexicographicFileWalker {

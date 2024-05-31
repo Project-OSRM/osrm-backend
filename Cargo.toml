@@ -10,6 +10,8 @@ clap = "4.5.4"
 cucumber = "0.21.0"
 futures = "0.3.30"
 geo-types = "0.7.13"
+help = "0.0.0"
+serde = { version = "1.0.203", features = ["serde_derive"] }
 serde_json = "1.0.117"
 ureq = "2.9.7"
 xml-builder = "0.5.2"

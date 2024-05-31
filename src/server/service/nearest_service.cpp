@@ -7,6 +7,7 @@
 #include "util/json_container.hpp"
 
 #include <boost/format.hpp>
+#include <iostream>
 
 namespace osrm::server::service
 {
@@ -30,11 +31,11 @@ std::string getWrongOptionHelp(const engine::api::NearestParameters &parameters)
     return help;
 }
 } // namespace
-
 engine::Status NearestService::RunQuery(std::size_t prefix_length,
                                         std::string &query,
                                         osrm::engine::api::ResultT &result)
 {
+    std::cout << "running query: " << query << "\n";
     result = util::json::Object();
     auto &json_result = std::get<util::json::Object>(result);
 
