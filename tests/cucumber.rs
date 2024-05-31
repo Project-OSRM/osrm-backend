@@ -206,10 +206,11 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
 
     let mut running = false;
     if let Some(output) = &mut child.stdout {
+        // implement with a timeout
         let mut reader = BufReader::new(output);
         let mut line = String::new();
-        while let Ok(count) = reader.read_line(&mut line) {
-            println!("count: {count} ->{line}");
+        while let Ok(_count) = reader.read_line(&mut line) {
+            // println!("count: {count} ->{line}");
             if line.contains("running and waiting for requests") {
                 running = true;
                 break;
@@ -220,6 +221,7 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
         panic! {"routed not started"}
     }
 
+    // TODO: move to generic http request handling struct
     let agent: Agent = ureq::AgentBuilder::new()
         .timeout_read(Duration::from_secs(5))
         .timeout_write(Duration::from_secs(5))
@@ -230,9 +232,8 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
         let query_location = world.get_location(query);
         let expected_location = world.get_location(expected);
 
-        println!("{query_location:?} => {expected_location:?}");
+        // println!("{query_location:?} => {expected_location:?}");
         // run queries
-        // "http://localhost:5000/nearest/v1/testbot/1.0008984512067491,1.0"
         let url = format!(
             "http://localhost:5000/nearest/v1/{}/{},{}",
             world.profile,
@@ -245,8 +246,7 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
             Ok(response) => response.into_string().expect("response not parseable"),
             Err(e) => panic!("http error: {e}"),
         };
-
-        println!("body: {body}");
+        // println!("body: {body}");
 
         let v: NearestResponse = match serde_json::from_str(&body) {
             Ok(v) => v,
@@ -254,23 +254,15 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
         };
 
         let result_location = v.waypoints[0].location();
-        // assert_eq!(result_location, expected_location)
+        // check results
         assert!(approx_equal(result_location.x(), expected_location.x(), 5));
         assert!(approx_equal(result_location.y(), expected_location.y(), 5));
-        // println!("{body}");
-        // check results
     }
 
     if let Err(e) = child.kill() {
         panic!("shutdown failed: {e}");
     }
 }
-
-// matchLocation (got, want) {
-//     if (got == null || want == null) return false;
-//     return this.match(got[0], util.format('%d ~0.0025%', want.lon)) &&
-//         this.match(got[1], util.format('%d ~0.0025%', want.lat));
-// }
 
 pub fn approx_equal(a: f64, b: f64, dp: u8) -> bool {
     let p = 10f64.powi(-(dp as i32));
