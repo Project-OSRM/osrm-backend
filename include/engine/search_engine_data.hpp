@@ -12,7 +12,6 @@ namespace osrm::engine
 
 // Algorithm-dependent heaps
 // - CH algorithms use CH heaps
-// - CoreCH algorithms use CH
 // - MLD algorithms use MLD heaps
 
 template <typename Algorithm> struct SearchEngineData
