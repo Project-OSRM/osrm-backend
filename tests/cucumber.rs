@@ -5,6 +5,7 @@ mod common;
 use crate::common::osrm_world::OSRMWorld;
 use cheap_ruler::CheapRuler;
 use clap::Parser;
+use common::cli_arguments::Args;
 use common::lexicographic_file_walker::LexicographicFileWalker;
 use common::nearest_response::NearestResponse;
 use common::osm::OSMWay;
@@ -283,53 +284,6 @@ fn get_file_as_byte_vec(path: &PathBuf) -> Vec<u8> {
     buffer
 }
 
-#[derive(clap::ValueEnum, Clone, Default, Debug)]
-enum LoadMethod {
-    Mmap,
-    #[default]
-    Datastore,
-    Directly,
-}
-impl Display for LoadMethod {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let result = match self {
-            LoadMethod::Mmap => "mmap",
-            LoadMethod::Datastore => "datastore",
-            LoadMethod::Directly => "directly",
-        };
-        write!(f, "{result}")
-    }
-}
-
-#[derive(clap::ValueEnum, Clone, Default, Debug)]
-enum RoutingAlgorithm {
-    #[default]
-    Ch,
-    Mld,
-}
-
-impl Display for RoutingAlgorithm {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let result = match self {
-            RoutingAlgorithm::Ch => "ch",
-            RoutingAlgorithm::Mld => "mld",
-        };
-        write!(f, "{result}")
-    }
-}
-// TODO: move to external file
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-struct Args {
-    // underlying memory storage
-    #[arg(short, default_value_t = LoadMethod::Datastore)]
-    memory: LoadMethod,
-
-    // Number of times to greet
-    #[arg(short, default_value_t = RoutingAlgorithm::Ch)]
-    p: RoutingAlgorithm,
-}
-
 fn main() {
     let args = Args::parse();
     println!("name: {:?}", args);
@@ -344,7 +298,7 @@ fn main() {
     let build_path = path.join("build"); // TODO: Remove after migration to Rust build dir
     let mut dependencies = Vec::new();
 
-    // FIXME: the following iterator gymnastics port the exact behavior of the JavaScript implementation
+    // FIXME: the following iterator gymnastics port the exact order and behavior of the JavaScript implementation
     let names = [
         "osrm-extract",
         "osrm-contract",
@@ -406,30 +360,7 @@ fn main() {
         OSRMWorld::cucumber()
             .max_concurrent_scenarios(1)
             .before(move |feature, _rule, scenario, world| {
-                // TODO: move to function call below
-                // ports the following logic:
-                // let name = scenario.getName().toLowerCase().replace(/[/\-'=,():*#]/g, '')
-                // .replace(/\s/g, '_').replace(/__/g, '_').replace(/\.\./g, '.')
-                // .substring(0, 64);
-                let mut s = scenario
-                    .name
-                    .to_ascii_lowercase()
-                    .replace(
-                        &['/', '\\', '-', '\'', '=', ',', '(', ')', ':', '*', '#'][..],
-                        "",
-                    )
-                    .chars()
-                    .map(|x| match x {
-                        ' ' => '_',
-                        _ => x,
-                    })
-                    .collect::<String>()
-                    .replace('\\', "_")
-                    .replace("__", "_")
-                    .replace("..", ".");
-                s.truncate(64);
-
-                world.scenario_id = format!("{}_{}", scenario.position.line, s);
+                world.scenario_id = common::scenario_id::scenario_id(scenario);
                 world.set_scenario_specific_paths_and_digests(feature.path.clone());
                 world.osrm_digest = md5.digest().to_hex_lowercase();
 
