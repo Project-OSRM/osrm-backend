@@ -9,15 +9,14 @@ use common::cli_arguments::Args;
 use common::lexicographic_file_walker::LexicographicFileWalker;
 use common::nearest_response::NearestResponse;
 use common::osm::OSMWay;
+use common::task_starter::TaskStarter;
 use core::panic;
 use cucumber::{self, gherkin::Step, given, when, World};
 use futures::{future, FutureExt};
 use geo_types::{point, Point};
-use std::fmt::{format, Display};
 use std::fs::{create_dir_all, File};
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{Read, Write};
 use std::path::PathBuf;
-use std::process::{Command, Stdio};
 use std::time::Duration;
 use std::{env, fs};
 use ureq::Agent;
@@ -163,11 +162,6 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
         println!("{cache_path:?} does not exist");
     }
 
-    let routed_path = path.join("build").join("osrm-routed");
-    if !routed_path.exists() {
-        panic!("osrm-routed binary not found");
-    }
-
     // parse query data
     let t = &step.table.as_ref().expect("no query table specified");
     let test_cases: Vec<_> = t
@@ -192,35 +186,17 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
         .collect();
 
     let data_path = cache_path.join(world.scenario_id.to_owned() + ".osrm");
-    println!("{routed_path:?} {}", data_path.to_str().unwrap());
 
-    // TODO: move the child handling into a convenience struct
-    let mut handle = Command::new(routed_path)
-        .arg(data_path.to_str().unwrap())
-        .stdout(Stdio::piped())
-        .spawn();
-
-    let child = match &mut handle {
-        Ok(o) => o,
-        Err(e) => panic!("cannot access handle: {e}"),
-    };
-
-    let mut running = false;
-    if let Some(output) = &mut child.stdout {
-        // implement with a timeout
-        let mut reader = BufReader::new(output);
-        let mut line = String::new();
-        while let Ok(_count) = reader.read_line(&mut line) {
-            // println!("count: {count} ->{line}");
-            if line.contains("running and waiting for requests") {
-                running = true;
-                break;
-            }
-        }
+    let routed_path = path.join("build").join("osrm-routed");
+    if !routed_path.exists() {
+        panic!("osrm-routed binary not found");
     }
-    if !running {
-        panic! {"routed not started"}
-    }
+
+    // TODO: this should not require a temporary and behave like the API of std::process
+    let mut task = TaskStarter::new(routed_path.to_str().unwrap());
+    task.arg(data_path.to_str().unwrap());
+    task.spawn_wait_till_ready("running and waiting for requests");
+    assert!(task.is_ready());
 
     // TODO: move to generic http request handling struct
     let agent: Agent = ureq::AgentBuilder::new()
@@ -260,9 +236,9 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
         assert!(approx_equal(result_location.y(), expected_location.y(), 5));
     }
 
-    if let Err(e) = child.kill() {
-        panic!("shutdown failed: {e}");
-    }
+    // if let Err(e) = child.kill() {
+    //     panic!("shutdown failed: {e}");
+    // }
 }
 
 pub fn approx_equal(a: f64, b: f64, dp: u8) -> bool {

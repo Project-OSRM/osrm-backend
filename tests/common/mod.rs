@@ -5,3 +5,4 @@ pub mod osm;
 pub mod osm_db;
 pub mod osrm_world;
 pub mod scenario_id;
+pub mod task_starter;
