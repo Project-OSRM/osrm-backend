@@ -24,7 +24,7 @@ function run_benchmarks_for_folder {
 
     cp ~/data.osm.pbf $FOLDER
     $BINARIES_FOLDER/osrm-extract -p $FOLDER/profiles/car.lua $FOLDER/data.osm.pbf
-    $BINARIES_FOLDER/osrm-partition $FOLDER/data.osrm
+    time -f "%M" $BINARIES_FOLDER/osrm-partition $FOLDER/data.osrm > "$RESULTS_FOLDER/osrm_partition.bench"
     $BINARIES_FOLDER/osrm-customize $FOLDER/data.osrm
     $BINARIES_FOLDER/osrm-contract $FOLDER/data.osrm
 
