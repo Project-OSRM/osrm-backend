@@ -5,16 +5,19 @@ mod common;
 use cheap_ruler::CheapRuler;
 use clap::Parser;
 use common::{
-    cli_arguments::Args, f64_utils::approx_equal, hash_util::md5_of_osrm_executables,
-    nearest_response::NearestResponse, osm::OSMWay, osrm_world::OSRMWorld,
-    task_starter::TaskStarter,
+    cli_arguments::Args, dot_writer::CustomWriter, f64_utils::approx_equal, hash_util::md5_of_osrm_executables, nearest_response::NearestResponse, osm::OSMWay, osrm_world::OSRMWorld, task_starter::TaskStarter
 };
 use core::panic;
-use cucumber::{self, gherkin::Step, given, when, World};
+use cucumber::{gherkin::Step, given, when, World, WriterExt};
 use futures::{future, FutureExt};
 use geo_types::{point, Point};
 use log::debug;
-use std::{collections::HashMap, fs::File, io::Write, time::Duration};
+use std::{
+    collections::HashMap,
+    fs::File,
+    io::Write,
+    time::Duration,
+};
 use ureq::Agent;
 
 const DEFAULT_ORIGIN: [f64; 2] = [1., 1.]; // TODO: move to world?
@@ -189,7 +192,7 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
                 row.len() >= 2,
                 "test case broken: row needs to have at least two entries. One for query input, one for expected result"
             );
-            let query = row.get(0).unwrap();
+            let query = row.first().unwrap();
             let expected = row.get(1).unwrap();
             assert_eq!(query.len(), 1);
             assert_eq!(expected.len(), 1);
@@ -247,11 +250,6 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
     }
 }
 
-pub fn approx_equal(a: f64, b: f64, dp: u8) -> bool {
-    let p = 10f64.powi(-(dp as i32));
-    (a - b).abs() < p
-}
-
 fn main() {
     let args = Args::parse();
     debug!("arguments: {:?}", args);
@@ -268,6 +266,7 @@ fn main() {
 
                 future::ready(()).boxed()
             })
-            .run_and_exit("features/nearest/pick.feature"),
+            .with_writer(CustomWriter.normalized())
+            .run("features/nearest/pick.feature"),
     );
 }

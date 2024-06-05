@@ -98,7 +98,7 @@ impl OSRMWorld {
     }
 
     pub fn get_location(&self, name: char) -> Point {
-        match name {
+        *match name {
             // TODO: move lookup to world
             '0'..='9' => self
                 .known_locations
@@ -110,7 +110,6 @@ impl OSRMWorld {
                 .expect("test case specifies unknown osm node: {name}"),
             _ => unreachable!("nodes have to be name in [0-9][a-z]"),
         }
-        .clone()
     }
 
     pub fn add_location(&mut self, name: char, location: Point) {
