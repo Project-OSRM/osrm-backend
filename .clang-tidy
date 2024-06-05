@@ -13,6 +13,7 @@ Checks: >
     -bugprone-forward-declaration-namespace,
     -bugprone-sizeof-expression,
     -bugprone-throw-keyword-missing,
+    -bugprone-chained-comparison,
     -bugprone-incorrect-enable-if,
     -bugprone-switch-missing-default-case,
     -clang-analyzer-*,
