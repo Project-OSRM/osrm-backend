@@ -377,12 +377,11 @@ jobs:
         key: v4-test-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
           v4-test-${{ matrix.name }}-
-
     - name: Prepare environment
       run: |
         echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
         mkdir -p $HOME/.ccache
-        
+
         PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
         echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
         echo "OSRM_INSTALL_DIR=${GITHUB_WORKSPACE}/install-osrm" >> $GITHUB_ENV
@@ -490,7 +489,7 @@ jobs:
       run: |
         echo "Using ${JOBS} jobs"
         pushd ${OSRM_BUILD_DIR}
-
+        
         ccache --zero-stats
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                  -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
@@ -508,6 +507,7 @@ jobs:
         if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
           make tests --jobs=${JOBS}
           make benchmarks --jobs=${JOBS}
+
           sudo make install
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
             echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib" >> $GITHUB_ENV
@@ -690,7 +690,6 @@ jobs:
   #       run: |
   #         ccache -p
   #         ccache -s
-
   # ci-complete:
   #   runs-on: ubuntu-22.04
   #   needs: [build-test-publish, docker-image, windows-release-node, benchmarks]
