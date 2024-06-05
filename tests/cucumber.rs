@@ -5,8 +5,9 @@ mod common;
 use cheap_ruler::CheapRuler;
 use clap::Parser;
 use common::{
-    cli_arguments::Args, hash_util::md5_of_osrm_executables, nearest_response::NearestResponse,
-    osm::OSMWay, osrm_world::OSRMWorld, task_starter::TaskStarter,
+    cli_arguments::Args, f64_utils::approx_equal, hash_util::md5_of_osrm_executables,
+    nearest_response::NearestResponse, osm::OSMWay, osrm_world::OSRMWorld,
+    task_starter::TaskStarter,
 };
 use core::panic;
 use cucumber::{self, gherkin::Step, given, when, World};
