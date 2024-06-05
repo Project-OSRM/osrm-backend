@@ -377,12 +377,11 @@ jobs:
         key: v4-test-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
           v4-test-${{ matrix.name }}-
-
     - name: Prepare environment
       run: |
         echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
         mkdir -p $HOME/.ccache
-        
+
         PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
         echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
         echo "OSRM_INSTALL_DIR=${GITHUB_WORKSPACE}/install-osrm" >> $GITHUB_ENV
@@ -490,7 +489,7 @@ jobs:
       run: |
         echo "Using ${JOBS} jobs"
         pushd ${OSRM_BUILD_DIR}
-
+        
         ccache --zero-stats
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                  -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
@@ -508,6 +507,7 @@ jobs:
         if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
           make tests --jobs=${JOBS}
           make benchmarks --jobs=${JOBS}
+
           sudo make install
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
             echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib" >> $GITHUB_ENV
@@ -628,6 +628,13 @@ jobs:
       PR_NUMBER: ${{ github.event.pull_request.number }}
       GITHUB_REPOSITORY: ${{ github.repository }}
     steps: 
+      - name: Enable data.osm.pbf cache
+        uses: actions/cache@v4
+        with:
+          path: ~/data.osm.pbf
+          key: v1-data-osm-pbf
+          restore-keys: |
+            v1-data-osm-pbf
       - name: Enable compiler cache
         uses: actions/cache@v4
         with:
@@ -648,9 +655,15 @@ jobs:
           ref: ${{ github.head_ref }}
           path: pr
       - name: Install dependencies
-        run: |
-          python3 -m pip install "conan<2.0.0" "requests==2.31.0"
+        run: | 
+          python3 -m pip install "conan<2.0.0" "requests==2.31.0" "locust==2.28.0"
           sudo apt-get update -y && sudo apt-get install ccache
+      - name: Prepare data
+        run: |
+          if [ ! -f "~/data.osm.pbf" ]; then
+            wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
+          fi
+          gunzip -c ./pr/test/data/berlin_gps_traces.csv.gz > ~/gps_traces.csv
       - name: Prepare environment
         run: |
           echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
