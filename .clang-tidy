@@ -94,6 +94,7 @@ Checks: >
     -readability-redundant-inline-specifier,
     -readability-avoid-nested-conditional-operator,
     -readability-avoid-return-with-void-value,
+    -readability-redundant-casting,
     -readability-static-accessed-through-instance
     
 WarningsAsErrors: '*'
