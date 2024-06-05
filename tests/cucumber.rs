@@ -49,7 +49,7 @@ fn set_node_locations(world: &mut OSRMWorld, step: &Step) {
     );
     // the following lookup allows to define lat lon columns in any order
     let header_lookup: HashMap<&str, usize> = header
-        .into_iter()
+        .iter()
         .enumerate()
         .map(|(index, name)| (name.as_str(), index))
         .collect();
@@ -287,6 +287,6 @@ fn main() {
                 future::ready(()).boxed()
             })
             .with_writer(DotWriter.normalized())
-            .run("features/nearest/pick.feature"),
+            .run("features/nearest/projection.feature"),
     );
 }
