@@ -156,7 +156,20 @@ template <typename NodeID,
 class QueryHeap
 {
   private:
-    using HeapData = std::pair<Weight, Key>;
+    struct HeapData
+    {
+        Weight weight;
+        Key index;
+
+        bool operator>(const HeapData &other) const
+        {
+            if (weight == other.weight)
+            {
+                return index > other.index;
+            }
+            return weight > other.weight;
+        }
+    };
     using HeapContainer = boost::heap::d_ary_heap<HeapData,
                                                   boost::heap::arity<4>,
                                                   boost::heap::mutable_<true>,
@@ -195,7 +208,7 @@ class QueryHeap
     {
         BOOST_ASSERT(node < std::numeric_limits<NodeID>::max());
         const auto index = static_cast<Key>(inserted_nodes.size());
-        const auto handle = heap.push(std::make_pair(weight, index));
+        const auto handle = heap.emplace(HeapData{weight, index});
         inserted_nodes.emplace_back(HeapNode{handle, node, weight, data});
         node_index[node] = index;
     }
@@ -278,19 +291,19 @@ class QueryHeap
     NodeID Min() const
     {
         BOOST_ASSERT(!heap.empty());
-        return inserted_nodes[heap.top().second].node;
+        return inserted_nodes[heap.top().index].node;
     }
 
     Weight MinKey() const
     {
         BOOST_ASSERT(!heap.empty());
-        return heap.top().first;
+        return heap.top().weight;
     }
 
     NodeID DeleteMin()
     {
         BOOST_ASSERT(!heap.empty());
-        const Key removedIndex = heap.top().second;
+        const Key removedIndex = heap.top().index;
         heap.pop();
         inserted_nodes[removedIndex].handle = heap.s_handle_from_iterator(heap.end());
         return inserted_nodes[removedIndex].node;
@@ -299,7 +312,7 @@ class QueryHeap
     HeapNode &DeleteMinGetHeapNode()
     {
         BOOST_ASSERT(!heap.empty());
-        const Key removedIndex = heap.top().second;
+        const Key removedIndex = heap.top().index;
         heap.pop();
         inserted_nodes[removedIndex].handle = heap.s_handle_from_iterator(heap.end());
         return inserted_nodes[removedIndex];
@@ -320,13 +333,13 @@ class QueryHeap
         const auto index = node_index.peek_index(node);
         auto &reference = inserted_nodes[index];
         reference.weight = weight;
-        heap.increase(reference.handle, std::make_pair(weight, index));
+        heap.increase(reference.handle, HeapData{weight, static_cast<Key>(index)});
     }
 
     void DecreaseKey(const HeapNode &heapNode)
     {
         BOOST_ASSERT(!WasRemoved(heapNode.node));
-        heap.increase(heapNode.handle, std::make_pair(heapNode.weight, (*heapNode.handle).second));
+        heap.increase(heapNode.handle, HeapData{heapNode.weight, (*heapNode.handle).index});
     }
 
   private:

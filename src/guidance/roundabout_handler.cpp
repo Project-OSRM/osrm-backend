@@ -337,7 +337,7 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
         return RoundaboutType::RoundaboutIntersection;
     }
 
-    const double radius = roundabout_length / (2 * M_PI);
+    const double radius = roundabout_length * 0.5 * std::numbers::inv_pi;
 
     // Looks like a rotary: large roundabout with dedicated name
     // do we have a dedicated name for the rotary, if not its a roundabout

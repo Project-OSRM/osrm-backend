@@ -2,7 +2,6 @@ var OSRM = require('../../');
 var test = require('tape');
 var monaco_path = require('./constants').data_path;
 var monaco_mld_path = require('./constants').mld_data_path;
-var monaco_corech_path = require('./constants').corech_data_path;
 var three_test_coordinates = require('./constants').three_test_coordinates;
 var two_test_coordinates = require('./constants').two_test_coordinates;
 const flatbuffers = require('../../features/support/flatbuffers').flatbuffers;
@@ -69,32 +68,6 @@ test('route: routes Monaco on MLD', function(assert) {
     var osrm = new OSRM({path: monaco_mld_path, algorithm: 'MLD'});
     osrm.route({coordinates: [[13.43864,52.51993],[13.415852,52.513191]]}, function(err, route) {
         assert.ifError(err);
-        assert.ok(route.waypoints);
-        assert.ok(route.routes);
-        assert.ok(route.routes.length);
-        assert.ok(route.routes[0].geometry);
-    });
-});
-
-test('route: routes Monaco on CoreCH', function(assert) {
-    assert.plan(5);
-    var osrm = new OSRM({path: monaco_corech_path, algorithm: 'CoreCH'});
-    osrm.route({coordinates: [[13.43864,52.51993],[13.415852,52.513191]]}, function(err, route) {
-        assert.ifError(err);
-        assert.ok(route.waypoints);
-        assert.ok(route.routes);
-        assert.ok(route.routes.length);
-        assert.ok(route.routes[0].geometry);
-    });
-});
-
-test('route: routes Monaco and returns a JSON buffer', function(assert) {
-    assert.plan(6);
-    var osrm = new OSRM({path: monaco_corech_path, algorithm: 'CoreCH'});
-    osrm.route({coordinates: [[13.43864,52.51993],[13.415852,52.513191]]}, { format: 'json_buffer'}, function(err, result) {
-        assert.ifError(err);
-        assert.ok(result instanceof Buffer);
-        const route = JSON.parse(result);
         assert.ok(route.waypoints);
         assert.ok(route.routes);
         assert.ok(route.routes.length);

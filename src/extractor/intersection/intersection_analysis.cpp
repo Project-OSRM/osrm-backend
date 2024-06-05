@@ -6,6 +6,7 @@
 #include "util/coordinate_calculation.hpp"
 
 #include <boost/optional/optional_io.hpp>
+#include <numbers>
 
 namespace osrm::extractor::intersection
 {
@@ -79,11 +80,11 @@ namespace
 {
 double findAngleBisector(double alpha, double beta)
 {
-    alpha *= M_PI / 180.;
-    beta *= M_PI / 180.;
+    alpha *= std::numbers::pi / 180.;
+    beta *= std::numbers::pi / 180.;
     const auto average =
-        180. * std::atan2(std::sin(alpha) + std::sin(beta), std::cos(alpha) + std::cos(beta)) /
-        M_PI;
+        180. * std::atan2(std::sin(alpha) + std::sin(beta), std::cos(alpha) + std::cos(beta)) *
+        std::numbers::inv_pi;
     return std::fmod(average + 360., 360.);
 }
 

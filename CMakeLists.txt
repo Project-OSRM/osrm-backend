@@ -266,7 +266,6 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   add_dependency_defines(-DBOOST_LIB_DIAGNOSTIC)
   add_dependency_defines(-D_CRT_SECURE_NO_WARNINGS)
   add_dependency_defines(-DNOMINMAX) # avoid min and max macros that can break compilation
-  add_dependency_defines(-D_USE_MATH_DEFINES) #needed for M_PI with cmath.h
   add_dependency_defines(-D_WIN32_WINNT=0x0501)
   add_dependency_defines(-DXML_STATIC)
   find_library(ws2_32_LIBRARY_PATH ws2_32)
