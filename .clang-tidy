@@ -16,6 +16,7 @@ Checks: >
     -bugprone-chained-comparison,
     -bugprone-incorrect-enable-if,
     -bugprone-switch-missing-default-case,
+    -bugprone-empty-catch,
     -clang-analyzer-*,
     -clang-diagnostic-deprecated-declarations,
     -clang-diagnostic-constant-conversion,
