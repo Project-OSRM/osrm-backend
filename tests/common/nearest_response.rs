@@ -8,7 +8,6 @@ pub struct Waypoint {
     pub distance: f64,
     pub name: String,
     location: [f64; 2],
-    pub data_version: Option<String>,
 }
 
 impl Waypoint {
@@ -21,4 +20,5 @@ impl Waypoint {
 pub struct NearestResponse {
     pub code: String,
     pub waypoints: Vec<Waypoint>,
+    pub data_version: Option<String>,
 }

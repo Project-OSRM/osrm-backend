@@ -48,10 +48,14 @@ fn set_node_locations(world: &mut OSRMWorld, step: &Step) {
         "first column needs to be 'node' indicating the one-letter name"
     );
     // the following lookup allows to define lat lon columns in any order
-    let lat_lon_lookup = HashMap::from([(header[1].clone(), 1), (header[2].clone(), 2)]);
+    let header_lookup: HashMap<&str, usize> = header
+        .into_iter()
+        .enumerate()
+        .map(|(index, name)| (name.as_str(), index))
+        .collect();
     ["lat", "lon"].iter().for_each(|dim| {
         assert!(
-            lat_lon_lookup.contains_key(*dim),
+            header_lookup.contains_key(*dim),
             "table must define a {dim} column"
         );
     });
@@ -60,8 +64,8 @@ fn set_node_locations(world: &mut OSRMWorld, step: &Step) {
         assert_eq!(3, row.len());
         assert_eq!(row[0].len(), 1, "node name not in [0..9][a..z]");
         let name = &row[0].chars().next().expect("node name cannot be empty"); // the error is unreachable
-        let lon = &row[lat_lon_lookup["lon"]];
-        let lat = &row[lat_lon_lookup["lat"]];
+        let lon = &row[header_lookup["lon"]];
+        let lat = &row[header_lookup["lat"]];
         let location = point!(x: lon.parse::<f64>().expect("lon {lon} needs to be a f64"), y: lat.parse::<f64>().expect("lat {lat} needs to be a f64"));
         match name {
             '0'...'9' => world.add_location(*name, location),
@@ -179,24 +183,24 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
     }
 
     // parse query data
-    let t = &step.table.as_ref().expect("no query table specified");
-    let test_cases: Vec<_> = t
+    let table = &step.table.as_ref().expect("no query table specified");
+    // the following lookup allows to define lat lon columns in any order
+    let header = table.rows.first().expect("node locations table empty");
+    // TODO: move to common functionality
+    let test_cases: Vec<_> = table
         .rows
         .iter()
         .skip(1)
         .map(|row| {
-            assert!(
-                row.len() >= 2,
-                "test case broken: row needs to have at least two entries. One for query input, one for expected result"
-            );
-            let query = row.first().unwrap();
-            let expected = row.get(1).unwrap();
-            assert_eq!(query.len(), 1);
-            assert_eq!(expected.len(), 1);
-            (
-                query.chars().next().unwrap(),
-                expected.chars().next().unwrap(),
-            )
+            let row_map: HashMap<String, String> = row
+                .iter()
+                .enumerate()
+                .map(|(column_index, value)| {
+                    let key = header[column_index].clone();
+                    (key, value.clone())
+                })
+                .collect();
+            row_map
         })
         .collect();
 
@@ -215,9 +219,23 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
         .build();
 
     // parse and run test cases
-    for (query, expected) in test_cases {
-        let query_location = world.get_location(query);
-        let expected_location = world.get_location(expected);
+    for test_case in test_cases {
+        let query_location = world.get_location(
+            test_case
+                .get("in")
+                .expect("node name is one char long")
+                .chars()
+                .next()
+                .expect("node name is one char long"),
+        );
+        let expected_location = world.get_location(
+            test_case
+                .get("out")
+                .expect("node name is one char long")
+                .chars()
+                .next()
+                .expect("node name is one char long"),
+        );
 
         // debug!("{query_location:?} => {expected_location:?}");
         // run queries
@@ -235,15 +253,20 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
         };
         // debug!("body: {body}");
 
-        let v: NearestResponse = match serde_json::from_str(&body) {
-            Ok(v) => v,
+        let response: NearestResponse = match serde_json::from_str(&body) {
+            Ok(response) => response,
             Err(e) => panic!("parsing error {e}"),
         };
 
-        let result_location = v.waypoints[0].location();
-        // check results
-        assert!(approx_equal(result_location.x(), expected_location.x(), 5));
-        assert!(approx_equal(result_location.y(), expected_location.y(), 5));
+        if test_case.contains_key("out") {
+            // check that result node is (approximately) equivalent
+            let result_location = response.waypoints[0].location();
+            assert!(approx_equal(result_location.x(), expected_location.x(), 5));
+            assert!(approx_equal(result_location.y(), expected_location.y(), 5));
+        }
+        if test_case.contains_key("data_version") {
+            assert_eq!(test_case.get("data_version"), response.data_version.as_ref());
+        }
     }
 }
 

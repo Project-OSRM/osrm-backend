@@ -2,6 +2,7 @@ use std::io::{self, Write};
 
 use cucumber::{cli, event, parser, Event};
 // TODO: add colors
+// TODO: print summary at the end
 pub struct DotWriter;
 
 impl<W: 'static> cucumber::Writer<W> for DotWriter {
