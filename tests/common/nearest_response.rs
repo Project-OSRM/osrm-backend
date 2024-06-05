@@ -3,11 +3,12 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Waypoint {
-    hint: String,
-    nodes: Vec<u64>,
-    distance: f64,
-    name: String,
+    pub hint: String,
+    pub nodes: Vec<u64>,
+    pub distance: f64,
+    pub name: String,
     location: [f64; 2],
+    pub data_version: Option<String>,
 }
 
 impl Waypoint {
@@ -18,6 +19,6 @@ impl Waypoint {
 
 #[derive(Deserialize, Debug)]
 pub struct NearestResponse {
-    code: String,
+    pub code: String,
     pub waypoints: Vec<Waypoint>,
 }

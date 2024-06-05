@@ -29,8 +29,6 @@ impl TaskStarter {
     }
 
     pub fn spawn_wait_till_ready(&mut self, ready_token: &str) {
-        // TODO: move the child handling into a convenience struct
-
         let mut command = &mut Command::new(&self.command);
         for argument in &self.arguments {
             command = command.arg(argument);

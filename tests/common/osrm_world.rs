@@ -1,6 +1,11 @@
 use crate::Point;
 use cucumber::World;
-use std::{collections::HashMap, fs::File, path::PathBuf};
+use log::debug;
+use std::{
+    collections::HashMap,
+    fs::{create_dir_all, File},
+    path::PathBuf,
+};
 
 use super::{osm::OSMNode, osm_db::OSMDb};
 
@@ -17,9 +22,46 @@ pub struct OSRMWorld {
     pub known_locations: HashMap<char, Point>,
 
     pub osm_db: OSMDb,
+    pub extraction_parameters: Vec<String>,
 }
 
 impl OSRMWorld {
+    pub fn feature_cache_path(&self) -> PathBuf {
+        let full_path = self.feature_path.clone().unwrap();
+        let path = full_path
+            .ancestors()
+            .find(|p| p.ends_with("features"))
+            .expect(".feature files reside in a directory tree with the root name 'features'");
+
+        let suffix = full_path.strip_prefix(path).unwrap();
+        let path = path.parent().unwrap();
+        debug!("suffix: {suffix:?}");
+        let cache_path = path
+            .join("test")
+            .join("cache")
+            .join(suffix)
+            .join(&self.feature_digest);
+
+        debug!("{cache_path:?}");
+        if !cache_path.exists() {
+            create_dir_all(&cache_path).expect("cache path could not be created");
+        } else {
+            debug!("not creating cache dir");
+        }
+        cache_path
+    }
+
+    pub fn routed_path(&self) -> PathBuf {
+        let full_path = self.feature_path.clone().unwrap();
+        let path = full_path
+            .ancestors()
+            .find(|p| p.ends_with("features"))
+            .expect(".feature files reside in a directory tree with the root name 'features'");
+        let routed_path = path.parent().expect("cannot get parent path").join("build").join("osrm-routed");
+        assert!(routed_path.exists(), "osrm-routed binary not found");
+        routed_path
+    }
+
     pub fn set_scenario_specific_paths_and_digests(&mut self, path: Option<PathBuf>) {
         self.feature_path.clone_from(&path);
 

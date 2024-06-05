@@ -2,23 +2,18 @@ extern crate clap;
 
 mod common;
 
-use crate::common::osrm_world::OSRMWorld;
 use cheap_ruler::CheapRuler;
 use clap::Parser;
-use common::cli_arguments::Args;
-use common::lexicographic_file_walker::LexicographicFileWalker;
-use common::nearest_response::NearestResponse;
-use common::osm::OSMWay;
-use common::task_starter::TaskStarter;
+use common::{
+    cli_arguments::Args, hash_util::md5_of_osrm_executables, nearest_response::NearestResponse,
+    osm::OSMWay, osrm_world::OSRMWorld, task_starter::TaskStarter,
+};
 use core::panic;
 use cucumber::{self, gherkin::Step, given, when, World};
 use futures::{future, FutureExt};
 use geo_types::{point, Point};
-use std::fs::{create_dir_all, File};
-use std::io::{Read, Write};
-use std::path::PathBuf;
-use std::time::Duration;
-use std::{env, fs};
+use log::debug;
+use std::{collections::HashMap, fs::File, io::Write, time::Duration};
 use ureq::Agent;
 
 const DEFAULT_ORIGIN: [f64; 2] = [1., 1.]; // TODO: move to world?
@@ -35,12 +30,46 @@ fn offset_origin_by(dx: f64, dy: f64) -> geo_types::Point {
 
 #[given(expr = "the profile \"{word}\"")]
 fn set_profile(world: &mut OSRMWorld, profile: String) {
-    println!(
+    debug!(
         "using profile: {profile} on scenario: {}",
         world.scenario_id
     );
     world.profile = profile;
 }
+
+#[given(expr = "the node locations")]
+fn set_node_locations(world: &mut OSRMWorld, step: &Step) {
+    let table = step.table().expect("cannot get table");
+    let header = table.rows.first().expect("node locations table empty");
+    assert_eq!(header.len(), 3, "header needs to define three columns");
+    assert_eq!(
+        header[0], "node",
+        "first column needs to be 'node' indicating the one-letter name"
+    );
+    // the following lookup allows to define lat lon columns in any order
+    let lat_lon_lookup = HashMap::from([(header[1].clone(), 1), (header[2].clone(), 2)]);
+    ["lat", "lon"].iter().for_each(|dim| {
+        assert!(
+            lat_lon_lookup.contains_key(*dim),
+            "table must define a {dim} column"
+        );
+    });
+
+    table.rows.iter().skip(1).for_each(|row|{
+        assert_eq!(3, row.len());
+        assert_eq!(row[0].len(), 1, "node name not in [0..9][a..z]");
+        let name = &row[0].chars().next().expect("node name cannot be empty"); // the error is unreachable
+        let lon = &row[lat_lon_lookup["lon"]];
+        let lat = &row[lat_lon_lookup["lat"]];
+        let location = point!(x: lon.parse::<f64>().expect("lon {lon} needs to be a f64"), y: lat.parse::<f64>().expect("lat {lat} needs to be a f64"));
+        match name {
+            '0'...'9' => world.add_location(*name, location),
+            'a'...'z' => world.add_osm_node(*name, location, None),
+            _ => unreachable!("node name not in [0..9][a..z]"),
+        }
+    });
+}
+
 #[given(expr = "the node map")]
 fn set_node_map(world: &mut OSRMWorld, step: &Step) {
     if let Some(docstring) = step.docstring() {
@@ -68,9 +97,14 @@ fn set_node_map(world: &mut OSRMWorld, step: &Step) {
     }
 }
 
+#[given(expr = r#"the extract extra arguments {string}"#)]
+fn extra_parameters(world: &mut OSRMWorld, parameters: String) {
+    world.extraction_parameters.push(parameters);
+}
+
 #[given(regex = "the ways")]
 fn set_ways(world: &mut OSRMWorld, step: &Step) {
-    // println!("using profile: {profile}");
+    // debug!("using profile: {profile}");
     if let Some(table) = step.table.as_ref() {
         if table.rows.is_empty() {
             panic!("empty way table provided")
@@ -111,55 +145,36 @@ fn set_ways(world: &mut OSRMWorld, step: &Step) {
             world.osm_db.add_way(way);
         });
     } else {
-        println!("no table found {step:#?}");
+        debug!("no table found {step:#?}");
     }
 
-    // println!("{}", world.osm_db.to_xml())
+    // debug!("{}", world.osm_db.to_xml())
 }
 
 #[when("I request nearest I should get")]
 fn request_nearest(world: &mut OSRMWorld, step: &Step) {
     // if .osm file does not exist
     //    write osm file
-    // TODO: move to cache_file/path(.) function in OSRMWorld
-    let full_path = world.feature_path.clone().unwrap();
-    let path = full_path
-        .ancestors()
-        .find(|p| p.ends_with("features"))
-        .expect(".feature files reside in a directory tree with the root name 'features'");
 
-    let suffix = full_path.strip_prefix(path).unwrap();
-    let path = path.parent().unwrap();
-    println!("suffix: {suffix:?}");
-    let cache_path = path
-        .join("test")
-        .join("cache")
-        .join(suffix)
-        .join(&world.feature_digest);
-
-    println!("{cache_path:?}");
-    if !cache_path.exists() {
-        create_dir_all(&cache_path).expect("cache path could not be created");
-    } else {
-        println!("not creating cache dir");
-    }
-
-    let osm_file = cache_path.join(world.scenario_id.clone() + ".osm");
+    // TODO: the OSRMWorld instance should have a function to write the .osm file
+    let osm_file = world
+        .feature_cache_path()
+        .join(world.scenario_id.clone() + ".osm");
     if !osm_file.exists() {
-        println!("writing to osm file: {osm_file:?}");
+        debug!("writing to osm file: {osm_file:?}");
         let mut file = File::create(osm_file).expect("could not create OSM file");
         file.write_all(world.osm_db.to_xml().as_bytes())
             .expect("could not write OSM file");
     } else {
-        println!("not writing to OSM file {osm_file:?}");
+        debug!("not writing to OSM file {osm_file:?}");
     }
 
     // if extracted file does not exist
-    let cache_path = cache_path.join(&world.osrm_digest);
+    let cache_path = world.feature_cache_path().join(&world.osrm_digest);
     if cache_path.exists() {
-        println!("{cache_path:?} exists");
+        debug!("{cache_path:?} exists");
     } else {
-        println!("{cache_path:?} does not exist");
+        debug!("{cache_path:?} does not exist");
     }
 
     // parse query data
@@ -169,10 +184,9 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
         .iter()
         .skip(1)
         .map(|row| {
-            assert_eq!(
-                row.len(),
-                2,
-                "test case broken: row needs to have two entries"
+            assert!(
+                row.len() >= 2,
+                "test case broken: row needs to have at least two entries. One for query input, one for expected result"
             );
             let query = row.get(0).unwrap();
             let expected = row.get(1).unwrap();
@@ -187,13 +201,8 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
 
     let data_path = cache_path.join(world.scenario_id.to_owned() + ".osrm");
 
-    let routed_path = path.join("build").join("osrm-routed");
-    if !routed_path.exists() {
-        panic!("osrm-routed binary not found");
-    }
-
     // TODO: this should not require a temporary and behave like the API of std::process
-    let mut task = TaskStarter::new(routed_path.to_str().unwrap());
+    let mut task = TaskStarter::new(world.routed_path().to_str().unwrap());
     task.arg(data_path.to_str().unwrap());
     task.spawn_wait_till_ready("running and waiting for requests");
     assert!(task.is_ready());
@@ -209,7 +218,7 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
         let query_location = world.get_location(query);
         let expected_location = world.get_location(expected);
 
-        // println!("{query_location:?} => {expected_location:?}");
+        // debug!("{query_location:?} => {expected_location:?}");
         // run queries
         let url = format!(
             "http://localhost:5000/nearest/v1/{}/{},{}",
@@ -223,7 +232,7 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
             Ok(response) => response.into_string().expect("response not parseable"),
             Err(e) => panic!("http error: {e}"),
         };
-        // println!("body: {body}");
+        // debug!("body: {body}");
 
         let v: NearestResponse = match serde_json::from_str(&body) {
             Ok(v) => v,
@@ -235,10 +244,6 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
         assert!(approx_equal(result_location.x(), expected_location.x(), 5));
         assert!(approx_equal(result_location.y(), expected_location.y(), 5));
     }
-
-    // if let Err(e) = child.kill() {
-    //     panic!("shutdown failed: {e}");
-    // }
 }
 
 pub fn approx_equal(a: f64, b: f64, dp: u8) -> bool {
@@ -246,91 +251,9 @@ pub fn approx_equal(a: f64, b: f64, dp: u8) -> bool {
     (a - b).abs() < p
 }
 
-// TODO: move to different file
-fn get_file_as_byte_vec(path: &PathBuf) -> Vec<u8> {
-    println!("opening {path:?}");
-    let mut f = File::open(path).expect("no file found");
-    let metadata = fs::metadata(path).expect("unable to read metadata");
-    let mut buffer = vec![0; metadata.len() as usize];
-    match f.read(&mut buffer) {
-        Ok(l) => assert_eq!(metadata.len() as usize, l, "data was not completely read"),
-        Err(e) => panic!("Error: {e}"),
-    }
-
-    buffer
-}
-
 fn main() {
     let args = Args::parse();
-    println!("name: {:?}", args);
-
-    // create OSRM digest before any tests are executed since cucumber-rs doesn't have @beforeAll
-    let exe_path = env::current_exe().expect("failed to get current exe path");
-    let path = exe_path
-    .ancestors()
-    .find(|p| p.ends_with("target"))
-    .expect("compiled cucumber test executable resides in a directory tree with the root name 'target'")
-    .parent().unwrap(); // TODO: Remove after migration to Rust build dir
-    let build_path = path.join("build"); // TODO: Remove after migration to Rust build dir
-    let mut dependencies = Vec::new();
-
-    // FIXME: the following iterator gymnastics port the exact order and behavior of the JavaScript implementation
-    let names = [
-        "osrm-extract",
-        "osrm-contract",
-        "osrm-customize",
-        "osrm-partition",
-        "osrm_extract",
-        "osrm_contract",
-        "osrm_customize",
-        "osrm_partition",
-    ];
-
-    let files: Vec<PathBuf> = fs::read_dir(build_path)
-        .unwrap()
-        .filter_map(|e| e.ok())
-        .map(|dir_entry| dir_entry.path())
-        .collect();
-
-    let iter = names.iter().map(|name| {
-        files
-            .iter()
-            .find(|path_buf| {
-                path_buf
-                    .file_stem()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-                    .contains(name)
-            })
-            .cloned()
-            .expect("file exists and is usable")
-    });
-
-    dependencies.extend(iter);
-
-    let profiles_path = path.join("profiles");
-    println!("{profiles_path:?}");
-
-    dependencies.extend(
-        LexicographicFileWalker::new(&profiles_path)
-            .filter(|pb| !pb.to_str().unwrap().contains("examples"))
-            .filter(|pathbuf| match pathbuf.extension() {
-                Some(ext) => ext.to_str().unwrap() == "lua",
-                None => false,
-            }),
-    );
-    let mut md5 = chksum_md5::new();
-    println!("md5: {}", md5.digest().to_hex_lowercase());
-
-    for path_buf in dependencies {
-        let data = get_file_as_byte_vec(&path_buf);
-        if data.is_empty() {
-            continue;
-        }
-        md5.update(data);
-        // println!("md5: {}", md5.digest().to_hex_lowercase());
-    }
+    debug!("arguments: {:?}", args);
 
     futures::executor::block_on(
         OSRMWorld::cucumber()
@@ -338,9 +261,9 @@ fn main() {
             .before(move |feature, _rule, scenario, world| {
                 world.scenario_id = common::scenario_id::scenario_id(scenario);
                 world.set_scenario_specific_paths_and_digests(feature.path.clone());
-                world.osrm_digest = md5.digest().to_hex_lowercase();
+                world.osrm_digest = md5_of_osrm_executables().digest().to_hex_lowercase();
 
-                // TODO: clean up cache if needed
+                // TODO: clean up cache if needed? Or do in scenarios?
 
                 future::ready(()).boxed()
             })
