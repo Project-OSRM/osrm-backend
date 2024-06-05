@@ -5,19 +5,16 @@ mod common;
 use cheap_ruler::CheapRuler;
 use clap::Parser;
 use common::{
-    cli_arguments::Args, dot_writer::CustomWriter, f64_utils::approx_equal, hash_util::md5_of_osrm_executables, nearest_response::NearestResponse, osm::OSMWay, osrm_world::OSRMWorld, task_starter::TaskStarter
+    cli_arguments::Args, dot_writer::DotWriter, f64_utils::approx_equal,
+    hash_util::md5_of_osrm_executables, nearest_response::NearestResponse, osm::OSMWay,
+    osrm_world::OSRMWorld, task_starter::TaskStarter,
 };
 use core::panic;
 use cucumber::{gherkin::Step, given, when, World, WriterExt};
 use futures::{future, FutureExt};
 use geo_types::{point, Point};
 use log::debug;
-use std::{
-    collections::HashMap,
-    fs::File,
-    io::Write,
-    time::Duration,
-};
+use std::{collections::HashMap, fs::File, io::Write, time::Duration};
 use ureq::Agent;
 
 const DEFAULT_ORIGIN: [f64; 2] = [1., 1.]; // TODO: move to world?
@@ -266,7 +263,7 @@ fn main() {
 
                 future::ready(()).boxed()
             })
-            .with_writer(CustomWriter.normalized())
+            .with_writer(DotWriter.normalized())
             .run("features/nearest/pick.feature"),
     );
 }

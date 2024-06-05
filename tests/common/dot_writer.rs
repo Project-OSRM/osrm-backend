@@ -1,10 +1,10 @@
 use std::io::{self, Write};
 
 use cucumber::{cli, event, parser, Event};
+// TODO: add colors
+pub struct DotWriter;
 
-pub struct CustomWriter;
-
-impl<W: 'static> cucumber::Writer<W> for CustomWriter {
+impl<W: 'static> cucumber::Writer<W> for DotWriter {
     type Cli = cli::Empty; // we provide no CLI options
 
     async fn handle_event(&mut self, ev: parser::Result<Event<event::Cucumber<W>>>, _: &Self::Cli) {
