@@ -637,6 +637,13 @@ jobs:
       PR_NUMBER: ${{ github.event.pull_request.number }}
       GITHUB_REPOSITORY: ${{ github.repository }}
     steps: 
+      - name: Enable data.osm.pbf cache
+        uses: actions/cache@v4
+        with:
+          path: ~/data.osm.pbf
+          key: v1-data-osm-pbf
+          restore-keys: |
+            v1-data-osm-pbf
       - name: Enable compiler cache
         uses: actions/cache@v4
         with:
@@ -662,8 +669,10 @@ jobs:
           sudo apt-get update -y && sudo apt-get install ccache
       - name: Prepare data
         run: |
-          wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
-          python3 ./pr/scripts/ci/download_gps_traces.py 13.3384 52.4383 13.5611 52.5755 > ~/gps_traces.csv
+          if [ ! -f "~/data.osm.pbf" ]; then
+            wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
+          fi
+          gunzip -c ./pr/test/data/berlin_gps_traces.csv.gz > ~/gps_traces.csv
       - name: Prepare environment
         run: |
           echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
