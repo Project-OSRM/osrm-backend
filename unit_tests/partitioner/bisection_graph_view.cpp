@@ -16,7 +16,8 @@ using namespace osrm::util;
 
 BOOST_AUTO_TEST_SUITE(graph_view)
 
-namespace {
+namespace
+{
 void shuffle(std::vector<EdgeWithSomeAdditionalData> &grid_edges)
 {
     std::random_device rd;
