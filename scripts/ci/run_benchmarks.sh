@@ -23,10 +23,10 @@ function run_benchmarks_for_folder {
     BINARIES_FOLDER="$FOLDER/build"
 
     cp ~/data.osm.pbf $FOLDER
-    $BINARIES_FOLDER/osrm-extract -p $FOLDER/profiles/car.lua $FOLDER/data.osm.pbf
-    /usr/bin/time -f "%M" $BINARIES_FOLDER/osrm-partition $FOLDER/data.osrm 2> "$RESULTS_FOLDER/osrm_partition.bench"
-    $BINARIES_FOLDER/osrm-customize $FOLDER/data.osrm
-    $BINARIES_FOLDER/osrm-contract $FOLDER/data.osrm
+    /usr/bin/time -f "Time: %E Peak RAM: %M Kb" $BINARIES_FOLDER/osrm-extract -p $FOLDER/profiles/car.lua $FOLDER/data.osm.pbf 2> "$RESULTS_FOLDER/osrm_extract.bench"
+    /usr/bin/time -f "Time: %E Peak RAM: %M Kb" $BINARIES_FOLDER/osrm-partition $FOLDER/data.osrm 2> "$RESULTS_FOLDER/osrm_partition.bench"
+    /usr/bin/time -f "Time: %E Peak RAM: %M Kb" $BINARIES_FOLDER/osrm-customize $FOLDER/data.osrm 2> "$RESULTS_FOLDER/osrm_customize.bench"
+    /usr/bin/time -f "Time: %E Peak RAM: %M Kb" $BINARIES_FOLDER/osrm-contract $FOLDER/data.osrm 2> "$RESULTS_FOLDER/osrm_contract.bench"
 
     if [ -f "$FOLDER/scripts/ci/locustfile.py" ]; then
         for ALGORITHM in mld ch; do
