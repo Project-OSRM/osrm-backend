@@ -19417,6 +19417,7 @@ namespace sol { namespace function_detail {
 
 		template <bool is_yielding, bool no_trampoline>
 		static int call(lua_State* L) 
+// see https://github.com/ThePhD/sol2/issues/1581#issuecomment-2103463524
 #if SOL_IS_ON(SOL_COMPILER_CLANG)
 		// apparent regression in clang 18 - llvm/llvm-project#91362
 #else
@@ -19463,6 +19464,7 @@ namespace sol { namespace function_detail {
 
 		template <bool is_yielding, bool no_trampoline>
 		static int call(lua_State* L) 
+// see https://github.com/ThePhD/sol2/issues/1581#issuecomment-2103463524		
 #if SOL_IS_ON(SOL_COMPILER_CLANG)
 		// apparent regression in clang 18 - llvm/llvm-project#91362
 #else
