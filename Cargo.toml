@@ -21,3 +21,6 @@ xml-builder = "0.5.2"
 [[test]]
 name = "cucumber"
 harness = false
+
+[profile.bench]
+debug = true
