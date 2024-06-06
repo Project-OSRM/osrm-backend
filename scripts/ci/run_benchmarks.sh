@@ -13,10 +13,6 @@ function run_benchmarks_for_folder {
 
     # ./$BENCHMARKS_FOLDER/match-bench "./$FOLDER/test/data/mld/monaco.osrm" mld > "$RESULTS_FOLDER/match_mld.bench"
     # ./$BENCHMARKS_FOLDER/match-bench "./$FOLDER/test/data/ch/monaco.osrm" ch > "$RESULTS_FOLDER/match_ch.bench"
-    for BENCH in nearest table trip route match; do
-        ./$BENCHMARKS_FOLDER/bench "./$FOLDER/test/data/mld/monaco.osrm" mld ~/gps_traces.csv ${BENCH} > "$RESULTS_FOLDER/${BENCH}_mld.bench" || true
-        ./$BENCHMARKS_FOLDER/bench "./$FOLDER/test/data/ch/monaco.osrm" ch ~/gps_traces.csv ${BENCH}  > "$RESULTS_FOLDER/${BENCH}_ch.bench" || true
-    done
     ./$BENCHMARKS_FOLDER/alias-bench > "$RESULTS_FOLDER/alias.bench"
     ./$BENCHMARKS_FOLDER/json-render-bench  "./$FOLDER/src/benchmarks/portugal_to_korea.json" > "$RESULTS_FOLDER/json-render.bench"
     ./$BENCHMARKS_FOLDER/packedvector-bench > "$RESULTS_FOLDER/packedvector.bench"
@@ -29,6 +25,11 @@ function run_benchmarks_for_folder {
     $BINARIES_FOLDER/osrm-partition $FOLDER/data.osrm
     $BINARIES_FOLDER/osrm-customize $FOLDER/data.osrm
     $BINARIES_FOLDER/osrm-contract $FOLDER/data.osrm
+
+    for BENCH in nearest table trip route match; do
+        ./$BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" mld ~/gps_traces.csv ${BENCH} > "$RESULTS_FOLDER/${BENCH}_mld.bench" || true
+        ./$BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" ch ~/gps_traces.csv ${BENCH}  > "$RESULTS_FOLDER/${BENCH}_ch.bench" || true
+    done
 
     if [ -f "$FOLDER/scripts/ci/locustfile.py" ]; then
         for ALGORITHM in mld ch; do
