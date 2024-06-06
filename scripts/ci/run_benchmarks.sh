@@ -5,7 +5,12 @@ function measure_peak_ram_and_time {
     COMMAND=$1
     OUTPUT_FILE=$2
 
-    /usr/bin/time -f "Time: %E Peak RAM: %M Kb" $COMMAND 2>&1 | tail -n 1 > $OUTPUT_FILE
+    OUTPUT=$(/usr/bin/time -f "%E %M" $COMMAND 2>&1 | tail -n 1)
+
+    TIME=$(echo $OUTPUT | awk '{print $1}')
+    PEAK_RAM_KB=$(echo $OUTPUT | awk '{print $2}')
+    PEAK_RAM_MB=$(echo "scale=2; $PEAK_RAM_KB / 1024" | bc)
+    echo "Time: $TIME Peak RAM: $PEAK_RAM_MB MB" > $OUTPUT_FILE
 }
 
 function run_benchmarks_for_folder {
