@@ -90,22 +90,11 @@ public:
         return coordinates[dis(gen)];
     }
 
-    std::vector<osrm::util::Coordinate> getRandomTrace() const {
+    const std::vector<osrm::util::Coordinate>& getRandomTrace() const {
         std::uniform_int_distribution<> dis(0, trackIDs.size() - 1);
         auto it = trackIDs.begin();
         std::advance(it, dis(gen));
-        auto trace = traces.at(*it);
-
-        // slice trace
-        std::uniform_int_distribution<> dis2(0, trace.size() - 1);
-        auto start = dis2(gen);
-        auto end = dis2(gen);
-        if (start >= end) {
-            start = dis2(gen);
-            end = dis2(gen);
-        }
-
-        return std::vector<osrm::util::Coordinate>(trace.begin() + start, trace.begin() + end);
+        return traces.at(*it);
     }
 };
 
@@ -167,7 +156,13 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces) {
 
     auto run_benchmark = [&](const Benchmark &benchmark)
     {
-        RouteParameters params;
+      
+        Statistics statistics;
+
+        auto NUM = 10000;
+        for (int i = 0; i < NUM; ++i)
+        {
+              RouteParameters params;
         params.overview = benchmark.overview;
         params.steps = benchmark.steps;
 
@@ -187,11 +182,7 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces) {
                 params.coordinates.size(), boost::make_optional(*benchmark.radius));
         }
 
-        Statistics statistics;
 
-        auto NUM = 10000;
-        for (int i = 0; i < NUM; ++i)
-        {
             engine::api::ResultT result = json::Object();
             TIMER_START(routes);
             const auto rc = osrm.Route(params, result);
@@ -281,13 +272,19 @@ void runMatchBenchmark(const OSRM& osrm, const GPSTraces& gpsTraces) {
     };
 
     auto run_benchmark = [&](const Benchmark &benchmark) {
+
+
+        Statistics statistics;
+
+        auto NUM = 1000;
+        for (int i = 0; i < NUM; ++i) {
+            engine::api::ResultT result = json::Object();
+
         engine::api::MatchParameters params;
         params.coordinates = gpsTraces.getRandomTrace();
         params.radiuses = {};
         if (benchmark.radius)
         {
-
-        std::cerr << "radiuses: " << params.coordinates.size() << std::endl;
             for (size_t index = 0; index < params.coordinates.size(); ++index)
             {
                 params.radiuses.emplace_back(*benchmark.radius);
@@ -295,11 +292,6 @@ void runMatchBenchmark(const OSRM& osrm, const GPSTraces& gpsTraces) {
         }
 
 
-        Statistics statistics;
-
-        auto NUM = 10000;
-        for (int i = 0; i < NUM; ++i) {
-            engine::api::ResultT result = json::Object();
             TIMER_START(match);
             const auto rc = osrm.Match(params, result);
             TIMER_STOP(match);
@@ -324,8 +316,8 @@ void runMatchBenchmark(const OSRM& osrm, const GPSTraces& gpsTraces) {
 
     std::vector<Benchmark> benchmarks = {
         {"1000 matches, default radius"},
-         {"1000 matches, radius=10"},
-        // {"1000 matches, radius=20", 20}
+         {"1000 matches, radius=10", 10},
+         {"1000 matches, radius=20", 20}
     };
 
     for (const auto &benchmark : benchmarks) {
@@ -349,9 +341,9 @@ void runMatchBenchmark(const OSRM& osrm, const GPSTraces& gpsTraces) {
 int main(int argc, const char *argv[])
 try
 {
-    if (argc < 4)
+    if (argc < 5)
     {
-        std::cerr << "Usage: " << argv[0] << " data.osrm <mld|ch> <path to GPS traces.csv>\n";
+        std::cerr << "Usage: " << argv[0] << " data.osrm <mld|ch> <path to GPS traces.csv> <route|match|trip|table|nearest>\n";
         return EXIT_FAILURE;
     }
 
@@ -367,7 +359,7 @@ try
     OSRM osrm{config};
 
     GPSTraces gpsTraces{42};
-    gpsTraces.readCSV(argv[3]);
+    gpsTraces.readCSV(argv[4]);
 
     //runRouteBenchmark(osrm, gpsTraces);
     (void)runRouteBenchmark;
