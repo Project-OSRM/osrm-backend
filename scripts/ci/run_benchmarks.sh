@@ -11,10 +11,12 @@ function run_benchmarks_for_folder {
 
     BENCHMARKS_FOLDER="$FOLDER/build/src/benchmarks"
 
-    ./$BENCHMARKS_FOLDER/match-bench "./$FOLDER/test/data/mld/monaco.osrm" mld > "$RESULTS_FOLDER/match_mld.bench"
-    ./$BENCHMARKS_FOLDER/match-bench "./$FOLDER/test/data/ch/monaco.osrm" ch > "$RESULTS_FOLDER/match_ch.bench"
-    ./$BENCHMARKS_FOLDER/route-bench "./$FOLDER/test/data/mld/monaco.osrm" mld > "$RESULTS_FOLDER/route_mld.bench"
-    ./$BENCHMARKS_FOLDER/route-bench "./$FOLDER/test/data/ch/monaco.osrm" ch > "$RESULTS_FOLDER/route_ch.bench"
+    # ./$BENCHMARKS_FOLDER/match-bench "./$FOLDER/test/data/mld/monaco.osrm" mld > "$RESULTS_FOLDER/match_mld.bench"
+    # ./$BENCHMARKS_FOLDER/match-bench "./$FOLDER/test/data/ch/monaco.osrm" ch > "$RESULTS_FOLDER/match_ch.bench"
+    for BENCH in nearest table trip route match; do
+        ./$BENCHMARKS_FOLDER/bench "./$FOLDER/test/data/mld/monaco.osrm" mld ~/gps_traces.csv ${BENCH} > "$RESULTS_FOLDER/${BENCH}_mld.bench" || true
+        ./$BENCHMARKS_FOLDER/bench "./$FOLDER/test/data/ch/monaco.osrm" ch ~/gps_traces.csv ${BENCH}  > "$RESULTS_FOLDER/${BENCH}_ch.bench" || true
+    done
     ./$BENCHMARKS_FOLDER/alias-bench > "$RESULTS_FOLDER/alias.bench"
     ./$BENCHMARKS_FOLDER/json-render-bench  "./$FOLDER/src/benchmarks/portugal_to_korea.json" > "$RESULTS_FOLDER/json-render.bench"
     ./$BENCHMARKS_FOLDER/packedvector-bench > "$RESULTS_FOLDER/packedvector.bench"
