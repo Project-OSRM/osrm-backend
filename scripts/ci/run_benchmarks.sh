@@ -38,7 +38,7 @@ function run_benchmarks_for_folder {
         locust -f $LOCUSTFILE_FOLDER/scripts/ci/locustfile.py \
             --headless \
             --processes -1 \
-            --users 10 \
+            --users 1 \
             --spawn-rate 1 \
             --host http://localhost:5000 \
             --run-time 1m \
