@@ -7,6 +7,7 @@ edition = "2021"
 cheap-ruler = "0.4.0"
 chksum-md5 = "0.0.0"
 clap = "4.5.4"
+colored = "2.1.0"
 cucumber = { version = "0.21.0", features = ["tracing"] }
 futures = "0.3.30"
 geo-types = "0.7.13"
