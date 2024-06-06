@@ -22,8 +22,8 @@ class OSRMTasks(TaskSet):
 
     @task
     def get_route(self):
-        start = random.choice(self.coordinates)
-        end = random.choice(self.coordinates)
+        start = self.coordinates[0] #random.choice(self.coordinates)
+        end = self.coordinates[-1] #random.choice(self.coordinates)
         
         start_coord = f"{start[1]:.6f},{start[0]:.6f}"
         end_coord = f"{end[1]:.6f},{end[0]:.6f}"
