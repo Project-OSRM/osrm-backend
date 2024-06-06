@@ -286,7 +286,7 @@ fn main() {
 
                 future::ready(()).boxed()
             })
-            .with_writer(DotWriter.normalized())
-            .run("features/nearest/projection.feature"),
+            .with_writer(DotWriter::default().normalized())
+            .run("features/nearest/"),
     );
 }
