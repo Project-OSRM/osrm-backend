@@ -20,6 +20,7 @@ msbuild OSRM.sln ^
 /t:rebuild ^
 /p:BuildInParallel=true ^
 /m:%NUMBER_OF_PROCESSORS% ^
+/Zm ^
 /toolsversion:Current ^
 /clp:Verbosity=quiet ^
 /nologo
@@ -60,7 +61,7 @@ SET test_region=monaco
 SET test_region_ch=ch\monaco
 SET test_region_mld=mld\monaco
 SET test_osm=%test_region%.osm.pbf
-COPY %PROJECT_DIR%\test\data\%test_region%.osm.pbf %test_osm% 
+COPY %PROJECT_DIR%\test\data\%test_region%.osm.pbf %test_osm%
 %CONFIGURATION%\osrm-extract.exe -p %PROJECT_DIR%\profiles\car.lua %test_osm%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
