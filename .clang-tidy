@@ -59,7 +59,6 @@ Checks: >
     modernize-use-using,
     performance-*,
     -performance-noexcept-move-constructor,
-    -performance-noexcept-swap,
     -performance-no-int-to-ptr,
     -performance-enum-size,
     -performance-avoid-endl,
