@@ -656,7 +656,7 @@ jobs:
           path: pr
       - name: Install dependencies
         run: | 
-          python3 -m pip install "conan<2.0.0" "requests==2.31.0" "locust==2.28.0"
+          python3 -m pip install "conan<2.0.0" "requests==2.31.0" "locust==2.28.0" numpy 
           sudo apt-get update -y && sudo apt-get install ccache
       - name: Prepare data
         run: |

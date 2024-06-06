@@ -35,17 +35,19 @@ function run_benchmarks_for_folder {
 
         # wait for osrm-routed to start
         curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
-        locust -f $LOCUSTFILE_FOLDER/scripts/ci/locustfile.py \
-            --headless \
-            --processes -1 \
-            --users 1 \
-            --spawn-rate 1 \
-            --host http://localhost:5000 \
-            --run-time 1m \
-            --csv=locust_results_$ALGORITHM \
-            --loglevel ERROR
+        # locust -f $LOCUSTFILE_FOLDER/scripts/ci/locustfile.py \
+        #     --headless \
+        #     --processes -1 \
+        #     --users 1 \
+        #     --spawn-rate 1 \
+        #     --host http://localhost:5000 \
+        #     --run-time 1m \
+        #     --csv=locust_results_$ALGORITHM \
+        #     --loglevel ERROR
 
-        python3 $FOLDER/scripts/ci/process_locust_benchmark_results.py locust_results_$ALGORITHM $ALGORITHM $RESULTS_FOLDER
+        # python3 $FOLDER/scripts/ci/process_locust_benchmark_results.py locust_results_$ALGORITHM $ALGORITHM $RESULTS_FOLDER
+
+        python3 $LOCUSTFILE_FOLDER/scripts/ci/e2e_benchmark.py 
 
 
         kill -0 $OSRM_ROUTED_PID
