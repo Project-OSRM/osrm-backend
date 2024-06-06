@@ -1,6 +1,13 @@
 #!/bin/bash
 set -eou pipefail
 
+function measure_peak_ram_and_time {
+    COMMAND=$1
+    OUTPUT_FILE=$2
+
+    /usr/bin/time -f "Time: %E Peak RAM: %M Kb" $COMMAND 2>&1 | tail -n 1 > $OUTPUT_FILE
+}
+
 function run_benchmarks_for_folder {
     echo "Running benchmarks for $1"
 
@@ -23,10 +30,11 @@ function run_benchmarks_for_folder {
     BINARIES_FOLDER="$FOLDER/build"
 
     cp ~/data.osm.pbf $FOLDER
-    /usr/bin/time -f "Time: %E Peak RAM: %M Kb" $BINARIES_FOLDER/osrm-extract -p $FOLDER/profiles/car.lua $FOLDER/data.osm.pbf 2>&1 | tail -n 1 > "$RESULTS_FOLDER/osrm_extract.bench"
-    /usr/bin/time -f "Time: %E Peak RAM: %M Kb" $BINARIES_FOLDER/osrm-partition $FOLDER/data.osrm 2>&1 | tail -n 1 > "$RESULTS_FOLDER/osrm_partition.bench"
-    /usr/bin/time -f "Time: %E Peak RAM: %M Kb" $BINARIES_FOLDER/osrm-customize $FOLDER/data.osrm 2>&1 | tail -n 1 > "$RESULTS_FOLDER/osrm_customize.bench"
-    /usr/bin/time -f "Time: %E Peak RAM: %M Kb" $BINARIES_FOLDER/osrm-contract $FOLDER/data.osrm 2>&1 | tail -n 1 > "$RESULTS_FOLDER/osrm_contract.bench"
+
+    measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-extract -p $FOLDER/profiles/car.lua $FOLDER/data.osm.pbf" "$RESULTS_FOLDER/osrm_extract.bench"
+    measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-partition $FOLDER/data.osrm" "$RESULTS_FOLDER/osrm_partition.bench"
+    measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-customize $FOLDER/data.osrm" "$RESULTS_FOLDER/osrm_customize.bench"
+    measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-contract $FOLDER/data.osrm" "$RESULTS_FOLDER/osrm_contract.bench"
 
     if [ -f "$FOLDER/scripts/ci/locustfile.py" ]; then
         for ALGORITHM in mld ch; do
