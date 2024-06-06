@@ -47,7 +47,7 @@ function run_benchmarks_for_folder {
 
         # python3 $FOLDER/scripts/ci/process_locust_benchmark_results.py locust_results_$ALGORITHM $ALGORITHM $RESULTS_FOLDER
 
-        python3 $LOCUSTFILE_FOLDER/scripts/ci/e2e_benchmark.py 
+        python3 $LOCUSTFILE_FOLDER/scripts/ci/e2e_benchmark.py > $RESULTS_FOLDER/e2e_$ALGORITHM.bench
 
 
         kill -0 $OSRM_ROUTED_PID
