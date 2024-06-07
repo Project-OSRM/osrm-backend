@@ -18,16 +18,17 @@ msbuild OSRM.sln ^
 /p:Configuration=%CONFIGURATION% ^
 /p:Platform=x64 ^
 /t:rebuild ^
-/p:BuildInParallel=true ^
-/m:2 ^
 /p:nowarn="4244;4267;4365;4456;4514;4625;4626;4710;4711;4820;5026;5027" ^
 /p:WarningLevel=0 ^
 /clp:NoSummary;NoItemAndPropertyList;ErrorsOnly ^
 /p:RunCodeAnalysis=false ^
-/toolsversion:3.5 ^
+/toolsversion:Current ^
 /clp:Verbosity=quiet ^
 /nologo
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
+@REM /p:BuildInParallel=true ^
+@REM /m:2 ^
 
 @REM CD %PROJECT_DIR%\build
 @REM IF %ERRORLEVEL% NEQ 0 GOTO ERROR
