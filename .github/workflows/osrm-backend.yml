@@ -31,6 +31,13 @@ jobs:
       BUILD_TYPE: Release
     steps:
     - uses: actions/checkout@v4
+    - name: Enable Conan cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.conan
+        key: v9-conan-windows-${{ github.sha }}
+        restore-keys: |
+          v9-conan-windows-
     - run: pip install "conan<2.0.0"
     - run: conan --version
     - run: cmake --version

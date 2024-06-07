@@ -19,8 +19,7 @@ msbuild OSRM.sln ^
 /p:Platform=x64 ^
 /t:rebuild ^
 /p:BuildInParallel=true ^
-/m:%NUMBER_OF_PROCESSORS% ^
-/Zm ^
+/m:2 ^
 /toolsversion:Current ^
 /clp:Verbosity=quiet ^
 /nologo
