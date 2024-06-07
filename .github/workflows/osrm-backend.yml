@@ -29,18 +29,18 @@ jobs:
     continue-on-error: false
     env:
       BUILD_TYPE: Release
-      CC: gcc
-      CXX: g++
+      # CC: gcc
+      # CXX: g++
     steps:
     - uses: actions/checkout@v4
-    - name: Install Ninja
-      shell: cmd
-      run: |
-        choco install ninja -y
-        refreshenv
+    # - name: Install Ninja
+    #   shell: cmd
+    #   run: |
+    #     choco install ninja -y
+    #     refreshenv
 
-    - name: Verify Ninja installation
-      run: ninja --version
+    # - name: Verify Ninja installation
+    #   run: ninja --version
     # - name: Enable Conan cache
     #   uses: actions/cache@v4
     #   with:
@@ -64,11 +64,11 @@ jobs:
     - run: npm install --ignore-scripts
     - run: npm link --ignore-scripts
     # - uses: microsoft/setup-msbuild@v2
-    - name: Set up Clang in PATH
-      shell: bash
-      run: |
-        clang --version
-        clang++ --version
+    # - name: Set up Clang in PATH
+    #   shell: bash
+    #   run: |
+    #     clang --version
+    #     clang++ --version
     # - name: Configure Conan to use Clang
     #   shell: bash
     #   run: |
@@ -81,7 +81,7 @@ jobs:
         clang --version
         mkdir build
         cd build
-        cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ ..
+        cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
         cmake --build . --config Release
 
     #    .\scripts\ci\windows-build.bat
