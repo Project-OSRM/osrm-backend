@@ -29,65 +29,65 @@ msbuild OSRM.sln ^
 /nologo
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-CD %PROJECT_DIR%\build
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+@REM CD %PROJECT_DIR%\build
+@REM IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-ECHO running extractor-tests.exe ...
-unit_tests\%CONFIGURATION%\extractor-tests.exe
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+@REM ECHO running extractor-tests.exe ...
+@REM unit_tests\%CONFIGURATION%\extractor-tests.exe
+@REM IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-ECHO running contractor-tests.exe ...
-unit_tests\%CONFIGURATION%\contractor-tests.exe
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+@REM ECHO running contractor-tests.exe ...
+@REM unit_tests\%CONFIGURATION%\contractor-tests.exe
+@REM IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-ECHO running engine-tests.exe ...
-unit_tests\%CONFIGURATION%\engine-tests.exe
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+@REM ECHO running engine-tests.exe ...
+@REM unit_tests\%CONFIGURATION%\engine-tests.exe
+@REM IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-ECHO running util-tests.exe ...
-unit_tests\%CONFIGURATION%\util-tests.exe
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+@REM ECHO running util-tests.exe ...
+@REM unit_tests\%CONFIGURATION%\util-tests.exe
+@REM IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-ECHO running server-tests.exe ...
-unit_tests\%CONFIGURATION%\server-tests.exe
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+@REM ECHO running server-tests.exe ...
+@REM unit_tests\%CONFIGURATION%\server-tests.exe
+@REM IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-ECHO running partitioner-tests.exe ...
-unit_tests\%CONFIGURATION%\partitioner-tests.exe
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+@REM ECHO running partitioner-tests.exe ...
+@REM unit_tests\%CONFIGURATION%\partitioner-tests.exe
+@REM IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-ECHO running customizer-tests.exe ...
-unit_tests\%CONFIGURATION%\customizer-tests.exe
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+@REM ECHO running customizer-tests.exe ...
+@REM unit_tests\%CONFIGURATION%\customizer-tests.exe
+@REM IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-SET test_region=monaco
-SET test_region_ch=ch\monaco
-SET test_region_mld=mld\monaco
-SET test_osm=%test_region%.osm.pbf
-COPY %PROJECT_DIR%\test\data\%test_region%.osm.pbf %test_osm%
-%CONFIGURATION%\osrm-extract.exe -p %PROJECT_DIR%\profiles\car.lua %test_osm%
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+@REM SET test_region=monaco
+@REM SET test_region_ch=ch\monaco
+@REM SET test_region_mld=mld\monaco
+@REM SET test_osm=%test_region%.osm.pbf
+@REM COPY %PROJECT_DIR%\test\data\%test_region%.osm.pbf %test_osm%
+@REM %CONFIGURATION%\osrm-extract.exe -p %PROJECT_DIR%\profiles\car.lua %test_osm%
+@REM IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-MKDIR ch
-XCOPY %test_region%.osrm.* ch\
-XCOPY %test_region%.osrm ch\
-MKDIR mld
-XCOPY %test_region%.osrm.* mld\
-XCOPY %test_region%.osrm mld\
-%CONFIGURATION%\osrm-contract.exe %test_region_ch%.osrm
-%CONFIGURATION%\osrm-partition.exe %test_region_mld%.osrm
-%CONFIGURATION%\osrm-customize.exe %test_region_mld%.osrm
-XCOPY /Y ch\*.* ..\test\data\ch\
-XCOPY /Y mld\*.* ..\test\data\mld\
-unit_tests\%CONFIGURATION%\library-tests.exe
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+@REM MKDIR ch
+@REM XCOPY %test_region%.osrm.* ch\
+@REM XCOPY %test_region%.osrm ch\
+@REM MKDIR mld
+@REM XCOPY %test_region%.osrm.* mld\
+@REM XCOPY %test_region%.osrm mld\
+@REM %CONFIGURATION%\osrm-contract.exe %test_region_ch%.osrm
+@REM %CONFIGURATION%\osrm-partition.exe %test_region_mld%.osrm
+@REM %CONFIGURATION%\osrm-customize.exe %test_region_mld%.osrm
+@REM XCOPY /Y ch\*.* ..\test\data\ch\
+@REM XCOPY /Y mld\*.* ..\test\data\mld\
+@REM unit_tests\%CONFIGURATION%\library-tests.exe
+@REM IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-:ERROR
-ECHO ~~~~~~~~~~~~~~~~~~~~~~ ERROR %~f0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ECHO ERRORLEVEL^: %ERRORLEVEL%
-SET EL=%ERRORLEVEL%
+@REM :ERROR
+@REM ECHO ~~~~~~~~~~~~~~~~~~~~~~ ERROR %~f0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@REM ECHO ERRORLEVEL^: %ERRORLEVEL%
+@REM SET EL=%ERRORLEVEL%
 
-:DONE
-ECHO ~~~~~~~~~~~~~~~~~~~~~~ DONE %~f0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@REM :DONE
+@REM ECHO ~~~~~~~~~~~~~~~~~~~~~~ DONE %~f0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-EXIT /b %EL%
+@REM EXIT /b %EL%

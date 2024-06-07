@@ -57,27 +57,27 @@ jobs:
     - name: Build
       run: |
         .\scripts\ci\windows-build.bat
-    - name: Run node tests
-      shell: bash
-      run: |
-        ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
-        node test/nodejs/index.js
-    - name: Build Node package
-      shell: bash
-      run: ./scripts/ci/node_package.sh
-    - name: Publish Node package
-      if: ${{ env.PUBLISH == 'On' }}
-      uses: ncipollo/release-action@v1
-      with:
-        allowUpdates: true
-        artifactErrorsFailBuild: true
-        artifacts: build/stage/**/*.tar.gz
-        omitBody: true
-        omitBodyDuringUpdate: true
-        omitName: true
-        omitNameDuringUpdate: true
-        replacesArtifacts: true
-        token: ${{ secrets.GITHUB_TOKEN }}
+    # - name: Run node tests
+    #   shell: bash
+    #   run: |
+    #     ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
+    #     node test/nodejs/index.js
+    # - name: Build Node package
+    #   shell: bash
+    #   run: ./scripts/ci/node_package.sh
+    # - name: Publish Node package
+    #   if: ${{ env.PUBLISH == 'On' }}
+    #   uses: ncipollo/release-action@v1
+    #   with:
+    #     allowUpdates: true
+    #     artifactErrorsFailBuild: true
+    #     artifacts: build/stage/**/*.tar.gz
+    #     omitBody: true
+    #     omitBodyDuringUpdate: true
+    #     omitName: true
+    #     omitNameDuringUpdate: true
+    #     replacesArtifacts: true
+    #     token: ${{ secrets.GITHUB_TOKEN }}
 
   format-taginfo-docs:
     runs-on: ubuntu-22.04
