@@ -1,6 +1,6 @@
 use colored::Colorize;
 use cucumber::{cli, event, parser, Event};
-use std::io::{self, Write};
+use std::{io::{self, Write}, time::Instant};
 
 #[derive(Debug, Default)]
 pub struct DotWriter {
@@ -13,7 +13,7 @@ pub struct DotWriter {
     step_failed: usize,
     step_passed: usize,
     step_skipped: usize,
-    // TODO: add timestamp to report timing
+    start_time: Option<Instant>,
 }
 
 impl<W: 'static> cucumber::Writer<W> for DotWriter {
@@ -74,6 +74,11 @@ impl<W: 'static> cucumber::Writer<W> for DotWriter {
                     let s = format!("{} skipped", self.step_skipped).cyan();
                     let p = format!("{} passed", self.step_passed).green();
                     println!("{} steps ({f}, {s}, {p})", self.step_started);
+
+                    let elapsed =  Instant::now() - self.start_time.unwrap();
+                    let minutes = elapsed.as_secs()/60;
+                    let seconds = (elapsed.as_millis() % 60_000) as f64 / 1000.;
+                    println!("{}m{}s", minutes, seconds);
                 }
                 event::Cucumber::ParsingFinished {
                     features: _,
@@ -81,8 +86,10 @@ impl<W: 'static> cucumber::Writer<W> for DotWriter {
                     scenarios: _,
                     steps: _,
                     parser_errors: _,
-                } => {}
-                _ => {}
+                } => {},
+                event::Cucumber::Started => {
+                    self.start_time = Some(Instant::now());
+                },
             },
             Err(e) => println!("Error: {e}"),
         }
