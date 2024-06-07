@@ -24,8 +24,7 @@ msbuild OSRM.sln ^
 /p:WarningLevel=0 ^
 /clp:NoSummary;NoItemAndPropertyList;ErrorsOnly ^
 /p:RunCodeAnalysis=false ^
-/Zm200 ^
-/toolsversion:Current ^
+/toolsversion:16.0 ^
 /clp:Verbosity=quiet ^
 /nologo
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
