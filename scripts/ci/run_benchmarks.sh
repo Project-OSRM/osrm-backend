@@ -60,8 +60,9 @@ function run_benchmarks_for_folder {
 
         # python3 $FOLDER/scripts/ci/process_locust_benchmark_results.py locust_results_$ALGORITHM $ALGORITHM $RESULTS_FOLDER
 
-        python3 $LOCUSTFILE_FOLDER/scripts/ci/e2e_benchmark.py > $RESULTS_FOLDER/e2e_$ALGORITHM.bench
-
+        for METHOD in route table nearest trip match; do
+         python3 $LOCUSTFILE_FOLDER/scripts/ci/e2e_benchmark.py --host http://localhost:5000 --method $METHOD --num_requests 10000 > $RESULTS_FOLDER/e2e_${METHOD}_${ALGORITHM}.bench
+        done
 
         kill -0 $OSRM_ROUTED_PID
     done

@@ -6,6 +6,7 @@ import os
 import csv
 import numpy as np
 import time
+import argparse
 
 class BenchmarkRunner:
     def __init__(self):
@@ -69,13 +70,17 @@ class BenchmarkRunner:
             raise Exception(f"Unknown benchmark: {benchmark_name}")
 
 def main():
-    pass
+    parser = argparse.ArgumentParser(description='Run GPS benchmark tests.')
+    parser.add_argument('--host', type=str, required=True, help='Host URL')
+    parser.add_argument('--method', type=str, required=True, choices=['route', 'table', 'match', 'nearest', 'trip'], help='Benchmark method')
+    parser.add_argument('--num_requests', type=int, required=True, help='Number of requests to perform')
+
+    args = parser.parse_args()
 
     random.seed(42)
 
     runner = BenchmarkRunner()
-    host = "http://localhost:5000"
-    times = runner.run('route', host, 10000)
+    times = runner.run(args.method, args.host, args.num_requests)
 
     print(f'Total: {np.sum(times)}')
     print(f"Min time: {np.min(times)}")
