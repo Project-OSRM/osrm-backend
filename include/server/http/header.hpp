@@ -12,7 +12,7 @@ struct header
     // explicitly use default copy c'tor as adding move c'tor
     header &operator=(const header &other) = default;
     header(std::string name, std::string value) : name(std::move(name)), value(std::move(value)) {}
-    header(header &&other) : name(std::move(other.name)), value(std::move(other.value)) {}
+    header(header &&other) noexcept : name(std::move(other.name)), value(std::move(other.value)) {}
 
     void clear()
     {
