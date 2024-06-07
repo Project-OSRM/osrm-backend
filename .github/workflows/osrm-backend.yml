@@ -660,9 +660,10 @@ jobs:
           sudo apt-get update -y && sudo apt-get install ccache
       - name: Prepare data
         run: |
-          if [ ! -f "~/data.osm.pbf" ]; then
-            wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
-          fi
+          # if [ ! -f "~/data.osm.pbf" ]; then
+          #   wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
+          # fi
+          wget http://download.geofabrik.de/europe/germany-latest.osm.pbf -O ~/data.osm.pbf
           gunzip -c ./pr/test/data/berlin_gps_traces.csv.gz > ~/gps_traces.csv
       - name: Prepare environment
         run: |
