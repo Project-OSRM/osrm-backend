@@ -20,6 +20,7 @@ msbuild OSRM.sln ^
 /t:rebuild ^
 /p:BuildInParallel=true ^
 /m:2 ^
+/p:nowarn="4244;4267;4365;4456;4514;4625;4626;4710;4711;4820;5026;5027" ^
 /toolsversion:Current ^
 /clp:Verbosity=quiet ^
 /nologo
