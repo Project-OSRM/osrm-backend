@@ -29,6 +29,8 @@ jobs:
     continue-on-error: false
     env:
       BUILD_TYPE: Release
+      CC: clang
+      CXX: clang++
     steps:
     - uses: actions/checkout@v4
     - name: Install Ninja
@@ -67,6 +69,11 @@ jobs:
       run: |
         clang --version
         clang++ --version
+    - name: Configure Conan to use Clang
+      shell: bash
+      run: |
+        conan profile new default --detect || true
+        conan profile update settings.compiler=clang default
     - name: Build
       shell: bash
       run: |
