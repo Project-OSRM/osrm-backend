@@ -723,10 +723,10 @@ add_custom_target(uninstall
 
 
 # Modular build system: each directory registered here provides its own CMakeLists.txt
-if (NOT MSVC)
+#if (NOT MSVC)
   add_subdirectory(unit_tests)
   add_subdirectory(src/benchmarks)
-endif()
+# endif()
 
 if (ENABLE_NODE_BINDINGS)
   add_subdirectory(src/nodejs)
