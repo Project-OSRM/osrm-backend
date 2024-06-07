@@ -239,7 +239,6 @@ void test_route_same_coordinates(bool use_json_only_api)
                 BOOST_CHECK(((void)name, true));
 
                 // nothing can be said about mode, contains mode of transportation
-                const auto mode = std::get<json::String>(step_object.values.at("mode")).value;
                 BOOST_CHECK(!name.empty());
 
                 const auto &maneuver =

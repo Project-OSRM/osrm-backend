@@ -192,16 +192,16 @@ jobs:
   #           CXXCOMPILER: clang++-15
   #           CUCUMBER_TIMEOUT: 60000
 
-  #         - name: clang-15-debug-clang-tidy
-  #           continue-on-error: false
-  #           node: 18
-  #           runs-on: ubuntu-22.04
-  #           BUILD_TOOLS: ON
-  #           BUILD_TYPE: Debug
-  #           CCOMPILER: clang-15
-  #           CXXCOMPILER: clang++-15
-  #           CUCUMBER_TIMEOUT: 60000
-  #           ENABLE_CLANG_TIDY: ON
+          # - name: clang-18-debug-clang-tidy
+          #   continue-on-error: false
+          #   node: 18
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Debug
+          #   CCOMPILER: clang-18
+          #   CXXCOMPILER: clang++-18
+          #   CUCUMBER_TIMEOUT: 60000
+          #   ENABLE_CLANG_TIDY: ON
 
   #         - name: clang-14-release
   #           continue-on-error: false
