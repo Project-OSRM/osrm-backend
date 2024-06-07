@@ -31,6 +31,13 @@ jobs:
       BUILD_TYPE: Release
     steps:
     - uses: actions/checkout@v4
+    - name: Install Ninja
+      run: |
+        choco install ninja -y
+        refreshenv
+
+    - name: Verify Ninja installation
+      run: ninja --version
     # - name: Enable Conan cache
     #   uses: actions/cache@v4
     #   with:
@@ -53,14 +60,20 @@ jobs:
         echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
     - run: npm install --ignore-scripts
     - run: npm link --ignore-scripts
-    - uses: microsoft/setup-msbuild@v2
+    # - uses: microsoft/setup-msbuild@v2
+    - name: Set up Clang in PATH
+      shell: bash
+      run: |
+        echo "::add-path::C:\\Program Files\\LLVM\\bin"
+        clang --version
+        clang++ --version
     - name: Build
       run: |
         make --version
         clang --version
         mkdir build
         cd build
-        cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..
+        cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..
         cmake --build . --config Release
 
     #    .\scripts\ci\windows-build.bat
