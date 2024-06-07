@@ -27,8 +27,8 @@ function run_benchmarks_for_folder {
     $BINARIES_FOLDER/osrm-contract $FOLDER/data.osrm
 
     for BENCH in nearest table trip route match; do
-        ./$BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" mld ~/gps_traces.csv ${BENCH} > "$RESULTS_FOLDER/${BENCH}_mld.bench" || true
-        ./$BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" ch ~/gps_traces.csv ${BENCH}  > "$RESULTS_FOLDER/${BENCH}_ch.bench" || true
+        ./$BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" mld ~/gps_traces.csv ${BENCH} > "$RESULTS_FOLDER/random_${BENCH}_mld.bench" || true
+        ./$BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" ch ~/gps_traces.csv ${BENCH}  > "$RESULTS_FOLDER/random_${BENCH}_ch.bench" || true
     done
 
     if [ -f "$FOLDER/scripts/ci/locustfile.py" ]; then
