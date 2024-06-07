@@ -65,10 +65,10 @@ jobs:
     - name: Set up Clang in PATH
       shell: bash
       run: |
-        echo "::add-path::C:\\Program Files\\LLVM\\bin"
         clang --version
         clang++ --version
     - name: Build
+      shell: bash
       run: |
         make --version
         clang --version
