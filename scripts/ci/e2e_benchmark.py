@@ -32,6 +32,10 @@ class BenchmarkRunner:
             response = requests.get(url)
             end_time = time.time()
             if response.status_code != 200:
+                if benchmark_name == 'match':
+                    code = response.json()['code']
+                    if code == 'NoSegment' or code == 'NoMatch':
+                        continue
                 raise Exception(f"Error: {response.status_code} {response.text}")
             times.append(end_time - start_time)
         
