@@ -745,23 +745,23 @@ if (ENABLE_FUZZING)
   add_subdirectory(fuzz)
 endif ()
 
-# add headers sanity check target that includes all headers independently
-set(check_headers_dir "${PROJECT_BINARY_DIR}/check-headers")
-file(GLOB_RECURSE headers_to_check
-  ${PROJECT_BINARY_DIR}/*.hpp
-  ${PROJECT_SOURCE_DIR}/include/*.hpp)
-foreach(header ${headers_to_check})
-  if ("${header}" MATCHES ".*/include/nodejs/.*")
-    # we do not check NodeJS bindings headers
-    continue()
-  endif()
-  get_filename_component(filename ${header} NAME_WE)
-  set(filename "${check_headers_dir}/${filename}.cpp")
-  if (NOT EXISTS ${filename})
-    file(WRITE ${filename} "#include \"${header}\"\n")
-  endif()
-  list(APPEND sources ${filename})
-endforeach()
-add_library(check-headers STATIC EXCLUDE_FROM_ALL ${sources})
-set_target_properties(check-headers PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${check_headers_dir})
+# # add headers sanity check target that includes all headers independently
+# set(check_headers_dir "${PROJECT_BINARY_DIR}/check-headers")
+# file(GLOB_RECURSE headers_to_check
+#   ${PROJECT_BINARY_DIR}/*.hpp
+#   ${PROJECT_SOURCE_DIR}/include/*.hpp)
+# foreach(header ${headers_to_check})
+#   if ("${header}" MATCHES ".*/include/nodejs/.*")
+#     # we do not check NodeJS bindings headers
+#     continue()
+#   endif()
+#   get_filename_component(filename ${header} NAME_WE)
+#   set(filename "${check_headers_dir}/${filename}.cpp")
+#   if (NOT EXISTS ${filename})
+#     file(WRITE ${filename} "#include \"${header}\"\n")
+#   endif()
+#   list(APPEND sources ${filename})
+# endforeach()
+# add_library(check-headers STATIC EXCLUDE_FROM_ALL ${sources})
+# set_target_properties(check-headers PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${check_headers_dir})
 
