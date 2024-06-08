@@ -50,11 +50,11 @@ function run_benchmarks_for_folder {
         curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
 
         for METHOD in route nearest trip table match; do
-            python3 $SCRIPTS_FOLDER/scripts/ci/e2e_benchmark.py --host http://localhost:5000 --method $METHOD --num_requests 1000 > $RESULTS_FOLDER/e2e_${METHOD}_${ALGORITHM}.bench
+            #python3 $SCRIPTS_FOLDER/scripts/ci/e2e_benchmark.py --host http://localhost:5000 --method $METHOD --num_requests 1000 > $RESULTS_FOLDER/e2e_${METHOD}_${ALGORITHM}.bench
             python3 $SCRIPTS_FOLDER/scripts/ci/e2e_benchmark.py --host http://localhost:5000 --method $METHOD --num_requests 1000 > $RESULTS_FOLDER/e2e_${METHOD}_${ALGORITHM}.bench
         done
 
-        kill -0 $OSRM_ROUTED_PID
+        kill -9 $OSRM_ROUTED_PID
     done
 
 
