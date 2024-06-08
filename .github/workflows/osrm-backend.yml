@@ -67,11 +67,12 @@ jobs:
         # prepare data
         pushd build
         cp ../test/data/monaco.osm.pbf .
-        Release\osrm-extract.exe -p ../profiles/car.lua monaco.osm.pbf
+        ls -R
+        Release/osrm-extract.exe -p ../profiles/car.lua monaco.osm.pbf
 
         mkdir ch
         cp ./monaco.osrm* ch/
-        Release\osrm-contract.exe ch/monaco.osrm
+        Release/osrm-contract.exe ch/monaco.osrm
         cp -rf ch/* ../test/data/ch/
         popd
 
