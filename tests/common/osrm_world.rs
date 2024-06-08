@@ -1,4 +1,4 @@
-use crate::Point;
+use crate::Location;
 use cucumber::World;
 use log::debug;
 use std::{
@@ -18,11 +18,13 @@ pub struct OSRMWorld {
     pub osm_id: u64,
     pub profile: String,
 
-    pub known_osm_nodes: HashMap<char, Point>,
-    pub known_locations: HashMap<char, Point>,
+    pub known_osm_nodes: HashMap<char, Location>,
+    pub known_locations: HashMap<char, Location>,
 
     pub osm_db: OSMDb,
     pub extraction_parameters: Vec<String>,
+
+    pub request_with_flatbuffers: bool,
 }
 
 impl OSRMWorld {
@@ -78,7 +80,7 @@ impl OSRMWorld {
         self.osm_id
     }
 
-    pub fn add_osm_node(&mut self, name: char, location: Point, id: Option<u64>) {
+    pub fn add_osm_node(&mut self, name: char, location: Location, id: Option<u64>) {
         if self.known_osm_nodes.contains_key(&name) {
             panic!("duplicate node: {name}");
         }
@@ -88,8 +90,7 @@ impl OSRMWorld {
         };
         let node = OSMNode {
             id,
-            lat: location.y(),
-            lon: location.x(),
+            location,
             tags: HashMap::from([("name".to_string(), name.to_string())]),
         };
 
@@ -97,7 +98,7 @@ impl OSRMWorld {
         self.osm_db.add_node(node);
     }
 
-    pub fn get_location(&self, name: char) -> Point {
+    pub fn get_location(&self, name: char) -> Location {
         *match name {
             // TODO: move lookup to world
             '0'..='9' => self
@@ -112,7 +113,7 @@ impl OSRMWorld {
         }
     }
 
-    pub fn add_location(&mut self, name: char, location: Point) {
+    pub fn add_location(&mut self, name: char, location: Location) {
         if self.known_locations.contains_key(&name) {
             panic!("duplicate location: {name}")
         }

@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use xml_builder::XMLElement;
 
+use super::location::Location;
+
 static OSM_USER: &str = "osrm";
 static OSM_TIMESTAMP: &str = "2000-01-01T00:00:00Z";
 static OSM_UID: &str = "1";
@@ -9,8 +11,7 @@ static OSM_UID: &str = "1";
 #[derive(Clone, Debug, Default)]
 pub struct OSMNode {
     pub id: u64,
-    pub lat: f64,
-    pub lon: f64,
+    pub location: Location,
     pub tags: HashMap<String, String>,
 }
 
@@ -34,8 +35,8 @@ impl OSMNode {
         node.add_attribute("uid", OSM_UID);
         node.add_attribute("user", OSM_USER);
         node.add_attribute("timestamp", OSM_TIMESTAMP);
-        node.add_attribute("lon", &format!("{:?}", self.lon));
-        node.add_attribute("lat", &format!("{:?}", self.lat));
+        node.add_attribute("lon", &format!("{:?}", self.location.longitude));
+        node.add_attribute("lat", &format!("{:?}", self.location.latitude));
 
         if !self.tags.is_empty() {
             for (key, value) in &self.tags {
@@ -81,8 +82,8 @@ impl OSMWay {
             let mut nd = XMLElement::new("nd");
             nd.add_attribute("ref", &node.id.to_string());
             if self.add_locations {
-                nd.add_attribute("lon", &format!("{:?}", node.lon));
-                nd.add_attribute("lat", &format!("{:?}", node.lat));
+                nd.add_attribute("lon", &format!("{:?}", node.location.longitude));
+                nd.add_attribute("lat", &format!("{:?}", node.location.latitude));
             }
             way.add_child(nd).unwrap();
         }

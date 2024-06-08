@@ -9,13 +9,14 @@ chksum-md5 = "0.0.0"
 clap = "4.5.4"
 colored = "2.1.0"
 cucumber = { version = "0.21.0", features = ["tracing"] }
+flatbuffers = "24.3.25"
 futures = "0.3.30"
 geo-types = "0.7.13"
 help = "0.0.0"
 log = "0.4.21"
 serde = { version = "1.0.203", features = ["serde_derive"] }
 serde_json = "1.0.117"
-ureq = "2.9.7"
+ureq = { version = "2.9.7", features = ["charset"] }
 xml-builder = "0.5.2"
 
 [[test]]
@@ -24,3 +25,6 @@ harness = false
 
 [profile.bench]
 debug = true
+
+[build-dependencies]
+flatc-rust = "0.2.0"

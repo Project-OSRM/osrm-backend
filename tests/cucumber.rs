@@ -1,4 +1,4 @@
-extern crate clap;
+// extern crate clap;
 
 mod common;
 
@@ -6,13 +6,13 @@ use cheap_ruler::CheapRuler;
 use clap::Parser;
 use common::{
     cli_arguments::Args, dot_writer::DotWriter, f64_utils::approx_equal,
-    hash_util::md5_of_osrm_executables, nearest_response::NearestResponse, osm::OSMWay,
-    osrm_world::OSRMWorld, task_starter::TaskStarter,
+    hash_util::md5_of_osrm_executables, location::Location, nearest_response::NearestResponse,
+    osm::OSMWay, osrm_world::OSRMWorld, task_starter::TaskStarter,
 };
 use core::panic;
 use cucumber::{gherkin::Step, given, when, World, WriterExt};
 use futures::{future, FutureExt};
-use geo_types::{point, Point};
+use geo_types::point;
 use log::debug;
 use std::{collections::HashMap, fs::File, io::Write, time::Duration};
 use ureq::Agent;
@@ -20,13 +20,17 @@ use ureq::Agent;
 const DEFAULT_ORIGIN: [f64; 2] = [1., 1.]; // TODO: move to world?
 const DEFAULT_GRID_SIZE: f64 = 100.; // TODO: move to world?
 
-fn offset_origin_by(dx: f64, dy: f64) -> geo_types::Point {
+fn offset_origin_by(dx: f64, dy: f64) -> Location {
     let ruler = CheapRuler::new(DEFAULT_ORIGIN[1], cheap_ruler::DistanceUnit::Meters);
-    ruler.offset(
+    let loc = ruler.offset(
         &point!(DEFAULT_ORIGIN),
         dx * DEFAULT_GRID_SIZE,
         dy * DEFAULT_GRID_SIZE,
-    ) //TODO: needs to be world's gridSize, not the local one
+    ); //TODO: needs to be world's gridSize, not the local one
+    Location {
+        latitude: loc.y() as f32,
+        longitude: loc.x() as f32,
+    }
 }
 
 #[given(expr = "the profile \"{word}\"")]
@@ -60,13 +64,16 @@ fn set_node_locations(world: &mut OSRMWorld, step: &Step) {
         );
     });
 
-    table.rows.iter().skip(1).for_each(|row|{
+    table.rows.iter().skip(1).for_each(|row| {
         assert_eq!(3, row.len());
         assert_eq!(row[0].len(), 1, "node name not in [0..9][a..z]");
         let name = &row[0].chars().next().expect("node name cannot be empty"); // the error is unreachable
         let lon = &row[header_lookup["lon"]];
         let lat = &row[header_lookup["lat"]];
-        let location = point!(x: lon.parse::<f64>().expect("lon {lon} needs to be a f64"), y: lat.parse::<f64>().expect("lat {lat} needs to be a f64"));
+        let location = Location {
+            latitude: lat.parse::<f32>().expect("lat {lat} needs to be a f64"),
+            longitude: lon.parse::<f32>().expect("lon {lon} needs to be a f64"),
+        };
         match name {
             '0'...'9' => world.add_location(*name, location),
             'a'...'z' => world.add_osm_node(*name, location, None),
@@ -115,7 +122,7 @@ fn set_ways(world: &mut OSRMWorld, step: &Step) {
             panic!("empty way table provided")
         }
         // store a reference to the headers for convenient lookup
-        let headers = table.rows.first().unwrap();
+        let headers = table.rows.first().expect("table has a first row");
 
         // iterate over the following rows and build ways one by one
         table.rows.iter().skip(1).for_each(|row| {
@@ -156,8 +163,10 @@ fn set_ways(world: &mut OSRMWorld, step: &Step) {
     // debug!("{}", world.osm_db.to_xml())
 }
 
-#[when("I request nearest I should get")]
-fn request_nearest(world: &mut OSRMWorld, step: &Step) {
+// #[when("I request nearest I should get")]
+#[when(regex = r"^I request nearest( with flatbuffers|) I should get$")]
+fn request_nearest(world: &mut OSRMWorld, step: &Step, state: String) {
+    let request_with_flatbuffers = state == " with flatbuffers";
     // if .osm file does not exist
     //    write osm file
 
@@ -207,8 +216,8 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
     let data_path = cache_path.join(world.scenario_id.to_owned() + ".osrm");
 
     // TODO: this should not require a temporary and behave like the API of std::process
-    let mut task = TaskStarter::new(world.routed_path().to_str().unwrap());
-    task.arg(data_path.to_str().unwrap());
+    let mut task = TaskStarter::new(world.routed_path().to_str().expect("task can be started"));
+    task.arg(data_path.to_str().expect("data path unwrappable"));
     task.spawn_wait_till_ready("running and waiting for requests");
     assert!(task.is_ready());
 
@@ -239,33 +248,44 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step) {
 
         // debug!("{query_location:?} => {expected_location:?}");
         // run queries
-        let url = format!(
-            "http://localhost:5000/nearest/v1/{}/{},{}",
-            world.profile,
-            query_location.x(),
-            query_location.y()
+        let mut url = format!(
+            "http://localhost:5000/nearest/v1/{}/{:?},{:?}",
+            world.profile, query_location.longitude, query_location.latitude
         );
+        if request_with_flatbuffers {
+            url += ".flatbuffers";
+        }
         let call = agent.get(&url).call();
 
         let body = match call {
-            Ok(response) => response.into_string().expect("response not parseable"),
+            Ok(response) => response.into_reader(),
             Err(e) => panic!("http error: {e}"),
         };
-        // debug!("body: {body}");
 
-        let response: NearestResponse = match serde_json::from_str(&body) {
-            Ok(response) => response,
-            Err(e) => panic!("parsing error {e}"),
+        let response = match request_with_flatbuffers {
+            true => NearestResponse::from_flatbuffer(body),
+            false => NearestResponse::from_json_reader(body),
         };
 
         if test_case.contains_key("out") {
             // check that result node is (approximately) equivalent
             let result_location = response.waypoints[0].location();
-            assert!(approx_equal(result_location.x(), expected_location.x(), 5));
-            assert!(approx_equal(result_location.y(), expected_location.y(), 5));
+            assert!(approx_equal(
+                result_location.longitude,
+                expected_location.longitude,
+                5
+            ));
+            assert!(approx_equal(
+                result_location.latitude,
+                expected_location.latitude,
+                5
+            ));
         }
         if test_case.contains_key("data_version") {
-            assert_eq!(test_case.get("data_version"), response.data_version.as_ref());
+            assert_eq!(
+                test_case.get("data_version"),
+                response.data_version.as_ref()
+            );
         }
     }
 }
