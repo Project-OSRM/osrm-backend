@@ -33,32 +33,34 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 CD %PROJECT_DIR%\build
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
+dir /S
+
 ECHO running extractor-tests.exe ...
-unit_tests\%CONFIGURATION%\extractor-tests.exe
+unit_tests\extractor-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 ECHO running contractor-tests.exe ...
-unit_tests\%CONFIGURATION%\contractor-tests.exe
+unit_tests\contractor-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 ECHO running engine-tests.exe ...
-unit_tests\%CONFIGURATION%\engine-tests.exe
+unit_tests\engine-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 ECHO running util-tests.exe ...
-unit_tests\%CONFIGURATION%\util-tests.exe
+unit_tests\util-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 ECHO running server-tests.exe ...
-unit_tests\%CONFIGURATION%\server-tests.exe
+unit_tests\server-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 ECHO running partitioner-tests.exe ...
-unit_tests\%CONFIGURATION%\partitioner-tests.exe
+unit_tests\artitioner-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 ECHO running customizer-tests.exe ...
-unit_tests\%CONFIGURATION%\customizer-tests.exe
+unit_tests\customizer-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 SET test_region=monaco
@@ -66,7 +68,7 @@ SET test_region_ch=ch\monaco
 SET test_region_mld=mld\monaco
 SET test_osm=%test_region%.osm.pbf
 COPY %PROJECT_DIR%\test\data\%test_region%.osm.pbf %test_osm%
-%CONFIGURATION%\osrm-extract.exe -p %PROJECT_DIR%\profiles\car.lua %test_osm%
+osrm-extract.exe -p %PROJECT_DIR%\profiles\car.lua %test_osm%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 MKDIR ch
@@ -75,12 +77,12 @@ XCOPY %test_region%.osrm ch\
 MKDIR mld
 XCOPY %test_region%.osrm.* mld\
 XCOPY %test_region%.osrm mld\
-%CONFIGURATION%\osrm-contract.exe %test_region_ch%.osrm
-%CONFIGURATION%\osrm-partition.exe %test_region_mld%.osrm
-%CONFIGURATION%\osrm-customize.exe %test_region_mld%.osrm
+osrm-contract.exe %test_region_ch%.osrm
+osrm-partition.exe %test_region_mld%.osrm
+osrm-customize.exe %test_region_mld%.osrm
 XCOPY /Y ch\*.* ..\test\data\ch\
 XCOPY /Y mld\*.* ..\test\data\mld\
-unit_tests\%CONFIGURATION%\library-tests.exe
+unit_tests\library-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 :ERROR
