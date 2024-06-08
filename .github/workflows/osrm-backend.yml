@@ -61,13 +61,16 @@ jobs:
     #     cd build
     #     cmake --build . --config Release --target tests
     #     # TODO: run tests
+    - name: Debig
+      shell: bash
+      run: 
+        ls -R build
     - name: Run node tests
       shell: bash
       run: |
         # prepare data
         pushd build
         cp ../test/data/monaco.osm.pbf .
-        ls -R
         Release/osrm-extract.exe -p ../profiles/car.lua monaco.osm.pbf
 
         mkdir ch
