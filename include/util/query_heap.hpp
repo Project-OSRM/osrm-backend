@@ -139,38 +139,38 @@ class TwoLevelStorage
 
     Key &operator[](const NodeID node)
     {
-        if (node < number_of_overlay_nodes)
-        {
-            return overlay[node];
-        }
-        else
-        {
+        // if (node < number_of_overlay_nodes)
+        // {
+        //     return overlay[node];
+        // }
+        // else
+        // {
             return base[node];
-        }
+       // }
     }
 
     Key peek_index(const NodeID node) const
     {
-        if (node < number_of_overlay_nodes)
-        {
-            return overlay.peek_index(node);
-        }
-        else
-        {
+        // if (node < number_of_overlay_nodes)
+        // {
+        //     return overlay.peek_index(node);
+        // }
+        // else
+        // {
             return base.peek_index(node);
-        }
+      //  }
     }
 
     Key const &operator[](const NodeID node) const
     {
-        if (node < number_of_overlay_nodes)
-        {
-            return overlay[node];
-        }
-        else
-        {
+        // if (node < number_of_overlay_nodes)
+        // {
+        //     return overlay[node];
+        // }
+        // else
+        // {
             return base[node];
-        }
+        // }
     }
 
     void Clear()
