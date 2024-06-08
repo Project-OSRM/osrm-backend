@@ -663,7 +663,8 @@ jobs:
           if [ ! -f "~/data.osm.pbf" ]; then
             wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
           fi
-          # wget http://download.geofabrik.de/europe/germany-latest.osm.pbf -O ~/data.osm.pbf --quiet
+          rm -rf ~/data.osm.pbf
+          wget http://download.geofabrik.de/europe/poland-latest.osm.pbf -O ~/data.osm.pbf --quiet
           gunzip -c ./pr/test/data/berlin_gps_traces.csv.gz > ~/gps_traces.csv
       - name: Prepare environment
         run: |

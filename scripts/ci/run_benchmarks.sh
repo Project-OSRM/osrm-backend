@@ -11,12 +11,12 @@ function run_benchmarks_for_folder {
 
     BENCHMARKS_FOLDER="$FOLDER/build/src/benchmarks"
 
-    # ./$BENCHMARKS_FOLDER/match-bench "./$FOLDER/test/data/mld/monaco.osrm" mld > "$RESULTS_FOLDER/match_mld.bench"
-    # ./$BENCHMARKS_FOLDER/match-bench "./$FOLDER/test/data/ch/monaco.osrm" ch > "$RESULTS_FOLDER/match_ch.bench"
-    ./$BENCHMARKS_FOLDER/alias-bench > "$RESULTS_FOLDER/alias.bench"
-    ./$BENCHMARKS_FOLDER/json-render-bench  "./$FOLDER/src/benchmarks/portugal_to_korea.json" > "$RESULTS_FOLDER/json-render.bench"
-    ./$BENCHMARKS_FOLDER/packedvector-bench > "$RESULTS_FOLDER/packedvector.bench"
-    ./$BENCHMARKS_FOLDER/rtree-bench "./$FOLDER/test/data/monaco.osrm.ramIndex" "./$FOLDER/test/data/monaco.osrm.fileIndex" "./$FOLDER/test/data/monaco.osrm.nbg_nodes" > "$RESULTS_FOLDER/rtree.bench"
+    # # ./$BENCHMARKS_FOLDER/match-bench "./$FOLDER/test/data/mld/monaco.osrm" mld > "$RESULTS_FOLDER/match_mld.bench"
+    # # ./$BENCHMARKS_FOLDER/match-bench "./$FOLDER/test/data/ch/monaco.osrm" ch > "$RESULTS_FOLDER/match_ch.bench"
+    # ./$BENCHMARKS_FOLDER/alias-bench > "$RESULTS_FOLDER/alias.bench"
+    # ./$BENCHMARKS_FOLDER/json-render-bench  "./$FOLDER/src/benchmarks/portugal_to_korea.json" > "$RESULTS_FOLDER/json-render.bench"
+    # ./$BENCHMARKS_FOLDER/packedvector-bench > "$RESULTS_FOLDER/packedvector.bench"
+    # ./$BENCHMARKS_FOLDER/rtree-bench "./$FOLDER/test/data/monaco.osrm.ramIndex" "./$FOLDER/test/data/monaco.osrm.fileIndex" "./$FOLDER/test/data/monaco.osrm.nbg_nodes" > "$RESULTS_FOLDER/rtree.bench"
 
     BINARIES_FOLDER="$FOLDER/build"
 
@@ -26,34 +26,34 @@ function run_benchmarks_for_folder {
     $BINARIES_FOLDER/osrm-customize $FOLDER/data.osrm
     $BINARIES_FOLDER/osrm-contract $FOLDER/data.osrm
 
-    for BENCH in nearest table trip route match; do
-        ./$BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" mld ~/gps_traces.csv ${BENCH} > "$RESULTS_FOLDER/random_${BENCH}_mld.bench" || true
-        ./$BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" ch ~/gps_traces.csv ${BENCH}  > "$RESULTS_FOLDER/random_${BENCH}_ch.bench" || true
-    done
+    # for BENCH in nearest table trip route match; do
+    #     ./$BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" mld ~/gps_traces.csv ${BENCH} > "$RESULTS_FOLDER/random_${BENCH}_mld.bench" || true
+    #     ./$BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" ch ~/gps_traces.csv ${BENCH}  > "$RESULTS_FOLDER/random_${BENCH}_ch.bench" || true
+    # done
 
-    if [ -f "$FOLDER/scripts/ci/locustfile.py" ]; then
-        for ALGORITHM in mld ch; do
-            $BINARIES_FOLDER/osrm-routed --algorithm $ALGORITHM $FOLDER/data.osrm &
-            OSRM_ROUTED_PID=$!
+    # if [ -f "$FOLDER/scripts/ci/locustfile.py" ]; then
+    #     for ALGORITHM in mld ch; do
+    #         $BINARIES_FOLDER/osrm-routed --algorithm $ALGORITHM $FOLDER/data.osrm &
+    #         OSRM_ROUTED_PID=$!
 
-            # wait for osrm-routed to start
-            curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
-            locust -f $FOLDER/scripts/ci/locustfile.py \
-                --headless \
-                --processes -1 \
-                --users 10 \
-                --spawn-rate 1 \
-                --host http://localhost:5000 \
-                --run-time 1m \
-                --csv=locust_results_$ALGORITHM \
-                --loglevel ERROR
+    #         # wait for osrm-routed to start
+    #         curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
+    #         locust -f $FOLDER/scripts/ci/locustfile.py \
+    #             --headless \
+    #             --processes -1 \
+    #             --users 10 \
+    #             --spawn-rate 1 \
+    #             --host http://localhost:5000 \
+    #             --run-time 1m \
+    #             --csv=locust_results_$ALGORITHM \
+    #             --loglevel ERROR
 
-            python3 $FOLDER/scripts/ci/process_locust_benchmark_results.py locust_results_$ALGORITHM $ALGORITHM $RESULTS_FOLDER
+    #         python3 $FOLDER/scripts/ci/process_locust_benchmark_results.py locust_results_$ALGORITHM $ALGORITHM $RESULTS_FOLDER
 
 
-            kill -0 $OSRM_ROUTED_PID
-        done
-    fi
+    #         kill -0 $OSRM_ROUTED_PID
+    #     done
+    # fi
 
 }
 
