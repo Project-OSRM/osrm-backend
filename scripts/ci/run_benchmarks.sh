@@ -57,6 +57,6 @@ function run_benchmarks_for_folder {
 
 }
 
-# run_benchmarks_for_folder $1 "${1}_results"
+run_benchmarks_for_folder $1 "${1}_results"
 run_benchmarks_for_folder $2 "${2}_results"
 
