@@ -64,6 +64,17 @@ jobs:
     - name: Run node tests
       shell: bash
       run: |
+        # prepare data
+        pushd build
+        cp ../test/data/ch/monaco.osm.pbf .
+        Release\osrm-extract -p ../profiles/car.lua monaco.osm.pbf
+
+        mkdir ch
+        cp ./monaco.osrm* ch/
+        Release\osrm-contract.exe ch/monaco.osrm
+        cp -rf ch/* ../test/data/ch/
+        popd
+
         ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
         node test/nodejs/index.js
     - name: Build Node package

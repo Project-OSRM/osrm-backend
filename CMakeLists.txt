@@ -89,6 +89,12 @@ else()
   add_definitions(-DOSRM_PROJECT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 endif()
 
+
+if(MSVC)
+    # make MSVC less verbose
+    add_compile_options("/p:WarningLevel=0 /clp:NoSummary;NoItemAndPropertyList;ErrorsOnly /p:RunCodeAnalysis=false")
+endif()
+
 # these two functions build up custom variables:
 #   DEPENDENCIES_INCLUDE_DIRS and OSRM_DEFINES
 # These variables we want to pass to
