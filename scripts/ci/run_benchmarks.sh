@@ -51,6 +51,7 @@ function run_benchmarks_for_folder {
 
         for METHOD in route nearest trip table match; do
             python3 $SCRIPTS_FOLDER/scripts/ci/e2e_benchmark.py --host http://localhost:5000 --method $METHOD --num_requests 1000 > $RESULTS_FOLDER/e2e_${METHOD}_${ALGORITHM}.bench
+            python3 $SCRIPTS_FOLDER/scripts/ci/e2e_benchmark.py --host http://localhost:5000 --method $METHOD --num_requests 1000 > $RESULTS_FOLDER/e2e_${METHOD}_${ALGORITHM}.bench
         done
 
         kill -0 $OSRM_ROUTED_PID
