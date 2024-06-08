@@ -26,7 +26,7 @@ struct ConcurrentIDMap
     mutable UpgradableMutex mutex;
 
     ConcurrentIDMap() = default;
-    ConcurrentIDMap(ConcurrentIDMap &&other)
+    ConcurrentIDMap(ConcurrentIDMap &&other) noexcept
     {
         if (this != &other)
         {
@@ -36,7 +36,7 @@ struct ConcurrentIDMap
             data = std::move(other.data);
         }
     }
-    ConcurrentIDMap &operator=(ConcurrentIDMap &&other)
+    ConcurrentIDMap &operator=(ConcurrentIDMap &&other) noexcept
     {
         if (this != &other)
         {

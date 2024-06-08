@@ -192,14 +192,14 @@ jobs:
             CXXCOMPILER: clang++-15
             CUCUMBER_TIMEOUT: 60000
 
-          - name: clang-15-debug-clang-tidy
+          - name: clang-18-debug-clang-tidy
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: clang-15
-            CXXCOMPILER: clang++-15
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             CUCUMBER_TIMEOUT: 60000
             ENABLE_CLANG_TIDY: ON
 
@@ -656,7 +656,7 @@ jobs:
           path: pr
       - name: Install dependencies
         run: | 
-          python3 -m pip install "conan<2.0.0" "requests==2.31.0" "locust==2.28.0"
+          python3 -m pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" 
           sudo apt-get update -y && sudo apt-get install ccache
       - name: Prepare data
         run: |
