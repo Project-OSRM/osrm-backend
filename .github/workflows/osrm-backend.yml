@@ -665,7 +665,8 @@ jobs:
           fi
           rm -rf ~/data.osm.pbf
           wget http://download.geofabrik.de/europe/poland-latest.osm.pbf -O ~/data.osm.pbf --quiet
-          gunzip -c ./pr/test/data/berlin_gps_traces.csv.gz > ~/gps_traces.csv
+          python3 scripts/ci/download_gps_traces.py 20.85,52.10,21.15,52.30 16.85,51.05,17.10,51.20 18.55,54.30,18.70,54.45 19.85,50.00,20.05,50.10 16.85,52.35,17.05,52.45 > ~/gps_traces.csv
+          #gunzip -c ./pr/test/data/berlin_gps_traces.csv.gz > ~/gps_traces.csv
       - name: Prepare environment
         run: |
           echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
