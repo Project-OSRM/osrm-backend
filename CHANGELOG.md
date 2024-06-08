@@ -8,6 +8,7 @@
       - ADDED: Add support for opposite approach request parameter. [#6842](https://github.com/Project-OSRM/osrm-backend/pull/6842)
       - ADDED: Add support for accessing edge flags in `process_segment` [#6658](https://github.com/Project-OSRM/osrm-backend/pull/6658)
     - Build:
+      - CHANGED: Upgrade clang-format to version 15. [#6919](https://github.com/Project-OSRM/osrm-backend/pull/6919)
       - CHANGED: Use Debian Bookworm as base Docker image [#6904](https://github.com/Project-OSRM/osrm-backend/pull/6904)
       - CHANGED: Upgrade CI actions to latest versions [#6893](https://github.com/Project-OSRM/osrm-backend/pull/6893)
       - CHANGED:  Remove outdated warnings #6894 [#6894](https://github.com/Project-OSRM/osrm-backend/pull/6894)
@@ -23,6 +24,9 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - FIXED: Fix bugprone-unused-return-value clang-tidy warning. [#6934](https://github.com/Project-OSRM/osrm-backend/pull/6934)
+      - FIXED: Fix performance-noexcept-move-constructor clang-tidy warning. [#6931](https://github.com/Project-OSRM/osrm-backend/pull/6933)
+      - FIXED: Fix performance-noexcept-swap clang-tidy warning. [#6931](https://github.com/Project-OSRM/osrm-backend/pull/6931)
       - CHANGED: Use custom struct instead of std::pair in QueryHeap. [#6921](https://github.com/Project-OSRM/osrm-backend/pull/6921)
       - CHANGED: Use std::string_view::starts_with instead of boost::starts_with. [#6918](https://github.com/Project-OSRM/osrm-backend/pull/6918)
       - CHANGED: Get rid of boost::math::constants::* and M_PI in favor of std::numbers. [#6916](https://github.com/Project-OSRM/osrm-backend/pull/6916)

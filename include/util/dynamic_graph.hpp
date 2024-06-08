@@ -154,7 +154,7 @@ template <typename EdgeDataT> class DynamicGraph
         return *this;
     }
 
-    DynamicGraph(DynamicGraph &&other)
+    DynamicGraph(DynamicGraph &&other) noexcept
     {
         number_of_nodes = other.number_of_nodes;
         // atomics can't be moved this is why we need an own constructor
@@ -164,7 +164,7 @@ template <typename EdgeDataT> class DynamicGraph
         edge_list = std::move(other.edge_list);
     }
 
-    DynamicGraph &operator=(DynamicGraph &&other)
+    DynamicGraph &operator=(DynamicGraph &&other) noexcept
     {
         number_of_nodes = other.number_of_nodes;
         // atomics can't be moved this is why we need an own constructor
