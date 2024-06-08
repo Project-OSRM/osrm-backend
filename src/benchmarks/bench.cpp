@@ -22,8 +22,10 @@
 #include <cstdlib>
 #include <exception>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <optional>
+#include <ostream>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -155,6 +157,17 @@ class Statistics
     bool sorted = false;
 };
 
+std::ostream &operator<<(std::ostream &os, Statistics &statistics)
+{
+    os << std::fixed << std::setprecision(2);
+    os << "total: " << statistics.sum() << "ms" << std::endl;
+    os << "avg: " << statistics.mean() << "ms" << std::endl;
+    os << "min: " << statistics.min() << "ms" << std::endl;
+    os << "max: " << statistics.max() << "ms" << std::endl;
+    os << "p99: " << statistics.percentile(0.99) << "ms" << std::endl;
+    return os;
+}
+
 void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
 {
     struct Benchmark
@@ -212,10 +225,7 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
             }
         }
         std::cout << benchmark.name << std::endl;
-        std::cout << "total: " << statistics.sum() << "ms" << std::endl;
-        std::cout << "avg: ~" << statistics.mean() << "ms/req" << std::endl;
-        std::cout << "p99: " << statistics.percentile(0.99) << "ms" << std::endl;
-        std::cout << "max: " << statistics.max() << "ms" << std::endl;
+        std::cout << statistics << std::endl;
     };
 
     std::vector<Benchmark> benchmarks = {
@@ -323,10 +333,7 @@ void runMatchBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
         }
 
         std::cout << benchmark.name << std::endl;
-        std::cout << "total: " << statistics.sum() << "ms" << std::endl;
-        std::cout << "avg: " << statistics.mean() << "ms/req" << std::endl;
-        std::cout << "p99: " << statistics.percentile(0.99) << "ms" << std::endl;
-        std::cout << "max: " << statistics.max() << "ms" << std::endl;
+        std::cout << statistics << std::endl;
     };
 
     std::vector<Benchmark> benchmarks = {{"1000 matches, default radius"},
@@ -382,10 +389,7 @@ void runNearestBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
         }
 
         std::cout << benchmark.name << std::endl;
-        std::cout << "total: " << statistics.sum() << "ms" << std::endl;
-        std::cout << "avg: " << statistics.mean() << "ms/req" << std::endl;
-        std::cout << "p99: " << statistics.percentile(0.99) << "ms" << std::endl;
-        std::cout << "max: " << statistics.max() << "ms" << std::endl;
+        std::cout << statistics << std::endl;
     };
 
     std::vector<Benchmark> benchmarks = {{"10000 nearest, number_of_results=1", 1},
@@ -439,10 +443,7 @@ void runTripBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
         }
 
         std::cout << benchmark.name << std::endl;
-        std::cout << "total: " << statistics.sum() << "ms" << std::endl;
-        std::cout << "avg: " << statistics.mean() << "ms/req" << std::endl;
-        std::cout << "p99: " << statistics.percentile(0.99) << "ms" << std::endl;
-        std::cout << "max: " << statistics.max() << "ms" << std::endl;
+        std::cout << statistics << std::endl;
     };
 
     std::vector<Benchmark> benchmarks = {
@@ -497,10 +498,7 @@ void runTableBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
         }
 
         std::cout << benchmark.name << std::endl;
-        std::cout << "total: " << statistics.sum() << "ms" << std::endl;
-        std::cout << "avg: " << statistics.mean() << "ms/req" << std::endl;
-        std::cout << "p99: " << statistics.percentile(0.99) << "ms" << std::endl;
-        std::cout << "max: " << statistics.max() << "ms" << std::endl;
+        std::cout << statistics << std::endl;
     };
 
     std::vector<Benchmark> benchmarks = {{"1000 tables, 3 coordinates", 3},
