@@ -204,8 +204,8 @@ template <typename ElementT> class DeallocatingVector
     }
 
     // moving is fine
-    DeallocatingVector(DeallocatingVector &&other) { swap(other); }
-    DeallocatingVector &operator=(DeallocatingVector &&other)
+    DeallocatingVector(DeallocatingVector &&other) noexcept { swap(other); }
+    DeallocatingVector &operator=(DeallocatingVector &&other) noexcept
     {
         swap(other);
         return *this;
