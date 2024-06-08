@@ -150,6 +150,9 @@ return_code parseArguments(int argc,
 int main(int argc, char *argv[])
 try
 {
+
+    std::cerr << "DEBUG 1" << std::endl;
+
     util::LogPolicy::GetInstance().Unmute();
     extractor::ExtractorConfig extractor_config;
     std::string verbosity;
@@ -166,7 +169,12 @@ try
         return EXIT_SUCCESS;
     }
 
+    std::cerr << "DEBUG" << std::endl;
+
     util::LogPolicy::GetInstance().SetLevel(verbosity);
+
+        std::cerr << "DEBUG 2" << std::endl;
+
 
     extractor_config.UseDefaultOutputNames(extractor_config.input_path);
 
@@ -189,8 +197,10 @@ try
                             << " not found!";
         return EXIT_FAILURE;
     }
+    std::cerr << "DEBUG 3" << std::endl;
 
     osrm::extract(extractor_config);
+    std::cerr << "DEBUG 4" << std::endl;
 
     util::DumpMemoryStats();
 
