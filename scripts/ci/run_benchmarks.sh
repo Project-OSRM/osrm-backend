@@ -18,6 +18,7 @@ function run_benchmarks_for_folder {
 
     FOLDER=$1
     RESULTS_FOLDER=$2
+    SCRIPTS_FOLDER=$3
 
     mkdir -p $RESULTS_FOLDER
 
@@ -41,32 +42,27 @@ function run_benchmarks_for_folder {
     measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-customize $FOLDER/data.osrm" "$RESULTS_FOLDER/osrm_customize.bench"
     measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-contract $FOLDER/data.osrm" "$RESULTS_FOLDER/osrm_contract.bench"
 
-    if [ -f "$FOLDER/scripts/ci/locustfile.py" ]; then
-        for ALGORITHM in mld ch; do
-            $BINARIES_FOLDER/osrm-routed --algorithm $ALGORITHM $FOLDER/data.osrm &
-            OSRM_ROUTED_PID=$!
+    for ALGORITHM in ch mld; do
+        $BINARIES_FOLDER/osrm-routed --algorithm $ALGORITHM $FOLDER/data.osrm &
+        OSRM_ROUTED_PID=$!
 
-            # wait for osrm-routed to start
-            curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
-            locust -f $FOLDER/scripts/ci/locustfile.py \
-                --headless \
-                --processes -1 \
-                --users 10 \
-                --spawn-rate 1 \
-                --host http://localhost:5000 \
-                --run-time 1m \
-                --csv=locust_results_$ALGORITHM \
-                --loglevel ERROR
+        # wait for osrm-routed to start
+        if ! curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"; then
+            echo "osrm-routed failed to start for algorithm $ALGORITHM"
+            kill -9 $OSRM_ROUTED_PID
+            continue
+        fi
 
-            python3 $FOLDER/scripts/ci/process_locust_benchmark_results.py locust_results_$ALGORITHM $ALGORITHM $RESULTS_FOLDER
-
-
-            kill -0 $OSRM_ROUTED_PID
+        for METHOD in route nearest trip table match; do
+            python3 $SCRIPTS_FOLDER/scripts/ci/e2e_benchmark.py --host http://localhost:5000 --method $METHOD --num_requests 1000 > $RESULTS_FOLDER/e2e_${METHOD}_${ALGORITHM}.bench
         done
-    fi
+
+        kill -9 $OSRM_ROUTED_PID
+    done
+
 
 }
 
-run_benchmarks_for_folder $1 "${1}_results"
-run_benchmarks_for_folder $2 "${2}_results"
+run_benchmarks_for_folder $1 "${1}_results" $2
+run_benchmarks_for_folder $2 "${2}_results" $2
 
