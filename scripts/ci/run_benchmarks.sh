@@ -42,7 +42,7 @@ function run_benchmarks_for_folder {
     measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-customize $FOLDER/data.osrm" "$RESULTS_FOLDER/osrm_customize.bench"
     measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-contract $FOLDER/data.osrm" "$RESULTS_FOLDER/osrm_contract.bench"
 
-    for ALGORITHM in mld ch; do
+    for ALGORITHM in ch mld; do
         $BINARIES_FOLDER/osrm-routed --algorithm $ALGORITHM $FOLDER/data.osrm &
         OSRM_ROUTED_PID=$!
 
