@@ -75,14 +75,15 @@ jobs:
     #     conan profile new default --detect || true
     #     conan profile update settings.compiler=clang default
     - name: Build
-      shell: bash
+      #shell: bash
       run: |
-        make --version
-        clang --version
-        mkdir build
-        cd build
-        cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
-        cmake --build . --config Release
+        .\scripts\ci\windows-build.bat
+        # make --version
+        # clang --version
+        # mkdir build
+        # cd build
+        # cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
+        # cmake --build . --config Release
 
     #    .\scripts\ci\windows-build.bat
     # - name: Run node tests
