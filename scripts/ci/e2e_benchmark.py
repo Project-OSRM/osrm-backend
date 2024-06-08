@@ -37,7 +37,7 @@ class BenchmarkRunner:
                     if code == 'NoSegment' or code == 'NoMatch':
                         continue
                 raise Exception(f"Error: {response.status_code} {response.text}")
-            times.append(end_time - start_time)
+            times.append((end_time - start_time) * 1000) # convert to ms
         
         return times
     
@@ -86,13 +86,13 @@ def main():
     runner = BenchmarkRunner()
     times = runner.run(args.method, args.host, args.num_requests)
 
-    print(f'Total: {np.sum(times)}')
-    print(f"Min time: {np.min(times)}")
-    print(f"Mean time: {np.mean(times)}")
-    print(f"Median time: {np.median(times)}")
-    print(f"95th percentile: {np.percentile(times, 95)}")
-    print(f"99th percentile: {np.percentile(times, 99)}")
-    print(f"Max time: {np.max(times)}")
+    print(f'Total: {np.sum(times)}ms')
+    print(f"Min time: {np.min(times)}ms")
+    print(f"Mean time: {np.mean(times)}ms")
+    print(f"Median time: {np.median(times)}ms")
+    print(f"95th percentile: {np.percentile(times, 95)}ms")
+    print(f"99th percentile: {np.percentile(times, 99)}ms")
+    print(f"Max time: {np.max(times)}ms")
 
 if __name__ == '__main__':
     main()
