@@ -69,15 +69,22 @@ jobs:
       shell: bash
       run: |
         # prepare data
-        pushd build
-        cp ../test/data/monaco.osm.pbf .
-        Release/osrm-extract.exe -p ../profiles/car.lua monaco.osm.pbf
+        # pushd build
+        # cp ../test/data/monaco.osm.pbf .
+        # Release/osrm-extract.exe -p ../profiles/car.lua monaco.osm.pbf
 
-        mkdir ch
-        cp ./monaco.osrm* ch/
-        Release/osrm-contract.exe ch/monaco.osrm
-        cp -rf ch/* ../test/data/ch/
-        popd
+        # mkdir ch
+        # cp ./monaco.osrm* ch/
+        # Release/osrm-contract.exe ch/monaco.osrm
+        # cp -rf ch/* ../test/data/ch/
+        # popd
+        ./lib/binding/osrm-extract.exe --help
+        
+        ./lib/binding/osrm-extract.exe -p profiles/car.lua test/data/monaco.osm.pbf
+
+        mkdir -p test/data/ch
+        cp test/data/monaco.osrm* test/data/ch/
+        ./lib/binding/osrm-contract.exe test/data/ch/monaco.osrm
 
         ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
         node test/nodejs/index.js
