@@ -24,6 +24,7 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - FIXED: Fix bugprone-unused-return-value clang-tidy warning. [#6934](https://github.com/Project-OSRM/osrm-backend/pull/6934)
       - FIXED: Fix performance-noexcept-move-constructor clang-tidy warning. [#6931](https://github.com/Project-OSRM/osrm-backend/pull/6933)
       - FIXED: Fix performance-noexcept-swap clang-tidy warning. [#6931](https://github.com/Project-OSRM/osrm-backend/pull/6931)
       - CHANGED: Use custom struct instead of std::pair in QueryHeap. [#6921](https://github.com/Project-OSRM/osrm-backend/pull/6921)
