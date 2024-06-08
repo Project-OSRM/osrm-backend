@@ -205,9 +205,9 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
             if (rc != Status::Ok || json_result.values.find("routes") == json_result.values.end())
             {
                 auto code = std::get<json::String>(json_result.values["code"]).value;
-                if (code != "NoSegment")
+                if (code != "NoSegment" && code != "NoRoute")
                 {
-                    throw std::runtime_error{"Couldn't route"};
+                    throw std::runtime_error{"Couldn't route: " + code};
                 }
             }
         }
@@ -315,9 +315,9 @@ void runMatchBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
                 json_result.values.find("matchings") == json_result.values.end())
             {
                 auto code = std::get<json::String>(json_result.values["code"]).value;
-                if (code != "NoSegment")
+                if (code != "NoSegment" && code != "NoMatch")
                 {
-                    throw std::runtime_error{"Couldn't route"};
+                    throw std::runtime_error{"Couldn't route: " + code};
                 }
             }
         }
