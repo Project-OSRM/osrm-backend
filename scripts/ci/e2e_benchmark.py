@@ -32,6 +32,8 @@ class BenchmarkRunner:
         for _ in range(num_requests):
             url = self.make_url(host, benchmark_name)
 
+            _ = requests.get(url) # warmup
+
             start_time = time.time()
             response = requests.get(url)
             end_time = time.time()
