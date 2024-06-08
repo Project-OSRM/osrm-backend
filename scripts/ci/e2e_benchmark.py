@@ -22,7 +22,11 @@ class BenchmarkRunner:
                 self.tracks[row['TrackID']].append(coord)
         self.track_ids = list(self.tracks.keys())
     
-    def run(self, benchmark_name, host, num_requests):
+    def run(self, benchmark_name, host, num_requests, warmup_requests=50):
+        for _ in range(warmup_requests):
+            url = self.make_url(host, benchmark_name)
+            _ = requests.get(url)
+    
         times = []
 
         for _ in range(num_requests):
