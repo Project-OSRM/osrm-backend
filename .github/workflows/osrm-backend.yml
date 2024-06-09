@@ -662,7 +662,7 @@ jobs:
           sudo apt-get update -y && sudo apt-get install ccache
       - name: Prepare data
         run: |
-          if [ {{ env.RUN_BIG_BENCHMARK }} ]; then
+          if [ "$RUN_BIG_BENCHMARK" = "true" ]; then
               rm -rf ~/data.osm.pbf
               wget http://download.geofabrik.de/europe/poland-latest.osm.pbf -O ~/data.osm.pbf --quiet
               gunzip -c ./pr/test/data/poland_gps_traces.csv.gz > ~/gps_traces.csv
