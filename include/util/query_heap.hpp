@@ -11,6 +11,7 @@
 #include <map>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace osrm::util
@@ -34,7 +35,7 @@ template <typename NodeID, typename Key> class ArrayStorage
 template <typename NodeID, typename Key> class UnorderedMapStorage
 {
   public:
-    explicit UnorderedMapStorage(std::size_t) {}
+    explicit UnorderedMapStorage(std::size_t) { nodes.rehash(1000); }
 
     Key &operator[](const NodeID node) { return nodes[node]; }
 
@@ -57,7 +58,8 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
     void Clear() { nodes.clear(); }
 
   private:
-    ankerl::unordered_dense::map<NodeID, Key> nodes;
+    // ankerl::unordered_dense::map<NodeID, Key> nodes;
+    std::unordered_map<NodeID, Key> nodes;
 };
 
 template <typename NodeID,
