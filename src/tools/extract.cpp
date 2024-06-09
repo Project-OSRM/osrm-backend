@@ -6,10 +6,10 @@
 #include "util/version.hpp"
 
 #include <boost/program_options.hpp>
-
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
+#include <iostream>
 #include <new>
 #include <thread>
 
