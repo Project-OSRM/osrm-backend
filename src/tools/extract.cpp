@@ -150,9 +150,6 @@ return_code parseArguments(int argc,
 int main(int argc, char *argv[])
 try
 {
-
-    std::cerr << "DEBUG 1" << std::endl;
-
     util::LogPolicy::GetInstance().Unmute();
     extractor::ExtractorConfig extractor_config;
     std::string verbosity;
@@ -170,7 +167,6 @@ try
     }
 
     util::LogPolicy::GetInstance().SetLevel(verbosity);
-
 
     extractor_config.UseDefaultOutputNames(extractor_config.input_path);
 
