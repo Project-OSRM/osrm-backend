@@ -192,14 +192,14 @@ jobs:
             CXXCOMPILER: clang++-15
             CUCUMBER_TIMEOUT: 60000
 
-          - name: clang-15-debug-clang-tidy
+          - name: clang-18-debug-clang-tidy
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: clang-15
-            CXXCOMPILER: clang++-15
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             CUCUMBER_TIMEOUT: 60000
             ENABLE_CLANG_TIDY: ON
 
@@ -627,8 +627,10 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
       GITHUB_REPOSITORY: ${{ github.repository }}
+      RUN_BIG_BENCHMARK: ${{ contains(github.event.pull_request.labels.*.name, 'Performance') }}
     steps: 
       - name: Enable data.osm.pbf cache
+        if: ${{ ! env.RUN_BIG_BENCHMARK }}        
         uses: actions/cache@v4
         with:
           path: ~/data.osm.pbf
@@ -656,17 +658,22 @@ jobs:
           path: pr
       - name: Install dependencies
         run: | 
-          python3 -m pip install "conan<2.0.0" "requests==2.31.0" "locust==2.28.0"
+          python3 -m pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" 
           sudo apt-get update -y && sudo apt-get install ccache
       - name: Prepare data
         run: |
-          if [ ! -f "~/data.osm.pbf" ]; then
-            wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
+          if [ {{ env.RUN_BIG_BENCHMARK }} ]; then
+              rm -rf ~/data.osm.pbf
+              wget http://download.geofabrik.de/europe/poland-latest.osm.pbf -O ~/data.osm.pbf --quiet
+              gunzip -c ./pr/test/data/poland_gps_traces.csv.gz > ~/gps_traces.csv
+          else
+              if [ ! -f "~/data.osm.pbf" ]; then
+                wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
+              else
+                echo "Using cached data.osm.pbf"
+              fi
+              gunzip -c ./pr/test/data/berlin_gps_traces.csv.gz > ~/gps_traces.csv
           fi
-          rm -rf ~/data.osm.pbf
-          wget http://download.geofabrik.de/europe/poland-latest.osm.pbf -O ~/data.osm.pbf --quiet
-          python3 ./pr/scripts/ci/download_gps_traces.py 20.85,52.10,21.15,52.30 16.85,51.05,17.10,51.20 18.55,54.30,18.70,54.45 19.85,50.00,20.05,50.10 16.85,52.35,17.05,52.45 > ~/gps_traces.csv
-          #gunzip -c ./pr/test/data/berlin_gps_traces.csv.gz > ~/gps_traces.csv
       - name: Prepare environment
         run: |
           echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
