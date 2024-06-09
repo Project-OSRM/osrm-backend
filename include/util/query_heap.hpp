@@ -34,7 +34,7 @@ template <typename NodeID, typename Key> class ArrayStorage
 template <typename NodeID, typename Key> class UnorderedMapStorage
 {
   public:
-    explicit UnorderedMapStorage(std::size_t)
+    explicit UnorderedMapStorage(std::size_t) {}
 
     Key &operator[](const NodeID node) { return nodes[node]; }
 
