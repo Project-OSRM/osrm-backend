@@ -31,12 +31,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JSON_CONTAINER_HPP
 #define JSON_CONTAINER_HPP
 
+#include <ankerl/unordered_dense.h>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
-
 namespace osrm::util::json
 {
 
@@ -104,7 +104,8 @@ using Value = std::variant<String, Number, Object, Array, True, False, Null>;
  */
 struct Object
 {
-    std::unordered_map<std::string, Value> values;
+    ankerl::unordered_dense::map<std::string, Value> values;
+    // std::unordered_map<std::string, Value> values;
 };
 
 /**
