@@ -412,7 +412,7 @@ void runTripBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
     auto run_benchmark = [&](const Benchmark &benchmark)
     {
         Statistics statistics;
-        auto NUM = 10000;
+        auto NUM = 1000;
         for (int i = 0; i < NUM; ++i)
         {
             engine::api::ResultT result = json::Object();
@@ -446,9 +446,9 @@ void runTripBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
     };
 
     std::vector<Benchmark> benchmarks = {
-        {"10000 trips, 3 coordinates", 3},
-        {"10000 trips, 4 coordinates", 4},
-        {"10000 trips, 5 coordinates", 5},
+        {"1000 trips, 3 coordinates", 3},
+        {"1000 trips, 4 coordinates", 4},
+        {"1000 trips, 5 coordinates", 5},
     };
 
     for (const auto &benchmark : benchmarks)
@@ -467,7 +467,7 @@ void runTableBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
     auto run_benchmark = [&](const Benchmark &benchmark)
     {
         Statistics statistics;
-        auto NUM = 1000;
+        auto NUM = 250;
         for (int i = 0; i < NUM; ++i)
         {
             engine::api::ResultT result = json::Object();
@@ -500,11 +500,10 @@ void runTableBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
         std::cout << statistics << std::endl;
     };
 
-    std::vector<Benchmark> benchmarks = {{"1000 tables, 3 coordinates", 3},
-                                         {"1000 tables, 25 coordinates", 25},
-                                         {"1000 tables, 50 coordinates", 50},
-                                         {"1000 tables, 100 coordinates", 100},
-                                         {"1000 tables, 250 coordinates", 250}};
+    std::vector<Benchmark> benchmarks = {{"250 tables, 3 coordinates", 3},
+                                         {"250 tables, 25 coordinates", 25},
+                                         {"250 tables, 50 coordinates", 50},
+                                         {"250 tables, 100 coordinates", 100}};
 
     for (const auto &benchmark : benchmarks)
     {
