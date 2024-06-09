@@ -31,36 +31,10 @@ template <typename NodeID, typename Key> class ArrayStorage
     std::vector<Key> positions;
 };
 
-template <typename NodeID, typename Key> class MapStorage
-{
-  public:
-    explicit MapStorage(std::size_t) {}
-
-    Key &operator[](NodeID node) { return nodes[node]; }
-
-    void Clear() { nodes.clear(); }
-
-    Key peek_index(const NodeID node) const
-    {
-        const auto iter = nodes.find(node);
-        if (nodes.end() != iter)
-        {
-            return iter->second;
-        }
-        return std::numeric_limits<Key>::max();
-    }
-
-  private:
-    std::map<NodeID, Key> nodes;
-};
-
 template <typename NodeID, typename Key> class UnorderedMapStorage
 {
   public:
     explicit UnorderedMapStorage(std::size_t)
-    {
-        // nodes.rehash(1000);
-    }
 
     Key &operator[](const NodeID node) { return nodes[node]; }
 
@@ -84,7 +58,6 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
 
   private:
     ankerl::unordered_dense::map<NodeID, Key> nodes;
-    //  std::unordered_map<NodeID, Key> nodes;
 };
 
 template <typename NodeID,
