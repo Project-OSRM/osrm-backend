@@ -640,6 +640,7 @@ jobs:
       CXXCOMPILER: g++-12 #clang++-13
       CC: gcc-12 #clang-13
       CXX: g++-12 #clang++-13
+      CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
       GITHUB_REPOSITORY: ${{ github.repository }}
