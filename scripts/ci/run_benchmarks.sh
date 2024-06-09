@@ -42,6 +42,12 @@ function run_benchmarks_for_folder {
     measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-customize $FOLDER/data.osrm" "$RESULTS_FOLDER/osrm_customize.bench"
     measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-contract $FOLDER/data.osrm" "$RESULTS_FOLDER/osrm_contract.bench"
 
+    for BENCH in nearest table trip route match; do
+        ./$BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" mld ~/gps_traces.csv ${BENCH} > "$RESULTS_FOLDER/random_${BENCH}_mld.bench" || true
+        ./$BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" ch ~/gps_traces.csv ${BENCH}  > "$RESULTS_FOLDER/random_${BENCH}_ch.bench" || true
+    done
+
+
     for ALGORITHM in ch mld; do
         $BINARIES_FOLDER/osrm-routed --algorithm $ALGORITHM $FOLDER/data.osrm &
         OSRM_ROUTED_PID=$!
@@ -59,8 +65,6 @@ function run_benchmarks_for_folder {
 
         kill -9 $OSRM_ROUTED_PID
     done
-
-
 }
 
 run_benchmarks_for_folder $1 "${1}_results" $2
