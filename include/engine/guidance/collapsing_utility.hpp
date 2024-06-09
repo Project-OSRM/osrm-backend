@@ -202,8 +202,8 @@ inline double totalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_
     if (entry_step.geometry_begin > exit_step.geometry_begin)
         return totalTurnAngle(exit_step, entry_step);
 
-    const auto exit_intersection = exit_step.intersections.front();
-    const auto entry_intersection = entry_step.intersections.front();
+    const auto& exit_intersection = exit_step.intersections.front();
+    const auto& entry_intersection = entry_step.intersections.front();
     if ((exit_intersection.out >= exit_intersection.bearings.size()) ||
         (entry_intersection.in >= entry_intersection.bearings.size()))
         return entry_intersection.bearings[entry_intersection.out];
