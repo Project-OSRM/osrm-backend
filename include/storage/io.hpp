@@ -13,11 +13,11 @@
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/seek.hpp>
 #include <boost/iostreams/stream.hpp>
-
 #include <cerrno>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <tuple>
 #include <type_traits>
 
