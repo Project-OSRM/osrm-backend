@@ -104,8 +104,8 @@ using Value = std::variant<String, Number, Object, Array, True, False, Null>;
  */
 struct Object
 {
-    ankerl::unordered_dense::map<std::string, Value> values;
-    // std::unordered_map<std::string, Value> values;
+    // ankerl::unordered_dense::map<std::string, Value> values;
+    std::unordered_map<std::string, Value> values;
 };
 
 /**
