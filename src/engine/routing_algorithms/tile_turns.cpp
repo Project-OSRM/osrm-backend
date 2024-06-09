@@ -49,7 +49,7 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
         {
             // operator[] will construct an empty vector at [edge.u] if there is no value.
             directed_graph[edge.u].push_back({edge.v, edge.forward_segment_id.id});
-            if (edge_based_node_info.count(edge.forward_segment_id.id) == 0)
+            if (!edge_based_node_info.contains(edge.forward_segment_id.id))
             {
                 edge_based_node_info[edge.forward_segment_id.id] = {true, get_geometry_id(edge)};
             }
@@ -64,7 +64,7 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
         if (edge.reverse_segment_id.enabled)
         {
             directed_graph[edge.v].push_back({edge.u, edge.reverse_segment_id.id});
-            if (edge_based_node_info.count(edge.reverse_segment_id.id) == 0)
+            if (!edge_based_node_info.contains(edge.reverse_segment_id.id))
             {
                 edge_based_node_info[edge.reverse_segment_id.id] = {false, get_geometry_id(edge)};
             }
@@ -106,7 +106,7 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
         {
             // If the target of this edge doesn't exist in our directed
             // graph, it's probably outside the tile, so we can skip it
-            if (directed_graph.count(approachedge.target_node) == 0)
+            if (!directed_graph.contains(approachedge.target_node))
                 continue;
 
             // For each of the outgoing edges from our target coordinate

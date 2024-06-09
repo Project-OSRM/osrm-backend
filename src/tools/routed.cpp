@@ -61,7 +61,7 @@ std::istream &operator>>(std::istream &in, EngineConfig::Algorithm &algorithm)
     in >> token;
     boost::to_lower(token);
 
-    if (token == "ch" || token == "corech")
+    if (token == "ch")
         algorithm = EngineConfig::Algorithm::CH;
     else if (token == "mld")
         algorithm = EngineConfig::Algorithm::MLD;
@@ -159,7 +159,7 @@ inline unsigned generateServerProgramOptions(const int argc,
         ("algorithm,a",
          value<EngineConfig::Algorithm>(&config.algorithm)
              ->default_value(EngineConfig::Algorithm::CH, "CH"),
-         "Algorithm to use for the data. Can be CH, CoreCH, MLD.") //
+         "Algorithm to use for the data. Can be CH, MLD.") //
         ("disable-feature-dataset",
          value<std::vector<storage::FeatureDataset>>(&config.disable_feature_dataset)->multitoken(),
          "Disables a feature dataset from being loaded into memory if not needed. Options: "

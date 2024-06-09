@@ -1,12 +1,15 @@
 # Unreleased
   - Changes from 5.27.1
     - Features
+      - REMOVED: Remove all core-CH left-overs [#6920](https://github.com/Project-OSRM/osrm-backend/pull/6920)
       - ADDED: Add support for a keepalive_timeout flag. [#6674](https://github.com/Project-OSRM/osrm-backend/pull/6674)
       - ADDED: Add support for a default_radius flag. [#6575](https://github.com/Project-OSRM/osrm-backend/pull/6575)
       - ADDED: Add support for disabling feature datasets. [#6666](https://github.com/Project-OSRM/osrm-backend/pull/6666)
       - ADDED: Add support for opposite approach request parameter. [#6842](https://github.com/Project-OSRM/osrm-backend/pull/6842)
       - ADDED: Add support for accessing edge flags in `process_segment` [#6658](https://github.com/Project-OSRM/osrm-backend/pull/6658)
     - Build:
+      - CHANGED: Upgrade clang-format to version 15. [#6919](https://github.com/Project-OSRM/osrm-backend/pull/6919)
+      - CHANGED: Use Debian Bookworm as base Docker image [#6904](https://github.com/Project-OSRM/osrm-backend/pull/6904)
       - CHANGED: Upgrade CI actions to latest versions [#6893](https://github.com/Project-OSRM/osrm-backend/pull/6893)
       - CHANGED:  Remove outdated warnings #6894 [#6894](https://github.com/Project-OSRM/osrm-backend/pull/6894)
       - ADDED: Add CI job which builds OSRM with gcc 12. [#6455](https://github.com/Project-OSRM/osrm-backend/pull/6455)
@@ -21,6 +24,16 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - FIXED: Fix bugprone-unused-return-value clang-tidy warning. [#6934](https://github.com/Project-OSRM/osrm-backend/pull/6934)
+      - FIXED: Fix performance-noexcept-move-constructor clang-tidy warning. [#6931](https://github.com/Project-OSRM/osrm-backend/pull/6933)
+      - FIXED: Fix performance-noexcept-swap clang-tidy warning. [#6931](https://github.com/Project-OSRM/osrm-backend/pull/6931)
+      - CHANGED: Use custom struct instead of std::pair in QueryHeap. [#6921](https://github.com/Project-OSRM/osrm-backend/pull/6921)
+      - CHANGED: Use std::string_view::starts_with instead of boost::starts_with. [#6918](https://github.com/Project-OSRM/osrm-backend/pull/6918)
+      - CHANGED: Get rid of boost::math::constants::* and M_PI in favor of std::numbers. [#6916](https://github.com/Project-OSRM/osrm-backend/pull/6916)
+      - CHANGED: Make constants in PackedVector constexpr. [#6917](https://github.com/Project-OSRM/osrm-backend/pull/6917)
+      - CHANGED: Use std::variant instead of mapbox::util::variant. [#6903](https://github.com/Project-OSRM/osrm-backend/pull/6903)
+      - CHANGED: Bump rapidjson to version f9d53419e912910fd8fa57d5705fa41425428c35 [#6906](https://github.com/Project-OSRM/osrm-backend/pull/6906)
+      - CHANGED: Bump mapbox/variant to version 1.2.0 [#6898](https://github.com/Project-OSRM/osrm-backend/pull/6898)
       - CHANGED: Avoid copy of std::function-based callback in path unpacking [#6895](https://github.com/Project-OSRM/osrm-backend/pull/6895)
       - CHANGED: Replace boost::hash by std::hash [#6892](https://github.com/Project-OSRM/osrm-backend/pull/6892)
       - CHANGED: Partial fix migration from boost::optional to std::optional [#6551](https://github.com/Project-OSRM/osrm-backend/issues/6551)

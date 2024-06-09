@@ -50,14 +50,14 @@ class RouteAPI : public BaseAPI
     {
         BOOST_ASSERT(!raw_routes.routes.empty());
 
-        if (response.is<flatbuffers::FlatBufferBuilder>())
+        if (std::holds_alternative<flatbuffers::FlatBufferBuilder>(response))
         {
-            auto &fb_result = response.get<flatbuffers::FlatBufferBuilder>();
+            auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(response);
             MakeResponse(raw_routes, waypoint_candidates, fb_result);
         }
         else
         {
-            auto &json_result = response.get<util::json::Object>();
+            auto &json_result = std::get<util::json::Object>(response);
             MakeResponse(raw_routes, waypoint_candidates, json_result);
         }
     }
@@ -158,8 +158,8 @@ class RouteAPI : public BaseAPI
     }
 
     template <typename ForwardIter>
-    mapbox::util::variant<flatbuffers::Offset<flatbuffers::String>,
-                          flatbuffers::Offset<flatbuffers::Vector<const fbresult::Position *>>>
+    std::variant<flatbuffers::Offset<flatbuffers::String>,
+                 flatbuffers::Offset<flatbuffers::Vector<const fbresult::Position *>>>
     MakeGeometry(flatbuffers::FlatBufferBuilder &builder, ForwardIter begin, ForwardIter end) const
     {
         if (parameters.geometries == RouteParameters::GeometriesType::Polyline)
@@ -408,8 +408,8 @@ class RouteAPI : public BaseAPI
 
         // Fill geometry
         auto overview = MakeOverview(leg_geometries);
-        mapbox::util::variant<flatbuffers::Offset<flatbuffers::String>,
-                              flatbuffers::Offset<flatbuffers::Vector<const fbresult::Position *>>>
+        std::variant<flatbuffers::Offset<flatbuffers::String>,
+                     flatbuffers::Offset<flatbuffers::Vector<const fbresult::Position *>>>
             geometry;
         if (overview)
         {
@@ -426,8 +426,7 @@ class RouteAPI : public BaseAPI
         routeObject.add_legs(legs_vector);
         if (overview)
         {
-            mapbox::util::apply_visitor(GeometryVisitor<fbresult::RouteObjectBuilder>(routeObject),
-                                        geometry);
+            std::visit(GeometryVisitor<fbresult::RouteObjectBuilder>(routeObject), geometry);
         }
 
         return routeObject.Finish();
@@ -443,23 +442,22 @@ class RouteAPI : public BaseAPI
         if (requested_annotations & RouteParameters::AnnotationsType::Speed)
         {
             double prev_speed = 0;
-            speed =
-                GetAnnotations<float>(fb_result,
-                                      leg_geometry,
-                                      [&prev_speed](const guidance::LegGeometry::Annotation &anno)
-                                      {
-                                          if (anno.duration < std::numeric_limits<float>::min())
-                                          {
-                                              return prev_speed;
-                                          }
-                                          else
-                                          {
-                                              auto speed =
-                                                  round(anno.distance / anno.duration * 10.) / 10.;
-                                              prev_speed = speed;
-                                              return util::json::clamp_float(speed);
-                                          }
-                                      });
+            speed = GetAnnotations<float>(
+                fb_result,
+                leg_geometry,
+                [&prev_speed](const guidance::LegGeometry::Annotation &anno)
+                {
+                    if (anno.duration < std::numeric_limits<float>::min())
+                    {
+                        return prev_speed;
+                    }
+                    else
+                    {
+                        auto speed = std::round(anno.distance / anno.duration * 10.) / 10.;
+                        prev_speed = speed;
+                        return util::json::clamp_float(speed);
+                    }
+                });
         }
 
         flatbuffers::Offset<flatbuffers::Vector<uint32_t>> duration;
@@ -645,7 +643,7 @@ class RouteAPI : public BaseAPI
         stepBuilder.add_rotary_pronunciation(rotary_pronunciation_string);
         stepBuilder.add_intersections(intersections_vector);
         stepBuilder.add_maneuver(maneuver_buffer);
-        mapbox::util::apply_visitor(GeometryVisitor<fbresult::StepBuilder>(stepBuilder), geometry);
+        std::visit(GeometryVisitor<fbresult::StepBuilder>(stepBuilder), geometry);
         return stepBuilder.Finish();
     };
 

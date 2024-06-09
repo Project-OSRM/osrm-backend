@@ -235,8 +235,6 @@ auto make_rtree(const std::filesystem::path &path, FixtureT &fixture)
 template <typename RTreeT = TestStaticRTree, typename FixtureT>
 void construction_test(const std::string &path, FixtureT &fixture)
 {
-    std::string leaves_path;
-    std::string nodes_path;
     auto rtree = make_rtree<RTreeT>(path, fixture);
     LinearSearchNN<TestData> lsnn(fixture.coords, fixture.edges);
 

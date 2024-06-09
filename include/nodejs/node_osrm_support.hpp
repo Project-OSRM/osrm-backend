@@ -24,11 +24,11 @@
 #include <boost/optional.hpp>
 
 #include <algorithm>
-#include <iostream>
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include <exception>
@@ -51,7 +51,7 @@ struct PluginParameters
     bool renderToBuffer = false;
 };
 
-using ObjectOrString = typename mapbox::util::variant<osrm::json::Object, std::string>;
+using ObjectOrString = typename std::variant<osrm::json::Object, std::string>;
 
 template <typename ResultT> inline Napi::Value render(const Napi::Env &env, const ResultT &result);
 
@@ -62,18 +62,18 @@ template <> Napi::Value inline render(const Napi::Env &env, const std::string &r
 
 template <> Napi::Value inline render(const Napi::Env &env, const ObjectOrString &result)
 {
-    if (result.is<osrm::json::Object>())
+    if (std::holds_alternative<osrm::json::Object>(result))
     {
         // Convert osrm::json object tree into matching v8 object tree
         Napi::Value value;
-        renderToV8(env, value, result.get<osrm::json::Object>());
+        renderToV8(env, value, std::get<osrm::json::Object>(result));
         return value;
     }
     else
     {
         // Return the string object as a node Buffer
         return Napi::Buffer<char>::Copy(
-            env, result.get<std::string>().data(), result.get<std::string>().size());
+            env, std::get<std::string>(result).data(), std::get<std::string>(result).size());
     }
 }
 
@@ -96,7 +96,7 @@ inline void ParseResult(const osrm::Status &result_status, osrm::json::Object &r
 
     if (result_status == osrm::Status::Error)
     {
-        throw std::logic_error(code_iter->second.get<osrm::json::String>().value.c_str());
+        throw std::logic_error(std::get<osrm::json::String>(code_iter->second).value.c_str());
     }
 
     result.values.erase(code_iter);
@@ -296,24 +296,19 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
         {
             engine_config->algorithm = osrm::EngineConfig::Algorithm::CH;
         }
-        else if (algorithm_str == "CoreCH")
-        {
-            engine_config->algorithm = osrm::EngineConfig::Algorithm::CH;
-        }
         else if (algorithm_str == "MLD")
         {
             engine_config->algorithm = osrm::EngineConfig::Algorithm::MLD;
         }
         else
         {
-            ThrowError(args.Env(), "algorithm option must be one of 'CH', 'CoreCH', or 'MLD'.");
+            ThrowError(args.Env(), "algorithm option must be one of 'CH', or 'MLD'.");
             return engine_config_ptr();
         }
     }
     else if (!algorithm.IsUndefined())
     {
-        ThrowError(args.Env(),
-                   "algorithm option must be a string and one of 'CH', 'CoreCH', or 'MLD'.");
+        ThrowError(args.Env(), "algorithm option must be a string and one of 'CH', or 'MLD'.");
         return engine_config_ptr();
     }
 

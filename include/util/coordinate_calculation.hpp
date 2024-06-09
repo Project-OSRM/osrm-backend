@@ -3,7 +3,7 @@
 
 #include "util/coordinate.hpp"
 
-#include <boost/math/constants/constants.hpp>
+#include <numbers>
 
 #include <algorithm>
 #include <cmath>
@@ -23,17 +23,9 @@ const constexpr double RAD_TO_DEGREE = 1. / DEGREE_TO_RAD;
 // The IUGG value for the equatorial radius is 6378.137 km (3963.19 miles)
 const constexpr long double EARTH_RADIUS = 6372797.560856;
 
-inline double degToRad(const double degree)
-{
-    using namespace boost::math::constants;
-    return degree * (pi<double>() / 180.0);
-}
+inline double degToRad(const double degree) { return degree * (std::numbers::pi / 180.0); }
 
-inline double radToDeg(const double radian)
-{
-    using namespace boost::math::constants;
-    return radian * (180.0 * (1. / pi<double>()));
-}
+inline double radToDeg(const double radian) { return radian * (180.0 * std::numbers::inv_pi); }
 } // namespace detail
 
 const constexpr static double METERS_PER_DEGREE_LAT = 110567.0;

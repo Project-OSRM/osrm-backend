@@ -325,7 +325,7 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                            EdgeDuration initial_duration,
                            EdgeDistance initial_distance)
     {
-        if (target_nodes_index.count(node))
+        if (target_nodes_index.contains(node))
         {
             // Source and target on the same edge node. If target is not reachable directly via
             // the node (e.g destination is before source on oneway segment) we want to allow

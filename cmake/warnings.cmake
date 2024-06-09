@@ -79,3 +79,8 @@ add_warning(tautological-compare)
 add_warning(trampolines)
 # these warnings are not enabled by default
 # no_warning(name-of-warning)
+no_warning(deprecated-comma-subscript)
+no_warning(comma-subscript)
+no_warning(ambiguous-reversed-operator)
+no_warning(restrict)
+no_warning(free-nonheap-object)

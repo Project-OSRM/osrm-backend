@@ -41,7 +41,7 @@ inline bool hasValidLanes(const guidance::IntermediateIntersection &intersection
     return intersection.lanes.lanes_in_turn > 0;
 }
 
-util::json::Array coordinateToLonLat(const util::Coordinate &coordinate);
+util::json::Value coordinateToLonLat(const util::Coordinate &coordinate);
 
 /**
  * Ensures that a bearing value is a whole number, and clamped to the range 0-359
@@ -79,7 +79,7 @@ util::json::Object makeGeoJSONGeometry(ForwardIter begin, ForwardIter end)
         coordinates.values.push_back(location);
         coordinates.values.push_back(location);
     }
-    geojson.values["coordinates"] = std::move(coordinates);
+    geojson.values["coordinates"] = util::json::Value{std::move(coordinates)};
 
     return geojson;
 }

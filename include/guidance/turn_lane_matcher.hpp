@@ -5,7 +5,6 @@
 #include "guidance/turn_instruction.hpp"
 #include "guidance/turn_lane_data.hpp"
 
-#include "util/attributes.hpp"
 #include "util/guidance/turn_lanes.hpp"
 #include "util/node_based_graph.hpp"
 
@@ -34,12 +33,12 @@ findBestMatchForReverse(const extractor::TurnLaneType::Mask leftmost_tag,
 bool canMatchTrivially(const Intersection &intersection, const LaneDataVector &lane_data);
 
 // perform a trivial match on the turn lanes
-OSRM_ATTR_WARN_UNUSED
-Intersection triviallyMatchLanesToTurns(Intersection intersection,
-                                        const LaneDataVector &lane_data,
-                                        const util::NodeBasedDynamicGraph &node_based_graph,
-                                        const LaneDescriptionID lane_string_id,
-                                        util::guidance::LaneDataIdMap &lane_data_to_id);
+[[nodiscard]] Intersection
+triviallyMatchLanesToTurns(Intersection intersection,
+                           const LaneDataVector &lane_data,
+                           const util::NodeBasedDynamicGraph &node_based_graph,
+                           const LaneDescriptionID lane_string_id,
+                           util::guidance::LaneDataIdMap &lane_data_to_id);
 
 } // namespace osrm::guidance::lanes
 

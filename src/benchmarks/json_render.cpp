@@ -86,7 +86,7 @@ json::Object load(const char *filename)
 
     json::Value result;
     convert(document, result);
-    return result.get<json::Object>();
+    return std::get<json::Object>(result);
 }
 
 } // namespace

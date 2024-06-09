@@ -12,14 +12,11 @@ set -o nounset
 OSMIUM_PATH="osmcode/libosmium"
 OSMIUM_TAG=v2.14.0
 
-VARIANT_PATH="mapbox/variant"
-VARIANT_TAG=v1.1.3
-
 SOL_PATH="ThePhD/sol2"
-SOL_TAG=v2.17.5
+SOL_TAG=v3.3.0
 
 RAPIDJSON_PATH="Tencent/rapidjson"
-RAPIDJSON_TAG=v1.1.0
+RAPIDJSON_TAG=f9d53419e912910fd8fa57d5705fa41425428c35
 
 MICROTAR_PATH="rxi/microtar"
 MICROTAR_TAG=v0.1.0
@@ -34,7 +31,7 @@ FMT_PATH="fmtlib/fmt"
 FMT_TAG=v10.2.1
 
 function update_subtree () {
-    name=${1^^}
+    name=$(echo "$1" | tr '[:lower:]' '[:upper:]')
     path=$(tmpvar=${name}_PATH && echo ${!tmpvar})
     tag=$(tmpvar=${name}_TAG && echo ${!tmpvar})
     dir=$(basename $path)
@@ -56,6 +53,6 @@ function update_subtree () {
 }
 
 ## Update dependencies
-for dep in osmium variant sol rapidjson microtar protozero vtzero fmt; do
+for dep in osmium sol rapidjson microtar protozero vtzero fmt; do
     update_subtree $dep
 done

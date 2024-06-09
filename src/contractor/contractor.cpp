@@ -1,7 +1,6 @@
 #include "contractor/contractor.hpp"
 #include "contractor/contract_excludable_graph.hpp"
 #include "contractor/contracted_edge_container.hpp"
-#include "contractor/crc32_processor.hpp"
 #include "contractor/files.hpp"
 #include "contractor/graph_contractor.hpp"
 #include "contractor/graph_contractor_adaptors.hpp"

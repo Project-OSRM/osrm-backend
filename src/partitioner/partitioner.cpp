@@ -15,7 +15,6 @@
 
 #include "util/coordinate.hpp"
 #include "util/geojson_debug_logger.hpp"
-#include "util/geojson_debug_policies.hpp"
 #include "util/integer_range.hpp"
 #include "util/json_container.hpp"
 #include "util/log.hpp"

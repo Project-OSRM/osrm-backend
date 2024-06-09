@@ -53,14 +53,10 @@ namespace osrm::engine
  *
  * In addition, shared memory can be used for datasets loaded with osrm-datastore.
  *
- * You can chose between three algorithms:
+ * You can chose between two algorithms:
  *  - Algorithm::CH
  *      Contraction Hierarchies, extremely fast queries but slow pre-processing. The default right
  * now.
- *  - Algorithm::CoreCH
- *      Deprecated, to be removed in v6.0
- *      Contraction Hierachies with partial contraction for faster pre-processing but slower
- * queries.
  *  - Algorithm::MLD
  *      Multi Level Dijkstra, moderately fast in both pre-processing and query.
  *
@@ -73,7 +69,6 @@ struct EngineConfig final
     enum class Algorithm
     {
         CH,
-        CoreCH, // Deprecated, will be removed in v6.0
         MLD
     };
 

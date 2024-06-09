@@ -2,7 +2,6 @@
 #define OSRM_GUIDANCE_TURN_LANE_DATA_HPP_
 
 #include "extractor/turn_lane_types.hpp"
-#include "util/attributes.hpp"
 #include "util/typedefs.hpp"
 #include <vector>
 
@@ -23,8 +22,8 @@ struct TurnLaneData
 using LaneDataVector = std::vector<TurnLaneData>;
 
 // convertes a string given in the OSM format into a TurnLaneData vector
-OSRM_ATTR_WARN_UNUSED
-LaneDataVector laneDataFromDescription(const extractor::TurnLaneDescription &turn_lane_description);
+[[nodiscard]] LaneDataVector
+laneDataFromDescription(const extractor::TurnLaneDescription &turn_lane_description);
 
 // Locate A Tag in a lane data vector (if multiple tags are set, the first one found is returned)
 LaneDataVector::const_iterator findTag(const extractor::TurnLaneType::Mask tag,

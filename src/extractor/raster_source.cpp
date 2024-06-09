@@ -40,8 +40,8 @@ RasterDatum RasterSource::GetRasterData(const int lon, const int lat) const
         return {};
     }
 
-    const std::size_t xth = static_cast<std::size_t>(round((lon - xmin) / xstep));
-    const std::size_t yth = static_cast<std::size_t>(round((ymax - lat) / ystep));
+    const std::size_t xth = static_cast<std::size_t>(std::round((lon - xmin) / xstep));
+    const std::size_t yth = static_cast<std::size_t>(std::round((ymax - lat) / ystep));
 
     return {raster_data(xth, yth)};
 }

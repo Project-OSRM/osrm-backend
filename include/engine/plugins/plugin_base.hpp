@@ -95,7 +95,7 @@ class BasePlugin
                  const std::string &message,
                  osrm::engine::api::ResultT &result) const
     {
-        mapbox::util::apply_visitor(ErrorRenderer(code, message), result);
+        std::visit(ErrorRenderer(code, message), result);
         return Status::Error;
     }
 

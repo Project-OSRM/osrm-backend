@@ -67,7 +67,7 @@ template <typename Out> struct Renderer
             write('\"');
             write(it->first);
             write<>("\":");
-            mapbox::util::apply_visitor(Renderer(out), it->second);
+            std::visit(Renderer(out), it->second);
             if (++it != end)
             {
                 write(',');
@@ -81,7 +81,7 @@ template <typename Out> struct Renderer
         write('[');
         for (auto it = array.values.cbegin(), end = array.values.cend(); it != end;)
         {
-            mapbox::util::apply_visitor(Renderer(out), *it);
+            std::visit(Renderer(out), *it);
             if (++it != end)
             {
                 write(',');

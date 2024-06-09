@@ -6,7 +6,6 @@
 #include "extractor/name_table.hpp"
 #include "extractor/suffix_table.hpp"
 
-#include "util/attributes.hpp"
 #include "util/typedefs.hpp"
 
 #include <algorithm>
@@ -14,9 +13,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 
 namespace osrm::util::guidance
 {
@@ -128,8 +124,7 @@ inline bool requiresNameAnnounced(const StringView &from_name,
 
     // check similarity of names
     const auto names_are_empty = from_name.empty() && to_name.empty();
-    const auto name_is_contained =
-        boost::starts_with(from_name, to_name) || boost::starts_with(to_name, from_name);
+    const auto name_is_contained = from_name.starts_with(to_name) || to_name.starts_with(from_name);
 
     const auto checkForPrefixOrSuffixChange = [](const std::string_view first,
                                                  const std::string_view second,

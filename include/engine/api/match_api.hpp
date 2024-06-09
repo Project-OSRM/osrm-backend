@@ -30,14 +30,14 @@ class MatchAPI final : public RouteAPI
                       osrm::engine::api::ResultT &response) const
     {
         BOOST_ASSERT(sub_matchings.size() == sub_routes.size());
-        if (response.is<flatbuffers::FlatBufferBuilder>())
+        if (std::holds_alternative<flatbuffers::FlatBufferBuilder>(response))
         {
-            auto &fb_result = response.get<flatbuffers::FlatBufferBuilder>();
+            auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(response);
             MakeResponse(sub_matchings, sub_routes, fb_result);
         }
         else
         {
-            auto &json_result = response.get<util::json::Object>();
+            auto &json_result = std::get<util::json::Object>(response);
             MakeResponse(sub_matchings, sub_routes, json_result);
         }
     }

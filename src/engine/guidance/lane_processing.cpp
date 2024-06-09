@@ -125,9 +125,9 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
 
                 if (previous_is_straight)
                 {
-                    if (isLeftTurn(current_inst) || is_straight_left.count(&current) > 0)
+                    if (isLeftTurn(current_inst) || is_straight_left.contains(&current))
                         is_straight_left.insert(&previous);
-                    else if (isRightTurn(current_inst) || is_straight_right.count(&current) > 0)
+                    else if (isRightTurn(current_inst) || is_straight_right.contains(&current))
                         is_straight_right.insert(&previous);
                 }
 
@@ -190,9 +190,9 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
                     //
                     // coming from right, going to left (in direction of way) -> handle as left turn
 
-                    if (is_straight_left.count(&current) > 0)
+                    if (is_straight_left.contains(&current))
                         anticipate_for_left_turn();
-                    else if (is_straight_right.count(&current) > 0)
+                    else if (is_straight_right.contains(&current))
                         anticipate_for_right_turn();
                     else // FIXME: right-sided driving
                         anticipate_for_right_turn();
