@@ -340,8 +340,8 @@ class RouteAPI : public BaseAPI
                                   unpacked_path_segments,
                                   source_traversed_in_reverse,
                                   target_traversed_in_reverse);
-        std::vector<guidance::RouteLeg> legs = legs_info.first;
-        std::vector<guidance::LegGeometry> leg_geometries = legs_info.second;
+        std::vector<guidance::RouteLeg>& legs = legs_info.first;
+        std::vector<guidance::LegGeometry>& leg_geometries = legs_info.second;
         auto route = guidance::assembleRoute(legs);
 
         // Fill legs
@@ -716,8 +716,8 @@ class RouteAPI : public BaseAPI
                                   unpacked_path_segments,
                                   source_traversed_in_reverse,
                                   target_traversed_in_reverse);
-        std::vector<guidance::RouteLeg> legs = legs_info.first;
-        std::vector<guidance::LegGeometry> leg_geometries = legs_info.second;
+        std::vector<guidance::RouteLeg>& legs = legs_info.first;
+        std::vector<guidance::LegGeometry>& leg_geometries = legs_info.second;
 
         auto route = guidance::assembleRoute(legs);
         boost::optional<util::json::Value> json_overview =
