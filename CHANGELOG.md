@@ -24,6 +24,7 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: Avoid copy of intersection in totalTurnAngle. [#6938](https://github.com/Project-OSRM/osrm-backend/pull/6938)
       - CHANGED: Use std::unordered_map::emplace instead of operator[] when producing JSONs. [#6936](https://github.com/Project-OSRM/osrm-backend/pull/6936)
       - CHANGED: Avoid copy of vectors in MakeRoute function. [#6939](https://github.com/Project-OSRM/osrm-backend/pull/6939)
       - FIXED: Fix bugprone-unused-return-value clang-tidy warning. [#6934](https://github.com/Project-OSRM/osrm-backend/pull/6934)
