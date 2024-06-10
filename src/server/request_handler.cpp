@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <string>
 #include <thread>
+#include <variant>
 
 namespace osrm::server
 {
@@ -38,17 +39,17 @@ void SendResponse(ServiceHandler::ResultT &result, http::reply &current_reply)
     current_reply.headers.emplace_back("Access-Control-Allow-Methods", "GET");
     current_reply.headers.emplace_back("Access-Control-Allow-Headers",
                                        "X-Requested-With, Content-Type");
-    if (result.is<util::json::Object>())
+    if (std::holds_alternative<util::json::Object>(result))
     {
         current_reply.headers.emplace_back("Content-Type", "application/json; charset=UTF-8");
         current_reply.headers.emplace_back("Content-Disposition",
                                            "inline; filename=\"response.json\"");
 
-        util::json::render(current_reply.content, result.get<util::json::Object>());
+        util::json::render(current_reply.content, std::get<util::json::Object>(result));
     }
-    else if (result.is<flatbuffers::FlatBufferBuilder>())
+    else if (std::holds_alternative<flatbuffers::FlatBufferBuilder>(result))
     {
-        auto &buffer = result.get<flatbuffers::FlatBufferBuilder>();
+        auto &buffer = std::get<flatbuffers::FlatBufferBuilder>(result);
         current_reply.content.resize(buffer.GetSize());
         std::copy(buffer.GetBufferPointer(),
                   buffer.GetBufferPointer() + buffer.GetSize(),
@@ -59,10 +60,10 @@ void SendResponse(ServiceHandler::ResultT &result, http::reply &current_reply)
     }
     else
     {
-        BOOST_ASSERT(result.is<std::string>());
-        current_reply.content.resize(result.get<std::string>().size());
-        std::copy(result.get<std::string>().cbegin(),
-                  result.get<std::string>().cend(),
+        BOOST_ASSERT(std::holds_alternative<std::string>(result));
+        current_reply.content.resize(std::get<std::string>(result).size());
+        std::copy(std::get<std::string>(result).cbegin(),
+                  std::get<std::string>(result).cend(),
                   current_reply.content.begin());
 
         current_reply.headers.emplace_back("Content-Type", "application/x-protobuf");
@@ -127,7 +128,7 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
 
             current_reply.status = http::reply::bad_request;
             result = util::json::Object();
-            auto &json_result = result.get<util::json::Object>();
+            auto &json_result = std::get<util::json::Object>(result);
             json_result.values["code"] = "InvalidUrl";
             json_result.values["message"] = "URL string malformed close to position " +
                                             std::to_string(position) + ": \"" + context + "\"";
@@ -174,7 +175,7 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
         current_reply.status = http::reply::bad_request;
 
         ServiceHandler::ResultT result = util::json::Object();
-        auto &json_result = result.get<util::json::Object>();
+        auto &json_result = std::get<util::json::Object>(result);
         json_result.values["code"] = "DisabledDataset";
         json_result.values["message"] = e.what();
         SendResponse(result, current_reply);

@@ -20,19 +20,19 @@ BOOST_AUTO_TEST_CASE(test_json_linestring)
 
     auto geom = engine::api::json::makeGeoJSONGeometry(begin(locations), end(locations));
 
-    const auto type = geom.values["type"].get<util::json::String>().value;
+    const auto type = std::get<util::json::String>(geom.values["type"]).value;
     BOOST_CHECK_EQUAL(type, "LineString");
 
-    const auto coords = geom.values["coordinates"].get<util::json::Array>().values;
+    const auto coords = std::get<util::json::Array>(geom.values["coordinates"]).values;
     BOOST_CHECK_EQUAL(coords.size(), 3); // array of three location arrays
 
     for (const auto &each : coords)
     {
-        const auto loc = each.get<util::json::Array>().values;
+        const auto loc = std::get<util::json::Array>(each).values;
         BOOST_CHECK_EQUAL(loc.size(), 2);
 
-        const auto lon = loc[0].get<util::json::Number>().value;
-        const auto lat = loc[1].get<util::json::Number>().value;
+        const auto lon = std::get<util::json::Number>(loc[0]).value;
+        const auto lat = std::get<util::json::Number>(loc[1]).value;
 
         (void)lon;
         (void)lat;
@@ -46,19 +46,19 @@ BOOST_AUTO_TEST_CASE(test_json_single_point)
 
     auto geom = engine::api::json::makeGeoJSONGeometry(begin(locations), end(locations));
 
-    const auto type = geom.values["type"].get<util::json::String>().value;
+    const auto type = std::get<util::json::String>(geom.values["type"]).value;
     BOOST_CHECK_EQUAL(type, "LineString");
 
-    const auto coords = geom.values["coordinates"].get<util::json::Array>().values;
+    const auto coords = std::get<util::json::Array>(geom.values["coordinates"]).values;
     BOOST_CHECK_EQUAL(coords.size(), 2); // array of two location arrays
 
     for (const auto &each : coords)
     {
-        const auto loc = each.get<util::json::Array>().values;
+        const auto loc = std::get<util::json::Array>(each).values;
         BOOST_CHECK_EQUAL(loc.size(), 2);
 
-        const auto lon = loc[0].get<util::json::Number>().value;
-        const auto lat = loc[1].get<util::json::Number>().value;
+        const auto lon = std::get<util::json::Number>(loc[0]).value;
+        const auto lat = std::get<util::json::Number>(loc[1]).value;
 
         (void)lon;
         (void)lat;

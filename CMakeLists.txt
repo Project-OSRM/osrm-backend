@@ -120,8 +120,7 @@ endif()
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sol2-3.3.0/include)
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/variant/include)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sol2/include)
 
 set(BOOST_COMPONENTS date_time chrono filesystem iostreams program_options regex system thread unit_test_framework)
 
@@ -267,7 +266,6 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   add_dependency_defines(-DBOOST_LIB_DIAGNOSTIC)
   add_dependency_defines(-D_CRT_SECURE_NO_WARNINGS)
   add_dependency_defines(-DNOMINMAX) # avoid min and max macros that can break compilation
-  add_dependency_defines(-D_USE_MATH_DEFINES) #needed for M_PI with cmath.h
   add_dependency_defines(-D_WIN32_WINNT=0x0501)
   add_dependency_defines(-DXML_STATIC)
   find_library(ws2_32_LIBRARY_PATH ws2_32)
@@ -607,7 +605,6 @@ if (BUILD_ROUTED)
   set_property(TARGET osrm-routed PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif()
 
-file(GLOB VariantGlob third_party/variant/include/mapbox/*.hpp)
 file(GLOB FlatbuffersGlob third_party/flatbuffers/include/flatbuffers/*.h)
 file(GLOB LibraryGlob include/osrm/*.hpp)
 file(GLOB ParametersGlob include/engine/api/*_parameters.hpp)
@@ -627,7 +624,6 @@ install(FILES ${ContractorHeader} DESTINATION include/osrm/contractor)
 install(FILES ${LibraryGlob} DESTINATION include/osrm)
 install(FILES ${ParametersGlob} DESTINATION include/osrm/engine/api)
 install(FILES ${ApiHeader} DESTINATION include/osrm/engine/api)
-install(FILES ${VariantGlob} DESTINATION include/mapbox)
 install(FILES ${FlatbuffersGlob} DESTINATION include/flatbuffers)
 install(TARGETS osrm-extract DESTINATION bin)
 install(TARGETS osrm-partition DESTINATION bin)

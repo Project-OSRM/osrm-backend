@@ -15,7 +15,6 @@ env:
   CCACHE_TEMPDIR: /tmp/.ccache-temp
   CCACHE_COMPRESS: 1
   CASHER_TIME_OUT: 599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
-  CCACHE_VERSION: 3.3.1
   CMAKE_VERSION: 3.21.2
   ENABLE_NODE_BINDINGS: "ON"
 
@@ -47,15 +46,32 @@ jobs:
         echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
     - run: npm install --ignore-scripts
     - run: npm link --ignore-scripts
-    - uses: microsoft/setup-msbuild@v2
     - name: Build
-      run: |
-        .\scripts\ci\windows-build.bat
-    - name: Run node tests
       shell: bash
       run: |
-        ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
-        node test/nodejs/index.js
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
+        cmake --build . --config Release
+        
+    # TODO: MSVC goes out of memory when building our tests
+    # - name: Run tests
+    #   shell: bash
+    #   run: |
+    #     cd build
+    #     cmake --build . --config Release --target tests
+    #     # TODO: run tests
+    # - name: Run node tests
+    #   shell: bash
+    #   run: |
+    #     ./lib/binding/osrm-extract.exe -p profiles/car.lua test/data/monaco.osm.pbf
+
+    #     mkdir -p test/data/ch
+    #     cp test/data/monaco.osrm* test/data/ch/
+    #     ./lib/binding/osrm-contract.exe test/data/ch/monaco.osrm
+
+    #     ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
+    #     node test/nodejs/index.js
     - name: Build Node package
       shell: bash
       run: ./scripts/ci/node_package.sh
@@ -193,16 +209,17 @@ jobs:
             CXXCOMPILER: clang++-15
             CUCUMBER_TIMEOUT: 60000
 
-          - name: clang-15-debug-clang-tidy
+          - name: clang-18-debug-clang-tidy
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: clang-15
-            CXXCOMPILER: clang++-15
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             CUCUMBER_TIMEOUT: 60000
             ENABLE_CLANG_TIDY: ON
+
 
           - name: clang-14-release
             continue-on-error: false
@@ -245,6 +262,16 @@ jobs:
             CXXCOMPILER: clang++-15
             ENABLE_CONAN: ON
 
+          - name: gcc-14-release
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-24.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-14
+            CXXCOMPILER: g++-14
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+
           - name: gcc-13-release
             continue-on-error: false
             node: 20
@@ -264,15 +291,6 @@ jobs:
             CCOMPILER: gcc-12
             CXXCOMPILER: g++-12
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
-
-          - name: gcc-11-release
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-22.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-11
-            CXXCOMPILER: g++-11
 
           - name: conan-linux-release-node
             build_node_package: true
@@ -377,9 +395,11 @@ jobs:
         key: v4-test-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
           v4-test-${{ matrix.name }}-
-
     - name: Prepare environment
       run: |
+        echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
+        mkdir -p $HOME/.ccache
+
         PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
         echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
         echo "OSRM_INSTALL_DIR=${GITHUB_WORKSPACE}/install-osrm" >> $GITHUB_ENV
@@ -456,7 +476,7 @@ jobs:
         fi
 
         # TBB
-        TBB_VERSION=2021.3.0
+        TBB_VERSION=2021.12.0
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
           TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz"
         elif [[ "${RUNNER_OS}" == "macOS" ]]; then
@@ -487,8 +507,8 @@ jobs:
       run: |
         echo "Using ${JOBS} jobs"
         pushd ${OSRM_BUILD_DIR}
-
-
+        
+        ccache --zero-stats
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                  -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
                  -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
@@ -505,7 +525,7 @@ jobs:
         if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
           make tests --jobs=${JOBS}
           make benchmarks --jobs=${JOBS}
-          ccache -s
+
           sudo make install
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
             echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib" >> $GITHUB_ENV
@@ -608,7 +628,10 @@ jobs:
         omitNameDuringUpdate: true
         replacesArtifacts: true
         token: ${{ secrets.GITHUB_TOKEN }}
-
+    - name: Show CCache statistics
+      run: |
+        ccache -p
+        ccache -s
 
   benchmarks:
     if: github.event_name == 'pull_request'
@@ -622,7 +645,16 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
       GITHUB_REPOSITORY: ${{ github.repository }}
+      RUN_BIG_BENCHMARK: ${{ contains(github.event.pull_request.labels.*.name, 'Performance') }}
     steps: 
+      - name: Enable data.osm.pbf cache
+        if: ${{ ! env.RUN_BIG_BENCHMARK }}        
+        uses: actions/cache@v4
+        with:
+          path: ~/data.osm.pbf
+          key: v1-data-osm-pbf
+          restore-keys: |
+            v1-data-osm-pbf
       - name: Enable compiler cache
         uses: actions/cache@v4
         with:
@@ -642,7 +674,30 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           path: pr
-      - run: python3 -m pip install "conan<2.0.0" "requests==2.31.0"
+      - name: Install dependencies
+        run: | 
+          python3 -m pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" 
+          sudo apt-get update -y && sudo apt-get install ccache
+      - name: Prepare data
+        run: |
+          if [ "$RUN_BIG_BENCHMARK" = "true" ]; then
+              rm -rf ~/data.osm.pbf
+              wget http://download.geofabrik.de/europe/poland-latest.osm.pbf -O ~/data.osm.pbf --quiet
+              gunzip -c ./pr/test/data/poland_gps_traces.csv.gz > ~/gps_traces.csv
+          else
+              if [ ! -f "~/data.osm.pbf" ]; then
+                wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
+              else
+                echo "Using cached data.osm.pbf"
+              fi
+              gunzip -c ./pr/test/data/berlin_gps_traces.csv.gz > ~/gps_traces.csv
+          fi
+      - name: Prepare environment
+        run: |
+          echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
+          mkdir -p $HOME/.ccache
+          ccache --zero-stats
+          ccache --max-size=256M
       - name: Build PR Branch
         run: |
           mkdir -p pr/build
@@ -672,6 +727,10 @@ jobs:
       - name: Post Benchmark Results
         run: |
           python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
+      - name: Show CCache statistics
+        run: |
+          ccache -p
+          ccache -s
 
   ci-complete:
     runs-on: ubuntu-22.04

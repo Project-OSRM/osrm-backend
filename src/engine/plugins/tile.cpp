@@ -497,13 +497,13 @@ void encodeVectorTile(const DataFacadeBase &facade,
                     {
                         // Calculate the speed for this line
                         std::uint32_t speed_kmh_idx = static_cast<std::uint32_t>(
-                            round(length / from_alias<double>(forward_duration) * 10 * 3.6));
+                            std::round(length / from_alias<double>(forward_duration) * 10 * 3.6));
 
                         // Rate values are in meters per weight-unit - and similar to speeds, we
                         // present 1 decimal place of precision (these values are added as
                         // double/10) lower down
                         std::uint32_t forward_rate = static_cast<std::uint32_t>(
-                            round(length / from_alias<double>(forward_weight) * 10.));
+                            std::round(length / from_alias<double>(forward_weight) * 10.));
 
                         auto tile_line = coordinatesToTileLine(a, b, tile_bbox);
                         if (!tile_line.empty())
@@ -531,13 +531,13 @@ void encodeVectorTile(const DataFacadeBase &facade,
                     {
                         // Calculate the speed for this line
                         std::uint32_t speed_kmh_idx = static_cast<std::uint32_t>(
-                            round(length / from_alias<double>(reverse_duration) * 10 * 3.6));
+                            std::round(length / from_alias<double>(reverse_duration) * 10 * 3.6));
 
                         // Rate values are in meters per weight-unit - and similar to speeds, we
                         // present 1 decimal place of precision (these values are added as
                         // double/10) lower down
                         std::uint32_t reverse_rate = static_cast<std::uint32_t>(
-                            round(length / from_alias<double>(reverse_weight) * 10.));
+                            std::round(length / from_alias<double>(reverse_weight) * 10.));
 
                         auto tile_line = coordinatesToTileLine(b, a, tile_bbox);
                         if (!tile_line.empty())
@@ -663,7 +663,7 @@ Status TilePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 {
     BOOST_ASSERT(parameters.IsValid());
 
-    auto &pbf_buffer = result.get<std::string>();
+    auto &pbf_buffer = std::get<std::string>(result);
     const auto &facade = algorithms.GetFacade();
     auto edges = getEdges(facade, parameters.x, parameters.y, parameters.z);
     auto segregated_nodes = getSegregatedNodes(facade, edges);
