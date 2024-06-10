@@ -510,17 +510,18 @@ std::optional<std::pair<NodeID, EdgeWeight>> runSearch(const DataFacade<Algorith
     EdgeWeight weight = weight_upper_bound;
     EdgeWeight forward_heap_min = forward_heap.MinKey();
     EdgeWeight reverse_heap_min = reverse_heap.MinKey();
-    // if (!reverse_heap.Empty())
-    //     reverse_heap_min = reverse_heap.MinKey();
-    #if 0
+// if (!reverse_heap.Empty())
+//     reverse_heap_min = reverse_heap.MinKey();
+#if 0
     while (forward_heap.Size() + reverse_heap.Size() > 0 && (
            forward_heap_min < weight || reverse_heap_min < weight))
-    #else
-        while (forward_heap.Size() + reverse_heap.Size() > 0 && (
-           forward_heap_min + reverse_heap_min < weight))
-    #endif
+#else
+    while (forward_heap.Size() + reverse_heap.Size() > 0 &&
+           (forward_heap_min + reverse_heap_min < weight))
+#endif
     {
-       // std::cerr << "F: " << forward_heap_min << " R: " << reverse_heap_min << " W: " << weight << std::endl;
+        // std::cerr << "F: " << forward_heap_min << " R: " << reverse_heap_min << " W: " << weight
+        // << std::endl;
 
         if (!forward_heap.Empty())
         {
@@ -531,7 +532,7 @@ std::optional<std::pair<NodeID, EdgeWeight>> runSearch(const DataFacade<Algorith
         }
         if (!reverse_heap.Empty())
         {
-           routingStep<REVERSE_DIRECTION>(
+            routingStep<REVERSE_DIRECTION>(
                 facade, reverse_heap, forward_heap, middle, weight, force_step_nodes, args...);
             if (!reverse_heap.Empty())
                 reverse_heap_min = reverse_heap.MinKey();
@@ -653,7 +654,7 @@ searchDistance(SearchEngineData<Algorithm> &,
     }
 
     auto [middle, weight] = *searchResult;
-    //std::cerr << "W: " << weight << std::endl;
+    // std::cerr << "W: " << weight << std::endl;
     auto distance = forward_heap.GetData(middle).distance + reverse_heap.GetData(middle).distance;
 
     return distance;
@@ -752,38 +753,52 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
     //     }
     // }
 
-
-  //  forward_heap.Clear();
- if (forward_heap.Empty()) {
-    if (source_phantom.IsValidForwardSource())
+    //  forward_heap.Clear();
+    if (forward_heap.Empty())
     {
-        forward_heap.Insert(source_phantom.forward_segment_id.id,
-                            EdgeWeight{0},
-                            {source_phantom.forward_segment_id.id, false, EdgeDistance{0}});
-    }
+        if (source_phantom.IsValidForwardSource())
+        {
+            forward_heap.Insert(source_phantom.forward_segment_id.id,
+                                EdgeWeight{0},
+                                {source_phantom.forward_segment_id.id, false, EdgeDistance{0}});
+        }
 
-    if (source_phantom.IsValidReverseSource())
-    {
-        forward_heap.Insert(source_phantom.reverse_segment_id.id,
-                            EdgeWeight{0},
-                            {source_phantom.reverse_segment_id.id, false, EdgeDistance{0}});
-    }
-} else {
-    if (target_phantom.IsValidForwardTarget()) {
-        if (forward_heap.WasInserted(target_phantom.forward_segment_id.id)) {
-            std::cerr << "Found " << target_phantom.forward_segment_id.id << " in forward_heap" << std::endl;
-        } else {
-            std::cerr << "Not found " << target_phantom.forward_segment_id.id << " in forward_heap" << std::endl;
+        if (source_phantom.IsValidReverseSource())
+        {
+            forward_heap.Insert(source_phantom.reverse_segment_id.id,
+                                EdgeWeight{0},
+                                {source_phantom.reverse_segment_id.id, false, EdgeDistance{0}});
         }
     }
-    if (target_phantom.IsValidReverseTarget()) {
-        if (forward_heap.WasInserted(target_phantom.reverse_segment_id.id)) {
-            std::cerr << "Found " << target_phantom.reverse_segment_id.id << " in forward_heap" << std::endl;
-        } else {
-            std::cerr << "Not found " << target_phantom.reverse_segment_id.id << " in forward_heap" << std::endl;
+    else
+    {
+        if (target_phantom.IsValidForwardTarget())
+        {
+            if (forward_heap.WasInserted(target_phantom.forward_segment_id.id))
+            {
+                std::cerr << "Found " << target_phantom.forward_segment_id.id << " in forward_heap"
+                          << std::endl;
+            }
+            else
+            {
+                std::cerr << "Not found " << target_phantom.forward_segment_id.id
+                          << " in forward_heap" << std::endl;
+            }
+        }
+        if (target_phantom.IsValidReverseTarget())
+        {
+            if (forward_heap.WasInserted(target_phantom.reverse_segment_id.id))
+            {
+                std::cerr << "Found " << target_phantom.reverse_segment_id.id << " in forward_heap"
+                          << std::endl;
+            }
+            else
+            {
+                std::cerr << "Not found " << target_phantom.reverse_segment_id.id
+                          << " in forward_heap" << std::endl;
+            }
         }
     }
-}
 
     if (target_phantom.IsValidForwardTarget())
     {
