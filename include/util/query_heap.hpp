@@ -5,6 +5,7 @@
 #include <boost/heap/d_ary_heap.hpp>
 
 #include <algorithm>
+#include <boost/pool/pool_alloc.hpp>
 #include <cstdint>
 #include <limits>
 #include <map>
@@ -121,7 +122,16 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
     void Clear() { nodes.clear(); }
 
   private:
-    std::unordered_map<NodeID, Key> nodes;
+    template <typename T>
+    using PoolAllocator = boost::fast_pool_allocator<T,
+                                                     boost::default_user_allocator_new_delete,
+                                                     boost::details::pool::null_mutex>;
+
+    template <typename K, typename V>
+    using UnorderedMap = std::
+        unordered_map<K, V, std::hash<K>, std::equal_to<K>, PoolAllocator<std::pair<const K, V>>>;
+
+    UnorderedMap<NodeID, Key> nodes;
 };
 
 template <typename NodeID,
