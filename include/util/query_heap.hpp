@@ -40,7 +40,7 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
     explicit UnorderedMapStorage(std::size_t)
     {
 #ifdef USE_ANKERL
-        nodes.rehash(500);
+        nodes.rehash(2000);
 #else
         nodes.rehash(1000);
 #endif
