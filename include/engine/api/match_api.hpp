@@ -77,19 +77,19 @@ class MatchAPI final : public RouteAPI
                                    sub_routes[index].unpacked_path_segments,
                                    sub_routes[index].source_traversed_in_reverse,
                                    sub_routes[index].target_traversed_in_reverse);
-            route.values["confidence"] = sub_matchings[index].confidence;
-            routes.values.push_back(std::move(route));
+            route.values.emplace("confidence", sub_matchings[index].confidence);
+            routes.values.emplace_back(std::move(route));
         }
         if (!parameters.skip_waypoints)
         {
-            response.values["tracepoints"] = MakeTracepoints(sub_matchings);
+            response.values.emplace("tracepoints", MakeTracepoints(sub_matchings));
         }
-        response.values["matchings"] = std::move(routes);
-        response.values["code"] = "Ok";
+        response.values.emplace("matchings", std::move(routes));
+        response.values.emplace("code", "Ok");
         auto data_timestamp = facade.GetTimestamp();
         if (!data_timestamp.empty())
         {
-            response.values["data_version"] = data_timestamp;
+            response.values.emplace("data_version", data_timestamp);
         }
     }
 
@@ -132,13 +132,13 @@ class MatchAPI final : public RouteAPI
 
             if (tidy_result.can_be_removed[trace_index])
             {
-                waypoints.push_back(fbresult::WaypointBuilder(fb_result).Finish());
+                waypoints.emplace_back(fbresult::WaypointBuilder(fb_result).Finish());
                 continue;
             }
             auto matching_index = trace_idx_to_matching_idx[trace_index];
             if (matching_index.NotMatched())
             {
-                waypoints.push_back(fbresult::WaypointBuilder(fb_result).Finish());
+                waypoints.emplace_back(fbresult::WaypointBuilder(fb_result).Finish());
                 continue;
             }
             const auto &phantom =
@@ -165,7 +165,7 @@ class MatchAPI final : public RouteAPI
             {
                 waypoint->add_waypoint_index(matching_index.point_index);
             }
-            waypoints.push_back(waypoint->Finish());
+            waypoints.emplace_back(waypoint->Finish());
         }
 
         return fb_result.CreateVector(waypoints);
@@ -186,38 +186,38 @@ class MatchAPI final : public RouteAPI
         {
             if (tidy_result.can_be_removed[trace_index])
             {
-                waypoints.values.push_back(util::json::Null());
+                waypoints.values.emplace_back(util::json::Null());
                 continue;
             }
             auto matching_index = trace_idx_to_matching_idx[trace_index];
             if (matching_index.NotMatched())
             {
-                waypoints.values.push_back(util::json::Null());
+                waypoints.values.emplace_back(util::json::Null());
                 continue;
             }
             const auto &phantom =
                 sub_matchings[matching_index.sub_matching_index].nodes[matching_index.point_index];
             auto waypoint = BaseAPI::MakeWaypoint({phantom});
-            waypoint.values["matchings_index"] = matching_index.sub_matching_index;
-            waypoint.values["waypoint_index"] = matching_index.point_index;
-            waypoint.values["alternatives_count"] =
-                sub_matchings[matching_index.sub_matching_index]
-                    .alternatives_count[matching_index.point_index];
+            waypoint.values.emplace("matchings_index", matching_index.sub_matching_index);
+            waypoint.values.emplace("waypoint_index", matching_index.point_index);
+            waypoint.values.emplace("alternatives_count",
+                                    sub_matchings[matching_index.sub_matching_index]
+                                        .alternatives_count[matching_index.point_index]);
             // waypoint indices need to be adjusted if route legs were collapsed
             // waypoint parameter assumes there is only one match object
             if (!parameters.waypoints.empty())
             {
                 if (tidy_result.was_waypoint[trace_index])
                 {
-                    waypoint.values["waypoint_index"] = was_waypoint_idx;
+                    waypoint.values.emplace("waypoint_index", was_waypoint_idx);
                     was_waypoint_idx++;
                 }
                 else
                 {
-                    waypoint.values["waypoint_index"] = util::json::Null();
+                    waypoint.values.emplace("waypoint_index", util::json::Null());
                 }
             }
-            waypoints.values.push_back(std::move(waypoint));
+            waypoints.values.emplace_back(std::move(waypoint));
         }
 
         return waypoints;
