@@ -69,6 +69,7 @@ def main():
 
     base_folder = sys.argv[1]
     pr_folder = sys.argv[2]
+    run_number = sys.argv[3]
 
     benchmark_results = collect_benchmark_results(base_folder, pr_folder)
 
@@ -78,23 +79,23 @@ def main():
 
     markdown_table = create_markdown_table(benchmark_results)
     new_benchmark_section = f"""
-<!-- BENCHMARK_RESULTS_START -->
+<!-- BENCHMARK_RESULTS_START {run_number} -->
 <details><summary><h2>Benchmark Results</h2></summary>
 
 {markdown_table}
 </details>
-<!-- BENCHMARK_RESULTS_END -->
+<!-- BENCHMARK_RESULTS_END {run_number} -->
 """
 
-    if re.search(r'<!-- BENCHMARK_RESULTS_START -->.*<!-- BENCHMARK_RESULTS_END -->', pr_body, re.DOTALL):
-        updated_body = re.sub(
-            r'<!-- BENCHMARK_RESULTS_START -->.*<!-- BENCHMARK_RESULTS_END -->',
-            new_benchmark_section,
-            pr_body,
-            flags=re.DOTALL
-        )
-    else:
-        updated_body = f"{pr_body}\n\n{new_benchmark_section}" if len(pr_body) > 0 else new_benchmark_section
+    # if re.search(r'<!-- BENCHMARK_RESULTS_START -->.*<!-- BENCHMARK_RESULTS_END -->', pr_body, re.DOTALL):
+    #     updated_body = re.sub(
+    #         r'<!-- BENCHMARK_RESULTS_START -->.*<!-- BENCHMARK_RESULTS_END -->',
+    #         new_benchmark_section,
+    #         pr_body,
+    #         flags=re.DOTALL
+    #     )
+    # else:
+    updated_body = f"{pr_body}\n\n{new_benchmark_section}" if len(pr_body) > 0 else new_benchmark_section
     
     update_pr_description(REPO_OWNER, REPO_NAME, PR_NUMBER, updated_body)
     print("PR description updated successfully.")
