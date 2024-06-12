@@ -104,16 +104,15 @@ class NearestAPI final : public BaseAPI
 
                                auto node_values = MakeNodes(phantom_node);
 
-                               nodes.values.push_back(node_values.first);
-                               nodes.values.push_back(node_values.second);
+                               nodes.values.emplace_back(node_values.first);
+                               nodes.values.emplace_back(node_values.second);
                                waypoint.values.emplace("nodes", std::move(nodes));
                                return waypoint;
                            });
             response.values.emplace("waypoints", std::move(waypoints));
         }
 
-        response.values.emplace("code", "Ok")
-        auto data_timestamp = facade.GetTimestamp();
+        response.values.emplace("code", "Ok") auto data_timestamp = facade.GetTimestamp();
         if (!data_timestamp.empty())
         {
             response.values.emplace("data_version", data_timestamp);
