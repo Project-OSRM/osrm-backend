@@ -41,7 +41,7 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
     explicit UnorderedMapStorage(std::size_t)
     {
 #ifdef USE_ANKERL
-        nodes.rehash(1000);
+        // nodes.rehash(1000);
 #else
         nodes.rehash(1000);
 #endif
@@ -69,8 +69,7 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
 
   private:
 #ifdef USE_ANKERL
-    boost::unordered_map<NodeID, Key> nodes;
-    // ankerl::unordered_dense::segmented_map<NodeID, Key> nodes;
+    ankerl::unordered_dense::segmented_map<NodeID, Key> nodes;
     // ankerl::unordered_dense::map<NodeID, Key> nodes;
 #else
     std::unordered_map<NodeID, Key> nodes;
