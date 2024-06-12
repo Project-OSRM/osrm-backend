@@ -38,14 +38,7 @@ template <typename NodeID, typename Key> class ArrayStorage
 template <typename NodeID, typename Key> class UnorderedMapStorage
 {
   public:
-    explicit UnorderedMapStorage(std::size_t)
-    {
-#ifdef USE_ANKERL
-        // nodes.rehash(1000);
-#else
-        nodes.rehash(1000);
-#endif
-    }
+    explicit UnorderedMapStorage(std::size_t) {}
 
     Key &operator[](const NodeID node) { return nodes[node]; }
 
@@ -68,12 +61,7 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
     void Clear() { nodes.clear(); }
 
   private:
-#ifdef USE_ANKERL
     ankerl::unordered_dense::segmented_map<NodeID, Key> nodes;
-    // ankerl::unordered_dense::map<NodeID, Key> nodes;
-#else
-    std::unordered_map<NodeID, Key> nodes;
-#endif
 };
 
 template <typename NodeID,
