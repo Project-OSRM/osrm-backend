@@ -112,7 +112,8 @@ class NearestAPI final : public BaseAPI
             response.values.emplace("waypoints", std::move(waypoints));
         }
 
-        response.values.emplace("code", "Ok") auto data_timestamp = facade.GetTimestamp();
+        response.values.emplace("code", "Ok");
+        auto data_timestamp = facade.GetTimestamp();
         if (!data_timestamp.empty())
         {
             response.values.emplace("data_version", data_timestamp);
