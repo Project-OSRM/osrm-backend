@@ -63,7 +63,7 @@ def collect_benchmark_results(base_folder, pr_folder):
     return results
 
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         print("Usage: python post_benchmark_results.py <base_folder> <pr_folder>")
         exit(1)
 
