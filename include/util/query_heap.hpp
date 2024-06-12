@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <ankerl/unordered_dense.h>
+#include <boost/unordered_map.hpp>
 #include <cstdint>
 #include <limits>
 #include <map>
@@ -68,7 +69,8 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
 
   private:
 #ifdef USE_ANKERL
-    ankerl::unordered_dense::segmented_map<NodeID, Key> nodes;
+    boost::unordered_map<NodeID, Key> nodes;
+    // ankerl::unordered_dense::segmented_map<NodeID, Key> nodes;
     // ankerl::unordered_dense::map<NodeID, Key> nodes;
 #else
     std::unordered_map<NodeID, Key> nodes;
