@@ -209,12 +209,12 @@ class MatchAPI final : public RouteAPI
             {
                 if (tidy_result.was_waypoint[trace_index])
                 {
-                    waypoint.values.emplace("waypoint_index", was_waypoint_idx);
+                    waypoint.values["waypoint_index"] = was_waypoint_idx;
                     was_waypoint_idx++;
                 }
                 else
                 {
-                    waypoint.values.emplace("waypoint_index", util::json::Null());
+                    waypoint.values["waypoint_index"] = util::json::Null();
                 }
             }
             waypoints.values.emplace_back(std::move(waypoint));
