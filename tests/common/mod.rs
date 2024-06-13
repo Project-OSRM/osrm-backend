@@ -6,6 +6,7 @@ pub mod dot_writer;
 pub mod f64_utils;
 pub mod file_util;
 pub mod hash_util;
+pub mod http_request;
 pub mod lexicographic_file_walker;
 pub mod location;
 pub mod nearest_response;

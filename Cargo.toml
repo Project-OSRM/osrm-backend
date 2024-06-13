@@ -28,3 +28,7 @@ debug = true
 
 [build-dependencies]
 flatc-rust = "0.2.0"
+serde = { version = "1.0.203", features = ["serde_derive"] }
+toml = "0.8.14"
+ureq = { version = "2.9.7", features = ["charset"] }
+zip-extract = "0.1.3"

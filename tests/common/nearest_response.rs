@@ -25,6 +25,7 @@ pub struct NearestResponse {
 }
 
 impl NearestResponse {
+    // TODO: the from_* functions should be a) into_. or b) implement From<_> trait
     pub fn from_json_reader(reader: impl std::io::Read) -> Self {
         let response = match serde_json::from_reader::<_, NearestResponse>(reader) {
             Ok(response) => response,
