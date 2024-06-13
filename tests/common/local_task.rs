@@ -3,24 +3,25 @@ use std::{
     process::{Child, Command, Stdio},
 };
 
-#[derive(Default)]
-pub struct TaskStarter {
+#[derive(Debug, Default)]
+pub struct LocalTask {
     ready: bool,
     command: String,
     arguments: Vec<String>,
     child: Option<Child>,
 }
 
-impl TaskStarter {
-    pub fn new(command: &str) -> Self {
+impl LocalTask {
+    pub fn new(command: String) -> Self {
         Self {
             ready: false,
-            command: command.into(),
+            command: command,
             arguments: Vec::new(),
             child: None,
         }
     }
     pub fn is_ready(&self) -> bool {
+        // TODO: also check that process is running
         self.ready
     }
     pub fn arg(&mut self, argument: &str) -> &mut Self {
@@ -39,6 +40,10 @@ impl TaskStarter {
             Err(e) => panic!("cannot spawn task: {e}"),
         }
 
+        if self.child.is_none() {
+            return;
+        }
+
         if let Some(output) = &mut self.child.as_mut().unwrap().stdout {
             // implement with a timeout
             let mut reader = BufReader::new(output);
@@ -54,10 +59,10 @@ impl TaskStarter {
     }
 }
 
-impl Drop for TaskStarter {
-    fn drop(&mut self) {
-        if let Err(e) = self.child.as_mut().expect("can't access child").kill() {
-            panic!("shutdown failed: {e}");
-        }
-    }
-}
+// impl Drop for LocalTask {
+//     fn drop(&mut self) {
+//         if let Err(e) = self.child.as_mut().expect("can't access child").kill() {
+//             panic!("shutdown failed: {e}");
+//         }
+//     }
+// }

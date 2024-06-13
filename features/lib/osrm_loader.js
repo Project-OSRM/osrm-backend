@@ -46,7 +46,7 @@ class OSRMBaseLoader{
         let retry = (err) => {
           if (err) {
             if (retryCount < this.scope.OSRM_CONNECTION_RETRIES) {
-              const timeoutMs = 10 * Math.pow(this.scope.OSRM_CONNECTION_EXP_BACKOFF_COEF, retryCount);
+              const timeoutMs = 10 * Math.pow(1.1, retryCount);
               retryCount++;
               setTimeout(() => { tryConnect(this.scope.OSRM_IP, this.scope.OSRM_PORT, retry); }, timeoutMs);
             } else {

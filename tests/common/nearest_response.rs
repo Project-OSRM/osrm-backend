@@ -1,11 +1,11 @@
-use crate::common::fbresult_flatbuffers::osrm::engine::api::fbresult::FBResult;
 use super::location::Location;
+use crate::common::fbresult_flatbuffers::osrm::engine::api::fbresult::FBResult;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Waypoint {
     pub hint: String,
-    pub nodes: Vec<u64>,
+    pub nodes: Option<Vec<u64>>,
     pub distance: f32,
     pub name: String,
     location: Location,
@@ -66,7 +66,7 @@ impl NearestResponse {
                     longitude: location.longitude(),
                 };
                 let nodes = wp.nodes().expect("waypoint mus have nodes");
-                let nodes = vec![nodes.first(), nodes.second()];
+                let nodes = Some(vec![nodes.first(), nodes.second()]);
                 let distance = wp.distance();
 
                 Waypoint {

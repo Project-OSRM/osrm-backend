@@ -66,7 +66,7 @@ fn main() {
     if let Some((platform, compiler)) = match env::consts::OS {
         "linux" if env::consts::ARCH == "x86_64" => Some((OS::Linux, ".clang++-15")),
         "macos" if env::consts::ARCH == "x86_64" => Some((OS::MacIntel, "")),
-        "macos" if env::consts::ARCH == "arm" => Some((OS::Mac, "")),
+        "macos" if env::consts::ARCH == "aarch64" => Some((OS::Mac, "")),
         "windows" if env::consts::ARCH == "x86_64" => Some((OS::Windows, "")),
         _ => None,
     } {
@@ -98,11 +98,16 @@ fn main() {
         build_println!("unsupported platform: {} {}. 'flatc' binary supporting version {} of the library needs to be in system path", env::consts::OS, env::consts::ARCH, version);
     }
 
-    let flatc = match Path::new(executable_path).exists() {
-        true => flatc_rust::Flatc::from_path(executable_path),
-        false => flatc_rust::Flatc::from_env_path(),
+    let (flatc, location) = match Path::new(executable_path).exists() {
+        true => (flatc_rust::Flatc::from_path(executable_path), "local"),
+        false => (flatc_rust::Flatc::from_env_path(), "downloaded"),
     };
     assert!(flatc.check().is_ok());
+    let version = &flatc.version().unwrap();
+    build_println!(
+        "using {location} flatc v{} to compile schema files",
+        version.version()
+    );
     flatc
         .run(flatc_rust::Args {
             extra: &["--gen-all"],

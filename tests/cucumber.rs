@@ -1,35 +1,31 @@
-// extern crate clap;
-
 mod common;
 
 use cheap_ruler::CheapRuler;
 use clap::Parser;
 use common::{
     cli_arguments::Args, dot_writer::DotWriter, f64_utils::approx_equal,
-    hash_util::md5_of_osrm_executables, location::Location, nearest_response::NearestResponse,
-    osm::OSMWay, osrm_world::OSRMWorld, task_starter::TaskStarter,
+    hash_util::md5_of_osrm_executables, location::Location, osm::OSMWay, osrm_world::OSRMWorld,
 };
 use core::panic;
-use cucumber::{gherkin::Step, given, when, World, WriterExt};
+use cucumber::{
+    gherkin::{Step, Table},
+    given, when, World, WriterExt,
+};
 use futures::{future, FutureExt};
-use geo_types::point;
+use geo_types::Point;
 use log::debug;
-use std::{collections::HashMap, fs::File, io::Write, time::Duration};
-use ureq::Agent;
+use std::collections::HashMap;
 
-const DEFAULT_ORIGIN: [f64; 2] = [1., 1.]; // TODO: move to world?
-const DEFAULT_GRID_SIZE: f64 = 100.; // TODO: move to world?
-
-fn offset_origin_by(dx: f64, dy: f64) -> Location {
-    let ruler = CheapRuler::new(DEFAULT_ORIGIN[1], cheap_ruler::DistanceUnit::Meters);
+fn offset_origin_by(dx: f32, dy: f32, origin: Location, grid_size: f32) -> Location {
+    let ruler = CheapRuler::new(origin.latitude, cheap_ruler::DistanceUnit::Meters);
     let loc = ruler.offset(
-        &point!(DEFAULT_ORIGIN),
-        dx * DEFAULT_GRID_SIZE,
-        dy * DEFAULT_GRID_SIZE,
+        &Point::new(origin.longitude, origin.latitude),
+        dx * grid_size,
+        dy * grid_size,
     ); //TODO: needs to be world's gridSize, not the local one
     Location {
-        latitude: loc.y() as f32,
-        longitude: loc.x() as f32,
+        latitude: loc.y(),
+        longitude: loc.x(),
     }
 }
 
@@ -95,12 +91,16 @@ fn set_node_map(world: &mut OSRMWorld, step: &Step) {
                     .filter(|(_column_index, charater)| *charater != ' ')
                     .for_each(|(column_index, name)| {
                         // This ports the logic from previous implementations.
-                        let location =
-                            offset_origin_by(column_index as f64 * 0.5, -(row_index as f64 - 1.));
+                        let location = offset_origin_by(
+                            column_index as f32 * 0.5,
+                            -(row_index as f32 - 1.),
+                            world.origin,
+                            world.grid_size,
+                        );
                         match name {
                             '0'...'9' => world.add_location(name, location),
                             'a'...'z' => world.add_osm_node(name, location, None),
-                            _ => unreachable!("node name not in [0..9][a..z]"),
+                            _ => unreachable!("node name not in [0..9][a..z]: {docstring}"),
                         }
                     });
             });
@@ -112,6 +112,11 @@ fn set_node_map(world: &mut OSRMWorld, step: &Step) {
 #[given(expr = r#"the extract extra arguments {string}"#)]
 fn extra_parameters(world: &mut OSRMWorld, parameters: String) {
     world.extraction_parameters.push(parameters);
+}
+
+#[given(expr = "a grid size of {float} meters")]
+fn set_grid_size(world: &mut OSRMWorld, meters: f32) {
+    world.grid_size = meters;
 }
 
 #[given(regex = "the ways")]
@@ -159,43 +164,13 @@ fn set_ways(world: &mut OSRMWorld, step: &Step) {
     } else {
         debug!("no table found {step:#?}");
     }
-
-    // debug!("{}", world.osm_db.to_xml())
 }
 
-// #[when("I request nearest I should get")]
-#[when(regex = r"^I request nearest( with flatbuffers|) I should get$")]
-fn request_nearest(world: &mut OSRMWorld, step: &Step, state: String) {
-    let request_with_flatbuffers = state == " with flatbuffers";
-    // if .osm file does not exist
-    //    write osm file
-
-    // TODO: the OSRMWorld instance should have a function to write the .osm file
-    let osm_file = world
-        .feature_cache_path()
-        .join(world.scenario_id.clone() + ".osm");
-    if !osm_file.exists() {
-        debug!("writing to osm file: {osm_file:?}");
-        let mut file = File::create(osm_file).expect("could not create OSM file");
-        file.write_all(world.osm_db.to_xml().as_bytes())
-            .expect("could not write OSM file");
-    } else {
-        debug!("not writing to OSM file {osm_file:?}");
-    }
-
-    // if extracted file does not exist
-    let cache_path = world.feature_cache_path().join(&world.osrm_digest);
-    if cache_path.exists() {
-        debug!("{cache_path:?} exists");
-    } else {
-        debug!("{cache_path:?} does not exist");
-    }
-
+fn parse_table_from_steps(table: &Option<&Table>) -> Vec<HashMap<String, String>> {
     // parse query data
-    let table = &step.table.as_ref().expect("no query table specified");
+    let table = table.expect("no query table specified");
     // the following lookup allows to define lat lon columns in any order
     let header = table.rows.first().expect("node locations table empty");
-    // TODO: move to common functionality
     let test_cases: Vec<_> = table
         .rows
         .iter()
@@ -212,23 +187,22 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step, state: String) {
             row_map
         })
         .collect();
+    test_cases
+    // TODO: also return the header
+}
 
-    let data_path = cache_path.join(world.scenario_id.to_owned() + ".osrm");
+#[when(regex = r"^I request nearest( with flatbuffers|) I should get$")]
+fn request_nearest(world: &mut OSRMWorld, step: &Step, state: String) {
+    let request_with_flatbuffers = state == " with flatbuffers";
 
-    // TODO: this should not require a temporary and behave like the API of std::process
-    let mut task = TaskStarter::new(world.routed_path().to_str().expect("task can be started"));
-    task.arg(data_path.to_str().expect("data path unwrappable"));
-    task.spawn_wait_till_ready("running and waiting for requests");
-    assert!(task.is_ready());
+    world.write_osm_file();
+    world.extract_osm_file();
 
-    // TODO: move to generic http request handling struct
-    let agent: Agent = ureq::AgentBuilder::new()
-        .timeout_read(Duration::from_secs(5))
-        .timeout_write(Duration::from_secs(5))
-        .build();
+    // parse query data
+    let test_cases = parse_table_from_steps(&step.table.as_ref());
 
-    // parse and run test cases
-    for test_case in test_cases {
+    // run test cases
+    for test_case in &test_cases {
         let query_location = world.get_location(
             test_case
                 .get("in")
@@ -237,7 +211,10 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step, state: String) {
                 .next()
                 .expect("node name is one char long"),
         );
-        let expected_location = world.get_location(
+
+        let response = world.nearest(&query_location, request_with_flatbuffers);
+
+        let expected_location = &world.get_location(
             test_case
                 .get("out")
                 .expect("node name is one char long")
@@ -245,27 +222,6 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step, state: String) {
                 .next()
                 .expect("node name is one char long"),
         );
-
-        // debug!("{query_location:?} => {expected_location:?}");
-        // run queries
-        let mut url = format!(
-            "http://localhost:5000/nearest/v1/{}/{:?},{:?}",
-            world.profile, query_location.longitude, query_location.latitude
-        );
-        if request_with_flatbuffers {
-            url += ".flatbuffers";
-        }
-        let call = agent.get(&url).call();
-
-        let body = match call {
-            Ok(response) => response.into_reader(),
-            Err(e) => panic!("http error: {e}"),
-        };
-
-        let response = match request_with_flatbuffers {
-            true => NearestResponse::from_flatbuffer(body),
-            false => NearestResponse::from_json_reader(body),
-        };
 
         if test_case.contains_key("out") {
             // check that result node is (approximately) equivalent
@@ -290,6 +246,99 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step, state: String) {
     }
 }
 
+#[when(regex = r"^I route( with flatbuffers|) I should get$")]
+fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
+    let request_with_flatbuffers = state == " with flatbuffers";
+    world.write_osm_file();
+    world.extract_osm_file();
+    // TODO: preprocess
+
+    let test_cases = parse_table_from_steps(&step.table.as_ref());
+    for test_case in &test_cases {
+        let from_location = world.get_location(
+            test_case
+                .get("from")
+                .expect("node name is one char long")
+                .chars()
+                .next()
+                .expect("node name is one char long"),
+        );
+        let to_location = world.get_location(
+            test_case
+                .get("to")
+                .expect("node name is one char long")
+                .chars()
+                .next()
+                .expect("node name is one char long"),
+        );
+
+        let response = world.route(&from_location, &to_location, request_with_flatbuffers);
+
+        if test_case.contains_key("route") {
+            // NOTE: the following code ports logic from JavaScript that checks only properties of the first route
+            let route = response
+                .routes
+                .first()
+                .expect("no route returned")
+                .legs
+                .first()
+                .expect("legs required")
+                .steps
+                .iter()
+                .map(|step| step.name.clone())
+                .collect::<Vec<String>>()
+                .join(",");
+
+            assert_eq!(*test_case.get("route").expect("msg"), route);
+        }
+
+        if test_case.contains_key("pronunciations") {
+            let pronunciations = response
+                .routes
+                .first()
+                .expect("no route returned")
+                .legs
+                .first()
+                .expect("legs required")
+                .steps
+                .iter()
+                .map(|step| match &step.pronunciation {
+                    Some(p) => p.clone(),
+                    None => "".to_string(),
+                })
+                .collect::<Vec<String>>()
+                .join(",");
+            assert_eq!(
+                *test_case.get("pronunciations").expect("msg"),
+                pronunciations
+            );
+        }
+
+        if test_case.contains_key("ref") {
+            let refs = response
+                .routes
+                .first()
+                .expect("no route returned")
+                .legs
+                .first()
+                .expect("legs required")
+                .steps
+                .iter()
+                .map(|step| match &step.r#ref {
+                    Some(p) => p.clone(),
+                    None => "".to_string(),
+                })
+                .collect::<Vec<String>>()
+                .join(",");
+            assert_eq!(*test_case.get("ref").expect("msg"), refs);
+        }
+        // TODO: more checks need to be implemented
+
+        // TODO: check for unchecked test columns
+    }
+
+    // unimplemented!("route");
+}
 fn main() {
     let args = Args::parse();
     debug!("arguments: {:?}", args);
@@ -307,6 +356,8 @@ fn main() {
                 future::ready(()).boxed()
             })
             .with_writer(DotWriter::default().normalized())
-            .run("features/nearest/"),
+            .filter_run("features/car/names.feature", |_, _, sc| {
+                !sc.tags.iter().any(|t| t == "todo")
+            }),
     );
 }

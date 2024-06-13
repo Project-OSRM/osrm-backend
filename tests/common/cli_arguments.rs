@@ -37,7 +37,6 @@ impl Display for RoutingAlgorithm {
     }
 }
 
-
 // TODO: move to external file
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

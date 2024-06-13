@@ -1,15 +1,25 @@
-use crate::Location;
+use super::{
+    nearest_response::NearestResponse, osm::OSMNode, osm_db::OSMDb, route_response::RouteResponse,
+};
+use crate::{common::local_task::LocalTask, Location};
+use core::panic;
 use cucumber::World;
 use log::debug;
 use std::{
     collections::HashMap,
     fs::{create_dir_all, File},
+    io::Write,
     path::PathBuf,
+    time::Duration,
 };
 
-use super::{osm::OSMNode, osm_db::OSMDb};
+const DEFAULT_ORIGIN: Location = Location {
+    longitude: 1.0f32,
+    latitude: 1.0f32,
+};
+const DEFAULT_GRID_SIZE: f32 = 100.;
 
-#[derive(Debug, Default, World)]
+#[derive(Debug, World)]
 pub struct OSRMWorld {
     pub feature_path: Option<PathBuf>,
     pub scenario_id: String,
@@ -25,6 +35,36 @@ pub struct OSRMWorld {
     pub extraction_parameters: Vec<String>,
 
     pub request_with_flatbuffers: bool,
+
+    pub grid_size: f32,
+    pub origin: Location,
+    task: LocalTask,
+    agent: ureq::Agent,
+}
+
+impl Default for OSRMWorld {
+    fn default() -> Self {
+        Self {
+            feature_path: Default::default(),
+            scenario_id: Default::default(),
+            feature_digest: Default::default(),
+            osrm_digest: Default::default(),
+            osm_id: Default::default(),
+            profile: Default::default(),
+            known_osm_nodes: Default::default(),
+            known_locations: Default::default(),
+            osm_db: Default::default(),
+            extraction_parameters: Default::default(),
+            request_with_flatbuffers: Default::default(),
+            grid_size: DEFAULT_GRID_SIZE,
+            origin: DEFAULT_ORIGIN,
+            task: LocalTask::default(),
+            agent: ureq::AgentBuilder::new()
+                .timeout_read(Duration::from_secs(5))
+                .timeout_write(Duration::from_secs(5))
+                .build(),
+        }
+    }
 }
 
 impl OSRMWorld {
@@ -59,7 +99,11 @@ impl OSRMWorld {
             .ancestors()
             .find(|p| p.ends_with("features"))
             .expect(".feature files reside in a directory tree with the root name 'features'");
-        let routed_path = path.parent().expect("cannot get parent path").join("build").join("osrm-routed");
+        let routed_path = path
+            .parent()
+            .expect("cannot get parent path")
+            .join("build")
+            .join("osrm-routed");
         assert!(routed_path.exists(), "osrm-routed binary not found");
         routed_path
     }
@@ -118,5 +162,113 @@ impl OSRMWorld {
             panic!("duplicate location: {name}")
         }
         self.known_locations.insert(name, location);
+    }
+
+    pub fn write_osm_file(&self) {
+        let osm_file = self
+            .feature_cache_path()
+            .join(self.scenario_id.clone() + ".osm");
+        if !osm_file.exists() {
+            debug!("writing to osm file: {osm_file:?}");
+            let mut file = File::create(osm_file).expect("could not create OSM file");
+            file.write_all(self.osm_db.to_xml().as_bytes())
+                .expect("could not write OSM file");
+        } else {
+            debug!("not writing to OSM file {osm_file:?}");
+        }
+    }
+
+    pub fn extract_osm_file(&self) {
+        let cache_path = self.artefact_cache_path();
+        if cache_path.exists() {
+            debug!("{cache_path:?} exists");
+        } else {
+            unimplemented!("{cache_path:?} does not exist");
+        }
+    }
+
+    pub fn artefact_cache_path(&self) -> PathBuf {
+        self.feature_cache_path().join(&self.osrm_digest)
+    }
+
+    fn start_routed(&mut self) {
+        if self.task.is_ready() {
+            // task running already
+            return;
+        }
+        let data_path = self
+            .artefact_cache_path()
+            .join(self.scenario_id.to_owned() + ".osrm");
+
+        // TODO: this should not require a temporary and behave like the API of std::process
+        self.task = LocalTask::new(self.routed_path().to_string_lossy().into());
+        self.task
+            .arg(data_path.to_str().expect("data path unwrappable"));
+        self.task
+            .spawn_wait_till_ready("running and waiting for requests");
+        assert!(self.task.is_ready());
+    }
+
+    pub fn nearest(
+        &mut self,
+        query_location: &Location,
+        request_with_flatbuffers: bool,
+    ) -> NearestResponse {
+        self.start_routed();
+
+        let mut url = format!(
+            "http://localhost:5000/nearest/v1/{}/{:?},{:?}",
+            self.profile, query_location.longitude, query_location.latitude
+        );
+        if request_with_flatbuffers {
+            url += ".flatbuffers";
+        }
+        let call = self.agent.get(&url).call();
+
+        let body = match call {
+            Ok(response) => response.into_reader(),
+            Err(e) => panic!("http error: {e}"),
+        };
+
+        let response = match request_with_flatbuffers {
+            true => NearestResponse::from_flatbuffer(body),
+            false => NearestResponse::from_json_reader(body),
+        };
+        response
+    }
+
+    pub fn route(
+        &mut self,
+        from_location: &Location,
+        to_location: &Location,
+        request_with_flatbuffers: bool,
+    ) -> RouteResponse {
+        self.start_routed();
+
+        let mut url = format!(
+            "http://localhost:5000/route/v1/{}/{:?},{:?};{:?},{:?}?steps=true&alternatives=false",
+            self.profile,
+            from_location.longitude,
+            from_location.latitude,
+            to_location.longitude,
+            to_location.latitude,
+        );
+        if request_with_flatbuffers {
+            url += ".flatbuffers";
+        }
+        // println!("url: {url}");
+        let call = self.agent.get(&url).call();
+
+        let body = match call {
+            Ok(response) => response.into_reader(),
+            Err(e) => panic!("http error: {e}"),
+        };
+
+        let text = std::io::read_to_string(body).unwrap();
+        let response = match request_with_flatbuffers {
+            true => unimplemented!("RouteResponse::from_flatbuffer(body)"),
+            false => RouteResponse::from_string(&text),
+        };
+        response
     }
 }

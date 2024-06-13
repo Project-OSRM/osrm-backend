@@ -2,7 +2,9 @@ use std::{env, fs, path::PathBuf};
 
 use log::debug;
 
-use crate::common::{file_util::get_file_as_byte_vec, lexicographic_file_walker::LexicographicFileWalker};
+use crate::common::{
+    file_util::get_file_as_byte_vec, lexicographic_file_walker::LexicographicFileWalker,
+};
 
 pub fn md5_of_osrm_executables() -> chksum_md5::MD5 {
     // create OSRM digest before any tests are executed since cucumber-rs doesn't have @beforeAll
@@ -75,4 +77,4 @@ pub fn md5_of_osrm_executables() -> chksum_md5::MD5 {
         // debug!("md5: {}", md5.digest().to_hex_lowercase());
     }
     md5
-    }
+}

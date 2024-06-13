@@ -1,4 +1,8 @@
-use std::{fs::{self, File}, io::Read, path::PathBuf};
+use std::{
+    fs::{self, File},
+    io::Read,
+    path::PathBuf,
+};
 
 use log::debug;
 

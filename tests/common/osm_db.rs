@@ -93,15 +93,19 @@ mod tests {
 
         let mut node1 = OSMNode {
             id: 123,
-            lat: 50.1234,
-            lon: 8.9876,
+            location: Location {
+                longitude: 8.9876,
+                latitude: 50.1234,
+            },
             ..Default::default()
         };
 
         let mut node2 = OSMNode {
             id: 321,
-            lat: 50.1234,
-            lon: 8.9876,
+            location: Location {
+                longitude: 8.9876,
+                latitude: 50.1234,
+            },
             ..Default::default()
         };
         node1.add_tag("name", "a");
