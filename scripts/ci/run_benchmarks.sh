@@ -44,6 +44,9 @@ function run_benchmarks_for_folder {
 
     for BENCH in nearest table trip route match; do
         ./$BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" mld ~/gps_traces.csv ${BENCH} > "$RESULTS_FOLDER/random_${BENCH}_mld.bench" || true
+        ./$BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" mld ~/gps_traces.csv ${BENCH} > "$RESULTS_FOLDER/random_${BENCH}_mld.bench" || true
+
+        ./$BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" ch ~/gps_traces.csv ${BENCH}  > "$RESULTS_FOLDER/random_${BENCH}_ch.bench" || true
         ./$BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" ch ~/gps_traces.csv ${BENCH}  > "$RESULTS_FOLDER/random_${BENCH}_ch.bench" || true
     done
 
@@ -60,6 +63,7 @@ function run_benchmarks_for_folder {
         fi
 
         for METHOD in route nearest trip table match; do
+            python3 $SCRIPTS_FOLDER/scripts/ci/e2e_benchmark.py --host http://localhost:5000 --method $METHOD --num_requests 1000 > $RESULTS_FOLDER/e2e_${METHOD}_${ALGORITHM}.bench
             python3 $SCRIPTS_FOLDER/scripts/ci/e2e_benchmark.py --host http://localhost:5000 --method $METHOD --num_requests 1000 > $RESULTS_FOLDER/e2e_${METHOD}_${ALGORITHM}.bench
         done
 
