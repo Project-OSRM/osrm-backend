@@ -102,22 +102,22 @@ class RouteAPI : public BaseAPI
             if (!route.is_valid())
                 continue;
 
-            jsRoutes.values.push_back(MakeRoute(route.leg_endpoints,
-                                                route.unpacked_path_segments,
-                                                route.source_traversed_in_reverse,
-                                                route.target_traversed_in_reverse));
+            jsRoutes.values.emplace_back(MakeRoute(route.leg_endpoints,
+                                                   route.unpacked_path_segments,
+                                                   route.source_traversed_in_reverse,
+                                                   route.target_traversed_in_reverse));
         }
 
         if (!parameters.skip_waypoints)
         {
-            response.values["waypoints"] = BaseAPI::MakeWaypoints(waypoint_candidates);
+            response.values.emplace("waypoints", BaseAPI::MakeWaypoints(waypoint_candidates));
         }
-        response.values["routes"] = std::move(jsRoutes);
-        response.values["code"] = "Ok";
+        response.values.emplace("routes", std::move(jsRoutes));
+        response.values.emplace("code", "Ok");
         auto data_timestamp = facade.GetTimestamp();
         if (!data_timestamp.empty())
         {
-            response.values["data_version"] = data_timestamp;
+            response.values.emplace("data_version", data_timestamp);
         }
     }
 
@@ -135,11 +135,11 @@ class RouteAPI : public BaseAPI
             if (!raw_route.is_valid())
                 continue;
 
-            routes.push_back(MakeRoute(fb_result,
-                                       raw_route.leg_endpoints,
-                                       raw_route.unpacked_path_segments,
-                                       raw_route.source_traversed_in_reverse,
-                                       raw_route.target_traversed_in_reverse));
+            routes.emplace_back(MakeRoute(fb_result,
+                                          raw_route.leg_endpoints,
+                                          raw_route.unpacked_path_segments,
+                                          raw_route.source_traversed_in_reverse,
+                                          raw_route.target_traversed_in_reverse));
         }
 
         auto routes_vector = fb_result.CreateVector(routes);
@@ -218,7 +218,7 @@ class RouteAPI : public BaseAPI
 
         for (const auto &step : leg.annotations)
         {
-            annotations_store.push_back(Get(step));
+            annotations_store.emplace_back(Get(step));
         }
 
         return fb_result.CreateVector(annotations_store);
@@ -232,7 +232,7 @@ class RouteAPI : public BaseAPI
 
         for (const auto &step : leg.annotations)
         {
-            annotations_store.values.push_back(Get(step));
+            annotations_store.values.emplace_back(Get(step));
         }
 
         return annotations_store;
@@ -323,7 +323,7 @@ class RouteAPI : public BaseAPI
         {
             if (mask[index])
             {
-                result.push_back(mapping[index]);
+                result.emplace_back(mapping[index]);
             }
         }
         return result;
@@ -674,7 +674,7 @@ class RouteAPI : public BaseAPI
                         auto lane_valid = lane_id >= intersection.lanes.first_lane_from_the_right &&
                                           lane_id < intersection.lanes.first_lane_from_the_right +
                                                         intersection.lanes.lanes_in_turn;
-                        lanes.push_back(
+                        lanes.emplace_back(
                             fbresult::CreateLaneDirect(fb_result, &indications, lane_valid));
                     }
                 }
@@ -784,49 +784,57 @@ class RouteAPI : public BaseAPI
                 if (requested_annotations & RouteParameters::AnnotationsType::Speed)
                 {
                     double prev_speed = 0;
-                    annotation.values["speed"] = GetAnnotations(
-                        leg_geometry,
-                        [&prev_speed](const guidance::LegGeometry::Annotation &anno)
-                        {
-                            if (anno.duration < std::numeric_limits<double>::min())
-                            {
-                                return prev_speed;
-                            }
-                            else
-                            {
-                                auto speed = std::round(anno.distance / anno.duration * 10.) / 10.;
-                                prev_speed = speed;
-                                return util::json::clamp_float(speed);
-                            }
-                        });
+                    annotation.values.emplace(
+                        "speed",
+                        GetAnnotations(leg_geometry,
+                                       [&prev_speed](const guidance::LegGeometry::Annotation &anno)
+                                       {
+                                           if (anno.duration < std::numeric_limits<double>::min())
+                                           {
+                                               return prev_speed;
+                                           }
+                                           else
+                                           {
+                                               auto speed =
+                                                   std::round(anno.distance / anno.duration * 10.) /
+                                                   10.;
+                                               prev_speed = speed;
+                                               return util::json::clamp_float(speed);
+                                           }
+                                       }));
                 }
 
                 if (requested_annotations & RouteParameters::AnnotationsType::Duration)
                 {
-                    annotation.values["duration"] =
+                    annotation.values.emplace(
+                        "duration",
                         GetAnnotations(leg_geometry,
                                        [](const guidance::LegGeometry::Annotation &anno)
-                                       { return anno.duration; });
+                                       { return anno.duration; }));
                 }
                 if (requested_annotations & RouteParameters::AnnotationsType::Distance)
                 {
-                    annotation.values["distance"] =
+                    annotation.values.emplace(
+                        "distance",
                         GetAnnotations(leg_geometry,
                                        [](const guidance::LegGeometry::Annotation &anno)
-                                       { return anno.distance; });
+                                       { return anno.distance; }));
                 }
                 if (requested_annotations & RouteParameters::AnnotationsType::Weight)
                 {
-                    annotation.values["weight"] = GetAnnotations(
-                        leg_geometry,
-                        [](const guidance::LegGeometry::Annotation &anno) { return anno.weight; });
+                    annotation.values.emplace(
+                        "weight",
+                        GetAnnotations(leg_geometry,
+                                       [](const guidance::LegGeometry::Annotation &anno)
+                                       { return anno.weight; }));
                 }
                 if (requested_annotations & RouteParameters::AnnotationsType::Datasources)
                 {
-                    annotation.values["datasources"] =
+                    annotation.values.emplace(
+                        "datasources",
                         GetAnnotations(leg_geometry,
                                        [](const guidance::LegGeometry::Annotation &anno)
-                                       { return anno.datasource; });
+                                       { return anno.datasource; }));
                 }
                 if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
                 {
@@ -834,10 +842,10 @@ class RouteAPI : public BaseAPI
                     nodes.values.reserve(leg_geometry.node_ids.size());
                     for (const auto node_id : leg_geometry.node_ids)
                     {
-                        nodes.values.push_back(
+                        nodes.values.emplace_back(
                             static_cast<std::uint64_t>(facade.GetOSMNodeIDOfNode(node_id)));
                     }
-                    annotation.values["nodes"] = std::move(nodes);
+                    annotation.values.emplace("nodes", std::move(nodes));
                 }
                 // Add any supporting metadata, if needed
                 if (requested_annotations & RouteParameters::AnnotationsType::Datasources)
@@ -851,13 +859,14 @@ class RouteAPI : public BaseAPI
                         // Length of 0 indicates the first empty name, so we can stop here
                         if (name.empty())
                             break;
-                        datasource_names.values.push_back(std::string(facade.GetDatasourceName(i)));
+                        datasource_names.values.emplace_back(
+                            std::string(facade.GetDatasourceName(i)));
                     }
-                    metadata.values["datasource_names"] = datasource_names;
-                    annotation.values["metadata"] = metadata;
+                    metadata.values.emplace("datasource_names", datasource_names);
+                    annotation.values.emplace("metadata", metadata);
                 }
 
-                annotations.push_back(std::move(annotation));
+                annotations.emplace_back(std::move(annotation));
             }
         }
 
@@ -983,8 +992,8 @@ class RouteAPI : public BaseAPI
                 }
             }
 
-            leg_geometries.push_back(std::move(leg_geometry));
-            legs.push_back(std::move(leg));
+            leg_geometries.emplace_back(std::move(leg_geometry));
+            legs.emplace_back(std::move(leg));
         }
         return result;
     }
