@@ -1,12 +1,18 @@
+use std::env;
 use std::fmt::Display;
-use std::io::{Cursor, Write};
+use std::io::Cursor;
 use std::path::PathBuf;
 use std::time::Duration;
 use std::{collections::HashMap, path::Path};
-use std::{env, fs};
 
 use serde::{Deserialize, Serialize};
-use ureq::{Agent, AgentBuilder};
+use ureq::AgentBuilder;
+
+macro_rules! build_println {
+    ($($tokens: tt)*) => {
+        println!("cargo:warning=\r\x1b[32;1m   {}", format!($($tokens)*))
+    }
+}
 
 #[derive(Debug)]
 enum OS {
@@ -51,21 +57,23 @@ fn main() {
             features: _,
         } => version,
     };
+
+    let executable_path = match env::consts::OS {
+        "windows" => "target/flatc.exe",
+        _ => "target/flatc",
+    };
+
     if let Some((platform, compiler)) = match env::consts::OS {
         "linux" if env::consts::ARCH == "x86_64" => Some((OS::Linux, ".clang++-15")),
-        "macos" if env::consts::ARCH == "x86_64" => Some((OS::MacIntel, "")), // TODO: check literals
-        "macos" if env::consts::ARCH == "arm" => Some((OS::Mac, "")), // TODO: check literals
+        "macos" if env::consts::ARCH == "x86_64" => Some((OS::MacIntel, "")),
+        "macos" if env::consts::ARCH == "arm" => Some((OS::Mac, "")),
         "windows" if env::consts::ARCH == "x86_64" => Some((OS::Windows, "")),
-        _ => {
-            println!("cargo:warning=unsupported platform: {} {}. 'flatc' binary supporting version {} of the library needs to be in system path", env::consts::OS, env::consts::ARCH, version);
-            None
-        }
+        _ => None,
     } {
         let url = format!("https://github.com/google/flatbuffers/releases/download/v{version}/{platform}.flatc.binary{compiler}.zip");
 
-        // download flatc compiler if it does not exist
-        if !Path::new("target/flatc").exists() {
-            println!("cargo:warning=downloading flatc from {url}");
+        if !Path::new(executable_path).exists() {
+            build_println!("downloading flatc executable from {url}");
             let agent = AgentBuilder::new()
                 .timeout_read(Duration::from_secs(5))
                 .timeout_write(Duration::from_secs(5))
@@ -78,32 +86,35 @@ fn main() {
             };
             let mut archive = Vec::new();
             if let Err(e) = reader.read_to_end(&mut archive) {
-                panic!("cannot read from strem: {e}");
+                panic!("cannot read from stream: {e}");
             };
-            let target_dir = PathBuf::from("target"); // Doesn't need to exist
-            zip_extract::extract(Cursor::new(archive), &target_dir, true).expect("flatc cannot be unpacked")
+            let target_dir = PathBuf::from("target");
+            zip_extract::extract(Cursor::new(archive), &target_dir, true)
+                .expect("flatc cannot be unpacked")
         } else {
-            println!("cargo:warning=cached zip file found, not downloading");
+            build_println!("cached flatc executable found, not downloading");
         }
-        // TODO: unpack binary
+    } else {
+        build_println!("unsupported platform: {} {}. 'flatc' binary supporting version {} of the library needs to be in system path", env::consts::OS, env::consts::ARCH, version);
     }
-    // Linux + x86: https://github.com/google/flatbuffers/releases/download/v24.3.25/Linux.flatc.binary.clang++-15.zip
-    // macOS + aarch: https://github.com/google/flatbuffers/releases/download/v24.3.25/Mac.flatc.binary.zip
-    // macOS + x86: https://github.com/google/flatbuffers/releases/download/v24.3.25/MacIntel.flatc.binary.zip
-    // Windows + x86: https://github.com/google/flatbuffers/releases/download/v24.3.25/Windows.flatc.binary.zip
 
-    // TODO: check if file exists, and then run it or try global installation
-    flatc_rust::run(flatc_rust::Args {
-        extra: &["--gen-all"],
-        inputs: &[
-            Path::new("include/engine/api/flatbuffers/position.fbs"),
-            Path::new("include/engine/api/flatbuffers/waypoint.fbs"),
-            Path::new("include/engine/api/flatbuffers/route.fbs"),
-            Path::new("include/engine/api/flatbuffers/table.fbs"),
-            Path::new("include/engine/api/flatbuffers/fbresult.fbs"),
-        ],
-        out_dir: Path::new("target/flatbuffers/"),
-        ..Default::default()
-    })
-    .expect("flatc");
+    let flatc = match Path::new(executable_path).exists() {
+        true => flatc_rust::Flatc::from_path(executable_path),
+        false => flatc_rust::Flatc::from_env_path(),
+    };
+    assert!(flatc.check().is_ok());
+    flatc
+        .run(flatc_rust::Args {
+            extra: &["--gen-all"],
+            inputs: &[
+                Path::new("include/engine/api/flatbuffers/position.fbs"),
+                Path::new("include/engine/api/flatbuffers/waypoint.fbs"),
+                Path::new("include/engine/api/flatbuffers/route.fbs"),
+                Path::new("include/engine/api/flatbuffers/table.fbs"),
+                Path::new("include/engine/api/flatbuffers/fbresult.fbs"),
+            ],
+            out_dir: Path::new("target/flatbuffers/"),
+            ..Default::default()
+        })
+        .expect("flatc failed generated files");
 }
