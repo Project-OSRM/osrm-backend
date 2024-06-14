@@ -402,7 +402,7 @@ class RouteAPI : public BaseAPI
             {
                 legBuilder.add_annotations(annotation_buffer);
             }
-            routeLegs.push_back(legBuilder.Finish());
+            routeLegs.emplace_back(legBuilder.Finish());
         }
         auto legs_vector = fb_result.CreateVector(routeLegs);
 
@@ -501,7 +501,7 @@ class RouteAPI : public BaseAPI
             nodes.reserve(leg_geometry.node_ids.size());
             for (const auto node_id : leg_geometry.node_ids)
             {
-                nodes.push_back(static_cast<uint64_t>(facade.GetOSMNodeIDOfNode(node_id)));
+                nodes.emplace_back(static_cast<uint64_t>(facade.GetOSMNodeIDOfNode(node_id)));
             }
         }
         auto nodes_vector = fb_result.CreateVector(nodes);
@@ -518,7 +518,7 @@ class RouteAPI : public BaseAPI
                 // Length of 0 indicates the first empty name, so we can stop here
                 if (name.empty())
                     break;
-                names.push_back(
+                names.emplace_back(
                     fb_result.CreateString(std::string(facade.GetDatasourceName(i))));
             }
             metadata_buffer = fbresult::CreateMetadataDirect(fb_result, &names);
