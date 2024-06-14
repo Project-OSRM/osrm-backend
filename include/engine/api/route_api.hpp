@@ -102,7 +102,7 @@ class RouteAPI : public BaseAPI
             if (!route.is_valid())
                 continue;
 
-            jsRoutes.values.emplace_back(MakeRoute(route.leg_endpoints,
+            jsRoutes.values.push_back(MakeRoute(route.leg_endpoints,
                                                    route.unpacked_path_segments,
                                                    route.source_traversed_in_reverse,
                                                    route.target_traversed_in_reverse));
@@ -135,7 +135,7 @@ class RouteAPI : public BaseAPI
             if (!raw_route.is_valid())
                 continue;
 
-            routes.emplace_back(MakeRoute(fb_result,
+            routes.push_back(MakeRoute(fb_result,
                                           raw_route.leg_endpoints,
                                           raw_route.unpacked_path_segments,
                                           raw_route.source_traversed_in_reverse,
@@ -218,7 +218,7 @@ class RouteAPI : public BaseAPI
 
         for (const auto &step : leg.annotations)
         {
-            annotations_store.emplace_back(Get(step));
+            annotations_store.push_back(Get(step));
         }
 
         return fb_result.CreateVector(annotations_store);
@@ -232,7 +232,7 @@ class RouteAPI : public BaseAPI
 
         for (const auto &step : leg.annotations)
         {
-            annotations_store.values.emplace_back(Get(step));
+            annotations_store.values.push_back(Get(step));
         }
 
         return annotations_store;
@@ -323,7 +323,7 @@ class RouteAPI : public BaseAPI
         {
             if (mask[index])
             {
-                result.emplace_back(mapping[index]);
+                result.push_back(mapping[index]);
             }
         }
         return result;
@@ -402,7 +402,7 @@ class RouteAPI : public BaseAPI
             {
                 legBuilder.add_annotations(annotation_buffer);
             }
-            routeLegs.emplace_back(legBuilder.Finish());
+            routeLegs.push_back(legBuilder.Finish());
         }
         auto legs_vector = fb_result.CreateVector(routeLegs);
 
@@ -501,7 +501,7 @@ class RouteAPI : public BaseAPI
             nodes.reserve(leg_geometry.node_ids.size());
             for (const auto node_id : leg_geometry.node_ids)
             {
-                nodes.emplace_back(static_cast<uint64_t>(facade.GetOSMNodeIDOfNode(node_id)));
+                nodes.push_back(static_cast<uint64_t>(facade.GetOSMNodeIDOfNode(node_id)));
             }
         }
         auto nodes_vector = fb_result.CreateVector(nodes);
@@ -518,7 +518,7 @@ class RouteAPI : public BaseAPI
                 // Length of 0 indicates the first empty name, so we can stop here
                 if (name.empty())
                     break;
-                names.emplace_back(
+                names.push_back(
                     fb_result.CreateString(std::string(facade.GetDatasourceName(i))));
             }
             metadata_buffer = fbresult::CreateMetadataDirect(fb_result, &names);
@@ -674,7 +674,7 @@ class RouteAPI : public BaseAPI
                         auto lane_valid = lane_id >= intersection.lanes.first_lane_from_the_right &&
                                           lane_id < intersection.lanes.first_lane_from_the_right +
                                                         intersection.lanes.lanes_in_turn;
-                        lanes.emplace_back(
+                        lanes.push_back(
                             fbresult::CreateLaneDirect(fb_result, &indications, lane_valid));
                     }
                 }
@@ -842,7 +842,7 @@ class RouteAPI : public BaseAPI
                     nodes.values.reserve(leg_geometry.node_ids.size());
                     for (const auto node_id : leg_geometry.node_ids)
                     {
-                        nodes.values.emplace_back(
+                        nodes.values.push_back(
                             static_cast<std::uint64_t>(facade.GetOSMNodeIDOfNode(node_id)));
                     }
                     annotation.values.emplace("nodes", std::move(nodes));
@@ -859,14 +859,14 @@ class RouteAPI : public BaseAPI
                         // Length of 0 indicates the first empty name, so we can stop here
                         if (name.empty())
                             break;
-                        datasource_names.values.emplace_back(
+                        datasource_names.values.push_back(
                             std::string(facade.GetDatasourceName(i)));
                     }
                     metadata.values.emplace("datasource_names", datasource_names);
                     annotation.values.emplace("metadata", metadata);
                 }
 
-                annotations.emplace_back(std::move(annotation));
+                annotations.push_back(std::move(annotation));
             }
         }
 
@@ -992,8 +992,8 @@ class RouteAPI : public BaseAPI
                 }
             }
 
-            leg_geometries.emplace_back(std::move(leg_geometry));
-            legs.emplace_back(std::move(leg));
+            leg_geometries.push_back(std::move(leg_geometry));
+            legs.push_back(std::move(leg));
         }
         return result;
     }
