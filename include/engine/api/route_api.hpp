@@ -103,9 +103,9 @@ class RouteAPI : public BaseAPI
                 continue;
 
             jsRoutes.values.push_back(MakeRoute(route.leg_endpoints,
-                                                   route.unpacked_path_segments,
-                                                   route.source_traversed_in_reverse,
-                                                   route.target_traversed_in_reverse));
+                                                route.unpacked_path_segments,
+                                                route.source_traversed_in_reverse,
+                                                route.target_traversed_in_reverse));
         }
 
         if (!parameters.skip_waypoints)
@@ -136,10 +136,10 @@ class RouteAPI : public BaseAPI
                 continue;
 
             routes.push_back(MakeRoute(fb_result,
-                                          raw_route.leg_endpoints,
-                                          raw_route.unpacked_path_segments,
-                                          raw_route.source_traversed_in_reverse,
-                                          raw_route.target_traversed_in_reverse));
+                                       raw_route.leg_endpoints,
+                                       raw_route.unpacked_path_segments,
+                                       raw_route.source_traversed_in_reverse,
+                                       raw_route.target_traversed_in_reverse));
         }
 
         auto routes_vector = fb_result.CreateVector(routes);
@@ -859,8 +859,7 @@ class RouteAPI : public BaseAPI
                         // Length of 0 indicates the first empty name, so we can stop here
                         if (name.empty())
                             break;
-                        datasource_names.values.push_back(
-                            std::string(facade.GetDatasourceName(i)));
+                        datasource_names.values.push_back(std::string(facade.GetDatasourceName(i)));
                     }
                     metadata.values.emplace("datasource_names", datasource_names);
                     annotation.values.emplace("metadata", metadata);
