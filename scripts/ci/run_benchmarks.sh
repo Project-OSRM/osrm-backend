@@ -2,11 +2,11 @@
 set -eou pipefail
 
 function usage {
-    echo "Usage: $0 -f <folder> -r <results_folder> -s <scripts_folder> -b <binaries_folder>"
+    echo "Usage: $0 -f <folder> -r <results_folder> -s <scripts_folder> -b <binaries_folder> -o <osm_pbf> -g <gps_traces>"
     exit 1
 }
 
-while getopts ":f:r:s:b:o:g" opt; do
+while getopts ":f:r:s:b:o:g:" opt; do
   case $opt in
     f) FOLDER="$OPTARG"
     ;;
@@ -29,7 +29,7 @@ while getopts ":f:r:s:b:o:g" opt; do
   esac
 done
 
-if [ -z "${FOLDER:-}" ] || [ -z "${RESULTS_FOLDER:-}" ] || [ -z "${SCRIPTS_FOLDER:-}" ] || [ -z "${BINARIES_FOLDER:-}" || [ -z "${OSM_PBF:-}" || [ -z "${GPS_TRACES:-}" ]; then
+if [ -z "${FOLDER:-}" ] || [ -z "${RESULTS_FOLDER:-}" ] || [ -z "${SCRIPTS_FOLDER:-}" ] || [ -z "${BINARIES_FOLDER:-}" ] || [ -z "${OSM_PBF:-}" ] || [ -z "${GPS_TRACES:-}" ]; then
     usage
 fi
 
@@ -50,9 +50,6 @@ function measure_peak_ram_and_time {
 }
 
 function run_benchmarks_for_folder {
-    echo "Running benchmarks for $1"
-
-
     mkdir -p $RESULTS_FOLDER
 
     BENCHMARKS_FOLDER="$BINARIES_FOLDER/src/benchmarks"
