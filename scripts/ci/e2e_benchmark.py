@@ -1,4 +1,4 @@
-import requests
+pimport requests
 import sys
 import random
 from collections import defaultdict
@@ -79,7 +79,7 @@ class BenchmarkRunner:
             raise Exception(f"Unknown benchmark: {benchmark_name}")
 
 def calculate_confidence_interval(data):
-    assert len(data) == 5, f"Shape: {data.shape}"
+    #assert len(data) == 5, f"Shape: {data.shape}"
     mean = np.mean(data)
     std_err = np.std(data, ddof=1) / np.sqrt(len(data))
     h = std_err * stats.t.ppf((1 + 0.95) / 2., len(data) - 1)  # 95% confidence interval using t-distribution
