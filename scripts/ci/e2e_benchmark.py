@@ -78,6 +78,7 @@ class BenchmarkRunner:
             raise Exception(f"Unknown benchmark: {benchmark_name}")
 
 def calculate_confidence_interval(data):
+    print('Data: ', data.shape)
     assert len(data) == 5
     mean = np.mean(data)
     std_err = np.std(data, ddof=1) / np.sqrt(len(data))
@@ -89,7 +90,7 @@ def main():
     parser.add_argument('--host', type=str, required=True, help='Host URL')
     parser.add_argument('--method', type=str, required=True, choices=['route', 'table', 'match', 'nearest', 'trip'], help='Benchmark method')
     parser.add_argument('--num_requests', type=int, required=True, help='Number of requests to perform')
-    parser.add_argument('--iterations', type=int, default=5, required=True, help='Number of iterations to run the benchmark')
+    parser.add_argument('--iterations', type=int, required=True, help='Number of iterations to run the benchmark')
     parser.add_argument('--gps_traces_file_path', type=str, required=True, help='Path to the GPS traces file')
 
     args = parser.parse_args()
@@ -103,6 +104,8 @@ def main():
         times = runner.run(args.method, args.host, args.num_requests)
         all_times.append(times)
     all_times = np.asarray(all_times)
+
+    print('Shape: ', all_times.shape)
 
     total_time, total_ci = calculate_confidence_interval(np.sum(all_times, axis=0))
     min_time, min_ci = calculate_confidence_interval(np.min(all_times, axis=0))
