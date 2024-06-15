@@ -24,6 +24,7 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: Apply micro-optimisation for Table & Trip APIs. [#6949](https://github.com/Project-OSRM/osrm-backend/pull/6949)
       - CHANGED: Apply micro-optimisation for Match API. [#6945](https://github.com/Project-OSRM/osrm-backend/pull/6945)
       - CHANGED: Apply micro-optimisation for Nearest API. [#6944](https://github.com/Project-OSRM/osrm-backend/pull/6944)
       - CHANGED: Avoid copy of intersection in totalTurnAngle. [#6938](https://github.com/Project-OSRM/osrm-backend/pull/6938)
