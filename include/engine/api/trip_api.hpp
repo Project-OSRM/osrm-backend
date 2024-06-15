@@ -79,14 +79,14 @@ class TripAPI final : public RouteAPI
         }
         if (!parameters.skip_waypoints)
         {
-            response.values["waypoints"] = MakeWaypoints(sub_trips, candidates);
+            response.values.emplace("waypoints", MakeWaypoints(sub_trips, candidates));
         }
-        response.values["trips"] = std::move(routes);
-        response.values["code"] = "Ok";
+        response.values.emplace("trips", std::move(routes));
+        response.values.emplace("code", "Ok");
         auto data_timestamp = facade.GetTimestamp();
         if (!data_timestamp.empty())
         {
-            response.values["data_version"] = data_timestamp;
+            response.values.emplace("data_version", data_timestamp);
         }
     }
 
@@ -151,8 +151,8 @@ class TripAPI final : public RouteAPI
             BOOST_ASSERT(!trip_index.NotUsed());
 
             auto waypoint = BaseAPI::MakeWaypoint(candidates[input_index]);
-            waypoint.values["trips_index"] = trip_index.sub_trip_index;
-            waypoint.values["waypoint_index"] = trip_index.point_index;
+            waypoint.values.emplace("trips_index", trip_index.sub_trip_index);
+            waypoint.values.emplace("waypoint_index", trip_index.point_index);
             waypoints.values.push_back(std::move(waypoint));
         }
 
