@@ -721,9 +721,15 @@ jobs:
           make -j$(nproc) benchmarks
           cd ..
           make -C test/data 
-      - name: Run Benchmarks
+      - name: Run Base Benchmarks
         run: |
-          ./pr/scripts/ci/run_benchmarks.sh base pr
+          # we intentionally use scripts from PR branch to be able to update them and see results in the same PR
+          ./pr/scripts/ci/run_benchmarks.sh -f $(pwd)/base -r $(pwd)/base_results -s $(pwd)/pr -b $(pwd)/base/build -o ~/data.osm.pbf -g ~/gps_traces.csv
+          
+      - name: Run PR Benchmarks 
+         run: |
+          ./pr/scripts/ci/run_benchmarks.sh -f $(pwd)/pr -r $(pwd)/pr_results -s $(pwd)/pr -b $(pwd)/pr/build -o ~/data.osm.pbf -g ~/gps_traces.csv
+          
       - name: Post Benchmark Results
         run: |
           python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results

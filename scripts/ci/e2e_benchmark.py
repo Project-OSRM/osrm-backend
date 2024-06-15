@@ -9,11 +9,11 @@ import time
 import argparse
 
 class BenchmarkRunner:
-    def __init__(self):
+    def __init__(self, gps_traces_file_path):
         self.coordinates = []
         self.tracks = defaultdict(list)
 
-        gps_traces_file_path = os.path.expanduser('~/gps_traces.csv')
+        gps_traces_file_path = os.path.expanduser(gps_traces_file_path)
         with open(gps_traces_file_path, 'r') as file:
             reader = csv.DictReader(file)
             for row in reader:
@@ -90,11 +90,12 @@ def main():
     parser.add_argument('--method', type=str, required=True, choices=['route', 'table', 'match', 'nearest', 'trip'], help='Benchmark method')
     parser.add_argument('--num_requests', type=int, required=True, help='Number of requests to perform')
     parser.add_argument('--iterations', type=int, default=5, required=True, help='Number of iterations to run the benchmark')
+    parser.add_argument('--gps_traces_file_path', type=str, required=True, help='Path to the GPS traces file')
 
     args = parser.parse_args()
 
 
-    runner = BenchmarkRunner()
+    runner = BenchmarkRunner(args.gps_traces_file_path)
     
     all_times = []
     for _ in range(args.iterations):
@@ -110,13 +111,13 @@ def main():
     perc_99_time, perc_99_ci = calculate_confidence_interval(np.percentile(all_times, 99, axis=0))
     max_time, max_ci = calculate_confidence_interval(np.max(all_times, axis=0))
 
-    print(f'Total: {total_time}ms ± {total_ci:.2f}ms')
-    print(f"Min time: {min_time}ms ± {min_ci:.2f}ms")
+    print(f'Total: {total_time:.2f}ms ± {total_ci:.2f}ms')
+    print(f"Min time: {min_time:.2f}ms ± {min_ci:.2f}ms")
     print(f"Mean time: {mean_time:.2f}ms ± {mean_ci:.2f}ms")
-    print(f"Median time: {median_time}ms ± {median_ci:.2f}ms")
+    print(f"Median time: {median_time:.2f}ms ± {median_ci:.2f}ms")
     print(f"95th percentile: {perc_95_time:.2f}ms ± {perc_95_ci:.2f}ms")
     print(f"99th percentile: {perc_99_time:.2f}ms ± {perc_99_ci:.2f}ms")
-    print(f"Max time: {max_time}ms ± {max_ci:.2f}ms")
+    print(f"Max time: {max_time:.2f}ms ± {max_ci:.2f}ms")
 
 if __name__ == '__main__':
     main()
