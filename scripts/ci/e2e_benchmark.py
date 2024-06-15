@@ -79,7 +79,7 @@ class BenchmarkRunner:
 
 def calculate_confidence_interval(data):
     print('Data: ', data.shape)
-    assert len(data) == 5
+    assert len(data) == 5, f"Shape: {data.shape}"
     mean = np.mean(data)
     std_err = np.std(data, ddof=1) / np.sqrt(len(data))
     h = std_err * 1.96 # 95% confidence interval
