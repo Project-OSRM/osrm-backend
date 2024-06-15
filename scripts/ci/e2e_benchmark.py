@@ -77,26 +77,46 @@ class BenchmarkRunner:
         else:
             raise Exception(f"Unknown benchmark: {benchmark_name}")
 
+def calculate_confidence_interval(data):
+    assert len(data) == 5
+    mean = np.mean(data)
+    std_err = np.std(data, ddof=1) / np.sqrt(len(data))
+    h = std_err * 1.96 # 95% confidence interval
+    return mean, h
+
 def main():
     parser = argparse.ArgumentParser(description='Run GPS benchmark tests.')
     parser.add_argument('--host', type=str, required=True, help='Host URL')
     parser.add_argument('--method', type=str, required=True, choices=['route', 'table', 'match', 'nearest', 'trip'], help='Benchmark method')
     parser.add_argument('--num_requests', type=int, required=True, help='Number of requests to perform')
+    parser.add_argument('--iterations', type=int, default=5, required=True, help='Number of iterations to run the benchmark')
 
     args = parser.parse_args()
 
-    random.seed(42)
 
     runner = BenchmarkRunner()
-    times = runner.run(args.method, args.host, args.num_requests)
+    
+    all_times = []
+    for _ in range(args.iterations):
+        random.seed(42)
+        times = runner.run(args.method, args.host, args.num_requests)
+        all_times.extend(times)
+    
+    total_time, total_ci = calculate_confidence_interval(np.sum(all_times, axis=1))
+    min_time, min_ci = calculate_confidence_interval(np.min(all_times, axis=1))
+    mean_time, mean_ci = calculate_confidence_interval(np.mean(all_times, axis=1))
+    median_time, median_ci = calculate_confidence_interval(np.median(all_times, axis=1))
+    perc_95_time, perc_95_ci = calculate_confidence_interval(np.percentile(all_times, 95, axis=1))
+    perc_99_time, perc_99_ci = calculate_confidence_interval(np.percentile(all_times, 99, axis=1))
+    max_time, max_ci = calculate_confidence_interval(np.max(all_times, axis=1))
 
-    print(f'Total: {np.sum(times)}ms')
-    print(f"Min time: {np.min(times)}ms")
-    print(f"Mean time: {np.mean(times)}ms")
-    print(f"Median time: {np.median(times)}ms")
-    print(f"95th percentile: {np.percentile(times, 95)}ms")
-    print(f"99th percentile: {np.percentile(times, 99)}ms")
-    print(f"Max time: {np.max(times)}ms")
+    print(f'Total: {total_time}ms ± {total_ci:.2f}ms')
+    print(f"Min time: {min_time}ms ± {min_ci:.2f}ms")
+    print(f"Mean time: {mean_time:.2f}ms ± {mean_ci:.2f}ms")
+    print(f"Median time: {median_time}ms ± {median_ci:.2f}ms")
+    print(f"95th percentile: {perc_95_time:.2f}ms ± {perc_95_ci:.2f}ms")
+    print(f"99th percentile: {perc_99_time:.2f}ms ± {perc_99_ci:.2f}ms")
+    print(f"Max time: {max_time}ms ± {max_ci:.2f}ms")
 
 if __name__ == '__main__':
     main()
