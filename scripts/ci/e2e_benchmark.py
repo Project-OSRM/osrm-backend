@@ -101,8 +101,9 @@ def main():
     for _ in range(args.iterations):
         random.seed(42)
         times = runner.run(args.method, args.host, args.num_requests)
-        all_times.extend(times)
-    
+        all_times.append(times)
+    all_times = np.asarray(all_times)
+
     total_time, total_ci = calculate_confidence_interval(np.sum(all_times, axis=0))
     min_time, min_ci = calculate_confidence_interval(np.min(all_times, axis=0))
     mean_time, mean_ci = calculate_confidence_interval(np.mean(all_times, axis=0))
