@@ -107,13 +107,13 @@ def main():
 
     print('Shape: ', all_times.shape)
 
-    total_time, total_ci = calculate_confidence_interval(np.sum(all_times, axis=0))
-    min_time, min_ci = calculate_confidence_interval(np.min(all_times, axis=0))
-    mean_time, mean_ci = calculate_confidence_interval(np.mean(all_times, axis=0))
-    median_time, median_ci = calculate_confidence_interval(np.median(all_times, axis=0))
-    perc_95_time, perc_95_ci = calculate_confidence_interval(np.percentile(all_times, 95, axis=0))
-    perc_99_time, perc_99_ci = calculate_confidence_interval(np.percentile(all_times, 99, axis=0))
-    max_time, max_ci = calculate_confidence_interval(np.max(all_times, axis=0))
+    total_time, total_ci = calculate_confidence_interval(np.sum(all_times, axis=1))
+    min_time, min_ci = calculate_confidence_interval(np.min(all_times, axis=1))
+    mean_time, mean_ci = calculate_confidence_interval(np.mean(all_times, axis=1))
+    median_time, median_ci = calculate_confidence_interval(np.median(all_times, axis=1))
+    perc_95_time, perc_95_ci = calculate_confidence_interval(np.percentile(all_times, 95, axis=1))
+    perc_99_time, perc_99_ci = calculate_confidence_interval(np.percentile(all_times, 99, axis=1))
+    max_time, max_ci = calculate_confidence_interval(np.max(all_times, axis=1))
 
     print(f'Total: {total_time:.2f}ms ± {total_ci:.2f}ms')
     print(f"Min time: {min_time:.2f}ms ± {min_ci:.2f}ms")
