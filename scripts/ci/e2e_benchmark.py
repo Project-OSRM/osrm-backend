@@ -7,6 +7,7 @@ import csv
 import numpy as np
 import time
 import argparse
+from scipy import stats
 
 class BenchmarkRunner:
     def __init__(self, gps_traces_file_path):
@@ -82,7 +83,7 @@ def calculate_confidence_interval(data):
     assert len(data) == 5, f"Shape: {data.shape}"
     mean = np.mean(data)
     std_err = np.std(data, ddof=1) / np.sqrt(len(data))
-    h = std_err * 1.96 # 95% confidence interval
+    h = std_err * stats.t.ppf((1 + 0.95) / 2., len(data) - 1)  # 95% confidence interval using t-distribution
     return mean, h
 
 def main():
