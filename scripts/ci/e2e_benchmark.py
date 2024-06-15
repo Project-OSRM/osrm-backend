@@ -79,7 +79,6 @@ class BenchmarkRunner:
             raise Exception(f"Unknown benchmark: {benchmark_name}")
 
 def calculate_confidence_interval(data):
-    print('Data: ', data.shape)
     assert len(data) == 5, f"Shape: {data.shape}"
     mean = np.mean(data)
     std_err = np.std(data, ddof=1) / np.sqrt(len(data))
