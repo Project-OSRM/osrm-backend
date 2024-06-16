@@ -698,15 +698,6 @@ jobs:
           mkdir -p $HOME/.ccache
           ccache --zero-stats
           ccache --max-size=256M
-      - name: Build PR Branch
-        run: |
-          mkdir -p pr/build
-          cd pr/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
-          make -j$(nproc) 
-          make -j$(nproc) benchmarks
-          cd ..
-          make -C test/data 
       - name: Checkout Base Branch
         uses: actions/checkout@v4
         with:
@@ -718,6 +709,15 @@ jobs:
           cd base/build
           cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
           make -j$(nproc)
+          make -j$(nproc) benchmarks
+          cd ..
+          make -C test/data 
+      - name: Build PR Branch
+        run: |
+          mkdir -p pr/build
+          cd pr/build
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          make -j$(nproc) 
           make -j$(nproc) benchmarks
           cd ..
           make -C test/data 
