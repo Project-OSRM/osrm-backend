@@ -68,7 +68,7 @@ class BenchmarkRunner:
             end_coord = f"{end[1]:.6f},{end[0]:.6f}"
             return f"{host}/route/v1/driving/{start_coord};{end_coord}?overview=full&steps=true"
         elif benchmark_name == 'table':
-            num_coords = random.randint(3, 100)
+            num_coords = random.randint(3, 50)
             selected_coords = random.sample(self.coordinates, num_coords)
             coords_str = ";".join([f"{coord[1]:.6f},{coord[0]:.6f}" for coord in selected_coords])
             return f"{host}/table/v1/driving/{coords_str}"
