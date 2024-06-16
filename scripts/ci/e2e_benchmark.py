@@ -1,4 +1,4 @@
-pimport requests
+import requests
 import sys
 import random
 from collections import defaultdict
