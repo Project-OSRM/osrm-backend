@@ -91,12 +91,21 @@ class BenchmarkRunner:
         else:
             raise Exception(f"Unknown benchmark: {benchmark_name}")
 
+def bootstrap_confidence_interval(data, num_samples=1000, confidence_level=0.95):
+    means = []
+    for _ in range(num_samples):
+        sample = np.random.choice(data, size=len(data), replace=True)
+        means.append(np.mean(sample))
+    lower_bound = np.percentile(means, (1 - confidence_level) / 2 * 100)
+    upper_bound = np.percentile(means, (1 + confidence_level) / 2 * 100)
+    mean = np.mean(means)
+    return mean, lower_bound, upper_bound
+
 def calculate_confidence_interval(data):
-    #assert len(data) == 5, f"Shape: {data.shape}"
-    mean = np.mean(data)
-    std_err = np.std(data, ddof=1) / np.sqrt(len(data))
-    h = std_err * stats.t.ppf((1 + 0.95) / 2., len(data) - 1)  # 95% confidence interval using t-distribution
-    return mean, h, np.min(data)
+    mean, lower, upper = bootstrap_confidence_interval(data)
+    min_value = np.min(data)
+    return mean, (upper - lower) / 2, min_value
+
 
 def main():
     parser = argparse.ArgumentParser(description='Run GPS benchmark tests.')
@@ -108,6 +117,7 @@ def main():
 
     args = parser.parse_args()
 
+    np.random.seed(42)
 
     runner = BenchmarkRunner(args.gps_traces_file_path)
     
