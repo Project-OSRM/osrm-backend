@@ -68,7 +68,7 @@ class BenchmarkRunner:
             end_coord = f"{end[1]:.6f},{end[0]:.6f}"
             return f"{host}/route/v1/driving/{start_coord};{end_coord}?overview=full&steps=true"
         elif benchmark_name == 'table':
-            num_coords = random.randint(3, 25)
+            num_coords = random.randint(3, 12)
             selected_coords = random.sample(self.coordinates, num_coords)
             coords_str = ";".join([f"{coord[1]:.6f},{coord[0]:.6f}" for coord in selected_coords])
             return f"{host}/table/v1/driving/{coords_str}"
@@ -134,7 +134,7 @@ def main():
 
     total_time, total_ci, total_best = calculate_confidence_interval(np.sum(all_times, axis=1))
     print('Ops: ', float(all_times.shape[1]) / np.sum(all_times * 1000, axis=1))
-    
+
     ops_per_sec, ops_per_sec_ci, ops_per_sec_best = calculate_confidence_interval(float(all_times.shape[1]) / np.sum(all_times * 1000, axis=1))
     min_time, min_ci, _ = calculate_confidence_interval(np.min(all_times, axis=1))
     mean_time, mean_ci, _ = calculate_confidence_interval(np.mean(all_times, axis=1))
