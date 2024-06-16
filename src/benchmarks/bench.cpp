@@ -45,8 +45,12 @@ class GPSTraces
     std::vector<osrm::util::Coordinate> coordinates;
     mutable std::mt19937 gen;
 
+    int seed;
+
   public:
-    GPSTraces(int seed) : gen(std::random_device{}()) { gen.seed(seed); }
+    GPSTraces(int seed) : gen(std::random_device{}()), seed(seed) { gen.seed(seed); }
+
+    void resetSeed() const { gen.seed(seed); }
 
     bool readCSV(const std::string &filename)
     {
@@ -113,7 +117,7 @@ class GPSTraces
 class Statistics
 {
   public:
-    void push(double timeMs)
+    void push(double timeMs, int /*iteration*/ = 0)
     {
         times.push_back(timeMs);
         sorted = false;
@@ -168,7 +172,7 @@ std::ostream &operator<<(std::ostream &os, Statistics &statistics)
     return os;
 }
 
-void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
+void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterations)
 {
     struct Benchmark
     {
@@ -184,43 +188,49 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
     {
         Statistics statistics;
 
-        auto NUM = 10000;
-        for (int i = 0; i < NUM; ++i)
+        for (int iteration = 0; iteration < iterations; ++iteration)
         {
-            RouteParameters params;
-            params.overview = benchmark.overview;
-            params.steps = benchmark.steps;
+            gpsTraces.resetSeed();
 
-            for (size_t i = 0; i < benchmark.coordinates; ++i)
+            auto NUM = 1000;
+            for (int i = 0; i < NUM; ++i)
             {
-                params.coordinates.push_back(gpsTraces.getRandomCoordinate());
-            }
+                RouteParameters params;
+                params.overview = benchmark.overview;
+                params.steps = benchmark.steps;
 
-            if (benchmark.alternatives)
-            {
-                params.alternatives = *benchmark.alternatives;
-            }
-
-            if (benchmark.radius)
-            {
-                params.radiuses = std::vector<boost::optional<double>>(
-                    params.coordinates.size(), boost::make_optional(*benchmark.radius));
-            }
-
-            engine::api::ResultT result = json::Object();
-            TIMER_START(routes);
-            const auto rc = osrm.Route(params, result);
-            TIMER_STOP(routes);
-
-            statistics.push(TIMER_MSEC(routes));
-
-            auto &json_result = std::get<json::Object>(result);
-            if (rc != Status::Ok || json_result.values.find("routes") == json_result.values.end())
-            {
-                auto code = std::get<json::String>(json_result.values["code"]).value;
-                if (code != "NoSegment" && code != "NoRoute")
+                for (size_t i = 0; i < benchmark.coordinates; ++i)
                 {
-                    throw std::runtime_error{"Couldn't route: " + code};
+                    params.coordinates.push_back(gpsTraces.getRandomCoordinate());
+                }
+
+                if (benchmark.alternatives)
+                {
+                    params.alternatives = *benchmark.alternatives;
+                }
+
+                if (benchmark.radius)
+                {
+                    params.radiuses = std::vector<boost::optional<double>>(
+                        params.coordinates.size(), boost::make_optional(*benchmark.radius));
+                }
+
+                engine::api::ResultT result = json::Object();
+                TIMER_START(routes);
+                const auto rc = osrm.Route(params, result);
+                TIMER_STOP(routes);
+
+                statistics.push(TIMER_MSEC(routes), iteration);
+
+                auto &json_result = std::get<json::Object>(result);
+                if (rc != Status::Ok ||
+                    json_result.values.find("routes") == json_result.values.end())
+                {
+                    auto code = std::get<json::String>(json_result.values["code"]).value;
+                    if (code != "NoSegment" && code != "NoRoute")
+                    {
+                        throw std::runtime_error{"Couldn't route: " + code};
+                    }
                 }
             }
         }
@@ -234,11 +244,6 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
          RouteParameters::OverviewType::Full,
          true,
          std::nullopt},
-        {"10000 routes, 2 coordinates, no alternatives, overview=full, steps=true",
-         2,
-         RouteParameters::OverviewType::Full,
-         true,
-         std::nullopt},
         {"10000 routes, 2 coordinates, 3 alternatives, overview=full, steps=true",
          2,
          RouteParameters::OverviewType::Full,
@@ -249,36 +254,11 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
          RouteParameters::OverviewType::False,
          false,
          std::nullopt},
-        {"10000 routes, 2 coordinates, no alternatives, overview=false, steps=false",
-         2,
-         RouteParameters::OverviewType::False,
-         false,
-         std::nullopt},
         {"10000 routes, 2 coordinates, 3 alternatives, overview=false, steps=false",
          2,
          RouteParameters::OverviewType::False,
          false,
-         3},
-        {"10000 routes, 3 coordinates, no alternatives, overview=false, steps=false, radius=750",
-         3,
-         RouteParameters::OverviewType::False,
-         false,
-         std::nullopt,
-         750},
-        {"10000 routes, 2 coordinates, no alternatives, overview=false, steps=false, radius=750",
-         2,
-         RouteParameters::OverviewType::False,
-         false,
-         std::nullopt,
-         750},
-        {"10000 routes, 2 coordinates, 3 alternatives, overview=false, steps=false, radius=750",
-         2,
-         RouteParameters::OverviewType::False,
-         false,
-         3,
-         750}
-
-    };
+         3}};
 
     for (const auto &benchmark : benchmarks)
     {
@@ -502,8 +482,7 @@ void runTableBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
 
     std::vector<Benchmark> benchmarks = {{"250 tables, 3 coordinates", 3},
                                          {"250 tables, 25 coordinates", 25},
-                                         {"250 tables, 50 coordinates", 50},
-                                         {"250 tables, 100 coordinates", 100}};
+                                         {"250 tables, 50 coordinates", 50}};
 
     for (const auto &benchmark : benchmarks)
     {
@@ -516,11 +495,11 @@ void runTableBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
 int main(int argc, const char *argv[])
 try
 {
-    if (argc < 5)
+    if (argc < 6)
     {
-        std::cerr
-            << "Usage: " << argv[0]
-            << " data.osrm <mld|ch> <path to GPS traces.csv> <route|match|trip|table|nearest>\n";
+        std::cerr << "Usage: " << argv[0]
+                  << " data.osrm <mld|ch> <path to GPS traces.csv> "
+                     "<route|match|trip|table|nearest> <number_of_iterations>\n";
         return EXIT_FAILURE;
     }
 
@@ -537,11 +516,13 @@ try
     GPSTraces gpsTraces{42};
     gpsTraces.readCSV(argv[3]);
 
+    int iterations = std::stoi(argv[5]);
+
     const auto benchmarkToRun = std::string{argv[4]};
 
     if (benchmarkToRun == "route")
     {
-        runRouteBenchmark(osrm, gpsTraces);
+        runRouteBenchmark(osrm, gpsTraces, iterations);
     }
     else if (benchmarkToRun == "match")
     {
