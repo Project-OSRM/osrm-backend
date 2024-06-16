@@ -68,7 +68,7 @@ class BenchmarkRunner:
             end_coord = f"{end[1]:.6f},{end[0]:.6f}"
             return f"{host}/route/v1/driving/{start_coord};{end_coord}?overview=full&steps=true"
         elif benchmark_name == 'table':
-            num_coords = random.randint(3, 50)
+            num_coords = random.randint(3, 25)
             selected_coords = random.sample(self.coordinates, num_coords)
             coords_str = ";".join([f"{coord[1]:.6f},{coord[0]:.6f}" for coord in selected_coords])
             return f"{host}/table/v1/driving/{coords_str}"
@@ -128,9 +128,12 @@ def main():
         all_times.append(times)
     all_times = np.asarray(all_times)
 
+    assert all_times.shape == (args.iterations, all_times.shape[1])
+
     print('Shape: ', all_times.shape)
 
     total_time, total_ci, total_best = calculate_confidence_interval(np.sum(all_times, axis=1))
+    ops_per_sec, ops_per_sec_ci, ops_per_sec_best = calculate_confidence_interval(len(all_times[0]) / np.sum(all_times * 1000, axis=1))
     min_time, min_ci, _ = calculate_confidence_interval(np.min(all_times, axis=1))
     mean_time, mean_ci, _ = calculate_confidence_interval(np.mean(all_times, axis=1))
     median_time, median_ci, _ = calculate_confidence_interval(np.median(all_times, axis=1))
@@ -139,6 +142,7 @@ def main():
     max_time, max_ci, _ = calculate_confidence_interval(np.max(all_times, axis=1))
 
     print(f'Total: {total_time:.2f}ms ± {total_ci:.2f}ms. Best: {total_best:.2f}ms')
+    print(f'Ops: {ops_per_sec:.2f} ± {ops_per_sec_ci:.2f} ops/s. Best: {ops_per_sec_best:.2f} ops/s')
     print(f"Min time: {min_time:.2f}ms ± {min_ci:.2f}ms")
     print(f"Mean time: {mean_time:.2f}ms ± {mean_ci:.2f}ms")
     print(f"Median time: {median_time:.2f}ms ± {median_ci:.2f}ms")
