@@ -133,7 +133,9 @@ def main():
     print('Shape: ', all_times.shape)
 
     total_time, total_ci, total_best = calculate_confidence_interval(np.sum(all_times, axis=1))
-    ops_per_sec, ops_per_sec_ci, ops_per_sec_best = calculate_confidence_interval(len(all_times[0]) / np.sum(all_times * 1000, axis=1))
+    print('Ops: ', float(all_times.shape[1]) / np.sum(all_times * 1000, axis=1))
+    
+    ops_per_sec, ops_per_sec_ci, ops_per_sec_best = calculate_confidence_interval(float(all_times.shape[1]) / np.sum(all_times * 1000, axis=1))
     min_time, min_ci, _ = calculate_confidence_interval(np.min(all_times, axis=1))
     mean_time, mean_ci, _ = calculate_confidence_interval(np.mean(all_times, axis=1))
     median_time, median_ci, _ = calculate_confidence_interval(np.median(all_times, axis=1))
