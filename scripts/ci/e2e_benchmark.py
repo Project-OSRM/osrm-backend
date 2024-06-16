@@ -45,6 +45,10 @@ class BenchmarkRunner:
                     code = response.json()['code']
                     if code == 'NoRoute':
                         continue
+                elif benchmark_name == 'trip':
+                    code = response.json()['code']
+                    if code == 'NoTrips':
+                        continue
                 raise Exception(f"Error: {response.status_code} {response.text}")
             times.append((end_time - start_time) * 1000) # convert to ms
         
