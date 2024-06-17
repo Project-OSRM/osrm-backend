@@ -117,9 +117,10 @@ class GPSTraces
 class Statistics
 {
   public:
-    void push(double timeMs, int /*iteration*/ = 0)
+    explicit Statistics(int iterations) : times(iterations) {}
+    void push(double timeMs, int iteration)
     {
-        times.push_back(timeMs);
+        times[iteration].push_back(timeMs);
         sorted = false;
     }
 
@@ -128,16 +129,16 @@ class Statistics
     double sum()
     {
         double sum = 0;
-        for (auto time : times)
+        for (auto time : times[0])
         {
             sum += time;
         }
         return sum;
     }
 
-    double min() { return *std::min_element(times.begin(), times.end()); }
+    double min() { return *std::min_element(times[0].begin(), times[0].end()); }
 
-    double max() { return *std::max_element(times.begin(), times.end()); }
+    double max() { return *std::max_element(times[0].begin(), times[0].end()); }
 
     double percentile(double p)
     {
@@ -150,13 +151,14 @@ class Statistics
     {
         if (!sorted)
         {
-            std::sort(times.begin(), times.end());
+            std::sort(times[0].begin(), times[0].end());
             sorted = true;
         }
-        return times;
+        return times[0];
     }
 
-    std::vector<double> times;
+    // vector of times for each iteration
+    std::vector<std::vector<double>> times;
 
     bool sorted = false;
 };
@@ -186,7 +188,7 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterati
 
     auto run_benchmark = [&](const Benchmark &benchmark)
     {
-        Statistics statistics;
+        Statistics statistics{iterations};
 
         for (int iteration = 0; iteration < iterations; ++iteration)
         {
@@ -266,7 +268,7 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterati
     }
 }
 
-void runMatchBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
+void runMatchBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterations)
 {
     struct Benchmark
     {
@@ -276,38 +278,42 @@ void runMatchBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
 
     auto run_benchmark = [&](const Benchmark &benchmark)
     {
-        Statistics statistics;
+        Statistics statistics{iterations};
 
         auto NUM = 1000;
-        for (int i = 0; i < NUM; ++i)
+        for (int iteration = 0; iteration < iterations; ++iteration)
         {
-            engine::api::ResultT result = json::Object();
-
-            engine::api::MatchParameters params;
-            params.coordinates = gpsTraces.getRandomTrace();
-            params.radiuses = {};
-            if (benchmark.radius)
+            gpsTraces.resetSeed();
+            for (int i = 0; i < NUM; ++i)
             {
-                for (size_t index = 0; index < params.coordinates.size(); ++index)
+                engine::api::ResultT result = json::Object();
+
+                engine::api::MatchParameters params;
+                params.coordinates = gpsTraces.getRandomTrace();
+                params.radiuses = {};
+                if (benchmark.radius)
                 {
-                    params.radiuses.emplace_back(*benchmark.radius);
+                    for (size_t index = 0; index < params.coordinates.size(); ++index)
+                    {
+                        params.radiuses.emplace_back(*benchmark.radius);
+                    }
                 }
-            }
 
-            TIMER_START(match);
-            const auto rc = osrm.Match(params, result);
-            TIMER_STOP(match);
+                TIMER_START(match);
+                const auto rc = osrm.Match(params, result);
+                TIMER_STOP(match);
 
-            statistics.push(TIMER_MSEC(match));
+                statistics.push(TIMER_MSEC(match), iteration);
 
-            auto &json_result = std::get<json::Object>(result);
-            if (rc != Status::Ok ||
-                json_result.values.find("matchings") == json_result.values.end())
-            {
-                auto code = std::get<json::String>(json_result.values["code"]).value;
-                if (code != "NoSegment" && code != "NoMatch")
+                auto &json_result = std::get<json::Object>(result);
+                if (rc != Status::Ok ||
+                    json_result.values.find("matchings") == json_result.values.end())
                 {
-                    throw std::runtime_error{"Couldn't route: " + code};
+                    auto code = std::get<json::String>(json_result.values["code"]).value;
+                    if (code != "NoSegment" && code != "NoMatch")
+                    {
+                        throw std::runtime_error{"Couldn't route: " + code};
+                    }
                 }
             }
         }
@@ -326,7 +332,7 @@ void runMatchBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
     }
 }
 
-void runNearestBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
+void runNearestBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterations)
 {
     struct Benchmark
     {
@@ -336,33 +342,37 @@ void runNearestBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
 
     auto run_benchmark = [&](const Benchmark &benchmark)
     {
-        Statistics statistics;
+        Statistics statistics{iterations};
         auto NUM = 10000;
-        for (int i = 0; i < NUM; ++i)
+        for (int iteration = 0; iteration < iterations; ++iteration)
         {
-            engine::api::ResultT result = json::Object();
-            NearestParameters params;
-            params.coordinates.push_back(gpsTraces.getRandomCoordinate());
-
-            if (benchmark.number_of_results)
+            gpsTraces.resetSeed();
+            for (int i = 0; i < NUM; ++i)
             {
-                params.number_of_results = *benchmark.number_of_results;
-            }
+                engine::api::ResultT result = json::Object();
+                NearestParameters params;
+                params.coordinates.push_back(gpsTraces.getRandomCoordinate());
 
-            TIMER_START(nearest);
-            const auto rc = osrm.Nearest(params, result);
-            TIMER_STOP(nearest);
-
-            statistics.push(TIMER_MSEC(nearest));
-
-            auto &json_result = std::get<json::Object>(result);
-            if (rc != Status::Ok ||
-                json_result.values.find("waypoints") == json_result.values.end())
-            {
-                auto code = std::get<json::String>(json_result.values["code"]).value;
-                if (code != "NoSegment")
+                if (benchmark.number_of_results)
                 {
-                    throw std::runtime_error{"Couldn't find nearest point"};
+                    params.number_of_results = *benchmark.number_of_results;
+                }
+
+                TIMER_START(nearest);
+                const auto rc = osrm.Nearest(params, result);
+                TIMER_STOP(nearest);
+
+                statistics.push(TIMER_MSEC(nearest), iteration);
+
+                auto &json_result = std::get<json::Object>(result);
+                if (rc != Status::Ok ||
+                    json_result.values.find("waypoints") == json_result.values.end())
+                {
+                    auto code = std::get<json::String>(json_result.values["code"]).value;
+                    if (code != "NoSegment")
+                    {
+                        throw std::runtime_error{"Couldn't find nearest point"};
+                    }
                 }
             }
         }
@@ -381,7 +391,7 @@ void runNearestBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
     }
 }
 
-void runTripBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
+void runTripBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterations)
 {
     struct Benchmark
     {
@@ -391,32 +401,37 @@ void runTripBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
 
     auto run_benchmark = [&](const Benchmark &benchmark)
     {
-        Statistics statistics;
+        Statistics statistics{iterations};
         auto NUM = 1000;
-        for (int i = 0; i < NUM; ++i)
+        for (int iteration = 0; iteration < iterations; ++iteration)
         {
-            engine::api::ResultT result = json::Object();
-            TripParameters params;
-            params.roundtrip = true;
-
-            for (size_t i = 0; i < benchmark.coordinates; ++i)
+            gpsTraces.resetSeed();
+            for (int i = 0; i < NUM; ++i)
             {
-                params.coordinates.push_back(gpsTraces.getRandomCoordinate());
-            }
+                engine::api::ResultT result = json::Object();
+                TripParameters params;
+                params.roundtrip = true;
 
-            TIMER_START(trip);
-            const auto rc = osrm.Trip(params, result);
-            TIMER_STOP(trip);
-
-            statistics.push(TIMER_MSEC(trip));
-
-            auto &json_result = std::get<json::Object>(result);
-            if (rc != Status::Ok || json_result.values.find("trips") == json_result.values.end())
-            {
-                auto code = std::get<json::String>(json_result.values["code"]).value;
-                if (code != "NoSegment")
+                for (size_t i = 0; i < benchmark.coordinates; ++i)
                 {
-                    throw std::runtime_error{"Couldn't find trip"};
+                    params.coordinates.push_back(gpsTraces.getRandomCoordinate());
+                }
+
+                TIMER_START(trip);
+                const auto rc = osrm.Trip(params, result);
+                TIMER_STOP(trip);
+
+                statistics.push(TIMER_MSEC(trip), iteration);
+
+                auto &json_result = std::get<json::Object>(result);
+                if (rc != Status::Ok ||
+                    json_result.values.find("trips") == json_result.values.end())
+                {
+                    auto code = std::get<json::String>(json_result.values["code"]).value;
+                    if (code != "NoSegment")
+                    {
+                        throw std::runtime_error{"Couldn't find trip"};
+                    }
                 }
             }
         }
@@ -436,7 +451,7 @@ void runTripBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
         run_benchmark(benchmark);
     }
 }
-void runTableBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
+void runTableBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterations)
 {
     struct Benchmark
     {
@@ -446,32 +461,37 @@ void runTableBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces)
 
     auto run_benchmark = [&](const Benchmark &benchmark)
     {
-        Statistics statistics;
+        Statistics statistics{iterations};
         auto NUM = 250;
-        for (int i = 0; i < NUM; ++i)
+        for (int iteration = 0; iteration < iterations; ++iteration)
         {
-            engine::api::ResultT result = json::Object();
-            TableParameters params;
+            gpsTraces.resetSeed();
 
-            for (size_t i = 0; i < benchmark.coordinates; ++i)
+            for (int i = 0; i < NUM; ++i)
             {
-                params.coordinates.push_back(gpsTraces.getRandomCoordinate());
-            }
+                engine::api::ResultT result = json::Object();
+                TableParameters params;
 
-            TIMER_START(table);
-            const auto rc = osrm.Table(params, result);
-            TIMER_STOP(table);
-
-            statistics.push(TIMER_MSEC(table));
-
-            auto &json_result = std::get<json::Object>(result);
-            if (rc != Status::Ok ||
-                json_result.values.find("durations") == json_result.values.end())
-            {
-                auto code = std::get<json::String>(json_result.values["code"]).value;
-                if (code != "NoSegment")
+                for (size_t i = 0; i < benchmark.coordinates; ++i)
                 {
-                    throw std::runtime_error{"Couldn't compute table"};
+                    params.coordinates.push_back(gpsTraces.getRandomCoordinate());
+                }
+
+                TIMER_START(table);
+                const auto rc = osrm.Table(params, result);
+                TIMER_STOP(table);
+
+                statistics.push(TIMER_MSEC(table), iteration);
+
+                auto &json_result = std::get<json::Object>(result);
+                if (rc != Status::Ok ||
+                    json_result.values.find("durations") == json_result.values.end())
+                {
+                    auto code = std::get<json::String>(json_result.values["code"]).value;
+                    if (code != "NoSegment")
+                    {
+                        throw std::runtime_error{"Couldn't compute table"};
+                    }
                 }
             }
         }
@@ -526,19 +546,19 @@ try
     }
     else if (benchmarkToRun == "match")
     {
-        runMatchBenchmark(osrm, gpsTraces);
+        runMatchBenchmark(osrm, gpsTraces, iterations);
     }
     else if (benchmarkToRun == "nearest")
     {
-        runNearestBenchmark(osrm, gpsTraces);
+        runNearestBenchmark(osrm, gpsTraces, iterations);
     }
     else if (benchmarkToRun == "trip")
     {
-        runTripBenchmark(osrm, gpsTraces);
+        runTripBenchmark(osrm, gpsTraces, iterations);
     }
     else if (benchmarkToRun == "table")
     {
-        runTableBenchmark(osrm, gpsTraces);
+        runTableBenchmark(osrm, gpsTraces, iterations);
     }
     else
     {
