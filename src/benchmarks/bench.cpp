@@ -37,6 +37,8 @@ using namespace osrm;
 namespace
 {
 
+    
+
 class GPSTraces
 {
   private:
@@ -114,63 +116,119 @@ class GPSTraces
     }
 };
 
+// Struct to hold confidence interval data
+struct ConfidenceInterval {
+    double mean;
+    double confidence;
+    double min;
+};
+
+// Helper function to calculate the bootstrap confidence interval
+ConfidenceInterval confidenceInterval(const std::vector<double>& data, int num_samples = 1000, double confidence_level = 0.95) {
+    std::vector<double> means;
+    std::default_random_engine generator;
+    std::uniform_int_distribution<int> distribution(0, data.size() - 1);
+
+    for (int i = 0; i < num_samples; ++i) {
+        std::vector<double> sample;
+        for (size_t j = 0; j < data.size(); ++j) {
+            sample.push_back(data[distribution(generator)]);
+        }
+        double sample_mean = std::accumulate(sample.begin(), sample.end(), 0.0) / sample.size();
+        means.push_back(sample_mean);
+    }
+
+    std::sort(means.begin(), means.end());
+    double lower_bound = means[(int)((1 - confidence_level) / 2 * num_samples)];
+    double upper_bound = means[(int)((1 + confidence_level) / 2 * num_samples)];
+    double mean = std::accumulate(means.begin(), means.end(), 0.0) / means.size();
+
+    ConfidenceInterval ci = {mean, (upper_bound - lower_bound) / 2, *std::min_element(data.begin(), data.end())};
+    return ci;
+}
+
+
 class Statistics
 {
   public:
-    explicit Statistics(int iterations) : times(iterations) {}
-    void push(double timeMs, int iteration)
-    {
+  explicit Statistics(int iterations) : times(iterations) {}
+
+    void push(double timeMs, int iteration) {
         times[iteration].push_back(timeMs);
-        sorted = false;
     }
 
-    double mean() { return sum() / times.size(); }
-
-    double sum()
-    {
-        double sum = 0;
-        for (auto time : times[0])
-        {
-            sum += time;
+    ConfidenceInterval mean() {
+        std::vector<double> means;
+        for (const auto& iter_times : times) {
+            means.push_back(std::accumulate(iter_times.begin(), iter_times.end(), 0.0) / iter_times.size());
         }
-        return sum;
+        return confidenceInterval(means);
     }
 
-    double min() { return *std::min_element(times[0].begin(), times[0].end()); }
-
-    double max() { return *std::max_element(times[0].begin(), times[0].end()); }
-
-    double percentile(double p)
-    {
-        const auto &times = getTimes();
-        return times[static_cast<size_t>(p * times.size())];
+    ConfidenceInterval total() {
+        std::vector<double> sums;
+        for (const auto& iter_times : times) {
+            sums.push_back(std::accumulate(iter_times.begin(), iter_times.end(), 0.0));
+        }
+        return confidenceInterval(sums);
     }
 
+    ConfidenceInterval min() {
+        std::vector<double> mins;
+        for (const auto& iter_times : times) {
+            mins.push_back(*std::min_element(iter_times.begin(), iter_times.end()));
+        }
+        return confidenceInterval(mins);
+    }
+
+    ConfidenceInterval max() {
+        std::vector<double> maxs;
+        for (const auto& iter_times : times) {
+            maxs.push_back(*std::max_element(iter_times.begin(), iter_times.end()));
+        }
+        return confidenceInterval(maxs);
+    }
+
+    ConfidenceInterval percentile(double p) {
+        std::vector<double> percentiles;
+        for (const auto& iter_times : times) {
+            auto sorted_times = iter_times;
+            std::sort(sorted_times.begin(), sorted_times.end());
+            percentiles.push_back(sorted_times[static_cast<size_t>(p * sorted_times.size())]);
+        }
+        return confidenceInterval(percentiles);
+    }
+
+    ConfidenceInterval ops_per_sec() {
+        std::vector<double> ops;
+        for (const auto& iter_times : times) {
+            double total_time = std::accumulate(iter_times.begin(), iter_times.end(), 0.0) / 1000.0;
+            ops.push_back(iter_times.size() / total_time);
+        }
+        return confidenceInterval(ops);
+    }
   private:
-    std::vector<double> getTimes()
-    {
-        if (!sorted)
-        {
-            std::sort(times[0].begin(), times[0].end());
-            sorted = true;
-        }
-        return times[0];
-    }
-
     // vector of times for each iteration
     std::vector<std::vector<double>> times;
-
-    bool sorted = false;
 };
 
-std::ostream &operator<<(std::ostream &os, Statistics &statistics)
-{
+std::ostream& operator<<(std::ostream& os, Statistics& statistics) {
     os << std::fixed << std::setprecision(2);
-    os << "total: " << statistics.sum() << "ms" << std::endl;
-    os << "avg: " << statistics.mean() << "ms" << std::endl;
-    os << "min: " << statistics.min() << "ms" << std::endl;
-    os << "max: " << statistics.max() << "ms" << std::endl;
-    os << "p99: " << statistics.percentile(0.99) << "ms" << std::endl;
+
+    ConfidenceInterval mean_ci = statistics.mean();
+    ConfidenceInterval total_ci = statistics.total();
+    ConfidenceInterval min_ci = statistics.min();
+    ConfidenceInterval max_ci = statistics.max();
+    ConfidenceInterval p99_ci = statistics.percentile(0.99);
+    ConfidenceInterval ops_ci = statistics.ops_per_sec();
+
+    os << "ops: " << ops_ci.mean << " ± " << ops_ci.confidence << " ops/s. " << "best: " << ops_ci.min << "ops/s." << std::endl;
+    os << "total: " << total_ci.mean << " ± " << total_ci.confidence << "ms. " << "best: " << total_ci.min << "ms." << std::endl;
+    os << "avg: " << mean_ci.mean << " ± " << mean_ci.confidence << "ms" << std::endl;
+    os << "min: " << min_ci.mean << " ± " << min_ci.confidence << "ms" << std::endl;
+    os << "max: " << max_ci.mean << " ± " << max_ci.confidence << "ms" << std::endl;
+    os << "p99: " << p99_ci.mean << " ± " << p99_ci.confidence << "ms" << std::endl;
+
     return os;
 }
 
