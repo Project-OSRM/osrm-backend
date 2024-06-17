@@ -677,7 +677,7 @@ jobs:
       - name: Install dependencies
         run: | 
           python3 -m pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" "scipy==1.13.1" --break-system-packages
-          sudo apt-get update -y && sudo apt-get install ccache
+          #sudo apt-get update -y && sudo apt-get install ccache
       - name: Prepare data
         run: |
           if [ "$RUN_BIG_BENCHMARK" = "true" ]; then
