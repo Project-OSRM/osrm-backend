@@ -85,7 +85,7 @@ function run_benchmarks_for_folder {
         for BENCH in nearest table trip route match; do
             echo "Running random $BENCH $ALGORITHM"
             START=$(date +%s.%N)
-            $BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" $ALGORITHM $GPS_TRACES ${BENCH} > "$RESULTS_FOLDER/random_${BENCH}_${$ALGORITHM}.bench" 5 || true
+            $BENCHMARKS_FOLDER/bench "$FOLDER/data.osrm" $ALGORITHM $GPS_TRACES ${BENCH} > "$RESULTS_FOLDER/random_${BENCH}_${ALGORITHM}.bench" 5 || true
             END=$(date +%s.%N)
             DIFF=$(echo "$END - $START" | bc)
             echo "Took: ${DIFF}s"
