@@ -90,7 +90,7 @@ function run_benchmarks_for_folder {
 
 
     for ALGORITHM in ch mld; do
-        $BINARIES_FOLDER/osrm-routed --algorithm $ALGORITHM $FOLDER/data.osrm &
+        $BINARIES_FOLDER/osrm-routed --algorithm $ALGORITHM $FOLDER/data.osrm > /dev/null 2>&1 &
         OSRM_ROUTED_PID=$!
 
 
