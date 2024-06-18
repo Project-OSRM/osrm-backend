@@ -460,7 +460,7 @@ void runTripBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iteratio
     auto run_benchmark = [&](const Benchmark &benchmark)
     {
         Statistics statistics{iterations};
-        auto NUM = 1000;
+        auto NUM = 250;
         for (int iteration = 0; iteration < iterations; ++iteration)
         {
             gpsTraces.resetSeed();
@@ -499,9 +499,8 @@ void runTripBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iteratio
     };
 
     std::vector<Benchmark> benchmarks = {
-        {"1000 trips, 3 coordinates", 3},
-        {"1000 trips, 4 coordinates", 4},
-        {"1000 trips, 5 coordinates", 5},
+        {"250 trips, 3 coordinates", 3},
+        {"250 trips, 5 coordinates", 5},
     };
 
     for (const auto &benchmark : benchmarks)

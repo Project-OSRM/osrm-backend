@@ -72,13 +72,13 @@ function run_benchmarks_for_folder {
 
     cp -rf $OSM_PBF $FOLDER/data.osm.pbf
 
-    # echo "Running osrm-extract"
+    echo "Running osrm-extract"
     measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-extract -p $FOLDER/profiles/car.lua $FOLDER/data.osm.pbf" "$RESULTS_FOLDER/osrm_extract.bench"
-    # echo "Running osrm-partition"
+    echo "Running osrm-partition"
     measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-partition $FOLDER/data.osrm" "$RESULTS_FOLDER/osrm_partition.bench"
-    # echo "Running osrm-customize"
+    echo "Running osrm-customize"
     measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-customize $FOLDER/data.osrm" "$RESULTS_FOLDER/osrm_customize.bench"
-    # echo "Running osrm-contract"
+    echo "Running osrm-contract"
     measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-contract $FOLDER/data.osrm" "$RESULTS_FOLDER/osrm_contract.bench"
 
     for BENCH in nearest table trip route match; do
@@ -94,13 +94,14 @@ function run_benchmarks_for_folder {
         OSRM_ROUTED_PID=$!
 
         # wait for osrm-routed to start
-        if ! curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"; then
+        if ! curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true" > /dev/null 2>&1; then
             echo "osrm-routed failed to start for algorithm $ALGORITHM"
             kill -9 $OSRM_ROUTED_PID
             continue
         fi
 
         for METHOD in route nearest trip table match; do
+            echo "Running e2e benchmark for $METHOD $ALGORITHM"
             python3 $SCRIPTS_FOLDER/scripts/ci/e2e_benchmark.py --host http://localhost:5000 --method $METHOD --iterations 5 --num_requests 1000 --gps_traces_file_path $GPS_TRACES > $RESULTS_FOLDER/e2e_${METHOD}_${ALGORITHM}.bench
         done
 
