@@ -93,6 +93,9 @@ function run_benchmarks_for_folder {
         $BINARIES_FOLDER/osrm-routed --algorithm $ALGORITHM $FOLDER/data.osrm &
         OSRM_ROUTED_PID=$!
 
+
+        sleep 5
+
         # # wait for osrm-routed to start
         # if ! curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true" > /dev/null 2>&1; then
         #     echo "osrm-routed failed to start for algorithm $ALGORITHM"
