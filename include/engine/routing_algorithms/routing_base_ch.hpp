@@ -471,6 +471,23 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           const PhantomNode &target_phantom,
                           EdgeWeight duration_upper_bound = INVALID_EDGE_WEIGHT);
 
+inline double getNetworkDistanceOld(SearchEngineData<Algorithm> &engine_working_data,
+                                    const DataFacade<ch::Algorithm> &facade,
+                                    SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                                    SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                                    const PhantomNode &source_phantom,
+                                    const PhantomNode &target_phantom,
+                                    EdgeWeight duration_upper_bound = INVALID_EDGE_WEIGHT)
+{
+    return getNetworkDistance(engine_working_data,
+                              facade,
+                              forward_heap,
+                              reverse_heap,
+                              source_phantom,
+                              target_phantom,
+                              duration_upper_bound);
+}
+
 template <typename EdgeMetric>
 std::tuple<EdgeMetric, EdgeDistance> getLoopMetric(const DataFacade<Algorithm> &facade, NodeID node)
 {
