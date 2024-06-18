@@ -336,14 +336,6 @@ if(ENABLE_CONAN)
 
   set(CONAN_SYSTEM_INCLUDES ON)
 
-  # TODO:
-  # if we link TBB dynamically osrm-extract.exe finishes on the first access to any TBB symbol
-  # with exit code = -1073741515, which means that program cannot load required DLL.
-  if (MSVC)
-    set(TBB_SHARED False)
-  else()
-    set(TBB_SHARED True)
-  endif()
 
   set(CONAN_ARGS
     REQUIRES
