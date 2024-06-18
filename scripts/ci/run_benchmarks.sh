@@ -105,10 +105,10 @@ function run_benchmarks_for_folder {
 
         for METHOD in route nearest trip table match; do
             echo "Running e2e benchmark for $METHOD $ALGORITHM"
-          #  python3 $SCRIPTS_FOLDER/scripts/ci/e2e_benchmark.py --host http://localhost:5000 --method $METHOD --iterations 5 --num_requests 1000 --gps_traces_file_path $GPS_TRACES > $RESULTS_FOLDER/e2e_${METHOD}_${ALGORITHM}.bench
+            python3 $SCRIPTS_FOLDER/scripts/ci/e2e_benchmark.py --host http://localhost:5000 --method $METHOD --iterations 5 --num_requests 1000 --gps_traces_file_path $GPS_TRACES > $RESULTS_FOLDER/e2e_${METHOD}_${ALGORITHM}.bench
         done
 
-        kill -9 $OSRM_ROUTED_PID >/dev/null
+        kill -9 $OSRM_ROUTED_PID >/dev/null 2>&1
     done
 }
 
