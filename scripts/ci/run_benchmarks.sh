@@ -108,7 +108,7 @@ function run_benchmarks_for_folder {
         #   #  python3 $SCRIPTS_FOLDER/scripts/ci/e2e_benchmark.py --host http://localhost:5000 --method $METHOD --iterations 5 --num_requests 1000 --gps_traces_file_path $GPS_TRACES > $RESULTS_FOLDER/e2e_${METHOD}_${ALGORITHM}.bench
         # done
 
-        kill -9 $OSRM_ROUTED_PID
+        kill -9 $OSRM_ROUTED_PID >/dev/null
     done
 }
 
