@@ -330,9 +330,9 @@ if(ENABLE_CONAN)
 
   set(CONAN_BOOST_VERSION "1.85.0@#14265ec82b25d91305bbb3b30d3357f8")
   set(CONAN_BZIP2_VERSION "1.0.8@#d1b2d5816f25865acf978501dff1f897")
-  set(CONAN_EXPAT_VERSION "2.2.10@#916908d4a570ad839edd25322c3268cd")
-  set(CONAN_LUA_VERSION "5.4.4@#3ec62efc37cd0a5d80b9e5cb35277360")
-  set(CONAN_TBB_VERSION "2021.3.0@#507ec17cbd51a84167e143b20d170eea")
+  set(CONAN_EXPAT_VERSION "2.6.2@#2d385d0d50eb5561006a7ff9e356656b")
+  set(CONAN_LUA_VERSION "5.4.6@#658d6089093cf01992c2737ab2e96763")
+  set(CONAN_TBB_VERSION "2021.12.0@#e56e5b44be8d690530585dd3634c0106")
 
   set(CONAN_SYSTEM_INCLUDES ON)
 
@@ -357,7 +357,7 @@ if(ENABLE_CONAN)
     KEEP_RPATHS
     NO_OUTPUT_DIRS
     OPTIONS boost:filesystem_version=3 # https://stackoverflow.com/questions/73392648/error-with-boost-filesystem-version-in-cmake
-            onetbb:shared=${TBB_SHARED}
+          #  onetbb:shared=${TBB_SHARED}
             boost:without_stacktrace=True # Apple Silicon cross-compilation fails without it
     BUILD missing
   )
