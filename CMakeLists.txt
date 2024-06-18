@@ -357,7 +357,7 @@ if(ENABLE_CONAN)
     KEEP_RPATHS
     NO_OUTPUT_DIRS
     OPTIONS boost:filesystem_version=3 # https://stackoverflow.com/questions/73392648/error-with-boost-filesystem-version-in-cmake
-          #  onetbb:shared=${TBB_SHARED}
+            onetbb:shared=${TBB_SHARED}
             boost:without_stacktrace=True # Apple Silicon cross-compilation fails without it
     BUILD missing
   )
