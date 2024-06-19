@@ -105,12 +105,26 @@ class GPSTraces
         return coordinates[dis(gen)];
     }
 
-    const std::vector<osrm::util::Coordinate> &getRandomTrace() const
+    std::vector<osrm::util::Coordinate> getRandomTrace() const
     {
         std::uniform_int_distribution<> dis(0, trackIDs.size() - 1);
         auto it = trackIDs.begin();
         std::advance(it, dis(gen));
-        return traces.at(*it);
+
+        const auto &trace = traces.at(*it);
+
+        std::uniform_int_distribution<> length_dis(50, 100);
+        size_t length = length_dis(gen);
+        if (trace.size() <= length + 1)
+        {
+            return trace;
+        }
+
+        std::uniform_int_distribution<> start_dis(0, trace.size() - length - 1);
+        size_t start_index = start_dis(gen);
+
+        return std::vector<osrm::util::Coordinate>(trace.begin() + start_index,
+                                                   trace.begin() + start_index + length);
     }
 };
 
