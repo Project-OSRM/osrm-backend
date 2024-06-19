@@ -10,9 +10,6 @@ import argparse
 from scipy import stats
 import logging
 
-logging.getLogger("urllib3").setLevel(logging.CRITICAL)
-logging.getLogger("requests").setLevel(logging.CRITICAL)
-
 
 class BenchmarkRunner:
     def __init__(self, gps_traces_file_path):
@@ -42,18 +39,9 @@ class BenchmarkRunner:
             response = requests.get(url)
             end_time = time.time()
             if response.status_code != 200:
-                if benchmark_name == 'match':
-                    code = response.json()['code']
-                    if code == 'NoSegment' or code == 'NoMatch':
-                        continue
-                elif benchmark_name == 'route':
-                    code = response.json()['code']
-                    if code == 'NoRoute':
-                        continue
-                elif benchmark_name == 'trip':
-                    code = response.json()['code']
-                    if code == 'NoTrips':
-                        continue
+                code = response.json()['code']
+                if code in ['NoSegment', 'NoMatch', 'NoRoute', 'NoTrips']:
+                    continue
                 raise Exception(f"Error: {response.status_code} {response.text}")
             times.append((end_time - start_time) * 1000) # convert to ms
         
