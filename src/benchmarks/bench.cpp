@@ -289,22 +289,22 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterati
         std::optional<double> radius = std::nullopt;
     };
     std::vector<Benchmark> benchmarks = {
-        {"10000 routes, 3 coordinates, no alternatives, overview=full, steps=true",
+        {"1000 routes, 3 coordinates, no alternatives, overview=full, steps=true",
          3,
          RouteParameters::OverviewType::Full,
          true,
          std::nullopt},
-        {"10000 routes, 2 coordinates, 3 alternatives, overview=full, steps=true",
+        {"1000 routes, 2 coordinates, 3 alternatives, overview=full, steps=true",
          2,
          RouteParameters::OverviewType::Full,
          true,
          3},
-        {"10000 routes, 3 coordinates, no alternatives, overview=false, steps=false",
+        {"1000 routes, 3 coordinates, no alternatives, overview=false, steps=false",
          3,
          RouteParameters::OverviewType::False,
          false,
          std::nullopt},
-        {"10000 routes, 2 coordinates, 3 alternatives, overview=false, steps=false",
+        {"1000 routes, 2 coordinates, 3 alternatives, overview=false, steps=false",
          2,
          RouteParameters::OverviewType::False,
          false,
@@ -312,7 +312,7 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterati
 
     runBenchmarks(benchmarks,
                   iterations,
-                  10000,
+                  1000,
                   osrm,
                   gpsTraces,
                   [](int iteration,
@@ -372,13 +372,13 @@ void runMatchBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterati
         std::optional<size_t> radius = std::nullopt;
     };
 
-    std::vector<Benchmark> benchmarks = {{"1000 matches, default radius"},
-                                         {"1000 matches, radius=10", 10},
-                                         {"1000 matches, radius=20", 20}};
+    std::vector<Benchmark> benchmarks = {{"500 matches, default radius"},
+                                         {"500 matches, radius=10", 10},
+                                         {"500 matches, radius=20", 20}};
 
     runBenchmarks(benchmarks,
                   iterations,
-                  1000,
+                  500,
                   osrm,
                   gpsTraces,
                   [](int iteration,
