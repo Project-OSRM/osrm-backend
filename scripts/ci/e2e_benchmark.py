@@ -1,5 +1,4 @@
 import requests
-import sys
 import random
 from collections import defaultdict
 import os
