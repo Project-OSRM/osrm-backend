@@ -378,14 +378,11 @@ if(ENABLE_CONAN)
   set(Boost_USE_STATIC_LIBS ON)
   find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
   set(Boost_DATE_TIME_LIBRARY "${Boost_date_time_LIB_TARGETS}")
-  set(Boost_CHRONO_LIBRARY "${Boost_chrono_LIB_TARGETS}")
   set(Boost_PROGRAM_OPTIONS_LIBRARY "${Boost_program_options_LIB_TARGETS}")
   set(Boost_FILESYSTEM_LIBRARY "${Boost_filesystem_LIB_TARGETS}")
   set(Boost_IOSTREAMS_LIBRARY "${Boost_iostreams_LIB_TARGETS}")
   set(Boost_THREAD_LIBRARY "${Boost_thread_LIB_TARGETS}")
-  set(Boost_SYSTEM_LIBRARY "${Boost_system_LIB_TARGETS}")
   set(Boost_ZLIB_LIBRARY "${Boost_zlib_LIB_TARGETS}")
-  set(Boost_REGEX_LIBRARY "${Boost_regex_LIB_TARGETS}")
   set(Boost_UNIT_TEST_FRAMEWORK_LIBRARY "${Boost_unit_test_framework_LIB_TARGETS}")
 
 
@@ -468,11 +465,9 @@ include_directories(SYSTEM ${DEPENDENCIES_INCLUDE_DIRS})
 
 set(BOOST_BASE_LIBRARIES
    ${Boost_DATE_TIME_LIBRARY}
-   ${Boost_CHRONO_LIBRARY}
    ${Boost_FILESYSTEM_LIBRARY}
    ${Boost_IOSTREAMS_LIBRARY}
-   ${Boost_THREAD_LIBRARY}
-   ${Boost_SYSTEM_LIBRARY})
+   ${Boost_THREAD_LIBRARY})
 
 set(BOOST_ENGINE_LIBRARIES
   ${Boost_ZLIB_LIBRARY}
@@ -491,7 +486,6 @@ endif()
 
 set(EXTRACTOR_LIBRARIES
     ${BZIP2_LIBRARIES}
-    ${Boost_REGEX_LIBRARY}
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${EXPAT_LIBRARIES}

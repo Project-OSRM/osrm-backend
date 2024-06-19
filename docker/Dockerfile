@@ -49,9 +49,9 @@ COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libboost-program-options1.81.0 libboost-regex1.81.0 \
-        libboost-date-time1.81.0 libboost-chrono1.81.0 libboost-filesystem1.81.0 \
-        libboost-iostreams1.81.0 libboost-system1.81.0 libboost-thread1.81.0 \
+    apt-get install -y --no-install-recommends libboost-program-options1.81.0 \
+        libboost-date-time1.81.0 libboost-filesystem1.81.0 \
+        libboost-iostreams1.81.0 libboost-thread1.81.0 \
         expat liblua5.4-0 && \
     rm -rf /var/lib/apt/lists/* && \
 # add /usr/local/lib to ldconfig to allow loading libraries from there
