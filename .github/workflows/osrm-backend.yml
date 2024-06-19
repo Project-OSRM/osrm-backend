@@ -119,7 +119,7 @@ jobs:
   docker-image-matrix:
     strategy:
       matrix:
-        dockerfile: [Dockerfile, Dockerfile-alpine]
+        docker-base-image: ["debian", "alpine"]
     needs: format-taginfo-docs
     runs-on: ubuntu-22.04
     continue-on-error: false
@@ -135,7 +135,7 @@ jobs:
             v1-berlin-osm-pbf
       - name: Docker build
         run: |
-          docker build -t osrm-backend-local -f docker/${{ matrix.dockerfile }} .
+          docker build -t osrm-backend-local -f docker/Dockerfile-${{ matrix.docker-base-image }} .
       - name: Test Docker image
         run: |
           if [ ! -f "${PWD}/berlin-latest.osm.pbf" ]; then
