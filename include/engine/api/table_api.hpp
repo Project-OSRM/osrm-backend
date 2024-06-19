@@ -179,7 +179,7 @@ class TableAPI final : public BaseAPI
         {
             if (!parameters.skip_waypoints)
             {
-                response.values["sources"] = MakeWaypoints(candidates);
+                response.values.emplace("sources", MakeWaypoints(candidates));
             }
             number_of_sources = candidates.size();
         }
@@ -187,7 +187,7 @@ class TableAPI final : public BaseAPI
         {
             if (!parameters.skip_waypoints)
             {
-                response.values["sources"] = MakeWaypoints(candidates, parameters.sources);
+                response.values.emplace("sources", MakeWaypoints(candidates, parameters.sources));
             }
         }
 
@@ -195,7 +195,7 @@ class TableAPI final : public BaseAPI
         {
             if (!parameters.skip_waypoints)
             {
-                response.values["destinations"] = MakeWaypoints(candidates);
+                response.values.emplace("destinations", MakeWaypoints(candidates));
             }
             number_of_destinations = candidates.size();
         }
@@ -203,34 +203,37 @@ class TableAPI final : public BaseAPI
         {
             if (!parameters.skip_waypoints)
             {
-                response.values["destinations"] =
-                    MakeWaypoints(candidates, parameters.destinations);
+                response.values.emplace("destinations",
+                                        MakeWaypoints(candidates, parameters.destinations));
             }
         }
 
         if (parameters.annotations & TableParameters::AnnotationsType::Duration)
         {
-            response.values["durations"] =
-                MakeDurationTable(tables.first, number_of_sources, number_of_destinations);
+            response.values.emplace(
+                "durations",
+                MakeDurationTable(tables.first, number_of_sources, number_of_destinations));
         }
 
         if (parameters.annotations & TableParameters::AnnotationsType::Distance)
         {
-            response.values["distances"] =
-                MakeDistanceTable(tables.second, number_of_sources, number_of_destinations);
+            response.values.emplace(
+                "distances",
+                MakeDistanceTable(tables.second, number_of_sources, number_of_destinations));
         }
 
         if (parameters.fallback_speed != from_alias<double>(INVALID_FALLBACK_SPEED) &&
             parameters.fallback_speed > 0)
         {
-            response.values["fallback_speed_cells"] = MakeEstimatesTable(fallback_speed_cells);
+            response.values.emplace("fallback_speed_cells",
+                                    MakeEstimatesTable(fallback_speed_cells));
         }
 
-        response.values["code"] = "Ok";
+        response.values.emplace("code", "Ok");
         auto data_timestamp = facade.GetTimestamp();
         if (!data_timestamp.empty())
         {
-            response.values["data_version"] = data_timestamp;
+            response.values.emplace("data_version", data_timestamp);
         }
     }
 

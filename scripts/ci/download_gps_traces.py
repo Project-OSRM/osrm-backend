@@ -4,41 +4,43 @@ import csv
 import sys
 import argparse
 
-def get_osm_gps_traces(min_lon, min_lat, max_lon, max_lat):
+def get_osm_gps_traces(bboxes):
     url = 'https://api.openstreetmap.org/api/0.6/trackpoints'
     traces = []
     
     lon_step = 0.25
     lat_step = 0.25
-    
-    current_min_lon = min_lon
 
-    while current_min_lon < max_lon:
-        current_max_lon = min(current_min_lon + lon_step, max_lon)
+    for bbox in bboxes:
+        min_lon, min_lat, max_lon, max_lat = map(float, bbox.split(','))
         
-        current_min_lat = min_lat
-        while current_min_lat < max_lat:
-            current_max_lat = min(current_min_lat + lat_step, max_lat)
+        current_min_lon = min_lon
+        while current_min_lon < max_lon:
+            current_max_lon = min(current_min_lon + lon_step, max_lon)
             
-            bbox = f'{current_min_lon},{current_min_lat},{current_max_lon},{current_max_lat}'
-            print(f"Requesting bbox: {bbox}", file=sys.stderr)
-            
-            params = {
-                'bbox': bbox,
-                'page': 0
-            }
-            headers = {
-                'Accept': 'application/xml'
-            }
-            
-            response = requests.get(url, params=params, headers=headers)
-            if response.status_code == 200:
-                traces.append(response.content)
-            else:
-                print(f"Error fetching data for bbox {bbox}: {response.status_code} {response.text}", file=sys.stderr)
-            
-            current_min_lat += lat_step
-        current_min_lon += lon_step
+            current_min_lat = min_lat
+            while current_min_lat < max_lat:
+                current_max_lat = min(current_min_lat + lat_step, max_lat)
+                
+                bbox_str = f'{current_min_lon},{current_min_lat},{current_max_lon},{current_max_lat}'
+                print(f"Requesting bbox: {bbox_str}", file=sys.stderr)
+                
+                params = {
+                    'bbox': bbox_str,
+                    'page': 0
+                }
+                headers = {
+                    'Accept': 'application/xml'
+                }
+                
+                response = requests.get(url, params=params, headers=headers)
+                if response.status_code == 200:
+                    traces.append(response.content)
+                else:
+                    print(f"Error fetching data for bbox {bbox_str}: {response.status_code} {response.text}", file=sys.stderr)
+                
+                current_min_lat += lat_step
+            current_min_lon += lon_step
     
     return traces
 
@@ -68,15 +70,12 @@ def save_to_csv(data, file):
     writer.writerows(data)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Fetch and output OSM GPS traces for a given bounding box.')
-    parser.add_argument('min_lon', type=float, help='Minimum longitude of the bounding box')
-    parser.add_argument('min_lat', type=float, help='Minimum latitude of the bounding box')
-    parser.add_argument('max_lon', type=float, help='Maximum longitude of the bounding box')
-    parser.add_argument('max_lat', type=float, help='Maximum latitude of the bounding box')
+    parser = argparse.ArgumentParser(description='Fetch and output OSM GPS traces for given bounding boxes.')
+    parser.add_argument('bboxes', nargs='+', help='Bounding boxes in the format min_lon,min_lat,max_lon,max_lat')
     
     args = parser.parse_args()
     
-    gpx_data_traces = get_osm_gps_traces(args.min_lon, args.min_lat, args.max_lon, args.max_lat)
+    gpx_data_traces = get_osm_gps_traces(args.bboxes)
     print(f"Collected {len(gpx_data_traces)} trace segments", file=sys.stderr)
 
     all_data = []

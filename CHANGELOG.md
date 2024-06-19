@@ -24,6 +24,13 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: Apply micro-optimisation for Table & Trip APIs. [#6949](https://github.com/Project-OSRM/osrm-backend/pull/6949)
+      - CHANGED: Apply micro-optimisation for Route API. [#6948](https://github.com/Project-OSRM/osrm-backend/pull/6948)
+      - CHANGED: Apply micro-optimisation for Match API. [#6945](https://github.com/Project-OSRM/osrm-backend/pull/6945)
+      - CHANGED: Apply micro-optimisation for Nearest API. [#6944](https://github.com/Project-OSRM/osrm-backend/pull/6944)
+      - CHANGED: Avoid copy of intersection in totalTurnAngle. [#6938](https://github.com/Project-OSRM/osrm-backend/pull/6938)
+      - CHANGED: Use std::unordered_map::emplace instead of operator[] when producing JSONs. [#6936](https://github.com/Project-OSRM/osrm-backend/pull/6936)
+      - CHANGED: Avoid copy of vectors in MakeRoute function. [#6939](https://github.com/Project-OSRM/osrm-backend/pull/6939)
       - FIXED: Fix bugprone-unused-return-value clang-tidy warning. [#6934](https://github.com/Project-OSRM/osrm-backend/pull/6934)
       - FIXED: Fix performance-noexcept-move-constructor clang-tidy warning. [#6931](https://github.com/Project-OSRM/osrm-backend/pull/6933)
       - FIXED: Fix performance-noexcept-swap clang-tidy warning. [#6931](https://github.com/Project-OSRM/osrm-backend/pull/6931)

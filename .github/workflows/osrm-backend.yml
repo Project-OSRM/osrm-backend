@@ -645,8 +645,10 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
       GITHUB_REPOSITORY: ${{ github.repository }}
+      RUN_BIG_BENCHMARK: ${{ contains(github.event.pull_request.labels.*.name, 'Performance') }}
     steps: 
       - name: Enable data.osm.pbf cache
+        if: ${{ ! env.RUN_BIG_BENCHMARK }}        
         uses: actions/cache@v4
         with:
           path: ~/data.osm.pbf
@@ -678,10 +680,18 @@ jobs:
           sudo apt-get update -y && sudo apt-get install ccache
       - name: Prepare data
         run: |
-          if [ ! -f "~/data.osm.pbf" ]; then
-            wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
+          if [ "$RUN_BIG_BENCHMARK" = "true" ]; then
+              rm -rf ~/data.osm.pbf
+              wget http://download.geofabrik.de/europe/poland-latest.osm.pbf -O ~/data.osm.pbf --quiet
+              gunzip -c ./pr/test/data/poland_gps_traces.csv.gz > ~/gps_traces.csv
+          else
+              if [ ! -f "~/data.osm.pbf" ]; then
+                wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
+              else
+                echo "Using cached data.osm.pbf"
+              fi
+              gunzip -c ./pr/test/data/berlin_gps_traces.csv.gz > ~/gps_traces.csv
           fi
-          gunzip -c ./pr/test/data/berlin_gps_traces.csv.gz > ~/gps_traces.csv
       - name: Prepare environment
         run: |
           echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
