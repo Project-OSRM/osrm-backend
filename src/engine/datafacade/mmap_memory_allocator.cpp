@@ -22,7 +22,7 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
         std::unique_ptr<storage::BaseDataLayout> fake_layout =
             std::make_unique<storage::TarDataLayout>();
 
-        // Convert the std::filesystem::path object into a plain string
+        // Convert the boost::filesystem::path object into a plain string
         // that's stored as a member of this allocator object
         rtree_filename = storage.PopulateLayoutWithRTree(*fake_layout);
 
@@ -42,20 +42,19 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
     auto updatable_files = storage.GetUpdatableFiles();
     files.insert(files.end(), updatable_files.begin(), updatable_files.end());
 
-    // for (const auto &file : files)
-    // {
-    //     if (std::filesystem::exists(file.second))
-    //     {
-    //         std::unique_ptr<storage::BaseDataLayout> layout =
-    //             std::make_unique<storage::TarDataLayout>();
-    //         boost::iostreams::mapped_file_source mapped_memory_file;
-    //         auto data = util::mmapFile<char>(file.second, mapped_memory_file).data();
-    //         mapped_memory_files.emplace_back(std::move(mapped_memory_file));
-    //         storage::populateLayoutFromFile(file.second, *layout);
-    //         allocated_regions.emplace_back(storage::SharedDataIndex::AllocatedRegion{
-    //             const_cast<char *>(data), std::move(layout)});
-    //     }
-    // }
+    for (const auto &file : files)
+    {
+        if (boost::filesystem::exists(file.second))
+        {
+            std::unique_ptr<storage::BaseDataLayout> layout =
+                std::make_unique<storage::TarDataLayout>();
+            boost::iostreams::mapped_file_source mapped_memory_file;
+            auto data = util::mmapFile<char>(file.second, mapped_memory_file).data();
+            mapped_memory_files.push_back(std::move(mapped_memory_file));
+            storage::populateLayoutFromFile(file.second, *layout);
+            allocated_regions.push_back({const_cast<char *>(data), std::move(layout)});
+        }
+    }
 
     index = storage::SharedDataIndex{std::move(allocated_regions)};
 }
