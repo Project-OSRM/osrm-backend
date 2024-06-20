@@ -20,7 +20,6 @@ jobs:
           days-before-issue-close: 30 # 1 month
           days-before-pr-stale: 180 # 6 months
           days-before-pr-close: -1 # never close PRs
-          debug-only: true
           exempt-issue-labels: 'Do Not Stale,Feature Request,Performance,Bug Report,CI,Starter Task,Refactor,Guidance'
 
   
