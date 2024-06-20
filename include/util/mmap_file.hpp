@@ -19,7 +19,8 @@ util::vector_view<T> mmapFile(const std::filesystem::path &file, MmapContainerT 
 {
     try
     {
-        mmap_container.open(file);
+        auto path_string = file.string();
+        mmap_container.open(path_string);
         std::size_t num_objects = mmap_container.size() / sizeof(T);
         auto data_ptr = mmap_container.data();
         BOOST_ASSERT(reinterpret_cast<uintptr_t>(data_ptr) % alignof(T) == 0);
