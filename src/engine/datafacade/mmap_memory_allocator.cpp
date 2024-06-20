@@ -42,20 +42,20 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
     auto updatable_files = storage.GetUpdatableFiles();
     files.insert(files.end(), updatable_files.begin(), updatable_files.end());
 
-    for (const auto &file : files)
-    {
-        if (std::filesystem::exists(file.second))
-        {
-            std::unique_ptr<storage::BaseDataLayout> layout =
-                std::make_unique<storage::TarDataLayout>();
-            boost::iostreams::mapped_file_source mapped_memory_file;
-            auto data = util::mmapFile<char>(file.second, mapped_memory_file).data();
-            mapped_memory_files.emplace_back(std::move(mapped_memory_file));
-            storage::populateLayoutFromFile(file.second, *layout);
-            allocated_regions.emplace_back(storage::SharedDataIndex::AllocatedRegion{
-                const_cast<char *>(data), std::move(layout)});
-        }
-    }
+    // for (const auto &file : files)
+    // {
+    //     if (std::filesystem::exists(file.second))
+    //     {
+    //         std::unique_ptr<storage::BaseDataLayout> layout =
+    //             std::make_unique<storage::TarDataLayout>();
+    //         boost::iostreams::mapped_file_source mapped_memory_file;
+    //         auto data = util::mmapFile<char>(file.second, mapped_memory_file).data();
+    //         mapped_memory_files.emplace_back(std::move(mapped_memory_file));
+    //         storage::populateLayoutFromFile(file.second, *layout);
+    //         allocated_regions.emplace_back(storage::SharedDataIndex::AllocatedRegion{
+    //             const_cast<char *>(data), std::move(layout)});
+    //     }
+    // }
 
     index = storage::SharedDataIndex{std::move(allocated_regions)};
 }
