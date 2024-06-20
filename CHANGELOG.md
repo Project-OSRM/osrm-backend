@@ -44,6 +44,7 @@
       - CHANGED: Avoid copy of std::function-based callback in path unpacking [#6895](https://github.com/Project-OSRM/osrm-backend/pull/6895)
       - CHANGED: Replace boost::hash by std::hash [#6892](https://github.com/Project-OSRM/osrm-backend/pull/6892)
       - CHANGED: Partial fix migration from boost::optional to std::optional [#6551](https://github.com/Project-OSRM/osrm-backend/issues/6551)
+      - CHANGED: Replace boost::filesystem with std::filesystem [#6432](https://github.com/Project-OSRM/osrm-backend/pull/6432)
       - CHANGED: Update Conan Boost version to 1.85.0. [#6868](https://github.com/Project-OSRM/osrm-backend/pull/6868)
       - FIXED: Fix an error in a RouteParameters AnnotationsType operator overload. [#6646](https://github.com/Project-OSRM/osrm-backend/pull/6646)
       - ADDED: Add support for "unlimited" to be passed as a value for the default-radius and max-matching-radius flags. [#6599](https://github.com/Project-OSRM/osrm-backend/pull/6599)

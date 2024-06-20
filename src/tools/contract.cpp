@@ -6,12 +6,12 @@
 #include "util/timezones.hpp"
 #include "util/version.hpp"
 
-#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/program_options/errors.hpp>
 
 #include <cstdlib>
 #include <exception>
+#include <filesystem>
 #include <new>
 #include <ostream>
 #include <thread>
@@ -86,7 +86,7 @@ return_code parseArguments(int argc,
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
         "input,i",
-        boost::program_options::value<boost::filesystem::path>(&contractor_config.base_path),
+        boost::program_options::value<std::filesystem::path>(&contractor_config.base_path),
         "Input file in .osm, .osm.bz2 or .osm.pbf format");
 
     // positional option
@@ -99,7 +99,7 @@ return_code parseArguments(int argc,
 
     const auto *executable = argv[0];
     boost::program_options::options_description visible_options(
-        "Usage: " + boost::filesystem::path(executable).filename().string() +
+        "Usage: " + std::filesystem::path(executable).filename().string() +
         " <input.osrm> [options]");
     visible_options.add(generic_options).add(config_options);
 

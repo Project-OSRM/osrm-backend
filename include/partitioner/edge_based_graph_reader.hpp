@@ -173,8 +173,8 @@ graphToEdges(const DynamicEdgeBasedGraph &edge_based_graph)
                 for (auto edge : edge_based_graph.GetAdjacentEdgeRange(node))
                 {
                     const auto &data = edge_based_graph.GetEdgeData(edge);
-                    // we only need to save the forward edges, since the read method will
-                    // convert from forward to bi-directional edges again
+                    // we only need to save the forward edges, since the read method
+                    // will convert from forward to bi-directional edges again
                     if (data.forward)
                     {
                         auto target = edge_based_graph.GetTarget(edge);
@@ -191,7 +191,7 @@ graphToEdges(const DynamicEdgeBasedGraph &edge_based_graph)
     return edges;
 }
 
-inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const boost::filesystem::path &path)
+inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const std::filesystem::path &path)
 {
     EdgeID number_of_edge_based_nodes;
     std::vector<extractor::EdgeBasedEdge> edges;

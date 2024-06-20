@@ -152,7 +152,6 @@ jobs:
             >&2 echo "No berlin-latest.geojson found"
             exit 1
           fi
-
           # removing `.osrm.nbg` to check that whole pipeline works without it
           rm -rf "${PWD}/berlin-latest.osrm.nbg"
 
@@ -740,3 +739,4 @@ jobs:
     needs: [build-test-publish, docker-image-matrix, windows-release-node, benchmarks]
     steps:
     - run: echo "CI complete"
+
