@@ -44,7 +44,7 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
 
     for (const auto &file : files)
     {
-        if (boost::filesystem::exists(file.second))
+        if (std::filesystem::exists(file.second))
         {
             std::unique_ptr<storage::BaseDataLayout> layout =
                 std::make_unique<storage::TarDataLayout>();
