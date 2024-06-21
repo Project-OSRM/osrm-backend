@@ -254,7 +254,7 @@ try
                   << std::endl;
     };
 
-    for (auto radius : std::vector<std::optional<double>>{std::nullopt, 5.0, 10.0, 15.0, 30.0})
+    for (auto radius : std::vector<std::optional<double>>{std::nullopt, 10.0})
     {
         run_benchmark(radius);
     }

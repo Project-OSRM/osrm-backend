@@ -1,5 +1,4 @@
 import requests
-import sys
 import random
 from collections import defaultdict
 import os
@@ -8,12 +7,13 @@ import numpy as np
 import time
 import argparse
 
+
 class BenchmarkRunner:
-    def __init__(self):
+    def __init__(self, gps_traces_file_path):
         self.coordinates = []
         self.tracks = defaultdict(list)
 
-        gps_traces_file_path = os.path.expanduser('~/gps_traces.csv')
+        gps_traces_file_path = os.path.expanduser(gps_traces_file_path)
         with open(gps_traces_file_path, 'r') as file:
             reader = csv.DictReader(file)
             for row in reader:
@@ -36,10 +36,9 @@ class BenchmarkRunner:
             response = requests.get(url)
             end_time = time.time()
             if response.status_code != 200:
-                if benchmark_name == 'match':
-                    code = response.json()['code']
-                    if code == 'NoSegment' or code == 'NoMatch':
-                        continue
+                code = response.json()['code']
+                if code in ['NoSegment', 'NoMatch', 'NoRoute', 'NoTrips']:
+                    continue
                 raise Exception(f"Error: {response.status_code} {response.text}")
             times.append((end_time - start_time) * 1000) # convert to ms
         
@@ -54,7 +53,7 @@ class BenchmarkRunner:
             end_coord = f"{end[1]:.6f},{end[0]:.6f}"
             return f"{host}/route/v1/driving/{start_coord};{end_coord}?overview=full&steps=true"
         elif benchmark_name == 'table':
-            num_coords = random.randint(3, 100)
+            num_coords = random.randint(3, 12)
             selected_coords = random.sample(self.coordinates, num_coords)
             coords_str = ";".join([f"{coord[1]:.6f},{coord[0]:.6f}" for coord in selected_coords])
             return f"{host}/table/v1/driving/{coords_str}"
@@ -77,26 +76,63 @@ class BenchmarkRunner:
         else:
             raise Exception(f"Unknown benchmark: {benchmark_name}")
 
+def bootstrap_confidence_interval(data, num_samples=1000, confidence_level=0.95):
+    means = []
+    for _ in range(num_samples):
+        sample = np.random.choice(data, size=len(data), replace=True)
+        means.append(np.mean(sample))
+    lower_bound = np.percentile(means, (1 - confidence_level) / 2 * 100)
+    upper_bound = np.percentile(means, (1 + confidence_level) / 2 * 100)
+    mean = np.mean(means)
+    return mean, lower_bound, upper_bound
+
+def calculate_confidence_interval(data):
+    mean, lower, upper = bootstrap_confidence_interval(data)
+    min_value = np.min(data)
+    return mean, (upper - lower) / 2, min_value
+
+
 def main():
     parser = argparse.ArgumentParser(description='Run GPS benchmark tests.')
     parser.add_argument('--host', type=str, required=True, help='Host URL')
     parser.add_argument('--method', type=str, required=True, choices=['route', 'table', 'match', 'nearest', 'trip'], help='Benchmark method')
     parser.add_argument('--num_requests', type=int, required=True, help='Number of requests to perform')
+    parser.add_argument('--iterations', type=int, required=True, help='Number of iterations to run the benchmark')
+    parser.add_argument('--gps_traces_file_path', type=str, required=True, help='Path to the GPS traces file')
 
     args = parser.parse_args()
 
-    random.seed(42)
+    np.random.seed(42)
 
-    runner = BenchmarkRunner()
-    times = runner.run(args.method, args.host, args.num_requests)
+    runner = BenchmarkRunner(args.gps_traces_file_path)
+    
+    all_times = []
+    for _ in range(args.iterations):
+        random.seed(42)
+        times = runner.run(args.method, args.host, args.num_requests)
+        all_times.append(times)
+    all_times = np.asarray(all_times)
 
-    print(f'Total: {np.sum(times)}ms')
-    print(f"Min time: {np.min(times)}ms")
-    print(f"Mean time: {np.mean(times)}ms")
-    print(f"Median time: {np.median(times)}ms")
-    print(f"95th percentile: {np.percentile(times, 95)}ms")
-    print(f"99th percentile: {np.percentile(times, 99)}ms")
-    print(f"Max time: {np.max(times)}ms")
+    assert all_times.shape == (args.iterations, all_times.shape[1])
+
+
+    total_time, total_ci, total_best = calculate_confidence_interval(np.sum(all_times, axis=1))
+    ops_per_sec, ops_per_sec_ci, ops_per_sec_best = calculate_confidence_interval(float(all_times.shape[1]) / np.sum(all_times / 1000, axis=1))
+    min_time, min_ci, _ = calculate_confidence_interval(np.min(all_times, axis=1))
+    mean_time, mean_ci, _ = calculate_confidence_interval(np.mean(all_times, axis=1))
+    median_time, median_ci, _ = calculate_confidence_interval(np.median(all_times, axis=1))
+    perc_95_time, perc_95_ci, _ = calculate_confidence_interval(np.percentile(all_times, 95, axis=1))
+    perc_99_time, perc_99_ci, _ = calculate_confidence_interval(np.percentile(all_times, 99, axis=1))
+    max_time, max_ci, _ = calculate_confidence_interval(np.max(all_times, axis=1))
+
+    print(f'Ops: {ops_per_sec:.2f} ± {ops_per_sec_ci:.2f} ops/s. Best: {ops_per_sec_best:.2f} ops/s')
+    print(f'Total: {total_time:.2f}ms ± {total_ci:.2f}ms. Best: {total_best:.2f}ms')
+    print(f"Min time: {min_time:.2f}ms ± {min_ci:.2f}ms")
+    print(f"Mean time: {mean_time:.2f}ms ± {mean_ci:.2f}ms")
+    print(f"Median time: {median_time:.2f}ms ± {median_ci:.2f}ms")
+    print(f"95th percentile: {perc_95_time:.2f}ms ± {perc_95_ci:.2f}ms")
+    print(f"99th percentile: {perc_99_time:.2f}ms ± {perc_99_ci:.2f}ms")
+    print(f"Max time: {max_time:.2f}ms ± {max_ci:.2f}ms")
 
 if __name__ == '__main__':
     main()
