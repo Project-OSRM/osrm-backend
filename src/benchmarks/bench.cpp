@@ -176,6 +176,7 @@ class Statistics
     ConfidenceInterval mean()
     {
         std::vector<double> means;
+        means.reserve(times.size());
         for (const auto &iter_times : times)
         {
             means.push_back(std::accumulate(iter_times.begin(), iter_times.end(), 0.0) /
@@ -187,6 +188,7 @@ class Statistics
     ConfidenceInterval total()
     {
         std::vector<double> sums;
+        sums.reserve(times.size());
         for (const auto &iter_times : times)
         {
             sums.push_back(std::accumulate(iter_times.begin(), iter_times.end(), 0.0));
@@ -197,6 +199,7 @@ class Statistics
     ConfidenceInterval min()
     {
         std::vector<double> mins;
+        mins.reserve(times.size());
         for (const auto &iter_times : times)
         {
             mins.push_back(*std::min_element(iter_times.begin(), iter_times.end()));
@@ -207,6 +210,7 @@ class Statistics
     ConfidenceInterval max()
     {
         std::vector<double> maxs;
+        maxs.reserve(times.size());
         for (const auto &iter_times : times)
         {
             maxs.push_back(*std::max_element(iter_times.begin(), iter_times.end()));
@@ -217,6 +221,7 @@ class Statistics
     ConfidenceInterval percentile(double p)
     {
         std::vector<double> percentiles;
+        percentiles.reserve(times.size());
         for (const auto &iter_times : times)
         {
             auto sorted_times = iter_times;
@@ -229,6 +234,7 @@ class Statistics
     ConfidenceInterval ops_per_sec()
     {
         std::vector<double> ops;
+        ops.reserve(times.size());
         for (const auto &iter_times : times)
         {
             double total_time = std::accumulate(iter_times.begin(), iter_times.end(), 0.0) / 1000.0;
