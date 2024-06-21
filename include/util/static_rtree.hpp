@@ -2,6 +2,7 @@
 #define STATIC_RTREE_HPP
 
 #include "storage/tar_fwd.hpp"
+#include "osrm/coordinate.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/deallocating_vector.hpp"
@@ -14,8 +15,6 @@
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 #include "util/web_mercator.hpp"
-
-#include "osrm/coordinate.hpp"
 
 #include "storage/shared_memory_ownership.hpp"
 
@@ -554,14 +553,21 @@ class StaticRTree
         auto projected_coordinate = web_mercator::fromWGS84(input_coordinate);
         Coordinate fixed_projected_coordinate{projected_coordinate};
 
+        // we use std::vector<QueryCandidate> with std::push_heap/std::pop_heap instead of
+        // std::priority_queue to be able to re-use allocated memory: std::priority_queue does not
+        // have `clear` method
+        static thread_local std::vector<QueryCandidate> traversal_queue;
+
+        traversal_queue.clear();
         // initialize queue with root element
-        std::priority_queue<QueryCandidate> traversal_queue;
-        traversal_queue.push(QueryCandidate{0, TreeIndex{}});
+        traversal_queue.emplace_back(QueryCandidate{0, TreeIndex{}});
+        std::push_heap(traversal_queue.begin(), traversal_queue.end());
 
         while (!traversal_queue.empty())
         {
-            QueryCandidate current_query_node = traversal_queue.top();
-            traversal_queue.pop();
+            QueryCandidate current_query_node = traversal_queue.front();
+            std::pop_heap(traversal_queue.begin(), traversal_queue.end());
+            traversal_queue.pop_back();
 
             const TreeIndex &current_tree_index = current_query_node.tree_index;
             if (!current_query_node.is_segment())
@@ -710,10 +716,12 @@ class StaticRTree
             // distance must be non-negative
             BOOST_ASSERT(0. <= squared_distance);
             BOOST_ASSERT(i < std::numeric_limits<std::uint32_t>::max());
-            traversal_queue.push(QueryCandidate{squared_distance,
-                                                leaf_id,
-                                                static_cast<std::uint32_t>(i),
-                                                Coordinate{projected_nearest}});
+
+            traversal_queue.emplace_back(QueryCandidate{squared_distance,
+                                                        leaf_id,
+                                                        static_cast<std::uint32_t>(i),
+                                                        Coordinate{projected_nearest}});
+            std::push_heap(traversal_queue.begin(), traversal_queue.end());
         }
     }
 
@@ -742,9 +750,10 @@ class StaticRTree
                 child.minimum_bounding_rectangle.GetMinSquaredDist(
                     fixed_projected_input_coordinate);
 
-            traversal_queue.push(QueryCandidate{
+            traversal_queue.emplace_back(QueryCandidate{
                 squared_lower_bound_to_element,
                 TreeIndex(parent.level + 1, child_index - m_tree_level_starts[parent.level + 1])});
+            std::push_heap(traversal_queue.begin(), traversal_queue.end());
         }
     }
 
