@@ -24,6 +24,7 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: Get rid of unused Boost dependencies. [#6960](https://github.com/Project-OSRM/osrm-backend/pull/6960)
       - CHANGED: Apply micro-optimisation for Table & Trip APIs. [#6949](https://github.com/Project-OSRM/osrm-backend/pull/6949)
       - CHANGED: Apply micro-optimisation for Route API. [#6948](https://github.com/Project-OSRM/osrm-backend/pull/6948)
       - CHANGED: Apply micro-optimisation for Match API. [#6945](https://github.com/Project-OSRM/osrm-backend/pull/6945)
@@ -44,6 +45,7 @@
       - CHANGED: Avoid copy of std::function-based callback in path unpacking [#6895](https://github.com/Project-OSRM/osrm-backend/pull/6895)
       - CHANGED: Replace boost::hash by std::hash [#6892](https://github.com/Project-OSRM/osrm-backend/pull/6892)
       - CHANGED: Partial fix migration from boost::optional to std::optional [#6551](https://github.com/Project-OSRM/osrm-backend/issues/6551)
+      - CHANGED: Replace boost::filesystem with std::filesystem [#6432](https://github.com/Project-OSRM/osrm-backend/pull/6432)
       - CHANGED: Update Conan Boost version to 1.85.0. [#6868](https://github.com/Project-OSRM/osrm-backend/pull/6868)
       - FIXED: Fix an error in a RouteParameters AnnotationsType operator overload. [#6646](https://github.com/Project-OSRM/osrm-backend/pull/6646)
       - ADDED: Add support for "unlimited" to be passed as a value for the default-radius and max-matching-radius flags. [#6599](https://github.com/Project-OSRM/osrm-backend/pull/6599)

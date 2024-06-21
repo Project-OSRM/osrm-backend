@@ -1,25 +1,27 @@
-FROM alpine:3.20.0 as alpine-mimalloc
-
-RUN apk add --no-cache mimalloc
-
-ENV LD_PRELOAD=/usr/lib/libmimalloc.so.2
-ENV MIMALLOC_LARGE_OS_PAGES=1
-
-
-FROM alpine-mimalloc as builder
+FROM debian:bookworm-slim as builder
 ARG DOCKER_TAG
 ARG BUILD_CONCURRENCY
 RUN mkdir -p /src  && mkdir -p /opt
 
-RUN apk add --no-cache \
-    cmake make git clang libbz2 libxml2 \
-    boost-dev boost-program_options boost-filesystem boost-iostreams boost-thread \
-    lua5.4-dev onetbb-dev expat-dev
+RUN apt-get update && \
+    apt-get -y --no-install-recommends install ca-certificates cmake make git gcc g++ libbz2-dev libxml2-dev wget \
+    libzip-dev libboost1.81-all-dev lua5.4 liblua5.4-dev pkg-config -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
+
+RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
+    ldconfig /usr/local/lib && \
+    git clone --branch v2021.12.0 --single-branch https://github.com/oneapi-src/oneTBB.git && \
+    cd oneTBB && \
+    mkdir build && \
+    cd build && \
+    cmake -DTBB_TEST=OFF -DCMAKE_BUILD_TYPE=Release ..  && \
+    cmake --build . && \
+    cmake --install .
 
 COPY . /src
 WORKDIR /src
 
 RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
+    export CXXFLAGS="-Wno-array-bounds -Wno-uninitialized" && \
     echo "Building OSRM ${DOCKER_TAG}" && \
     git show --format="%H" | head -n1 > /opt/OSRM_GITSHA && \
     echo "Building OSRM gitsha $(cat /opt/OSRM_GITSHA)" && \
@@ -41,14 +43,17 @@ RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
 
 # Multistage build to reduce image size - https://docs.docker.com/engine/userguide/eng-image/multistage-build/#use-multi-stage-builds
 # Only the content below ends up in the image, this helps remove /src from the image (which is large)
-FROM alpine-mimalloc as runstage
+FROM debian:bookworm-slim as runstage
 
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
 
-RUN apk add --no-cache \
-    boost-program_options boost-date_time boost-iostreams boost-system boost-thread \
-    expat lua5.4 onetbb && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libboost-program-options1.81.0 libboost-date-time1.81.0 libboost-iostreams1.81.0 libboost-system1.81.0 libboost-thread1.81.0 \
+        expat liblua5.4-0 && \
+    rm -rf /var/lib/apt/lists/* && \
+# add /usr/local/lib to ldconfig to allow loading libraries from there
     ldconfig /usr/local/lib
 
 RUN /usr/local/bin/osrm-extract --help && \

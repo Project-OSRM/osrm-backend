@@ -7,17 +7,17 @@
 #include <rapidjson/error/en.h>
 #include <rapidjson/istreamwrapper.h>
 
-#include <boost/filesystem.hpp>
 #include <boost/geometry/algorithms/equals.hpp>
 #include <boost/iterator/function_output_iterator.hpp>
 
+#include <filesystem>
 #include <fstream>
 #include <string>
 
 namespace osrm::extractor
 {
 
-LocationDependentData::LocationDependentData(const std::vector<boost::filesystem::path> &file_paths)
+LocationDependentData::LocationDependentData(const std::vector<std::filesystem::path> &file_paths)
 {
     std::vector<rtree_t::value_type> bounding_boxes;
     for (const auto &path : file_paths)
@@ -32,12 +32,12 @@ LocationDependentData::LocationDependentData(const std::vector<boost::filesystem
 }
 
 void LocationDependentData::loadLocationDependentData(
-    const boost::filesystem::path &file_path, std::vector<rtree_t::value_type> &bounding_boxes)
+    const std::filesystem::path &file_path, std::vector<rtree_t::value_type> &bounding_boxes)
 {
     if (file_path.empty())
         return;
 
-    if (!boost::filesystem::exists(file_path) || !boost::filesystem::is_regular_file(file_path))
+    if (!std::filesystem::exists(file_path) || !std::filesystem::is_regular_file(file_path))
     {
         throw osrm::util::exception(std::string("File with location-dependent data ") +
                                     file_path.string() + " does not exists");

@@ -3,13 +3,11 @@
 #include "util/geojson_validation.hpp"
 #include "util/log.hpp"
 
-#include <boost/filesystem/fstream.hpp>
-#include <boost/filesystem/path.hpp>
-
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
 #include <rapidjson/istreamwrapper.h>
 
+#include <filesystem>
 #include <fstream>
 #include <optional>
 #include <regex>
@@ -40,7 +38,7 @@ Timezoner::Timezoner(const char geojson[], std::time_t utc_time_now)
     LoadLocalTimesRTree(doc, utc_time_now);
 }
 
-Timezoner::Timezoner(const boost::filesystem::path &tz_shapes_filename, std::time_t utc_time_now)
+Timezoner::Timezoner(const std::filesystem::path &tz_shapes_filename, std::time_t utc_time_now)
 {
     util::Log() << "Time zone validation based on UTC time : " << utc_time_now;
 

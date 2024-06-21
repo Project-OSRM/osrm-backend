@@ -177,7 +177,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     SharedRTree m_static_rtree;
     std::unique_ptr<SharedGeospatialQuery> m_geospatial_query;
-    boost::filesystem::path file_index_path;
+    std::filesystem::path file_index_path;
 
     std::optional<extractor::IntersectionBearingsView> intersection_bearings_view;
 

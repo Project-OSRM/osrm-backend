@@ -116,7 +116,10 @@ jobs:
         npm run docs && ./scripts/error_on_dirty.sh
         npm audit --production
 
-  docker-image:
+  docker-image-matrix:
+    strategy:
+      matrix:
+        docker-base-image: ["debian", "alpine"]
     needs: format-taginfo-docs
     runs-on: ubuntu-22.04
     continue-on-error: false
@@ -132,7 +135,7 @@ jobs:
             v1-berlin-osm-pbf
       - name: Docker build
         run: |
-          docker build -t osrm-backend-local -f docker/Dockerfile .
+          docker build -t osrm-backend-local -f docker/Dockerfile-${{ matrix.docker-base-image }} .
       - name: Test Docker image
         run: |
           if [ ! -f "${PWD}/berlin-latest.osm.pbf" ]; then
@@ -149,7 +152,6 @@ jobs:
             >&2 echo "No berlin-latest.geojson found"
             exit 1
           fi
-
           # removing `.osrm.nbg` to check that whole pipeline works without it
           rm -rf "${PWD}/berlin-latest.osrm.nbg"
 
@@ -734,6 +736,7 @@ jobs:
 
   ci-complete:
     runs-on: ubuntu-22.04
-    needs: [build-test-publish, docker-image, windows-release-node, benchmarks]
+    needs: [build-test-publish, docker-image-matrix, windows-release-node, benchmarks]
     steps:
     - run: echo "CI complete"
+
