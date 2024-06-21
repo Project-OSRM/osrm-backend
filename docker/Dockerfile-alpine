@@ -47,9 +47,7 @@ COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
 
 RUN apk add --no-cache \
-    boost-program_options boost-regex \
-    boost-date_time boost-chrono boost-filesystem \
-    boost-iostreams boost-system boost-thread \
+    boost-program_options boost-date_time boost-iostreams boost-thread \
     expat lua5.4 onetbb && \
     ldconfig /usr/local/lib
 

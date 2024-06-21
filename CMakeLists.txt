@@ -122,7 +122,7 @@ include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sol2/include)
 
-set(BOOST_COMPONENTS date_time chrono filesystem iostreams program_options regex system thread unit_test_framework)
+set(BOOST_COMPONENTS date_time iostreams program_options thread unit_test_framework)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util/version.hpp.in
@@ -348,8 +348,7 @@ if(ENABLE_CONAN)
     GENERATORS cmake_find_package json  # json generator generates a conanbuildinfo.json in the build folder so (non-CMake) projects can easily parse OSRM's dependencies
     KEEP_RPATHS
     NO_OUTPUT_DIRS
-    OPTIONS boost:filesystem_version=3 # https://stackoverflow.com/questions/73392648/error-with-boost-filesystem-version-in-cmake
-            boost:without_stacktrace=True # Apple Silicon cross-compilation fails without it
+    OPTIONS boost:without_stacktrace=True # Apple Silicon cross-compilation fails without it
     BUILD missing
   )
 
@@ -378,14 +377,10 @@ if(ENABLE_CONAN)
   set(Boost_USE_STATIC_LIBS ON)
   find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
   set(Boost_DATE_TIME_LIBRARY "${Boost_date_time_LIB_TARGETS}")
-  set(Boost_CHRONO_LIBRARY "${Boost_chrono_LIB_TARGETS}")
   set(Boost_PROGRAM_OPTIONS_LIBRARY "${Boost_program_options_LIB_TARGETS}")
-  set(Boost_FILESYSTEM_LIBRARY "${Boost_filesystem_LIB_TARGETS}")
   set(Boost_IOSTREAMS_LIBRARY "${Boost_iostreams_LIB_TARGETS}")
   set(Boost_THREAD_LIBRARY "${Boost_thread_LIB_TARGETS}")
-  set(Boost_SYSTEM_LIBRARY "${Boost_system_LIB_TARGETS}")
   set(Boost_ZLIB_LIBRARY "${Boost_zlib_LIB_TARGETS}")
-  set(Boost_REGEX_LIBRARY "${Boost_regex_LIB_TARGETS}")
   set(Boost_UNIT_TEST_FRAMEWORK_LIBRARY "${Boost_unit_test_framework_LIB_TARGETS}")
 
 
@@ -458,7 +453,6 @@ add_dependency_includes(${ZLIB_INCLUDE_DIRS})
 
 add_dependency_defines(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_dependency_defines(-DBOOST_RESULT_OF_USE_DECLTYPE)
-add_dependency_defines(-DBOOST_FILESYSTEM_NO_DEPRECATED)
 
 # Workaround for https://github.com/boostorg/phoenix/issues/111
 add_dependency_defines(-DBOOST_PHOENIX_STL_TUPLE_H_)
@@ -468,11 +462,8 @@ include_directories(SYSTEM ${DEPENDENCIES_INCLUDE_DIRS})
 
 set(BOOST_BASE_LIBRARIES
    ${Boost_DATE_TIME_LIBRARY}
-   ${Boost_CHRONO_LIBRARY}
-   ${Boost_FILESYSTEM_LIBRARY}
    ${Boost_IOSTREAMS_LIBRARY}
-   ${Boost_THREAD_LIBRARY}
-   ${Boost_SYSTEM_LIBRARY})
+   ${Boost_THREAD_LIBRARY})
 
 set(BOOST_ENGINE_LIBRARIES
   ${Boost_ZLIB_LIBRARY}
@@ -491,7 +482,6 @@ endif()
 
 set(EXTRACTOR_LIBRARIES
     ${BZIP2_LIBRARIES}
-    ${Boost_REGEX_LIBRARY}
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${EXPAT_LIBRARIES}
