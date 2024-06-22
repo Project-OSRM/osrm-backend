@@ -723,7 +723,7 @@ jobs:
           make -j$(nproc) benchmarks
           cd ..
           make -C test/data 
-        # we run benchmarks in tmpfs to avoid impact of disk IO
+      # we run benchmarks in tmpfs to avoid impact of disk IO
       - name: Create folder for tmpfs 
         run: mkdir -p /opt/benchmarks
       - name: Run PR Benchmarks 
@@ -736,7 +736,6 @@ jobs:
 
           ./pr/scripts/ci/run_benchmarks.sh -f /opt/benchmarks -r $(pwd)/pr_results -s $(pwd)/pr -b /opt/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
           sudo umount /opt/benchmarks
-      - run: ls -R /opt/benchmarks
       - name: Run Base Benchmarks
         run: |
           sudo mount -t tmpfs -o size=4g none /opt/benchmarks
