@@ -191,15 +191,15 @@ jobs:
           #   OSRM_CONNECTION_RETRIES: 10
           #   OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
-          # - name: clang-15-release
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-15
-          #   CXXCOMPILER: clang++-15
-          #   CUCUMBER_TIMEOUT: 60000
+          - name: clang-15-release
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-15
+            CXXCOMPILER: clang++-15
+            CUCUMBER_TIMEOUT: 60000
 
           # - name: clang-15-debug
           #   continue-on-error: false
