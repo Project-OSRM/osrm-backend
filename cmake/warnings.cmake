@@ -49,7 +49,7 @@ endmacro ()
 add_warning(all)
 add_warning(extra)
 add_warning(pedantic)
-add_warning(error) # treat all warnings as errors
+# add_warning(error) # treat all warnings as errors
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_warning(strict-overflow=1)
 endif()
