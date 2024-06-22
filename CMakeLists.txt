@@ -291,7 +291,7 @@ set(MICROTAR_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src")
 include_directories(SYSTEM ${MICROTAR_INCLUDE_DIR})
 
 add_library(MICROTAR OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src/microtar.c")
-# set_property(TARGET MICROTAR PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET MICROTAR PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_no_warning(MICROTAR unused-variable)
 target_no_warning(MICROTAR format)
 
