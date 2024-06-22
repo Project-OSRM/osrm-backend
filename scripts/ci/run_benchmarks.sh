@@ -40,12 +40,13 @@ function measure_peak_ram_and_time {
         # on macOS time has different parameters, so simply run command on macOS
         $COMMAND > /dev/null 2>&1
     else
-        OUTPUT=$(/usr/bin/time -f "%e %M" $COMMAND 2>&1 | tail -n 1)
+        $COMMAND
+        # OUTPUT=$(/usr/bin/time -f "%e %M" $COMMAND 2>&1 | tail -n 1)
 
-        TIME=$(echo $OUTPUT | awk '{print $1}')
-        PEAK_RAM_KB=$(echo $OUTPUT | awk '{print $2}')
-        PEAK_RAM_MB=$(echo "scale=2; $PEAK_RAM_KB / 1024" | bc)
-        echo "Time: ${TIME}s Peak RAM: ${PEAK_RAM_MB}MB" > $OUTPUT_FILE
+        # TIME=$(echo $OUTPUT | awk '{print $1}')
+        # PEAK_RAM_KB=$(echo $OUTPUT | awk '{print $2}')
+        # PEAK_RAM_MB=$(echo "scale=2; $PEAK_RAM_KB / 1024" | bc)
+        # echo "Time: ${TIME}s Peak RAM: ${PEAK_RAM_MB}MB" > $OUTPUT_FILE
     fi
 }
 
