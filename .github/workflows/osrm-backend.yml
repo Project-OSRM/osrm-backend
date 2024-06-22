@@ -729,14 +729,17 @@ jobs:
         run: |
           sudo mount -t tmpfs -o size=4g none /opt/benchmarks
           cp -rf pr/build /opt/benchmarks/build
+          mkdir -p /opt/benchmarks/test
           cp -rf pr/test/data /opt/benchmarks/test/data
           ls -R /opt/benchmarks
           ./pr/scripts/ci/run_benchmarks.sh -f /opt/benchmarks -r $(pwd)/pr_results -s $(pwd)/pr -b /opt/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
           sudo umount /opt/benchmarks
+      - run: ls -R /opt/benchmarks
       - name: Run Base Benchmarks
         run: |
           sudo mount -t tmpfs -o size=4g none /opt/benchmarks
           cp -rf base/build /opt/benchmarks/build
+          mkdir -p /opt/benchmarks/test
           cp -rf base/test/data /opt/benchmarks/test/data
           ls -R /opt/benchmarks
           # we intentionally use scripts from PR branch to be able to update them and see results in the same PR
