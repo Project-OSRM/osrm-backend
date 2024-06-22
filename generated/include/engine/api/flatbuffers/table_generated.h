@@ -20,11 +20,11 @@ namespace engine {
 namespace api {
 namespace fbresult {
 
-struct Table;
-struct TableBuilder;
+struct TableResult;
+struct TableResultBuilder;
 
-struct Table FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef TableBuilder Builder;
+struct TableResult FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef TableResultBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_DURATIONS = 4,
     VT_ROWS = 6,
@@ -68,40 +68,40 @@ struct Table FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
 };
 
-struct TableBuilder {
-  typedef Table Table;
+struct TableResultBuilder {
+  typedef TableResult Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_durations(::flatbuffers::Offset<::flatbuffers::Vector<float>> durations) {
-    fbb_.AddOffset(Table::VT_DURATIONS, durations);
+    fbb_.AddOffset(TableResult::VT_DURATIONS, durations);
   }
   void add_rows(uint16_t rows) {
-    fbb_.AddElement<uint16_t>(Table::VT_ROWS, rows, 0);
+    fbb_.AddElement<uint16_t>(TableResult::VT_ROWS, rows, 0);
   }
   void add_cols(uint16_t cols) {
-    fbb_.AddElement<uint16_t>(Table::VT_COLS, cols, 0);
+    fbb_.AddElement<uint16_t>(TableResult::VT_COLS, cols, 0);
   }
   void add_distances(::flatbuffers::Offset<::flatbuffers::Vector<float>> distances) {
-    fbb_.AddOffset(Table::VT_DISTANCES, distances);
+    fbb_.AddOffset(TableResult::VT_DISTANCES, distances);
   }
   void add_destinations(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> destinations) {
-    fbb_.AddOffset(Table::VT_DESTINATIONS, destinations);
+    fbb_.AddOffset(TableResult::VT_DESTINATIONS, destinations);
   }
   void add_fallback_speed_cells(::flatbuffers::Offset<::flatbuffers::Vector<uint32_t>> fallback_speed_cells) {
-    fbb_.AddOffset(Table::VT_FALLBACK_SPEED_CELLS, fallback_speed_cells);
+    fbb_.AddOffset(TableResult::VT_FALLBACK_SPEED_CELLS, fallback_speed_cells);
   }
-  explicit TableBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit TableResultBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Table> Finish() {
+  ::flatbuffers::Offset<TableResult> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Table>(end);
+    auto o = ::flatbuffers::Offset<TableResult>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Table> CreateTable(
+inline ::flatbuffers::Offset<TableResult> CreateTableResult(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::Vector<float>> durations = 0,
     uint16_t rows = 0,
@@ -109,7 +109,7 @@ inline ::flatbuffers::Offset<Table> CreateTable(
     ::flatbuffers::Offset<::flatbuffers::Vector<float>> distances = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> destinations = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<uint32_t>> fallback_speed_cells = 0) {
-  TableBuilder builder_(_fbb);
+  TableResultBuilder builder_(_fbb);
   builder_.add_fallback_speed_cells(fallback_speed_cells);
   builder_.add_destinations(destinations);
   builder_.add_distances(distances);
@@ -119,7 +119,7 @@ inline ::flatbuffers::Offset<Table> CreateTable(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Table> CreateTableDirect(
+inline ::flatbuffers::Offset<TableResult> CreateTableResultDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const std::vector<float> *durations = nullptr,
     uint16_t rows = 0,
@@ -131,7 +131,7 @@ inline ::flatbuffers::Offset<Table> CreateTableDirect(
   auto distances__ = distances ? _fbb.CreateVector<float>(*distances) : 0;
   auto destinations__ = destinations ? _fbb.CreateVector<::flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>(*destinations) : 0;
   auto fallback_speed_cells__ = fallback_speed_cells ? _fbb.CreateVector<uint32_t>(*fallback_speed_cells) : 0;
-  return osrm::engine::api::fbresult::CreateTable(
+  return osrm::engine::api::fbresult::CreateTableResult(
       _fbb,
       durations__,
       rows,

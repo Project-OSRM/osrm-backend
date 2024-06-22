@@ -117,8 +117,8 @@ struct FBResult FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const ::flatbuffers::Vector<::flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *routes() const {
     return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *>(VT_ROUTES);
   }
-  const osrm::engine::api::fbresult::Table *table() const {
-    return GetPointer<const osrm::engine::api::fbresult::Table *>(VT_TABLE);
+  const osrm::engine::api::fbresult::TableResult *table() const {
+    return GetPointer<const osrm::engine::api::fbresult::TableResult *>(VT_TABLE);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -158,7 +158,7 @@ struct FBResultBuilder {
   void add_routes(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>> routes) {
     fbb_.AddOffset(FBResult::VT_ROUTES, routes);
   }
-  void add_table(::flatbuffers::Offset<osrm::engine::api::fbresult::Table> table) {
+  void add_table(::flatbuffers::Offset<osrm::engine::api::fbresult::TableResult> table) {
     fbb_.AddOffset(FBResult::VT_TABLE, table);
   }
   explicit FBResultBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
@@ -179,7 +179,7 @@ inline ::flatbuffers::Offset<FBResult> CreateFBResult(
     ::flatbuffers::Offset<::flatbuffers::String> data_version = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>> waypoints = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>> routes = 0,
-    ::flatbuffers::Offset<osrm::engine::api::fbresult::Table> table = 0) {
+    ::flatbuffers::Offset<osrm::engine::api::fbresult::TableResult> table = 0) {
   FBResultBuilder builder_(_fbb);
   builder_.add_table(table);
   builder_.add_routes(routes);
@@ -197,7 +197,7 @@ inline ::flatbuffers::Offset<FBResult> CreateFBResultDirect(
     const char *data_version = nullptr,
     const std::vector<::flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>> *waypoints = nullptr,
     const std::vector<::flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>> *routes = nullptr,
-    ::flatbuffers::Offset<osrm::engine::api::fbresult::Table> table = 0) {
+    ::flatbuffers::Offset<osrm::engine::api::fbresult::TableResult> table = 0) {
   auto data_version__ = data_version ? _fbb.CreateString(data_version) : 0;
   auto waypoints__ = waypoints ? _fbb.CreateVector<::flatbuffers::Offset<osrm::engine::api::fbresult::Waypoint>>(*waypoints) : 0;
   auto routes__ = routes ? _fbb.CreateVector<::flatbuffers::Offset<osrm::engine::api::fbresult::RouteObject>>(*routes) : 0;
