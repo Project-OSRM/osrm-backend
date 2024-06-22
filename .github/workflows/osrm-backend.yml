@@ -723,7 +723,7 @@ jobs:
       #     make -j$(nproc) benchmarks
       #     cd ..
       #     make -C test/data 
-      - run: du -sh base/build pr/build
+      # - run: du -sh base/build pr/build
       - run: mkdir -p /opt/benchmarks
       - name: Run PR Benchmarks 
         run: |
