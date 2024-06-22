@@ -25,6 +25,7 @@
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
       - CHANGED: Optimise encodePolyline function. [#6940](https://github.com/Project-OSRM/osrm-backend/pull/6940)
+      - CHANGED: Avoid reallocations in base64 encoding. [#6951](https://github.com/Project-OSRM/osrm-backend/pull/6951)
       - CHANGED: Get rid of unused Boost dependencies. [#6960](https://github.com/Project-OSRM/osrm-backend/pull/6960)
       - CHANGED: Apply micro-optimisation for Table & Trip APIs. [#6949](https://github.com/Project-OSRM/osrm-backend/pull/6949)
       - CHANGED: Apply micro-optimisation for Route API. [#6948](https://github.com/Project-OSRM/osrm-backend/pull/6948)
