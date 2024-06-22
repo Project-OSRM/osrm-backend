@@ -1254,7 +1254,7 @@ void Sol2ScriptingEnvironment::ProcessSegment(ExtractionSegment &segment)
 
     if (context.has_segment_function)
     {
-        sol::protected_function_result luares;
+        std::optional<sol::protected_function_result> luares;
         switch (context.api_version)
         {
         case 4:
@@ -1274,8 +1274,8 @@ void Sol2ScriptingEnvironment::ProcessSegment(ExtractionSegment &segment)
             break;
         }
 
-        if (!luares.valid())
-            handle_lua_error(luares);
+        if (luares && !luares->valid())
+            handle_lua_error(*luares);
     }
 }
 
@@ -1285,7 +1285,7 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node,
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 
-    sol::protected_function_result luares;
+    std::optional<sol::protected_function_result> luares;
 
     // TODO check for api version, make sure luares is always set
     switch (api_version)
@@ -1302,10 +1302,12 @@ void LuaScriptingContext::ProcessNode(const osmium::Node &node,
     case 0:
         luares = node_function(std::cref(node), std::ref(result));
         break;
+    default:
+        BOOST_ASSERT(false && "Invalid API version");
     }
 
-    if (!luares.valid())
-        handle_lua_error(luares);
+    if (luares && !luares->valid())
+        handle_lua_error(*luares);
 }
 
 void LuaScriptingContext::ProcessWay(const osmium::Way &way,
@@ -1314,7 +1316,7 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way,
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 
-    sol::protected_function_result luares;
+    std::optional<sol::protected_function_result> luares;
 
     // TODO check for api version, make sure luares is always set
     switch (api_version)
@@ -1331,10 +1333,12 @@ void LuaScriptingContext::ProcessWay(const osmium::Way &way,
     case 0:
         luares = way_function(std::cref(way), std::ref(result));
         break;
+    default:
+        BOOST_ASSERT(false && "Invalid API version");
     }
 
-    if (!luares.valid())
-        handle_lua_error(luares);
+    if (luares && !luares->valid())
+        handle_lua_error(*luares);
 }
 
 } // namespace osrm::extractor
