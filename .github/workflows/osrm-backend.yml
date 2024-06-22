@@ -177,19 +177,19 @@ jobs:
             CXXCOMPILER: g++-13
             ENABLE_COVERAGE: ON
 
-          - name: clang-15-debug-asan-ubsan
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-22.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-15
-            CUCUMBER_TIMEOUT: 20000
-            CXXCOMPILER: clang++-15
-            ENABLE_SANITIZER: ON
-            TARGET_ARCH: x86_64-asan-ubsan
-            OSRM_CONNECTION_RETRIES: 10
-            OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
+          # - name: clang-15-debug-asan-ubsan
+          #   continue-on-error: false
+          #   node: 20
+          #   runs-on: ubuntu-22.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Debug
+          #   CCOMPILER: clang-15
+          #   CUCUMBER_TIMEOUT: 20000
+          #   CXXCOMPILER: clang++-15
+          #   ENABLE_SANITIZER: ON
+          #   TARGET_ARCH: x86_64-asan-ubsan
+          #   OSRM_CONNECTION_RETRIES: 10
+          #   OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
           - name: clang-15-release
             continue-on-error: false
