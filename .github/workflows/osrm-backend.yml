@@ -643,7 +643,7 @@ jobs:
 
   benchmarks:
     if: github.event_name == 'pull_request'
-    #needs: [format-taginfo-docs]
+    needs: [format-taginfo-docs]
     runs-on: ubuntu-22.04
     env:
       CCOMPILER: clang-13
@@ -765,9 +765,9 @@ jobs:
           ccache -p
           ccache -s
 
-  # ci-complete:
-  #   runs-on: ubuntu-22.04
-  #   needs: [build-test-publish, docker-image-matrix, windows-release-node, benchmarks]
-  #   steps:
-  #   - run: echo "CI complete"
+  ci-complete:
+    runs-on: ubuntu-22.04
+    needs: [build-test-publish, docker-image-matrix, windows-release-node, benchmarks]
+    steps:
+    - run: echo "CI complete"
 
