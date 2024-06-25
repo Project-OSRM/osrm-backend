@@ -679,7 +679,7 @@ jobs:
       - name: Install dependencies
         run: | 
           python3 -m pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" 
-          sudo apt-get update -y && sudo apt-get install ccache
+          #sudo apt-get update -y && sudo apt-get install ccache
       - name: Prepare data
         run: |
           if [ "$RUN_BIG_BENCHMARK" = "true" ]; then
@@ -728,17 +728,17 @@ jobs:
         run: mkdir -p /opt/benchmarks
       - name: Run PR Benchmarks 
         run: |
-          sudo mount -t tmpfs -o size=4g none /opt/benchmarks
+          mount -t tmpfs -o size=4g none /opt/benchmarks
           cp -rf pr/build /opt/benchmarks/build
           mkdir -p /opt/benchmarks/test
           cp -rf pr/test/data /opt/benchmarks/test/data
           cp -rf pr/profiles /opt/benchmarks/profiles
 
           ./pr/scripts/ci/run_benchmarks.sh -f /opt/benchmarks -r $(pwd)/pr_results -s $(pwd)/pr -b /opt/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
-          sudo umount /opt/benchmarks
+          umount /opt/benchmarks
       - name: Run Base Benchmarks
         run: |
-          sudo mount -t tmpfs -o size=4g none /opt/benchmarks
+          mount -t tmpfs -o size=4g none /opt/benchmarks
           cp -rf base/build /opt/benchmarks/build
           mkdir -p /opt/benchmarks/test
           cp -rf base/test/data /opt/benchmarks/test/data
@@ -750,7 +750,7 @@ jobs:
           fi
           # we intentionally use scripts from PR branch to be able to update them and see results in the same PR
           ./pr/scripts/ci/run_benchmarks.sh -f /opt/benchmarks -r $(pwd)/base_results -s $(pwd)/pr -b /opt/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
-          sudo umount /opt/benchmarks
+          umount /opt/benchmarks
       - name: Post Benchmark Results
         run: |
           python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
