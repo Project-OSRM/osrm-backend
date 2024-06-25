@@ -162,137 +162,137 @@ jobs:
           docker stop osrm-container
 
   build-test-publish:
-   # needs: format-taginfo-docs
+    needs: format-taginfo-docs
     strategy:
       matrix:
         include:
-          # - name: gcc-13-debug-cov
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-24.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Debug
-          #   CCOMPILER: gcc-13
-          #   CUCUMBER_TIMEOUT: 20000
-          #   CXXCOMPILER: g++-13
-          #   ENABLE_COVERAGE: ON
+          - name: gcc-13-debug-cov
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-24.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CCOMPILER: gcc-13
+            CUCUMBER_TIMEOUT: 20000
+            CXXCOMPILER: g++-13
+            ENABLE_COVERAGE: ON
 
-          # - name: clang-15-debug-asan-ubsan
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Debug
-          #   CCOMPILER: clang-15
-          #   CUCUMBER_TIMEOUT: 20000
-          #   CXXCOMPILER: clang++-15
-          #   ENABLE_SANITIZER: ON
-          #   TARGET_ARCH: x86_64-asan-ubsan
-          #   OSRM_CONNECTION_RETRIES: 10
-          #   OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
+          - name: clang-15-debug-asan-ubsan
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-15
+            CUCUMBER_TIMEOUT: 20000
+            CXXCOMPILER: clang++-15
+            ENABLE_SANITIZER: ON
+            TARGET_ARCH: x86_64-asan-ubsan
+            OSRM_CONNECTION_RETRIES: 10
+            OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
-          # - name: clang-15-release
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-15
-          #   CXXCOMPILER: clang++-15
-          #   CUCUMBER_TIMEOUT: 60000
+          - name: clang-15-release
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-15
+            CXXCOMPILER: clang++-15
+            CUCUMBER_TIMEOUT: 60000
 
-          # - name: clang-15-debug
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Debug
-          #   CCOMPILER: clang-15
-          #   CXXCOMPILER: clang++-15
-          #   CUCUMBER_TIMEOUT: 60000
+          - name: clang-15-debug
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-15
+            CXXCOMPILER: clang++-15
+            CUCUMBER_TIMEOUT: 60000
 
-          # - name: clang-18-debug-clang-tidy
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-24.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Debug
-          #   CCOMPILER: clang-18
-          #   CXXCOMPILER: clang++-18
-          #   CUCUMBER_TIMEOUT: 60000
-          #   ENABLE_CLANG_TIDY: ON
+          - name: clang-18-debug-clang-tidy
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-24.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_CLANG_TIDY: ON
 
 
-          # - name: clang-14-release
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-14
-          #   CXXCOMPILER: clang++-14
-          #   CUCUMBER_TIMEOUT: 60000
+          - name: clang-14-release
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-14
+            CXXCOMPILER: clang++-14
+            CUCUMBER_TIMEOUT: 60000
 
-          # - name: clang-13-release
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-13
-          #   CXXCOMPILER: clang++-13
-          #   CUCUMBER_TIMEOUT: 60000
+          - name: clang-13-release
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-13
+            CXXCOMPILER: clang++-13
+            CUCUMBER_TIMEOUT: 60000
 
-          # - name: conan-linux-debug-asan-ubsan
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-15
-          #   CXXCOMPILER: clang++-15
-          #   ENABLE_CONAN: ON
-          #   ENABLE_SANITIZER: ON
+          - name: conan-linux-debug-asan-ubsan
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-15
+            CXXCOMPILER: clang++-15
+            ENABLE_CONAN: ON
+            ENABLE_SANITIZER: ON
 
-          # - name: conan-linux-release
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-15
-          #   CXXCOMPILER: clang++-15
-          #   ENABLE_CONAN: ON
+          - name: conan-linux-release
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-15
+            CXXCOMPILER: clang++-15
+            ENABLE_CONAN: ON
 
-          # - name: gcc-14-release
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-24.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: gcc-14
-          #   CXXCOMPILER: g++-14
-          #   CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+          - name: gcc-14-release
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-24.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-14
+            CXXCOMPILER: g++-14
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          # - name: gcc-13-release
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-24.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: gcc-13
-          #   CXXCOMPILER: g++-13
-          #   CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+          - name: gcc-13-release
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-24.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-13
+            CXXCOMPILER: g++-13
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          # - name: gcc-12-release
-          #   continue-on-error: false
-          #   node: 20
-          #   runs-on: ubuntu-22.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: gcc-12
-          #   CXXCOMPILER: g++-12
-          #   CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+          - name: gcc-12-release
+            continue-on-error: false
+            node: 20
+            runs-on: ubuntu-22.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-12
+            CXXCOMPILER: g++-12
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
           - name: conan-linux-release-node
             build_node_package: true
@@ -304,6 +304,7 @@ jobs:
             CXXCOMPILER: clang++-13
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
+            ENABLE_LTO: ON
 
           - name: conan-linux-debug-node
             build_node_package: true
@@ -315,6 +316,7 @@ jobs:
             CXXCOMPILER: clang++-13
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
+            ENABLE_LTO: ON
 
           - name: conan-macos-x64-release-node
             build_node_package: true
@@ -327,6 +329,7 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
+            ENABLE_LTO: ON
 
           - name: conan-macos-arm64-release-node
             build_node_package: true
@@ -339,6 +342,7 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
+            ENABLE_LTO: ON
 
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
@@ -361,6 +365,7 @@ jobs:
       TARGET_ARCH: ${{ matrix.TARGET_ARCH }}
       OSRM_CONNECTION_RETRIES: ${{ matrix.OSRM_CONNECTION_RETRIES }}
       OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
+      ENABLE_LTO: ${{ matrix.ENABLE_LTO }}
     steps:
     - uses: actions/checkout@v4
     - name: Build machine architecture
@@ -521,7 +526,8 @@ jobs:
                  -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
                  -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
                  -DENABLE_CCACHE=ON \
-                 -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
+                 -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
+                 -DCMAKE_ENABLE_LTO=${ENABLE_LTO:-OFF}
         make --jobs=${JOBS}
 
         if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
@@ -709,7 +715,7 @@ jobs:
         run: |
           mkdir base/build
           cd base/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DENABLE_CONAN=ON -DENABLE_LTO=ON -DCMAKE_BUILD_TYPE=Release ..
           make -j$(nproc)
           make -j$(nproc) benchmarks
           cd ..
@@ -718,7 +724,7 @@ jobs:
         run: |
           mkdir -p pr/build
           cd pr/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DENABLE_CONAN=ON -DENABLE_LTO=ON -DCMAKE_BUILD_TYPE=Release ..
           make -j$(nproc) 
           make -j$(nproc) benchmarks
           cd ..

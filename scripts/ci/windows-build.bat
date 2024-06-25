@@ -11,7 +11,7 @@ mkdir build
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 cd build
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-cmake -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON -DCMAKE_BUILD_TYPE=%CONFIGURATION% -G "Visual Studio 17 2022" ..
+cmake -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON -DENABLE_LTO=ON -DCMAKE_BUILD_TYPE=%CONFIGURATION% -G "Visual Studio 17 2022" ..
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 msbuild OSRM.sln ^
@@ -62,7 +62,7 @@ SET test_region_ch=ch\monaco
 SET test_region_corech=corech\monaco
 SET test_region_mld=mld\monaco
 SET test_osm=%test_region%.osm.pbf
-COPY %PROJECT_DIR%\test\data\%test_region%.osm.pbf %test_osm% 
+COPY %PROJECT_DIR%\test\data\%test_region%.osm.pbf %test_osm%
 %CONFIGURATION%\osrm-extract.exe -p %PROJECT_DIR%\profiles\car.lua %test_osm%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
