@@ -648,6 +648,7 @@ jobs:
       PR_NUMBER: ${{ github.event.pull_request.number }}
       GITHUB_REPOSITORY: ${{ github.repository }}
       RUN_BIG_BENCHMARK: ${{ contains(github.event.pull_request.labels.*.name, 'Performance') }}
+      CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
     steps: 
       - name: Enable data.osm.pbf cache
         if: ${{ ! env.RUN_BIG_BENCHMARK }}        
