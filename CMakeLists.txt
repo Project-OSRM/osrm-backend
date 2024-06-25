@@ -122,7 +122,7 @@ include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sol2/include)
 
-set(BOOST_COMPONENTS date_time chrono filesystem iostreams program_options regex system thread unit_test_framework)
+set(BOOST_COMPONENTS date_time iostreams program_options thread unit_test_framework)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util/version.hpp.in
@@ -334,20 +334,12 @@ if(ENABLE_CONAN)
 
   set(CONAN_BOOST_VERSION "1.85.0@#14265ec82b25d91305bbb3b30d3357f8")
   set(CONAN_BZIP2_VERSION "1.0.8@#d1b2d5816f25865acf978501dff1f897")
-  set(CONAN_EXPAT_VERSION "2.2.10@#916908d4a570ad839edd25322c3268cd")
-  set(CONAN_LUA_VERSION "5.4.4@#3ec62efc37cd0a5d80b9e5cb35277360")
-  set(CONAN_TBB_VERSION "2021.3.0@#507ec17cbd51a84167e143b20d170eea")
+  set(CONAN_EXPAT_VERSION "2.6.2@#2d385d0d50eb5561006a7ff9e356656b")
+  set(CONAN_LUA_VERSION "5.4.6@#658d6089093cf01992c2737ab2e96763")
+  set(CONAN_TBB_VERSION "2021.12.0@#e56e5b44be8d690530585dd3634c0106")
 
   set(CONAN_SYSTEM_INCLUDES ON)
 
-  # TODO:
-  # if we link TBB dynamically osrm-extract.exe finishes on the first access to any TBB symbol
-  # with exit code = -1073741515, which means that program cannot load required DLL.
-  if (MSVC)
-    set(TBB_SHARED False)
-  else()
-    set(TBB_SHARED True)
-  endif()
 
   set(CONAN_ARGS
     REQUIRES
@@ -360,9 +352,7 @@ if(ENABLE_CONAN)
     GENERATORS cmake_find_package json  # json generator generates a conanbuildinfo.json in the build folder so (non-CMake) projects can easily parse OSRM's dependencies
     KEEP_RPATHS
     NO_OUTPUT_DIRS
-    OPTIONS boost:filesystem_version=3 # https://stackoverflow.com/questions/73392648/error-with-boost-filesystem-version-in-cmake
-            onetbb:shared=${TBB_SHARED}
-            boost:without_stacktrace=True # Apple Silicon cross-compilation fails without it
+    OPTIONS boost:without_stacktrace=True # Apple Silicon cross-compilation fails without it
     BUILD missing
   )
 
@@ -391,14 +381,10 @@ if(ENABLE_CONAN)
   set(Boost_USE_STATIC_LIBS ON)
   find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
   set(Boost_DATE_TIME_LIBRARY "${Boost_date_time_LIB_TARGETS}")
-  set(Boost_CHRONO_LIBRARY "${Boost_chrono_LIB_TARGETS}")
   set(Boost_PROGRAM_OPTIONS_LIBRARY "${Boost_program_options_LIB_TARGETS}")
-  set(Boost_FILESYSTEM_LIBRARY "${Boost_filesystem_LIB_TARGETS}")
   set(Boost_IOSTREAMS_LIBRARY "${Boost_iostreams_LIB_TARGETS}")
   set(Boost_THREAD_LIBRARY "${Boost_thread_LIB_TARGETS}")
-  set(Boost_SYSTEM_LIBRARY "${Boost_system_LIB_TARGETS}")
   set(Boost_ZLIB_LIBRARY "${Boost_zlib_LIB_TARGETS}")
-  set(Boost_REGEX_LIBRARY "${Boost_regex_LIB_TARGETS}")
   set(Boost_UNIT_TEST_FRAMEWORK_LIBRARY "${Boost_unit_test_framework_LIB_TARGETS}")
 
 
@@ -471,7 +457,6 @@ add_dependency_includes(${ZLIB_INCLUDE_DIRS})
 
 add_dependency_defines(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_dependency_defines(-DBOOST_RESULT_OF_USE_DECLTYPE)
-add_dependency_defines(-DBOOST_FILESYSTEM_NO_DEPRECATED)
 
 # Workaround for https://github.com/boostorg/phoenix/issues/111
 add_dependency_defines(-DBOOST_PHOENIX_STL_TUPLE_H_)
@@ -481,11 +466,8 @@ include_directories(SYSTEM ${DEPENDENCIES_INCLUDE_DIRS})
 
 set(BOOST_BASE_LIBRARIES
    ${Boost_DATE_TIME_LIBRARY}
-   ${Boost_CHRONO_LIBRARY}
-   ${Boost_FILESYSTEM_LIBRARY}
    ${Boost_IOSTREAMS_LIBRARY}
-   ${Boost_THREAD_LIBRARY}
-   ${Boost_SYSTEM_LIBRARY})
+   ${Boost_THREAD_LIBRARY})
 
 set(BOOST_ENGINE_LIBRARIES
   ${Boost_ZLIB_LIBRARY}
@@ -504,7 +486,6 @@ endif()
 
 set(EXTRACTOR_LIBRARIES
     ${BZIP2_LIBRARIES}
-    ${Boost_REGEX_LIBRARY}
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${EXPAT_LIBRARIES}

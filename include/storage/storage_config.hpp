@@ -28,22 +28,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef STORAGE_CONFIG_HPP
 #define STORAGE_CONFIG_HPP
 
-#include <boost/filesystem/path.hpp>
-
 #include "storage/io_config.hpp"
 #include "osrm/datasets.hpp"
 
+#include <filesystem>
+#include <istream>
 #include <set>
+#include <vector>
 
 namespace osrm::storage
 {
 
 std::istream &operator>>(std::istream &in, FeatureDataset &datasets);
 
-static std::vector<boost::filesystem::path>
+static std::vector<std::filesystem::path>
 GetRequiredFiles(const std::vector<storage::FeatureDataset> &disabled_feature_dataset)
 {
-    std::set<boost::filesystem::path> required{
+    std::set<std::filesystem::path> required{
         ".osrm.datasource_names",
         ".osrm.ebg_nodes",
         ".osrm.edges",
@@ -82,7 +83,7 @@ GetRequiredFiles(const std::vector<storage::FeatureDataset> &disabled_feature_da
         }
     }
 
-    return std::vector<boost::filesystem::path>(required.begin(), required.end());
+    return std::vector<std::filesystem::path>(required.begin(), required.end());
     ;
 }
 
@@ -94,7 +95,7 @@ GetRequiredFiles(const std::vector<storage::FeatureDataset> &disabled_feature_da
 struct StorageConfig final : IOConfig
 {
 
-    StorageConfig(const boost::filesystem::path &base,
+    StorageConfig(const std::filesystem::path &base,
                   const std::vector<storage::FeatureDataset> &disabled_feature_datasets_ = {})
         : StorageConfig(disabled_feature_datasets_)
     {

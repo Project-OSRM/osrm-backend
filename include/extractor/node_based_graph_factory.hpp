@@ -12,8 +12,7 @@
 #include "util/coordinate.hpp"
 #include "util/node_based_graph.hpp"
 
-#include <boost/filesystem/path.hpp>
-
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <unordered_set>

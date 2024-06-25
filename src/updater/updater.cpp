@@ -25,7 +25,6 @@
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/filesystem/fstream.hpp>
 
 #include <tbb/blocked_range.h>
 #include <tbb/concurrent_vector.h>
@@ -38,6 +37,7 @@
 #include <atomic>
 #include <bitset>
 #include <cstdint>
+#include <fstream>
 #include <iterator>
 #include <memory>
 #include <tuple>
@@ -408,7 +408,7 @@ void saveDatasourcesNames(const UpdaterConfig &config)
     // for rendering in the debug tiles.
     for (auto const &name : config.segment_speed_lookup_paths)
     {
-        sources.SetSourceName(source, boost::filesystem::path(name).stem().string());
+        sources.SetSourceName(source, std::filesystem::path(name).stem().string());
         source++;
     }
 
