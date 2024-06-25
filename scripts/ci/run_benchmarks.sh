@@ -64,7 +64,7 @@ function run_benchmarks_for_folder {
     echo "Running alias"
     $BENCHMARKS_FOLDER/alias-bench > "$RESULTS_FOLDER/alias.bench"
     echo "Running json-render-bench"
-    $BENCHMARKS_FOLDER/json-render-bench  "$FOLDER/src/benchmarks/portugal_to_korea.json" > "$RESULTS_FOLDER/json-render.bench"
+    $BENCHMARKS_FOLDER/json-render-bench  "$FOLDER/test/data/portugal_to_korea.json" > "$RESULTS_FOLDER/json-render.bench"
     echo "Running packedvector-bench"
     $BENCHMARKS_FOLDER/packedvector-bench > "$RESULTS_FOLDER/packedvector.bench"
     echo "Running rtree-bench"
