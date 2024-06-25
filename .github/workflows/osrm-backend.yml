@@ -640,10 +640,10 @@ jobs:
     #needs: [format-taginfo-docs]
     runs-on: self-hosted
     env:
-      CCOMPILER: gcc-12
-      CXXCOMPILER: g++-12
-      CC: gcc-12
-      CXX: g++-12
+      CCOMPILER: gcc-13
+      CXXCOMPILER: g++-13
+      CC: gcc-13
+      CXX: g++-13
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
       GITHUB_REPOSITORY: ${{ github.repository }}
