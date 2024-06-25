@@ -708,6 +708,7 @@ jobs:
           path: base
       - name: Build Base Branch
         run: |
+          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/sfedartsou/.conan/data/onetbb/2021.12.0/_/_/package/14d80dcc6e4fac53fcd6bcf3899648ac2c72c6aa/lib/"
           mkdir base/build
           cd base/build
           cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
@@ -717,6 +718,7 @@ jobs:
           make -C test/data 
       - name: Build PR Branch
         run: |
+          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/sfedartsou/.conan/data/onetbb/2021.12.0/_/_/package/14d80dcc6e4fac53fcd6bcf3899648ac2c72c6aa/lib/"
           mkdir -p pr/build
           cd pr/build
           cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
@@ -729,6 +731,7 @@ jobs:
         run: mkdir -p ~/benchmarks_tmp
       - name: Run PR Benchmarks 
         run: |
+          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/sfedartsou/.conan/data/onetbb/2021.12.0/_/_/package/14d80dcc6e4fac53fcd6bcf3899648ac2c72c6aa/lib/"
           sudo mount -t tmpfs -o size=4g none ~/benchmarks_tmp
           cp -rf pr/build ~/benchmarks_tmp/build
           mkdir -p ~/benchmarks_tmp/test
@@ -739,6 +742,7 @@ jobs:
           sudo umount ~/benchmarks_tmp
       - name: Run Base Benchmarks
         run: |
+          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/sfedartsou/.conan/data/onetbb/2021.12.0/_/_/package/14d80dcc6e4fac53fcd6bcf3899648ac2c72c6aa/lib/"
           sudo mount -t tmpfs -o size=4g none ~/benchmarks_tmp
           cp -rf base/build ~/benchmarks_tmp/build
           mkdir -p ~/benchmarks_tmp/test
