@@ -729,17 +729,17 @@ jobs:
         run: mkdir -p ~/benchmarks_tmp
       - name: Run PR Benchmarks 
         run: |
-          mount -t tmpfs -o size=4g none ~/benchmarks_tmp
+          sudo mount -t tmpfs -o size=4g none ~/benchmarks_tmp
           cp -rf pr/build ~/benchmarks_tmp/build
           mkdir -p ~/benchmarks_tmp/test
           cp -rf pr/test/data ~/benchmarks_tmp/test/data
           cp -rf pr/profiles ~/benchmarks_tmp/profiles
 
           ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks_tmp -r $(pwd)/pr_results -s $(pwd)/pr -b ~/benchmarks_tmp/build -o ~/data.osm.pbf -g ~/gps_traces.csv
-          umount ~/benchmarks_tmp
+          sudo umount ~/benchmarks_tmp
       - name: Run Base Benchmarks
         run: |
-          mount -t tmpfs -o size=4g none ~/benchmarks_tmp
+          sudo mount -t tmpfs -o size=4g none ~/benchmarks_tmp
           cp -rf base/build ~/benchmarks_tmp/build
           mkdir -p ~/benchmarks_tmp/test
           cp -rf base/test/data ~/benchmarks_tmp/test/data
@@ -751,7 +751,7 @@ jobs:
           fi
           # we intentionally use scripts from PR branch to be able to update them and see results in the same PR
           ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks_tmp -r $(pwd)/base_results -s $(pwd)/pr -b ~/benchmarks_tmp/build -o ~/data.osm.pbf -g ~/gps_traces.csv
-          umount ~/benchmarks_tmp
+          sudo umount ~/benchmarks_tmp
       - name: Post Benchmark Results
         run: |
           python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
