@@ -682,7 +682,6 @@ jobs:
           sudo apt-get update -y && sudo apt-get install ccache
       - name: Prepare data
         run: |
-          echo "RUN BIG BENCHMARK: $RUN_BIG_BENCHMARK"
           if [ "$RUN_BIG_BENCHMARK" = "true" ]; then
               rm -rf ~/data.osm.pbf
               wget http://download.geofabrik.de/europe/poland-latest.osm.pbf -O ~/data.osm.pbf --quiet
@@ -754,7 +753,7 @@ jobs:
           sudo umount /opt/benchmarks
       - name: Post Benchmark Results
         run: |
-          python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results 1
+          python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
       - name: Show CCache statistics
         run: |
           ccache -p

@@ -81,7 +81,6 @@ function run_benchmarks_for_folder {
     echo "Running osrm-contract"
     measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-contract $FOLDER/data.osrm" "$RESULTS_FOLDER/osrm_contract.bench"
 
-
     for ALGORITHM in ch mld; do
         for BENCH in nearest table trip route match; do
             echo "Running random $BENCH $ALGORITHM"

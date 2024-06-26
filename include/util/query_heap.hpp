@@ -33,8 +33,6 @@ template <typename NodeID, typename Key> class ArrayStorage
     std::vector<Key> positions;
 };
 
-#define USE_ANKERL
-
 template <typename NodeID, typename Key> class UnorderedMapStorage
 {
   public:
