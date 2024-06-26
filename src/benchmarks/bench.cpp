@@ -162,8 +162,10 @@ ConfidenceInterval confidenceInterval(const std::vector<double> &data,
     double upper_bound = means[(int)((1 + confidence_level) / 2 * num_samples)];
     double mean = std::accumulate(means.begin(), means.end(), 0.0) / means.size();
 
-    ConfidenceInterval ci = {
-        mean, (upper_bound - lower_bound) / 2, *std::min_element(data.begin(), data.end()), *std::max_element(data.begin(), data.end())};
+    ConfidenceInterval ci = {mean,
+                             (upper_bound - lower_bound) / 2,
+                             *std::min_element(data.begin(), data.end()),
+                             *std::max_element(data.begin(), data.end())};
     return ci;
 }
 
