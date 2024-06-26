@@ -746,10 +746,10 @@ jobs:
         run: |
           export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/sfedartsou/.conan/data/onetbb/2021.12.0/_/_/package/14d80dcc6e4fac53fcd6bcf3899648ac2c72c6aa/lib/"
           sudo mount -t tmpfs -o size=4g none ~/benchmarks_tmp
-          cp -rf base/build ~/benchmarks_tmp/build
+          cp -rf pr/build ~/benchmarks_tmp/build
           mkdir -p ~/benchmarks_tmp/test
-          cp -rf base/test/data ~/benchmarks_tmp/test/data
-          cp -rf base/profiles ~/benchmarks_tmp/profiles
+          cp -rf pr/test/data ~/benchmarks_tmp/test/data
+          cp -rf pr/profiles ~/benchmarks_tmp/profiles
 
           # TODO: remove it when base branch will have this file at needed location
           if [ ! -f ~/benchmarks_tmp/test/data/portugal_to_korea.json ]; then
