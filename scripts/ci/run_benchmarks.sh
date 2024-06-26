@@ -58,9 +58,9 @@ function run_benchmarks_for_folder {
 
     BENCHMARKS_FOLDER="$BINARIES_FOLDER/src/benchmarks"
     echo "Running match-bench MLD"
-    perf stat $BENCHMARKS_FOLDER/match-bench "$FOLDER/test/data/mld/monaco.osrm" mld &> "$RESULTS_FOLDER/match_mld.bench"
+    perf stat -r 10 $BENCHMARKS_FOLDER/match-bench "$FOLDER/test/data/mld/monaco.osrm" mld &> "$RESULTS_FOLDER/match_mld.bench"
     echo "Running match-bench CH"
-    perf stat $BENCHMARKS_FOLDER/match-bench "$FOLDER/test/data/ch/monaco.osrm" ch &> "$RESULTS_FOLDER/match_ch.bench"
+    perf stat -r 10 $BENCHMARKS_FOLDER/match-bench "$FOLDER/test/data/ch/monaco.osrm" ch &> "$RESULTS_FOLDER/match_ch.bench"
     # echo "Running route-bench MLD"
     # $BENCHMARKS_FOLDER/route-bench "$FOLDER/test/data/mld/monaco.osrm" mld > "$RESULTS_FOLDER/route_mld.bench"
     # echo "Running route-bench CH"
