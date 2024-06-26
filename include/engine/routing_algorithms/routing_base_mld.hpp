@@ -487,7 +487,13 @@ void routingStep(const DataFacade<Algorithm> &facade,
 
 using UnpackedNodes = std::vector<NodeID>;
 using UnpackedEdges = std::vector<EdgeID>;
-using UnpackedPath = std::tuple<EdgeWeight, UnpackedNodes, UnpackedEdges>;
+
+struct UnpackedPath
+{
+    EdgeWeight weight;
+    UnpackedNodes nodes;
+    UnpackedEdges edges;
+};
 
 template <typename Algorithm, typename Heap, typename... Args>
 std::optional<std::pair<NodeID, EdgeWeight>> runSearch(const DataFacade<Algorithm> &facade,
@@ -551,7 +557,7 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
         facade, forward_heap, reverse_heap, force_step_nodes, weight_upper_bound, args...);
     if (!searchResult)
     {
-        return std::make_tuple(INVALID_EDGE_WEIGHT, std::vector<NodeID>(), std::vector<EdgeID>());
+        return {INVALID_EDGE_WEIGHT, std::vector<NodeID>(), std::vector<EdgeID>()};
     }
 
     auto [middle, weight] = *searchResult;
@@ -595,25 +601,27 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
             forward_heap.Insert(source, {0}, {source});
             reverse_heap.Insert(target, {0}, {target});
 
-            auto [subpath_weight, subpath_nodes, subpath_edges] = search(engine_working_data,
-                                                                         facade,
-                                                                         forward_heap,
-                                                                         reverse_heap,
-                                                                         force_step_nodes,
-                                                                         INVALID_EDGE_WEIGHT,
-                                                                         sublevel,
-                                                                         parent_cell_id);
+            auto unpacked_subpath = search(engine_working_data,
+                                           facade,
+                                           forward_heap,
+                                           reverse_heap,
+                                           force_step_nodes,
+                                           INVALID_EDGE_WEIGHT,
+                                           sublevel,
+                                           parent_cell_id);
             BOOST_ASSERT(!subpath_edges.empty());
-            BOOST_ASSERT(subpath_nodes.size() > 1);
-            BOOST_ASSERT(subpath_nodes.front() == source);
-            BOOST_ASSERT(subpath_nodes.back() == target);
-            unpacked_nodes.insert(
-                unpacked_nodes.end(), std::next(subpath_nodes.begin()), subpath_nodes.end());
-            unpacked_edges.insert(unpacked_edges.end(), subpath_edges.begin(), subpath_edges.end());
+            BOOST_ASSERT(unpacked_subpath.nodes.size() > 1);
+            BOOST_ASSERT(unpacked_subpath.nodes.front() == source);
+            BOOST_ASSERT(unpacked_subpath.nodes.back() == target);
+            unpacked_nodes.insert(unpacked_nodes.end(),
+                                  std::next(unpacked_subpath.nodes.begin()),
+                                  unpacked_subpath.nodes.end());
+            unpacked_edges.insert(
+                unpacked_edges.end(), unpacked_subpath.edges.begin(), unpacked_subpath.edges.end());
         }
     }
 
-    return std::make_tuple(weight, std::move(unpacked_nodes), std::move(unpacked_edges));
+    return {weight, std::move(unpacked_nodes), std::move(unpacked_edges)};
 }
 
 template <typename Algorithm, typename... Args>
@@ -654,13 +662,15 @@ inline void search(SearchEngineData<Algorithm> &engine_working_data,
                    const EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
 {
     // TODO: change search calling interface to use unpacked_edges result
-    std::tie(weight, unpacked_nodes, std::ignore) = search(engine_working_data,
-                                                           facade,
-                                                           forward_heap,
-                                                           reverse_heap,
-                                                           force_step_nodes,
-                                                           weight_upper_bound,
-                                                           endpoints);
+    auto unpacked_path = search(engine_working_data,
+                                facade,
+                                forward_heap,
+                                reverse_heap,
+                                force_step_nodes,
+                                weight_upper_bound,
+                                endpoints);
+    weight = unpacked_path.weight;
+    unpacked_nodes = std::move(unpacked_path.nodes);
 }
 
 // TODO: refactor CH-related stub to use unpacked_edges
