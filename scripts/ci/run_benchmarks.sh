@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eou pipefail
 
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/sfedartsou/.conan/data/onetbb/2021.12.0/_/_/package/14d80dcc6e4fac53fcd6bcf3899648ac2c72c6aa/lib/"
+export LD_LIBRARY_PATH="/home/sfedartsou/.conan/data/onetbb/2021.12.0/_/_/package/14d80dcc6e4fac53fcd6bcf3899648ac2c72c6aa/lib/"
 
 function usage {
     echo "Usage: $0 -f <folder> -r <results_folder> -s <scripts_folder> -b <binaries_folder> -o <osm_pbf> -g <gps_traces>"
