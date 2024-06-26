@@ -723,9 +723,9 @@ jobs:
       #     make -j$(nproc) benchmarks
       #     cd ..
       #     make -C test/data 
-      # # we run benchmarks in tmpfs to avoid impact of disk IO
-      # - name: Create folder for tmpfs 
-      #   run: mkdir -p /opt/benchmarks
+      # we run benchmarks in tmpfs to avoid impact of disk IO
+      - name: Create folder for tmpfs 
+        run: mkdir -p /opt/benchmarks
       # - name: Run PR Benchmarks 
       #   run: |
       #     sudo mount -t tmpfs -o size=4g none /opt/benchmarks
