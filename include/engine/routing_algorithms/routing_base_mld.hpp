@@ -609,7 +609,7 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
                                            INVALID_EDGE_WEIGHT,
                                            sublevel,
                                            parent_cell_id);
-            BOOST_ASSERT(!subpath_edges.empty());
+            BOOST_ASSERT(!unpacked_subpath.edges.empty());
             BOOST_ASSERT(unpacked_subpath.nodes.size() > 1);
             BOOST_ASSERT(unpacked_subpath.nodes.front() == source);
             BOOST_ASSERT(unpacked_subpath.nodes.back() == target);
