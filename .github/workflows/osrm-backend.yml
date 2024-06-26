@@ -738,7 +738,7 @@ jobs:
           cp -rf pr/test/data ~/benchmarks_tmp/test/data
           cp -rf pr/profiles ~/benchmarks_tmp/profiles
 
-          sudo cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks_tmp -r $(pwd)/pr_results -s $(pwd)/pr -b ~/benchmarks_tmp/build -o ~/data.osm.pbf -g ~/gps_traces.csv
+          LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/sfedartsou/.conan/data/onetbb/2021.12.0/_/_/package/14d80dcc6e4fac53fcd6bcf3899648ac2c72c6aa/lib/" sudo cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks_tmp -r $(pwd)/pr_results -s $(pwd)/pr -b ~/benchmarks_tmp/build -o ~/data.osm.pbf -g ~/gps_traces.csv
           sleep 10
           # lsof ~/benchmarks_tmp
           sudo umount ~/benchmarks_tmp
@@ -756,7 +756,7 @@ jobs:
             cp base/src/benchmarks/portugal_to_korea.json ~/benchmarks_tmp/test/data/portugal_to_korea.json
           fi
           # we intentionally use scripts from PR branch to be able to update them and see results in the same PR
-          sudo cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks_tmp -r $(pwd)/base_results -s $(pwd)/pr -b ~/benchmarks_tmp/build -o ~/data.osm.pbf -g ~/gps_traces.csv
+          LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/sfedartsou/.conan/data/onetbb/2021.12.0/_/_/package/14d80dcc6e4fac53fcd6bcf3899648ac2c72c6aa/lib/" sudo cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks_tmp -r $(pwd)/base_results -s $(pwd)/pr -b ~/benchmarks_tmp/build -o ~/data.osm.pbf -g ~/gps_traces.csv
           sleep 10
           # lsof ~/benchmarks_tmp
           sudo umount ~/benchmarks_tmp
