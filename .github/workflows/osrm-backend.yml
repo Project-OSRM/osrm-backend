@@ -740,7 +740,7 @@ jobs:
 
           ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks_tmp -r $(pwd)/pr_results -s $(pwd)/pr -b ~/benchmarks_tmp/build -o ~/data.osm.pbf -g ~/gps_traces.csv
           sleep 10
-          lsof ~/benchmarks_tmp
+          # lsof ~/benchmarks_tmp
           sudo umount ~/benchmarks_tmp
       - name: Run Base Benchmarks
         run: |
@@ -758,7 +758,7 @@ jobs:
           # we intentionally use scripts from PR branch to be able to update them and see results in the same PR
           ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks_tmp -r $(pwd)/base_results -s $(pwd)/pr -b ~/benchmarks_tmp/build -o ~/data.osm.pbf -g ~/gps_traces.csv
           sleep 10
-          lsof ~/benchmarks_tmp
+          # lsof ~/benchmarks_tmp
           sudo umount ~/benchmarks_tmp
       - name: Post Benchmark Results
         run: |
