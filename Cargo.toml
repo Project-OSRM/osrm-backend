@@ -6,9 +6,9 @@ edition = "2021"
 [dependencies]
 cheap-ruler = "0.4.0"
 chksum-md5 = "0.0.0"
-clap = "4.5.4"
+clap = "4.5.7"
 colored = "2.1.0"
-cucumber = { version = "0.21.0", features = ["tracing"] }
+cucumber = { version = "0.21.1", features = ["tracing"] }
 flatbuffers = "24.3.25"
 futures = "0.3.30"
 geo-types = "0.7.13"
@@ -24,6 +24,9 @@ name = "cucumber"
 harness = false
 
 [profile.bench]
+debug = true
+
+[profile.release]
 debug = true
 
 [build-dependencies]

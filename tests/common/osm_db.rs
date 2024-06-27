@@ -125,7 +125,7 @@ mod tests {
         let actual = osm_db.to_xml();
         let expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm generator=\"osrm-test\" version=\"0.6\">\n\t<node id=\"123\" version=\"1.0\" user=\"osrm\" timestamp=\"2000-01-01T00:00:00Z\" lon=\"8.9876\" lat=\"50.1234\">\n\t\t<tag name=\"a\" />\n\t</node>\n\t<node id=\"321\" version=\"1.0\" user=\"osrm\" timestamp=\"2000-01-01T00:00:00Z\" lon=\"8.9876\" lat=\"50.1234\">\n\t\t<tag name=\"b\" />\n\t</node>\n\t<way id=\"890\" version=\"1\" uid=\"1\" user=\"osrm\" timestamp=\"2000-01-01T00:00:00Z\">\n\t\t<nd ref=\"123\" />\n\t\t<nd ref=\"321\" />\n\t</way>\n</osm>\n";
 
-        println!("{actual}");
+        // println!("{actual}");
         assert_eq!(actual, expected);
     }
 }

@@ -60,5 +60,5 @@ Feature: Car - Handle driving
         When I route I should get
             | from | to | route           | modes                           | speed  | turns                                      |
             | a    | g  | abc,cde,efg,efg | driving,driving,driving,driving | 7 km/h | depart,new name right,new name left,arrive |
-            | c    | e  | cde,cde         | driving,driving                 | 2 km/h | depart,arrive                              |
-            | e    | c  | cde,cde         | driving,driving                 | 2 km/h | depart,arrive                              |
+            | c    | e  | cde,cde         | driving,driving                 | 2.4 km/h | depart,arrive                              |
+            | e    | c  | cde,cde         | driving,driving                 | 2.4 km/h | depart,arrive                              |

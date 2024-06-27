@@ -18,6 +18,7 @@ const DEFAULT_ORIGIN: Location = Location {
     latitude: 1.0f32,
 };
 const DEFAULT_GRID_SIZE: f32 = 100.;
+const WAY_SPACING: f32 = 100.;
 
 #[derive(Debug, World)]
 pub struct OSRMWorld {
@@ -35,9 +36,12 @@ pub struct OSRMWorld {
     pub extraction_parameters: Vec<String>,
 
     pub request_with_flatbuffers: bool,
+    pub bearings: Option<String>,
 
     pub grid_size: f32,
     pub origin: Location,
+    pub way_spacing: f32,
+
     task: LocalTask,
     agent: ureq::Agent,
 }
@@ -56,8 +60,10 @@ impl Default for OSRMWorld {
             osm_db: Default::default(),
             extraction_parameters: Default::default(),
             request_with_flatbuffers: Default::default(),
+            bearings: None,
             grid_size: DEFAULT_GRID_SIZE,
             origin: DEFAULT_ORIGIN,
+            way_spacing: WAY_SPACING,
             task: LocalTask::default(),
             agent: ureq::AgentBuilder::new()
                 .timeout_read(Duration::from_secs(5))
@@ -212,7 +218,7 @@ impl OSRMWorld {
     pub fn nearest(
         &mut self,
         query_location: &Location,
-        request_with_flatbuffers: bool,
+        // request_with_flatbuffers: bool,
     ) -> NearestResponse {
         self.start_routed();
 
@@ -220,7 +226,7 @@ impl OSRMWorld {
             "http://localhost:5000/nearest/v1/{}/{:?},{:?}",
             self.profile, query_location.longitude, query_location.latitude
         );
-        if request_with_flatbuffers {
+        if self.request_with_flatbuffers {
             url += ".flatbuffers";
         }
         let call = self.agent.get(&url).call();
@@ -230,42 +236,43 @@ impl OSRMWorld {
             Err(e) => panic!("http error: {e}"),
         };
 
-        let response = match request_with_flatbuffers {
+        let response = match self.request_with_flatbuffers {
             true => NearestResponse::from_flatbuffer(body),
             false => NearestResponse::from_json_reader(body),
         };
         response
     }
 
-    pub fn route(
-        &mut self,
-        from_location: &Location,
-        to_location: &Location,
-        request_with_flatbuffers: bool,
-    ) -> RouteResponse {
+    pub fn route(&mut self, waypoints: &[Location]) -> RouteResponse {
         self.start_routed();
 
+        let waypoint_string = waypoints
+            .iter()
+            .map(|location| format!("{:?},{:?}", location.longitude, location.latitude))
+            .collect::<Vec<String>>()
+            .join(";");
+
         let mut url = format!(
-            "http://localhost:5000/route/v1/{}/{:?},{:?};{:?},{:?}?steps=true&alternatives=false",
+            "http://localhost:5000/route/v1/{}/{waypoint_string}?steps=true&alternatives=false",
             self.profile,
-            from_location.longitude,
-            from_location.latitude,
-            to_location.longitude,
-            to_location.latitude,
         );
-        if request_with_flatbuffers {
+        if self.request_with_flatbuffers {
             url += ".flatbuffers";
+        }
+        if let Some(bearings) = &self.bearings {
+            url += "&bearings=";
+            url += bearings;
         }
         // println!("url: {url}");
         let call = self.agent.get(&url).call();
 
         let body = match call {
             Ok(response) => response.into_reader(),
-            Err(e) => panic!("http error: {e}"),
+            Err(_e) => return RouteResponse::default(),
         };
 
         let text = std::io::read_to_string(body).unwrap();
-        let response = match request_with_flatbuffers {
+        let response = match self.request_with_flatbuffers {
             true => unimplemented!("RouteResponse::from_flatbuffer(body)"),
             false => RouteResponse::from_string(&text),
         };
