@@ -675,6 +675,12 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           path: pr
+      - name: Activate virtualenv
+        run: |
+          python3 -m venv .venv
+          . .venv/bin/activate
+          echo PATH=$PATH >> $GITHUB_ENV
+          pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" 
      #- name: Install dependencies
      #   run: | 
      #     python3 -m pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" 
