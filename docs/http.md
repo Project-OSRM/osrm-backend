@@ -200,7 +200,7 @@ curl 'http://router.project-osrm.org/nearest/v1/driving/13.388860,52.517037?numb
 Finds the fastest route between coordinates in the supplied order.
 
 ```endpoint
-GET /route/v1/{profile}/{coordinates}?alternatives={true|false|number}&steps={true|false}&geometries={polyline|polyline6|geojson}&overview={full|simplified|false}&annotations={true|false}
+GET /route/v1/{profile}/{coordinates}?alternatives={true|false|number}&steps={true|false}&geometries={polyline|polyline6|geojson}&overview={full|simplified|false}&annotations={true|false}&continue_straight={default|true|false}
 ```
 
 In addition to the [general options](#general-options) the following options are supported for this service:

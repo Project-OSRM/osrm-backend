@@ -24,7 +24,7 @@ impl LocalTask {
         // TODO: also check that process is running
         self.ready
     }
-    pub fn arg(&mut self, argument: &str) -> &mut Self {
+    pub fn arg(mut self, argument: &str) -> Self {
         self.arguments.push(argument.into());
         self
     }

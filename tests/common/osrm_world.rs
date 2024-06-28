@@ -36,7 +36,7 @@ pub struct OSRMWorld {
     pub extraction_parameters: Vec<String>,
 
     pub request_with_flatbuffers: bool,
-    pub bearings: Option<String>,
+    pub query_options: HashMap<String, String>,
 
     pub grid_size: f32,
     pub origin: Location,
@@ -60,7 +60,13 @@ impl Default for OSRMWorld {
             osm_db: Default::default(),
             extraction_parameters: Default::default(),
             request_with_flatbuffers: Default::default(),
-            bearings: None,
+            query_options: HashMap::from([
+                // default parameters // TODO: check if necessary
+                ("steps".into(), "true".into()),
+                ("alternatives".into(), "false".into()),
+                ("annotations".into(), "true".into()),
+            ]),
+
             grid_size: DEFAULT_GRID_SIZE,
             origin: DEFAULT_ORIGIN,
             way_spacing: WAY_SPACING,
@@ -206,9 +212,7 @@ impl OSRMWorld {
             .artefact_cache_path()
             .join(self.scenario_id.to_owned() + ".osrm");
 
-        // TODO: this should not require a temporary and behave like the API of std::process
-        self.task = LocalTask::new(self.routed_path().to_string_lossy().into());
-        self.task
+        self.task = LocalTask::new(self.routed_path().to_string_lossy().into())
             .arg(data_path.to_str().expect("data path unwrappable"));
         self.task
             .spawn_wait_till_ready("running and waiting for requests");
@@ -229,6 +233,19 @@ impl OSRMWorld {
         if self.request_with_flatbuffers {
             url += ".flatbuffers";
         }
+
+        if !self.query_options.is_empty() {
+            let options = self
+                .query_options
+                .iter()
+                .map(|(key, value)| format!("{key}={value}"))
+                .collect::<Vec<String>>()
+                .join("&");
+            url += "?";
+            url += &options;
+        }
+
+        // panic!("url: {url}");
         let call = self.agent.get(&url).call();
 
         let body = match call {
@@ -253,15 +270,21 @@ impl OSRMWorld {
             .join(";");
 
         let mut url = format!(
-            "http://localhost:5000/route/v1/{}/{waypoint_string}?steps=true&alternatives=false",
+            "http://localhost:5000/route/v1/{}/{waypoint_string}",
             self.profile,
         );
         if self.request_with_flatbuffers {
             url += ".flatbuffers";
         }
-        if let Some(bearings) = &self.bearings {
-            url += "&bearings=";
-            url += bearings;
+        if !self.query_options.is_empty() {
+            let options = self
+                .query_options
+                .iter()
+                .map(|(key, value)| format!("{key}={value}"))
+                .collect::<Vec<String>>()
+                .join("&");
+            url += "?";
+            url += &options;
         }
         // println!("url: {url}");
         let call = self.agent.get(&url).call();

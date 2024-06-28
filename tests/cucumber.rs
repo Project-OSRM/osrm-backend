@@ -12,11 +12,14 @@ use common::{
     location::Location,
     osm::OSMWay,
     osrm_world::OSRMWorld,
+    route_response,
 };
 use core::panic;
 use cucumber::{
     gherkin::{Step, Table},
-    given, then, when, World, WriterExt,
+    given, then, when,
+    writer::summarize,
+    World, WriterExt,
 };
 use futures::{future, FutureExt};
 use geo_types::Point;
@@ -46,6 +49,12 @@ fn set_profile(world: &mut OSRMWorld, profile: String) {
         world.scenario_id
     );
     world.profile = profile;
+}
+
+#[given(expr = "the query options")]
+fn set_query_options(world: &mut OSRMWorld, step: &Step) {
+    let table = parse_option_table(&step.table.as_ref());
+    world.query_options.extend(table.into_iter());
 }
 
 #[given(expr = "the node locations")]
@@ -187,6 +196,19 @@ fn set_ways(world: &mut OSRMWorld, step: &Step) {
     } else {
         debug!("no table found {step:#?}");
     }
+}
+
+fn parse_option_table(table: &Option<&Table>) -> HashMap<String, String> {
+    let table = table.expect("no query table specified");
+    let result = table
+        .rows
+        .iter()
+        .map(|row| {
+            assert_eq!(2, row.len());
+            (row[0].clone(), row[1].clone())
+        })
+        .collect();
+    result
 }
 
 fn parse_table_from_steps(table: &Option<&Table>) -> (Vec<String>, Vec<HashMap<String, String>>) {
@@ -456,6 +478,15 @@ pub fn get_location_specification(test_case: &HashMap<String, String>) -> Waypoi
     // WaypointsOrLocation::Undefined
 }
 
+#[given(expr = r"skip waypoints")]
+fn skip_waypoints(world: &mut OSRMWorld, step: &Step) {
+    // TODO: adapt test to use query options
+    // only used in features/testbot/basic.feature
+    world
+        .query_options
+        .insert("skip_waypoints".into(), "true".into());
+}
+
 #[when(regex = r"^I route( with flatbuffers|) I should get$")]
 fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
     world.request_with_flatbuffers = state == " with flatbuffers";
@@ -500,8 +531,11 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
             }
         };
 
-        if let Some(bearing) = test_case.get("bearings").cloned() {
-            world.bearings = Some(bearing.replace(" ", ";"));
+        if let Some(bearings) = test_case.get("bearings").cloned() {
+            // TODO: change test cases to provide proper query options
+            world
+                .query_options
+                .insert("bearings".into(), bearings.replace(" ", ";"));
         }
 
         let response = world.route(&waypoints);
@@ -510,7 +544,7 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
             .iter()
             .map(|(column_title, expectation)| (column_title.as_str(), expectation.as_str()))
             .for_each(|(case, expectation)| match case {
-                "from" | "to" | "bearings"=> {}, // ignore input columns
+                "from" | "to" | "bearings" | "waypoints" | "#" => {}, // ignore input and comment columns
                 "route" => {
                     let route = if expectation.is_empty() {
                         assert!(response.routes.is_empty());
@@ -603,13 +637,18 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                         .legs
                         .iter()
                         .map(|leg| {
-                            leg.steps
+                    leg.steps
                                 .iter()
                                 .map(|step| {
                                     let prefix = step.maneuver.r#type.clone();
+                                    if prefix == "depart" || prefix == "arrive" {
+                                        // TODO: this reimplements the behavior that depart and arrive are not checked for their modifier
+                                        //       check if tests shall be adapted, since this is reported by the engine
+                                        return prefix;
+                                    }
                                     let suffix = match &step.maneuver.modifier {
                                         Some(modifier) => " ".to_string() + &modifier,
-                                        None => "".into(),
+                                        _ => "".into(),
                                     };
                                     prefix + &suffix
                                 })
@@ -633,10 +672,10 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     // TODO: go over steps
 
                     let actual_times : Vec<f64>= response.routes.first().expect("no route returned").legs.iter().map(|leg| {
-                        leg.steps.iter().map(|step| step.duration).collect::<Vec<f64>>()
+                        leg.steps.iter().filter(|step| step.duration > 0.).map(|step| step.duration).collect::<Vec<f64>>()
                     }).flatten().collect();
                     let (expected_times, offset) = extract_number_vector_and_offset("s", expectation);
-                    println!("{actual_times:?} == {expected_times:?} +- {offset}");
+                    // println!("{actual_times:?} == {expected_times:?} +- {offset}");
                     assert_eq!(actual_times.len(), expected_times.len(), "times mismatch: {actual_times:?} != {expected_times:?} +- {offset}");
 
                     zip(actual_times, expected_times).for_each(|(actual_time, expected_time)| {
@@ -645,29 +684,20 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     });
                 },
                 "distances" => {
-
-                    println!("{:?}",response.routes.first().expect("no route returned"));
-                    // TODO: go over steps
-                    let actual_distances : Vec<f64>   = response.routes.first().expect("no route returned").legs.iter().map(|leg| leg.distance).collect();
+                    let actual_distances = response.routes.first().expect("no route returned").legs.iter().map(|leg| {
+                        leg.steps.iter().filter(|step| step.distance > 0.).map(|step| step.distance).collect::<Vec<f64>>()
+                    }).flatten().collect::<Vec<f64>>();
                     let (expected_distances, offset) = extract_number_vector_and_offset("m", expectation);
-                    println!("{expected_distances:?} == {actual_distances:?}");
-                    println!("!");
                     assert_eq!(expected_distances.len(), actual_distances.len(), "distances mismatch {expected_distances:?} != {actual_distances:?} +- {offset}");
 
                     zip(actual_distances, expected_distances).for_each(|(actual_distance, expected_distance)| {
                         assert!(approx_equal_within_offset_range(actual_distance, expected_distance, offset as f64),
                             "actual distance {actual_distance} not equal to expected value {expected_distance}");
                     });
-                    // // println!("{actual_time} == {expected_time} +- {offset}");
-                    // assert!(
-                    //     approx_equal_within_offset_range(actual_time, expected_time, offset as f64),
-                    //     "actual time {actual_time} not equal to expected value {expected_time}"
-                    // );
                 },
                 "weight" => {
                     let actual_weight = response.routes.first().expect("no route returned").weight;
                     let (expected_weight, offset) = extract_number_and_offset("s", expectation);
-                    // println!("{actual_weight} == {expected_weight} +- {offset}");
                     assert!(
                         approx_equal_within_offset_range(
                             actual_weight,
@@ -689,7 +719,54 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                         "actual time {actual_distance} not equal to expected value {expected_distance}"
                     );
                 },
-                "waypoints" => {},
+                "summary" => {
+                    let actual_summary = response.routes.first().expect("no route returned").legs.iter().map(|leg| {
+                        leg.summary.clone()
+                    }).collect::<Vec<String>>().join(",");
+                    assert_eq!(actual_summary,expectation, "summary mismatch");
+                },
+                "data_version" => {
+                    let expected_data_version = match test_case.get("data_version") {
+                        Some(s) if !s.is_empty() => Some(s),
+                        _ => None,
+                    };
+                    assert_eq!(
+                        expected_data_version,
+                        response.data_version.as_ref(),
+                        "data_version does not match"
+                    );
+                },
+                "waypoints_count" => {
+                    let expected_waypoint_count = match test_case.get("waypoints_count") {
+                        Some(s) if !s.is_empty() => s.parse::<usize>().expect("waypoint_count is a number"),
+                        _ => 0,
+                    };
+                    let actual_waypoint_count = match &response.waypoints {
+                        Some(w) => w.len(),
+                        None => 0,
+                    };
+                    assert_eq!(
+                        expected_waypoint_count,
+                        actual_waypoint_count,
+                        "waypoint_count does not match"
+                    );
+                },
+                "geometry" => {
+                    let expected_geometry = test_case.get("geometry").expect("no geometry found");
+                    match &response.routes.first().expect("no route").geometry {
+                        route_response::Geometry::A(actual_geometry) => {
+                            assert_eq!(
+                                expected_geometry,
+                                actual_geometry,
+                                "geometry does not match"
+                            );
+                        },
+                        route_response::Geometry::B { coordinates: _, r#type: _ } => unimplemented!("geojson comparison"),
+                    }
+
+
+                },
+                // "classes" => {},
                 // TODO: more checks need to be implemented
                 _ => {
                     let msg = format!("case {case} = {expectation} not implemented");
@@ -700,8 +777,7 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
 }
 fn main() {
     let args = Args::parse();
-    debug!("arguments: {:?}", args);
-
+    debug!("{args:?}");
     let digest = md5_of_osrm_executables().digest().to_hex_lowercase();
 
     futures::executor::block_on(
@@ -717,8 +793,7 @@ fn main() {
                 future::ready(()).boxed()
             })
             // .with_writer(DotWriter::default().normalized())
-            .filter_run("features/testbot/time.feature", |_, _, sc| {
-                !sc.tags.iter().any(|t| t == "todo")
-            }),
+            // .filter_run("features/testbot/geometry.feature", |_, _, sc| {
+            .filter_run("features", |_, _, sc| !sc.tags.iter().any(|t| t == "todo")),
     );
 }
