@@ -638,7 +638,7 @@ jobs:
   benchmarks:
     if: github.event_name == 'pull_request'
     #needs: [format-taginfo-docs]
-    runs-on: ubuntu-22.04
+    runs-on: self-hosted
     env:
       CCOMPILER: clang-13
       CXXCOMPILER: clang++-13
