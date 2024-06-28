@@ -730,32 +730,32 @@ jobs:
           make -C test/data 
       # we run benchmarks in tmpfs to avoid impact of disk IO
       - name: Create folder for tmpfs 
-        run: mkdir -p /opt/benchmarks
+        run: mkdir -p ~/benchmarks
       - name: Run PR Benchmarks 
         run: |
-          sudo mount -t tmpfs -o size=4g none /opt/benchmarks
-          cp -rf pr/build /opt/benchmarks/build
-          mkdir -p /opt/benchmarks/test
-          cp -rf pr/test/data /opt/benchmarks/test/data
-          cp -rf pr/profiles /opt/benchmarks/profiles
+          sudo mount -t tmpfs -o size=4g none ~/benchmarks
+          cp -rf pr/build ~/benchmarks/build
+          mkdir -p ~/benchmarks/test
+          cp -rf pr/test/data ~/benchmarks/test/data
+          cp -rf pr/profiles ~/benchmarks/profiles
 
-          ./pr/scripts/ci/run_benchmarks.sh -f /opt/benchmarks -r $(pwd)/pr_results -s $(pwd)/pr -b /opt/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
-          sudo umount /opt/benchmarks
+          ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/pr_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
+          sudo umount ~/benchmarks
       - name: Run Base Benchmarks
         run: |
-          sudo mount -t tmpfs -o size=4g none /opt/benchmarks
-          cp -rf base/build /opt/benchmarks/build
-          mkdir -p /opt/benchmarks/test
-          cp -rf base/test/data /opt/benchmarks/test/data
-          cp -rf base/profiles /opt/benchmarks/profiles
+          sudo mount -t tmpfs -o size=4g none ~/benchmarks
+          cp -rf base/build ~/benchmarks/build
+          mkdir -p ~/benchmarks/test
+          cp -rf base/test/data ~/benchmarks/test/data
+          cp -rf base/profiles ~/benchmarks/profiles
 
           # TODO: remove it when base branch will have this file at needed location
-          if [ ! -f /opt/benchmarks/test/data/portugal_to_korea.json ]; then
-            cp base/src/benchmarks/portugal_to_korea.json /opt/benchmarks/test/data/portugal_to_korea.json
+          if [ ! -f ~/benchmarks/test/data/portugal_to_korea.json ]; then
+            cp base/src/benchmarks/portugal_to_korea.json ~/benchmarks/test/data/portugal_to_korea.json
           fi
           # we intentionally use scripts from PR branch to be able to update them and see results in the same PR
-          ./pr/scripts/ci/run_benchmarks.sh -f /opt/benchmarks -r $(pwd)/base_results -s $(pwd)/pr -b /opt/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
-          sudo umount /opt/benchmarks
+          ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/base_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
+          sudo umount ~/benchmarks
       - name: Post Benchmark Results
         run: |
           python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
