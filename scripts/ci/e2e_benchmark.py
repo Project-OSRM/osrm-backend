@@ -86,9 +86,9 @@ def bootstrap_confidence_interval(data, num_samples=1000, confidence_level=0.95)
     mean = np.mean(means)
     return mean, lower_bound, upper_bound
 
-def calculate_confidence_interval(data):
+def calculate_confidence_interval(data, min_is_best=True):
     mean, lower, upper = bootstrap_confidence_interval(data)
-    min_value = np.min(data)
+    min_value = np.min(data) if min_is_best else np.max(data)
     return mean, (upper - lower) / 2, min_value
 
 
@@ -117,7 +117,7 @@ def main():
 
 
     total_time, total_ci, total_best = calculate_confidence_interval(np.sum(all_times, axis=1))
-    ops_per_sec, ops_per_sec_ci, ops_per_sec_best = calculate_confidence_interval(float(all_times.shape[1]) / np.sum(all_times / 1000, axis=1))
+    ops_per_sec, ops_per_sec_ci, ops_per_sec_best = calculate_confidence_interval(float(all_times.shape[1]) / np.sum(all_times / 1000, axis=1), min_is_best=False)
     min_time, min_ci, _ = calculate_confidence_interval(np.min(all_times, axis=1))
     mean_time, mean_ci, _ = calculate_confidence_interval(np.mean(all_times, axis=1))
     median_time, median_ci, _ = calculate_confidence_interval(np.median(all_times, axis=1))
