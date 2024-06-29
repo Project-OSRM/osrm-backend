@@ -304,7 +304,6 @@ jobs:
             CXXCOMPILER: clang++-13
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
-            ENABLE_LTO: ON
 
           - name: conan-linux-debug-node
             build_node_package: true
@@ -316,7 +315,6 @@ jobs:
             CXXCOMPILER: clang++-13
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
-            ENABLE_LTO: ON
 
           - name: conan-macos-x64-release-node
             build_node_package: true
@@ -329,7 +327,6 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
-            ENABLE_LTO: ON
 
           - name: conan-macos-arm64-release-node
             build_node_package: true
@@ -342,7 +339,6 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
-            ENABLE_LTO: ON
 
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
@@ -527,7 +523,7 @@ jobs:
                  -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
                  -DENABLE_CCACHE=ON \
                  -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
-                 -DCMAKE_ENABLE_LTO=${ENABLE_LTO:-OFF}
+                 -DCMAKE_ENABLE_LTO=${ENABLE_LTO:-ON}
         make --jobs=${JOBS}
 
         if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then

@@ -24,6 +24,7 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: Use Link Time Optimisation whenever possible. [#6967](https://github.com/Project-OSRM/osrm-backend/pull/6967)
       - CHANGED: Use struct instead of tuple to define UnpackedPath. [#6974](https://github.com/Project-OSRM/osrm-backend/pull/6974)
       - CHANGED: Micro performance optimisation in map matching. [#6976](https://github.com/Project-OSRM/osrm-backend/pull/6976)
       - CHANGED: Re-use priority queue in StaticRTree. [#6952](https://github.com/Project-OSRM/osrm-backend/pull/6952)
