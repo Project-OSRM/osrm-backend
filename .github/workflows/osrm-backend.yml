@@ -232,6 +232,7 @@ jobs:
             CCOMPILER: clang-14
             CXXCOMPILER: clang++-14
             CUCUMBER_TIMEOUT: 60000
+            ENABLE_LTO: OFF
 
           - name: clang-13-release
             continue-on-error: false
