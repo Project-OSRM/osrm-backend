@@ -16,6 +16,7 @@ env:
   CASHER_TIME_OUT: 599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
   CMAKE_VERSION: 3.21.2
   ENABLE_NODE_BINDINGS: "ON"
+  GITHUB_TRIGGERING_ACTOR: SiarheiFed
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -647,7 +648,6 @@ jobs:
       PR_NUMBER: ${{ github.event.pull_request.number }}
       GITHUB_REPOSITORY: ${{ github.repository }}
       RUN_BIG_BENCHMARK: ${{ contains(github.event.pull_request.labels.*.name, 'Performance') }}
-      GITHUB_TRIGGERING_ACTOR: SiarheiFed
     steps: 
       - run: cat /home/actions/actions_runner_hook_job_started.sh
       - name: Enable data.osm.pbf cache
