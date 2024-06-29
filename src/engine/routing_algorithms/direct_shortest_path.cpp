@@ -70,20 +70,19 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<mld::Algorithm> &e
     auto &reverse_heap = *engine_working_data.reverse_heap_1;
     insertNodesInHeaps(forward_heap, reverse_heap, endpoint_candidates);
 
-    // TODO: when structured bindings will be allowed change to
-    // auto [weight, source_node, target_node, unpacked_edges] = ...
-    EdgeWeight weight = INVALID_EDGE_WEIGHT;
-    std::vector<NodeID> unpacked_nodes;
-    std::vector<EdgeID> unpacked_edges;
-    std::tie(weight, unpacked_nodes, unpacked_edges) = mld::search(engine_working_data,
-                                                                   facade,
-                                                                   forward_heap,
-                                                                   reverse_heap,
-                                                                   {},
-                                                                   INVALID_EDGE_WEIGHT,
-                                                                   endpoint_candidates);
+    auto unpacked_path = mld::search(engine_working_data,
+                                     facade,
+                                     forward_heap,
+                                     reverse_heap,
+                                     {},
+                                     INVALID_EDGE_WEIGHT,
+                                     endpoint_candidates);
 
-    return extractRoute(facade, weight, endpoint_candidates, unpacked_nodes, unpacked_edges);
+    return extractRoute(facade,
+                        unpacked_path.weight,
+                        endpoint_candidates,
+                        unpacked_path.nodes,
+                        unpacked_path.edges);
 }
 
 } // namespace osrm::engine::routing_algorithms
