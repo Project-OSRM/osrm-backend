@@ -710,6 +710,7 @@ jobs:
           sudo umount ~/benchmarks | true
           rm -rf ~/benchmarks 
           mkdir -p ~/benchmarks
+      # see https://llvm.org/docs/Benchmarking.html
       - name: Run PR Benchmarks 
         run: |
           sudo cset shield -c 2-3 -k on
