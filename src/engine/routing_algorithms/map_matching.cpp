@@ -401,6 +401,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
         auto trace_distance = 0.0;
         matching.nodes.reserve(reconstructed_indices.size());
         matching.indices.reserve(reconstructed_indices.size());
+        matching.alternatives_count.reserve(reconstructed_indices.size());
         for (const auto &idx : reconstructed_indices)
         {
             const auto timestamp_index = idx.first;
@@ -428,7 +429,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
 
         matching.confidence = confidence(trace_distance, matching_distance);
 
-        sub_matchings.push_back(matching);
+        sub_matchings.emplace_back(std::move(matching));
         sub_matching_begin = sub_matching_end;
     }
 
