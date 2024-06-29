@@ -40,6 +40,7 @@ function measure_peak_ram_and_time {
         # on macOS time has different parameters, so simply run command on macOS
         $COMMAND > /dev/null 2>&1
     else
+        
         OUTPUT=$(/usr/bin/time -f "%e %M" $COMMAND 2>&1 | tail -n 1)
 
         TIME=$(echo $OUTPUT | awk '{print $1}')
