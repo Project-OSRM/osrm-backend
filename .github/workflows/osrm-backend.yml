@@ -10,6 +10,7 @@ on:
   pull_request:
     branches:
       - master
+
 env:
   CCACHE_TEMPDIR: /tmp/.ccache-temp
   CCACHE_COMPRESS: 1
