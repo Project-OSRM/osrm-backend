@@ -24,6 +24,7 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: Use struct instead of tuple to define UnpackedPath. [#6974](https://github.com/Project-OSRM/osrm-backend/pull/6974)
       - CHANGED: Re-use priority queue in StaticRTree. [#6952](https://github.com/Project-OSRM/osrm-backend/pull/6952)
       - CHANGED: Optimise encodePolyline function. [#6940](https://github.com/Project-OSRM/osrm-backend/pull/6940)
       - CHANGED: Avoid reallocations in base64 encoding. [#6951](https://github.com/Project-OSRM/osrm-backend/pull/6951)
