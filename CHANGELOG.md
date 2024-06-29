@@ -1,5 +1,7 @@
 # Unreleased
   - Changes from 5.27.1
+    - API:
+      - CHANGED: Require a `radius` parameter when using `bearings`. [#6572](https://github.com/Project-OSRM/osrm-backend/pull/6572)
     - Features
       - REMOVED: Remove all core-CH left-overs [#6920](https://github.com/Project-OSRM/osrm-backend/pull/6920)
       - ADDED: Add support for a keepalive_timeout flag. [#6674](https://github.com/Project-OSRM/osrm-backend/pull/6674)
