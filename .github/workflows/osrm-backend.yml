@@ -648,6 +648,7 @@ jobs:
       GITHUB_REPOSITORY: ${{ github.repository }}
       RUN_BIG_BENCHMARK: ${{ contains(github.event.pull_request.labels.*.name, 'Performance') }}
     steps: 
+      - run: cat /home/actions/actions_runner_hook_job_started.sh
       - name: Enable data.osm.pbf cache
         if: ${{ ! env.RUN_BIG_BENCHMARK }}        
         uses: actions/cache@v4
