@@ -40,12 +40,13 @@ function measure_peak_ram_and_time {
         # on macOS time has different parameters, so simply run command on macOS
         $COMMAND > /dev/null 2>&1
     else
-        OUTPUT=$(/usr/bin/time -f "%e %M" $COMMAND 2>&1 | tail -n 1)
+        $COMMAND
+        # OUTPUT=$(/usr/bin/time -f "%e %M" $COMMAND 2>&1 | tail -n 1)
 
-        TIME=$(echo $OUTPUT | awk '{print $1}')
-        PEAK_RAM_KB=$(echo $OUTPUT | awk '{print $2}')
-        PEAK_RAM_MB=$(echo "scale=2; $PEAK_RAM_KB / 1024" | bc)
-        echo "Time: ${TIME}s Peak RAM: ${PEAK_RAM_MB}MB" > $OUTPUT_FILE
+        # TIME=$(echo $OUTPUT | awk '{print $1}')
+        # PEAK_RAM_KB=$(echo $OUTPUT | awk '{print $2}')
+        # PEAK_RAM_MB=$(echo "scale=2; $PEAK_RAM_KB / 1024" | bc)
+        # echo "Time: ${TIME}s Peak RAM: ${PEAK_RAM_MB}MB" > $OUTPUT_FILE
     fi
 }
 
@@ -53,22 +54,22 @@ function run_benchmarks_for_folder {
     mkdir -p $RESULTS_FOLDER
 
     BENCHMARKS_FOLDER="$BINARIES_FOLDER/src/benchmarks"
-    echo "Running match-bench MLD"
-    $BENCHMARKS_FOLDER/match-bench "$FOLDER/test/data/mld/monaco.osrm" mld > "$RESULTS_FOLDER/match_mld.bench"
-    echo "Running match-bench CH"
-    $BENCHMARKS_FOLDER/match-bench "$FOLDER/test/data/ch/monaco.osrm" ch > "$RESULTS_FOLDER/match_ch.bench"
-    echo "Running route-bench MLD"
-    $BENCHMARKS_FOLDER/route-bench "$FOLDER/test/data/mld/monaco.osrm" mld > "$RESULTS_FOLDER/route_mld.bench"
-    echo "Running route-bench CH"
-    $BENCHMARKS_FOLDER/route-bench "$FOLDER/test/data/ch/monaco.osrm" ch > "$RESULTS_FOLDER/route_ch.bench"
-    echo "Running alias"
-    $BENCHMARKS_FOLDER/alias-bench > "$RESULTS_FOLDER/alias.bench"
-    echo "Running json-render-bench"
-    $BENCHMARKS_FOLDER/json-render-bench  "$FOLDER/test/data/portugal_to_korea.json" > "$RESULTS_FOLDER/json-render.bench"
-    echo "Running packedvector-bench"
-    $BENCHMARKS_FOLDER/packedvector-bench > "$RESULTS_FOLDER/packedvector.bench"
-    echo "Running rtree-bench"
-    $BENCHMARKS_FOLDER/rtree-bench "$FOLDER/test/data/monaco.osrm.ramIndex" "$FOLDER/test/data/monaco.osrm.fileIndex" "$FOLDER/test/data/monaco.osrm.nbg_nodes" > "$RESULTS_FOLDER/rtree.bench"
+    # echo "Running match-bench MLD"
+    # $BENCHMARKS_FOLDER/match-bench "$FOLDER/test/data/mld/monaco.osrm" mld > "$RESULTS_FOLDER/match_mld.bench"
+    # echo "Running match-bench CH"
+    # $BENCHMARKS_FOLDER/match-bench "$FOLDER/test/data/ch/monaco.osrm" ch > "$RESULTS_FOLDER/match_ch.bench"
+    # echo "Running route-bench MLD"
+    # $BENCHMARKS_FOLDER/route-bench "$FOLDER/test/data/mld/monaco.osrm" mld > "$RESULTS_FOLDER/route_mld.bench"
+    # echo "Running route-bench CH"
+    # $BENCHMARKS_FOLDER/route-bench "$FOLDER/test/data/ch/monaco.osrm" ch > "$RESULTS_FOLDER/route_ch.bench"
+    # echo "Running alias"
+    # $BENCHMARKS_FOLDER/alias-bench > "$RESULTS_FOLDER/alias.bench"
+    # echo "Running json-render-bench"
+    # $BENCHMARKS_FOLDER/json-render-bench  "$FOLDER/test/data/portugal_to_korea.json" > "$RESULTS_FOLDER/json-render.bench"
+    # echo "Running packedvector-bench"
+    # $BENCHMARKS_FOLDER/packedvector-bench > "$RESULTS_FOLDER/packedvector.bench"
+    # echo "Running rtree-bench"
+    # $BENCHMARKS_FOLDER/rtree-bench "$FOLDER/test/data/monaco.osrm.ramIndex" "$FOLDER/test/data/monaco.osrm.fileIndex" "$FOLDER/test/data/monaco.osrm.nbg_nodes" > "$RESULTS_FOLDER/rtree.bench"
 
     cp -rf $OSM_PBF $FOLDER/data.osm.pbf
 
