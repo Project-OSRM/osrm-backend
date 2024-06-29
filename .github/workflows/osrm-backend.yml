@@ -660,9 +660,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.ccache
-          key: v1-ccache-benchmarks-${{ github.sha }}
+          key: v2-ccache-benchmarks-${{ github.sha }}
           restore-keys: |
-            v1-ccache-benchmarks-
+            v2-ccache-benchmarks-
       - name: Enable Conan cache
         uses: actions/cache@v4
         with:
@@ -678,13 +678,9 @@ jobs:
       - name: Activate virtualenv
         run: |
           python3 -m venv .venv
-          . .venv/bin/activate
+          source .venv/bin/activate
           echo PATH=$PATH >> $GITHUB_ENV
           pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" 
-     #- name: Install dependencies
-     #   run: | 
-     #     python3 -m pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" 
-    #      sudo apt-get update -y && sudo apt-get install ccache
       - name: Prepare data
         run: |
           if [ "$RUN_BIG_BENCHMARK" = "true" ]; then
@@ -730,7 +726,9 @@ jobs:
           make -C test/data 
       # we run benchmarks in tmpfs to avoid impact of disk IO
       - name: Create folder for tmpfs 
-        run: mkdir -p ~/benchmarks
+        run: |
+          rm -rf ~/benchmarks 
+          mkdir -p ~/benchmarks
       - name: Run PR Benchmarks 
         run: |
           sudo mount -t tmpfs -o size=4g none ~/benchmarks
