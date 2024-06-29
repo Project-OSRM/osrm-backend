@@ -273,7 +273,7 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: gcc-14
             CXXCOMPILER: g++-14
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized -Wno-stringop-overflow'
+            CXXFLAGS: '-Wno-maybe-uninitialized -Wno-array-bounds -Wno-uninitialized -Wno-stringop-overflow'
 
           - name: gcc-13-release
             continue-on-error: false
@@ -283,7 +283,7 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: gcc-13
             CXXCOMPILER: g++-13
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized -Wno-stringop-overflow'
+            CXXFLAGS: '-Wno-maybe-uninitialized -Wno-array-bounds -Wno-uninitialized -Wno-stringop-overflow'
 
           - name: gcc-12-release
             continue-on-error: false
@@ -293,7 +293,7 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: gcc-12
             CXXCOMPILER: g++-12
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized -Wno-stringop-overflow'
+            CXXFLAGS: '-Wno-maybe-uninitialized -Wno-array-bounds -Wno-uninitialized -Wno-stringop-overflow'
 
           - name: conan-linux-release-node
             build_node_package: true
