@@ -6,6 +6,29 @@ import (
 	flatbuffers "github.com/google/flatbuffers/go"
 )
 
+type MonsterT struct {
+}
+
+func (t *MonsterT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil {
+		return 0
+	}
+	MonsterStart(builder)
+	return MonsterEnd(builder)
+}
+
+func (rcv *Monster) UnPackTo(t *MonsterT) {
+}
+
+func (rcv *Monster) UnPack() *MonsterT {
+	if rcv == nil {
+		return nil
+	}
+	t := &MonsterT{}
+	rcv.UnPackTo(t)
+	return t
+}
+
 type Monster struct {
 	_tab flatbuffers.Table
 }
@@ -15,6 +38,21 @@ func GetRootAsMonster(buf []byte, offset flatbuffers.UOffsetT) *Monster {
 	x := &Monster{}
 	x.Init(buf, n+offset)
 	return x
+}
+
+func FinishMonsterBuffer(builder *flatbuffers.Builder, offset flatbuffers.UOffsetT) {
+	builder.Finish(offset)
+}
+
+func GetSizePrefixedRootAsMonster(buf []byte, offset flatbuffers.UOffsetT) *Monster {
+	n := flatbuffers.GetUOffsetT(buf[offset+flatbuffers.SizeUint32:])
+	x := &Monster{}
+	x.Init(buf, n+offset+flatbuffers.SizeUint32)
+	return x
+}
+
+func FinishSizePrefixedMonsterBuffer(builder *flatbuffers.Builder, offset flatbuffers.UOffsetT) {
+	builder.FinishSizePrefixed(offset)
 }
 
 func (rcv *Monster) Init(buf []byte, i flatbuffers.UOffsetT) {

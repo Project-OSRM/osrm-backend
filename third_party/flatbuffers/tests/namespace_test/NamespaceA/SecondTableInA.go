@@ -8,6 +8,29 @@ import (
 	NamespaceC "NamespaceC"
 )
 
+type SecondTableInAT struct {
+	ReferToC *NamespaceC.TableInCT
+}
+
+func (t *SecondTableInAT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil { return 0 }
+	referToCOffset := t.ReferToC.Pack(builder)
+	SecondTableInAStart(builder)
+	SecondTableInAAddReferToC(builder, referToCOffset)
+	return SecondTableInAEnd(builder)
+}
+
+func (rcv *SecondTableInA) UnPackTo(t *SecondTableInAT) {
+	t.ReferToC = rcv.ReferToC(nil).UnPack()
+}
+
+func (rcv *SecondTableInA) UnPack() *SecondTableInAT {
+	if rcv == nil { return nil }
+	t := &SecondTableInAT{}
+	rcv.UnPackTo(t)
+	return t
+}
+
 type SecondTableInA struct {
 	_tab flatbuffers.Table
 }
@@ -16,6 +39,13 @@ func GetRootAsSecondTableInA(buf []byte, offset flatbuffers.UOffsetT) *SecondTab
 	n := flatbuffers.GetUOffsetT(buf[offset:])
 	x := &SecondTableInA{}
 	x.Init(buf, n+offset)
+	return x
+}
+
+func GetSizePrefixedRootAsSecondTableInA(buf []byte, offset flatbuffers.UOffsetT) *SecondTableInA {
+	n := flatbuffers.GetUOffsetT(buf[offset+flatbuffers.SizeUint32:])
+	x := &SecondTableInA{}
+	x.Init(buf, n+offset+flatbuffers.SizeUint32)
 	return x
 }
 

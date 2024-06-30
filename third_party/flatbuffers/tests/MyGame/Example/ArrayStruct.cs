@@ -6,7 +6,8 @@ namespace MyGame.Example
 {
 
 using global::System;
-using global::FlatBuffers;
+using global::System.Collections.Generic;
+using global::Google.FlatBuffers;
 
 public struct ArrayStruct : IFlatbufferObject
 {
@@ -21,13 +22,25 @@ public struct ArrayStruct : IFlatbufferObject
   public void MutateB(int j, int b) { __p.bb.PutInt(__p.bb_pos + 4 + j * 4, b); }
   public sbyte C { get { return __p.bb.GetSbyte(__p.bb_pos + 64); } }
   public void MutateC(sbyte c) { __p.bb.PutSbyte(__p.bb_pos + 64, c); }
-  public MyGame.Example.NestedStruct D(int j) { return (new MyGame.Example.NestedStruct()).__assign(__p.bb_pos + 68 + j * 12, __p.bb); }
+  public MyGame.Example.NestedStruct D(int j) { return (new MyGame.Example.NestedStruct()).__assign(__p.bb_pos + 72 + j * 32, __p.bb); }
+  public int E { get { return __p.bb.GetInt(__p.bb_pos + 136); } }
+  public void MutateE(int e) { __p.bb.PutInt(__p.bb_pos + 136, e); }
+  public long F(int j) { return __p.bb.GetLong(__p.bb_pos + 144 + j * 8); }
+  public void MutateF(int j, long f) { __p.bb.PutLong(__p.bb_pos + 144 + j * 8, f); }
 
-  public static Offset<MyGame.Example.ArrayStruct> CreateArrayStruct(FlatBufferBuilder builder, float A, int[] B, sbyte C, int[,] d_A, MyGame.Example.TestEnum[] d_B, MyGame.Example.TestEnum[,] d_C) {
-    builder.Prep(4, 92);
+  public static Offset<MyGame.Example.ArrayStruct> CreateArrayStruct(FlatBufferBuilder builder, float A, int[] B, sbyte C, int[,] d_A, MyGame.Example.TestEnum[] d_B, MyGame.Example.TestEnum[,] d_C, long[,] d_D, int E, long[] F) {
+    builder.Prep(8, 160);
     for (int _idx0 = 2; _idx0 > 0; _idx0--) {
-      builder.Prep(4, 12);
-      builder.Pad(1);
+      builder.PutLong(F[_idx0-1]);
+    }
+    builder.Pad(4);
+    builder.PutInt(E);
+    for (int _idx0 = 2; _idx0 > 0; _idx0--) {
+      builder.Prep(8, 32);
+      for (int _idx1 = 2; _idx1 > 0; _idx1--) {
+        builder.PutLong(d_D[_idx0-1,_idx1-1]);
+      }
+      builder.Pad(5);
       for (int _idx1 = 2; _idx1 > 0; _idx1--) {
         builder.PutSbyte((sbyte)d_C[_idx0-1,_idx1-1]);
       }
@@ -36,7 +49,7 @@ public struct ArrayStruct : IFlatbufferObject
         builder.PutInt(d_A[_idx0-1,_idx1-1]);
       }
     }
-    builder.Pad(3);
+    builder.Pad(7);
     builder.PutSbyte(C);
     for (int _idx0 = 15; _idx0 > 0; _idx0--) {
       builder.PutInt(B[_idx0-1]);
@@ -44,7 +57,72 @@ public struct ArrayStruct : IFlatbufferObject
     builder.PutFloat(A);
     return new Offset<MyGame.Example.ArrayStruct>(builder.Offset);
   }
-};
+  public ArrayStructT UnPack() {
+    var _o = new ArrayStructT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(ArrayStructT _o) {
+    _o.A = this.A;
+    _o.B = new int[15];
+    for (var _j = 0; _j < 15; ++_j) { _o.B[_j] = this.B(_j); }
+    _o.C = this.C;
+    _o.D = new MyGame.Example.NestedStructT[2];
+    for (var _j = 0; _j < 2; ++_j) { _o.D[_j] = this.D(_j).UnPack(); }
+    _o.E = this.E;
+    _o.F = new long[2];
+    for (var _j = 0; _j < 2; ++_j) { _o.F[_j] = this.F(_j); }
+  }
+  public static Offset<MyGame.Example.ArrayStruct> Pack(FlatBufferBuilder builder, ArrayStructT _o) {
+    if (_o == null) return default(Offset<MyGame.Example.ArrayStruct>);
+    var _b = _o.B;
+    var _d_a = new int[2,2];
+    for (var idx0 = 0; idx0 < 2; ++idx0) {for (var idx1 = 0; idx1 < 2; ++idx1) {_d_a[idx0,idx1] = _o.D[idx0].A[idx1];}}
+    var _d_b = new MyGame.Example.TestEnum[2];
+    for (var idx0 = 0; idx0 < 2; ++idx0) {_d_b[idx0] = _o.D[idx0].B;}
+    var _d_c = new MyGame.Example.TestEnum[2,2];
+    for (var idx0 = 0; idx0 < 2; ++idx0) {for (var idx1 = 0; idx1 < 2; ++idx1) {_d_c[idx0,idx1] = _o.D[idx0].C[idx1];}}
+    var _d_d = new long[2,2];
+    for (var idx0 = 0; idx0 < 2; ++idx0) {for (var idx1 = 0; idx1 < 2; ++idx1) {_d_d[idx0,idx1] = _o.D[idx0].D[idx1];}}
+    var _f = _o.F;
+    return CreateArrayStruct(
+      builder,
+      _o.A,
+      _b,
+      _o.C,
+      _d_a,
+      _d_b,
+      _d_c,
+      _d_d,
+      _o.E,
+      _f);
+  }
+}
+
+public class ArrayStructT
+{
+  [Newtonsoft.Json.JsonProperty("a")]
+  public float A { get; set; }
+  [Newtonsoft.Json.JsonProperty("b")]
+  public int[] B { get; set; }
+  [Newtonsoft.Json.JsonProperty("c")]
+  public sbyte C { get; set; }
+  [Newtonsoft.Json.JsonProperty("d")]
+  public MyGame.Example.NestedStructT[] D { get; set; }
+  [Newtonsoft.Json.JsonProperty("e")]
+  public int E { get; set; }
+  [Newtonsoft.Json.JsonProperty("f")]
+  public long[] F { get; set; }
+
+  public ArrayStructT() {
+    this.A = 0.0f;
+    this.B = new int[15];
+    this.C = 0;
+    this.D = new MyGame.Example.NestedStructT[2];
+    this.E = 0;
+    this.F = new long[2];
+  }
+}
 
 
 }

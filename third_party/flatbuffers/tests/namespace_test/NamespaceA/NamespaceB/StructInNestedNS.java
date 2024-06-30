@@ -23,5 +23,30 @@ public final class StructInNestedNS extends Struct {
     builder.putInt(a);
     return builder.offset();
   }
+
+  public static final class Vector extends BaseVector {
+    public Vector __assign(int _vector, int _element_size, ByteBuffer _bb) { __reset(_vector, _element_size, _bb); return this; }
+
+    public StructInNestedNS get(int j) { return get(new StructInNestedNS(), j); }
+    public StructInNestedNS get(StructInNestedNS obj, int j) {  return obj.__assign(__element(j), bb); }
+  }
+  public StructInNestedNST unpack() {
+    StructInNestedNST _o = new StructInNestedNST();
+    unpackTo(_o);
+    return _o;
+  }
+  public void unpackTo(StructInNestedNST _o) {
+    int _oA = a();
+    _o.setA(_oA);
+    int _oB = b();
+    _o.setB(_oB);
+  }
+  public static int pack(FlatBufferBuilder builder, StructInNestedNST _o) {
+    if (_o == null) return 0;
+    return createStructInNestedNS(
+      builder,
+      _o.getA(),
+      _o.getB());
+  }
 }
 

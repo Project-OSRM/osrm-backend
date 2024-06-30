@@ -30,6 +30,9 @@ VTZERO_TAG=v1.1.0
 FMT_PATH="fmtlib/fmt"
 FMT_TAG=v10.2.1
 
+FLATBUFFERS_PATH="google/flatbuffers"
+FLATBUFFERS_TAG=v24.3.25
+
 function update_subtree () {
     name=$(echo "$1" | tr '[:lower:]' '[:upper:]')
     path=$(tmpvar=${name}_PATH && echo ${!tmpvar})
@@ -53,6 +56,6 @@ function update_subtree () {
 }
 
 ## Update dependencies
-for dep in osmium sol rapidjson microtar protozero vtzero fmt; do
+for dep in osmium sol rapidjson microtar protozero vtzero fmt flatbuffers; do
     update_subtree $dep
 done

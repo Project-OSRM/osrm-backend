@@ -5,17 +5,13 @@
 #include "fuzzer_assert.h"
 #include "test_assert.h"
 
-static_assert(__has_feature(memory_sanitizer) ||
-                  __has_feature(address_sanitizer),
-              "sanitizer disabled");
-
 // Utility for test run.
 struct OneTimeTestInit {
   // Declare trap for the Flatbuffers test engine.
   // This hook terminate program both in Debug and Release.
   static bool TestFailListener(const char *expval, const char *val,
                                const char *exp, const char *file, int line,
-                               const char *func = 0) {
+                               const char *func = nullptr) {
     (void)expval;
     (void)val;
     (void)exp;

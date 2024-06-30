@@ -6,6 +6,42 @@ import (
 	flatbuffers "github.com/google/flatbuffers/go"
 )
 
+type StatT struct {
+	Id string `json:"id"`
+	Val int64 `json:"val"`
+	Count uint16 `json:"count"`
+}
+
+func (t *StatT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil {
+		return 0
+	}
+	idOffset := flatbuffers.UOffsetT(0)
+	if t.Id != "" {
+		idOffset = builder.CreateString(t.Id)
+	}
+	StatStart(builder)
+	StatAddId(builder, idOffset)
+	StatAddVal(builder, t.Val)
+	StatAddCount(builder, t.Count)
+	return StatEnd(builder)
+}
+
+func (rcv *Stat) UnPackTo(t *StatT) {
+	t.Id = string(rcv.Id())
+	t.Val = rcv.Val()
+	t.Count = rcv.Count()
+}
+
+func (rcv *Stat) UnPack() *StatT {
+	if rcv == nil {
+		return nil
+	}
+	t := &StatT{}
+	rcv.UnPackTo(t)
+	return t
+}
+
 type Stat struct {
 	_tab flatbuffers.Table
 }
@@ -15,6 +51,21 @@ func GetRootAsStat(buf []byte, offset flatbuffers.UOffsetT) *Stat {
 	x := &Stat{}
 	x.Init(buf, n+offset)
 	return x
+}
+
+func FinishStatBuffer(builder *flatbuffers.Builder, offset flatbuffers.UOffsetT) {
+	builder.Finish(offset)
+}
+
+func GetSizePrefixedRootAsStat(buf []byte, offset flatbuffers.UOffsetT) *Stat {
+	n := flatbuffers.GetUOffsetT(buf[offset+flatbuffers.SizeUint32:])
+	x := &Stat{}
+	x.Init(buf, n+offset+flatbuffers.SizeUint32)
+	return x
+}
+
+func FinishSizePrefixedStatBuffer(builder *flatbuffers.Builder, offset flatbuffers.UOffsetT) {
+	builder.FinishSizePrefixed(offset)
 }
 
 func (rcv *Stat) Init(buf []byte, i flatbuffers.UOffsetT) {
@@ -56,6 +107,43 @@ func (rcv *Stat) Count() uint16 {
 
 func (rcv *Stat) MutateCount(n uint16) bool {
 	return rcv._tab.MutateUint16Slot(8, n)
+}
+
+func StatKeyCompare(o1, o2 flatbuffers.UOffsetT, buf []byte) bool {
+	obj1 := &Stat{}
+	obj2 := &Stat{}
+	obj1.Init(buf, flatbuffers.UOffsetT(len(buf))-o1)
+	obj2.Init(buf, flatbuffers.UOffsetT(len(buf))-o2)
+	return obj1.Count() < obj2.Count()
+}
+
+func (rcv *Stat) LookupByKey(key uint16, vectorLocation flatbuffers.UOffsetT, buf []byte) bool {
+	span := flatbuffers.GetUOffsetT(buf[vectorLocation-4:])
+	start := flatbuffers.UOffsetT(0)
+	for span != 0 {
+		middle := span / 2
+		tableOffset := flatbuffers.GetIndirectOffset(buf, vectorLocation+4*(start+middle))
+		obj := &Stat{}
+		obj.Init(buf, tableOffset)
+		val := obj.Count()
+		comp := 0
+		if val > key {
+			comp = 1
+		} else if val < key {
+			comp = -1
+		}
+		if comp > 0 {
+			span = middle
+		} else if comp < 0 {
+			middle += 1
+			start += middle
+			span -= middle
+		} else {
+			rcv.Init(buf, tableOffset)
+			return true
+		}
+	}
+	return false
 }
 
 func StatStart(builder *flatbuffers.Builder) {

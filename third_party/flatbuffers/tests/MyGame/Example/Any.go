@@ -2,7 +2,12 @@
 
 package Example
 
-import "strconv"
+import (
+	flatbuffers "github.com/google/flatbuffers/go"
+	"strconv"
+
+	MyGame__Example2 "MyGame/Example2"
+)
 
 type Any byte
 
@@ -32,4 +37,42 @@ func (v Any) String() string {
 		return s
 	}
 	return "Any(" + strconv.FormatInt(int64(v), 10) + ")"
+}
+
+type AnyT struct {
+	Type Any
+	Value interface{}
+}
+
+func (t *AnyT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil {
+		return 0
+	}
+	switch t.Type {
+	case AnyMonster:
+		return t.Value.(*MonsterT).Pack(builder)
+	case AnyTestSimpleTableWithEnum:
+		return t.Value.(*TestSimpleTableWithEnumT).Pack(builder)
+	case AnyMyGame_Example2_Monster:
+		return t.Value.(*MyGame__Example2.MonsterT).Pack(builder)
+	}
+	return 0
+}
+
+func (rcv Any) UnPack(table flatbuffers.Table) *AnyT {
+	switch rcv {
+	case AnyMonster:
+		var x Monster
+		x.Init(table.Bytes, table.Pos)
+		return &AnyT{Type: AnyMonster, Value: x.UnPack()}
+	case AnyTestSimpleTableWithEnum:
+		var x TestSimpleTableWithEnum
+		x.Init(table.Bytes, table.Pos)
+		return &AnyT{Type: AnyTestSimpleTableWithEnum, Value: x.UnPack()}
+	case AnyMyGame_Example2_Monster:
+		var x MyGame__Example2.Monster
+		x.Init(table.Bytes, table.Pos)
+		return &AnyT{Type: AnyMyGame_Example2_Monster, Value: x.UnPack()}
+	}
+	return nil
 }

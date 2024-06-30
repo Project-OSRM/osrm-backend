@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash
 #
 # Copyright 2014 Google Inc. All rights reserved.
 #
@@ -14,13 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -eu
+
 pushd "$(dirname $0)" >/dev/null
 test_dir="$(pwd)"
 gen_code_path=${test_dir}
 runtime_library_dir=${test_dir}/../python
 
 # Emit Python code for the example schema in the test dir:
-${test_dir}/../flatc -p -o ${gen_code_path} -I include_test monster_test.fbs
+${test_dir}/../flatc -p -o ${gen_code_path} -I include_test monster_test.fbs --gen-object-api
+${test_dir}/../flatc -p -o ${gen_code_path} -I include_test monster_test.fbs --gen-object-api --gen-onefile
+${test_dir}/../flatc -p -o ${gen_code_path} -I include_test monster_extra.fbs --gen-object-api
+${test_dir}/../flatc -p -o ${gen_code_path} -I include_test arrays_test.fbs --gen-object-api
+${test_dir}/../flatc -p -o ${gen_code_path} -I include_test nested_union_test.fbs --gen-object-api
 
 # Syntax: run_tests <interpreter> <benchmark vtable dedupes>
 #                   <benchmark read count> <benchmark build count>
@@ -34,17 +40,24 @@ function run_tests() {
     JYTHONPATH=${runtime_library_dir}:${gen_code_path} \
     COMPARE_GENERATED_TO_GO=0 \
     COMPARE_GENERATED_TO_JAVA=0 \
-    $1 py_test.py $2 $3 $4
+    $1 py_test.py $2 $3 $4 $5 $6
+    if [ $1 = python3 ]; then
+      PYTHONDONTWRITEBYTECODE=1 \
+      PYTHONPATH=${runtime_library_dir}:${gen_code_path} \
+      $1 py_flexbuffers_test.py
+    fi
     interpreters_tested+=(${1})
     echo
   fi
 }
 
 # Run test suite with these interpreters. The arguments are benchmark counts.
-run_tests python2.6 100 100 100
-run_tests python2.7 100 100 100
-run_tests python3 100 100 100
-run_tests pypy 100 100 100
+run_tests python2.6 100 100 100 100 false
+run_tests python2.7 100 100 100 100 false
+run_tests python2.7 100 100 100 100 true
+run_tests python3 100 100 100 100 false
+run_tests python3 100 100 100 100 true
+run_tests pypy 100 100 100 100 false
 
 # NOTE: We'd like to support python2.5 in the future.
 
@@ -64,7 +77,7 @@ if $(which coverage >/dev/null); then
 
   PYTHONDONTWRITEBYTECODE=1 \
   PYTHONPATH=${runtime_library_dir}:${gen_code_path} \
-  coverage run --source=flatbuffers,MyGame py_test.py 0 0 0 > /dev/null
+  coverage run --source=flatbuffers,MyGame py_test.py 0 0 0 0 false > /dev/null
 
   echo
   cov_result=`coverage report --omit="*flatbuffers/vendor*,*py_test*" \

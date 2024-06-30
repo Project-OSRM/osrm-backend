@@ -1,46 +1,32 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9DB0B5E7-757E-4BD1-A5F6-279390331254}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FlatBuffers.Test</RootNamespace>
-    <AssemblyName>FlatBuffers.Test</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+
   <PropertyGroup Condition="'$(UnsafeByteBuffer)' == 'true'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);UNSAFE_BYTEBUFFER</DefineConstants>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-  </ItemGroup>
+
+  <PropertyGroup Condition="'$(EnableSpanT)' == 'true'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);ENABLE_SPAN_T</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="..\..\net\FlatBuffers\ByteBuffer.cs">
       <Link>FlatBuffers\ByteBuffer.cs</Link>
@@ -60,11 +46,17 @@
     <Compile Include="..\..\net\FlatBuffers\FlatBufferConstants.cs">
       <Link>FlatBuffers\FlatBufferConstants.cs</Link>
     </Compile>
+    <Compile Include="..\..\net\FlatBuffers\FlatBufferVerify.cs">
+      <Link>FlatBuffers\FlatBufferVerify.cs</Link>
+    </Compile>
     <Compile Include="..\..\net\FlatBuffers\Struct.cs">
       <Link>FlatBuffers\Struct.cs</Link>
     </Compile>
     <Compile Include="..\..\net\FlatBuffers\Table.cs">
       <Link>FlatBuffers\Table.cs</Link>
+    </Compile>
+    <Compile Include="..\MyGame\Example2\Monster.cs">
+      <Link>MyGame\Example2\Monster.cs</Link>
     </Compile>
     <Compile Include="..\MyGame\Example\Any.cs">
       <Link>MyGame\Example\Any.cs</Link>
@@ -77,6 +69,9 @@
     </Compile>
     <Compile Include="..\MyGame\Example\Color.cs">
       <Link>MyGame\Example\Color.cs</Link>
+    </Compile>
+    <Compile Include="..\MyGame\Example\Race.cs">
+      <Link>MyGame\Example\Race.cs</Link>
     </Compile>
     <Compile Include="..\MyGame\Example\Monster.cs">
       <Link>MyGame\Example\Monster.cs</Link>
@@ -93,6 +88,9 @@
     <Compile Include="..\MyGame\Example\TestSimpleTableWithEnum.cs">
       <Link>MyGame\Example\TestSimpleTableWithEnum.cs</Link>
     </Compile>
+    <Compile Include="..\MyGame\Example\TypeAliases.cs">
+      <Link>MyGame\Example\TypeAliases.cs</Link>
+    </Compile>
     <Compile Include="..\MyGame\Example\Vec3.cs">
       <Link>MyGame\Example\Vec3.cs</Link>
     </Compile>
@@ -107,6 +105,9 @@
     </Compile>
     <Compile Include="..\MyGame\Example\NestedStruct.cs">
       <Link>MyGame\Example\NestedStruct.cs</Link>
+    </Compile>
+    <Compile Include="..\MyGame\Example\LongEnum.cs">
+      <Link>MyGame\Example\LongEnum.cs</Link>
     </Compile>
     <Compile Include="..\MyGame\Example\TestEnum.cs">
       <Link>MyGame\Example\TestEnum.cs</Link>
@@ -123,34 +124,80 @@
     <Compile Include="..\namespace_test\NamespaceA\NamespaceB\TableInNestedNS.cs">
       <Link>NamespaceA\NamespaceB\TableInNestedNS.cs</Link>
     </Compile>
+    <Compile Include="..\namespace_test\NamespaceA\NamespaceB\UnionInNestedNS.cs">
+      <Link>NamespaceA\NamespaceB\UnionInNestedNS.cs</Link>
+    </Compile>
     <Compile Include="..\namespace_test\NamespaceA\TableInFirstNS.cs">
       <Link>NamespaceA\TableInFirstNS.cs</Link>
     </Compile>
-    <Compile Include="Assert.cs" />
-    <Compile Include="ByteBufferTests.cs" />
-    <Compile Include="FlatBufferBuilderTests.cs" />
-    <Compile Include="FlatBuffersFuzzTests.cs" />
-    <Compile Include="FlatBuffersTestClassAttribute.cs" />
-    <Compile Include="FlatBuffersTestMethodAttribute.cs" />
-    <Compile Include="FuzzTestData.cs" />
-    <Compile Include="Lcg.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="FlatBuffersExampleTests.cs" />
-    <Compile Include="TestTable.cs" />
+    <Compile Include="..\union_vector\Attacker.cs">
+      <Link>union_vector\Attacker.cs</Link>
+    </Compile>
+    <Compile Include="..\union_vector\BookReader.cs">
+      <Link>union_vector\BookReader.cs</Link>
+    </Compile>
+    <Compile Include="..\union_vector\Character.cs">
+      <Link>union_vector\Character.cs</Link>
+    </Compile>
+    <Compile Include="..\union_vector\Movie.cs">
+      <Link>union_vector\Movie.cs</Link>
+    </Compile>
+    <Compile Include="..\union_vector\Rapunzel.cs">
+      <Link>union_vector\Rapunzel.cs</Link>
+    </Compile>
+    <Compile Include="..\optional_scalars\OptionalByte.cs">
+      <Link>optional_scalars\OptionalByte.cs</Link>
+    </Compile>
+    <Compile Include="..\optional_scalars\ScalarStuff.cs">
+      <Link>optional_scalars\ScalarStuff.cs</Link>
+    </Compile>
+    <Compile Include="..\KeywordTest\ABC.cs">
+      <Link>KeywordTest\ABC.cs</Link>
+    </Compile>
+    <Compile Include="..\KeywordTest\public.cs">
+      <Link>KeywordTest\public.cs</Link>
+    </Compile>
+    <Compile Include="..\KeywordTest\KeywordsInTable.cs">
+      <Link>KeywordTest\KeywordsInTable.cs</Link>
+    </Compile>
+    <Compile Include="..\KeywordTest\KeywordsInUnion.cs">
+      <Link>KeywordTest\KeywordsInUnion.cs</Link>
+    </Compile>
+    <Compile Include="..\nested_namespace_test\nested_namespace_test1_generated.cs">
+      <Link>nested_namespace_test\nested_namespace_test1_generated.cs</Link>
+    </Compile>
+    <Compile Include="..\nested_namespace_test\nested_namespace_test2_generated.cs">
+      <Link>nested_namespace_test\nested_namespace_test2_generated.cs</Link>
+    </Compile>
+    <Compile Include="..\nested_namespace_test\nested_namespace_test3_generated.cs">
+      <Link>nested_namespace_test\nested_namespace_test3_generated.cs</Link>
+    </Compile>
+    <Compile Include="..\union_value_collsion\union_value_collision_generated.cs">
+      <Link>union_value_collsion\union_value_collision_generated.cs</Link>
+    </Compile>
   </ItemGroup>
+
+  <ItemGroup>
+    <None Remove=".gitignore" />
+    <None Remove="clean.sh" />
+    <None Remove="NetTest.sh" />
+    <None Remove="packages.config" />
+    <None Remove="README.md" />
+  </ItemGroup>
+
   <ItemGroup>
     <Content Include="..\monsterdata_test.mon">
       <Link>Resources\monsterdata_test.mon</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\monsterdata_test.json">
+      <Link>Resources\monsterdata_test.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
 </Project>

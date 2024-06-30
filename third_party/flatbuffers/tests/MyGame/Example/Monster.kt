@@ -2,15 +2,26 @@
 
 package MyGame.Example
 
-import java.nio.*
+import com.google.flatbuffers.BaseVector
+import com.google.flatbuffers.BooleanVector
+import com.google.flatbuffers.ByteVector
+import com.google.flatbuffers.Constants
+import com.google.flatbuffers.DoubleVector
+import com.google.flatbuffers.FlatBufferBuilder
+import com.google.flatbuffers.FloatVector
+import com.google.flatbuffers.LongVector
+import com.google.flatbuffers.StringVector
+import com.google.flatbuffers.Struct
+import com.google.flatbuffers.Table
+import com.google.flatbuffers.UnionVector
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import kotlin.math.sign
-import com.google.flatbuffers.*
 
 /**
- * an example documentation comment: monster object
+ * an example documentation comment: "monster object"
  */
 @Suppress("unused")
-@ExperimentalUnsignedTypes
 class Monster : Table() {
 
     fun __init(_i: Int, _bb: ByteBuffer)  {
@@ -57,10 +68,14 @@ class Monster : Table() {
             false
         }
     }
-    val name : String?
+    val name : String
         get() {
             val o = __offset(10)
-            return if (o != 0) __string(o + bb_pos) else null
+            return if (o != 0) {
+                __string(o + bb_pos)
+            } else {
+                throw AssertionError("No value for (required) field name")
+            }
         }
     val nameAsByteBuffer : ByteBuffer get() = __vector_as_bytebuffer(10, 1)
     fun nameInByteBuffer(_bb: ByteBuffer) : ByteBuffer = __vector_in_bytebuffer(_bb, 10, 1)
@@ -116,7 +131,7 @@ class Monster : Table() {
         }
     }
     fun test(obj: Table) : Table? {
-        val o = __offset(20); return if (o != 0) __union(obj, o) else null
+        val o = __offset(20); return if (o != 0) __union(obj, o + bb_pos) else null
     }
     fun test4(j: Int) : MyGame.Example.Test? = test4(MyGame.Example.Test(), j)
     fun test4(obj: MyGame.Example.Test, j: Int) : MyGame.Example.Test? {
@@ -717,7 +732,7 @@ class Monster : Table() {
         }
     }
     fun anyUnique(obj: Table) : Table? {
-        val o = __offset(92); return if (o != 0) __union(obj, o) else null
+        val o = __offset(92); return if (o != 0) __union(obj, o + bb_pos) else null
     }
     val anyAmbiguousType : UByte
         get() {
@@ -734,7 +749,7 @@ class Monster : Table() {
         }
     }
     fun anyAmbiguous(obj: Table) : Table? {
-        val o = __offset(96); return if (o != 0) __union(obj, o) else null
+        val o = __offset(96); return if (o != 0) __union(obj, o + bb_pos) else null
     }
     fun vectorOfEnums(j: Int) : UByte {
         val o = __offset(98)
@@ -759,23 +774,251 @@ class Monster : Table() {
             false
         }
     }
+    val signedEnum : Byte
+        get() {
+            val o = __offset(100)
+            return if(o != 0) bb.get(o + bb_pos) else -1
+        }
+    fun mutateSignedEnum(signedEnum: Byte) : Boolean {
+        val o = __offset(100)
+        return if (o != 0) {
+            bb.put(o + bb_pos, signedEnum)
+            true
+        } else {
+            false
+        }
+    }
+    fun testrequirednestedflatbuffer(j: Int) : UByte {
+        val o = __offset(102)
+        return if (o != 0) {
+            bb.get(__vector(o) + j * 1).toUByte()
+        } else {
+            0u
+        }
+    }
+    val testrequirednestedflatbufferLength : Int
+        get() {
+            val o = __offset(102); return if (o != 0) __vector_len(o) else 0
+        }
+    val testrequirednestedflatbufferAsByteBuffer : ByteBuffer get() = __vector_as_bytebuffer(102, 1)
+    fun testrequirednestedflatbufferInByteBuffer(_bb: ByteBuffer) : ByteBuffer = __vector_in_bytebuffer(_bb, 102, 1)
+    val testrequirednestedflatbufferAsMonster : MyGame.Example.Monster? get() = testrequirednestedflatbufferAsMonster(MyGame.Example.Monster())
+    fun testrequirednestedflatbufferAsMonster(obj: MyGame.Example.Monster) : MyGame.Example.Monster? {
+        val o = __offset(102)
+        return if (o != 0) {
+            obj.__assign(__indirect(__vector(o)), bb)
+        } else {
+            null
+        }
+    }
+    fun mutateTestrequirednestedflatbuffer(j: Int, testrequirednestedflatbuffer: UByte) : Boolean {
+        val o = __offset(102)
+        return if (o != 0) {
+            bb.put(__vector(o) + j * 1, testrequirednestedflatbuffer.toByte())
+            true
+        } else {
+            false
+        }
+    }
+    fun scalarKeySortedTables(j: Int) : MyGame.Example.Stat? = scalarKeySortedTables(MyGame.Example.Stat(), j)
+    fun scalarKeySortedTables(obj: MyGame.Example.Stat, j: Int) : MyGame.Example.Stat? {
+        val o = __offset(104)
+        return if (o != 0) {
+            obj.__assign(__indirect(__vector(o) + j * 4), bb)
+        } else {
+            null
+        }
+    }
+    val scalarKeySortedTablesLength : Int
+        get() {
+            val o = __offset(104); return if (o != 0) __vector_len(o) else 0
+        }
+    fun scalarKeySortedTablesByKey(key: UShort) : MyGame.Example.Stat? {
+        val o = __offset(104)
+        return if (o != 0) {
+            MyGame.Example.Stat.__lookup_by_key(null, __vector(o), key, bb)
+        } else {
+            null
+        }
+    }
+    fun scalarKeySortedTablesByKey(obj: MyGame.Example.Stat, key: UShort) : MyGame.Example.Stat? {
+        val o = __offset(104)
+        return if (o != 0) {
+            MyGame.Example.Stat.__lookup_by_key(obj, __vector(o), key, bb)
+        } else {
+            null
+        }
+    }
+    val nativeInline : MyGame.Example.Test? get() = nativeInline(MyGame.Example.Test())
+    fun nativeInline(obj: MyGame.Example.Test) : MyGame.Example.Test? {
+        val o = __offset(106)
+        return if (o != 0) {
+            obj.__assign(o + bb_pos, bb)
+        } else {
+            null
+        }
+    }
+    val longEnumNonEnumDefault : ULong
+        get() {
+            val o = __offset(108)
+            return if(o != 0) bb.getLong(o + bb_pos).toULong() else 0UL
+        }
+    fun mutateLongEnumNonEnumDefault(longEnumNonEnumDefault: ULong) : Boolean {
+        val o = __offset(108)
+        return if (o != 0) {
+            bb.putLong(o + bb_pos, longEnumNonEnumDefault.toLong())
+            true
+        } else {
+            false
+        }
+    }
+    val longEnumNormalDefault : ULong
+        get() {
+            val o = __offset(110)
+            return if(o != 0) bb.getLong(o + bb_pos).toULong() else 2UL
+        }
+    fun mutateLongEnumNormalDefault(longEnumNormalDefault: ULong) : Boolean {
+        val o = __offset(110)
+        return if (o != 0) {
+            bb.putLong(o + bb_pos, longEnumNormalDefault.toLong())
+            true
+        } else {
+            false
+        }
+    }
+    val nanDefault : Float
+        get() {
+            val o = __offset(112)
+            return if(o != 0) bb.getFloat(o + bb_pos) else Float.NaN
+        }
+    fun mutateNanDefault(nanDefault: Float) : Boolean {
+        val o = __offset(112)
+        return if (o != 0) {
+            bb.putFloat(o + bb_pos, nanDefault)
+            true
+        } else {
+            false
+        }
+    }
+    val infDefault : Float
+        get() {
+            val o = __offset(114)
+            return if(o != 0) bb.getFloat(o + bb_pos) else Float.POSITIVE_INFINITY
+        }
+    fun mutateInfDefault(infDefault: Float) : Boolean {
+        val o = __offset(114)
+        return if (o != 0) {
+            bb.putFloat(o + bb_pos, infDefault)
+            true
+        } else {
+            false
+        }
+    }
+    val positiveInfDefault : Float
+        get() {
+            val o = __offset(116)
+            return if(o != 0) bb.getFloat(o + bb_pos) else Float.POSITIVE_INFINITY
+        }
+    fun mutatePositiveInfDefault(positiveInfDefault: Float) : Boolean {
+        val o = __offset(116)
+        return if (o != 0) {
+            bb.putFloat(o + bb_pos, positiveInfDefault)
+            true
+        } else {
+            false
+        }
+    }
+    val infinityDefault : Float
+        get() {
+            val o = __offset(118)
+            return if(o != 0) bb.getFloat(o + bb_pos) else Float.POSITIVE_INFINITY
+        }
+    fun mutateInfinityDefault(infinityDefault: Float) : Boolean {
+        val o = __offset(118)
+        return if (o != 0) {
+            bb.putFloat(o + bb_pos, infinityDefault)
+            true
+        } else {
+            false
+        }
+    }
+    val positiveInfinityDefault : Float
+        get() {
+            val o = __offset(120)
+            return if(o != 0) bb.getFloat(o + bb_pos) else Float.POSITIVE_INFINITY
+        }
+    fun mutatePositiveInfinityDefault(positiveInfinityDefault: Float) : Boolean {
+        val o = __offset(120)
+        return if (o != 0) {
+            bb.putFloat(o + bb_pos, positiveInfinityDefault)
+            true
+        } else {
+            false
+        }
+    }
+    val negativeInfDefault : Float
+        get() {
+            val o = __offset(122)
+            return if(o != 0) bb.getFloat(o + bb_pos) else Float.NEGATIVE_INFINITY
+        }
+    fun mutateNegativeInfDefault(negativeInfDefault: Float) : Boolean {
+        val o = __offset(122)
+        return if (o != 0) {
+            bb.putFloat(o + bb_pos, negativeInfDefault)
+            true
+        } else {
+            false
+        }
+    }
+    val negativeInfinityDefault : Float
+        get() {
+            val o = __offset(124)
+            return if(o != 0) bb.getFloat(o + bb_pos) else Float.NEGATIVE_INFINITY
+        }
+    fun mutateNegativeInfinityDefault(negativeInfinityDefault: Float) : Boolean {
+        val o = __offset(124)
+        return if (o != 0) {
+            bb.putFloat(o + bb_pos, negativeInfinityDefault)
+            true
+        } else {
+            false
+        }
+    }
+    val doubleInfDefault : Double
+        get() {
+            val o = __offset(126)
+            return if(o != 0) bb.getDouble(o + bb_pos) else Double.POSITIVE_INFINITY
+        }
+    fun mutateDoubleInfDefault(doubleInfDefault: Double) : Boolean {
+        val o = __offset(126)
+        return if (o != 0) {
+            bb.putDouble(o + bb_pos, doubleInfDefault)
+            true
+        } else {
+            false
+        }
+    }
     override fun keysCompare(o1: Int, o2: Int, _bb: ByteBuffer) : Int {
          return compareStrings(__offset(10, o1, _bb), __offset(10, o2, _bb), _bb)
     }
     companion object {
-        fun validateVersion() = Constants.FLATBUFFERS_1_11_1()
+        fun validateVersion() = Constants.FLATBUFFERS_24_3_25()
         fun getRootAsMonster(_bb: ByteBuffer): Monster = getRootAsMonster(_bb, Monster())
         fun getRootAsMonster(_bb: ByteBuffer, obj: Monster): Monster {
             _bb.order(ByteOrder.LITTLE_ENDIAN)
             return (obj.__assign(_bb.getInt(_bb.position()) + _bb.position(), _bb))
         }
         fun MonsterBufferHasIdentifier(_bb: ByteBuffer) : Boolean = __has_identifier(_bb, "MONS")
-        fun startMonster(builder: FlatBufferBuilder) = builder.startTable(48)
+        fun startMonster(builder: FlatBufferBuilder) = builder.startTable(62)
         fun addPos(builder: FlatBufferBuilder, pos: Int) = builder.addStruct(0, pos, 0)
         fun addMana(builder: FlatBufferBuilder, mana: Short) = builder.addShort(1, mana, 150)
         fun addHp(builder: FlatBufferBuilder, hp: Short) = builder.addShort(2, hp, 100)
-        fun addName(builder: FlatBufferBuilder, name: Int) = builder.addOffset(3, name, 0)
+        fun addName(builder: FlatBufferBuilder, name: Int)  {
+            builder.addOffset(name)
+            builder.slot(3)
+        }
         fun addInventory(builder: FlatBufferBuilder, inventory: Int) = builder.addOffset(5, inventory, 0)
+        @kotlin.ExperimentalUnsignedTypes
         fun createInventoryVector(builder: FlatBufferBuilder, data: UByteArray) : Int {
             builder.startVector(1, data.size, 1)
             for (i in data.size - 1 downTo 0) {
@@ -809,6 +1052,7 @@ class Monster : Table() {
         fun startTestarrayoftablesVector(builder: FlatBufferBuilder, numElems: Int) = builder.startVector(4, numElems, 4)
         fun addEnemy(builder: FlatBufferBuilder, enemy: Int) = builder.addOffset(12, enemy, 0)
         fun addTestnestedflatbuffer(builder: FlatBufferBuilder, testnestedflatbuffer: Int) = builder.addOffset(13, testnestedflatbuffer, 0)
+        @kotlin.ExperimentalUnsignedTypes
         fun createTestnestedflatbufferVector(builder: FlatBufferBuilder, data: UByteArray) : Int {
             builder.startVector(1, data.size, 1)
             for (i in data.size - 1 downTo 0) {
@@ -851,6 +1095,7 @@ class Monster : Table() {
         fun addTestarrayofsortedstruct(builder: FlatBufferBuilder, testarrayofsortedstruct: Int) = builder.addOffset(29, testarrayofsortedstruct, 0)
         fun startTestarrayofsortedstructVector(builder: FlatBufferBuilder, numElems: Int) = builder.startVector(8, numElems, 4)
         fun addFlex(builder: FlatBufferBuilder, flex: Int) = builder.addOffset(30, flex, 0)
+        @kotlin.ExperimentalUnsignedTypes
         fun createFlexVector(builder: FlatBufferBuilder, data: UByteArray) : Int {
             builder.startVector(1, data.size, 1)
             for (i in data.size - 1 downTo 0) {
@@ -891,6 +1136,7 @@ class Monster : Table() {
         fun startVectorOfReferrablesVector(builder: FlatBufferBuilder, numElems: Int) = builder.startVector(4, numElems, 4)
         fun addSingleWeakReference(builder: FlatBufferBuilder, singleWeakReference: ULong) = builder.addLong(36, singleWeakReference.toLong(), 0)
         fun addVectorOfWeakReferences(builder: FlatBufferBuilder, vectorOfWeakReferences: Int) = builder.addOffset(37, vectorOfWeakReferences, 0)
+        @kotlin.ExperimentalUnsignedTypes
         fun createVectorOfWeakReferencesVector(builder: FlatBufferBuilder, data: ULongArray) : Int {
             builder.startVector(8, data.size, 8)
             for (i in data.size - 1 downTo 0) {
@@ -910,6 +1156,7 @@ class Monster : Table() {
         fun startVectorOfStrongReferrablesVector(builder: FlatBufferBuilder, numElems: Int) = builder.startVector(4, numElems, 4)
         fun addCoOwningReference(builder: FlatBufferBuilder, coOwningReference: ULong) = builder.addLong(39, coOwningReference.toLong(), 0)
         fun addVectorOfCoOwningReferences(builder: FlatBufferBuilder, vectorOfCoOwningReferences: Int) = builder.addOffset(40, vectorOfCoOwningReferences, 0)
+        @kotlin.ExperimentalUnsignedTypes
         fun createVectorOfCoOwningReferencesVector(builder: FlatBufferBuilder, data: ULongArray) : Int {
             builder.startVector(8, data.size, 8)
             for (i in data.size - 1 downTo 0) {
@@ -920,6 +1167,7 @@ class Monster : Table() {
         fun startVectorOfCoOwningReferencesVector(builder: FlatBufferBuilder, numElems: Int) = builder.startVector(8, numElems, 8)
         fun addNonOwningReference(builder: FlatBufferBuilder, nonOwningReference: ULong) = builder.addLong(41, nonOwningReference.toLong(), 0)
         fun addVectorOfNonOwningReferences(builder: FlatBufferBuilder, vectorOfNonOwningReferences: Int) = builder.addOffset(42, vectorOfNonOwningReferences, 0)
+        @kotlin.ExperimentalUnsignedTypes
         fun createVectorOfNonOwningReferencesVector(builder: FlatBufferBuilder, data: ULongArray) : Int {
             builder.startVector(8, data.size, 8)
             for (i in data.size - 1 downTo 0) {
@@ -933,6 +1181,7 @@ class Monster : Table() {
         fun addAnyAmbiguousType(builder: FlatBufferBuilder, anyAmbiguousType: UByte) = builder.addByte(45, anyAmbiguousType.toByte(), 0)
         fun addAnyAmbiguous(builder: FlatBufferBuilder, anyAmbiguous: Int) = builder.addOffset(46, anyAmbiguous, 0)
         fun addVectorOfEnums(builder: FlatBufferBuilder, vectorOfEnums: Int) = builder.addOffset(47, vectorOfEnums, 0)
+        @kotlin.ExperimentalUnsignedTypes
         fun createVectorOfEnumsVector(builder: FlatBufferBuilder, data: UByteArray) : Int {
             builder.startVector(1, data.size, 1)
             for (i in data.size - 1 downTo 0) {
@@ -941,6 +1190,37 @@ class Monster : Table() {
             return builder.endVector()
         }
         fun startVectorOfEnumsVector(builder: FlatBufferBuilder, numElems: Int) = builder.startVector(1, numElems, 1)
+        fun addSignedEnum(builder: FlatBufferBuilder, signedEnum: Byte) = builder.addByte(48, signedEnum, -1)
+        fun addTestrequirednestedflatbuffer(builder: FlatBufferBuilder, testrequirednestedflatbuffer: Int) = builder.addOffset(49, testrequirednestedflatbuffer, 0)
+        @kotlin.ExperimentalUnsignedTypes
+        fun createTestrequirednestedflatbufferVector(builder: FlatBufferBuilder, data: UByteArray) : Int {
+            builder.startVector(1, data.size, 1)
+            for (i in data.size - 1 downTo 0) {
+                builder.addByte(data[i].toByte())
+            }
+            return builder.endVector()
+        }
+        fun startTestrequirednestedflatbufferVector(builder: FlatBufferBuilder, numElems: Int) = builder.startVector(1, numElems, 1)
+        fun addScalarKeySortedTables(builder: FlatBufferBuilder, scalarKeySortedTables: Int) = builder.addOffset(50, scalarKeySortedTables, 0)
+        fun createScalarKeySortedTablesVector(builder: FlatBufferBuilder, data: IntArray) : Int {
+            builder.startVector(4, data.size, 4)
+            for (i in data.size - 1 downTo 0) {
+                builder.addOffset(data[i])
+            }
+            return builder.endVector()
+        }
+        fun startScalarKeySortedTablesVector(builder: FlatBufferBuilder, numElems: Int) = builder.startVector(4, numElems, 4)
+        fun addNativeInline(builder: FlatBufferBuilder, nativeInline: Int) = builder.addStruct(51, nativeInline, 0)
+        fun addLongEnumNonEnumDefault(builder: FlatBufferBuilder, longEnumNonEnumDefault: ULong) = builder.addLong(52, longEnumNonEnumDefault.toLong(), 0)
+        fun addLongEnumNormalDefault(builder: FlatBufferBuilder, longEnumNormalDefault: ULong) = builder.addLong(53, longEnumNormalDefault.toLong(), 2)
+        fun addNanDefault(builder: FlatBufferBuilder, nanDefault: Float) = builder.addFloat(54, nanDefault, Double.NaN)
+        fun addInfDefault(builder: FlatBufferBuilder, infDefault: Float) = builder.addFloat(55, infDefault, Double.POSITIVE_INFINITY)
+        fun addPositiveInfDefault(builder: FlatBufferBuilder, positiveInfDefault: Float) = builder.addFloat(56, positiveInfDefault, Double.POSITIVE_INFINITY)
+        fun addInfinityDefault(builder: FlatBufferBuilder, infinityDefault: Float) = builder.addFloat(57, infinityDefault, Double.POSITIVE_INFINITY)
+        fun addPositiveInfinityDefault(builder: FlatBufferBuilder, positiveInfinityDefault: Float) = builder.addFloat(58, positiveInfinityDefault, Double.POSITIVE_INFINITY)
+        fun addNegativeInfDefault(builder: FlatBufferBuilder, negativeInfDefault: Float) = builder.addFloat(59, negativeInfDefault, Double.NEGATIVE_INFINITY)
+        fun addNegativeInfinityDefault(builder: FlatBufferBuilder, negativeInfinityDefault: Float) = builder.addFloat(60, negativeInfinityDefault, Double.NEGATIVE_INFINITY)
+        fun addDoubleInfDefault(builder: FlatBufferBuilder, doubleInfDefault: Double) = builder.addDouble(61, doubleInfDefault, Double.POSITIVE_INFINITY)
         fun endMonster(builder: FlatBufferBuilder) : Int {
             val o = builder.endTable()
                 builder.required(o, 10)
@@ -949,7 +1229,7 @@ class Monster : Table() {
         fun finishMonsterBuffer(builder: FlatBufferBuilder, offset: Int) = builder.finish(offset, "MONS")
         fun finishSizePrefixedMonsterBuffer(builder: FlatBufferBuilder, offset: Int) = builder.finishSizePrefixed(offset, "MONS")
         fun __lookup_by_key(obj: Monster?, vectorLocation: Int, key: String, bb: ByteBuffer) : Monster? {
-            val byteKey = key.toByteArray(Table.UTF8_CHARSET.get()!!)
+            val byteKey = key.toByteArray(java.nio.charset.StandardCharsets.UTF_8)
             var span = bb.getInt(vectorLocation - 4)
             var start = 0
             while (span != 0) {

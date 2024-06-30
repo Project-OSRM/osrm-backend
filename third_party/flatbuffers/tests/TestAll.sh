@@ -14,15 +14,9 @@ echo "************************ Python:"
 
 sh PythonTest.sh
 
-echo "************************ JavaScript:"
-
-sh JavaScriptTest.sh
-# FIXME does not exist:
-# sh JavaScriptUnionVectorTest.sh
-
 echo "************************ TypeScript:"
 
-sh TypeScriptTest.sh
+python3 ts/TypeScriptTest.py
 
 echo "************************ C++:"
 
@@ -60,4 +54,6 @@ echo "(in a different repo)"
 
 echo "************************ Swift:"
 
-echo "(in a different repo)"
+cd FlatBuffers.Test.Swift
+sh SwiftTest.sh
+cd ..

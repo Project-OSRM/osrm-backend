@@ -6,6 +6,29 @@ import (
 	flatbuffers "github.com/google/flatbuffers/go"
 )
 
+type InParentNamespaceT struct {
+}
+
+func (t *InParentNamespaceT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil {
+		return 0
+	}
+	InParentNamespaceStart(builder)
+	return InParentNamespaceEnd(builder)
+}
+
+func (rcv *InParentNamespace) UnPackTo(t *InParentNamespaceT) {
+}
+
+func (rcv *InParentNamespace) UnPack() *InParentNamespaceT {
+	if rcv == nil {
+		return nil
+	}
+	t := &InParentNamespaceT{}
+	rcv.UnPackTo(t)
+	return t
+}
+
 type InParentNamespace struct {
 	_tab flatbuffers.Table
 }
@@ -15,6 +38,21 @@ func GetRootAsInParentNamespace(buf []byte, offset flatbuffers.UOffsetT) *InPare
 	x := &InParentNamespace{}
 	x.Init(buf, n+offset)
 	return x
+}
+
+func FinishInParentNamespaceBuffer(builder *flatbuffers.Builder, offset flatbuffers.UOffsetT) {
+	builder.Finish(offset)
+}
+
+func GetSizePrefixedRootAsInParentNamespace(buf []byte, offset flatbuffers.UOffsetT) *InParentNamespace {
+	n := flatbuffers.GetUOffsetT(buf[offset+flatbuffers.SizeUint32:])
+	x := &InParentNamespace{}
+	x.Init(buf, n+offset+flatbuffers.SizeUint32)
+	return x
+}
+
+func FinishSizePrefixedInParentNamespaceBuffer(builder *flatbuffers.Builder, offset flatbuffers.UOffsetT) {
+	builder.FinishSizePrefixed(offset)
 }
 
 func (rcv *InParentNamespace) Init(buf []byte, i flatbuffers.UOffsetT) {

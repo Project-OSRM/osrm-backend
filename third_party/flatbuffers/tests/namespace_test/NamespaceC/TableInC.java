@@ -9,7 +9,7 @@ import com.google.flatbuffers.*;
 
 @SuppressWarnings("unused")
 public final class TableInC extends Table {
-  public static void ValidateVersion() { Constants.FLATBUFFERS_1_11_1(); }
+  public static void ValidateVersion() { Constants.FLATBUFFERS_24_3_25(); }
   public static TableInC getRootAsTableInC(ByteBuffer _bb) { return getRootAsTableInC(_bb, new TableInC()); }
   public static TableInC getRootAsTableInC(ByteBuffer _bb, TableInC obj) { _bb.order(ByteOrder.LITTLE_ENDIAN); return (obj.__assign(_bb.getInt(_bb.position()) + _bb.position(), _bb)); }
   public void __init(int _i, ByteBuffer _bb) { __reset(_i, _bb); }
@@ -21,11 +21,11 @@ public final class TableInC extends Table {
   public NamespaceA.SecondTableInA referToA2(NamespaceA.SecondTableInA obj) { int o = __offset(6); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
 
   public static int createTableInC(FlatBufferBuilder builder,
-      int refer_to_a1Offset,
-      int refer_to_a2Offset) {
+      int referToA1Offset,
+      int referToA2Offset) {
     builder.startTable(2);
-    TableInC.addReferToA2(builder, refer_to_a2Offset);
-    TableInC.addReferToA1(builder, refer_to_a1Offset);
+    TableInC.addReferToA2(builder, referToA2Offset);
+    TableInC.addReferToA1(builder, referToA1Offset);
     return TableInC.endTableInC(builder);
   }
 
@@ -35,6 +35,33 @@ public final class TableInC extends Table {
   public static int endTableInC(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;
+  }
+
+  public static final class Vector extends BaseVector {
+    public Vector __assign(int _vector, int _element_size, ByteBuffer _bb) { __reset(_vector, _element_size, _bb); return this; }
+
+    public TableInC get(int j) { return get(new TableInC(), j); }
+    public TableInC get(TableInC obj, int j) {  return obj.__assign(__indirect(__element(j), bb), bb); }
+  }
+  public TableInCT unpack() {
+    TableInCT _o = new TableInCT();
+    unpackTo(_o);
+    return _o;
+  }
+  public void unpackTo(TableInCT _o) {
+    if (referToA1() != null) _o.setReferToA1(referToA1().unpack());
+    else _o.setReferToA1(null);
+    if (referToA2() != null) _o.setReferToA2(referToA2().unpack());
+    else _o.setReferToA2(null);
+  }
+  public static int pack(FlatBufferBuilder builder, TableInCT _o) {
+    if (_o == null) return 0;
+    int _refer_to_a1 = _o.getReferToA1() == null ? 0 : NamespaceA.TableInFirstNS.pack(builder, _o.getReferToA1());
+    int _refer_to_a2 = _o.getReferToA2() == null ? 0 : NamespaceA.SecondTableInA.pack(builder, _o.getReferToA2());
+    return createTableInC(
+      builder,
+      _refer_to_a1,
+      _refer_to_a2);
   }
 }
 

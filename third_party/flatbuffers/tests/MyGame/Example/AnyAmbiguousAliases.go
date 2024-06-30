@@ -2,7 +2,10 @@
 
 package Example
 
-import "strconv"
+import (
+	flatbuffers "github.com/google/flatbuffers/go"
+	"strconv"
+)
 
 type AnyAmbiguousAliases byte
 
@@ -32,4 +35,42 @@ func (v AnyAmbiguousAliases) String() string {
 		return s
 	}
 	return "AnyAmbiguousAliases(" + strconv.FormatInt(int64(v), 10) + ")"
+}
+
+type AnyAmbiguousAliasesT struct {
+	Type AnyAmbiguousAliases
+	Value interface{}
+}
+
+func (t *AnyAmbiguousAliasesT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil {
+		return 0
+	}
+	switch t.Type {
+	case AnyAmbiguousAliasesM1:
+		return t.Value.(*MonsterT).Pack(builder)
+	case AnyAmbiguousAliasesM2:
+		return t.Value.(*MonsterT).Pack(builder)
+	case AnyAmbiguousAliasesM3:
+		return t.Value.(*MonsterT).Pack(builder)
+	}
+	return 0
+}
+
+func (rcv AnyAmbiguousAliases) UnPack(table flatbuffers.Table) *AnyAmbiguousAliasesT {
+	switch rcv {
+	case AnyAmbiguousAliasesM1:
+		var x Monster
+		x.Init(table.Bytes, table.Pos)
+		return &AnyAmbiguousAliasesT{Type: AnyAmbiguousAliasesM1, Value: x.UnPack()}
+	case AnyAmbiguousAliasesM2:
+		var x Monster
+		x.Init(table.Bytes, table.Pos)
+		return &AnyAmbiguousAliasesT{Type: AnyAmbiguousAliasesM2, Value: x.UnPack()}
+	case AnyAmbiguousAliasesM3:
+		var x Monster
+		x.Init(table.Bytes, table.Pos)
+		return &AnyAmbiguousAliasesT{Type: AnyAmbiguousAliasesM3, Value: x.UnPack()}
+	}
+	return nil
 }

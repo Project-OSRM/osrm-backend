@@ -34,13 +34,13 @@ fi
 all_kt_files=`find . -name "*.kt" -print`
 
 # Compile java FlatBuffer library 
-javac ${testdir}/../java/com/google/flatbuffers/*.java -d $targetdir
+javac ${testdir}/../java/src/main/java/com/google/flatbuffers/*.java -d $targetdir
 # Compile Kotlin files
 kotlinc $all_kt_files -classpath $targetdir -include-runtime -d $targetdir
 # Make jar
 jar cvf ${testdir}/kotlin_test.jar -C $targetdir . > /dev/null
 # Run test
-kotlin -cp ${testdir}/kotlin_test.jar KotlinTest
+kotlin -J"-ea" -cp ${testdir}/kotlin_test.jar KotlinTest
 # clean up
 rm -rf $targetdir
 rm ${testdir}/kotlin_test.jar

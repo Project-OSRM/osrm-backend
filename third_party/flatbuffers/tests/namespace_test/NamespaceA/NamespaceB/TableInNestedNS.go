@@ -6,6 +6,28 @@ import (
 	flatbuffers "github.com/google/flatbuffers/go"
 )
 
+type TableInNestedNST struct {
+	Foo int32
+}
+
+func (t *TableInNestedNST) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil { return 0 }
+	TableInNestedNSStart(builder)
+	TableInNestedNSAddFoo(builder, t.Foo)
+	return TableInNestedNSEnd(builder)
+}
+
+func (rcv *TableInNestedNS) UnPackTo(t *TableInNestedNST) {
+	t.Foo = rcv.Foo()
+}
+
+func (rcv *TableInNestedNS) UnPack() *TableInNestedNST {
+	if rcv == nil { return nil }
+	t := &TableInNestedNST{}
+	rcv.UnPackTo(t)
+	return t
+}
+
 type TableInNestedNS struct {
 	_tab flatbuffers.Table
 }
@@ -14,6 +36,13 @@ func GetRootAsTableInNestedNS(buf []byte, offset flatbuffers.UOffsetT) *TableInN
 	n := flatbuffers.GetUOffsetT(buf[offset:])
 	x := &TableInNestedNS{}
 	x.Init(buf, n+offset)
+	return x
+}
+
+func GetSizePrefixedRootAsTableInNestedNS(buf []byte, offset flatbuffers.UOffsetT) *TableInNestedNS {
+	n := flatbuffers.GetUOffsetT(buf[offset+flatbuffers.SizeUint32:])
+	x := &TableInNestedNS{}
+	x.Init(buf, n+offset+flatbuffers.SizeUint32)
 	return x
 }
 

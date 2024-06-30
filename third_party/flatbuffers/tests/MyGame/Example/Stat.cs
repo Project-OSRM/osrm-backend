@@ -6,13 +6,14 @@ namespace MyGame.Example
 {
 
 using global::System;
-using global::FlatBuffers;
+using global::System.Collections.Generic;
+using global::Google.FlatBuffers;
 
 public struct Stat : IFlatbufferObject
 {
   private Table __p;
   public ByteBuffer ByteBuffer { get { return __p.bb; } }
-  public static void ValidateVersion() { FlatBufferConstants.FLATBUFFERS_1_11_1(); }
+  public static void ValidateVersion() { FlatBufferConstants.FLATBUFFERS_24_3_25(); }
   public static Stat GetRootAsStat(ByteBuffer _bb) { return GetRootAsStat(_bb, new Stat()); }
   public static Stat GetRootAsStat(ByteBuffer _bb, Stat obj) { return (obj.__assign(_bb.GetInt(_bb.Position) + _bb.Position, _bb)); }
   public void __init(int _i, ByteBuffer _bb) { __p = new Table(_i, _bb); }
@@ -20,7 +21,7 @@ public struct Stat : IFlatbufferObject
 
   public string Id { get { int o = __p.__offset(4); return o != 0 ? __p.__string(o + __p.bb_pos) : null; } }
 #if ENABLE_SPAN_T
-  public Span<byte> GetIdBytes() { return __p.__vector_as_span(4); }
+  public Span<byte> GetIdBytes() { return __p.__vector_as_span<byte>(4, 1); }
 #else
   public ArraySegment<byte>? GetIdBytes() { return __p.__vector_as_arraysegment(4); }
 #endif
@@ -49,7 +50,83 @@ public struct Stat : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<MyGame.Example.Stat>(o);
   }
-};
 
+  public static VectorOffset CreateSortedVectorOfStat(FlatBufferBuilder builder, Offset<Stat>[] offsets) {
+    Array.Sort(offsets,
+      (Offset<Stat> o1, Offset<Stat> o2) =>
+        new Stat().__assign(builder.DataBuffer.Length - o1.Value, builder.DataBuffer).Count.CompareTo(new Stat().__assign(builder.DataBuffer.Length - o2.Value, builder.DataBuffer).Count));
+    return builder.CreateVectorOfTables(offsets);
+  }
+
+  public static Stat? __lookup_by_key(int vectorLocation, ushort key, ByteBuffer bb) {
+    Stat obj_ = new Stat();
+    int span = bb.GetInt(vectorLocation - 4);
+    int start = 0;
+    while (span != 0) {
+      int middle = span / 2;
+      int tableOffset = Table.__indirect(vectorLocation + 4 * (start + middle), bb);
+      obj_.__assign(tableOffset, bb);
+      int comp = obj_.Count.CompareTo(key);
+      if (comp > 0) {
+        span = middle;
+      } else if (comp < 0) {
+        middle++;
+        start += middle;
+        span -= middle;
+      } else {
+        return obj_;
+      }
+    }
+    return null;
+  }
+  public StatT UnPack() {
+    var _o = new StatT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(StatT _o) {
+    _o.Id = this.Id;
+    _o.Val = this.Val;
+    _o.Count = this.Count;
+  }
+  public static Offset<MyGame.Example.Stat> Pack(FlatBufferBuilder builder, StatT _o) {
+    if (_o == null) return default(Offset<MyGame.Example.Stat>);
+    var _id = _o.Id == null ? default(StringOffset) : builder.CreateString(_o.Id);
+    return CreateStat(
+      builder,
+      _id,
+      _o.Val,
+      _o.Count);
+  }
+}
+
+public class StatT
+{
+  [Newtonsoft.Json.JsonProperty("id")]
+  public string Id { get; set; }
+  [Newtonsoft.Json.JsonProperty("val")]
+  public long Val { get; set; }
+  [Newtonsoft.Json.JsonProperty("count")]
+  public ushort Count { get; set; }
+
+  public StatT() {
+    this.Id = null;
+    this.Val = 0;
+    this.Count = 0;
+  }
+}
+
+
+static public class StatVerify
+{
+  static public bool Verify(Google.FlatBuffers.Verifier verifier, uint tablePos)
+  {
+    return verifier.VerifyTableStart(tablePos)
+      && verifier.VerifyString(tablePos, 4 /*Id*/, false)
+      && verifier.VerifyField(tablePos, 6 /*Val*/, 8 /*long*/, 8, false)
+      && verifier.VerifyField(tablePos, 8 /*Count*/, 2 /*ushort*/, 2, false)
+      && verifier.VerifyTableEnd(tablePos);
+  }
+}
 
 }

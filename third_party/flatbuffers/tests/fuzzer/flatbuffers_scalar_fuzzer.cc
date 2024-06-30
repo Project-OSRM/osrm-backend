@@ -1,6 +1,23 @@
+/*
+ * Copyright 2014 Google Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+
 #include <algorithm>
 #include <clocale>
 #include <memory>
@@ -9,6 +26,9 @@
 
 #include "flatbuffers/idl.h"
 #include "test_init.h"
+
+static constexpr size_t kMinInputLength = 1;
+static constexpr size_t kMaxInputLength = 3000;
 
 static constexpr uint8_t flags_scalar_type = 0x0F;  // type of scalar value
 static constexpr uint8_t flags_quotes_kind = 0x10;  // quote " or '
@@ -101,8 +121,8 @@ class IntegerRegex : public RegexMatcher {
     static const std::vector<std::regex> re_list = {
       std::regex{ R"(^[-+]?[0-9]+$)", std::regex_constants::optimize },
 
-      std::regex{
-          R"(^[-+]?0[xX][0-9a-fA-F]+$)", std::regex_constants::optimize }
+      std::regex{ R"(^[-+]?0[xX][0-9a-fA-F]+$)",
+                  std::regex_constants::optimize }
     };
     return MatchRegexList(input, re_list);
   }
@@ -117,8 +137,8 @@ class UIntegerRegex : public RegexMatcher {
   bool MatchNumber(const std::string &input) const override {
     static const std::vector<std::regex> re_list = {
       std::regex{ R"(^[+]?[0-9]+$)", std::regex_constants::optimize },
-      std::regex{
-          R"(^[+]?0[xX][0-9a-fA-F]+$)", std::regex_constants::optimize },
+      std::regex{ R"(^[+]?0[xX][0-9a-fA-F]+$)",
+                  std::regex_constants::optimize },
       // accept -0 number
       std::regex{ R"(^[-](?:0[xX])?0+$)", std::regex_constants::optimize }
     };
@@ -196,10 +216,9 @@ class ScalarReferenceResult {
 
 bool Parse(flatbuffers::Parser &parser, const std::string &json,
            std::string *_text) {
-  auto done = parser.Parse(json.c_str());
+  auto done = parser.ParseJson(json.c_str());
   if (done) {
-    TEST_EQ(GenerateText(parser, parser.builder_.GetBufferPointer(), _text),
-            true);
+    TEST_NULL(GenText(parser, parser.builder_.GetBufferPointer(), _text));
   } else {
     *_text = parser.error_;
   }
@@ -216,14 +235,16 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   if (size < 3) return 0;
   const uint8_t flags = data[0];
   // normalize to ascii alphabet
-  const int extra_rep_number = data[1] >= '0' ? (data[1] - '0') : 0;
+  const int extra_rep_number =
+      std::max(5, (data[1] > '0' ? (data[1] - '0') : 0));
   data += 2;
   size -= 2;  // bypass
 
   // Guarantee 0-termination.
   const std::string original(reinterpret_cast<const char *>(data), size);
   auto input = std::string(original.c_str());  // until '\0'
-  if (input.empty()) return 0;
+  if (input.size() < kMinInputLength || input.size() > kMaxInputLength)
+    return 0;
 
   // Break comments in json to avoid complexity with regex matcher.
   // The string " 12345 /* text */" will be accepted if insert it to string
@@ -232,6 +253,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   // We reject this by transform "/* text */ 12345" to "@* text */ 12345".
   BreakSequence(input, "//", '@');  // "//" -> "@/"
   BreakSequence(input, "/*", '@');  // "/*" -> "@*"
+  // { "$schema: "text" } is exceptional case.
+  // This key:value ignored by the parser. Numbers can not have $.
+  BreakSequence(input, "$schema", '@');  // "$schema" -> "@schema"
   // Break all known scalar functions (todo: add them to regex?):
   for (auto f : { "deg", "rad", "sin", "cos", "tan", "asin", "acos", "atan" }) {
     BreakSequence(input, f, '_');  // ident -> ident
@@ -267,7 +291,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     }
 
     // Parse original input as-is.
-    auto orig_scalar = "{ \"Y\" : " + input + " }";
+    auto orig_scalar = "{\"Y\" : " + input + "}";
     std::string orig_back;
     auto orig_done = Parse(parser, orig_scalar, &orig_back);
 
@@ -305,7 +329,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
     // Test quoted version of the string
     if (!qouted_input.empty()) {
-      auto fix_scalar = "{ \"Y\" : " + qouted_input + " }";
+      auto fix_scalar = "{\"Y\" : " + qouted_input + "}";
       std::string fix_back;
       auto fix_done = Parse(parser, fix_scalar, &fix_back);
 
@@ -333,9 +357,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       }
       // Compare with print.
       std::string ref_string, def_string;
-      FLATBUFFERS_ASSERT(GenerateText(
+      FLATBUFFERS_ASSERT(!GenText(
           parser, parser.builder_.GetBufferPointer(), &ref_string));
-      FLATBUFFERS_ASSERT(GenerateText(
+      FLATBUFFERS_ASSERT(!GenText(
           def_parser, def_parser.builder_.GetBufferPointer(), &def_string));
       if (ref_string != def_string) {
         TEST_OUTPUT_LINE("Stage 3.2 failed: '%s' != '%s'", def_string.c_str(),

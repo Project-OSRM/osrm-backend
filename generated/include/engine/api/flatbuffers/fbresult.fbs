@@ -1,0 +1,20 @@
+include "route.fbs";
+include "table.fbs";
+
+namespace osrm.engine.api.fbresult;
+
+table Error {
+    code: string;
+    message: string;
+}
+
+table FBResult {
+    error: bool = false;
+    code: Error;
+    data_version: string;
+    waypoints: [Waypoint]; //Used as 'sources' waypoints for a 'Table' service
+    routes: [RouteObject];
+    table: TableResult;
+}
+
+root_type FBResult;

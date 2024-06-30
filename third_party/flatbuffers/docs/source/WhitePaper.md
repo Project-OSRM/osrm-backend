@@ -20,7 +20,7 @@ and locality.
 If it would be possible to do serialization with no temporary objects,
 no additional allocation, no copying, and good locality, this could be
 of great value. The reason serialization systems usually don't manage
-this is because it goes counter to forwards/backwards compatability, and
+this is because it goes counter to forwards/backwards compatibility, and
 platform specifics like endianness and alignment.
 
 FlatBuffers is what you get if you try anyway.
@@ -64,7 +64,7 @@ through a *vtable*. Each table comes with a vtable (which may be shared
 between multiple tables with the same layout), and contains information
 where fields for this particular kind of instance of vtable are stored.
 The vtable may also indicate that the field is not present (because this
-FlatBuffer was written with an older version of the software, of simply
+FlatBuffer was written with an older version of the software, or simply
 because the information was not necessary for this instance, or deemed
 deprecated), in which case a default value is returned.
 

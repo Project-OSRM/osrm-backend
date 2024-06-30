@@ -1,4 +1,16 @@
 package.path = string.format("../lua/?.lua;./?.lua;%s",package.path)
+local compat = require("flatbuffers.compat")
+
+local performBenchmarkTests = false
+
+if #arg > 1 then
+    print("usage: lua luatests [benchmark]");
+    return
+elseif #arg > 0 then 
+    if(arg[1] == "benchmark") then
+        performBenchmarkTests = true
+    end 
+end
 
 local function checkReadBuffer(buf, offset, sizePrefix)
     offset = offset or 0
@@ -9,7 +21,7 @@ local function checkReadBuffer(buf, offset, sizePrefix)
     
     if sizePrefix then               
         local size = flatbuffers.N.Int32:Unpack(buf, offset)
-        assert(size == #buf - offset - 4)
+        assert(size == buf.size - offset - 4)
         offset = offset + flatbuffers.N.Int32.bytewidth
     end    
     
@@ -17,6 +29,7 @@ local function checkReadBuffer(buf, offset, sizePrefix)
     assert(mon:Hp() == 80, "Monster Hp is not 80")
     assert(mon:Mana() == 150, "Monster Mana is not 150")
     assert(mon:Name() == "MyMonster", "Monster Name is not MyMonster")
+    assert(mon:Testbool() == true)
     
     local vec = assert(mon:Pos(), "Monster Position is nil")
     assert(vec:X() == 1.0)
@@ -81,8 +94,9 @@ local function checkReadBuffer(buf, offset, sizePrefix)
     assert(mon:Testempty() == nil)
 end
 
-local function generateMonster(sizePrefix)
-    local b = flatbuffers.Builder(0)
+local function generateMonster(sizePrefix, b)
+    if b then b:Clear() end
+    b = b or flatbuffers.Builder(0)
     local str = b:CreateString("MyMonster")
     local test1 = b:CreateString("test1")
     local test2 = b:CreateString("test2")
@@ -156,6 +170,51 @@ local function sizePrefix(sizePrefix)
     checkReadBuffer(buf, offset, sizePrefix)
 end
 
+local function fbbClear()
+    -- Generate a builder that will be 'cleared' and reused to create two different objects.
+    local fbb = flatbuffers.Builder(0)
+
+    -- First use the builder to read the normal monster data and verify it works
+    local buf, offset = generateMonster(false, fbb)
+    checkReadBuffer(buf, offset, false)
+
+    -- Then clear the builder to be used again
+    fbb:Clear()
+
+    -- Storage for the built monsters
+    local monsters = {}
+    local lastBuf
+
+    -- Make another builder that will be use identically to the 'cleared' one so outputs can be compared. Build both the
+    -- Cleared builder and new builder in the exact same way, so we can compare their results
+    for i, builder in ipairs({fbb, flatbuffers.Builder(0)}) do
+        local strOffset = builder:CreateString("Hi there")
+        monster.Start(builder)
+        monster.AddPos(builder, vec3.CreateVec3(builder, 3.0, 2.0, 1.0, 17.0, 3, 100, 123))
+        monster.AddName(builder, strOffset)
+        monster.AddMana(builder, 123)
+        builder:Finish(monster.End(builder))
+        local buf = builder:Output(false)
+        if not lastBuf then
+            lastBuf = buf
+        else
+            -- the output, sized-buffer should be identical
+            assert(lastBuf == buf, "Monster output buffers are not identical")
+        end
+        monsters[i] = monster.GetRootAsMonster(flatbuffers.binaryArray.New(buf), 0)
+    end
+
+    -- Check that all the fields for the generated monsters are as we expect
+    for i, monster in ipairs(monsters) do
+        assert(monster:Name() == "Hi there", "Monster Name is not 'Hi There' for monster "..i)
+        -- HP is default to 100 in the schema, but we change it in generateMonster to 80, so this is a good test to
+        -- see if the cleared builder really clears the data.
+        assert(monster:Hp() == 100, "HP doesn't equal the default value for monster "..i)
+        assert(monster:Mana() == 123, "Monster Mana is not '123' for monster "..i)
+        assert(monster:Pos():X() == 3.0, "Monster vec3.X is not '3' for monster "..i)
+    end
+end
+
 local function testCanonicalData()
     local f = assert(io.open('monsterdata_test.mon', 'rb'))
     local wireData = f:read("*a")
@@ -163,26 +222,28 @@ local function testCanonicalData()
     checkReadBuffer(wireData)  
 end    
     
-local function benchmarkMakeMonster(count)
-    local length = #(generateMonster())
-    
-    --require("flatbuffers.profiler")
-    --profiler = newProfiler("call")
-    --profiler:start()
-    
+local function testCreateEmptyString()
+    local b = flatbuffers.Builder(0)
+    local str = b:CreateString("")
+    monster.Start(b)
+    monster.AddName(b, str)
+    b:Finish(monster.End(b))
+    local s = b:Output()
+    local data = flatbuffers.binaryArray.New(s)
+    local mon = monster.GetRootAsMonster(data, 0)
+    assert(mon:Name() == "")
+end
+
+local function benchmarkMakeMonster(count, reuseBuilder)
+    local fbb = reuseBuilder and flatbuffers.Builder(0)
+    local length = #(generateMonster(false, fbb))
+
     local s = os.clock()
     for i=1,count do
-        generateMonster()
+        generateMonster(false, fbb)
     end
     local e = os.clock()    
-    
-    --profiler:stop()
 
-    --local outfile = io.open( "profile.txt", "w+" )
-    --profiler:report( outfile, true)
-    --outfile:close()
-    
-    
     local dur = (e - s)
     local rate = count / (dur * 1000)
     local data = (length * count) / (1024 * 1024)
@@ -211,7 +272,51 @@ local function benchmarkReadBuffer(count)
     print(string.format('traversed %d %d-byte flatbuffers in %.2fsec: %.2f/msec, %.2fMB/sec',
         count, #buf, dur, rate, dataRate))
 end
+
+local function getRootAs_canAcceptString()
+    local f = assert(io.open('monsterdata_test.mon', 'rb'))
+    local wireData = f:read("*a")
+    f:close() 
+    assert(type(wireData) == "string", "Data is not a string");
+    local mon = monster.GetRootAsMonster(wireData, 0)
+    assert(mon:Hp() == 80, "Monster Hp is not 80")
+end
     
+local function testAccessByteVectorAsString()
+    local f = assert(io.open('monsterdata_test.mon', 'rb'))
+    local wireData = f:read("*a")
+    f:close()
+    local mon = monster.GetRootAsMonster(wireData, 0)
+    -- the data of byte array Inventory is [0, 1, 2, 3, 4]
+    local s = mon:InventoryAsString(1, 3)
+    assert(#s == 3)
+    for i = 1, #s do
+        assert(string.byte(s, i) == i - 1)
+    end
+
+    local s = mon:InventoryAsString(2, 5)
+    assert(#s == 4)
+    for i = 1, #s do
+        assert(string.byte(s, i) == i)
+    end
+
+    local s = mon:InventoryAsString(5, 5)
+    assert(#s == 1)
+    assert(string.byte(s, 1) == 4)
+
+    local s = mon:InventoryAsString(2)
+    assert(#s == 4)
+    for i = 1, #s do
+        assert(string.byte(s, i) == i)
+    end
+
+    local s = mon:InventoryAsString()
+    assert(#s == 5)
+    for i = 1, #s do
+        assert(string.byte(s, i) == i - 1)
+    end
+end
+
 local tests = 
 { 
     {   
@@ -219,10 +324,30 @@ local tests =
         d = "Test size prefix",
         args = {{true}, {false}}
     },
+    {
+        f = fbbClear,
+        d = "FlatBufferBuilder Clear",
+    },
     {   
         f = testCanonicalData, 
         d = "Tests Canonical flatbuffer file included in repo"       
     },
+    {
+        f = testCreateEmptyString,
+        d = "Avoid infinite loop when creating empty string"
+    },
+    {
+        f = getRootAs_canAcceptString,
+        d = "Tests that GetRootAs<type>() generated methods accept strings"
+    },
+    {
+        f = testAccessByteVectorAsString,
+        d = "Access byte vector as string"
+    },
+}
+
+local benchmarks = 
+{
     {
         f = benchmarkMakeMonster,
         d = "Benchmark making monsters",
@@ -230,6 +355,7 @@ local tests =
             {100}, 
             {1000},
             {10000},
+            {10000, true}
         }
     },   
     {
@@ -241,7 +367,7 @@ local tests =
             {10000},
             -- uncomment following to run 1 million to compare. 
             -- Took ~141 seconds on my machine
-            --{1000000}, 
+            --{1000000},
         }
     }, 
 }
@@ -260,6 +386,12 @@ local result, err = xpcall(function()
         return s:sub(1,-2)
     end
     
+    if performBenchmarkTests then
+        for _,benchmark in ipairs(benchmarks) do
+            table.insert(tests, benchmark)
+        end
+    end
+
     local testsPassed, testsFailed = 0,0
     for _,test in ipairs(tests) do
         local allargs = test.args or {{}}
@@ -293,4 +425,4 @@ if not result then
     print("Unable to run tests due to test framework error: ",err)
 end
 
-os.exit(result or -1)
+os.exit(result and 0 or -1)
