@@ -35,6 +35,7 @@
 #include <cstddef>
 
 #include <engine/bearing.hpp>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
