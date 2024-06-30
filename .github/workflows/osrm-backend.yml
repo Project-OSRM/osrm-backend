@@ -717,7 +717,7 @@ jobs:
         run: |
           mkdir base/build
           cd base/build
-          cmake -DENABLE_CONAN=ON -DENABLE_LTO=ON -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
           make -j$(nproc)
           make -j$(nproc) benchmarks
           cd ..
