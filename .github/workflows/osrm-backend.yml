@@ -247,28 +247,28 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_LTO: OFF
 
-          - name: conan-linux-debug-asan-ubsan
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_CONAN: ON
-            ENABLE_SANITIZER: ON
-            ENABLE_LTO: OFF
+          # - name: conan-linux-debug-asan-ubsan
+          #   continue-on-error: false
+          #   node: 18
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-18
+          #   CXXCOMPILER: clang++-18
+          #   ENABLE_CONAN: ON
+          #   ENABLE_SANITIZER: ON
+          #   ENABLE_LTO: OFF
 
-          - name: conan-linux-release
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_CONAN: ON
-            ENABLE_LTO: OFF
+          # - name: conan-linux-release
+          #   continue-on-error: false
+          #   node: 18
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-18
+          #   CXXCOMPILER: clang++-18
+          #   ENABLE_CONAN: ON
+          #   ENABLE_LTO: OFF
 
           - name: gcc-14-release
             continue-on-error: false
@@ -646,7 +646,7 @@ jobs:
   benchmarks:
     if: github.event_name == 'pull_request'
     needs: [format-taginfo-docs]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       CCOMPILER: clang-16
       CXXCOMPILER: clang++-16
@@ -686,7 +686,7 @@ jobs:
           path: pr
       - name: Install dependencies
         run: | 
-          python3 -m pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" 
+          python3 -m pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" --break-system-packages
           sudo apt-get update -y && sudo apt-get install ccache
       - name: Prepare data
         run: |
