@@ -257,6 +257,7 @@ jobs:
             CXXCOMPILER: clang++-15
             ENABLE_CONAN: ON
             ENABLE_SANITIZER: ON
+            ENABLE_LTO: OFF
 
           - name: conan-linux-release
             continue-on-error: false
@@ -716,7 +717,7 @@ jobs:
         run: |
           mkdir base/build
           cd base/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DENABLE_CONAN=ON -DENABLE_LTO=ON -DCMAKE_BUILD_TYPE=Release ..
           make -j$(nproc)
           make -j$(nproc) benchmarks
           cd ..
