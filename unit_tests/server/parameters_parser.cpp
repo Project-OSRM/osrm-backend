@@ -54,11 +54,13 @@
 //     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("a;3,4"), 0UL);
 //     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("120;3,4"), 3UL);
 //     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("90000000,2;3,4"), 0UL);
-//     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&bla=foo"), 22UL);
+//     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&bla=foo"),
+//     22UL);
 //     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&bearings=foo"),
 //                       32UL);
 //     BOOST_CHECK_EQUAL(
-//         testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&continue_straight=foo"), 41UL);
+//         testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&continue_straight=foo"),
+//         41UL);
 //     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&radiuses=foo"),
 //                       32UL);
 //     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&approaches=foo"),
@@ -82,21 +84,22 @@
 //     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4.json?nooptions"), 13);
 //     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4..json?nooptions"), 14);
 //     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4.0.json?nooptions"), 15);
-//     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(std::string{"1,2;3,4"} + '\0' + ".json"),
+//     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(std::string{"1,2;3,4"} + '\0' +
+//     ".json"),
 //                       7);
 //     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(std::string{"1,2;3,"} + '\0'), 6);
-//     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?annotations=distances"), 28UL);
-//     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?annotations="), 20UL);
-//     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?annotations=true,false"), 24UL);
-//     BOOST_CHECK_EQUAL(
+//     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?annotations=distances"),
+//     28UL); BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?annotations="), 20UL);
+//     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?annotations=true,false"),
+//     24UL); BOOST_CHECK_EQUAL(
 //         testInvalidOptions<RouteParameters>("1,2;3,4?annotations=&overview=simplified"), 20UL);
 // }
 
 // BOOST_AUTO_TEST_CASE(invalid_table_urls)
 // {
 //     BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?sources=1&bla=foo"), 17UL);
-//     BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?destinations=1&bla=foo"), 22UL);
-//     BOOST_CHECK_EQUAL(
+//     BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?destinations=1&bla=foo"),
+//     22UL); BOOST_CHECK_EQUAL(
 //         testInvalidOptions<TableParameters>("1,2;3,4?sources=1&destinations=1&bla=foo"), 32UL);
 //     BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?sources=foo"), 16UL);
 //     BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?destinations=foo"), 21UL);
@@ -105,11 +108,13 @@
 //         49UL);
 //     BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?fallback_coordinate=asdf"),
 //                       28UL);
-//     BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?fallback_coordinate=10"), 28UL);
+//     BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?fallback_coordinate=10"),
+//     28UL); BOOST_CHECK_EQUAL(
+//         testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&scale_factor=-1"),
+//         28UL);
 //     BOOST_CHECK_EQUAL(
-//         testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&scale_factor=-1"), 28UL);
-//     BOOST_CHECK_EQUAL(
-//         testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&scale_factor=0"), 28UL);
+//         testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&scale_factor=0"),
+//         28UL);
 //     BOOST_CHECK_EQUAL(
 //         testInvalidOptions<TableParameters>("1,2;3,4?annotations=durations&fallback_speed=0"),
 //         28UL);
@@ -259,7 +264,8 @@
 //                                 std::vector<std::optional<engine::Hint>>{},
 //                                 std::vector<std::optional<double>>{},
 //                                 bearings_4};
-//     auto result_5 = parseParameters<RouteParameters>("1,2;3,4?steps=false&bearings=;200,10;100,5");
+//     auto result_5 =
+//     parseParameters<RouteParameters>("1,2;3,4?steps=false&bearings=;200,10;100,5");
 //     BOOST_CHECK(result_5);
 //     BOOST_CHECK_EQUAL(reference_5.steps, result_5->steps);
 //     BOOST_CHECK_EQUAL(reference_5.alternatives, result_5->alternatives);
@@ -387,8 +393,8 @@
 //     auto result_14 = parseParameters<RouteParameters>("1,2;3,4?geometries=polyline");
 //     BOOST_CHECK(result_14);
 //     BOOST_CHECK_EQUAL(reference_14.geometries, result_14->geometries);
-//     BOOST_CHECK_EQUAL(result_14->annotations_type == RouteParameters::AnnotationsType::None, true);
-//     BOOST_CHECK_EQUAL(result_14->annotations, false);
+//     BOOST_CHECK_EQUAL(result_14->annotations_type == RouteParameters::AnnotationsType::None,
+//     true); BOOST_CHECK_EQUAL(result_14->annotations, false);
 
 //     // parse single annotations value correctly
 //     RouteParameters reference_15{};
@@ -803,7 +809,8 @@
 //     BOOST_CHECK(param_fs_nr->IsValid());
 //     auto param_fe_r = parseParameters<TripParameters>("1,2;3,4?destination=last&roundtrip=true");
 //     BOOST_CHECK(param_fe_r->IsValid());
-//     auto param_fe_nr = parseParameters<TripParameters>("1,2;3,4?destination=last&roundtrip=false");
+//     auto param_fe_nr =
+//     parseParameters<TripParameters>("1,2;3,4?destination=last&roundtrip=false");
 //     BOOST_CHECK(param_fe_nr->IsValid());
 //     auto param_r = parseParameters<TripParameters>("1,2;3,4?roundtrip=true");
 //     BOOST_CHECK(param_r->IsValid());
@@ -813,7 +820,8 @@
 //     auto param_fail_1 =
 //         testInvalidOptions<TripParameters>("1,2;3,4?source=blubb&destination=random");
 //     BOOST_CHECK_EQUAL(param_fail_1, 15UL);
-//     auto param_fail_2 = testInvalidOptions<TripParameters>("1,2;3,4?source=first&destination=nah");
+//     auto param_fail_2 =
+//     testInvalidOptions<TripParameters>("1,2;3,4?source=first&destination=nah");
 //     BOOST_CHECK_EQUAL(param_fail_2, 33UL);
 // }
 
