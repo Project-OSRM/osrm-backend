@@ -102,7 +102,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                 bearing = engine::Bearing{boost::fusion::at_c<0>(*bearing_range),
                                           boost::fusion::at_c<1>(*bearing_range)};
             }
-            base_parameters.bearings.push_back(std::move(bearing));
+            base_parameters.bearings.push_back(bearing);
         };
 
         const auto add_approach = [](engine::api::BaseParameters &base_parameters,
