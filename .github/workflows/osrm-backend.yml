@@ -386,16 +386,16 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.ccache
-        key: v1-ccache-${{ matrix.name }}-${{ github.sha }}
+        key: ccache-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
-          v1-ccache-${{ matrix.name }}-
+          ccache-${{ matrix.name }}-
     - name: Enable Conan cache
       uses: actions/cache@v4
       with:
         path: ~/.conan
-        key: v10-conan-${{ matrix.name }}-${{ github.sha }}
+        key: v9-conan-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
-          v10-conan-${{ matrix.name }}-
+          v9-conan-${{ matrix.name }}-
     - name: Enable test cache
       uses: actions/cache@v4
       with:
@@ -528,7 +528,7 @@ jobs:
                  -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
                  -DENABLE_CCACHE=ON \
                  -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
-                 -DCMAKE_ENABLE_LTO=${ENABLE_LTO:-ON}
+                 -DENABLE_LTO=${ENABLE_LTO:-ON}
         make --jobs=${JOBS}
 
         if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
