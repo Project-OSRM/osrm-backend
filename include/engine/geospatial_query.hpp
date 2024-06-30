@@ -53,8 +53,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const Approach approach,
                         const double max_distance,
-                        const boost::optional<Bearing> bearing_with_range,
-                        const boost::optional<bool> use_all_edges) const
+                        const std::optional<Bearing> bearing_with_range,
+                        const std::optional<bool> use_all_edges) const
     {
         auto results = rtree.SearchInRange(
             input_coordinate,
@@ -85,9 +85,9 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const Approach approach,
                         const size_t max_results,
-                        const boost::optional<double> max_distance,
-                        const boost::optional<Bearing> bearing_with_range,
-                        const boost::optional<bool> use_all_edges) const
+                        const std::optional<double> max_distance,
+                        const std::optional<Bearing> bearing_with_range,
+                        const std::optional<bool> use_all_edges) const
     {
         auto results = rtree.Nearest(
             input_coordinate,
@@ -121,9 +121,9 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     PhantomCandidateAlternatives NearestCandidatesWithAlternativeFromBigComponent(
         const util::Coordinate input_coordinate,
         const Approach approach,
-        const boost::optional<double> max_distance,
-        const boost::optional<Bearing> bearing_with_range,
-        const boost::optional<bool> use_all_edges) const
+        const std::optional<double> max_distance,
+        const std::optional<Bearing> bearing_with_range,
+        const std::optional<bool> use_all_edges) const
     {
         bool has_nearest = false;
         bool has_big_component = false;

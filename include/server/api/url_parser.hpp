@@ -11,9 +11,9 @@ namespace osrm::server::api
 {
 
 // Starts parsing and iter and modifies it until iter == end or parsing failed
-boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::string::iterator end);
+std::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::string::iterator end);
 
-inline boost::optional<ParsedURL> parseURL(std::string url_string)
+inline std::optional<ParsedURL> parseURL(std::string url_string)
 {
     auto iter = url_string.begin();
     return parseURL(iter, url_string.end());

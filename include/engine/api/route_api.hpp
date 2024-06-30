@@ -184,10 +184,10 @@ class RouteAPI : public BaseAPI
         return builder.CreateVectorOfStructs(coordinates);
     }
 
-    boost::optional<util::json::Value>
-    MakeGeometry(boost::optional<std::vector<Coordinate>> &&annotations) const
+    std::optional<util::json::Value>
+    MakeGeometry(std::optional<std::vector<Coordinate>> &&annotations) const
     {
-        boost::optional<util::json::Value> json_geometry;
+        std::optional<util::json::Value> json_geometry;
         if (annotations)
         {
             auto begin = annotations->begin();
@@ -720,8 +720,7 @@ class RouteAPI : public BaseAPI
         std::vector<guidance::LegGeometry> &leg_geometries = legs_info.second;
 
         auto route = guidance::assembleRoute(legs);
-        boost::optional<util::json::Value> json_overview =
-            MakeGeometry(MakeOverview(leg_geometries));
+        std::optional<util::json::Value> json_overview = MakeGeometry(MakeOverview(leg_geometries));
 
         std::vector<util::json::Value> step_geometries;
         const auto total_step_count =
@@ -997,10 +996,10 @@ class RouteAPI : public BaseAPI
         return result;
     }
 
-    boost::optional<std::vector<Coordinate>>
+    std::optional<std::vector<Coordinate>>
     MakeOverview(const std::vector<guidance::LegGeometry> &leg_geometries) const
     {
-        boost::optional<std::vector<Coordinate>> overview;
+        std::optional<std::vector<Coordinate>> overview;
         if (parameters.overview != RouteParameters::OverviewType::False)
         {
             const auto use_simplification =

@@ -258,7 +258,7 @@ void annotatePath(const FacadeT &facade,
                                              alias_cast<EdgeDuration>(duration_vector[segment_idx]),
                                              {0},
                                              datasource_vector[segment_idx],
-                                             boost::none});
+                                             std::nullopt});
         }
         BOOST_ASSERT(!unpacked_path.empty());
 
@@ -315,7 +315,7 @@ void annotatePath(const FacadeT &facade,
                      alias_cast<EdgeDuration>(duration_vector[segment_idx]),
                      {0},
                      datasource_vector[segment_idx],
-                     boost::none});
+                     std::nullopt});
     }
 
     if (!unpacked_path.empty())

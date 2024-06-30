@@ -29,7 +29,7 @@ class BasePlugin
   protected:
     BasePlugin() = default;
 
-    BasePlugin(const boost::optional<double> default_radius_) : default_radius(default_radius_) {}
+    BasePlugin(const std::optional<double> default_radius_) : default_radius(default_radius_) {}
 
     bool CheckAllCoordinates(const std::vector<util::Coordinate> &coordinates) const
     {
@@ -200,8 +200,8 @@ class BasePlugin
             phantom_nodes[i] = facade.NearestPhantomNodesInRange(
                 parameters.coordinates[i],
                 radiuses[i],
-                use_bearings ? parameters.bearings[i] : boost::none,
-                use_approaches && parameters.approaches[i] ? parameters.approaches[i].get()
+                use_bearings ? parameters.bearings[i] : std::nullopt,
+                use_approaches && parameters.approaches[i] ? parameters.approaches[i].value()
                                                            : engine::Approach::UNRESTRICTED,
                 use_all_edges);
         }
@@ -242,8 +242,8 @@ class BasePlugin
                 parameters.coordinates[i],
                 number_of_results,
                 use_radiuses ? parameters.radiuses[i] : default_radius,
-                use_bearings ? parameters.bearings[i] : boost::none,
-                use_approaches && parameters.approaches[i] ? parameters.approaches[i].get()
+                use_bearings ? parameters.bearings[i] : std::nullopt,
+                use_approaches && parameters.approaches[i] ? parameters.approaches[i].value()
                                                            : engine::Approach::UNRESTRICTED);
 
             // we didn't find a fitting node, return error
@@ -284,8 +284,8 @@ class BasePlugin
             alternatives[i] = facade.NearestCandidatesWithAlternativeFromBigComponent(
                 parameters.coordinates[i],
                 use_radiuses ? parameters.radiuses[i] : default_radius,
-                use_bearings ? parameters.bearings[i] : boost::none,
-                use_approaches && parameters.approaches[i] ? parameters.approaches[i].get()
+                use_bearings ? parameters.bearings[i] : std::nullopt,
+                use_approaches && parameters.approaches[i] ? parameters.approaches[i].value()
                                                            : engine::Approach::UNRESTRICTED,
                 use_all_edges);
 
@@ -325,7 +325,7 @@ class BasePlugin
                std::to_string(missing_index);
     }
 
-    const boost::optional<double> default_radius;
+    const std::optional<double> default_radius;
 };
 } // namespace osrm::engine::plugins
 

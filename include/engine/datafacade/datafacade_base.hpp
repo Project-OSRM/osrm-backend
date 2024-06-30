@@ -126,21 +126,21 @@ class BaseDataFacade
     virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const double max_distance,
-                               const boost::optional<Bearing> bearing,
+                               const std::optional<Bearing> bearing,
                                const Approach approach,
                                const bool use_all_edges) const = 0;
 
     virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const size_t max_results,
-                        const boost::optional<double> max_distance,
-                        const boost::optional<Bearing> bearing,
+                        const std::optional<double> max_distance,
+                        const std::optional<Bearing> bearing,
                         const Approach approach) const = 0;
 
     virtual PhantomCandidateAlternatives
     NearestCandidatesWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                     const boost::optional<double> max_distance,
-                                                     const boost::optional<Bearing> bearing,
+                                                     const std::optional<double> max_distance,
+                                                     const std::optional<Bearing> bearing,
                                                      const Approach approach,
                                                      const bool use_all_edges) const = 0;
 
