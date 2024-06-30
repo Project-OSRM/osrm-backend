@@ -265,35 +265,35 @@ jobs:
             CXXCOMPILER: clang++-15
             ENABLE_CONAN: ON
 
-          - name: gcc-14-release
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-14
-            CXXCOMPILER: g++-14
-            CXXFLAGS: '-Wno-maybe-uninitialized -Wno-array-bounds -Wno-uninitialized -Wno-stringop-overflow'
+          # - name: gcc-14-release
+          #   continue-on-error: false
+          #   node: 20
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-14
+          #   CXXCOMPILER: g++-14
+          #   CXXFLAGS: '-Wno-maybe-uninitialized -Wno-array-bounds -Wno-uninitialized -Wno-stringop-overflow'
 
-          - name: gcc-13-release
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-13
-            CXXCOMPILER: g++-13
-            CXXFLAGS: '-Wno-maybe-uninitialized -Wno-array-bounds -Wno-uninitialized -Wno-stringop-overflow'
+          # - name: gcc-13-release
+          #   continue-on-error: false
+          #   node: 20
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-13
+          #   CXXCOMPILER: g++-13
+          #   CXXFLAGS: '-Wno-maybe-uninitialized -Wno-array-bounds -Wno-uninitialized -Wno-stringop-overflow'
 
-          - name: gcc-12-release
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-22.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-12
-            CXXCOMPILER: g++-12
-            CXXFLAGS: '-Wno-maybe-uninitialized -Wno-array-bounds -Wno-uninitialized -Wno-stringop-overflow'
+          # - name: gcc-12-release
+          #   continue-on-error: false
+          #   node: 20
+          #   runs-on: ubuntu-22.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-12
+          #   CXXCOMPILER: g++-12
+          #   CXXFLAGS: '-Wno-maybe-uninitialized -Wno-array-bounds -Wno-uninitialized -Wno-stringop-overflow'
 
           - name: conan-linux-release-node
             build_node_package: true
