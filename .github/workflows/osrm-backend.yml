@@ -200,6 +200,7 @@ jobs:
             CCOMPILER: clang-15
             CXXCOMPILER: clang++-15
             CUCUMBER_TIMEOUT: 60000
+            ENABLE_LTO: OFF
 
           - name: clang-15-debug
             continue-on-error: false
@@ -210,6 +211,7 @@ jobs:
             CCOMPILER: clang-15
             CXXCOMPILER: clang++-15
             CUCUMBER_TIMEOUT: 60000
+            ENABLE_LTO: OFF
 
           - name: clang-18-debug-clang-tidy
             continue-on-error: false
@@ -243,6 +245,7 @@ jobs:
             CCOMPILER: clang-13
             CXXCOMPILER: clang++-13
             CUCUMBER_TIMEOUT: 60000
+            ENABLE_LTO: OFF
 
           - name: conan-linux-debug-asan-ubsan
             continue-on-error: false
