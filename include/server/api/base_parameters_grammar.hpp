@@ -7,9 +7,9 @@
 #include "engine/hint.hpp"
 #include "engine/polyline_compressor.hpp"
 
-#include <boost/optional.hpp>
 #include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
+#include <optional>
 
 #include <limits>
 #include <string>

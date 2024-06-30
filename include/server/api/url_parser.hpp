@@ -3,7 +3,7 @@
 
 #include "server/api/parsed_url.hpp"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <string>
 

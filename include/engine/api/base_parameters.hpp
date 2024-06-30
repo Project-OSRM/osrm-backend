@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "engine/hint.hpp"
 #include "util/coordinate.hpp"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <algorithm>
 #include <vector>

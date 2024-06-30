@@ -21,7 +21,7 @@
 #include <napi.h>
 
 #include <boost/assert.hpp>
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <algorithm>
 #include <iterator>

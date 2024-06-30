@@ -12,7 +12,7 @@
 
 #include "osrm/coordinate.hpp"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <algorithm>
 #include <cmath>

@@ -12,7 +12,7 @@
 #include "util/coordinate.hpp"
 #include "util/json_container.hpp"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <algorithm>
 #include <iterator>

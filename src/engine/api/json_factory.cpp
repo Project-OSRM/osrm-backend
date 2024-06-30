@@ -11,7 +11,7 @@
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <algorithm>
 #include <iterator>

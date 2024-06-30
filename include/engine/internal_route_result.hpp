@@ -15,7 +15,7 @@
 #include "util/integer_range.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/optional.hpp>
+#include <optional>
 #include <vector>
 
 namespace osrm::engine

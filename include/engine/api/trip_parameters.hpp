@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "engine/api/route_parameters.hpp"
 
-#include <boost/optional.hpp>
+#include <optional>
 #include <vector>
 
 namespace osrm::engine::api

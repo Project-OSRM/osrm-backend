@@ -4,7 +4,7 @@
 #include "engine/routing_algorithms/shortest_path.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/optional.hpp>
+#include <optional>
 
 namespace osrm::engine::routing_algorithms
 {
