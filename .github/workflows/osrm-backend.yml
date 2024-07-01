@@ -390,13 +390,13 @@ jobs:
         key: ccache-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
           ccache-${{ matrix.name }}-
-    # - name: Enable Conan cache
-    #   uses: actions/cache@v4
-    #   with:
-    #     path: ~/.conan
-    #     key: v9-conan-${{ matrix.name }}-${{ github.sha }}
-    #     restore-keys: |
-    #       v9-conan-${{ matrix.name }}-
+    - name: Enable Conan cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.conan
+        key: v9-conan-${{ matrix.name }}-${{ github.sha }}
+        restore-keys: |
+          v9-conan-${{ matrix.name }}-
     - name: Enable test cache
       uses: actions/cache@v4
       with:
