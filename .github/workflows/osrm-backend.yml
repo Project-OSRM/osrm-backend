@@ -498,10 +498,8 @@ jobs:
     - name: Add Clang 18 to list of Conan compilers
       if: ${{ matrix.ENABLE_CONAN == 'ON' }}
       run: |
-        # Initialize Conan to create default settings
-        conan profile new default --detect || true
-        conan profile update settings.compiler=clang default || true
-
+        conan install .
+        
         ls -R $HOME/.conan/
 
         # Path to the settings.yml file
