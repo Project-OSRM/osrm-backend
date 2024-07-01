@@ -194,7 +194,7 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             tidied.parameters.radiuses.begin(),
             tidied.parameters.radiuses.end(),
             search_radiuses.begin(),
-            [default_radius = this->default_radius](const boost::optional<double> &maybe_radius)
+            [default_radius = this->default_radius](const std::optional<double> &maybe_radius)
             {
                 if (maybe_radius)
                 {

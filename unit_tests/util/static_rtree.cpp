@@ -332,13 +332,13 @@ BOOST_AUTO_TEST_CASE(radius_regression_test)
 
     {
         auto results = query.NearestPhantomNodes(
-            input, osrm::engine::Approach::UNRESTRICTED, 0.01, boost::none, true);
+            input, osrm::engine::Approach::UNRESTRICTED, 0.01, std::nullopt, true);
         BOOST_CHECK_EQUAL(results.size(), 0);
     }
 
     {
         auto results = query.NearestPhantomNodes(
-            input, osrm::engine::Approach::UNRESTRICTED, 1, 0.01, boost::none, true);
+            input, osrm::engine::Approach::UNRESTRICTED, 1, 0.01, std::nullopt, true);
         BOOST_CHECK_EQUAL(results.size(), 0);
     }
 }
@@ -364,25 +364,25 @@ BOOST_AUTO_TEST_CASE(permissive_edge_snapping)
 
     {
         auto results = query.NearestPhantomNodes(
-            input, osrm::engine::Approach::UNRESTRICTED, 1000, boost::none, false);
+            input, osrm::engine::Approach::UNRESTRICTED, 1000, std::nullopt, false);
         BOOST_CHECK_EQUAL(results.size(), 1);
     }
 
     {
         auto results = query.NearestPhantomNodes(
-            input, osrm::engine::Approach::UNRESTRICTED, 1000, boost::none, true);
+            input, osrm::engine::Approach::UNRESTRICTED, 1000, std::nullopt, true);
         BOOST_CHECK_EQUAL(results.size(), 2);
     }
 
     {
         auto results = query.NearestPhantomNodes(
-            input, osrm::engine::Approach::UNRESTRICTED, 10, 1000, boost::none, false);
+            input, osrm::engine::Approach::UNRESTRICTED, 10, 1000, std::nullopt, false);
         BOOST_CHECK_EQUAL(results.size(), 1);
     }
 
     {
         auto results = query.NearestPhantomNodes(
-            input, osrm::engine::Approach::UNRESTRICTED, 10, 1000, boost::none, true);
+            input, osrm::engine::Approach::UNRESTRICTED, 10, 1000, std::nullopt, true);
         BOOST_CHECK_EQUAL(results.size(), 2);
     }
 }
@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
 
     {
         auto results = query.NearestPhantomNodes(
-            input, osrm::engine::Approach::UNRESTRICTED, 5, boost::none, boost::none, false);
+            input, osrm::engine::Approach::UNRESTRICTED, 5, std::nullopt, std::nullopt, false);
         BOOST_CHECK_EQUAL(results.size(), 2);
         BOOST_CHECK_EQUAL(results.back().phantom_node.forward_segment_id.id, 0);
         BOOST_CHECK_EQUAL(results.back().phantom_node.reverse_segment_id.id, 1);
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
         auto results = query.NearestPhantomNodes(input,
                                                  osrm::engine::Approach::UNRESTRICTED,
                                                  5,
-                                                 boost::none,
+                                                 std::nullopt,
                                                  engine::Bearing{270, 10},
                                                  false);
         BOOST_CHECK_EQUAL(results.size(), 0);
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
         auto results = query.NearestPhantomNodes(input,
                                                  osrm::engine::Approach::UNRESTRICTED,
                                                  5,
-                                                 boost::none,
+                                                 std::nullopt,
                                                  engine::Bearing{45, 10},
                                                  false);
         BOOST_CHECK_EQUAL(results.size(), 2);
@@ -444,13 +444,13 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
 
     {
         auto results = query.NearestPhantomNodes(
-            input, osrm::engine::Approach::UNRESTRICTED, 11000, boost::none, true);
+            input, osrm::engine::Approach::UNRESTRICTED, 11000, std::nullopt, true);
         BOOST_CHECK_EQUAL(results.size(), 2);
     }
 
     {
         auto results = query.NearestPhantomNodes(
-            input, osrm::engine::Approach::UNRESTRICTED, 10, 11000, boost::none, true);
+            input, osrm::engine::Approach::UNRESTRICTED, 10, 11000, std::nullopt, true);
         BOOST_CHECK_EQUAL(results.size(), 2);
     }
 

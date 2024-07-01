@@ -17,9 +17,9 @@
 #include "util/guidance/turn_lanes.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/optional.hpp>
 #include <cstddef>
 #include <guidance/turn_bearing.hpp>
+#include <optional>
 #include <vector>
 
 namespace osrm::engine::guidance

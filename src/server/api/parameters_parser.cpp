@@ -28,8 +28,8 @@ template <typename ParameterT,
           typename GrammarT,
           typename std::enable_if<detail::is_parameter_t<ParameterT>::value, int>::type = 0,
           typename std::enable_if<detail::is_grammar_t<GrammarT>::value, int>::type = 0>
-boost::optional<ParameterT> parseParameters(std::string::iterator &iter,
-                                            const std::string::iterator end)
+std::optional<ParameterT> parseParameters(std::string::iterator &iter,
+                                          const std::string::iterator end)
 {
     using It = std::decay<decltype(iter)>::type;
 
@@ -56,52 +56,52 @@ boost::optional<ParameterT> parseParameters(std::string::iterator &iter,
         // as normal parser error
     }
 
-    return boost::none;
+    return std::nullopt;
 }
 } // namespace detail
 
 template <>
-boost::optional<engine::api::RouteParameters> parseParameters(std::string::iterator &iter,
-                                                              const std::string::iterator end)
+std::optional<engine::api::RouteParameters> parseParameters(std::string::iterator &iter,
+                                                            const std::string::iterator end)
 {
     return detail::parseParameters<engine::api::RouteParameters, RouteParametersGrammar<>>(iter,
                                                                                            end);
 }
 
 template <>
-boost::optional<engine::api::TableParameters> parseParameters(std::string::iterator &iter,
-                                                              const std::string::iterator end)
+std::optional<engine::api::TableParameters> parseParameters(std::string::iterator &iter,
+                                                            const std::string::iterator end)
 {
     return detail::parseParameters<engine::api::TableParameters, TableParametersGrammar<>>(iter,
                                                                                            end);
 }
 
 template <>
-boost::optional<engine::api::NearestParameters> parseParameters(std::string::iterator &iter,
-                                                                const std::string::iterator end)
+std::optional<engine::api::NearestParameters> parseParameters(std::string::iterator &iter,
+                                                              const std::string::iterator end)
 {
     return detail::parseParameters<engine::api::NearestParameters, NearestParametersGrammar<>>(iter,
                                                                                                end);
 }
 
 template <>
-boost::optional<engine::api::TripParameters> parseParameters(std::string::iterator &iter,
-                                                             const std::string::iterator end)
+std::optional<engine::api::TripParameters> parseParameters(std::string::iterator &iter,
+                                                           const std::string::iterator end)
 {
     return detail::parseParameters<engine::api::TripParameters, TripParametersGrammar<>>(iter, end);
 }
 
 template <>
-boost::optional<engine::api::MatchParameters> parseParameters(std::string::iterator &iter,
-                                                              const std::string::iterator end)
+std::optional<engine::api::MatchParameters> parseParameters(std::string::iterator &iter,
+                                                            const std::string::iterator end)
 {
     return detail::parseParameters<engine::api::MatchParameters, MatchParametersGrammar<>>(iter,
                                                                                            end);
 }
 
 template <>
-boost::optional<engine::api::TileParameters> parseParameters(std::string::iterator &iter,
-                                                             const std::string::iterator end)
+std::optional<engine::api::TileParameters> parseParameters(std::string::iterator &iter,
+                                                           const std::string::iterator end)
 {
     return detail::parseParameters<engine::api::TileParameters, TileParametersGrammar<>>(iter, end);
 }

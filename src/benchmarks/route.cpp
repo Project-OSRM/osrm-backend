@@ -66,8 +66,8 @@ try
 
         if (benchmark.radius)
         {
-            params.radiuses = std::vector<boost::optional<double>>(
-                params.coordinates.size(), boost::make_optional(*benchmark.radius));
+            params.radiuses = std::vector<std::optional<double>>(
+                params.coordinates.size(), std::make_optional(*benchmark.radius));
         }
 
         TIMER_START(routes);

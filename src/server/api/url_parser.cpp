@@ -65,7 +65,7 @@ struct URLParser final : qi::grammar<Iterator, Into>
 namespace osrm::server::api
 {
 
-boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::string::iterator end)
+std::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::string::iterator end)
 {
     using It = std::decay<decltype(iter)>::type;
 
@@ -77,7 +77,7 @@ boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::stri
         const auto ok = boost::spirit::qi::parse(iter, end, parser(boost::phoenix::val(iter)), out);
 
         if (ok && iter == end)
-            return boost::make_optional(out);
+            return std::make_optional(out);
     }
     catch (const qi::expectation_failure<It> &failure)
     {
@@ -86,7 +86,7 @@ boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::stri
         iter = failure.first;
     }
 
-    return boost::none;
+    return std::nullopt;
 }
 
 } // namespace osrm::server::api

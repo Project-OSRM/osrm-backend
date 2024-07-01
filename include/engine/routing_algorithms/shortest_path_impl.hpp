@@ -4,7 +4,7 @@
 #include "engine/routing_algorithms/shortest_path.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/optional.hpp>
+#include <optional>
 
 namespace osrm::engine::routing_algorithms
 {
@@ -339,10 +339,10 @@ struct leg_connections
 {
     // X_to_Y = i can be read as
     // sources[i].X is the source of the shortest leg path to target.Y
-    boost::optional<size_t> forward_to_forward;
-    boost::optional<size_t> reverse_to_forward;
-    boost::optional<size_t> forward_to_reverse;
-    boost::optional<size_t> reverse_to_reverse;
+    std::optional<size_t> forward_to_forward;
+    std::optional<size_t> reverse_to_forward;
+    std::optional<size_t> forward_to_reverse;
+    std::optional<size_t> reverse_to_reverse;
 };
 
 // Identify which of the source candidates segments is being used for paths to the
@@ -771,7 +771,7 @@ InternalRouteResult
 shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
                    const DataFacade<Algorithm> &facade,
                    const std::vector<PhantomNodeCandidates> &waypoint_candidates,
-                   const boost::optional<bool> continue_straight_at_waypoint)
+                   const std::optional<bool> continue_straight_at_waypoint)
 {
     const bool allow_uturn_at_waypoint =
         !(continue_straight_at_waypoint ? *continue_straight_at_waypoint

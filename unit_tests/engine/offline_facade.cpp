@@ -219,7 +219,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     std::vector<engine::PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate /*input_coordinate*/,
                                const double /*max_distance*/,
-                               const boost::optional<engine::Bearing> /*bearing*/,
+                               const std::optional<engine::Bearing> /*bearing*/,
                                const engine::Approach /*approach*/,
                                const bool /*use_all_edges*/) const override
     {
@@ -229,8 +229,8 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     std::vector<engine::PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
                         const size_t /*max_results*/,
-                        const boost::optional<double> /*max_distance*/,
-                        const boost::optional<engine::Bearing> /*bearing*/,
+                        const std::optional<double> /*max_distance*/,
+                        const std::optional<engine::Bearing> /*bearing*/,
                         const engine::Approach /*approach*/) const override
     {
         return {};
@@ -238,8 +238,8 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
 
     engine::PhantomCandidateAlternatives NearestCandidatesWithAlternativeFromBigComponent(
         const util::Coordinate /*input_coordinate*/,
-        const boost::optional<double> /*max_distance*/,
-        const boost::optional<engine::Bearing> /*bearing*/,
+        const std::optional<double> /*max_distance*/,
+        const std::optional<engine::Bearing> /*bearing*/,
         const engine::Approach /*approach*/,
         const bool /*use_all_edges*/) const override
     {

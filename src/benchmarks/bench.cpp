@@ -360,8 +360,8 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterati
 
                       if (benchmark.radius)
                       {
-                          params.radiuses = std::vector<boost::optional<double>>(
-                              params.coordinates.size(), boost::make_optional(*benchmark.radius));
+                          params.radiuses = std::vector<std::optional<double>>(
+                              params.coordinates.size(), std::make_optional(*benchmark.radius));
                       }
 
                       engine::api::ResultT result = json::Object();

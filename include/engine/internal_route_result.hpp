@@ -15,7 +15,7 @@
 #include "util/integer_range.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/optional.hpp>
+#include <optional>
 #include <vector>
 
 namespace osrm::engine
@@ -42,7 +42,7 @@ struct PathData
     // Source of the speed value on this road segment
     DatasourceID datasource_id;
     // If segment precedes a turn, ID of the turn itself
-    boost::optional<EdgeID> turn_edge;
+    std::optional<EdgeID> turn_edge;
 };
 
 struct InternalRouteResult

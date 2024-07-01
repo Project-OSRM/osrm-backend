@@ -271,8 +271,8 @@ void test_table_no_segment_for_some_coordinates(bool use_json_only_api)
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
     // resembles query option: `&radiuses=0;`
-    params.radiuses.push_back(boost::make_optional(0.));
-    params.radiuses.push_back(boost::none);
+    params.radiuses.push_back(std::make_optional(0.));
+    params.radiuses.push_back(std::nullopt);
 
     json::Object json_result;
     const auto rc = run_table_json(osrm, params, json_result, use_json_only_api);
