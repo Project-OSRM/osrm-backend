@@ -1,0 +1,55 @@
+---
+Checks: '*
+  -abseil-string-find-str-contains
+  -altera*
+  -bugprone-easily-swappable-parameters
+  -cert-err58-cpp
+  -cppcoreguidelines-avoid-magic-numbers
+  -cppcoreguidelines-pro-bounds-constant-array-index
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic
+  -fuchsia*
+  -llvm-header-guard
+  -llvmlibc*
+  -readability-function-cognitive-complexity
+  -readability-identifier-length
+  -readability-magic-numbers
+  '
+HeaderFilterRegex: ''
+CheckOptions:
+  cppcoreguidelines-avoid-do-while.IgnoreMacros: 'true'
+  readability-identifier-naming.MacroDefinitionCase: 'UPPER_CASE'
+  readability-identifier-naming.TemplateParameterCase: 'CamelCase'
+  readability-identifier-naming.TypeTemplateParameterCase: 'CamelCase'
+  readability-identifier-naming.ValueTemplateParameterCase: 'CamelCase'
+  readability-identifier-naming.ParameterPackCase: 'lower_case'
+  readability-identifier-naming.AbstractClassCase: 'lower_case'
+  readability-identifier-naming.ClassCase: 'lower_case'
+  readability-identifier-naming.ClassMemberCase: 'lower_case'
+  readability-identifier-naming.ConstantCase: 'lower_case'
+  readability-identifier-naming.ConstexprVariableCase: 'lower_case'
+  readability-identifier-naming.EnumCase: 'lower_case'
+  readability-identifier-naming.EnumConstantCase: 'lower_case'
+  readability-identifier-naming.FunctionCase: 'lower_case'
+  readability-identifier-naming.GlobalConstantCase: 'lower_case'
+  readability-identifier-naming.LocalVariableCase: 'lower_case'
+  readability-identifier-naming.MemberCase: 'lower_case'
+  readability-identifier-naming.NamespaceCase: 'lower_case'
+  readability-identifier-naming.ParameterCase: 'lower_case'
+  readability-identifier-naming.StructCase: 'lower_case'
+  readability-identifier-naming.TypeAliasCase: 'lower_case'
+  readability-identifier-naming.TypedefCase: 'lower_case'
+  readability-identifier-naming.StaticConstantCase: 'lower_case'
+  readability-identifier-naming.StaticVariableCase: 'lower_case'
+  readability-identifier-naming.UnionCase: 'lower_case'
+  readability-identifier-naming.VariableCase: 'lower_case'
+  readability-identifier-naming.GlobalConstantPrefix: 'global_'
+  readability-identifier-naming.GlobalVariablePrefix: 'global_'
+  readability-identifier-naming.MemberPrefix: 'm_'
+  readability-identifier-naming.PrivateMemberPrefix: 'm_'
+  readability-identifier-naming.PrivateMemberPrefix: 'm_'
+  readability-identifier-naming.ProtectedMemberPrefix: 'm_'
+  readability-identifier-naming.PublicMemberPrefix: ''
+  readability-identifier-naming.StaticConstantPrefix: 'static_'
+  readability-identifier-naming.StaticVariablePrefix: 'static_'
+  readability-identifier-naming.ClassMemberPrefix: 'static_'
+...

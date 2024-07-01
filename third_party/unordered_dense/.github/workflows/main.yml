@@ -1,0 +1,74 @@
+name: Build, Test, Lint
+
+on: [push, pull_request]
+
+# see https://github.com/mesonbuild/meson/blob/master/docs/markdown/Continuous-Integration.md
+jobs:
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - run: ./scripts/lint/lint-version.py
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: sudo apt-get install -yq libboost-dev
+    - uses: hendrikmuhs/ccache-action@v1.2
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - run: pip install meson ninja
+    - run: meson setup builddir/
+      env:
+        CXX: ccache c++
+    - run: meson test -C builddir/ -v
+    - uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: Linux_Meson_Testlog
+        path: builddir/meson-logs/testlog.txt
+
+  macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - run: brew install gcc ccache meson ninja
+    - run: meson setup builddir/
+      env:
+        CXX: ccache c++
+    - run: meson test -C builddir/ -v
+    - uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: MacOS_Meson_Testlog
+        path: builddir/meson-logs/testlog.txt
+  
+  windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - uses: BSFishy/pip-action@v1
+      with:
+        packages: ninja meson
+    - uses: ilammy/msvc-dev-cmd@v1
+    - run: meson setup builddir
+    - run: meson test -C builddir -v
+    - uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: Windows_Meson_Testlog
+        path: |
+          builddir/meson-logs/testlog.txt
+          builddir/test/udm-test.exe

@@ -30,6 +30,9 @@ VTZERO_TAG=v1.1.0
 FMT_PATH="fmtlib/fmt"
 FMT_TAG=v10.2.1
 
+ANKERL_PATH="martinus/unordered_dense"
+ANKERL_TAG=v4.4.0
+
 function update_subtree () {
     name=$(echo "$1" | tr '[:lower:]' '[:upper:]')
     path=$(tmpvar=${name}_PATH && echo ${!tmpvar})
@@ -53,6 +56,6 @@ function update_subtree () {
 }
 
 ## Update dependencies
-for dep in osmium sol rapidjson microtar protozero vtzero fmt; do
+for dep in ankerl osmium sol rapidjson microtar protozero vtzero fmt; do
     update_subtree $dep
 done

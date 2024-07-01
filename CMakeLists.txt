@@ -302,6 +302,10 @@ include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
 set(VTZERO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/vtzero/include")
 include_directories(SYSTEM ${VTZERO_INCLUDE_DIR})
 
+set(ANKERL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/unordered_dense/include")
+include_directories(SYSTEM ${ANKERL_INCLUDE_DIR})
+
+
 set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "Disable the build of Flatbuffers tests and samples.")
 set(FLATBUFFERS_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/flatbuffers")
 set(FLATBUFFERS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/flatbuffers/include")
