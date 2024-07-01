@@ -502,6 +502,8 @@ jobs:
         conan profile new default --detect || true
         conan profile update settings.compiler=clang default || true
 
+        ls -R $HOME/.conan/
+
         # Path to the settings.yml file
         SETTINGS_PATH="$HOME/.conan/settings.yml"
 
