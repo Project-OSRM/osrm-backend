@@ -498,6 +498,8 @@ jobs:
     - name: Add Clang 18 to list of Conan compilers
       if: ${{ matrix.ENABLE_CONAN == 'ON' }}
       run: |
+        sudo wget https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
+
         conan config init
 
         ls -R $HOME/.conan/
@@ -505,11 +507,14 @@ jobs:
         # Path to the settings.yml file
         SETTINGS_PATH="$HOME/.conan/settings.yml"
 
-        cat $SETTINGS_PATH
 
         echo "AAA:"
-        conan config list
-        echo "BBB"
+        cat $SETTINGS_PATH
+
+        yq eval '.compiler.clang.version += ["18"]' -i $SETTINGS_PATH
+
+        echo "BBB:"
+        cat $SETTINGS_PATH
 
 
 
