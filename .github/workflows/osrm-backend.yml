@@ -505,19 +505,28 @@ jobs:
         # Path to the settings.yml file
         SETTINGS_PATH="$HOME/.conan/settings.yml"
 
-        # Verify the settings.yml file is created
-        if [[ ! -f "$SETTINGS_PATH" ]]; then
-            echo "Error: $SETTINGS_PATH was not created."
-            exit 1
-        fi
+        cat $SETTINGS_PATH
 
-        # Add Clang 18 to the list of versions if not already present
-        if grep -q "18" "$SETTINGS_PATH"; then
-            echo "Clang 18 is already present in settings.yml"
-        else
-            sed -i '/compiler:/,/version:/ s/version:$/version:\n    - 18/' "$SETTINGS_PATH"
-            echo "Added Clang 18 to settings.yml"
-        fi
+        echo "AAA:"
+        conan config list
+        echo "BBB"
+
+
+
+
+        # # Verify the settings.yml file is created
+        # if [[ ! -f "$SETTINGS_PATH" ]]; then
+        #     echo "Error: $SETTINGS_PATH was not created."
+        #     exit 1
+        # fi
+
+        # # Add Clang 18 to the list of versions if not already present
+        # if grep -q "18" "$SETTINGS_PATH"; then
+        #     echo "Clang 18 is already present in settings.yml"
+        # else
+        #     sed -i '/compiler:/,/version:/ s/version:$/version:\n    - 18/' "$SETTINGS_PATH"
+        #     echo "Added Clang 18 to settings.yml"
+        # fi
     - name: Prepare build
       run: |
         mkdir ${OSRM_BUILD_DIR}
