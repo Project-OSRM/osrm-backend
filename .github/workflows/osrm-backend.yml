@@ -200,6 +200,7 @@ jobs:
             CCOMPILER: clang-15
             CXXCOMPILER: clang++-15
             CUCUMBER_TIMEOUT: 60000
+            ENABLE_LTO: OFF
 
           - name: clang-15-debug
             continue-on-error: false
@@ -210,6 +211,7 @@ jobs:
             CCOMPILER: clang-15
             CXXCOMPILER: clang++-15
             CUCUMBER_TIMEOUT: 60000
+            ENABLE_LTO: OFF
 
           - name: clang-18-debug-clang-tidy
             continue-on-error: false
@@ -232,6 +234,7 @@ jobs:
             CCOMPILER: clang-14
             CXXCOMPILER: clang++-14
             CUCUMBER_TIMEOUT: 60000
+            ENABLE_LTO: OFF
 
           - name: clang-13-release
             continue-on-error: false
@@ -242,6 +245,7 @@ jobs:
             CCOMPILER: clang-13
             CXXCOMPILER: clang++-13
             CUCUMBER_TIMEOUT: 60000
+            ENABLE_LTO: OFF
 
           - name: conan-linux-debug-asan-ubsan
             continue-on-error: false
@@ -253,6 +257,7 @@ jobs:
             CXXCOMPILER: clang++-15
             ENABLE_CONAN: ON
             ENABLE_SANITIZER: ON
+            ENABLE_LTO: OFF
 
           - name: conan-linux-release
             continue-on-error: false
@@ -263,6 +268,7 @@ jobs:
             CCOMPILER: clang-15
             CXXCOMPILER: clang++-15
             ENABLE_CONAN: ON
+            ENABLE_LTO: OFF
 
           - name: gcc-14-release
             continue-on-error: false
@@ -361,6 +367,7 @@ jobs:
       TARGET_ARCH: ${{ matrix.TARGET_ARCH }}
       OSRM_CONNECTION_RETRIES: ${{ matrix.OSRM_CONNECTION_RETRIES }}
       OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
+      ENABLE_LTO: ${{ matrix.ENABLE_LTO }}
     steps:
     - uses: actions/checkout@v4
     - name: Build machine architecture
@@ -521,6 +528,7 @@ jobs:
                  -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
                  -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
                  -DENABLE_CCACHE=ON \
+                 -DENABLE_LTO=${ENABLE_LTO:-ON} \
                  -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
         make --jobs=${JOBS}
 
