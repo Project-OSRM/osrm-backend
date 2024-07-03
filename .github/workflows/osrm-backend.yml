@@ -177,39 +177,39 @@ jobs:
             CXXCOMPILER: g++-13
             ENABLE_COVERAGE: ON
 
-          - name: clang-15-debug-asan-ubsan
+          - name: clang-18-debug-asan-ubsan
             continue-on-error: false
             node: 20
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: clang-15
+            CCOMPILER: clang-18
             CUCUMBER_TIMEOUT: 20000
-            CXXCOMPILER: clang++-15
+            CXXCOMPILER: clang++-18
             ENABLE_SANITIZER: ON
             TARGET_ARCH: x86_64-asan-ubsan
             OSRM_CONNECTION_RETRIES: 10
             OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
-          - name: clang-15-release
+          - name: clang-18-release
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-15
-            CXXCOMPILER: clang++-15
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             CUCUMBER_TIMEOUT: 60000
             ENABLE_LTO: OFF
 
-          - name: clang-15-debug
+          - name: clang-18-debug
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: clang-15
-            CXXCOMPILER: clang++-15
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             CUCUMBER_TIMEOUT: 60000
             ENABLE_LTO: OFF
 
@@ -225,36 +225,36 @@ jobs:
             ENABLE_CLANG_TIDY: ON
 
 
-          - name: clang-14-release
+          - name: clang-17-release
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-14
-            CXXCOMPILER: clang++-14
+            CCOMPILER: clang-17
+            CXXCOMPILER: clang++-17
             CUCUMBER_TIMEOUT: 60000
             ENABLE_LTO: OFF
 
-          - name: clang-13-release
+          - name: clang-16-release
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-13
-            CXXCOMPILER: clang++-13
+            CCOMPILER: clang-16
+            CXXCOMPILER: clang++-16
             CUCUMBER_TIMEOUT: 60000
             ENABLE_LTO: OFF
 
           - name: conan-linux-debug-asan-ubsan
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-15
-            CXXCOMPILER: clang++-15
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             ENABLE_CONAN: ON
             ENABLE_SANITIZER: ON
             ENABLE_LTO: OFF
@@ -262,11 +262,11 @@ jobs:
           - name: conan-linux-release
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-15
-            CXXCOMPILER: clang++-15
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             ENABLE_CONAN: ON
             ENABLE_LTO: OFF
 
@@ -304,10 +304,10 @@ jobs:
             build_node_package: true
             continue-on-error: false
             node: 20
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TYPE: Release
-            CCOMPILER: clang-13
-            CXXCOMPILER: clang++-13
+            CCOMPILER: clang-16
+            CXXCOMPILER: clang++-16
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -315,10 +315,10 @@ jobs:
             build_node_package: true
             continue-on-error: false
             node: 20
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
-            CCOMPILER: clang-13
-            CXXCOMPILER: clang++-13
+            CCOMPILER: clang-16
+            CXXCOMPILER: clang++-16
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -495,6 +495,13 @@ jobs:
         tar zxvf onetbb.tgz
         sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
         sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
+    - name: Add Clang 18 to list of Conan compilers # workaround for the issue that Conan 1.x doesn't know about Clang 18
+      if: ${{ matrix.ENABLE_CONAN == 'ON' && matrix.CCOMPILER == 'clang-18' }}
+      run: |
+        sudo wget https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
+
+        conan config init
+        yq eval '.compiler.clang.version += ["18"]' -i "$HOME/.conan/settings.yml"
     - name: Prepare build
       run: |
         mkdir ${OSRM_BUILD_DIR}
@@ -646,12 +653,12 @@ jobs:
   benchmarks:
     if: github.event_name == 'pull_request'
     needs: [format-taginfo-docs]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
-      CCOMPILER: clang-13
-      CXXCOMPILER: clang++-13
-      CC: clang-13
-      CXX: clang++-13
+      CCOMPILER: clang-16
+      CXXCOMPILER: clang++-16
+      CC: clang-16
+      CXX: clang++-16
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
       GITHUB_REPOSITORY: ${{ github.repository }}
@@ -686,7 +693,7 @@ jobs:
           path: pr
       - name: Install dependencies
         run: | 
-          python3 -m pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" 
+          python3 -m pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" --break-system-packages
           sudo apt-get update -y && sudo apt-get install ccache
       - name: Prepare data
         run: |
