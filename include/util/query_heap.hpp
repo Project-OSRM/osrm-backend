@@ -121,10 +121,7 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
     void Clear() { nodes.clear(); }
 
   private:
-    template <typename T>
-    using PoolAllocator = boost::fast_pool_allocator<T,
-                                                     boost::default_user_allocator_new_delete,
-                                                     boost::details::pool::null_mutex>;
+    template <typename T> using PoolAllocator = boost::fast_pool_allocator<T>;
 
     template <typename K, typename V>
     using UnorderedMap = std::
@@ -216,10 +213,7 @@ class QueryHeap
             return weight > other.weight;
         }
     };
-    using HeapContainerAllocator =
-        boost::fast_pool_allocator<HeapData,
-                                   boost::default_user_allocator_new_delete,
-                                   boost::details::pool::null_mutex>;
+    using HeapContainerAllocator = boost::fast_pool_allocator<HeapData>;
     using HeapContainer = boost::heap::d_ary_heap<HeapData,
                                                   boost::heap::arity<4>,
                                                   boost::heap::mutable_<true>,

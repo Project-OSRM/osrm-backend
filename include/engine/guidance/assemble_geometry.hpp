@@ -36,6 +36,11 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
                                     const bool reversed_target)
 {
     LegGeometry geometry;
+    geometry.locations.reserve(leg_data.size() + 2);
+    geometry.segment_distances.reserve(leg_data.size() + 1);
+    geometry.segment_offsets.reserve(leg_data.size() + 1);
+    geometry.annotations.reserve(leg_data.size() + 1);
+    geometry.node_ids.reserve(leg_data.size() + 2);
 
     // segment 0 first and last
     geometry.segment_offsets.push_back(0);
