@@ -12,7 +12,6 @@
 #include <optional>
 #include <unordered_map>
 #include <vector>
-
 namespace osrm::util
 {
 
@@ -217,10 +216,12 @@ class QueryHeap
             return weight > other.weight;
         }
     };
+    using HeapContainerAllocator = boost::fast_pool_allocator<HeapData>;
     using HeapContainer = boost::heap::d_ary_heap<HeapData,
                                                   boost::heap::arity<4>,
                                                   boost::heap::mutable_<true>,
-                                                  boost::heap::compare<std::greater<HeapData>>>;
+                                                  boost::heap::compare<std::greater<HeapData>>,
+                                                  boost::heap::allocator<HeapContainerAllocator>>;
     using HeapHandle = typename HeapContainer::handle_type;
 
   public:
