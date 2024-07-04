@@ -3,8 +3,8 @@ pub fn approx_equal(a: f32, b: f32, dp: u8) -> bool {
     (a - b).abs() < p
 }
 
-pub fn aprox_equal_within_percentage_range(actual: f64, expectation: f64, percentage: u8) -> bool {
-    assert!(percentage <= 100);
+pub fn aprox_equal_within_percentage_range(actual: f64, expectation: f64, percentage: f64) -> bool {
+    assert!(percentage.is_sign_positive() && percentage <= 100.);
     let factor = 0.01 * percentage as f64;
     actual >= expectation - (factor * expectation) && actual <= expectation + (factor * expectation)
 }

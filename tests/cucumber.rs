@@ -12,7 +12,7 @@ use common::{
     location::Location,
     osm::OSMWay,
     osrm_world::OSRMWorld,
-    route_response,
+    route_response::{self, RouteResponse},
 };
 use core::panic;
 use cucumber::{
@@ -238,7 +238,6 @@ fn parse_table_from_steps(table: &Option<&Table>) -> (Vec<String>, Vec<HashMap<S
 #[when(regex = r"^I request nearest( with flatbuffers|) I should get$")]
 fn request_nearest(world: &mut OSRMWorld, step: &Step, state: String) {
     world.request_with_flatbuffers = state == " with flatbuffers";
-
     world.write_osm_file();
     world.extract_osm_file();
 
@@ -256,7 +255,7 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step, state: String) {
                 .expect("node name is one char long"),
         );
 
-        let response = world.nearest(&query_location);
+        let nearest_result = world.nearest(&query_location);
 
         let expected_location = &world.get_location(
             test_case
@@ -268,6 +267,10 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step, state: String) {
         );
 
         if test_case.contains_key("out") {
+            assert!(nearest_result.is_ok());
+            let (_, response) = nearest_result
+                .as_ref()
+                .expect("did not yield a nearest response");
             // check that result node is (approximately) equivalent
             let result_location = response.waypoints[0].location();
             assert!(approx_equal(
@@ -282,6 +285,10 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step, state: String) {
             ));
         }
         if test_case.contains_key("data_version") {
+            assert!(nearest_result.is_ok());
+            let (_, response) = nearest_result
+                .as_ref()
+                .expect("did not yield a nearest response");
             assert_eq!(
                 test_case.get("data_version"),
                 response.data_version.as_ref()
@@ -337,17 +344,14 @@ fn routability(world: &mut OSRMWorld, step: &Step) {
                 .filter(|(title, _)| supported_headers.contains(title.as_str()))
                 .for_each(|(title, expectation)| {
                     let forward = title.starts_with("forw");
-                    // println!("{direction}: >{expectation}<");
-                    let response = match forward {
+                    let route_result = match forward {
                         true => world.route(&vec![source, target]),
                         false => world.route(&vec![target, source]),
                     };
+                    let (_, response) = route_result
+                        .as_ref()
+                        .expect("osrm-routed returned an unexpected error");
                     if expectation.is_empty() {
-                        // if !response.routes.is_empty() {
-                        //     println!("> {title} {expectation}");
-                        //     println!("{response:?}");
-                        // }
-
                         assert!(
                             response.routes.is_empty()
                                 || response.routes.first().unwrap().distance == 0.,
@@ -379,7 +383,7 @@ fn routability(world: &mut OSRMWorld, step: &Step) {
                         let route = response.routes.first().unwrap();
                         let actual_rate = route.distance / route.weight;
                         assert!(
-                            aprox_equal_within_percentage_range(actual_rate, expected_rate, 1),
+                            aprox_equal_within_percentage_range(actual_rate, expected_rate, 1.),
                             "{actual_rate} and {expected_rate} differ by more than 1%"
                         );
                     } else {
@@ -390,7 +394,7 @@ fn routability(world: &mut OSRMWorld, step: &Step) {
     // unimplemented!("{test_cases:#?}");
 }
 
-fn extract_number_and_offset(unit: &str, expectation: &str) -> (f64, u8) {
+fn extract_number_and_offset(unit: &str, expectation: &str) -> (f64, f64) {
     let tokens: Vec<_> = expectation
         .split(unit)
         .map(|token| token.trim())
@@ -401,9 +405,10 @@ fn extract_number_and_offset(unit: &str, expectation: &str) -> (f64, u8) {
         .parse::<f64>()
         .expect("{expectation} needs to define a speed");
     let offset = match tokens.len() {
-        1 => 5u8, // TODO: the JS fuzzy matcher has a default margin of 5% for absolute comparsions. This is imprecise
+        1 => 5., // TODO: the JS fuzzy matcher has a default margin of 5% for absolute comparsions. This is imprecise
         2 => tokens[1]
-            .replace("+-", "")
+        .replace("~", "")
+        .replace("+-", "")
             .trim()
             .parse()
             .expect(&format!("{} needs to specify a number", tokens[1])),
@@ -444,14 +449,15 @@ fn extract_number_vector_and_offset(unit: &str, expectation: &str) -> (Vec<f64>,
     (numbers, offset)
 }
 
-enum WaypointsOrLocation {
+pub enum WaypointsOrLocation {
     Waypoints,
     Locations,
-    // Undefined,
+    Undefined,
 }
 
 pub fn get_location_specification(test_case: &HashMap<String, String>) -> WaypointsOrLocation {
     assert!(
+        test_case.contains_key("request") ||
         test_case.contains_key("from")
             && test_case.contains_key("to")
             && !test_case.contains_key("waypoints")
@@ -460,6 +466,10 @@ pub fn get_location_specification(test_case: &HashMap<String, String>) -> Waypoi
                 && test_case.contains_key("waypoints"),
         "waypoints need to be specified by either from/to columns or a waypoint column, but not both"
     );
+
+    if test_case.contains_key("request") {
+        return WaypointsOrLocation::Undefined;
+    }
 
     if test_case.contains_key("from")
         && test_case.contains_key("to")
@@ -528,6 +538,11 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                         .expect("to node name is one char long"),
                 );
                 vec![from_location, to_location]
+            },
+            WaypointsOrLocation::Undefined => {
+                world.request_string = test_case.get("request").cloned();
+                // println!("setting request to: {:?}", world.request_string);
+                vec![]
             }
         };
 
@@ -538,14 +553,18 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                 .insert("bearings".into(), bearings.replace(" ", ";"));
         }
 
-        let response = world.route(&waypoints);
+        let route_result = world.route(&waypoints);
 
         test_case
             .iter()
             .map(|(column_title, expectation)| (column_title.as_str(), expectation.as_str()))
             .for_each(|(case, expectation)| match case {
-                "from" | "to" | "bearings" | "waypoints" | "#" => {}, // ignore input and comment columns
+                "from" | "to" | "bearings" | "request" | "waypoints" | "#" => {}, // ignore input and comment columns
                 "route" => {
+                    let response = match route_result.as_ref() {
+                        Ok((_, response)) => response,
+                        Err(_) => &RouteResponse::default(),
+                    };
                     let route = if expectation.is_empty() {
                         assert!(response.routes.is_empty());
                         String::new()
@@ -570,6 +589,7 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     assert_eq!(expectation, route);
                 },
                 "pronunciations" => {
+                    let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
                     let pronunciations = response
                         .routes
                         .first()
@@ -588,6 +608,7 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     assert_eq!(expectation, pronunciations);
                 },
                 "ref" => {
+                    let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
                     let refs = response
                         .routes
                         .first()
@@ -606,6 +627,7 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     assert_eq!(expectation, refs);
                 },
                 "speed" => {
+                    let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
                     let route = response.routes.first().expect("no route returned");
                     let actual_speed = route.distance / route.duration * 3.6;
                     let (expected_speed, offset) = extract_number_and_offset("km/h", expectation);
@@ -616,6 +638,7 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     );
                 },
                 "modes" => {
+                    let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
                     let route = response.routes.first().expect("no route returned");
                     let actual_modes = route
                         .legs
@@ -632,6 +655,7 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     assert_eq!(actual_modes, expectation);
                 },
                 "turns" => {
+                    let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
                     let route = response.routes.first().expect("no route returned");
                     let actual_turns = route
                         .legs
@@ -660,6 +684,7 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     assert_eq!(actual_turns, expectation);
                 },
                 "time" => {
+                    let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
                     let actual_time = response.routes.first().expect("no route returned").duration;
                     let (expected_time, offset) = extract_number_and_offset("s", expectation);
                     // println!("{actual_time} == {expected_time} +- {offset}");
@@ -670,12 +695,11 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                 },
                 "times" => {
                     // TODO: go over steps
-
+                    let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
                     let actual_times : Vec<f64>= response.routes.first().expect("no route returned").legs.iter().map(|leg| {
                         leg.steps.iter().filter(|step| step.duration > 0.).map(|step| step.duration).collect::<Vec<f64>>()
                     }).flatten().collect();
                     let (expected_times, offset) = extract_number_vector_and_offset("s", expectation);
-                    // println!("{actual_times:?} == {expected_times:?} +- {offset}");
                     assert_eq!(actual_times.len(), expected_times.len(), "times mismatch: {actual_times:?} != {expected_times:?} +- {offset}");
 
                     zip(actual_times, expected_times).for_each(|(actual_time, expected_time)| {
@@ -684,6 +708,7 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     });
                 },
                 "distances" => {
+                    let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
                     let actual_distances = response.routes.first().expect("no route returned").legs.iter().map(|leg| {
                         leg.steps.iter().filter(|step| step.distance > 0.).map(|step| step.distance).collect::<Vec<f64>>()
                     }).flatten().collect::<Vec<f64>>();
@@ -696,6 +721,7 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     });
                 },
                 "weight" => {
+                    let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
                     let actual_weight = response.routes.first().expect("no route returned").weight;
                     let (expected_weight, offset) = extract_number_and_offset("s", expectation);
                     assert!(
@@ -708,6 +734,7 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     );
                 },
                 "distance" => {
+                    let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
                     let actual_distance = response.routes.first().expect("no route returned").distance;
                     let (expected_distance, offset) = extract_number_and_offset("m", expectation);
                     assert!(
@@ -720,12 +747,14 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     );
                 },
                 "summary" => {
+                    let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
                     let actual_summary = response.routes.first().expect("no route returned").legs.iter().map(|leg| {
                         leg.summary.clone()
                     }).collect::<Vec<String>>().join(",");
                     assert_eq!(actual_summary,expectation, "summary mismatch");
                 },
                 "data_version" => {
+                    let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
                     let expected_data_version = match test_case.get("data_version") {
                         Some(s) if !s.is_empty() => Some(s),
                         _ => None,
@@ -737,6 +766,7 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     );
                 },
                 "waypoints_count" => {
+                    let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
                     let expected_waypoint_count = match test_case.get("waypoints_count") {
                         Some(s) if !s.is_empty() => s.parse::<usize>().expect("waypoint_count is a number"),
                         _ => 0,
@@ -752,6 +782,7 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     );
                 },
                 "geometry" => {
+                    let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
                     let expected_geometry = test_case.get("geometry").expect("no geometry found");
                     match &response.routes.first().expect("no route").geometry {
                         route_response::Geometry::A(actual_geometry) => {
@@ -763,10 +794,29 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                         },
                         route_response::Geometry::B { coordinates: _, r#type: _ } => unimplemented!("geojson comparison"),
                     }
+                },
+                "status" => {
+                    let actual_status = match route_result {
+                        Ok((code, _)) => code,
+                        Err((code, _)) => code,
+                    };
 
+                    let expected_status = test_case.get("status").expect("no status found").parse::<u16>().expect("status code must be an u16 number");
+                    assert_eq!(
+                        expected_status,
+                        actual_status,
+                        "status does not match for test case {test_case:?}"
+                    );
+                }
+                "message" => {
+                    let actual_message = match route_result.as_ref() {
+                        Ok(_) => "".to_string(),
+                        Err((_status, e)) => e.message.clone(),
+                    };
+                    let expected_message = test_case.get("message").expect("no message found");
+                    assert_eq!(&actual_message, expected_message, "message does not match {test_case:?}");
 
                 },
-                // "classes" => {},
                 // TODO: more checks need to be implemented
                 _ => {
                     let msg = format!("case {case} = {expectation} not implemented");
@@ -793,7 +843,9 @@ fn main() {
                 future::ready(()).boxed()
             })
             // .with_writer(DotWriter::default().normalized())
-            // .filter_run("features/testbot/geometry.feature", |_, _, sc| {
-            .filter_run("features", |_, _, sc| !sc.tags.iter().any(|t| t == "todo")),
+            // .filter_run("features", |_, _, sc| {
+            .filter_run("features/testbot/oneway_phantom.feature", |_, _, sc| {
+                !sc.tags.iter().any(|t| t == "todo")
+            }),
     );
 }

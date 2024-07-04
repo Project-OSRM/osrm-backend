@@ -1,17 +1,20 @@
 use super::{
-    nearest_response::NearestResponse, osm::OSMNode, osm_db::OSMDb, route_response::RouteResponse,
+    nearest_response::NearestResponse, osm::OSMNode, osm_db::OSMDb, osrm_error::OSRMError,
+    route_response::RouteResponse,
 };
 use crate::{common::local_task::LocalTask, Location};
 use core::panic;
 use cucumber::World;
 use log::debug;
+use reqwest::StatusCode;
 use std::{
     collections::HashMap,
     fs::{create_dir_all, File},
-    io::Write,
+    io::{Read, Write},
     path::PathBuf,
     time::Duration,
 };
+// use ureq::Error;
 
 const DEFAULT_ORIGIN: Location = Location {
     longitude: 1.0f32,
@@ -37,13 +40,15 @@ pub struct OSRMWorld {
 
     pub request_with_flatbuffers: bool,
     pub query_options: HashMap<String, String>,
+    pub request_string: Option<String>,
 
     pub grid_size: f32,
     pub origin: Location,
     pub way_spacing: f32,
 
     task: LocalTask,
-    agent: ureq::Agent,
+    client: reqwest::blocking::Client,
+    // agent: ureq::Agent,
 }
 
 impl Default for OSRMWorld {
@@ -66,15 +71,22 @@ impl Default for OSRMWorld {
                 ("alternatives".into(), "false".into()),
                 ("annotations".into(), "true".into()),
             ]),
+            request_string: Default::default(),
 
             grid_size: DEFAULT_GRID_SIZE,
             origin: DEFAULT_ORIGIN,
             way_spacing: WAY_SPACING,
             task: LocalTask::default(),
-            agent: ureq::AgentBuilder::new()
-                .timeout_read(Duration::from_secs(5))
-                .timeout_write(Duration::from_secs(5))
-                .build(),
+            // agent: ureq::AgentBuilder::new()
+            //     .timeout_read(Duration::from_secs(5))
+            //     .timeout_write(Duration::from_secs(5))
+            //     .build(),
+            client: reqwest::blocking::Client::builder()
+                .connect_timeout(Duration::from_secs(5))
+                .no_proxy()
+                .http1_only()
+                .build()
+                .unwrap(),
         }
     }
 }
@@ -222,8 +234,7 @@ impl OSRMWorld {
     pub fn nearest(
         &mut self,
         query_location: &Location,
-        // request_with_flatbuffers: bool,
-    ) -> NearestResponse {
+    ) -> Result<(u16, NearestResponse), (u16, OSRMError)> {
         self.start_routed();
 
         let mut url = format!(
@@ -234,33 +245,45 @@ impl OSRMWorld {
             url += ".flatbuffers";
         }
 
-        if !self.query_options.is_empty() {
-            let options = self
-                .query_options
-                .iter()
-                .map(|(key, value)| format!("{key}={value}"))
-                .collect::<Vec<String>>()
-                .join("&");
-            url += "?";
-            url += &options;
-        }
-
-        // panic!("url: {url}");
-        let call = self.agent.get(&url).call();
-
-        let body = match call {
-            Ok(response) => response.into_reader(),
+        let response = match self.client.get(url).send() {
+            Ok(response) => response,
             Err(e) => panic!("http error: {e}"),
         };
+        let status = response.status();
+        let bytes = &response.bytes().unwrap()[..];
 
-        let response = match self.request_with_flatbuffers {
-            true => NearestResponse::from_flatbuffer(body),
-            false => NearestResponse::from_json_reader(body),
-        };
-        response
+        match status {
+            StatusCode::OK => {
+                let response = match self.request_with_flatbuffers {
+                    true => NearestResponse::from_flatbuffer(bytes),
+                    false => NearestResponse::from_json_reader(bytes),
+                };
+                return Ok((status.as_u16(), response));
+            }
+            _ => {
+                return Err((status.as_u16(), OSRMError::from_json_reader(bytes)));
+            }
+        }
+
+        // match call {
+        //     Ok(response) => {
+        //         let response = match self.request_with_flatbuffers {
+        //             true => NearestResponse::from_flatbuffer(response.into_reader()),
+        //             false => NearestResponse::from_json_reader(response.into_reader()),
+        //         };
+        //         Ok((200u16, response))
+        //     }
+        //     Err(Error::Status(code, response)) => {
+        //         return Err((code, OSRMError::from_json_reader(response.into_reader())));
+        //     }
+        //     Err(e) => panic!("http error: {e}"),
+        // }
     }
 
-    pub fn route(&mut self, waypoints: &[Location]) -> RouteResponse {
+    pub fn route(
+        &mut self,
+        waypoints: &[Location],
+    ) -> Result<(u16, RouteResponse), (u16, OSRMError)> {
         self.start_routed();
 
         let waypoint_string = waypoints
@@ -269,36 +292,80 @@ impl OSRMWorld {
             .collect::<Vec<String>>()
             .join(";");
 
-        let mut url = format!(
-            "http://localhost:5000/route/v1/{}/{waypoint_string}",
-            self.profile,
-        );
-        if self.request_with_flatbuffers {
-            url += ".flatbuffers";
-        }
-        if !self.query_options.is_empty() {
-            let options = self
-                .query_options
-                .iter()
-                .map(|(key, value)| format!("{key}={value}"))
-                .collect::<Vec<String>>()
-                .join("&");
-            url += "?";
-            url += &options;
-        }
+        let url = match &self.request_string {
+            None => {
+                let mut url = format!(
+                    "http://localhost:5000/route/v1/{}/{waypoint_string}",
+                    self.profile,
+                );
+                if self.request_with_flatbuffers {
+                    url += ".flatbuffers";
+                }
+                if !self.query_options.is_empty() {
+                    let options = self
+                        .query_options
+                        .iter()
+                        .map(|(key, value)| format!("{key}={value}"))
+                        .collect::<Vec<String>>()
+                        .join("&");
+                    url += "?";
+                    url += &options;
+                }
+                url
+            }
+            Some(request_string) => {
+                let temp = format!("http://localhost:5000/{}", request_string);
+                // if request_string == "?" {
+                //     panic!("s: {temp}");
+                // }
+                temp
+            }
+        };
         // println!("url: {url}");
-        let call = self.agent.get(&url).call();
-
-        let body = match call {
-            Ok(response) => response.into_reader(),
-            Err(_e) => return RouteResponse::default(),
+        // let request = self.agent.get(&url);
+        // if url.ends_with("?") {
+        //     // request = request.query("", "");
+        // }
+        // let call = request.call();
+        let response = match self.client.get(url).send() {
+            Ok(response) => response,
+            Err(e) => panic!("http error: {e}"),
         };
+        let status = &response.status();
 
-        let text = std::io::read_to_string(body).unwrap();
-        let response = match self.request_with_flatbuffers {
-            true => unimplemented!("RouteResponse::from_flatbuffer(body)"),
-            false => RouteResponse::from_string(&text),
-        };
-        response
+        match *status {
+            StatusCode::OK => {
+                let text = response.text().unwrap();
+                let response = match self.request_with_flatbuffers {
+                    true => unimplemented!("RouteResponse::from_flatbuffer(body)"),
+                    false => RouteResponse::from_string(&text),
+                };
+                Ok((status.as_u16(), response))
+            }
+            _ => {
+                let bytes = &response.bytes().unwrap()[..];
+                return Err((status.as_u16(), OSRMError::from_json_reader(bytes)));
+            }
+        }
+
+        // match call {
+        //     Ok(response) => {
+        //         let text = std::io::read_to_string(response.into_reader()).unwrap();
+        //         let response = match self.request_with_flatbuffers {
+        //             true => unimplemented!("RouteResponse::from_flatbuffer(body)"),
+        //             false => RouteResponse::from_string(&text),
+        //         };
+        //         Ok((200u16, response))
+        //     }
+        //     Err(Error::Status(code, response)) => {
+        //         let result = Err((code, OSRMError::from_json_reader(response.into_reader())));
+        //         if url.ends_with("?") {
+        //             panic!("{url} {result:?}");
+        //         }
+
+        //         return result;
+        //     }
+        //     Err(e) => panic!("http error: {e}"),
+        // }
     }
 }

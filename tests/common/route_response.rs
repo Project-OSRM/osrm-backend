@@ -84,6 +84,7 @@ impl RouteResponse {
     }
 
     pub fn from_string(input: &str) -> Self {
+        // println!("{input}");
         let response = match serde_json::from_str(input) {
             Ok(response) => response,
             Err(e) => panic!("parsing error {e} => {input}"),

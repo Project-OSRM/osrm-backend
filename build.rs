@@ -2,11 +2,9 @@ use std::env;
 use std::fmt::Display;
 use std::io::Cursor;
 use std::path::PathBuf;
-use std::time::Duration;
 use std::{collections::HashMap, path::Path};
 
 use serde::{Deserialize, Serialize};
-use ureq::AgentBuilder;
 
 macro_rules! build_println {
     ($($tokens: tt)*) => {
@@ -74,19 +72,13 @@ fn main() {
 
         if !Path::new(executable_path).exists() {
             build_println!("downloading flatc executable from {url}");
-            let agent = AgentBuilder::new()
-                .timeout_read(Duration::from_secs(5))
-                .timeout_write(Duration::from_secs(5))
-                .build();
-
-            let call = agent.get(&url).call();
-            let mut reader = match call {
-                Ok(response) => response.into_reader(),
-                Err(e) => panic!("http error: {e}"),
+            let response = match reqwest::blocking::get(url) {
+                Ok(response) => response,
+                Err(e) => panic!("network error during build: {e}"),
             };
-            let mut archive = Vec::new();
-            if let Err(e) = reader.read_to_end(&mut archive) {
-                panic!("cannot read from stream: {e}");
+            let archive = match response.bytes() {
+                Ok(archive) => archive,
+                Err(e) => panic!("could not retrieve byte stream during build: {e}"),
             };
             let target_dir = PathBuf::from("target");
             zip_extract::extract(Cursor::new(archive), &target_dir, true)
@@ -99,13 +91,13 @@ fn main() {
     }
 
     let (flatc, location) = match Path::new(executable_path).exists() {
-        true => (flatc_rust::Flatc::from_path(executable_path), "local"),
-        false => (flatc_rust::Flatc::from_env_path(), "downloaded"),
+        true => (flatc_rust::Flatc::from_path(executable_path), "downloaded"),
+        false => (flatc_rust::Flatc::from_env_path(), "locally installed"),
     };
     assert!(flatc.check().is_ok());
     let version = &flatc.version().unwrap();
     build_println!(
-        "using {location} flatc v{} to compile schema files",
+        "using {location} flatc v{} to compile schema files ({executable_path})",
         version.version()
     );
     flatc

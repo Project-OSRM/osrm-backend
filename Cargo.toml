@@ -14,9 +14,9 @@ futures = "0.3.30"
 geo-types = "0.7.13"
 help = "0.0.0"
 log = "0.4.21"
+reqwest = {version = "0.12.5", features = ["blocking"] }
 serde = { version = "1.0.203", features = ["serde_derive"] }
 serde_json = "1.0.118"
-ureq = { version = "2.9.7", features = ["charset"] }
 xml-builder = "0.5.2"
 
 [[test]]
@@ -31,7 +31,7 @@ debug = true
 
 [build-dependencies]
 flatc-rust = "0.2.0"
+reqwest = {version = "0.12.5", features = ["blocking"] }
 serde = { version = "1.0.203", features = ["serde_derive"] }
 toml = "0.8.14"
-ureq = { version = "2.9.7", features = ["charset"] }
 zip-extract = "0.1.3"

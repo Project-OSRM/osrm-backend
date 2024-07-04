@@ -13,6 +13,7 @@ pub mod location;
 pub mod nearest_response;
 pub mod osm;
 pub mod osm_db;
+pub mod osrm_error;
 pub mod osrm_world;
 pub mod route_response;
 pub mod scenario_id;
