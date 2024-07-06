@@ -213,7 +213,7 @@ class QueryHeap
             return weight > other.weight;
         }
     };
-    using HeapContainerAllocator = boost::fast_pool_allocator<HeapData>;
+    using HeapContainerAllocator = std::allocator<HeapData>; // boost::fast_pool_allocator<HeapData>;
     using HeapContainer = boost::heap::d_ary_heap<HeapData,
                                                   boost::heap::arity<4>,
                                                   boost::heap::mutable_<true>,
