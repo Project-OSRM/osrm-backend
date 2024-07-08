@@ -12,6 +12,7 @@ jobs:
     steps:
       - uses: actions/stale@v9
         with:
+          operations-per-run: 1000
           stale-issue-message: 'This issue seems to be stale. It will be closed in 30 days if no further activity occurs.'
           stale-pr-message: 'This PR seems to be stale. Is it still relevant?'
           days-before-issue-stale: 180 # 6 months
