@@ -1,5 +1,8 @@
 name: 'Close stale issues'
 on:
+  pull_request:
+    branches:
+      - master
   schedule:
     - cron: '30 1 * * *' # every day at 1:30am
 permissions:
