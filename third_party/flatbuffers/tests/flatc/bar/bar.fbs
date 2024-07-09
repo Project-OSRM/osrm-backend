@@ -1,5 +1,0 @@
-include "baz/baz.fbs";
-
-table Bar {
-  baz:Baz;
-}
