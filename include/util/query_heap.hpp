@@ -124,7 +124,7 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
   private:
     template <typename K, typename V>
     using UnorderedMap = std::
-        unordered_map<K, V, std::hash<K>, std::equal_to<K>, PoolAllocator<std::pair<const K, V>>>;
+        unordered_map<K, V/*, std::hash<K>, std::equal_to<K>, PoolAllocator<std::pair<const K, V>>*/>;
 
     UnorderedMap<NodeID, Key> nodes;
 };
@@ -241,7 +241,8 @@ template <typename NodeID,
           typename Key,
           typename Weight,
           typename Data,
-          typename IndexStorage = ArrayStorage<NodeID, NodeID>>
+          typename IndexStorage = ArrayStorage<NodeID, NodeID>,
+          bool ThreadLocal = true>
 class QueryHeap
 {
   private:
@@ -259,11 +260,17 @@ class QueryHeap
             return weight > other.weight;
         }
     };
+
+  using AllocatorType = typename std::conditional<ThreadLocal,
+                                                    PoolAllocator<HeapData>,
+                                                    std::allocator<HeapData>>::type;
+
+
     using HeapContainer = boost::heap::d_ary_heap<HeapData,
                                                   boost::heap::arity<4>,
                                                   boost::heap::mutable_<true>,
                                                   boost::heap::compare<std::greater<HeapData>>,
-                                                  boost::heap::allocator<PoolAllocator<HeapData>>>;
+                                                  boost::heap::allocator<AllocatorType>>;
     using HeapHandle = typename HeapContainer::handle_type;
 
   public:

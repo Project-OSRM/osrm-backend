@@ -25,7 +25,7 @@ class CellCustomizer
 
   public:
     using Heap =
-        util::QueryHeap<NodeID, NodeID, EdgeWeight, HeapData, util::ArrayStorage<NodeID, int>>;
+        util::QueryHeap<NodeID, NodeID, EdgeWeight, HeapData, util::ArrayStorage<NodeID, int>, false>;
     using HeapPtr = tbb::enumerable_thread_specific<Heap>;
 
     CellCustomizer(const partitioner::MultiLevelPartition &partition) : partition(partition) {}
