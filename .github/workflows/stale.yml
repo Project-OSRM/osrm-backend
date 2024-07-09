@@ -1,6 +1,6 @@
 name: 'Close stale issues'
 on:
-  # uncomment if you want to test changes to this file in PRs CI
+  # NOTE: uncomment if you want to test changes to this file in PRs CI
   # pull_request:
   #   branches:
   #     - master
