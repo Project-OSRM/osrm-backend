@@ -5,7 +5,6 @@ use clap::Parser;
 use common::{
     cli_arguments::Args,
     comparison::Offset,
-    dot_writer::DotWriter,
     f64_utils::{approx_equal, approximate_within_range},
     hash_util::md5_of_osrm_executables,
     location::Location,
@@ -18,14 +17,14 @@ use cucumber::{
     codegen::ParametersProvider,
     gherkin::{Step, Table},
     given, then, when,
-    writer::summarize,
-    World, WriterExt,
+    World,
 };
 use futures::{future, FutureExt};
 use geo_types::Point;
 use log::debug;
 use std::{
-    collections::{HashMap, HashSet}, fmt::format, iter::zip, process::ExitCode, result
+    collections::{HashMap, HashSet},
+    iter::zip,
 };
 
 fn offset_origin_by(dx: f64, dy: f64, origin: Location, grid_size: f64) -> Location {
@@ -53,7 +52,7 @@ fn set_profile(world: &mut OSRMWorld, profile: String) {
 #[given(expr = "the query options")]
 fn set_query_options(world: &mut OSRMWorld, step: &Step) {
     let table = parse_option_table(&step.table.as_ref());
-    world.query_options.extend(table.into_iter());
+    world.query_options.extend(table);
 }
 
 #[given(expr = "the node locations")]
@@ -404,8 +403,8 @@ fn routability(world: &mut OSRMWorld, step: &Step) {
                 .iter()
                 .filter(|(title, _)| tested_headers.contains(title.as_str()))
                 .for_each(|(title, expectation)| {
-                    let route_results = vec![world.route(&vec![source, target])
-                    ,world.route(&vec![target, source])];
+                    let route_results = vec![world.route(&[source, target])
+                    ,world.route(&[target, source])];
                     let forward = title.starts_with("forw");
                     let route_result = match forward {
                         true => &route_results[0],
@@ -582,7 +581,7 @@ fn extract_number_and_offset(unit: &str, expectation: &str) -> (f64, Offset) {
     let expectation = expectation.replace(unit, "");
     let delimiter = if expectation.contains("+-") {
         "+-"
-    } else if expectation.contains("~") {
+    } else if expectation.contains('~') {
         "~"
     } else {
         "unknown"
@@ -595,26 +594,26 @@ fn extract_number_and_offset(unit: &str, expectation: &str) -> (f64, Offset) {
     // println!("{tokens:?}");
     let number = tokens[0]
         .parse::<f64>()
-        .expect(&format!("'{}' needs to denote a parseablespeed", tokens[0]));
+        .unwrap_or_else(|_| panic!("'{}' needs to denote a parseablespeed", tokens[0]));
     let offset = match tokens.len() {
         1 => 5., // TODO: the JS fuzzy matcher has a default margin of 5% for absolute comparsions. This is imprecise
         2 => tokens[1]
-            .replace("~", "")
+            .replace('~', "")
             .replace("+-", "")
-            .replace("%", "")
+            .replace('%', "")
             .trim()
             .parse()
-            .expect(&format!("{} needs to specify a number", tokens[1])),
+            .unwrap_or_else(|_| panic!("{} needs to specify a number", tokens[1])),
         _ => unreachable!("expectations can't be parsed"),
     };
-    if expectation.ends_with("%") {
+    if expectation.ends_with('%') {
         return (number, Offset::Percentage(offset));
     }
     (number, Offset::Absolute(offset))
 }
 
 fn extract_number_vector_and_offset(unit: &str, expectation: &str) -> (Vec<f64>, Offset) {
-    let expectation = expectation.replace(",", "");
+    let expectation = expectation.replace(',', "");
     let tokens: Vec<_> = expectation
         .split(unit)
         .map(|token| token.trim())
@@ -639,10 +638,10 @@ fn extract_number_vector_and_offset(unit: &str, expectation: &str) -> (Vec<f64>,
             .replace("+-", "")
             .trim()
             .parse()
-            .expect(&format!("{} needs to specify a number", tokens[1])),
+            .unwrap_or_else(|_| panic!("{} needs to specify a number", tokens[1])),
         // _ => unreachable!("expectations can't be parsed"),
     };
-    if expectation.ends_with("%") {
+    if expectation.ends_with('%') {
         return (numbers, Offset::Percentage(offset.into()));
     }
     (numbers, Offset::Absolute(offset.into()))
@@ -705,13 +704,12 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
 
     let (_, test_cases) = parse_table_from_steps(&step.table.as_ref());
     for test_case in &test_cases {
-        let waypoints = match get_location_specification(&test_case) {
+        let waypoints = match get_location_specification(test_case) {
             WaypointsOrLocation::Waypoints => {
                 let locations: Vec<Location> = test_case
                     .get("waypoints")
                     .expect("locations specified as waypoints")
-                    .split(",")
-                    .into_iter()
+                    .split(',')
                     .map(|name| {
                         assert!(name.len() == 1, "node names need to be of length one");
                         world.get_location(name.chars().next().unwrap())
@@ -749,7 +747,7 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
             // TODO: change test cases to provide proper query options
             world
                 .query_options
-                .insert("bearings".into(), bearings.replace(" ", ";"));
+                .insert("bearings".into(), bearings.replace(' ', ";"));
         }
 
         let route_result = world.route(&waypoints);
@@ -927,9 +925,9 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                 "times" => {
                     // TODO: go over steps
                     let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
-                    let actual_times : Vec<f64>= response.routes.first().expect("no route returned").legs.iter().map(|leg| {
+                    let actual_times : Vec<f64>= response.routes.first().expect("no route returned").legs.iter().flat_map(|leg| {
                         leg.steps.iter().filter(|step| step.duration > 0.).map(|step| step.duration).collect::<Vec<f64>>()
-                    }).flatten().collect();
+                    }).collect();
                     let (expected_times, offset) = extract_number_vector_and_offset("s", expectation);
                     assert_eq!(actual_times.len(), expected_times.len(), "times mismatch: {actual_times:?} != {expected_times:?} +- {offset:?}");
 
@@ -940,10 +938,10 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                 },
                 "distances" => {
                     let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
-                    let actual_distances = response.routes.first().expect("no route returned").legs.iter().map(|leg| {
+                    let actual_distances = response.routes.first().expect("no route returned").legs.iter().flat_map(|leg| {
                         leg.steps.iter().filter(|step| step.distance > 0.).map(|step| step.distance).collect::<Vec<f64>>()
-                    }).flatten().collect::<Vec<f64>>();
-                    let (expected_distances, offset) = extract_number_vector_and_offset("m", expectation);
+                    }).collect::<Vec<f64>>();
+                        let (expected_distances, offset) = extract_number_vector_and_offset("m", expectation);
                     assert_eq!(expected_distances.len(), actual_distances.len(), "distances mismatch {expected_distances:?} != {actual_distances:?} +- {offset:?}");
 
                     zip(actual_distances, expected_distances).for_each(|(actual_distance, expected_distance)| {
@@ -1146,16 +1144,19 @@ fn main() {
             .before(move |feature, _rule, scenario, world| {
                 world.scenario_id = common::scenario_id::scenario_id(scenario);
                 world.set_scenario_specific_paths_and_digests(feature.path.clone());
-                world.osrm_digest = digest.clone();
+                world.osrm_digest.clone_from(&digest);
 
                 // TODO: clean up cache if needed? Or do in scenarios?
 
                 future::ready(()).boxed()
             })
             // .with_writer(DotWriter::default().normalized())
-            // .filter_run("features/", |fe, _, sc| {
-            .filter_run("features/guidance/anticipate-lanes.feature", |fe, _, sc| {
-                !sc.tags.iter().any(|t| t == "todo") && !fe.tags.iter().any(|t| t == "todo")
+            .filter_run("features/", |fe, r, sc| {
+                // .filter_run("features/bicycle/classes.feature", |fe, r, sc| {
+                let tag = "todo".to_string();
+                !sc.tags.contains(&tag)
+                    && !fe.tags.contains(&tag)
+                    && !r.is_some_and(|rule| rule.tags.contains(&tag))
             }),
     );
 }

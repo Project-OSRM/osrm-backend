@@ -71,7 +71,7 @@ fn main() {
         let url = format!("https://github.com/google/flatbuffers/releases/download/v{version}/{platform}.flatc.binary{compiler}.zip");
 
         if !Path::new(executable_path).exists() {
-            build_println!("downloading flatc executable from {url}");
+            build_println!("Downloading flatc executable from {url}");
             let response = match reqwest::blocking::get(url) {
                 Ok(response) => response,
                 Err(e) => panic!("network error during build: {e}"),
@@ -97,7 +97,7 @@ fn main() {
     assert!(flatc.check().is_ok());
     let version = &flatc.version().unwrap();
     build_println!(
-        "using {location} flatc v{} to compile schema files ({executable_path})",
+        "Using {location} flatc v{} to compile schema files ({executable_path})",
         version.version()
     );
     flatc
