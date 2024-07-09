@@ -1,5 +1,9 @@
 name: 'Close stale issues'
 on:
+  # uncomment if you want to test changes to this file in PRs CI
+  # pull_request:
+  #   branches:
+  #     - master
   schedule:
     - cron: '30 1 * * *' # every day at 1:30am
 permissions:
@@ -12,6 +16,7 @@ jobs:
     steps:
       - uses: actions/stale@v9
         with:
+          operations-per-run: 3000
           stale-issue-message: 'This issue seems to be stale. It will be closed in 30 days if no further activity occurs.'
           stale-pr-message: 'This PR seems to be stale. Is it still relevant?'
           days-before-issue-stale: 180 # 6 months

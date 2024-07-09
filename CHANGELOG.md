@@ -24,6 +24,14 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: Add .reserve(...) to assembleGeometry function. [#6983](https://github.com/Project-OSRM/osrm-backend/pull/6983)
+      - CHANGED: Get rid of boost::optional leftovers. [#6977](https://github.com/Project-OSRM/osrm-backend/pull/6977)
+      - CHANGED: Use Link Time Optimisation whenever possible. [#6967](https://github.com/Project-OSRM/osrm-backend/pull/6967)
+      - CHANGED: Use struct instead of tuple to define UnpackedPath. [#6974](https://github.com/Project-OSRM/osrm-backend/pull/6974)
+      - CHANGED: Micro performance optimisation in map matching. [#6976](https://github.com/Project-OSRM/osrm-backend/pull/6976)
+      - CHANGED: Re-use priority queue in StaticRTree. [#6952](https://github.com/Project-OSRM/osrm-backend/pull/6952)
+      - CHANGED: Optimise encodePolyline function. [#6940](https://github.com/Project-OSRM/osrm-backend/pull/6940)
+      - CHANGED: Avoid reallocations in base64 encoding. [#6951](https://github.com/Project-OSRM/osrm-backend/pull/6951)
       - CHANGED: Get rid of unused Boost dependencies. [#6960](https://github.com/Project-OSRM/osrm-backend/pull/6960)
       - CHANGED: Apply micro-optimisation for Table & Trip APIs. [#6949](https://github.com/Project-OSRM/osrm-backend/pull/6949)
       - CHANGED: Apply micro-optimisation for Route API. [#6948](https://github.com/Project-OSRM/osrm-backend/pull/6948)

@@ -621,27 +621,24 @@ void unpackPackedPaths(InputIt first,
                 BOOST_ASSERT(!facade.ExcludeNode(source));
                 BOOST_ASSERT(!facade.ExcludeNode(target));
 
-                // TODO: when structured bindings will be allowed change to
-                // auto [subpath_weight, subpath_source, subpath_target, subpath] = ...
-                EdgeWeight subpath_weight;
-                std::vector<NodeID> subpath_nodes;
-                std::vector<EdgeID> subpath_edges;
-                std::tie(subpath_weight, subpath_nodes, subpath_edges) = search(search_engine_data,
-                                                                                facade,
-                                                                                forward_heap,
-                                                                                reverse_heap,
-                                                                                {},
-                                                                                INVALID_EDGE_WEIGHT,
-                                                                                sublevel,
-                                                                                parent_cell_id);
-                BOOST_ASSERT(!subpath_edges.empty());
-                BOOST_ASSERT(subpath_nodes.size() > 1);
-                BOOST_ASSERT(subpath_nodes.front() == source);
-                BOOST_ASSERT(subpath_nodes.back() == target);
-                unpacked_nodes.insert(
-                    unpacked_nodes.end(), std::next(subpath_nodes.begin()), subpath_nodes.end());
-                unpacked_edges.insert(
-                    unpacked_edges.end(), subpath_edges.begin(), subpath_edges.end());
+                auto unpacked_subpath = search(search_engine_data,
+                                               facade,
+                                               forward_heap,
+                                               reverse_heap,
+                                               {},
+                                               INVALID_EDGE_WEIGHT,
+                                               sublevel,
+                                               parent_cell_id);
+                BOOST_ASSERT(!unpacked_subpath.edges.empty());
+                BOOST_ASSERT(unpacked_subpath.nodes.size() > 1);
+                BOOST_ASSERT(unpacked_subpath.nodes.front() == source);
+                BOOST_ASSERT(unpacked_subpath.nodes.back() == target);
+                unpacked_nodes.insert(unpacked_nodes.end(),
+                                      std::next(unpacked_subpath.nodes.begin()),
+                                      unpacked_subpath.nodes.end());
+                unpacked_edges.insert(unpacked_edges.end(),
+                                      unpacked_subpath.edges.begin(),
+                                      unpacked_subpath.edges.end());
             }
         }
 

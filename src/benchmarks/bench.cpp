@@ -134,6 +134,7 @@ struct ConfidenceInterval
     double mean;
     double confidence;
     double min;
+    double max;
 };
 
 // Helper function to calculate the bootstrap confidence interval
@@ -161,8 +162,10 @@ ConfidenceInterval confidenceInterval(const std::vector<double> &data,
     double upper_bound = means[(int)((1 + confidence_level) / 2 * num_samples)];
     double mean = std::accumulate(means.begin(), means.end(), 0.0) / means.size();
 
-    ConfidenceInterval ci = {
-        mean, (upper_bound - lower_bound) / 2, *std::min_element(data.begin(), data.end())};
+    ConfidenceInterval ci = {mean,
+                             (upper_bound - lower_bound) / 2,
+                             *std::min_element(data.begin(), data.end()),
+                             *std::max_element(data.begin(), data.end())};
     return ci;
 }
 
@@ -260,7 +263,7 @@ std::ostream &operator<<(std::ostream &os, Statistics &statistics)
     ConfidenceInterval ops_ci = statistics.ops_per_sec();
 
     os << "ops: " << ops_ci.mean << " ± " << ops_ci.confidence << " ops/s. "
-       << "best: " << ops_ci.min << "ops/s." << std::endl;
+       << "best: " << ops_ci.max << "ops/s." << std::endl;
     os << "total: " << total_ci.mean << " ± " << total_ci.confidence << "ms. "
        << "best: " << total_ci.min << "ms." << std::endl;
     os << "avg: " << mean_ci.mean << " ± " << mean_ci.confidence << "ms" << std::endl;
@@ -357,8 +360,8 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterati
 
                       if (benchmark.radius)
                       {
-                          params.radiuses = std::vector<boost::optional<double>>(
-                              params.coordinates.size(), boost::make_optional(*benchmark.radius));
+                          params.radiuses = std::vector<std::optional<double>>(
+                              params.coordinates.size(), std::make_optional(*benchmark.radius));
                       }
 
                       engine::api::ResultT result = json::Object();
