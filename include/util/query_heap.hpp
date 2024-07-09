@@ -1,12 +1,13 @@
 #ifndef OSRM_UTIL_QUERY_HEAP_HPP
 #define OSRM_UTIL_QUERY_HEAP_HPP
 
+#include "util/pool_allocator.hpp"
+#include <algorithm>
 #include <boost/assert.hpp>
 #include <boost/heap/d_ary_heap.hpp>
-
-#include <algorithm>
 #include <boost/pool/pool_alloc.hpp>
 #include <cstdint>
+#include <iostream>
 #include <limits>
 #include <map>
 #include <optional>
@@ -121,8 +122,6 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
     void Clear() { nodes.clear(); }
 
   private:
-    template <typename T> using PoolAllocator = boost::fast_pool_allocator<T>;
-
     template <typename K, typename V>
     using UnorderedMap = std::
         unordered_map<K, V, std::hash<K>, std::equal_to<K>, PoolAllocator<std::pair<const K, V>>>;
@@ -191,6 +190,53 @@ class TwoLevelStorage
     OverlayIndexStorage<NodeID, Key> overlay;
 };
 
+template <typename T> class LoggingAllocator
+{
+  public:
+    using value_type = T;
+
+    LoggingAllocator() noexcept = default;
+    template <typename U> LoggingAllocator(const LoggingAllocator<U> &) noexcept {}
+
+    T *allocate(std::size_t n)
+    {
+        if (n == 1024)
+        {
+            std::cerr << "bingo\n";
+        }
+
+        auto p = std::allocator<T>().allocate(n);
+        if (n != 1)
+        {
+            std::cout << "Allocated " << n << " element(s) of size " << sizeof(T) << " at "
+                      << static_cast<void *>(p) << std::endl;
+        }
+
+        return p;
+    }
+
+    void deallocate(T *p, std::size_t n) noexcept
+    {
+        //        std::cout << "Deallocated " << n << " element(s) at " << static_cast<void*>(p) <<
+        //        std::endl;
+        std::allocator<T>().deallocate(p, n);
+    }
+
+    template <typename U, typename... Args> void construct(U *p, Args &&...args)
+    {
+        std::allocator<T> a;
+        //        std::cout << "Constructing object at " << static_cast<void*>(p) << std::endl;
+        std::allocator_traits<std::allocator<T>>::construct(a, p, std::forward<Args>(args)...);
+    }
+
+    template <typename U> void destroy(U *p)
+    {
+        //        std::cout << "Destroying object at " << static_cast<void*>(p) << std::endl;
+        std::allocator<T> a;
+        std::allocator_traits<std::allocator<T>>::destroy(a, p);
+    }
+};
+
 template <typename NodeID,
           typename Key,
           typename Weight,
@@ -213,13 +259,11 @@ class QueryHeap
             return weight > other.weight;
         }
     };
-    using HeapContainerAllocator =
-        std::allocator<HeapData>; // boost::fast_pool_allocator<HeapData>;
     using HeapContainer = boost::heap::d_ary_heap<HeapData,
                                                   boost::heap::arity<4>,
                                                   boost::heap::mutable_<true>,
                                                   boost::heap::compare<std::greater<HeapData>>,
-                                                  boost::heap::allocator<HeapContainerAllocator>>;
+                                                  boost::heap::allocator<PoolAllocator<HeapData>>>;
     using HeapHandle = typename HeapContainer::handle_type;
 
   public:
@@ -244,6 +288,7 @@ class QueryHeap
         heap.clear();
         inserted_nodes.clear();
         node_index.Clear();
+        heap.reserve(1024);
     }
 
     std::size_t Size() const { return heap.size(); }
