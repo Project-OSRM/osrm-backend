@@ -62,8 +62,8 @@ impl NearestResponse {
                 let hint = wp.hint().expect("hint is missing").to_string();
                 let location = wp.location().expect("waypoint must have a location");
                 let location = Location {
-                    latitude: location.latitude(),
-                    longitude: location.longitude(),
+                    latitude: location.latitude() as f64,
+                    longitude: location.longitude() as f64,
                 };
                 let nodes = wp.nodes().expect("waypoint mus have nodes");
                 let nodes = Some(vec![nodes.first(), nodes.second()]);

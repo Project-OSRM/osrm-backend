@@ -2,6 +2,7 @@
 extern crate flatbuffers;
 
 pub mod cli_arguments;
+pub mod comparison;
 pub mod dot_writer;
 pub mod f64_utils;
 pub mod file_util;

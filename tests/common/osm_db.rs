@@ -4,7 +4,7 @@ use xml_builder::{XMLBuilder, XMLElement, XMLVersion};
 // TODO: better error handling in XML creation
 #[derive(Debug, Default)]
 pub struct OSMDb {
-    nodes: Vec<(char, OSMNode)>,
+    nodes: Vec<(String, OSMNode)>,
     ways: Vec<OSMWay>,
     // relations: Vec<OSMRelation>,
 }
@@ -12,14 +12,14 @@ pub struct OSMDb {
 impl OSMDb {
     pub fn add_node(&mut self, node: OSMNode) {
         let name = node.tags.get("name").unwrap();
-        assert!(
-            name.len() == 1,
-            "name needs to be of length 1, but was \"{name}\""
-        );
-        self.nodes.push((name.chars().next().unwrap(), node));
+        // assert!(
+        //     name.len() == 1,
+        //     "name needs to be of length 1, but was \"{name}\""
+        // );
+        self.nodes.push((name.clone(), node));
     }
 
-    pub fn find_node(&self, search_name: char) -> Option<&(char, OSMNode)> {
+    pub fn find_node(&self, search_name: String) -> Option<&(String, OSMNode)> {
         // TODO: this is a linear search.
         self.nodes.iter().find(|(name, _node)| search_name == *name)
     }

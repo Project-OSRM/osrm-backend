@@ -1,5 +1,5 @@
 use super::{
-    nearest_response::NearestResponse, osm::OSMNode, osm_db::OSMDb, osrm_error::OSRMError,
+    nearest_response::NearestResponse, osm::{OSMNode, OSMWay}, osm_db::OSMDb, osrm_error::OSRMError,
     route_response::RouteResponse,
 };
 use crate::{common::local_task::LocalTask, Location};
@@ -10,18 +10,18 @@ use reqwest::StatusCode;
 use std::{
     collections::HashMap,
     fs::{create_dir_all, File},
-    io::{Read, Write},
+    io::Write,
     path::PathBuf,
     time::Duration,
 };
-// use ureq::Error;
 
 const DEFAULT_ORIGIN: Location = Location {
-    longitude: 1.0f32,
-    latitude: 1.0f32,
+    longitude: 1.0f64,
+    latitude: 1.0f64,
 };
-const DEFAULT_GRID_SIZE: f32 = 100.;
-const WAY_SPACING: f32 = 100.;
+const DEFAULT_GRID_SIZE: f64 = 100.;
+const WAY_SPACING: f64 = 100.;
+const DEFAULT_PROFILE: &str = "bicycle";
 
 #[derive(Debug, World)]
 pub struct OSRMWorld {
@@ -42,13 +42,12 @@ pub struct OSRMWorld {
     pub query_options: HashMap<String, String>,
     pub request_string: Option<String>,
 
-    pub grid_size: f32,
+    pub grid_size: f64,
     pub origin: Location,
-    pub way_spacing: f32,
+    pub way_spacing: f64,
 
     task: LocalTask,
     client: reqwest::blocking::Client,
-    // agent: ureq::Agent,
 }
 
 impl Default for OSRMWorld {
@@ -59,7 +58,7 @@ impl Default for OSRMWorld {
             feature_digest: Default::default(),
             osrm_digest: Default::default(),
             osm_id: Default::default(),
-            profile: Default::default(),
+            profile: DEFAULT_PROFILE.into(),
             known_osm_nodes: Default::default(),
             known_locations: Default::default(),
             osm_db: Default::default(),
@@ -69,7 +68,7 @@ impl Default for OSRMWorld {
                 // default parameters // TODO: check if necessary
                 ("steps".into(), "true".into()),
                 ("alternatives".into(), "false".into()),
-                ("annotations".into(), "true".into()),
+                // ("annotations".into(), "true".into()),
             ]),
             request_string: Default::default(),
 
@@ -77,10 +76,6 @@ impl Default for OSRMWorld {
             origin: DEFAULT_ORIGIN,
             way_spacing: WAY_SPACING,
             task: LocalTask::default(),
-            // agent: ureq::AgentBuilder::new()
-            //     .timeout_read(Duration::from_secs(5))
-            //     .timeout_write(Duration::from_secs(5))
-            //     .build(),
             client: reqwest::blocking::Client::builder()
                 .connect_timeout(Duration::from_secs(5))
                 .no_proxy()
@@ -164,6 +159,14 @@ impl OSRMWorld {
 
         self.known_osm_nodes.insert(name, location);
         self.osm_db.add_node(node);
+    }
+
+    pub fn add_osm_way(&mut self, way: OSMWay) {
+        way.nodes.iter().for_each(|node| {
+            self.osm_db.add_node(node.clone());
+        });
+
+        self.osm_db.add_way(way);
     }
 
     pub fn get_location(&self, name: char) -> Location {
@@ -264,20 +267,6 @@ impl OSRMWorld {
                 return Err((status.as_u16(), OSRMError::from_json_reader(bytes)));
             }
         }
-
-        // match call {
-        //     Ok(response) => {
-        //         let response = match self.request_with_flatbuffers {
-        //             true => NearestResponse::from_flatbuffer(response.into_reader()),
-        //             false => NearestResponse::from_json_reader(response.into_reader()),
-        //         };
-        //         Ok((200u16, response))
-        //     }
-        //     Err(Error::Status(code, response)) => {
-        //         return Err((code, OSRMError::from_json_reader(response.into_reader())));
-        //     }
-        //     Err(e) => panic!("http error: {e}"),
-        // }
     }
 
     pub fn route(
@@ -295,7 +284,7 @@ impl OSRMWorld {
         let url = match &self.request_string {
             None => {
                 let mut url = format!(
-                    "http://localhost:5000/route/v1/{}/{waypoint_string}",
+                    "http://127.0.0.1:5000/route/v1/{}/{waypoint_string}",
                     self.profile,
                 );
                 if self.request_with_flatbuffers {
@@ -314,19 +303,11 @@ impl OSRMWorld {
                 url
             }
             Some(request_string) => {
-                let temp = format!("http://localhost:5000/{}", request_string);
-                // if request_string == "?" {
-                //     panic!("s: {temp}");
-                // }
+                let temp = format!("http://127.0.0.1:5000/{}", request_string);
                 temp
             }
         };
         // println!("url: {url}");
-        // let request = self.agent.get(&url);
-        // if url.ends_with("?") {
-        //     // request = request.query("", "");
-        // }
-        // let call = request.call();
         let response = match self.client.get(url).send() {
             Ok(response) => response,
             Err(e) => panic!("http error: {e}"),
@@ -347,25 +328,5 @@ impl OSRMWorld {
                 return Err((status.as_u16(), OSRMError::from_json_reader(bytes)));
             }
         }
-
-        // match call {
-        //     Ok(response) => {
-        //         let text = std::io::read_to_string(response.into_reader()).unwrap();
-        //         let response = match self.request_with_flatbuffers {
-        //             true => unimplemented!("RouteResponse::from_flatbuffer(body)"),
-        //             false => RouteResponse::from_string(&text),
-        //         };
-        //         Ok((200u16, response))
-        //     }
-        //     Err(Error::Status(code, response)) => {
-        //         let result = Err((code, OSRMError::from_json_reader(response.into_reader())));
-        //         if url.ends_with("?") {
-        //             panic!("{url} {result:?}");
-        //         }
-
-        //         return result;
-        //     }
-        //     Err(e) => panic!("http error: {e}"),
-        // }
     }
 }

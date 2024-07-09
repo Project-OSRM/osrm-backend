@@ -16,9 +16,12 @@ pub struct OSMNode {
 }
 
 impl OSMNode {
-    // pub fn add_tag(&mut self, key: &str, value: &str) {
-    //     self.tags.insert(key.into(), value.into());
-    // }
+    pub fn add_tag(&mut self, key: &str, value: &str) {
+        if key.is_empty() || value.is_empty() {
+            return;
+        }
+        self.tags.insert(key.into(), value.into());
+    }
 
     // pub fn set_id_(&mut self, id: u64) {
     //     self.id = id;
@@ -67,6 +70,13 @@ impl OSMWay {
     // pub fn set_tags(&mut self, tags: HashMap<String, String>) {
     //     self.tags = tags;
     // }
+
+    pub fn add_tag(&mut self, key: &str, value: &str) {
+        if key.is_empty() || value.is_empty() {
+            return;
+        }
+        self.tags.insert(key.into(), value.into());
+    }
 
     pub fn to_xml(&self) -> XMLElement {
         let mut way = XMLElement::new("way");

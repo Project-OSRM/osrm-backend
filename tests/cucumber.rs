@@ -4,18 +4,18 @@ use cheap_ruler::CheapRuler;
 use clap::Parser;
 use common::{
     cli_arguments::Args,
+    comparison::Offset,
     dot_writer::DotWriter,
-    f64_utils::{
-        approx_equal, approx_equal_within_offset_range, aprox_equal_within_percentage_range,
-    },
+    f64_utils::{approx_equal, approximate_within_range},
     hash_util::md5_of_osrm_executables,
     location::Location,
-    osm::OSMWay,
+    osm::{OSMNode, OSMWay},
     osrm_world::OSRMWorld,
     route_response::{self, RouteResponse},
 };
 use core::panic;
 use cucumber::{
+    codegen::ParametersProvider,
     gherkin::{Step, Table},
     given, then, when,
     writer::summarize,
@@ -25,17 +25,16 @@ use futures::{future, FutureExt};
 use geo_types::Point;
 use log::debug;
 use std::{
-    collections::{HashMap, HashSet},
-    iter::zip,
+    collections::{HashMap, HashSet}, fmt::format, iter::zip, process::ExitCode, result
 };
 
-fn offset_origin_by(dx: f32, dy: f32, origin: Location, grid_size: f32) -> Location {
+fn offset_origin_by(dx: f64, dy: f64, origin: Location, grid_size: f64) -> Location {
     let ruler = CheapRuler::new(origin.latitude, cheap_ruler::DistanceUnit::Meters);
     let loc = ruler.offset(
         &Point::new(origin.longitude, origin.latitude),
         dx * grid_size,
         dy * grid_size,
-    ); //TODO: needs to be world's gridSize, not the local one
+    );
     Location {
         latitude: loc.y(),
         longitude: loc.x(),
@@ -89,8 +88,12 @@ fn set_node_locations(world: &mut OSRMWorld, step: &Step) {
         let lon = &row[header_lookup["lon"]];
         let lat = &row[header_lookup["lat"]];
         let location = Location {
-            latitude: lat.parse::<f32>().expect("lat {lat} needs to be a f64"),
-            longitude: lon.parse::<f32>().expect("lon {lon} needs to be a f64"),
+            latitude: lat
+                .parse()
+                .expect("lat {lat} needs to be a floating point number"),
+            longitude: lon
+                .parse()
+                .expect("lon {lon} needs to be a floating point number"),
         };
         let id = match header_lookup.get("id") {
             Some(index) => {
@@ -117,22 +120,25 @@ fn set_node_map(world: &mut OSRMWorld, step: &Step) {
             .split('\n')
             .enumerate()
             .for_each(|(row_index, row)| {
+                let row_index = row_index - 1;
                 row.chars()
                     .enumerate()
-                    .filter(|(_column_index, charater)| *charater != ' ')
+                    .filter(|(_column_index, character)| {
+                        *character >= '0' && *character <= '9'
+                            || *character >= 'a' && *character <= 'z'
+                    })
                     .for_each(|(column_index, name)| {
-                        // This ports the logic from previous implementations.
+                        // This ports the logic from previous JS/Ruby implementations.
                         let location = offset_origin_by(
-                            column_index as f32 * 0.5,
-                            -(row_index as f32 - 1.),
+                            column_index as f64 * 0.5,
+                            -(row_index as f64),
                             world.origin,
                             world.grid_size,
                         );
                         match name {
                             '0'...'9' => world.add_location(name, location),
                             'a'...'z' => world.add_osm_node(name, location, None),
-                            _ => {} // TODO: unreachable!("node name not in [0..9][a..z]: {docstring}"),
-                                    //       tests contain random characters.
+                            _ => unreachable!("node name not in [0..9][a..z]: {docstring}"),
                         }
                     });
             });
@@ -147,7 +153,7 @@ fn extra_parameters(world: &mut OSRMWorld, parameters: String) {
 }
 
 #[given(expr = "a grid size of {float} meters")]
-fn set_grid_size(world: &mut OSRMWorld, meters: f32) {
+fn set_grid_size(world: &mut OSRMWorld, meters: f64) {
     world.grid_size = meters;
 }
 
@@ -181,7 +187,7 @@ fn set_ways(world: &mut OSRMWorld, step: &Step) {
                             // TODO: this check is probably not necessary since it is also checked below implicitly
                             panic!("referenced unknown node {name} in way {token}");
                         }
-                        if let Some((_, node)) = world.osm_db.find_node(name) {
+                        if let Some((_, node)) = world.osm_db.find_node(name.to_string()) {
                             way.add_node(node.clone());
                         } else {
                             panic!("node is known, but not found in osm_db");
@@ -299,13 +305,7 @@ fn request_nearest(world: &mut OSRMWorld, step: &Step, state: String) {
 
 #[then(expr = "routability should be")]
 fn routability(world: &mut OSRMWorld, step: &Step) {
-    world.write_osm_file();
-    world.extract_osm_file();
-    // TODO: preprocess
-
-    let (header, test_cases) = parse_table_from_steps(&step.table.as_ref());
-    // TODO: rename forw/backw to forw/backw_speed
-    let supported_headers = HashSet::<_>::from([
+    let tested_headers = HashSet::<_>::from([
         "forw",
         "backw",
         "bothw",
@@ -313,9 +313,67 @@ fn routability(world: &mut OSRMWorld, step: &Step) {
         "backw_rate",
         "bothw_rate",
     ]);
-    if 0 == header
+    let (headers, test_cases) = parse_table_from_steps(&step.table.as_ref());
+    // add all non-empty, non-test headers as key=value pairs to OSM data
+    test_cases
         .iter()
-        .filter(|title| supported_headers.contains(title.as_str()))
+        .enumerate()
+        .for_each(|(index, test_case)| {
+            let mut way = OSMWay {
+                id: world.make_osm_id(),
+                ..Default::default()
+            };
+            way.add_tag("highway", "primary");
+            way.add_tag("name", &format!("w{index}"));
+            let source = offset_origin_by(
+                world.way_spacing * index as f64,
+                0.,
+                world.origin,
+                world.grid_size,
+            );
+            let mut source_node = OSMNode {
+                id: world.make_osm_id(),
+                location: source,
+                ..Default::default()
+            };
+            source_node.add_tag("name", &format!("a{index}"));
+            way.add_node(source_node);
+
+            let target = offset_origin_by(
+                4. + world.way_spacing * index as f64,
+                0.,
+                world.origin,
+                world.grid_size,
+            );
+            let mut target_node = OSMNode {
+                id: world.make_osm_id(),
+                location: target,
+                ..Default::default()
+            };
+            target_node.add_tag("name", &format!("e{index}"));
+            way.add_node(target_node);
+
+            test_case
+                .iter()
+                .filter(|(key, _value)| !tested_headers.iter().any(|header| header == key))
+                .for_each(|(key, value)| {
+                    if key != "#" {
+                        // ignore comments
+                        way.add_tag(key, value);
+                    }
+                });
+            world.add_osm_way(way);
+        });
+
+    world.write_osm_file();
+    world.extract_osm_file();
+    // TODO: preprocess
+
+    // TODO: rename forw/backw to forw/backw_speed (comment from JS implementation)
+
+    if 0 == headers
+        .iter()
+        .filter(|title| tested_headers.contains(title.as_str()))
         .count()
     {
         panic!(
@@ -328,96 +386,234 @@ fn routability(world: &mut OSRMWorld, step: &Step) {
         .enumerate()
         .for_each(|(index, test_case)| {
             let source = offset_origin_by(
-                1. + world.way_spacing * index as f32,
+                1. + world.way_spacing * index as f64,
                 0.,
                 world.origin,
                 world.grid_size,
             );
             let target = offset_origin_by(
-                3. + world.way_spacing * index as f32,
+                3. + world.way_spacing * index as f64,
                 0.,
                 world.origin,
                 world.grid_size,
             );
+
+            let expected_summary = format!("w{index}");
+
             test_case
                 .iter()
-                .filter(|(title, _)| supported_headers.contains(title.as_str()))
+                .filter(|(title, _)| tested_headers.contains(title.as_str()))
                 .for_each(|(title, expectation)| {
+                    let route_results = vec![world.route(&vec![source, target])
+                    ,world.route(&vec![target, source])];
                     let forward = title.starts_with("forw");
                     let route_result = match forward {
-                        true => world.route(&vec![source, target]),
-                        false => world.route(&vec![target, source]),
+                        true => &route_results[0],
+                        false => &route_results[1],
                     };
-                    let (_, response) = route_result
-                        .as_ref()
-                        .expect("osrm-routed returned an unexpected error");
-                    if expectation.is_empty() {
-                        assert!(
-                            response.routes.is_empty()
-                                || response.routes.first().unwrap().distance == 0.,
-                            "no route expected when result column {title} is unset"
-                        );
-                    } else if expectation.contains("km/h") {
-                        assert!(
-                            !response.routes.is_empty(),
-                            "route expected when result column is set"
-                        );
+                    match title.as_str() {
+                        "forw" | "backw" => {
+                            match expectation.as_str() {
+                                "" => {
+                                    assert!(
+                                        route_result.is_err() ||
+                                        extract_summary_from_route_response(&route_result.as_ref().unwrap().1) != expected_summary,
+                                        // || response.routes.first().unwrap().distance == 0.,
+                                        "no route expected when result column {title} is unset"
+                                    );
+                                }
+                                "x" => {
+                                    let (_, response) = route_result
+                                        .as_ref()
+                                        .expect("osrm-routed returned an unexpected error");
+                                    assert!(
+                                        !response.routes.is_empty()
+                                            && response.routes.first().unwrap().distance >= 0.,
+                                        "no route expected when result column {title} is set to {expectation}"
+                                    );
+                                }
+                                _ if expectation.contains("km/h") => {
+                                    assert!(route_result.is_ok());
+                                    let (_, response) = route_result.as_ref().unwrap();
+                                    assert!(
+                                        !response.routes.is_empty(),
+                                        "route expected when result column is set"
+                                    );
 
-                        let (expected_speed, offset) =
-                            extract_number_and_offset("km/h", expectation);
-                        let route = response.routes.first().unwrap();
-                        let actual_speed = route.distance / route.duration * 3.6;
-                        assert!(
-                            aprox_equal_within_percentage_range(
-                                actual_speed,
-                                expected_speed,
-                                offset
-                            ),
-                            "{actual_speed} and {expected_speed} differ by more than {offset}"
-                        );
-                    } else if title.ends_with("_rate") {
-                        assert!(!response.routes.is_empty());
-                        let expected_rate = expectation
-                            .parse::<f64>()
-                            .expect("rate needs to be a number");
-                        let route = response.routes.first().unwrap();
-                        let actual_rate = route.distance / route.weight;
-                        assert!(
-                            aprox_equal_within_percentage_range(actual_rate, expected_rate, 1.),
-                            "{actual_rate} and {expected_rate} differ by more than 1%"
-                        );
-                    } else {
-                        unimplemented!("{title} = {expectation}");
+                                    let (expected_speed, offset) =
+                                        extract_number_and_offset("km/h", expectation);
+                                    let route = response.routes.first().unwrap();
+                                    let actual_speed = route.distance / route.duration * 3.6;
+                                    assert!(
+                                        approximate_within_range(
+                                            actual_speed,
+                                            expected_speed,
+                                            &offset
+                                        ),
+                                        "{actual_speed} and {expected_speed} differ by more than {offset:?}"
+                                    );
+                                }
+                                _ => {
+                                    let (_, response) = route_result
+                                        .as_ref()
+                                        .expect("osrm-routed returned an unexpected error");
+                                    let mode = extract_mode_string_from_route_response(response);
+                                    assert_eq!(&mode, expectation, "failed: {test_case:?}");
+                                }
+                            }
+                        }
+                        "forw_rate" | "backw_rate" => {
+                            assert!(route_result.is_ok());
+                            let (_, response) = route_result.as_ref().unwrap();
+                            assert!(!response.routes.is_empty());
+                            let expected_rate = expectation
+                                .parse::<f64>()
+                                .expect("rate needs to be a number");
+                            let route = response.routes.first().unwrap();
+                            let actual_rate = route.distance / route.weight;
+                            assert!(
+                                approximate_within_range(actual_rate, expected_rate, &Offset::Percentage(1.)),
+                                "{actual_rate} and {expected_rate} differ by more than 1%"
+                            );
+                        }
+                        "bothw" => {
+                            match expectation.as_str() {
+                                "x" => {
+                                    for result in &route_results {
+                                        let (_, response) = result
+                                        .as_ref()
+                                        .expect("osrm-routed returned an unexpected error");
+                                        assert!(
+                                            !response.routes.is_empty()
+                                                && response.routes.first().unwrap().distance >= 0.,
+                                            "no forward route when result column {title}={expectation}"
+                                        );
+                                    }
+                            }
+                            _ if expectation.contains("km/h") => {
+                                let (expected_speed, offset) =
+                                    extract_number_and_offset("km/h", expectation);
+                                for result in &route_results {
+                                    assert!(result.is_ok());
+                                    let (_, response) = result.as_ref().unwrap();
+                                    assert!(
+                                        !response.routes.is_empty(),
+                                        "route expected when result column is set"
+                                    );
+                                    let route = response.routes.first().unwrap();
+                                    let actual_speed = route.distance / route.duration * 3.6;
+                                    assert!(
+                                        approximate_within_range(
+                                            actual_speed,
+                                            expected_speed,
+                                            &offset
+                                        ),
+                                        "{actual_speed} and {expected_speed} differ by more than {offset:?}"
+                                    );
+                                }
+                            }
+
+                            _ => {
+                                // match expectation against mode
+                                for result in &route_results {
+                                    match result {
+                                        Ok((_,response)) => {
+                                            let mode = extract_mode_string_from_route_response(response);
+                                            let summary = extract_summary_from_route_response(response);
+                                            if summary != expected_summary {
+                                                assert!(expectation.is_empty());
+                                            } else {
+                                                assert_eq!(&mode, expectation, "failed: {source:?} -> {target:?}");
+                                            }
+                                        },
+                                        Err(_) => {
+                                            assert!(expectation.is_empty());
+                                        },
+
+                                    }
+                                }
+                            }
+                        }
                     }
-                });
+                    _ => {
+                        unreachable!("{title} = {expectation}");
+                    }
+                }
+            });
         });
-    // unimplemented!("{test_cases:#?}");
 }
 
-fn extract_number_and_offset(unit: &str, expectation: &str) -> (f64, f64) {
+fn extract_summary_from_route_response(response: &RouteResponse) -> String {
+    response
+        .routes
+        .first()
+        .unwrap()
+        .legs
+        .first()
+        .unwrap()
+        .summary
+        .clone()
+}
+
+fn extract_mode_string_from_route_response(response: &RouteResponse) -> String {
+    // From JS test suite:
+    // use the mode of the first step of the route
+    // for routability table test, we can assume the mode is the same throughout the route,
+    // since the route is just a single way
+    assert!(
+        !response.routes.is_empty(),
+        "route expected when extracting mode"
+    );
+    response
+        .routes
+        .first()
+        .unwrap()
+        .legs
+        .first()
+        .unwrap()
+        .steps
+        .first()
+        .unwrap()
+        .mode
+        .clone()
+}
+
+fn extract_number_and_offset(unit: &str, expectation: &str) -> (f64, Offset) {
+    let expectation = expectation.replace(unit, "");
+    let delimiter = if expectation.contains("+-") {
+        "+-"
+    } else if expectation.contains("~") {
+        "~"
+    } else {
+        "unknown"
+    };
     let tokens: Vec<_> = expectation
-        .split(unit)
+        .split(delimiter)
         .map(|token| token.trim())
         .filter(|token| !token.is_empty())
         .collect();
     // println!("{tokens:?}");
     let number = tokens[0]
         .parse::<f64>()
-        .expect("{expectation} needs to define a speed");
+        .expect(&format!("'{}' needs to denote a parseablespeed", tokens[0]));
     let offset = match tokens.len() {
         1 => 5., // TODO: the JS fuzzy matcher has a default margin of 5% for absolute comparsions. This is imprecise
         2 => tokens[1]
-        .replace("~", "")
-        .replace("+-", "")
+            .replace("~", "")
+            .replace("+-", "")
+            .replace("%", "")
             .trim()
             .parse()
             .expect(&format!("{} needs to specify a number", tokens[1])),
         _ => unreachable!("expectations can't be parsed"),
     };
-    (number, offset)
+    if expectation.ends_with("%") {
+        return (number, Offset::Percentage(offset));
+    }
+    (number, Offset::Absolute(offset))
 }
 
-fn extract_number_vector_and_offset(unit: &str, expectation: &str) -> (Vec<f64>, u8) {
+fn extract_number_vector_and_offset(unit: &str, expectation: &str) -> (Vec<f64>, Offset) {
     let expectation = expectation.replace(",", "");
     let tokens: Vec<_> = expectation
         .split(unit)
@@ -446,7 +642,10 @@ fn extract_number_vector_and_offset(unit: &str, expectation: &str) -> (Vec<f64>,
             .expect(&format!("{} needs to specify a number", tokens[1])),
         // _ => unreachable!("expectations can't be parsed"),
     };
-    (numbers, offset)
+    if expectation.ends_with("%") {
+        return (numbers, Offset::Percentage(offset.into()));
+    }
+    (numbers, Offset::Absolute(offset.into()))
 }
 
 pub enum WaypointsOrLocation {
@@ -538,7 +737,7 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                         .expect("to node name is one char long"),
                 );
                 vec![from_location, to_location]
-            },
+            }
             WaypointsOrLocation::Undefined => {
                 world.request_string = test_case.get("request").cloned();
                 // println!("setting request to: {:?}", world.request_string);
@@ -554,7 +753,6 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
         }
 
         let route_result = world.route(&waypoints);
-
         test_case
             .iter()
             .map(|(column_title, expectation)| (column_title.as_str(), expectation.as_str()))
@@ -566,13 +764,14 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                         Err(_) => &RouteResponse::default(),
                     };
                     let route = if expectation.is_empty() {
+                        assert!(route_result.is_err());
                         assert!(response.routes.is_empty());
                         String::new()
                     } else {
                         response
                             .routes
                             .first()
-                            .expect("no route returned")
+                            .expect("no route returned when checking 'route' column")
                             .legs
                             .iter()
                             .map(|leg| {
@@ -633,26 +832,32 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     let (expected_speed, offset) = extract_number_and_offset("km/h", expectation);
                     // println!("{actual_speed} == {expected_speed} +- {offset}");
                     assert!(
-                        aprox_equal_within_percentage_range(actual_speed, expected_speed, offset),
+                        approximate_within_range(actual_speed, expected_speed, &offset),
                         "actual time {actual_speed} not equal to expected value {expected_speed}"
                     );
                 },
                 "modes" => {
-                    let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
-                    let route = response.routes.first().expect("no route returned");
-                    let actual_modes = route
-                        .legs
-                        .iter()
-                        .map(|leg| {
-                            leg.steps
+                    let actual = match &route_result {
+                        Ok((_, response)) => {
+                            let route = response.routes.first().expect("no route returned");
+                            let actual_modes = route
+                                .legs
                                 .iter()
-                                .map(|step| step.mode.clone())
+                                .map(|leg| {
+                                    leg.steps
+                                        .iter()
+                                        .map(|step| step.mode.clone())
+                                        .collect::<Vec<String>>()
+                                        .join(",")
+                                })
                                 .collect::<Vec<String>>()
-                                .join(",")
-                        })
-                        .collect::<Vec<String>>()
-                        .join(",");
-                    assert_eq!(actual_modes, expectation);
+                                .join(",");
+                            actual_modes
+                        },
+                        Err(_) => String::new(),
+                    };
+
+                    assert_eq!(actual, expectation);
                 },
                 "turns" => {
                     let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
@@ -664,17 +869,43 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     leg.steps
                                 .iter()
                                 .map(|step| {
-                                    let prefix = step.maneuver.r#type.clone();
-                                    if prefix == "depart" || prefix == "arrive" {
-                                        // TODO: this reimplements the behavior that depart and arrive are not checked for their modifier
-                                        //       check if tests shall be adapted, since this is reported by the engine
-                                        return prefix;
-                                    }
-                                    let suffix = match &step.maneuver.modifier {
-                                        Some(modifier) => " ".to_string() + &modifier,
-                                        _ => "".into(),
+                                    // NOTE: this is port of JS logic as is. Arguably, this should be replace by a simple join over all type/modifier pairs
+                                    let r#type = step.maneuver.r#type.clone();
+                                    let modifier = match &step.maneuver.modifier {
+                                        Some(modifier) => modifier.as_str(),
+                                        _ => "",
                                     };
-                                    prefix + &suffix
+                                    match r#type.as_str() {
+                                        "depart" | "arrive" => {
+                                            r#type
+                                        }
+                                        "roundabout" => {
+                                            let exit = match step.maneuver.exit {
+                                                Some(x) => x,
+                                                None => unreachable!("roundabout maneuver must come with an exit number"),
+                                            };
+                                            format!("roundabout-exit-{}", exit)
+                                        },
+                                        "rotary" => {
+                                            let exit = match step.maneuver.exit {
+                                                Some(x) => x,
+                                                None => unreachable!("roundabout maneuver must come with an exit number"),
+                                            };
+                                            if let Some(rotary_name) = &step.rotary_name {
+                                                format!("{rotary_name}-exit-{exit}")
+                                            } else {
+                                                format!("rotary-exit-{exit}")
+                                            }
+                                        },
+                                        "roundabout turn" => {
+                                            let exit = match step.maneuver.exit {
+                                                Some(x) => x,
+                                                None => unreachable!("roundabout maneuver must come with an exit number"),
+                                            };
+                                            format!("{} {} exit-{}", r#type, modifier, exit)
+                                        }
+                                        _ => format!("{} {}", r#type, &modifier),
+                                    }
                                 })
                                 .collect::<Vec<String>>()
                                 .join(",")
@@ -689,7 +920,7 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     let (expected_time, offset) = extract_number_and_offset("s", expectation);
                     // println!("{actual_time} == {expected_time} +- {offset}");
                     assert!(
-                        approx_equal_within_offset_range(actual_time, expected_time, offset as f64),
+                        approximate_within_range(actual_time, expected_time, &offset),
                         "actual time {actual_time} not equal to expected value {expected_time}"
                     );
                 },
@@ -700,10 +931,10 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                         leg.steps.iter().filter(|step| step.duration > 0.).map(|step| step.duration).collect::<Vec<f64>>()
                     }).flatten().collect();
                     let (expected_times, offset) = extract_number_vector_and_offset("s", expectation);
-                    assert_eq!(actual_times.len(), expected_times.len(), "times mismatch: {actual_times:?} != {expected_times:?} +- {offset}");
+                    assert_eq!(actual_times.len(), expected_times.len(), "times mismatch: {actual_times:?} != {expected_times:?} +- {offset:?}");
 
                     zip(actual_times, expected_times).for_each(|(actual_time, expected_time)| {
-                        assert!(approx_equal_within_offset_range(actual_time, expected_time, offset as f64),
+                        assert!(approximate_within_range(actual_time, expected_time, &offset),
                             "actual time {actual_time} not equal to expected value {expected_time}");
                     });
                 },
@@ -713,10 +944,10 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                         leg.steps.iter().filter(|step| step.distance > 0.).map(|step| step.distance).collect::<Vec<f64>>()
                     }).flatten().collect::<Vec<f64>>();
                     let (expected_distances, offset) = extract_number_vector_and_offset("m", expectation);
-                    assert_eq!(expected_distances.len(), actual_distances.len(), "distances mismatch {expected_distances:?} != {actual_distances:?} +- {offset}");
+                    assert_eq!(expected_distances.len(), actual_distances.len(), "distances mismatch {expected_distances:?} != {actual_distances:?} +- {offset:?}");
 
                     zip(actual_distances, expected_distances).for_each(|(actual_distance, expected_distance)| {
-                        assert!(approx_equal_within_offset_range(actual_distance, expected_distance, offset as f64),
+                        assert!(approximate_within_range(actual_distance, expected_distance, &offset),
                             "actual distance {actual_distance} not equal to expected value {expected_distance}");
                     });
                 },
@@ -725,26 +956,32 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     let actual_weight = response.routes.first().expect("no route returned").weight;
                     let (expected_weight, offset) = extract_number_and_offset("s", expectation);
                     assert!(
-                        approx_equal_within_offset_range(
+                        approximate_within_range(
                             actual_weight,
                             expected_weight,
-                            offset as f64
+                            &offset
                         ),
-                        "actual time {actual_weight} not equal to expected value {expected_weight}"
+                        "actual weight {actual_weight} not equal to expected value {expected_weight}"
                     );
                 },
                 "distance" => {
-                    let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
-                    let actual_distance = response.routes.first().expect("no route returned").distance;
-                    let (expected_distance, offset) = extract_number_and_offset("m", expectation);
-                    assert!(
-                        approx_equal_within_offset_range(
-                            actual_distance,
-                            expected_distance,
-                            offset as f64
-                        ),
-                        "actual time {actual_distance} not equal to expected value {expected_distance}"
-                    );
+                    match &route_result {
+                        Ok((_, response)) => {
+                            let actual_distance = response.routes.first().expect("no route returned").distance;
+                            let (expected_distance, offset) = extract_number_and_offset("m", expectation);
+                            assert!(
+                                approximate_within_range(
+                                    actual_distance,
+                                    expected_distance,
+                                    &offset
+                                ),
+                                "actual distance {actual_distance} not equal to expected value {expected_distance} +- {offset:?}"
+                            );
+                        },
+                        Err(_) => {
+                            assert_eq!("", expectation);
+                        }
+                    };
                 },
                 "summary" => {
                     let (_, response) = route_result.as_ref().expect("osrm-routed returned an unexpected error");
@@ -817,6 +1054,79 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     assert_eq!(&actual_message, expected_message, "message does not match {test_case:?}");
 
                 },
+                "bearing" => {
+                    let reverse_bearing = | bearing: u64 | -> u64 {
+                        assert!(bearing <= 360);
+                        if bearing >= 180 {
+                            return bearing - 180;
+                        }
+                        bearing + 180
+                    };
+
+                    let actual_bearing = match &route_result {
+                        Ok((_,r)) => {
+                        r.routes.first().expect("no routes found in 'bearing' check").legs.iter().map(|leg| {
+                                    leg.steps.iter().map(|step| {
+                                        let intersection = step.intersections.first().expect("could not find intersection when checking bearing");
+                                        let prefix = if let Some(r#in) = intersection.r#in {
+                                            reverse_bearing(intersection.bearings[r#in as usize])
+                                        } else {
+                                            0
+                                        };
+                                        let suffix = if let Some(out) = intersection.out {
+                                            intersection.bearings[out as usize]
+                                        } else {
+                                            0
+                                        };
+                                        format!("{}->{}", prefix, suffix)
+                                    }).collect::<Vec<String>>().join(",")
+                                }).collect::<Vec<_>>().join(",")
+                            },
+                        Err(_) => String::new(),
+                    };
+                    let expected_bearing = test_case.get("bearing").expect("test case doesn't have bearing");
+                    assert_eq!(&actual_bearing, expected_bearing, "bearings don't match");
+                },
+                "lanes" => {
+                    let actual = match &route_result {
+                        Ok((_, response)) => {
+                            let route = response.routes.first().expect("no route returned");
+
+                            /*  if(i.lanes)
+                                {
+                                    return i.lanes.map( l => {
+                                        let indications = l.indications.join(';');
+                                        return indications + ':' + (l.valid ? 'true' : 'false');
+                                    }).join(' ');
+                                }
+                                else
+                                {
+                                    return '';
+                                }
+                            }).join(';');
+                        */
+
+                            let actual_lanes = route
+                                .legs
+                                .iter()
+                                .map(|leg| {
+                                    leg.steps
+                                        .iter()
+                                        .map(|step| {//step.intersections.iter().map(|i|{
+                                         "-".to_string()
+                                        })
+                                        .collect::<Vec<String>>()
+                                        .join(" ")
+                                })
+                                .collect::<Vec<String>>()
+                                .join(";");
+                            actual_lanes
+                        },
+                        Err(_) => String::new(),
+                    };
+
+                    assert_eq!(actual, expectation);
+                }
                 // TODO: more checks need to be implemented
                 _ => {
                     let msg = format!("case {case} = {expectation} not implemented");
@@ -843,9 +1153,9 @@ fn main() {
                 future::ready(()).boxed()
             })
             // .with_writer(DotWriter::default().normalized())
-            // .filter_run("features", |_, _, sc| {
-            .filter_run("features/testbot/oneway_phantom.feature", |_, _, sc| {
-                !sc.tags.iter().any(|t| t == "todo")
+            // .filter_run("features/", |fe, _, sc| {
+            .filter_run("features/guidance/anticipate-lanes.feature", |fe, _, sc| {
+                !sc.tags.iter().any(|t| t == "todo") && !fe.tags.iter().any(|t| t == "todo")
             }),
     );
 }

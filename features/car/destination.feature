@@ -113,12 +113,12 @@ Feature: Car - Destination only, no passing through
     Scenario: Car - Routing around a way that becomes destination only
         Given the node map
             """
-               a---c---b
-                   +    \
-                   +    |
-                   d    |
-                   1    |
-                    \___e
+            a---c---b
+                +    \
+                +    |
+                d    |
+                1    |
+                 \___e
             """
 
         And the ways
@@ -136,12 +136,12 @@ Feature: Car - Destination only, no passing through
     Scenario: Car - Routing through a parking lot tagged access=destination,service
         Given the node map
             """
-               a----c++++b+++g------h---i
-               |    +    +   +     /
-               |    +    +   +    /
-               |    +    +  +    /
-               |    d++++e+f    /
-               z--------------y
+            a----c++++b+++g------h---i
+            |    +    +   +     /
+            |    +    +   +    /
+            |    +    +  +    /
+            |    d++++e+f    /
+            z--------------y
             """
 
         And the ways
@@ -165,12 +165,12 @@ Feature: Car - Destination only, no passing through
         Given a grid size of 20 meters
         Given the node map
             """
-               a---c---b
-                   :
-                   x
-                   :
-                   d
-                    \__e
+            a---c---b
+                :
+                x
+                :
+                d
+                 \__e
             """
 
         And the ways
