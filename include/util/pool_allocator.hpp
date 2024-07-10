@@ -13,19 +13,18 @@ namespace osrm::util
 {
 
 #if 1
-template <typename T, size_t MinItemsInBlock = 1024> class PoolAllocator
+template <typename T, size_t MinItemsInBlock = 1024>
+class PoolAllocator;
+
+template <typename T, size_t MinItemsInBlock = 1024>
+class MemoryManager
 {
-  public:
-    using value_type = T;
-
-    PoolAllocator() noexcept = default;
-
-    template <typename U> PoolAllocator(const PoolAllocator<U> &) noexcept {}
-
-    template <typename U> struct rebind
+public:
+    static MemoryManager &instance()
     {
-        using other = PoolAllocator<U, MinItemsInBlock>;
-    };
+        thread_local MemoryManager instance;
+        return instance;
+    }
 
     T *allocate(std::size_t n)
     {
@@ -55,7 +54,7 @@ template <typename T, size_t MinItemsInBlock = 1024> class PoolAllocator
         free_lists_[free_list_index].push_back(p);
     }
 
-    ~PoolAllocator()
+    ~MemoryManager()
     {
         for (auto block : blocks_)
         {
@@ -63,44 +62,11 @@ template <typename T, size_t MinItemsInBlock = 1024> class PoolAllocator
         }
     }
 
-    PoolAllocator(const PoolAllocator &) = delete;
-    PoolAllocator &operator=(const PoolAllocator &) = delete;
-
-    PoolAllocator(PoolAllocator &&other) noexcept
-        : free_lists_(std::move(other.free_lists_)),
-          blocks_(std::move(other.blocks_)),
-          current_block_ptr_(other.current_block_ptr_),
-          current_block_left_items_(other.current_block_left_items_),
-          total_allocated_(other.total_allocated_)
-    {
-        other.current_block_ptr_ = nullptr;
-        other.current_block_left_items_ = 0;
-        other.total_allocated_ = 0;
-    }
-
-    PoolAllocator &operator=(PoolAllocator &&other) noexcept
-    {
-        if (this != &other)
-        {
-            for (auto block : blocks_)
-            {
-                std::free(block);
-            }
-
-            free_lists_ = std::move(other.free_lists_);
-            blocks_ = std::move(other.blocks_);
-            current_block_ptr_ = other.current_block_ptr_;
-            current_block_left_items_ = other.current_block_left_items_;
-            total_allocated_ = other.total_allocated_;
-
-            other.current_block_ptr_ = nullptr;
-            other.current_block_left_items_ = 0;
-            other.total_allocated_ = 0;
-        }
-        return *this;
-    }
-
 private:
+    MemoryManager() = default;
+    MemoryManager(const MemoryManager &) = delete;
+    MemoryManager &operator=(const MemoryManager &) = delete;
+
     size_t get_next_power_of_two_exponent(size_t n) const
     {
         BOOST_ASSERT(n > 0);
@@ -110,7 +76,7 @@ private:
     void allocate_block(size_t items_in_block)
     {
         items_in_block = std::max(items_in_block, MinItemsInBlock);
-       
+
         size_t block_size = items_in_block * sizeof(T);
         T *block = static_cast<T *>(std::malloc(block_size));
         if (!block)
@@ -129,6 +95,48 @@ private:
     size_t current_block_left_items_ = 0;
 
     size_t total_allocated_ = 0;
+};
+
+template <typename T, size_t MinItemsInBlock>
+class PoolAllocator
+{
+public:
+    using value_type = T;
+
+    PoolAllocator() noexcept = default;
+
+    template <typename U>
+    PoolAllocator(const PoolAllocator<U> &) noexcept {}
+
+    template <typename U>
+    struct rebind
+    {
+        using other = PoolAllocator<U, MinItemsInBlock>;
+    };
+
+    T *allocate(std::size_t n)
+    {
+        return MemoryManager<T, MinItemsInBlock>::instance().allocate(n);
+    }
+
+    void deallocate(T *p, std::size_t n) noexcept
+    {
+        MemoryManager<T, MinItemsInBlock>::instance().deallocate(p, n);
+    }
+
+    ~PoolAllocator() = default;
+
+    PoolAllocator(const PoolAllocator &) = default;
+    PoolAllocator &operator=(const PoolAllocator &) = default;
+    PoolAllocator(PoolAllocator &&) noexcept = default;
+    PoolAllocator &operator=(PoolAllocator &&) noexcept = default;
+
+private:
+    static size_t get_next_power_of_two_exponent(size_t n)
+    {
+        BOOST_ASSERT(n > 0);
+        return (sizeof(size_t) * 8) - std::countl_zero(n - 1);
+    }
 };
 
 template <typename T, typename U>

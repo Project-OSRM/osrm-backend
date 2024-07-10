@@ -57,6 +57,21 @@ BOOST_AUTO_TEST_CASE(copy)
     pool2.deallocate(ptr, 1);
 }
 
+BOOST_AUTO_TEST_CASE(move)
+{
+    PoolAllocator<int> pool;
+    auto ptr = pool.allocate(1);
+    *ptr = 42;
+    BOOST_CHECK_NE(ptr, nullptr);
+    pool.deallocate(ptr, 1);
+
+    PoolAllocator<int> pool2(std::move(pool));
+    ptr = pool2.allocate(1);
+    *ptr = 42;
+    BOOST_CHECK_NE(ptr, nullptr);
+    pool2.deallocate(ptr, 1);
+}
+
 BOOST_AUTO_TEST_CASE(unordered_map)
 {
     std::unordered_map<int, int, std::hash<int>, std::equal_to<int>, PoolAllocator<std::pair<const int, int>>> map;
