@@ -24,6 +24,7 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: Bump flatbuffers to v24.3.25 version. [#6988](https://github.com/Project-OSRM/osrm-backend/pull/6988)
       - CHANGED: Add .reserve(...) to assembleGeometry function. [#6983](https://github.com/Project-OSRM/osrm-backend/pull/6983)
       - CHANGED: Get rid of boost::optional leftovers. [#6977](https://github.com/Project-OSRM/osrm-backend/pull/6977)
       - CHANGED: Use Link Time Optimisation whenever possible. [#6967](https://github.com/Project-OSRM/osrm-backend/pull/6967)
