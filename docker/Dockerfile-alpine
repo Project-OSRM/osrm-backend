@@ -1,0 +1,62 @@
+FROM alpine:3.20.0 as alpine-mimalloc
+
+RUN apk add --no-cache mimalloc
+
+ENV LD_PRELOAD=/usr/lib/libmimalloc.so.2
+ENV MIMALLOC_LARGE_OS_PAGES=1
+
+
+FROM alpine-mimalloc as builder
+ARG DOCKER_TAG
+ARG BUILD_CONCURRENCY
+RUN mkdir -p /src  && mkdir -p /opt
+
+RUN apk add --no-cache \
+    cmake make git clang libbz2 libxml2 \
+    boost-dev boost-program_options boost-filesystem boost-iostreams boost-thread \
+    lua5.4-dev onetbb-dev expat-dev
+
+COPY . /src
+WORKDIR /src
+
+RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
+    echo "Building OSRM ${DOCKER_TAG}" && \
+    git show --format="%H" | head -n1 > /opt/OSRM_GITSHA && \
+    echo "Building OSRM gitsha $(cat /opt/OSRM_GITSHA)" && \
+    mkdir -p build && \
+    cd build && \
+    BUILD_TYPE="Release" && \
+    ENABLE_ASSERTIONS="Off" && \
+    BUILD_TOOLS="Off" && \
+    case ${DOCKER_TAG} in *"-debug"*) BUILD_TYPE="Debug";; esac && \
+    case ${DOCKER_TAG} in *"-assertions"*) BUILD_TYPE="RelWithDebInfo" && ENABLE_ASSERTIONS="On" && BUILD_TOOLS="On";; esac && \
+    echo "Building ${BUILD_TYPE} with ENABLE_ASSERTIONS=${ENABLE_ASSERTIONS} BUILD_TOOLS=${BUILD_TOOLS}" && \
+    cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS} -DBUILD_TOOLS=${BUILD_TOOLS} -DENABLE_LTO=OFF && \
+    make -j${NPROC} install && \
+    cd ../profiles && \
+    cp -r * /opt && \
+    strip /usr/local/bin/* && \
+    rm -rf /src
+
+
+# Multistage build to reduce image size - https://docs.docker.com/engine/userguide/eng-image/multistage-build/#use-multi-stage-builds
+# Only the content below ends up in the image, this helps remove /src from the image (which is large)
+FROM alpine-mimalloc as runstage
+
+COPY --from=builder /usr/local /usr/local
+COPY --from=builder /opt /opt
+
+RUN apk add --no-cache \
+    boost-program_options boost-date_time boost-iostreams boost-thread \
+    expat lua5.4 onetbb && \
+    ldconfig /usr/local/lib
+
+RUN /usr/local/bin/osrm-extract --help && \
+    /usr/local/bin/osrm-routed --help && \
+    /usr/local/bin/osrm-contract --help && \
+    /usr/local/bin/osrm-partition --help && \
+    /usr/local/bin/osrm-customize --help
+
+WORKDIR /opt
+
+EXPOSE 5000

@@ -45,7 +45,7 @@ class NearestAPI final : public BaseAPI
                       flatbuffers::FlatBufferBuilder &fb_result) const
     {
         auto data_timestamp = facade.GetTimestamp();
-        boost::optional<flatbuffers::Offset<flatbuffers::String>> data_version_string = boost::none;
+        std::optional<flatbuffers::Offset<flatbuffers::String>> data_version_string = std::nullopt;
         if (!data_timestamp.empty())
         {
             data_version_string = fb_result.CreateString(data_timestamp);
@@ -100,23 +100,23 @@ class NearestAPI final : public BaseAPI
                                auto waypoint = MakeWaypoint({phantom_node});
 
                                util::json::Array nodes;
+                               nodes.values.reserve(2);
 
                                auto node_values = MakeNodes(phantom_node);
 
-                               nodes.values.push_back(node_values.first);
-                               nodes.values.push_back(node_values.second);
-                               waypoint.values["nodes"] = std::move(nodes);
-
+                               nodes.values.emplace_back(node_values.first);
+                               nodes.values.emplace_back(node_values.second);
+                               waypoint.values.emplace("nodes", std::move(nodes));
                                return waypoint;
                            });
-            response.values["waypoints"] = std::move(waypoints);
+            response.values.emplace("waypoints", std::move(waypoints));
         }
 
-        response.values["code"] = "Ok";
+        response.values.emplace("code", "Ok");
         auto data_timestamp = facade.GetTimestamp();
         if (!data_timestamp.empty())
         {
-            response.values["data_version"] = data_timestamp;
+            response.values.emplace("data_version", data_timestamp);
         }
     }
 

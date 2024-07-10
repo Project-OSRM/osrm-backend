@@ -70,7 +70,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                             const CandidateLists &candidates_list,
                             const std::vector<util::Coordinate> &trace_coordinates,
                             const std::vector<unsigned> &trace_timestamps,
-                            const std::vector<boost::optional<double>> &trace_gps_precision,
+                            const std::vector<std::optional<double>> &trace_gps_precision,
                             const bool allow_splitting)
 {
     map_matching::MatchingConfidence confidence;
@@ -401,6 +401,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
         auto trace_distance = 0.0;
         matching.nodes.reserve(reconstructed_indices.size());
         matching.indices.reserve(reconstructed_indices.size());
+        matching.alternatives_count.reserve(reconstructed_indices.size());
         for (const auto &idx : reconstructed_indices)
         {
             const auto timestamp_index = idx.first;
@@ -428,7 +429,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
 
         matching.confidence = confidence(trace_distance, matching_distance);
 
-        sub_matchings.push_back(matching);
+        sub_matchings.emplace_back(std::move(matching));
         sub_matching_begin = sub_matching_end;
     }
 
@@ -436,24 +437,22 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
 }
 
 // CH
-template SubMatchingList
-mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
-            const DataFacade<ch::Algorithm> &facade,
-            const CandidateLists &candidates_list,
-            const std::vector<util::Coordinate> &trace_coordinates,
-            const std::vector<unsigned> &trace_timestamps,
-            const std::vector<boost::optional<double>> &trace_gps_precision,
-            const bool allow_splitting);
+template SubMatchingList mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
+                                     const DataFacade<ch::Algorithm> &facade,
+                                     const CandidateLists &candidates_list,
+                                     const std::vector<util::Coordinate> &trace_coordinates,
+                                     const std::vector<unsigned> &trace_timestamps,
+                                     const std::vector<std::optional<double>> &trace_gps_precision,
+                                     const bool allow_splitting);
 
 // MLD
-template SubMatchingList
-mapMatching(SearchEngineData<mld::Algorithm> &engine_working_data,
-            const DataFacade<mld::Algorithm> &facade,
-            const CandidateLists &candidates_list,
-            const std::vector<util::Coordinate> &trace_coordinates,
-            const std::vector<unsigned> &trace_timestamps,
-            const std::vector<boost::optional<double>> &trace_gps_precision,
-            const bool allow_splitting);
+template SubMatchingList mapMatching(SearchEngineData<mld::Algorithm> &engine_working_data,
+                                     const DataFacade<mld::Algorithm> &facade,
+                                     const CandidateLists &candidates_list,
+                                     const std::vector<util::Coordinate> &trace_coordinates,
+                                     const std::vector<unsigned> &trace_timestamps,
+                                     const std::vector<std::optional<double>> &trace_gps_precision,
+                                     const bool allow_splitting);
 
 } // namespace osrm::engine::routing_algorithms
 

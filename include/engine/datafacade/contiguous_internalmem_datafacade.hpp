@@ -177,7 +177,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     SharedRTree m_static_rtree;
     std::unique_ptr<SharedGeospatialQuery> m_geospatial_query;
-    boost::filesystem::path file_index_path;
+    std::filesystem::path file_index_path;
 
     std::optional<extractor::IntersectionBearingsView> intersection_bearings_view;
 
@@ -369,7 +369,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const double max_distance,
-                               const boost::optional<Bearing> bearing,
+                               const std::optional<Bearing> bearing,
                                const Approach approach,
                                const bool use_all_edges) const override final
     {
@@ -382,20 +382,20 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const size_t max_results,
-                        const boost::optional<double> max_distance,
-                        const boost::optional<Bearing> bearing,
+                        const std::optional<double> max_distance,
+                        const std::optional<Bearing> bearing,
                         const Approach approach) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(
-            input_coordinate, approach, max_results, max_distance, bearing, boost::none);
+            input_coordinate, approach, max_results, max_distance, bearing, std::nullopt);
     }
 
     PhantomCandidateAlternatives
     NearestCandidatesWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                     const boost::optional<double> max_distance,
-                                                     const boost::optional<Bearing> bearing,
+                                                     const std::optional<double> max_distance,
+                                                     const std::optional<Bearing> bearing,
                                                      const Approach approach,
                                                      const bool use_all_edges) const override final
     {

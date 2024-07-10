@@ -66,8 +66,8 @@ try
 
         if (benchmark.radius)
         {
-            params.radiuses = std::vector<boost::optional<double>>(
-                params.coordinates.size(), boost::make_optional(*benchmark.radius));
+            params.radiuses = std::vector<std::optional<double>>(
+                params.coordinates.size(), std::make_optional(*benchmark.radius));
         }
 
         TIMER_START(routes);
@@ -96,12 +96,6 @@ try
          RouteParameters::OverviewType::Full,
          true,
          std::nullopt},
-        {"1000 routes, 2 coordinates, no alternatives, overview=full, steps=true",
-         {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
-          {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
-         RouteParameters::OverviewType::Full,
-         true,
-         std::nullopt},
         {"1000 routes, 2 coordinates, 3 alternatives, overview=full, steps=true",
          {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
           {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
@@ -115,40 +109,12 @@ try
          RouteParameters::OverviewType::False,
          false,
          std::nullopt},
-        {"1000 routes, 2 coordinates, no alternatives, overview=false, steps=false",
-         {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
-          {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
-         RouteParameters::OverviewType::False,
-         false,
-         std::nullopt},
         {"1000 routes, 2 coordinates, 3 alternatives, overview=false, steps=false",
          {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
           {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
          RouteParameters::OverviewType::False,
          false,
          3},
-        {"1000 routes, 3 coordinates, no alternatives, overview=false, steps=false, radius=750",
-         {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
-          {FloatLongitude{7.421844922513342}, FloatLatitude{43.73690777888953}},
-          {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
-         RouteParameters::OverviewType::False,
-         false,
-         std::nullopt,
-         750},
-        {"1000 routes, 2 coordinates, no alternatives, overview=false, steps=false, radius=750",
-         {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
-          {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
-         RouteParameters::OverviewType::False,
-         false,
-         std::nullopt,
-         750},
-        {"1000 routes, 2 coordinates, 3 alternatives, overview=false, steps=false, radius=750",
-         {{FloatLongitude{7.437602352715465}, FloatLatitude{43.75030522209604}},
-          {FloatLongitude{7.412303912230966}, FloatLatitude{43.72851046529198}}},
-         RouteParameters::OverviewType::False,
-         false,
-         3,
-         750}
 
     };
 
