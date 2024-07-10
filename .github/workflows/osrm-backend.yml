@@ -703,7 +703,7 @@ jobs:
               gunzip -c ./pr/test/data/poland_gps_traces.csv.gz > ~/gps_traces.csv
           else
               if [ ! -f "~/data.osm.pbf" ]; then
-                wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
+                wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf --quiet
               else
                 echo "Using cached data.osm.pbf"
               fi
