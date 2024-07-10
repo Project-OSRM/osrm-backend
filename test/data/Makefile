@@ -65,4 +65,4 @@ benchmark: data $(DATA_NAME).requests
 checksum:
 	$(MD5SUM) $(DATA_NAME).osm.pbf $(DATA_NAME).poly > data.md5sum
 
-.PHONY: clean checksum benchmark data
+.PHONY: clean checksum data
