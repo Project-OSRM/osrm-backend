@@ -63,6 +63,15 @@ template <typename T, size_t MinItemsInBlock = 1024> class PoolAllocator
         }
     }
 
+    PoolAllocator(const PoolAllocator &) {}
+
+    PoolAllocator &operator=(const PoolAllocator &){return *this;}
+
+    // You may also want to implement move semantics if needed
+    PoolAllocator(PoolAllocator &&) noexcept = default;
+    PoolAllocator &operator=(PoolAllocator &&) noexcept = default;
+
+
   private:
     size_t get_next_power_of_two_exponent(size_t n) const
     {
