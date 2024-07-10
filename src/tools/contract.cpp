@@ -46,7 +46,7 @@ return_code parseArguments(int argc,
         boost::program_options::value<unsigned int>(&contractor_config.requested_num_threads)
             ->default_value(std::thread::hardware_concurrency()),
         "Number of threads to use")(
-        "core,k",
+        "segment-speed-file",
         boost::program_options::value<std::vector<std::string>>(
             &contractor_config.updater_config.segment_speed_lookup_paths)
             ->composing(),
