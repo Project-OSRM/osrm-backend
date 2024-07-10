@@ -82,8 +82,9 @@ template <typename T, size_t MinItemsInBlock = 1024> class PoolAllocator
     void allocate_block(size_t items_in_block)
     {
         items_in_block = std::max(items_in_block, MinItemsInBlock);
+       
         size_t block_size = items_in_block * sizeof(T);
-        T *block = static_cast<T *>(std::aligned_alloc(alignof(T), block_size));
+        T *block = static_cast<T *>(std::malloc(block_size));
         if (!block)
         {
             throw std::bad_alloc();
