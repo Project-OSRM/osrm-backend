@@ -1,16 +1,20 @@
 package testing
 
 import (
-	"../../tests/MyGame/Example"
+	flatbuffers "github.com/google/flatbuffers/go"
+	"github.com/google/flatbuffers/tests/MyGame/Example"
 
 	"context"
 	"net"
 	"testing"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/encoding"
 )
 
-type server struct{}
+type server struct {
+	Example.UnimplementedMonsterStorageServer
+}
 
 // test used to send and receive in grpc methods
 var test = "Flatbuffers"
@@ -63,8 +67,12 @@ func RetrieveClient(c Example.MonsterStorageClient, t *testing.T) {
 	if err != nil {
 		t.Fatalf("Retrieve client failed: %v", err)
 	}
-	if string(out.Name()) != test {
-		t.Errorf("RetrieveClient failed: expected=%s, got=%s\n", test, out.Name())
+	monster, err := out.Recv()
+	if err != nil {
+		t.Fatalf("Recv failed: %v", err)
+	}
+	if string(monster.Name()) != test {
+		t.Errorf("RetrieveClient failed: expected=%s, got=%s\n", test, monster.Name())
 		t.Fail()
 	}
 }
@@ -74,7 +82,8 @@ func TestGRPC(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to listen: %v", err)
 	}
-	ser := grpc.NewServer(grpc.CustomCodec(flatbuffers.FlatbuffersCodec{}))
+	ser := grpc.NewServer()
+	encoding.RegisterCodec(flatbuffers.FlatbuffersCodec{})
 	Example.RegisterMonsterStorageServer(ser, &server{})
 	go func() {
 		if err := ser.Serve(lis); err != nil {
