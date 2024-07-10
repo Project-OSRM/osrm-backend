@@ -23,7 +23,7 @@ using TestNodeID = NodeID;
 using TestKey = int;
 using TestWeight = int;
 using storage_types = boost::mpl::list<ArrayStorage<TestNodeID, TestKey>,
-                                       MapStorage<TestNodeID, TestKey>,
+                                       TwoLevelStorage<TestNodeID, TestKey>,
                                        UnorderedMapStorage<TestNodeID, TestKey>>;
 
 template <unsigned NUM_ELEM> struct RandomDataFixture
