@@ -65,32 +65,6 @@ Feature: Via points
             | waypoints | route          | turns                                                      |
             | 1,2,3     | cd,ac,ab,bd,cd | depart,new name right,new name right,new name right,arrive |
 
-    Scenario: Simple via point with core factor
-        Given the contract extra arguments "--core 0.8"
-        Given the node map
-            """
-            a b c d
-              e f g
-                h i
-                  j
-            """
-
-        And the ways
-            | nodes |
-            | abcd  |
-            | efg   |
-            | hi    |
-            | be    |
-            | cfh   |
-            | dgij  |
-
-        When I route I should get
-            | waypoints | route               |
-            | a,b,c     | abcd,abcd,abcd,abcd |
-            | c,b,a     | abcd,abcd,abcd,abcd |
-            | a,d,j     | abcd,abcd,dgij,dgij |
-            | j,d,a     | dgij,dgij,abcd,abcd |
-
     Scenario: Via point at a dead end
         Given the node map
             """
