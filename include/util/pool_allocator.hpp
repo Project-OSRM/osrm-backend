@@ -63,16 +63,44 @@ template <typename T, size_t MinItemsInBlock = 1024> class PoolAllocator
         }
     }
 
-    PoolAllocator(const PoolAllocator &) {}
+    PoolAllocator(const PoolAllocator &) = delete;
+    PoolAllocator &operator=(const PoolAllocator &) = delete;
 
-    PoolAllocator &operator=(const PoolAllocator &){return *this;}
+    PoolAllocator(PoolAllocator &&other) noexcept
+        : free_lists_(std::move(other.free_lists_)),
+          blocks_(std::move(other.blocks_)),
+          current_block_ptr_(other.current_block_ptr_),
+          current_block_left_items_(other.current_block_left_items_),
+          total_allocated_(other.total_allocated_)
+    {
+        other.current_block_ptr_ = nullptr;
+        other.current_block_left_items_ = 0;
+        other.total_allocated_ = 0;
+    }
 
-    // You may also want to implement move semantics if needed
-    PoolAllocator(PoolAllocator &&) noexcept = default;
-    PoolAllocator &operator=(PoolAllocator &&) noexcept = default;
+    PoolAllocator &operator=(PoolAllocator &&other) noexcept
+    {
+        if (this != &other)
+        {
+            for (auto block : blocks_)
+            {
+                std::free(block);
+            }
 
+            free_lists_ = std::move(other.free_lists_);
+            blocks_ = std::move(other.blocks_);
+            current_block_ptr_ = other.current_block_ptr_;
+            current_block_left_items_ = other.current_block_left_items_;
+            total_allocated_ = other.total_allocated_;
 
-  private:
+            other.current_block_ptr_ = nullptr;
+            other.current_block_left_items_ = 0;
+            other.total_allocated_ = 0;
+        }
+        return *this;
+    }
+
+private:
     size_t get_next_power_of_two_exponent(size_t n) const
     {
         BOOST_ASSERT(n > 0);
