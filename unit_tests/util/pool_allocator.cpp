@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(smoke)
 
 BOOST_AUTO_TEST_CASE(a_lot_of_items)
 {
-    PoolAllocator<int, 1024> pool;
+    PoolAllocator<int> pool;
     auto ptr = pool.allocate(2048);
     for (int i = 0; i < 2048; ++i)
     {
