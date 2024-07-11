@@ -194,8 +194,7 @@ template <typename NodeID,
           typename Key,
           typename Weight,
           typename Data,
-          typename IndexStorage = ArrayStorage<NodeID, NodeID>,
-          bool ThreadLocal = true>
+          typename IndexStorage = ArrayStorage<NodeID, NodeID>>
 class QueryHeap
 {
   private:
@@ -214,16 +213,13 @@ class QueryHeap
         }
     };
 
-  using AllocatorType = typename std::conditional<ThreadLocal,
-                                                    PoolAllocator<HeapData>,
-                                                    std::allocator<HeapData>>::type;
 
 
     using HeapContainer = boost::heap::d_ary_heap<HeapData,
                                                   boost::heap::arity<4>,
                                                   boost::heap::mutable_<true>,
                                                   boost::heap::compare<std::greater<HeapData>>,
-                                                  boost::heap::allocator<AllocatorType>>;
+                                                  boost::heap::allocator<PoolAllocator<HeapData>>>;
     using HeapHandle = typename HeapContainer::handle_type;
 
   public:

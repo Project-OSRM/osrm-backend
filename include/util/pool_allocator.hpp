@@ -14,14 +14,14 @@
 namespace osrm::util
 {
 
-#if 1
-
-template <typename T, size_t MinItemsInBlock = 1024>
+template <typename T>
 class PoolAllocator;
 
-template <typename T, size_t MinItemsInBlock = 1024>
+template <typename T>
 class MemoryManager
 {
+private:
+    constexpr static size_t MIN_ITEMS_IN_BLOCK = 1024;
 public:
     static std::shared_ptr<MemoryManager> instance()
     {
@@ -82,7 +82,7 @@ private:
 
     void allocate_block(size_t items_in_block)
     {
-        items_in_block = std::max(items_in_block, MinItemsInBlock);
+        items_in_block = std::max(items_in_block, MIN_ITEMS_IN_BLOCK);
 
         size_t block_size = items_in_block * sizeof(T);
         T *block = static_cast<T *>(std::malloc(block_size));
@@ -104,21 +104,21 @@ private:
     size_t total_allocated_ = 0;
 };
 
-template <typename T, size_t MinItemsInBlock>
+template <typename T>
 class PoolAllocator
 {
 public:
     using value_type = T;
 
-    PoolAllocator() noexcept : pool(MemoryManager<T, MinItemsInBlock>::instance()) {};
+    PoolAllocator() noexcept : pool(MemoryManager<T>::instance()) {};
 
     template <typename U>
-    PoolAllocator(const PoolAllocator<U> &) noexcept : pool(MemoryManager<T, MinItemsInBlock>::instance()) {}
+    PoolAllocator(const PoolAllocator<U> &) noexcept : pool(MemoryManager<T>::instance()) {}
 
     template <typename U>
     struct rebind
     {
-        using other = PoolAllocator<U, MinItemsInBlock>;
+        using other = PoolAllocator<U>;
     };
 
     T *allocate(std::size_t n)
@@ -139,13 +139,7 @@ public:
     PoolAllocator &operator=(PoolAllocator &&) noexcept = default;
 
 private:
-    std::shared_ptr<MemoryManager<T, MinItemsInBlock>> pool;
-
-    static size_t get_next_power_of_two_exponent(size_t n)
-    {
-        BOOST_ASSERT(n > 0);
-        return (sizeof(size_t) * 8) - std::countl_zero(n - 1);
-    }
+    std::shared_ptr<MemoryManager<T>> pool;
 };
 
 template <typename T, typename U>
@@ -160,7 +154,4 @@ bool operator!=(const PoolAllocator<T> &, const PoolAllocator<U> &)
     return false;
 }
 
-#else
-template <typename T> using PoolAllocator = std::allocator<T>;
-#endif
 } // namespace osrm::util
