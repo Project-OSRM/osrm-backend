@@ -116,15 +116,17 @@ class CellCustomizer
                    const std::vector<bool> &allowed_nodes,
                    CellMetric &metric) const
     {
-        Heap heap_exemplar(graph.GetNumberOfNodes());
-        HeapPtr heaps(heap_exemplar);
+        // std::cerr << "Customizing cells\n";
+        // Heap heap_exemplar(graph.GetNumberOfNodes());
+        // HeapPtr heaps(heap_exemplar);
 
         for (std::size_t level = 1; level < partition.GetNumberOfLevels(); ++level)
         {
             tbb::parallel_for(tbb::blocked_range<std::size_t>(0, partition.GetNumberOfCells(level)),
                               [&](const tbb::blocked_range<std::size_t> &range)
                               {
-                                  auto &heap = heaps.local();
+                                Heap heap{graph.GetNumberOfNodes()};
+                                //  auto &heap = heaps.local();
                                   for (auto id = range.begin(), end = range.end(); id != end; ++id)
                                   {
                                       Customize(
