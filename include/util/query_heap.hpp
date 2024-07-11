@@ -101,6 +101,10 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
   public:
     explicit UnorderedMapStorage(std::size_t) { nodes.rehash(1000); }
 
+    ~UnorderedMapStorage() {
+        std::cerr << "~UnorderedMapStorage()" << std::endl;
+    }
+
     Key &operator[](const NodeID node) { return nodes[node]; }
 
     Key peek_index(const NodeID node) const
@@ -124,7 +128,7 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
   private:
     template <typename K, typename V>
     using UnorderedMap = std::
-        unordered_map<K, V/*, std::hash<K>, std::equal_to<K>, PoolAllocator<std::pair<const K, V>>*/>;
+        unordered_map<K, V, std::hash<K>, std::equal_to<K>, PoolAllocator<std::pair<const K, V>>>;
 
     UnorderedMap<NodeID, Key> nodes;
 };
