@@ -9,6 +9,7 @@
 #include <mutex>
 #include <new>
 #include <vector>
+#include <memory>
 
 namespace osrm::util
 {
