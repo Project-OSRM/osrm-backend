@@ -6,6 +6,7 @@
 #include <boost/assert.hpp>
 #include <cstdlib>
 #include <iostream>
+#include <mutex>
 #include <new>
 #include <vector>
 
@@ -28,6 +29,7 @@ public:
 
     T *allocate(std::size_t n)
     {
+        std::lock_guard<std::mutex> lock(mutex_);
         size_t free_list_index = get_next_power_of_two_exponent(n);
         auto &free_list = free_lists_[free_list_index];
         const auto items_in_block = 1u << free_list_index;
@@ -50,19 +52,23 @@ public:
 
     void deallocate(T *p, std::size_t n) noexcept
     {
+        std::lock_guard<std::mutex> lock(mutex_);
         size_t free_list_index = get_next_power_of_two_exponent(n);
         free_lists_[free_list_index].push_back(p);
     }
 
     ~MemoryManager()
     {
-        for (auto block : blocks_)
-        {
-            std::free(block);
-        }
+        // std::lock_guard<std::mutex> lock(mutex_);
+        // for (auto block : blocks_)
+        // {
+        //     std::free(block);
+        // }
     }
 
 private:
+    std::mutex mutex_;
+
     MemoryManager() = default;
     MemoryManager(const MemoryManager &) = delete;
     MemoryManager &operator=(const MemoryManager &) = delete;
