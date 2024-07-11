@@ -656,7 +656,7 @@ try
         return EXIT_FAILURE;
     }
 
-    std::cerr << "Peak RAM: " << osrm::util::PeakRAMUsedInBytes() / (1024 * 1024) << "MB" << std::endl;
+    std::cout << "Peak RAM: " << osrm::util::PeakRAMUsedInBytes() / (1024 * 1024) << "MB" << std::endl;
     return EXIT_SUCCESS;
 }
 catch (const std::exception &e)
