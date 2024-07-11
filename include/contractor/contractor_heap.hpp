@@ -20,8 +20,7 @@ using ContractorHeap = util::QueryHeap<NodeID,
                                        NodeID,
                                        EdgeWeight,
                                        ContractorHeapData,
-                                       util::XORFastHashStorage<NodeID, NodeID>,
-                                       false>;
+                                       util::XORFastHashStorage<NodeID, NodeID>>;
 
 } // namespace osrm::contractor
 
