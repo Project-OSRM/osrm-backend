@@ -22,9 +22,13 @@ template <typename T, size_t MinItemsInBlock = 1024>
 class MemoryManager
 {
 public:
-    static MemoryManager &instance()
+    static std::shared_ptr<MemoryManager> instance()
     {
-        static thread_local MemoryManager instance;
+        static thread_local std::shared_ptr<MemoryManager> instance;
+        if (!instance)
+        {
+            instance = std::shared_ptr<MemoryManager>(new MemoryManager());
+        }
         return instance;
     }
 
@@ -58,11 +62,11 @@ public:
 
     ~MemoryManager()
     {
-        // std::cerr << "~MemoryManager()" << std::endl;
-        // for (auto block : blocks_)
-        // {
-        //     std::free(block);
-        // }
+       // std::cerr << "~MemoryManager()" << std::endl;
+        for (auto block : blocks_)
+        {
+            std::free(block);
+        }
     }
 private:
     MemoryManager() = default;
@@ -105,10 +109,10 @@ class PoolAllocator
 public:
     using value_type = T;
 
-    PoolAllocator() noexcept = default;
+    PoolAllocator() noexcept : pool(MemoryManager<T, MinItemsInBlock>::instance()) {};
 
     template <typename U>
-    PoolAllocator(const PoolAllocator<U> &) noexcept {}
+    PoolAllocator(const PoolAllocator<U> &) noexcept : pool(MemoryManager<T, MinItemsInBlock>::instance()) {}
 
     template <typename U>
     struct rebind
@@ -118,12 +122,12 @@ public:
 
     T *allocate(std::size_t n)
     {
-        return MemoryManager<T, MinItemsInBlock>::instance().allocate(n);
+        return pool->allocate(n);
     }
 
     void deallocate(T *p, std::size_t n) noexcept
     {
-        MemoryManager<T, MinItemsInBlock>::instance().deallocate(p, n);
+        pool->deallocate(p, n);
     }
 
     ~PoolAllocator() = default;
@@ -134,6 +138,8 @@ public:
     PoolAllocator &operator=(PoolAllocator &&) noexcept = default;
 
 private:
+    std::shared_ptr<MemoryManager<T, MinItemsInBlock>> pool;
+
     static size_t get_next_power_of_two_exponent(size_t n)
     {
         BOOST_ASSERT(n > 0);
