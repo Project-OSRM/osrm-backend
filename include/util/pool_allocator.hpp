@@ -30,6 +30,7 @@ public:
         return instance;
     }
 
+    // TODO: alignment!!!
     template <typename T>
     T *allocate(std::size_t n)
     {
