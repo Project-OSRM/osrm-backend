@@ -15,25 +15,6 @@ namespace osrm::util
 
 #if 1
 
-class Cleanup {
-public:
-    static void CleanupAtExit(void* p) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        allocated_blocks_.push_back(static_cast<char*>(p));
-    }
-
-    ~Cleanup() {
-        std::lock_guard<std::mutex> lock(mutex_);
-        for (auto block : allocated_blocks_) {
-            std::free(block);
-        }
-    }
-
-private:
-    static std::vector<void*> allocated_blocks_;
-    static std::mutex mutex_;
-};
-
 template <typename T, size_t MinItemsInBlock = 1024>
 class PoolAllocator;
 
@@ -104,8 +85,6 @@ private:
         {
             throw std::bad_alloc();
         }
-        Cleanup::CleanupAtExit(block);
-        
         total_allocated_ += block_size;
         blocks_.push_back(block);
         current_block_ptr_ = block;
