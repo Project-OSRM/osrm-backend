@@ -59,7 +59,6 @@ public:
 
     ~MemoryManager()
     {
-       // std::lock_guard<std::mutex> lock(mutex_);
         for (auto block : blocks_)
         {
             std::free(block);
