@@ -5,9 +5,7 @@
 #include <algorithm>
 #include <boost/assert.hpp>
 #include <boost/heap/d_ary_heap.hpp>
-#include <boost/pool/pool_alloc.hpp>
 #include <cstdint>
-#include <iostream>
 #include <limits>
 #include <map>
 #include <optional>
@@ -180,7 +178,6 @@ class QueryHeap
         heap.clear();
         inserted_nodes.clear();
         node_index.Clear();
-        heap.reserve(1024);
     }
 
     std::size_t Size() const { return heap.size(); }

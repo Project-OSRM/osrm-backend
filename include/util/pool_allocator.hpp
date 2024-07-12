@@ -70,7 +70,7 @@ class MemoryPool
     template <typename T> void deallocate(T *p, std::size_t n) noexcept
     {
         size_t free_list_index = get_next_power_of_two_exponent(n * sizeof(T));
-        free_lists_[free_list_index].push_back(p);
+        free_lists_[free_list_index].push_back(static_cast<void *>(p));
     }
 
     ~MemoryPool()
