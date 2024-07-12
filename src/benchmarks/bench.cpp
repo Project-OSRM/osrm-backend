@@ -655,18 +655,16 @@ try
         std::cerr << "Unknown benchmark: " << benchmarkToRun << std::endl;
         return EXIT_FAILURE;
     }
-    
-    std::cout 
-        << "Peak RAM: " 
-        << std::setprecision(3) 
-        << static_cast<double>(osrm::util::PeakRAMUsedInBytes()) / static_cast<double>((1024 * 1024)) 
-        << "MB"
-        << std::endl;
+
+    std::cout << "Peak RAM: " << std::setprecision(3)
+              << static_cast<double>(osrm::util::PeakRAMUsedInBytes()) /
+                     static_cast<double>((1024 * 1024))
+              << "MB" << std::endl;
 
     return EXIT_SUCCESS;
 }
 catch (const std::exception &e)
 {
- std::cerr << "Error: " << e.what() << std::endl;
- return EXIT_FAILURE;
+    std::cerr << "Error: " << e.what() << std::endl;
+    return EXIT_FAILURE;
 }
