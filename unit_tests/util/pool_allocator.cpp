@@ -85,4 +85,33 @@ BOOST_AUTO_TEST_CASE(unordered_map)
     BOOST_CHECK_EQUAL(map[2], 43);
 }
 
+BOOST_AUTO_TEST_CASE(alignment)
+{
+    PoolAllocator<char> pool_char; 
+    PoolAllocator<double> pool_double; 
+    
+    auto ptr_char = pool_char.allocate(1);
+    auto ptr_double = pool_double.allocate(1);
+
+    BOOST_CHECK_NE(ptr_double, nullptr);
+    BOOST_CHECK_EQUAL(reinterpret_cast<uintptr_t>(ptr_double) % alignof(double), 0);
+    BOOST_CHECK_NE(ptr_char, nullptr);
+    BOOST_CHECK_EQUAL(reinterpret_cast<uintptr_t>(ptr_char) % alignof(char), 0);
+
+   pool_char.deallocate(ptr_char, 1);
+ pool_double.deallocate(ptr_double, 1);
+    
+
+    ptr_char = pool_char.allocate(2);
+    ptr_double = pool_double.allocate(1);
+
+    BOOST_CHECK_NE(ptr_double, nullptr);
+    BOOST_CHECK_EQUAL(reinterpret_cast<uintptr_t>(ptr_double) % alignof(double), 0);
+    BOOST_CHECK_NE(ptr_char, nullptr);
+    BOOST_CHECK_EQUAL(reinterpret_cast<uintptr_t>(ptr_char) % alignof(char), 0);
+
+    pool_char.deallocate(ptr_char, 2);
+    pool_double.deallocate(ptr_double, 1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

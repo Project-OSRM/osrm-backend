@@ -116,7 +116,6 @@ class CellCustomizer
                    const std::vector<bool> &allowed_nodes,
                    CellMetric &metric) const
     {
-        // std::cerr << "Customizing cells\n";
         const auto number_of_nodes = graph.GetNumberOfNodes();
         HeapPtr heaps([number_of_nodes]{
             return Heap{number_of_nodes};
