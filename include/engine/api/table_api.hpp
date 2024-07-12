@@ -137,7 +137,7 @@ class TableAPI final : public BaseAPI
             speed_cells = MakeEstimatesTable(fb_result, fallback_speed_cells);
         }
 
-        fbresult::TableBuilder table(fb_result);
+        fbresult::TableResultBuilder table(fb_result);
         table.add_destinations(destinations);
         table.add_rows(number_of_sources);
         table.add_cols(number_of_destinations);

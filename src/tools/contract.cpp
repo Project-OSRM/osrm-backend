@@ -46,25 +46,16 @@ return_code parseArguments(int argc,
         boost::program_options::value<unsigned int>(&contractor_config.requested_num_threads)
             ->default_value(std::thread::hardware_concurrency()),
         "Number of threads to use")(
-        "core,k",
-        boost::program_options::value<double>(&contractor_config.core_factor)->default_value(1.0),
-        "DEPRECATED: Will always be 1.0. Percentage of the graph (in vertices) to contract "
-        "[0..1].")("segment-speed-file",
-                   boost::program_options::value<std::vector<std::string>>(
-                       &contractor_config.updater_config.segment_speed_lookup_paths)
-                       ->composing(),
-                   "Lookup files containing nodeA, nodeB, speed data to adjust edge weights")(
+        "segment-speed-file",
+        boost::program_options::value<std::vector<std::string>>(
+            &contractor_config.updater_config.segment_speed_lookup_paths)
+            ->composing(),
+        "Lookup files containing nodeA, nodeB, speed data to adjust edge weights")(
         "turn-penalty-file",
         boost::program_options::value<std::vector<std::string>>(
             &contractor_config.updater_config.turn_penalty_lookup_paths)
             ->composing(),
         "Lookup files containing from_, to_, via_nodes, and turn penalties to adjust turn weights")(
-        "level-cache,o",
-        boost::program_options::bool_switch(&contractor_config.use_cached_priority)
-            ->default_value(false),
-        "DEPRECATED: Will always be false. Use .level file to retain the contraction level for "
-        "each "
-        "node from the last run.")(
         "edge-weight-updates-over-factor",
         boost::program_options::value<double>(
             &contractor_config.updater_config.log_edge_updates_factor)

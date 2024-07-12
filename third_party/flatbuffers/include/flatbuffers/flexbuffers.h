@@ -17,6 +17,7 @@
 #ifndef FLATBUFFERS_FLEXBUFFERS_H_
 #define FLATBUFFERS_FLEXBUFFERS_H_
 
+#include <algorithm>
 #include <map>
 // Used to select STL variant.
 #include "flatbuffers/base.h"
@@ -53,7 +54,7 @@ enum Type {
   FBT_INT = 1,
   FBT_UINT = 2,
   FBT_FLOAT = 3,
-  // Types above stored inline, types below store an offset.
+  // Types above stored inline, types below (except FBT_BOOL) store an offset.
   FBT_KEY = 4,
   FBT_STRING = 5,
   FBT_INDIRECT_INT = 6,
@@ -65,7 +66,9 @@ enum Type {
   FBT_VECTOR_UINT = 12,
   FBT_VECTOR_FLOAT = 13,
   FBT_VECTOR_KEY = 14,
-  FBT_VECTOR_STRING = 15,
+  // DEPRECATED, use FBT_VECTOR or FBT_VECTOR_KEY instead.
+  // Read test.cpp/FlexBuffersDeprecatedTest() for details on why.
+  FBT_VECTOR_STRING_DEPRECATED = 15,
   FBT_VECTOR_INT2 = 16,  // Typed tuple (no type table, no size field).
   FBT_VECTOR_UINT2 = 17,
   FBT_VECTOR_FLOAT2 = 18,
@@ -79,6 +82,8 @@ enum Type {
   FBT_BOOL = 26,
   FBT_VECTOR_BOOL =
       36,  // To Allow the same type of conversion of type to vector type
+
+  FBT_MAX_TYPE = 37
 };
 
 inline bool IsInline(Type t) { return t <= FBT_FLOAT || t == FBT_BOOL; }
@@ -88,7 +93,7 @@ inline bool IsTypedVectorElementType(Type t) {
 }
 
 inline bool IsTypedVector(Type t) {
-  return (t >= FBT_VECTOR_INT && t <= FBT_VECTOR_STRING) ||
+  return (t >= FBT_VECTOR_INT && t <= FBT_VECTOR_STRING_DEPRECATED) ||
          t == FBT_VECTOR_BOOL;
 }
 
@@ -152,8 +157,10 @@ inline uint64_t ReadUInt64(const uint8_t *data, uint8_t byte_width) {
   // TODO: GCC apparently replaces memcpy by a rep movsb, but only if count is a
   // constant, which here it isn't. Test if memcpy is still faster than
   // the conditionals in ReadSizedScalar. Can also use inline asm.
+
   // clang-format off
-  #if defined(_MSC_VER) && (defined(_M_X64) || defined _M_IX86)
+  #if defined(_MSC_VER) && defined(_M_X64) && !defined(_M_ARM64EC)
+  // This is 64-bit Windows only, __movsb does not work on 32-bit Windows.
     uint64_t u = 0;
     __movsb(reinterpret_cast<uint8_t *>(&u),
             reinterpret_cast<const uint8_t *>(data), byte_width);
@@ -212,26 +219,40 @@ class Object {
   uint8_t byte_width_;
 };
 
-// Stores size in `byte_width_` bytes before data_ pointer.
+// Object that has a size, obtained either from size prefix, or elsewhere.
 class Sized : public Object {
  public:
-  Sized(const uint8_t *data, uint8_t byte_width) : Object(data, byte_width) {}
-  size_t size() const {
+  // Size prefix.
+  Sized(const uint8_t *data, uint8_t byte_width)
+      : Object(data, byte_width), size_(read_size()) {}
+  // Manual size.
+  Sized(const uint8_t *data, uint8_t byte_width, size_t sz)
+      : Object(data, byte_width), size_(sz) {}
+  size_t size() const { return size_; }
+  // Access size stored in `byte_width_` bytes before data_ pointer.
+  size_t read_size() const {
     return static_cast<size_t>(ReadUInt64(data_ - byte_width_, byte_width_));
   }
+
+ protected:
+  size_t size_;
 };
 
 class String : public Sized {
  public:
+  // Size prefix.
   String(const uint8_t *data, uint8_t byte_width) : Sized(data, byte_width) {}
+  // Manual size.
+  String(const uint8_t *data, uint8_t byte_width, size_t sz)
+      : Sized(data, byte_width, sz) {}
 
   size_t length() const { return size(); }
   const char *c_str() const { return reinterpret_cast<const char *>(data_); }
-  std::string str() const { return std::string(c_str(), length()); }
+  std::string str() const { return std::string(c_str(), size()); }
 
   static String EmptyString() {
-    static const uint8_t empty_string[] = { 0 /*len*/, 0 /*terminator*/ };
-    return String(empty_string + 1, 1);
+    static const char *empty_string = "";
+    return String(reinterpret_cast<const uint8_t *>(empty_string), 1, 0);
   }
   bool IsTheEmptyString() const { return data_ == EmptyString().data_; }
 };
@@ -279,6 +300,8 @@ class TypedVector : public Sized {
 
   Type ElementType() { return type_; }
 
+  friend Reference;
+
  private:
   Type type_;
 
@@ -301,8 +324,8 @@ class FixedTypedVector : public Object {
     return data_ == FixedTypedVector::EmptyFixedTypedVector().data_;
   }
 
-  Type ElementType() { return type_; }
-  uint8_t size() { return len_; }
+  Type ElementType() const { return type_; }
+  uint8_t size() const { return len_; }
 
  private:
   Type type_;
@@ -337,18 +360,45 @@ class Map : public Vector {
   bool IsTheEmptyMap() const { return data_ == EmptyMap().data_; }
 };
 
+inline void IndentString(std::string &s, int indent,
+                         const char *indent_string) {
+  for (int i = 0; i < indent; i++) s += indent_string;
+}
+
+template<typename T>
+void AppendToString(std::string &s, T &&v, bool keys_quoted, bool indented,
+                    int cur_indent, const char *indent_string) {
+  s += "[";
+  s += indented ? "\n" : " ";
+  for (size_t i = 0; i < v.size(); i++) {
+    if (i) {
+      s += ",";
+      s += indented ? "\n" : " ";
+    }
+    if (indented) IndentString(s, cur_indent, indent_string);
+    v[i].ToString(true, keys_quoted, s, indented, cur_indent,
+                  indent_string);
+  }
+  if (indented) {
+    s += "\n";
+    IndentString(s, cur_indent - 1, indent_string);
+  } else {
+    s += " ";
+  }
+  s += "]";
+}
+
 template<typename T>
 void AppendToString(std::string &s, T &&v, bool keys_quoted) {
-    s += "[ ";
-    for (size_t i = 0; i < v.size(); i++) {
-      if (i) s += ", ";
-      v[i].ToString(true, keys_quoted, s);
-    }
-    s += " ]";
+  AppendToString(s, v, keys_quoted);
 }
+
 
 class Reference {
  public:
+  Reference()
+      : data_(nullptr), parent_width_(0), byte_width_(0), type_(FBT_NULL) {}
+
   Reference(const uint8_t *data, uint8_t parent_width, uint8_t byte_width,
             Type type)
       : data_(data),
@@ -357,10 +407,10 @@ class Reference {
         type_(type) {}
 
   Reference(const uint8_t *data, uint8_t parent_width, uint8_t packed_type)
-      : data_(data), parent_width_(parent_width) {
-    byte_width_ = 1U << static_cast<BitWidth>(packed_type & 3);
-    type_ = static_cast<Type>(packed_type >> 2);
-  }
+      : data_(data),
+        parent_width_(parent_width),
+        byte_width_(static_cast<uint8_t>(1 << (packed_type & 3))),
+        type_(static_cast<Type>(packed_type >> 2)) {}
 
   Type GetType() const { return type_; }
 
@@ -378,15 +428,19 @@ class Reference {
   bool IsString() const { return type_ == FBT_STRING; }
   bool IsKey() const { return type_ == FBT_KEY; }
   bool IsVector() const { return type_ == FBT_VECTOR || type_ == FBT_MAP; }
+  bool IsUntypedVector() const { return type_ == FBT_VECTOR; }
   bool IsTypedVector() const { return flexbuffers::IsTypedVector(type_); }
-  bool IsFixedTypedVector() const { return flexbuffers::IsFixedTypedVector(type_); }
-  bool IsAnyVector() const { return (IsTypedVector() || IsFixedTypedVector() || IsVector());}
+  bool IsFixedTypedVector() const {
+    return flexbuffers::IsFixedTypedVector(type_);
+  }
+  bool IsAnyVector() const {
+    return (IsTypedVector() || IsFixedTypedVector() || IsVector());
+  }
   bool IsMap() const { return type_ == FBT_MAP; }
   bool IsBlob() const { return type_ == FBT_BLOB; }
-
   bool AsBool() const {
     return (type_ == FBT_BOOL ? ReadUInt64(data_, parent_width_)
-                               : AsUInt64()) != 0;
+                              : AsUInt64()) != 0;
   }
 
   // Reads any type as a int64_t. Never fails, does most sensible conversion.
@@ -464,7 +518,11 @@ class Reference {
         case FBT_INDIRECT_UINT:
           return static_cast<double>(ReadUInt64(Indirect(), byte_width_));
         case FBT_NULL: return 0.0;
-        case FBT_STRING: return strtod(AsString().c_str(), nullptr);
+        case FBT_STRING: {
+          double d;
+          flatbuffers::StringToNumber(AsString().c_str(), &d);
+          return d;
+        }
         case FBT_VECTOR: return static_cast<double>(AsVector().size());
         case FBT_BOOL:
           return static_cast<double>(ReadUInt64(data_, parent_width_));
@@ -477,17 +535,22 @@ class Reference {
   float AsFloat() const { return static_cast<float>(AsDouble()); }
 
   const char *AsKey() const {
-    if (type_ == FBT_KEY) {
+    if (type_ == FBT_KEY || type_ == FBT_STRING) {
       return reinterpret_cast<const char *>(Indirect());
     } else {
       return "";
     }
   }
 
-  // This function returns the empty string if you try to read a not-string.
+  // This function returns the empty string if you try to read something that
+  // is not a string or key.
   String AsString() const {
     if (type_ == FBT_STRING) {
       return String(Indirect(), byte_width_);
+    } else if (type_ == FBT_KEY) {
+      auto key = Indirect();
+      return String(key, byte_width_,
+                    strlen(reinterpret_cast<const char *>(key)));
     } else {
       return String::EmptyString();
     }
@@ -503,8 +566,13 @@ class Reference {
   // Convert any type to a JSON-like string. strings_quoted determines if
   // string values at the top level receive "" quotes (inside other values
   // they always do). keys_quoted determines if keys are quoted, at any level.
-  // TODO(wvo): add further options to have indentation/newlines.
   void ToString(bool strings_quoted, bool keys_quoted, std::string &s) const {
+    ToString(strings_quoted, keys_quoted, s, false, 0, "");
+  }
+
+  // This version additionally allow you to specify if you want indentation.
+  void ToString(bool strings_quoted, bool keys_quoted, std::string &s,
+                bool indented, int cur_indent, const char *indent_string) const {
     if (type_ == FBT_STRING) {
       String str(Indirect(), byte_width_);
       if (strings_quoted) {
@@ -530,26 +598,54 @@ class Reference {
     } else if (IsBool()) {
       s += AsBool() ? "true" : "false";
     } else if (IsMap()) {
-      s += "{ ";
+      s += "{";
+      s += indented ? "\n" : " ";
       auto m = AsMap();
       auto keys = m.Keys();
       auto vals = m.Values();
       for (size_t i = 0; i < keys.size(); i++) {
-        keys[i].ToString(true, keys_quoted, s);
+        bool kq = keys_quoted;
+        if (!kq) {
+          // FlexBuffers keys may contain arbitrary characters, only allow
+          // unquoted if it looks like an "identifier":
+          const char *p = keys[i].AsKey();
+          if (!flatbuffers::is_alpha(*p) && *p != '_') {
+            kq = true;
+          } else {
+            while (*++p) {
+              if (!flatbuffers::is_alnum(*p) && *p != '_') {
+                kq = true;
+                break;
+              }
+            }
+          }
+        }
+        if (indented) IndentString(s, cur_indent + 1, indent_string);
+        keys[i].ToString(true, kq, s);
         s += ": ";
-        vals[i].ToString(true, keys_quoted, s);
-        if (i < keys.size() - 1) s += ", ";
+        vals[i].ToString(true, keys_quoted, s, indented, cur_indent + 1, indent_string);
+        if (i < keys.size() - 1) {
+          s += ",";
+          if (!indented) s += " ";
+        }
+        if (indented) s += "\n";
       }
-      s += " }";
+      if (!indented) s += " ";
+      if (indented) IndentString(s, cur_indent, indent_string);
+      s += "}";
     } else if (IsVector()) {
-      AppendToString<Vector>(s, AsVector(), keys_quoted);
+      AppendToString<Vector>(s, AsVector(), keys_quoted, indented,
+                             cur_indent + 1, indent_string);
     } else if (IsTypedVector()) {
-      AppendToString<TypedVector>(s, AsTypedVector(), keys_quoted);
+      AppendToString<TypedVector>(s, AsTypedVector(), keys_quoted, indented,
+                                  cur_indent + 1, indent_string);
     } else if (IsFixedTypedVector()) {
-      AppendToString<FixedTypedVector>(s, AsFixedTypedVector(), keys_quoted);
+      AppendToString<FixedTypedVector>(s, AsFixedTypedVector(), keys_quoted,
+                                       indented, cur_indent + 1, indent_string);
     } else if (IsBlob()) {
       auto blob = AsBlob();
-      flatbuffers::EscapeString(reinterpret_cast<const char*>(blob.data()), blob.size(), &s, true, false);
+      flatbuffers::EscapeString(reinterpret_cast<const char *>(blob.data()),
+                                blob.size(), &s, true, false);
     } else {
       s += "(?)";
     }
@@ -577,8 +673,18 @@ class Reference {
 
   TypedVector AsTypedVector() const {
     if (IsTypedVector()) {
-      return TypedVector(Indirect(), byte_width_,
-                         ToTypedVectorElementType(type_));
+      auto tv =
+          TypedVector(Indirect(), byte_width_, ToTypedVectorElementType(type_));
+      if (tv.type_ == FBT_STRING) {
+        // These can't be accessed as strings, since we don't know the bit-width
+        // of the size field, see the declaration of
+        // FBT_VECTOR_STRING_DEPRECATED above for details.
+        // We change the type here to be keys, which are a subtype of strings,
+        // and will ignore the size field. This will truncate strings with
+        // embedded nulls.
+        tv.type_ = FBT_KEY;
+      }
+      return tv;
     } else {
       return TypedVector::EmptyTypedVector();
     }
@@ -708,6 +814,8 @@ class Reference {
     return false;
   }
 
+  friend class Verifier;
+
   const uint8_t *data_;
   uint8_t parent_width_;
   uint8_t byte_width_;
@@ -723,9 +831,15 @@ template<> inline int32_t Reference::As<int32_t>() const { return AsInt32(); }
 template<> inline int64_t Reference::As<int64_t>() const { return AsInt64(); }
 
 template<> inline uint8_t Reference::As<uint8_t>() const { return AsUInt8(); }
-template<> inline uint16_t Reference::As<uint16_t>() const { return AsUInt16(); }
-template<> inline uint32_t Reference::As<uint32_t>() const { return AsUInt32(); }
-template<> inline uint64_t Reference::As<uint64_t>() const { return AsUInt64(); }
+template<> inline uint16_t Reference::As<uint16_t>() const {
+  return AsUInt16();
+}
+template<> inline uint32_t Reference::As<uint32_t>() const {
+  return AsUInt32();
+}
+template<> inline uint64_t Reference::As<uint64_t>() const {
+  return AsUInt64();
+}
 
 template<> inline double Reference::As<double>() const { return AsDouble(); }
 template<> inline float Reference::As<float>() const { return AsFloat(); }
@@ -796,6 +910,7 @@ inline Reference Map::operator[](const char *key) const {
     case 2: comp = KeyCompare<uint16_t>; break;
     case 4: comp = KeyCompare<uint32_t>; break;
     case 8: comp = KeyCompare<uint64_t>; break;
+    default: FLATBUFFERS_ASSERT(false); return Reference();
   }
   auto res = std::bsearch(key, keys.data_, keys.size(), keys.byte_width_, comp);
   if (!res) return Reference(nullptr, 1, NullPackedType());
@@ -818,7 +933,7 @@ inline Reference GetRoot(const uint8_t *buffer, size_t size) {
 }
 
 inline Reference GetRoot(const std::vector<uint8_t> &buffer) {
-  return GetRoot(flatbuffers::vector_data(buffer), buffer.size());
+  return GetRoot(buffer.data(), buffer.size());
 }
 
 // Flags that configure how the Builder behaves.
@@ -846,12 +961,18 @@ class Builder FLATBUFFERS_FINAL_CLASS {
           BuilderFlag flags = BUILDER_FLAG_SHARE_KEYS)
       : buf_(initial_size),
         finished_(false),
+        has_duplicate_keys_(false),
         flags_(flags),
         force_min_bit_width_(BIT_WIDTH_8),
         key_pool(KeyOffsetCompare(buf_)),
         string_pool(StringOffsetCompare(buf_)) {
     buf_.clear();
   }
+
+#ifdef FLATBUFFERS_DEFAULT_DECLARATION
+  Builder(Builder &&) = default;
+  Builder &operator=(Builder &&) = default;
+#endif
 
   /// @brief Get the serialized buffer (after you call `Finish()`).
   /// @return Returns a vector owned by this class.
@@ -1008,7 +1129,16 @@ class Builder FLATBUFFERS_FINAL_CLASS {
     return CreateBlob(data, len, 0, FBT_BLOB);
   }
   size_t Blob(const std::vector<uint8_t> &v) {
-    return CreateBlob(flatbuffers::vector_data(v), v.size(), 0, FBT_BLOB);
+    return CreateBlob(v.data(), v.size(), 0, FBT_BLOB);
+  }
+
+  void Blob(const char *key, const void *data, size_t len) {
+    Key(key);
+    Blob(data, len);
+  }
+  void Blob(const char *key, const std::vector<uint8_t> &v) {
+    Key(key);
+    Blob(v);
   }
 
   // TODO(wvo): support all the FlexBuffer types (like flexbuffers::String),
@@ -1026,7 +1156,7 @@ class Builder FLATBUFFERS_FINAL_CLASS {
     return stack_.size();
   }
 
-  // TODO(wvo): allow this to specify an aligment greater than the natural
+  // TODO(wvo): allow this to specify an alignment greater than the natural
   // alignment.
   size_t EndVector(size_t start, bool typed, bool fixed) {
     auto vec = CreateVector(start, stack_.size() - start, 1, typed, fixed);
@@ -1038,15 +1168,12 @@ class Builder FLATBUFFERS_FINAL_CLASS {
 
   size_t EndMap(size_t start) {
     // We should have interleaved keys and values on the stack.
-    // Make sure it is an even number:
-    auto len = stack_.size() - start;
-    FLATBUFFERS_ASSERT(!(len & 1));
-    len /= 2;
+    auto len = MapElementCount(start);
     // Make sure keys are all strings:
     for (auto key = start; key < stack_.size(); key += 2) {
       FLATBUFFERS_ASSERT(stack_[key].type_ == FBT_KEY);
     }
-    // Now sort values, so later we can do a binary seach lookup.
+    // Now sort values, so later we can do a binary search lookup.
     // We want to sort 2 array elements at a time.
     struct TwoValue {
       Value key;
@@ -1061,23 +1188,24 @@ class Builder FLATBUFFERS_FINAL_CLASS {
     // step automatically when appliccable, and encourage people to write in
     // sorted fashion.
     // std::sort is typically already a lot faster on sorted data though.
-    auto dict =
-        reinterpret_cast<TwoValue *>(flatbuffers::vector_data(stack_) + start);
-    std::sort(dict, dict + len,
-              [&](const TwoValue &a, const TwoValue &b) -> bool {
-                auto as = reinterpret_cast<const char *>(
-                    flatbuffers::vector_data(buf_) + a.key.u_);
-                auto bs = reinterpret_cast<const char *>(
-                    flatbuffers::vector_data(buf_) + b.key.u_);
-                auto comp = strcmp(as, bs);
-                // If this assertion hits, you've added two keys with the same
-                // value to this map.
-                // TODO: Have to check for pointer equality, as some sort
-                // implementation apparently call this function with the same
-                // element?? Why?
-                FLATBUFFERS_ASSERT(comp || &a == &b);
-                return comp < 0;
-              });
+    auto dict = reinterpret_cast<TwoValue *>(stack_.data() + start);
+    std::sort(
+        dict, dict + len, [&](const TwoValue &a, const TwoValue &b) -> bool {
+          auto as = reinterpret_cast<const char *>(buf_.data() + a.key.u_);
+          auto bs = reinterpret_cast<const char *>(buf_.data() + b.key.u_);
+          auto comp = strcmp(as, bs);
+          // We want to disallow duplicate keys, since this results in a
+          // map where values cannot be found.
+          // But we can't assert here (since we don't want to fail on
+          // random JSON input) or have an error mechanism.
+          // Instead, we set has_duplicate_keys_ in the builder to
+          // signal this.
+          // TODO: Have to check for pointer equality, as some sort
+          // implementation apparently call this function with the same
+          // element?? Why?
+          if (!comp && &a != &b) has_duplicate_keys_ = true;
+          return comp < 0;
+        });
     // First create a vector out of all keys.
     // TODO(wvo): if kBuilderFlagShareKeyVectors is true, see if we can share
     // the first vector.
@@ -1088,6 +1216,10 @@ class Builder FLATBUFFERS_FINAL_CLASS {
     stack_.push_back(vec);
     return static_cast<size_t>(vec.u_);
   }
+
+  // Call this after EndMap to see if the map had any duplicate keys.
+  // Any map with such keys won't be able to retrieve all values.
+  bool HasDuplicateKeys() const { return has_duplicate_keys_; }
 
   template<typename F> size_t Vector(F f) {
     auto start = StartVector();
@@ -1127,7 +1259,7 @@ class Builder FLATBUFFERS_FINAL_CLASS {
     Vector(elems, len);
   }
   template<typename T> void Vector(const std::vector<T> &vec) {
-    Vector(flatbuffers::vector_data(vec), vec.size());
+    Vector(vec.data(), vec.size());
   }
 
   template<typename F> size_t TypedVector(F f) {
@@ -1192,6 +1324,38 @@ class Builder FLATBUFFERS_FINAL_CLASS {
     for (auto it = map.begin(); it != map.end(); ++it)
       Add(it->first.c_str(), it->second);
     EndMap(start);
+  }
+
+  size_t MapElementCount(size_t start) {
+    // Make sure it is an even number:
+    auto len = stack_.size() - start;
+    FLATBUFFERS_ASSERT(!(len & 1));
+    len /= 2;
+    return len;
+  }
+
+  // If you wish to share a value explicitly (a value not shared automatically
+  // through one of the BUILDER_FLAG_SHARE_* flags) you can do so with these
+  // functions. Or if you wish to turn those flags off for performance reasons
+  // and still do some explicit sharing. For example:
+  // builder.IndirectDouble(M_PI);
+  // auto id = builder.LastValue();  // Remember where we stored it.
+  // .. more code goes here ..
+  // builder.ReuseValue(id);  // Refers to same double by offset.
+  // LastValue works regardless of whether the value has a key or not.
+  // Works on any data type.
+  struct Value;
+  Value LastValue() { return stack_.back(); }
+  void ReuseValue(Value v) { stack_.push_back(v); }
+  void ReuseValue(const char *key, Value v) {
+    Key(key);
+    ReuseValue(v);
+  }
+
+  // Undo the last element serialized. Call once for a value and once for a
+  // key.
+  void Undo() {
+      stack_.pop_back();
   }
 
   // Overloaded Add that tries to call the correct function above.
@@ -1311,14 +1475,14 @@ class Builder FLATBUFFERS_FINAL_CLASS {
 
   template<typename T> static Type GetScalarType() {
     static_assert(flatbuffers::is_scalar<T>::value, "Unrelated types");
-    return flatbuffers::is_floating_point<T>::value
-               ? FBT_FLOAT
-               : flatbuffers::is_same<T, bool>::value
-                     ? FBT_BOOL
-                     : (flatbuffers::is_unsigned<T>::value ? FBT_UINT
-                                                           : FBT_INT);
+    return flatbuffers::is_floating_point<T>::value ? FBT_FLOAT
+           : flatbuffers::is_same<T, bool>::value
+               ? FBT_BOOL
+               : (flatbuffers::is_unsigned<T>::value ? FBT_UINT : FBT_INT);
   }
 
+ public:
+  // This was really intended to be private, except for LastValue/ReuseValue.
   struct Value {
     union {
       int64_t i_;
@@ -1343,7 +1507,10 @@ class Builder FLATBUFFERS_FINAL_CLASS {
     Value(uint64_t u, Type t, BitWidth bw)
         : u_(u), type_(t), min_bit_width_(bw) {}
 
-    Value(float f) : f_(f), type_(FBT_FLOAT), min_bit_width_(BIT_WIDTH_32) {}
+    Value(float f)
+        : f_(static_cast<double>(f)),
+          type_(FBT_FLOAT),
+          min_bit_width_(BIT_WIDTH_32) {}
     Value(double f) : f_(f), type_(FBT_FLOAT), min_bit_width_(WidthF(f)) {}
 
     uint8_t StoredPackedType(BitWidth parent_bit_width_ = BIT_WIDTH_8) const {
@@ -1388,6 +1555,7 @@ class Builder FLATBUFFERS_FINAL_CLASS {
     }
   };
 
+ private:
   void WriteAny(const Value &val, uint8_t byte_width) {
     switch (val.type_) {
       case FBT_NULL:
@@ -1420,6 +1588,7 @@ class Builder FLATBUFFERS_FINAL_CLASS {
     // TODO: instead of asserting, could write vector with larger elements
     // instead, though that would be wasteful.
     FLATBUFFERS_ASSERT(WidthU(len) <= bit_width);
+    Align(bit_width);
     if (!fixed) Write<uint64_t>(len, byte_width);
     auto vloc = buf_.size();
     for (size_t i = 0; i < len; i++) Write(elems[i], byte_width);
@@ -1431,7 +1600,9 @@ class Builder FLATBUFFERS_FINAL_CLASS {
 
   Value CreateVector(size_t start, size_t vec_len, size_t step, bool typed,
                      bool fixed, const Value *keys = nullptr) {
-    FLATBUFFERS_ASSERT(!fixed || typed); // typed=false, fixed=true combination is not supported.
+    FLATBUFFERS_ASSERT(
+        !fixed ||
+        typed);  // typed=false, fixed=true combination is not supported.
     // Figure out smallest bit width we can store this vector with.
     auto bit_width = (std::max)(force_min_bit_width_, WidthU(vec_len));
     auto prefix_elems = 1;
@@ -1444,7 +1615,8 @@ class Builder FLATBUFFERS_FINAL_CLASS {
     Type vector_type = FBT_KEY;
     // Check bit widths and types for all elements.
     for (size_t i = start; i < stack_.size(); i += step) {
-      auto elem_width = stack_[i].ElemWidth(buf_.size(), i + prefix_elems);
+      auto elem_width =
+          stack_[i].ElemWidth(buf_.size(), i - start + prefix_elems);
       bit_width = (std::max)(bit_width, elem_width);
       if (typed) {
         if (i == start) {
@@ -1456,9 +1628,9 @@ class Builder FLATBUFFERS_FINAL_CLASS {
         }
       }
     }
-    // If you get this assert, your fixed types are not one of:
+    // If you get this assert, your typed types are not one of:
     // Int / UInt / Float / Key.
-    FLATBUFFERS_ASSERT(!fixed || IsTypedVectorElementType(vector_type));
+    FLATBUFFERS_ASSERT(!typed || IsTypedVectorElementType(vector_type));
     auto byte_width = Align(bit_width);
     // Write vector. First the keys width/offset if available, and size.
     if (keys) {
@@ -1492,6 +1664,7 @@ class Builder FLATBUFFERS_FINAL_CLASS {
   std::vector<Value> stack_;
 
   bool finished_;
+  bool has_duplicate_keys_;
 
   BuilderFlag flags_;
 
@@ -1500,10 +1673,8 @@ class Builder FLATBUFFERS_FINAL_CLASS {
   struct KeyOffsetCompare {
     explicit KeyOffsetCompare(const std::vector<uint8_t> &buf) : buf_(&buf) {}
     bool operator()(size_t a, size_t b) const {
-      auto stra =
-          reinterpret_cast<const char *>(flatbuffers::vector_data(*buf_) + a);
-      auto strb =
-          reinterpret_cast<const char *>(flatbuffers::vector_data(*buf_) + b);
+      auto stra = reinterpret_cast<const char *>(buf_->data() + a);
+      auto strb = reinterpret_cast<const char *>(buf_->data() + b);
       return strcmp(stra, strb) < 0;
     }
     const std::vector<uint8_t> *buf_;
@@ -1511,13 +1682,13 @@ class Builder FLATBUFFERS_FINAL_CLASS {
 
   typedef std::pair<size_t, size_t> StringOffset;
   struct StringOffsetCompare {
-    explicit StringOffsetCompare(const std::vector<uint8_t> &buf) : buf_(&buf) {}
+    explicit StringOffsetCompare(const std::vector<uint8_t> &buf)
+        : buf_(&buf) {}
     bool operator()(const StringOffset &a, const StringOffset &b) const {
-      auto stra = reinterpret_cast<const char *>(
-          flatbuffers::vector_data(*buf_) + a.first);
-      auto strb = reinterpret_cast<const char *>(
-          flatbuffers::vector_data(*buf_) + b.first);
-      return strncmp(stra, strb, (std::min)(a.second, b.second) + 1) < 0;
+      auto stra = buf_->data() + a.first;
+      auto strb = buf_->data() + b.first;
+      auto cr = memcmp(stra, strb, (std::min)(a.second, b.second) + 1);
+      return cr < 0 || (cr == 0 && a.second < b.second);
     }
     const std::vector<uint8_t> *buf_;
   };
@@ -1527,12 +1698,241 @@ class Builder FLATBUFFERS_FINAL_CLASS {
 
   KeyOffsetMap key_pool;
   StringOffsetMap string_pool;
+
+  friend class Verifier;
 };
+
+// Helper class to verify the integrity of a FlexBuffer
+class Verifier FLATBUFFERS_FINAL_CLASS {
+ public:
+  Verifier(const uint8_t *buf, size_t buf_len,
+           // Supplying this vector likely results in faster verification
+           // of larger buffers with many shared keys/strings, but
+           // comes at the cost of using additional memory the same size of
+           // the buffer being verified, so it is by default off.
+           std::vector<uint8_t> *reuse_tracker = nullptr,
+           bool _check_alignment = true, size_t max_depth = 64)
+      : buf_(buf),
+        size_(buf_len),
+        depth_(0),
+        max_depth_(max_depth),
+        num_vectors_(0),
+        max_vectors_(buf_len),
+        check_alignment_(_check_alignment),
+        reuse_tracker_(reuse_tracker) {
+    FLATBUFFERS_ASSERT(static_cast<int32_t>(size_) < FLATBUFFERS_MAX_BUFFER_SIZE);
+    if (reuse_tracker_) {
+      reuse_tracker_->clear();
+      reuse_tracker_->resize(size_, PackedType(BIT_WIDTH_8, FBT_NULL));
+    }
+  }
+
+ private:
+  // Central location where any verification failures register.
+  bool Check(bool ok) const {
+    // clang-format off
+    #ifdef FLATBUFFERS_DEBUG_VERIFICATION_FAILURE
+      FLATBUFFERS_ASSERT(ok);
+    #endif
+    // clang-format on
+    return ok;
+  }
+
+  // Verify any range within the buffer.
+  bool VerifyFrom(size_t elem, size_t elem_len) const {
+    return Check(elem_len < size_ && elem <= size_ - elem_len);
+  }
+  bool VerifyBefore(size_t elem, size_t elem_len) const {
+    return Check(elem_len <= elem);
+  }
+
+  bool VerifyFromPointer(const uint8_t *p, size_t len) {
+    auto o = static_cast<size_t>(p - buf_);
+    return VerifyFrom(o, len);
+  }
+  bool VerifyBeforePointer(const uint8_t *p, size_t len) {
+    auto o = static_cast<size_t>(p - buf_);
+    return VerifyBefore(o, len);
+  }
+
+  bool VerifyByteWidth(size_t width) {
+    return Check(width == 1 || width == 2 || width == 4 || width == 8);
+  }
+
+  bool VerifyType(int type) { return Check(type >= 0 && type < FBT_MAX_TYPE); }
+
+  bool VerifyOffset(uint64_t off, const uint8_t *p) {
+    return Check(off <= static_cast<uint64_t>(size_)) &&
+           off <= static_cast<uint64_t>(p - buf_);
+  }
+
+  bool VerifyAlignment(const uint8_t *p, size_t size) const {
+    auto o = static_cast<size_t>(p - buf_);
+    return Check((o & (size - 1)) == 0 || !check_alignment_);
+  }
+
+// Macro, since we want to escape from parent function & use lazy args.
+#define FLEX_CHECK_VERIFIED(P, PACKED_TYPE)                     \
+  if (reuse_tracker_) {                                         \
+    auto packed_type = PACKED_TYPE;                             \
+    auto existing = (*reuse_tracker_)[P - buf_];                \
+    if (existing == packed_type) return true;                   \
+    /* Fail verification if already set with different type! */ \
+    if (!Check(existing == 0)) return false;                    \
+    (*reuse_tracker_)[P - buf_] = packed_type;                  \
+  }
+
+  bool VerifyVector(Reference r, const uint8_t *p, Type elem_type) {
+    // Any kind of nesting goes thru this function, so guard against that
+    // here, both with simple nesting checks, and the reuse tracker if on.
+    depth_++;
+    num_vectors_++;
+    if (!Check(depth_ <= max_depth_ && num_vectors_ <= max_vectors_))
+      return false;
+    auto size_byte_width = r.byte_width_;
+    if (!VerifyBeforePointer(p, size_byte_width)) return false;
+    FLEX_CHECK_VERIFIED(p - size_byte_width,
+                        PackedType(Builder::WidthB(size_byte_width), r.type_));
+    auto sized = Sized(p, size_byte_width);
+    auto num_elems = sized.size();
+    auto elem_byte_width = r.type_ == FBT_STRING || r.type_ == FBT_BLOB
+                               ? uint8_t(1)
+                               : r.byte_width_;
+    auto max_elems = SIZE_MAX / elem_byte_width;
+    if (!Check(num_elems < max_elems))
+      return false;  // Protect against byte_size overflowing.
+    auto byte_size = num_elems * elem_byte_width;
+    if (!VerifyFromPointer(p, byte_size)) return false;
+    if (elem_type == FBT_NULL) {
+      // Verify type bytes after the vector.
+      if (!VerifyFromPointer(p + byte_size, num_elems)) return false;
+      auto v = Vector(p, size_byte_width);
+      for (size_t i = 0; i < num_elems; i++)
+        if (!VerifyRef(v[i])) return false;
+    } else if (elem_type == FBT_KEY) {
+      auto v = TypedVector(p, elem_byte_width, FBT_KEY);
+      for (size_t i = 0; i < num_elems; i++)
+        if (!VerifyRef(v[i])) return false;
+    } else {
+      FLATBUFFERS_ASSERT(IsInline(elem_type));
+    }
+    depth_--;
+    return true;
+  }
+
+  bool VerifyKeys(const uint8_t *p, uint8_t byte_width) {
+    // The vector part of the map has already been verified.
+    const size_t num_prefixed_fields = 3;
+    if (!VerifyBeforePointer(p, byte_width * num_prefixed_fields)) return false;
+    p -= byte_width * num_prefixed_fields;
+    auto off = ReadUInt64(p, byte_width);
+    if (!VerifyOffset(off, p)) return false;
+    auto key_byte_with =
+        static_cast<uint8_t>(ReadUInt64(p + byte_width, byte_width));
+    if (!VerifyByteWidth(key_byte_with)) return false;
+    return VerifyVector(Reference(p, byte_width, key_byte_with, FBT_VECTOR_KEY),
+                        p - off, FBT_KEY);
+  }
+
+  bool VerifyKey(const uint8_t *p) {
+    FLEX_CHECK_VERIFIED(p, PackedType(BIT_WIDTH_8, FBT_KEY));
+    while (p < buf_ + size_)
+      if (*p++) return true;
+    return false;
+  }
+
+#undef FLEX_CHECK_VERIFIED
+
+  bool VerifyTerminator(const String &s) {
+    return VerifyFromPointer(reinterpret_cast<const uint8_t *>(s.c_str()),
+                             s.size() + 1);
+  }
+
+  bool VerifyRef(Reference r) {
+    // r.parent_width_ and r.data_ already verified.
+    if (!VerifyByteWidth(r.byte_width_) || !VerifyType(r.type_)) {
+      return false;
+    }
+    if (IsInline(r.type_)) {
+      // Inline scalars, don't require further verification.
+      return true;
+    }
+    // All remaining types are an offset.
+    auto off = ReadUInt64(r.data_, r.parent_width_);
+    if (!VerifyOffset(off, r.data_)) return false;
+    auto p = r.Indirect();
+    if (!VerifyAlignment(p, r.byte_width_)) return false;
+    switch (r.type_) {
+      case FBT_INDIRECT_INT:
+      case FBT_INDIRECT_UINT:
+      case FBT_INDIRECT_FLOAT: return VerifyFromPointer(p, r.byte_width_);
+      case FBT_KEY: return VerifyKey(p);
+      case FBT_MAP:
+        return VerifyVector(r, p, FBT_NULL) && VerifyKeys(p, r.byte_width_);
+      case FBT_VECTOR: return VerifyVector(r, p, FBT_NULL);
+      case FBT_VECTOR_INT: return VerifyVector(r, p, FBT_INT);
+      case FBT_VECTOR_BOOL:
+      case FBT_VECTOR_UINT: return VerifyVector(r, p, FBT_UINT);
+      case FBT_VECTOR_FLOAT: return VerifyVector(r, p, FBT_FLOAT);
+      case FBT_VECTOR_KEY: return VerifyVector(r, p, FBT_KEY);
+      case FBT_VECTOR_STRING_DEPRECATED:
+        // Use of FBT_KEY here intentional, see elsewhere.
+        return VerifyVector(r, p, FBT_KEY);
+      case FBT_BLOB: return VerifyVector(r, p, FBT_UINT);
+      case FBT_STRING:
+        return VerifyVector(r, p, FBT_UINT) &&
+               VerifyTerminator(String(p, r.byte_width_));
+      case FBT_VECTOR_INT2:
+      case FBT_VECTOR_UINT2:
+      case FBT_VECTOR_FLOAT2:
+      case FBT_VECTOR_INT3:
+      case FBT_VECTOR_UINT3:
+      case FBT_VECTOR_FLOAT3:
+      case FBT_VECTOR_INT4:
+      case FBT_VECTOR_UINT4:
+      case FBT_VECTOR_FLOAT4: {
+        uint8_t len = 0;
+        auto vtype = ToFixedTypedVectorElementType(r.type_, &len);
+        if (!VerifyType(vtype)) return false;
+        return VerifyFromPointer(p, static_cast<size_t>(r.byte_width_) * len);
+      }
+      default: return false;
+    }
+  }
+
+ public:
+  bool VerifyBuffer() {
+    if (!Check(size_ >= 3)) return false;
+    auto end = buf_ + size_;
+    auto byte_width = *--end;
+    auto packed_type = *--end;
+    return VerifyByteWidth(byte_width) && Check(end - buf_ >= byte_width) &&
+           VerifyRef(Reference(end - byte_width, byte_width, packed_type));
+  }
+
+ private:
+  const uint8_t *buf_;
+  size_t size_;
+  size_t depth_;
+  const size_t max_depth_;
+  size_t num_vectors_;
+  const size_t max_vectors_;
+  bool check_alignment_;
+  std::vector<uint8_t> *reuse_tracker_;
+};
+
+// Utility function that constructs the Verifier for you, see above for
+// parameters.
+inline bool VerifyBuffer(const uint8_t *buf, size_t buf_len,
+                         std::vector<uint8_t> *reuse_tracker = nullptr) {
+  Verifier verifier(buf, buf_len, reuse_tracker);
+  return verifier.VerifyBuffer();
+}
 
 }  // namespace flexbuffers
 
-#  if defined(_MSC_VER)
-#    pragma warning(pop)
-#  endif
+#if defined(_MSC_VER)
+#  pragma warning(pop)
+#endif
 
 #endif  // FLATBUFFERS_FLEXBUFFERS_H_
