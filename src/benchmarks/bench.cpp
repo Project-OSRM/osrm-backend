@@ -12,9 +12,9 @@
 #include "osrm/coordinate.hpp"
 #include "osrm/engine_config.hpp"
 #include "osrm/json_container.hpp"
+
 #include "osrm/osrm.hpp"
 #include "osrm/status.hpp"
-#include "util/meminfo.hpp"
 
 #include <boost/assert.hpp>
 
@@ -655,9 +655,6 @@ try
         std::cerr << "Unknown benchmark: " << benchmarkToRun << std::endl;
         return EXIT_FAILURE;
     }
-
-    std::cout << "Peak RAM: " << osrm::util::PeakRAMUsedInBytes() / (1024 * 1024) << "MB"
-              << std::endl;
     return EXIT_SUCCESS;
 }
 catch (const std::exception &e)

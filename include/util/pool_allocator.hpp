@@ -62,7 +62,7 @@ class MemoryPool
             current_chunk_left_bytes_ -= block_size_in_bytes;
             current_chunk_ptr_ += block_size_in_bytes;
         }
-        auto ptr = static_cast<T *>(free_list.back());
+        auto ptr = reinterpret_cast<T *>(free_list.back());
         free_list.pop_back();
         return ptr;
     }
@@ -70,7 +70,8 @@ class MemoryPool
     template <typename T> void deallocate(T *p, std::size_t n) noexcept
     {
         size_t free_list_index = get_next_power_of_two_exponent(n * sizeof(T));
-        free_lists_[free_list_index].push_back(static_cast<void *>(p));
+        // NOLINTNEXTLINE(bugprone-multi-level-implicit-pointer-conversion)
+        free_lists_[free_list_index].push_back(reinterpret_cast<void *>(p));
     }
 
     ~MemoryPool()
@@ -138,6 +139,8 @@ template <typename T> class PoolAllocator
     PoolAllocator &operator=(PoolAllocator &&) noexcept = default;
 
   private:
+    // using shared_ptr guarantees that memory pool won't be destroyed before all allocators using
+    // it (important if there are static instances of PoolAllocator)
     std::shared_ptr<MemoryPool> pool;
 };
 template <typename T, typename U>
