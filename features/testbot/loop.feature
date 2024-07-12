@@ -75,7 +75,7 @@ Feature: Avoid weird loops caused by rounding errors
 
     @412 @via
     Scenario: Avoid weird loops 3
-        And the node map
+        Given the node map
             """
             a
             b e
