@@ -1,5 +1,3 @@
-
-
 use serde::Deserialize;
 
 use super::{location::Location, nearest_response::Waypoint};
@@ -11,7 +9,7 @@ pub struct Maneuver {
     pub location: Location,
     pub modifier: Option<String>, // TODO: should be an enum
     pub r#type: String,           // TODO: should be an enum
-    pub exit: Option<u64>
+    pub exit: Option<u64>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -37,6 +35,7 @@ pub struct Intersection {
     pub entry: Vec<bool>,
     pub bearings: Vec<u64>,
     pub location: Location,
+    pub classes: Option<Vec<String>>,
 }
 
 #[derive(Deserialize, Default, Debug)]

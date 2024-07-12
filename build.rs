@@ -104,14 +104,14 @@ fn main() {
         .run(flatc_rust::Args {
             extra: &["--gen-all"],
             inputs: &[
-                Path::new("include/engine/api/flatbuffers/position.fbs"),
-                Path::new("include/engine/api/flatbuffers/waypoint.fbs"),
-                Path::new("include/engine/api/flatbuffers/route.fbs"),
-                Path::new("include/engine/api/flatbuffers/table.fbs"),
-                Path::new("include/engine/api/flatbuffers/fbresult.fbs"),
+                Path::new("generated/include/engine/api/flatbuffers/position.fbs"),
+                Path::new("generated/include/engine/api/flatbuffers/waypoint.fbs"),
+                Path::new("generated/include/engine/api/flatbuffers/route.fbs"),
+                Path::new("generated/include/engine/api/flatbuffers/table.fbs"),
+                Path::new("generated/include/engine/api/flatbuffers/fbresult.fbs"),
             ],
             out_dir: Path::new("target/flatbuffers/"),
             ..Default::default()
         })
-        .expect("flatc failed generated files");
+        .expect("flatc failed generating files");
 }

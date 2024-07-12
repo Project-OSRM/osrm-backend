@@ -1,5 +1,8 @@
 use super::{
-    nearest_response::NearestResponse, osm::{OSMNode, OSMWay}, osm_db::OSMDb, osrm_error::OSRMError,
+    nearest_response::NearestResponse,
+    osm::{OSMNode, OSMWay},
+    osm_db::OSMDb,
+    osrm_error::OSRMError,
     route_response::RouteResponse,
 };
 use crate::{common::local_task::LocalTask, Location};

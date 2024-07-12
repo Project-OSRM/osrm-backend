@@ -16,7 +16,7 @@ fn approx_equal_within_offset_range(actual: f64, expectation: f64, offset: f64) 
     actual >= expectation - offset && actual <= expectation + offset
 }
 
-pub fn approximate_within_range(actual: f64, expectation: f64, offset: &Offset) -> bool{
+pub fn approximate_within_range(actual: f64, expectation: f64, offset: &Offset) -> bool {
     match offset {
         Offset::Absolute(a) => approx_equal_within_offset_range(actual, expectation, *a),
         Offset::Percentage(p) => aprox_equal_within_percentage_range(actual, expectation, *p),

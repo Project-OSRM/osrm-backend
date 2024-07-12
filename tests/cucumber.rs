@@ -16,8 +16,7 @@ use core::panic;
 use cucumber::{
     codegen::ParametersProvider,
     gherkin::{Step, Table},
-    given, then, when,
-    World,
+    given, then, when, World,
 };
 use futures::{future, FutureExt};
 use geo_types::Point;
@@ -1124,6 +1123,28 @@ fn request_route(world: &mut OSRMWorld, step: &Step, state: String) {
                     };
 
                     assert_eq!(actual, expectation);
+                },
+                "classes" => {
+        //  '[' + s.intersections.map(i => '(' + (i.classes ? i.classes.join(',') : '') + ')').join(',') + ']');
+
+                    let (_, response) = route_result.as_ref().expect("no route response in 'classes'");
+                    let first_route = &response.routes[0];
+                    let first_leg = first_route.legs.first().expect("no first leg on route");
+                    let actual_classes = first_leg.steps.iter().map(|step| {
+                        "[".to_string() +
+                        &step.intersections.iter().map(|intersection| {
+                            let tmp = match &intersection.classes {
+                                Some(classes) => {
+                                    classes.join(",")
+                                },
+                                None => "".to_string(),
+                            };
+                            "(".to_string() + &tmp + ")"
+                        }).collect::<Vec<_>>().join(",") + "]"
+                    }).collect::<Vec<_>>().join(",");
+
+                    let expected_classes = test_case.get("classes").expect("test case classes not found");
+                    assert_eq!(&actual_classes, expected_classes, "classes don't match");
                 }
                 // TODO: more checks need to be implemented
                 _ => {
@@ -1151,7 +1172,7 @@ fn main() {
                 future::ready(()).boxed()
             })
             // .with_writer(DotWriter::default().normalized())
-            .filter_run("features/", |fe, r, sc| {
+            .filter_run("features", |fe, r, sc| {
                 // .filter_run("features/bicycle/classes.feature", |fe, r, sc| {
                 let tag = "todo".to_string();
                 !sc.tags.contains(&tag)
