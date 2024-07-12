@@ -117,9 +117,7 @@ class CellCustomizer
                    CellMetric &metric) const
     {
         const auto number_of_nodes = graph.GetNumberOfNodes();
-        HeapPtr heaps([number_of_nodes]{
-            return Heap{number_of_nodes};
-        });
+        HeapPtr heaps([number_of_nodes] { return Heap{number_of_nodes}; });
 
         for (std::size_t level = 1; level < partition.GetNumberOfLevels(); ++level)
         {

@@ -148,8 +148,6 @@ class QueryHeap
         }
     };
 
-
-
     using HeapContainer = boost::heap::d_ary_heap<HeapData,
                                                   boost::heap::arity<4>,
                                                   boost::heap::mutable_<true>,
@@ -169,8 +167,8 @@ class QueryHeap
         Data data;
     };
 
-    QueryHeap(const QueryHeap& other) = delete;
-    QueryHeap(QueryHeap&& other) = delete;
+    QueryHeap(const QueryHeap &other) = delete;
+    QueryHeap(QueryHeap &&other) = delete;
 
     template <typename... StorageArgs> explicit QueryHeap(StorageArgs... args) : node_index(args...)
     {
