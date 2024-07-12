@@ -11,8 +11,10 @@ thread_local SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::for
 thread_local SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::reverse_heap_2;
 thread_local SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::forward_heap_3;
 thread_local SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::reverse_heap_3;
-thread_local SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::map_matching_forward_heap_1;
-thread_local SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::map_matching_reverse_heap_1;
+thread_local SearchEngineData<CH>::SearchEngineHeapPtr
+    SearchEngineData<CH>::map_matching_forward_heap_1;
+thread_local SearchEngineData<CH>::SearchEngineHeapPtr
+    SearchEngineData<CH>::map_matching_reverse_heap_1;
 
 thread_local SearchEngineData<CH>::ManyToManyHeapPtr SearchEngineData<CH>::many_to_many_heap;
 
@@ -116,8 +118,15 @@ void SearchEngineData<CH>::InitializeOrClearManyToManyThreadLocalStorage(unsigne
 using MLD = routing_algorithms::mld::Algorithm;
 thread_local SearchEngineData<MLD>::SearchEngineHeapPtr SearchEngineData<MLD>::forward_heap_1;
 thread_local SearchEngineData<MLD>::SearchEngineHeapPtr SearchEngineData<MLD>::reverse_heap_1;
+<<<<<<< HEAD
 thread_local SearchEngineData<MLD>::MapMatchingHeapPtr SearchEngineData<MLD>::map_matching_forward_heap_1;
 thread_local SearchEngineData<MLD>::MapMatchingHeapPtr SearchEngineData<MLD>::map_matching_reverse_heap_1;
+=======
+thread_local SearchEngineData<MLD>::MapMatchingHeapPtr
+    SearchEngineData<MLD>::map_matching_forward_heap_1;
+thread_local SearchEngineData<MLD>::MapMatchingHeapPtr
+    SearchEngineData<MLD>::map_matching_reverse_heap_1;
+>>>>>>> master
 thread_local SearchEngineData<MLD>::ManyToManyHeapPtr SearchEngineData<MLD>::many_to_many_heap;
 
 void SearchEngineData<MLD>::InitializeOrClearMapMatchingThreadLocalStorage(

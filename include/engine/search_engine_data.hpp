@@ -5,8 +5,6 @@
 #include "util/query_heap.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/thread/tss.hpp>
-
 namespace osrm::engine
 {
 
