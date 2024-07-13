@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -116,7 +116,7 @@ namespace osmium {
 #ifdef _MSC_VER
                 osmium::detail::disable_invalid_parameter_handler diph;
 #endif
-                m_gzfile = ::gzdopen(osmium::io::detail::reliable_dup(fd), "wb");
+                m_gzfile = ::gzdopen(osmium::io::detail::reliable_dup(fd), "wb"); // NOLINT(cppcoreguidelines-prefer-member-initializer)
                 if (!m_gzfile) {
                     throw gzip_error{"gzip error: write initialization failed"};
                 }
@@ -192,7 +192,7 @@ namespace osmium {
 #ifdef _MSC_VER
                 osmium::detail::disable_invalid_parameter_handler diph;
 #endif
-                m_gzfile = ::gzdopen(fd, "rb");
+                m_gzfile = ::gzdopen(fd, "rb"); // NOLINT(cppcoreguidelines-prefer-member-initializer)
                 if (!m_gzfile) {
                     try {
                         osmium::io::detail::reliable_close(fd);
@@ -230,7 +230,7 @@ namespace osmium {
 #endif
                 std::string buffer(osmium::io::Decompressor::input_buffer_size, '\0');
                 assert(buffer.size() < std::numeric_limits<unsigned int>::max());
-                int nread = ::gzread(m_gzfile, &*buffer.begin(), static_cast<unsigned int>(buffer.size()));
+                const int nread = ::gzread(m_gzfile, &*buffer.begin(), static_cast<unsigned int>(buffer.size()));
                 if (nread < 0) {
                     detail::throw_gzip_error(m_gzfile, "read failed");
                 }

@@ -34,14 +34,14 @@ int main(int argc, char* argv[]) {
     try {
         // The Reader is initialized here with an osmium::io::File, but could
         // also be directly initialized with a file name.
-        osmium::io::File input_file{argv[1]};
+        const osmium::io::File input_file{argv[1]};
         osmium::io::Reader reader{input_file};
 
         // Initialize progress bar, enable it only if STDERR is a TTY.
         osmium::ProgressBar progress{reader.file_size(), osmium::isatty(2)};
 
         // OSM data comes in buffers, read until there are no more.
-        while (osmium::memory::Buffer buffer = reader.read()) {
+        while (const osmium::memory::Buffer buffer = reader.read()) {
             // Update progress bar for each buffer.
             progress.update(reader.offset());
         }

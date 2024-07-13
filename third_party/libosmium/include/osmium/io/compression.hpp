@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -199,10 +199,10 @@ namespace osmium {
                 const create_decompressor_type_fd& create_decompressor_fd,
                 const create_decompressor_type_buffer& create_decompressor_buffer) {
 
-                compression_map_type::value_type cc{compression,
-                                                    std::make_tuple(create_compressor,
-                                                                    create_decompressor_fd,
-                                                                    create_decompressor_buffer)};
+                const compression_map_type::value_type cc{compression,
+                                                          std::make_tuple(create_compressor,
+                                                              create_decompressor_fd,
+                                                              create_decompressor_buffer)};
 
                 return m_callbacks.insert(cc).second;
             }
@@ -357,7 +357,7 @@ namespace osmium {
                         osmium::io::detail::remove_buffered_pages(m_fd, m_offset);
                     }
                     const auto nread = detail::reliable_read(m_fd, &*buffer.begin(), osmium::io::Decompressor::input_buffer_size);
-                    buffer.resize(std::string::size_type(nread));
+                    buffer.resize(static_cast<std::string::size_type>(nread));
                 }
 
                 m_offset += buffer.size();

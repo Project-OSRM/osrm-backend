@@ -47,10 +47,10 @@ int main(int argc, char* argv[]) {
 
     try {
         // The input file, deduce file format from file suffix.
-        osmium::io::File input_file{argv[1]};
+        const osmium::io::File input_file{argv[1]};
 
         // The output file, force XML OSM file format.
-        osmium::io::File output_file{argv[2], "osm"};
+        const osmium::io::File output_file{argv[2], "osm"};
 
         // Initialize Reader for the input file.
         // Read only changesets (will ignore nodes, ways, and

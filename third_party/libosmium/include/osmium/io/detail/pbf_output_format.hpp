@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -206,7 +206,7 @@ namespace osmium {
                         m_versions.push_back(static_cast<int32_t>(node.version()));
                     }
                     if (m_options->add_metadata.timestamp()) {
-                        m_timestamps.push_back(m_delta_timestamp.update(uint32_t(node.timestamp())));
+                        m_timestamps.push_back(m_delta_timestamp.update(static_cast<uint32_t>(node.timestamp())));
                     }
                     if (m_options->add_metadata.changeset()) {
                         m_changesets.push_back(m_delta_changeset.update(node.changeset()));
@@ -435,12 +435,12 @@ namespace osmium {
                             pbf_blob.add_bytes(FileFormat::Blob::optional_bytes_raw, m_msg);
                             break;
                         case pbf_compression::zlib:
-                            pbf_blob.add_int32(FileFormat::Blob::optional_int32_raw_size, int32_t(m_msg.size()));
+                            pbf_blob.add_int32(FileFormat::Blob::optional_int32_raw_size, static_cast<int32_t>(m_msg.size()));
                             pbf_blob.add_bytes(FileFormat::Blob::optional_bytes_zlib_data, osmium::io::detail::zlib_compress(m_msg, m_compression_level));
                             break;
                         case pbf_compression::lz4:
 #ifdef OSMIUM_WITH_LZ4
-                            pbf_blob.add_int32(FileFormat::Blob::optional_int32_raw_size, int32_t(m_msg.size()));
+                            pbf_blob.add_int32(FileFormat::Blob::optional_int32_raw_size, static_cast<int32_t>(m_msg.size()));
                             pbf_blob.add_bytes(FileFormat::Blob::optional_bytes_lz4_data, osmium::io::detail::lz4_compress(m_msg, m_compression_level));
                             break;
 #else
@@ -511,14 +511,14 @@ namespace osmium {
                 template <typename T>
                 void add_meta(const osmium::OSMObject& object, T& pbf_object) {
                     {
-                        protozero::packed_field_uint32 field{pbf_object, protozero::pbf_tag_type(T::enum_type::packed_uint32_keys)};
+                        protozero::packed_field_uint32 field{pbf_object, static_cast<protozero::pbf_tag_type>(T::enum_type::packed_uint32_keys)};
                         for (const auto& tag : object.tags()) {
                             field.add_element(m_primitive_block->store_in_stringtable_unsigned(tag.key()));
                         }
                     }
 
                     {
-                        protozero::packed_field_uint32 field{pbf_object, protozero::pbf_tag_type(T::enum_type::packed_uint32_vals)};
+                        protozero::packed_field_uint32 field{pbf_object, static_cast<protozero::pbf_tag_type>(T::enum_type::packed_uint32_vals)};
                         for (const auto& tag : object.tags()) {
                             field.add_element(m_primitive_block->store_in_stringtable_unsigned(tag.value()));
                         }
@@ -532,7 +532,7 @@ namespace osmium {
                             pbf_info.add_int32(OSMFormat::Info::optional_int32_version, static_cast<int32_t>(object.version()));
                         }
                         if (m_options.add_metadata.timestamp()) {
-                            pbf_info.add_int64(OSMFormat::Info::optional_int64_timestamp, uint32_t(object.timestamp()));
+                            pbf_info.add_int64(OSMFormat::Info::optional_int64_timestamp, static_cast<uint32_t>(object.timestamp()));
                         }
                         if (m_options.add_metadata.changeset()) {
                             pbf_info.add_int64(OSMFormat::Info::optional_int64_changeset, object.changeset());
@@ -617,10 +617,10 @@ namespace osmium {
                         protozero::pbf_builder<OSMFormat::HeaderBBox> pbf_header_bbox{pbf_header_block, OSMFormat::HeaderBlock::optional_HeaderBBox_bbox};
 
                         osmium::Box box = header.joined_boxes();
-                        pbf_header_bbox.add_sint64(OSMFormat::HeaderBBox::required_sint64_left,   int64_t(box.bottom_left().lon() * lonlat_resolution));
-                        pbf_header_bbox.add_sint64(OSMFormat::HeaderBBox::required_sint64_right,  int64_t(box.top_right().lon()   * lonlat_resolution));
-                        pbf_header_bbox.add_sint64(OSMFormat::HeaderBBox::required_sint64_top,    int64_t(box.top_right().lat()   * lonlat_resolution));
-                        pbf_header_bbox.add_sint64(OSMFormat::HeaderBBox::required_sint64_bottom, int64_t(box.bottom_left().lat() * lonlat_resolution));
+                        pbf_header_bbox.add_sint64(OSMFormat::HeaderBBox::required_sint64_left,   static_cast<int64_t>(box.bottom_left().lon() * lonlat_resolution));
+                        pbf_header_bbox.add_sint64(OSMFormat::HeaderBBox::required_sint64_right,  static_cast<int64_t>(box.top_right().lon()   * lonlat_resolution));
+                        pbf_header_bbox.add_sint64(OSMFormat::HeaderBBox::required_sint64_top,    static_cast<int64_t>(box.top_right().lat()   * lonlat_resolution));
+                        pbf_header_bbox.add_sint64(OSMFormat::HeaderBBox::required_sint64_bottom, static_cast<int64_t>(box.bottom_left().lat() * lonlat_resolution));
                     }
 
                     pbf_header_block.add_string(OSMFormat::HeaderBlock::repeated_string_required_features, "OsmSchema-V0.6");
@@ -645,8 +645,8 @@ namespace osmium {
 
                     const std::string osmosis_replication_timestamp{header.get("osmosis_replication_timestamp")};
                     if (!osmosis_replication_timestamp.empty()) {
-                        osmium::Timestamp ts{osmosis_replication_timestamp.c_str()};
-                        pbf_header_block.add_int64(OSMFormat::HeaderBlock::optional_int64_osmosis_replication_timestamp, uint32_t(ts));
+                        const osmium::Timestamp ts{osmosis_replication_timestamp.c_str()};
+                        pbf_header_block.add_int64(OSMFormat::HeaderBlock::optional_int64_osmosis_replication_timestamp, static_cast<uint32_t>(ts));
                     }
 
                     const std::string osmosis_replication_sequence_number{header.get("osmosis_replication_sequence_number")};
@@ -700,7 +700,7 @@ namespace osmium {
 
                     {
                         osmium::DeltaEncode<object_id_type, int64_t> delta_id;
-                        protozero::packed_field_sint64 field{pbf_way, protozero::pbf_tag_type(OSMFormat::Way::packed_sint64_refs)};
+                        protozero::packed_field_sint64 field{pbf_way, static_cast<protozero::pbf_tag_type>(OSMFormat::Way::packed_sint64_refs)};
                         for (const auto& node_ref : way.nodes()) {
                             field.add_element(delta_id.update(node_ref.ref()));
                         }
@@ -709,14 +709,14 @@ namespace osmium {
                     if (m_options.locations_on_ways) {
                         {
                             osmium::DeltaEncode<int64_t, int64_t> delta;
-                            protozero::packed_field_sint64 field{pbf_way, protozero::pbf_tag_type(OSMFormat::Way::packed_sint64_lon)};
+                            protozero::packed_field_sint64 field{pbf_way, static_cast<protozero::pbf_tag_type>(OSMFormat::Way::packed_sint64_lon)};
                             for (const auto& node_ref : way.nodes()) {
                                 field.add_element(delta.update(node_ref.location().x()));
                             }
                         }
                         {
                             osmium::DeltaEncode<int64_t, int64_t> delta;
-                            protozero::packed_field_sint64 field{pbf_way, protozero::pbf_tag_type(OSMFormat::Way::packed_sint64_lat)};
+                            protozero::packed_field_sint64 field{pbf_way, static_cast<protozero::pbf_tag_type>(OSMFormat::Way::packed_sint64_lat)};
                             for (const auto& node_ref : way.nodes()) {
                                 field.add_element(delta.update(node_ref.location().y()));
                             }
@@ -732,7 +732,7 @@ namespace osmium {
                     add_meta(relation, pbf_relation);
 
                     {
-                        protozero::packed_field_int32 field{pbf_relation, protozero::pbf_tag_type(OSMFormat::Relation::packed_int32_roles_sid)};
+                        protozero::packed_field_int32 field{pbf_relation, static_cast<protozero::pbf_tag_type>(OSMFormat::Relation::packed_int32_roles_sid)};
                         for (const auto& member : relation.members()) {
                             field.add_element(m_primitive_block->store_in_stringtable(member.role()));
                         }
@@ -740,16 +740,16 @@ namespace osmium {
 
                     {
                         osmium::DeltaEncode<object_id_type, int64_t> delta_id;
-                        protozero::packed_field_sint64 field{pbf_relation, protozero::pbf_tag_type(OSMFormat::Relation::packed_sint64_memids)};
+                        protozero::packed_field_sint64 field{pbf_relation, static_cast<protozero::pbf_tag_type>(OSMFormat::Relation::packed_sint64_memids)};
                         for (const auto& member : relation.members()) {
                             field.add_element(delta_id.update(member.ref()));
                         }
                     }
 
                     {
-                        protozero::packed_field_int32 field{pbf_relation, protozero::pbf_tag_type(OSMFormat::Relation::packed_MemberType_types)};
+                        protozero::packed_field_int32 field{pbf_relation, static_cast<protozero::pbf_tag_type>(OSMFormat::Relation::packed_MemberType_types)};
                         for (const auto& member : relation.members()) {
-                            field.add_element(int32_t(osmium::item_type_to_nwr_index(member.type())));
+                            field.add_element(static_cast<int32_t>(osmium::item_type_to_nwr_index(member.type())));
                         }
                     }
                 }

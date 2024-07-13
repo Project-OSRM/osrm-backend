@@ -12,6 +12,38 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+## [2.20.0] - 2023-09-20
+
+### Changed
+
+* Optionally allow fractional seconds in timestamps in OSM files.
+* Enable `posix_fadvise` usage on FreeBSD.
+* Make parsing PBFs a bit less picky.
+* Various small code cleanups.
+
+### Fixed
+
+* Don't use class template arguments on `GeometryFactory` constructor
+  definition.
+
+## [2.19.0] - 2023-01-19
+
+### Changed
+
+* Mark RapidJSON support as deprecated.
+* Update included Catch to v2.13.10.
+* Remove deprecated BoolVector class.
+* Remove deprecated NWRIdSet class.
+* Remove deprecated AssemblerConfig constructor.
+* Print start of offending string in overlong string exception.
+* Implement `set_thread_name()` on FreeBSD.
+* Some small code cleanups.
+
+### Fixed
+
+* Fix return type in `MembersDatabaseCommon::count_not_removed()`.
+* Make bzip2 unit tests pass on musl-based systems.
+* Fix bug in members database test case.
 
 ## [2.18.0] - 2022-02-07
 
@@ -1253,7 +1285,9 @@ long time. These will not be part of the next version of libosmium:
   Doxygen (up to version 1.8.8). This version contains a workaround to fix
   this.
 
-[unreleased]: https://github.com/osmcode/libosmium/compare/v2.18.0...HEAD
+[unreleased]: https://github.com/osmcode/libosmium/compare/v2.20.0...HEAD
+[2.20.0]: https://github.com/osmcode/libosmium/compare/v2.19.0...v2.20.0
+[2.19.0]: https://github.com/osmcode/libosmium/compare/v2.18.9...v2.19.0
 [2.18.0]: https://github.com/osmcode/libosmium/compare/v2.17.3...v2.18.0
 [2.17.3]: https://github.com/osmcode/libosmium/compare/v2.17.2...v2.17.3
 [2.17.2]: https://github.com/osmcode/libosmium/compare/v2.17.1...v2.17.2
