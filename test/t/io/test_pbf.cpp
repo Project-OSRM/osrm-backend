@@ -6,6 +6,13 @@
 #include <osmium/io/reader.hpp>
 #include <osmium/osm/object.hpp>
 
+TEST_CASE("Get supported PBF compression types") {
+    const auto types = osmium::io::supported_pbf_compression_types();
+    REQUIRE(types.size() >= 2);
+    REQUIRE(types[0] == "none");
+    REQUIRE(types[1] == "zlib");
+}
+
 /**
  * Osmosis writes PBF with changeset=-1 if its input file did not contain the changeset field.
  * The default value of the version field is -1 in the OSM.PBF format.
@@ -18,7 +25,7 @@
  *   `osmosis --read-pbf file=tmp.osm.pbf --write-pbf file=data_pbf_version-1.osm.pbf compress=none usedense=false`
  */
 TEST_CASE("Read PBF file with version=-1 and changeset=-1 (written by Osmosis)") {
-    osmium::memory::Buffer buffer = osmium::io::read_file(with_data_dir("t/io/data_pbf_version-1.osm.pbf"));
+    const osmium::memory::Buffer buffer = osmium::io::read_file(with_data_dir("t/io/data_pbf_version-1.osm.pbf"));
     // one node should be in this buffer
     const osmium::OSMObject& object = *(buffer.cbegin<osmium::OSMObject>());
     REQUIRE(object.version() == 0);
@@ -37,7 +44,7 @@ TEST_CASE("Read PBF file with version=-1 and changeset=-1 (written by Osmosis)")
  *   `osmosis --read-pbf file=tmp.osm.pbf --write-pbf file=data_pbf_version-1-densenodes.osm.pbf compress=none usedense=true`
  */
 TEST_CASE("Read PBF file with version=-1 and changeset=-1 and DenseNodes (written by Osmosis)") {
-    osmium::memory::Buffer buffer = osmium::io::read_file(with_data_dir("t/io/data_pbf_version-1-densenodes.osm.pbf"));
+    const osmium::memory::Buffer buffer = osmium::io::read_file(with_data_dir("t/io/data_pbf_version-1-densenodes.osm.pbf"));
     // one node should be in this buffer
     const osmium::OSMObject& object = *(buffer.cbegin<osmium::OSMObject>());
     REQUIRE(object.version() == 0);

@@ -46,22 +46,22 @@ TEST_CASE("string to integer conversion") {
     REQUIRE(osmium::detail::str_to_int<uint16_t>("65536") == 0);
 
     test_conv<int32_t>();
-    REQUIRE(osmium::detail::str_to_int<int32_t>("2147483646") == 2147483646ll);
+    REQUIRE(osmium::detail::str_to_int<int32_t>("2147483646") == 2147483646LL);
     REQUIRE(osmium::detail::str_to_int<int32_t>("2147483647") == 0);
     REQUIRE(osmium::detail::str_to_int<int32_t>("2147483648") == 0);
 
     test_conv<uint32_t>();
-    REQUIRE(osmium::detail::str_to_int<uint32_t>("4294967294") == 4294967294ull);
+    REQUIRE(osmium::detail::str_to_int<uint32_t>("4294967294") == 4294967294ULL);
     REQUIRE(osmium::detail::str_to_int<uint32_t>("4294967295") == 0);
     REQUIRE(osmium::detail::str_to_int<uint32_t>("4294967296") == 0);
 
     test_conv<int64_t>();
-    REQUIRE(osmium::detail::str_to_int<int64_t>("9223372036854775806") == 9223372036854775806ll);
+    REQUIRE(osmium::detail::str_to_int<int64_t>("9223372036854775806") == 9223372036854775806LL);
     REQUIRE(osmium::detail::str_to_int<int64_t>("9223372036854775807") == 0);
     REQUIRE(osmium::detail::str_to_int<int64_t>("9223372036854775808") == 0);
 
     test_conv<uint64_t>();
-    REQUIRE(osmium::detail::str_to_int<uint64_t>("9223372036854775806") == 9223372036854775806ull);
+    REQUIRE(osmium::detail::str_to_int<uint64_t>("9223372036854775806") == 9223372036854775806ULL);
     REQUIRE(osmium::detail::str_to_int<uint64_t>("9223372036854775807") == 0);
     REQUIRE(osmium::detail::str_to_int<uint64_t>("9223372036854775808") == 0);
 }

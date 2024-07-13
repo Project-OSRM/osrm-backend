@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -46,6 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/visitor.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -185,14 +186,16 @@ namespace osmium {
              */
             using mm_vector_type = std::vector<MemberMeta>;
             using mm_iterator = mm_vector_type::iterator;
-            mm_vector_type m_member_meta[3];
+            std::array<mm_vector_type, 3> m_member_meta;
 
             int m_count_complete = 0;
 
             using callback_func_type = std::function<void(osmium::memory::Buffer&&)>;
             callback_func_type m_callback;
 
-            static constexpr size_t initial_buffer_size = 1024 * 1024;
+            enum {
+                initial_buffer_size = 1024UL * 1024UL
+            };
 
             iterator_range<mm_iterator> find_member_meta(osmium::item_type type, osmium::object_id_type id) {
                 auto& mmv = member_meta(type);
@@ -366,7 +369,7 @@ namespace osmium {
             }
 
             static typename iterator_range<mm_iterator>::iterator::difference_type count_not_removed(const iterator_range<mm_iterator>& range) {
-                return std::count_if(range.begin(), range.end(), [](MemberMeta& mm) {
+                return std::count_if(range.begin(), range.end(), [](const MemberMeta& mm) {
                     return !mm.removed();
                 });
             }
@@ -390,22 +393,22 @@ namespace osmium {
                     members_buffer().add_item(object);
                     const size_t member_offset = members_buffer().commit();
 
-                    for (auto& member_meta : range) {
-                        member_meta.set_buffer_offset(member_offset);
+                    for (auto& member : range) {
+                        member.set_buffer_offset(member_offset);
                     }
                 }
 
-                for (auto& member_meta : range) {
-                    if (member_meta.removed()) {
+                for (auto& member : range) {
+                    if (member.removed()) {
                         break;
                     }
-                    assert(member_meta.member_id() == object.id());
-                    assert(member_meta.relation_pos() < m_relations.size());
-                    RelationMeta& relation_meta = m_relations[member_meta.relation_pos()];
-                    assert(member_meta.member_pos() < get_relation(relation_meta).members().size());
+                    assert(member.member_id() == object.id());
+                    assert(member.relation_pos() < m_relations.size());
+                    RelationMeta& relation_meta = m_relations[member.relation_pos()];
+                    assert(member.member_pos() < get_relation(relation_meta).members().size());
                     relation_meta.got_one_member();
                     if (relation_meta.has_all_members()) {
-                        const size_t relation_offset = member_meta.relation_pos();
+                        const size_t relation_offset = member.relation_pos();
                         static_cast<TCollector*>(this)->complete_relation(relation_meta);
                         clear_member_metas(relation_meta);
                         m_relations[relation_offset] = RelationMeta{};
@@ -444,7 +447,7 @@ namespace osmium {
             uint64_t used_memory() const {
                 const uint64_t nmembers = m_member_meta[0].capacity() + m_member_meta[1].capacity() + m_member_meta[2].capacity();
                 const uint64_t members = nmembers * sizeof(MemberMeta);
-                const uint64_t relations = m_relations.capacity() * sizeof(RelationMeta);
+                const uint64_t relations_size = m_relations.capacity() * sizeof(RelationMeta);
                 const uint64_t relations_buffer_capacity = m_relations_buffer.capacity();
                 const uint64_t members_buffer_capacity = m_members_buffer.capacity();
 
@@ -457,17 +460,17 @@ namespace osmium {
                 std::cerr << "  sRM = sizeof(RelationMeta) ............. = " << std::setw(12) << sizeof(RelationMeta) << "\n";
                 std::cerr << "  sMM = sizeof(MemberMeta) ............... = " << std::setw(12) << sizeof(MemberMeta) << "\n\n";
 
-                std::cerr << "  nR * sRM ............................... = " << std::setw(12) << relations << "\n";
+                std::cerr << "  nR * sRM ............................... = " << std::setw(12) << relations_size << "\n";
                 std::cerr << "  nM * sMM ............................... = " << std::setw(12) << members << "\n";
                 std::cerr << "  relations_buffer_capacity .............. = " << std::setw(12) << relations_buffer_capacity << "\n";
                 std::cerr << "  members_buffer_capacity ................ = " << std::setw(12) << members_buffer_capacity << "\n";
 
-                const uint64_t total = relations + members + relations_buffer_capacity + members_buffer_capacity;
+                const uint64_t total = relations_size + members + relations_buffer_capacity + members_buffer_capacity;
 
                 std::cerr << "  total .................................. = " << std::setw(12) << total << "\n";
                 std::cerr << "  =======================================================\n";
 
-                return relations_buffer_capacity + members_buffer_capacity + relations + members;
+                return relations_buffer_capacity + members_buffer_capacity + relations_size + members;
             }
 
             /**
@@ -542,8 +545,8 @@ namespace osmium {
 
             template <typename TIter>
             void read_relations(TIter begin, TIter end) {
-                HandlerPass1 handler(*static_cast<TCollector*>(this));
-                osmium::apply(begin, end, handler);
+                HandlerPass1 handler_pass1{*static_cast<TCollector*>(this)};
+                osmium::apply(begin, end, handler_pass1);
                 sort_member_meta();
             }
 
@@ -558,9 +561,9 @@ namespace osmium {
             void moving_in_buffer(size_t old_offset, size_t new_offset) {
                 const osmium::OSMObject& object = m_members_buffer.get<osmium::OSMObject>(old_offset);
                 auto range = find_member_meta(object.type(), object.id());
-                for (auto& member_meta : range) {
-                    assert(member_meta.buffer_offset() == old_offset);
-                    member_meta.set_buffer_offset(new_offset);
+                for (auto& member : range) {
+                    assert(member.buffer_offset() == old_offset);
+                    member.set_buffer_offset(new_offset);
                 }
             }
 
@@ -595,13 +598,13 @@ namespace osmium {
              * owned by the Collector object.
              */
             std::vector<const osmium::Relation*> get_incomplete_relations() const {
-                std::vector<const osmium::Relation*> relations;
+                std::vector<const osmium::Relation*> incomplete_relations;
                 for (const auto& relation_meta : m_relations) {
                     if (!relation_meta.has_all_members()) {
-                        relations.push_back(&get_relation(relation_meta));
+                        incomplete_relations.push_back(&get_relation(relation_meta));
                     }
                 }
-                return relations;
+                return incomplete_relations;
             }
 
         }; // class Collector

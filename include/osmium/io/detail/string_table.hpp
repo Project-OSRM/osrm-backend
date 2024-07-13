@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -134,7 +134,7 @@ namespace osmium {
 
                     const_iterator& operator++() {
                         assert(m_it != m_last);
-                        const auto last_pos = m_it->c_str() + m_it->size();
+                        const auto* const last_pos = m_it->c_str() + m_it->size();
                         while (m_pos != last_pos && *m_pos) {
                             ++m_pos;
                         }
@@ -213,10 +213,10 @@ namespace osmium {
 
                 std::size_t operator()(const char* str) const noexcept {
                     std::size_t hash = 5381;
-                    int c;
+                    int c = 0;
 
-                    while ((c = *str++)) {
-                        hash = ((hash << 5u) + hash) + c; /* hash * 33 + c */
+                    while ((c = static_cast<signed char>(*str++))) { // NOLINT(bugprone-signed-char-misuse,cert-str34-c)
+                        hash = ((hash << 5U) + hash) + c; /* hash * 33 + c */
                     }
 
                     return hash;
@@ -231,7 +231,15 @@ namespace osmium {
                 // make sure it doesn't. If we had max_uncompressed_blob_size
                 // many entries, we are sure they would never fit into a PBF
                 // Blob.
-                static constexpr const uint32_t max_entries = max_uncompressed_blob_size;
+                enum {
+                    max_entries = static_cast<int32_t>(max_uncompressed_blob_size)
+                };
+
+                StringStore m_strings;
+                std::unordered_map<const char*, int32_t, djb2_hash, str_equal> m_index;
+                int32_t m_size = 0;
+
+            public:
 
                 // There is one string table per PBF primitive block. Most of
                 // them are really small, because most blocks are full of nodes
@@ -240,34 +248,33 @@ namespace osmium {
                 // The chosen size is enough so that 99% of all string tables
                 // in typical OSM files will only need a single memory
                 // allocation.
-                static constexpr const size_t default_stringtable_chunk_size = 100 * 1024;
+                enum {
+                    default_stringtable_chunk_size = 100U * 1024U
+                };
 
-                StringStore m_strings;
-                std::unordered_map<const char*, size_t, djb2_hash, str_equal> m_index;
-                uint32_t m_size = 0;
+                // Minimum bucket count for hash.
+                enum {
+                    min_bucket_count = 1
+                };
 
-            public:
-
-                explicit StringTable(size_t size = default_stringtable_chunk_size) :
-                    m_strings(size) {
+                explicit StringTable(size_t size = default_stringtable_chunk_size, size_t bucket_count = min_bucket_count) :
+                    m_strings(size),
+                    m_index(bucket_count) {
                     m_strings.add("");
                 }
 
-                void clear() {
-                    m_strings.clear();
-                    m_index.clear();
-                    m_size = 0;
-                    m_strings.add("");
-                }
-
-                uint32_t size() const noexcept {
+                int32_t size() const noexcept {
                     return m_size + 1;
                 }
 
-                uint32_t add(const char* s) {
+                std::size_t get_bucket_count() const noexcept {
+                    return m_index.bucket_count();
+                }
+
+                int32_t add(const char* s) {
                     const auto f = m_index.find(s);
                     if (f != m_index.end()) {
-                        return uint32_t(f->second);
+                        return f->second;
                     }
 
                     const char* cs = m_strings.add(s);

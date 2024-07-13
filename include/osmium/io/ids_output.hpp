@@ -1,11 +1,11 @@
-#ifndef OSMIUM_INDEX_BOOL_VECTOR_HPP
-#define OSMIUM_INDEX_BOOL_VECTOR_HPP
+#ifndef OSMIUM_IO_IDS_OUTPUT_HPP
+#define OSMIUM_IO_IDS_OUTPUT_HPP
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,18 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <osmium/index/id_set.hpp>
+#include <osmium/io/detail/ids_output_format.hpp> // IWYU pragma: export
+#include <osmium/io/writer.hpp> // IWYU pragma: export
 
-namespace osmium {
-
-    namespace index {
-
-        /// @deprecated Use osmium::index::IdSet instead.
-        template <typename T>
-        using BoolVector = IdSet<T>;
-
-    } // namespace index
-
-} // namespace osmium
-
-#endif // OSMIUM_INDEX_BOOL_VECTOR_HPP
+#endif // OSMIUM_IO_IDS_OUTPUT_HPP

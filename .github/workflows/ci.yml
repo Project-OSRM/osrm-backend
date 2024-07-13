@@ -1,0 +1,294 @@
+name: CI
+
+on: [ push, pull_request ]
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [Ubuntu-18, Ubuntu-20, Ubuntu-22, Debian-10, Debian-11, Debian-12, Debian-Testing, Debian-Experimental, Fedora-35, Fedora-36, Fedora-37, Fedora-38]
+        build_type: [Dev]
+        cpp_compiler: [g++]
+        cpp_version: [c++11]
+        include:
+          - name: Ubuntu-18
+            # Uses gcc 7.5.0, clang 6.0.0, cmake 3.10.2
+            image: "ubuntu:18.04"
+            ubuntu: 18
+          - name: Ubuntu-20
+            # Uses gcc 9.3.0, clang 10.0.0, cmake 3.16.3
+            image: "ubuntu:20.04"
+            ubuntu: 20
+          - name: Ubuntu-22
+            # Uses gcc 12.2.0, clang 15.0.7, cmake 3.24.2
+            image: "ubuntu:22.04"
+            ubuntu: 22
+            CXXFLAGS: -Wno-stringop-overread
+          - name: Debian-10
+            # Uses gcc 8.3.0, clang 7.0.1, cmake 3.13.4
+            image: "debian:buster"
+          - name: Debian-11
+            # Uses gcc 10.2.1, clang 11.0.1, cmake 3.18.4
+            image: "debian:bullseye"
+          - name: Debian-11
+            image: "debian:bullseye"
+            cpp_version: c++17
+          - name: Debian-11
+            image: "debian:bullseye"
+            cpp_version: c++20
+          - name: Debian-11
+            image: "debian:bullseye"
+            c_compiler: clang
+            cpp_compiler: clang++
+          - name: Debian-11
+            image: "debian:bullseye"
+            c_compiler: clang
+            cpp_compiler: clang++
+            cpp_version: c++17
+          - name: Debian-11
+            image: "debian:bullseye"
+            c_compiler: clang
+            cpp_compiler: clang++
+            cpp_version: c++20
+          - name: Debian-11
+            image: "debian:bullseye"
+            build_type: RelWithDebInfo
+          - name: Debian-11
+            image: "debian:bullseye"
+            c_compiler: clang
+            cpp_compiler: clang++
+            CXXFLAGS: -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer
+            LDFLAGS: -fsanitize=address,undefined
+          - name: Debian-12
+            # Uses gcc 12.2.0, clang 15.0.6, cmake 3.25.1
+            image: "debian:bookworm"
+            CXXFLAGS: -Wno-stringop-overread
+          - name: Debian-12
+            image: "debian:bookworm"
+            cpp_version: c++17
+            CXXFLAGS: -Wno-stringop-overread
+          - name: Debian-12
+            image: "debian:bookworm"
+            cpp_version: c++20
+            CXXFLAGS: -Wno-stringop-overread
+          - name: Debian-12
+            image: "debian:bookworm"
+            c_compiler: clang
+            cpp_compiler: clang++
+          - name: Debian-12
+            image: "debian:bookworm"
+            c_compiler: clang
+            cpp_compiler: clang++
+            cpp_version: c++17
+          - name: Debian-12
+            image: "debian:bookworm"
+            c_compiler: clang
+            cpp_compiler: clang++
+            cpp_version: c++20
+          - name: Debian-12
+            image: "debian:bookworm"
+            build_type: RelWithDebInfo
+            CXXFLAGS: -Wno-stringop-overread
+          - name: Debian-12
+            image: "debian:bookworm"
+            c_compiler: clang
+            cpp_compiler: clang++
+            CXXFLAGS: -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer
+            LDFLAGS: -fsanitize=address,undefined
+          - name: Debian-Testing
+            image: "debian:testing"
+            CXXFLAGS: -Wno-stringop-overread -Wno-dangling-reference
+          - name: Debian-Testing
+            image: "debian:testing"
+            c_compiler: clang
+            cpp_compiler: clang++
+          - name: Debian-Experimental
+            image: "debian:experimental"
+            CXXFLAGS: -Wno-stringop-overread -Wno-dangling-reference
+          - name: Debian-Experimental
+            image: "debian:experimental"
+            c_compiler: clang
+            cpp_compiler: clang++
+          - name: Fedora-35
+            # Uses gcc 11.2.1, clang 12.0.1, cmake 3.20.5
+            image: "fedora:35"
+            CXXFLAGS: -Wno-stringop-overread
+          - name: Fedora-36
+            # Uses gcc 12.2.0, clang 14.0.5, cmake 3.24.2
+            image: "fedora:36"
+            CXXFLAGS: -Wno-stringop-overread
+          - name: Fedora-37
+            # Uses gcc 12.3.1, clang 15.0.7, cmake 3.26.4
+            image: "fedora:37"
+            CXXFLAGS: -Wno-stringop-overread
+          - name: Fedora-38
+            # Uses gcc 13.0.1, clang 16.0.5, cmake 3.26.4
+            image: "fedora:38"
+            CXXFLAGS: -Wno-stringop-overread -Wno-dangling-reference
+    container:
+      image: ${{ matrix.image }}
+      env:
+        LANG: en_US.UTF-8
+        BUILD_TYPE: ${{ matrix.build_type }}
+        CC: ${{ matrix.c_compiler }}
+        CXX: ${{ matrix.cpp_compiler }}
+        CXXFLAGS: ${{ matrix.CXXFLAGS }}
+        LDFLAGS: ${{ matrix.LDFLAGS }}
+        CPP_VERSION: ${{ matrix.cpp_version }}
+        WITH_PROJ: ON
+        APT_LISTCHANGES_FRONTEND: none
+        DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Prepare container (apt)
+        shell: bash
+        if: startsWith(matrix.image, 'debian:') || startsWith(matrix.image, 'ubuntu:')
+        run: |
+          apt-get update -qq
+          apt-get install -yq \
+            clang \
+            cmake \
+            doxygen \
+            g++ \
+            git \
+            graphviz \
+            libboost-dev \
+            libbz2-dev \
+            libexpat1-dev \
+            libgdal-dev \
+            libgeos++-dev \
+            liblz4-dev \
+            libproj-dev \
+            libsparsehash-dev \
+            make \
+            ruby \
+            ruby-json \
+            spatialite-bin \
+            zlib1g-dev
+      - name: Install compiler
+        shell: bash
+        if: matrix.cpp_compiler == 'clang++-14'
+        run: apt-get install -yq clang-14
+      - name: Prepare container (dnf)
+        shell: bash
+        if: startsWith(matrix.image, 'fedora:')
+        run: |
+          dnf install --quiet --assumeyes \
+              boost-devel \
+              bzip2-devel \
+              cmake \
+              doxygen \
+              expat-devel \
+              gcc-c++ \
+              gdal-devel \
+              gdalcpp-static \
+              geos-devel \
+              git \
+              graphviz \
+              lz4-devel \
+              make \
+              proj-devel \
+              ruby \
+              rubygem-json \
+              sparsehash-devel \
+              spatialite-tools \
+              zlib-devel
+      # Use v1 of checkout because v3 doesn't work with submodules
+      - uses: actions/checkout@v1
+        with:
+          submodules: true
+      - uses: ./.github/actions/install-protozero
+      - uses: ./.github/actions/cmake
+      - uses: ./.github/actions/build
+      - uses: ./.github/actions/ctest
+
+  ubuntu-latest:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    env:
+      CC: clang-15
+      CXX: clang++-15
+      BUILD_TYPE: Dev
+      WITH_PROJ: ON
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install new clang
+        run: |
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/llvm-snapshot.asc
+          sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-15 main'
+          sudo apt-get update -qq
+          sudo apt-get install -yq clang-15
+        shell: bash
+      - uses: ./.github/actions/install-ubuntu
+      - uses: ./.github/actions/install-protozero
+      - uses: ./.github/actions/cmake
+      - uses: ./.github/actions/build
+      - uses: ./.github/actions/ctest
+
+  macos:
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - "macos-11"
+          - "macos-12"
+          - "macos-13"
+        build_type: [Dev]
+        include:
+          - os: "macos-12"
+            build_type: Release
+    runs-on: ${{ matrix.os }}
+    env:
+      CC: clang
+      CXX: clang++
+      BUILD_TYPE: ${{ matrix.build_type }}
+      WITH_PROJ: OFF
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: ./.github/actions/install-macos
+      - uses: ./.github/actions/install-protozero
+      - uses: ./.github/actions/cmake
+      - uses: ./.github/actions/build
+      - uses: ./.github/actions/ctest
+
+  windows-minimal:
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-2019
+          - windows-2022
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: ./.github/actions/install-windows
+      - uses: ./.github/actions/install-protozero
+      - uses: ./.github/actions/cmake-windows
+      - uses: ./.github/actions/build-windows
+      - uses: ./.github/actions/ctest-windows
+
+  windows-2019-full:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: ./.github/actions/install-windows
+      - name: Install extra packages
+        run: vcpkg install geos:x64-windows gdal:x64-windows proj4:x64-windows
+        shell: bash
+      - uses: ./.github/actions/install-protozero
+      - uses: ./.github/actions/cmake-windows
+      - uses: ./.github/actions/build-windows
+      - uses: ./.github/actions/ctest-windows
+

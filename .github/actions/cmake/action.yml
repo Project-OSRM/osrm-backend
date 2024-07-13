@@ -1,0 +1,19 @@
+name: CMake
+
+runs:
+  using: composite
+  steps:
+    - name: Create build directory
+      run: mkdir build
+      shell: bash
+    - name: Configure
+      run: |
+        cmake -LA .. \
+              -DBUILD_DATA_TESTS=ON \
+              -DUSE_CPP_VERSION=${CPP_VERSION} \
+              -DWITH_PROJ=${WITH_PROJ} \
+              -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+              -DPROTOZERO_INCLUDE_DIR=${GITHUB_WORKSPACE}/../protozero/include
+      shell: bash
+      working-directory: build
+

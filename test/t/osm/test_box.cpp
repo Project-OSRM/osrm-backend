@@ -1,10 +1,10 @@
 #include "catch.hpp"
 
+#include "test_crc.hpp"
+
 #include <osmium/geom/relations.hpp>
 #include <osmium/osm/box.hpp>
 #include <osmium/osm/crc.hpp>
-
-#include <boost/crc.hpp>
 
 #include <sstream>
 
@@ -14,7 +14,7 @@ TEST_CASE("Default constructor creates invalid box") {
     REQUIRE_FALSE(b);
     REQUIRE_FALSE(b.bottom_left());
     REQUIRE_FALSE(b.top_right());
-    REQUIRE_THROWS_AS(b.size(), const osmium::invalid_location&);
+    REQUIRE_THROWS_AS(b.size(), osmium::invalid_location);
 }
 
 TEST_CASE("Extend box with undefined") {
@@ -64,7 +64,7 @@ TEST_CASE("Extend box with valid") {
     REQUIRE(b.contains(loc2));
     REQUIRE(b.contains(loc3));
 
-    osmium::CRC<boost::crc_32_type> crc32;
+    osmium::CRC<crc_type> crc32;
     crc32.update(b);
     REQUIRE(crc32().checksum() == 0xd381a838);
 }
@@ -114,6 +114,10 @@ TEST_CASE("Create box from locations") {
     REQUIRE(!!b);
     REQUIRE(b.bottom_left() == (osmium::Location{1.23, 2.34}));
     REQUIRE(b.top_right() == (osmium::Location{3.45, 4.56}));
+    REQUIRE(b.top() == Approx(4.56));
+    REQUIRE(b.bottom() == Approx(2.34));
+    REQUIRE(b.left() == Approx(1.23));
+    REQUIRE(b.right() == Approx(3.45));
 }
 
 TEST_CASE("Create box from doubles") {
@@ -156,7 +160,7 @@ TEST_CASE("Relationship between boxes: overlaps") {
     overlap.extend(osmium::Location{3, 3});
     overlap.extend(osmium::Location{5, 5});
 
-    osmium::Box outside{};
+    const osmium::Box outside{};
     overlap.extend(osmium::Location{30, 30});
     overlap.extend(osmium::Location{50, 50});
 

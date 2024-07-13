@@ -89,11 +89,11 @@ between compilers due to different C++11 support.
 
 ## Operating systems
 
-Usually all code must work on Linux, OSX, and Windows. Execptions are allowed
+Usually all code must work on Linux, macOS, and Windows. Execptions are allowed
 for some minor functionality, but please discuss this first.
 
 When writing code and tests, care must be taken that everything works with the
-CR line ending convention used on Linux and OSX and the CRLF line ending used
+CR line ending convention used on Linux and macOS and the CRLF line ending used
 on Windows. Note that `git` can be run with different settings regarding line
 ending rewritings on different machines making things more difficult. Some
 files have been "forced" to LF line endings using `.gitattributes` files.
@@ -136,15 +136,7 @@ directory, some data tests in `test/osm-testdata` and tests of the examples in
 `test/examples`. They are built by the default cmake config. Run `ctest` to
 run them. We can always use more tests.
 
-Tests are run automatically using the Travis (Linux/Mac) and Appveyor (Windows)
-services. We automatically create coverage reports on Codevoc.io. Note that
-the coverage percentages reported are not always accurate, because code that
-is not used in tests at all will not necessarily end up in the binary and
-the code coverage tool will not know it is there.
-
-[![Travis Build Status](https://secure.travis-ci.org/osmcode/libosmium.svg)](https://travis-ci.org/osmcode/libosmium)
-[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/github/osmcode/libosmium?svg=true)](https://ci.appveyor.com/project/Mapbox/libosmium)
-[![Coverage Status](https://codecov.io/gh/osmcode/libosmium/branch/master/graph/badge.svg)](https://codecov.io/gh/osmcode/libosmium)
+Tests are run automatically using Github Actions.
 
 
 ## Documenting the code

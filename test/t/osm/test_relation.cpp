@@ -1,10 +1,12 @@
 #include "catch.hpp"
 
+#include "test_crc.hpp"
+
 #include <osmium/builder/attr.hpp>
 #include <osmium/osm/crc.hpp>
 #include <osmium/osm/relation.hpp>
 
-#include <boost/crc.hpp>
+#include <string>
 
 using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
@@ -17,7 +19,7 @@ TEST_CASE("Build relation") {
         _visible(),
         _cid(333),
         _uid(21),
-        _timestamp(time_t(123)),
+        _timestamp(static_cast<std::time_t>(123)),
         _user("foo"),
         _tag("type", "multipolygon"),
         _tag("name", "Sherwood Forest"),
@@ -39,7 +41,7 @@ TEST_CASE("Build relation") {
     REQUIRE(3 == relation.members().size());
 
     int n=1;
-    for (auto& member : relation.members()) {
+    for (const auto& member : relation.members()) {
         REQUIRE(osmium::item_type::way == member.type());
         REQUIRE(n == member.ref());
         switch (n) {
@@ -58,7 +60,7 @@ TEST_CASE("Build relation") {
         ++n;
     }
 
-    osmium::CRC<boost::crc_32_type> crc32;
+    osmium::CRC<crc_type> crc32;
     crc32.update(relation);
     REQUIRE(crc32().checksum() == 0x2c2352e);
 }

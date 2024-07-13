@@ -15,7 +15,7 @@
 
 */
 
-#include <cstdlib>  // for std::exit, std::atoi, std::atof
+#include <cstdlib>  // for std::atoi, std::atof
 #include <iostream> // for std::cout, std::cerr
 
 // The Location contains a longitude and latitude and is usually used inside
@@ -33,14 +33,14 @@
 int main(int argc, char* argv[]) {
     if (argc != 4) {
         std::cerr << "Usage: " << argv[0] << " ZOOM LON LAT\n";
-        std::exit(1);
+        return 1;
     }
 
     const int zoom = std::atoi(argv[1]); // NOLINT(cert-err34-c)
 
     if (zoom < 0 || zoom > 30) {
         std::cerr << "ERROR: Zoom must be between 0 and 30\n";
-        std::exit(1);
+        return 1;
     }
 
     osmium::Location location{};
@@ -49,14 +49,14 @@ int main(int argc, char* argv[]) {
         location.set_lat(argv[3]);
     } catch (const osmium::invalid_location&) {
         std::cerr << "ERROR: Location is invalid\n";
-        std::exit(1);
+        return 1;
     }
 
     // A location can store some invalid locations, ie locations outside the
     // -180 to 180 and -90 to 90 degree range. This function checks for that.
     if (!location.valid()) {
         std::cerr << "ERROR: Location is invalid\n";
-        std::exit(1);
+        return 1;
     }
 
     std::cout << "WGS84:    lon=" << location.lon() << " lat=" << location.lat() << "\n";
@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
 
     // Create a tile at this location. This will also internally use the
     // Mercator projection and then calculate the tile coordinates.
-    const osmium::geom::Tile tile{uint32_t(zoom), location};
+    const osmium::geom::Tile tile{static_cast<uint32_t>(zoom), location};
     std::cout << "Tile:     zoom=" << tile.z << " x=" << tile.x << " y=" << tile.y << "\n";
 }
 

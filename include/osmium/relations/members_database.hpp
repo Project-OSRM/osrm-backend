@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -67,7 +67,9 @@ namespace osmium {
                  * Special value used for member_num to mark the element as
                  * removed.
                  */
-                static const size_t removed_value = std::numeric_limits<std::size_t>::max();
+                enum {
+                    removed_value = std::numeric_limits<std::size_t>::max()
+                };
 
                 /**
                  * Object ID of this relation member. Can be a node, way,
@@ -157,7 +159,7 @@ namespace osmium {
                 return make_range(std::equal_range(m_elements.cbegin(), m_elements.cend(), element{id}, compare_member_id{}));
             }
 
-            static typename iterator_range<iterator>::iterator::difference_type count_not_removed(const iterator_range<iterator>& range) noexcept {
+            static typename std::iterator_traits<iterator>::difference_type count_not_removed(const iterator_range<iterator>& range) noexcept {
                 return std::count_if(range.begin(), range.end(), [](const element& elem) {
                     return !elem.is_removed();
                 });
@@ -203,11 +205,11 @@ namespace osmium {
              */
             struct counts {
                 /// The number of members tracked and not found yet.
-                std::size_t tracked   = 0;
+                std::size_t tracked = 0;
                 /// The number of members tracked and found already.
                 std::size_t available = 0;
                 /// The number of members that were tracked, found and then removed because of a completed relation.
-                std::size_t removed   = 0;
+                std::size_t removed = 0;
             };
 
             /**
@@ -265,8 +267,11 @@ namespace osmium {
             /**
              * Remove the entry with the specified member_id and relation_id
              * from the database. If the entry doesn't exist, nothing happens.
+             *
+             * @pre You have to call prepare_for_lookup() before using this.
              */
             void remove(osmium::object_id_type member_id, osmium::object_id_type relation_id) {
+                assert(!m_init_phase && "Call MembersDatabase::prepare_for_lookup() before calling remove().");
                 const auto range = find(member_id);
 
                 if (range.empty()) {
@@ -291,6 +296,8 @@ namespace osmium {
              * Find the object with the specified id in the database and
              * return a pointer to it. Returns nullptr if there is no object
              * with that id in the database.
+             *
+             * @pre You have to call prepare_for_lookup() before using this.
              *
              * Complexity: Logarithmic in the number of members tracked (as
              *             returned by size()).
@@ -352,6 +359,7 @@ namespace osmium {
              *             as a parameter.
              * @returns true if the object was actually added, false if no
              *          relation needed this object.
+             * @pre You have to call prepare_for_lookup() before using this.
              */
             template <typename TFunc>
             bool add(const TObject& object, TFunc&& func) {
@@ -387,6 +395,8 @@ namespace osmium {
              * Find the object with the specified id in the database and
              * return a pointer to it. Returns nullptr if there is no object
              * with that id in the database.
+             *
+             * @pre You have to call prepare_for_lookup() before using this.
              *
              * Complexity: Logarithmic in the number of members tracked (as
              *             returned by size()).

@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -71,10 +71,6 @@ namespace osmium {
          * and their members.
          */
         class AssemblerLegacy : public detail::BasicAssemblerWithTags {
-
-            void add_tags_to_area(osmium::builder::AreaBuilder& builder, const osmium::Way& way) const {
-                builder.add_item(way.tags());
-            }
 
             void add_common_tags(osmium::builder::TagListBuilder& tl_builder, std::set<const osmium::Way*>& ways) const {
                 std::map<std::string, std::size_t> counter;
@@ -166,7 +162,7 @@ namespace osmium {
 
                 const bool area_okay = create_rings();
                 if (area_okay || config().create_empty_areas) {
-                    add_tags_to_area(builder, way);
+                    builder.add_item(way.tags());
                 }
                 if (area_okay) {
                     add_rings_to_area(builder);
@@ -336,12 +332,15 @@ namespace osmium {
                             if (!way.nodes().empty() && way.is_closed() && !way.tags().empty()) {
                                 const auto d = std::count_if(way.tags().cbegin(), way.tags().cend(), std::cref(filter()));
                                 if (d > 0) {
-                                    osmium::tags::KeyFilter::iterator way_fi_begin(std::cref(filter()), way.tags().cbegin(), way.tags().cend());
-                                    osmium::tags::KeyFilter::iterator way_fi_end(std::cref(filter()), way.tags().cend(), way.tags().cend());
-                                    osmium::tags::KeyFilter::iterator area_fi_begin(std::cref(filter()), area_tags.cbegin(), area_tags.cend());
-                                    osmium::tags::KeyFilter::iterator area_fi_end(std::cref(filter()), area_tags.cend(), area_tags.cend());
-
-                                    if (!std::equal(way_fi_begin, way_fi_end, area_fi_begin) || d != std::distance(area_fi_begin, area_fi_end)) {
+                                    const osmium::tags::KeyFilter::iterator way_fi_begin(std::cref(filter()), way.tags().cbegin(), way.tags().cend());
+                                    const osmium::tags::KeyFilter::iterator way_fi_end(std::cref(filter()), way.tags().cend(), way.tags().cend());
+                                    const osmium::tags::KeyFilter::iterator area_fi_begin(std::cref(filter()), area_tags.cbegin(), area_tags.cend());
+                                    const osmium::tags::KeyFilter::iterator area_fi_end(std::cref(filter()), area_tags.cend(), area_tags.cend());
+#ifdef __cpp_lib_robust_nonmodifying_seq_ops
+                                    if (!std::equal(way_fi_begin, way_fi_end, area_fi_begin, area_fi_end)) {
+#else
+                                    if (d != std::distance(area_fi_begin, area_fi_end) || !std::equal(way_fi_begin, way_fi_end, area_fi_begin)) {
+#endif
                                         ways_that_should_be_areas.push_back(&way);
                                     } else {
                                         ++stats().inner_with_same_tags;

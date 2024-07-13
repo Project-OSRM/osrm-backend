@@ -1,0 +1,10 @@
+name: Build
+
+runs:
+  using: composite
+  steps:
+    - name: Build
+      run: make VERBOSE=1
+      shell: bash
+      working-directory: build
+
