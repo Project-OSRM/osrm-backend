@@ -276,16 +276,16 @@ RestrictionGraph constructRestrictionGraph(const std::vector<TurnRestriction> &t
 RestrictionGraph::RestrictionRange RestrictionGraph::GetRestrictions(RestrictionID id) const
 {
     const auto &node = nodes[id];
-    return boost::make_iterator_range(restrictions.begin() + node.restrictions_begin_idx,
-                                      restrictions.begin() + node.restrictions_begin_idx +
-                                          node.num_restrictions);
+    return std::ranges::subrange(restrictions.begin() + node.restrictions_begin_idx,
+                                 restrictions.begin() + node.restrictions_begin_idx +
+                                     node.num_restrictions);
 }
 
 RestrictionGraph::EdgeRange RestrictionGraph::GetEdges(RestrictionID id) const
 {
     const auto &node = nodes[id];
-    return boost::make_iterator_range(edges.begin() + node.edges_begin_idx,
-                                      edges.begin() + node.edges_begin_idx + node.num_edges);
+    return std::ranges::subrange(edges.begin() + node.edges_begin_idx,
+                                 edges.begin() + node.edges_begin_idx + node.num_edges);
 }
 
 } // namespace osrm::extractor

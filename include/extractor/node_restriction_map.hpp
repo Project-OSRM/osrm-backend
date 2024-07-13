@@ -26,7 +26,7 @@ template <typename RestrictionFilter> class NodeRestrictionMap
     // Find all restrictions applicable to (from,via,*) turns
     auto Restrictions(NodeID from, NodeID via) const
     {
-        return getRange(from, via) | boost::adaptors::filtered(index_filter);
+        return getRange(from, via) | std::views::filter(index_filter);
     };
 
     // Find all restrictions applicable to (from,via,to) turns
@@ -34,7 +34,7 @@ template <typename RestrictionFilter> class NodeRestrictionMap
     {
         const auto turnFilter = [this, to](const auto &restriction)
         { return index_filter(restriction) && restriction->IsTurnRestricted(to); };
-        return getRange(from, via) | boost::adaptors::filtered(turnFilter);
+        return getRange(from, via) | std::views::filter(turnFilter);
     };
 
   private:
