@@ -653,7 +653,7 @@ jobs:
   benchmarks:
     if: github.event_name == 'pull_request'
     needs: [format-taginfo-docs]
-    runs-on: ubuntu-24.04
+    runs-on: self-hosted
     env:
       CCOMPILER: clang-16
       CXXCOMPILER: clang++-16
@@ -664,37 +664,17 @@ jobs:
       GITHUB_REPOSITORY: ${{ github.repository }}
       RUN_BIG_BENCHMARK: ${{ contains(github.event.pull_request.labels.*.name, 'Performance') }}
     steps: 
-      - name: Enable data.osm.pbf cache
-        if: ${{ ! env.RUN_BIG_BENCHMARK }}        
-        uses: actions/cache@v4
-        with:
-          path: ~/data.osm.pbf
-          key: v1-data-osm-pbf
-          restore-keys: |
-            v1-data-osm-pbf
-      - name: Enable compiler cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.ccache
-          key: v1-ccache-benchmarks-${{ github.sha }}
-          restore-keys: |
-            v1-ccache-benchmarks-
-      - name: Enable Conan cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.conan
-          key: v1-conan-benchmarks-${{ github.sha }}
-          restore-keys: |
-            v1-conan-benchmarks-
       - name: Checkout PR Branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
           path: pr
-      - name: Install dependencies
-        run: | 
-          python3 -m pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" --break-system-packages
-          sudo apt-get update -y && sudo apt-get install ccache
+      - name: Activate virtualenv
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          echo PATH=$PATH >> $GITHUB_ENV
+          pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" 
       - name: Prepare data
         run: |
           if [ "$RUN_BIG_BENCHMARK" = "true" ]; then
@@ -740,32 +720,41 @@ jobs:
           make -C test/data 
       # we run benchmarks in tmpfs to avoid impact of disk IO
       - name: Create folder for tmpfs 
-        run: mkdir -p /opt/benchmarks
+        run: |
+          # if by any chance it was mounted before(e.g. due to previous job failed), unmount it
+          sudo umount ~/benchmarks | true
+          rm -rf ~/benchmarks 
+          mkdir -p ~/benchmarks
+      # see https://llvm.org/docs/Benchmarking.html
       - name: Run PR Benchmarks 
         run: |
-          sudo mount -t tmpfs -o size=4g none /opt/benchmarks
-          cp -rf pr/build /opt/benchmarks/build
-          mkdir -p /opt/benchmarks/test
-          cp -rf pr/test/data /opt/benchmarks/test/data
-          cp -rf pr/profiles /opt/benchmarks/profiles
+          sudo cset shield -c 2-3 -k on
+          sudo mount -t tmpfs -o size=4g none ~/benchmarks
+          cp -rf pr/build ~/benchmarks/build
+          mkdir -p ~/benchmarks/test
+          cp -rf pr/test/data ~/benchmarks/test/data
+          cp -rf pr/profiles ~/benchmarks/profiles
 
-          ./pr/scripts/ci/run_benchmarks.sh -f /opt/benchmarks -r $(pwd)/pr_results -s $(pwd)/pr -b /opt/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
-          sudo umount /opt/benchmarks
+          sudo cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/pr_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
+          sudo umount ~/benchmarks
+          sudo cset shield --reset
       - name: Run Base Benchmarks
         run: |
-          sudo mount -t tmpfs -o size=4g none /opt/benchmarks
-          cp -rf base/build /opt/benchmarks/build
-          mkdir -p /opt/benchmarks/test
-          cp -rf base/test/data /opt/benchmarks/test/data
-          cp -rf base/profiles /opt/benchmarks/profiles
+          sudo cset shield -c 2-3 -k on
+          sudo mount -t tmpfs -o size=4g none ~/benchmarks
+          cp -rf base/build ~/benchmarks/build
+          mkdir -p ~/benchmarks/test
+          cp -rf base/test/data ~/benchmarks/test/data
+          cp -rf base/profiles ~/benchmarks/profiles
 
           # TODO: remove it when base branch will have this file at needed location
-          if [ ! -f /opt/benchmarks/test/data/portugal_to_korea.json ]; then
-            cp base/src/benchmarks/portugal_to_korea.json /opt/benchmarks/test/data/portugal_to_korea.json
+          if [ ! -f ~/benchmarks/test/data/portugal_to_korea.json ]; then
+            cp base/src/benchmarks/portugal_to_korea.json ~/benchmarks/test/data/portugal_to_korea.json
           fi
           # we intentionally use scripts from PR branch to be able to update them and see results in the same PR
-          ./pr/scripts/ci/run_benchmarks.sh -f /opt/benchmarks -r $(pwd)/base_results -s $(pwd)/pr -b /opt/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
-          sudo umount /opt/benchmarks
+          sudo cset shield --exec -- cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/base_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
+          sudo umount ~/benchmarks
+          sudo cset shield --reset
       - name: Post Benchmark Results
         run: |
           python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
