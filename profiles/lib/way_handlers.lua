@@ -9,7 +9,7 @@ local set_classification = require("lib/guidance").set_classification
 local get_destination = require("lib/destination").get_destination
 local Tags = require('lib/tags')
 local Measure = require("lib/measure")
-local ConditionalAccess = require("lib/access_conditional")
+local ConditionalAccess = require("lib/conditional_access")
 
 WayHandlers = {}
 
