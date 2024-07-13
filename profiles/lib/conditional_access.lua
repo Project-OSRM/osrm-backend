@@ -17,8 +17,9 @@ local function parse_conditional_access(way, key)
       return nil
     end
 
-    -- Examples of conditional tags: "no @ (2018 May 22-2018 Oct 7)
-    -- or  "no @ 2018 Jun 01-2018 Jul 23"
+    -- Examples of conditional tags:
+    -- "no @ (2018 May 22-2018 Oct 7)" or
+    -- "no @ 2018 Jun 01 - 2018 Jul 23"
     local condition, time_range = conditional:match("([^@]+)@(.+)")
     if not condition or not time_range then
       return nil
