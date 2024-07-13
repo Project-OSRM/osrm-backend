@@ -44,7 +44,8 @@ namespace protozero {
             protozero_assert(from <= buffer->size());
             protozero_assert(to <= buffer->size());
             protozero_assert(from <= to);
-            buffer->erase(std::next(buffer->begin(), from), std::next(buffer->begin(), to));
+            buffer->erase(std::next(buffer->begin(), static_cast<std::string::iterator::difference_type>(from)),
+                          std::next(buffer->begin(), static_cast<std::string::iterator::difference_type>(to)));
         }
 
         static char* at_pos(test_external::ext_buffer* buffer, std::size_t pos) {

@@ -9,7 +9,7 @@
 #include <test.hpp> // IWYU pragma: keep
 
 std::string load_data(const std::string& filename) {
-    const char* tests_dir = std::getenv("TESTS_DIR");
+    const char* tests_dir = std::getenv("TESTS_DIR"); // NOLINT(concurrency-mt-unsafe) okay in test
     if (tests_dir == nullptr) {
         tests_dir = "test";
     }
