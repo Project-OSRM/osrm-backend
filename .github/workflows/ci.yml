@@ -1,0 +1,176 @@
+name: CI
+
+on: [ push, pull_request ]
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - "ubuntu:18.04"        # gcc  7.5.0, clang  6.0.0, cmake 3.10.2
+          - "ubuntu:20.04"        # gcc  9.3.0, clang 10.0.0, cmake 3.16.3
+          - "ubuntu:21.04"        # gcc 10.3.0, clang 12.0.0, cmake 3.18.4
+          - "ubuntu:21.10"        # gcc 11.2.0, clang 13.0.0, cmake 3.18.4
+          - "debian:stretch"      # gcc  6.3.0, clang  3.8.1, cmake 3.7.2
+          - "debian:buster"       # gcc  8.3.0, clang  7.0.1, cmake 3.13.4
+          - "debian:bullseye"     # gcc 10.2.1, clang 11.0.1, cmake 3.18.4
+          - "debian:testing"      # gcc 10.3.0, clang 11.1.0, cmake 3.21.3
+          - "debian:experimental" # gcc 11.0.0, clang 14.0.0, cmake 3.21.3
+          - "fedora:34"           # gcc 11.2.1, clang 12.0.1, cmake 3.20.5
+          - "fedora:35"           # gcc 11.2.1, clang 13.0.0, cmake 3.22.0
+        build_type: [Debug]
+        cpp_compiler: [g++]
+        cpp_version: [11]
+        include:
+          - image: "debian:bullseye"
+            cpp_version: 14
+          - image: "debian:bullseye"
+            cpp_version: 17
+          - image: "debian:bullseye"
+            cpp_version: 20
+          - image: "debian:bullseye"
+            c_compiler: clang
+            cpp_compiler: clang++
+            cpp_version: 14
+          - image: "debian:bullseye"
+            c_compiler: clang
+            cpp_compiler: clang++
+            cpp_version: 17
+          - image: "debian:bullseye"
+            c_compiler: clang
+            cpp_compiler: clang++
+            cpp_version: 20
+          - image: "debian:bullseye"
+            build_type: Release
+          - image: "debian:bullseye"
+            c_compiler: clang
+            cpp_compiler: clang++
+          - image: "debian:bullseye"
+            c_compiler: clang
+            cpp_compiler: clang++
+            data_view: std::string_view
+# Disabled because it fails due to a bug in the protobuf library
+# See https://github.com/protocolbuffers/protobuf/issues/7224
+#          - image: "debian:bullseye"
+#            c_compiler: clang
+#            cpp_compiler: clang++
+#            CXXFLAGS: "-fsanitize=address,undefined,integer -fno-sanitize-recover=all -fno-omit-frame-pointer"
+#            LDFLAGS: "-fsanitize=address,undefined,integer"
+          - image: "debian:testing"
+            c_compiler: clang
+            cpp_compiler: clang++
+          - image: "debian:experimental"
+            c_compiler: clang-14
+            cpp_compiler: clang++-14
+    container:
+      image: ${{ matrix.image }}
+      env:
+        BUILD_TYPE: ${{ matrix.build_type }}
+        CC: ${{ matrix.c_compiler }}
+        CXX: ${{ matrix.cpp_compiler }}
+        CXXFLAGS: ${{ matrix.CXXFLAGS }}
+        LDFLAGS: ${{ matrix.LDFLAGS }}
+        CPP_VERSION: ${{ matrix.cpp_version }}
+        PROTOZERO_DATA_VIEW: ${{ matrix.data_view }}
+        APT_LISTCHANGES_FRONTEND: none
+        DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Prepare container (apt)
+        shell: bash
+        if: startsWith(matrix.image, 'debian:') || startsWith(matrix.image, 'ubuntu:')
+        run: |
+          apt-get update -qq
+          apt-get install -y \
+            clang \
+            cmake \
+            doxygen \
+            g++ \
+            graphviz \
+            libprotobuf-dev \
+            make \
+            protobuf-compiler
+      - name: Install compiler
+        shell: bash
+        if: matrix.cpp_compiler == 'clang++-14'
+        run: apt-get install -y --no-install-suggests --no-install-recommends clang-14
+      - name: Prepare container (dnf)
+        shell: bash
+        if: startsWith(matrix.image, 'fedora:')
+        run: |
+          dnf install --quiet --assumeyes \
+            cmake \
+            doxygen \
+            gcc-c++ \
+            graphviz \
+            make \
+            protobuf-devel \
+            protobuf-lite-static
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/cmake
+      - uses: ./.github/actions/build
+      - uses: ./.github/actions/ctest
+
+  ubuntu-latest:
+    runs-on: ubuntu-20.04
+    env:
+      CC: clang-13
+      CXX: clang++-13
+      BUILD_TYPE: Debug
+    steps:
+      - name: Install new clang
+        run: |
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main'
+        shell: bash
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-ubuntu
+      - uses: ./.github/actions/cmake
+      - uses: ./.github/actions/build
+      - uses: ./.github/actions/ctest
+
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - "macos-10.15"
+          - "macos-11.0"
+        build_type: [Debug]
+        include:
+          - os: "macos-11.0"
+            build_type: Release
+    runs-on: ${{ matrix.os }}
+    env:
+      CC: clang
+      CXX: clang++
+      BUILD_TYPE: ${{ matrix.build_type }}
+    steps:
+      - run: brew install protobuf
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/cmake
+      - uses: ./.github/actions/build
+      - uses: ./.github/actions/ctest
+
+  windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-2019
+          - windows-2022
+    runs-on: ${{ matrix.os }}
+    steps:
+      - run: |
+          vcpkg install \
+            protobuf:x64-windows \
+            protobuf-c:x64-windows
+        shell: bash
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: ./.github/actions/cmake-windows
+      - uses: ./.github/actions/build-windows
+      - uses: ./.github/actions/ctest-windows
+

@@ -1,8 +1,9 @@
 
 #include <testcase.hpp>
+
 #include "testcase.pb.h"
 
-int main(int c, char *argv[]) {
+int main() {
     TestNested::Test msg;
     msg.set_i(77);
 

@@ -47,7 +47,7 @@ TEST_CASE("check alignment issues for fixed32 field") {
             for (std::string::size_type i = 1; i < abuffer.size() - n; ++i) {
                 protozero::pbf_reader item{abuffer.data() + n, i};
                 REQUIRE(item.next());
-                REQUIRE_THROWS_AS(item.get_fixed32(), const protozero::end_of_buffer_exception&);
+                REQUIRE_THROWS_AS(item.get_fixed32(), protozero::end_of_buffer_exception);
             }
         }
 
@@ -55,7 +55,7 @@ TEST_CASE("check alignment issues for fixed32 field") {
             abuffer.append(load_data("fixed32/data-zero"));
             protozero::pbf_reader item{abuffer.data() + n, abuffer.size() - n};
 
-            REQUIRE_THROWS_AS(item.get_fixed32(), const assert_error&);
+            REQUIRE_THROWS_AS(item.get_fixed32(), assert_error);
             REQUIRE(item.next());
             REQUIRE(item.get_fixed32() == 0UL);
             REQUIRE_THROWS(item.get_fixed32());
@@ -66,7 +66,7 @@ TEST_CASE("check alignment issues for fixed32 field") {
             abuffer.append(load_data("fixed32/data-zero"));
             protozero::pbf_reader item{abuffer.data() + n, abuffer.size() - n};
 
-            REQUIRE_THROWS_AS(item.skip(), const assert_error&);
+            REQUIRE_THROWS_AS(item.skip(), assert_error);
             REQUIRE(item.next());
             item.skip();
             REQUIRE_THROWS(item.skip());
@@ -114,7 +114,7 @@ TEST_CASE("check alignment issues for fixed64 field") {
             for (std::string::size_type i = 1; i < abuffer.size() - n; ++i) {
                 protozero::pbf_reader item{abuffer.data() + n, i};
                 REQUIRE(item.next());
-                REQUIRE_THROWS_AS(item.get_fixed64(), const protozero::end_of_buffer_exception&);
+                REQUIRE_THROWS_AS(item.get_fixed64(), protozero::end_of_buffer_exception);
             }
         }
     }

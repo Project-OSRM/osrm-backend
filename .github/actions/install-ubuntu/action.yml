@@ -1,0 +1,14 @@
+name: Install Prerequisites on Ubuntu
+
+runs:
+  using: composite
+
+  steps:
+    - name: Install packages
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -yq \
+            libprotobuf-dev \
+            protobuf-compiler
+        if [ "$CC" = clang-13 ]; then sudo apt-get install -yq --no-install-suggests --no-install-recommends clang-13; fi
+      shell: bash
