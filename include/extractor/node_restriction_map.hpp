@@ -5,8 +5,6 @@
 #include "restriction_graph.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/range/adaptor/filtered.hpp>
-
 #include <unordered_map>
 #include <utility>
 #include <vector>

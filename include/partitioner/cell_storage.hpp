@@ -14,8 +14,6 @@
 
 #include "customizer/cell_metric.hpp"
 
-#include <boost/iterator/iterator_facade.hpp>
-#include <boost/range/iterator_range.hpp>
 #include <ranges>
 #include <tbb/parallel_sort.h>
 
