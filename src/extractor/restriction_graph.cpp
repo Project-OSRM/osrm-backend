@@ -5,8 +5,6 @@
 #include "util/timing_util.hpp"
 #include <util/for_each_pair.hpp>
 
-#include <boost/range/algorithm/copy.hpp>
-
 namespace osrm::extractor
 {
 

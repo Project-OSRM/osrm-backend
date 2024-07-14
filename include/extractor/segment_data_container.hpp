@@ -8,7 +8,6 @@
 #include "storage/shared_memory_ownership.hpp"
 #include "storage/tar_fwd.hpp"
 #include <filesystem>
-#include <iostream>
 #include <ranges>
 #include <string>
 #include <unordered_map>
