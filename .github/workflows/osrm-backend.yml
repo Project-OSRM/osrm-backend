@@ -672,6 +672,11 @@ jobs:
           key: v1-data-osm-pbf
           restore-keys: |
             v1-data-osm-pbf
+      - name: Use Node 20
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - name: Enable compiler cache
         uses: actions/cache@v4
         with:
@@ -722,6 +727,7 @@ jobs:
           path: base
       - name: Build Base Branch
         run: |
+          npm ci --ignore-scripts
           mkdir base/build
           cd base/build
           cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
@@ -731,6 +737,7 @@ jobs:
           make -C test/data 
       - name: Build PR Branch
         run: |
+          npm ci --ignore-scripts
           mkdir -p pr/build
           cd pr/build
           cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
