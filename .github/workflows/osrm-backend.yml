@@ -727,6 +727,7 @@ jobs:
           path: base
       - name: Build Base Branch
         run: |
+          cd base
           npm ci --ignore-scripts
           mkdir base/build
           cd base/build
@@ -737,6 +738,7 @@ jobs:
           make -C test/data 
       - name: Build PR Branch
         run: |
+          cd pr
           npm ci --ignore-scripts
           mkdir -p pr/build
           cd pr/build
