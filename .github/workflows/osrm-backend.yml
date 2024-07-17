@@ -729,6 +729,7 @@ jobs:
         run: |
           cd base
           npm ci --ignore-scripts
+          cd ..
           mkdir base/build
           cd base/build
           cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
@@ -740,6 +741,7 @@ jobs:
         run: |
           cd pr
           npm ci --ignore-scripts
+          cd ..
           mkdir -p pr/build
           cd pr/build
           cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
