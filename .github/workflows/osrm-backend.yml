@@ -724,7 +724,7 @@ jobs:
         run: |
           mkdir base/build
           cd base/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
           make -j$(nproc)
           make -j$(nproc) benchmarks
           cd ..
@@ -733,7 +733,7 @@ jobs:
         run: |
           mkdir -p pr/build
           cd pr/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
           make -j$(nproc) 
           make -j$(nproc) benchmarks
           cd ..
