@@ -756,6 +756,7 @@ jobs:
         run: |
           sudo mount -t tmpfs -o size=4g none /opt/benchmarks
           cp -rf pr/build /opt/benchmarks/build
+          cp -rf pr/lib /opt/benchmarks/lib
           mkdir -p /opt/benchmarks/test
           cp -rf pr/test/data /opt/benchmarks/test/data
           cp -rf pr/profiles /opt/benchmarks/profiles
@@ -766,6 +767,7 @@ jobs:
         run: |
           sudo mount -t tmpfs -o size=4g none /opt/benchmarks
           cp -rf base/build /opt/benchmarks/build
+          cp -rf base/lib /opt/benchmarks/lib
           mkdir -p /opt/benchmarks/test
           cp -rf base/test/data /opt/benchmarks/test/data
           cp -rf base/profiles /opt/benchmarks/profiles
