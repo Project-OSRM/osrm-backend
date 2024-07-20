@@ -176,7 +176,7 @@ async function main() {
 
     const {OSRM} = require(args[0]);
     const path = args[1];
-    const algorithm = args[2];
+    const algorithm = args[2].toUpperCase();
     const method = args[3];
     const numRequests = parseInt(args[4]);
     const gpsTracesFilePath = args[5];
