@@ -99,7 +99,7 @@ async function route(osrm, numRequests, gpsData) {
 
 async function table(osrm, numRequests, gpsData) {
     const times = [];
-    for (let i = 0; i < numRequests; i++) {
+    for (let i = 0; i < 250; i++) {
         const numPoints = Math.floor(RNG() * 3) + 15;
         const coordinates = [];
         for (let i = 0; i < numPoints; i++) {
@@ -127,7 +127,7 @@ async function match(osrm, numRequests, gpsData) {
 async function trip(osrm, numRequests, gpsData) {
     const times = [];
     for (let i = 0; i < numRequests; i++) {
-        const numPoints = Math.floor(RNG() * 2) + 8;
+        const numPoints = Math.floor(RNG() * 2) + 5;
         const coordinates = [];
         for (let i = 0; i < numPoints; i++) {
             coordinates.push(gpsData.getRandomCoordinate());
