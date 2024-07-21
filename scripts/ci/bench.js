@@ -100,7 +100,7 @@ async function route(osrm, numRequests, gpsData) {
 async function table(osrm, numRequests, gpsData) {
     const times = [];
     for (let i = 0; i < numRequests; i++) {
-        const numPoints = Math.floor(RNG() * 50) + 50;
+        const numPoints = Math.floor(RNG() * 3) + 15;
         const coordinates = [];
         for (let i = 0; i < numPoints; i++) {
             coordinates.push(gpsData.getRandomCoordinate());
