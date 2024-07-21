@@ -109,6 +109,7 @@ async function table(osrm, numRequests, gpsData) {
         
         times.push(await runOSRMMethod(osrm, 'table', coordinates));
     }
+    return times;
 }
 
 async function match(osrm, numRequests, gpsData) {
@@ -119,8 +120,8 @@ async function match(osrm, numRequests, gpsData) {
 
         
         times.push(await runOSRMMethod(osrm, 'match', coordinates));
-
     }
+    return times;
 }
 
 async function trip(osrm, numRequests, gpsData) {
@@ -134,8 +135,8 @@ async function trip(osrm, numRequests, gpsData) {
 
         
         times.push(await runOSRMMethod(osrm, 'trip', coordinates));
-
     }
+    return times;
 }
 
 function bootstrapConfidenceInterval(data, numSamples = 1000, confidenceLevel = 0.95) {
@@ -170,7 +171,6 @@ function calculateConfidenceInterval(data) {
     return { mean, errorMargin, bestValue };
 }
 
-
 async function main() {
     const args = process.argv.slice(2);
 
@@ -200,10 +200,9 @@ async function main() {
     const allTimes = [];
     for (let i = 0; i < iterations; i++) {
         RNG = seedrandom(42);
-        allTimes.push(await func(osrm, numRequests, gpsData));
+        allTimes.push((await func(osrm, numRequests, gpsData)).filter(t => t !== null));
     }
 
-    console.log(allTimes.length);
     const opsPerSec = allTimes.map(times => times.length / times.reduce((a, b) => a + b, 0));
     const { mean, errorMargin, bestValue } = calculateConfidenceInterval(opsPerSec);
     console.log(`Ops: ${mean} ± ${errorMargin} ops/s. Best: ${bestValue} ops/s`);
