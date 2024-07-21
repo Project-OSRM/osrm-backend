@@ -84,7 +84,7 @@ function run_benchmarks_for_folder {
 
 
     for ALGORITHM in ch mld; do
-        for BENCH in nearest route; do
+        for BENCH in match nearest route; do
             echo "Running random $BENCH $ALGORITHM"
             START=$(date +%s.%N)
             node $SCRIPTS_FOLDER/scripts/ci/bench.js $FOLDER/lib/binding/node_osrm.node $FOLDER/data.osrm $ALGORITHM $BENCH 1000 $GPS_TRACES > "$RESULTS_FOLDER/node_${BENCH}_${ALGORITHM}.bench" 5 #|| true
