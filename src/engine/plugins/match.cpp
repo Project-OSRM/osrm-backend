@@ -132,6 +132,13 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error("InvalidValue", "Invalid coordinate value.", result);
     }
 
+    if (!parameters.bearings.empty() && !default_radius.has_value() &&
+        parameters.radiuses.size() != parameters.bearings.size())
+    {
+        return Error(
+            "InvalidOptions", "Number of radiuses does not match number of bearings", result);
+    }
+
     if (max_radius_map_matching > 0 && std::any_of(parameters.radiuses.begin(),
                                                    parameters.radiuses.end(),
                                                    [&](const auto &radius)
