@@ -204,7 +204,7 @@ async function main() {
 
     const opsPerSec = allTimes.map(times => times.length / times.reduce((a, b) => a + b, 0));
     const { mean, errorMargin, bestValue } = calculateConfidenceInterval(opsPerSec);
-    console.log(`Ops: ${mean.toFixed(1)} ± ${errorMargin.toFixed(1} ops/s. Best: ${bestValue.toFixed(1)} ops/s`);
+    console.log(`Ops: ${mean.toFixed(1)} ± ${errorMargin.toFixed(1)} ops/s. Best: ${bestValue.toFixed(1)} ops/s`);
 
 }
 
