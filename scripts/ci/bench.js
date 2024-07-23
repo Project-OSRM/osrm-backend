@@ -25,7 +25,7 @@ class GPSData {
         const trackIdIndex = headers.indexOf('TrackID');
 
         for (let i = 1; i < lines.length; i++) {
-            if (lines[i].trim() === '') continue; // Skip empty lines
+            if (lines[i].trim() === '') continue;
             const row = lines[i].split(',');
 
             const latitude = parseFloat(row[latitudeIndex]);
