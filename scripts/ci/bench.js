@@ -76,18 +76,18 @@ async function runOSRMMethod(osrm, method, coordinates) {
     return time;
 }
 
-async function nearest(osrm, numRequests, gpsData) {
+async function nearest(osrm, gpsData) {
     const times = [];
-    for (let i = 0; i < numRequests; i++) {
+    for (let i = 0; i < 1000; i++) {
         const coord = gpsData.getRandomCoordinate();
         times.push(await runOSRMMethod(osrm, 'nearest', [coord]));
     }
     return times;
 }
 
-async function route(osrm, numRequests, gpsData) {
+async function route(osrm, gpsData) {
     const times = [];
-    for (let i = 0; i < numRequests; i++) {
+    for (let i = 0; i < 1000; i++) {
         const from = gpsData.getRandomCoordinate();
         const to = gpsData.getRandomCoordinate();
 
@@ -97,7 +97,7 @@ async function route(osrm, numRequests, gpsData) {
     return times;
 }
 
-async function table(osrm, numRequests, gpsData) {
+async function table(osrm, gpsData) {
     const times = [];
     for (let i = 0; i < 250; i++) {
         const numPoints = Math.floor(RNG() * 3) + 15;
@@ -112,9 +112,9 @@ async function table(osrm, numRequests, gpsData) {
     return times;
 }
 
-async function match(osrm, numRequests, gpsData) {
+async function match(osrm, gpsData) {
     const times = [];
-    for (let i = 0; i < numRequests; i++) {
+    for (let i = 0; i < 1000; i++) {
         const numPoints = Math.floor(RNG() * 50) + 50;
         const coordinates = gpsData.getRandomTrack().slice(0, numPoints);
 
@@ -124,9 +124,9 @@ async function match(osrm, numRequests, gpsData) {
     return times;
 }
 
-async function trip(osrm, numRequests, gpsData) {
+async function trip(osrm, gpsData) {
     const times = [];
-    for (let i = 0; i < numRequests; i++) {
+    for (let i = 0; i < 250; i++) {
         const numPoints = Math.floor(RNG() * 2) + 5;
         const coordinates = [];
         for (let i = 0; i < numPoints; i++) {
@@ -178,9 +178,8 @@ async function main() {
     const path = args[1];
     const algorithm = args[2].toUpperCase();
     const method = args[3];
-    const numRequests = parseInt(args[4]);
-    const gpsTracesFilePath = args[5];
-    const iterations = parseInt(args[6]);
+    const gpsTracesFilePath = args[4];
+    const iterations = parseInt(args[5]);
 
     const gpsData = new GPSData(gpsTracesFilePath);
     const osrm = new OSRM({path, algorithm});
@@ -200,7 +199,7 @@ async function main() {
     const allTimes = [];
     for (let i = 0; i < iterations; i++) {
         RNG = seedrandom(42);
-        allTimes.push((await func(osrm, numRequests, gpsData)).filter(t => t !== null));
+        allTimes.push((await func(osrm, gpsData)).filter(t => t !== null));
     }
 
     const opsPerSec = allTimes.map(times => times.length / times.reduce((a, b) => a + b, 0));
