@@ -16,8 +16,8 @@
 #include "osrm/osrm.hpp"
 #include "osrm/status.hpp"
 
+#include "util/meminfo.hpp"
 #include <boost/assert.hpp>
-
 #include <boost/optional/optional.hpp>
 #include <cstdlib>
 #include <exception>
@@ -655,6 +655,12 @@ try
         std::cerr << "Unknown benchmark: " << benchmarkToRun << std::endl;
         return EXIT_FAILURE;
     }
+
+    std::cout << "Peak RAM: " << std::setprecision(3)
+              << static_cast<double>(osrm::util::PeakRAMUsedInBytes()) /
+                     static_cast<double>((1024 * 1024))
+              << "MB" << std::endl;
+
     return EXIT_SUCCESS;
 }
 catch (const std::exception &e)
