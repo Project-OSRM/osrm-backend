@@ -9,7 +9,7 @@ Feature: Basic Roundabout
             """
 
     Scenario: Roundabout exit counting for left sided driving
-        And a grid size of 10 meters
+        Given a grid size of 10 meters
         And the node map
             """
                 a
@@ -33,7 +33,7 @@ Feature: Basic Roundabout
            | a,h       | ab,gh,gh | depart,roundabout turn right exit-3,arrive    |
 
     Scenario: Mixed Entry and Exit
-        And a grid size of 10 meters
+        Given a grid size of 10 meters
         And the node map
            """
              c   a

@@ -37,6 +37,14 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
 {
     LegGeometry geometry;
 
+    // each container will at most have `leg_data.size()` + 1/2 elements in it
+    // these additional 1/2 elements come from processing of very first and very last segment
+    geometry.locations.reserve(leg_data.size() + 2);
+    geometry.segment_distances.reserve(leg_data.size() + 1);
+    geometry.segment_offsets.reserve(leg_data.size() + 1);
+    geometry.annotations.reserve(leg_data.size() + 1);
+    geometry.node_ids.reserve(leg_data.size() + 2);
+
     // segment 0 first and last
     geometry.segment_offsets.push_back(0);
     geometry.locations.push_back(source_node.location);

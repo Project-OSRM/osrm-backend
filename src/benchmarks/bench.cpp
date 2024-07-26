@@ -16,8 +16,8 @@
 #include "osrm/osrm.hpp"
 #include "osrm/status.hpp"
 
+#include "util/meminfo.hpp"
 #include <boost/assert.hpp>
-
 #include <boost/optional/optional.hpp>
 #include <cstdlib>
 #include <exception>
@@ -360,8 +360,8 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterati
 
                       if (benchmark.radius)
                       {
-                          params.radiuses = std::vector<boost::optional<double>>(
-                              params.coordinates.size(), boost::make_optional(*benchmark.radius));
+                          params.radiuses = std::vector<std::optional<double>>(
+                              params.coordinates.size(), std::make_optional(*benchmark.radius));
                       }
 
                       engine::api::ResultT result = json::Object();
@@ -655,6 +655,12 @@ try
         std::cerr << "Unknown benchmark: " << benchmarkToRun << std::endl;
         return EXIT_FAILURE;
     }
+
+    std::cout << "Peak RAM: " << std::setprecision(3)
+              << static_cast<double>(osrm::util::PeakRAMUsedInBytes()) /
+                     static_cast<double>((1024 * 1024))
+              << "MB" << std::endl;
+
     return EXIT_SUCCESS;
 }
 catch (const std::exception &e)

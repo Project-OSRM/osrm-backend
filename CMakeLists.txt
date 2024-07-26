@@ -31,10 +31,11 @@ option(ENABLE_ASSERTIONS "Use assertions in release mode" OFF)
 option(ENABLE_DEBUG_LOGGING "Use debug logging in release mode" OFF)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
-option(ENABLE_LTO "Use LTO if available" OFF)
+option(ENABLE_LTO "Use Link Time Optimisation" ON)
 option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
 option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
 option(ENABLE_CLANG_TIDY "Enables clang-tidy checks" OFF)
+
 
 if (ENABLE_CLANG_TIDY)
   find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
@@ -56,6 +57,18 @@ if (POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()
 project(OSRM C CXX)
+
+
+if(ENABLE_LTO AND (CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT LTO_SUPPORTED OUTPUT error)
+  if(LTO_SUPPORTED)
+      message(STATUS "IPO / LTO enabled")
+      set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+  else()
+      message(FATAL_ERROR "IPO / LTO not supported: <${error}>")
+  endif()
+endif()
 
 # add @loader_path/$ORIGIN to rpath to make binaries relocatable
 if (APPLE)
@@ -120,6 +133,7 @@ endif()
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/generated/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sol2/include)
 
 set(BOOST_COMPONENTS date_time iostreams program_options thread unit_test_framework)
@@ -208,17 +222,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og -ggdb")
 endif()
 
-if(ENABLE_LTO AND (CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
-  include(CheckIPOSupported)
-  check_ipo_supported(RESULT LTO_SUPPORTED OUTPUT error)
-  if(LTO_SUPPORTED)
-      message(STATUS "IPO / LTO enabled")
-      set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-  else()
-      message(WARNING "IPO / LTO not supported: <${error}>")
-  endif()
-endif()
-
 set(MAYBE_COVERAGE_LIBRARIES "")
 if (ENABLE_COVERAGE)
   if (NOT CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -290,6 +293,7 @@ include_directories(SYSTEM ${MICROTAR_INCLUDE_DIR})
 
 add_library(MICROTAR OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src/microtar.c")
 set_property(TARGET MICROTAR PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 target_no_warning(MICROTAR unused-variable)
 target_no_warning(MICROTAR format)
 

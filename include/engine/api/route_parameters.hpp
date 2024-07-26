@@ -82,7 +82,7 @@ struct RouteParameters : public BaseParameters
                     const bool alternatives_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,
-                    const boost::optional<bool> continue_straight_,
+                    const std::optional<bool> continue_straight_,
                     Args &&...args_)
         // Once we perfectly-forward `args` (see #2990) this constructor can delegate to the one
         // below.
@@ -100,7 +100,7 @@ struct RouteParameters : public BaseParameters
                     const bool annotations_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,
-                    const boost::optional<bool> continue_straight_,
+                    const std::optional<bool> continue_straight_,
                     Args &&...args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{annotations_},
@@ -118,7 +118,7 @@ struct RouteParameters : public BaseParameters
                     const AnnotationsType annotations_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,
-                    const boost::optional<bool> continue_straight_,
+                    const std::optional<bool> continue_straight_,
                     Args &&...args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           number_of_alternatives{alternatives_ ? 1u : 0u},
@@ -135,7 +135,7 @@ struct RouteParameters : public BaseParameters
                     const bool annotations_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,
-                    const boost::optional<bool> continue_straight_,
+                    const std::optional<bool> continue_straight_,
                     std::vector<std::size_t> waypoints_,
                     const Args &&...args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
@@ -153,7 +153,7 @@ struct RouteParameters : public BaseParameters
                     const AnnotationsType annotations_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,
-                    const boost::optional<bool> continue_straight_,
+                    const std::optional<bool> continue_straight_,
                     std::vector<std::size_t> waypoints_,
                     Args &&...args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
@@ -172,7 +172,7 @@ struct RouteParameters : public BaseParameters
     AnnotationsType annotations_type = AnnotationsType::None;
     GeometriesType geometries = GeometriesType::Polyline;
     OverviewType overview = OverviewType::Simplified;
-    boost::optional<bool> continue_straight;
+    std::optional<bool> continue_straight;
     std::vector<std::size_t> waypoints;
 
     bool IsValid() const

@@ -177,39 +177,41 @@ jobs:
             CXXCOMPILER: g++-13
             ENABLE_COVERAGE: ON
 
-          - name: clang-15-debug-asan-ubsan
+          - name: clang-18-debug-asan-ubsan
             continue-on-error: false
             node: 20
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: clang-15
+            CCOMPILER: clang-18
             CUCUMBER_TIMEOUT: 20000
-            CXXCOMPILER: clang++-15
+            CXXCOMPILER: clang++-18
             ENABLE_SANITIZER: ON
             TARGET_ARCH: x86_64-asan-ubsan
             OSRM_CONNECTION_RETRIES: 10
             OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
-          - name: clang-15-release
+          - name: clang-18-release
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-15
-            CXXCOMPILER: clang++-15
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             CUCUMBER_TIMEOUT: 60000
+            ENABLE_LTO: OFF
 
-          - name: clang-15-debug
+          - name: clang-18-debug
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Debug
-            CCOMPILER: clang-15
-            CXXCOMPILER: clang++-15
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             CUCUMBER_TIMEOUT: 60000
+            ENABLE_LTO: OFF
 
           - name: clang-18-debug-clang-tidy
             continue-on-error: false
@@ -223,46 +225,50 @@ jobs:
             ENABLE_CLANG_TIDY: ON
 
 
-          - name: clang-14-release
+          - name: clang-17-release
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-14
-            CXXCOMPILER: clang++-14
+            CCOMPILER: clang-17
+            CXXCOMPILER: clang++-17
             CUCUMBER_TIMEOUT: 60000
+            ENABLE_LTO: OFF
 
-          - name: clang-13-release
+          - name: clang-16-release
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-13
-            CXXCOMPILER: clang++-13
+            CCOMPILER: clang-16
+            CXXCOMPILER: clang++-16
             CUCUMBER_TIMEOUT: 60000
+            ENABLE_LTO: OFF
 
           - name: conan-linux-debug-asan-ubsan
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-15
-            CXXCOMPILER: clang++-15
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             ENABLE_CONAN: ON
             ENABLE_SANITIZER: ON
+            ENABLE_LTO: OFF
 
           - name: conan-linux-release
             continue-on-error: false
             node: 18
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
-            CCOMPILER: clang-15
-            CXXCOMPILER: clang++-15
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             ENABLE_CONAN: ON
+            ENABLE_LTO: OFF
 
           - name: gcc-14-release
             continue-on-error: false
@@ -298,10 +304,10 @@ jobs:
             build_node_package: true
             continue-on-error: false
             node: 20
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TYPE: Release
-            CCOMPILER: clang-13
-            CXXCOMPILER: clang++-13
+            CCOMPILER: clang-16
+            CXXCOMPILER: clang++-16
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -309,10 +315,10 @@ jobs:
             build_node_package: true
             continue-on-error: false
             node: 20
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
-            CCOMPILER: clang-13
-            CXXCOMPILER: clang++-13
+            CCOMPILER: clang-16
+            CXXCOMPILER: clang++-16
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
@@ -361,6 +367,7 @@ jobs:
       TARGET_ARCH: ${{ matrix.TARGET_ARCH }}
       OSRM_CONNECTION_RETRIES: ${{ matrix.OSRM_CONNECTION_RETRIES }}
       OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
+      ENABLE_LTO: ${{ matrix.ENABLE_LTO }}
     steps:
     - uses: actions/checkout@v4
     - name: Build machine architecture
@@ -488,6 +495,13 @@ jobs:
         tar zxvf onetbb.tgz
         sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
         sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
+    - name: Add Clang 18 to list of Conan compilers # workaround for the issue that Conan 1.x doesn't know about Clang 18
+      if: ${{ matrix.ENABLE_CONAN == 'ON' && matrix.CCOMPILER == 'clang-18' }}
+      run: |
+        sudo wget https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
+
+        conan config init
+        yq eval '.compiler.clang.version += ["18"]' -i "$HOME/.conan/settings.yml"
     - name: Prepare build
       run: |
         mkdir ${OSRM_BUILD_DIR}
@@ -521,6 +535,7 @@ jobs:
                  -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
                  -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
                  -DENABLE_CCACHE=ON \
+                 -DENABLE_LTO=${ENABLE_LTO:-ON} \
                  -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
         make --jobs=${JOBS}
 
@@ -640,10 +655,10 @@ jobs:
     needs: [format-taginfo-docs]
     runs-on: self-hosted
     env:
-      CCOMPILER: clang-13
-      CXXCOMPILER: clang++-13
-      CC: clang-13
-      CXX: clang++-13
+      CCOMPILER: clang-16
+      CXXCOMPILER: clang++-16
+      CC: clang-16
+      CXX: clang++-16
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
       GITHUB_REPOSITORY: ${{ github.repository }}
@@ -687,18 +702,24 @@ jobs:
           path: base
       - name: Build Base Branch
         run: |
+          cd base
+          npm ci --ignore-scripts
+          cd ..
           mkdir base/build
           cd base/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
           make -j$(nproc)
           make -j$(nproc) benchmarks
           cd ..
           make -C test/data 
       - name: Build PR Branch
         run: |
+          cd pr
+          npm ci --ignore-scripts
+          cd ..
           mkdir -p pr/build
           cd pr/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
           make -j$(nproc) 
           make -j$(nproc) benchmarks
           cd ..
@@ -716,6 +737,7 @@ jobs:
           sudo cset shield -c 2-3 -k on
           sudo mount -t tmpfs -o size=4g none ~/benchmarks
           cp -rf pr/build ~/benchmarks/build
+          cp -rf pr/lib ~/benchmarks/lib
           mkdir -p ~/benchmarks/test
           cp -rf pr/test/data ~/benchmarks/test/data
           cp -rf pr/profiles ~/benchmarks/profiles
@@ -728,6 +750,7 @@ jobs:
           sudo cset shield -c 2-3 -k on
           sudo mount -t tmpfs -o size=4g none ~/benchmarks
           cp -rf base/build ~/benchmarks/build
+          cp -rf base/lib ~/benchmarks/lib
           mkdir -p ~/benchmarks/test
           cp -rf base/test/data ~/benchmarks/test/data
           cp -rf base/profiles ~/benchmarks/profiles

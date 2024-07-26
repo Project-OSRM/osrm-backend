@@ -1,6 +1,7 @@
 # Unreleased
   - Changes from 5.27.1
     - Features
+      - ADDED: Route pedestrians over highway=platform [#6993](https://github.com/Project-OSRM/osrm-backend/pull/6993)
       - REMOVED: Remove all core-CH left-overs [#6920](https://github.com/Project-OSRM/osrm-backend/pull/6920)
       - ADDED: Add support for a keepalive_timeout flag. [#6674](https://github.com/Project-OSRM/osrm-backend/pull/6674)
       - ADDED: Add support for a default_radius flag. [#6575](https://github.com/Project-OSRM/osrm-backend/pull/6575)
@@ -24,6 +25,13 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: Use thread_local instead of boost::thread_specific_ptr. [#6991](https://github.com/Project-OSRM/osrm-backend/pull/6991)
+      - CHANGED: Bump flatbuffers to v24.3.25 version. [#6988](https://github.com/Project-OSRM/osrm-backend/pull/6988)
+      - CHANGED: Add .reserve(...) to assembleGeometry function. [#6983](https://github.com/Project-OSRM/osrm-backend/pull/6983)
+      - CHANGED: Get rid of boost::optional leftovers. [#6977](https://github.com/Project-OSRM/osrm-backend/pull/6977)
+      - CHANGED: Use Link Time Optimisation whenever possible. [#6967](https://github.com/Project-OSRM/osrm-backend/pull/6967)
+      - CHANGED: Use struct instead of tuple to define UnpackedPath. [#6974](https://github.com/Project-OSRM/osrm-backend/pull/6974)
+      - CHANGED: Micro performance optimisation in map matching. [#6976](https://github.com/Project-OSRM/osrm-backend/pull/6976)
       - CHANGED: Re-use priority queue in StaticRTree. [#6952](https://github.com/Project-OSRM/osrm-backend/pull/6952)
       - CHANGED: Optimise encodePolyline function. [#6940](https://github.com/Project-OSRM/osrm-backend/pull/6940)
       - CHANGED: Avoid reallocations in base64 encoding. [#6951](https://github.com/Project-OSRM/osrm-backend/pull/6951)
