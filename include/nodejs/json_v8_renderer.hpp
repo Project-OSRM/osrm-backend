@@ -11,87 +11,85 @@ namespace node_osrm
 
 struct V8Renderer
 {
-    explicit V8Renderer(const Napi::Env &env, Napi::Value &out) : env(env), out(out) {}
+    explicit V8Renderer(const Napi::Env &env) : env(env) {}
 
-    void operator()(const osrm::json::String &string) const
+    Napi::Value operator()(const osrm::json::String &string) const
     {
-        out = Napi::String::New(env, string.value);
+        return Napi::String::New(env, string.value);
     }
 
-    void operator()(const osrm::json::Number &number) const
+    Napi::Value operator()(const osrm::json::Number &number) const
     {
-        out = Napi::Number::New(env, number.value);
+        return Napi::Number::New(env, number.value);
     }
 
-    void operator()(const osrm::json::Object &object) const
+    Napi::Value operator()(const osrm::json::Object &object) const
     {
         Napi::Object obj = Napi::Object::New(env);
         for (const auto &keyValue : object.values)
         {
-            Napi::Value child;
-
-            visit(V8Renderer(env, child), keyValue.second);
-            obj.Set(keyValue.first, child);
+            obj.Set(keyValue.first, visit(V8Renderer(env), keyValue.second));
         }
-        out = obj;
+        return obj;
     }
 
-    void operator()(const osrm::json::Array &array) const
+    Napi::Value operator()(const osrm::json::Array &array) const
     {
         Napi::Array a = Napi::Array::New(env, array.values.size());
         for (auto i = 0u; i < array.values.size(); ++i)
         {
-            Napi::Value child;
-            visit(V8Renderer(env, child), array.values[i]);
-            a.Set(i, child);
+            a.Set(i, visit(V8Renderer(env), array.values[i]));
         }
-        out = a;
+        return a;
     }
 
-    void operator()(const osrm::json::True &) const { out = Napi::Boolean::New(env, true); }
+    Napi::Value operator()(const osrm::json::True &) const { return Napi::Boolean::New(env, true); }
 
-    void operator()(const osrm::json::False &) const { out = Napi::Boolean::New(env, false); }
+    Napi::Value operator()(const osrm::json::False &) const
+    {
+        return Napi::Boolean::New(env, false);
+    }
 
-    void operator()(const osrm::json::Null &) const { out = env.Null(); }
+    Napi::Value operator()(const osrm::json::Null &) const { return env.Null(); }
 
   private:
-    void visit(const V8Renderer &renderer, const osrm::json::Value &value) const
+    Napi::Value visit(const V8Renderer &renderer, const osrm::json::Value &value) const
     {
         switch (value.index())
         {
         case 0:
-            renderer(std::get<osrm::json::String>(value));
+            return renderer(std::get<osrm::json::String>(value));
             break;
         case 1:
-            renderer(std::get<osrm::json::Number>(value));
+            return renderer(std::get<osrm::json::Number>(value));
             break;
         case 2:
-            renderer(std::get<osrm::json::Object>(value));
+            return renderer(std::get<osrm::json::Object>(value));
             break;
         case 3:
-            renderer(std::get<osrm::json::Array>(value));
+            return renderer(std::get<osrm::json::Array>(value));
             break;
         case 4:
-            renderer(std::get<osrm::json::True>(value));
+            return renderer(std::get<osrm::json::True>(value));
             break;
         case 5:
-            renderer(std::get<osrm::json::False>(value));
+            return renderer(std::get<osrm::json::False>(value));
             break;
         case 6:
-            renderer(std::get<osrm::json::Null>(value));
+            return renderer(std::get<osrm::json::Null>(value));
             break;
         }
+        return env.Null();
     }
 
   private:
     const Napi::Env &env;
-    Napi::Value &out;
 };
 
 inline void renderToV8(const Napi::Env &env, Napi::Value &out, const osrm::json::Object &object)
 {
-    V8Renderer renderer(env, out);
-    renderer(object);
+    V8Renderer renderer(env);
+    out = renderer(object);
 }
 } // namespace node_osrm
 
