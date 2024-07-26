@@ -672,6 +672,11 @@ jobs:
           key: v1-data-osm-pbf
           restore-keys: |
             v1-data-osm-pbf
+      - name: Use Node 20
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - name: Enable compiler cache
         uses: actions/cache@v4
         with:
@@ -722,18 +727,24 @@ jobs:
           path: base
       - name: Build Base Branch
         run: |
+          cd base
+          npm ci --ignore-scripts
+          cd ..
           mkdir base/build
           cd base/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
           make -j$(nproc)
           make -j$(nproc) benchmarks
           cd ..
           make -C test/data 
       - name: Build PR Branch
         run: |
+          cd pr
+          npm ci --ignore-scripts
+          cd ..
           mkdir -p pr/build
           cd pr/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
           make -j$(nproc) 
           make -j$(nproc) benchmarks
           cd ..
@@ -745,6 +756,7 @@ jobs:
         run: |
           sudo mount -t tmpfs -o size=4g none /opt/benchmarks
           cp -rf pr/build /opt/benchmarks/build
+          cp -rf pr/lib /opt/benchmarks/lib
           mkdir -p /opt/benchmarks/test
           cp -rf pr/test/data /opt/benchmarks/test/data
           cp -rf pr/profiles /opt/benchmarks/profiles
@@ -755,6 +767,7 @@ jobs:
         run: |
           sudo mount -t tmpfs -o size=4g none /opt/benchmarks
           cp -rf base/build /opt/benchmarks/build
+          cp -rf base/lib /opt/benchmarks/lib
           mkdir -p /opt/benchmarks/test
           cp -rf base/test/data /opt/benchmarks/test/data
           cp -rf base/profiles /opt/benchmarks/profiles
