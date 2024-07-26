@@ -29,7 +29,8 @@ struct V8Renderer
         for (const auto &keyValue : object.values)
         {
             Napi::Value child;
-            std::visit(V8Renderer(env, child), keyValue.second);
+
+            visit(V8Renderer(env, child), keyValue.second);
             obj.Set(keyValue.first, child);
         }
         out = obj;
@@ -41,7 +42,7 @@ struct V8Renderer
         for (auto i = 0u; i < array.values.size(); ++i)
         {
             Napi::Value child;
-            std::visit(V8Renderer(env, child), array.values[i]);
+            visit(V8Renderer(env, child), array.values[i]);
             a.Set(i, child);
         }
         out = a;
@@ -52,6 +53,35 @@ struct V8Renderer
     void operator()(const osrm::json::False &) const { out = Napi::Boolean::New(env, false); }
 
     void operator()(const osrm::json::Null &) const { out = env.Null(); }
+
+  private:
+    void visit(const V8Renderer &renderer, const osrm::json::Value &value) const
+    {
+        switch (value.index())
+        {
+        case 0:
+            renderer(std::get<osrm::json::String>(value));
+            break;
+        case 1:
+            renderer(std::get<osrm::json::Number>(value));
+            break;
+        case 2:
+            renderer(std::get<osrm::json::Object>(value));
+            break;
+        case 3:
+            renderer(std::get<osrm::json::Array>(value));
+            break;
+        case 4:
+            renderer(std::get<osrm::json::True>(value));
+            break;
+        case 5:
+            renderer(std::get<osrm::json::False>(value));
+            break;
+        case 6:
+            renderer(std::get<osrm::json::Null>(value));
+            break;
+        }
+    }
 
   private:
     const Napi::Env &env;
