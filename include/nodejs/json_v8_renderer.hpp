@@ -28,7 +28,7 @@ struct V8Renderer
         Napi::Object obj = Napi::Object::New(env);
         for (const auto &keyValue : object.values)
         {
-            obj.Set(keyValue.first, visit(V8Renderer(env), keyValue.second));
+            obj.Set(keyValue.first, visit(*this, keyValue.second));
         }
         return obj;
     }
@@ -38,7 +38,7 @@ struct V8Renderer
         Napi::Array a = Napi::Array::New(env, array.values.size());
         for (auto i = 0u; i < array.values.size(); ++i)
         {
-            a.Set(i, visit(V8Renderer(env), array.values[i]));
+            a.Set(i, visit(*this, array.values[i]));
         }
         return a;
     }
