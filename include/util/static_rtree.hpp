@@ -260,6 +260,7 @@ class StaticRTree
     boost::iostreams::mapped_file_source m_objects_region;
     // This is a view of the EdgeDataT data mmap'd from the .fileIndex file
     util::vector_view<const EdgeDataT> m_objects;
+    EdgeDataT tmp;
 
   public:
     StaticRTree() = default;
@@ -463,6 +464,7 @@ class StaticRTree
         : m_coordinate_list(coordinate_list.data(), coordinate_list.size()),
           m_objects(mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region))
     {
+              preheat();
     }
 
     /**
@@ -481,6 +483,7 @@ class StaticRTree
     {
         BOOST_ASSERT(m_tree_level_starts.size() >= 2);
         m_objects = mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region);
+        preheat();
     }
 
     /* Returns all features inside the bounding box.
@@ -810,6 +813,18 @@ class StaticRTree
     {
         BOOST_ASSERT(m_tree_level_starts.size() >= 2);
         return treeindex.level == m_tree_level_starts.size() - 2;
+    }
+
+    void preheat()
+    {
+        auto iter = m_objects.begin();
+        auto end = m_objects.end();
+        while (iter < end)
+        {
+            tmp = *(iter.get_ptr());
+            // because os's page is unit of 4K
+            iter += LEAF_NODE_SIZE;
+        }
     }
 
     friend void serialization::read<EdgeDataT, Ownership, BRANCHING_FACTOR, LEAF_PAGE_SIZE>(
