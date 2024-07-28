@@ -353,6 +353,8 @@ if(ENABLE_CONAN)
     KEEP_RPATHS
     NO_OUTPUT_DIRS
     OPTIONS boost:without_stacktrace=True # Apple Silicon cross-compilation fails without it
+            onetbb:tbbmalloc=False
+            onetbb:tbbproxy=False
     BUILD missing
   )
 
