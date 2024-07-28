@@ -705,6 +705,8 @@ void unpackPath(const FacadeT &facade,
     annotatePath(facade, route_endpoints, unpacked_nodes, unpacked_edges, unpacked_path);
 }
 
+
+
 template <typename Algorithm>
 double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           const DataFacade<Algorithm> &facade,
@@ -761,6 +763,29 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
         return std::numeric_limits<double>::max();
     }
     return from_alias<double>(distance);
+}
+
+template <typename Algorithm>
+std::vector<double> getNetworkDistances(SearchEngineData<Algorithm> &engine_working_data,
+                          const DataFacade<Algorithm> &facade,
+ typename SearchEngineData<Algorithm>::MapMatchingQueryHeap &forward_heap,
+                          typename SearchEngineData<Algorithm>::MapMatchingQueryHeap &reverse_heap,
+                          const PhantomNode &source_phantom,
+                          const std::vector<PhantomNode> &target_phantoms,
+                          EdgeWeight duration_upper_bound = INVALID_EDGE_WEIGHT) {
+    std::vector<double> distances;
+    for (const auto &target_phantom : target_phantoms)
+    {
+        auto distance = getNetworkDistance(engine_working_data,
+                                           facade,
+                                           forward_heap,
+                                           reverse_heap,
+                                           source_phantom,
+                                           target_phantom,
+                                           duration_upper_bound);
+        distances.push_back(distance);
+    }
+    return distances;
 }
 
 } // namespace osrm::engine::routing_algorithms::mld

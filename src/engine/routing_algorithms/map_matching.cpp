@@ -225,6 +225,46 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                     continue;
                 }
 
+                std::vector<PhantomNode> target_phantom_nodes;
+                for (const auto s_prime : util::irange<std::size_t>(0UL, current_viterbi.size()))
+                {
+                    const double emission_pr = emission_log_probabilities[t][s_prime];
+                    double new_value = prev_viterbi[s] + emission_pr;
+                    if (current_viterbi[s_prime] > new_value)
+                    {
+                        continue;
+                    }
+                    target_phantom_nodes.push_back(current_timestamps_list[s_prime].phantom_node);
+                }
+
+                auto new_distances = getNetworkDistances(engine_working_data,
+                                    facade,
+                                    forward_heap,
+                                    reverse_heap,
+                                    prev_unbroken_timestamps_list[s].phantom_node,
+                                    target_phantom_nodes,
+                                    weight_upper_bound);
+
+                std::vector<double> old_distances;
+
+                for (const auto& pn: target_phantom_nodes)
+                {
+                     double network_distance =
+                        getNetworkDistance(engine_working_data,
+                                           facade,
+                                           forward_heap,
+                                           reverse_heap,
+                                           prev_unbroken_timestamps_list[s].phantom_node,
+                                           pn,
+                                           weight_upper_bound);
+                     old_distances.push_back(network_distance);
+                }
+
+                if (old_distances != new_distances) {
+                    std::cerr << "OOPS " << std::endl;
+                }
+
+
                 for (const auto s_prime : util::irange<std::size_t>(0UL, current_viterbi.size()))
                 {
                     const double emission_pr = emission_log_probabilities[t][s_prime];
