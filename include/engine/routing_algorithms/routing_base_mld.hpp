@@ -773,6 +773,57 @@ std::vector<double> getNetworkDistances(SearchEngineData<Algorithm> &engine_work
                           const PhantomNode &source_phantom,
                           const std::vector<PhantomNode> &target_phantoms,
                           EdgeWeight duration_upper_bound = INVALID_EDGE_WEIGHT) {
+    using Heap = typename SearchEngineData<Algorithm>::MapMatchingQueryHeap;
+    forward_heap.Clear();
+    std::vector<std::unique_ptr<Heap>> reverse_heaps;
+    const auto nodes_number = facade.GetNumberOfNodes();
+    const auto border_nodes_number = facade.GetMaxBorderNodeID() + 1;
+    for (const auto &target_phantom : target_phantoms)
+    {
+        (void)target_phantom;
+        reverse_heaps.emplace_back(std::make_unique<Heap>(nodes_number, border_nodes_number));
+    }
+
+    if (source_phantom.IsValidForwardSource())
+    {
+        forward_heap.Insert(source_phantom.forward_segment_id.id,
+                            EdgeWeight{0} - source_phantom.GetForwardWeightPlusOffset(),
+                            {source_phantom.forward_segment_id.id,
+                             false,
+                             EdgeDistance{0} - source_phantom.GetForwardDistance()});
+    }
+
+    if (source_phantom.IsValidReverseSource())
+    {
+        forward_heap.Insert(source_phantom.reverse_segment_id.id,
+                            EdgeWeight{0} - source_phantom.GetReverseWeightPlusOffset(),
+                            {source_phantom.reverse_segment_id.id,
+                             false,
+                             EdgeDistance{0} - source_phantom.GetReverseDistance()});
+    }
+
+    for (size_t i = 0; i < target_phantoms.size(); ++i) {
+        auto& reverse_heap = *reverse_heaps[i];
+        const auto& target_phantom = target_phantoms[i];
+        if (target_phantom.IsValidForwardTarget())
+        {
+            reverse_heap.Insert(
+                target_phantom.forward_segment_id.id,
+                target_phantom.GetForwardWeightPlusOffset(),
+                {target_phantom.forward_segment_id.id, false, target_phantom.GetForwardDistance()});
+        }
+
+        if (target_phantom.IsValidReverseTarget())
+        {
+            reverse_heap.Insert(
+                target_phantom.reverse_segment_id.id,
+                target_phantom.GetReverseWeightPlusOffset(),
+                {target_phantom.reverse_segment_id.id, false, target_phantom.GetReverseDistance()});
+        }
+    }
+   
+
+
     std::vector<double> distances;
     for (const auto &target_phantom : target_phantoms)
     {
