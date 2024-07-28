@@ -355,6 +355,7 @@ if(ENABLE_CONAN)
     OPTIONS boost:without_stacktrace=True # Apple Silicon cross-compilation fails without it
             onetbb:tbbmalloc=False
             onetbb:tbbproxy=False
+            onetbb:tbbbind=False
     BUILD missing
   )
 
