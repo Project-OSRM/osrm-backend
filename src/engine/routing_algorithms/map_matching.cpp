@@ -237,19 +237,20 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                     target_phantom_nodes.push_back(current_timestamps_list[s_prime].phantom_node);
                 }
 
-                auto new_distances = getNetworkDistances(engine_working_data,
-                                    facade,
-                                    forward_heap,
-                                    reverse_heap,
-                                    prev_unbroken_timestamps_list[s].phantom_node,
-                                    target_phantom_nodes,
-                                    weight_upper_bound);
+                auto new_distances =
+                    getNetworkDistances(engine_working_data,
+                                        facade,
+                                        forward_heap,
+                                        reverse_heap,
+                                        prev_unbroken_timestamps_list[s].phantom_node,
+                                        target_phantom_nodes,
+                                        weight_upper_bound);
 
                 std::vector<double> old_distances;
 
-                for (const auto& pn: target_phantom_nodes)
+                for (const auto &pn : target_phantom_nodes)
                 {
-                     double network_distance =
+                    double network_distance =
                         getNetworkDistance(engine_working_data,
                                            facade,
                                            forward_heap,
@@ -257,13 +258,17 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                                            prev_unbroken_timestamps_list[s].phantom_node,
                                            pn,
                                            weight_upper_bound);
-                     old_distances.push_back(network_distance);
+                    old_distances.push_back(network_distance);
                 }
 
-                if (old_distances != new_distances) {
-                    std::cerr << "OOPS " << std::endl;
+                for (size_t i = 0; i < old_distances.size(); ++i)
+                {
+                    if (std::abs(old_distances[i] - new_distances[i]) > 0.01)
+                    {
+                        std::cerr << "OOPS " << old_distances[i] << " " << new_distances[i]
+                                  << std::endl;
+                    }
                 }
-
 
                 for (const auto s_prime : util::irange<std::size_t>(0UL, current_viterbi.size()))
                 {
