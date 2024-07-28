@@ -45,7 +45,8 @@ unsigned getMedianSampleTime(const std::vector<unsigned> &timestamps)
 
 template <typename Algorithm>
 inline void initializeHeap(SearchEngineData<Algorithm> &engine_working_data,
-                           const DataFacade<Algorithm> &facade)
+                           const DataFacade<Algorithm> &facade,
+                           size_t)
 {
 
     const auto nodes_number = facade.GetNumberOfNodes();
@@ -54,14 +55,86 @@ inline void initializeHeap(SearchEngineData<Algorithm> &engine_working_data,
 
 template <>
 inline void initializeHeap<mld::Algorithm>(SearchEngineData<mld::Algorithm> &engine_working_data,
-                                           const DataFacade<mld::Algorithm> &facade)
+                                           const DataFacade<mld::Algorithm> &facade,
+                                           size_t max_candidates)
 {
 
     const auto nodes_number = facade.GetNumberOfNodes();
     const auto border_nodes_number = facade.GetMaxBorderNodeID() + 1;
     engine_working_data.InitializeOrClearMapMatchingThreadLocalStorage(nodes_number,
-                                                                       border_nodes_number);
+                                                                       border_nodes_number,
+                                                                       max_candidates);
 }
+
+#include <iostream>
+#include <fstream>
+
+template <typename T>
+void saveVectorToFile(const std::vector<T>& data, const std::string& filename) {
+    std::ofstream outFile(filename, std::ios::binary);
+    if (!outFile) {
+        std::cerr << "Error opening file for writing: " << filename << std::endl;
+        return;
+    }
+    size_t size = data.size();
+    outFile.write(reinterpret_cast<const char*>(&size), sizeof(size));
+    outFile.write(reinterpret_cast<const char*>(data.data()), size * sizeof(T));
+    outFile.close();
+    if (!outFile.good()) {
+        std::cerr << "Error occurred at writing time!" << std::endl;
+    }
+}
+
+template <typename T>
+bool loadVectorFromFile(std::vector<T>& data, const std::string& filename) {
+    std::ifstream inFile(filename, std::ios::binary);
+    if (!inFile) {
+        std::cerr << "Error opening file for reading: " << filename << std::endl;
+        return false;
+    }
+    size_t size;
+    inFile.read(reinterpret_cast<char*>(&size), sizeof(size));
+    data.resize(size);
+    inFile.read(reinterpret_cast<char*>(data.data()), size * sizeof(T));
+    inFile.close();
+    if (!inFile.good()) {
+        std::cerr << "Error occurred at reading time!" << std::endl;
+        return false;
+    }
+    return true;
+}
+
+template <typename T>
+void saveStructToFile(const T& data, const std::string& filename) {
+    std::ofstream outFile(filename, std::ios::binary);
+    if (!outFile) {
+        std::cerr << "Error opening file for writing: " << filename << std::endl;
+        return;
+    }
+    outFile.write(reinterpret_cast<const char*>(&data), sizeof(T));
+    outFile.close();
+    if (!outFile.good()) {
+        std::cerr << "Error occurred at writing time!" << std::endl;
+    }
+}
+
+
+template <typename T>
+bool loadStructFromFile(T& data, const std::string& filename) {
+    std::ifstream inFile(filename, std::ios::binary);
+    if (!inFile) {
+        std::cerr << "Error opening file for reading: " << filename << std::endl;
+        return false;
+    }
+    inFile.read(reinterpret_cast<char*>(&data), sizeof(T));
+    inFile.close();
+    if (!inFile.good()) {
+        std::cerr << "Error occurred at reading time!" << std::endl;
+        return false;
+    }
+    return true;
+}
+
 } // namespace
 
 template <typename Algorithm>
@@ -144,9 +217,16 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
         return sub_matchings;
     }
 
-    initializeHeap(engine_working_data, facade);
+    size_t max_candidates = 0;
+    for (const auto &candidates : candidates_list)
+    {
+        max_candidates = std::max(max_candidates, candidates.size());
+    }
+
+    initializeHeap(engine_working_data, facade, max_candidates);
     auto &forward_heap = *engine_working_data.map_matching_forward_heap_1;
     auto &reverse_heap = *engine_working_data.map_matching_reverse_heap_1;
+    const auto &reverse_heaps = engine_working_data.map_matching_reverse_heaps;
 
     std::size_t breakage_begin = map_matching::INVALID_STATE;
     std::vector<std::size_t> split_points;
@@ -224,8 +304,20 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                 {
                     continue;
                 }
-
-                std::vector<PhantomNode> target_phantom_nodes;
+                
+            //    PhantomNode source;
+            //   loadStructFromFile<PhantomNode>(source, "source.bin");
+                 std::vector<PhantomNode> target_phantom_nodes;
+            //      loadVectorFromFile(target_phantom_nodes, "target.bin");
+            //      target_phantom_nodes.erase(target_phantom_nodes.begin());
+            //      target_phantom_nodes.erase(target_phantom_nodes.begin());
+            //      target_phantom_nodes.erase(target_phantom_nodes.begin());
+            //      target_phantom_nodes.erase(target_phantom_nodes.begin());
+            //      target_phantom_nodes.pop_back();
+            //      target_phantom_nodes.pop_back();
+            //      target_phantom_nodes.erase(target_phantom_nodes.begin() + 1);
+                 
+//                target_phantom_nodes.push_back(target);
                 for (const auto s_prime : util::irange<std::size_t>(0UL, current_viterbi.size()))
                 {
                     const double emission_pr = emission_log_probabilities[t][s_prime];
@@ -237,16 +329,22 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                     target_phantom_nodes.push_back(current_timestamps_list[s_prime].phantom_node);
                 }
 
-                auto new_distances =
+               // TIMER_START(NEW_DIST);
+               #if 1
+               (void)reverse_heap;
+                auto distances =
                     getNetworkDistances(engine_working_data,
                                         facade,
                                         forward_heap,
-                                        reverse_heap,
+                                        reverse_heaps,
                                         prev_unbroken_timestamps_list[s].phantom_node,
                                         target_phantom_nodes,
                                         weight_upper_bound);
-
-                std::vector<double> old_distances;
+                // TIMER_STOP(NEW_DIST);
+#else
+                // TIMER_START(OLD_DIST);
+                (void)reverse_heaps;
+                std::vector<double> distances;
 
                 for (const auto &pn : target_phantom_nodes)
                 {
@@ -258,18 +356,26 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                                            prev_unbroken_timestamps_list[s].phantom_node,
                                            pn,
                                            weight_upper_bound);
-                    old_distances.push_back(network_distance);
+                    distances.push_back(network_distance);
                 }
+#endif
+                // TIMER_STOP(OLD_DIST);
 
-                for (size_t i = 0; i < old_distances.size(); ++i)
-                {
-                    if (std::abs(old_distances[i] - new_distances[i]) > 0.01)
-                    {
-                        std::cerr << "OOPS " << old_distances[i] << " " << new_distances[i]
-                                  << std::endl;
-                    }
-                }
+                // std::cerr << "Old: " << TIMER_MSEC(OLD_DIST) << " New: " << TIMER_MSEC(NEW_DIST)
+                //           << std::endl;
 
+                // for (size_t i = 0; i < old_distances.size(); ++i)
+                // {
+                //     if (std::abs(old_distances[i] - new_distances[i]) > 0.01)
+                //     {
+                //         // saveStructToFile(prev_unbroken_timestamps_list[s].phantom_node, "source.bin");
+                //         // saveVectorToFile(target_phantom_nodes, "target.bin");
+                //         // std::cerr << "OOPS " << old_distances[i] << " " << new_distances[i]
+                //         //           << std::endl;
+                //        // std::exit(1);
+                //     }
+                // }
+                size_t distance_index = 0;
                 for (const auto s_prime : util::irange<std::size_t>(0UL, current_viterbi.size()))
                 {
                     const double emission_pr = emission_log_probabilities[t][s_prime];
@@ -279,14 +385,16 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                         continue;
                     }
 
-                    double network_distance =
-                        getNetworkDistance(engine_working_data,
-                                           facade,
-                                           forward_heap,
-                                           reverse_heap,
-                                           prev_unbroken_timestamps_list[s].phantom_node,
-                                           current_timestamps_list[s_prime].phantom_node,
-                                           weight_upper_bound);
+                    double network_distance = distances[distance_index];
+                    ++distance_index;
+                    // double network_distance =
+                    //     getNetworkDistance(engine_working_data,
+                    //                        facade,
+                    //                        forward_heap,
+                    //                        reverse_heap,
+                    //                        prev_unbroken_timestamps_list[s].phantom_node,
+                    //                        current_timestamps_list[s_prime].phantom_node,
+                    //                        weight_upper_bound);
 
                     // get distance diff between loc1/2 and locs/s_prime
                     const auto d_t = std::abs(network_distance - haversine_distance);

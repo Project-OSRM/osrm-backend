@@ -464,7 +464,7 @@ inline std::vector<double>
 getNetworkDistances(SearchEngineData<Algorithm> &,
                     const DataFacade<ch::Algorithm> &,
                     SearchEngineData<Algorithm>::QueryHeap &,
-                    SearchEngineData<Algorithm>::QueryHeap &,
+                    const std::vector<std::unique_ptr<typename SearchEngineData<Algorithm>::QueryHeap>> &,
                     const PhantomNode &,
                     const std::vector<PhantomNode> &,
                     EdgeWeight /*duration_upper_bound*/ = INVALID_EDGE_WEIGHT)
