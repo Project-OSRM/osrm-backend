@@ -53,6 +53,7 @@ function run_benchmarks_for_folder {
     mkdir -p $RESULTS_FOLDER
 
     BENCHMARKS_FOLDER="$BINARIES_FOLDER/src/benchmarks"
+
     echo "Running match-bench MLD"
     $BENCHMARKS_FOLDER/match-bench "$FOLDER/test/data/mld/monaco.osrm" mld > "$RESULTS_FOLDER/match_mld.bench"
     echo "Running match-bench CH"
@@ -81,6 +82,18 @@ function run_benchmarks_for_folder {
     echo "Running osrm-contract"
     measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-contract $FOLDER/data.osrm" "$RESULTS_FOLDER/osrm_contract.bench"
 
+
+    for ALGORITHM in ch mld; do
+        for BENCH in nearest table trip route match; do
+            echo "Running node $BENCH $ALGORITHM"
+            START=$(date +%s.%N)
+            node $SCRIPTS_FOLDER/scripts/ci/bench.js $FOLDER/lib/binding/node_osrm.node $FOLDER/data.osrm $ALGORITHM $BENCH $GPS_TRACES > "$RESULTS_FOLDER/node_${BENCH}_${ALGORITHM}.bench" 5
+            END=$(date +%s.%N)
+            DIFF=$(echo "$END - $START" | bc)
+            echo "Took: ${DIFF}s"
+        done
+    done
+    
     for ALGORITHM in ch mld; do
         for BENCH in nearest table trip route match; do
             echo "Running random $BENCH $ALGORITHM"

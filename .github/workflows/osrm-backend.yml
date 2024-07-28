@@ -702,18 +702,24 @@ jobs:
           path: base
       - name: Build Base Branch
         run: |
+          cd base
+          npm ci --ignore-scripts
+          cd ..
           mkdir base/build
           cd base/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
           make -j$(nproc)
           make -j$(nproc) benchmarks
           cd ..
           make -C test/data 
       - name: Build PR Branch
         run: |
+          cd pr
+          npm ci --ignore-scripts
+          cd ..
           mkdir -p pr/build
           cd pr/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
           make -j$(nproc) 
           make -j$(nproc) benchmarks
           cd ..
@@ -731,6 +737,7 @@ jobs:
           sudo cset shield -c 2-3 -k on
           sudo mount -t tmpfs -o size=4g none ~/benchmarks
           cp -rf pr/build ~/benchmarks/build
+          cp -rf pr/lib ~/benchmarks/lib
           mkdir -p ~/benchmarks/test
           cp -rf pr/test/data ~/benchmarks/test/data
           cp -rf pr/profiles ~/benchmarks/profiles
@@ -743,6 +750,7 @@ jobs:
           sudo cset shield -c 2-3 -k on
           sudo mount -t tmpfs -o size=4g none ~/benchmarks
           cp -rf base/build ~/benchmarks/build
+          cp -rf base/lib ~/benchmarks/lib
           mkdir -p ~/benchmarks/test
           cp -rf base/test/data ~/benchmarks/test/data
           cp -rf base/profiles ~/benchmarks/profiles
