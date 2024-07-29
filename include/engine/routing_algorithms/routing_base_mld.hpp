@@ -780,7 +780,7 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
 
 
 template <typename Algorithm, typename Heap>
-std::vector<std::optional<std::pair<NodeID, EdgeWeight>>>
+std::vector<NodeID>
 runSearch2(const DataFacade<Algorithm> &facade,
            Heap &forward_heap,
            const std::vector<std::unique_ptr<Heap>> &reverse_heap,
@@ -905,20 +905,21 @@ runSearch2(const DataFacade<Algorithm> &facade,
         }
     };
 
-    std::vector<std::optional<std::pair<NodeID, EdgeWeight>>> results;
-    results.reserve(candidatesCount);
-    for (size_t i = 0; i < candidatesCount; ++i)
-    {
-        if (weights[i] >= weight_upper_bound || SPECIAL_NODEID == middles[i])
-        {
-            results.push_back({});
-        }
-        else
-        {
-            results.push_back({{middles[i], weights[i]}});
-        }
-    }
-    return results;
+return middles;
+    // std::vector<std::optional<std::pair<NodeID, EdgeWeight>>> results;
+    // results.reserve(candidatesCount);
+    // for (size_t i = 0; i < candidatesCount; ++i)
+    // {
+    //     if (weights[i] >= weight_upper_bound || SPECIAL_NODEID == middles[i])
+    //     {
+    //         results.push_back({});
+    //     }
+    //     else
+    //     {
+    //         results.push_back({{middles[i], weights[i]}});
+    //     }
+    // }
+    // return results;
 
     // // run two-Target Dijkstra routing step.
     // NodeID middle = SPECIAL_NODEID;
@@ -954,7 +955,7 @@ runSearch2(const DataFacade<Algorithm> &facade,
 }
 
 template <typename Algorithm>
-std::vector<EdgeDistance> searchDistance2(
+std::vector<double> searchDistance2(
     SearchEngineData<Algorithm> &,
     const DataFacade<Algorithm> &facade,
     typename SearchEngineData<Algorithm>::MapMatchingQueryHeap &forward_heap,
@@ -972,22 +973,23 @@ std::vector<EdgeDistance> searchDistance2(
                                     force_step_nodes,
                                     weight_upper_bound,
                                     candidates);
-    std::vector<EdgeDistance> res;
+    std::vector<double> res;
+    res.reserve(candidatesCount);
     for (size_t i = 0; i < searchResults.size(); ++i)
     {
-        if (!searchResults[i])
+        if (searchResults[i] == SPECIAL_NODEID)
         {
-            res.push_back(INVALID_EDGE_DISTANCE);
+            res.push_back(std::numeric_limits<double>::max());
         }
         else
         {
-            auto [middle, _] = *searchResults[i];
+            auto middle = searchResults[i];
 
             // std::cerr << "new " << i << " " << middle << std::endl;
 
             auto distance =
                 forward_heap.GetData(middle).distance + reverse_heaps[i]->GetData(middle).distance;
-            res.push_back(distance);
+            res.push_back(from_alias<double>(distance));
         }
     }
     return res;
@@ -1066,7 +1068,7 @@ std::vector<double> getNetworkDistances(
     source_phantomes.push_back(source_phantom);
     PhantomEndpointCandidates phantom_candidates{source_phantomes, target_phantoms};
 
-    auto distances2 = searchDistance2(engine_working_data,
+    auto distances = searchDistance2(engine_working_data,
                                       facade,
                                       forward_heap,
                                       reverse_heaps,
@@ -1074,48 +1076,7 @@ std::vector<double> getNetworkDistances(
                                       {},
                                       weight_upper_bound,
                                       phantom_candidates);
-    std::vector<double> distances;
-    for (auto d : distances2)
-    {
-        if (d == INVALID_EDGE_DISTANCE)
-        {
-            distances.push_back(std::numeric_limits<double>::max());
-        }
-        else
-        {
-            distances.push_back(from_alias<double>(d));
-        }
-    }
     return distances;
-
-    // for (const auto &target_phantom : target_phantoms)
-    // {
-    // //     forward_heap.Clear();
-    // //     auto& reverse_heap = *reverse_heaps[0];
-    // //     reverse_heap.Clear();
-    // //       const PhantomEndpoints endpoints{source_phantom, target_phantom};
-
-    // auto distance = searchDistance2(
-    //     engine_working_data, facade, forward_heap, reverse_heap, {}, weight_upper_bound,
-    //     endpoints);
-
-    // // if (distance == INVALID_EDGE_DISTANCE)
-    // // {
-    // //     distances.push_back(std::numeric_limits<double>::max());
-    // // } else {
-    // //     distances.push_back(from_alias<double>(distance));
-    // // }
-    // // return from_alias<double>(distance);
-    //     auto distance = getNetworkDistance(engine_working_data,
-    //                                        facade,
-    //                                        forward_heap,
-    //                                        *reverse_heaps[0],
-    //                                        source_phantom,
-    //                                        target_phantom,
-    //                                        weight_upper_bound);
-    //     distances.push_back(distance);
-    // }
-    // return distances;
 }
 
 } // namespace osrm::engine::routing_algorithms::mld
