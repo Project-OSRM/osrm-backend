@@ -778,38 +778,6 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
     return from_alias<double>(distance);
 }
 
-template <bool DIRECTION, typename Algorithm, typename Heap, typename... Args>
-auto routingStep2(const DataFacade<Algorithm> &facade, Heap &forward_heap, const Args &...args)
-{
-    const auto heapNode = forward_heap.DeleteMinGetHeapNode();
-    // const auto weight = heapNode.weight;
-
-    BOOST_ASSERT(!facade.ExcludeNode(heapNode.node));
-
-    // // Upper bound for the path source -> target with
-    // // weight(source -> node) = weight weight(to -> target) ≤ reverse_weight
-    // // is weight + reverse_weight
-    // // More tighter upper bound requires additional condition reverse_heap.WasRemoved(to)
-    // // with weight(to -> target) = reverse_weight and all weights ≥ 0
-    // const auto reverseHeapNode = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
-    // if (reverseHeapNode)
-    // {
-    //     auto reverse_weight = reverseHeapNode->weight;
-    //     auto path_weight = weight + reverse_weight;
-
-    //     if (!shouldForceStep(force_step_nodes, heapNode, *reverseHeapNode) &&
-    //         (path_weight >= EdgeWeight{0}) && (path_weight < path_upper_bound))
-    //     {
-    //         middle_node = heapNode.node;
-    //         path_upper_bound = path_weight;
-    //     }
-    // }
-
-    // Relax outgoing edges from node
-    relaxOutgoingEdges<DIRECTION>(facade, forward_heap, heapNode, args...);
-
-    return heapNode;
-}
 
 template <typename Algorithm, typename Heap>
 std::vector<std::optional<std::pair<NodeID, EdgeWeight>>>
@@ -858,7 +826,8 @@ runSearch2(const DataFacade<Algorithm> &facade,
         return cont;
     };
 
-    while (shouldContinue())
+    bool cont = shouldContinue();
+    while (cont)
     {
         if (!forward_heap.Empty())
         {
@@ -894,8 +863,15 @@ runSearch2(const DataFacade<Algorithm> &facade,
             if (!forward_heap.Empty())
                 forward_heap_min = forward_heap.MinKey();
         }
+
+        cont = false;
         for (size_t i = 0; i < candidatesCount; ++i)
         {
+             if ((forward_heap.Size() + reverse_heap[i]->Size() > 0) &&
+                (forward_heap_min + reverse_heap_mins[i]) < weights[i])
+            {
+                cont = true;
+            }
             if (!reverse_heap[i]->Empty() && (forward_heap_min + reverse_heap_mins[i]) < weights[i])
             {
                 const auto heapNode = reverse_heap[i]->DeleteMinGetHeapNode();
@@ -930,6 +906,7 @@ runSearch2(const DataFacade<Algorithm> &facade,
     };
 
     std::vector<std::optional<std::pair<NodeID, EdgeWeight>>> results;
+    results.reserve(candidatesCount);
     for (size_t i = 0; i < candidatesCount; ++i)
     {
         if (weights[i] >= weight_upper_bound || SPECIAL_NODEID == middles[i])

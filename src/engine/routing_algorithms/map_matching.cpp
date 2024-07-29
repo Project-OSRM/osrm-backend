@@ -336,7 +336,48 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                 }
 
 // TIMER_START(NEW_DIST);
-#if 1
+
+#define MODE 2
+
+#if MODE == 0
+                auto new_distances =
+                    getNetworkDistances(engine_working_data,
+                                        facade,
+                                        forward_heap,
+                                        reverse_heaps,
+                                        prev_unbroken_timestamps_list[s].phantom_node,
+                                        target_phantom_nodes,
+                                        weight_upper_bound);
+               std::vector<double> old_distances;
+
+                for (const auto &pn : target_phantom_nodes)
+                {
+                    double network_distance =
+                        getNetworkDistance(engine_working_data,
+                                           facade,
+                                           forward_heap,
+                                           reverse_heap,
+                                           prev_unbroken_timestamps_list[s].phantom_node,
+                                           pn,
+                                           weight_upper_bound);
+                    old_distances.push_back(network_distance);
+                }
+
+                 for (size_t i = 0; i < old_distances.size(); ++i)
+                {
+                    if (std::abs(old_distances[i] - new_distances[i]) > 0.01)
+                    {
+                        // saveStructToFile(prev_unbroken_timestamps_list[s].phantom_node,
+                       // "source.bin");
+                        // saveVectorToFile(target_phantom_nodes, "target.bin");
+                        std::cerr << "OOPS " << old_distances[i] << " " << new_distances[i]
+                                  << std::endl;
+                       // std::exit(1);
+                    }
+                }
+
+                auto distances = old_distances;
+#elif MODE == 1 
                (void)reverse_heap;
                 auto distances =
                     getNetworkDistances(engine_working_data,
@@ -370,18 +411,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                 // std::cerr << "Old: " << TIMER_MSEC(OLD_DIST) << " New: " << TIMER_MSEC(NEW_DIST)
                 //           << std::endl;
 
-                // for (size_t i = 0; i < old_distances.size(); ++i)
-                // {
-                //     if (std::abs(old_distances[i] - new_distances[i]) > 0.01)
-                //     {
-                //         // saveStructToFile(prev_unbroken_timestamps_list[s].phantom_node,
-                //         "source.bin");
-                //         // saveVectorToFile(target_phantom_nodes, "target.bin");
-                //         // std::cerr << "OOPS " << old_distances[i] << " " << new_distances[i]
-                //         //           << std::endl;
-                //        // std::exit(1);
-                //     }
-                // }
+               
                 size_t distance_index = 0;
                 for (const auto s_prime : util::irange<std::size_t>(0UL, current_viterbi.size()))
                 {
