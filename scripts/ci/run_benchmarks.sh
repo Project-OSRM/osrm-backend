@@ -94,7 +94,7 @@ function run_benchmarks_for_folder {
     #     done
     # done
 
-    for ALGORITHM in ch mld; do
+    for ALGORITHM in mld; do
         for BENCH in match; do
             echo "Running random $BENCH $ALGORITHM"
             START=$(date +%s.%N)
