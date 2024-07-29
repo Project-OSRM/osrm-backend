@@ -39,11 +39,11 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
     };
 
     auto res = std::min(std::min(level(source.forward_segment_id, target.forward_segment_id),
-                             level(source.forward_segment_id, target.reverse_segment_id)),
-                    std::min(level(source.reverse_segment_id, target.forward_segment_id),
-                             level(source.reverse_segment_id, target.reverse_segment_id)));
+                                 level(source.forward_segment_id, target.reverse_segment_id)),
+                        std::min(level(source.reverse_segment_id, target.forward_segment_id),
+                                 level(source.reverse_segment_id, target.reverse_segment_id)));
 
-                          //   std::cerr << "OLD!!! " << (int)res << std::endl;
+    //   std::cerr << "OLD!!! " << (int)res << std::endl;
     return res;
 }
 
@@ -95,7 +95,7 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                                         getNodeQueryLevel(partition, node, source, target));
                                 }));
         });
-   // std::cerr << "NEW " << (int)min_level << std::endl;
+    // std::cerr << "NEW " << (int)min_level << std::endl;
     return min_level;
 }
 
@@ -144,10 +144,9 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                                          highest_different_level(phantom_node.reverse_segment_id));
                             return std::min(current_level, highest_level);
                         });
- 
-                            //     std::cerr << "NEW!!! " << (int)node_level << std::endl;
-   return node_level;
 
+    //     std::cerr << "NEW!!! " << (int)node_level << std::endl;
+    return node_level;
 }
 
 // Unrestricted search with a single phantom node and a vector of phantom nodes:
@@ -463,10 +462,13 @@ void routingStep(const DataFacade<Algorithm> &facade,
 
     BOOST_ASSERT(!facade.ExcludeNode(heapNode.node));
 
-    if (DIRECTION == FORWARD_DIRECTION) {
-    //    std::cerr << "FORWARDO " << heapNode.node << std::endl;
-    } else {
-        //std::cerr << "REVERSEO " << heapNode.node << std::endl;
+    if (DIRECTION == FORWARD_DIRECTION)
+    {
+        //    std::cerr << "FORWARDO " << heapNode.node << std::endl;
+    }
+    else
+    {
+        // std::cerr << "REVERSEO " << heapNode.node << std::endl;
     }
 
     // Upper bound for the path source -> target with
@@ -656,7 +658,7 @@ searchDistance(SearchEngineData<Algorithm> &,
 
     auto [middle, _] = *searchResult;
 
-         //   std::cerr << "old " << middle << std::endl;
+    //   std::cerr << "old " << middle << std::endl;
     auto distance = forward_heap.GetData(middle).distance + reverse_heap.GetData(middle).distance;
 
     return distance;
@@ -817,7 +819,7 @@ runSearch2(const DataFacade<Algorithm> &facade,
            size_t candidatesCount,
            const std::vector<NodeID> &force_step_nodes,
            EdgeWeight weight_upper_bound,
-           const PhantomEndpointCandidates& candidates)
+           const PhantomEndpointCandidates &candidates)
 {
     // if (forward_heap.Empty() || reverse_heap.Empty())
     // {
@@ -846,7 +848,8 @@ runSearch2(const DataFacade<Algorithm> &facade,
         bool cont = false;
         for (size_t i = 0; i < candidatesCount; ++i)
         {
-            if ((forward_heap_min + reverse_heap_mins[i]) < weights[i])
+            if ((forward_heap.Size() + reverse_heap[i]->Size() > 0) &&
+                (forward_heap_min + reverse_heap_mins[i]) < weights[i])
             {
                 cont = true;
                 break;
@@ -855,19 +858,13 @@ runSearch2(const DataFacade<Algorithm> &facade,
         return cont;
     };
 
-    while ((forward_heap.Size() + std::accumulate(reverse_heap.begin(),
-                                                  reverse_heap.end(),
-                                                  0,
-                                                  [](auto sum, const auto &heap)
-                                                  { return sum + heap->Size(); }) >
-            0) &&
-           shouldContinue())
+    while (shouldContinue())
     {
         if (!forward_heap.Empty())
         {
             const auto heapNode = forward_heap.DeleteMinGetHeapNode();
-          //  std::cerr << "FORWARDN " << heapNode.node << std::endl;
-            //auto heapNode = routingStep2<FORWARD_DIRECTION>(facade, forward_heap, args...);
+            //  std::cerr << "FORWARDN " << heapNode.node << std::endl;
+            // auto heapNode = routingStep2<FORWARD_DIRECTION>(facade, forward_heap, args...);
 
             for (size_t i = 0; i < candidatesCount; ++i)
             {
@@ -884,10 +881,10 @@ runSearch2(const DataFacade<Algorithm> &facade,
                         middles[i] = heapNode.node;
                         weights[i] = path_weight;
 
-                //                                             auto distance =
-                // forward_heap.GetData(middles[i]).distance + reverse_heap[i]->GetData(middles[i]).distance;
-             //    std::cerr << "RFOUNDN " << i <<" " << distance << std::endl;
-                       
+                        //                                             auto distance =
+                        // forward_heap.GetData(middles[i]).distance +
+                        // reverse_heap[i]->GetData(middles[i]).distance;
+                        //    std::cerr << "RFOUNDN " << i <<" " << distance << std::endl;
                     }
                 }
             }
@@ -902,8 +899,8 @@ runSearch2(const DataFacade<Algorithm> &facade,
             if (!reverse_heap[i]->Empty() && (forward_heap_min + reverse_heap_mins[i]) < weights[i])
             {
                 const auto heapNode = reverse_heap[i]->DeleteMinGetHeapNode();
-     //std::cerr << "REVERSEN " << i << " " << heapNode.node << std::endl;
-           
+                // std::cerr << "REVERSEN " << i << " " << heapNode.node << std::endl;
+
                 const auto reverseHeapNode = forward_heap.GetHeapNodeIfWasInserted(heapNode.node);
                 if (reverseHeapNode)
                 {
@@ -917,13 +914,14 @@ runSearch2(const DataFacade<Algorithm> &facade,
                         middles[i] = heapNode.node;
                         weights[i] = path_weight;
 
-                //                     auto distance =
-                // forward_heap.GetData(middles[i]).distance + reverse_heap[i]->GetData(middles[i]).distance;
-            //     std::cerr << "FFOUNDN " << i << " " << distance << std::endl;
-                       
+                        //                     auto distance =
+                        // forward_heap.GetData(middles[i]).distance +
+                        // reverse_heap[i]->GetData(middles[i]).distance;
+                        //     std::cerr << "FFOUNDN " << i << " " << distance << std::endl;
                     }
                 }
-                relaxOutgoingEdges<REVERSE_DIRECTION>(facade, *reverse_heap[i], heapNode, candidates);
+                relaxOutgoingEdges<REVERSE_DIRECTION>(
+                    facade, *reverse_heap[i], heapNode, candidates);
 
                 if (!reverse_heap[i]->Empty())
                     reverse_heap_mins[i] = reverse_heap[i]->MinKey();
@@ -988,10 +986,15 @@ std::vector<EdgeDistance> searchDistance2(
     size_t candidatesCount,
     const std::vector<NodeID> &force_step_nodes,
     EdgeWeight weight_upper_bound,
-    const PhantomEndpointCandidates& candidates)
+    const PhantomEndpointCandidates &candidates)
 {
-    auto searchResults = runSearch2(
-        facade, forward_heap, reverse_heaps, candidatesCount, force_step_nodes, weight_upper_bound, candidates);
+    auto searchResults = runSearch2(facade,
+                                    forward_heap,
+                                    reverse_heaps,
+                                    candidatesCount,
+                                    force_step_nodes,
+                                    weight_upper_bound,
+                                    candidates);
     std::vector<EdgeDistance> res;
     for (size_t i = 0; i < searchResults.size(); ++i)
     {
@@ -1003,7 +1006,7 @@ std::vector<EdgeDistance> searchDistance2(
         {
             auto [middle, _] = *searchResults[i];
 
-            //std::cerr << "new " << i << " " << middle << std::endl;
+            // std::cerr << "new " << i << " " << middle << std::endl;
 
             auto distance =
                 forward_heap.GetData(middle).distance + reverse_heaps[i]->GetData(middle).distance;
@@ -1013,14 +1016,15 @@ std::vector<EdgeDistance> searchDistance2(
     return res;
 }
 template <typename Algorithm>
-std::vector<double>
-getNetworkDistances(SearchEngineData<Algorithm> &engine_working_data,
-                    const DataFacade<Algorithm> &facade,
-                    typename SearchEngineData<Algorithm>::MapMatchingQueryHeap &forward_heap,
-                    const std::vector<std::unique_ptr<typename SearchEngineData<Algorithm>::MapMatchingQueryHeap>> &reverse_heaps,
-                    const PhantomNode &source_phantom,
-                    const std::vector<PhantomNode> &target_phantoms,
-                    EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
+std::vector<double> getNetworkDistances(
+    SearchEngineData<Algorithm> &engine_working_data,
+    const DataFacade<Algorithm> &facade,
+    typename SearchEngineData<Algorithm>::MapMatchingQueryHeap &forward_heap,
+    const std::vector<std::unique_ptr<typename SearchEngineData<Algorithm>::MapMatchingQueryHeap>>
+        &reverse_heaps,
+    const PhantomNode &source_phantom,
+    const std::vector<PhantomNode> &target_phantoms,
+    EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
 {
     forward_heap.Clear();
     for (const auto &heap : reverse_heaps)
@@ -1084,7 +1088,6 @@ getNetworkDistances(SearchEngineData<Algorithm> &engine_working_data,
     std::vector<PhantomNode> source_phantomes;
     source_phantomes.push_back(source_phantom);
     PhantomEndpointCandidates phantom_candidates{source_phantomes, target_phantoms};
-
 
     auto distances2 = searchDistance2(engine_working_data,
                                       facade,

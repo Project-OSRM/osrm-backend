@@ -395,9 +395,9 @@ void runMatchBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterati
         std::optional<size_t> radius = std::nullopt;
     };
 
-    std::vector<Benchmark> benchmarks = {{"500 matches, default radius", 10},
-                                         /*{"500 matches, radius=10", 10},
-                                         {"500 matches, radius=20", 20}*/};
+    std::vector<Benchmark> benchmarks = {{"500 matches, default radius"},
+                                         {"500 matches, radius=10", 10},
+                                         {"500 matches, radius=20", 20}};
 
     runBenchmarks(benchmarks,
                   iterations,

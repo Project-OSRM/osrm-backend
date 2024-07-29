@@ -61,74 +61,80 @@ inline void initializeHeap<mld::Algorithm>(SearchEngineData<mld::Algorithm> &eng
 
     const auto nodes_number = facade.GetNumberOfNodes();
     const auto border_nodes_number = facade.GetMaxBorderNodeID() + 1;
-    engine_working_data.InitializeOrClearMapMatchingThreadLocalStorage(nodes_number,
-                                                                       border_nodes_number,
-                                                                       max_candidates);
+    engine_working_data.InitializeOrClearMapMatchingThreadLocalStorage(
+        nodes_number, border_nodes_number, max_candidates);
 }
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
-template <typename T>
-void saveVectorToFile(const std::vector<T>& data, const std::string& filename) {
+template <typename T> void saveVectorToFile(const std::vector<T> &data, const std::string &filename)
+{
     std::ofstream outFile(filename, std::ios::binary);
-    if (!outFile) {
+    if (!outFile)
+    {
         std::cerr << "Error opening file for writing: " << filename << std::endl;
         return;
     }
     size_t size = data.size();
-    outFile.write(reinterpret_cast<const char*>(&size), sizeof(size));
-    outFile.write(reinterpret_cast<const char*>(data.data()), size * sizeof(T));
+    outFile.write(reinterpret_cast<const char *>(&size), sizeof(size));
+    outFile.write(reinterpret_cast<const char *>(data.data()), size * sizeof(T));
     outFile.close();
-    if (!outFile.good()) {
+    if (!outFile.good())
+    {
         std::cerr << "Error occurred at writing time!" << std::endl;
     }
 }
 
-template <typename T>
-bool loadVectorFromFile(std::vector<T>& data, const std::string& filename) {
+template <typename T> bool loadVectorFromFile(std::vector<T> &data, const std::string &filename)
+{
     std::ifstream inFile(filename, std::ios::binary);
-    if (!inFile) {
+    if (!inFile)
+    {
         std::cerr << "Error opening file for reading: " << filename << std::endl;
         return false;
     }
     size_t size;
-    inFile.read(reinterpret_cast<char*>(&size), sizeof(size));
+    inFile.read(reinterpret_cast<char *>(&size), sizeof(size));
     data.resize(size);
-    inFile.read(reinterpret_cast<char*>(data.data()), size * sizeof(T));
+    inFile.read(reinterpret_cast<char *>(data.data()), size * sizeof(T));
     inFile.close();
-    if (!inFile.good()) {
+    if (!inFile.good())
+    {
         std::cerr << "Error occurred at reading time!" << std::endl;
         return false;
     }
     return true;
 }
 
-template <typename T>
-void saveStructToFile(const T& data, const std::string& filename) {
+template <typename T> void saveStructToFile(const T &data, const std::string &filename)
+{
     std::ofstream outFile(filename, std::ios::binary);
-    if (!outFile) {
+    if (!outFile)
+    {
         std::cerr << "Error opening file for writing: " << filename << std::endl;
         return;
     }
-    outFile.write(reinterpret_cast<const char*>(&data), sizeof(T));
+    outFile.write(reinterpret_cast<const char *>(&data), sizeof(T));
     outFile.close();
-    if (!outFile.good()) {
+    if (!outFile.good())
+    {
         std::cerr << "Error occurred at writing time!" << std::endl;
     }
 }
 
-
-template <typename T>
-bool loadStructFromFile(T& data, const std::string& filename) {
+template <typename T> bool loadStructFromFile(T &data, const std::string &filename)
+{
     std::ifstream inFile(filename, std::ios::binary);
-    if (!inFile) {
+    if (!inFile)
+    {
         std::cerr << "Error opening file for reading: " << filename << std::endl;
         return false;
     }
-    inFile.read(reinterpret_cast<char*>(&data), sizeof(T));
+    inFile.read(reinterpret_cast<char *>(&data), sizeof(T));
     inFile.close();
-    if (!inFile.good()) {
+    if (!inFile.good())
+    {
         std::cerr << "Error occurred at reading time!" << std::endl;
         return false;
     }
@@ -304,20 +310,20 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                 {
                     continue;
                 }
-                
-            //    PhantomNode source;
-            //   loadStructFromFile<PhantomNode>(source, "source.bin");
-                 std::vector<PhantomNode> target_phantom_nodes;
-            //      loadVectorFromFile(target_phantom_nodes, "target.bin");
-            //      target_phantom_nodes.erase(target_phantom_nodes.begin());
-            //      target_phantom_nodes.erase(target_phantom_nodes.begin());
-            //      target_phantom_nodes.erase(target_phantom_nodes.begin());
-            //      target_phantom_nodes.erase(target_phantom_nodes.begin());
-            //      target_phantom_nodes.pop_back();
-            //      target_phantom_nodes.pop_back();
-            //      target_phantom_nodes.erase(target_phantom_nodes.begin() + 1);
-                 
-//                target_phantom_nodes.push_back(target);
+
+                //    PhantomNode source;
+                //   loadStructFromFile<PhantomNode>(source, "source.bin");
+                std::vector<PhantomNode> target_phantom_nodes;
+                //      loadVectorFromFile(target_phantom_nodes, "target.bin");
+                //      target_phantom_nodes.erase(target_phantom_nodes.begin());
+                //      target_phantom_nodes.erase(target_phantom_nodes.begin());
+                //      target_phantom_nodes.erase(target_phantom_nodes.begin());
+                //      target_phantom_nodes.erase(target_phantom_nodes.begin());
+                //      target_phantom_nodes.pop_back();
+                //      target_phantom_nodes.pop_back();
+                //      target_phantom_nodes.erase(target_phantom_nodes.begin() + 1);
+
+                //                target_phantom_nodes.push_back(target);
                 for (const auto s_prime : util::irange<std::size_t>(0UL, current_viterbi.size()))
                 {
                     const double emission_pr = emission_log_probabilities[t][s_prime];
@@ -329,8 +335,8 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                     target_phantom_nodes.push_back(current_timestamps_list[s_prime].phantom_node);
                 }
 
-               // TIMER_START(NEW_DIST);
-               #if 1
+// TIMER_START(NEW_DIST);
+#if 1
                (void)reverse_heap;
                 auto distances =
                     getNetworkDistances(engine_working_data,
@@ -368,7 +374,8 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                 // {
                 //     if (std::abs(old_distances[i] - new_distances[i]) > 0.01)
                 //     {
-                //         // saveStructToFile(prev_unbroken_timestamps_list[s].phantom_node, "source.bin");
+                //         // saveStructToFile(prev_unbroken_timestamps_list[s].phantom_node,
+                //         "source.bin");
                 //         // saveVectorToFile(target_phantom_nodes, "target.bin");
                 //         // std::cerr << "OOPS " << old_distances[i] << " " << new_distances[i]
                 //         //           << std::endl;
