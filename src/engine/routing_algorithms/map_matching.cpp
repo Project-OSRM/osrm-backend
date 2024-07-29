@@ -337,7 +337,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
 
 // TIMER_START(NEW_DIST);
 
-#define MODE 2
+#define MODE 1
 
 #if MODE == 0
                 auto new_distances =
