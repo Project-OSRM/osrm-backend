@@ -50,6 +50,7 @@ function measure_peak_ram_and_time {
 }
 
 function run_benchmarks_for_folder {
+    rm -rf $RESULTS_FOLDER
     mkdir -p $RESULTS_FOLDER
 
     BENCHMARKS_FOLDER="$BINARIES_FOLDER/src/benchmarks"
