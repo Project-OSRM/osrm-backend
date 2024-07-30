@@ -732,7 +732,7 @@ jobs:
           rm -rf ~/benchmarks 
           mkdir -p ~/benchmarks
 
-          sudo cset shield --reset
+          sudo cset shield --reset || true
       # see https://llvm.org/docs/Benchmarking.html
       - name: Run PR Benchmarks 
         run: |
