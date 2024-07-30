@@ -748,6 +748,7 @@ jobs:
           sudo umount ~/benchmarks
 
           sleep 5
+          sudo cset shield --move --cpu=0-1
           sudo cset shield --reset
       - name: Run Base Benchmarks
         run: |
@@ -768,6 +769,7 @@ jobs:
           sudo umount ~/benchmarks
 
           sleep 5
+          sudo cset shield --move --cpu=0-1
           sudo cset shield --reset
       - name: Post Benchmark Results
         run: |
