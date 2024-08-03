@@ -42,6 +42,8 @@ class VectorViewIterator : public boost::iterator_facade<VectorViewIterator<Data
     explicit VectorViewIterator() : m_value(nullptr) {}
     explicit VectorViewIterator(DataT *x) : m_value(x) {}
 
+    reference operator[](difference_type n) const { return m_value[n]; }
+
   private:
     void increment() { ++m_value; }
     void decrement() { --m_value; }

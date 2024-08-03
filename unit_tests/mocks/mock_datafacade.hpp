@@ -54,7 +54,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     {
         static NodeID data[] = {0, 1, 2, 3};
         static extractor::SegmentDataView::SegmentNodeVector nodes(data, 4);
-        return boost::make_iterator_range(nodes.cbegin(), nodes.cend());
+        return std::ranges::subrange(nodes.cbegin(), nodes.cend());
     }
     NodeReverseRange GetUncompressedReverseGeometry(const EdgeID id) const override
     {
