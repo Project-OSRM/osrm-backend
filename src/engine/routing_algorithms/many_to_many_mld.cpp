@@ -222,7 +222,6 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
     std::vector<EdgeDuration> durations_table(target_indices.size(), MAXIMAL_EDGE_DURATION);
     std::vector<EdgeDistance> distances_table(calculate_distance ? target_indices.size() : 0,
                                               MAXIMAL_EDGE_DISTANCE);
-    std::vector<NodeID> middle_nodes_table(target_indices.size(), SPECIAL_NODEID);
 
     // Collect destination (source) nodes into a map
     std::unordered_multimap<NodeID, std::tuple<std::size_t, EdgeWeight, EdgeDuration, EdgeDistance>>
@@ -307,7 +306,6 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                     weights_table[index] = path_weight;
                     durations_table[index] = path_duration;
                     current_distance = path_distance;
-                    middle_nodes_table[index] = node;
                 }
 
                 // Remove node from destinations list
