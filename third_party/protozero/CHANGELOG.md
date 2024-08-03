@@ -2,8 +2,8 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
-The format is based on [Keep a Changelog](http://keepachangelog.com/)
-This project adheres to [Semantic Versioning](http://semver.org/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/)
+This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [unreleased] -
 
@@ -12,6 +12,24 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 ### Fixed
+
+
+## [1.7.1] - 2022-01-10
+
+### Changed
+
+- Don't build tests if the standard CMake `BUILD_TESTING` variable is set to
+  off.
+- Now needs CMake 3.5.0 or greater.
+- Update included catch2 framework to current version v2.13.8.
+- Only enable clang-tidy make target if protobuf was found.
+- Allow setting C++ version to compile with in CMake config.
+
+### Fixed
+
+- Fixes undefined behaviour in `float` and `double` byteswap.
+- Add missing includes of "config.hpp".
+- Avoid narrowing conversion by doing an explicit `static_cast`.
 
 
 ## [1.7.0] - 2020-06-08
@@ -381,7 +399,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Make pbf reader and writer code endianess-aware.
 
 
-[unreleased]: https://github.com/osmcode/libosmium/compare/v1.7.0...HEAD
+[unreleased]: https://github.com/osmcode/libosmium/compare/v1.7.1...HEAD
+[1.7.1]: https://github.com/osmcode/libosmium/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/osmcode/libosmium/compare/v1.6.8...v1.7.0
 [1.6.8]: https://github.com/osmcode/libosmium/compare/v1.6.7...v1.6.8
 [1.6.7]: https://github.com/osmcode/libosmium/compare/v1.6.6...v1.6.7

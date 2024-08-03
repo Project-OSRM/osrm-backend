@@ -215,7 +215,7 @@ int main(int argc, char* argv[]) {
     std::size_t length = std::numeric_limits<std::size_t>::max();
 
     while (true) {
-        const int c = getopt_long(argc, argv, "hl:o:", long_options, nullptr);
+        const int c = getopt_long(argc, argv, "hl:o:", long_options, nullptr); // NOLINT(concurrency-mt-unsafe) no threads here
         if (c == -1) {
             break;
         }

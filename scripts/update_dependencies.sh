@@ -22,7 +22,7 @@ MICROTAR_PATH="rxi/microtar"
 MICROTAR_TAG=v0.1.0
 
 PROTOZERO_PATH="mapbox/protozero"
-PROTOZERO_TAG=v1.6.2
+PROTOZERO_TAG=v1.7.1
 
 VTZERO_PATH="mapbox/vtzero"
 VTZERO_TAG=v1.1.0

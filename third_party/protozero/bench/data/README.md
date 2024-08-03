@@ -2,7 +2,7 @@
 
 mapbox-streets-v6/14/8714/8017.vector.pbf
 
- - http://c.tile.openstreetmap.org/14/8714/8017.png
+ - https://c.tile.openstreetmap.org/14/8714/8017.png
  - https://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v6/14/8714/8017.vector.pbf
  - https://www.mapbox.com/developers/vector-tiles/mapbox-streets/
 

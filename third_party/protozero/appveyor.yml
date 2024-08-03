@@ -14,8 +14,6 @@ clone_depth: 1
 
 environment:
   matrix:
-  - config: MSYS2
-    autocrlf: true
   - config: Debug
     autocrlf: true
   - config: RelWithDebInfo
@@ -27,6 +25,9 @@ environment:
   - config: Debug
     autocrlf: false
     platform: x86
+  - config: MSYS2
+    autocrlf: true
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
 #-----------------------------------------------------------------------------
 
