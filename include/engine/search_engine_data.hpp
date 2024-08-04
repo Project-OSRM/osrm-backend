@@ -56,6 +56,7 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
     static thread_local ManyToManyHeapPtr many_to_many_heap;
     static thread_local SearchEngineHeapPtr map_matching_forward_heap_1;
     static thread_local SearchEngineHeapPtr map_matching_reverse_heap_1;
+    static thread_local std::vector<SearchEngineHeapPtr> map_matching_reverse_heaps;
 
     void InitializeOrClearMapMatchingThreadLocalStorage(unsigned number_of_nodes);
 
@@ -133,13 +134,15 @@ template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
     static thread_local SearchEngineHeapPtr reverse_heap_1;
     static thread_local MapMatchingHeapPtr map_matching_forward_heap_1;
     static thread_local MapMatchingHeapPtr map_matching_reverse_heap_1;
+    static thread_local std::vector<MapMatchingHeapPtr> map_matching_reverse_heaps;
 
     static thread_local ManyToManyHeapPtr many_to_many_heap;
 
     void InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes,
                                                   unsigned number_of_boundary_nodes);
     void InitializeOrClearMapMatchingThreadLocalStorage(unsigned number_of_nodes,
-                                                        unsigned number_of_boundary_nodes);
+                                                        unsigned number_of_boundary_nodes,
+                                                        size_t max_candidates);
 
     void InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes,
                                                        unsigned number_of_boundary_nodes);
