@@ -46,9 +46,9 @@ public:
 
 }; // class MockCompressor
 
-TEST_CASE("Write with mock compressor") {
+std::string fail_in;
 
-    std::string fail_in;
+TEST_CASE("Write with mock compressor") {
 
     osmium::io::CompressionFactory::instance().register_compression(osmium::io::file_compression::gzip,
         [&](int /*unused*/, osmium::io::fsync /*unused*/) { return new MockCompressor(fail_in); },

@@ -9,7 +9,7 @@
 #include <string>
 
 TEST_CASE("file_size(int) and file_offset() of known file") {
-    std::string file_name{with_data_dir("t/util/known_file_size")};
+    const std::string file_name{with_data_dir("t/util/known_file_size")};
     const int fd = osmium::io::detail::open_for_reading(file_name);
     REQUIRE(fd > 0);
     REQUIRE(osmium::file_size(fd) == 22);
@@ -18,12 +18,12 @@ TEST_CASE("file_size(int) and file_offset() of known file") {
 }
 
 TEST_CASE("file_size(std::string) of known file") {
-    std::string file_name{with_data_dir("t/util/known_file_size")};
+    const std::string file_name{with_data_dir("t/util/known_file_size")};
     REQUIRE(osmium::file_size(file_name) == 22);
 }
 
 TEST_CASE("file_size(const char*) of known file") {
-    std::string file_name{with_data_dir("t/util/known_file_size")};
+    const std::string file_name{with_data_dir("t/util/known_file_size")};
     REQUIRE(osmium::file_size(file_name.c_str()) == 22);
 }
 

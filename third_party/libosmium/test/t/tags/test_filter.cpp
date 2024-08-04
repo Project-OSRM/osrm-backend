@@ -24,8 +24,8 @@ void check_filter(const osmium::TagList& tag_list,
         REQUIRE(filter(*t_it) == *it);
     }
 
-    typename TFilter::iterator fi_begin{filter, tag_list.begin(), tag_list.end()};
-    typename TFilter::iterator fi_end{filter, tag_list.end(), tag_list.end()};
+    const typename TFilter::iterator fi_begin{filter, tag_list.begin(), tag_list.end()};
+    const typename TFilter::iterator fi_end{filter, tag_list.end(), tag_list.end()};
 
     REQUIRE(std::distance(fi_begin, fi_end) == std::count(reference.begin(), reference.end(), true));
 }
@@ -210,7 +210,7 @@ TEST_CASE("RegexFilter matches some tags") {
 TEST_CASE("RegexFilter matches some tags with lvalue regex") {
     osmium::memory::Buffer buffer{10240};
     osmium::tags::RegexFilter filter{false};
-    std::regex r{".*straße"};
+    const std::regex r{".*straße"};
     filter.add(true, "name", r);
 
     const osmium::TagList& tag_list = make_tag_list(buffer, {

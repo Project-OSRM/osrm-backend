@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -79,10 +79,10 @@ namespace osmium {
 
         Timer() = default;
 
-        void start() const noexcept { // NOLINT(readability-convert-member-functions-to-static)
+        void start() noexcept { // NOLINT(readability-convert-member-functions-to-static)
         }
 
-        void stop() const noexcept { // NOLINT(readability-convert-member-functions-to-static)
+        void stop() noexcept { // NOLINT(readability-convert-member-functions-to-static)
         }
 
         int64_t elapsed_microseconds() const noexcept { // NOLINT(readability-convert-member-functions-to-static)

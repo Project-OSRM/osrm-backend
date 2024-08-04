@@ -136,8 +136,7 @@ directory, some data tests in `test/osm-testdata` and tests of the examples in
 `test/examples`. They are built by the default cmake config. Run `ctest` to
 run them. We can always use more tests.
 
-Tests are run automatically using Github Actions (Linux/macOS) and Appveyor
-(Windows) services.
+Tests are run automatically using Github Actions.
 
 
 ## Documenting the code

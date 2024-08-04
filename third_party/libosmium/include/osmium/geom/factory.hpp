@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -166,7 +166,7 @@ namespace osmium {
 
         public:
 
-            GeometryFactory<TGeomImpl, TProjection>() :
+            GeometryFactory() :
                 m_projection(),
                 m_impl(m_projection.epsg()) {
             }
@@ -175,7 +175,7 @@ namespace osmium {
              * Constructor for default initialized projection.
              */
             template <typename... TArgs>
-            explicit GeometryFactory<TGeomImpl, TProjection>(TArgs&&... args) :
+            explicit GeometryFactory(TArgs&&... args) :
                 m_projection(),
                 m_impl(m_projection.epsg(), std::forward<TArgs>(args)...) {
             }
@@ -185,7 +185,7 @@ namespace osmium {
              * projection is moved into the GeometryFactory.
              */
             template <typename... TArgs>
-            explicit GeometryFactory<TGeomImpl, TProjection>(TProjection&& projection, TArgs&&... args) :
+            explicit GeometryFactory(TProjection&& projection, TArgs&&... args) :
                 m_projection(std::move(projection)),
                 m_impl(m_projection.epsg(), std::forward<TArgs>(args)...) {
             }

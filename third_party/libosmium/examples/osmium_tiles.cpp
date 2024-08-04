@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
 
     // Create a tile at this location. This will also internally use the
     // Mercator projection and then calculate the tile coordinates.
-    const osmium::geom::Tile tile{uint32_t(zoom), location};
+    const osmium::geom::Tile tile{static_cast<uint32_t>(zoom), location};
     std::cout << "Tile:     zoom=" << tile.z << " x=" << tile.x << " y=" << tile.y << "\n";
 }
 

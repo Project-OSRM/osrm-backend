@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -165,9 +165,10 @@ namespace osmium {
                     while (pbf_string_table.next(OSMFormat::StringTable::repeated_bytes_s, protozero::pbf_wire_type::length_delimited)) {
                         const auto str_view = pbf_string_table.get_view();
                         if (str_view.size() > osmium::max_osm_string_length) {
-                            throw osmium::pbf_error{"overlong string in string table"};
+                            const std::string start_of_string(str_view.data(), 20);
+                            throw osmium::pbf_error{"overlong string (" +  start_of_string + "...) in string table"};
                         }
-                        m_stringtable.emplace_back(str_view.data(), osmium::string_size_type(str_view.size()));
+                        m_stringtable.emplace_back(str_view.data(), static_cast<osmium::string_size_type>(str_view.size()));
                     }
                 }
 
@@ -313,11 +314,11 @@ namespace osmium {
                 }
 
                 int32_t convert_pbf_lon(const int64_t c) const noexcept {
-                    return int32_t((c * m_granularity + m_lon_offset) / resolution_convert);
+                    return static_cast<int32_t>((c * m_granularity + m_lon_offset) / resolution_convert);
                 }
 
                 int32_t convert_pbf_lat(const int64_t c) const noexcept {
-                    return int32_t((c * m_granularity + m_lat_offset) / resolution_convert);
+                    return static_cast<int32_t>((c * m_granularity + m_lat_offset) / resolution_convert);
                 }
 
                 void decode_node(const data_view& data) {
@@ -502,7 +503,7 @@ namespace osmium {
                                 throw osmium::pbf_error{"unknown relation member type"};
                             }
                             rml_builder.add_member(
-                                osmium::item_type(type + 1),
+                                static_cast<osmium::item_type>(type + 1),
                                 ref.update(refs.next_sint64()),
                                 r.first,
                                 r.second
@@ -787,7 +788,7 @@ namespace osmium {
                             }
                         case protozero::tag_and_type(FileFormat::Blob::optional_int32_raw_size, protozero::pbf_wire_type::varint):
                             raw_size = pbf_blob.get_int32();
-                            if (raw_size <= 0 || uint32_t(raw_size) > max_uncompressed_blob_size) {
+                            if (raw_size <= 0 || static_cast<uint32_t>(raw_size) > max_uncompressed_blob_size) {
                                 throw osmium::pbf_error{"illegal blob size"};
                             }
                             break;
@@ -808,37 +809,41 @@ namespace osmium {
                         case protozero::tag_and_type(FileFormat::Blob::optional_bytes_zstd_data, protozero::pbf_wire_type::length_delimited):
                             throw osmium::pbf_error{"zstd blobs not supported"};
                         default:
-                            throw osmium::pbf_error{"unknown compression"};
+                            pbf_blob.skip();
                     }
                 }
 
-                if (!compressed_data.empty() && raw_size != 0) {
-                    switch (use_compression) {
-                        case pbf_compression::none:
-                            break;
-                        case pbf_compression::zlib:
-                            return osmium::io::detail::zlib_uncompress_string(
-                                compressed_data.data(),
-                                static_cast<unsigned long>(compressed_data.size()), // NOLINT(google-runtime-int)
-                                static_cast<unsigned long>(raw_size), // NOLINT(google-runtime-int)
-                                output
-                            );
-                        case pbf_compression::lz4:
+                if (compressed_data.empty()) {
+                    throw osmium::pbf_error{"blob contains no data or unknown compression method"};
+                }
+
+                if (raw_size == 0) {
+                    throw osmium::pbf_error{"missing raw_size in compressed blob"};
+                }
+
+                switch (use_compression) {
+                    case pbf_compression::none:
+                        break;
+                    case pbf_compression::zlib:
+                        return osmium::io::detail::zlib_uncompress_string(
+                            compressed_data.data(),
+                            static_cast<unsigned long>(compressed_data.size()), // NOLINT(google-runtime-int)
+                            static_cast<unsigned long>(raw_size), // NOLINT(google-runtime-int)
+                            output
+                        );
+                    case pbf_compression::lz4:
 #ifdef OSMIUM_WITH_LZ4
-                            return osmium::io::detail::lz4_uncompress_string(
-                                compressed_data.data(),
-                                static_cast<unsigned long>(compressed_data.size()), // NOLINT(google-runtime-int)
-                                static_cast<unsigned long>(raw_size), // NOLINT(google-runtime-int)
-                                output
-                            );
+                        return osmium::io::detail::lz4_uncompress_string(
+                            compressed_data.data(),
+                            static_cast<unsigned long>(compressed_data.size()), // NOLINT(google-runtime-int)
+                            static_cast<unsigned long>(raw_size), // NOLINT(google-runtime-int)
+                            output
+                        );
 #else
-                            break;
+                        break;
 #endif
-                    }
-                    std::abort(); // should never be here
                 }
-
-                throw osmium::pbf_error{"blob contains no data"};
+                std::abort(); // should never be here
             }
 
             inline osmium::Box decode_header_bbox(const data_view& data) {

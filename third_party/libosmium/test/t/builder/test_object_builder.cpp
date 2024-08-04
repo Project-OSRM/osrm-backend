@@ -371,7 +371,7 @@ TEST_CASE("no call to set_user on node") {
     osmium::memory::Buffer buffer{test_buffer_size};
 
     {
-        osmium::builder::NodeBuilder builder{buffer};
+        const osmium::builder::NodeBuilder builder{buffer};
     }
 
     const auto& node = buffer.get<osmium::Node>(buffer.commit());
@@ -381,7 +381,7 @@ TEST_CASE("no call to set_user on node") {
 
 TEST_CASE("set_user with length on node") {
     osmium::memory::Buffer buffer{test_buffer_size};
-    std::string user = "userx";
+    const std::string user = "userx";
 
     {
         osmium::builder::NodeBuilder builder{buffer};
@@ -397,7 +397,7 @@ TEST_CASE("no call to set_user on way") {
     osmium::memory::Buffer buffer{test_buffer_size};
 
     {
-        osmium::builder::WayBuilder builder{buffer};
+        const osmium::builder::WayBuilder builder{buffer};
     }
 
     const auto& way = buffer.get<osmium::Way>(buffer.commit());
@@ -407,7 +407,7 @@ TEST_CASE("no call to set_user on way") {
 
 TEST_CASE("set_user with length on way") {
     osmium::memory::Buffer buffer{test_buffer_size};
-    std::string user = "userx";
+    const std::string user = "userx";
 
     {
         osmium::builder::WayBuilder builder{buffer};
@@ -423,7 +423,7 @@ TEST_CASE("no call to set_user on changeset") {
     osmium::memory::Buffer buffer{test_buffer_size};
 
     {
-        osmium::builder::ChangesetBuilder builder{buffer};
+        const osmium::builder::ChangesetBuilder builder{buffer};
     }
 
     const auto& changeset = buffer.get<osmium::Changeset>(buffer.commit());
@@ -433,7 +433,7 @@ TEST_CASE("no call to set_user on changeset") {
 
 TEST_CASE("set_user with length on changeset") {
     osmium::memory::Buffer buffer{test_buffer_size};
-    std::string user = "userx";
+    const std::string user = "userx";
 
     {
         osmium::builder::ChangesetBuilder builder{buffer};
@@ -447,7 +447,7 @@ TEST_CASE("set_user with length on changeset") {
 
 TEST_CASE("clear_user should clear the user field but nothing else") {
     osmium::memory::Buffer buffer{test_buffer_size};
-    std::string user = "user";
+    const std::string user = "user";
 
     {
         osmium::builder::NodeBuilder builder{buffer};

@@ -61,7 +61,7 @@ TEST_CASE("Fill member database") {
     int n = 0;
     int match = 0;
     for (const auto& way : buffer.select<osmium::Way>()) {
-        bool added = mdb.add(way, [&](osmium::relations::RelationHandle& rel_handle) {
+        const bool added = mdb.add(way, [&](osmium::relations::RelationHandle& rel_handle) {
             ++match;
             switch (n) {
                 case 0: // added w10
@@ -186,6 +186,8 @@ TEST_CASE("Remove non-existing object from members database doesn't do anything"
             ++n;
         }
     }
+
+    mdb.prepare_for_lookup();
 
     REQUIRE(mdb.size() == 6);
     mdb.remove(100, 100);

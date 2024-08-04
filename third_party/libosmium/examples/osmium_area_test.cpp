@@ -122,11 +122,11 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        osmium::io::File input_file{argv[2]};
+        const osmium::io::File input_file{argv[2]};
 
         // Configuration for the multipolygon assembler. Here the default settings
         // are used, but you could change multiple settings.
-        osmium::area::Assembler::config_type assembler_config;
+        const osmium::area::Assembler::config_type assembler_config;
 
         // Set up a filter matching only forests. This will be used to only build
         // areas with matching tags.

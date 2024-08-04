@@ -19,7 +19,7 @@ TEST_CASE("Build area") {
         _visible(),
         _cid(333),
         _uid(21),
-        _timestamp(time_t(123)),
+        _timestamp(static_cast<std::time_t>(123)),
         _user("foo"),
         _tag("landuse", "forest"),
         _tag("name", "Sherwood Forest"),

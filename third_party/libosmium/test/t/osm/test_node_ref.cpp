@@ -59,7 +59,7 @@ TEST_CASE("WayNodeList") {
 
     SECTION("Empty list") {
         {
-            osmium::builder::WayNodeListBuilder builder{buffer};
+            const osmium::builder::WayNodeListBuilder builder{buffer};
         }
         REQUIRE(buffer.commit() == 0);
         REQUIRE(buffer.committed() > 0);

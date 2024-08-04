@@ -165,31 +165,31 @@ int main(int argc, char* argv[]) {
         reader.close();
 
         // Write out node, way, and relation offset indexes to disk.
-        IndexFile nodes_idx{output_dir + "/nodes.idx"};
+        const IndexFile nodes_idx{output_dir + "/nodes.idx"};
         node_index.dump_as_list(nodes_idx.fd());
 
-        IndexFile ways_idx{output_dir + "/ways.idx"};
+        const IndexFile ways_idx{output_dir + "/ways.idx"};
         way_index.dump_as_list(ways_idx.fd());
 
-        IndexFile relations_idx{output_dir + "/relations.idx"};
+        const IndexFile relations_idx{output_dir + "/relations.idx"};
         relation_index.dump_as_list(relations_idx.fd());
 
         // Sort the maps (so later binary search will work on them) and write
         // them to disk.
         map_node2way.sort();
-        IndexFile node2way_idx{output_dir + "/node2way.map"};
+        const IndexFile node2way_idx{output_dir + "/node2way.map"};
         map_node2way.dump_as_list(node2way_idx.fd());
 
         map_node2relation.sort();
-        IndexFile node2relation_idx{output_dir + "/node2rel.map"};
+        const IndexFile node2relation_idx{output_dir + "/node2rel.map"};
         map_node2relation.dump_as_list(node2relation_idx.fd());
 
         map_way2relation.sort();
-        IndexFile way2relation_idx{output_dir + "/way2rel.map"};
+        const IndexFile way2relation_idx{output_dir + "/way2rel.map"};
         map_way2relation.dump_as_list(way2relation_idx.fd());
 
         map_relation2relation.sort();
-        IndexFile relation2relation_idx{output_dir + "/rel2rel.map"};
+        const IndexFile relation2relation_idx{output_dir + "/rel2rel.map"};
         map_relation2relation.dump_as_list(relation2relation_idx.fd());
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.

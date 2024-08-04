@@ -122,7 +122,7 @@ TEST_CASE("debug encoding encodes some unicode characters") {
 }
 
 TEST_CASE("utf8 encoding of non-printable characters in the first 127 characters") {
-    std::locale cloc{"C"};
+    const std::locale cloc{"C"};
     char s[] = "a\0";
 
     for (char c = 1; c < 0x7f; ++c) {
@@ -136,7 +136,7 @@ TEST_CASE("utf8 encoding of non-printable characters in the first 127 characters
 }
 
 TEST_CASE("debug encoding of non-printable characters in the first 127 characters") {
-    std::locale cloc{"C"};
+    const std::locale cloc{"C"};
     char s[] = "a\0";
 
     for (char c = 1; c < 0x7f; ++c) {
@@ -219,7 +219,7 @@ TEST_CASE("incomplete Unicode codepoint") {
     REQUIRE(osmium::io::detail::next_utf8_codepoint(&it, end - 1) == 0x1f680U);
     REQUIRE(std::distance(s, it) == 4);
 
-    for (int i : {0, 1, 2, 3}) {
+    for (const int i : {0, 1, 2, 3}) {
         it = s;
         REQUIRE_THROWS_AS(osmium::io::detail::next_utf8_codepoint(&it, s + i), std::out_of_range);
     }

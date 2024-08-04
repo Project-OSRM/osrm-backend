@@ -18,12 +18,12 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        std::string input_filename{argv[1]};
-        std::string output_filename{argv[2]};
+        const std::string input_filename{argv[1]};
+        const std::string output_filename{argv[2]};
 
         osmium::io::Reader reader{input_filename};
-        osmium::io::File output_file{output_filename, "pbf"};
-        osmium::io::Header header;
+        const osmium::io::File output_file{output_filename, "pbf"};
+        const osmium::io::Header header;
         osmium::io::Writer writer{output_file, header, osmium::io::overwrite::allow};
 
         while (osmium::memory::Buffer buffer = reader.read()) { // NOLINT(bugprone-use-after-move) Bug in clang-tidy https://bugs.llvm.org/show_bug.cgi?id=36516

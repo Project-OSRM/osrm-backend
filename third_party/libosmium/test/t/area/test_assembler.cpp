@@ -21,7 +21,7 @@ TEST_CASE("Build area from way") {
         })
     );
 
-    osmium::area::AssemblerConfig config;
+    const osmium::area::AssemblerConfig config;
     osmium::area::Assembler assembler{config};
 
     osmium::memory::Buffer area_buffer{10240};
@@ -58,7 +58,7 @@ TEST_CASE("Build area from way with duplicate nodes") {
         })
     );
 
-    osmium::area::AssemblerConfig config;
+    const osmium::area::AssemblerConfig config;
     osmium::area::Assembler assembler{config};
 
     osmium::memory::Buffer area_buffer{10240};
@@ -94,7 +94,7 @@ TEST_CASE("Build area from way with invalid location") {
         })
     );
 
-    osmium::area::AssemblerConfig config;
+    const osmium::area::AssemblerConfig config;
     osmium::area::Assembler assembler{config};
 
     osmium::memory::Buffer area_buffer{10240};

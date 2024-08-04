@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -68,7 +68,7 @@ namespace osmium {
                 std::string out;
                 out.reserve(str.size() * 2);
 
-                for (char c : str) {
+                for (const char c : str) {
                     out += lookup_hex[(static_cast<unsigned int>(c) >> 4U) & 0xfU];
                     out += lookup_hex[ static_cast<unsigned int>(c)        & 0xfU];
                 }

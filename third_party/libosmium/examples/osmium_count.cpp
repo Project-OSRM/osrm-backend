@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
     try {
         // The Reader is initialized here with an osmium::io::File, but could
         // also be directly initialized with a file name.
-        osmium::io::File input_file{argv[1]};
+        const osmium::io::File input_file{argv[1]};
         osmium::io::Reader reader{input_file};
 
         // Create an instance of our own CountHandler and push the data from the
@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
         // (though not this one) can use huge amounts of data. So checking actual
         // memore usage is often useful and can be done easily with this class.
         // (Currently only works on Linux, not macOS and Windows.)
-        osmium::MemoryUsage memory;
+        const osmium::MemoryUsage memory;
 
         std::cout << "\nMemory used: " << memory.peak() << " MBytes\n";
     } catch (const std::exception& e) {

@@ -40,11 +40,11 @@ int main(int argc, char* argv[]) {
     }
 
     // Get output file name from command line.
-    std::string output_file_name{argv[1]};
+    const std::string output_file_name{argv[1]};
 
     // If output file name is "-", this means STDOUT. Set the OPL file type
     // in this case. Otherwise take the file type from the file name suffix.
-    osmium::io::File output_file{output_file_name, output_file_name == "-" ? ".opl" : ""};
+    const osmium::io::File output_file{output_file_name, output_file_name == "-" ? ".opl" : ""};
 
     try {
         // Create a buffer where all objects will live. Use a sensible initial

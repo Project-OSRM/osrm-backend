@@ -23,8 +23,8 @@ std::string to_wkb(const OGRGeometry* geometry) {
 }
 
 TEST_CASE("compare WKB point against GDAL/OGR") {
-    osmium::geom::WKBFactory<> wkb_factory{osmium::geom::wkb_type::wkb};
-    osmium::geom::OGRFactory<> ogr_factory;
+    const osmium::geom::WKBFactory<> wkb_factory{osmium::geom::wkb_type::wkb};
+    const osmium::geom::OGRFactory<> ogr_factory;
 
     const osmium::Location loc{3.2, 4.2};
     const std::string wkb{wkb_factory.create_point(loc)};

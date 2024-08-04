@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
     try {
         const std::string input_filename{argv[1]};
 
-        osmium::memory::Buffer buffer{osmium::io::read_file(input_filename)};
+        const osmium::memory::Buffer buffer{osmium::io::read_file(input_filename)};
 
         const auto& map_factory = osmium::index::MapFactory<osmium::unsigned_object_id_type, osmium::Location>::instance();
 

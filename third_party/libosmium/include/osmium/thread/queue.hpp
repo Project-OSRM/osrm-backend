@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -165,7 +165,7 @@ namespace osmium {
 #endif
                     }
                 }
-                std::lock_guard<std::mutex> lock{m_mutex};
+                const std::lock_guard<std::mutex> lock{m_mutex};
                 m_queue.push(std::move(value));
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
                 if (m_largest_size < m_queue.size()) {
@@ -203,7 +203,7 @@ namespace osmium {
                 ++m_pop_counter;
 #endif
                 {
-                    std::lock_guard<std::mutex> lock{m_mutex};
+                    const std::lock_guard<std::mutex> lock{m_mutex};
                     if (m_queue.empty()) {
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
                         ++m_empty_counter;
@@ -220,12 +220,12 @@ namespace osmium {
             }
 
             bool empty() const {
-                std::lock_guard<std::mutex> lock{m_mutex};
+                const std::lock_guard<std::mutex> lock{m_mutex};
                 return m_queue.empty();
             }
 
             std::size_t size() const {
-                std::lock_guard<std::mutex> lock{m_mutex};
+                const std::lock_guard<std::mutex> lock{m_mutex};
                 return m_queue.size();
             }
 
@@ -235,7 +235,7 @@ namespace osmium {
 
             void shutdown() {
                 m_in_use = false;
-                std::lock_guard<std::mutex> lock{m_mutex};
+                const std::lock_guard<std::mutex> lock{m_mutex};
                 while (!m_queue.empty()) {
                     m_queue.pop();
                 }

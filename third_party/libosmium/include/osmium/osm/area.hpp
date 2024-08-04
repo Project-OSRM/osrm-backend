@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -223,7 +223,7 @@ namespace osmium {
          * all inner rings.
          */
         osmium::memory::ItemIteratorRange<const osmium::InnerRing> inner_rings(const osmium::OuterRing& outer) const {
-            osmium::memory::ItemIteratorRange<const osmium::OuterRing> outer_range{outer.data(), next()};
+            const osmium::memory::ItemIteratorRange<const osmium::OuterRing> outer_range{outer.data(), next()};
             return osmium::memory::ItemIteratorRange<const osmium::InnerRing>{outer_range.cbegin().data(), std::next(outer_range.cbegin()).data()};
         }
 

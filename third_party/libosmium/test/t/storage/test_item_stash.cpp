@@ -64,9 +64,9 @@ TEST_CASE("Item stash") {
     for (auto& handle : handles) { // must be reference because we will change it!
         REQUIRE(handle.valid());
         const auto& item = stash.get_item(handle);
-        bool correct_type = item.type() == osmium::item_type::node ||
-                            item.type() == osmium::item_type::way ||
-                            item.type() == osmium::item_type::relation;
+        const bool correct_type = item.type() == osmium::item_type::node ||
+                                  item.type() == osmium::item_type::way ||
+                                  item.type() == osmium::item_type::relation;
         REQUIRE(correct_type);
         const auto& obj = static_cast<const osmium::OSMObject&>(item);
         REQUIRE(obj.id() == id);
@@ -141,7 +141,7 @@ TEST_CASE("Fill item stash until it garbage collects") {
     const auto& node = buffer.get<osmium::Node>(0);
 
     std::vector<osmium::ItemStash::handle_type> handles;
-    std::size_t num_items = 6UL * 1000UL * 1000UL;
+    const std::size_t num_items = 6UL * 1000UL * 1000UL;
     for (std::size_t i = 0; i < num_items; ++i) {
         auto handle = stash.add_item(node);
         handles.push_back(handle);

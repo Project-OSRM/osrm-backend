@@ -8,14 +8,14 @@
 #include <memory>
 
 TEST_CASE("OGR point geometry") {
-    osmium::geom::OGRFactory<> factory;
+    const osmium::geom::OGRFactory<> factory;
     std::unique_ptr<OGRPoint> point{factory.create_point(osmium::Location{3.2, 4.2})};
     REQUIRE(3.2 == point->getX());
     REQUIRE(4.2 == point->getY());
 }
 
 TEST_CASE("OGR empty point geometry") {
-    osmium::geom::OGRFactory<> factory;
+    const osmium::geom::OGRFactory<> factory;
     REQUIRE_THROWS_AS(factory.create_point(osmium::Location()), osmium::invalid_location);
 }
 

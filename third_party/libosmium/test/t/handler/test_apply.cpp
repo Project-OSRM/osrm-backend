@@ -10,7 +10,7 @@
 #include <osmium/visitor.hpp>
 
 TEST_CASE("apply with lambdas on reader") {
-    osmium::io::File file{with_data_dir("t/relations/data.osm")};
+    const osmium::io::File file{with_data_dir("t/relations/data.osm")};
     osmium::io::Reader reader{file};
 
     int count_n = 0;
@@ -56,7 +56,7 @@ TEST_CASE("apply with lambdas on reader") {
 }
 
 TEST_CASE("apply with lambda on buffer") {
-    osmium::io::File file{with_data_dir("t/relations/data.osm")};
+    const osmium::io::File file{with_data_dir("t/relations/data.osm")};
     osmium::io::Reader reader{file};
 
     const auto buffer = reader.read();
@@ -72,7 +72,7 @@ TEST_CASE("apply with lambda on buffer") {
 }
 
 TEST_CASE("apply on non-const buffer can change data") {
-    osmium::io::File file{with_data_dir("t/relations/data.osm")};
+    const osmium::io::File file{with_data_dir("t/relations/data.osm")};
     osmium::io::Reader reader{file};
 
     auto buffer = reader.read();
@@ -97,7 +97,7 @@ TEST_CASE("apply with handler and lambda") {
     using index_type = osmium::index::map::FlexMem<osmium::unsigned_object_id_type, osmium::Location>;
     using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
 
-    osmium::io::File file{with_data_dir("t/relations/data.osm")};
+    const osmium::io::File file{with_data_dir("t/relations/data.osm")};
     osmium::io::Reader reader{file};
 
     auto buffer = reader.read();

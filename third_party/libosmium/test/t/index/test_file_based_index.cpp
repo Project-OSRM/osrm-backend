@@ -60,7 +60,7 @@ TEST_CASE("File based dense index") {
     }
 
     {
-        index_type index{fd};
+        const index_type index{fd};
         REQUIRE(osmium::file_size(fd) >= (6 * S));
 
         REQUIRE(index.size() == 7);
@@ -139,7 +139,7 @@ TEST_CASE("File based sparse index") {
     }
 
     {
-        index_type index{fd};
+        const index_type index{fd};
         REQUIRE(osmium::file_size(fd) >= (2 * S));
 
         REQUIRE(index.size() == 2);

@@ -25,7 +25,7 @@ public:
 }; // class TestHandler
 
 TEST_CASE("Read relations with one handler") {
-    osmium::io::File file{with_data_dir("t/relations/data.osm")};
+    const osmium::io::File file{with_data_dir("t/relations/data.osm")};
 
     TestHandler handler;
 
@@ -36,7 +36,7 @@ TEST_CASE("Read relations with one handler") {
 }
 
 TEST_CASE("Read relations with two handlers") {
-    osmium::io::File file{with_data_dir("t/relations/data.osm")};
+    const osmium::io::File file{with_data_dir("t/relations/data.osm")};
 
     TestHandler handler1;
     TestHandler handler2;
@@ -50,7 +50,7 @@ TEST_CASE("Read relations with two handlers") {
 }
 
 TEST_CASE("Read relations with progress bar and one handler") {
-    osmium::io::File file{with_data_dir("t/relations/data.osm")};
+    const osmium::io::File file{with_data_dir("t/relations/data.osm")};
     osmium::ProgressBar progress_bar{file.size(), false};
 
     TestHandler handler;
@@ -62,7 +62,7 @@ TEST_CASE("Read relations with progress bar and one handler") {
 }
 
 TEST_CASE("Read relations with progress bar and two handlers") {
-    osmium::io::File file{with_data_dir("t/relations/data.osm")};
+    const osmium::io::File file{with_data_dir("t/relations/data.osm")};
     osmium::ProgressBar progress_bar{file.size(), false};
 
     TestHandler handler1;

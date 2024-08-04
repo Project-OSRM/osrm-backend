@@ -27,11 +27,11 @@ int main(int argc, char* argv[]) {
     try {
         // The Reader is initialized here with an osmium::io::File, but could
         // also be directly initialized with a file name.
-        osmium::io::File input_file{argv[1]};
+        const osmium::io::File input_file{argv[1]};
         osmium::io::Reader reader{input_file};
 
         // OSM data comes in buffers, read until there are no more.
-        while (osmium::memory::Buffer buffer = reader.read()) {
+        while (const osmium::memory::Buffer buffer = reader.read()) {
             // do nothing
         }
 

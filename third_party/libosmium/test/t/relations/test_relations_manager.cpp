@@ -109,7 +109,7 @@ struct AnyRM : public osmium::relations::RelationsManager<AnyRM, true, true, tru
 };
 
 TEST_CASE("Use RelationsManager without any overloaded functions in derived class") {
-    osmium::io::File file{with_data_dir("t/relations/data.osm")};
+    const osmium::io::File file{with_data_dir("t/relations/data.osm")};
 
     EmptyRM manager;
 
@@ -134,7 +134,7 @@ TEST_CASE("Use RelationsManager without any overloaded functions in derived clas
 }
 
 TEST_CASE("Relations manager derived class") {
-    osmium::io::File file{with_data_dir("t/relations/data.osm")};
+    const osmium::io::File file{with_data_dir("t/relations/data.osm")};
 
     TestRM manager;
 
@@ -176,7 +176,7 @@ TEST_CASE("Relations manager derived class") {
 }
 
 TEST_CASE("Relations manager with callback") {
-    osmium::io::File file{with_data_dir("t/relations/data.osm")};
+    const osmium::io::File file{with_data_dir("t/relations/data.osm")};
 
     CallbackRM manager;
 
@@ -198,7 +198,7 @@ TEST_CASE("Relations manager with callback") {
 }
 
 TEST_CASE("Relations manager reading buffer without callback") {
-    osmium::io::File file{with_data_dir("t/relations/data.osm")};
+    const osmium::io::File file{with_data_dir("t/relations/data.osm")};
 
     CallbackRM manager;
 
@@ -233,7 +233,7 @@ TEST_CASE("Access members via RelationsManager") {
 }
 
 TEST_CASE("Handle duplicate members correctly") {
-    osmium::io::File file{with_data_dir("t/relations/dupl_member.osm")};
+    const osmium::io::File file{with_data_dir("t/relations/dupl_member.osm")};
 
     TestRM manager;
 
@@ -260,7 +260,7 @@ TEST_CASE("Handle duplicate members correctly") {
 }
 
 TEST_CASE("Check handling of missing members") {
-    osmium::io::File file{with_data_dir("t/relations/missing_members.osm")};
+    const osmium::io::File file{with_data_dir("t/relations/missing_members.osm")};
 
     AnyRM manager;
 

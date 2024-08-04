@@ -27,21 +27,21 @@ TEST_CASE("Tag matcher") {
     const osmium::TagList& tag_list = buffer.get<osmium::TagList>(pos);
 
     SECTION("Matching nothing (default constructor)") {
-        osmium::TagMatcher m{};
+        const osmium::TagMatcher m{};
         REQUIRE_FALSE(m(tag_list));
 
         REQUIRE_FALSE(m(*tag_list.begin()));
     }
 
     SECTION("Matching nothing (bool)") {
-        osmium::TagMatcher m{false};
+        const osmium::TagMatcher m{false};
         REQUIRE_FALSE(m(tag_list));
 
         REQUIRE_FALSE(m(*tag_list.begin()));
     }
 
     SECTION("Matching everything") {
-        osmium::TagMatcher m{true};
+        const osmium::TagMatcher m{true};
         REQUIRE(m(tag_list));
 
         REQUIRE(m(*tag_list.begin()));
@@ -50,7 +50,7 @@ TEST_CASE("Tag matcher") {
     }
 
     SECTION("Matching keys only") {
-        osmium::TagMatcher m{osmium::StringMatcher::equal{"highway"}};
+        const osmium::TagMatcher m{osmium::StringMatcher::equal{"highway"}};
         REQUIRE(m(tag_list));
 
         REQUIRE(m(*tag_list.begin()));
@@ -58,7 +58,7 @@ TEST_CASE("Tag matcher") {
     }
 
     SECTION("Matching keys only with shortcut const char*") {
-        osmium::TagMatcher m{"highway"};
+        const osmium::TagMatcher m{"highway"};
         REQUIRE(m(tag_list));
 
         REQUIRE(m(*tag_list.begin()));
@@ -66,8 +66,8 @@ TEST_CASE("Tag matcher") {
     }
 
     SECTION("Matching keys only with shortcut std::string") {
-        std::string s{"highway"};
-        osmium::TagMatcher m{s};
+        const std::string s{"highway"};
+        const osmium::TagMatcher m{s};
         REQUIRE(m(tag_list));
 
         REQUIRE(m(*tag_list.begin()));
@@ -75,8 +75,8 @@ TEST_CASE("Tag matcher") {
     }
 
     SECTION("Matching key and value") {
-        osmium::TagMatcher m{osmium::StringMatcher::equal{"highway"},
-                             osmium::StringMatcher::equal{"primary"}};
+        const osmium::TagMatcher m{osmium::StringMatcher::equal{"highway"},
+                                   osmium::StringMatcher::equal{"primary"}};
         REQUIRE(m(tag_list));
 
         REQUIRE(m(*tag_list.begin()));
@@ -84,7 +84,7 @@ TEST_CASE("Tag matcher") {
     }
 
     SECTION("Matching key and value with shortcut") {
-        osmium::TagMatcher m{"highway", "primary", false};
+        const osmium::TagMatcher m{"highway", "primary", false};
         REQUIRE(m(tag_list));
 
         REQUIRE(m(*tag_list.begin()));
@@ -92,15 +92,15 @@ TEST_CASE("Tag matcher") {
     }
 
     SECTION("Matching key and value") {
-        osmium::TagMatcher m{osmium::StringMatcher::equal{"highway"},
-                             osmium::StringMatcher::equal{"secondary"}};
+        const osmium::TagMatcher m{osmium::StringMatcher::equal{"highway"},
+                                   osmium::StringMatcher::equal{"secondary"}};
         REQUIRE_FALSE(m(tag_list));
     }
 
     SECTION("Matching key and value inverted") {
-        osmium::TagMatcher m{osmium::StringMatcher::equal{"highway"},
-                             osmium::StringMatcher::equal{"secondary"},
-                             true};
+        const osmium::TagMatcher m{osmium::StringMatcher::equal{"highway"},
+                                   osmium::StringMatcher::equal{"secondary"},
+                                   true};
         REQUIRE(m(tag_list));
 
         REQUIRE(m(*tag_list.begin()));
@@ -108,8 +108,8 @@ TEST_CASE("Tag matcher") {
     }
 
     SECTION("Matching key and value list") {
-        osmium::TagMatcher m{osmium::StringMatcher::equal{"highway"},
-                             osmium::StringMatcher::list{{"primary", "secondary"}}};
+        const osmium::TagMatcher m{osmium::StringMatcher::equal{"highway"},
+                                   osmium::StringMatcher::list{{"primary", "secondary"}}};
         REQUIRE(m(tag_list));
 
         REQUIRE(m(*tag_list.begin()));
@@ -118,7 +118,7 @@ TEST_CASE("Tag matcher") {
 }
 
 TEST_CASE("Copy and move tag matcher") {
-    osmium::TagMatcher m1{"highway"};
+    const osmium::TagMatcher m1{"highway"};
     osmium::TagMatcher c1{true};
     osmium::TagMatcher c2{false};
 

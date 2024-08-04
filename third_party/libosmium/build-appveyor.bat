@@ -24,6 +24,11 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 SET PATH=C:/projects/bzip2.v140.1.0.6.9/build/native/bin/x64/%config%;%PATH%
 
+nuget install lz4 -Version 1.3.1.2
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
+SET PATH=C:/projects/lz4.1.3.1.2/build/native/bin/x64/%config%;%PATH%
+
 CD libosmium
 
 ECHO config^: %config%
@@ -52,7 +57,9 @@ SET CMAKE_CMD=cmake .. -LA -G "Visual Studio 14 Win64" ^
 -DEXPAT_INCLUDE_DIR=C:/projects/expat.v140.2.2.5/build/native/include ^
 -DEXPAT_LIBRARY=C:/projects/expat.v140.2.2.5/build/native/lib/x64/%config%/libexpat%libpostfix%.lib ^
 -DBZIP2_INCLUDE_DIR=C:/projects/bzip2.v140.1.0.6.9/build/native/include ^
--DBZIP2_LIBRARIES=C:/projects/bzip2.v140.1.0.6.9/build/native/lib/x64/%config%/libbz2%libpostfix%.lib
+-DBZIP2_LIBRARIES=C:/projects/bzip2.v140.1.0.6.9/build/native/lib/x64/%config%/libbz2%libpostfix%.lib ^
+-DLZ4_INCLUDE_DIR=C:/projects/lz4.1.3.1.2/build/native/include ^
+-DLZ4_LIBRARY=C:/projects/lz4.1.3.1.2/build/native/lib/x64/%config%/liblz4%libpostfix%.lib
 
 ECHO calling^: %CMAKE_CMD%
 %CMAKE_CMD%

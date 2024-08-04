@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -123,15 +123,6 @@ namespace osmium {
             bool ignore_invalid_locations = false;
 
             AssemblerConfig() noexcept = default;
-
-            /**
-             * Constructor
-             * @deprecated Use default constructor and set values afterwards.
-             */
-            explicit AssemblerConfig(ProblemReporter* pr, bool d = false) :
-                problem_reporter(pr),
-                debug_level(d) {
-            }
 
         }; // struct AssemblerConfig
 

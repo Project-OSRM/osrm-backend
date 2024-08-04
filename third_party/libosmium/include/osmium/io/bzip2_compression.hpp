@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -112,7 +112,7 @@ namespace osmium {
 #ifdef _MSC_VER
                     osmium::detail::disable_invalid_parameter_handler diph;
 #endif
-                    m_file = fdopen(fd, mode);
+                    m_file = fdopen(fd, mode); // NOLINT(cppcoreguidelines-prefer-member-initializer)
                     if (!m_file) {
 
                         // Do not close stdout
@@ -134,7 +134,7 @@ namespace osmium {
                     osmium::detail::disable_invalid_parameter_handler diph;
 #endif
                     if (m_file) {
-                        fclose(m_file);
+                        (void)fclose(m_file);
                     }
                 }
 
