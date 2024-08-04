@@ -305,3 +305,16 @@ Feature: Car - Restricted access
             | primary    | psv          |       |
             | primary    | no           |       |
             | primary    | customers    |   x   |
+
+    Scenario: Car - Conditional restrictions
+        Then routability should be
+            | highway      | motor_vehicle   |  motor_vehicle:conditional            | bothw |
+            | primary      | yes             |                                       |   x   |
+            | primary      | yes             |  no @ 2002 Jan 7 - 2002 Feb 8         |   x   |
+            | primary      | yes             |  no @ 2002 Jan 07 - 2002 Feb 08       |   x   |
+            | primary      | yes             |  no @ 2090 Jan 7 - 2100 Feb 8         |   x   |
+            | primary      | yes             |  no @ 2020 Jan 7 - 2050 Feb 8         |       |
+            | primary      | yes             |  no @ 2020 Jan 07 - 2050 Feb 08       |       |
+            | primary      | yes             |  no @ (2020 Jan 7 - 2050 Feb 8)       |       |
+            | primary      | yes             |  no @ foo - bar                       |   x   |
+            | primary      | yes             |  foo                                  |   x   |
