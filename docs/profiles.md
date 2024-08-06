@@ -16,6 +16,7 @@ When running OSRM preprocessing commands you specify the profile with the --prof
 Some countries have differing access rules for different transport types. (https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access_restrictions). Profiles countrycar, countrybicycle and countryfoot may be used as starting points for country support. Country Specific location data (geojson geometry) should be provided to the osrm-extract for example:
 
 osrm-extract --profile ../profiles/countryfoot.lua --location-dependent-data ../data/osmb.geojson
+
 osrm-extract --profile ../profiles/countrybicycle.lua --location-dependent-data ../mygeojson/Netherlands.geojson
 
 ## Processing flow
