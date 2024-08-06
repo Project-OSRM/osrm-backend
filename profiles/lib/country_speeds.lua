@@ -35,6 +35,9 @@ function country_speeds.getcountrytag(way)
     location = way:get_location_tag("ISO_A3")
   end
   if not location then
+    location = way:get_location_tag("ISO3_CODE")
+  end
+  if not location then
     countryname = way:get_location_tag("name_en")
     if countryname then
       location = country_speeds.getCnameEntry(countryname)
