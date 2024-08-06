@@ -7,7 +7,6 @@ Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 find_access_tag = require("lib/access").find_access_tag
 country_speeds = require("lib/country_speeds")
-inspect = require("/lib/inspect")
 
 function setup()
   local walking_speed = 5
