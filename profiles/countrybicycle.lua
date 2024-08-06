@@ -220,7 +220,8 @@ function setup()
     avoid = Set {
       'impassable',
       'construction',
-      'proposed'
+      'proposed',
+      'motorroad'
     },
     
     uselocationtags = Set
