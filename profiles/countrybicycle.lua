@@ -10,7 +10,6 @@ find_access_tag = require("lib/access").find_access_tag
 country_speeds = require("lib/country_speeds")
 limit = require("lib/maxspeed").limit
 Measure = require("lib/measure")
-inspect = require("lib/inspect")
 
 function setup()
   local default_speed = 15
