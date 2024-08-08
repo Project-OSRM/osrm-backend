@@ -58,7 +58,7 @@ function way_function (way, result)
     "SELECT SUM(SQRT(area.area)) AS val " ..
     "FROM osm_ways way " ..
     "LEFT JOIN osm_landusages area ON ST_DWithin(way.geometry, area.geometry, 100) " ..
-    "WHERE area.type IN ('industrial') AND way.osm_id=" .. way.id .. " " ..
+    "WHERE area.type IN ('industrial') AND way.osm_id=" .. way:id() .. " " ..
     "GROUP BY way.id"
 
   local cursor = assert( sql_con:execute(sql_query) )   -- execute querty
