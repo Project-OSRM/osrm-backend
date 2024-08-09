@@ -140,7 +140,7 @@ function setup()
     
     uselocationtags = Set
     {
-        'countryspeeds',
+      --  'countryspeeds',
     }
   }
 end
