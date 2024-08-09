@@ -392,5 +392,5 @@ osrm-extract --profile ../profiles/countryfoot.lua --location-dependent-data ../
 
 osrm-extract --profile ../profiles/countrybicycle.lua --location-dependent-data ../mygeojson/Netherlands.geojson
 
-If you enable the tag but provide no location-dependent-data the profile will use the 'Worldwide' profile. (https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access_restrictions#Worldwide)
+If you enable the tag but provide no location-dependent-data, the profile will use the 'Worldwide' settings. (https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access_restrictions#Worldwide)
 
