@@ -1,0 +1,12 @@
+{
+"type": "FeatureCollection",
+"features": [
+{ "type": "Feature", "properties": { "name_en": "Switzerland", "iso_a3_eh": "CHE", "ISO3_CODE": "CHE"}, "geometry": { "type": "Polygon", "coordinates": [ [ [ 0.0, 10.0 ], [ 10.0, 10.0 ], [ 10.0, 9.0 ], [ 0.0, 9.0 ], [ 0.0, 10.0 ] ] ] } },
+{ "type": "Feature", "properties": { "name_en": "Finland", "iso_a3_eh": "FIN", "ISO3_CODE": "FIN"}, "geometry": { "type": "Polygon", "coordinates": [ [ [ 10.0, 10.0 ], [ 20.0, 10.0 ], [ 20.0, 9.0 ], [ 10.0, 9.0 ], [ 10.0, 10.0 ] ] ] } },
+{ "type": "Feature", "properties": { "name_en": "France", "iso_a3_eh": "FRA", "ISO3_CODE": "FRA"}, "geometry": { "type": "Polygon", "coordinates": [ [ [ 0.0, 9.0 ], [ 10.0, 9.0 ], [ 10.0, 8.0 ], [ 0.0, 8.0 ], [ 0.0, 9.0 ] ] ] } },
+{ "type": "Feature", "properties": {"name_en": "Belgium", "iso_a3_eh": "BEL", "ISO3_CODE": "BEL"}, "geometry": { "type": "Polygon", "coordinates": [ [ [ 10.0, 9.0 ], [ 20.0, 9.0 ], [ 20.0, 8.0 ], [ 10.0, 8.0 ], [ 10.0, 9.0 ] ] ] } },
+{ "type": "Feature", "properties": {"name_en": "Greece", "iso_a3_eh": "GRC", "ISO3_CODE": "GRC" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 0.0, 8.0 ], [ 10.0, 8.0 ], [ 10.0, 7.0 ], [ 0.0, 7.0 ], [ 0.0, 8.0 ] ] ] } },
+{ "type": "Feature", "properties": {"name_en": "Ireland", "iso_a3_eh": "IRL", "ISO3_CODE": "IRL" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 10.0, 8.0 ], [ 20.0, 8.0 ], [ 20.0, 7.0 ], [ 10.0, 7.0 ], [ 10.0, 8.0 ] ] ] } },
+{ "type": "Feature", "properties": {"name_en": "Lithuania", "iso_a3_eh": "LIU", "ISO3_CODE": "LIU" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 0.0, 7.0 ], [ 10.0, 7.0 ], [ 10.0, 6.0 ], [ 0.0, 6.0 ], [ 0.0, 7.0 ] ] ] } } 
+]
+}
