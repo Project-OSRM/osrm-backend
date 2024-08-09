@@ -12,13 +12,6 @@ When running OSRM preprocessing commands you specify the profile with the --prof
 
 `osrm-extract --profile ../profiles/car.lua planet-latest.osm.pbf`
 
-### Profiles for country differences
-Some countries have differing access rules for different transport types. (https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access_restrictions). Profiles countrycar, countrybicycle and countryfoot may be used as starting points for country support. Country Specific location data (geojson geometry) should be provided to the osrm-extract for example:
-
-osrm-extract --profile ../profiles/countryfoot.lua --location-dependent-data ../data/osmb.geojson
-
-osrm-extract --profile ../profiles/countrybicycle.lua --location-dependent-data ../mygeojson/Netherlands.geojson
-
 ## Processing flow
 It's important to understand that profiles are used when preprocessing the OSM data, NOT at query time when routes are computed.
 
@@ -382,3 +375,22 @@ There are a few helper functions defined in the global scope that profiles can u
 - `trimLaneString`
 - `applyAccessTokens`
 - `canonicalizeStringList`
+
+### Profiles for country differences
+Some countries have differing access rules for different transport types. (https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access_restrictions). Profiles countrycar, countrybicycle and countryfoot may be used as starting points for country support. 
+
+To enable support add  'countryspeeds' to the uselocationtags Set. e.g.
+
+    uselocationtags = Set
+    {
+        'countryspeeds',
+    }
+    
+Country Specific location data (geojson geometry) should be provided to the osrm-extract for example:
+
+osrm-extract --profile ../profiles/countryfoot.lua --location-dependent-data ../data/osmb.geojson
+
+osrm-extract --profile ../profiles/countrybicycle.lua --location-dependent-data ../mygeojson/Netherlands.geojson
+
+If you enable the tag but provide no location-dependent-data the profile will use the 'Worldwide' profile. (https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access_restrictions#Worldwide)
+
