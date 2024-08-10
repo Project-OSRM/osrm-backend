@@ -17,25 +17,6 @@ local walking_speed = 5
 local default_speed = 15
 local no_speed = -1
 
-local speeds = Sequence {
-    motorway        = 90,
-    motorway_link   = 45,
-    trunk           = 85,
-    trunk_link      = 40,
-    primary         = 65,
-    primary_link    = 30,
-    secondary       = 55,
-    secondary_link  = 25,
-    tertiary        = 40,
-    tertiary_link   = 20,
-    unclassified    = 25,
-    residential     = 25,
-    living_street   = 10,
-    service         = 15
-  }
-
-
-
 local clist = Set
 {
   'Worldwide',
