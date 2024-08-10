@@ -14,8 +14,6 @@ local country_vehicle_data = require('lib/country_vehicle_data')
 local country_data = require('lib/country_data')
 local Tags = require('lib/tags')
 
-local inspect = require('lib/inspect')
-
 local country_speeds = {}
 
 function country_speeds.inAccessSet(country)
@@ -70,9 +68,6 @@ function country_speeds.wayspeed(profile,way,result,data)
     return        -- abort if already set, eg. by a route
   end
   local key,value,speed
---  if (way) then
---    print('way=' .. way:id())
---  end
   
   if profile.uselocationtags and profile.uselocationtags.countryspeeds then
     -- check for location tags to handle speeds 
@@ -86,7 +81,6 @@ function country_speeds.wayspeed(profile,way,result,data)
       result.forward_speed = speed
       result.backward_speed = speed
     else
-    --  print('way=' .. way:id() .. ' -1')   
       speed = false 
     end
   else
