@@ -16,11 +16,16 @@ local country_bicycle_data = {}
 
 local no_speed = -1
 
+local default_speed = 15
+local walking_speed = 5
 
 local bicycle_speeds = Sequence {
+    motorway       = no_speed,
     cycleway       = default_speed,
     primary        = default_speed,
     primary_link   = default_speed,
+    trunk          = default_speed,
+    trunk_link     = default_speed,
     secondary      = default_speed,
     secondary_link = default_speed,
     tertiary       = default_speed,
@@ -31,7 +36,14 @@ local bicycle_speeds = Sequence {
     road           = default_speed,
     service        = default_speed,
     track          = 12,
-    path           = 13
+    path           = 13,
+    path           = 13,
+    busway         = default_speed,
+    bus            = default_speed,
+    bridleway      = default_speed,
+    footway        = default_speed,
+    steps          = walking_speed,
+    pier           = walking_speed
   }
 
 
