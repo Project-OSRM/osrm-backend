@@ -337,6 +337,9 @@ function speed_handler(profile,way,result,data)
     if extra_speeds then
         if extra_speeds.highway[data.highway] then
             extraspeed = extra_speeds.highway[data.highway]
+            if extraspeed == -1 then
+                extraspeed = false
+            end
         end
     end
   end
