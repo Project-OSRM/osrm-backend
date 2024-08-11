@@ -8,7 +8,6 @@ local Set = require('lib/set')
 local Sequence = require('lib/sequence')
 local country_foot_data = require('lib/country_foot_data')
 local country_bicycle_data = require('lib/country_bicycle_data')
-local country_vehicle_data = require('lib/country_vehicle_data')
 local country_data = require('lib/country_data')
 local Tags = require('lib/tags')
 
@@ -53,9 +52,6 @@ function country_speeds.getAccessProfile(data, profile)
   end
   if profile == 'bicycle' then
     return country_bicycle_data.getAccessProfile(country, prof)
-  end
-  if profile == 'vehicle' then
-    return country_vehicle_data.getAccessProfile(country, prof)
   end
   return false
 end
