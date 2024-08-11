@@ -2,8 +2,6 @@
 -- based on reading https://wiki.openstreetmap.org/wiki/Key:motorroad
 -- and https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access_restrictions
 -- (esp #Alternative_ideas)
--- We treat all cases of motorroad="yes" as no access.
--- pass in way data and speed to set.
 -- 
 
 local Set = require('lib/set')
