@@ -377,7 +377,7 @@ There are a few helper functions defined in the global scope that profiles can u
 - `canonicalizeStringList`
 
 ### Profiles for country differences
-Some countries have differing access rules for different transport types. (https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access_restrictions). Profiles countrycar, countrybicycle and countryfoot may be used as starting points for country support. 
+Some countries have differing access rules for different transport types. (https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access_restrictions). Profiles countrybicycle and countryfoot may be used as starting points for country support. 
 
 To enable support add  'countryspeeds' to the uselocationtags Set. e.g.
 
