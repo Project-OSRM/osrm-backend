@@ -1,7 +1,7 @@
 @routing @countryfoot @countryspeeds
 Feature:  Testbot - Country Profile Selection
 
-    # Check that country date is being collected
+    # Check that country data is being selected
     # CHE (a) and FIN (c) support foot on cycleway
     # FRA (g) does not support  foot on cycleway
     # BEL (i) and FIN (c) support foot on cycleway
