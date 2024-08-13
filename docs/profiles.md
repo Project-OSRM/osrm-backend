@@ -388,9 +388,10 @@ To enable support add  'countryspeeds' to the uselocationtags Set. e.g.
     
 Country Specific location data (geojson geometry) should be provided to the osrm-extract for example:
 
-osrm-extract --profile ../profiles/countryfoot.lua --location-dependent-data ../data/osmb.geojson
+osrm-extract --profile ../profiles/countryfoot.lua --location-dependent-data ../data/allthecountries.geojson
 
 osrm-extract --profile ../profiles/countrybicycle.lua --location-dependent-data ../mygeojson/Netherlands.geojson
 
 If you enable the tag but provide no location-dependent-data, the profile will use the 'Worldwide' settings. (https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access_restrictions#Worldwide)
 
+It is possible to to include multiple countries in the location data file through the use of a FeatureCollection.
