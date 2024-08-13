@@ -11,7 +11,7 @@ Feature:  Testbot - Country Profile Selection
     
     Scenario: Country Profile Selection - highway chosen for country
     
-        Given the extract extra arguments "--location-dependent-data data/countrytest.geojson"
+        Given the extract extra arguments "--location-dependent-data test/data/countrytest.geojson"
         And the partition extra arguments "--threads 1"
         And the customize extra arguments "--threads 1"
 
