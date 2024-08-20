@@ -119,9 +119,9 @@ function process_way (profile, way, result)
 end
 
 function process_turn (profile, turn)
-  if (2 < nil) then
-    print("2 is less than nil")
-  end
+  --if (2 < nil) then
+  --  print("2 is less than nil")
+  --end
 
   if turn.is_u_turn then
     turn.duration = turn.duration + profile.properties.u_turn_penalty
