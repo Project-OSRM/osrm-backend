@@ -602,6 +602,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
         auto found_range = std::equal_range(
             m_maneuver_overrides.begin(), m_maneuver_overrides.end(), edge_based_node_id, Comp{});
+        
+        results.reserve(std::distance(found_range.first, found_range.second));
 
         std::for_each(found_range.first,
                       found_range.second,
