@@ -613,6 +613,11 @@ end
 -- handle various that can block access
 function WayHandlers.blocked_ways(profile,way,result,data)
 
+  -- motorroad
+  if profile.avoid.motorroad and way:get_value_by_key("motorroad") == "yes" then
+    return false
+  end
+
   -- areas
   if profile.avoid.area and way:get_value_by_key("area") == "yes" then
     return false
