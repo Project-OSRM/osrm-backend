@@ -438,11 +438,11 @@ function WayHandlers.maxspeed(profile,way,result,data)
   backward = WayHandlers.parse_maxspeed(backward,profile)
 
   if forward and forward > 0 then
-    result.forward_speed = forward * profile.speed_reduction
+    result.forward_speed = math.min(forward * profile.speed_reduction, result.forward_speed)
   end
 
   if backward and backward > 0 then
-    result.backward_speed = backward * profile.speed_reduction
+    result.backward_speed = math.min(backward * profile.speed_reduction, result.backward_speed)
   end
 end
 
