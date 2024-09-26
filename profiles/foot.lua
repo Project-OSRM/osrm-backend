@@ -6,6 +6,7 @@ Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 find_access_tag = require("lib/access").find_access_tag
+country_speeds = require("lib/country_speeds")
 
 function setup()
   local walking_speed = 5
@@ -20,6 +21,7 @@ function setup()
       use_turn_restrictions         = false,
     },
 
+    profile                 = 'foot',
     default_mode            = mode.walking,
     default_speed           = walking_speed,
     oneway_handling         = 'specific',     -- respect 'oneway:foot' but not 'oneway'
@@ -70,10 +72,11 @@ function setup()
 
     avoid = Set {
       'impassable',
-      'proposed'
+      'proposed',
+      'motorroad'
     },
 
-    speeds = Sequence {
+    hwyspeeds = Sequence {
       highway = {
         primary         = walking_speed,
         primary_link    = walking_speed,
@@ -94,6 +97,9 @@ function setup()
         footway         = walking_speed,
         pier            = walking_speed,
       },
+    },
+
+    otherspeeds = Sequence {
 
       railway = {
         platform        = walking_speed
@@ -132,6 +138,11 @@ function setup()
     },
 
     smoothness_speeds = {
+    },
+
+    uselocationtags = Set
+    {
+    --  'countryspeeds'
     }
   }
 end
@@ -198,6 +209,12 @@ function process_way(profile, way, result)
   if next(data) == nil then     -- is the data table empty?
     return
   end
+  local speedhandler = WayHandlers.speed
+
+  if profile.uselocationtags and profile.uselocationtags.countryspeeds then
+      data.location = country_speeds.getcountrytag(way)
+      speedhandler =country_speeds.wayspeed
+  end
 
   local handlers = Sequence {
     -- set the default mode for this profile. if can be changed later
@@ -224,7 +241,7 @@ function process_way(profile, way, result)
     WayHandlers.movables,
 
     -- compute speed taking into account way type, maxspeed tags, etc.
-    WayHandlers.speed,
+    speedhandler,
     WayHandlers.surface,
 
     -- handle turn lanes and road classification, used for guidance

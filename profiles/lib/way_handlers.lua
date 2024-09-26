@@ -274,8 +274,27 @@ function WayHandlers.speed(profile,way,result,data)
     return        -- abort if already set, eg. by a route
   end
 
-  local key,value,speed = Tags.get_constant_by_key_value(way,profile.speeds)
+  local wayspeeds
+  if profile.speeds then
+    wayspeeds = profile.speeds
+  elseif profile.hwyspeeds then
+    wayspeeds = profile.hwyspeeds
+  else
+    return false
+  end
 
+  local key,value,speed = Tags.get_constant_by_key_value(way,wayspeeds)
+
+  if speed then
+    -- set speed by way type
+    result.forward_speed = speed
+    result.backward_speed = speed
+  else
+    -- check for other speeds
+    if profile.otherspeeds then
+      key,value,speed = Tags.get_constant_by_key_value(way,profile.otherspeeds)
+    end
+  end
   if speed then
     -- set speed by way type
     result.forward_speed = speed

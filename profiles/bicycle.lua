@@ -7,6 +7,7 @@ Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 TrafficSignal = require("lib/traffic_signal")
 find_access_tag = require("lib/access").find_access_tag
+country_speeds = require("lib/country_speeds")
 limit = require("lib/maxspeed").limit
 Measure = require("lib/measure")
 
@@ -27,6 +28,7 @@ function setup()
       mode_change_penalty           = 30,
     },
 
+    profile                   = 'bicycle',
     default_mode              = mode.cycling,
     default_speed             = default_speed,
     walking_speed             = walking_speed,
@@ -217,7 +219,13 @@ function setup()
     avoid = Set {
       'impassable',
       'construction',
-      'proposed'
+      'proposed',
+      'motorroad'
+    },
+
+    uselocationtags = Set
+    {
+      -- 'countryspeeds'
     }
   }
 end
@@ -315,11 +323,23 @@ function handle_bicycle_tags(profile,way,result,data)
   safety_handler(profile,way,result,data)
 end
 
-
-
 function speed_handler(profile,way,result,data)
 
   data.way_type_allows_pushing = false
+  local extra_speeds
+  local extraspeed = false
+
+  if profile.uselocationtags and profile.uselocationtags.countryspeeds then
+    extra_speeds = country_speeds.getAccessProfile(data, profile.profile)
+    if extra_speeds then
+        if extra_speeds.highway[data.highway] then
+            extraspeed = extra_speeds.highway[data.highway]
+            if extraspeed == -1 then
+                extraspeed = false
+            end
+        end
+    end
+  end
 
   -- speed
   local bridge_speed = profile.bridge_speeds[data.bridge]
@@ -362,6 +382,12 @@ function speed_handler(profile,way,result,data)
     result.forward_speed = profile.amenity_speeds[data.amenity]
     result.backward_speed = profile.amenity_speeds[data.amenity]
     data.way_type_allows_pushing = true
+  elseif extraspeed then
+    if extraspeed ~= -1 then
+        result.forward_speed = extraspeed
+        result.backward_speed = extraspeed
+        data.way_type_allows_pushing = true
+    end
   elseif profile.bicycle_speeds[data.highway] then
     -- regular ways
     result.forward_speed = profile.bicycle_speeds[data.highway]
@@ -605,6 +631,10 @@ function process_way(profile, way, result)
     reverse = false,
     implied_oneway = false
   }
+
+  if profile.uselocationtags and profile.uselocationtags.countryspeeds then
+     data.location = country_speeds.getcountrytag(way)
+  end
 
   local handlers = Sequence {
     -- set the default mode for this profile. if can be changed later
