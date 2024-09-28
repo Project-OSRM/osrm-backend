@@ -91,32 +91,145 @@ struct Null
 };
 
 /**
- * Typed Value sum-type implemented as a variant able to represent tree-like JSON structures.
- *
- * Dispatch on its type by either by using apply_visitor or its get function.
- */
-using Value = std::variant<String, Number, Object, Array, True, False, Null>;
-
-/**
  * Typed Object.
  *
  * Unwrap the key-value pairs holding type via its values member attribute.
  */
-struct Object
-{
-    std::unordered_map<std::string, Value> values;
-};
+struct Object;
 
 /**
  * Typed Array.
  *
  * Unwrap the Value holding type via its values member attribute.
  */
+struct Array;
+
+struct Value;
+
+// Definitions of Object and Array (must come after Value is defined)
+struct Object
+{
+    std::unordered_map<std::string, Value> values;
+};
+
 struct Array
 {
     std::vector<Value> values;
 };
 
+
+struct Value {
+    enum class Type {
+        Invalid,
+        String,
+        Number,
+        Object,
+        Array,
+        True,
+        False,
+        Null
+    };
+    String string;
+    Number number;
+    Object object;
+    Array array;
+    Type type;
+
+    Value() noexcept : type(Type::Invalid) {}
+    Value(const Null&) noexcept : type(Type::Null) {}
+    Value(const True&) noexcept : type(Type::True) {}
+    Value(const False&) noexcept : type(Type::False) {}
+    Value(String &&string_) noexcept : string(std::move(string_)), type(Type::String) {}
+    Value(const Number &number_) noexcept : number(number_), type(Type::Number) {}
+    Value(const Object &object_) noexcept : object(object_), type(Type::Object) {}
+    Value(const Array &array_) noexcept : array(array_), type(Type::Array) {}
+
+    Value(double number) noexcept : number(number), type(Type::Number) {}
+    Value(std::string string) noexcept : string(std::move(string)), type(Type::String) {}
+    Value(const char* string) noexcept : string(string), type(Type::String) {}
+};
+
 } // namespace osrm::util::json
 
+namespace std {
+template <typename T>
+inline T& get(osrm::util::json::Value& value) noexcept;
+
+template<>
+inline osrm::util::json::String& get<osrm::util::json::String>(osrm::util::json::Value& value) noexcept
+{
+    return value.string;
+}
+
+template<>
+inline osrm::util::json::Number& get<osrm::util::json::Number>(osrm::util::json::Value& value) noexcept
+{
+    return value.number;
+}
+
+template<>
+inline osrm::util::json::Object& get<osrm::util::json::Object>(osrm::util::json::Value& value) noexcept
+{
+    return value.object;
+}
+
+template<>
+inline osrm::util::json::Array& get<osrm::util::json::Array>(osrm::util::json::Value& value) noexcept
+{
+    return value.array;
+}
+
+template <typename T>
+inline const T& get(const osrm::util::json::Value& value) noexcept;
+
+template<>
+inline const osrm::util::json::String& get<osrm::util::json::String>(const osrm::util::json::Value& value) noexcept
+{
+    return value.string;
+}
+
+template<>
+inline const osrm::util::json::Number& get<osrm::util::json::Number>(const osrm::util::json::Value& value) noexcept
+{
+    return value.number;
+}
+
+template<>
+inline const osrm::util::json::Object& get<osrm::util::json::Object>(const osrm::util::json::Value& value) noexcept
+{
+    return value.object;
+}
+
+template<typename Visitor>
+inline void visit(Visitor&& visitor, const osrm::util::json::Value& value)
+{
+    switch (value.type)
+    {
+    case osrm::util::json::Value::Type::String:
+        visitor(value.string);
+        break;
+    case osrm::util::json::Value::Type::Number:
+        visitor(value.number);
+        break;
+    case osrm::util::json::Value::Type::Object:
+        visitor(value.object);
+        break;
+    case osrm::util::json::Value::Type::Array:
+        visitor(value.array);
+        break;
+    case osrm::util::json::Value::Type::True:
+        visitor(osrm::util::json::True{});
+        break;
+    case osrm::util::json::Value::Type::False:
+        visitor(osrm::util::json::False{});
+        break;
+    case osrm::util::json::Value::Type::Null:
+        visitor(osrm::util::json::Null{});
+        break;
+    case osrm::util::json::Value::Type::Invalid:
+        break;
+    }
+}
+
+}// namespace std
 #endif // JSON_CONTAINER_HPP
