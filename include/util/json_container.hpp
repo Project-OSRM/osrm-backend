@@ -207,6 +207,13 @@ get<osrm::util::json::Object>(const osrm::util::json::Value &value) noexcept
     return value.object;
 }
 
+template <>
+inline const osrm::util::json::Array &
+get<osrm::util::json::Array>(const osrm::util::json::Value &value) noexcept
+{
+    return value.array;
+}
+
 template <typename Visitor>
 inline void visit(Visitor &&visitor, const osrm::util::json::Value &value)
 {

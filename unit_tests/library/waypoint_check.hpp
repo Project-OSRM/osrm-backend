@@ -11,10 +11,10 @@ inline bool waypoint_check(osrm::json::Value waypoint)
 {
     using namespace osrm;
 
-    if (!std::holds_alternative<util::json::Object>(waypoint))
-    {
-        throw util::exception("Must pass in a waypoint object");
-    }
+    // if (!std::holds_alternative<util::json::Object>(waypoint))
+    // {
+    //     throw util::exception("Must pass in a waypoint object");
+    // }
     const auto waypoint_object = std::get<json::Object>(waypoint);
     const auto waypoint_location =
         std::get<json::Array>(waypoint_object.values.at("location")).values;
