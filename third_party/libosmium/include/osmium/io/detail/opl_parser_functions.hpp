@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -243,7 +243,7 @@ namespace osmium {
                     }
                 }
 
-                return T(value);
+                return static_cast<T>(value);
             }
 
             inline osmium::object_id_type opl_parse_id(const char** s) {
@@ -592,7 +592,7 @@ namespace osmium {
                 osmium::builder::RelationMemberListBuilder builder{buffer, parent_builder};
 
                 while (s < e) {
-                    osmium::item_type type = osmium::char_to_item_type(*s);
+                    const osmium::item_type type = osmium::char_to_item_type(*s);
                     if (type != osmium::item_type::node &&
                         type != osmium::item_type::way &&
                         type != osmium::item_type::relation) {
@@ -603,7 +603,7 @@ namespace osmium {
                     if (s == e) {
                         throw opl_error{"expected integer", s};
                     }
-                    osmium::object_id_type ref = opl_parse_id(&s);
+                    const osmium::object_id_type ref = opl_parse_id(&s);
                     opl_parse_char(&s, '@');
                     if (s == e) {
                         builder.add_member(type, ref, "");

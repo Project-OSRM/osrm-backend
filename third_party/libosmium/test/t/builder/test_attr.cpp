@@ -110,8 +110,8 @@ TEST_CASE("create node using builders: order of attributes doesn't matter") {
 TEST_CASE("create node with tags using builders: add tags using _tag") {
     osmium::memory::Buffer buffer{test_buffer_size};
 
-    std::pair<const char*, const char*> t1 = {"name", "Node Inn"};
-    std::pair<std::string, std::string> t2 = {"phone", "+1-123-555-4567"};
+    const std::pair<const char*, const char*> t1 = {"name", "Node Inn"};
+    const std::pair<std::string, std::string> t2 = {"phone", "+1-123-555-4567"};
 
     const auto pos = osmium::builder::add_node(buffer,
         _id(2),
@@ -449,7 +449,7 @@ TEST_CASE("create way with nodes") {
 TEST_CASE("create relation using builders: create relation") {
     osmium::memory::Buffer buffer{test_buffer_size};
 
-    osmium::builder::attr::member_type m{osmium::item_type::way, 113, "inner"};
+    const osmium::builder::attr::member_type m{osmium::item_type::way, 113, "inner"};
 
     osmium::builder::add_relation(buffer,
         _id(123),

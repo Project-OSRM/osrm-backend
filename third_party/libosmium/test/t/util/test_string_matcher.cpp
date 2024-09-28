@@ -25,24 +25,24 @@ std::string print(const T& matcher) {
 }
 
 TEST_CASE("String matcher: always false") {
-    osmium::StringMatcher::always_false m;
+    const osmium::StringMatcher::always_false m;
     REQUIRE_FALSE(m.match("foo"));
 }
 
 TEST_CASE("String matcher: always true") {
-    osmium::StringMatcher::always_true m;
+    const osmium::StringMatcher::always_true m;
     REQUIRE(m.match("foo"));
 }
 
 TEST_CASE("String matcher: equal") {
-    osmium::StringMatcher::equal m{"foo"};
+    const osmium::StringMatcher::equal m{"foo"};
     REQUIRE(m.match("foo"));
     REQUIRE_FALSE(m.match("bar"));
     REQUIRE_FALSE(m.match("foobar"));
 }
 
 TEST_CASE("String matcher: prefix from const char*") {
-    osmium::StringMatcher::prefix m{"foo"};
+    const osmium::StringMatcher::prefix m{"foo"};
     REQUIRE(m.match("foo"));
     REQUIRE_FALSE(m.match("bar"));
     REQUIRE(m.match("foobar"));
@@ -51,7 +51,7 @@ TEST_CASE("String matcher: prefix from const char*") {
 
 TEST_CASE("String matcher: prefix from std::string") {
     const std::string v{"foo"};
-    osmium::StringMatcher::prefix m{v};
+    const osmium::StringMatcher::prefix m{v};
     REQUIRE(m.match("foo"));
     REQUIRE_FALSE(m.match("bar"));
     REQUIRE(m.match("foobar"));
@@ -59,7 +59,7 @@ TEST_CASE("String matcher: prefix from std::string") {
 }
 
 TEST_CASE("String matcher: substring from const char*") {
-    osmium::StringMatcher::substring m{"foo"};
+    const osmium::StringMatcher::substring m{"foo"};
     REQUIRE(m.match("foo"));
     REQUIRE_FALSE(m.match("bar"));
     REQUIRE(m.match("foobar"));
@@ -69,7 +69,7 @@ TEST_CASE("String matcher: substring from const char*") {
 
 TEST_CASE("String matcher: substring from std::string") {
     const std::string v{"foo"};
-    osmium::StringMatcher::substring m{v};
+    const osmium::StringMatcher::substring m{v};
     REQUIRE(m.match("foo"));
     REQUIRE_FALSE(m.match("bar"));
     REQUIRE(m.match("foobar"));
@@ -78,7 +78,7 @@ TEST_CASE("String matcher: substring from std::string") {
 }
 
 TEST_CASE("String matcher: empty prefix") {
-    osmium::StringMatcher::prefix m{""};
+    const osmium::StringMatcher::prefix m{""};
     REQUIRE(m.match("foo"));
     REQUIRE(m.match("bar"));
     REQUIRE(m.match("foobar"));
@@ -87,7 +87,7 @@ TEST_CASE("String matcher: empty prefix") {
 
 #ifdef OSMIUM_WITH_REGEX
 TEST_CASE("String matcher: regex prefix") {
-    osmium::StringMatcher::regex m{std::regex{"^foo", std::regex::optimize}};
+    const osmium::StringMatcher::regex m{std::regex{"^foo", std::regex::optimize}};
     REQUIRE(m.match("foo"));
     REQUIRE_FALSE(m.match("bar"));
     REQUIRE(m.match("foobar"));
@@ -95,7 +95,7 @@ TEST_CASE("String matcher: regex prefix") {
 }
 
 TEST_CASE("String matcher: regex substr") {
-    osmium::StringMatcher::regex m{std::regex{"foo", std::regex::optimize}};
+    const osmium::StringMatcher::regex m{std::regex{"foo", std::regex::optimize}};
     REQUIRE(m.match("foo"));
     REQUIRE_FALSE(m.match("bar"));
     REQUIRE(m.match("foobar"));
@@ -105,7 +105,7 @@ TEST_CASE("String matcher: regex substr") {
 #endif
 
 TEST_CASE("String matcher: list") {
-    osmium::StringMatcher::list m{{"foo", "bar"}};
+    const osmium::StringMatcher::list m{{"foo", "bar"}};
     REQUIRE(m.match("foo"));
     REQUIRE(m.match("bar"));
     REQUIRE_FALSE(m.match("foobar"));
@@ -127,26 +127,26 @@ TEST_CASE("String matcher: list with add") {
 }
 
 TEST_CASE("Default constructed StringMatcher matches nothing") {
-    osmium::StringMatcher m;
+    const osmium::StringMatcher m;
     REQUIRE_FALSE(m("foo"));
     REQUIRE_FALSE(m("bar"));
     REQUIRE(print(m) == "always_false");
 }
 
 TEST_CASE("Construct StringMatcher from bool") {
-    osmium::StringMatcher m1{false};
+    const osmium::StringMatcher m1{false};
     REQUIRE_FALSE(m1("foo"));
     REQUIRE_FALSE(m1("bar"));
     REQUIRE(print(m1) == "always_false");
 
-    osmium::StringMatcher m2{true};
+    const osmium::StringMatcher m2{true};
     REQUIRE(m2("foo"));
     REQUIRE(m2("bar"));
     REQUIRE(print(m2) == "always_true");
 }
 
 TEST_CASE("Construct StringMatcher from string") {
-    osmium::StringMatcher m{"foo"};
+    const osmium::StringMatcher m{"foo"};
     REQUIRE(m("foo"));
     REQUIRE_FALSE(m("bar"));
     REQUIRE(print(m) == "equal[foo]");
@@ -154,7 +154,7 @@ TEST_CASE("Construct StringMatcher from string") {
 
 #ifdef OSMIUM_WITH_REGEX
 TEST_CASE("Construct StringMatcher from regex") {
-    osmium::StringMatcher m{std::regex{"^foo"}};
+    const osmium::StringMatcher m{std::regex{"^foo"}};
     REQUIRE(m("foo"));
     REQUIRE_FALSE(m("bar"));
     REQUIRE(print(m) == "regex");
@@ -162,8 +162,8 @@ TEST_CASE("Construct StringMatcher from regex") {
 #endif
 
 TEST_CASE("Construct StringMatcher from list") {
-    std::vector<std::string> v{"foo", "xxx"};
-    osmium::StringMatcher m{v};
+    const std::vector<std::string> v{"foo", "xxx"};
+    const osmium::StringMatcher m{v};
     REQUIRE(m("foo"));
     REQUIRE_FALSE(m("bar"));
     REQUIRE(print(m) == "list[[foo][xxx]]");
@@ -194,15 +194,15 @@ TEST_CASE("Construct StringMatcher") {
 }
 
 TEST_CASE("Copy construct StringMatcher") {
-    osmium::StringMatcher m1{"foo"};
-    osmium::StringMatcher m2{m1}; // NOLINT(performance-unnecessary-copy-initialization)
+    const osmium::StringMatcher m1{"foo"};
+    const osmium::StringMatcher m2{m1}; // NOLINT(performance-unnecessary-copy-initialization)
 
     REQUIRE(print(m1) == "equal[foo]");
     REQUIRE(print(m2) == "equal[foo]");
 }
 
 TEST_CASE("Copy assign StringMatcher") {
-    osmium::StringMatcher m1{"foo"};
+    const osmium::StringMatcher m1{"foo"};
     osmium::StringMatcher m2{"bar"};
     m2 = m1;
 
@@ -212,7 +212,7 @@ TEST_CASE("Copy assign StringMatcher") {
 
 TEST_CASE("Move construct StringMatcher") {
     osmium::StringMatcher m1{"foo"};
-    osmium::StringMatcher m2{std::move(m1)};
+    const osmium::StringMatcher m2{std::move(m1)};
 
     REQUIRE(print(m2) == "equal[foo]");
 }

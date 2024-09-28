@@ -55,7 +55,7 @@ TEST_CASE("Writer: Empty writes") {
     }
 
     osmium::io::Reader reader_check{filename};
-    osmium::memory::Buffer buffer_check = reader_check.read();
+    const osmium::memory::Buffer buffer_check = reader_check.read();
     REQUIRE_FALSE(buffer_check);
 
     REQUIRE(count == count_fds());
@@ -70,7 +70,7 @@ TEST_CASE("Writer: Successful writes writing buffer") {
     REQUIRE(num > 0);
     REQUIRE(buffer.select<osmium::OSMObject>().cbegin()->id() == 1);
 
-    std::string filename = "test-writer-out-buffer.osm";
+    const std::string filename = "test-writer-out-buffer.osm";
     osmium::io::Writer writer{filename, osmium::io::Header{}, osmium::io::overwrite::allow};
     writer(std::move(buffer));
     writer.close();
@@ -96,7 +96,7 @@ TEST_CASE("Writer: Successful writes writing items") {
     REQUIRE(num > 0);
     REQUIRE(buffer.select<osmium::OSMObject>().cbegin()->id() == 1);
 
-    std::string filename = "test-writer-out-item.osm";
+    const std::string filename = "test-writer-out-item.osm";
     osmium::io::Writer writer{filename, osmium::io::overwrite::allow};
     for (const auto& item : buffer) {
         writer(item);
@@ -122,7 +122,7 @@ TEST_CASE("Writer: Successful writes using output iterator") {
     REQUIRE(num > 0);
     REQUIRE(buffer.select<osmium::OSMObject>().cbegin()->id() == 1);
 
-    std::string filename = "test-writer-out-iterator.osm";
+    const std::string filename = "test-writer-out-iterator.osm";
     osmium::io::Writer writer{filename, osmium::io::overwrite::allow};
     auto it = osmium::io::make_output_iterator(writer);
     std::copy(buffer.cbegin(), buffer.cend(), it);
@@ -145,7 +145,7 @@ TEST_CASE("Writer: Interrupted writer after open") {
 
     bool error = false;
     try {
-        osmium::io::Writer writer{"test-writer-out-fail1.osm", osmium::io::overwrite::allow};
+        const osmium::io::Writer writer{"test-writer-out-fail1.osm", osmium::io::overwrite::allow};
         throw std::runtime_error{"some error"};
     } catch (...) {
         error = true;
