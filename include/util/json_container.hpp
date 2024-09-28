@@ -117,9 +117,10 @@ struct Array
     std::vector<Value> values;
 };
 
-
-struct Value {
-    enum class Type {
+struct Value
+{
+    enum class Type
+    {
         Invalid,
         String,
         Number,
@@ -136,9 +137,9 @@ struct Value {
     Type type;
 
     Value() noexcept : type(Type::Invalid) {}
-    Value(const Null&) noexcept : type(Type::Null) {}
-    Value(const True&) noexcept : type(Type::True) {}
-    Value(const False&) noexcept : type(Type::False) {}
+    Value(const Null &) noexcept : type(Type::Null) {}
+    Value(const True &) noexcept : type(Type::True) {}
+    Value(const False &) noexcept : type(Type::False) {}
     Value(String &&string_) noexcept : string(std::move(string_)), type(Type::String) {}
     Value(const Number &number_) noexcept : number(number_), type(Type::Number) {}
     Value(const Object &object_) noexcept : object(object_), type(Type::Object) {}
@@ -146,62 +147,68 @@ struct Value {
 
     Value(double number) noexcept : number(number), type(Type::Number) {}
     Value(std::string string) noexcept : string(std::move(string)), type(Type::String) {}
-    Value(const char* string) noexcept : string(string), type(Type::String) {}
+    Value(const char *string) noexcept : string(string), type(Type::String) {}
 };
 
 } // namespace osrm::util::json
 
-namespace std {
-template <typename T>
-inline T& get(osrm::util::json::Value& value) noexcept;
+namespace std
+{
+template <typename T> inline T &get(osrm::util::json::Value &value) noexcept;
 
-template<>
-inline osrm::util::json::String& get<osrm::util::json::String>(osrm::util::json::Value& value) noexcept
+template <>
+inline osrm::util::json::String &
+get<osrm::util::json::String>(osrm::util::json::Value &value) noexcept
 {
     return value.string;
 }
 
-template<>
-inline osrm::util::json::Number& get<osrm::util::json::Number>(osrm::util::json::Value& value) noexcept
+template <>
+inline osrm::util::json::Number &
+get<osrm::util::json::Number>(osrm::util::json::Value &value) noexcept
 {
     return value.number;
 }
 
-template<>
-inline osrm::util::json::Object& get<osrm::util::json::Object>(osrm::util::json::Value& value) noexcept
+template <>
+inline osrm::util::json::Object &
+get<osrm::util::json::Object>(osrm::util::json::Value &value) noexcept
 {
     return value.object;
 }
 
-template<>
-inline osrm::util::json::Array& get<osrm::util::json::Array>(osrm::util::json::Value& value) noexcept
+template <>
+inline osrm::util::json::Array &
+get<osrm::util::json::Array>(osrm::util::json::Value &value) noexcept
 {
     return value.array;
 }
 
-template <typename T>
-inline const T& get(const osrm::util::json::Value& value) noexcept;
+template <typename T> inline const T &get(const osrm::util::json::Value &value) noexcept;
 
-template<>
-inline const osrm::util::json::String& get<osrm::util::json::String>(const osrm::util::json::Value& value) noexcept
+template <>
+inline const osrm::util::json::String &
+get<osrm::util::json::String>(const osrm::util::json::Value &value) noexcept
 {
     return value.string;
 }
 
-template<>
-inline const osrm::util::json::Number& get<osrm::util::json::Number>(const osrm::util::json::Value& value) noexcept
+template <>
+inline const osrm::util::json::Number &
+get<osrm::util::json::Number>(const osrm::util::json::Value &value) noexcept
 {
     return value.number;
 }
 
-template<>
-inline const osrm::util::json::Object& get<osrm::util::json::Object>(const osrm::util::json::Value& value) noexcept
+template <>
+inline const osrm::util::json::Object &
+get<osrm::util::json::Object>(const osrm::util::json::Value &value) noexcept
 {
     return value.object;
 }
 
-template<typename Visitor>
-inline void visit(Visitor&& visitor, const osrm::util::json::Value& value)
+template <typename Visitor>
+inline void visit(Visitor &&visitor, const osrm::util::json::Value &value)
 {
     switch (value.type)
     {
@@ -231,5 +238,5 @@ inline void visit(Visitor&& visitor, const osrm::util::json::Value& value)
     }
 }
 
-}// namespace std
+} // namespace std
 #endif // JSON_CONTAINER_HPP
