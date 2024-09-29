@@ -143,8 +143,8 @@ util::json::Object makeIntersection(const guidance::IntermediateIntersection &in
                    });
 
     result.values.emplace("location", detail::coordinateToLonLat(intersection.location));
-    result.values.emplace("bearings", bearings);
-    result.values.emplace("entry", entry);
+    result.values.emplace("bearings", std::move(bearings));
+    result.values.emplace("entry", std::move(entry));
     if (intersection.in != guidance::IntermediateIntersection::NO_INDEX)
         result.values.emplace("in", intersection.in);
     if (intersection.out != guidance::IntermediateIntersection::NO_INDEX)

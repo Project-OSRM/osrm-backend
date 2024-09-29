@@ -141,6 +141,10 @@ struct Value
     Value(const True &) noexcept : type(Type::True) {}
     Value(const False &) noexcept : type(Type::False) {}
     Value(String &&string_) noexcept : string(std::move(string_)), type(Type::String) {}
+    Value(Number &&number_) noexcept : number(number_), type(Type::Number) {}
+    Value(Object &&object_) noexcept : object(std::move(object_)), type(Type::Object) {}
+    Value(Array &&array_) noexcept : array(std::move(array_)), type(Type::Array) {}
+    Value(const String &string_) noexcept : string(string_), type(Type::String) {}
     Value(const Number &number_) noexcept : number(number_), type(Type::Number) {}
     Value(const Object &object_) noexcept : object(object_), type(Type::Object) {}
     Value(const Array &array_) noexcept : array(array_), type(Type::Array) {}
