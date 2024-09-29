@@ -506,13 +506,6 @@ jobs:
         tar zxvf onetbb.tgz
         sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
         sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
-    - name: Add Clang 18 to list of Conan compilers # workaround for the issue that Conan 1.x doesn't know about Clang 18
-      if: ${{ matrix.ENABLE_CONAN == 'ON' && matrix.CCOMPILER == 'clang-18' }}
-      run: |
-        sudo wget https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
-
-        conan config init
-        yq eval '.compiler.clang.version += ["18"]' -i "$HOME/.conan/settings.yml"
     - name: Prepare build
       run: |
         mkdir ${OSRM_BUILD_DIR}
