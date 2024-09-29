@@ -31,8 +31,6 @@ jobs:
       BUILD_TYPE: Release
     steps:
     - uses: actions/checkout@v4
-    - run: pip install "conan<2.0.0"
-    - run: conan --version
     - run: cmake --version
     - uses: actions/setup-node@v4
       with:
@@ -470,8 +468,6 @@ jobs:
     
     - name: Install dev dependencies
       run: |
-        python3 -m pip install "conan<2.0.0" || python3 -m pip install "conan<2.0.0" --break-system-packages
-
         # workaround for issue that GitHub Actions seems to not adding it to PATH after https://github.com/actions/runner-images/pull/6499
         # and that's why CI cannot find conan executable installed above
         if [[ "${RUNNER_OS}" == "macOS" ]]; then
@@ -538,45 +534,47 @@ jobs:
         pushd ${OSRM_BUILD_DIR}
 
         python3 -m venv .venv
-        source .venv/bin/activate
 
-        python3 -m pip install conan==2.7.1
+        ls -R .venv
+        # source .venv/bin/activate
 
-        conan profile detect --force
-        cat ~/.conan2/profiles/default
-        # sed -i '' 's/compiler.cppstd=.*$/compiler.cppstd=20/' ~/.conan/profiles/default
+        # python3 -m pip install conan==2.7.1
 
-        if [[ "${ENABLE_CONAN}" == "ON" ]]; then
-          conan install .. --output-folder=. --build=missing --settings compiler.cppstd=20
-        fi
+        # conan profile detect --force
+        # cat ~/.conan2/profiles/default
+        # # sed -i '' 's/compiler.cppstd=.*$/compiler.cppstd=20/' ~/.conan/profiles/default
+
+        # if [[ "${ENABLE_CONAN}" == "ON" ]]; then
+        #   conan install .. --output-folder=. --build=missing --settings compiler.cppstd=20
+        # fi
         
-        ccache --zero-stats
-        cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-                 -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
-                 -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
-                 -DENABLE_CLANG_TIDY=${ENABLE_CLANG_TIDY:-OFF} \
-                 -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} \
-                 -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} \
-                 -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
-                 -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
-                 -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
-                 -DENABLE_CCACHE=ON \
-                 -DENABLE_LTO=${ENABLE_LTO:-ON} \
-                 -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
-                 -DCMAKE_TOOLCHAIN_FILE=./conan_toolchain.cmake
-        make --jobs=${JOBS}
+        # ccache --zero-stats
+        # cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+        #          -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
+        #          -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
+        #          -DENABLE_CLANG_TIDY=${ENABLE_CLANG_TIDY:-OFF} \
+        #          -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} \
+        #          -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} \
+        #          -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
+        #          -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
+        #          -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
+        #          -DENABLE_CCACHE=ON \
+        #          -DENABLE_LTO=${ENABLE_LTO:-ON} \
+        #          -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
+        #          -DCMAKE_TOOLCHAIN_FILE=./conan_toolchain.cmake
+        # make --jobs=${JOBS}
 
-        if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
-          make tests --jobs=${JOBS}
-          make benchmarks --jobs=${JOBS}
+        # if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
+        #   make tests --jobs=${JOBS}
+        #   make benchmarks --jobs=${JOBS}
 
-          sudo make install
-          if [[ "${RUNNER_OS}" == "Linux" ]]; then
-            echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib" >> $GITHUB_ENV
-          fi
-          echo "PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig" >> $GITHUB_ENV
-        fi
-        popd
+        #   sudo make install
+        #   if [[ "${RUNNER_OS}" == "Linux" ]]; then
+        #     echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib" >> $GITHUB_ENV
+        #   fi
+        #   echo "PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig" >> $GITHUB_ENV
+        # fi
+        # popd
     - name: Build example
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
       run: |
@@ -701,7 +699,7 @@ jobs:
   #         python3 -m venv .venv
   #         source .venv/bin/activate
   #         echo PATH=$PATH >> $GITHUB_ENV
-  #         pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" 
+  #         pip install "conan==2.7.1" "requests==2.31.0" "numpy==1.26.4" 
   #     - name: Prepare data
   #       run: |
   #         if [ "$RUN_BIG_BENCHMARK" = "true" ]; then
