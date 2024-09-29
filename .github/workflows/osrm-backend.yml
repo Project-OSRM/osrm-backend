@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   windows-release-node:
-    needs: format-taginfo-docs
+    #needs: format-taginfo-docs
     runs-on: windows-2022
     continue-on-error: false
     env:
