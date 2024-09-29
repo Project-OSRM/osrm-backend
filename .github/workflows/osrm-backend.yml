@@ -529,7 +529,7 @@ jobs:
 
         python3 -m pip install conan==2.7.1
 
-        conan profile new default --detect
+        conan profile detect --force
         sed -i '' 's/compiler.cppstd=.*$/compiler.cppstd=20/' ~/.conan/profiles/default
 
         if [[ "${ENABLE_CONAN}" == "ON" ]]; then
