@@ -502,6 +502,13 @@ jobs:
 
         conan config init
         yq eval '.compiler.clang.version += ["18"]' -i "$HOME/.conan/settings.yml"
+    - name: Add Apple-clang 16 to list of Conan compilers # workaround for the issue that Conan 1.x doesn't know about Apple-clang 16
+      if: ${{ matrix.ENABLE_CONAN == 'ON' && matrix.macos-14 == 'macos-14' }}
+      run: |
+        sudo wget https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_darwin_arm64 -O /usr/local/bin/yq && sudo chmod +x /usr/local/bin/yq
+
+        conan config init
+        yq eval '.compiler.apple-clang.version += ["16.0"]' -i "$HOME/.conan/settings.yml"
     - name: Prepare build
       run: |
         mkdir ${OSRM_BUILD_DIR}
