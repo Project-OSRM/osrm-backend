@@ -52,9 +52,10 @@ jobs:
 
         python3 -m venv .venv
         ls -R .venv
-        # source .venv/bin/activate
+        
+        source .venv/Scripts/Activate
 
-        # python3 -m pip install conan==2.7.1
+        python3 -m pip install conan==2.7.1
 
         # conan profile detect --force
         # cat ~/.conan2/profiles/default
