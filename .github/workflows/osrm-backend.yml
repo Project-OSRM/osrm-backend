@@ -51,19 +51,20 @@ jobs:
         cd build
 
         python3 -m venv .venv
-        source .venv/bin/activate
+        ls -R .venv
+        # source .venv/bin/activate
 
-        python3 -m pip install conan==2.7.1
+        # python3 -m pip install conan==2.7.1
 
-        conan profile detect --force
-        cat ~/.conan2/profiles/default
+        # conan profile detect --force
+        # cat ~/.conan2/profiles/default
 
-        if [[ "${ENABLE_CONAN}" == "ON" ]]; then
-          conan install .. --output-folder=. --build=missing --settings compiler.cppstd=20
-        fi
+        # if [[ "${ENABLE_CONAN}" == "ON" ]]; then
+        #   conan install .. --output-folder=. --build=missing --settings compiler.cppstd=20
+        # fi
 
-        cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON -DCMAKE_TOOLCHAIN_FILE=./conan_toolchain.cmake ..
-        cmake --build . --config Release
+        # cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON -DCMAKE_TOOLCHAIN_FILE=./conan_toolchain.cmake ..
+        # cmake --build . --config Release
         
   #   # TODO: MSVC goes out of memory when building our tests
   #   # - name: Run tests
@@ -404,10 +405,10 @@ jobs:
     - name: Enable Conan cache
       uses: actions/cache@v4
       with:
-        path: ~/.conan
-        key: v9-conan-${{ matrix.name }}-${{ github.sha }}
+        path: ~/.conan2
+        key: v10-conan-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
-          v9-conan-${{ matrix.name }}-
+          v10-conan-${{ matrix.name }}-
     - name: Enable test cache
       uses: actions/cache@v4
       with:
@@ -535,46 +536,45 @@ jobs:
 
         python3 -m venv .venv
 
-        ls -R .venv
-        # source .venv/bin/activate
+        source .venv/bin/activate
 
-        # python3 -m pip install conan==2.7.1
+        python3 -m pip install conan==2.7.1
 
-        # conan profile detect --force
-        # cat ~/.conan2/profiles/default
-        # # sed -i '' 's/compiler.cppstd=.*$/compiler.cppstd=20/' ~/.conan/profiles/default
+        conan profile detect --force
+        cat ~/.conan2/profiles/default
+        # sed -i '' 's/compiler.cppstd=.*$/compiler.cppstd=20/' ~/.conan/profiles/default
 
-        # if [[ "${ENABLE_CONAN}" == "ON" ]]; then
-        #   conan install .. --output-folder=. --build=missing --settings compiler.cppstd=20
-        # fi
+        if [[ "${ENABLE_CONAN}" == "ON" ]]; then
+          conan install .. --output-folder=. --build=missing --settings compiler.cppstd=20
+        fi
         
-        # ccache --zero-stats
-        # cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-        #          -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
-        #          -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
-        #          -DENABLE_CLANG_TIDY=${ENABLE_CLANG_TIDY:-OFF} \
-        #          -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} \
-        #          -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} \
-        #          -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
-        #          -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
-        #          -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
-        #          -DENABLE_CCACHE=ON \
-        #          -DENABLE_LTO=${ENABLE_LTO:-ON} \
-        #          -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
-        #          -DCMAKE_TOOLCHAIN_FILE=./conan_toolchain.cmake
-        # make --jobs=${JOBS}
+        ccache --zero-stats
+        cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+                 -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
+                 -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
+                 -DENABLE_CLANG_TIDY=${ENABLE_CLANG_TIDY:-OFF} \
+                 -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} \
+                 -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} \
+                 -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
+                 -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
+                 -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
+                 -DENABLE_CCACHE=ON \
+                 -DENABLE_LTO=${ENABLE_LTO:-ON} \
+                 -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
+                 -DCMAKE_TOOLCHAIN_FILE=./conan_toolchain.cmake
+        make --jobs=${JOBS}
 
-        # if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
-        #   make tests --jobs=${JOBS}
-        #   make benchmarks --jobs=${JOBS}
+        if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
+          make tests --jobs=${JOBS}
+          make benchmarks --jobs=${JOBS}
 
-        #   sudo make install
-        #   if [[ "${RUNNER_OS}" == "Linux" ]]; then
-        #     echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib" >> $GITHUB_ENV
-        #   fi
-        #   echo "PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig" >> $GITHUB_ENV
-        # fi
-        # popd
+          sudo make install
+          if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib" >> $GITHUB_ENV
+          fi
+          echo "PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig" >> $GITHUB_ENV
+        fi
+        popd
     - name: Build example
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
       run: |
