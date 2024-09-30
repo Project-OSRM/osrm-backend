@@ -11,6 +11,10 @@ class OsrmConan(ConanFile):
         "onetbb/2021.12.0",
     )
     generators = "CMakeDeps"
+
+    def requirements(self):
+        self.options["boost"].without_python = True
+        self.options["boost"].without_coroutine = True
     
     def generate(self):
         tc = CMakeToolchain(self)
