@@ -12,7 +12,7 @@ class OsrmConan(ConanFile):
     )
     generators = "CMakeDeps"
 
-    def requirements(self):
+    def configure(self):
         self.options["boost"].without_python = True
         self.options["boost"].without_coroutine = True
     

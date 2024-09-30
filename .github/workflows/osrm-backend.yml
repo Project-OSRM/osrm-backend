@@ -57,15 +57,12 @@ jobs:
         python3 -m pip install conan==2.7.1
 
         conan profile detect --force
-        cat ~/.conan2/profiles/default
 
-        if [[ "${ENABLE_CONAN}" == "ON" ]]; then
-          conan install .. --output-folder=. --build=missing --settings compiler.cppstd=20
-        fi
+        conan install .. --output-folder=. --build=missing --settings compiler.cppstd=20
 
         ls -la
 
-        # cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON -DCMAKE_TOOLCHAIN_FILE=./conan_toolchain.cmake ..
+        cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON -DCMAKE_TOOLCHAIN_FILE=./conan_toolchain.cmake ..
         # cmake --build . --config Release
         
   #   # TODO: MSVC goes out of memory when building our tests
