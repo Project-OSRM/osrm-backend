@@ -537,7 +537,7 @@ jobs:
         # sed -i '' 's/compiler.cppstd=.*$/compiler.cppstd=20/' ~/.conan/profiles/default
 
         if [[ "${ENABLE_CONAN}" == "ON" ]]; then
-          conan install .. --output-folder=. --build=missing --settings compiler.cppstd=20 --settings build_type=Debug
+          conan install .. --output-folder=. --build=missing --settings compiler.cppstd=20 #--settings build_type=Release
         fi
         
         ccache --zero-stats
