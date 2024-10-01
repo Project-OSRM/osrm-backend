@@ -605,7 +605,7 @@ JOIN("-I${DEPENDENCIES_INCLUDE_DIRS}" " -I" PKGCONFIG_OSRM_INCLUDE_FLAGS)
 # the link libraries to be written to the pkg-config file.
 # Conan & TBB define dependencies as CMake targets too, that's why we do the same for them.
 foreach(engine_lib ${ENGINE_LIBRARIES})
-  if("${engine_lib}" MATCHES "^Boost.*" OR "${engine_lib}" MATCHES "^CONAN_LIB.*" OR "${engine_lib}" MATCHES "^TBB.*")
+  if("${engine_lib}" MATCHES "^boost.*" OR "${engine_lib}" MATCHES "^CONAN_LIB.*" OR "${engine_lib}" MATCHES "^TBB.*")
     list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "$<TARGET_LINKER_FILE:${engine_lib}>")
   else()
     list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "${engine_lib}")
