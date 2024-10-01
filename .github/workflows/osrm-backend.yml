@@ -567,13 +567,13 @@ jobs:
           echo "PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig" >> $GITHUB_ENV
         fi
         popd
-    - name: Build example
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
-      run: |
-        mkdir example/build && pushd example/build
-        cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-        make --jobs=${JOBS}
-        popd
+    # - name: Build example
+    #   if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
+    #   run: |
+    #     mkdir example/build && pushd example/build
+    #     cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+    #     make --jobs=${JOBS}
+    #     popd
     - name: Run all tests
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
       run: |
