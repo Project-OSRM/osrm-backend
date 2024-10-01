@@ -23,47 +23,47 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  windows-release-node:
-    #needs: format-taginfo-docs
-    runs-on: windows-2022
-    continue-on-error: false
-    env:
-      BUILD_TYPE: Release
-    steps:
-    - uses: actions/checkout@v4
-    - run: cmake --version
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 18
-    - run: node --version
-    - run: npm --version
-    - name: Prepare environment
-      shell: bash
-      run: |
-        PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
-        echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
-    - run: npm install --ignore-scripts
-    - run: npm link --ignore-scripts
-    - name: Build
-      shell: bash
-      run: |
-        mkdir build
-        cd build
+  # windows-release-node:
+  #   #needs: format-taginfo-docs
+  #   runs-on: windows-2022
+  #   continue-on-error: false
+  #   env:
+  #     BUILD_TYPE: Release
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #   - run: cmake --version
+  #   - uses: actions/setup-node@v4
+  #     with:
+  #       node-version: 18
+  #   - run: node --version
+  #   - run: npm --version
+  #   - name: Prepare environment
+  #     shell: bash
+  #     run: |
+  #       PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+  #       echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
+  #   - run: npm install --ignore-scripts
+  #   - run: npm link --ignore-scripts
+  #   - name: Build
+  #     shell: bash
+  #     run: |
+  #       mkdir build
+  #       cd build
 
-        python3 -m venv .venv
+  #       python3 -m venv .venv
 
-        source .venv/Scripts/Activate
+  #       source .venv/Scripts/Activate
 
-        python3 -m pip install conan==2.7.1
+  #       python3 -m pip install conan==2.7.1
 
-        conan profile detect --force
+  #       conan profile detect --force
 
-        conan install .. --output-folder=. --build=missing --settings compiler.cppstd=20
+  #       conan install .. --output-folder=. --build=missing --settings compiler.cppstd=20
 
-        ls -la
+  #       ls -la
 
-        cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON -DCMAKE_TOOLCHAIN_FILE=./conan_toolchain.cmake ..
-        cmake --build . --config Release
+  #       cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON -DCMAKE_TOOLCHAIN_FILE=./conan_toolchain.cmake ..
+  #       cmake --build . --config Release
         
   #   # TODO: MSVC goes out of memory when building our tests
   #   # - name: Run tests
@@ -333,17 +333,17 @@ jobs:
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          # - name: conan-macos-x64-release-node
-          #   build_node_package: true
-          #   continue-on-error: true
-          #   node: 20
-          #   runs-on: macos-13 # x86_64
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang
-          #   CXXCOMPILER: clang++
-          #   CUCUMBER_TIMEOUT: 60000
-          #   ENABLE_ASSERTIONS: ON
-          #   ENABLE_CONAN: ON
+          - name: conan-macos-x64-release-node
+            build_node_package: true
+            continue-on-error: true
+            node: 20
+            runs-on: macos-13 # x86_64
+            BUILD_TYPE: Release
+            CCOMPILER: clang
+            CXXCOMPILER: clang++
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_ASSERTIONS: ON
+            ENABLE_CONAN: ON
 
           # - name: conan-macos-arm64-release-node
           #   build_node_package: true
