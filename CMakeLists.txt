@@ -604,13 +604,15 @@ JOIN("-I${DEPENDENCIES_INCLUDE_DIRS}" " -I" PKGCONFIG_OSRM_INCLUDE_FLAGS)
 # Boost uses imported targets, we need to use a generator expression to extract
 # the link libraries to be written to the pkg-config file.
 # Conan & TBB define dependencies as CMake targets too, that's why we do the same for them.
-foreach(engine_lib ${ENGINE_LIBRARIES})
-  if("${engine_lib}" MATCHES "^boost.*" OR "${engine_lib}" MATCHES "^CONAN_LIB.*" OR "${engine_lib}" MATCHES "^TBB.*")
-    list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "$<TARGET_LINKER_FILE:${engine_lib}>")
-  else()
-    list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "${engine_lib}")
-  endif()
-endforeach(engine_lib)
+# foreach(engine_lib ${ENGINE_LIBRARIES})
+#   message(STATUS "Adding ${engine_lib} to pkg-config dependencies")
+#   # if("${engine_lib}" MATCHES "^boost.*" OR "${engine_lib}" MATCHES "^CONAN_LIB.*" OR "${engine_lib}" MATCHES "^TBB.*")
+#   #   list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "$<TARGET_LINKER_FILE:${engine_lib}>")
+#   # else()
+#   #   list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "${engine_lib}")
+#   # endif()
+# endforeach(engine_lib)
+# #message(FATAL_ERROR "XXX")
 JOIN("${PKGCONFIG_DEPENDENT_LIBRARIES}" " " PKGCONFIG_OSRM_DEPENDENT_LIBRARIES)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgconfig.in pkgconfig.configured @ONLY)
