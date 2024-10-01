@@ -15,7 +15,9 @@ class OsrmConan(ConanFile):
     def configure(self):
         self.options["boost"].without_python = True
         self.options["boost"].without_coroutine = True
-    
+        self.options["boost"].without_stacktrace = True
+        self.options["boost"].without_cobalt = True
+        
     def generate(self):
         tc = CMakeToolchain(self)
         tc.variables["CMAKE_CXX_STANDARD"] = "20"
