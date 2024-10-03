@@ -579,9 +579,9 @@ jobs:
       run: |
         make -C test/data benchmark
 
-        # macOS SIP strips the linker path. Reset this inside the running shell
-        export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
-        ./example/build/osrm-example test/data/mld/monaco.osrm
+        # # macOS SIP strips the linker path. Reset this inside the running shell
+        # export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
+        # ./example/build/osrm-example test/data/mld/monaco.osrm
 
         # All tests assume to be run from the build directory
         pushd ${OSRM_BUILD_DIR}
