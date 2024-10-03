@@ -6,32 +6,35 @@
 #
 #-----------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.5.0 FATAL_ERROR)
 
 #-----------------------------------------------------------------------------
 
-project(protozero)
-
-set(PROTOZERO_VERSION_MAJOR 1)
-set(PROTOZERO_VERSION_MINOR 7)
-set(PROTOZERO_VERSION_PATCH 0)
-
-set(PROTOZERO_VERSION
-    "${PROTOZERO_VERSION_MAJOR}.${PROTOZERO_VERSION_MINOR}.${PROTOZERO_VERSION_PATCH}")
+project(protozero VERSION 1.7.1 LANGUAGES CXX C)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 #-----------------------------------------------------------------------------
 
+if (NOT "${CMAKE_CXX_STANDARD}")
+    set(CMAKE_CXX_STANDARD 11)
+endif()
+message(STATUS "Building in C++${CMAKE_CXX_STANDARD} mode")
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+#-----------------------------------------------------------------------------
+
+option(BUILD_TESTING "Build tests" ON)
 option(WERROR "Add -Werror flag to build (turns warnings into errors)" ON)
 
 if(MSVC)
-    add_definitions(/W3)
+    add_compile_options(/W3)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
 else()
-    add_definitions(-std=c++11 -Wall -Wextra -pedantic -Wsign-compare -Wunused-parameter -Wno-float-equal -Wno-covered-switch-default)
+    add_compile_options(-Wall -Wextra -pedantic -Wsign-compare -Wunused-parameter -Wno-float-equal -Wno-covered-switch-default)
     if(WERROR)
-        add_definitions(-Werror)
+        add_compile_options(-Werror)
     endif()
 endif()
 
@@ -58,9 +61,9 @@ find_package(Protobuf)
 #
 #-----------------------------------------------------------------------------
 message(STATUS "Looking for clang-tidy")
-find_program(CLANG_TIDY NAMES clang-tidy clang-tidy-10 clang-tidy-9 clang-tidy-8 clang-tidy-7 clang-tidy-6.0 clang-tidy-5.0)
+find_program(CLANG_TIDY NAMES clang-tidy clang-tidy-14 clang-tidy-13 clang-tidy-12 clang-tidy-11)
 
-if(CLANG_TIDY)
+if(CLANG_TIDY AND PROTOBUF_FOUND)
     message(STATUS "Looking for clang-tidy - found ${CLANG_TIDY}")
     add_custom_target(clang-tidy
         ${CLANG_TIDY}
@@ -134,13 +137,13 @@ install(DIRECTORY include/protozero DESTINATION include)
 
 #-----------------------------------------------------------------------------
 
-enable_testing()
-
 add_subdirectory(doc)
 
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(test)
+endif()
+
 add_subdirectory(tools)
-
-add_subdirectory(test)
-
 
 #-----------------------------------------------------------------------------

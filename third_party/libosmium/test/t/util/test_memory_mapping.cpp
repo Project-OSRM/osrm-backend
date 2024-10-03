@@ -31,7 +31,7 @@ TEST_CASE("Anonymous mapping: simple memory mapping should work") {
 }
 
 TEST_CASE("Anonymous mapping: memory mapping of zero length should result in memory mapping of pagesize length") {
-    osmium::MemoryMapping mapping{0, osmium::MemoryMapping::mapping_mode::write_private};
+    const osmium::MemoryMapping mapping{0, osmium::MemoryMapping::mapping_mode::write_private};
     REQUIRE(mapping.size() == osmium::get_pagesize());
 }
 

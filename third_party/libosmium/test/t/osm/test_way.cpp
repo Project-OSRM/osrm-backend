@@ -20,7 +20,7 @@ TEST_CASE("Build way") {
         _visible(true),
         _cid(333),
         _uid(21),
-        _timestamp(time_t(123)),
+        _timestamp(static_cast<std::time_t>(123)),
         _user("foo"),
         _tag("highway", "residential"),
         _tag("name", "High Street"),

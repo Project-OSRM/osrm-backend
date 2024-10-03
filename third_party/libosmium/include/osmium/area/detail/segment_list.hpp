@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -333,7 +333,7 @@ namespace osmium {
                             }
 
                             if (y_range_overlap(s1, s2)) {
-                                osmium::Location intersection{calculate_intersection(s1, s2)};
+                                const osmium::Location intersection{calculate_intersection(s1, s2)};
                                 if (intersection) {
                                     ++found_intersections;
                                     if (m_debug) {
