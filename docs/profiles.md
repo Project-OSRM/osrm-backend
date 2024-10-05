@@ -375,3 +375,20 @@ There are a few helper functions defined in the global scope that profiles can u
 - `trimLaneString`
 - `applyAccessTokens`
 - `canonicalizeStringList`
+
+### osrm-extract location dependent data
+The creation of the dataset for routing use requires preprocessing of the osm data source.
+The first preprocessing step is via osrm-extract.
+Certain data (like driving-side or vehicle height) may be different between areas.
+The "--location-dependent-data" command option can be used to pass geojson polygon data to support this differentiation.
+
+### Highway support for Trunk Roads
+The default routing profiles foot.lua and bicycle.lua do not allow access on ways with highway="trunk" or highway="trunk_link".
+The wiki page outlining access restrictions ("https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access_restrictions") outlines seven countries that do not allow such access.
+If the setup option uselocationtags includes 'trunk' then access is changed to yes for all countries.
+To support routing data that honours different trunk access 
+
+- confirm uselocationtags = 'trunk' is set
+- osrm-extract --location-dependent-data data/notrunk.geojson ...
+
+This geojson sets the notrunk option for the seven countries (Austria, Belgium, Denmark, France, Hungary, Slovakia and Switzerland). 
