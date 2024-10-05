@@ -476,7 +476,7 @@ set(BOOST_ENGINE_LIBRARIES
 
 # Binaries
 target_link_libraries(osrm-datastore osrm_store ${Boost_PROGRAM_OPTIONS_LIBRARY})
-target_link_libraries(osrm-extract osrm_extract ${Boost_PROGRAM_OPTIONS_LIBRARY})
+target_link_libraries(osrm-extract osrm_extract osrm_guidance ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-partition osrm_partition ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-customize osrm_customize ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-contract osrm_contract ${Boost_PROGRAM_OPTIONS_LIBRARY})
@@ -551,7 +551,17 @@ set(UTIL_LIBRARIES
 target_link_libraries(osrm ${ENGINE_LIBRARIES})
 target_link_libraries(osrm_update ${UPDATER_LIBRARIES})
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES} osrm_update osrm_store)
-target_link_libraries(osrm_extract osrm_guidance ${EXTRACTOR_LIBRARIES})
+
+# There is a circular dependency between osrm_extract and osrm_guidance. Tell the linker to trust us
+# that the two osrm::guidance functions used in osrm_extract will be available at runtime.
+# We don't need to do this for osrm_guidance, as osrm_extract will already be built when that gets
+# built and symbols can be looked up in osrm_extract directly.
+# https://stackoverflow.com/questions/25421479/
+target_link_libraries(osrm_extract
+  "-Wl,-U,__ZN4osrm8guidance13annotateTurnsERKNS_4util12DynamicGraphINS1_17NodeBasedEdgeDataEEERKNS_9extractor6detail30EdgeBasedNodeDataContainerImplILNS_7storage9OwnershipE0EEERKNSt3__16vectorINS1_10CoordinateENSF_9allocatorISH_EEEERKNS7_23CompressedEdgeContainerERKNSF_13unordered_setIjNSF_4hashIjEENSF_8equal_toIjEENSI_IjEEEERKNS7_18NodeRestrictionMapINS7_17UnconditionalOnlyEEERKNS7_17WayRestrictionMapERKNS8_13NameTableImplILSB_0EEERKNS7_11SuffixTableERKNSF_5tupleIJNSG_IjSV_EENSG_ItNSI_ItEEEEEEERNS1_15ConcurrentIDMapIS1H_tNSR_IS1H_EEEERNS1L_INS1_8guidance15LaneTupleIdPairEtNSR_IS1Q_EEEERNS0_6detail21TurnDataContainerImplILSB_2EEERS1F_RNS1L_INS1P_12BearingClassEjNSR_IS1Z_EEEERNS1L_INS1P_10EntryClassEtNSR_IS23_EEEERj"
+  "-Wl,-U,__ZN4osrm8guidance19findSegregatedNodesERKNS_9extractor21NodeBasedGraphFactoryERKNS1_6detail13NameTableImplILNS_7storage9OwnershipE0EEE"
+  ${EXTRACTOR_LIBRARIES})
+target_link_libraries(osrm_guidance ${GUIDANCE_LIBRARIES} osrm_extract)
 target_link_libraries(osrm_partition ${PARTITIONER_LIBRARIES})
 target_link_libraries(osrm_customize ${CUSTOMIZER_LIBRARIES} osrm_update osrm_store)
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
