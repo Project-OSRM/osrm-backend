@@ -15,6 +15,8 @@ thread_local SearchEngineData<CH>::SearchEngineHeapPtr
     SearchEngineData<CH>::map_matching_forward_heap_1;
 thread_local SearchEngineData<CH>::SearchEngineHeapPtr
     SearchEngineData<CH>::map_matching_reverse_heap_1;
+thread_local std::vector<typename SearchEngineData<CH>::SearchEngineHeapPtr>
+    SearchEngineData<CH>::map_matching_reverse_heaps;
 
 thread_local SearchEngineData<CH>::ManyToManyHeapPtr SearchEngineData<CH>::many_to_many_heap;
 
@@ -123,9 +125,11 @@ thread_local SearchEngineData<MLD>::MapMatchingHeapPtr
 thread_local SearchEngineData<MLD>::MapMatchingHeapPtr
     SearchEngineData<MLD>::map_matching_reverse_heap_1;
 thread_local SearchEngineData<MLD>::ManyToManyHeapPtr SearchEngineData<MLD>::many_to_many_heap;
+thread_local std::vector<typename SearchEngineData<MLD>::MapMatchingHeapPtr>
+    SearchEngineData<MLD>::map_matching_reverse_heaps;
 
 void SearchEngineData<MLD>::InitializeOrClearMapMatchingThreadLocalStorage(
-    unsigned number_of_nodes, unsigned number_of_boundary_nodes)
+    unsigned number_of_nodes, unsigned number_of_boundary_nodes, size_t max_candidates)
 {
     if (map_matching_forward_heap_1.get())
     {
@@ -145,6 +149,16 @@ void SearchEngineData<MLD>::InitializeOrClearMapMatchingThreadLocalStorage(
     {
         map_matching_reverse_heap_1.reset(
             new MapMatchingQueryHeap(number_of_nodes, number_of_boundary_nodes));
+    }
+
+    if (max_candidates > map_matching_reverse_heaps.size())
+    {
+        size_t to_add = max_candidates - map_matching_reverse_heaps.size();
+        for (unsigned i = 0; i < to_add; ++i)
+        {
+            map_matching_reverse_heaps.emplace_back(
+                new MapMatchingQueryHeap(number_of_nodes, number_of_boundary_nodes));
+        }
     }
 }
 
