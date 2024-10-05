@@ -42,3 +42,37 @@ Feature: Foot - Accessability of different way types
             | footway  |       |          | x    |
             | proposed |       |          |      |
             | proposed | yes   | yes      |      |
+
+    Scenario: Foot - Basic access with profile.uselocationtags.trunk = true
+
+        Given the profile file "foot" initialized with
+        """
+        profile.uselocationtags.trunk = true
+        """
+
+        Then routability should be
+            | highway        | forw |
+            | motorway       |      |
+            | motorway_link  |      |
+            | trunk          | x    |
+            | trunk_link     | x    |
+            | primary        | x    |
+            | primary_link   | x    |
+            | secondary      | x    |
+            | secondary_link | x    |
+            | tertiary       | x    |
+            | tertiary_link  | x    |
+            | residential    | x    |
+            | service        | x    |
+            | unclassified   | x    |
+            | living_street  | x    |
+            | road           | x    |
+            | track          | x    |
+            | path           | x    |
+            | footway        | x    |
+            | pedestrian     | x    |
+            | steps          | x    |
+            | pier           | x    |
+            | cycleway       |      |
+            | bridleway      |      |
+
