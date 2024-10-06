@@ -114,6 +114,7 @@ classes                              | Sequence         | Determines the allowed
 restrictions                         | Sequence         | Determines which turn restrictions will be used for this profile.
 suffix_list                          | Set              | List of name suffixes needed for determining if "Highway 101 NW" the same road as "Highway 101 ES".
 relation_types                       | Sequence         | Determines which relations should be cached for processing in this profile. It contains relations types
+uselocationtags                      | Set              | Defines optional attributes that rely on location tags .e.g. 'trunk' will enable highway="trunk" support for the profile 
 
 ### process_node(profile, node, result, relations)
 Process an OSM node to determine whether this node is a barrier or can be passed and whether passing it incurs a delay.
