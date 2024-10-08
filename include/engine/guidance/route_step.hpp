@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-#include <boost/range/iterator_range.hpp>
+#include <ranges>
 
 namespace osrm::engine::guidance
 {
@@ -220,14 +220,14 @@ inline auto RouteStep::LanesToTheLeft() const
 {
     const auto &description = intersections.front().lane_description;
     LaneID num_lanes_left = NumLanesToTheLeft();
-    return boost::make_iterator_range(description.begin(), description.begin() + num_lanes_left);
+    return std::ranges::subrange(description.begin(), description.begin() + num_lanes_left);
 }
 
 inline auto RouteStep::LanesToTheRight() const
 {
     const auto &description = intersections.front().lane_description;
     LaneID num_lanes_right = NumLanesToTheRight();
-    return boost::make_iterator_range(description.end() - num_lanes_right, description.end());
+    return std::ranges::subrange(description.end() - num_lanes_right, description.end());
 }
 
 } // namespace osrm::engine::guidance

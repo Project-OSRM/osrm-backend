@@ -252,11 +252,11 @@ updateSegmentData(const UpdaterConfig &config,
 
                 // In this case we want it oriented from in forward directions
                 auto rev_weights_range =
-                    boost::adaptors::reverse(segment_data.GetReverseWeights(geometry_id));
+                    segment_data.GetReverseWeights(geometry_id) | std::views::reverse;
                 auto rev_durations_range =
-                    boost::adaptors::reverse(segment_data.GetReverseDurations(geometry_id));
+                    segment_data.GetReverseDurations(geometry_id) | std::views::reverse;
                 auto rev_datasources_range =
-                    boost::adaptors::reverse(segment_data.GetReverseDatasources(geometry_id));
+                    segment_data.GetReverseDatasources(geometry_id) | std::views::reverse;
                 bool rev_was_updated = false;
 
                 for (const auto segment_offset :
@@ -337,11 +337,11 @@ updateSegmentData(const UpdaterConfig &config,
             auto new_fwd_durations_range = segment_data.GetForwardDurations(geometry_id);
             auto new_fwd_datasources_range = segment_data.GetForwardDatasources(geometry_id);
             auto new_rev_durations_range =
-                boost::adaptors::reverse(segment_data.GetReverseDurations(geometry_id));
+                segment_data.GetReverseDurations(geometry_id) | std::views::reverse;
             auto new_rev_datasources_range = segment_data.GetReverseDatasources(geometry_id);
             auto old_fwd_durations_range = segment_data_backup->GetForwardDurations(geometry_id);
             auto old_rev_durations_range =
-                boost::adaptors::reverse(segment_data_backup->GetReverseDurations(geometry_id));
+                segment_data_backup->GetReverseDurations(geometry_id) | std::views::reverse;
 
             for (const auto segment_offset :
                  util::irange<std::size_t>(0, new_fwd_durations_range.size()))
