@@ -80,7 +80,7 @@
     - Profiles:
       - FIXED: Bicycle and foot profiles now don't route on proposed ways [#6615](https://github.com/Project-OSRM/osrm-backend/pull/6615)
       - ADDED: Add optional support of cargo bike exclusion and width to bicyle profile [#7044](https://github.com/Project-OSRM/osrm-backend/pull/7044)
-      - FIXED:  foot and bicycle profiles should support trunk access for some countries.[#6710 #6008 #6697](https://github.com/Project-OSRM/osrm-backend/pulls/7049) 
+      - FIXED: Support country trunk access in bicycle and foot profiles [#7049](https://github.com/Project-OSRM/osrm-backend/pull/7049)
     - Routing:
       - FIXED: Fix adding traffic signal penalties during compression [#6419](https://github.com/Project-OSRM/osrm-backend/pull/6419)
       - FIXED: Correctly handle compressed traffic signals. [#6724](https://github.com/Project-OSRM/osrm-backend/pull/6724)
