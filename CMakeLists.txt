@@ -1,5 +1,22 @@
 cmake_minimum_required(VERSION 3.18)
 
+option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
+option(BUILD_TOOLS "Build OSRM tools" OFF)
+option(BUILD_PACKAGE "Build OSRM package" OFF)
+option(BUILD_ROUTED "Build osrm-routed HTTP server" ON)
+option(ENABLE_ASSERTIONS "Use assertions in release mode" OFF)
+option(ENABLE_DEBUG_LOGGING "Use debug logging in release mode" OFF)
+option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
+option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
+option(ENABLE_LTO "Use Link Time Optimisation" ON)
+option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
+option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
+option(ENABLE_CLANG_TIDY "Enables clang-tidy checks" OFF)
+
+if (ENABLE_CONAN)
+  set(CMAKE_TOOLCHAIN_FILE "./conan_toolchain.cmake")
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -21,21 +38,6 @@ endif()
 if (NOT WIN32 AND NOT DEFINED ENV{OSRM_BUILD_DIR})
   set(ENV{OSRM_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 endif()
-
-
-option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
-option(BUILD_TOOLS "Build OSRM tools" OFF)
-option(BUILD_PACKAGE "Build OSRM package" OFF)
-option(BUILD_ROUTED "Build osrm-routed HTTP server" ON)
-option(ENABLE_ASSERTIONS "Use assertions in release mode" OFF)
-option(ENABLE_DEBUG_LOGGING "Use debug logging in release mode" OFF)
-option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
-option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
-option(ENABLE_LTO "Use Link Time Optimisation" ON)
-option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
-option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
-option(ENABLE_CLANG_TIDY "Enables clang-tidy checks" OFF)
-
 
 if (ENABLE_CLANG_TIDY)
   find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
@@ -322,48 +324,71 @@ if (MSVC)
 endif()
 
 find_package(Boost 1.70 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
-add_dependency_includes(${Boost_INCLUDE_DIRS})
-#message(FATAL_ERROR "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS} Boost_LIBRARIES: ${Boost_LIBRARIES}")
-set(BOOST_LIBRARIES ${Boost_LIBRARIES})
-# set(BOOST_IN ${Boost_LIBRARIES})
 find_package(TBB REQUIRED)
-add_dependency_includes(${TBB_INCLUDE_DIR})
-set(TBB_LIBRARIES ${TBB_LIBRARIES})
-
 find_package(EXPAT REQUIRED)
-add_dependency_includes(${EXPAT_INCLUDE_DIRS})
-#message(FATAL_ERROR "EXPAT_INCLUDE_DIRS: ${expat_INCLUDE_DIRS} EXPAT_LIBRARIES: ${expat_LIBRARIES}")
-set(EXPAT_LIBRARIES ${expat_LIBRARIES})
-set(EXPAT_INCLUDE_DIRS ${expat_INCLUDE_DIRS})
 find_package(BZip2 REQUIRED)
-add_dependency_includes(${BZIP2_INCLUDE_DIR})
-
 find_package(Lua 5.2 REQUIRED)
-set(LUA_LIBRARIES lua::lua)
-if (LUA_FOUND)
-  message(STATUS "Using Lua ${LUA_VERSION_STRING}")
+
+if (ENABLE_CONAN)
+  add_dependency_includes(${Boost_INCLUDE_DIRS})
+  set(BOOST_LIBRARIES ${Boost_LIBRARIES})
+
+  add_dependency_includes(${TBB_INCLUDE_DIR})
+  set(TBB_LIBRARIES ${TBB_LIBRARIES})
+
+  add_dependency_includes(${EXPAT_INCLUDE_DIRS})
+  set(EXPAT_LIBRARIES ${expat_LIBRARIES})
+  set(EXPAT_INCLUDE_DIRS ${expat_INCLUDE_DIRS})
+
+  add_dependency_includes(${BZIP2_INCLUDE_DIR})
+
+  set(LUA_LIBRARIES lua::lua)
+  if (LUA_FOUND)
+    message(STATUS "Using Lua ${LUA_VERSION_STRING}")
+  endif()
+
+  add_dependency_includes(${lua_INCLUDE_DIRS})
+
+  # note: we avoid calling find_package(Osmium ...) here to ensure that the
+  # expat and bzip2 are used from conan rather than the system
+  include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
+else()
+  add_dependency_includes(${Boost_INCLUDE_DIRS})
+  add_dependency_includes(${TBB_INCLUDE_DIR})
+  add_dependency_includes(${EXPAT_INCLUDE_DIRS})
+  add_dependency_includes(${BZIP2_INCLUDE_DIR})
+  add_dependency_includes(${LUA_INCLUDE_DIR})
+
+  set(TBB_LIBRARIES TBB::tbb)
+
+  set(BOOST_LIBRARIES
+   ${Boost_DATE_TIME_LIBRARY}
+   ${Boost_IOSTREAMS_LIBRARY}
+   ${Boost_THREAD_LIBRARY}
+   ${Boost_ZLIB_LIBRARY}
+   ${Boost_REGEX_LIBRARY}
+  )
+
+  # add a target to generate API documentation with Doxygen
+  find_package(Doxygen)
+  if(DOXYGEN_FOUND)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+    add_custom_target(doc
+      ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Generating API documentation with Doxygen" VERBATIM
+    )
+  endif()
+  # note libosmium depends on expat and bzip2
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/cmake")
+  if(NOT OSMIUM_INCLUDE_DIR)
+    set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include")
+  endif()
+  find_package(Osmium REQUIRED COMPONENTS io)
+  include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
 endif()
 
-add_dependency_includes(${lua_INCLUDE_DIRS})
 
-# add a target to generate API documentation with Doxygen
-find_package(Doxygen)
-if(DOXYGEN_FOUND)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-add_custom_target(doc
-${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-COMMENT "Generating API documentation with Doxygen" VERBATIM
-)
-endif()
-
-# note libosmium depends on expat and bzip2
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/cmake")
-if(NOT OSMIUM_INCLUDE_DIR)
-  set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include")
-endif()
-find_package(Osmium REQUIRED COMPONENTS io)
-include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
 
 # prefix compilation with ccache by default if available and on clang or gcc
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))

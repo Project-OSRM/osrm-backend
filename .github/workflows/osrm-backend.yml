@@ -247,16 +247,16 @@ jobs:
           #   CUCUMBER_TIMEOUT: 60000
           #   ENABLE_LTO: OFF
 
-          # - name: clang-16-release
-          #   continue-on-error: false
-          #   node: 18
-          #   runs-on: ubuntu-24.04
-          #   BUILD_TOOLS: ON
-          #   BUILD_TYPE: Release
-          #   CCOMPILER: clang-16
-          #   CXXCOMPILER: clang++-16
-          #   CUCUMBER_TIMEOUT: 60000
-          #   ENABLE_LTO: OFF
+          - name: clang-16-release
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-24.04
+            BUILD_TOOLS: ON
+            BUILD_TYPE: Release
+            CCOMPILER: clang-16
+            CXXCOMPILER: clang++-16
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_LTO: OFF
 
           # - name: conan-linux-debug-asan-ubsan
           #   continue-on-error: false
@@ -552,8 +552,8 @@ jobs:
                  -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
                  -DENABLE_CCACHE=ON \
                  -DENABLE_LTO=${ENABLE_LTO:-ON} \
-                 -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR} \
-                 -DCMAKE_TOOLCHAIN_FILE=./conan_toolchain.cmake
+                 -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
+
         make --jobs=${JOBS}
 
         if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
