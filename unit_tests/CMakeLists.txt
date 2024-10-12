@@ -126,6 +126,10 @@ add_executable(util-tests
 	${UtilTestsSources}
         $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:MICROTAR>)
 
+if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS AND NOT ENABLE_CONAN)
+  add_definitions(-DBOOST_TEST_DYN_LINK)
+endif()
+
 set(UPDATER_TEST_DATA_DIR "${CMAKE_SOURCE_DIR}/unit_tests/updater")
 set(TEST_DATA_DIR "${CMAKE_SOURCE_DIR}/test/data")
 add_dependencies(library-tests osrm-extract osrm-contract osrm-partition)
