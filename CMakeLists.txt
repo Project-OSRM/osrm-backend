@@ -138,7 +138,7 @@ include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/generated/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sol2/include)
 
-set(BOOST_COMPONENTS date_time iostreams program_options thread unit_test_framework)
+set(BOOST_COMPONENTS system date_time iostreams program_options thread unit_test_framework)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util/version.hpp.in
@@ -323,7 +323,8 @@ if (MSVC)
   add_definitions(-DBOOST_ALL_NO_LIB)
 endif()
 
-find_package(Boost 1.70 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+set(Boost_USE_STATIC_LIBS ON)
+find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 find_package(TBB REQUIRED)
 find_package(EXPAT REQUIRED)
 find_package(BZip2 REQUIRED)
