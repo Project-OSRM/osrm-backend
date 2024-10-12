@@ -387,34 +387,34 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node }}
-    - name: Enable Node.js cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-    - name: Enable compiler cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.ccache
-        key: ccache-${{ matrix.name }}-${{ github.sha }}
-        restore-keys: |
-          ccache-${{ matrix.name }}-
-    - name: Enable Conan cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.conan2
-        key: v10-conan-${{ matrix.name }}-${{ github.sha }}
-        restore-keys: |
-          v10-conan-${{ matrix.name }}-
-    - name: Enable test cache
-      uses: actions/cache@v4
-      with:
-        path: ${{github.workspace}}/test/cache
-        key: v4-test-${{ matrix.name }}-${{ github.sha }}
-        restore-keys: |
-          v4-test-${{ matrix.name }}-
+    # - name: Enable Node.js cache
+    #   uses: actions/cache@v4
+    #   with:
+    #     path: ~/.npm
+    #     key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-node-
+    # - name: Enable compiler cache
+    #   uses: actions/cache@v4
+    #   with:
+    #     path: ~/.ccache
+    #     key: ccache-${{ matrix.name }}-${{ github.sha }}
+    #     restore-keys: |
+    #       ccache-${{ matrix.name }}-
+    # - name: Enable Conan cache
+    #   uses: actions/cache@v4
+    #   with:
+    #     path: ~/.conan2
+    #     key: v10-conan-${{ matrix.name }}-${{ github.sha }}
+    #     restore-keys: |
+    #       v10-conan-${{ matrix.name }}-
+    # - name: Enable test cache
+    #   uses: actions/cache@v4
+    #   with:
+    #     path: ${{github.workspace}}/test/cache
+    #     key: v4-test-${{ matrix.name }}-${{ github.sha }}
+    #     restore-keys: |
+    #       v4-test-${{ matrix.name }}-
     - name: Prepare environment
       run: |
         echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
