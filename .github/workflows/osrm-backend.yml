@@ -568,7 +568,7 @@ jobs:
         fi
         popd
     - name: Build example
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && matrix.ENABLE_CONAN != 'ON' }}
       run: |
         mkdir example/build && pushd example/build
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
