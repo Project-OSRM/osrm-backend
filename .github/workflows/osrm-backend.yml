@@ -536,9 +536,9 @@ jobs:
         cat ~/.conan2/profiles/default
         # sed -i '' 's/compiler.cppstd=.*$/compiler.cppstd=20/' ~/.conan/profiles/default
 
-        if [[ "${ENABLE_CONAN}" == "ON" ]]; then
-          conan install .. --output-folder=. --build=missing --settings compiler.cppstd=20 --settings build_type=${BUILD_TYPE}
-        fi
+        # if [[ "${ENABLE_CONAN}" == "ON" ]]; then
+        #   conan install .. --output-folder=. --build=missing --settings compiler.cppstd=20 --settings build_type=${BUILD_TYPE}
+        # fi
         
         ccache --zero-stats
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \

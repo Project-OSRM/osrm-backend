@@ -14,7 +14,29 @@ option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
 option(ENABLE_CLANG_TIDY "Enables clang-tidy checks" OFF)
 
 if (ENABLE_CONAN)
-  set(CMAKE_TOOLCHAIN_FILE "./conan_toolchain.cmake")
+  message(STATUS "Installing Conan packages. It may take a while...")
+  find_program(CONAN_EXECUTABLE NAMES conan)
+
+  if (NOT CONAN_EXECUTABLE)
+    message(FATAL_ERROR "Conan not found! Please install Conan 2.x and try again.")
+  else()
+    set(CMAKE_TOOLCHAIN_FILE "./conan_toolchain.cmake")
+
+   # message(STATUS "Conan install stdout: ${CONAN_EXECUTABLE} install .. --output-folder=. --build=missing --settings compiler.cppstd=20 --settings build_type=${CMAKE_BUILD_TYPE}")
+    execute_process(
+      COMMAND ${CONAN_EXECUTABLE} install .. --output-folder=. --build=missing --settings compiler.cppstd=20 --settings build_type=${CMAKE_BUILD_TYPE}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      OUTPUT_VARIABLE conan_stdout
+      ERROR_VARIABLE conan_stderr
+      RESULT_VARIABLE conan_install_result
+    )
+    # message(STATUS "Conan install stdout: ${conan_stdout} ${CMAKE_BUILD_TYPE}")
+    # message(STATUS "Conan install stderr: ${conan_stderr}")
+
+    if (NOT conan_install_result EQUAL 0)
+      message(FATAL_ERROR "Conan install failed.")
+    endif()
+  endif()
 endif()
 
 set(CMAKE_CXX_STANDARD 20)
