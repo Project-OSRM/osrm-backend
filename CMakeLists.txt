@@ -351,6 +351,7 @@ find_package(TBB REQUIRED)
 find_package(EXPAT REQUIRED)
 find_package(BZip2 REQUIRED)
 find_package(Lua 5.2 REQUIRED)
+fina_package(ZLIB REQUIRED)
 
 if (ENABLE_CONAN)
   add_dependency_includes(${Boost_INCLUDE_DIRS})
@@ -371,9 +372,12 @@ if (ENABLE_CONAN)
 
   add_dependency_includes(${lua_INCLUDE_DIRS})
 
+  add_dependency_includes(${ZLIB_INCLUDE_DIRS})
+
   # note: we avoid calling find_package(Osmium ...) here to ensure that the
   # expat and bzip2 are used from conan rather than the system
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
+
 else()
   add_dependency_includes(${Boost_INCLUDE_DIRS})
   add_dependency_includes(${TBB_INCLUDE_DIR})
