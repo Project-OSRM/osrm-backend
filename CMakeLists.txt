@@ -351,7 +351,7 @@ find_package(TBB REQUIRED)
 find_package(EXPAT REQUIRED)
 find_package(BZip2 REQUIRED)
 find_package(Lua 5.2 REQUIRED)
-fina_package(ZLIB REQUIRED)
+find_package(ZLIB REQUIRED)
 
 if (ENABLE_CONAN)
   add_dependency_includes(${Boost_INCLUDE_DIRS})
