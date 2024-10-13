@@ -160,7 +160,7 @@ include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/generated/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sol2/include)
 
-set(BOOST_COMPONENTS system date_time iostreams program_options thread unit_test_framework)
+set(BOOST_COMPONENTS system date_time iostreams program_options thread unit_test_framework zlib)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util/version.hpp.in
@@ -351,11 +351,9 @@ find_package(TBB REQUIRED)
 find_package(EXPAT REQUIRED)
 find_package(BZip2 REQUIRED)
 find_package(Lua 5.2 REQUIRED)
-find_package(ZLIB REQUIRED)
 
 if (ENABLE_CONAN)
   add_dependency_includes(${Boost_INCLUDE_DIRS})
-  set(BOOST_LIBRARIES ${Boost_LIBRARIES})
   add_dependency_includes(${TBB_INCLUDE_DIR})
   set(TBB_LIBRARIES ${TBB_LIBRARIES})
 

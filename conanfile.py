@@ -9,9 +9,9 @@ class OsrmConan(ConanFile):
         "expat/2.6.2",
         "lua/5.4.6",
         "onetbb/2021.12.0",
-        "zlib/1.3.1"
     )
     generators = "CMakeDeps"
+
 
     def configure(self):
         self.options["boost"].without_python = True
