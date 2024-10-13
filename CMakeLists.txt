@@ -426,7 +426,7 @@ endif()
 # to ensure that osrm binaries play well with other binaries like nodejs
 find_package(ZLIB REQUIRED)
 add_dependency_includes(${ZLIB_INCLUDE_DIRS})
-
+message(STATUS "Using zlib include dirs ${ZLIB_INCLUDE_DIRS}")
 add_dependency_defines(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_dependency_defines(-DBOOST_RESULT_OF_USE_DECLTYPE)
 
