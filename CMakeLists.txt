@@ -430,6 +430,8 @@ message(STATUS "Zlib found: ${ZLIB_FOUND}")
 message(STATUS "Zlib include dirs: ${ZLIB_INCLUDE_DIRS}")
 message(STATUS "Zlib libraries: ${ZLIB_LIBRARIES}")
 message(STATUS "Using zlib include dirs ${ZLIB_INCLUDE_DIRS}")
+set(ZLIB_LIBRARY ${ZLIB_LIBRARIES})
+
 add_dependency_defines(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_dependency_defines(-DBOOST_RESULT_OF_USE_DECLTYPE)
 
