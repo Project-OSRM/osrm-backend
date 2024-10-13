@@ -370,8 +370,6 @@ if (ENABLE_CONAN)
 
   add_dependency_includes(${lua_INCLUDE_DIRS})
 
-  add_dependency_includes(${ZLIB_INCLUDE_DIRS})
-
   # note: we avoid calling find_package(Osmium ...) here to ensure that the
   # expat and bzip2 are used from conan rather than the system
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
