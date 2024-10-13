@@ -659,8 +659,7 @@ foreach(engine_lib ${ENGINE_LIBRARIES})
     list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "${engine_lib}")
   endif()
 endforeach(engine_lib)
-#message(FATAL_ERROR "XXX")
-# JOIN("${PKGCONFIG_DEPENDENT_LIBRARIES}" " " PKGCONFIG_OSRM_DEPENDENT_LIBRARIES)
+JOIN("${PKGCONFIG_DEPENDENT_LIBRARIES}" " " PKGCONFIG_OSRM_DEPENDENT_LIBRARIES)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgconfig.in pkgconfig.configured @ONLY)
 file(GENERATE
