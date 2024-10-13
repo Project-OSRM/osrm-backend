@@ -458,6 +458,7 @@ target_link_libraries(osrm-partition osrm_partition ${Boost_PROGRAM_OPTIONS_LIBR
 target_link_libraries(osrm-customize osrm_customize ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-contract osrm_contract ${Boost_PROGRAM_OPTIONS_LIBRARY})
 if (BUILD_ROUTED)
+  message(STATUS "Building osrm-routed ${ZLIB_LIBRARY}")
   target_link_libraries(osrm-routed osrm ${Boost_PROGRAM_OPTIONS_LIBRARY} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
 endif()
 
@@ -476,6 +477,7 @@ set(GUIDANCE_LIBRARIES
     ${CMAKE_THREAD_LIBS_INIT}
     ${LUA_LIBRARIES}
     ${TBB_LIBRARIES}
+    ${ZLIB_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
 set(PARTITIONER_LIBRARIES
     ${BOOST_LIBRARIES}
@@ -486,6 +488,7 @@ set(PARTITIONER_LIBRARIES
     ${ZLIB_LIBRARY})
 set(CUSTOMIZER_LIBRARIES
     ${BOOST_LIBRARIES}
+    ${ZLIB_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
@@ -499,6 +502,7 @@ set(UPDATER_LIBRARIES
     ${ZLIB_LIBRARY})
 set(CONTRACTOR_LIBRARIES
     ${BOOST_LIBRARIES}
+    ${ZLIB_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     ${LUA_LIBRARIES}
     ${TBB_LIBRARIES}
@@ -513,6 +517,7 @@ set(ENGINE_LIBRARIES
     ${ZLIB_LIBRARY})
 set(STORAGE_LIBRARIES
     ${BOOST_LIBRARIES}
+    ${ZLIB_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
