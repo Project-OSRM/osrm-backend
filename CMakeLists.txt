@@ -30,8 +30,8 @@ if (ENABLE_CONAN)
       ERROR_VARIABLE conan_stderr
       RESULT_VARIABLE conan_install_result
     )
-    # message(STATUS "Conan install stdout: ${conan_stdout} ${CMAKE_BUILD_TYPE}")
-    # message(STATUS "Conan install stderr: ${conan_stderr}")
+    message(STATUS "Conan install stdout: ${conan_stdout} ${CMAKE_BUILD_TYPE}")
+    message(STATUS "Conan install stderr: ${conan_stderr}")
 
     if (NOT conan_install_result EQUAL 0)
       message(FATAL_ERROR "Conan install failed.")
@@ -354,6 +354,8 @@ find_package(Lua 5.2 REQUIRED)
 
 if (ENABLE_CONAN)
   add_dependency_includes(${Boost_INCLUDE_DIRS})
+  set(BOOST_LIBRARIES ${Boost_LIBRARIES})
+
   add_dependency_includes(${TBB_INCLUDE_DIR})
   set(TBB_LIBRARIES ${TBB_LIBRARIES})
 
