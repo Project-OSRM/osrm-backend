@@ -58,10 +58,6 @@ jobs:
 
         conan profile detect --force
 
-        # conan install .. --output-folder=. --build=missing --settings compiler.cppstd=20
-
-        # ls -la
-
         cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
         cmake --build . --config Release
         
