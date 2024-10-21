@@ -359,7 +359,7 @@ if (ENABLE_CONAN)
   add_dependency_includes(${TBB_INCLUDE_DIR})
   set(TBB_LIBRARIES ${TBB_LIBRARIES})
 
-  add_dependency_includes(${EXPAT_INCLUDE_DIRS})
+  add_dependency_includes(${expat_INCLUDE_DIRS})
   set(EXPAT_LIBRARIES ${expat_LIBRARIES})
   set(EXPAT_INCLUDE_DIRS ${expat_INCLUDE_DIRS})
 
