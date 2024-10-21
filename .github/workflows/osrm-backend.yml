@@ -46,6 +46,7 @@ jobs:
     - run: npm link --ignore-scripts
     - name: Install Zlib Using Scoop
       run: |
+        iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
         echo "C:/Users/runneradmin/scoop/shims" >> $env:GITHUB_PATH
         Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
         refreshenv
