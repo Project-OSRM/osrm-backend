@@ -8,8 +8,7 @@ class OsrmConan(ConanFile):
         "bzip2/1.0.8",
         "expat/2.6.2",
         "lua/5.4.6",
-        "onetbb/2021.12.0",
-        "zlib/1.3.1"
+        "onetbb/2021.12.0"
     )
     generators = "CMakeDeps"
 

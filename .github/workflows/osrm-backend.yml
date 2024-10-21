@@ -44,6 +44,9 @@ jobs:
         echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
     - run: npm install --ignore-scripts
     - run: npm link --ignore-scripts
+    - name: Install zlib
+      run: |
+        choco install zlib
     - name: Build
       shell: bash
       run: |
