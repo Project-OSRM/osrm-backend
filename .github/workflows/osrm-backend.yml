@@ -44,9 +44,14 @@ jobs:
         echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
     - run: npm install --ignore-scripts
     - run: npm link --ignore-scripts
-    - name: Install zlib
+    - name: Install Zlib Using Scoop
       run: |
-        choco install zlib
+        echo "C:/Users/runneradmin/scoop/shims" >> $env:GITHUB_PATH
+        Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+        refreshenv
+        scoop bucket add extras
+        scoop install zlib
+        regedit /s "C:\\Users\\runneradmin\\scoop\\apps\\zlib\\current\\register.reg"
     - name: Build
       shell: bash
       run: |
