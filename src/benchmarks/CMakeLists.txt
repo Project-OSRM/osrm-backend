@@ -13,7 +13,7 @@ target_include_directories(rtree-bench
 	${PROJECT_SOURCE_DIR}/unit_tests)
 
 target_link_libraries(rtree-bench
-	${BOOST_BASE_LIBRARIES}
+	${BOOST_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES}
 	${MAYBE_SHAPEFILE})
@@ -26,7 +26,7 @@ add_executable(match-bench
 
 target_link_libraries(match-bench
 	osrm
-	${BOOST_BASE_LIBRARIES}
+	${BOOST_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES}
 	${MAYBE_SHAPEFILE})
@@ -39,7 +39,7 @@ add_executable(route-bench
 
 target_link_libraries(route-bench
 	osrm
-	${BOOST_BASE_LIBRARIES}
+	${BOOST_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES}
 	${MAYBE_SHAPEFILE})
@@ -51,7 +51,7 @@ add_executable(bench
 
 target_link_libraries(bench
 	osrm
-	${BOOST_BASE_LIBRARIES}
+	${BOOST_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES}
 	${MAYBE_SHAPEFILE})
@@ -63,7 +63,7 @@ add_executable(json-render-bench
 
 target_link_libraries(json-render-bench
 	osrm
-	${BOOST_BASE_LIBRARIES}
+	${BOOST_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES}
 	${MAYBE_SHAPEFILE})
@@ -74,7 +74,7 @@ add_executable(alias-bench
 	$<TARGET_OBJECTS:UTIL>)
 
 target_link_libraries(alias-bench
-	${BOOST_BASE_LIBRARIES}
+	${BOOST_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES}
 	${MAYBE_SHAPEFILE})
@@ -87,7 +87,7 @@ add_executable(packedvector-bench
 	$<TARGET_OBJECTS:UTIL>)
 
 target_link_libraries(packedvector-bench
-	${BOOST_BASE_LIBRARIES}
+	${BOOST_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES}
     ${MAYBE_SHAPEFILE})
