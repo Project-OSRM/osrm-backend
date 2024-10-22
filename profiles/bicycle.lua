@@ -27,6 +27,7 @@ function setup()
       mode_change_penalty           = 30,
     },
 
+    profile                   = 'bicycle',
     default_mode              = mode.cycling,
     default_speed             = default_speed,
     walking_speed             = walking_speed,
@@ -140,6 +141,11 @@ function setup()
       path = 13
     },
 
+    trunk_speeds = {
+      trunk = default_speed,
+      trunk_link = default_speed,
+    },
+
     pedestrian_speeds = {
       footway = walking_speed,
       pedestrian = walking_speed,
@@ -220,8 +226,13 @@ function setup()
 
     avoid = Set {
       'impassable',
+      'motorroad',
       'construction',
       'proposed'
+    },
+
+    uselocationtags = Set {
+    --  'trunk'
     }
   }
 end
@@ -394,6 +405,13 @@ function speed_handler(profile,way,result,data)
     result.forward_speed = profile.bicycle_speeds[data.highway]
     result.backward_speed = profile.bicycle_speeds[data.highway]
     data.way_type_allows_pushing = true
+    -- check trunk
+  elseif profile.trunk_speeds[data.highway] and profile.uselocationtags and profile.uselocationtags.trunk then
+    if not way:get_location_tag(data.highway) or way:get_location_tag(data.highway) ~= "no" then
+      result.forward_speed = profile.trunk_speeds[data.highway]
+      result.backward_speed = profile.trunk_speeds[data.highway]
+      data.way_type_allows_pushing = true
+    end
   elseif data.access and profile.access_tag_whitelist[data.access]  then
     -- unknown way, but valid access tag
     result.forward_speed = profile.default_speed
