@@ -3,16 +3,17 @@ from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
 
 class OsrmConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
-    requires = (
-        "boost/1.85.0",
-        "bzip2/1.0.8",
-        "expat/2.6.2",
-        "lua/5.4.6",
-        "onetbb/2021.12.0"
-    )
     generators = "CMakeDeps"
 
-
+    def requirements(self):
+        self.requires("boost/1.85.0")
+        self.requires("bzip2/1.0.8")
+        self.requires("expat/2.6.2")
+        self.requires("lua/5.4.6")
+        self.requires("onetbb/2021.12.0")
+        if self.settings.os == "Windows":
+            self.requires("zlib/1.3.1")
+    
     def configure(self):
         self.options["boost"].without_python = True
         self.options["boost"].without_coroutine = True
