@@ -13,6 +13,8 @@ option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
 option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
 option(ENABLE_CLANG_TIDY "Enables clang-tidy checks" OFF)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 if (ENABLE_CONAN)
   message(STATUS "Installing Conan packages. It may take a while...")
   find_program(CONAN_EXECUTABLE NAMES conan)
@@ -393,6 +395,17 @@ else()
    ${Boost_REGEX_LIBRARY}
   )
 
+#   set(BOOST_LIBRARIES
+#    ${Boost_DATE_TIME_LIBRARY}
+#    ${Boost_IOSTREAMS_LIBRARY}
+#    ${Boost_THREAD_LIBRARY})
+
+# set(BOOST_LIBRARIES
+#   ${Boost_ZLIB_LIBRARY}
+#   ${Boost_REGEX_LIBRARY}
+#   ${BOOST_LIBRARIES})
+
+
   # add a target to generate API documentation with Doxygen
   find_package(Doxygen)
   if(DOXYGEN_FOUND)
@@ -443,15 +456,6 @@ add_dependency_defines(-DBOOST_PHOENIX_STL_TUPLE_H_)
 add_definitions(${OSRM_DEFINES})
 include_directories(SYSTEM ${DEPENDENCIES_INCLUDE_DIRS})
 
-# set(BOOST_LIBRARIES
-#    ${Boost_DATE_TIME_LIBRARY}
-#    ${Boost_IOSTREAMS_LIBRARY}
-#    ${Boost_THREAD_LIBRARY})
-
-# set(BOOST_LIBRARIES
-#   ${Boost_ZLIB_LIBRARY}
-#   ${Boost_REGEX_LIBRARY}
-#   ${BOOST_LIBRARIES})
 
 # Binaries
 target_link_libraries(osrm-datastore osrm_store ${Boost_PROGRAM_OPTIONS_LIBRARY})
