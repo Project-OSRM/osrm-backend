@@ -136,7 +136,7 @@ class NearestAPI final : public BaseAPI
             forward_geometry = facade.GetUncompressedForwardGeometry(geometry_id);
 
             auto osm_node_id =
-                facade.GetOSMNodeIDOfNode(forward_geometry(phantom_node.fwd_segment_position));
+                facade.GetOSMNodeIDOfNode(forward_geometry[phantom_node.fwd_segment_position]);
             to_node = static_cast<std::uint64_t>(osm_node_id);
         }
 
@@ -146,14 +146,14 @@ class NearestAPI final : public BaseAPI
             const auto geometry_id = facade.GetGeometryIndex(segment_id).id;
             const auto geometry = facade.GetUncompressedForwardGeometry(geometry_id);
             auto osm_node_id =
-                facade.GetOSMNodeIDOfNode(geometry(phantom_node.fwd_segment_position + 1));
+                facade.GetOSMNodeIDOfNode(geometry[phantom_node.fwd_segment_position + 1]);
             from_node = static_cast<std::uint64_t>(osm_node_id);
         }
         else if (phantom_node.forward_segment_id.enabled && phantom_node.fwd_segment_position > 0)
         {
             // In the case of one way, rely on forward segment only
             auto osm_node_id =
-                facade.GetOSMNodeIDOfNode(forward_geometry(phantom_node.fwd_segment_position - 1));
+                facade.GetOSMNodeIDOfNode(forward_geometry[phantom_node.fwd_segment_position - 1]);
             from_node = static_cast<std::uint64_t>(osm_node_id);
         }
 
