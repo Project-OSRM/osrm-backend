@@ -13,7 +13,6 @@ option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
 option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
 option(ENABLE_CLANG_TIDY "Enables clang-tidy checks" OFF)
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if (ENABLE_CONAN)
   message(STATUS "Installing Conan packages. It may take a while...")
@@ -162,7 +161,7 @@ include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/generated/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sol2/include)
 
-set(BOOST_COMPONENTS system date_time iostreams program_options thread unit_test_framework)
+set(BOOST_COMPONENTS date_time iostreams program_options thread unit_test_framework)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util/version.hpp.in
@@ -356,7 +355,9 @@ find_package(Lua 5.2 REQUIRED)
 
 if (ENABLE_CONAN)
   add_dependency_includes(${Boost_INCLUDE_DIRS})
-  set(BOOST_LIBRARIES ${Boost_LIBRARIES})
+
+  set(BOOST_BASE_LIBRARIES ${Boost_LIBRARIES})
+  set(BOOST_ENGINE_LIBRARIES ${Boost_LIBRARIES})
 
   add_dependency_includes(${TBB_INCLUDE_DIR})
   set(TBB_LIBRARIES ${TBB_LIBRARIES})
@@ -387,24 +388,15 @@ else()
 
   set(TBB_LIBRARIES TBB::tbb)
 
-  set(BOOST_LIBRARIES
-   ${Boost_DATE_TIME_LIBRARY}
-   ${Boost_IOSTREAMS_LIBRARY}
-   ${Boost_THREAD_LIBRARY}
-   ${Boost_ZLIB_LIBRARY}
-   ${Boost_REGEX_LIBRARY}
-  )
+  set(BOOST_BASE_LIBRARIES
+    ${Boost_DATE_TIME_LIBRARY}
+    ${Boost_IOSTREAMS_LIBRARY}
+    ${Boost_THREAD_LIBRARY})
 
-#   set(BOOST_LIBRARIES
-#    ${Boost_DATE_TIME_LIBRARY}
-#    ${Boost_IOSTREAMS_LIBRARY}
-#    ${Boost_THREAD_LIBRARY})
-
-# set(BOOST_LIBRARIES
-#   ${Boost_ZLIB_LIBRARY}
-#   ${Boost_REGEX_LIBRARY}
-#   ${BOOST_LIBRARIES})
-
+  set(BOOST_ENGINE_LIBRARIES
+    ${Boost_ZLIB_LIBRARY}
+    ${Boost_REGEX_LIBRARY}
+    ${BOOST_BASE_LIBRARIES})
 
   # add a target to generate API documentation with Doxygen
   find_package(Doxygen)
@@ -470,7 +462,7 @@ endif()
 
 set(EXTRACTOR_LIBRARIES
     ${BZIP2_LIBRARIES}
-    ${BOOST_LIBRARIES}
+    ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${EXPAT_LIBRARIES}
     ${LUA_LIBRARIES}
@@ -479,35 +471,35 @@ set(EXTRACTOR_LIBRARIES
     ${ZLIB_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
 set(GUIDANCE_LIBRARIES
-    ${BOOST_LIBRARIES}
+    ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${LUA_LIBRARIES}
     ${TBB_LIBRARIES}
     ${ZLIB_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
 set(PARTITIONER_LIBRARIES
-    ${BOOST_LIBRARIES}
+    ${BOOST_ENGINE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES}
     ${ZLIB_LIBRARY})
 set(CUSTOMIZER_LIBRARIES
-    ${BOOST_LIBRARIES}
+    ${BOOST_ENGINE_LIBRARIES}
     ${ZLIB_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
 set(UPDATER_LIBRARIES
-    ${BOOST_LIBRARIES}
+    ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES}
     ${ZLIB_LIBRARY})
 set(CONTRACTOR_LIBRARIES
-    ${BOOST_LIBRARIES}
+    ${BOOST_BASE_LIBRARIES}
     ${ZLIB_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     ${LUA_LIBRARIES}
@@ -515,21 +507,21 @@ set(CONTRACTOR_LIBRARIES
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
 set(ENGINE_LIBRARIES
-    ${BOOST_LIBRARIES}
+    ${BOOST_ENGINE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES}
     ${ZLIB_LIBRARY})
 set(STORAGE_LIBRARIES
-    ${BOOST_LIBRARIES}
+    ${BOOST_BASE_LIBRARIES}
     ${ZLIB_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
 set(UTIL_LIBRARIES
-    ${BOOST_LIBRARIES}
+    ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_COVERAGE_LIBRARIES}
@@ -546,13 +538,13 @@ target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
 
 # BUILD_COMPONENTS
 add_executable(osrm-components src/tools/components.cpp $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
-target_link_libraries(osrm-components ${TBB_LIBRARIES} ${BOOST_LIBRARIES} ${UTIL_LIBRARIES})
+target_link_libraries(osrm-components ${TBB_LIBRARIES} ${BOOST_BASE_LIBRARIES} ${UTIL_LIBRARIES})
 install(TARGETS osrm-components DESTINATION bin)
 
 if(BUILD_TOOLS)
   message(STATUS "Activating OSRM internal tools")
   add_executable(osrm-io-benchmark src/tools/io-benchmark.cpp $<TARGET_OBJECTS:UTIL>)
-  target_link_libraries(osrm-io-benchmark ${BOOST_LIBRARIES} ${TBB_LIBRARIES})
+  target_link_libraries(osrm-io-benchmark ${BOOST_BASE_LIBRARIES} ${TBB_LIBRARIES})
 
   install(TARGETS osrm-io-benchmark DESTINATION bin)
 endif()
