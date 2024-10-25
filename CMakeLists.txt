@@ -346,14 +346,15 @@ if (MSVC)
   add_definitions(-DBOOST_ALL_NO_LIB)
 endif()
 
-set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
-find_package(TBB REQUIRED)
-find_package(EXPAT REQUIRED)
-find_package(BZip2 REQUIRED)
-find_package(Lua 5.2 REQUIRED)
 
 if (ENABLE_CONAN)
+  set(Boost_USE_STATIC_LIBS ON)
+  find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+  find_package(TBB REQUIRED)
+  find_package(EXPAT REQUIRED)
+  find_package(BZip2 REQUIRED)
+  find_package(Lua 5.2 REQUIRED)
+
   add_dependency_includes(${Boost_INCLUDE_DIRS})
 
   set(BOOST_BASE_LIBRARIES ${Boost_LIBRARIES})
@@ -380,6 +381,12 @@ if (ENABLE_CONAN)
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
 
 else()
+  find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+  find_package(TBB REQUIRED)
+  find_package(EXPAT REQUIRED)
+  find_package(BZip2 REQUIRED)
+  find_package(Lua 5.2 REQUIRED)
+
   add_dependency_includes(${Boost_INCLUDE_DIRS})
   add_dependency_includes(${TBB_INCLUDE_DIR})
   add_dependency_includes(${EXPAT_INCLUDE_DIRS})
@@ -452,7 +459,6 @@ target_link_libraries(osrm-partition osrm_partition ${Boost_PROGRAM_OPTIONS_LIBR
 target_link_libraries(osrm-customize osrm_customize ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-contract osrm_contract ${Boost_PROGRAM_OPTIONS_LIBRARY})
 if (BUILD_ROUTED)
-  message(STATUS "Building osrm-routed ${ZLIB_LIBRARY}")
   target_link_libraries(osrm-routed osrm ${Boost_PROGRAM_OPTIONS_LIBRARY} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
 endif()
 
@@ -471,15 +477,13 @@ set(GUIDANCE_LIBRARIES
     ${CMAKE_THREAD_LIBS_INIT}
     ${LUA_LIBRARIES}
     ${TBB_LIBRARIES}
-    ${ZLIB_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
 set(PARTITIONER_LIBRARIES
     ${BOOST_ENGINE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
-    ${MAYBE_COVERAGE_LIBRARIES}
-    ${ZLIB_LIBRARY})
+    ${MAYBE_COVERAGE_LIBRARIES})
 set(CUSTOMIZER_LIBRARIES
     ${BOOST_ENGINE_LIBRARIES}
     ${ZLIB_LIBRARY}
