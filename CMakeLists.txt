@@ -1,5 +1,27 @@
 cmake_minimum_required(VERSION 3.18)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR AND NOT MSVC_IDE)
+  message(FATAL_ERROR "In-source builds are not allowed.
+Please create a directory and run cmake from there, passing the path to this source directory as the last argument.
+This process created the file `CMakeCache.txt' and the directory `CMakeFiles'. Please delete them.")
+endif()
+
+# detect if this is included as subproject and if so expose
+# some variables to its parent scope
+get_directory_property(BUILD_AS_SUBPROJECT PARENT_DIRECTORY)
+if(BUILD_AS_SUBPROJECT)
+  message(STATUS "Building libosrm as subproject.")
+endif()
+
+# set OSRM_BUILD_DIR location (might be used in various scripts)
+if (NOT WIN32 AND NOT DEFINED ENV{OSRM_BUILD_DIR})
+  set(ENV{OSRM_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 option(BUILD_PACKAGE "Build OSRM package" OFF)
@@ -38,28 +60,6 @@ if (ENABLE_CONAN)
       message(FATAL_ERROR "Conan install failed.")
     endif()
   endif()
-endif()
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR AND NOT MSVC_IDE)
-  message(FATAL_ERROR "In-source builds are not allowed.
-Please create a directory and run cmake from there, passing the path to this source directory as the last argument.
-This process created the file `CMakeCache.txt' and the directory `CMakeFiles'. Please delete them.")
-endif()
-
-# detect if this is included as subproject and if so expose
-# some variables to its parent scope
-get_directory_property(BUILD_AS_SUBPROJECT PARENT_DIRECTORY)
-if(BUILD_AS_SUBPROJECT)
-  message(STATUS "Building libosrm as subproject.")
-endif()
-
-# set OSRM_BUILD_DIR location (might be used in various scripts)
-if (NOT WIN32 AND NOT DEFINED ENV{OSRM_BUILD_DIR})
-  set(ENV{OSRM_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
 if (ENABLE_CLANG_TIDY)
@@ -433,10 +433,6 @@ endif()
 # to ensure that osrm binaries play well with other binaries like nodejs
 find_package(ZLIB REQUIRED)
 add_dependency_includes(${ZLIB_INCLUDE_DIRS})
-message(STATUS "Zlib found: ${ZLIB_FOUND}")
-message(STATUS "Zlib include dirs: ${ZLIB_INCLUDE_DIRS}")
-message(STATUS "Zlib libraries: ${ZLIB_LIBRARIES}")
-message(STATUS "Using zlib include dirs ${ZLIB_INCLUDE_DIRS}")
 set(ZLIB_LIBRARY ${ZLIB_LIBRARIES})
 
 add_dependency_defines(-DBOOST_SPIRIT_USE_PHOENIX_V3)
@@ -500,7 +496,6 @@ set(UPDATER_LIBRARIES
     ${ZLIB_LIBRARY})
 set(CONTRACTOR_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
-    ${ZLIB_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     ${LUA_LIBRARIES}
     ${TBB_LIBRARIES}
@@ -515,7 +510,6 @@ set(ENGINE_LIBRARIES
     ${ZLIB_LIBRARY})
 set(STORAGE_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
-    ${ZLIB_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
