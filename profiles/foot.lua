@@ -90,7 +90,6 @@ function setup()
         tertiary_link   = walking_speed,
         unclassified    = walking_speed,
         residential     = walking_speed,
-        road            = walking_speed,
         living_street   = walking_speed,
         service         = walking_speed,
         track           = walking_speed,
