@@ -166,7 +166,7 @@ jobs:
           docker stop osrm-container
 
   build-test-publish:
-    #needs: format-taginfo-docs
+    needs: format-taginfo-docs
     strategy:
       matrix:
         include:
@@ -519,13 +519,12 @@ jobs:
         echo "Using ${JOBS} jobs"
         pushd ${OSRM_BUILD_DIR}
 
-        python3 -m venv .venv
-
-        source .venv/bin/activate
-
-        python3 -m pip install conan==2.7.1
-
-        conan profile detect --force
+        if [[ "${ENABLE_CONAN}" == "ON" ]]; then
+          python3 -m venv .venv
+          source .venv/bin/activate
+          python3 -m pip install conan==2.7.1
+          conan profile detect --force
+        fi
 
         ccache --zero-stats
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
@@ -566,9 +565,11 @@ jobs:
       run: |
         make -C test/data benchmark
 
-        # # macOS SIP strips the linker path. Reset this inside the running shell
-        # export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
-        # ./example/build/osrm-example test/data/mld/monaco.osrm
+        # macOS SIP strips the linker path. Reset this inside the running shell
+        if [[ "${ENABLE_CONAN}" == "OFF" ]]; then
+          export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
+          ./example/build/osrm-example test/data/mld/monaco.osrm
+        fi
 
         # All tests assume to be run from the build directory
         pushd ${OSRM_BUILD_DIR}
