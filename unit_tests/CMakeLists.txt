@@ -126,7 +126,7 @@ add_executable(util-tests
 	${UtilTestsSources}
         $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:MICROTAR>)
 
-if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS AND NOT ENABLE_CONAN)
+if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
   add_definitions(-DBOOST_TEST_DYN_LINK)
 endif()
 

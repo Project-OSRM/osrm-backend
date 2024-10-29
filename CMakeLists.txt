@@ -22,6 +22,7 @@ if (NOT WIN32 AND NOT DEFINED ENV{OSRM_BUILD_DIR})
   set(ENV{OSRM_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
+option(ENABLE_CONAN "Use conan for dependencies" OFF)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 option(BUILD_PACKAGE "Build OSRM package" OFF)
@@ -45,7 +46,6 @@ if (ENABLE_CONAN)
   else()
     set(CMAKE_TOOLCHAIN_FILE "./conan_toolchain.cmake")
 
-   # message(STATUS "Conan install stdout: ${CONAN_EXECUTABLE} install .. --output-folder=. --build=missing --settings compiler.cppstd=20 --settings build_type=${CMAKE_BUILD_TYPE}")
     execute_process(
       COMMAND ${CONAN_EXECUTABLE} install .. --output-folder=. --build=missing --settings compiler.cppstd=20 --settings build_type=${CMAKE_BUILD_TYPE}
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -53,11 +53,9 @@ if (ENABLE_CONAN)
       ERROR_VARIABLE conan_stderr
       RESULT_VARIABLE conan_install_result
     )
-    message(STATUS "Conan install stdout: ${conan_stdout} ${CMAKE_BUILD_TYPE}")
-    message(STATUS "Conan install stderr: ${conan_stderr}")
 
     if (NOT conan_install_result EQUAL 0)
-      message(FATAL_ERROR "Conan install failed.")
+      message(FATAL_ERROR "Conan install failed: ${conan_install_result}. Stderr: ${conan_stderr}. Stdout: ${conan_stdout}")
     endif()
   endif()
 endif()
