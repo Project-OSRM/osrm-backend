@@ -81,10 +81,11 @@ struct Comparator
 
             const auto &rhs_child = rhs.values.find(key)->second;
             const auto &lhs_child = lhs.values.find(key)->second;
-            auto is_same =
-                std::visit(Comparator(reason, lhs_path + "." + std::string(key), rhs_path + "." + std::string(key)),
-                           lhs_child,
-                           rhs_child);
+            auto is_same = std::visit(Comparator(reason,
+                                                 lhs_path + "." + std::string(key),
+                                                 rhs_path + "." + std::string(key)),
+                                      lhs_child,
+                                      rhs_child);
             if (!is_same)
             {
                 return false;
