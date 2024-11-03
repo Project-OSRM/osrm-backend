@@ -6,6 +6,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <thread>
+#include <tbb/flow_graph.h>
 
 // utility class to redirect stderr so we can test it
 // inspired by https://stackoverflow.com/questions/5405016
@@ -31,14 +32,17 @@ BOOST_AUTO_TEST_SUITE(library_extract)
 
 BOOST_AUTO_TEST_CASE(test_extract_with_invalid_config)
 {
+    tbb::flow::graph g;
     osrm::ExtractorConfig config;
     config.requested_num_threads = std::thread::hardware_concurrency();
     BOOST_CHECK_THROW(osrm::extract(config),
                       std::exception); // including osrm::util::exception, osmium::io_error, etc.
+    g.wait_for_all();
 }
 
 BOOST_AUTO_TEST_CASE(test_extract_with_valid_config)
 {
+    tbb::flow::graph g;
     osrm::ExtractorConfig config;
     config.input_path = OSRM_TEST_DATA_DIR "/monaco.osm.pbf";
     config.UseDefaultOutputNames(OSRM_TEST_DATA_DIR "/monaco.osm.pbf");
@@ -46,6 +50,7 @@ BOOST_AUTO_TEST_CASE(test_extract_with_valid_config)
     config.small_component_size = 1000;
     config.requested_num_threads = std::thread::hardware_concurrency();
     BOOST_CHECK_NO_THROW(osrm::extract(config));
+    g.wait_for_all();
 }
 
 BOOST_AUTO_TEST_CASE(test_setup_runtime_error)
