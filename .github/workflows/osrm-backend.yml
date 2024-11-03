@@ -778,9 +778,9 @@ jobs:
           ccache -p
           ccache -s
 
-  # ci-complete:
-  #   runs-on: ubuntu-22.04
-  #   needs: [build-test-publish, docker-image-matrix, windows-release-node, benchmarks]
-  #   steps:
-  #   - run: echo "CI complete"
+  ci-complete:
+    runs-on: ubuntu-22.04
+    needs: [build-test-publish, docker-image-matrix, windows-release-node, benchmarks]
+    steps:
+    - run: echo "CI complete"
 

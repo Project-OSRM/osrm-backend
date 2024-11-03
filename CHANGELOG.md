@@ -25,6 +25,7 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: Use std::string_view for key type in json::Object. [#7062](https://github.com/Project-OSRM/osrm-backend/pull/7062)
       - CHANGED: Use thread_local instead of boost::thread_specific_ptr. [#6991](https://github.com/Project-OSRM/osrm-backend/pull/6991)
       - CHANGED: Bump flatbuffers to v24.3.25 version. [#6988](https://github.com/Project-OSRM/osrm-backend/pull/6988)
       - CHANGED: Add .reserve(...) to assembleGeometry function. [#6983](https://github.com/Project-OSRM/osrm-backend/pull/6983)
