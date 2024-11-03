@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(test_extract_with_valid_config)
 
 BOOST_AUTO_TEST_CASE(test_setup_runtime_error)
 {
-
+    oneapi::tbb::task_scheduler_handle handle{tbb::attach{}};
     osrm::ExtractorConfig config;
     config.input_path = OSRM_TEST_DATA_DIR "/monaco.osm.pbf";
     config.UseDefaultOutputNames(OSRM_TEST_DATA_DIR "/monaco.osm.pbf");
@@ -76,10 +76,12 @@ BOOST_AUTO_TEST_CASE(test_setup_runtime_error)
     // issues since the output contains the full path to the file, which may change between systems
     BOOST_CHECK(boost::algorithm::contains(output.str(),
                                            "bad_setup.lua:6: attempt to compare number with nil"));
+    oneapi::tbb::finalize(handle);
 }
 
 BOOST_AUTO_TEST_CASE(test_way_runtime_error)
 {
+    oneapi::tbb::task_scheduler_handle handle{tbb::attach{}};
     osrm::ExtractorConfig config;
     config.input_path = OSRM_TEST_DATA_DIR "/monaco.osm.pbf";
     config.UseDefaultOutputNames(OSRM_TEST_DATA_DIR "/monaco.osm.pbf");
@@ -98,10 +100,12 @@ BOOST_AUTO_TEST_CASE(test_way_runtime_error)
     // issues since the output contains the full path to the file, which may change between systems
     BOOST_CHECK(boost::algorithm::contains(output.str(),
                                            "bad_way.lua:41: attempt to compare number with nil"));
+    oneapi::tbb::finalize(handle);
 }
 
 BOOST_AUTO_TEST_CASE(test_node_runtime_error)
 {
+    oneapi::tbb::task_scheduler_handle handle{tbb::attach{}};
     osrm::ExtractorConfig config;
     config.input_path = OSRM_TEST_DATA_DIR "/monaco.osm.pbf";
     config.UseDefaultOutputNames(OSRM_TEST_DATA_DIR "/monaco.osm.pbf");
@@ -120,10 +124,12 @@ BOOST_AUTO_TEST_CASE(test_node_runtime_error)
     // issues since the output contains the full path to the file, which may change between systems
     BOOST_CHECK(boost::algorithm::contains(output.str(),
                                            "bad_node.lua:36: attempt to compare number with nil"));
+    oneapi::tbb::finalize(handle);
 }
 
 BOOST_AUTO_TEST_CASE(test_segment_runtime_error)
 {
+    oneapi::tbb::task_scheduler_handle handle{tbb::attach{}};
     osrm::ExtractorConfig config;
     config.input_path = OSRM_TEST_DATA_DIR "/monaco.osm.pbf";
     config.UseDefaultOutputNames(OSRM_TEST_DATA_DIR "/monaco.osm.pbf");
@@ -142,10 +148,12 @@ BOOST_AUTO_TEST_CASE(test_segment_runtime_error)
     // issues since the output contains the full path to the file, which may change between systems
     BOOST_CHECK(boost::algorithm::contains(
         output.str(), "bad_segment.lua:132: attempt to compare number with nil"));
+    oneapi::tbb::finalize(handle);
 }
 
 BOOST_AUTO_TEST_CASE(test_turn_runtime_error)
 {
+    oneapi::tbb::task_scheduler_handle handle{tbb::attach{}};
     osrm::ExtractorConfig config;
     config.input_path = OSRM_TEST_DATA_DIR "/monaco.osm.pbf";
     config.UseDefaultOutputNames(OSRM_TEST_DATA_DIR "/monaco.osm.pbf");
@@ -164,6 +172,7 @@ BOOST_AUTO_TEST_CASE(test_turn_runtime_error)
     // issues since the output contains the full path to the file, which may change between systems
     BOOST_CHECK(boost::algorithm::contains(output.str(),
                                            "bad_turn.lua:122: attempt to compare number with nil"));
+    oneapi::tbb::finalize(handle);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
