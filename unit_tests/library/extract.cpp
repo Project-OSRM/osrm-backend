@@ -47,18 +47,18 @@ BOOST_AUTO_TEST_CASE(test_extract_with_invalid_config)
     oneapi::tbb::finalize(handle);
 }
 
-// BOOST_AUTO_TEST_CASE(test_extract_with_valid_config)
-// {
-//     oneapi::tbb::task_scheduler_handle handle{tbb::attach{}};
-//     osrm::ExtractorConfig config;
-//     config.input_path = OSRM_TEST_DATA_DIR "/monaco.osm.pbf";
-//     config.UseDefaultOutputNames(OSRM_TEST_DATA_DIR "/monaco.osm.pbf");
-//     config.profile_path = OSRM_TEST_DATA_DIR "/../../profiles/car.lua";
-//     config.small_component_size = 1000;
-//     config.requested_num_threads = std::thread::hardware_concurrency();
-//     BOOST_CHECK_NO_THROW(osrm::extract(config));
-//     oneapi::tbb::finalize(handle);
-// }
+BOOST_AUTO_TEST_CASE(test_extract_with_valid_config)
+{
+    oneapi::tbb::task_scheduler_handle handle{tbb::attach{}};
+    osrm::ExtractorConfig config;
+    config.input_path = OSRM_TEST_DATA_DIR "/monaco.osm.pbf";
+    config.UseDefaultOutputNames(OSRM_TEST_DATA_DIR "/monaco.osm.pbf");
+    config.profile_path = OSRM_TEST_DATA_DIR "/../../profiles/car.lua";
+    config.small_component_size = 1000;
+    config.requested_num_threads = std::thread::hardware_concurrency();
+    BOOST_CHECK_NO_THROW(osrm::extract(config));
+    oneapi::tbb::finalize(handle);
+}
 
 // BOOST_AUTO_TEST_CASE(test_setup_runtime_error)
 // {
