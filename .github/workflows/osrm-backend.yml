@@ -719,18 +719,18 @@ jobs:
       #     make -j$(nproc) benchmarks
       #     cd ..
       #     make -C test/data 
-      # - name: Build PR Branch
-      #   run: |
-      #     cd pr
-      #     npm ci --ignore-scripts
-      #     cd ..
-      #     mkdir -p pr/build
-      #     cd pr/build
-      #     cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
-      #     make -j$(nproc) 
-      #     make -j$(nproc) benchmarks
-      #     cd ..
-      #     make -C test/data 
+      - name: Build PR Branch
+        run: |
+          cd pr
+          npm ci --ignore-scripts
+          cd ..
+          mkdir -p pr/build
+          cd pr/build
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
+          make -j$(nproc) 
+          make -j$(nproc) benchmarks
+          cd ..
+          make -C test/data 
       # we run benchmarks in tmpfs to avoid impact of disk IO
       - name: Create folder for tmpfs 
         run: |
