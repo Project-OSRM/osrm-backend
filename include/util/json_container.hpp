@@ -104,7 +104,7 @@ using Value = std::variant<String, Number, Object, Array, True, False, Null>;
  */
 struct Object
 {
-    std::unordered_map<std::string_view, Value> values;
+    std::unordered_map<std::string, Value> values;
 };
 
 /**
