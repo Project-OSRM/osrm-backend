@@ -707,71 +707,71 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           path: base
-      - name: Build Base Branch
-        run: |
-          cd base
-          npm ci --ignore-scripts
-          cd ..
-          mkdir base/build
-          cd base/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
-          make -j$(nproc)
-          make -j$(nproc) benchmarks
-          cd ..
-          make -C test/data 
-      # - name: Build PR Branch
+      # - name: Build Base Branch
       #   run: |
-      #     cd pr
+      #     cd base
       #     npm ci --ignore-scripts
       #     cd ..
-      #     mkdir -p pr/build
-      #     cd pr/build
+      #     mkdir base/build
+      #     cd base/build
       #     cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
-      #     make -j$(nproc) 
+      #     make -j$(nproc)
       #     make -j$(nproc) benchmarks
       #     cd ..
       #     make -C test/data 
-      # we run benchmarks in tmpfs to avoid impact of disk IO
+      - name: Build PR Branch
+        run: |
+          cd pr
+          npm ci --ignore-scripts
+          cd ..
+          mkdir -p pr/build
+          cd pr/build
+          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
+          make -j$(nproc) 
+          make -j$(nproc) benchmarks
+          cd ..
+          make -C test/data 
+      we run benchmarks in tmpfs to avoid impact of disk IO
       - name: Create folder for tmpfs 
         run: |
           # if by any chance it was mounted before(e.g. due to previous job failed), unmount it
           sudo umount ~/benchmarks | true
           rm -rf ~/benchmarks 
           mkdir -p ~/benchmarks
-      # # see https://llvm.org/docs/Benchmarking.html
-      # - name: Run PR Benchmarks 
-      #   run: |
-      #     sudo cset shield -c 2-3 -k on
-      #     sudo mount -t tmpfs -o size=4g none ~/benchmarks
-      #     cp -rf pr/build ~/benchmarks/build
-      #     cp -rf pr/lib ~/benchmarks/lib
-      #     mkdir -p ~/benchmarks/test
-      #     cp -rf pr/test/data ~/benchmarks/test/data
-      #     cp -rf pr/profiles ~/benchmarks/profiles
-
-      #     ls ~/benchmarks/test/data
-
-      #     sudo cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/pr_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
-      #     sudo umount ~/benchmarks
-      #     sudo cset shield --reset
-      - name: Run Base Benchmarks
+      # see https://llvm.org/docs/Benchmarking.html
+      - name: Run PR Benchmarks 
         run: |
           sudo cset shield -c 2-3 -k on
           sudo mount -t tmpfs -o size=4g none ~/benchmarks
-          cp -rf base/build ~/benchmarks/build
-          cp -rf base/lib ~/benchmarks/lib
+          cp -rf pr/build ~/benchmarks/build
+          cp -rf pr/lib ~/benchmarks/lib
           mkdir -p ~/benchmarks/test
-          cp -rf base/test/data ~/benchmarks/test/data
-          cp -rf base/profiles ~/benchmarks/profiles
+          cp -rf pr/test/data ~/benchmarks/test/data
+          cp -rf pr/profiles ~/benchmarks/profiles
 
-          # TODO: remove it when base branch will have this file at needed location
-          if [ ! -f ~/benchmarks/test/data/portugal_to_korea.json ]; then
-            cp base/src/benchmarks/portugal_to_korea.json ~/benchmarks/test/data/portugal_to_korea.json
-          fi
-          # we intentionally use scripts from PR branch to be able to update them and see results in the same PR
-          sudo cset shield --exec -- cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/base_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
+          ls ~/benchmarks/test/data
+
+          sudo cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/pr_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
           sudo umount ~/benchmarks
           sudo cset shield --reset
+      # - name: Run Base Benchmarks
+      #   run: |
+      #     sudo cset shield -c 2-3 -k on
+      #     sudo mount -t tmpfs -o size=4g none ~/benchmarks
+      #     cp -rf base/build ~/benchmarks/build
+      #     cp -rf base/lib ~/benchmarks/lib
+      #     mkdir -p ~/benchmarks/test
+      #     cp -rf base/test/data ~/benchmarks/test/data
+      #     cp -rf base/profiles ~/benchmarks/profiles
+
+      #     # TODO: remove it when base branch will have this file at needed location
+      #     if [ ! -f ~/benchmarks/test/data/portugal_to_korea.json ]; then
+      #       cp base/src/benchmarks/portugal_to_korea.json ~/benchmarks/test/data/portugal_to_korea.json
+      #     fi
+      #     # we intentionally use scripts from PR branch to be able to update them and see results in the same PR
+      #     sudo cset shield --exec -- cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/base_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
+      #     sudo umount ~/benchmarks
+      #     sudo cset shield --reset
       # - name: Post Benchmark Results
       #   run: |
       #     python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
