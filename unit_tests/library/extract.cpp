@@ -5,8 +5,8 @@
 #include "osrm/extractor_config.hpp"
 
 #include <boost/algorithm/string.hpp>
-#include <thread>
 #include <tbb/flow_graph.h>
+#include <thread>
 
 // utility class to redirect stderr so we can test it
 // inspired by https://stackoverflow.com/questions/5405016
