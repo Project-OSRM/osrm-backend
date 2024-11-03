@@ -65,11 +65,11 @@ function run_benchmarks_for_folder {
     echo "Running alias"
     $BENCHMARKS_FOLDER/alias-bench > "$RESULTS_FOLDER/alias.bench"
     echo "Running json-render-bench"
-    $BENCHMARKS_FOLDER/json-render-bench  "$FOLDER/test/data/portugal_to_korea.json" #> "$RESULTS_FOLDER/json-render.bench"
-    echo "Running packedvector-bench"
-    $BENCHMARKS_FOLDER/packedvector-bench > "$RESULTS_FOLDER/packedvector.bench"
-    echo "Running rtree-bench"
-    $BENCHMARKS_FOLDER/rtree-bench "$FOLDER/test/data/monaco.osrm.ramIndex" "$FOLDER/test/data/monaco.osrm.fileIndex" "$FOLDER/test/data/monaco.osrm.nbg_nodes" > "$RESULTS_FOLDER/rtree.bench"
+    $BENCHMARKS_FOLDER/json-render-bench  "$FOLDER/test/data/portugal_to_korea.json" > "$RESULTS_FOLDER/json-render.bench"
+    # echo "Running packedvector-bench"
+    # $BENCHMARKS_FOLDER/packedvector-bench > "$RESULTS_FOLDER/packedvector.bench"
+    # echo "Running rtree-bench"
+    # $BENCHMARKS_FOLDER/rtree-bench "$FOLDER/test/data/monaco.osrm.ramIndex" "$FOLDER/test/data/monaco.osrm.fileIndex" "$FOLDER/test/data/monaco.osrm.nbg_nodes" > "$RESULTS_FOLDER/rtree.bench"
 
     cp -rf $OSM_PBF $FOLDER/data.osm.pbf
 

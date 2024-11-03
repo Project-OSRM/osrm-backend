@@ -749,8 +749,6 @@ jobs:
           cp -rf pr/test/data ~/benchmarks/test/data
           cp -rf pr/profiles ~/benchmarks/profiles
 
-          ls ~/benchmarks/test/data
-
           sudo cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/pr_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
           sudo umount ~/benchmarks
           sudo cset shield --reset

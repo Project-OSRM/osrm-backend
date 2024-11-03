@@ -105,10 +105,7 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    std::cerr << "before: " << argv[1] << std::endl;
-
     const auto obj = load(argv[1]);
-    std::cerr << "after: " << argv[1] << std::endl;
 
     TIMER_START(string);
     std::string out_str;
