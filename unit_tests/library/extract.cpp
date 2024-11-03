@@ -32,6 +32,11 @@ class redirect_stderr
 
 BOOST_AUTO_TEST_SUITE(library_extract)
 
+BOOST_AUTO_TEST_CASE(dummy)
+{
+    BOOST_CHECK(true);
+}
+
 // BOOST_AUTO_TEST_CASE(test_extract_with_invalid_config)
 // {
 //     oneapi::tbb::task_scheduler_handle handle{tbb::attach{}};
