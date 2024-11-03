@@ -575,7 +575,7 @@ jobs:
 
         # All tests assume to be run from the build directory
         pushd ${OSRM_BUILD_DIR}
-        for i in $(seq 1 100); do
+        for i in $(seq 1 1000); do
             echo "Iteration $i"
             for test in ./unit_tests/*-tests; do
                 echo "Running $test"
