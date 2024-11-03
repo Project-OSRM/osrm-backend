@@ -719,18 +719,18 @@ jobs:
           make -j$(nproc) benchmarks
           cd ..
           make -C test/data 
-      - name: Build PR Branch
-        run: |
-          cd pr
-          npm ci --ignore-scripts
-          cd ..
-          mkdir -p pr/build
-          cd pr/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
-          make -j$(nproc) 
-          make -j$(nproc) benchmarks
-          cd ..
-          make -C test/data 
+      # - name: Build PR Branch
+      #   run: |
+      #     cd pr
+      #     npm ci --ignore-scripts
+      #     cd ..
+      #     mkdir -p pr/build
+      #     cd pr/build
+      #     cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
+      #     make -j$(nproc) 
+      #     make -j$(nproc) benchmarks
+      #     cd ..
+      #     make -C test/data 
       # we run benchmarks in tmpfs to avoid impact of disk IO
       - name: Create folder for tmpfs 
         run: |
@@ -738,22 +738,22 @@ jobs:
           sudo umount ~/benchmarks | true
           rm -rf ~/benchmarks 
           mkdir -p ~/benchmarks
-      # see https://llvm.org/docs/Benchmarking.html
-      - name: Run PR Benchmarks 
-        run: |
-          sudo cset shield -c 2-3 -k on
-          sudo mount -t tmpfs -o size=4g none ~/benchmarks
-          cp -rf pr/build ~/benchmarks/build
-          cp -rf pr/lib ~/benchmarks/lib
-          mkdir -p ~/benchmarks/test
-          cp -rf pr/test/data ~/benchmarks/test/data
-          cp -rf pr/profiles ~/benchmarks/profiles
+      # # see https://llvm.org/docs/Benchmarking.html
+      # - name: Run PR Benchmarks 
+      #   run: |
+      #     sudo cset shield -c 2-3 -k on
+      #     sudo mount -t tmpfs -o size=4g none ~/benchmarks
+      #     cp -rf pr/build ~/benchmarks/build
+      #     cp -rf pr/lib ~/benchmarks/lib
+      #     mkdir -p ~/benchmarks/test
+      #     cp -rf pr/test/data ~/benchmarks/test/data
+      #     cp -rf pr/profiles ~/benchmarks/profiles
 
-          ls ~/benchmarks/test/data
+      #     ls ~/benchmarks/test/data
 
-          sudo cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/pr_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
-          sudo umount ~/benchmarks
-          sudo cset shield --reset
+      #     sudo cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/pr_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
+      #     sudo umount ~/benchmarks
+      #     sudo cset shield --reset
       - name: Run Base Benchmarks
         run: |
           sudo cset shield -c 2-3 -k on
@@ -772,9 +772,9 @@ jobs:
           sudo cset shield --exec -- cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/base_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
           sudo umount ~/benchmarks
           sudo cset shield --reset
-      - name: Post Benchmark Results
-        run: |
-          python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
+      # - name: Post Benchmark Results
+      #   run: |
+      #     python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
       - name: Show CCache statistics
         run: |
           ccache -p
