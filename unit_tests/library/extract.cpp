@@ -37,15 +37,15 @@ BOOST_AUTO_TEST_CASE(dummy)
     BOOST_CHECK(true);
 }
 
-// BOOST_AUTO_TEST_CASE(test_extract_with_invalid_config)
-// {
-//     oneapi::tbb::task_scheduler_handle handle{tbb::attach{}};
-//     osrm::ExtractorConfig config;
-//     config.requested_num_threads = std::thread::hardware_concurrency();
-//     BOOST_CHECK_THROW(osrm::extract(config),
-//                       std::exception); // including osrm::util::exception, osmium::io_error, etc.
-//     oneapi::tbb::finalize(handle);
-// }
+BOOST_AUTO_TEST_CASE(test_extract_with_invalid_config)
+{
+    oneapi::tbb::task_scheduler_handle handle{tbb::attach{}};
+    osrm::ExtractorConfig config;
+    config.requested_num_threads = std::thread::hardware_concurrency();
+    BOOST_CHECK_THROW(osrm::extract(config),
+                      std::exception); // including osrm::util::exception, osmium::io_error, etc.
+    oneapi::tbb::finalize(handle);
+}
 
 // BOOST_AUTO_TEST_CASE(test_extract_with_valid_config)
 // {
