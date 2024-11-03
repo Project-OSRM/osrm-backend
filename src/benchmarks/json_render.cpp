@@ -16,8 +16,8 @@ using namespace osrm;
 namespace
 {
 
-// we use std::string_view as a key in the object, so since here we have dynamic keys we have to "hold" them somewhere
-// okay for tests...
+// we use std::string_view as a key in the object, so since here we have dynamic keys we have to
+// "hold" them somewhere okay for tests...
 static std::unordered_set<std::string> gKeysHolder;
 
 void convert(const rapidjson::Value &value, json::Value &result)
@@ -38,7 +38,7 @@ void convert(const rapidjson::Value &value, json::Value &result)
             json::Value member;
             convert(itr->value, member);
             auto keyItr = gKeysHolder.emplace(itr->name.GetString()).first;
-            object.values.emplace(*keyItr, std::move(member));;
+            object.values.emplace(*keyItr, std::move(member));
         }
         result = std::move(object);
     }
