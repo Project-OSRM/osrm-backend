@@ -71,10 +71,10 @@ function run_benchmarks_for_folder {
     # echo "Running rtree-bench"
     # $BENCHMARKS_FOLDER/rtree-bench "$FOLDER/test/data/monaco.osrm.ramIndex" "$FOLDER/test/data/monaco.osrm.fileIndex" "$FOLDER/test/data/monaco.osrm.nbg_nodes" > "$RESULTS_FOLDER/rtree.bench"
 
-    # cp -rf $OSM_PBF $FOLDER/data.osm.pbf
+    cp -rf $OSM_PBF $FOLDER/data.osm.pbf
 
-    # echo "Running osrm-extract"
-    # measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-extract -p $FOLDER/profiles/car.lua $FOLDER/data.osm.pbf" "$RESULTS_FOLDER/osrm_extract.bench"
+    echo "Running osrm-extract"
+    measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-extract -p $FOLDER/profiles/car.lua $FOLDER/data.osm.pbf" "$RESULTS_FOLDER/osrm_extract.bench"
     # # echo "Running osrm-partition"
     # measure_peak_ram_and_time "$BINARIES_FOLDER/osrm-partition $FOLDER/data.osrm" "$RESULTS_FOLDER/osrm_partition.bench"
     # echo "Running osrm-customize"
