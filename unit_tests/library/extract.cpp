@@ -5,6 +5,8 @@
 #include "osrm/extractor_config.hpp"
 
 #include <boost/algorithm/string.hpp>
+#include <oneapi/tbb/global_control.h>
+#include <oneapi/tbb/parallel_for.h>
 #include <tbb/flow_graph.h>
 #include <thread>
 
@@ -32,17 +34,17 @@ BOOST_AUTO_TEST_SUITE(library_extract)
 
 BOOST_AUTO_TEST_CASE(test_extract_with_invalid_config)
 {
-    tbb::flow::graph g;
+    oneapi::tbb::task_scheduler_handle handle{tbb::attach{}};
     osrm::ExtractorConfig config;
     config.requested_num_threads = std::thread::hardware_concurrency();
     BOOST_CHECK_THROW(osrm::extract(config),
                       std::exception); // including osrm::util::exception, osmium::io_error, etc.
-    g.wait_for_all();
+    oneapi::tbb::finalize(handle);
 }
 
 BOOST_AUTO_TEST_CASE(test_extract_with_valid_config)
 {
-    tbb::flow::graph g;
+    oneapi::tbb::task_scheduler_handle handle{tbb::attach{}};
     osrm::ExtractorConfig config;
     config.input_path = OSRM_TEST_DATA_DIR "/monaco.osm.pbf";
     config.UseDefaultOutputNames(OSRM_TEST_DATA_DIR "/monaco.osm.pbf");
@@ -50,11 +52,12 @@ BOOST_AUTO_TEST_CASE(test_extract_with_valid_config)
     config.small_component_size = 1000;
     config.requested_num_threads = std::thread::hardware_concurrency();
     BOOST_CHECK_NO_THROW(osrm::extract(config));
-    g.wait_for_all();
+    oneapi::tbb::finalize(handle);
 }
 
 BOOST_AUTO_TEST_CASE(test_setup_runtime_error)
 {
+
     osrm::ExtractorConfig config;
     config.input_path = OSRM_TEST_DATA_DIR "/monaco.osm.pbf";
     config.UseDefaultOutputNames(OSRM_TEST_DATA_DIR "/monaco.osm.pbf");
