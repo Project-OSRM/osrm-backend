@@ -731,7 +731,7 @@ jobs:
           make -j$(nproc) benchmarks
           cd ..
           make -C test/data 
-      we run benchmarks in tmpfs to avoid impact of disk IO
+      # we run benchmarks in tmpfs to avoid impact of disk IO
       - name: Create folder for tmpfs 
         run: |
           # if by any chance it was mounted before(e.g. due to previous job failed), unmount it
