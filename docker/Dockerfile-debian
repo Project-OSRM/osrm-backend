@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim as builder
+FROM debian:bookworm-slim AS builder
 ARG DOCKER_TAG
 ARG BUILD_CONCURRENCY
 RUN mkdir -p /src  && mkdir -p /opt
@@ -43,7 +43,7 @@ RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
 
 # Multistage build to reduce image size - https://docs.docker.com/engine/userguide/eng-image/multistage-build/#use-multi-stage-builds
 # Only the content below ends up in the image, this helps remove /src from the image (which is large)
-FROM debian:bookworm-slim as runstage
+FROM debian:bookworm-slim AS runstage
 
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
