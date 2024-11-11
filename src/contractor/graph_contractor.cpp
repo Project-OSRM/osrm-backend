@@ -138,6 +138,7 @@ void ContractNode(ContractorThreadData *data,
                   const ContractorGraph &graph,
                   const NodeID node,
                   std::vector<EdgeWeight> &node_weights,
+                  const std::vector<bool> &contractable,
                   ContractionStats *stats = nullptr)
 {
     auto &heap = data->heap;
@@ -245,12 +246,12 @@ void ContractNode(ContractorThreadData *data,
         if (RUNSIMULATION)
         {
             const int constexpr SIMULATION_SEARCH_SPACE_SIZE = 1000;
-            search(heap, graph, number_of_targets, SIMULATION_SEARCH_SPACE_SIZE, max_weight, node);
+            search(heap, graph, contractable, number_of_targets, SIMULATION_SEARCH_SPACE_SIZE, max_weight, node);
         }
         else
         {
             const int constexpr FULL_SEARCH_SPACE_SIZE = 2000;
-            search(heap, graph, number_of_targets, FULL_SEARCH_SPACE_SIZE, max_weight, node);
+            search(heap, graph, contractable, number_of_targets, FULL_SEARCH_SPACE_SIZE, max_weight, node);
         }
         for (auto out_edge : graph.GetAdjacentEdgeRange(node))
         {
@@ -344,18 +345,20 @@ void ContractNode(ContractorThreadData *data,
 void ContractNode(ContractorThreadData *data,
                   const ContractorGraph &graph,
                   const NodeID node,
-                  std::vector<EdgeWeight> &node_weights)
+                  std::vector<EdgeWeight> &node_weights,
+                  const std::vector<bool> &contractable)
 {
-    ContractNode<false>(data, graph, node, node_weights, nullptr);
+    ContractNode<false>(data, graph, node, node_weights, contractable, nullptr);
 }
 
 ContractionStats SimulateNodeContraction(ContractorThreadData *data,
                                          const ContractorGraph &graph,
                                          const NodeID node,
-                                         std::vector<EdgeWeight> &node_weights)
+                                         std::vector<EdgeWeight> &node_weights,
+                                         const std::vector<bool> &contractable)
 {
     ContractionStats stats;
-    ContractNode<true>(data, graph, node, node_weights, &stats);
+    ContractNode<true>(data, graph, node, node_weights, contractable, &stats);
     return stats;
 }
 
@@ -487,7 +490,7 @@ bool UpdateNodeNeighbours(ContractorNodeData &node_data,
         if (node_data.contractable[u])
         {
             node_data.priorities[u] = EvaluateNodePriority(
-                SimulateNodeContraction(data, graph, u, node_data.weights), node_data.depths[u]);
+                SimulateNodeContraction(data, graph, u, node_data.weights, node_data.contractable), node_data.depths[u]);
         }
     }
     return true;
@@ -627,7 +630,7 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
                                   auto node = remaining_nodes[x].id;
                                   BOOST_ASSERT(node_data.contractable[node]);
                                   node_data.priorities[node] = EvaluateNodePriority(
-                                      SimulateNodeContraction(data, graph, node, node_data.weights),
+                                      SimulateNodeContraction(data, graph, node, node_data.weights, node_data.contractable),
                                       node_data.depths[node]);
                               }
                           });
@@ -688,7 +691,7 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
                 for (auto position = range.begin(), end = range.end(); position != end; ++position)
                 {
                     const NodeID node = remaining_nodes[position].id;
-                    ContractNode(data, graph, node, node_data.weights);
+                    ContractNode(data, graph, node, node_data.weights, node_data.contractable);
                 }
             });
 
