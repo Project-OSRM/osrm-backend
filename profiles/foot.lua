@@ -8,6 +8,7 @@ Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 find_access_tag = require("lib/access").find_access_tag
+local pollution = 0
 
 function fetch_pollution_data(location)
   -- Convert location userdata to a string
@@ -29,19 +30,20 @@ function fetch_pollution_data(location)
     return 0 -- Return 0 if the format is invalid
   end
 
+  if lat > 41.320 and lat < 41.469 and lon > 2.069 and lon < 2.228 then
   -- Fetch pollution data
-  local url = string.format("http://localhost:8008/routes/api/pollution?lat=%f&lon=%f", lat, lon)
-  local response, status = http.request(url)
+    local url = string.format("http://localhost:8008/routes/api/pollution?lat=%f&lon=%f", lat, lon)
+    local response, status = http.request(url)
 
-  if status == 200 then
-    local data = json.decode(response)
-    return data.pollution  -- Return the pollution weight from the backend
-  else
-    print("Failed to fetch pollution data. HTTP status: " .. tostring(status))
-    return 0 -- Return 0 if the request fails
+    if status == 200 then
+      local data = json.decode(response)
+      return data.pollution  -- Return the pollution weight from the backend
+    else
+      print("Failed to fetch pollution data. HTTP status: " .. tostring(status))
+      return 0 -- Return 0 if the request fails
+    end
   end
 end
-
 
 function setup()
   local walking_speed = 5
@@ -192,8 +194,8 @@ function process_node(profile, node, result)
     end
   end
   local location = node:location()
-  local pollution = fetch_pollution_data(location)
-  print(pollution)
+  pollution = fetch_pollution_data(location)
+  --print(pollution)
   --result.weight = result.weight + pollution
 
 
@@ -229,6 +231,8 @@ function process_way(profile, way, result)
       print("Error: way is nil.")
       return
   end
+  print(result.weight)
+  result.weight = result.weight + pollution
 
 
   -- perform an quick initial check and abort if the way is
