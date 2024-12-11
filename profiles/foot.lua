@@ -43,6 +43,7 @@ function fetch_pollution_data(location)
       return 0 -- Return 0 if the request fails
     end
   end
+  return 0
 end
 
 function setup()
@@ -195,6 +196,9 @@ function process_node(profile, node, result)
   end
   local location = node:location()
   pollution = fetch_pollution_data(location)
+  if pollution > 50 then 
+    result.barrier = true
+  end
   --print(pollution)
   --result.weight = result.weight + pollution
 
