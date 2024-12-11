@@ -1,4 +1,6 @@
 -- Foot profile
+local http = require("socket.http") -- LuaSocket for HTTP requests
+local json = require("cjson") 
 
 api_version = 2
 
@@ -6,6 +8,43 @@ Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 find_access_tag = require("lib/access").find_access_tag
+local pollution = 0
+
+function fetch_pollution_data(location)
+  -- Convert location userdata to a string
+  local location_str = tostring(location)
+
+  -- Check if the location is "(undefined,undefined)"
+  if location_str == "(undefined,undefined)" then
+    print("Location is undefined. Skipping pollution data fetch.")
+    return 0 -- Return 0 for undefined locations
+  end
+
+  -- Extract lat and lon from the location string
+  local lat, lon = location_str:match("%(([^,]+),([^%)]+)%)")
+  if lat and lon then
+    lat = tonumber(lat)
+    lon = tonumber(lon)
+  else
+    print("Invalid location format: " .. location_str)
+    return 0 -- Return 0 if the format is invalid
+  end
+
+  if lat > 41.320 and lat < 41.469 and lon > 2.069 and lon < 2.228 then
+  -- Fetch pollution data
+    local url = string.format("http://localhost:8008/routes/api/pollution?lat=%f&lon=%f", lat, lon)
+    local response, status = http.request(url)
+
+    if status == 200 then
+      local data = json.decode(response)
+      return data.pollution  -- Return the pollution weight from the backend
+    else
+      print("Failed to fetch pollution data. HTTP status: " .. tostring(status))
+      return 0 -- Return 0 if the request fails
+    end
+  end
+  return 0
+end
 
 function setup()
   local walking_speed = 5
@@ -155,6 +194,14 @@ function process_node(profile, node, result)
       end
     end
   end
+  local location = node:location()
+  pollution = fetch_pollution_data(location)
+  if pollution > 50 then 
+    result.barrier = true
+  end
+  --print(pollution)
+  --result.weight = result.weight + pollution
+
 
   -- check if node is a traffic light
   local tag = node:get_value_by_key("highway")
@@ -180,16 +227,17 @@ function process_way(profile, way, result)
   -- data table for storing intermediate values during processing
   local data = {
     -- prefetch tags
-    highway = way:get_value_by_key('highway'),
-    bridge = way:get_value_by_key('bridge'),
-    route = way:get_value_by_key('route'),
-    leisure = way:get_value_by_key('leisure'),
-    man_made = way:get_value_by_key('man_made'),
-    railway = way:get_value_by_key('railway'),
-    platform = way:get_value_by_key('platform'),
-    amenity = way:get_value_by_key('amenity'),
-    public_transport = way:get_value_by_key('public_transport')
+    highway = way:get_value_by_key("highway"),
   }
+
+    -- Verificar si el objeto `way` está definido
+  if not way then
+      print("Error: way is nil.")
+      return
+  end
+  print(result.weight)
+  result.weight = result.weight + pollution
+
 
   -- perform an quick initial check and abort if the way is
   -- obviously not routable. here we require at least one
@@ -238,7 +286,7 @@ function process_way(profile, way, result)
     WayHandlers.names,
 
     -- set weight properties of the way
-    WayHandlers.weights
+    WayHandlers.weights,
   }
 
   WayHandlers.run(profile, way, result, data, handlers)
