@@ -44,7 +44,7 @@ RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
     rm -rf /src
 
 
-# Multistage build to reduce image size - https://docs.docker.com/engine/userguide/eng-image/multistage-build/#use-multi-stage-builds
+# Multistage build to reduce image size - https://docs.docker.com/build/building/multi-stage/#use-multi-stage-builds
 # Only the content below ends up in the image, this helps remove /src from the image (which is large)
 FROM debian:bookworm-slim AS runstage
 
