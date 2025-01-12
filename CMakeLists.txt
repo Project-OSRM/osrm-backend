@@ -56,6 +56,9 @@ endif()
 if (POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()
+if (POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
 project(OSRM C CXX)
 
 
