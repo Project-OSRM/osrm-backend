@@ -738,6 +738,8 @@ jobs:
           sudo umount ~/benchmarks | true
           rm -rf ~/benchmarks 
           mkdir -p ~/benchmarks
+
+          for i in {1..15}; do sudo cset shield --reset && break || echo "cset shield reset attempt $i failed"; sleep 1; done
       # see https://llvm.org/docs/Benchmarking.html
       - name: Run PR Benchmarks 
         run: |
@@ -751,7 +753,9 @@ jobs:
 
           sudo cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/pr_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
           sudo umount ~/benchmarks
-          sudo cset shield --reset
+
+          for i in {1..15}; do sudo cset shield --reset && break || echo "cset shield reset attempt $i failed"; sleep 1; done
+
       - name: Run Base Benchmarks
         run: |
           sudo cset shield -c 2-3 -k on
@@ -767,9 +771,10 @@ jobs:
             cp base/src/benchmarks/portugal_to_korea.json ~/benchmarks/test/data/portugal_to_korea.json
           fi
           # we intentionally use scripts from PR branch to be able to update them and see results in the same PR
-          sudo cset shield --exec -- cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/base_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
+          sudo cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/base_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
           sudo umount ~/benchmarks
-          sudo cset shield --reset
+
+          for i in {1..15}; do sudo cset shield --reset && break || echo "cset shield reset attempt $i failed"; sleep 1; done
       - name: Post Benchmark Results
         run: |
           python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
