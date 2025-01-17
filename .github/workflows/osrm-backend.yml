@@ -170,7 +170,6 @@ jobs:
             continue-on-error: false
             node: 20
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Debug
             CCOMPILER: gcc-13
             CUCUMBER_TIMEOUT: 20000
@@ -181,7 +180,6 @@ jobs:
             continue-on-error: false
             node: 20
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Debug
             CCOMPILER: clang-18
             CUCUMBER_TIMEOUT: 20000
@@ -195,7 +193,6 @@ jobs:
             continue-on-error: false
             node: 18
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
@@ -206,7 +203,6 @@ jobs:
             continue-on-error: false
             node: 18
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Debug
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
@@ -217,7 +213,6 @@ jobs:
             continue-on-error: false
             node: 18
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Debug
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
@@ -229,7 +224,6 @@ jobs:
             continue-on-error: false
             node: 18
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: clang-17
             CXXCOMPILER: clang++-17
@@ -240,7 +234,6 @@ jobs:
             continue-on-error: false
             node: 18
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: clang-16
             CXXCOMPILER: clang++-16
@@ -251,7 +244,6 @@ jobs:
             continue-on-error: false
             node: 18
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
@@ -263,7 +255,6 @@ jobs:
             continue-on-error: false
             node: 18
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
@@ -274,7 +265,6 @@ jobs:
             continue-on-error: false
             node: 20
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: gcc-14
             CXXCOMPILER: g++-14
@@ -284,7 +274,6 @@ jobs:
             continue-on-error: false
             node: 20
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: gcc-13
             CXXCOMPILER: g++-13
@@ -294,7 +283,6 @@ jobs:
             continue-on-error: false
             node: 20
             runs-on: ubuntu-22.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: gcc-12
             CXXCOMPILER: g++-12
@@ -350,7 +338,6 @@ jobs:
     continue-on-error: ${{ matrix.continue-on-error }}
     runs-on: ${{ matrix.runs-on }}
     env:
-      BUILD_TOOLS: ${{ matrix.BUILD_TOOLS }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
       BUILD_SHARED_LIBS: ${{ matrix.BUILD_SHARED_LIBS }}
       CCOMPILER: ${{ matrix.CCOMPILER }}
@@ -540,7 +527,6 @@ jobs:
                  -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} \
                  -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
                  -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
-                 -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
                  -DENABLE_CCACHE=ON \
                  -DENABLE_LTO=${ENABLE_LTO:-ON} \
                  -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
@@ -557,13 +543,6 @@ jobs:
           echo "PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig" >> $GITHUB_ENV
         fi
         popd
-    - name: Build example
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
-      run: |
-        mkdir example/build && pushd example/build
-        cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-        make --jobs=${JOBS}
-        popd
     - name: Run all tests
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
       run: |
@@ -571,7 +550,6 @@ jobs:
 
         # macOS SIP strips the linker path. Reset this inside the running shell
         export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
-        ./example/build/osrm-example test/data/mld/monaco.osrm
 
         # All tests assume to be run from the build directory
         pushd ${OSRM_BUILD_DIR}
