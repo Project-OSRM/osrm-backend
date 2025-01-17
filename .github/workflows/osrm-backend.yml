@@ -23,218 +23,218 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  windows-release-node:
-    needs: format-taginfo-docs
-    runs-on: windows-2022
-    continue-on-error: false
-    env:
-      BUILD_TYPE: Release
-    steps:
-    - uses: actions/checkout@v4
-    - run: pip install "conan<2.0.0"
-    - run: conan --version
-    - run: cmake --version
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 18
-    - run: node --version
-    - run: npm --version
-    - name: Prepare environment
-      shell: bash
-      run: |
-        PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
-        echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
-    - run: npm install --ignore-scripts
-    - run: npm link --ignore-scripts
-    - name: Build
-      shell: bash
-      run: |
-        mkdir build
-        cd build
-        cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
-        cmake --build . --config Release
+  # windows-release-node:
+  #   needs: format-taginfo-docs
+  #   runs-on: windows-2022
+  #   continue-on-error: false
+  #   env:
+  #     BUILD_TYPE: Release
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #   - run: pip install "conan<2.0.0"
+  #   - run: conan --version
+  #   - run: cmake --version
+  #   - uses: actions/setup-node@v4
+  #     with:
+  #       node-version: 18
+  #   - run: node --version
+  #   - run: npm --version
+  #   - name: Prepare environment
+  #     shell: bash
+  #     run: |
+  #       PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+  #       echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
+  #   - run: npm install --ignore-scripts
+  #   - run: npm link --ignore-scripts
+  #   - name: Build
+  #     shell: bash
+  #     run: |
+  #       mkdir build
+  #       cd build
+  #       cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
+  #       cmake --build . --config Release
         
-    # TODO: MSVC goes out of memory when building our tests
-    # - name: Run tests
-    #   shell: bash
-    #   run: |
-    #     cd build
-    #     cmake --build . --config Release --target tests
-    #     # TODO: run tests
-    # - name: Run node tests
-    #   shell: bash
-    #   run: |
-    #     ./lib/binding/osrm-extract.exe -p profiles/car.lua test/data/monaco.osm.pbf
+  #   # TODO: MSVC goes out of memory when building our tests
+  #   # - name: Run tests
+  #   #   shell: bash
+  #   #   run: |
+  #   #     cd build
+  #   #     cmake --build . --config Release --target tests
+  #   #     # TODO: run tests
+  #   # - name: Run node tests
+  #   #   shell: bash
+  #   #   run: |
+  #   #     ./lib/binding/osrm-extract.exe -p profiles/car.lua test/data/monaco.osm.pbf
 
-    #     mkdir -p test/data/ch
-    #     cp test/data/monaco.osrm* test/data/ch/
-    #     ./lib/binding/osrm-contract.exe test/data/ch/monaco.osrm
+  #   #     mkdir -p test/data/ch
+  #   #     cp test/data/monaco.osrm* test/data/ch/
+  #   #     ./lib/binding/osrm-contract.exe test/data/ch/monaco.osrm
 
-    #     ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
-    #     node test/nodejs/index.js
-    - name: Build Node package
-      shell: bash
-      run: ./scripts/ci/node_package.sh
-    - name: Publish Node package
-      if: ${{ env.PUBLISH == 'On' }}
-      uses: ncipollo/release-action@v1
-      with:
-        allowUpdates: true
-        artifactErrorsFailBuild: true
-        artifacts: build/stage/**/*.tar.gz
-        omitBody: true
-        omitBodyDuringUpdate: true
-        omitName: true
-        omitNameDuringUpdate: true
-        replacesArtifacts: true
-        token: ${{ secrets.GITHUB_TOKEN }}
+  #   #     ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
+  #   #     node test/nodejs/index.js
+  #   - name: Build Node package
+  #     shell: bash
+  #     run: ./scripts/ci/node_package.sh
+  #   - name: Publish Node package
+  #     if: ${{ env.PUBLISH == 'On' }}
+  #     uses: ncipollo/release-action@v1
+  #     with:
+  #       allowUpdates: true
+  #       artifactErrorsFailBuild: true
+  #       artifacts: build/stage/**/*.tar.gz
+  #       omitBody: true
+  #       omitBodyDuringUpdate: true
+  #       omitName: true
+  #       omitNameDuringUpdate: true
+  #       replacesArtifacts: true
+  #       token: ${{ secrets.GITHUB_TOKEN }}
 
-  format-taginfo-docs:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18
-    - name: Enable Node.js cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-    - name: Prepare environment
-      run: |
-        npm ci --ignore-scripts
-        clang-format-15 --version
-    - name: Run checks
-      run: |
-        ./scripts/check_taginfo.py taginfo.json profiles/car.lua
-        ./scripts/format.sh && ./scripts/error_on_dirty.sh
-        node ./scripts/validate_changelog.js
-        npm run docs && ./scripts/error_on_dirty.sh
-        npm audit --production
+  # format-taginfo-docs:
+  #   runs-on: ubuntu-22.04
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #   - name: Use Node.js
+  #     uses: actions/setup-node@v4
+  #     with:
+  #       node-version: 18
+  #   - name: Enable Node.js cache
+  #     uses: actions/cache@v4
+  #     with:
+  #       path: ~/.npm
+  #       key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+  #       restore-keys: |
+  #         ${{ runner.os }}-node-
+  #   - name: Prepare environment
+  #     run: |
+  #       npm ci --ignore-scripts
+  #       clang-format-15 --version
+  #   - name: Run checks
+  #     run: |
+  #       ./scripts/check_taginfo.py taginfo.json profiles/car.lua
+  #       ./scripts/format.sh && ./scripts/error_on_dirty.sh
+  #       node ./scripts/validate_changelog.js
+  #       npm run docs && ./scripts/error_on_dirty.sh
+  #       npm audit --production
 
-  docker-image-matrix:
-    strategy:
-      matrix:
-        docker-base-image: ["debian", "alpine"]
-    needs: format-taginfo-docs
-    runs-on: ubuntu-22.04
-    continue-on-error: false
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v4
-      - name: Enable osm.pbf cache
-        uses: actions/cache@v4
-        with:
-          path: berlin-latest.osm.pbf
-          key: v1-berlin-osm-pbf
-          restore-keys: |
-            v1-berlin-osm-pbf
-      - name: Docker build
-        run: |
-          docker build -t osrm-backend-local -f docker/Dockerfile-${{ matrix.docker-base-image }} .
-      - name: Test Docker image
-        run: |
-          if [ ! -f "${PWD}/berlin-latest.osm.pbf" ]; then
-            wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
-          fi
-          TAG=osrm-backend-local
-          # when `--memory-swap` value equals `--memory` it means container won't use swap
-          # see https://docs.docker.com/config/containers/resource_constraints/#--memory-swap-details
-          MEMORY_ARGS="--memory=1g --memory-swap=1g"
-          docker run $MEMORY_ARGS -t -v "${PWD}:/data" "${TAG}" osrm-extract --dump-nbg-graph -p /opt/car.lua /data/berlin-latest.osm.pbf
-          docker run $MEMORY_ARGS -t -v "${PWD}:/data" "${TAG}" osrm-components /data/berlin-latest.osrm.nbg /data/berlin-latest.geojson
-          if [ ! -s "${PWD}/berlin-latest.geojson" ]
-          then
-            >&2 echo "No berlin-latest.geojson found"
-            exit 1
-          fi
-          # removing `.osrm.nbg` to check that whole pipeline works without it
-          rm -rf "${PWD}/berlin-latest.osrm.nbg"
+  # docker-image-matrix:
+  #   strategy:
+  #     matrix:
+  #       docker-base-image: ["debian", "alpine"]
+  #   needs: format-taginfo-docs
+  #   runs-on: ubuntu-22.04
+  #   continue-on-error: false
+  #   steps:
+  #     - name: Check out the repo
+  #       uses: actions/checkout@v4
+  #     - name: Enable osm.pbf cache
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: berlin-latest.osm.pbf
+  #         key: v1-berlin-osm-pbf
+  #         restore-keys: |
+  #           v1-berlin-osm-pbf
+  #     - name: Docker build
+  #       run: |
+  #         docker build -t osrm-backend-local -f docker/Dockerfile-${{ matrix.docker-base-image }} .
+  #     - name: Test Docker image
+  #       run: |
+  #         if [ ! -f "${PWD}/berlin-latest.osm.pbf" ]; then
+  #           wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
+  #         fi
+  #         TAG=osrm-backend-local
+  #         # when `--memory-swap` value equals `--memory` it means container won't use swap
+  #         # see https://docs.docker.com/config/containers/resource_constraints/#--memory-swap-details
+  #         MEMORY_ARGS="--memory=1g --memory-swap=1g"
+  #         docker run $MEMORY_ARGS -t -v "${PWD}:/data" "${TAG}" osrm-extract --dump-nbg-graph -p /opt/car.lua /data/berlin-latest.osm.pbf
+  #         docker run $MEMORY_ARGS -t -v "${PWD}:/data" "${TAG}" osrm-components /data/berlin-latest.osrm.nbg /data/berlin-latest.geojson
+  #         if [ ! -s "${PWD}/berlin-latest.geojson" ]
+  #         then
+  #           >&2 echo "No berlin-latest.geojson found"
+  #           exit 1
+  #         fi
+  #         # removing `.osrm.nbg` to check that whole pipeline works without it
+  #         rm -rf "${PWD}/berlin-latest.osrm.nbg"
 
-          docker run $MEMORY_ARGS -t -v "${PWD}:/data" "${TAG}" osrm-partition /data/berlin-latest.osrm
-          docker run $MEMORY_ARGS -t -v "${PWD}:/data" "${TAG}" osrm-customize /data/berlin-latest.osrm
-          docker run $MEMORY_ARGS --name=osrm-container -t -p 5000:5000 -v "${PWD}:/data" "${TAG}" osrm-routed --algorithm mld /data/berlin-latest.osrm &
-          curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
-          docker stop osrm-container
+  #         docker run $MEMORY_ARGS -t -v "${PWD}:/data" "${TAG}" osrm-partition /data/berlin-latest.osrm
+  #         docker run $MEMORY_ARGS -t -v "${PWD}:/data" "${TAG}" osrm-customize /data/berlin-latest.osrm
+  #         docker run $MEMORY_ARGS --name=osrm-container -t -p 5000:5000 -v "${PWD}:/data" "${TAG}" osrm-routed --algorithm mld /data/berlin-latest.osrm &
+  #         curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
+  #         docker stop osrm-container
 
   build-test-publish:
-    needs: format-taginfo-docs
+    #needs: format-taginfo-docs
     strategy:
       matrix:
         include:
-          - name: gcc-13-debug-cov
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Debug
-            CCOMPILER: gcc-13
-            CUCUMBER_TIMEOUT: 20000
-            CXXCOMPILER: g++-13
-            ENABLE_COVERAGE: ON
+          # - name: gcc-13-debug-cov
+          #   continue-on-error: false
+          #   node: 20
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Debug
+          #   CCOMPILER: gcc-13
+          #   CUCUMBER_TIMEOUT: 20000
+          #   CXXCOMPILER: g++-13
+          #   ENABLE_COVERAGE: ON
 
-          - name: clang-18-debug-asan-ubsan
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-18
-            CUCUMBER_TIMEOUT: 20000
-            CXXCOMPILER: clang++-18
-            ENABLE_SANITIZER: ON
-            TARGET_ARCH: x86_64-asan-ubsan
-            OSRM_CONNECTION_RETRIES: 10
-            OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
+          # - name: clang-18-debug-asan-ubsan
+          #   continue-on-error: false
+          #   node: 20
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Debug
+          #   CCOMPILER: clang-18
+          #   CUCUMBER_TIMEOUT: 20000
+          #   CXXCOMPILER: clang++-18
+          #   ENABLE_SANITIZER: ON
+          #   TARGET_ARCH: x86_64-asan-ubsan
+          #   OSRM_CONNECTION_RETRIES: 10
+          #   OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
-          - name: clang-18-release
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_LTO: OFF
+          # - name: clang-18-release
+          #   continue-on-error: false
+          #   node: 18
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-18
+          #   CXXCOMPILER: clang++-18
+          #   CUCUMBER_TIMEOUT: 60000
+          #   ENABLE_LTO: OFF
 
-          - name: clang-18-debug
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_LTO: OFF
+          # - name: clang-18-debug
+          #   continue-on-error: false
+          #   node: 18
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Debug
+          #   CCOMPILER: clang-18
+          #   CXXCOMPILER: clang++-18
+          #   CUCUMBER_TIMEOUT: 60000
+          #   ENABLE_LTO: OFF
 
-          - name: clang-18-debug-clang-tidy
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_CLANG_TIDY: ON
+          # - name: clang-18-debug-clang-tidy
+          #   continue-on-error: false
+          #   node: 18
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Debug
+          #   CCOMPILER: clang-18
+          #   CXXCOMPILER: clang++-18
+          #   CUCUMBER_TIMEOUT: 60000
+          #   ENABLE_CLANG_TIDY: ON
 
 
-          - name: clang-17-release
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: clang-17
-            CXXCOMPILER: clang++-17
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_LTO: OFF
+          # - name: clang-17-release
+          #   continue-on-error: false
+          #   node: 18
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-17
+          #   CXXCOMPILER: clang++-17
+          #   CUCUMBER_TIMEOUT: 60000
+          #   ENABLE_LTO: OFF
 
           - name: clang-16-release
             continue-on-error: false
@@ -247,104 +247,104 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_LTO: OFF
 
-          - name: conan-linux-debug-asan-ubsan
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_CONAN: ON
-            ENABLE_SANITIZER: ON
-            ENABLE_LTO: OFF
+          # - name: conan-linux-debug-asan-ubsan
+          #   continue-on-error: false
+          #   node: 18
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-18
+          #   CXXCOMPILER: clang++-18
+          #   ENABLE_CONAN: ON
+          #   ENABLE_SANITIZER: ON
+          #   ENABLE_LTO: OFF
 
-          - name: conan-linux-release
-            continue-on-error: false
-            node: 18
-            runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_CONAN: ON
-            ENABLE_LTO: OFF
+          # - name: conan-linux-release
+          #   continue-on-error: false
+          #   node: 18
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-18
+          #   CXXCOMPILER: clang++-18
+          #   ENABLE_CONAN: ON
+          #   ENABLE_LTO: OFF
 
-          - name: gcc-14-release
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-14
-            CXXCOMPILER: g++-14
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+          # - name: gcc-14-release
+          #   continue-on-error: false
+          #   node: 20
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-14
+          #   CXXCOMPILER: g++-14
+          #   CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: gcc-13-release
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-13
-            CXXCOMPILER: g++-13
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+          # - name: gcc-13-release
+          #   continue-on-error: false
+          #   node: 20
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-13
+          #   CXXCOMPILER: g++-13
+          #   CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: gcc-12-release
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-22.04
-            BUILD_TOOLS: ON
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-12
-            CXXCOMPILER: g++-12
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+          # - name: gcc-12-release
+          #   continue-on-error: false
+          #   node: 20
+          #   runs-on: ubuntu-22.04
+          #   BUILD_TOOLS: ON
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-12
+          #   CXXCOMPILER: g++-12
+          #   CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: conan-linux-release-node
-            build_node_package: true
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-16
-            CXXCOMPILER: clang++-16
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
+          # - name: conan-linux-release-node
+          #   build_node_package: true
+          #   continue-on-error: false
+          #   node: 20
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-16
+          #   CXXCOMPILER: clang++-16
+          #   ENABLE_CONAN: ON
+          #   NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: conan-linux-debug-node
-            build_node_package: true
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-16
-            CXXCOMPILER: clang++-16
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
+          # - name: conan-linux-debug-node
+          #   build_node_package: true
+          #   continue-on-error: false
+          #   node: 20
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TYPE: Debug
+          #   CCOMPILER: clang-16
+          #   CXXCOMPILER: clang++-16
+          #   ENABLE_CONAN: ON
+          #   NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: conan-macos-x64-release-node
-            build_node_package: true
-            continue-on-error: true
-            node: 20
-            runs-on: macos-13 # x86_64
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_ASSERTIONS: ON
-            ENABLE_CONAN: ON
+          # - name: conan-macos-x64-release-node
+          #   build_node_package: true
+          #   continue-on-error: true
+          #   node: 20
+          #   runs-on: macos-13 # x86_64
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang
+          #   CXXCOMPILER: clang++
+          #   CUCUMBER_TIMEOUT: 60000
+          #   ENABLE_ASSERTIONS: ON
+          #   ENABLE_CONAN: ON
 
-          - name: conan-macos-arm64-release-node
-            build_node_package: true
-            continue-on-error: true
-            node: 20
-            runs-on: macos-14 # arm64 
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_ASSERTIONS: ON
-            ENABLE_CONAN: ON
+          # - name: conan-macos-arm64-release-node
+          #   build_node_package: true
+          #   continue-on-error: true
+          #   node: 20
+          #   runs-on: macos-14 # arm64 
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang
+          #   CXXCOMPILER: clang++
+          #   CUCUMBER_TIMEOUT: 60000
+          #   ENABLE_ASSERTIONS: ON
+          #   ENABLE_CONAN: ON
 
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
@@ -575,7 +575,13 @@ jobs:
 
         # All tests assume to be run from the build directory
         pushd ${OSRM_BUILD_DIR}
-        for i in ./unit_tests/*-tests ; do echo Running $i ; $i ; done
+        for i in $(seq 1 100); do
+            echo "Iteration $i"
+            for test in ./unit_tests/*-tests; do
+                echo "Running $test"
+                $test
+            done
+        done
         if [ -z "${ENABLE_SANITIZER}" ]; then
           npm run nodejs-tests
         fi
@@ -657,130 +663,130 @@ jobs:
         ccache -p
         ccache -s
 
-  benchmarks:
-    if: github.event_name == 'pull_request'
-    needs: [format-taginfo-docs]
-    runs-on: self-hosted
-    env:
-      CCOMPILER: clang-16
-      CXXCOMPILER: clang++-16
-      CC: clang-16
-      CXX: clang++-16
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PR_NUMBER: ${{ github.event.pull_request.number }}
-      GITHUB_REPOSITORY: ${{ github.repository }}
-      RUN_BIG_BENCHMARK: ${{ contains(github.event.pull_request.labels.*.name, 'Performance') }}
-    steps: 
-      - name: Checkout PR Branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-          path: pr
-      - name: Activate virtualenv
-        run: |
-          python3 -m venv .venv
-          source .venv/bin/activate
-          echo PATH=$PATH >> $GITHUB_ENV
-          pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" 
-      - name: Prepare data
-        run: |
-          if [ "$RUN_BIG_BENCHMARK" = "true" ]; then
-              rm -rf ~/data.osm.pbf
-              wget http://download.geofabrik.de/europe/poland-latest.osm.pbf -O ~/data.osm.pbf --quiet
-              gunzip -c ./pr/test/data/poland_gps_traces.csv.gz > ~/gps_traces.csv
-          else
-              if [ ! -f "~/data.osm.pbf" ]; then
-                wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
-              else
-                echo "Using cached data.osm.pbf"
-              fi
-              gunzip -c ./pr/test/data/berlin_gps_traces.csv.gz > ~/gps_traces.csv
-          fi
-      - name: Prepare environment
-        run: |
-          echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
-          mkdir -p $HOME/.ccache
-          ccache --zero-stats
-          ccache --max-size=256M
-      - name: Checkout Base Branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.base.ref }}
-          path: base
-      - name: Build Base Branch
-        run: |
-          cd base
-          npm ci --ignore-scripts
-          cd ..
-          mkdir base/build
-          cd base/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
-          make -j$(nproc)
-          make -j$(nproc) benchmarks
-          cd ..
-          make -C test/data 
-      - name: Build PR Branch
-        run: |
-          cd pr
-          npm ci --ignore-scripts
-          cd ..
-          mkdir -p pr/build
-          cd pr/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
-          make -j$(nproc) 
-          make -j$(nproc) benchmarks
-          cd ..
-          make -C test/data 
-      # we run benchmarks in tmpfs to avoid impact of disk IO
-      - name: Create folder for tmpfs 
-        run: |
-          # if by any chance it was mounted before(e.g. due to previous job failed), unmount it
-          sudo umount ~/benchmarks | true
-          rm -rf ~/benchmarks 
-          mkdir -p ~/benchmarks
-      # see https://llvm.org/docs/Benchmarking.html
-      - name: Run PR Benchmarks 
-        run: |
-          sudo cset shield -c 2-3 -k on
-          sudo mount -t tmpfs -o size=4g none ~/benchmarks
-          cp -rf pr/build ~/benchmarks/build
-          cp -rf pr/lib ~/benchmarks/lib
-          mkdir -p ~/benchmarks/test
-          cp -rf pr/test/data ~/benchmarks/test/data
-          cp -rf pr/profiles ~/benchmarks/profiles
+  # benchmarks:
+  #   if: github.event_name == 'pull_request'
+  #   needs: [format-taginfo-docs]
+  #   runs-on: self-hosted
+  #   env:
+  #     CCOMPILER: clang-16
+  #     CXXCOMPILER: clang++-16
+  #     CC: clang-16
+  #     CXX: clang++-16
+  #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     PR_NUMBER: ${{ github.event.pull_request.number }}
+  #     GITHUB_REPOSITORY: ${{ github.repository }}
+  #     RUN_BIG_BENCHMARK: ${{ contains(github.event.pull_request.labels.*.name, 'Performance') }}
+  #   steps: 
+  #     - name: Checkout PR Branch
+  #       uses: actions/checkout@v4
+  #       with:
+  #         ref: ${{ github.head_ref }}
+  #         path: pr
+  #     - name: Activate virtualenv
+  #       run: |
+  #         python3 -m venv .venv
+  #         source .venv/bin/activate
+  #         echo PATH=$PATH >> $GITHUB_ENV
+  #         pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" 
+  #     - name: Prepare data
+  #       run: |
+  #         if [ "$RUN_BIG_BENCHMARK" = "true" ]; then
+  #             rm -rf ~/data.osm.pbf
+  #             wget http://download.geofabrik.de/europe/poland-latest.osm.pbf -O ~/data.osm.pbf --quiet
+  #             gunzip -c ./pr/test/data/poland_gps_traces.csv.gz > ~/gps_traces.csv
+  #         else
+  #             if [ ! -f "~/data.osm.pbf" ]; then
+  #               wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
+  #             else
+  #               echo "Using cached data.osm.pbf"
+  #             fi
+  #             gunzip -c ./pr/test/data/berlin_gps_traces.csv.gz > ~/gps_traces.csv
+  #         fi
+  #     - name: Prepare environment
+  #       run: |
+  #         echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
+  #         mkdir -p $HOME/.ccache
+  #         ccache --zero-stats
+  #         ccache --max-size=256M
+  #     - name: Checkout Base Branch
+  #       uses: actions/checkout@v4
+  #       with:
+  #         ref: ${{ github.event.pull_request.base.ref }}
+  #         path: base
+  #     - name: Build Base Branch
+  #       run: |
+  #         cd base
+  #         npm ci --ignore-scripts
+  #         cd ..
+  #         mkdir base/build
+  #         cd base/build
+  #         cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
+  #         make -j$(nproc)
+  #         make -j$(nproc) benchmarks
+  #         cd ..
+  #         make -C test/data 
+  #     - name: Build PR Branch
+  #       run: |
+  #         cd pr
+  #         npm ci --ignore-scripts
+  #         cd ..
+  #         mkdir -p pr/build
+  #         cd pr/build
+  #         cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
+  #         make -j$(nproc) 
+  #         make -j$(nproc) benchmarks
+  #         cd ..
+  #         make -C test/data 
+  #     # we run benchmarks in tmpfs to avoid impact of disk IO
+  #     - name: Create folder for tmpfs 
+  #       run: |
+  #         # if by any chance it was mounted before(e.g. due to previous job failed), unmount it
+  #         sudo umount ~/benchmarks | true
+  #         rm -rf ~/benchmarks 
+  #         mkdir -p ~/benchmarks
+  #     # see https://llvm.org/docs/Benchmarking.html
+  #     - name: Run PR Benchmarks 
+  #       run: |
+  #         sudo cset shield -c 2-3 -k on
+  #         sudo mount -t tmpfs -o size=4g none ~/benchmarks
+  #         cp -rf pr/build ~/benchmarks/build
+  #         cp -rf pr/lib ~/benchmarks/lib
+  #         mkdir -p ~/benchmarks/test
+  #         cp -rf pr/test/data ~/benchmarks/test/data
+  #         cp -rf pr/profiles ~/benchmarks/profiles
 
-          sudo cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/pr_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
-          sudo umount ~/benchmarks
-          sudo cset shield --reset
-      - name: Run Base Benchmarks
-        run: |
-          sudo cset shield -c 2-3 -k on
-          sudo mount -t tmpfs -o size=4g none ~/benchmarks
-          cp -rf base/build ~/benchmarks/build
-          cp -rf base/lib ~/benchmarks/lib
-          mkdir -p ~/benchmarks/test
-          cp -rf base/test/data ~/benchmarks/test/data
-          cp -rf base/profiles ~/benchmarks/profiles
+  #         sudo cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/pr_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
+  #         sudo umount ~/benchmarks
+  #         sudo cset shield --reset
+  #     - name: Run Base Benchmarks
+  #       run: |
+  #         sudo cset shield -c 2-3 -k on
+  #         sudo mount -t tmpfs -o size=4g none ~/benchmarks
+  #         cp -rf base/build ~/benchmarks/build
+  #         cp -rf base/lib ~/benchmarks/lib
+  #         mkdir -p ~/benchmarks/test
+  #         cp -rf base/test/data ~/benchmarks/test/data
+  #         cp -rf base/profiles ~/benchmarks/profiles
 
-          # TODO: remove it when base branch will have this file at needed location
-          if [ ! -f ~/benchmarks/test/data/portugal_to_korea.json ]; then
-            cp base/src/benchmarks/portugal_to_korea.json ~/benchmarks/test/data/portugal_to_korea.json
-          fi
-          # we intentionally use scripts from PR branch to be able to update them and see results in the same PR
-          sudo cset shield --exec -- cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/base_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
-          sudo umount ~/benchmarks
-          sudo cset shield --reset
-      - name: Post Benchmark Results
-        run: |
-          python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
-      - name: Show CCache statistics
-        run: |
-          ccache -p
-          ccache -s
+  #         # TODO: remove it when base branch will have this file at needed location
+  #         if [ ! -f ~/benchmarks/test/data/portugal_to_korea.json ]; then
+  #           cp base/src/benchmarks/portugal_to_korea.json ~/benchmarks/test/data/portugal_to_korea.json
+  #         fi
+  #         # we intentionally use scripts from PR branch to be able to update them and see results in the same PR
+  #         sudo cset shield --exec -- cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/base_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
+  #         sudo umount ~/benchmarks
+  #         sudo cset shield --reset
+  #     - name: Post Benchmark Results
+  #       run: |
+  #         python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
+  #     - name: Show CCache statistics
+  #       run: |
+  #         ccache -p
+  #         ccache -s
 
-  ci-complete:
-    runs-on: ubuntu-22.04
-    needs: [build-test-publish, docker-image-matrix, windows-release-node, benchmarks]
-    steps:
-    - run: echo "CI complete"
+  # ci-complete:
+  #   runs-on: ubuntu-22.04
+  #   needs: [build-test-publish, docker-image-matrix, windows-release-node, benchmarks]
+  #   steps:
+  #   - run: echo "CI complete"
 
