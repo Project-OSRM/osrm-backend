@@ -18,7 +18,7 @@
 #include <numeric>
 #include <vector>
 
-#include <boost/range/adaptor/reversed.hpp>
+#include <ranges>
 
 namespace osrm::partitioner
 {
@@ -281,7 +281,7 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
 
         // top down assign new cell ids
         LevelID level = partitions.size();
-        for (const auto &partition : boost::adaptors::reverse(partitions))
+        for (const auto &partition : std::ranges::reverse_view(partitions))
         {
             BOOST_ASSERT(permutation.size() > 0);
             CellID last_cell_id = partition[permutation.front()];

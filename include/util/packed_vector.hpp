@@ -340,6 +340,8 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         {
         }
 
+        ReferenceT operator[](difference_type n) const { return container->operator[](index + n); }
+
       private:
         void increment() { ++index; }
         void decrement() { --index; }
