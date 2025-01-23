@@ -446,14 +446,14 @@ jobs:
       if: steps.cache-boost.outputs.cache-hit != 'true' && runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
       run: |
         BOOST_VERSION="1.85.0"
-        BOOST_VERSION_UNDERSCORE="${BOOST_VERSION//./_}"
-        wget -q https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_UNDERSCORE}.tar.gz
-        tar xzf boost_${BOOST_VERSION_UNDERSCORE}.tar.gz
-        cd boost_${BOOST_VERSION_UNDERSCORE}
+        BOOST_VERSION_FLAVOR="${BOOST_VERSION}-b2-nodocs"
+        wget -q https://github.com/boostorg/boost/releases/download/boost-${BOOST_VERSION}/boost-${BOOST_VERSION_FLAVOR}.tar.gz
+        tar xzf boost-${BOOST_VERSION_FLAVOR}.tar.gz
+        cd boost-${BOOST_VERSION_FLAVOR}
         sudo ./bootstrap.sh
         sudo ./b2 install
         cd ..
-        sudo rm -rf boost_${BOOST_VERSION_UNDERSCORE}*
+        sudo rm -rf boost-${BOOST_VERSION_FLAVOR}*
     
     - name: Install dev dependencies
       run: |
