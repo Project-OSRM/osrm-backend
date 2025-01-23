@@ -449,11 +449,11 @@ jobs:
         BOOST_VERSION_FLAVOR="${BOOST_VERSION}-b2-nodocs"
         wget -q https://github.com/boostorg/boost/releases/download/boost-${BOOST_VERSION}/boost-${BOOST_VERSION_FLAVOR}.tar.gz
         tar xzf boost-${BOOST_VERSION_FLAVOR}.tar.gz
-        cd boost-${BOOST_VERSION_FLAVOR}
+        cd boost-${BOOST_VERSION}
         sudo ./bootstrap.sh
         sudo ./b2 install
         cd ..
-        sudo rm -rf boost-${BOOST_VERSION_FLAVOR}*
+        sudo rm -rf boost-${BOOST_VERSION}*
     
     - name: Install dev dependencies
       run: |
