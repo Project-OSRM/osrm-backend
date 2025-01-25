@@ -54,7 +54,10 @@ template <typename Out> struct Renderer
         // `fmt::memory_buffer` stores first 500 bytes in the object itself(i.e. on stack in this
         // case) and then grows using heap if needed
         fmt::memory_buffer buffer;
-        fmt::format_to(std::back_inserter(buffer), FMT_COMPILE("{:.10g}"), number.value);
+        if (static_cast<std::uint64_t>(number.value) == number.value)
+            fmt::format_to(std::back_inserter(buffer), FMT_COMPILE("{}"), static_cast<std::uint64_t>(number.value));
+        else
+            fmt::format_to(std::back_inserter(buffer), FMT_COMPILE("{:.10g}"), number.value);
 
         write(buffer.data(), buffer.size());
     }
