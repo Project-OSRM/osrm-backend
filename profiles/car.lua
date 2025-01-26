@@ -1,376 +1,242 @@
--- Car profile
 
-api_version = 4
+-- Foot profile
+local http = require("socket.http") -- LuaSocket for HTTP requests
+local json = require("cjson") 
+
+api_version = 2
 
 Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
-Relations = require("lib/relations")
-TrafficSignal = require("lib/traffic_signal")
 find_access_tag = require("lib/access").find_access_tag
-limit = require("lib/maxspeed").limit
-Utils = require("lib/utils")
-Measure = require("lib/measure")
+stations_data = nil
+
+
+function fetch_pollution_data()
+  local url = "http://128.199.51.173:8000/routes/api/pollution/PM2.5/"
+  local response, status = http.request(url)
+
+  if status == 200 and response then
+    print("Raw response:", response)
+    local success, data = pcall(json.decode, response) -- Manejar errores de JSON
+    if success and data and data.stations then
+      print("Pollution data fetched successfully.")
+      print("Number of stations:", #data.stations)
+      return data
+    else
+      print("Failed to decode JSON or missing 'stations' key.")
+    end
+  else
+    print("HTTP request failed. Status:", status)
+  end
+
+  -- Fallback a datos vacíos si hay un error
+  return { stations = {} }
+end
+
+
 
 function setup()
+  local walking_speed = 5
+  stations_data = fetch_pollution_data()
+
+  -- Check if data was successfully retrieved
+  if not stations_data or not stations_data.stations then
+    print("Warning: Pollution data could not be loaded. Defaulting to no pollution.")
+    stations_data = { stations = {} } -- Fallback to empty station data
+  else
+    print("Pollution data loaded successfully.")
+  end
   return {
     properties = {
-      max_speed_for_map_matching      = 180/3.6, -- 180kmph -> m/s
-      -- For routing based on duration, but weighted for preferring certain roads
-      weight_name                     = 'routability',
-      -- For shortest duration without penalties for accessibility
-      -- weight_name                     = 'duration',
-      -- For shortest distance without penalties for accessibility
-      -- weight_name                     = 'distance',
-      process_call_tagless_node      = false,
-      u_turn_penalty                 = 20,
-      continue_straight_at_waypoint  = true,
-      use_turn_restrictions          = true,
-      left_hand_driving              = false,
-      traffic_light_penalty          = 2,
+      weight_name                   = 'duration',
+      max_speed_for_map_matching    = 40/3.6, -- kmph -> m/s
+      call_tagless_node_function    = false,
+      traffic_light_penalty         = 2,
+      u_turn_penalty                = 2,
+      continue_straight_at_waypoint = false,
+      use_turn_restrictions         = false,
     },
 
-    default_mode              = mode.driving,
-    default_speed             = 10,
-    oneway_handling           = true,
-    side_road_multiplier      = 0.8,
-    turn_penalty              = 7.5,
-    speed_reduction           = 0.8,
-    turn_bias                 = 1.075,
-    cardinal_directions       = false,
+    default_mode            = mode.walking,
+    default_speed           = walking_speed,
+    oneway_handling         = 'specific',     -- respect 'oneway:foot' but not 'oneway'
 
-    -- Size of the vehicle, to be limited by physical restriction of the way
-    vehicle_height = 2.0, -- in meters, 2.0m is the height slightly above biggest SUVs
-    vehicle_width = 1.9, -- in meters, ways with narrow tag are considered narrower than 2.2m
-
-    -- Size of the vehicle, to be limited mostly by legal restriction of the way
-    vehicle_length = 4.8, -- in meters, 4.8m is the length of large or family car
-    vehicle_weight = 2000, -- in kilograms
-
-    -- a list of suffixes to suppress in name change instructions. The suffixes also include common substrings of each other
-    suffix_list = {
-      'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'North', 'South', 'West', 'East', 'Nor', 'Sou', 'We', 'Ea'
-    },
-
-    barrier_whitelist = Set {
-      'cattle_grid',
-      'border_control',
-      'toll_booth',
-      'sally_port',
-      'gate',
-      'lift_gate',
-      'no',
-      'entrance',
-      'height_restrictor',
-      'arch'
+    barrier_blacklist = Set {
+      'yes',
+      'wall',
+      'fence'
     },
 
     access_tag_whitelist = Set {
       'yes',
-      'motorcar',
-      'motor_vehicle',
-      'vehicle',
+      'foot',
       'permissive',
-      'designated',
-      'hov'
+      'designated'
     },
 
     access_tag_blacklist = Set {
       'no',
       'agricultural',
       'forestry',
-      'emergency',
-      'psv',
-      'customers',
       'private',
       'delivery',
-      'destination'
     },
 
-    -- tags disallow access to in combination with highway=service
-    service_access_tag_blacklist = Set {
-        'private'
-    },
+    restricted_access_tag_list = Set { },
 
-    restricted_access_tag_list = Set {
-      'private',
-      'delivery',
-      'destination',
-      'customers',
-    },
+    restricted_highway_whitelist = Set { },
+
+    construction_whitelist = Set {},
 
     access_tags_hierarchy = Sequence {
-      'motorcar',
-      'motor_vehicle',
-      'vehicle',
+      'foot',
       'access'
     },
 
-    service_tag_forbidden = Set {
-      'emergency_access'
-    },
+    -- tags disallow access to in combination with highway=service
+    service_access_tag_blacklist = Set { },
 
     restrictions = Sequence {
-      'motorcar',
-      'motor_vehicle',
-      'vehicle'
+      'foot'
     },
 
-    classes = Sequence {
-        'toll', 'motorway', 'ferry', 'restricted', 'tunnel'
-    },
-
-    -- classes to support for exclude flags
-    excludable = Sequence {
-        Set {'toll'},
-        Set {'motorway'},
-        Set {'ferry'}
+    -- list of suffixes to suppress in name change instructions
+    suffix_list = Set {
+      'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'North', 'South', 'West', 'East'
     },
 
     avoid = Set {
-      'area',
-      -- 'toll',    -- uncomment this to avoid tolls
-      'reversible',
       'impassable',
-      'hov_lanes',
-      'steps',
-      'construction',
       'proposed'
     },
 
     speeds = Sequence {
       highway = {
-        motorway        = 90,
-        motorway_link   = 45,
-        trunk           = 85,
-        trunk_link      = 40,
-        primary         = 65,
-        primary_link    = 30,
-        secondary       = 55,
-        secondary_link  = 25,
-        tertiary        = 40,
-        tertiary_link   = 20,
-        unclassified    = 25,
-        residential     = 25,
-        living_street   = 10,
-        service         = 15
+        primary         = walking_speed,
+        primary_link    = walking_speed,
+        secondary       = walking_speed,
+        secondary_link  = walking_speed,
+        tertiary        = walking_speed,
+        tertiary_link   = walking_speed,
+        unclassified    = walking_speed,
+        residential     = walking_speed,
+        road            = walking_speed,
+        living_street   = walking_speed,
+        service         = walking_speed,
+        track           = walking_speed,
+        path            = walking_speed,
+        steps           = walking_speed,
+        pedestrian      = walking_speed,
+        platform        = walking_speed,
+        footway         = walking_speed,
+        pier            = walking_speed,
+      },
+
+      railway = {
+        platform        = walking_speed
+      },
+
+      amenity = {
+        parking         = walking_speed,
+        parking_entrance= walking_speed
+      },
+
+      man_made = {
+        pier            = walking_speed
+      },
+
+      leisure = {
+        track           = walking_speed
       }
     },
 
-    service_penalties = {
-      alley             = 0.5,
-      parking           = 0.5,
-      parking_aisle     = 0.5,
-      driveway          = 0.5,
-      ["drive-through"] = 0.5,
-      ["drive-thru"] = 0.5
-    },
-
-    restricted_highway_whitelist = Set {
-      'motorway',
-      'motorway_link',
-      'trunk',
-      'trunk_link',
-      'primary',
-      'primary_link',
-      'secondary',
-      'secondary_link',
-      'tertiary',
-      'tertiary_link',
-      'residential',
-      'living_street',
-      'unclassified',
-      'service'
-    },
-
-    construction_whitelist = Set {
-      'no',
-      'widening',
-      'minor',
-    },
-
     route_speeds = {
-      ferry = 5,
-      shuttle_train = 10
+      ferry = 5
     },
 
     bridge_speeds = {
-      movable = 5
     },
 
-    -- surface/trackype/smoothness
-    -- values were estimated from looking at the photos at the relevant wiki pages
-
-    -- max speed for surfaces
     surface_speeds = {
-      asphalt = nil,    -- nil mean no limit. removing the line has the same effect
-      concrete = nil,
-      ["concrete:plates"] = nil,
-      ["concrete:lanes"] = nil,
-      paved = nil,
-
-      cement = 80,
-      compacted = 80,
-      fine_gravel = 80,
-
-      paving_stones = 60,
-      metal = 60,
-      bricks = 60,
-
-      grass = 40,
-      wood = 40,
-      sett = 40,
-      grass_paver = 40,
-      gravel = 40,
-      unpaved = 40,
-      ground = 40,
-      dirt = 40,
-      pebblestone = 40,
-      tartan = 40,
-
-      cobblestone = 30,
-      clay = 30,
-
-      earth = 20,
-      stone = 20,
-      rocky = 20,
-      sand = 20,
-
-      mud = 10
+      fine_gravel =   walking_speed*0.75,
+      gravel =        walking_speed*0.75,
+      pebblestone =   walking_speed*0.75,
+      mud =           walking_speed*0.5,
+      sand =          walking_speed*0.5
     },
 
-    -- max speed for tracktypes
     tracktype_speeds = {
-      grade1 =  60,
-      grade2 =  40,
-      grade3 =  30,
-      grade4 =  25,
-      grade5 =  20
     },
 
-    -- max speed for smoothnesses
     smoothness_speeds = {
-      intermediate    =  80,
-      bad             =  40,
-      very_bad        =  20,
-      horrible        =  10,
-      very_horrible   =  5,
-      impassable      =  0
-    },
-
-    -- http://wiki.openstreetmap.org/wiki/Speed_limits
-    maxspeed_table_default = {
-      urban = 50,
-      rural = 90,
-      trunk = 110,
-      motorway = 130
-    },
-
-    -- List only exceptions
-    maxspeed_table = {
-      ["at:rural"] = 100,
-      ["at:trunk"] = 100,
-      ["be:motorway"] = 120,
-      ["be-bru:rural"] = 70,
-      ["be-bru:urban"] = 30,
-      ["be-vlg:rural"] = 70,
-      ["bg:motorway"] = 140,
-      ["by:urban"] = 60,
-      ["by:motorway"] = 110,
-      ["ca-on:rural"] = 80,
-      ["ch:rural"] = 80,
-      ["ch:trunk"] = 100,
-      ["ch:motorway"] = 120,
-      ["cz:trunk"] = 0,
-      ["cz:motorway"] = 0,
-      ["de:living_street"] = 7,
-      ["de:rural"] = 100,
-      ["de:motorway"] = 0,
-      ["dk:rural"] = 80,
-      ["es:trunk"] = 90,
-      ["fr:rural"] = 80,
-      ["gb:nsl_single"] = (60*1609)/1000,
-      ["gb:nsl_dual"] = (70*1609)/1000,
-      ["gb:motorway"] = (70*1609)/1000,
-      ["nl:rural"] = 80,
-      ["nl:trunk"] = 100,
-      ['no:rural'] = 80,
-      ['no:motorway'] = 110,
-      ['ph:urban'] = 40,
-      ['ph:rural'] = 80,
-      ['ph:motorway'] = 100,
-      ['pl:rural'] = 100,
-      ['pl:trunk'] = 120,
-      ['pl:motorway'] = 140,
-      ["ro:trunk"] = 100,
-      ["ru:living_street"] = 20,
-      ["ru:urban"] = 60,
-      ["ru:motorway"] = 110,
-      ["uk:nsl_single"] = (60*1609)/1000,
-      ["uk:nsl_dual"] = (70*1609)/1000,
-      ["uk:motorway"] = (70*1609)/1000,
-      ['za:urban'] = 60,
-      ['za:rural'] = 100,
-      ["none"] = 140
-    },
-
-    relation_types = Sequence {
-      "route"
-    },
-
-    -- classify highway tags when necessary for turn weights
-    highway_turn_classification = {
-    },
-
-    -- classify access tags when necessary for turn weights
-    access_turn_classification = {
     }
   }
 end
 
-function process_node(profile, node, result, relations)
-  -- parse access and barrier tags
+function calculate_pollution(lat, lon)
+  -- Calcular contaminación
+  local pollution_value = 0
+  local total_weight = 0
+  local weight = 0
+  local p = 1.8
+  local max_distance = 3
+  if stations_data and stations_data.stations then
+    for _, station in ipairs(stations_data.stations) do
+      local station_lat = tonumber(station.lat)
+      local station_lon = tonumber(station.lon)
+      local latest_reading = tonumber(station.pollution)
+
+      if station_lat and station_lon and latest_reading then
+        -- Fórmula de distancia usando Haversine
+        local R = 6371 -- Radio de la Tierra en km
+        local dlat = math.rad(station_lat - lat)
+        local dlon = math.rad(station_lon - lon)
+        local a = math.sin(dlat / 2)^2 +
+                  math.cos(math.rad(lat)) * math.cos(math.rad(station_lat)) * math.sin(dlon / 2)^2
+        local c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        local distance = R * c
+
+      -- Ponderación ajustada
+        weight = 1 / ((distance + 1)) 
+        weight = tonumber(string.format("%.6f", weight))
+        pollution_value = pollution_value + (latest_reading * weight)
+        --total_weight = total_weight + weight
+
+      end
+    end
+    --print(pollution_value)
+    return pollution_value
+  else
+    print("No station data available.")
+    return 0
+  end
+end
+
+function process_node(profile, node, result)
+  -- Parse access and barrier tags
   local access = find_access_tag(node, profile.access_tags_hierarchy)
   if access then
-    if profile.access_tag_blacklist[access] and not profile.restricted_access_tag_list[access] then
+    if profile.access_tag_blacklist[access] then
       result.barrier = true
     end
   else
     local barrier = node:get_value_by_key("barrier")
     if barrier then
-      --  check height restriction barriers
-      local restricted_by_height = false
-      if barrier == 'height_restrictor' then
-         local maxheight = Measure.get_max_height(node:get_value_by_key("maxheight"), node)
-         restricted_by_height = maxheight and maxheight < profile.vehicle_height
-      end
-
-      --  make an exception for rising bollard barriers
+      -- Make an exception for rising bollard barriers
       local bollard = node:get_value_by_key("bollard")
       local rising_bollard = bollard and "rising" == bollard
 
-      -- make an exception for lowered/flat barrier=kerb
-      -- and incorrect tagging of highway crossing kerb as highway barrier
-      local kerb = node:get_value_by_key("kerb")
-      local highway = node:get_value_by_key("highway")
-      local flat_kerb = kerb and ("lowered" == kerb or "flush" == kerb)
-      local highway_crossing_kerb = barrier == "kerb" and highway and highway == "crossing"
-
-      if not profile.barrier_whitelist[barrier]
-                and not rising_bollard
-                and not flat_kerb
-                and not highway_crossing_kerb
-                or restricted_by_height then
+      if profile.barrier_blacklist[barrier] and not rising_bollard then
         result.barrier = true
       end
     end
   end
-
-  -- check if node is a traffic light
-  result.traffic_lights = TrafficSignal.get_value(node)
 end
 
-function process_way(profile, way, result, relations)
+
+-- main entry point for processsing a way
+function process_way(profile, way, result)
   -- the intial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways
   -- have to be checked.
@@ -385,21 +251,25 @@ function process_way(profile, way, result, relations)
   -- data table for storing intermediate values during processing
   local data = {
     -- prefetch tags
-    highway = way:get_value_by_key('highway'),
-    bridge = way:get_value_by_key('bridge'),
-    route = way:get_value_by_key('route')
+    highway = way:get_value_by_key("highway"),
   }
 
+    -- Verificar si el objeto `way` está definido
+  if not way then
+      print("Error: way is nil.")
+      return
+  end
+
+
   -- perform an quick initial check and abort if the way is
-  -- obviously not routable.
-  -- highway or route tags must be in data table, bridge is optional
-  if (not data.highway or data.highway == '') and
-  (not data.route or data.route == '')
-  then
+  -- obviously not routable. here we require at least one
+  -- of the prefetched tags to be present, ie. the data table
+  -- cannot be empty
+  if next(data) == nil then     -- is the data table empty?
     return
   end
 
-  handlers = Sequence {
+  local handlers = Sequence {
     -- set the default mode for this profile. if can be changed later
     -- in case it turns we're e.g. on a ferry
     WayHandlers.default_mode,
@@ -408,108 +278,83 @@ function process_way(profile, way, result, relations)
     -- routable. this includes things like status=impassable,
     -- toll=yes and oneway=reversible
     WayHandlers.blocked_ways,
-    WayHandlers.avoid_ways,
-    WayHandlers.handle_height,
-    WayHandlers.handle_width,
-    WayHandlers.handle_length,
-    WayHandlers.handle_weight,
 
     -- determine access status by checking our hierarchy of
     -- access tags, e.g: motorcar, motor_vehicle, vehicle
     WayHandlers.access,
 
-    -- check whether forward/backward directions are routable
+    -- check whether forward/backward directons are routable
     WayHandlers.oneway,
 
-    -- check a road's destination
+    -- check whether forward/backward directons are routable
     WayHandlers.destinations,
 
     -- check whether we're using a special transport mode
     WayHandlers.ferries,
     WayHandlers.movables,
 
-    -- handle service road restrictions
-    WayHandlers.service,
-
-    -- handle hov
-    WayHandlers.hov,
-
     -- compute speed taking into account way type, maxspeed tags, etc.
     WayHandlers.speed,
-    WayHandlers.maxspeed,
     WayHandlers.surface,
-    WayHandlers.penalties,
-
-    -- compute class labels
-    WayHandlers.classes,
 
     -- handle turn lanes and road classification, used for guidance
-    WayHandlers.turn_lanes,
     WayHandlers.classification,
 
     -- handle various other flags
     WayHandlers.roundabouts,
     WayHandlers.startpoint,
-    WayHandlers.driving_side,
 
     -- set name, ref and pronunciation
     WayHandlers.names,
 
     -- set weight properties of the way
     WayHandlers.weights,
-
-    -- set classification of ways relevant for turns
-    WayHandlers.way_classification_for_turn
   }
 
-  WayHandlers.run(profile, way, result, data, handlers, relations)
-
-  if profile.cardinal_directions then
-      Relations.process_way_refs(way, relations, result)
-  end
+  WayHandlers.run(profile, way, result, data, handlers)
 end
 
-function process_turn(profile, turn)
-  -- Use a sigmoid function to return a penalty that maxes out at turn_penalty
-  -- over the space of 0-180 degrees.  Values here were chosen by fitting
-  -- the function to some turn penalty samples from real driving.
-  local turn_penalty = profile.turn_penalty
-  local turn_bias = turn.is_left_hand_driving and 1. / profile.turn_bias or profile.turn_bias
+function process_turn (profile, turn)
+  turn.duration = 0.
+
+  if turn.direction_modifier == direction_modifier.u_turn then
+     turn.duration = turn.duration + profile.properties.u_turn_penalty
+  end
 
   if turn.has_traffic_light then
-      turn.duration = profile.properties.traffic_light_penalty
+     turn.duration = profile.properties.traffic_light_penalty
   end
-
-  if turn.number_of_roads > 2 or turn.source_mode ~= turn.target_mode or turn.is_u_turn then
-    if turn.angle >= 0 then
-      turn.duration = turn.duration + turn_penalty / (1 + math.exp( -((13 / turn_bias) *  turn.angle/180 - 6.5*turn_bias)))
-    else
-      turn.duration = turn.duration + turn_penalty / (1 + math.exp( -((13 * turn_bias) * -turn.angle/180 - 6.5/turn_bias)))
-    end
-
-    if turn.is_u_turn then
-      turn.duration = turn.duration + profile.properties.u_turn_penalty
-    end
-  end
-
-  -- for distance based routing we don't want to have penalties based on turn angle
-  if profile.properties.weight_name == 'distance' then
-     turn.weight = 0
-  else
-     turn.weight = turn.duration
-  end
-
   if profile.properties.weight_name == 'routability' then
       -- penalize turns from non-local access only segments onto local access only tags
       if not turn.source_restricted and turn.target_restricted then
-          turn.weight = constants.max_turn_weight
+          turn.weight = turn.weight + 3000
       end
   end
 end
 
+function process_segment(profile, segment)
+  -- Extract coordinates of the start and end points
+  local source_lat, source_lon = segment.source.lat, segment.source.lon
+  local target_lat, target_lon = segment.target.lat, segment.target.lon
+
+  -- Calculate pollution impact at source and target
+  local pollution_source = calculate_pollution(source_lat, source_lon)
+  local pollution_target = calculate_pollution(target_lat, target_lon)
+  
+
+  -- Average pollution for the segment
+  local avg_pollution = (pollution_source + pollution_target) / 2
+  --print(avg_pollution)
+
+  -- Adjust weight and duration based on pollution level
+  segment.weight = segment.weight + (avg_pollution^1.4)
+end
+
+
 return {
   setup = setup,
-  process_way = process_way,
+  process_way =  process_way,
   process_node = process_node,
-  process_turn = process_turn
+  process_turn = process_turn,
+  process_segment = process_segment
 }
