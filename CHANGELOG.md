@@ -78,6 +78,7 @@
       - FIXED: Ensure required file check in osrm-routed is correctly enforced. [#6655](https://github.com/Project-OSRM/osrm-backend/pull/6655)
       - FIXED: Correct HTTP docs to reflect summary output dependency on steps parameter. [#6655](https://github.com/Project-OSRM/osrm-backend/pull/6655)
       - ADDED: Extract prerelease/build information from package semver [#6839](https://github.com/Project-OSRM/osrm-backend/pull/6839)
+      - ADDED: Handle conditional access tags for date ranges [#6984](https://github.com/Project-OSRM/osrm-backend/pull/6984)
     - Profiles:
       - FIXED: Bicycle and foot profiles now don't route on proposed ways [#6615](https://github.com/Project-OSRM/osrm-backend/pull/6615)
       - ADDED: Add optional support of cargo bike exclusion and width to bicyle profile [#7044](https://github.com/Project-OSRM/osrm-backend/pull/7044)
