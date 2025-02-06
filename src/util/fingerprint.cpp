@@ -3,13 +3,11 @@
 #include "util/exception_utils.hpp"
 #include "util/version.hpp"
 
-#include <boost/assert.hpp>
 #include <boost/crc.hpp>
 
 #include <cstring>
 
 #include <algorithm>
-#include <string>
 
 namespace osrm::util
 {

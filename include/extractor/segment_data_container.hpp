@@ -13,8 +13,6 @@
 
 #include <filesystem>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 namespace osrm::extractor
 {

@@ -13,7 +13,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <utility>
 #include <vector>
 
 namespace osrm::engine::guidance

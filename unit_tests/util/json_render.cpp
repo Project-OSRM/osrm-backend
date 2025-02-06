@@ -3,8 +3,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <iostream>
-
 BOOST_AUTO_TEST_SUITE(json_renderer)
 
 using namespace osrm::util::json;

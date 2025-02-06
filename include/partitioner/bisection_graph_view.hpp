@@ -8,7 +8,6 @@
 #include <boost/range/iterator_range.hpp>
 
 #include <cstddef>
-#include <cstdint>
 
 namespace osrm::partitioner
 {

@@ -9,7 +9,6 @@
 #include <boost/assert.hpp>
 
 #include <algorithm>
-#include <limits>
 #include <utility>
 #include <vector>
 

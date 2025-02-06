@@ -4,7 +4,6 @@
 #include "util/coordinate.hpp"
 
 #include <algorithm>
-#include <boost/assert.hpp>
 #include <string>
 #include <vector>
 

@@ -5,9 +5,7 @@
 #include <boost/heap/d_ary_heap.hpp>
 
 #include <algorithm>
-#include <cstdint>
 #include <limits>
-#include <map>
 #include <optional>
 #include <unordered_map>
 #include <vector>

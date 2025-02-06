@@ -17,7 +17,6 @@
 #include <algorithm>
 #include <cmath>
 #include <iterator>
-#include <memory>
 #include <vector>
 
 namespace osrm::engine

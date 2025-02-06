@@ -3,7 +3,6 @@
 
 #include <iterator>
 #include <numeric>
-#include <utility>
 
 namespace osrm::util
 {
