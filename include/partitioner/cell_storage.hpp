@@ -14,9 +14,7 @@
 
 #include "customizer/cell_metric.hpp"
 
-#include <boost/iterator/iterator_facade.hpp>
-#include <boost/range/iterator_range.hpp>
-
+#include <ranges>
 #include <tbb/parallel_sort.h>
 
 #include <algorithm>
@@ -128,19 +126,19 @@ template <storage::Ownership Ownership> class CellStorageImpl
 
             friend class ::boost::iterator_core_access;
             ValuePtrT current;
-            const std::size_t stride;
+            std::size_t stride;
         };
 
         template <typename ValuePtr> auto GetOutRange(const ValuePtr ptr, const NodeID node) const
         {
             auto iter = std::find(source_boundary, source_boundary + num_source_nodes, node);
             if (iter == source_boundary + num_source_nodes)
-                return boost::make_iterator_range(ptr, ptr);
+                return std::ranges::subrange(ptr, ptr);
 
             auto row = std::distance(source_boundary, iter);
             auto begin = ptr + num_destination_nodes * row;
             auto end = begin + num_destination_nodes;
-            return boost::make_iterator_range(begin, end);
+            return std::ranges::subrange(begin, end);
         }
 
         template <typename ValuePtr> auto GetInRange(const ValuePtr ptr, const NodeID node) const
@@ -148,14 +146,14 @@ template <storage::Ownership Ownership> class CellStorageImpl
             auto iter =
                 std::find(destination_boundary, destination_boundary + num_destination_nodes, node);
             if (iter == destination_boundary + num_destination_nodes)
-                return boost::make_iterator_range(ColumnIterator<ValuePtr>{},
-                                                  ColumnIterator<ValuePtr>{});
+                return std::ranges::subrange(ColumnIterator<ValuePtr>{},
+                                             ColumnIterator<ValuePtr>{});
 
             auto column = std::distance(destination_boundary, iter);
             auto begin = ColumnIterator<ValuePtr>{ptr + column, num_destination_nodes};
             auto end = ColumnIterator<ValuePtr>{
                 ptr + column + num_source_nodes * num_destination_nodes, num_destination_nodes};
-            return boost::make_iterator_range(begin, end);
+            return std::ranges::subrange(begin, end);
         }
 
       public:
@@ -173,13 +171,13 @@ template <storage::Ownership Ownership> class CellStorageImpl
 
         auto GetSourceNodes() const
         {
-            return boost::make_iterator_range(source_boundary, source_boundary + num_source_nodes);
+            return std::ranges::subrange(source_boundary, source_boundary + num_source_nodes);
         }
 
         auto GetDestinationNodes() const
         {
-            return boost::make_iterator_range(destination_boundary,
-                                              destination_boundary + num_destination_nodes);
+            return std::ranges::subrange(destination_boundary,
+                                         destination_boundary + num_destination_nodes);
         }
 
         CellImpl(const CellData &data,
