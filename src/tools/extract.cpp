@@ -7,7 +7,6 @@
 
 #include <boost/program_options.hpp>
 #include <cstdlib>
-#include <exception>
 #include <filesystem>
 #include <iostream>
 #include <new>

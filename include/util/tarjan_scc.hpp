@@ -14,11 +14,9 @@
 
 #include "osrm/coordinate.hpp"
 #include <boost/assert.hpp>
-#include <cstdint>
 
 #include <algorithm>
 #include <climits>
-#include <memory>
 #include <stack>
 #include <vector>
 

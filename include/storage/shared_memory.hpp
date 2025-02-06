@@ -20,7 +20,6 @@
 #include <cstdint>
 
 #include <algorithm>
-#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <thread>

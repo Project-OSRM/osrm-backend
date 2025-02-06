@@ -4,10 +4,8 @@
 #include "partitioner/bisection_graph_view.hpp"
 
 #include <cstdint>
-#include <functional>
 #include <set>
 #include <unordered_set>
-#include <utility>
 #include <vector>
 
 namespace osrm::partitioner

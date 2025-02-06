@@ -10,10 +10,8 @@
 #include <boost/program_options/errors.hpp>
 
 #include <cstdlib>
-#include <exception>
 #include <filesystem>
 #include <new>
-#include <ostream>
 #include <thread>
 
 #include "util/meminfo.hpp"

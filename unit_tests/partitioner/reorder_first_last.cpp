@@ -3,9 +3,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
-#include <functional>
 #include <iterator>
-#include <utility>
 #include <vector>
 
 using namespace osrm::partitioner;

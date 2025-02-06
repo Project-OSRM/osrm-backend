@@ -12,7 +12,6 @@
 
 #include "storage/shared_datatype.hpp"
 
-#include <array>
 #include <memory>
 #include <unordered_map>
 

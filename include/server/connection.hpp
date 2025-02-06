@@ -11,7 +11,6 @@
 #include <boost/config.hpp>
 #include <boost/version.hpp>
 
-#include <memory>
 #include <vector>
 
 namespace osrm::server

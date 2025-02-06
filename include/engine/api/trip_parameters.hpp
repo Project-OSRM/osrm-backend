@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "engine/api/route_parameters.hpp"
 
 #include <optional>
-#include <vector>
 
 namespace osrm::engine::api
 {

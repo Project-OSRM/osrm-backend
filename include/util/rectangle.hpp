@@ -6,7 +6,6 @@
 #include <boost/assert.hpp>
 
 #include <limits>
-#include <utility>
 
 #include <cstdint>
 

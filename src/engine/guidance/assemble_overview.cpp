@@ -5,8 +5,6 @@
 #include <iterator>
 #include <limits>
 #include <numeric>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 namespace osrm::engine::guidance

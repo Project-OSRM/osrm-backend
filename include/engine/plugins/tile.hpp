@@ -5,9 +5,6 @@
 #include "engine/plugins/plugin_base.hpp"
 #include "engine/routing_algorithms.hpp"
 
-#include <utility>
-#include <vector>
-
 /*
  * This plugin generates Mapbox Vector tiles that show the internal
  * routing geometry and speed values on all road segments.

@@ -10,8 +10,6 @@
 #include "osrm/osrm.hpp"
 #include "osrm/status.hpp"
 
-#include <boost/assert.hpp>
-
 #include <cstdlib>
 #include <exception>
 #include <iostream>

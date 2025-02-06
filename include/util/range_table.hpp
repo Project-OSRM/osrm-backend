@@ -7,7 +7,6 @@
 #include "util/vector_view.hpp"
 
 #include <array>
-#include <fstream>
 #include <utility>
 
 namespace osrm::util

@@ -10,7 +10,6 @@
 #include <iterator>
 #include <limits>
 #include <optional>
-#include <utility>
 
 namespace osrm::util::coordinate_calculation
 {

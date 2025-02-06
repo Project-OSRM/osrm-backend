@@ -16,8 +16,6 @@
 #include "util/range_table.hpp"
 #include "util/serialization.hpp"
 
-#include <boost/assert.hpp>
-
 namespace osrm::extractor::files
 {
 

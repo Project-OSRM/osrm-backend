@@ -6,8 +6,6 @@
 #include "storage/serialization.hpp"
 #include "storage/tar.hpp"
 
-#include <boost/assert.hpp>
-
 namespace osrm::guidance::serialization
 {
 

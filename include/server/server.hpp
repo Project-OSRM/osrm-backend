@@ -18,7 +18,6 @@
 #include <sys/types.h>
 #endif
 
-#include <functional>
 #include <memory>
 #include <string>
 #include <thread>
@@ -53,8 +52,7 @@ class Server
         const auto port_string = std::to_string(port);
 
         boost::asio::ip::tcp::resolver resolver(io_context);
-        boost::asio::ip::tcp::resolver::query query(address, port_string);
-        boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
+        boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(address, port_string).begin();
 
         acceptor.open(endpoint.protocol());
 #ifdef SO_REUSEPORT

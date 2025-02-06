@@ -18,7 +18,6 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <tuple>
 #include <type_traits>
 
 namespace osrm::storage::io

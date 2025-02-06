@@ -7,7 +7,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <exception>
 #include <numeric>
 #include <string>
 
