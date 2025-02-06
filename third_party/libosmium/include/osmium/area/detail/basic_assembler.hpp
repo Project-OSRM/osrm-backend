@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -608,7 +608,7 @@ namespace osmium {
 
                 void create_rings_simple_case() {
                     auto count_remaining = m_segment_list.size();
-                    for (slocation& sl : m_locations) {
+                    for (const slocation& sl : m_locations) {
                         const NodeRefSegment& segment = m_segment_list[sl.item];
                         if (!segment.is_done()) {
                             count_remaining -= add_new_ring(sl);
@@ -671,7 +671,7 @@ namespace osmium {
                         std::cerr << "    Trying to merge " << open_ring_its.size() << " open rings (try_to_merge)\n";
                     }
 
-                    std::vector<location_to_ring_map> xrings = create_location_to_ring_map(open_ring_its);
+                    const auto xrings = create_location_to_ring_map(open_ring_its);
 
                     auto it = xrings.cbegin();
                     while (it != xrings.cend()) {
@@ -825,7 +825,7 @@ namespace osmium {
 
                     find_inner_outer_complex();
                     ProtoRing* outer_ring = find_enclosing_ring(ring_min->ring().min_segment());
-                    bool ring_min_is_outer = !outer_ring;
+                    const bool ring_min_is_outer = !outer_ring;
                     if (debug()) {
                         std::cerr << "  Open ring is " << (ring_min_is_outer ? "outer" : "inner") << " ring\n";
                     }
@@ -924,7 +924,7 @@ namespace osmium {
 
                     // Now find all the rest of the rings (ie not starting at split locations)
                     if (count_remaining > 0) {
-                        for (slocation& sl : m_locations) {
+                        for (const slocation& sl : m_locations) {
                             const NodeRefSegment& segment = m_segment_list[sl.item];
                             if (!segment.is_done()) {
                                 count_remaining -= add_new_ring_complex(sl);

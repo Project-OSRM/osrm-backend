@@ -1,6 +1,7 @@
 # Unreleased
   - Changes from 5.27.1
     - Features
+      - ADDED: Route pedestrians over highway=platform [#6993](https://github.com/Project-OSRM/osrm-backend/pull/6993)
       - REMOVED: Remove all core-CH left-overs [#6920](https://github.com/Project-OSRM/osrm-backend/pull/6920)
       - ADDED: Add support for a keepalive_timeout flag. [#6674](https://github.com/Project-OSRM/osrm-backend/pull/6674)
       - ADDED: Add support for a default_radius flag. [#6575](https://github.com/Project-OSRM/osrm-backend/pull/6575)
@@ -24,6 +25,7 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: Use std::string_view for key type in json::Object. [#7062](https://github.com/Project-OSRM/osrm-backend/pull/7062)
       - CHANGED: Use thread_local instead of boost::thread_specific_ptr. [#6991](https://github.com/Project-OSRM/osrm-backend/pull/6991)
       - CHANGED: Bump flatbuffers to v24.3.25 version. [#6988](https://github.com/Project-OSRM/osrm-backend/pull/6988)
       - CHANGED: Add .reserve(...) to assembleGeometry function. [#6983](https://github.com/Project-OSRM/osrm-backend/pull/6983)
@@ -78,6 +80,7 @@
       - ADDED: Extract prerelease/build information from package semver [#6839](https://github.com/Project-OSRM/osrm-backend/pull/6839)
     - Profiles:
       - FIXED: Bicycle and foot profiles now don't route on proposed ways [#6615](https://github.com/Project-OSRM/osrm-backend/pull/6615)
+      - ADDED: Add optional support of cargo bike exclusion and width to bicyle profile [#7044](https://github.com/Project-OSRM/osrm-backend/pull/7044)
     - Routing:
       - FIXED: Fix adding traffic signal penalties during compression [#6419](https://github.com/Project-OSRM/osrm-backend/pull/6419)
       - FIXED: Correctly handle compressed traffic signals. [#6724](https://github.com/Project-OSRM/osrm-backend/pull/6724)

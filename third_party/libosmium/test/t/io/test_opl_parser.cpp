@@ -707,7 +707,7 @@ TEST_CASE("Parse node") {
         REQUIRE(node.timestamp() == osmium::Timestamp{"2011-03-29T21:43:10Z"});
         REQUIRE(node.uid() == 45445);
         REQUIRE(std::string{node.user()} == "UScha");
-        osmium::Location loc{8.7868047, 53.0749415};
+        const osmium::Location loc{8.7868047, 53.0749415};
         REQUIRE(node.location() == loc);
         REQUIRE(node.tags().empty());
     }
@@ -751,7 +751,7 @@ TEST_CASE("Parse node") {
         REQUIRE(node.timestamp() == osmium::Timestamp{"2011-03-29T21:43:10Z"});
         REQUIRE(node.uid() == 45445);
         REQUIRE(std::string{node.user()} == "UScha");
-        osmium::Location loc{8.7868047, 53.0749415};
+        const osmium::Location loc{8.7868047, 53.0749415};
         REQUIRE(node.location() == loc);
         REQUIRE(node.tags().empty());
     }
@@ -809,7 +809,7 @@ TEST_CASE("Parse way") {
         REQUIRE(it == way.tags().cend());
 
         REQUIRE(way.nodes().size() == 14);
-        std::vector<osmium::object_id_type> ids = {
+        const std::vector<osmium::object_id_type> ids = {
             1011242, 2569390773, 2569390769, 255308687, 2569390761, 255308689,
             255308691, 1407526499, 255308692, 3888362655, 255308693, 255308694,
             255308695, 255308686
@@ -912,7 +912,7 @@ TEST_CASE("Parse changeset") {
         ++it;
         REQUIRE(it == changeset.tags().cend());
 
-        osmium::Box box{13.923302, 50.957069, 14.0337519, 50.9824084};
+        const osmium::Box box{13.923302, 50.957069, 14.0337519, 50.9824084};
         REQUIRE(box == changeset.bounds());
     }
 
@@ -1122,7 +1122,7 @@ TEST_CASE("Duplicate attributes") {
 }
 
 TEST_CASE("Parse OPL using Reader") {
-    osmium::io::File file{with_data_dir("t/io/data.opl")};
+    const osmium::io::File file{with_data_dir("t/io/data.opl")};
     osmium::io::Reader reader{file};
 
     const auto buffer = reader.read();
@@ -1132,7 +1132,7 @@ TEST_CASE("Parse OPL using Reader") {
 }
 
 TEST_CASE("Parse OPL with CRLF line ending using Reader") {
-    osmium::io::File file{with_data_dir("t/io/data-cr.opl")};
+    const osmium::io::File file{with_data_dir("t/io/data-cr.opl")};
     osmium::io::Reader reader{file};
 
     const auto buffer = reader.read();
@@ -1142,7 +1142,7 @@ TEST_CASE("Parse OPL with CRLF line ending using Reader") {
 }
 
 TEST_CASE("Parse OPL with missing newline using Reader") {
-    osmium::io::File file{with_data_dir("t/io/data-nonl.opl")};
+    const osmium::io::File file{with_data_dir("t/io/data-nonl.opl")};
     osmium::io::Reader reader{file};
 
     const auto buffer = reader.read();

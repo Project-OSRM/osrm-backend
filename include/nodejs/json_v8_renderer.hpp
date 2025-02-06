@@ -30,7 +30,7 @@ struct V8Renderer
         {
             Napi::Value child;
             std::visit(V8Renderer(env, child), keyValue.second);
-            obj.Set(keyValue.first, child);
+            obj.Set(keyValue.first.data(), child);
         }
         out = obj;
     }

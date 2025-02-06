@@ -103,7 +103,7 @@ TEST_CASE("Metdata options: constructor using OSMObject") {
         const osmium::OSMObject& obj = buffer.get<osmium::OSMObject>(osmium::builder::add_node(buffer,
                 _id(1),
                 _version(2)));
-        osmium::metadata_options options = osmium::detect_available_metadata(obj);
+        const osmium::metadata_options options = osmium::detect_available_metadata(obj);
         REQUIRE_FALSE(options.user());
         REQUIRE_FALSE(options.uid());
         REQUIRE_FALSE(options.changeset());
@@ -119,7 +119,7 @@ TEST_CASE("Metdata options: constructor using OSMObject") {
                 _cid(30),
                 _uid(8),
                 _user("foo")));
-        osmium::metadata_options options = osmium::detect_available_metadata(obj);
+        const osmium::metadata_options options = osmium::detect_available_metadata(obj);
         REQUIRE(options.all());
     }
 
@@ -129,7 +129,7 @@ TEST_CASE("Metdata options: constructor using OSMObject") {
                 _version(2),
                 _timestamp("2018-01-01T23:00:00Z"),
                 _cid(30)));
-        osmium::metadata_options options = osmium::detect_available_metadata(obj);
+        const osmium::metadata_options options = osmium::detect_available_metadata(obj);
         REQUIRE(options.version());
         REQUIRE(options.timestamp());
         REQUIRE(options.changeset());
