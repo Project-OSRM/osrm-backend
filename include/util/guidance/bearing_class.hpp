@@ -5,8 +5,6 @@
 #include "util/typedefs.hpp"
 
 #include <cstddef>
-#include <cstdint>
-#include <functional>
 #include <vector>
 
 namespace osrm::util::guidance

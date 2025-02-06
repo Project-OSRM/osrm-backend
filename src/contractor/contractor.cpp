@@ -26,14 +26,10 @@
 #include "util/typedefs.hpp"
 
 #include <algorithm>
-#include <bitset>
 #include <cstdint>
-#include <fstream>
 #include <iterator>
-#include <memory>
 #include <vector>
 
-#include <boost/assert.hpp>
 #include <tbb/global_control.h>
 
 namespace osrm::contractor

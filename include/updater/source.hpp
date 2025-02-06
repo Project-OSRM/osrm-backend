@@ -4,6 +4,7 @@
 #include "util/typedefs.hpp"
 
 #include <optional>
+#include <tuple>
 #include <vector>
 
 namespace osrm::updater

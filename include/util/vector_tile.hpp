@@ -1,8 +1,6 @@
 #ifndef OSRM_UTIL_VECTOR_TILE_HPP
 #define OSRM_UTIL_VECTOR_TILE_HPP
 
-#include <cstdint>
-
 namespace osrm::util::vector_tile
 {
 // Vector tiles are 4096 virtual pixels on each side

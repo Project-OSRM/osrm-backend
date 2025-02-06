@@ -11,7 +11,6 @@
 #include "util/serialization.hpp"
 #include "util/timing_util.hpp"
 
-#include <fstream>
 #include <iostream>
 #include <random>
 

@@ -5,7 +5,6 @@
 #include "util/coordinate.hpp"
 #include "util/opening_hours.hpp"
 #include "util/typedefs.hpp"
-#include <limits>
 
 namespace osrm::extractor
 {

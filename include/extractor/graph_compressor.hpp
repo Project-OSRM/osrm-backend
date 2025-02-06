@@ -7,7 +7,6 @@
 #include "traffic_signals.hpp"
 #include "util/node_based_graph.hpp"
 
-#include <memory>
 #include <unordered_set>
 #include <vector>
 

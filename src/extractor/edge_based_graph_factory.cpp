@@ -23,11 +23,9 @@
 
 #include <algorithm>
 #include <limits>
-#include <sstream>
 #include <string>
 #include <thread>
 #include <tuple>
-#include <unordered_map>
 
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
