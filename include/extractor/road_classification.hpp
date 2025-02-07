@@ -2,7 +2,7 @@
 #define OSRM_EXTRACTOR_CLASSIFICATION_DATA_HPP_
 
 #include "extractor/intersection/constants.hpp"
-#include <algorithm>
+
 #include <boost/assert.hpp>
 #include <cmath>
 #include <cstdint>

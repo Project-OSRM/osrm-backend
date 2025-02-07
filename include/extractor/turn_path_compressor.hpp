@@ -3,6 +3,7 @@
 
 #include "util/typedefs.hpp"
 
+#include <unordered_map>
 #include <vector>
 
 namespace osrm::extractor

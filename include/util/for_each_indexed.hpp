@@ -2,7 +2,6 @@
 #define FOR_EACH_INDEXED_HPP
 
 #include <iterator>
-#include <numeric>
 
 namespace osrm::util
 {

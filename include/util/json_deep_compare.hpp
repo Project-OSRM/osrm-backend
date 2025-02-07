@@ -6,7 +6,6 @@
 
 #include <boost/assert.hpp>
 
-#include <algorithm>
 #include <set>
 
 namespace osrm::util::json

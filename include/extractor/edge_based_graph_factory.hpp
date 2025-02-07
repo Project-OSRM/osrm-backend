@@ -25,10 +25,7 @@
 #include "storage/io.hpp"
 #include "traffic_signals.hpp"
 
-#include <algorithm>
-#include <cstddef>
 #include <cstdint>
-#include <iosfwd>
 #include <string>
 #include <unordered_set>
 #include <vector>

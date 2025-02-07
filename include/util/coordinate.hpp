@@ -32,9 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/numeric/conversion/cast.hpp>
 
-#include <cstddef>
 #include <cstdint>
-#include <iosfwd> //for std::ostream
 #include <type_traits>
 
 namespace osrm

@@ -3,7 +3,6 @@
 
 #include "util/coordinate.hpp"
 
-#include <algorithm>
 #include <string>
 #include <vector>
 
