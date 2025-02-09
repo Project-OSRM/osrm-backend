@@ -20,6 +20,7 @@ function setup()
       use_turn_restrictions         = false,
     },
 
+    profile                 = 'foot',
     default_mode            = mode.walking,
     default_speed           = walking_speed,
     oneway_handling         = 'specific',     -- respect 'oneway:foot' but not 'oneway'
@@ -70,8 +71,14 @@ function setup()
 
     avoid = Set {
       'impassable',
-      'proposed'
+      'proposed',
+      'motorroad'
     },
+
+    trunk_speeds = {
+      trunk           = walking_speed,
+      trunk_link      = walking_speed
+     },
 
     speeds = Sequence {
       highway = {
@@ -83,7 +90,6 @@ function setup()
         tertiary_link   = walking_speed,
         unclassified    = walking_speed,
         residential     = walking_speed,
-        road            = walking_speed,
         living_street   = walking_speed,
         service         = walking_speed,
         track           = walking_speed,
@@ -132,6 +138,10 @@ function setup()
     },
 
     smoothness_speeds = {
+    },
+
+    uselocationtags = Set {
+     -- 'trunk'
     }
   }
 end
@@ -190,7 +200,6 @@ function process_way(profile, way, result)
     amenity = way:get_value_by_key('amenity'),
     public_transport = way:get_value_by_key('public_transport')
   }
-
   -- perform an quick initial check and abort if the way is
   -- obviously not routable. here we require at least one
   -- of the prefetched tags to be present, ie. the data table
