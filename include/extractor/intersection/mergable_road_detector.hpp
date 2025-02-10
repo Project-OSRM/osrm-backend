@@ -14,9 +14,6 @@
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
-#include <cstdint>
-#include <functional>
-#include <limits>
 #include <unordered_set>
 #include <vector>
 

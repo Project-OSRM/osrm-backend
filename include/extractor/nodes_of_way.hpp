@@ -3,8 +3,6 @@
 
 #include "util/typedefs.hpp"
 
-#include <limits>
-#include <string>
 #include <vector>
 
 namespace osrm::extractor

@@ -4,8 +4,6 @@
 #include "maneuver_override.hpp"
 
 #include <optional>
-#include <string>
-#include <vector>
 
 namespace osmium
 {

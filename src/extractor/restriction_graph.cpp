@@ -7,6 +7,8 @@
 
 #include <boost/range/algorithm/copy.hpp>
 
+#include <numeric>
+
 namespace osrm::extractor
 {
 

@@ -1,8 +1,5 @@
 #include "extractor/way_restriction_map.hpp"
 
-#include <tuple>
-#include <utility>
-
 namespace osrm::extractor
 {
 

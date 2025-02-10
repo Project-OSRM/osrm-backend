@@ -11,8 +11,6 @@
 
 #include <algorithm>
 #include <iterator>
-#include <memory>
-#include <vector>
 
 namespace osrm::partitioner
 {

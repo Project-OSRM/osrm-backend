@@ -6,8 +6,6 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 
-#include <string>
-
 namespace osrm::server
 {
 

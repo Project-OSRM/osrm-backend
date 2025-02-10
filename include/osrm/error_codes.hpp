@@ -1,8 +1,6 @@
 #ifndef OSRM_ERRORCODES_HPP
 #define OSRM_ERRORCODES_HPP
 
-#include <string>
-
 namespace osrm
 {
 

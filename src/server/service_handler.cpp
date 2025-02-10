@@ -10,8 +10,6 @@
 #include "server/api/parsed_url.hpp"
 #include "util/json_util.hpp"
 
-#include <memory>
-
 namespace osrm::server
 {
 ServiceHandler::ServiceHandler(osrm::EngineConfig &config) : routing_machine(config)

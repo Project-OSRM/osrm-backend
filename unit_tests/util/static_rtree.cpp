@@ -17,7 +17,6 @@
 #include <cstdint>
 
 #include <algorithm>
-#include <memory>
 #include <random>
 #include <string>
 #include <unordered_set>

@@ -11,8 +11,6 @@
 #include "osrm/osrm.hpp"
 #include "osrm/status.hpp"
 
-#include <boost/assert.hpp>
-
 #include <boost/optional/optional.hpp>
 #include <cstdlib>
 #include <exception>

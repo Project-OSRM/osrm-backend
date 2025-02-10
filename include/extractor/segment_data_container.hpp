@@ -11,10 +11,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/iterator_range.hpp>
 
-#include <filesystem>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 namespace osrm::extractor
 {

@@ -6,8 +6,6 @@
 
 #include "util/json_container.hpp"
 
-#include <boost/format.hpp>
-
 namespace osrm::server::service
 {
 

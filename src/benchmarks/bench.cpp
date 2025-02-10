@@ -17,7 +17,6 @@
 #include "osrm/status.hpp"
 
 #include "util/meminfo.hpp"
-#include <boost/assert.hpp>
 #include <boost/optional/optional.hpp>
 #include <cstdlib>
 #include <exception>

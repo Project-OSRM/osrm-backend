@@ -1,8 +1,6 @@
 #ifndef OSRM_EXTRACTOR_RESTRICTION_GRAPH_HPP_
 #define OSRM_EXTRACTOR_RESTRICTION_GRAPH_HPP_
 
-#include <boost/assert.hpp>
-
 #include "util/node_based_graph.hpp"
 #include "util/std_hash.hpp"
 #include "util/typedefs.hpp"

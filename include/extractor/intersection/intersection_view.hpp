@@ -15,9 +15,7 @@
 #include <boost/range/algorithm/min_element.hpp>
 
 #include <algorithm>
-#include <functional>
 #include <limits>
-#include <string>
 #include <type_traits>
 #include <vector>
 

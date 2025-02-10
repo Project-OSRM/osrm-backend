@@ -1,9 +1,7 @@
 #ifndef OSRM_PARTITIONER_CONFIG_HPP
 #define OSRM_PARTITIONER_CONFIG_HPP
 
-#include <array>
 #include <filesystem>
-#include <string>
 
 #include "storage/io_config.hpp"
 

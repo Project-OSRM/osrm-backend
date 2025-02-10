@@ -1,5 +1,3 @@
-
-
 #include "osrm/engine_config.hpp"
 #include "osrm/osrm.hpp"
 
@@ -10,10 +8,7 @@
 #include "osrm/tile_parameters.hpp"
 #include "osrm/trip_parameters.hpp"
 
-#include <exception>
 #include <napi.h>
-#include <sstream>
-#include <stdexcept>
 #include <type_traits>
 #include <utility>
 

@@ -7,10 +7,6 @@
 
 #include <boost/range/adaptor/filtered.hpp>
 
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
 namespace osrm::extractor
 {
 
