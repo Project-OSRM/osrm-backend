@@ -1,4 +1,7 @@
+
 -- Foot profile
+local http = require("socket.http") -- LuaSocket for HTTP requests
+local json = require("cjson") 
 
 api_version = 2
 
@@ -6,9 +9,45 @@ Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 find_access_tag = require("lib/access").find_access_tag
+stations_data = nil
+
+
+function fetch_pollution_data()
+  local url = "http://128.199.51.173:8000/routes/api/pollution/NO2"
+
+  local response, status = http.request(url)
+
+  if status == 200 and response then
+    print("Raw response:", response)
+    local success, data = pcall(json.decode, response) -- Manejar errores de JSON
+    if success and data and data.stations then
+      print("Pollution data fetched successfully.")
+      print("Number of stations:", #data.stations)
+      return data
+    else
+      print("Failed to decode JSON or missing 'stations' key.")
+    end
+  else
+    print("HTTP request failed. Status:", status)
+  end
+
+  -- Fallback a datos vacíos si hay un error
+  return { stations = {} }
+end
+
+
 
 function setup()
   local walking_speed = 5
+  stations_data = fetch_pollution_data()
+
+  -- Check if data was successfully retrieved
+  if not stations_data or not stations_data.stations then
+    print("Warning: Pollution data could not be loaded. Defaulting to no pollution.")
+    stations_data = { stations = {} } -- Fallback to empty station data
+  else
+    print("Pollution data loaded successfully.")
+  end
   return {
     properties = {
       weight_name                   = 'duration',
@@ -136,8 +175,47 @@ function setup()
   }
 end
 
+function calculate_pollution(lat, lon)
+  -- Calcular contaminación
+  local pollution_value = 0
+  local total_weight = 0
+  local weight = 0
+  local p = 1.8
+  local max_distance = 3
+  if stations_data and stations_data.stations then
+    for _, station in ipairs(stations_data.stations) do
+      local station_lat = tonumber(station.lat)
+      local station_lon = tonumber(station.lon)
+      local latest_reading = tonumber(station.pollution)
+
+      if station_lat and station_lon and latest_reading then
+        -- Fórmula de distancia usando Haversine
+        local R = 6371 -- Radio de la Tierra en km
+        local dlat = math.rad(station_lat - lat)
+        local dlon = math.rad(station_lon - lon)
+        local a = math.sin(dlat / 2)^2 +
+                  math.cos(math.rad(lat)) * math.cos(math.rad(station_lat)) * math.sin(dlon / 2)^2
+        local c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        local distance = R * c
+
+      -- Ponderación ajustada
+        weight = 1 / ((distance + 1)) 
+        weight = tonumber(string.format("%.6f", weight))
+        pollution_value = pollution_value + (latest_reading * weight)
+        --total_weight = total_weight + weight
+
+      end
+    end
+    --print(pollution_value)
+    return pollution_value
+  else
+    print("No station data available.")
+    return 0
+  end
+end
+
 function process_node(profile, node, result)
-  -- parse access and barrier tags
+  -- Parse access and barrier tags
   local access = find_access_tag(node, profile.access_tags_hierarchy)
   if access then
     if profile.access_tag_blacklist[access] then
@@ -146,7 +224,7 @@ function process_node(profile, node, result)
   else
     local barrier = node:get_value_by_key("barrier")
     if barrier then
-      --  make an exception for rising bollard barriers
+      -- Make an exception for rising bollard barriers
       local bollard = node:get_value_by_key("bollard")
       local rising_bollard = bollard and "rising" == bollard
 
@@ -155,14 +233,8 @@ function process_node(profile, node, result)
       end
     end
   end
-
-  -- check if node is a traffic light
-  local tag = node:get_value_by_key("highway")
-  if "traffic_signals" == tag then
-    -- Direction should only apply to vehicles
-    result.traffic_lights = true
-  end
 end
+
 
 -- main entry point for processsing a way
 function process_way(profile, way, result)
@@ -180,16 +252,15 @@ function process_way(profile, way, result)
   -- data table for storing intermediate values during processing
   local data = {
     -- prefetch tags
-    highway = way:get_value_by_key('highway'),
-    bridge = way:get_value_by_key('bridge'),
-    route = way:get_value_by_key('route'),
-    leisure = way:get_value_by_key('leisure'),
-    man_made = way:get_value_by_key('man_made'),
-    railway = way:get_value_by_key('railway'),
-    platform = way:get_value_by_key('platform'),
-    amenity = way:get_value_by_key('amenity'),
-    public_transport = way:get_value_by_key('public_transport')
+    highway = way:get_value_by_key("highway"),
   }
+
+    -- Verificar si el objeto `way` está definido
+  if not way then
+      print("Error: way is nil.")
+      return
+  end
+
 
   -- perform an quick initial check and abort if the way is
   -- obviously not routable. here we require at least one
@@ -238,7 +309,7 @@ function process_way(profile, way, result)
     WayHandlers.names,
 
     -- set weight properties of the way
-    WayHandlers.weights
+    WayHandlers.weights,
   }
 
   WayHandlers.run(profile, way, result, data, handlers)
@@ -262,9 +333,30 @@ function process_turn (profile, turn)
   end
 end
 
+function process_segment(profile, segment)
+  -- Extract coordinates of the start and end points
+  local source_lat, source_lon = segment.source.lat, segment.source.lon
+  local target_lat, target_lon = segment.target.lat, segment.target.lon
+
+  -- Calculate pollution impact at source and target
+  local pollution_source = calculate_pollution(source_lat, source_lon)
+  local pollution_target = calculate_pollution(target_lat, target_lon)
+  
+
+  -- Average pollution for the segment
+  local avg_pollution = (pollution_source + pollution_target) / 2
+  --print(avg_pollution)
+
+  -- Adjust weight and duration based on pollution level
+  segment.weight = segment.weight + (avg_pollution^1.4)
+end
+
+
 return {
   setup = setup,
   process_way =  process_way,
   process_node = process_node,
-  process_turn = process_turn
+  process_turn = process_turn,
+  process_segment = process_segment
 }
+
