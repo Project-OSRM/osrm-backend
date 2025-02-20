@@ -9,6 +9,7 @@ local set_classification = require("lib/guidance").set_classification
 local get_destination = require("lib/destination").get_destination
 local Tags = require('lib/tags')
 local Measure = require("lib/measure")
+local ConditionalAccess = require("lib/conditional_access")
 
 WayHandlers = {}
 
@@ -242,6 +243,13 @@ end
 function WayHandlers.access(profile,way,result,data)
   data.forward_access, data.backward_access =
     Tags.get_forward_backward_by_set(way,data,profile.access_tags_hierarchy)
+
+  -- check for conditional access (roads that are temporarily closed, etc.)
+  local conditional = ConditionalAccess.parse_by_set(way,profile.access_tags_hierarchy)
+  if conditional then
+    data.forward_access = conditional
+    data.backward_access = conditional
+  end
 
   -- only allow a subset of roads to be treated as restricted
   if profile.restricted_highway_whitelist[data.highway] then
