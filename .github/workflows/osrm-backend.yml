@@ -643,7 +643,7 @@ jobs:
 
   ci-complete:
     runs-on: ubuntu-latest
-    needs: [build-test-publish, docker-image-matrix, windows-release-node, benchmarks]
+    needs: [build-test-publish, docker-image-matrix, windows-release-node]
     steps:
     - run: echo "CI complete"
 
