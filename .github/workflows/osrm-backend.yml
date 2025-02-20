@@ -430,17 +430,6 @@ jobs:
     - name: Give tar root ownership 
       if: runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
       run: sudo chown root /bin/tar && sudo chmod u+s /bin/tar
-    # - name: Cache Boost
-    #   if: runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
-    #   id: cache-boost
-    #   uses: actions/cache@v4
-    #   with:
-    #     path: |
-    #       /usr/local/include/boost
-    #       /usr/local/lib/libboost*
-    #     key: v1-boost-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}
-    #     restore-keys: |
-    #       v1-boost-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}
 
     - name: Install boost
       uses: MarkusJx/install-boost@v2
@@ -774,7 +763,7 @@ jobs:
           ccache -s
 
   ci-complete:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     needs: [build-test-publish, docker-image-matrix, windows-release-node, benchmarks]
     steps:
     - run: echo "CI complete"
