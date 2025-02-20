@@ -551,7 +551,7 @@ jobs:
         fi
         popd
       env:
-        BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
+        Boost_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
     - name: Build example
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
       run: |
