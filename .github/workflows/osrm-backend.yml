@@ -430,30 +430,23 @@ jobs:
     - name: Give tar root ownership 
       if: runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
       run: sudo chown root /bin/tar && sudo chmod u+s /bin/tar
-    - name: Cache Boost
-      if: runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
-      id: cache-boost
-      uses: actions/cache@v4
-      with:
-        path: |
-          /usr/local/include/boost
-          /usr/local/lib/libboost*
-        key: v1-boost-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}
-        restore-keys: |
-          v1-boost-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}
+    # - name: Cache Boost
+    #   if: runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
+    #   id: cache-boost
+    #   uses: actions/cache@v4
+    #   with:
+    #     path: |
+    #       /usr/local/include/boost
+    #       /usr/local/lib/libboost*
+    #     key: v1-boost-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}
+    #     restore-keys: |
+    #       v1-boost-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}
 
-    - name: Install Boost
-      if: steps.cache-boost.outputs.cache-hit != 'true' && runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
-      run: |
-        BOOST_VERSION="1.85.0"
-        BOOST_VERSION_FLAVOR="${BOOST_VERSION}-b2-nodocs"
-        wget -q https://github.com/boostorg/boost/releases/download/boost-${BOOST_VERSION}/boost-${BOOST_VERSION_FLAVOR}.tar.gz
-        tar xzf boost-${BOOST_VERSION_FLAVOR}.tar.gz
-        cd boost-${BOOST_VERSION}
-        sudo ./bootstrap.sh
-        sudo ./b2 install
-        cd ..
-        sudo rm -rf boost-${BOOST_VERSION}*
+    - name: Install boost
+      uses: MarkusJx/install-boost@v2
+      id: install-boost
+      with:
+        boost_version: 1.85.0
     
     - name: Install dev dependencies
       run: |
@@ -557,6 +550,8 @@ jobs:
           echo "PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig" >> $GITHUB_ENV
         fi
         popd
+      env:
+        BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
     - name: Build example
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
       run: |
