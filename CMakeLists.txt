@@ -403,7 +403,7 @@ if(ENABLE_CONAN)
   # expat and bzip2 are used from conan rather than the system
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
 else()
-  find_package(Boost 1.70 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+  find_package(Boost REQUIRED CONFIG COMPONENTS ${BOOST_COMPONENTS})
   add_dependency_includes(${Boost_INCLUDE_DIRS})
 
   find_package(TBB REQUIRED)
