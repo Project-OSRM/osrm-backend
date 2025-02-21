@@ -643,7 +643,7 @@ jobs:
 
   ci-complete:
     runs-on: ubuntu-latest
-    needs: [build-matrix, conan-windows-release-node, docker-image-matrix]
+    needs: [build-matrix, conan-windows-release-node]
     steps:
     - run: echo "CI complete"
 
