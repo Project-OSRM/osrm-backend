@@ -11,18 +11,22 @@ class OsrmConan(ConanFile):
         self.requires("expat/2.6.2")
         self.requires("lua/5.4.6")
         self.requires("onetbb/2021.12.0")
-        if self.settings.os == "Windows":
-            self.requires("zlib/1.3.1")
+        self.requires("xz-utils/5.4.6")
+        self.requires("zlib/1.3.1")
     
     def configure(self):
         self.options["boost"].without_python = True
         self.options["boost"].without_coroutine = True
         self.options["boost"].without_stacktrace = True
         self.options["boost"].without_cobalt = True
+        self.options["bzip2"].shared = True
+        self.options["xz-utils"].shared = True
         
     def generate(self):
         tc = CMakeToolchain(self)
         tc.variables["CMAKE_CXX_STANDARD"] = "20"
+        tc.variables["BZIP2_ROOT"] = "${CMAKE_BINARY_DIR}"
+        tc.variables["LIBLZMA_ROOT"] = "${CMAKE_BINARY_DIR}"
         tc.generate()
 
     def build(self):
