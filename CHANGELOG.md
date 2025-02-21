@@ -9,6 +9,7 @@
       - ADDED: Add support for opposite approach request parameter. [#6842](https://github.com/Project-OSRM/osrm-backend/pull/6842)
       - ADDED: Add support for accessing edge flags in `process_segment` [#6658](https://github.com/Project-OSRM/osrm-backend/pull/6658)
     - Build:
+      - CHANGED: Fix compilation with upcoming Boost 1.87.0 [#7073](https://github.com/Project-OSRM/osrm-backend/pull/7073)
       - CHANGED: Upgrade clang-format to version 15. [#6919](https://github.com/Project-OSRM/osrm-backend/pull/6919)
       - CHANGED: Use Debian Bookworm as base Docker image [#6904](https://github.com/Project-OSRM/osrm-backend/pull/6904)
       - CHANGED: Upgrade CI actions to latest versions [#6893](https://github.com/Project-OSRM/osrm-backend/pull/6893)
