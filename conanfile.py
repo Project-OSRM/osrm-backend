@@ -13,7 +13,8 @@ class OsrmConan(ConanFile):
         self.requires("onetbb/2021.12.0")
         self.requires("xz_utils/5.4.5")
         self.requires("zlib/1.3.1")
-    
+        self.requires("zstd/1.5.6")
+
     def configure(self):
         self.options["boost"].without_python = True
         self.options["boost"].without_coroutine = True
@@ -27,6 +28,7 @@ class OsrmConan(ConanFile):
         tc.variables["CMAKE_CXX_STANDARD"] = "20"
         tc.variables["Bzip2_ROOT"] = "${CMAKE_BINARY_DIR}"
         tc.variables["LZMA_ROOT"] = "${CMAKE_BINARY_DIR}"
+        tc.variables["TBB_ROOT"] = "${CONAN_ONETBB_ROOT}"
         tc.generate()
 
     def build(self):
