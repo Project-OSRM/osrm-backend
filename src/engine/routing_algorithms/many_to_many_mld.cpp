@@ -2,7 +2,7 @@
 #include "engine/routing_algorithms/routing_base_mld.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/range/iterator_range_core.hpp>
+#include <ranges>
 
 #include <limits>
 #include <memory>
@@ -148,8 +148,8 @@ void relaxOutgoingEdges(
                     }
                 }
                 ++destination;
-                shortcut_durations.advance_begin(1);
-                shortcut_distances.advance_begin(1);
+                shortcut_durations.advance(1);
+                shortcut_distances.advance(1);
             }
             BOOST_ASSERT(shortcut_durations.empty());
             BOOST_ASSERT(shortcut_distances.empty());
@@ -169,8 +169,8 @@ void relaxOutgoingEdges(
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && heapNode.node != to)
                 {
                     const auto to_weight = heapNode.weight + shortcut_weight;
-                    const auto to_duration = heapNode.data.duration + shortcut_durations.front();
-                    const auto to_distance = heapNode.data.distance + shortcut_distances.front();
+                    const auto to_duration = heapNode.data.duration + *shortcut_durations.begin();
+                    const auto to_distance = heapNode.data.distance + *shortcut_distances.begin();
                     const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
@@ -189,8 +189,8 @@ void relaxOutgoingEdges(
                     }
                 }
                 ++source;
-                shortcut_durations.advance_begin(1);
-                shortcut_distances.advance_begin(1);
+                shortcut_durations.advance(1);
+                shortcut_distances.advance(1);
             }
             BOOST_ASSERT(shortcut_durations.empty());
             BOOST_ASSERT(shortcut_distances.empty());
@@ -426,7 +426,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                                                search_space_with_buckets.end(),
                                                heapNode.node,
                                                NodeBucket::Compare());
-    for (const auto &current_bucket : boost::make_iterator_range(bucket_list))
+    for (const auto &current_bucket : std::ranges::subrange(bucket_list.first, bucket_list.second))
     {
         // Get target id from bucket entry
         const auto column_idx = current_bucket.column_index;

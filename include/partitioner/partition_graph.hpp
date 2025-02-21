@@ -8,8 +8,7 @@
 #include <vector>
 
 #include "util/typedefs.hpp"
-#include <boost/range/iterator_range.hpp>
-
+#include <ranges>
 namespace osrm::partitioner
 {
 
@@ -84,26 +83,26 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
 
     auto Edges(const NodeID nid)
     {
-        return boost::make_iterator_range(edges.begin() + nodes[nid].edges_begin,
-                                          edges.begin() + nodes[nid].edges_end);
+        return std::ranges::subrange(edges.begin() + nodes[nid].edges_begin,
+                                     edges.begin() + nodes[nid].edges_end);
     }
 
     auto Edges(const NodeID nid) const
     {
-        return boost::make_iterator_range(edges.begin() + nodes[nid].edges_begin,
-                                          edges.begin() + nodes[nid].edges_end);
+        return std::ranges::subrange(edges.begin() + nodes[nid].edges_begin,
+                                     edges.begin() + nodes[nid].edges_end);
     }
 
     auto Edges(const NodeT &node)
     {
-        return boost::make_iterator_range(edges.begin() + node.edges_begin,
-                                          edges.begin() + node.edges_end);
+        return std::ranges::subrange(edges.begin() + node.edges_begin,
+                                     edges.begin() + node.edges_end);
     }
 
     auto Edges(const NodeT &node) const
     {
-        return boost::make_iterator_range(edges.begin() + node.edges_begin,
-                                          edges.begin() + node.edges_end);
+        return std::ranges::subrange(edges.begin() + node.edges_begin,
+                                     edges.begin() + node.edges_end);
     }
 
     auto BeginEdges(const NodeID nid) const { return edges.begin() + nodes[nid].edges_begin; }
@@ -118,8 +117,8 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
     EdgeID EndEdgeID(const NodeID nid) const { return nodes[nid].edges_end; }
 
     // iterate over all nodes
-    auto Nodes() { return boost::make_iterator_range(nodes.begin(), nodes.end()); }
-    auto Nodes() const { return boost::make_iterator_range(nodes.begin(), nodes.end()); }
+    auto Nodes() { return std::ranges::subrange(nodes.begin(), nodes.end()); }
+    auto Nodes() const { return std::ranges::subrange(nodes.begin(), nodes.end()); }
 
     NodeID GetID(const NodeT &node) const
     {

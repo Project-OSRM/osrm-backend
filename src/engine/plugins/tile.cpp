@@ -482,9 +482,10 @@ void encodeVectorTile(const DataFacadeBase &facade,
                         reverse_duration_range[reverse_duration_range.size() -
                                                edge.fwd_segment_position - 1];
                     const auto forward_datasource_idx =
-                        forward_datasource_range(edge.fwd_segment_position);
-                    const auto reverse_datasource_idx = reverse_datasource_range(
-                        reverse_datasource_range.size() - edge.fwd_segment_position - 1);
+                        forward_datasource_range[edge.fwd_segment_position];
+                    const auto reverse_datasource_idx =
+                        reverse_datasource_range[reverse_datasource_range.size() -
+                                                 edge.fwd_segment_position - 1];
 
                     const auto is_startpoint = edge.is_startpoint;
 
