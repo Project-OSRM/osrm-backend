@@ -25,8 +25,8 @@ class OsrmConan(ConanFile):
     def generate(self):
         tc = CMakeToolchain(self)
         tc.variables["CMAKE_CXX_STANDARD"] = "20"
-        tc.variables["BZIP2_ROOT"] = "${CMAKE_BINARY_DIR}"
-        tc.variables["LIBLZMA_ROOT"] = "${CMAKE_BINARY_DIR}"
+        tc.variables["Bzip2_ROOT"] = "${CMAKE_BINARY_DIR}"
+        tc.variables["LZMA_ROOT"] = "${CMAKE_BINARY_DIR}"
         tc.generate()
 
     def build(self):
