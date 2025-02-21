@@ -42,8 +42,11 @@ std::vector<T> removeInvalidTurnPaths(std::vector<T> turn_relations,
                is_valid_edge(via_node_path.via, via_node_path.to);
     };
 
-    const auto is_valid_way = [is_valid_edge](const auto &via_way_path)
+    const auto is_valid_way = [is_valid_edge](const ViaWayPath &via_way_path)
     {
+        if (!via_way_path.Valid())
+            return false;
+
         if (!is_valid_edge(via_way_path.from, via_way_path.via.front()))
             return false;
 
@@ -59,13 +62,16 @@ std::vector<T> removeInvalidTurnPaths(std::vector<T> turn_relations,
 
     const auto is_invalid = [is_valid_way, is_valid_node](const auto &turn_relation)
     {
-        if (turn_relation.turn_path.Type() == TurnPathType::VIA_NODE_TURN_PATH)
+        switch (turn_relation.turn_path.Type())
         {
+        case TurnPathType::VIA_NODE_TURN_PATH:
             return !is_valid_node(turn_relation.turn_path.AsViaNodePath());
+        case TurnPathType::VIA_WAY_TURN_PATH:
+            return !is_valid_way(turn_relation.turn_path.AsViaWayPath());
+        default:
+            break;
         }
-
-        BOOST_ASSERT(turn_relation.turn_path.Type() == TurnPathType::VIA_WAY_TURN_PATH);
-        return !is_valid_way(turn_relation.turn_path.AsViaWayPath());
+        return true;
     };
 
     const auto end_valid_relations =
