@@ -24,7 +24,7 @@ else()
   message(STATUS "Building on a 32 bit system")
 endif()
 
-find_package(Boost REQUIRED CONFIG COMPONENTS date_time iostreams thread)
+find_package(Boost REQUIRED COMPONENTS date_time iostreams thread)
 
 link_directories(${LibOSRM_LIBRARY_DIRS})
 add_executable(osrm-example example.cpp)
