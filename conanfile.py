@@ -13,8 +13,7 @@ class OsrmConan(ConanFile):
         self.requires("onetbb/2021.12.0")
         self.requires("xz_utils/5.4.5")
         self.requires("zlib/1.3.1")
-        self.requires("zstd/1.5.6")
-
+    
     def configure(self):
         self.options["boost"].without_python = True
         self.options["boost"].without_coroutine = True

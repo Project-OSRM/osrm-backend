@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  windows-release-node:
+  conan-windows-release-node:
     needs: format-taginfo-docs
     runs-on: windows-2022
     continue-on-error: false
@@ -165,7 +165,7 @@ jobs:
           curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
           docker stop osrm-container
 
-  build-test-publish:
+  build-matrix:
     needs: format-taginfo-docs
     strategy:
       matrix:
@@ -342,7 +342,7 @@ jobs:
             build_node_package: true
             continue-on-error: true
             node: 20
-            runs-on: macos-14 # arm64 
+            runs-on: macos-15 # arm64 
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
@@ -453,7 +453,7 @@ jobs:
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
           sudo apt-get update -y && sudo apt-get install ccache
         elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-          brew install ccache
+          brew install ccache zstd
         fi
 
         # Linux dev packages
@@ -642,7 +642,7 @@ jobs:
 
   ci-complete:
     runs-on: ubuntu-latest
-    needs: [build-test-publish, docker-image-matrix, windows-release-node]
+    needs: [build-matrix, conan-windows-release-node, docker-image-matrix]
     steps:
     - run: echo "CI complete"
 
