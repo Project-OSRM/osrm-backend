@@ -116,8 +116,8 @@ class CellCustomizer
                    const std::vector<bool> &allowed_nodes,
                    CellMetric &metric) const
     {
-        Heap heap_exemplar(graph.GetNumberOfNodes());
-        HeapPtr heaps(heap_exemplar);
+        const auto number_of_nodes = graph.GetNumberOfNodes();
+        HeapPtr heaps([number_of_nodes] { return Heap{number_of_nodes}; });
 
         for (std::size_t level = 1; level < partition.GetNumberOfLevels(); ++level)
         {

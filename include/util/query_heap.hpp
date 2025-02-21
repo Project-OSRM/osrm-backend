@@ -1,17 +1,16 @@
 #ifndef OSRM_UTIL_QUERY_HEAP_HPP
 #define OSRM_UTIL_QUERY_HEAP_HPP
 
+#include "util/pool_allocator.hpp"
+#include <algorithm>
 #include <boost/assert.hpp>
 #include <boost/heap/d_ary_heap.hpp>
-
-#include <algorithm>
 #include <cstdint>
 #include <limits>
 #include <map>
 #include <optional>
 #include <unordered_map>
 #include <vector>
-
 namespace osrm::util
 {
 
@@ -56,7 +55,11 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
     void Clear() { nodes.clear(); }
 
   private:
-    std::unordered_map<NodeID, Key> nodes;
+    template <typename K, typename V>
+    using UnorderedMap = std::
+        unordered_map<K, V, std::hash<K>, std::equal_to<K>, PoolAllocator<std::pair<const K, V>>>;
+
+    UnorderedMap<NodeID, Key> nodes;
 };
 
 template <typename NodeID,
@@ -142,10 +145,12 @@ class QueryHeap
             return weight > other.weight;
         }
     };
+
     using HeapContainer = boost::heap::d_ary_heap<HeapData,
                                                   boost::heap::arity<4>,
                                                   boost::heap::mutable_<true>,
-                                                  boost::heap::compare<std::greater<HeapData>>>;
+                                                  boost::heap::compare<std::greater<HeapData>>,
+                                                  boost::heap::allocator<PoolAllocator<HeapData>>>;
     using HeapHandle = typename HeapContainer::handle_type;
 
   public:
@@ -159,6 +164,9 @@ class QueryHeap
         Weight weight;
         Data data;
     };
+
+    QueryHeap(const QueryHeap &other) = delete;
+    QueryHeap(QueryHeap &&other) = delete;
 
     template <typename... StorageArgs> explicit QueryHeap(StorageArgs... args) : node_index(args...)
     {
