@@ -541,7 +541,8 @@ jobs:
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && matrix.ENABLE_CONAN != 'ON' }}
       run: |
         mkdir example/build && pushd example/build
-        cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+        cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+                 -DBoost_ROOT=${{ steps.install-boost.outputs.BOOST_ROOT }}
         make --jobs=${JOBS}
         popd
     - name: Run all tests
