@@ -79,6 +79,7 @@
       - FIXED: Ensure required file check in osrm-routed is correctly enforced. [#6655](https://github.com/Project-OSRM/osrm-backend/pull/6655)
       - FIXED: Correct HTTP docs to reflect summary output dependency on steps parameter. [#6655](https://github.com/Project-OSRM/osrm-backend/pull/6655)
       - ADDED: Extract prerelease/build information from package semver [#6839](https://github.com/Project-OSRM/osrm-backend/pull/6839)
+      - FIXED: Fix json rendering problem for large osm ids [#7096](https://github.com/Project-OSRM/osrm-backend/pull/7096)
       - FIXED: Segfault in `UnresolvedManeuverOverride::Turns()` on Australia extracts [#7112](https://github.com/Project-OSRM/osrm-backend/pull/7112)
       - CHANGED: Replaced PL:trunk with PL:expressway to match the latest changes in Polish tagging [#7079](https://github.com/Project-OSRM/osrm-backend/pull/7079)
     - Profiles:
