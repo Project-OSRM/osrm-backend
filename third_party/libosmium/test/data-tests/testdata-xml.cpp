@@ -136,7 +136,7 @@ void test_fail(const char* xml_file_name, const char* errmsg) {
     REQUIRE_THROWS_AS([&](){
         osmium::io::Reader reader{filename(xml_file_name)};
         const osmium::io::Header header{reader.header()};
-        osmium::memory::Buffer buffer = reader.read();
+        const osmium::memory::Buffer buffer = reader.read();
         reader.close();
     }(), TException);
 }
@@ -144,7 +144,7 @@ void test_fail(const char* xml_file_name, const char* errmsg) {
 // =============================================
 
 TEST_CASE("Reading OSM XML 100: Direct") {
-    header_buffer_type r = read_xml("100-correct_but_no_data");
+    const header_buffer_type r = read_xml("100-correct_but_no_data");
 
     REQUIRE(r.header.get("generator") == "testdata");
     REQUIRE(0 == r.buffer.committed());
@@ -157,7 +157,7 @@ TEST_CASE("Reading OSM XML 100: Using Reader") {
     const osmium::io::Header header{reader.header()};
     REQUIRE(header.get("generator") == "testdata");
 
-    osmium::memory::Buffer buffer = reader.read();
+    const osmium::memory::Buffer buffer = reader.read();
     REQUIRE(0 == buffer.committed());
     REQUIRE_FALSE(buffer);
     reader.close();
@@ -254,7 +254,7 @@ TEST_CASE("Reading OSM XML 109: Using Reader") {
     osmium::io::Reader reader{filename("109-unknown_data_level")};
 
     const osmium::io::Header header{reader.header()};
-    osmium::memory::Buffer buffer = reader.read();
+    const osmium::memory::Buffer buffer = reader.read();
     REQUIRE(buffer.committed() > 0);
     reader.close();
 }
@@ -268,11 +268,11 @@ TEST_CASE("Reading OSM XML 110") {
 // =============================================
 
 TEST_CASE("Reading OSM XML 120: Direct") {
-    std::string data = read_gz_file("120-correct_gzip_file_without_data", "osm.gz");
+    const std::string data = read_gz_file("120-correct_gzip_file_without_data", "osm.gz");
 
     REQUIRE(data.size() == 102);
 
-    header_buffer_type r = parse_xml(data);
+    const header_buffer_type r = parse_xml(data);
     REQUIRE(r.header.get("generator") == "testdata");
     REQUIRE(0 == r.buffer.committed());
     REQUIRE_FALSE(r.buffer);
@@ -284,7 +284,7 @@ TEST_CASE("Reading OSM XML 120: Using Reader") {
     const osmium::io::Header header{reader.header()};
     REQUIRE(header.get("generator") == "testdata");
 
-    osmium::memory::Buffer buffer = reader.read();
+    const osmium::memory::Buffer buffer = reader.read();
     REQUIRE(0 == buffer.committed());
     REQUIRE_FALSE(buffer);
     reader.close();
@@ -301,7 +301,7 @@ TEST_CASE("Reading OSM XML 121: Using Reader") {
     REQUIRE_THROWS([](){
         osmium::io::Reader reader{filename("121-truncated_gzip_file", "osm.gz")};
         const osmium::io::Header header{reader.header()};
-        osmium::memory::Buffer buffer = reader.read();
+        const osmium::memory::Buffer buffer = reader.read();
         reader.close();
     }());
 }
@@ -395,7 +395,7 @@ TEST_CASE("Reading OSM XML 140: Using Reader") {
 
 TEST_CASE("Reading OSM XML 141: Using Reader") {
     osmium::io::Reader reader{filename("141-entities")};
-    osmium::memory::Buffer buffer = reader.read();
+    const osmium::memory::Buffer buffer = reader.read();
     reader.close();
     REQUIRE(buffer.committed() > 0);
     REQUIRE(buffer.get<osmium::memory::Item>(0).type() == osmium::item_type::node);
@@ -414,7 +414,7 @@ TEST_CASE("Reading OSM XML 141: Using Reader") {
 
 TEST_CASE("Reading OSM XML 142: Using Reader to read nodes") {
     osmium::io::Reader reader{filename("142-whitespace")};
-    osmium::memory::Buffer buffer = reader.read();
+    const osmium::memory::Buffer buffer = reader.read();
     reader.close();
 
     int count = 0;
@@ -459,7 +459,7 @@ TEST_CASE("Reading OSM XML 142: Using Reader to read nodes") {
 
 TEST_CASE("Reading OSM XML 142: Using Reader to read relation") {
     osmium::io::Reader reader{filename("142-whitespace")};
-    osmium::memory::Buffer buffer = reader.read();
+    const osmium::memory::Buffer buffer = reader.read();
     reader.close();
 
     auto it = buffer.select<osmium::Relation>().begin();
@@ -553,7 +553,7 @@ TEST_CASE("Reading OSM XML 200: Using Reader asking for ways") {
     const osmium::io::Header header{reader.header()};
     REQUIRE(header.get("generator") == "testdata");
 
-    osmium::memory::Buffer buffer = reader.read();
+    const osmium::memory::Buffer buffer = reader.read();
     REQUIRE(0 == buffer.committed());
     REQUIRE_FALSE(buffer);
     reader.close();

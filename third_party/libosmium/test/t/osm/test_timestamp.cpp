@@ -110,7 +110,7 @@ TEST_CASE("Write four digit numbers") {
 }
 
 TEST_CASE("Valid timestamps") {
-    std::vector<std::string> test_cases = {
+    const std::vector<std::string> test_cases = {
         "1970-01-01T00:00:01Z",
         "2000-01-01T00:00:00Z",
         "2006-12-31T23:59:59Z",
@@ -123,6 +123,39 @@ TEST_CASE("Valid timestamps") {
         const osmium::Timestamp t{tc};
         REQUIRE(tc == t.to_iso());
         REQUIRE(tc == t.to_iso_all());
+    }
+}
+
+TEST_CASE("Valid timestamps with fractional seconds") {
+    const std::vector<std::string> test_cases = {
+        "2016-03-31T23:59:59.123Z",
+        "2016-03-31T23:59:59,4Z",
+        "2016-03-31T23:59:59,000000000000000001Z",
+        "2016-03-31T23:59:59.99Z"
+    };
+
+    for (const auto& tc : test_cases) {
+        const osmium::Timestamp t{tc};
+        REQUIRE("2016-03-31T23:59:59Z" == t.to_iso());
+        REQUIRE("2016-03-31T23:59:59Z" == t.to_iso_all());
+    }
+}
+
+TEST_CASE("Timestamp parsing leaves pointer after timestamp") {
+    const std::vector<std::string> test_cases = {
+        "2016-03-31T23:59:59Z#",
+        "2016-03-31T23:59:59.123Z#",
+        "2016-03-31T23:59:59,4Z#",
+        "2016-03-31T23:59:59,000000000000000001Z#",
+        "2016-03-31T23:59:59.99Z#"
+    };
+
+    for (const auto& tc : test_cases) {
+        const char *s = tc.data();
+        const char **str = &s;
+        auto const timestamp = osmium::detail::parse_timestamp(str);
+        REQUIRE(**str == '#');
+        REQUIRE(osmium::Timestamp(timestamp).to_iso() == "2016-03-31T23:59:59Z");
     }
 }
 
@@ -149,5 +182,11 @@ TEST_CASE("Invalid timestamps") {
     REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-32T00:00:00Z"}, std::invalid_argument);
     REQUIRE_THROWS_AS(osmium::Timestamp{"2000-02-30T00:00:00Z"}, std::invalid_argument);
     REQUIRE_THROWS_AS(osmium::Timestamp{"2000-03-32T00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-03-01T00:00:00"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-03-01T00:00:00,Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-03-01T00:00:00,xZ"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-03-01T00:00:00,123mZ"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-03-01T00:00:00.@Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-03-01T00:00:00.@"}, std::invalid_argument);
 }
 
