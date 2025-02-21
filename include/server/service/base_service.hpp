@@ -8,7 +8,6 @@
 #include <variant>
 
 #include <string>
-#include <vector>
 
 namespace osrm::server::service
 {

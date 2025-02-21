@@ -16,15 +16,11 @@
 #include <boost/assert.hpp>
 
 #include <cstddef>
-#include <cstdint>
 
 #include <algorithm>
-#include <functional>
 #include <iterator>
-#include <memory>
 #include <numeric>
 #include <stack>
-#include <utility>
 #include <vector>
 
 namespace osrm::engine::routing_algorithms

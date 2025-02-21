@@ -8,7 +8,6 @@
 #include <iostream>
 #include <numeric>
 #include <random>
-#include <string>
 #include <vector>
 
 using namespace osrm;

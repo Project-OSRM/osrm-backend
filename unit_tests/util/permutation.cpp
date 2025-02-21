@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <numeric>
-#include <random>
 
 BOOST_AUTO_TEST_SUITE(permutation_test)
 

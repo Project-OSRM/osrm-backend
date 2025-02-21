@@ -3,6 +3,8 @@
 
 #include "util/integer_range.hpp"
 
+#include <boost/assert.hpp>
+
 #include <algorithm>
 #include <atomic>
 #include <mutex>

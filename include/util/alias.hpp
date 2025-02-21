@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OSRM_UTIL_ALIAS_HPP
 
 #include <cstddef>
-#include <functional>
 #include <ostream>
 #include <type_traits>
 

@@ -2,7 +2,6 @@
 #define OSRM_UTIL_ASSERT_HPP
 
 #include <iostream>
-#include <string>
 
 #include "util/to_osm_link.hpp"
 

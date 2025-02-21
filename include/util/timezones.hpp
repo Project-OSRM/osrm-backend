@@ -8,7 +8,6 @@
 
 #include <rapidjson/document.h>
 
-#include <chrono>
 #include <filesystem>
 #include <optional>
 

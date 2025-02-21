@@ -11,9 +11,6 @@
 #include <cstdlib>
 
 #include <algorithm>
-#include <memory>
-#include <string>
-#include <vector>
 
 namespace osrm::engine::plugins
 {

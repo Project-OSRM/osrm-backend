@@ -81,6 +81,7 @@
       - ADDED: Extract prerelease/build information from package semver [#6839](https://github.com/Project-OSRM/osrm-backend/pull/6839)
       - FIXED: Segfault in `UnresolvedManeuverOverride::Turns()` on Australia extracts [#7112](https://github.com/Project-OSRM/osrm-backend/pull/7112)
       - CHANGED: Replaced PL:trunk with PL:expressway to match the latest changes in Polish tagging [#7079](https://github.com/Project-OSRM/osrm-backend/pull/7079)
+      - FIXED: Remove unused C++ headers [#7105](https://github.com/Project-OSRM/osrm-backend/pull/7105)
     - Profiles:
       - FIXED: Bicycle and foot profiles now don't route on proposed ways [#6615](https://github.com/Project-OSRM/osrm-backend/pull/6615)
       - ADDED: Add optional support of cargo bike exclusion and width to bicyle profile [#7044](https://github.com/Project-OSRM/osrm-backend/pull/7044)

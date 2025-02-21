@@ -5,7 +5,6 @@
 
 #include "extractor/edge_based_edge.hpp"
 
-#include <chrono>
 #include <vector>
 
 namespace osrm::updater

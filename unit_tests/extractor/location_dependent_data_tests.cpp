@@ -8,8 +8,6 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
-#include <random>
-#include <vector>
 
 BOOST_AUTO_TEST_SUITE(location_dependent_data_tests)
 

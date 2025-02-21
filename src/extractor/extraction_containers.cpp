@@ -22,10 +22,7 @@
 
 #include <tbb/parallel_sort.h>
 
-#include <chrono>
 #include <limits>
-#include <mutex>
-#include <sstream>
 
 namespace
 {

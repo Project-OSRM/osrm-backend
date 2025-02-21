@@ -4,7 +4,6 @@
 #include <cmath>
 
 #include <utility>
-#include <vector>
 
 #include <numbers>
 

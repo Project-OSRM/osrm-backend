@@ -20,7 +20,6 @@
 #include "storage/shared_memory_ownership.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/format.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 
 #include <tbb/blocked_range.h>
@@ -28,10 +27,8 @@
 #include <tbb/parallel_sort.h>
 
 #include <algorithm>
-#include <array>
 #include <filesystem>
 #include <limits>
-#include <memory>
 #include <queue>
 #include <string>
 #include <vector>

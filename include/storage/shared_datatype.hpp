@@ -7,8 +7,6 @@
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 
-#include <boost/assert.hpp>
-
 #include <array>
 #include <cstdint>
 #include <map>

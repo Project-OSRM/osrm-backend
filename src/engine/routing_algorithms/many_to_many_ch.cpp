@@ -4,8 +4,6 @@
 #include <boost/assert.hpp>
 #include <ranges>
 
-#include <limits>
-#include <memory>
 #include <vector>
 
 namespace osrm::engine::routing_algorithms

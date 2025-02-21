@@ -6,7 +6,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
-#include <random>
 #include <vector>
 
 using namespace osrm;

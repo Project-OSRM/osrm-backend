@@ -7,8 +7,6 @@
 
 #include "util/json_util.hpp"
 
-#include <vector>
-
 namespace osrm::engine::plugins
 {
 

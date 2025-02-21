@@ -20,7 +20,6 @@
 #include <array>
 #include <numeric>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace osrm::engine::guidance

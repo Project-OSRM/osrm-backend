@@ -32,7 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "osrm/datasets.hpp"
 
 #include <filesystem>
-#include <set>
 #include <string>
 
 namespace osrm::engine

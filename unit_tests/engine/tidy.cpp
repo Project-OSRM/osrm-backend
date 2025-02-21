@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <iterator>
-#include <vector>
 
 BOOST_AUTO_TEST_SUITE(tidy_test)
 
