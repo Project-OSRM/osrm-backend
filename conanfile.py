@@ -11,7 +11,7 @@ class OsrmConan(ConanFile):
         self.requires("expat/2.6.2")
         self.requires("lua/5.4.6")
         self.requires("onetbb/2021.12.0")
-        self.requires("xz-utils/5.4.6")
+        self.requires("xz_utils/5.4.5")
         self.requires("zlib/1.3.1")
     
     def configure(self):
