@@ -300,7 +300,7 @@ function setup()
       ['ph:rural'] = 80,
       ['ph:motorway'] = 100,
       ['pl:rural'] = 100,
-      ['pl:trunk'] = 120,
+      ['pl:expressway'] = 120,
       ['pl:motorway'] = 140,
       ["ro:trunk"] = 100,
       ["ru:living_street"] = 20,
