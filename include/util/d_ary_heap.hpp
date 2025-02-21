@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/assert.hpp>
+#include <cstddef>
 #include <limits>
 #include <utility>
 #include <vector>
