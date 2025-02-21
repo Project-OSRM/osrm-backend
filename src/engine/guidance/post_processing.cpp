@@ -13,7 +13,6 @@
 
 #include <boost/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
-#include <boost/range/iterator_range.hpp>
 
 #include <algorithm>
 #include <cmath>

@@ -124,7 +124,7 @@ bisectionToPartition(const std::vector<BisectionID> &node_to_bisection_id,
     std::vector<std::uint32_t> num_cells(max_cell_sizes.size());
 
     int level_idx = max_cell_sizes.size() - 1;
-    for (auto max_cell_size : boost::adaptors::reverse(max_cell_sizes))
+    for (auto max_cell_size : std::ranges::reverse_view(max_cell_sizes))
     {
         BOOST_ASSERT(level_idx >= 0);
         partitionLevel(node_to_bisection_id, max_cell_size, permutation, cells);

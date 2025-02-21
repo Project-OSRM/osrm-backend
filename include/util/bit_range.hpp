@@ -4,7 +4,7 @@
 #include "util/msb.hpp"
 #include <bit>
 #include <boost/iterator/iterator_facade.hpp>
-#include <boost/range/iterator_range.hpp>
+#include <ranges>
 
 namespace osrm::util
 {
@@ -58,7 +58,7 @@ class BitIterator : public boost::iterator_facade<BitIterator<DataT>,
 // Returns range over all 1 bits of value
 template <typename T> auto makeBitRange(const T value)
 {
-    return boost::make_iterator_range(BitIterator<T>{value}, BitIterator<T>{});
+    return std::ranges::subrange(BitIterator<T>{value}, BitIterator<T>{});
 }
 } // namespace osrm::util
 
