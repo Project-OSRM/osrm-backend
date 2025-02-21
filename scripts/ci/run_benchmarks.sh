@@ -93,7 +93,7 @@ function run_benchmarks_for_folder {
             echo "Took: ${DIFF}s"
         done
     done
-    
+
     for ALGORITHM in ch mld; do
         for BENCH in nearest table trip route match; do
             echo "Running random $BENCH $ALGORITHM"

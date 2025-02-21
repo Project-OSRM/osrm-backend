@@ -79,6 +79,9 @@ endif()
 if (POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()
+if (POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
 project(OSRM C CXX)
 
 
@@ -377,9 +380,8 @@ if (ENABLE_CONAN)
   # note: we avoid calling find_package(Osmium ...) here to ensure that the
   # expat and bzip2 are used from conan rather than the system
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
-
 else()
-  find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+  find_package(Boost REQUIRED CONFIG COMPONENTS ${BOOST_COMPONENTS})
   find_package(TBB REQUIRED)
   find_package(EXPAT REQUIRED)
   find_package(BZip2 REQUIRED)

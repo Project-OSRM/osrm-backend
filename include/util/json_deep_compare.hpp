@@ -44,13 +44,13 @@ struct Comparator
 
     bool operator()(const Object &lhs, const Object &rhs) const
     {
-        std::set<std::string> lhs_keys;
+        std::set<std::string_view> lhs_keys;
         for (const auto &key_value : lhs.values)
         {
             lhs_keys.insert(key_value.first);
         }
 
-        std::set<std::string> rhs_keys;
+        std::set<std::string_view> rhs_keys;
         for (const auto &key_value : rhs.values)
         {
             rhs_keys.insert(key_value.first);
@@ -60,7 +60,7 @@ struct Comparator
         {
             if (rhs_keys.find(key) == rhs_keys.end())
             {
-                reason = rhs_path + " doesn't have key \"" + key + "\"";
+                reason = rhs_path + " doesn't have key \"" + std::string(key) + "\"";
                 return false;
             }
         }
@@ -69,7 +69,7 @@ struct Comparator
         {
             if (lhs_keys.find(key) == lhs_keys.end())
             {
-                reason = lhs_path + " doesn't have key \"" + key + "\"";
+                reason = lhs_path + " doesn't have key \"" + std::string(key) + "\"";
                 return false;
             }
         }
@@ -81,10 +81,11 @@ struct Comparator
 
             const auto &rhs_child = rhs.values.find(key)->second;
             const auto &lhs_child = lhs.values.find(key)->second;
-            auto is_same =
-                std::visit(Comparator(reason, lhs_path + "." + key, rhs_path + "." + key),
-                           lhs_child,
-                           rhs_child);
+            auto is_same = std::visit(Comparator(reason,
+                                                 lhs_path + "." + std::string(key),
+                                                 rhs_path + "." + std::string(key)),
+                                      lhs_child,
+                                      rhs_child);
             if (!is_same)
             {
                 return false;
