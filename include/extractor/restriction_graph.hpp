@@ -6,7 +6,7 @@
 #include "util/node_based_graph.hpp"
 #include "util/std_hash.hpp"
 #include "util/typedefs.hpp"
-
+#include <ranges>
 #include <unordered_map>
 
 namespace osrm::extractor
@@ -102,9 +102,9 @@ struct RestrictionGraph
     friend restriction_graph_details::transferBuilder;
     friend RestrictionGraph constructRestrictionGraph(const std::vector<TurnRestriction> &);
 
-    using EdgeRange = boost::iterator_range<std::vector<RestrictionEdge>::const_iterator>;
+    using EdgeRange = std::ranges::subrange<std::vector<RestrictionEdge>::const_iterator>;
     using RestrictionRange =
-        boost::iterator_range<std::vector<const TurnRestriction *>::const_iterator>;
+        std::ranges::subrange<std::vector<const TurnRestriction *>::const_iterator>;
     using EdgeKey = std::pair<NodeID, NodeID>;
 
     // Helper functions for iterating over node restrictions and edges
