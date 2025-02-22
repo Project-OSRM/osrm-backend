@@ -103,3 +103,40 @@ test('nearest: nearest in Monaco without motorways', function(assert) {
         assert.equal(response.waypoints.length, 1);
     });
 });
+
+test('nearest: throws on disabled geometry', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({path: data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    var options = {
+        coordinates: [two_test_coordinates[0]],
+    };
+    osrm.nearest(options, function(err, response) {
+        console.log(err)
+        assert.match(err.message, /DisabledDatasetException/);
+    });
+});
+test('nearest: ok on disabled geometry', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM({path: data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    var options = {
+        coordinates: [two_test_coordinates[0]],
+        skip_waypoints: true,
+    };
+    osrm.nearest(options, function(err, response) {
+        assert.ifError(err);
+        assert.notok(response.waypoints);
+
+    });
+});
+
+test('nearest: ok on disabled steps', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM({path: data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    var options = {
+        coordinates: [two_test_coordinates[0]],
+    };
+    osrm.nearest(options, function(err, response) {
+        assert.ifError(err);
+        assert.equal(response.waypoints.length, 1);
+    });
+});

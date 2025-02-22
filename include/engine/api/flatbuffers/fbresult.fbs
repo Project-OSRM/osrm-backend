@@ -14,7 +14,7 @@ table FBResult {
     data_version: string;
     waypoints: [Waypoint]; //Used as 'sources' waypoints for a 'Table' service
     routes: [RouteObject];
-    table: Table;
+    table: TableResult;
 }
 
 root_type FBResult;

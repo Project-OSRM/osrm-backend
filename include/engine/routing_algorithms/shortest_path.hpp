@@ -14,7 +14,7 @@ InternalRouteResult
 shortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
                    const DataFacade<Algorithm> &facade,
                    const std::vector<PhantomNodeCandidates> &waypoint_candidates,
-                   const boost::optional<bool> continue_straight_at_waypoint);
+                   const std::optional<bool> continue_straight_at_waypoint);
 
 } // namespace osrm::engine::routing_algorithms
 

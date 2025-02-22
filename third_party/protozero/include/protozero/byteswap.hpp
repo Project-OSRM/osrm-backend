@@ -19,6 +19,7 @@ documentation.
 #include "config.hpp"
 
 #include <cstdint>
+#include <cstring>
 
 namespace protozero {
 namespace detail {
@@ -75,14 +76,22 @@ inline void byteswap_inplace(int64_t* ptr) noexcept {
 
 /// byteswap the data pointed to by ptr in-place.
 inline void byteswap_inplace(float* ptr) noexcept {
-    auto* bptr = reinterpret_cast<uint32_t*>(ptr);
-    *bptr = detail::byteswap_impl(*bptr);
+    static_assert(sizeof(float) == 4, "Expecting four byte float");
+
+    uint32_t tmp = 0;
+    std::memcpy(&tmp, ptr, 4);
+    tmp = detail::byteswap_impl(tmp); // uint32 overload
+    std::memcpy(ptr, &tmp, 4);
 }
 
 /// byteswap the data pointed to by ptr in-place.
 inline void byteswap_inplace(double* ptr) noexcept {
-    auto* bptr = reinterpret_cast<uint64_t*>(ptr);
-    *bptr = detail::byteswap_impl(*bptr);
+    static_assert(sizeof(double) == 8, "Expecting eight byte double");
+
+    uint64_t tmp = 0;
+    std::memcpy(&tmp, ptr, 8);
+    tmp = detail::byteswap_impl(tmp); // uint64 overload
+    std::memcpy(ptr, &tmp, 8);
 }
 
 namespace detail {

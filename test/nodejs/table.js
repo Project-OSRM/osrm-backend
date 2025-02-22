@@ -19,7 +19,7 @@ test('table: flatbuffer format', function(assert) {
         assert.ok(table instanceof Buffer);
         const fb = FBResult.getRootAsFBResult(new flatbuffers.ByteBuffer(table));
         assert.ok(fb.table());
-        
+
     });
 });
 
@@ -369,3 +369,43 @@ tables.forEach(function(annotation) {
     });
 });
 
+test('table: throws on disabled geometry', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    var options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+    };
+    osrm.table(options, function(err, table) {
+        console.log(err)
+        assert.match(err.message, /DisabledDatasetException/);
+    });
+});
+
+test('table: ok on disabled geometry', function (assert) {
+    assert.plan(4);
+    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    var options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+        skip_waypoints: true
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table.durations, 'distances table result should exist');
+        assert.notok(table.sources)
+        assert.notok(table.destinations)
+    });
+});
+
+test('table: ok on disabled steps', function (assert) {
+    assert.plan(4);
+    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    var options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table.durations, 'distances table result should exist');
+        assert.ok(table.sources.length, 2)
+        assert.ok(table.destinations.length, 2)
+    });
+});

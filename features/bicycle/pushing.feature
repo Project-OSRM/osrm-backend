@@ -78,6 +78,15 @@ Feature: Bike - Accessability of different way types
             | construction | yes  |         |       |
             | construction |      | yes     |       |
 
+    @proposed
+    Scenario: Bike - Don't allow routing on ways still being proposed
+        Then routability should be
+            | highway  | foot | bicycle | proposed | bothw |
+            | primary  |      |         |          | x     |
+            | proposed |      |         |          |       |
+            | proposed | yes  |         | yes      |       |
+            | proposed |      | yes     | yes      |       |
+
     @roundabout
     Scenario: Bike - Don't push bikes against oneway flow on roundabouts
         Then routability should be

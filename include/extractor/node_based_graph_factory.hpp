@@ -12,8 +12,7 @@
 #include "util/coordinate.hpp"
 #include "util/node_based_graph.hpp"
 
-#include <boost/filesystem/path.hpp>
-
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -39,7 +38,7 @@ class NodeBasedGraphFactory
     NodeBasedGraphFactory(ScriptingEnvironment &scripting_environment,
                           std::vector<TurnRestriction> &turn_restrictions,
                           std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
-                          const TrafficSignals &traffic_signals,
+                          TrafficSignals &traffic_signals,
                           std::unordered_set<NodeID> &&barriers,
                           std::vector<util::Coordinate> &&coordinates,
                           extractor::PackedOSMIDs &&osm_node_ids,
@@ -71,7 +70,7 @@ class NodeBasedGraphFactory
     void Compress(ScriptingEnvironment &scripting_environment,
                   std::vector<TurnRestriction> &turn_restrictions,
                   std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
-                  const TrafficSignals &traffic_signals);
+                  TrafficSignals &traffic_signals);
 
     // Most ways are bidirectional, making the geometry in forward and backward direction the same,
     // except for reversal. We make use of this fact by keeping only one representation of the

@@ -21,14 +21,14 @@
 #include <napi.h>
 
 #include <boost/assert.hpp>
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <algorithm>
-#include <iostream>
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include <exception>
@@ -51,7 +51,7 @@ struct PluginParameters
     bool renderToBuffer = false;
 };
 
-using ObjectOrString = typename mapbox::util::variant<osrm::json::Object, std::string>;
+using ObjectOrString = typename std::variant<osrm::json::Object, std::string>;
 
 template <typename ResultT> inline Napi::Value render(const Napi::Env &env, const ResultT &result);
 
@@ -62,18 +62,18 @@ template <> Napi::Value inline render(const Napi::Env &env, const std::string &r
 
 template <> Napi::Value inline render(const Napi::Env &env, const ObjectOrString &result)
 {
-    if (result.is<osrm::json::Object>())
+    if (std::holds_alternative<osrm::json::Object>(result))
     {
         // Convert osrm::json object tree into matching v8 object tree
         Napi::Value value;
-        renderToV8(env, value, result.get<osrm::json::Object>());
+        renderToV8(env, value, std::get<osrm::json::Object>(result));
         return value;
     }
     else
     {
         // Return the string object as a node Buffer
         return Napi::Buffer<char>::Copy(
-            env, result.get<std::string>().data(), result.get<std::string>().size());
+            env, std::get<std::string>(result).data(), std::get<std::string>(result).size());
     }
 }
 
@@ -96,7 +96,7 @@ inline void ParseResult(const osrm::Status &result_status, osrm::json::Object &r
 
     if (result_status == osrm::Status::Error)
     {
-        throw std::logic_error(code_iter->second.get<osrm::json::String>().value.c_str());
+        throw std::logic_error(std::get<osrm::json::String>(code_iter->second).value.c_str());
     }
 
     result.values.erase(code_iter);
@@ -205,9 +205,50 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
         }
     }
 
+    auto disable_feature_dataset = params.Get("disable_feature_dataset");
+    if (disable_feature_dataset.IsArray())
+    {
+        Napi::Array datasets = disable_feature_dataset.As<Napi::Array>();
+        for (uint32_t i = 0; i < datasets.Length(); ++i)
+        {
+            Napi::Value dataset = datasets.Get(i);
+            if (!dataset.IsString())
+            {
+                ThrowError(args.Env(), "disable_feature_dataset list option must be a string");
+                return engine_config_ptr();
+            }
+            auto dataset_str = dataset.ToString().Utf8Value();
+            if (dataset_str == "ROUTE_GEOMETRY")
+            {
+                engine_config->disable_feature_dataset.push_back(
+                    osrm::storage::FeatureDataset::ROUTE_GEOMETRY);
+            }
+            else if (dataset_str == "ROUTE_STEPS")
+            {
+                engine_config->disable_feature_dataset.push_back(
+                    osrm::storage::FeatureDataset::ROUTE_STEPS);
+            }
+            else
+            {
+                ThrowError(
+                    args.Env(),
+                    "disable_feature_dataset array can include 'ROUTE_GEOMETRY', 'ROUTE_STEPS'.");
+                return engine_config_ptr();
+            }
+        }
+    }
+    else if (!disable_feature_dataset.IsUndefined())
+    {
+        ThrowError(args.Env(),
+                   "disable_feature_dataset option must be an array and can include the string "
+                   "values 'ROUTE_GEOMETRY', 'ROUTE_STEPS'.");
+        return engine_config_ptr();
+    }
+
     if (!path.IsUndefined())
     {
-        engine_config->storage_config = osrm::StorageConfig(path.ToString().Utf8Value());
+        engine_config->storage_config = osrm::StorageConfig(path.ToString().Utf8Value(),
+                                                            engine_config->disable_feature_dataset);
 
         engine_config->use_shared_memory = false;
     }
@@ -255,24 +296,19 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
         {
             engine_config->algorithm = osrm::EngineConfig::Algorithm::CH;
         }
-        else if (algorithm_str == "CoreCH")
-        {
-            engine_config->algorithm = osrm::EngineConfig::Algorithm::CH;
-        }
         else if (algorithm_str == "MLD")
         {
             engine_config->algorithm = osrm::EngineConfig::Algorithm::MLD;
         }
         else
         {
-            ThrowError(args.Env(), "algorithm option must be one of 'CH', 'CoreCH', or 'MLD'.");
+            ThrowError(args.Env(), "algorithm option must be one of 'CH', or 'MLD'.");
             return engine_config_ptr();
         }
     }
     else if (!algorithm.IsUndefined())
     {
-        ThrowError(args.Env(),
-                   "algorithm option must be a string and one of 'CH', 'CoreCH', or 'MLD'.");
+        ThrowError(args.Env(), "algorithm option must be a string and one of 'CH', or 'MLD'.");
         return engine_config_ptr();
     }
 
@@ -317,9 +353,16 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
         ThrowError(args.Env(), "max_alternatives must be an integral number");
         return engine_config_ptr();
     }
-    if (!default_radius.IsUndefined() && !default_radius.IsNumber())
+    if (!max_radius_map_matching.IsUndefined() && max_radius_map_matching.IsString() &&
+        max_radius_map_matching.ToString().Utf8Value() != "unlimited")
     {
-        ThrowError(args.Env(), "default_radius must be an integral number");
+        ThrowError(args.Env(), "max_radius_map_matching must be unlimited or an integral number");
+        return engine_config_ptr();
+    }
+    if (!default_radius.IsUndefined() && default_radius.IsString() &&
+        default_radius.ToString().Utf8Value() != "unlimited")
+    {
+        ThrowError(args.Env(), "default_radius must be unlimited or an integral number");
         return engine_config_ptr();
     }
 
@@ -337,19 +380,26 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
         engine_config->max_results_nearest = max_results_nearest.ToNumber().Int32Value();
     if (max_alternatives.IsNumber())
         engine_config->max_alternatives = max_alternatives.ToNumber().Int32Value();
+
     if (max_radius_map_matching.IsNumber())
         engine_config->max_radius_map_matching = max_radius_map_matching.ToNumber().DoubleValue();
+    else if (max_radius_map_matching.IsString() &&
+             max_radius_map_matching.ToString().Utf8Value() == "unlimited")
+        engine_config->max_radius_map_matching = -1.0;
+
     if (default_radius.IsNumber())
         engine_config->default_radius = default_radius.ToNumber().DoubleValue();
+    else if (default_radius.IsString() && default_radius.ToString().Utf8Value() == "unlimited")
+        engine_config->default_radius = -1.0;
 
     return engine_config;
 }
 
-inline boost::optional<std::vector<osrm::Coordinate>>
+inline std::optional<std::vector<osrm::Coordinate>>
 parseCoordinateArray(const Napi::Array &coordinates_array)
 {
     Napi::HandleScope scope(coordinates_array.Env());
-    boost::optional<std::vector<osrm::Coordinate>> resulting_coordinates;
+    std::optional<std::vector<osrm::Coordinate>> resulting_coordinates;
     std::vector<osrm::Coordinate> temp_coordinates;
 
     for (uint32_t i = 0; i < coordinates_array.Length(); ++i)
@@ -400,7 +450,7 @@ parseCoordinateArray(const Napi::Array &coordinates_array)
                                       osrm::util::FloatLatitude{std::move(lat)});
     }
 
-    resulting_coordinates = boost::make_optional(std::move(temp_coordinates));
+    resulting_coordinates = std::make_optional(std::move(temp_coordinates));
     return resulting_coordinates;
 }
 
@@ -505,6 +555,10 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
                 {
                     params->approaches.push_back(osrm::Approach::CURB);
                 }
+                else if (approach_str == "opposite")
+                {
+                    params->approaches.push_back(osrm::Approach::OPPOSITE);
+                }
                 else if (approach_str == "unrestricted")
                 {
                     params->approaches.push_back(osrm::Approach::UNRESTRICTED);
@@ -512,13 +566,14 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
                 else
                 {
                     ThrowError(args.Env(),
-                               "'approaches' param must be one of [curb, unrestricted]");
+                               "'approaches' param must be one of [curb, opposite, unrestricted]");
                     return false;
                 }
             }
             else
             {
-                ThrowError(args.Env(), "Approach must be a string: [curb, unrestricted] or null");
+                ThrowError(args.Env(),
+                           "Approach must be a string: [curb, opposite, unrestricted] or null");
                 return false;
             }
         }
@@ -976,7 +1031,7 @@ inline bool parseCommonParameters(const Napi::Object &obj, ParamType &params)
 
 inline PluginParameters argumentsToPluginParameters(
     const Napi::CallbackInfo &args,
-    const boost::optional<osrm::engine::api::BaseParameters::OutputFormatType> &output_format = {})
+    const std::optional<osrm::engine::api::BaseParameters::OutputFormatType> &output_format = {})
 {
     if (args.Length() < 3 || !args[1].IsObject())
     {

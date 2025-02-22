@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -248,7 +248,7 @@ namespace osmium {
 #endif
                 }
                 const int fd = osmium::io::detail::open_for_reading(filename);
-#if __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
                 if (fd >= 0) {
                     // Tell the kernel we are going to read this file sequentially
                     ::posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL);

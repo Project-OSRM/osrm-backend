@@ -69,7 +69,8 @@ function setup()
     },
 
     avoid = Set {
-      'impassable'
+      'impassable',
+      'proposed'
     },
 
     speeds = Sequence {
@@ -89,6 +90,7 @@ function setup()
         path            = walking_speed,
         steps           = walking_speed,
         pedestrian      = walking_speed,
+        platform        = walking_speed,
         footway         = walking_speed,
         pier            = walking_speed,
       },

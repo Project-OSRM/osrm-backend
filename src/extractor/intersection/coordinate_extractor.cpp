@@ -88,9 +88,8 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
     std::vector<util::Coordinate> coordinates) const
 {
     // check if the coordinate is equal to the interseciton coordinate
-    const auto not_same_as_start = [&](const util::Coordinate coordinate) {
-        return node_coordinates[traversed_in_reverse ? to_node : intersection_node] != coordinate;
-    };
+    const auto not_same_as_start = [&](const util::Coordinate coordinate)
+    { return node_coordinates[traversed_in_reverse ? to_node : intersection_node] != coordinate; };
     // this is only used for debug purposes in assertions. We don't want warnings about it
     (void)not_same_as_start;
 
@@ -176,7 +175,8 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
      * information on the very first turn angle (requires knowledge about previous road) and the
      * respective lane widths.
      */
-    const bool first_coordinate_is_far_away = [&first_distance, considered_lanes]() {
+    const bool first_coordinate_is_far_away = [&first_distance, considered_lanes]()
+    {
         const auto required_distance =
             considered_lanes * ASSUMED_LANE_WIDTH + LOOKAHEAD_DISTANCE_WITHOUT_LANES;
         return first_distance > required_distance;
@@ -256,7 +256,8 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
      * possible negative:
      * http://www.openstreetmap.org/search?query=52.514503%2013.32252#map=19/52.51450/13.32252
      */
-    const auto straight_distance_and_index = [&]() {
+    const auto straight_distance_and_index = [&]()
+    {
         auto straight_distance = segment_distances[1];
 
         std::size_t index;
@@ -276,7 +277,8 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
     const auto straight_distance = straight_distance_and_index.second;
     const auto straight_index = straight_distance_and_index.first;
 
-    const bool starts_of_without_turn = [&]() {
+    const bool starts_of_without_turn = [&]()
+    {
         return straight_distance >=
                considered_lanes * ASSUMED_LANE_WIDTH + LOOKAHEAD_DISTANCE_WITHOUT_LANES;
     }();
@@ -435,7 +437,8 @@ CoordinateExtractor::ExtractCoordinateAtLength(const double distance,
     auto length_cache_itr = length_cache.begin() + 1;
     // find the end of the segment containing the coordinate which is at least distance away
     const auto find_coordinate_at_distance = [distance, &accumulated_distance, &length_cache_itr](
-                                                 const util::Coordinate /*coordinate*/) mutable {
+                                                 const util::Coordinate /*coordinate*/) mutable
+    {
         const auto result = (accumulated_distance + *length_cache_itr) >= distance;
         if (!result)
         {
@@ -468,18 +471,19 @@ util::Coordinate CoordinateExtractor::ExtractCoordinateAtLength(
     // checks (via its state) for an accumulated distance
     const auto coordinate_at_distance =
         [distance, &accumulated_distance, last_coordinate = coordinates.front()](
-            const util::Coordinate coordinate) mutable {
-            const double segment_distance =
-                util::coordinate_calculation::greatCircleDistance(last_coordinate, coordinate);
-            const auto result = (accumulated_distance + segment_distance) >= distance;
-            if (!result)
-            {
-                accumulated_distance += segment_distance;
-                last_coordinate = coordinate;
-            }
+            const util::Coordinate coordinate) mutable
+    {
+        const double segment_distance =
+            util::coordinate_calculation::greatCircleDistance(last_coordinate, coordinate);
+        const auto result = (accumulated_distance + segment_distance) >= distance;
+        if (!result)
+        {
+            accumulated_distance += segment_distance;
+            last_coordinate = coordinate;
+        }
 
-            return result;
-        };
+        return result;
+    };
 
     // find the begin of the segment containing the coordinate
     const auto coordinate_after =
@@ -514,9 +518,8 @@ util::Coordinate CoordinateExtractor::GetCoordinateCloseToTurn(const NodeID from
         // the compressed edges contain node ids, we transfer them to coordinates accessing the
         // node_coordinates array
         const auto compressedGeometryToCoordinate =
-            [this](const CompressedEdgeContainer::OnewayCompressedEdge &compressed_edge) {
-                return node_coordinates[compressed_edge.node_id];
-            };
+            [this](const CompressedEdgeContainer::OnewayCompressedEdge &compressed_edge)
+        { return node_coordinates[compressed_edge.node_id]; };
 
         // return the first coordinate that is reasonably far away from the start node
         const util::Coordinate start_coordinate = node_coordinates[start_node];
@@ -526,10 +529,11 @@ util::Coordinate CoordinateExtractor::GetCoordinateCloseToTurn(const NodeID from
         // away from the first entry
         const auto far_enough_away =
             [start_coordinate, compressedGeometryToCoordinate](
-                const CompressedEdgeContainer::OnewayCompressedEdge &compressed_edge) {
-                return util::coordinate_calculation::greatCircleDistance(
-                           compressedGeometryToCoordinate(compressed_edge), start_coordinate) > 1;
-            };
+                const CompressedEdgeContainer::OnewayCompressedEdge &compressed_edge)
+        {
+            return util::coordinate_calculation::greatCircleDistance(
+                       compressedGeometryToCoordinate(compressed_edge), start_coordinate) > 1;
+        };
 
         // find the first coordinate, that is at least unequal to the begin of the edge
         if (traversed_in_reverse)
@@ -614,7 +618,8 @@ CoordinateExtractor::GetMaxDeviation(std::vector<util::Coordinate>::const_iterat
                                      const util::Coordinate straight_end) const
 {
     // compute the deviation of a single coordinate from a straight line
-    auto get_single_deviation = [&](const util::Coordinate coordinate) {
+    auto get_single_deviation = [&](const util::Coordinate coordinate)
+    {
         // find the projected coordinate
         auto coord_between = util::coordinate_calculation::projectPointOnSegment(
                                  straight_begin, straight_end, coordinate)
@@ -626,10 +631,11 @@ CoordinateExtractor::GetMaxDeviation(std::vector<util::Coordinate>::const_iterat
 
     // note: we don't accumulate here but rather compute the maximum. The functor passed here is not
     // summing up anything.
-    return std::accumulate(
-        range_begin, range_end, 0.0, [&](const double current, const util::Coordinate coordinate) {
-            return std::max(current, get_single_deviation(coordinate));
-        });
+    return std::accumulate(range_begin,
+                           range_end,
+                           0.0,
+                           [&](const double current, const util::Coordinate coordinate)
+                           { return std::max(current, get_single_deviation(coordinate)); });
 }
 
 bool CoordinateExtractor::IsCurve(const std::vector<util::Coordinate> &coordinates,
@@ -645,7 +651,8 @@ bool CoordinateExtractor::IsCurve(const std::vector<util::Coordinate> &coordinat
         return true;
 
     // TODO we might have to fix this to better compensate for errors due to repeated coordinates
-    const bool takes_an_actual_turn = [&coordinates]() {
+    const bool takes_an_actual_turn = [&coordinates]()
+    {
         const auto begin_bearing =
             util::coordinate_calculation::bearing(coordinates[0], coordinates[1]);
         const auto end_bearing = util::coordinate_calculation::bearing(
@@ -660,7 +667,8 @@ bool CoordinateExtractor::IsCurve(const std::vector<util::Coordinate> &coordinat
 
     const auto get_deviation = [](const util::Coordinate line_start,
                                   const util::Coordinate line_end,
-                                  const util::Coordinate point) {
+                                  const util::Coordinate point)
+    {
         // find the projected coordinate
         auto coord_between =
             util::coordinate_calculation::projectPointOnSegment(line_start, line_end, point).second;
@@ -669,19 +677,22 @@ bool CoordinateExtractor::IsCurve(const std::vector<util::Coordinate> &coordinat
     };
 
     // a curve needs to be on one side of the coordinate array
-    const bool all_same_side = [&]() {
+    const bool all_same_side = [&]()
+    {
         if (coordinates.size() <= 3)
             return true;
 
         const bool ccw = util::coordinate_calculation::isCCW(
             coordinates.front(), coordinates.back(), coordinates[1]);
 
-        return std::all_of(
-            coordinates.begin() + 2, coordinates.end() - 1, [&](const util::Coordinate coordinate) {
-                const bool compare_ccw = util::coordinate_calculation::isCCW(
-                    coordinates.front(), coordinates.back(), coordinate);
-                return ccw == compare_ccw;
-            });
+        return std::all_of(coordinates.begin() + 2,
+                           coordinates.end() - 1,
+                           [&](const util::Coordinate coordinate)
+                           {
+                               const bool compare_ccw = util::coordinate_calculation::isCCW(
+                                   coordinates.front(), coordinates.back(), coordinate);
+                               return ccw == compare_ccw;
+                           });
     }();
 
     if (!all_same_side)
@@ -694,13 +705,16 @@ bool CoordinateExtractor::IsCurve(const std::vector<util::Coordinate> &coordinat
     double maximum_deviation = 0;
 
     std::tie(has_up_down_deviation, maximum_deviation_index, maximum_deviation) =
-        [&coordinates, get_deviation]() -> std::tuple<bool, std::size_t, double> {
-        const auto increasing = [&](const util::Coordinate lhs, const util::Coordinate rhs) {
+        [&coordinates, get_deviation]() -> std::tuple<bool, std::size_t, double>
+    {
+        const auto increasing = [&](const util::Coordinate lhs, const util::Coordinate rhs)
+        {
             return get_deviation(coordinates.front(), coordinates.back(), lhs) <
                    get_deviation(coordinates.front(), coordinates.back(), rhs);
         };
 
-        const auto decreasing = [&](const util::Coordinate lhs, const util::Coordinate rhs) {
+        const auto decreasing = [&](const util::Coordinate lhs, const util::Coordinate rhs)
+        {
             return get_deviation(coordinates.front(), coordinates.back(), lhs) >
                    get_deviation(coordinates.front(), coordinates.back(), rhs);
         };
@@ -744,7 +758,8 @@ bool CoordinateExtractor::IsCurve(const std::vector<util::Coordinate> &coordinat
 
     BOOST_ASSERT(coordinates.size() >= 3);
     // Compute all turn angles along the road
-    const auto turn_angles = [coordinates]() {
+    const auto turn_angles = [coordinates]()
+    {
         std::vector<double> turn_angles;
         turn_angles.reserve(coordinates.size() - 2);
         for (std::size_t index = 0; index + 2 < coordinates.size(); ++index)
@@ -755,10 +770,9 @@ bool CoordinateExtractor::IsCurve(const std::vector<util::Coordinate> &coordinat
         return turn_angles;
     }();
 
-    const bool curve_is_valid = [&turn_angles,
-                                 &segment_distances,
-                                 &segment_length,
-                                 &considered_lane_width]() {
+    const bool curve_is_valid =
+        [&turn_angles, &segment_distances, &segment_length, &considered_lane_width]()
+    {
         // internal state for our lamdae
         bool last_was_straight = false;
         // a turn angle represents two segments between three coordinates. We initialize the
@@ -769,8 +783,9 @@ bool CoordinateExtractor::IsCurve(const std::vector<util::Coordinate> &coordinat
         // every call to the lamda requires a call to the distances. They need to be aligned
         BOOST_ASSERT(segment_distances.size() == turn_angles.size() + 2);
 
-        const auto detect_invalid_curve = [&](const double previous_angle,
-                                              const double current_angle) {
+        const auto detect_invalid_curve =
+            [&](const double previous_angle, const double current_angle)
+        {
             const auto both_actually_turn =
                 (util::angularDeviation(previous_angle, STRAIGHT_ANGLE) > FUZZY_ANGLE_DIFFERENCE) &&
                 (util::angularDeviation(current_angle, STRAIGHT_ANGLE) > FUZZY_ANGLE_DIFFERENCE);
@@ -822,7 +837,8 @@ bool CoordinateExtractor::IsDirectOffset(const std::vector<util::Coordinate> &co
                                          const std::uint8_t considered_lanes) const
 {
     // check if a given length is with half a lane of the assumed lane offset
-    const auto IsCloseToLaneDistance = [considered_lanes](const double width) {
+    const auto IsCloseToLaneDistance = [considered_lanes](const double width)
+    {
         // a road usually is connected to the middle of the lanes. So the lane-offset has to
         // consider half to road
         const auto lane_offset = 0.5 * considered_lanes * ASSUMED_LANE_WIDTH;
@@ -856,7 +872,8 @@ bool CoordinateExtractor::IsDirectOffset(const std::vector<util::Coordinate> &co
     const auto segment_offset_past_thirty_meters =
         std::find_if(segment_distances.begin() + offset_index,
                      segment_distances.end(),
-                     [accumulated_distance = 0.](const auto value) mutable {
+                     [accumulated_distance = 0.](const auto value) mutable
+                     {
                          accumulated_distance += value;
                          return value >= 30;
                      });
@@ -887,19 +904,22 @@ CoordinateExtractor::PrepareLengthCache(const std::vector<util::Coordinate> &coo
     segment_distances.push_back(0);
     // sentinel
     // NOLINTNEXTLINE(bugprone-unused-return-value)
-    std::find_if(std::next(std::begin(coordinates)),
-                 std::end(coordinates),
-                 [last_coordinate = coordinates.front(),
-                  limit,
-                  &segment_distances,
-                  accumulated_distance = 0.](const util::Coordinate current_coordinate) mutable {
-                     const auto distance = util::coordinate_calculation::greatCircleDistance(
-                         last_coordinate, current_coordinate);
-                     accumulated_distance += distance;
-                     last_coordinate = current_coordinate;
-                     segment_distances.push_back(distance);
-                     return accumulated_distance >= limit;
-                 });
+    // We're only interested in the side effect of the lambda, not the return value
+    [[maybe_unused]] auto _ =
+        std::find_if(std::next(std::begin(coordinates)),
+                     std::end(coordinates),
+                     [last_coordinate = coordinates.front(),
+                      limit,
+                      &segment_distances,
+                      accumulated_distance = 0.](const util::Coordinate current_coordinate) mutable
+                     {
+                         const auto distance = util::coordinate_calculation::greatCircleDistance(
+                             last_coordinate, current_coordinate);
+                         accumulated_distance += distance;
+                         last_coordinate = current_coordinate;
+                         segment_distances.push_back(distance);
+                         return accumulated_distance >= limit;
+                     });
     return segment_distances;
 }
 
@@ -914,18 +934,17 @@ CoordinateExtractor::TrimCoordinatesToLength(std::vector<util::Coordinate> coord
     double distance_to_current_coordinate = 0;
     std::size_t coordinate_index = 0;
 
-    const auto compute_length =
-        [&coordinate_index, &distance_to_current_coordinate, &coordinates]() {
-            const auto new_distance =
-                distance_to_current_coordinate +
-                util::coordinate_calculation::greatCircleDistance(coordinates[coordinate_index - 1],
-                                                                  coordinates[coordinate_index]);
-            return new_distance;
-        };
-
-    const auto read_length_from_cache = [&length_cache, &coordinate_index]() {
-        return length_cache[coordinate_index];
+    const auto compute_length = [&coordinate_index, &distance_to_current_coordinate, &coordinates]()
+    {
+        const auto new_distance =
+            distance_to_current_coordinate +
+            util::coordinate_calculation::greatCircleDistance(coordinates[coordinate_index - 1],
+                                                              coordinates[coordinate_index]);
+        return new_distance;
     };
+
+    const auto read_length_from_cache = [&length_cache, &coordinate_index]()
+    { return length_cache[coordinate_index]; };
 
     bool use_cache = !length_cache.empty();
 
@@ -1042,8 +1061,9 @@ CoordinateExtractor::SampleCoordinates(const std::vector<util::Coordinate> &coor
 
     double carry_length = 0., total_length = 0.;
     // interpolate coordinates as long as we are not past the desired length
-    const auto add_samples_until_length_limit = [&](const util::Coordinate previous_coordinate,
-                                                    const util::Coordinate current_coordinate) {
+    const auto add_samples_until_length_limit =
+        [&](const util::Coordinate previous_coordinate, const util::Coordinate current_coordinate)
+    {
         // pretend to have found an element and stop the sampling
         if (total_length > max_sample_length)
             return true;
@@ -1090,7 +1110,8 @@ CoordinateExtractor::SampleCoordinates(const std::vector<util::Coordinate> &coor
     };
 
     // misuse of adjacent_find. Loop over coordinates, until a total sample length is reached
-    std::adjacent_find(coordinates.begin(), coordinates.end(), add_samples_until_length_limit);
+    [[maybe_unused]] auto _ =
+        std::adjacent_find(coordinates.begin(), coordinates.end(), add_samples_until_length_limit);
 
     return sampled_coordinates;
 }

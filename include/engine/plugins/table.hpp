@@ -15,7 +15,7 @@ class TablePlugin final : public BasePlugin
 {
   public:
     explicit TablePlugin(const int max_locations_distance_table,
-                         const boost::optional<double> default_radius);
+                         const std::optional<double> default_radius);
 
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::TableParameters &params,

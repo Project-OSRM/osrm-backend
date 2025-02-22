@@ -12,14 +12,17 @@ documentation.
 
 #include <protozero/pbf_reader.hpp>
 
+#include <array>
 #include <cassert>
 
 // @cond internal
 // Wrappers for assert() used for testing
 #ifndef vtzero_assert
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 # define vtzero_assert(x) assert(x)
 #endif
 #ifndef vtzero_assert_in_noexcept_function
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 # define vtzero_assert_in_noexcept_function(x) assert(x)
 #endif
 // @endcond
@@ -56,10 +59,10 @@ namespace vtzero {
      * Return the name of a GeomType (for debug output etc.)
      */
     inline const char* geom_type_name(GeomType type) noexcept {
-        static const char* names[] = {
-            "unknown", "point", "linestring", "polygon"
+        static const std::array<const char*, 4> names = {
+            {"unknown", "point", "linestring", "polygon"}
         };
-        return names[static_cast<int>(type)]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+        return names[static_cast<std::size_t>(type)]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
     }
 
     /// The property value type as specified in the vector tile spec
@@ -77,10 +80,10 @@ namespace vtzero {
      * Return the name of a property value type (for debug output etc.)
      */
     inline const char* property_value_type_name(property_value_type type) noexcept {
-        static const char* names[] = {
-            "", "string", "float", "double", "int", "uint", "sint", "bool"
+        static const std::array<const char*, 8> names = {
+            {"", "string", "float", "double", "int", "uint", "sint", "bool"}
         };
-        return names[static_cast<int>(type)]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+        return names[static_cast<std::size_t>(type)]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
     }
 
     namespace detail {
@@ -145,7 +148,7 @@ namespace vtzero {
         /// @endcond
 
         /// value
-        float value = 0.0f;
+        float value = 0.0F;
 
         /// Construct float_value_type with value 0.0
         constexpr float_value_type() noexcept = default;

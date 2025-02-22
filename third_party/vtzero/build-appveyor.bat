@@ -9,7 +9,7 @@ SET
 ECHO cmake on AppVeyor
 cmake -version
 
-ECHO activating VS cmd prompt && CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+ECHO activating VS cmd prompt && CALL "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 IF EXIST build ECHO deleting build dir... && RD /Q /S build
@@ -21,11 +21,8 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 CD build
 ECHO config^: %config%
 
-::This will produce lots of LNK4099 warnings which can be ignored.
-::Unfortunately they can't be disabled, see
-::https://stackoverflow.com/questions/661606/visual-c-how-to-disable-specific-linker-warnings
 SET CMAKE_CMD=cmake .. ^
--LA -G "Visual Studio 14 Win64"
+-LA -G "Visual Studio 15 2017 Win64"
 
 ECHO calling^: %CMAKE_CMD%
 %CMAKE_CMD%
@@ -36,9 +33,7 @@ IF /I "%APPVEYOR%"=="True" SET avlogger=/logger:"C:\Program Files\AppVeyor\Build
 
 msbuild vtzero.sln ^
 /p:Configuration=%config% ^
-/toolsversion:14.0 ^
-/p:Platform=x64 ^
-/p:PlatformToolset=v140 %avlogger%
+%avlogger%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 ctest --output-on-failure ^

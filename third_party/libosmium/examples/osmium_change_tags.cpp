@@ -153,8 +153,8 @@ int main(int argc, char* argv[]) {
     }
 
     // Get input and output file names from command line.
-    std::string input_file_name{argv[1]};
-    std::string output_file_name{argv[2]};
+    const std::string input_file_name{argv[1]};
+    const std::string output_file_name{argv[2]};
 
     try {
         // Initialize Reader

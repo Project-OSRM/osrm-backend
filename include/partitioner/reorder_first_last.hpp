@@ -30,10 +30,10 @@ void reorderFirstLast(RandomIt first, RandomIt last, std::size_t n, Comparator c
     // requirements.
     std::reverse_iterator<RandomIt> rfirst{last}, rlast{first + n};
 
-    const auto flipped = [](auto fn) {
-        return [fn](auto &&lhs, auto &&rhs) {
-            return fn(std::forward<decltype(lhs)>(rhs), std::forward<decltype(rhs)>(lhs));
-        };
+    const auto flipped = [](auto fn)
+    {
+        return [fn](auto &&lhs, auto &&rhs)
+        { return fn(std::forward<decltype(lhs)>(rhs), std::forward<decltype(rhs)>(lhs)); };
     };
 
     std::nth_element(rfirst, rfirst + (n - 1), rlast, flipped(comp));

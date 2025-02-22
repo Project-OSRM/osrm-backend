@@ -3,14 +3,12 @@
 
 #include "guidance/intersection.hpp"
 #include "guidance/turn_lane_data.hpp"
-#include "util/attributes.hpp"
 
 namespace osrm::guidance::lanes
 {
 
-OSRM_ATTR_WARN_UNUSED
-LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
-                                           const Intersection &intersection);
+[[nodiscard]] LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
+                                                         const Intersection &intersection);
 
 } // namespace osrm::guidance::lanes
 

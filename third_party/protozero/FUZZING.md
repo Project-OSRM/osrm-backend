@@ -1,5 +1,5 @@
 
-To do fuzz testing using [AFL](http://lcamtuf.coredump.cx/afl/) compile with
+To do fuzz testing using [AFL](https://lcamtuf.coredump.cx/afl/) compile with
 the AFL compiler wrappers:
 
     mkdir build

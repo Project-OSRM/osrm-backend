@@ -106,10 +106,10 @@ TEST_CASE("Calling add_points() with bad values throws assert") {
     vtzero::point_feature_builder fbuilder{lbuilder};
 
     SECTION("0") {
-        REQUIRE_THROWS_AS(fbuilder.add_points(0), const assert_error&);
+        REQUIRE_THROWS_AS(fbuilder.add_points(0), assert_error);
     }
     SECTION("2^29") {
-        REQUIRE_THROWS_AS(fbuilder.add_points(1ul << 29u), const assert_error&);
+        REQUIRE_THROWS_AS(fbuilder.add_points(1UL << 29U), assert_error);
     }
 }
 
@@ -178,13 +178,13 @@ TEST_CASE("Calling add_point() and then other geometry functions throws assert")
     fbuilder.add_point(10, 20);
 
     SECTION("add_point()") {
-        REQUIRE_THROWS_AS(fbuilder.add_point(10, 20), const assert_error&);
+        REQUIRE_THROWS_AS(fbuilder.add_point(10, 20), assert_error);
     }
     SECTION("add_points()") {
-        REQUIRE_THROWS_AS(fbuilder.add_points(2), const assert_error&);
+        REQUIRE_THROWS_AS(fbuilder.add_points(2), assert_error);
     }
     SECTION("set_point()") {
-        REQUIRE_THROWS_AS(fbuilder.set_point(10, 10), const assert_error&);
+        REQUIRE_THROWS_AS(fbuilder.set_point(10, 10), assert_error);
     }
 }
 
@@ -193,7 +193,7 @@ TEST_CASE("Calling point_feature_builder::set_point() throws assert") {
     vtzero::layer_builder lbuilder{tbuilder, "test"};
     vtzero::point_feature_builder fbuilder{lbuilder};
 
-    REQUIRE_THROWS_AS(fbuilder.set_point(10, 10), const assert_error&);
+    REQUIRE_THROWS_AS(fbuilder.set_point(10, 10), assert_error);
 }
 
 TEST_CASE("Calling add_points() and then other geometry functions throws assert") {
@@ -204,10 +204,10 @@ TEST_CASE("Calling add_points() and then other geometry functions throws assert"
     fbuilder.add_points(2);
 
     SECTION("add_point()") {
-        REQUIRE_THROWS_AS(fbuilder.add_point(10, 20), const assert_error&);
+        REQUIRE_THROWS_AS(fbuilder.add_point(10, 20), assert_error);
     }
     SECTION("add_points()") {
-        REQUIRE_THROWS_AS(fbuilder.add_points(2), const assert_error&);
+        REQUIRE_THROWS_AS(fbuilder.add_points(2), assert_error);
     }
 }
 
@@ -219,7 +219,7 @@ TEST_CASE("Calling point_feature_builder::set_point() too often throws assert") 
     fbuilder.add_points(2);
     fbuilder.set_point(10, 20);
     fbuilder.set_point(20, 20);
-    REQUIRE_THROWS_AS(fbuilder.set_point(30, 20), const assert_error&);
+    REQUIRE_THROWS_AS(fbuilder.set_point(30, 20), assert_error);
 }
 
 TEST_CASE("Add points from container") {

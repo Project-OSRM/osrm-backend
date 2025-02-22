@@ -9,11 +9,16 @@
 #include <rapidjson/document.h>
 #include <sstream>
 #include <stdexcept>
+#include <unordered_set>
 
 using namespace osrm;
 
 namespace
 {
+
+// we use std::string_view as a key in the object, so since here we have dynamic keys we have to
+// "hold" them somewhere okay for tests...
+static std::unordered_set<std::string> gKeysHolder;
 
 void convert(const rapidjson::Value &value, json::Value &result)
 {
@@ -32,7 +37,8 @@ void convert(const rapidjson::Value &value, json::Value &result)
         {
             json::Value member;
             convert(itr->value, member);
-            object.values.emplace(itr->name.GetString(), std::move(member));
+            auto keyItr = gKeysHolder.emplace(itr->name.GetString()).first;
+            object.values.emplace(*keyItr, std::move(member));
         }
         result = std::move(object);
     }
@@ -86,7 +92,7 @@ json::Object load(const char *filename)
 
     json::Value result;
     convert(document, result);
-    return result.get<json::Object>();
+    return std::get<json::Object>(result);
 }
 
 } // namespace
@@ -122,6 +128,7 @@ int main(int argc, char **argv)
 
     if (std::string{out_vec.begin(), out_vec.end()} != out_str || out_str != out_ss_str)
     {
+        std::cerr << "Vector/string results are not equal\n";
         throw std::logic_error("Vector/stringstream/string results are not equal");
     }
     return EXIT_SUCCESS;

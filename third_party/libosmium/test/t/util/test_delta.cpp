@@ -77,14 +77,14 @@ TEST_CASE("delta encode and decode") {
     osmium::DeltaEncode<int, int> de;
     std::vector<int> b;
     b.reserve(a.size());
-    for (int x : a) {
+    for (const int x : a) {
         b.push_back(de.update(x));
     }
 
     osmium::DeltaDecode<int, int> dd;
     std::vector<int> c;
     c.reserve(b.size());
-    for (int x : b) {
+    for (const int x : b) {
         c.push_back(dd.update(x));
     }
 
