@@ -7,8 +7,6 @@
 #include "util/typedefs.hpp"
 
 // to access the turn restrictions
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
 namespace osrm::extractor

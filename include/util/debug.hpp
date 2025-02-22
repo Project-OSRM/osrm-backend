@@ -11,10 +11,9 @@
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
+#include <bitset>
 #include <iomanip>
 #include <ostream>
-#include <sstream>
-#include <string>
 #include <vector>
 
 namespace osrm

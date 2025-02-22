@@ -9,7 +9,6 @@
 #include "util/typedefs.hpp"
 
 #include <cstddef>
-#include <cstdint>
 
 #include <boost/numeric/conversion/cast.hpp>
 

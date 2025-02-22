@@ -14,7 +14,6 @@
 #include <storage/io.hpp>
 
 #include <filesystem>
-#include <iterator>
 #include <string>
 #include <unordered_map>
 

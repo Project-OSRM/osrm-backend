@@ -8,14 +8,9 @@
 
 #include "util/json_container.hpp"
 
-#include <boost/assert.hpp>
-
 #include <algorithm>
 #include <cstdlib>
 #include <iterator>
-#include <memory>
-#include <string>
-#include <utility>
 #include <vector>
 
 namespace osrm::engine::plugins

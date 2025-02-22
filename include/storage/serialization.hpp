@@ -15,7 +15,6 @@
 
 #include <cmath>
 #include <cstdint>
-#include <tuple>
 
 namespace osrm::storage::serialization
 {

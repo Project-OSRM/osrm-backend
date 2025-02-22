@@ -6,7 +6,6 @@
 #include "util/coordinate_calculation.hpp"
 
 #include <cstddef>
-#include <set>
 #include <unordered_set>
 #include <utility>
 

@@ -2,11 +2,7 @@
 
 #include <cassert>
 #include <cmath>
-#include <cstdint>
-#include <limits>
 #include <numbers>
-#include <tuple>
-#include <utility>
 
 namespace mapbox
 {

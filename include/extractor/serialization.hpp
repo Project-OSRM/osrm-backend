@@ -15,8 +15,6 @@
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
 
-#include <boost/assert.hpp>
-
 namespace osrm::extractor::serialization
 {
 
