@@ -43,7 +43,7 @@ RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
     ENABLE_ASSERTIONS="Off" && \
     case ${DOCKER_TAG} in *"-debug"*) BUILD_TYPE="Debug";; esac && \
     case ${DOCKER_TAG} in *"-assertions"*) BUILD_TYPE="RelWithDebInfo" && ENABLE_ASSERTIONS="On";; esac && \
-    echo "Building ${BUILD_TYPE} with ENABLE_ASSERTIONS=${ENABLE_ASSERTIONS} && \
+    echo "Building ${BUILD_TYPE} with ENABLE_ASSERTIONS=${ENABLE_ASSERTIONS}" && \
     cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS} -DENABLE_LTO=OFF && \
     make -j${NPROC} install && \
     cd ../profiles && \
@@ -75,4 +75,3 @@ RUN /usr/local/bin/osrm-extract --help && \
 WORKDIR /opt
 
 EXPOSE 5000
-
