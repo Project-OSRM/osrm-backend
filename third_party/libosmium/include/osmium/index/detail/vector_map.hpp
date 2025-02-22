@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -64,6 +64,14 @@ namespace osmium {
                 VectorBasedDenseMap() :
                     m_vector() {
                 }
+
+                VectorBasedDenseMap(const VectorBasedDenseMap&) = default;
+                VectorBasedDenseMap& operator=(const VectorBasedDenseMap&) = default;
+
+                VectorBasedDenseMap(VectorBasedDenseMap&&) noexcept = default;
+                VectorBasedDenseMap& operator=(VectorBasedDenseMap&&) noexcept = default;
+
+                ~VectorBasedDenseMap() noexcept override = default;
 
                 explicit VectorBasedDenseMap(int fd) :
                     m_vector(fd) {
@@ -161,10 +169,9 @@ namespace osmium {
                 vector_type m_vector;
 
                 typename vector_type::const_iterator find_id(const TId id) const noexcept {
-                    const element_type element {
+                    const element_type element{
                         id,
-                        osmium::index::empty_value<TValue>()
-                    };
+                        osmium::index::empty_value<TValue>()};
                     return std::lower_bound(m_vector.begin(), m_vector.end(), element, [](const element_type& a, const element_type& b) {
                         return a.first < b.first;
                     });
@@ -179,6 +186,14 @@ namespace osmium {
                 explicit VectorBasedSparseMap(int fd) :
                     m_vector(fd) {
                 }
+
+                VectorBasedSparseMap(const VectorBasedSparseMap&) = default;
+                VectorBasedSparseMap& operator=(const VectorBasedSparseMap&) = default;
+
+                VectorBasedSparseMap(VectorBasedSparseMap&&) noexcept = default;
+                VectorBasedSparseMap& operator=(VectorBasedSparseMap&&) noexcept = default;
+
+                ~VectorBasedSparseMap() noexcept override = default;
 
                 void set(const TId id, const TValue value) final {
                     m_vector.push_back(element_type(id, value));
@@ -226,7 +241,7 @@ namespace osmium {
                 void dump_as_array(const int fd) final {
                     constexpr const size_t value_size = sizeof(TValue);
                     constexpr const size_t buffer_size = (10L * 1024L * 1024L) / value_size;
-                    std::unique_ptr<TValue[]> output_buffer{new TValue[buffer_size]};
+                    const std::unique_ptr<TValue[]> output_buffer{new TValue[buffer_size]};
 
                     size_t buffer_start_id = 0;
                     for (auto it = cbegin(); it != cend();) {

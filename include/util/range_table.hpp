@@ -7,12 +7,9 @@
 #include "util/vector_view.hpp"
 
 #include <array>
-#include <fstream>
 #include <utility>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 /*
  * These pre-declarations are needed because parsing C++ is hard
@@ -66,7 +63,8 @@ template <unsigned BLOCK_SIZE, storage::Ownership Ownership> class RangeTable
     // construct table from length vector
     template <typename VectorT> explicit RangeTable(const VectorT &lengths)
     {
-        const unsigned number_of_blocks = [&lengths]() {
+        const unsigned number_of_blocks = [&lengths]()
+        {
             unsigned num = (lengths.size() + 1) / (BLOCK_SIZE + 1);
             if ((lengths.size() + 1) % (BLOCK_SIZE + 1) != 0)
             {
@@ -81,21 +79,27 @@ template <unsigned BLOCK_SIZE, storage::Ownership Ownership> class RangeTable
         unsigned last_length = 0;
         unsigned lengths_prefix_sum = 0;
         unsigned block_idx = 0;
-        unsigned block_counter = 0;
         BlockT block;
+#ifndef BOOST_ASSERT_IS_VOID
         unsigned block_sum = 0;
+        unsigned block_counter = 0;
+#endif
         for (const unsigned l : lengths)
         {
             // first entry of a block: encode absolute offset
             if (block_idx == 0)
             {
                 block_offsets.push_back(lengths_prefix_sum);
+#ifndef BOOST_ASSERT_IS_VOID
                 block_sum = 0;
+#endif
             }
             else
             {
                 block[block_idx - 1] = last_length;
+#ifndef BOOST_ASSERT_IS_VOID
                 block_sum += last_length;
+#endif
             }
 
             BOOST_ASSERT((block_idx == 0 && block_offsets[block_counter] == lengths_prefix_sum) ||
@@ -105,7 +109,9 @@ template <unsigned BLOCK_SIZE, storage::Ownership Ownership> class RangeTable
             if (BLOCK_SIZE == block_idx)
             {
                 diff_blocks.push_back(block);
+#ifndef BOOST_ASSERT_IS_VOID
                 block_counter++;
+#endif
             }
 
             // we can only store strings with length 255
@@ -209,7 +215,6 @@ unsigned RangeTable<BLOCK_SIZE, Ownership>::PrefixSumAtIndex(int index, const Bl
 
     return sum;
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // RANGE_TABLE_HPP

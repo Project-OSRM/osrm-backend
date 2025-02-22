@@ -2,9 +2,7 @@
 
 #include "util/permutation.hpp"
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 namespace
 {
@@ -48,10 +46,10 @@ std::vector<std::uint32_t> makePermutation(const DynamicEdgeBasedGraph &graph,
     // Nodes in the same cell will be sorted by cell ID on the level below
     for (const auto &partition : partitions)
     {
-        std::stable_sort(
-            ordering.begin(), ordering.end(), [&partition](const auto lhs, const auto rhs) {
-                return partition[lhs] < partition[rhs];
-            });
+        std::stable_sort(ordering.begin(),
+                         ordering.end(),
+                         [&partition](const auto lhs, const auto rhs)
+                         { return partition[lhs] < partition[rhs]; });
     }
 
     // Now sort the nodes by the level at which they are a border node, descening.
@@ -59,12 +57,11 @@ std::vector<std::uint32_t> makePermutation(const DynamicEdgeBasedGraph &graph,
     // whereas nodes that are nerver border nodes are sorted to the end of the array.
     // Note: Since we use a stable sort that preserves the cell sorting within each level
     auto border_level = getHighestBorderLevel(graph, partitions);
-    std::stable_sort(
-        ordering.begin(), ordering.end(), [&border_level](const auto lhs, const auto rhs) {
-            return border_level[lhs] > border_level[rhs];
-        });
+    std::stable_sort(ordering.begin(),
+                     ordering.end(),
+                     [&border_level](const auto lhs, const auto rhs)
+                     { return border_level[lhs] > border_level[rhs]; });
 
     return util::orderingToPermutation(ordering);
 }
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner

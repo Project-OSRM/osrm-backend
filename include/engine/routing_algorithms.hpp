@@ -11,27 +11,27 @@
 #include "engine/routing_algorithms/shortest_path.hpp"
 #include "engine/routing_algorithms/tile_turns.hpp"
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 class RoutingAlgorithmsInterface
 {
   public:
+    virtual ~RoutingAlgorithmsInterface() = default;
+
     virtual InternalManyRoutesResult
-    AlternativePathSearch(const PhantomNodes &phantom_node_pair,
+    AlternativePathSearch(const PhantomEndpointCandidates &endpoint_candidates,
                           unsigned number_of_alternatives) const = 0;
 
     virtual InternalRouteResult
-    ShortestPathSearch(const std::vector<PhantomNodes> &phantom_node_pair,
-                       const boost::optional<bool> continue_straight_at_waypoint) const = 0;
+    ShortestPathSearch(const std::vector<PhantomNodeCandidates> &waypoint_candidates,
+                       const std::optional<bool> continue_straight_at_waypoint) const = 0;
 
     virtual InternalRouteResult
-    DirectShortestPathSearch(const PhantomNodes &phantom_node_pair) const = 0;
+    DirectShortestPathSearch(const PhantomEndpointCandidates &endpoint_candidates) const = 0;
 
     virtual std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>>
-    ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
+    ManyToManySearch(const std::vector<PhantomNodeCandidates> &candidates_list,
                      const std::vector<std::size_t> &source_indices,
                      const std::vector<std::size_t> &target_indices,
                      const bool calculate_distance) const = 0;
@@ -40,7 +40,7 @@ class RoutingAlgorithmsInterface
     MapMatching(const routing_algorithms::CandidateLists &candidates_list,
                 const std::vector<util::Coordinate> &trace_coordinates,
                 const std::vector<unsigned> &trace_timestamps,
-                const std::vector<boost::optional<double>> &trace_gps_precision,
+                const std::vector<std::optional<double>> &trace_gps_precision,
                 const bool allow_splitting) const = 0;
 
     virtual std::vector<routing_algorithms::TurnData>
@@ -70,21 +70,21 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
     {
     }
 
-    virtual ~RoutingAlgorithms() = default;
+    virtual ~RoutingAlgorithms() override = default;
 
     InternalManyRoutesResult
-    AlternativePathSearch(const PhantomNodes &phantom_node_pair,
+    AlternativePathSearch(const PhantomEndpointCandidates &endpoint_candidates,
                           unsigned number_of_alternatives) const final override;
 
     InternalRouteResult ShortestPathSearch(
-        const std::vector<PhantomNodes> &phantom_node_pair,
-        const boost::optional<bool> continue_straight_at_waypoint) const final override;
+        const std::vector<PhantomNodeCandidates> &waypoint_candidates,
+        const std::optional<bool> continue_straight_at_waypoint) const final override;
 
-    InternalRouteResult
-    DirectShortestPathSearch(const PhantomNodes &phantom_nodes) const final override;
+    InternalRouteResult DirectShortestPathSearch(
+        const PhantomEndpointCandidates &endpoint_candidates) const final override;
 
-    virtual std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>>
-    ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
+    std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>>
+    ManyToManySearch(const std::vector<PhantomNodeCandidates> &candidates_list,
                      const std::vector<std::size_t> &source_indices,
                      const std::vector<std::size_t> &target_indices,
                      const bool calculate_distance) const final override;
@@ -93,7 +93,7 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
     MapMatching(const routing_algorithms::CandidateLists &candidates_list,
                 const std::vector<util::Coordinate> &trace_coordinates,
                 const std::vector<unsigned> &trace_timestamps,
-                const std::vector<boost::optional<double>> &trace_gps_precision,
+                const std::vector<std::optional<double>> &trace_gps_precision,
                 const bool allow_splitting) const final override;
 
     std::vector<routing_algorithms::TurnData>
@@ -150,28 +150,27 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
 };
 
 template <typename Algorithm>
-InternalManyRoutesResult
-RoutingAlgorithms<Algorithm>::AlternativePathSearch(const PhantomNodes &phantom_node_pair,
-                                                    unsigned number_of_alternatives) const
+InternalManyRoutesResult RoutingAlgorithms<Algorithm>::AlternativePathSearch(
+    const PhantomEndpointCandidates &endpoint_candidates, unsigned number_of_alternatives) const
 {
     return routing_algorithms::alternativePathSearch(
-        heaps, *facade, phantom_node_pair, number_of_alternatives);
+        heaps, *facade, endpoint_candidates, number_of_alternatives);
 }
 
 template <typename Algorithm>
 InternalRouteResult RoutingAlgorithms<Algorithm>::ShortestPathSearch(
-    const std::vector<PhantomNodes> &phantom_node_pair,
-    const boost::optional<bool> continue_straight_at_waypoint) const
+    const std::vector<PhantomNodeCandidates> &waypoint_candidates,
+    const std::optional<bool> continue_straight_at_waypoint) const
 {
     return routing_algorithms::shortestPathSearch(
-        heaps, *facade, phantom_node_pair, continue_straight_at_waypoint);
+        heaps, *facade, waypoint_candidates, continue_straight_at_waypoint);
 }
 
 template <typename Algorithm>
-InternalRouteResult
-RoutingAlgorithms<Algorithm>::DirectShortestPathSearch(const PhantomNodes &phantom_nodes) const
+InternalRouteResult RoutingAlgorithms<Algorithm>::DirectShortestPathSearch(
+    const PhantomEndpointCandidates &endpoint_candidates) const
 {
-    return routing_algorithms::directShortestPathSearch(heaps, *facade, phantom_nodes);
+    return routing_algorithms::directShortestPathSearch(heaps, *facade, endpoint_candidates);
 }
 
 template <typename Algorithm>
@@ -179,7 +178,7 @@ inline routing_algorithms::SubMatchingList RoutingAlgorithms<Algorithm>::MapMatc
     const routing_algorithms::CandidateLists &candidates_list,
     const std::vector<util::Coordinate> &trace_coordinates,
     const std::vector<unsigned> &trace_timestamps,
-    const std::vector<boost::optional<double>> &trace_gps_precision,
+    const std::vector<std::optional<double>> &trace_gps_precision,
     const bool allow_splitting) const
 {
     return routing_algorithms::mapMatching(heaps,
@@ -193,30 +192,31 @@ inline routing_algorithms::SubMatchingList RoutingAlgorithms<Algorithm>::MapMatc
 
 template <typename Algorithm>
 std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>>
-RoutingAlgorithms<Algorithm>::ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
-                                               const std::vector<std::size_t> &_source_indices,
-                                               const std::vector<std::size_t> &_target_indices,
-                                               const bool calculate_distance) const
+RoutingAlgorithms<Algorithm>::ManyToManySearch(
+    const std::vector<PhantomNodeCandidates> &candidates_list,
+    const std::vector<std::size_t> &_source_indices,
+    const std::vector<std::size_t> &_target_indices,
+    const bool calculate_distance) const
 {
-    BOOST_ASSERT(!phantom_nodes.empty());
+    BOOST_ASSERT(!candidates_list.empty());
 
     auto source_indices = _source_indices;
     auto target_indices = _target_indices;
 
     if (source_indices.empty())
     {
-        source_indices.resize(phantom_nodes.size());
+        source_indices.resize(candidates_list.size());
         std::iota(source_indices.begin(), source_indices.end(), 0);
     }
     if (target_indices.empty())
     {
-        target_indices.resize(phantom_nodes.size());
+        target_indices.resize(candidates_list.size());
         std::iota(target_indices.begin(), target_indices.end(), 0);
     }
 
     return routing_algorithms::manyToManySearch(heaps,
                                                 *facade,
-                                                phantom_nodes,
+                                                candidates_list,
                                                 std::move(source_indices),
                                                 std::move(target_indices),
                                                 calculate_distance);
@@ -230,7 +230,6 @@ inline std::vector<routing_algorithms::TurnData> RoutingAlgorithms<Algorithm>::G
     return routing_algorithms::getTileTurns(*facade, edges, sorted_edge_indexes);
 }
 
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

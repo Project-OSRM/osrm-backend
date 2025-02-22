@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -111,11 +111,18 @@ namespace osmium {
 
             osmium::memory::Buffer m_buffer{};
 
+            osmium::io::Header m_header;
+
             size_t m_buffer_size = default_buffer_size;
 
-            std::future<bool> m_write_future{};
+            std::future<std::size_t> m_write_future{};
 
             osmium::thread::thread_handler m_thread{};
+
+            // Checking the m_write_future is much more expensive then checking
+            // one atomic bool, so we set this bool in the write_thread when
+            // the writer should check the future...
+            std::atomic_bool m_notification{false};
 
             enum class status {
                 okay   = 0, // normal writing
@@ -123,24 +130,47 @@ namespace osmium {
                 closed = 2  // close() called successfully
             } m_status = status::okay;
 
+            // Has the header already bin written to the file?
+            bool m_header_written = false;
+
             // This function will run in a separate thread.
             static void write_thread(detail::future_string_queue_type& output_queue,
                                      std::unique_ptr<osmium::io::Compressor>&& compressor,
-                                     std::promise<bool>&& write_promise) {
+                                     std::promise<std::size_t>&& write_promise,
+                                     std::atomic_bool* notification) {
                 detail::WriteThread write_thread{output_queue,
                                                  std::move(compressor),
-                                                 std::move(write_promise)};
+                                                 std::move(write_promise),
+                                                 notification};
                 write_thread();
             }
 
+            void write_header() {
+                if (m_header.get("generator").empty()) {
+                    m_header.set("generator", "libosmium/" LIBOSMIUM_VERSION_STRING);
+                }
+
+                m_output->write_header(m_header);
+
+                m_header_written = true;
+            }
+
             void do_write(osmium::memory::Buffer&& buffer) {
+                if (!m_header_written) {
+                    write_header();
+                }
                 if (buffer && buffer.committed() > 0) {
                     m_output->write_buffer(std::move(buffer));
                 }
             }
 
             void do_flush() {
-                osmium::thread::check_for_exception(m_write_future);
+                if (!m_header_written) {
+                    write_header();
+                }
+                if (m_notification) {
+                    osmium::thread::check_for_exception(m_write_future);
+                }
                 if (m_buffer && m_buffer.committed() > 0) {
                     osmium::memory::Buffer buffer{m_buffer_size,
                                                   osmium::memory::Buffer::auto_grow::no};
@@ -192,7 +222,7 @@ namespace osmium {
 
             void do_close() {
                 if (m_status == status::okay) {
-                    ensure_cleanup([&](){
+                    ensure_cleanup([&]() {
                         do_write(std::move(m_buffer));
                         m_output->write_end();
                         m_status = status::closed;
@@ -223,6 +253,13 @@ namespace osmium {
              *       before closing it? Can be osmium::io::fsync::yes or
              *       osmium::io::fsync::no (default).
              *
+             * * osmium::thread::Pool&: Reference to a thread pool that should
+             *      be used for writing instead of the default pool. Usually
+             *      it is okay to use the statically initialized shared
+             *      default pool, but sometimes you want or need your own.
+             *      For instance when your program will fork, using the
+             *      statically initialized pool will not work.
+             *
              * @throws osmium::io_error If there was an error.
              * @throws std::system_error If the file could not be opened.
              */
@@ -232,32 +269,24 @@ namespace osmium {
                 assert(!m_file.buffer()); // XXX can't handle pseudo-files
 
                 options_type options;
-                (void)std::initializer_list<int>{
-                    (set_option(options, args), 0)...
-                };
+                (void)std::initializer_list<int>{(set_option(options, args), 0)...};
 
                 if (!options.pool) {
                     options.pool = &thread::Pool::default_instance();
                 }
 
-                m_output = osmium::io::detail::OutputFormatFactory::instance().create_output(*options.pool, m_file, m_output_queue);
+                m_header = options.header;
 
-                if (options.header.get("generator").empty()) {
-                    options.header.set("generator", "libosmium/" LIBOSMIUM_VERSION_STRING);
-                }
+                m_output = osmium::io::detail::OutputFormatFactory::instance().create_output(*options.pool, m_file, m_output_queue);
 
                 std::unique_ptr<osmium::io::Compressor> compressor =
                     CompressionFactory::instance().create_compressor(file.compression(),
                                                                      osmium::io::detail::open_for_writing(m_file.filename(), options.allow_overwrite),
                                                                      options.sync);
 
-                std::promise<bool> write_promise;
+                std::promise<std::size_t> write_promise;
                 m_write_future = write_promise.get_future();
-                m_thread = osmium::thread::thread_handler{write_thread, std::ref(m_output_queue), std::move(compressor), std::move(write_promise)};
-
-                ensure_cleanup([&](){
-                    m_output->write_header(options.header);
-                });
+                m_thread = osmium::thread::thread_handler{write_thread, std::ref(m_output_queue), std::move(compressor), std::move(write_promise), &m_notification};
             }
 
             template <typename... TArgs>
@@ -300,6 +329,16 @@ namespace osmium {
             }
 
             /**
+             * Set header. This will overwrite a header set in the constructor.
+             *
+             * Has to be called before writing anything to the file, otherwise
+             * this will not do anything.
+             */
+            void set_header(const osmium::io::Header& header) {
+                m_header = header;
+            }
+
+            /**
              * Flush the internal buffer if it contains any data. This is
              * usually not needed as the buffer gets flushed on close()
              * automatically.
@@ -307,7 +346,7 @@ namespace osmium {
              * @throws Some form of osmium::io_error when there is a problem.
              */
             void flush() {
-                ensure_cleanup([&](){
+                ensure_cleanup([&]() {
                     do_flush();
                 });
             }
@@ -321,7 +360,7 @@ namespace osmium {
              * @throws Some form of osmium::io_error when there is a problem.
              */
             void operator()(osmium::memory::Buffer&& buffer) {
-                ensure_cleanup([&](){
+                ensure_cleanup([&]() {
                     do_flush();
                     do_write(std::move(buffer));
                 });
@@ -335,7 +374,7 @@ namespace osmium {
              * @throws Some form of osmium::io_error when there is a problem.
              */
             void operator()(const osmium::memory::Item& item) {
-                ensure_cleanup([&](){
+                ensure_cleanup([&]() {
                     if (!m_buffer) {
                         m_buffer = osmium::memory::Buffer{m_buffer_size,
                                                           osmium::memory::Buffer::auto_grow::no};
@@ -356,14 +395,18 @@ namespace osmium {
              * the destructor will ignore, it is better to call close()
              * explicitly.
              *
+             * @returns Number of bytes written to the file (or 0 if it can
+             *          not be determined).
              * @throws Some form of osmium::io_error when there is a problem.
              */
-            void close() {
+            std::size_t close() {
                 do_close();
 
                 if (m_write_future.valid()) {
-                    m_write_future.get();
+                    return m_write_future.get();
                 }
+
+                return 0;
             }
 
         }; // class Writer

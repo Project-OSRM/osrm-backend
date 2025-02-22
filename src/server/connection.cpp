@@ -7,16 +7,17 @@
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
+#include <fmt/format.h>
 #include <vector>
 
-namespace osrm
-{
-namespace server
+namespace osrm::server
 {
 
-Connection::Connection(boost::asio::io_context &io_context, RequestHandler &handler)
+Connection::Connection(boost::asio::io_context &io_context,
+                       RequestHandler &handler,
+                       short keepalive_timeout)
     : strand(boost::asio::make_strand(io_context)), TCP_socket(strand), timer(strand),
-      request_handler(handler)
+      request_handler(handler), keepalive_timeout(keepalive_timeout)
 {
 }
 
@@ -90,7 +91,9 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
         {
             keep_alive = true;
             current_reply.headers.emplace_back("Connection", "keep-alive");
-            current_reply.headers.emplace_back("Keep-Alive", "timeout=5, max=512");
+            current_reply.headers.emplace_back("Keep-Alive",
+                                               "timeout=" + fmt::to_string(keepalive_timeout) +
+                                                   ", max=" + fmt::to_string(processed_requests));
         }
 
         // compress the result w/ gzip/deflate if requested
@@ -183,6 +186,7 @@ void Connection::handle_timeout(boost::system::error_code ec)
     if (ec != boost::asio::error::operation_aborted)
     {
         boost::system::error_code ignore_error;
+        // NOLINTNEXTLINE(bugprone-unused-return-value)
         TCP_socket.cancel(ignore_error);
         handle_shutdown();
     }
@@ -194,6 +198,7 @@ void Connection::handle_shutdown()
     timer.cancel();
     // Initiate graceful connection closure.
     boost::system::error_code ignore_error;
+    // NOLINTNEXTLINE(bugprone-unused-return-value)
     TCP_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignore_error);
 }
 
@@ -215,10 +220,9 @@ std::vector<char> Connection::compress_buffers(const std::vector<char> &uncompre
     boost::iostreams::filtering_ostream gzip_stream;
     gzip_stream.push(boost::iostreams::gzip_compressor(compression_parameters));
     gzip_stream.push(boost::iostreams::back_inserter(compressed_data));
-    gzip_stream.write(&uncompressed_data[0], uncompressed_data.size());
+    gzip_stream.write(uncompressed_data.data(), uncompressed_data.size());
     boost::iostreams::close(gzip_stream);
 
     return compressed_data;
 }
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server

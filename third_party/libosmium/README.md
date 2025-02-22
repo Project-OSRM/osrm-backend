@@ -4,11 +4,9 @@ https://osmcode.org/libosmium
 
 A fast and flexible C++ library for working with OpenStreetMap data.
 
-Libosmium works on Linux, Mac OSX and Windows.
+Libosmium works on Linux, macOS and Windows.
 
-[![Travis Build Status](https://secure.travis-ci.org/osmcode/libosmium.svg)](https://travis-ci.org/osmcode/libosmium)
-[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/yy099a4vxcb604rn/branch/master?svg=true)](https://ci.appveyor.com/project/lonvia/libosmium-eq41p/branch/master)
-[![Coverage Status](https://codecov.io/gh/osmcode/libosmium/branch/master/graph/badge.svg)](https://codecov.io/gh/osmcode/libosmium)
+[![Github Build Status](https://github.com/osmcode/libosmium/workflows/CI/badge.svg?branch=master)](https://github.com/osmcode/libosmium/actions)
 [![Packaging status](https://repology.org/badge/tiny-repos/libosmium.svg)](https://repology.org/metapackage/libosmium)
 
 Please see the [Libosmium manual](https://osmcode.org/libosmium/manual.html)
@@ -17,9 +15,8 @@ for more details than this README can provide.
 
 ## Prerequisites
 
-Because Libosmium uses many C++11 features you need a modern compiler and
-standard C++ library. Osmium needs at least GCC 4.8 or clang (LLVM) 3.4.
-(Some parts may work with older versions.)
+You need a C++11 compiler and standard C++ library. Osmium needs at least GCC
+4.8 or clang (LLVM) 3.4. (Some parts may work with older versions.)
 
 Different parts of Libosmium (and the applications built on top of it) need
 different libraries. You DO NOT NEED to install all of them, just install those
@@ -88,16 +85,9 @@ See the
 for instructions.
 
 
-## Switching from the old Osmium
-
-If you have been using the old version of Osmium at
-https://github.com/joto/osmium you might want to read about the [changes
-needed](https://osmcode.org/libosmium/manual.html#changes-from-old-versions-of-osmium).
-
-
 ## License
 
-Libosmium is available under the Boost Software License. See LICENSE.txt.
+Libosmium is available under the Boost Software License. See LICENSE.
 
 
 ## Authors

@@ -9,16 +9,12 @@
 
 #include <unordered_map>
 
-namespace osrm
-{
-namespace customizer
-{
-namespace files
+namespace osrm::customizer::files
 {
 
 // reads .osrm.cell_metrics file
 template <typename CellMetricT>
-inline void readCellMetrics(const boost::filesystem::path &path,
+inline void readCellMetrics(const std::filesystem::path &path,
                             std::unordered_map<std::string, std::vector<CellMetricT>> &metrics)
 {
     static_assert(std::is_same<CellMetricView, CellMetricT>::value ||
@@ -48,7 +44,7 @@ inline void readCellMetrics(const boost::filesystem::path &path,
 // writes .osrm.cell_metrics file
 template <typename CellMetricT>
 inline void
-writeCellMetrics(const boost::filesystem::path &path,
+writeCellMetrics(const std::filesystem::path &path,
                  const std::unordered_map<std::string, std::vector<CellMetricT>> &metrics)
 {
     static_assert(std::is_same<CellMetricView, CellMetricT>::value ||
@@ -76,7 +72,7 @@ writeCellMetrics(const boost::filesystem::path &path,
 
 // reads .osrm.mldgr file
 template <typename MultiLevelGraphT>
-inline void readGraph(const boost::filesystem::path &path,
+inline void readGraph(const std::filesystem::path &path,
                       MultiLevelGraphT &graph,
                       std::uint32_t &connectivity_checksum)
 {
@@ -92,7 +88,7 @@ inline void readGraph(const boost::filesystem::path &path,
 
 // writes .osrm.mldgr file
 template <typename MultiLevelGraphT>
-inline void writeGraph(const boost::filesystem::path &path,
+inline void writeGraph(const std::filesystem::path &path,
                        const MultiLevelGraphT &graph,
                        const std::uint32_t connectivity_checksum)
 {
@@ -106,8 +102,6 @@ inline void writeGraph(const boost::filesystem::path &path,
     writer.WriteFrom("/mld/connectivity_checksum", connectivity_checksum);
     serialization::write(writer, "/mld/multilevelgraph", graph);
 }
-} // namespace files
-} // namespace customizer
-} // namespace osrm
+} // namespace osrm::customizer::files
 
 #endif

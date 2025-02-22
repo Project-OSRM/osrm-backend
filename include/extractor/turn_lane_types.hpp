@@ -3,19 +3,15 @@
 
 #include "util/concurrent_id_map.hpp"
 #include "util/integer_range.hpp"
+#include "util/std_hash.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/functional/hash.hpp>
-
-#include <bitset>
 #include <cstddef>
 #include <cstdint>
 #include <numeric> //partial_sum
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 namespace TurnLaneType
@@ -38,7 +34,7 @@ inline auto laneTypeToName(const std::size_t type_id)
     return name[type_id];
 }
 
-typedef std::uint16_t Mask;
+using Mask = std::uint16_t;
 const constexpr Mask empty = 0u;
 const constexpr Mask none = 1u << 0u;
 const constexpr Mask straight = 1u << 1u;
@@ -54,21 +50,9 @@ const constexpr Mask merge_to_right = 1u << 10u;
 
 } // namespace TurnLaneType
 
-typedef std::vector<TurnLaneType::Mask> TurnLaneDescription;
+using TurnLaneDescription = std::vector<TurnLaneType::Mask>;
 
-// hash function for TurnLaneDescription
-struct TurnLaneDescription_hash
-{
-    std::size_t operator()(const TurnLaneDescription &lane_description) const
-    {
-        std::size_t seed = 0;
-        boost::hash_range(seed, lane_description.begin(), lane_description.end());
-        return seed;
-    }
-};
-
-using LaneDescriptionMap =
-    util::ConcurrentIDMap<TurnLaneDescription, LaneDescriptionID, TurnLaneDescription_hash>;
+using LaneDescriptionMap = util::ConcurrentIDMap<TurnLaneDescription, LaneDescriptionID>;
 
 using TurnLanesIndexedArray =
     std::tuple<std::vector<std::uint32_t>, std::vector<TurnLaneType::Mask>>;
@@ -100,7 +84,6 @@ inline TurnLanesIndexedArray transformTurnLaneMapIntoArrays(const LaneDescriptio
     return std::make_tuple(std::move(turn_lane_offsets), std::move(turn_lane_masks));
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* OSRM_GUIDANCE_TURN_LANE_TYPES_HPP_ */

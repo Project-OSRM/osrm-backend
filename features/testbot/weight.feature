@@ -28,12 +28,12 @@ Feature: Weight tests
             | cde   |
 
         When I route I should get
-            | waypoints | route   | a:weight  |
-            | s,t       | abc,cde | 1.1:2:2:1 |
+            | waypoints | route   | a:weight    |
+            | s,t       | abc,cde | 1.1:2:2:0.9 |
 
         When I route I should get
             | waypoints | route   | times   | weight_name | weights |
-            | s,t       | abc,cde | 6.1s,0s | duration    | 6.1,0   |
+            | s,t       | abc,cde | 6s,0s   | duration    | 6,0     |
 
     # FIXME include/engine/guidance/assemble_geometry.hpp:95
     Scenario: Start and target on the same and adjacent edge
@@ -52,11 +52,11 @@ Feature: Weight tests
             | abc   |
 
         When I route I should get
-            | waypoints | route   | distances | weights | times   | a:distance          | a:duration | a:weight | a:speed |
-            | s,t       | abc,abc | 20m,0m    | 2.1,0   | 2.1s,0s | 20.017685           | 2.1        | 2.1      | 9.5     |
-            | t,s       | abc,abc | 20m,0m    | 2.1,0   | 2.1s,0s | 20.017685           | 2.1        | 2.1      | 9.5     |
-            | s,e       | abc,abc | 40m,0m    | 4.1,0   | 4.1s,0s | 30.026527:10.008842 | 3.1:1      | 3.1:1    | 9.7:10  |
-            | e,s       | abc,abc | 40m,0m    | 4.1,0   | 4.1s,0s | 10.008842:30.026527 | 1:3.1      | 1:3.1    | 10:9.7  |
+            | waypoints | route   | distances | weights | times   | a:distance                | a:duration | a:weight | a:speed |
+            | s,t       | abc,abc | 20m,0m    | 2,0     | 2s,0s   | 20.03462663              | 2          | 2        | 10      |
+            | t,s       | abc,abc | 20m,0m    | 2,0     | 2s,0s   | 20.03462663              | 2          | 2        | 10      |
+            | s,e       | abc,abc | 40m,0m    | 3.9,0   | 3.9s,0s | 29.94063646:10.01731331 | 3:0.9      | 3:0.9    | 10:11.1  |
+            | e,s       | abc,abc | 40m,0m    | 3.9,0   | 3.9s,0s | 10.01731331:29.94063646 | 0.9:3      | 0.9:3    | 11.1:10  |
 
 
     Scenario: Step weights -- way_function: fail if no weight or weight_per_meter property
@@ -173,13 +173,13 @@ Feature: Weight tests
             | fgh      |
 
         When I route I should get
-            | waypoints | route | distance | weights | times  |
-            | a,f       | ,     | 100m     | 99.9,0  | 30s,0s |
-            | f,a       | ,     | 100m     | 199.8,0 | 30s,0s |
-            | a,h       | ,     | 140m     | 139.9,0 | 42s,0s |
-            | h,a       | ,     | 140m     | 279.8,0 | 42s,0s |
-            | f,h       | ,     | 40m      | 40,0    | 12s,0s |
-            | h,f       | ,     | 40m      | 80,0    | 12s,0s |
+            | waypoints | route | distance   | weights   | times  |
+            | a,f       | ,     | 100m       | 99.8,0    | 30s,0s |
+            | f,a       | ,     | 100m       | 199.9,0   | 30s,0s |
+            | a,h       | ,     | 140m       | 139.8,0   | 42s,0s |
+            | h,a       | ,     | 140m       | 280.1,0   | 42s,0s |
+            | f,h       | ,     | 40.1m      | 40,0      | 12s,0s |
+            | h,f       | ,     | 40.1m      | 80.2,0    | 12s,0s |
 
     Scenario: Step weights -- segment_function
         Given the profile file
@@ -281,11 +281,11 @@ Feature: Weight tests
 
         When I route I should get
             | waypoints | route | distance | weights      | times          |
-            | a,c       | ,     | 40m +-.1 | 5.119,0      | 289.9s,0s      |
-            | a,e       | ,,    | 60m +-.1 | 5.119,1.11,0 | 289.9s,100s,0s |
-            | e,a       | ,,    | 60m +-.1 | 2.21,2.22,0  | 10.1s,200s,0s  |
-            | e,d       | ,,    | 40m +-.1 | 4.009,1.11,0 | 189.9s,100s,0s |
-            | d,e       | ,,    | 40m +-.1 | 2.21,1.11,0  | 10.1s,100s,0s  |
+            | a,c       | ,     | 40m +-.1 | 2.22,0       | 200s,0s        |
+            | a,e       | ,,    | 60m +-.1 | 5.12,1.11,0  | 290s,100s,0s   |
+            | e,a       | ,,    | 60m +-.1 | 2.21,2.22,0  | 10s,200s,0s    |
+            | e,d       | ,,    | 40m +-.1 | 4.01,1.11,0  | 190s,100s,0s   |
+            | d,e       | ,,    | 40m +-.1 | 2.21,1.11,0  | 10s,100s,0s    |
 
     @traffic @speed
     Scenario: Step weights -- segment_function with speed and turn updates
@@ -329,7 +329,7 @@ Feature: Weight tests
             | ce    |
         And the speed file
             """
-            1,2,36,42
+            1,2,36.999,42
             2,1,36,42
             """
         And the turn penalty file
@@ -341,9 +341,9 @@ Feature: Weight tests
 
         When I route I should get
             | waypoints | route | distance | weights   | times        |
-            | a,d       | ,     | 59.9m    | 20.5,0    | 24s,0s       |
-            | a,e       | ,,    | 60.1m    | 27.2,10,0 | 38.5s,11s,0s |
-            | d,e       | ,,    | 39.9m    | 10,10,0   | 11s,11s,0s   |
+            | a,d       | ,     | 60m      | 20.5,0    | 23.9s,0s       |
+            | a,e       | ,,    | 60m      | 27.2,10,0 | 38.4s,11s,0s |
+            | d,e       | ,,    | 40m      | 10,10,0   | 11s,11s,0s   |
 
     @traffic @speed
     Scenario: Step weights -- segment_function with speed and turn updates with fallback to durations
@@ -375,10 +375,10 @@ Feature: Weight tests
         And the customize extra arguments "--segment-speed-file {speeds_file} --turn-penalty-file {penalties_file}"
 
         When I route I should get
-            | waypoints | route      | distance | weights       | times    |
-            | a,d       | abcd,abcd  | 59.9m    | 6.996,0       | 7s,0s    |
-            | a,e       | abcd,ce,ce | 60.1m    | 6.005,2.002,0 | 6s,2s,0s |
-            | d,e       | abcd,ce,ce | 39.9m    | 1.991,2.002,0 | 2s,2s,0s |
+            | waypoints | route      | distance | weights        | times    |
+            | a,d       | abcd,abcd  | 60m      | 7,0            | 7s,0s    |
+            | a,e       | abcd,ce,ce | 60m      | 5.997,2.001,0  | 6s,2s,0s |
+            | d,e       | abcd,ce,ce | 40m      | 2.003,2.001,0  | 2s,2s,0s |
 
     @traffic @speed
     Scenario: Updating speeds without affecting weights.
@@ -410,5 +410,5 @@ Feature: Weight tests
         And the customize extra arguments "--segment-speed-file {speeds_file}"
 
         When I route I should get
-            | waypoints | route      | distance | weights       | times    |
-            | a,b       | acdb,acdb  | 78.3m    | 11.744,0      | 56.4s,0s  |
+            | waypoints | route     | distance | weights  | times    |
+            | a,b       | acdb,acdb | 78.3m    | 11.742,0 | 56.4s,0s |

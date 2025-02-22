@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -58,6 +58,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -97,14 +98,12 @@ namespace osmium {
 
                 // The following settings are from the o5m description:
 
-                // The maximum number of entries in this table.
-                enum {
-                    number_of_entries = 15000U
-                };
+                enum : uint64_t {
+                    // The maximum number of entries in this table.
+                    number_of_entries = 15000UL,
 
-                // The size of one entry in the table.
-                enum {
-                    entry_size = 256U
+                    // The size of one entry in the table.
+                    entry_size = 256UL
                 };
 
                 // The maximum length of a string in the table including
@@ -129,6 +128,8 @@ namespace osmium {
                 }
 
                 void add(const char* string, std::size_t size) {
+                    assert(string);
+
                     if (m_table.empty()) {
                         m_table.resize(entry_size * number_of_entries);
                     }
@@ -150,16 +151,9 @@ namespace osmium {
 
             }; // class ReferenceTable
 
-            class O5mParser final : public Parser {
-
-                enum {
-                    initial_buffer_size = 1024UL * 1024UL
-                };
+            class O5mParser final : public ParserWithBuffer {
 
                 osmium::io::Header m_header{};
-
-                osmium::memory::Buffer m_buffer{initial_buffer_size,
-                                                osmium::memory::Buffer::auto_grow::internal};
 
                 std::string m_input{};
 
@@ -173,7 +167,7 @@ namespace osmium {
                 }
 
                 bool ensure_bytes_available(std::size_t need_bytes) {
-                    if ((m_end - m_data) >= static_cast<int64_t>(need_bytes)) {
+                    if (static_cast<std::size_t>(m_end - m_data) >= need_bytes) {
                         return true;
                     }
 
@@ -198,7 +192,7 @@ namespace osmium {
                 }
 
                 void check_header_magic() {
-                    static const unsigned char header_magic[] = { 0xff, 0xe0, 0x04, 'o', '5' };
+                    static const unsigned char header_magic[] = {0xff, 0xe0, 0x04, 'o', '5'};
 
                     if (std::strncmp(reinterpret_cast<const char*>(header_magic), m_data, sizeof(header_magic)) != 0) {
                         throw o5m_error{"wrong header magic"};
@@ -228,7 +222,7 @@ namespace osmium {
                 }
 
                 void decode_header() {
-                    if (! ensure_bytes_available(7)) { // overall length of header
+                    if (!ensure_bytes_available(7)) { // overall length of header
                         throw o5m_error{"file too short (incomplete header info)"};
                     }
 
@@ -267,8 +261,10 @@ namespace osmium {
                 }
 
                 const char* decode_string(const char** dataptr, const char* const end) {
+                    assert(*dataptr != end);
+
                     if (**dataptr == 0x00) { // get inline string
-                        (*dataptr)++;
+                        ++(*dataptr);
                         if (*dataptr == end) {
                             throw o5m_error{"string format error"};
                         }
@@ -280,6 +276,8 @@ namespace osmium {
                 }
 
                 std::pair<osmium::user_id_type, const char*> decode_user(const char** dataptr, const char* const end) {
+                    assert(*dataptr != end);
+
                     const bool update_pointer = (**dataptr == 0x00);
                     const char* data = decode_string(dataptr, end);
                     const char* start = data;
@@ -301,11 +299,11 @@ namespace osmium {
                         return {0, ""};
                     }
 
-                    while (*data++) {
+                    do {
                         if (data == end) {
                             throw o5m_error{"no null byte in user name"};
                         }
-                    }
+                    } while (*data++);
 
                     if (update_pointer) {
                         m_reference_table.add(start, data - start);
@@ -352,6 +350,10 @@ namespace osmium {
                 const char* decode_info(osmium::OSMObject& object, const char** dataptr, const char* const end) {
                     const char* user = "";
 
+                    if (*dataptr == end) {
+                        throw o5m_error{"premature end of file while parsing object metadata"};
+                    }
+
                     if (**dataptr == 0x00) { // no info section
                         ++*dataptr;
                     } else { // has info section
@@ -370,7 +372,7 @@ namespace osmium {
                                 object.set_uid(uid_user.first);
                                 user = uid_user.second;
                             } else {
-                                object.set_uid(user_id_type(0));
+                                object.set_uid(user_id_type{0});
                             }
                         }
                     }
@@ -379,7 +381,7 @@ namespace osmium {
                 }
 
                 void decode_node(const char* data, const char* const end) {
-                    osmium::builder::NodeBuilder builder{m_buffer};
+                    osmium::builder::NodeBuilder builder{buffer()};
 
                     builder.set_id(m_delta_id.update(zvarint(&data, end)));
 
@@ -401,7 +403,7 @@ namespace osmium {
                 }
 
                 void decode_way(const char* data, const char* const end) {
-                    osmium::builder::WayBuilder builder{m_buffer};
+                    osmium::builder::WayBuilder builder{buffer()};
 
                     builder.set_id(m_delta_id.update(zvarint(&data, end)));
 
@@ -439,6 +441,8 @@ namespace osmium {
                 }
 
                 std::pair<osmium::item_type, const char*> decode_role(const char** dataptr, const char* const end) {
+                    assert(*dataptr != end);
+
                     const bool update_pointer = (**dataptr == 0x00);
                     const char* data = decode_string(dataptr, end);
                     const char* start = data;
@@ -464,7 +468,7 @@ namespace osmium {
                 }
 
                 void decode_relation(const char* data, const char* const end) {
-                    osmium::builder::RelationBuilder builder{m_buffer};
+                    osmium::builder::RelationBuilder builder{buffer()};
 
                     builder.set_id(m_delta_id.update(zvarint(&data, end)));
 
@@ -546,7 +550,7 @@ namespace osmium {
                                 throw o5m_error{"premature end of file"};
                             }
 
-                            if (! ensure_bytes_available(length)) {
+                            if (!ensure_bytes_available(length)) {
                                 throw o5m_error{"premature end of file"};
                             }
 
@@ -554,22 +558,25 @@ namespace osmium {
                                 case dataset_type::node:
                                     mark_header_as_done();
                                     if (read_types() & osmium::osm_entity_bits::node) {
+                                        maybe_new_buffer(osmium::item_type::node);
                                         decode_node(m_data, m_data + length);
-                                        m_buffer.commit();
+                                        buffer().commit();
                                     }
                                     break;
                                 case dataset_type::way:
                                     mark_header_as_done();
                                     if (read_types() & osmium::osm_entity_bits::way) {
+                                        maybe_new_buffer(osmium::item_type::way);
                                         decode_way(m_data, m_data + length);
-                                        m_buffer.commit();
+                                        buffer().commit();
                                     }
                                     break;
                                 case dataset_type::relation:
                                     mark_header_as_done();
                                     if (read_types() & osmium::osm_entity_bits::relation) {
+                                        maybe_new_buffer(osmium::item_type::relation);
                                         decode_relation(m_data, m_data + length);
-                                        m_buffer.commit();
+                                        buffer().commit();
                                     }
                                     break;
                                 case dataset_type::bounding_box:
@@ -589,24 +596,18 @@ namespace osmium {
 
                             m_data += length;
 
-                            if (m_buffer.has_nested_buffers()) {
-                                std::unique_ptr<osmium::memory::Buffer> buffer_ptr{m_buffer.get_last_nested()};
-                                send_to_output_queue(std::move(*buffer_ptr));
-                            }
+                            flush_nested_buffer();
                         }
                     }
 
-                    if (m_buffer.committed() > 0) {
-                        send_to_output_queue(std::move(m_buffer));
-                    }
-
                     mark_header_as_done();
+                    flush_final_buffer();
                 }
 
             public:
 
                 explicit O5mParser(parser_arguments& args) :
-                    Parser(args),
+                    ParserWithBuffer(args),
                     m_data(m_input.data()),
                     m_end(m_data) {
                 }
@@ -617,7 +618,7 @@ namespace osmium {
                 O5mParser(O5mParser&&) = delete;
                 O5mParser& operator=(O5mParser&&) = delete;
 
-                ~O5mParser() noexcept = default;
+                ~O5mParser() noexcept override = default;
 
                 void run() override {
                     osmium::thread::set_thread_name("_osmium_o5m_in");
@@ -634,7 +635,7 @@ namespace osmium {
                 file_format::o5m,
                 [](parser_arguments& args) {
                     return std::unique_ptr<Parser>(new O5mParser{args});
-            });
+                });
 
             // dummy function to silence the unused variable warning from above
             inline bool get_registered_o5m_parser() noexcept {

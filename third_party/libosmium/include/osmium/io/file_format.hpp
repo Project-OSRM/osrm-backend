@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -48,12 +48,18 @@ namespace osmium {
             o5m       = 5,
             debug     = 6,
             blackhole = 7,
-            last      = 7 // must have the same value as the last real value
+            ids       = 8,
+            last      = 8 // must have the same value as the last real value
         };
 
         enum class read_meta {
             no  = 0,
             yes = 1
+        };
+
+        enum class buffers_type {
+            any    = 0,
+            single = 1
         };
 
         inline const char* as_string(const file_format format) noexcept {
@@ -72,6 +78,8 @@ namespace osmium {
                     return "DEBUG";
                 case file_format::blackhole:
                     return "BLACKHOLE";
+                case file_format::ids:
+                    return "IDS";
                 default: // file_format::unknown
                     break;
             }

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -91,8 +91,7 @@ namespace osmium {
             m_prev(begin),
             m_curr(begin),
             m_next(begin == end ? begin : ++begin),
-            m_end(std::move(end)),
-            m_diff() {
+            m_end(std::move(end)) {
         }
 
         DiffIterator& operator++() {

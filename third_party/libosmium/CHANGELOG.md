@@ -12,6 +12,259 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+## [2.20.0] - 2023-09-20
+
+### Changed
+
+* Optionally allow fractional seconds in timestamps in OSM files.
+* Enable `posix_fadvise` usage on FreeBSD.
+* Make parsing PBFs a bit less picky.
+* Various small code cleanups.
+
+### Fixed
+
+* Don't use class template arguments on `GeometryFactory` constructor
+  definition.
+
+## [2.19.0] - 2023-01-19
+
+### Changed
+
+* Mark RapidJSON support as deprecated.
+* Update included Catch to v2.13.10.
+* Remove deprecated BoolVector class.
+* Remove deprecated NWRIdSet class.
+* Remove deprecated AssemblerConfig constructor.
+* Print start of offending string in overlong string exception.
+* Implement `set_thread_name()` on FreeBSD.
+* Some small code cleanups.
+
+### Fixed
+
+* Fix return type in `MembersDatabaseCommon::count_not_removed()`.
+* Make bzip2 unit tests pass on musl-based systems.
+* Fix bug in members database test case.
+
+## [2.18.0] - 2022-02-07
+
+### Changed
+
+* Use `system_error` instead of `runtime_error` where it fits better.
+* Remove `OSMIUM_NORETURN` macro. This hasn't been used in a while.
+
+### Removed deprecated parts of the code
+
+Several parts of libosmium have been marked deprecated, many of them for a very
+long time. These are now removed:
+
+* Sparsehash index class `osmium::index::map::SparseMemTable` as well as the
+  complete file `osmium/index/map/sparse_mem_table.hpp`.
+* Callback functionality of the `osmium::memory::Buffer` class. The
+  `set_full_callback()` will not be available any more. See the source
+  for replacement options.
+* Various `osmium::builder::build_*` functions in
+  `osmium/builder/builder_helper.hpp`. Use `osmium::builder::add_*`
+  functions instead. Removes `builder_helper.hpp`.
+* `osmium::builder::Builder::add_item(const osmium::memory::Item* item)`.
+  Use the function of the same name taking a reference instead.
+* `osmium::builder::OSMObject/ChangesetBuilder::add_user()`. Use
+  `set_user()` instead.
+* `osmium::builder::ChangesetBuilder::bounds()` returning a modifiable
+  reference. Use `set_bounds()` instead.
+* Several functions around `osmium::io::OutputIterator`.
+* `osmium::Area::inner_ring_cbegin/cend()`, use `inner_rings()` instead.
+* `osmium::RelationMember::ref()`, use `set_ref()` instead.
+* Implicit conversion from `osmium::Timestamp` to `std::time_t`. Use
+  `seconds_since_epoch()` instead.
+* `osmium::string_to_user_id()`, use `string_to_uid` instead.
+* `osmium::static_cast_with_assert()` helper functions as well as the
+  complete include file `osmium/util/cast.hpp`.
+* Some constructors of `osmium::util::MemoryMapping` and
+  `osmium::util::TypedMemoryMapping`. Use other constructor instead.
+
+
+## [2.17.3] - 2022-01-19
+
+### Fixed
+
+* Removed possible deadlock when shutting down active Reader.
+
+
+## [2.17.2] - 2021-12-16
+
+### Changed
+
+* Libosmium now supports being compiled in C++17 and C++20 mode. The minimum
+  version required is still C++11, but if you use libosmium in an C++17 or
+  C++20 application this should work properly.
+* Switch from catch version 1 to catch2 as test framework.
+* When `std::variant` is available (C++17 and above), libosmium will use that
+  instead of `boost::variant` reducing the dependencies a little bit.
+* Removed various workaround that were needed for older MSVC compilers.
+* Remove use of `boost::filter_iterator` and `boost::indirect_iterator`. The
+  removes the dependency on Boost Iterator.
+* Examples now mostly use the somewhat cleaner `return` instead of
+  `std::exit()` to return an exit code from `main`.
+* As always: Various small code cleanups.
+
+### Fixed
+
+* When ordering OSM objects (mostly use in the `CheckOrder` handler), the
+  smallest id possible (`INTMIN`) wasn't sorted correctly.
+* Threading problem when reading files.
+* Possible dereference of invalid iterator in legacy area assembler. This
+  only affects the legacy area assembler that takes old-style multipolygons
+  into account, so modern code that is not working with history data is not
+  affected.
+* Fixed read from an empty queue when reading a file which could block
+  libosmium forever when an error was encountered while reading a file.
+
+### Deprecated
+
+Several parts of libosmium have been marked deprecated, many of them for a very
+long time. These will not be part of the next version of libosmium:
+
+* Sparsehash index class `osmium::index::map::SparseMemTable` as well as the
+  complete file `osmium/index/map/sparse_mem_table.hpp`.
+* Callback functionality of the `osmium::memory::Buffer` class. The
+  `set_full_callback()` will not be available any more. See the source
+  for replacement options.
+* Various `osmium::builder::build_*` functions in
+  `osmium/builder/builder_helper.hpp`. Use `osmium::builder::add_*`
+  functions instead. Removes `builder_helper.hpp`.
+* `osmium::builder::Builder::add_item(const osmium::memory::Item* item)`.
+  Use the function of the same name taking a reference instead.
+* `osmium::builder::OSMObject/ChangesetBuilder::add_user()`. Use
+  `set_user()` instead.
+* `osmium::builder::ChangesetBuilder::bounds()` returning a modifiable
+  reference. Use `set_bounds()` instead.
+* Several functions around `osmium::io::OutputIterator`.
+* `osmium::Area::inner_ring_cbegin/cend()`, use `inner_rings()` instead.
+* `osmium::RelationMember::ref()`, use `set_ref()` instead.
+* Implicit conversion from `osmium::Timestamp` to `std::time_t`. Use
+  `seconds_since_epoch()` instead.
+* `osmium::string_to_user_id()`, use `string_to_uid` instead.
+* `osmium::static_cast_with_assert()` helper functions as well as the
+  complete include file `osmium/util/cast.hpp`.
+* Some constructors of `osmium::util::MemoryMapping` and
+  `osmium::util::TypedMemoryMapping`. Use other constructor instead.
+
+
+## [2.17.1] - 2021-10-05
+
+### Added
+
+* Add `osmium_tags_filter` example showing use of tags filter.
+* Add `Writer::set_header()` function to set header after constructing.
+
+### Changed
+
+* Various improvements in PBF file reading make it slightly faster and less
+  CPU intensive.
+* Since 2.17.0 Osmium will, when reading files, tell the kernel using
+  `fadvise` that it can remove pages from the buffer cache that are not
+  needed any more. This is usually beneficial, because the memory can be used
+  for something else. But if you are reading the same OSM file multiple times
+  at the same time or in short succession, it might be better to keep those
+  buffer pages. In that case you can set the environment variable
+  `OSMIUM_CLEAN_PAGE_CACHE_AFTER_READ` to `no` and Osmium will not call
+  `fadvise`. Set it to `yes` or anything else (or not set it at all) to get
+  the default behaviour.
+* If the macro `OSMIUM_DEFINE_EXPORT` is defined, all exception classes used
+  by Osmium will get "tagged as exported" using `__declspec(dllexport)` when
+  using MSVC or `__attribute__ ((visibility("default")))` on other compilers.
+  This is needed in PyOsmium.
+
+### Fixed
+
+* Fix integer parser. IDs in OPL files can now be anything between -2^63 and
+  2^63-1.
+
+
+## [2.17.0] - 2021-04-26
+
+### Added
+
+* Add "ids" output format. New IDS output format that is similar to
+  the OPL format, but only the entity type and id is written out.
+* Add convenience functions `left()`, `right()`, `top()`, `bottom()` to
+  access `osmium::Box` boundaries.
+* Add polygon output to WKB factory.
+* Add functions to access storage from `node_locations_for_ways`
+  handler.
+* Add flag `osmium::io::buffers_type` for telling the `Reader` class whether
+  you want buffers read to only contain a single type of OSM entity.
+* Add convenient named `nodes()`, `ways()`, and `relations()` accessor
+  functions to `nwr_array` class.
+* Add `DeltaDecode::value()` accessor function.
+* Add variant of the `Buffer::purge_removed()` function which doesn't take
+  a callback parameter.
+
+### Changed
+
+* Different varint decoding for faster PBF decoding. This makes PBF
+  decoding about 15% faster.
+* Several code optimmizations in (PBF) writer code that speed up
+  writing of OSM files considerably while using less CPU and spreading
+  the load on multiple CPUs.
+* Use memset/memcpy instead of `std::fill_n` and `std::copy` in object
+  builder for some slight speedups.
+* Ignore metadata setting on reader for history/change files. History
+  and change files must be read with metadata, because otherwise the
+  information is lost whether an object is visible or deleted. So
+  ignore this setting in that case.
+* On Linux: Use fadvise() to tell kernel about our reading patterns:
+  1. Tell kernel that we are reading OSM files sequentially. This
+     should improve pre-fetching of data blocks.
+  2. Tell kernel that we are done with block so they can be released.
+     This means we don't hog the buffer cache for something that
+     will, in all likelyhood, not be needed any more.
+* Use assert() instead of exception in "can not happen" situation in
+  the relations manager code.
+* Various code cleanups.
+
+### Fixed
+
+* Test failure with `add_tag_list` on some systems.
+* Test framework fix for aarch64 architecture.
+* Remove undefined behaviour in bzip2 compression code.
+* Rename some local variables to not shadow member functions.
+* Wrap `osmium::util::MemoryMapping::unmap()` in try/catch on Windows
+  also because we call this from a noexcept function.
+* Removed superfluous `std::forward`s and fixed code that called
+  `std::forward` multiple times on the same object.
+* Fix in OPL parser which could lead to invalid data being generated.
+* Fixed three bugs in O5M parser which could lead to an infinit loop
+  or segmentation faults.
+
+## [2.16.0] - 2021-01-08
+
+### Added
+
+* The PBF reader and writer now understand PBF blobs compressed with the LZ4
+  compression algorithm in addition to the usual ZLIB compression (or no
+  compression at all). LZ4 is much faster to compress and uncompress. Use
+  by setting the `pbf_compression` output file format option to `lz4`. You
+  have to define `OSMIUM_WITH_LZ4` to enable this before including any
+  libosmium includes.
+* The function `osmium::io::supported_pbf_compression_types` can now be used
+  to get a list of all PBF compression types supported.
+* The output file option `pbf_compression_level` can now be set to an integer.
+  The range depends on the compression type used, 0-9 for zlib compression
+  and 1-65537 for lz4 compression.
+* Adds `ptr_begin()`/`ptr_end()` functions to `ObjectPointerCollection` for
+  accessing the pointers instead of the underlying objects.
+
+### Changed
+
+* The `osmium::io::Writer::close()` function now returns the number of bytes
+  written to an OSM file if it is available (and 0 otherwise).
+* Use stable sort when sorting `ObjectPointerCollection`.
+
+### Fixed
+
+* Various small fixes and cleanups.
+
 
 ## [2.15.6] - 2020-06-27
 
@@ -1032,7 +1285,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   Doxygen (up to version 1.8.8). This version contains a workaround to fix
   this.
 
-[unreleased]: https://github.com/osmcode/libosmium/compare/v2.15.6...HEAD
+[unreleased]: https://github.com/osmcode/libosmium/compare/v2.20.0...HEAD
+[2.20.0]: https://github.com/osmcode/libosmium/compare/v2.19.0...v2.20.0
+[2.19.0]: https://github.com/osmcode/libosmium/compare/v2.18.9...v2.19.0
+[2.18.0]: https://github.com/osmcode/libosmium/compare/v2.17.3...v2.18.0
+[2.17.3]: https://github.com/osmcode/libosmium/compare/v2.17.2...v2.17.3
+[2.17.2]: https://github.com/osmcode/libosmium/compare/v2.17.1...v2.17.2
+[2.17.1]: https://github.com/osmcode/libosmium/compare/v2.17.0...v2.17.1
+[2.17.0]: https://github.com/osmcode/libosmium/compare/v2.16.0...v2.17.0
+[2.16.0]: https://github.com/osmcode/libosmium/compare/v2.15.6...v2.16.0
 [2.15.6]: https://github.com/osmcode/libosmium/compare/v2.15.5...v2.15.6
 [2.15.5]: https://github.com/osmcode/libosmium/compare/v2.15.4...v2.15.5
 [2.15.4]: https://github.com/osmcode/libosmium/compare/v2.15.3...v2.15.4

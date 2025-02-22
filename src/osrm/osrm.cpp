@@ -10,7 +10,7 @@
 #include "engine/engine_config.hpp"
 #include "engine/status.hpp"
 
-#include <memory>
+#include <boost/algorithm/string/join.hpp>
 
 namespace osrm
 {
@@ -25,19 +25,15 @@ OSRM::OSRM(engine::EngineConfig &config)
     // First, check that necessary core data is available
     if (!config.use_shared_memory && !config.storage_config.IsValid())
     {
-        throw util::exception("Required files are missing, cannot continue.  Have all the "
-                              "pre-processing steps been run?");
+        const auto &missingFiles = config.storage_config.GetMissingFiles();
+        throw util::exception("Required files are missing, cannot continue. Have all the "
+                              "pre-processing steps been run? "
+                              "Missing files: " +
+                              boost::algorithm::join(missingFiles, ", "));
     }
 
     // Now, check that the algorithm requested can be used with the data
     // that's available.
-
-    if (config.algorithm == EngineConfig::Algorithm::CoreCH)
-    {
-        util::Log(logWARNING) << "Using CoreCH is deprecated. Falling back to CH";
-        config.algorithm = EngineConfig::Algorithm::CH;
-    }
-
     switch (config.algorithm)
     {
     case EngineConfig::Algorithm::CH:
@@ -47,7 +43,7 @@ OSRM::OSRM(engine::EngineConfig &config)
         engine_ = std::make_unique<engine::Engine<MLD>>(config);
         break;
     default:
-        util::exception("Algorithm not implemented!");
+        throw util::exception("Algorithm not implemented!");
     }
 }
 OSRM::~OSRM() = default;
@@ -60,7 +56,7 @@ Status OSRM::Route(const engine::api::RouteParameters &params, json::Object &jso
 {
     osrm::engine::api::ResultT result = json::Object();
     auto status = engine_->Route(params, result);
-    json_result = std::move(result.get<json::Object>());
+    json_result = std::move(std::get<json::Object>(result));
     return status;
 }
 
@@ -73,7 +69,7 @@ Status OSRM::Table(const engine::api::TableParameters &params, json::Object &jso
 {
     osrm::engine::api::ResultT result = json::Object();
     auto status = engine_->Table(params, result);
-    json_result = std::move(result.get<json::Object>());
+    json_result = std::move(std::get<json::Object>(result));
     return status;
 }
 
@@ -86,7 +82,7 @@ Status OSRM::Nearest(const engine::api::NearestParameters &params, json::Object 
 {
     osrm::engine::api::ResultT result = json::Object();
     auto status = engine_->Nearest(params, result);
-    json_result = std::move(result.get<json::Object>());
+    json_result = std::move(std::get<json::Object>(result));
     return status;
 }
 
@@ -99,7 +95,7 @@ Status OSRM::Trip(const engine::api::TripParameters &params, json::Object &json_
 {
     osrm::engine::api::ResultT result = json::Object();
     auto status = engine_->Trip(params, result);
-    json_result = std::move(result.get<json::Object>());
+    json_result = std::move(std::get<json::Object>(result));
     return status;
 }
 
@@ -113,7 +109,7 @@ Status OSRM::Match(const engine::api::MatchParameters &params, json::Object &jso
 {
     osrm::engine::api::ResultT result = json::Object();
     auto status = engine_->Match(params, result);
-    json_result = std::move(result.get<json::Object>());
+    json_result = std::move(std::get<json::Object>(result));
     return status;
 }
 
@@ -126,7 +122,7 @@ Status OSRM::Tile(const engine::api::TileParameters &params, std::string &str_re
 {
     osrm::engine::api::ResultT result = std::string();
     auto status = engine_->Tile(params, result);
-    str_result = std::move(result.get<std::string>());
+    str_result = std::move(std::get<std::string>(result));
     return status;
 }
 

@@ -2,17 +2,11 @@
 #include "engine/routing_algorithms/routing_base_ch.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/range/iterator_range_core.hpp>
+#include <ranges>
 
-#include <limits>
-#include <memory>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 namespace ch
@@ -24,16 +18,16 @@ inline bool addLoopWeight(const DataFacade<ch::Algorithm> &facade,
                           EdgeDuration &duration,
                           EdgeDistance &distance)
 { // Special case for CH when contractor creates a loop edge node->node
-    BOOST_ASSERT(weight < 0);
+    BOOST_ASSERT(weight < EdgeWeight{0});
 
-    const auto loop_weight = ch::getLoopWeight<false>(facade, node);
+    const auto loop_weight = ch::getLoopMetric<EdgeWeight>(facade, node);
     if (std::get<0>(loop_weight) != INVALID_EDGE_WEIGHT)
     {
         const auto new_weight_with_loop = weight + std::get<0>(loop_weight);
-        if (new_weight_with_loop >= 0)
+        if (new_weight_with_loop >= EdgeWeight{0})
         {
             weight = new_weight_with_loop;
-            auto result = ch::getLoopWeight<true>(facade, node);
+            auto result = ch::getLoopMetric<EdgeDuration>(facade, node);
             duration += std::get<0>(result);
             distance += std::get<1>(result);
             return true;
@@ -49,7 +43,7 @@ void relaxOutgoingEdges(
     const DataFacade<Algorithm> &facade,
     const typename SearchEngineData<Algorithm>::ManyToManyQueryHeap::HeapNode &heapNode,
     typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
-    const PhantomNode &)
+    const PhantomNodeCandidates &)
 {
     if (stallAtNode<DIRECTION>(facade, heapNode, query_heap))
     {
@@ -67,9 +61,9 @@ void relaxOutgoingEdges(
             const auto edge_duration = data.duration;
             const auto edge_distance = data.distance;
 
-            BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
+            BOOST_ASSERT_MSG(edge_weight > EdgeWeight{0}, "edge_weight invalid");
             const auto to_weight = heapNode.weight + edge_weight;
-            const auto to_duration = heapNode.data.duration + edge_duration;
+            const auto to_duration = heapNode.data.duration + to_alias<EdgeDuration>(edge_duration);
             const auto to_distance = heapNode.data.distance + edge_distance;
 
             const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
@@ -99,7 +93,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         std::vector<EdgeDuration> &durations_table,
                         std::vector<EdgeDistance> &distances_table,
                         std::vector<NodeID> &middle_nodes_table,
-                        const PhantomNode &phantom_node)
+                        const PhantomNodeCandidates &candidates)
 {
     // Take a copy of the extracted node because otherwise could be modified later if toHeapNode is
     // the same
@@ -110,7 +104,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                                                search_space_with_buckets.end(),
                                                heapNode.node,
                                                NodeBucket::Compare());
-    for (const auto &current_bucket : boost::make_iterator_range(bucket_list))
+    for (const auto &current_bucket : std::ranges::subrange(bucket_list.first, bucket_list.second))
     {
         // Get target id from bucket entry
         const auto column_index = current_bucket.column_index;
@@ -120,7 +114,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
 
         auto &current_weight = weights_table[row_index * number_of_targets + column_index];
 
-        EdgeDistance nulldistance = 0;
+        EdgeDistance nulldistance = {0};
 
         auto &current_duration = durations_table[row_index * number_of_targets + column_index];
         auto &current_distance =
@@ -132,7 +126,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         auto new_duration = heapNode.data.duration + target_duration;
         auto new_distance = heapNode.data.distance + target_distance;
 
-        if (new_weight < 0)
+        if (new_weight < EdgeWeight{0})
         {
             if (addLoopWeight(facade, heapNode.node, new_weight, new_duration, new_distance))
             {
@@ -151,14 +145,14 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         }
     }
 
-    relaxOutgoingEdges<FORWARD_DIRECTION>(facade, heapNode, query_heap, phantom_node);
+    relaxOutgoingEdges<FORWARD_DIRECTION>(facade, heapNode, query_heap, candidates);
 }
 
 void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                          const unsigned column_index,
                          typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
                          std::vector<NodeBucket> &search_space_with_buckets,
-                         const PhantomNode &phantom_node)
+                         const PhantomNodeCandidates &candidates)
 {
     // Take a copy (no ref &) of the extracted node because otherwise could be modified later if
     // toHeapNode is the same
@@ -172,7 +166,7 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                                            heapNode.data.duration,
                                            heapNode.data.distance);
 
-    relaxOutgoingEdges<REVERSE_DIRECTION>(facade, heapNode, query_heap, phantom_node);
+    relaxOutgoingEdges<REVERSE_DIRECTION>(facade, heapNode, query_heap, candidates);
 }
 
 } // namespace ch
@@ -181,7 +175,7 @@ template <>
 std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>>
 manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                  const DataFacade<ch::Algorithm> &facade,
-                 const std::vector<PhantomNode> &phantom_nodes,
+                 const std::vector<PhantomNodeCandidates> &candidates_list,
                  const std::vector<std::size_t> &source_indices,
                  const std::vector<std::size_t> &target_indices,
                  const bool calculate_distance)
@@ -202,18 +196,18 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
     for (std::uint32_t column_index = 0; column_index < target_indices.size(); ++column_index)
     {
         const auto index = target_indices[column_index];
-        const auto &phantom = phantom_nodes[index];
+        const auto &target_candidates = candidates_list[index];
 
         engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(
             facade.GetNumberOfNodes());
         auto &query_heap = *(engine_working_data.many_to_many_heap);
-        insertTargetInHeap(query_heap, phantom);
+        insertTargetInHeap(query_heap, target_candidates);
 
         // Explore search space
         while (!query_heap.Empty())
         {
             backwardRoutingStep(
-                facade, column_index, query_heap, search_space_with_buckets, phantom);
+                facade, column_index, query_heap, search_space_with_buckets, target_candidates);
         }
     }
 
@@ -224,13 +218,13 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
     for (std::uint32_t row_index = 0; row_index < source_indices.size(); ++row_index)
     {
         const auto source_index = source_indices[row_index];
-        const auto &source_phantom = phantom_nodes[source_index];
+        const auto &source_candidates = candidates_list[source_index];
 
         // Clear heap and insert source nodes
         engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(
             facade.GetNumberOfNodes());
         auto &query_heap = *(engine_working_data.many_to_many_heap);
-        insertSourceInHeap(query_heap, source_phantom);
+        insertSourceInHeap(query_heap, source_candidates);
 
         // Explore search space
         while (!query_heap.Empty())
@@ -244,13 +238,11 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                                durations_table,
                                distances_table,
                                middle_nodes_table,
-                               source_phantom);
+                               source_candidates);
         }
     }
 
     return std::make_pair(std::move(durations_table), std::move(distances_table));
 }
 
-} // namespace routing_algorithms
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms

@@ -14,9 +14,7 @@
 
 #include "customizer/cell_metric.hpp"
 
-#include <boost/iterator/iterator_facade.hpp>
-#include <boost/range/iterator_range.hpp>
-
+#include <ranges>
 #include <tbb/parallel_sort.h>
 
 #include <algorithm>
@@ -24,9 +22,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 namespace detail
 {
@@ -100,15 +96,14 @@ template <storage::Ownership Ownership> class CellStorageImpl
         {
 
             using ValueT = decltype(*std::declval<ValuePtrT>());
-            typedef boost::
-                iterator_facade<ColumnIterator<ValueT>, ValueT, boost::random_access_traversal_tag>
-                    base_t;
+            using base_t = boost::
+                iterator_facade<ColumnIterator<ValueT>, ValueT, boost::random_access_traversal_tag>;
 
           public:
-            typedef typename base_t::value_type value_type;
-            typedef typename base_t::difference_type difference_type;
-            typedef typename base_t::reference reference;
-            typedef std::random_access_iterator_tag iterator_category;
+            using value_type = typename base_t::value_type;
+            using difference_type = typename base_t::difference_type;
+            using reference = typename base_t::reference;
+            using iterator_category = std::random_access_iterator_tag;
 
             explicit ColumnIterator() : current(nullptr), stride(1) {}
 
@@ -131,19 +126,19 @@ template <storage::Ownership Ownership> class CellStorageImpl
 
             friend class ::boost::iterator_core_access;
             ValuePtrT current;
-            const std::size_t stride;
+            std::size_t stride;
         };
 
         template <typename ValuePtr> auto GetOutRange(const ValuePtr ptr, const NodeID node) const
         {
             auto iter = std::find(source_boundary, source_boundary + num_source_nodes, node);
             if (iter == source_boundary + num_source_nodes)
-                return boost::make_iterator_range(ptr, ptr);
+                return std::ranges::subrange(ptr, ptr);
 
             auto row = std::distance(source_boundary, iter);
             auto begin = ptr + num_destination_nodes * row;
             auto end = begin + num_destination_nodes;
-            return boost::make_iterator_range(begin, end);
+            return std::ranges::subrange(begin, end);
         }
 
         template <typename ValuePtr> auto GetInRange(const ValuePtr ptr, const NodeID node) const
@@ -151,14 +146,14 @@ template <storage::Ownership Ownership> class CellStorageImpl
             auto iter =
                 std::find(destination_boundary, destination_boundary + num_destination_nodes, node);
             if (iter == destination_boundary + num_destination_nodes)
-                return boost::make_iterator_range(ColumnIterator<ValuePtr>{},
-                                                  ColumnIterator<ValuePtr>{});
+                return std::ranges::subrange(ColumnIterator<ValuePtr>{},
+                                             ColumnIterator<ValuePtr>{});
 
             auto column = std::distance(destination_boundary, iter);
             auto begin = ColumnIterator<ValuePtr>{ptr + column, num_destination_nodes};
             auto end = ColumnIterator<ValuePtr>{
                 ptr + column + num_source_nodes * num_destination_nodes, num_destination_nodes};
-            return boost::make_iterator_range(begin, end);
+            return std::ranges::subrange(begin, end);
         }
 
       public:
@@ -176,13 +171,13 @@ template <storage::Ownership Ownership> class CellStorageImpl
 
         auto GetSourceNodes() const
         {
-            return boost::make_iterator_range(source_boundary, source_boundary + num_source_nodes);
+            return std::ranges::subrange(source_boundary, source_boundary + num_source_nodes);
         }
 
         auto GetDestinationNodes() const
         {
-            return boost::make_iterator_range(destination_boundary,
-                                              destination_boundary + num_destination_nodes);
+            return std::ranges::subrange(destination_boundary,
+                                         destination_boundary + num_destination_nodes);
         }
 
         CellImpl(const CellData &data,
@@ -301,7 +296,8 @@ template <storage::Ownership Ownership> class CellStorageImpl
                                                                    auto set_num_nodes_fn,
                                                                    auto set_boundary_offset_fn,
                                                                    auto begin,
-                                                                   auto end) {
+                                                                   auto end)
+            {
                 BOOST_ASSERT(std::distance(begin, end) > 0);
 
                 const auto cell_id = begin->first;
@@ -319,7 +315,8 @@ template <storage::Ownership Ownership> class CellStorageImpl
             util::for_each_range(
                 level_source_boundary.begin(),
                 level_source_boundary.end(),
-                [this, insert_cell_boundary](auto begin, auto end) {
+                [this, insert_cell_boundary](auto begin, auto end)
+                {
                     insert_cell_boundary(
                         source_boundary,
                         [](auto &cell, auto value) { cell.num_source_nodes = value; },
@@ -330,7 +327,8 @@ template <storage::Ownership Ownership> class CellStorageImpl
             util::for_each_range(
                 level_destination_boundary.begin(),
                 level_destination_boundary.end(),
-                [this, insert_cell_boundary](auto begin, auto end) {
+                [this, insert_cell_boundary](auto begin, auto end)
+                {
                     insert_cell_boundary(
                         destination_boundary,
                         [](auto &cell, auto value) { cell.num_destination_nodes = value; },
@@ -449,7 +447,6 @@ template <storage::Ownership Ownership> class CellStorageImpl
     Vector<std::uint64_t> level_to_cell_offset;
 };
 } // namespace detail
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif // OSRM_PARTITIONER_CUSTOMIZE_CELL_STORAGE_HPP

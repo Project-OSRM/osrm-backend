@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -82,12 +82,17 @@ namespace osmium {
 
             virtual void close() = 0;
 
+            virtual std::size_t file_size() const {
+                return 0;
+            }
+
         }; // class Compressor
 
         class Decompressor {
 
-            std::atomic<std::size_t> m_file_size{0};
-            std::atomic<std::size_t> m_offset{0};
+            std::atomic<std::size_t>* m_offset_ptr{nullptr};
+
+            std::atomic_bool m_want_buffered_pages_removed{false};
 
         public:
 
@@ -109,20 +114,26 @@ namespace osmium {
 
             virtual void close() = 0;
 
-            std::size_t file_size() const noexcept {
-                return m_file_size;
+            virtual bool is_real() const noexcept {
+                return true;
             }
 
-            void set_file_size(const std::size_t size) noexcept {
-                m_file_size = size;
-            }
-
-            std::size_t offset() const noexcept {
-                return m_offset;
+            void set_offset_ptr(std::atomic<std::size_t>* offset_ptr) noexcept {
+                m_offset_ptr = offset_ptr;
             }
 
             void set_offset(const std::size_t offset) noexcept {
-                m_offset = offset;
+                if (m_offset_ptr) {
+                    *m_offset_ptr = offset;
+                }
+            }
+
+            bool want_buffered_pages_removed() const noexcept {
+                return m_want_buffered_pages_removed;
+            }
+
+            void set_want_buffered_pages_removed(bool value) noexcept {
+                m_want_buffered_pages_removed = value;
             }
 
         }; // class Decompressor
@@ -188,10 +199,10 @@ namespace osmium {
                 const create_decompressor_type_fd& create_decompressor_fd,
                 const create_decompressor_type_buffer& create_decompressor_buffer) {
 
-                compression_map_type::value_type cc{compression,
-                                                    std::make_tuple(create_compressor,
-                                                                    create_decompressor_fd,
-                                                                    create_decompressor_buffer)};
+                const compression_map_type::value_type cc{compression,
+                                                          std::make_tuple(create_compressor,
+                                                              create_decompressor_fd,
+                                                              create_decompressor_buffer)};
 
                 return m_callbacks.insert(cc).second;
             }
@@ -204,9 +215,7 @@ namespace osmium {
 
             std::unique_ptr<osmium::io::Decompressor> create_decompressor(const osmium::io::file_compression compression, const int fd) const {
                 const auto callbacks = find_callbacks(compression);
-                auto p = std::unique_ptr<osmium::io::Decompressor>(std::get<1>(callbacks)(fd));
-                p->set_file_size(osmium::file_size(fd));
-                return p;
+                return std::unique_ptr<osmium::io::Decompressor>(std::get<1>(callbacks)(fd));
             }
 
             std::unique_ptr<osmium::io::Decompressor> create_decompressor(const osmium::io::file_compression compression, const char* buffer, const std::size_t size) const {
@@ -218,6 +227,7 @@ namespace osmium {
 
         class NoCompressor final : public Compressor {
 
+            std::size_t m_file_size = 0;
             int m_fd;
 
         public:
@@ -233,7 +243,7 @@ namespace osmium {
             NoCompressor(NoCompressor&&) = delete;
             NoCompressor& operator=(NoCompressor&&) = delete;
 
-            ~NoCompressor() noexcept {
+            ~NoCompressor() noexcept override {
                 try {
                     close();
                 } catch (...) {
@@ -243,6 +253,7 @@ namespace osmium {
 
             void write(const std::string& data) override {
                 osmium::io::detail::reliable_write(m_fd, data.data(), data.size());
+                m_file_size += data.size();
             }
 
             void close() override {
@@ -262,7 +273,42 @@ namespace osmium {
                 }
             }
 
+            std::size_t file_size() const override {
+                return m_file_size;
+            }
+
         }; // class NoCompressor
+
+        /**
+         * The DummyDecompressor is used when reading PBF files. In that
+         * case the PBFParser class is responsible for reading from the
+         * file itself, and the DummyDecompressor does nothing.
+         */
+        class DummyDecompressor final : public Decompressor {
+        public:
+
+            DummyDecompressor() = default;
+
+            DummyDecompressor(const DummyDecompressor&) = delete;
+            DummyDecompressor& operator=(const DummyDecompressor&) = delete;
+
+            DummyDecompressor(DummyDecompressor&&) = delete;
+            DummyDecompressor& operator=(DummyDecompressor&&) = delete;
+
+            ~DummyDecompressor() noexcept override = default;
+
+            std::string read() override {
+                return {};
+            }
+
+            void close() override {
+            }
+
+            bool is_real() const noexcept override {
+                return false;
+            }
+
+        }; // class DummyDecompressor
 
         class NoDecompressor final : public Decompressor {
 
@@ -288,7 +334,7 @@ namespace osmium {
             NoDecompressor(NoDecompressor&&) = delete;
             NoDecompressor& operator=(NoDecompressor&&) = delete;
 
-            ~NoDecompressor() noexcept {
+            ~NoDecompressor() noexcept override {
                 try {
                     close();
                 } catch (...) {
@@ -307,8 +353,11 @@ namespace osmium {
                     }
                 } else {
                     buffer.resize(osmium::io::Decompressor::input_buffer_size);
+                    if (want_buffered_pages_removed()) {
+                        osmium::io::detail::remove_buffered_pages(m_fd, m_offset);
+                    }
                     const auto nread = detail::reliable_read(m_fd, &*buffer.begin(), osmium::io::Decompressor::input_buffer_size);
-                    buffer.resize(std::string::size_type(nread));
+                    buffer.resize(static_cast<std::string::size_type>(nread));
                 }
 
                 m_offset += buffer.size();
@@ -319,6 +368,9 @@ namespace osmium {
 
             void close() override {
                 if (m_fd >= 0) {
+                    if (want_buffered_pages_removed()) {
+                        osmium::io::detail::remove_buffered_pages(m_fd);
+                    }
                     const int fd = m_fd;
                     m_fd = -1;
                     osmium::io::detail::reliable_close(fd);

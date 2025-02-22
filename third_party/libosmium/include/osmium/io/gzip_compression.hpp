@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -104,6 +104,7 @@ namespace osmium {
 
         class GzipCompressor final : public Compressor {
 
+            std::size_t m_file_size = 0;
             int m_fd;
             gzFile m_gzfile;
 
@@ -115,7 +116,7 @@ namespace osmium {
 #ifdef _MSC_VER
                 osmium::detail::disable_invalid_parameter_handler diph;
 #endif
-                m_gzfile = ::gzdopen(osmium::io::detail::reliable_dup(fd), "wb");
+                m_gzfile = ::gzdopen(osmium::io::detail::reliable_dup(fd), "wb"); // NOLINT(cppcoreguidelines-prefer-member-initializer)
                 if (!m_gzfile) {
                     throw gzip_error{"gzip error: write initialization failed"};
                 }
@@ -127,7 +128,7 @@ namespace osmium {
             GzipCompressor(GzipCompressor&&) = delete;
             GzipCompressor& operator=(GzipCompressor&&) = delete;
 
-            ~GzipCompressor() noexcept {
+            ~GzipCompressor() noexcept override {
                 try {
                     close();
                 } catch (...) {
@@ -165,6 +166,8 @@ namespace osmium {
                         return;
                     }
 
+                    m_file_size = osmium::file_size(m_fd);
+
                     if (do_fsync()) {
                         osmium::io::detail::reliable_fsync(m_fd);
                     }
@@ -172,19 +175,24 @@ namespace osmium {
                 }
             }
 
+            std::size_t file_size() const override {
+                return m_file_size;
+            }
+
         }; // class GzipCompressor
 
         class GzipDecompressor final : public Decompressor {
 
             gzFile m_gzfile = nullptr;
+            int m_fd;
 
         public:
 
-            explicit GzipDecompressor(const int fd) {
+            explicit GzipDecompressor(const int fd) : m_fd(fd) {
 #ifdef _MSC_VER
                 osmium::detail::disable_invalid_parameter_handler diph;
 #endif
-                m_gzfile = ::gzdopen(fd, "rb");
+                m_gzfile = ::gzdopen(fd, "rb"); // NOLINT(cppcoreguidelines-prefer-member-initializer)
                 if (!m_gzfile) {
                     try {
                         osmium::io::detail::reliable_close(fd);
@@ -200,7 +208,7 @@ namespace osmium {
             GzipDecompressor(GzipDecompressor&&) = delete;
             GzipDecompressor& operator=(GzipDecompressor&&) = delete;
 
-            ~GzipDecompressor() noexcept {
+            ~GzipDecompressor() noexcept override {
                 try {
                     close();
                 } catch (...) {
@@ -209,13 +217,20 @@ namespace osmium {
             }
 
             std::string read() override {
+                assert(m_gzfile);
 #ifdef _MSC_VER
                 osmium::detail::disable_invalid_parameter_handler diph;
+#else
+# if ZLIB_VERNUM >= 0x1240
+                const auto offset = ::gzoffset(m_gzfile);
+                if (offset > 0 && want_buffered_pages_removed()) {
+                    osmium::io::detail::remove_buffered_pages(m_fd, static_cast<std::size_t>(offset));
+                }
+# endif
 #endif
-                assert(m_gzfile);
                 std::string buffer(osmium::io::Decompressor::input_buffer_size, '\0');
                 assert(buffer.size() < std::numeric_limits<unsigned int>::max());
-                int nread = ::gzread(m_gzfile, &*buffer.begin(), static_cast<unsigned int>(buffer.size()));
+                const int nread = ::gzread(m_gzfile, &*buffer.begin(), static_cast<unsigned int>(buffer.size()));
                 if (nread < 0) {
                     detail::throw_gzip_error(m_gzfile, "read failed");
                 }
@@ -228,6 +243,9 @@ namespace osmium {
 
             void close() override {
                 if (m_gzfile) {
+                    if (want_buffered_pages_removed()) {
+                        osmium::io::detail::remove_buffered_pages(m_fd);
+                    }
 #ifdef _MSC_VER
                     osmium::detail::disable_invalid_parameter_handler diph;
 #endif
@@ -272,7 +290,7 @@ namespace osmium {
             GzipBufferDecompressor(GzipBufferDecompressor&&) = delete;
             GzipBufferDecompressor& operator=(GzipBufferDecompressor&&) = delete;
 
-            ~GzipBufferDecompressor() noexcept {
+            ~GzipBufferDecompressor() noexcept override {
                 try {
                     close();
                 } catch (...) {

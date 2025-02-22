@@ -21,15 +21,9 @@
 
 #include <boost/assert.hpp>
 
-#if TBB_VERSION_MAJOR == 2020
 #include <tbb/global_control.h>
-#else
-#include <tbb/task_scheduler_init.h>
-#endif
 
-namespace osrm
-{
-namespace customizer
+namespace osrm::customizer
 {
 
 namespace
@@ -53,17 +47,18 @@ void printUnreachableStatistics(const Partition &partition,
             for (auto node : cell.GetSourceNodes())
             {
                 const auto &weights = cell.GetOutWeight(node);
-                invalid_sources += std::all_of(weights.begin(), weights.end(), [](auto weight) {
-                    return weight == INVALID_EDGE_WEIGHT;
-                });
+                invalid_sources +=
+                    std::all_of(weights.begin(),
+                                weights.end(),
+                                [](auto weight) { return weight == INVALID_EDGE_WEIGHT; });
             }
             for (auto node : cell.GetDestinationNodes())
             {
                 const auto &weights = cell.GetInWeight(node);
                 invalid_destinations +=
-                    std::all_of(weights.begin(), weights.end(), [](auto weight) {
-                        return weight == INVALID_EDGE_WEIGHT;
-                    });
+                    std::all_of(weights.begin(),
+                                weights.end(),
+                                [](auto weight) { return weight == INVALID_EDGE_WEIGHT; });
             }
         }
 
@@ -96,8 +91,7 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
     auto tidied = partitioner::prepareEdgesForUsageInGraph<
         typename partitioner::MultiLevelEdgeBasedGraph::InputEdge>(std::move(directed));
 
-    auto edge_based_graph =
-        partitioner::MultiLevelEdgeBasedGraph(mlp, num_nodes, std::move(tidied));
+    auto edge_based_graph = partitioner::MultiLevelEdgeBasedGraph(mlp, num_nodes, tidied);
 
     return edge_based_graph;
 }
@@ -108,8 +102,9 @@ std::vector<CellMetric> customizeFilteredMetrics(const partitioner::MultiLevelEd
                                                  const std::vector<std::vector<bool>> &node_filters)
 {
     std::vector<CellMetric> metrics;
+    metrics.reserve(node_filters.size());
 
-    for (auto filter : node_filters)
+    for (const auto &filter : node_filters)
     {
         auto metric = storage.MakeMetric();
         customizer.Customize(graph, storage, filter, metric);
@@ -122,13 +117,8 @@ std::vector<CellMetric> customizeFilteredMetrics(const partitioner::MultiLevelEd
 
 int Customizer::Run(const CustomizationConfig &config)
 {
-#if TBB_VERSION_MAJOR == 2020
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
-#else
-    tbb::task_scheduler_init init(config.requested_num_threads);
-    BOOST_ASSERT(init.is_active());
-#endif
 
     TIMER_START(loading_data);
 
@@ -142,7 +132,8 @@ int Customizer::Run(const CustomizationConfig &config)
     auto graph = LoadAndUpdateEdgeExpandedGraph(
         config, mlp, node_weights, node_durations, node_distances, connectivity_checksum);
     BOOST_ASSERT(graph.GetNumberOfNodes() == node_weights.size());
-    std::for_each(node_weights.begin(), node_weights.end(), [](auto &w) { w &= 0x7fffffff; });
+    std::for_each(
+        node_weights.begin(), node_weights.end(), [](auto &w) { w &= EdgeWeight{0x7fffffff}; });
     util::Log() << "Loaded edge based graph: " << graph.GetNumberOfEdges() << " edges, "
                 << graph.GetNumberOfNodes() << " nodes";
 
@@ -191,5 +182,4 @@ int Customizer::Run(const CustomizationConfig &config)
     return 0;
 }
 
-} // namespace customizer
-} // namespace osrm
+} // namespace osrm::customizer

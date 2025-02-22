@@ -15,13 +15,7 @@
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
 
-#include <boost/assert.hpp>
-
-namespace osrm
-{
-namespace extractor
-{
-namespace serialization
+namespace osrm::extractor::serialization
 {
 
 // read/write for bearing data
@@ -30,11 +24,11 @@ inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
                  detail::IntersectionBearingsContainer<Ownership> &intersection_bearings)
 {
-    storage::serialization::read(reader, name + "/bearing_values", intersection_bearings.values);
+    storage::serialization::read(reader, name + "/bearing_values", intersection_bearings.values_);
     storage::serialization::read(
-        reader, name + "/node_to_class_id", intersection_bearings.node_to_class_id);
+        reader, name + "/node_to_class_id", intersection_bearings.node_to_class_id_);
     util::serialization::read(
-        reader, name + "/class_id_to_ranges", intersection_bearings.class_id_to_ranges_table);
+        reader, name + "/class_id_to_ranges", intersection_bearings.class_id_to_ranges_table_);
 }
 
 template <storage::Ownership Ownership>
@@ -42,11 +36,11 @@ inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
                   const detail::IntersectionBearingsContainer<Ownership> &intersection_bearings)
 {
-    storage::serialization::write(writer, name + "/bearing_values", intersection_bearings.values);
+    storage::serialization::write(writer, name + "/bearing_values", intersection_bearings.values_);
     storage::serialization::write(
-        writer, name + "/node_to_class_id", intersection_bearings.node_to_class_id);
+        writer, name + "/node_to_class_id", intersection_bearings.node_to_class_id_);
     util::serialization::write(
-        writer, name + "/class_id_to_ranges", intersection_bearings.class_id_to_ranges_table);
+        writer, name + "/class_id_to_ranges", intersection_bearings.class_id_to_ranges_table_);
 }
 
 // read/write for properties file
@@ -219,11 +213,8 @@ inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
                  detail::NameTableImpl<Ownership> &name_table)
 {
-    std::string buffer;
     util::serialization::read(reader, name, name_table.indexed_data);
 }
-} // namespace serialization
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor::serialization
 
 #endif

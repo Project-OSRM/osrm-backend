@@ -300,7 +300,7 @@ And the relations
 The setting looks perfectly fine at first glance. However, it is not well defined.
 The forbidden right turn could be either a superfluous addition, forbidding the turn `cb` to `be`, or actually refer to the turn `ab` to `bd` to say that a turn is forbidden here.
 
-To model turn-restrictions correctly and unique, we need to split segments that contribute to the restriction into the smallest possible parts.
+To model turn-restrictions correctly and uniquely, we need to split segments that contribute to the restriction into the smallest possible parts.
 E.g. the above scenario could correctly be expressed as:
 
 ```
@@ -360,7 +360,7 @@ When I route I should get
 
 And the test reports `turn right` for the route `a->e`, where before it said `slight right`.
 
-If you changed the turn angles, obviously you can expect changes in the distinction between `slight right` and `right`.
+If you change the turn angles, obviously you can expect changes in the distinction between `slight right` and `right`.
 In such a case it is, of course, reasonable to change the expected route to report `right` instead of `slight right`. You should consider inspecting the actual turn angles at `b` to see if you feel that change is justified.
 
 However, you should never adjust the test itself.
@@ -390,9 +390,9 @@ In this case we would see a very slight turn angle. If your change now reports d
 
 ### Consider Post-Processing Impacts
 
-Some changes you might see could look completely unrelated. To understand the impact of your changes, you can make use of the debugging utilities you can finde in `util/debug.hpp` (and potentially other related headers).
+Some changes you might see could look completely unrelated. To understand the impact of your changes, you can make use of the debugging utilities you can find in `util/debug.hpp` (and potentially other related headers).
 
-If your test is inspecting a series of turns (remember, a turn not necessarily equals an instruction), you could see interaction with post-processing.
+If your test is inspecting a series of turns (remember, a turn does not necessarily equals an instruction), you could see interaction with post-processing.
 To see the unprocessed turns, you should print the steps at the end of step assembly (`assembleSteps` in `engine/guidance/assemble_steps.hpp`).
 
 If you see unexpected changes, you can consider adding the `locations` field to your test to study what location a turn is reported at.

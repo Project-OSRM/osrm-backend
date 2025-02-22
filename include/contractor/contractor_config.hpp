@@ -31,27 +31,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "storage/io_config.hpp"
 #include "updater/updater_config.hpp"
 
-#include <boost/filesystem/path.hpp>
+#include <filesystem>
 
-#include <string>
-
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 struct ContractorConfig final : storage::IOConfig
 {
     ContractorConfig()
-        : IOConfig({".osrm.ebg", ".osrm.ebg_nodes", ".osrm.properties"},
-                   {},
-                   {".osrm.hsgr", ".osrm.enw"}),
-          requested_num_threads(0)
+        : IOConfig(
+              {".osrm.ebg", ".osrm.ebg_nodes", ".osrm.properties"}, {}, {".osrm.hsgr", ".osrm.enw"})
     {
     }
 
     // Infer the output names from the path of the .osrm file
-    void UseDefaultOutputNames(const boost::filesystem::path &base)
+    void UseDefaultOutputNames(const std::filesystem::path &base)
     {
         IOConfig::UseDefaultOutputNames(base);
         updater_config.UseDefaultOutputNames(base);
@@ -62,18 +56,17 @@ struct ContractorConfig final : storage::IOConfig
     updater::UpdaterConfig updater_config;
 
     // DEPRECATED to be removed in v6.0
-    bool use_cached_priority;
+    bool use_cached_priority = false;
 
-    unsigned requested_num_threads;
+    unsigned requested_num_threads = 0;
 
     // DEPRECATED to be removed in v6.0
     // A percentage of vertices that will be contracted for the hierarchy.
     // Offers a trade-off between preprocessing and query time.
     // The remaining vertices form the core of the hierarchy
     //(e.g. 0.8 contracts 80 percent of the hierarchy, leaving a core of 20%)
-    double core_factor;
+    double core_factor = 1.0;
 };
-} // namespace contractor
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif // EXTRACTOR_OPTIONS_HPP

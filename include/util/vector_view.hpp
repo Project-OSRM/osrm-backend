@@ -19,9 +19,7 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 template <typename DataT>
@@ -30,20 +28,21 @@ class VectorViewIterator : public boost::iterator_facade<VectorViewIterator<Data
                                                          boost::random_access_traversal_tag,
                                                          DataT &>
 {
-    typedef boost::iterator_facade<VectorViewIterator<DataT>,
-                                   DataT,
-                                   boost::random_access_traversal_tag,
-                                   DataT &>
-        base_t;
+    using base_t = boost::iterator_facade<VectorViewIterator<DataT>,
+                                          DataT,
+                                          boost::random_access_traversal_tag,
+                                          DataT &>;
 
   public:
-    typedef typename base_t::value_type value_type;
-    typedef typename base_t::difference_type difference_type;
-    typedef typename base_t::reference reference;
-    typedef std::random_access_iterator_tag iterator_category;
+    using value_type = typename base_t::value_type;
+    using difference_type = typename base_t::difference_type;
+    using reference = typename base_t::reference;
+    using iterator_category = std::random_access_iterator_tag;
 
     explicit VectorViewIterator() : m_value(nullptr) {}
     explicit VectorViewIterator(DataT *x) : m_value(x) {}
+
+    reference operator[](difference_type n) const { return m_value[n]; }
 
   private:
     void increment() { ++m_value; }
@@ -268,7 +267,6 @@ struct is_view_or_vector
                                  std::is_same<util::vector_view<ValueT>, VectorT>::value>
 {
 };
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // SHARED_MEMORY_VECTOR_WRAPPER_HPP

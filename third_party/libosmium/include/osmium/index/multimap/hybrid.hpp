@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -62,10 +62,10 @@ namespace osmium {
 
             public:
 
-                 HybridIterator(typename main_map_type::iterator begin_main,
-                                typename main_map_type::iterator end_main,
-                                typename extra_map_type::iterator begin_extra,
-                                typename extra_map_type::iterator end_extra) :
+                HybridIterator(typename main_map_type::iterator begin_main,
+                               typename main_map_type::iterator end_main,
+                               typename extra_map_type::iterator begin_extra,
+                               typename extra_map_type::iterator end_extra) :
                     m_begin_main(begin_main),
                     m_end_main(end_main),
                     m_begin_extra(begin_extra),
@@ -100,15 +100,14 @@ namespace osmium {
                 }
 
                 bool operator!=(const HybridIterator& rhs) const {
-                    return ! operator==(rhs);
+                    return !operator==(rhs);
                 }
 
                 const element_type& operator*() {
                     if (m_begin_main == m_end_main) {
                         return *m_begin_extra;
-                    } else {
-                        return *m_begin_main;
                     }
+                    return *m_begin_main;
                 }
 
                 const element_type* operator->() {

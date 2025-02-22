@@ -5,19 +5,21 @@
 #include "util/typedefs.hpp"
 
 #include "storage/shared_memory_ownership.hpp"
+#include "turn_path.hpp"
+#include "util/integer_range.hpp"
+#include "util/log.hpp"
+#include "util/std_hash.hpp"
 #include "util/vector_view.hpp"
-#include <algorithm>
-#include <boost/functional/hash.hpp>
 
-namespace osrm
-{
-namespace extractor
+#include <algorithm>
+
+namespace osrm::extractor
 {
 
 // Data that is loaded from the OSM datafile directly
 struct InputManeuverOverride
 {
-    std::vector<OSMWayID> via_ways;
+    InputTurnPath turn_path;
     OSMNodeID via_node;
     std::string maneuver;
     std::string direction;
@@ -26,9 +28,7 @@ struct InputManeuverOverride
 // Object returned by the datafacade
 struct ManeuverOverride
 {
-    // util::ViewOrVector<NodeID, storage::Ownership::View> node_sequence;
     std::vector<NodeID> node_sequence;
-    // before the turn, then later, the edge_based_node_id of the turn
     NodeID instruction_node; // node-based node ID
     guidance::TurnType::Enum override_type;
     guidance::DirectionModifier::Enum direction;
@@ -40,12 +40,12 @@ struct StorageManeuverOverride
     std::uint32_t node_sequence_offset_begin;
     std::uint32_t node_sequence_offset_end;
     NodeID start_node;
-    // before the turn, then later, the edge_based_node_id of the turn
     NodeID instruction_node; // node-based node ID
     guidance::TurnType::Enum override_type;
     guidance::DirectionModifier::Enum direction;
 };
 
+// Used to identify maneuver turns whilst generating edge-based graph
 struct NodeBasedTurn
 {
     NodeID from;
@@ -58,48 +58,105 @@ struct NodeBasedTurn
     }
 };
 
+// Internal representation of maneuvers during graph extraction phase
 struct UnresolvedManeuverOverride
 {
-
-    std::vector<NodeBasedTurn>
-        turn_sequence; // initially the internal node-based-node ID of the node
-    // before the turn, then later, the edge_based_node_id of the turn
+    // The turn sequence that the maneuver override applies to.
+    TurnPath turn_path;
     NodeID instruction_node; // node-based node ID
     guidance::TurnType::Enum override_type;
     guidance::DirectionModifier::Enum direction;
 
+    UnresolvedManeuverOverride()
+    {
+        turn_path = {ViaNodePath{SPECIAL_NODEID, SPECIAL_NODEID, SPECIAL_NODEID}};
+        instruction_node = SPECIAL_NODEID;
+        override_type = guidance::TurnType::Invalid;
+        direction = guidance::DirectionModifier::MaxDirectionModifier;
+    }
+
     // check if all parts of the restriction reference an actual node
     bool Valid() const
     {
-        return !turn_sequence.empty() &&
-               std::none_of(turn_sequence.begin(),
-                            turn_sequence.end(),
-                            [](const auto &n) {
-                                return n.from == SPECIAL_NODEID || n.via == SPECIAL_NODEID ||
-                                       n.to == SPECIAL_NODEID;
-                            }) &&
-               (direction != guidance::DirectionModifier::MaxDirectionModifier ||
-                override_type != guidance::TurnType::Invalid);
+        if ((direction == guidance::DirectionModifier::MaxDirectionModifier &&
+             override_type == guidance::TurnType::Invalid) ||
+            instruction_node == SPECIAL_NODEID || !turn_path.Valid())
+        {
+            return false;
+        }
+
+        if (turn_path.Type() == TurnPathType::VIA_NODE_TURN_PATH)
+        {
+            const auto node_path = turn_path.AsViaNodePath();
+            if (node_path.via != instruction_node)
+            {
+                util::Log(logDEBUG) << "Maneuver via-node " << node_path.via
+                                    << " does not match instruction node " << instruction_node;
+                return false;
+            }
+        }
+        else
+        {
+            BOOST_ASSERT(turn_path.Type() == TurnPathType::VIA_WAY_TURN_PATH);
+            const auto way_path = turn_path.AsViaWayPath();
+
+            if (std::find(way_path.via.begin(), way_path.via.end(), instruction_node) ==
+                way_path.via.end())
+            {
+                util::Log(logDEBUG) << "Maneuver via-way path does not contain instruction node "
+                                    << instruction_node;
+                return false;
+            }
+        }
+        return true;
     }
+
+    // Generate sequence of node-based-node turns. Used to identify the maneuver's edge-based-node
+    // turns during graph expansion.
+    std::vector<NodeBasedTurn> Turns() const
+    {
+        if (turn_path.Type() == TurnPathType::VIA_NODE_TURN_PATH)
+        {
+            const auto node_maneuver = turn_path.AsViaNodePath();
+            return {{node_maneuver.from, node_maneuver.via, node_maneuver.to}};
+        }
+
+        BOOST_ASSERT(turn_path.Type() == TurnPathType::VIA_WAY_TURN_PATH);
+        std::vector<NodeBasedTurn> result;
+        const auto way_maneuver = turn_path.AsViaWayPath();
+        BOOST_ASSERT(way_maneuver.via.size() >= 2);
+        result.push_back({way_maneuver.from, way_maneuver.via[0], way_maneuver.via[1]});
+
+        for (auto i : util::irange<size_t>(0, way_maneuver.via.size() - 2))
+        {
+            result.push_back(
+                {way_maneuver.via[i], way_maneuver.via[i + 1], way_maneuver.via[i + 2]});
+        }
+        result.push_back({way_maneuver.via[way_maneuver.via.size() - 2],
+                          way_maneuver.via.back(),
+                          way_maneuver.to});
+
+        return result;
+    }
+
+    static std::string Name() { return "maneuver override"; };
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 // custom specialization of std::hash can be injected in namespace std
 namespace std
 {
 template <> struct hash<osrm::extractor::NodeBasedTurn>
-
 {
-    typedef osrm::extractor::NodeBasedTurn argument_type;
-    typedef std::size_t result_type;
+    using argument_type = osrm::extractor::NodeBasedTurn;
+    using result_type = std::size_t;
     result_type operator()(argument_type const &s) const noexcept
     {
 
         std::size_t seed = 0;
-        boost::hash_combine(seed, s.from);
-        boost::hash_combine(seed, s.via);
-        boost::hash_combine(seed, s.to);
+        hash_combine(seed, s.from);
+        hash_combine(seed, s.via);
+        hash_combine(seed, s.to);
 
         return seed;
     }

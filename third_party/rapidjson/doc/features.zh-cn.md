@@ -22,14 +22,14 @@
 * RapidJSON 应完全符合 RFC4627/ECMA-404 标准。
 * 支持 JSON Pointer (RFC6901).
 * 支持 JSON Schema Draft v4.
-* 支持 Unicod 代理对（surrogate pair）。
+* 支持 Unicode 代理对（surrogate pair）。
 * 支持空字符（`"\u0000"`）。
  * 例如，可以优雅地解析及处理 `["Hello\u0000World"]`。含读写字符串长度的 API。
 * 支持可选的放宽语法
  * 单行（`// ...`）及多行（`/* ... */`） 注释 (`kParseCommentsFlag`)。
  * 在对象和数组结束前含逗号 (`kParseTrailingCommasFlag`)。
  * `NaN`、`Inf`、`Infinity`、`-Inf` 及 `-Infinity` 作为 `double` 值 (`kParseNanAndInfFlag`)
-* [NPM 兼容](https://github.com/miloyip/rapidjson/blob/master/doc/npm.md).
+* [NPM 兼容](https://github.com/Tencent/rapidjson/blob/master/doc/npm.md).
 
 ## Unicode
 

@@ -4,7 +4,25 @@ var data_path = require('./constants').data_path;
 var mld_data_path = require('./constants').mld_data_path;
 var three_test_coordinates = require('./constants').three_test_coordinates;
 var two_test_coordinates = require('./constants').two_test_coordinates;
+const flatbuffers = require('../../features/support/flatbuffers').flatbuffers;
+const FBResult = require('../../features/support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
 
+
+test('nearest with flatbuffers format', function(assert) {
+    assert.plan(5);
+    var osrm = new OSRM(data_path);
+    osrm.nearest({
+        coordinates: [three_test_coordinates[0]],
+        format: 'flatbuffers'
+    }, function(err, result) {
+        assert.ifError(err);
+        assert.ok(result instanceof Buffer);
+        const fb = FBResult.getRootAsFBResult(new flatbuffers.ByteBuffer(result));
+        assert.equals(fb.waypointsLength(), 1);
+        assert.ok(fb.waypoints(0).location());
+        assert.ok(fb.waypoints(0).name());
+    });
+});
 
 test('nearest', function(assert) {
     assert.plan(4);
@@ -79,6 +97,43 @@ test('nearest: nearest in Monaco without motorways', function(assert) {
     var options = {
         coordinates: [two_test_coordinates[0]],
         exclude: ['motorway']
+    };
+    osrm.nearest(options, function(err, response) {
+        assert.ifError(err);
+        assert.equal(response.waypoints.length, 1);
+    });
+});
+
+test('nearest: throws on disabled geometry', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM({path: data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    var options = {
+        coordinates: [two_test_coordinates[0]],
+    };
+    osrm.nearest(options, function(err, response) {
+        console.log(err)
+        assert.match(err.message, /DisabledDatasetException/);
+    });
+});
+test('nearest: ok on disabled geometry', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM({path: data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    var options = {
+        coordinates: [two_test_coordinates[0]],
+        skip_waypoints: true,
+    };
+    osrm.nearest(options, function(err, response) {
+        assert.ifError(err);
+        assert.notok(response.waypoints);
+
+    });
+});
+
+test('nearest: ok on disabled steps', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM({path: data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    var options = {
+        coordinates: [two_test_coordinates[0]],
     };
     osrm.nearest(options, function(err, response) {
         assert.ifError(err);

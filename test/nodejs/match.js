@@ -4,6 +4,24 @@ var data_path = require('./constants').data_path;
 var mld_data_path = require('./constants').mld_data_path;
 var three_test_coordinates = require('./constants').three_test_coordinates;
 var two_test_coordinates = require('./constants').two_test_coordinates;
+const flatbuffers = require('../../features/support/flatbuffers').flatbuffers;
+const FBResult = require('../../features/support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
+
+
+test('match: match in Monaco with flatbuffers format', function(assert) {
+    assert.plan(2);
+    var osrm = new OSRM(data_path);
+    var options = {
+        coordinates: three_test_coordinates,
+        timestamps: [1424684612, 1424684616, 1424684620],
+        format: 'flatbuffers'
+    };
+    osrm.match(options, function(err, response) {
+        assert.ifError(err);
+        const fb = FBResult.getRootAsFBResult(new flatbuffers.ByteBuffer(response));
+        assert.equal(fb.routesLength(), 1);
+    });
+});
 
 test('match: match in Monaco', function(assert) {
     assert.plan(5);
@@ -378,5 +396,67 @@ test('match: match in Monaco with waypoints', function(assert) {
         assert.ok(response.tracepoints.every(function(t) {
             return !!t.hint && !isNaN(t.matchings_index) && !isNaN(t.waypoint_index) && !!t.name;
         }));
+    });
+});
+
+test('match: throws on disabled geometry', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    var options = {
+        coordinates: three_test_coordinates.concat(three_test_coordinates),
+    };
+    osrm.match(options, function(err, route) {
+        console.log(err)
+        assert.match(err.message, /DisabledDatasetException/);
+    });
+});
+
+test('match: ok on disabled geometry', function (assert) {
+    assert.plan(2);
+    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    var options = {
+        steps: false,
+        overview: 'false',
+        annotations: false,
+        skip_waypoints: true,
+        coordinates: three_test_coordinates.concat(three_test_coordinates),
+    };
+    osrm.match(options, function(err, response) {
+        assert.ifError(err);
+        assert.equal(response.matchings.length, 1);
+    });
+});
+
+test('match: throws on disabled steps', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates.concat(three_test_coordinates),
+    };
+    osrm.match(options, function(err, route) {
+        console.log(err)
+        assert.match(err.message, /DisabledDatasetException/);
+    });
+});
+
+test('match: ok on disabled steps', function (assert) {
+    assert.plan(8);
+    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    var options = {
+        steps: false,
+        overview: 'simplified',
+        annotations: true,
+        coordinates: three_test_coordinates.concat(three_test_coordinates),
+    };
+    osrm.match(options, function(err, response) {
+        assert.ifError(err);
+        assert.ok(response.tracepoints);
+        assert.ok(response.matchings);
+        assert.equal(response.matchings.length, 1);
+        assert.ok(response.matchings[0].geometry, "the match has geometry");
+        assert.ok(response.matchings[0].legs, "the match has legs");
+        assert.notok(response.matchings[0].legs.every(l => { return l.steps.length > 0; }), 'every leg has steps');
+        assert.ok(response.matchings[0].legs.every(l => { return l.annotation;}), 'every leg has annotations');
     });
 });

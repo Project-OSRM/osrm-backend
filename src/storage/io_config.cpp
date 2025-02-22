@@ -2,18 +2,15 @@
 
 #include "util/log.hpp"
 
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
+#include <filesystem>
 
-namespace osrm
+namespace osrm::storage
 {
-namespace storage
-{
+
+namespace fs = std::filesystem;
+
 bool IOConfig::IsValid() const
 {
-    namespace fs = boost::filesystem;
-
     bool success = true;
     for (auto &fileName : required_input_files)
     {
@@ -26,5 +23,17 @@ bool IOConfig::IsValid() const
     }
     return success;
 }
-} // namespace storage
-} // namespace osrm
+
+std::vector<std::string> IOConfig::GetMissingFiles() const
+{
+    std::vector<std::string> missingFiles;
+    for (auto &fileName : required_input_files)
+    {
+        if (!fs::is_regular_file(fs::path(base_path.string() + fileName.string())))
+        {
+            missingFiles.push_back(base_path.string() + fileName.string());
+        }
+    }
+    return missingFiles;
+}
+} // namespace osrm::storage

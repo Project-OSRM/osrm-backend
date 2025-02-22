@@ -12,11 +12,7 @@
 
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 class NearestAPI final : public BaseAPI
@@ -33,14 +29,14 @@ class NearestAPI final : public BaseAPI
         BOOST_ASSERT(phantom_nodes.size() == 1);
         BOOST_ASSERT(parameters.coordinates.size() == 1);
 
-        if (response.is<flatbuffers::FlatBufferBuilder>())
+        if (std::holds_alternative<flatbuffers::FlatBufferBuilder>(response))
         {
-            auto &fb_result = response.get<flatbuffers::FlatBufferBuilder>();
+            auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(response);
             MakeResponse(phantom_nodes, fb_result);
         }
         else
         {
-            auto &json_result = response.get<util::json::Object>();
+            auto &json_result = std::get<util::json::Object>(response);
             MakeResponse(phantom_nodes, json_result);
         }
     }
@@ -49,7 +45,7 @@ class NearestAPI final : public BaseAPI
                       flatbuffers::FlatBufferBuilder &fb_result) const
     {
         auto data_timestamp = facade.GetTimestamp();
-        boost::optional<flatbuffers::Offset<flatbuffers::String>> data_version_string = boost::none;
+        std::optional<flatbuffers::Offset<flatbuffers::String>> data_version_string = std::nullopt;
         if (!data_timestamp.empty())
         {
             data_version_string = fb_result.CreateString(data_timestamp);
@@ -61,20 +57,20 @@ class NearestAPI final : public BaseAPI
         {
             std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
             waypoints.resize(phantom_nodes.front().size());
-            std::transform(
-                phantom_nodes.front().begin(),
-                phantom_nodes.front().end(),
-                waypoints.begin(),
-                [this, &fb_result](const PhantomNodeWithDistance &phantom_with_distance) {
-                    auto &phantom_node = phantom_with_distance.phantom_node;
+            std::transform(phantom_nodes.front().begin(),
+                           phantom_nodes.front().end(),
+                           waypoints.begin(),
+                           [this, &fb_result](const PhantomNodeWithDistance &phantom_with_distance)
+                           {
+                               auto &phantom_node = phantom_with_distance.phantom_node;
 
-                    auto node_values = MakeNodes(phantom_node);
-                    fbresult::Uint64Pair nodes{node_values.first, node_values.second};
+                               auto node_values = MakeNodes(phantom_node);
+                               fbresult::Uint64Pair nodes{node_values.first, node_values.second};
 
-                    auto waypoint = MakeWaypoint(&fb_result, phantom_node);
-                    waypoint->add_nodes(&nodes);
-                    return waypoint->Finish();
-                });
+                               auto waypoint = MakeWaypoint(&fb_result, {phantom_node});
+                               waypoint->add_nodes(&nodes);
+                               return waypoint->Finish();
+                           });
 
             waypoints_vector = fb_result.CreateVector(waypoints);
         }
@@ -98,24 +94,30 @@ class NearestAPI final : public BaseAPI
             std::transform(phantom_nodes.front().begin(),
                            phantom_nodes.front().end(),
                            waypoints.values.begin(),
-                           [this](const PhantomNodeWithDistance &phantom_with_distance) {
+                           [this](const PhantomNodeWithDistance &phantom_with_distance)
+                           {
                                auto &phantom_node = phantom_with_distance.phantom_node;
-                               auto waypoint = MakeWaypoint(phantom_node);
+                               auto waypoint = MakeWaypoint({phantom_node});
 
                                util::json::Array nodes;
+                               nodes.values.reserve(2);
 
                                auto node_values = MakeNodes(phantom_node);
 
-                               nodes.values.push_back(node_values.first);
-                               nodes.values.push_back(node_values.second);
-                               waypoint.values["nodes"] = std::move(nodes);
-
+                               nodes.values.emplace_back(node_values.first);
+                               nodes.values.emplace_back(node_values.second);
+                               waypoint.values.emplace("nodes", std::move(nodes));
                                return waypoint;
                            });
-            response.values["waypoints"] = std::move(waypoints);
+            response.values.emplace("waypoints", std::move(waypoints));
         }
 
-        response.values["code"] = "Ok";
+        response.values.emplace("code", "Ok");
+        auto data_timestamp = facade.GetTimestamp();
+        if (!data_timestamp.empty())
+        {
+            response.values.emplace("data_version", data_timestamp);
+        }
     }
 
     const NearestParameters &parameters;
@@ -134,7 +136,7 @@ class NearestAPI final : public BaseAPI
             forward_geometry = facade.GetUncompressedForwardGeometry(geometry_id);
 
             auto osm_node_id =
-                facade.GetOSMNodeIDOfNode(forward_geometry(phantom_node.fwd_segment_position));
+                facade.GetOSMNodeIDOfNode(forward_geometry[phantom_node.fwd_segment_position]);
             to_node = static_cast<std::uint64_t>(osm_node_id);
         }
 
@@ -144,14 +146,14 @@ class NearestAPI final : public BaseAPI
             const auto geometry_id = facade.GetGeometryIndex(segment_id).id;
             const auto geometry = facade.GetUncompressedForwardGeometry(geometry_id);
             auto osm_node_id =
-                facade.GetOSMNodeIDOfNode(geometry(phantom_node.fwd_segment_position + 1));
+                facade.GetOSMNodeIDOfNode(geometry[phantom_node.fwd_segment_position + 1]);
             from_node = static_cast<std::uint64_t>(osm_node_id);
         }
         else if (phantom_node.forward_segment_id.enabled && phantom_node.fwd_segment_position > 0)
         {
             // In the case of one way, rely on forward segment only
             auto osm_node_id =
-                facade.GetOSMNodeIDOfNode(forward_geometry(phantom_node.fwd_segment_position - 1));
+                facade.GetOSMNodeIDOfNode(forward_geometry[phantom_node.fwd_segment_position - 1]);
             from_node = static_cast<std::uint64_t>(osm_node_id);
         }
 
@@ -159,8 +161,6 @@ class NearestAPI final : public BaseAPI
     }
 };
 
-} // namespace api
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

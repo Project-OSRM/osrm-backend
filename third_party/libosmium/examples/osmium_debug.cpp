@@ -17,7 +17,6 @@
 
 */
 
-#include <cstdlib>  // for std::exit
 #include <iostream> // for std::cout, std::cerr
 #include <string>   // for std::string
 
@@ -34,7 +33,7 @@ int main(int argc, char* argv[]) {
     if (argc < 2 || argc > 3) {
         std::cerr << "Usage: " << argv[0] << " OSMFILE [TYPES]\n";
         std::cerr << "TYPES can be any combination of 'n', 'w', 'r', and 'c' to indicate what types of OSM entities you want (default: all).\n";
-        std::exit(1);
+        return 1;
     }
 
     try {
@@ -44,7 +43,7 @@ int main(int argc, char* argv[]) {
         // Get entity types from command line if there is a 2nd argument.
         if (argc == 3) {
             read_types = osmium::osm_entity_bits::nothing;
-            std::string types = argv[2];
+            const std::string types = argv[2];
             if (types.find('n') != std::string::npos) {
                 read_types |= osmium::osm_entity_bits::node;
             }
@@ -84,7 +83,7 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
         std::cerr << e.what() << '\n';
-        std::exit(1);
+        return 1;
     }
 }
 

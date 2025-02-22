@@ -8,13 +8,10 @@
 #include <iterator>
 #include <numeric>
 #include <random>
-#include <vector>
 
 #include <cstdint>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 /*
@@ -65,7 +62,6 @@ template <std::size_t MaxNumElements = (1u << 16u)> class XORFastHash
         return table1[lsb] ^ table2[msb];
     }
 };
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // XOR_FAST_HASH_HPP

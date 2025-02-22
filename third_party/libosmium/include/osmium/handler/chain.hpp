@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -80,7 +80,7 @@ namespace osmium {
 
             template <int SIZE, typename THandlers>
             struct call_flush<SIZE, SIZE, THandlers> {
-                void operator()(THandlers&) {}
+                void operator()(THandlers& /*handlers*/) {}
             }; // struct call_flush
 
             OSMIUM_CHAIN_HANDLER_CALL(node, Node)

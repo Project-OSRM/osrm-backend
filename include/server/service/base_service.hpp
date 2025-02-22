@@ -5,16 +5,11 @@
 #include "osrm/osrm.hpp"
 #include "util/coordinate.hpp"
 
-#include <mapbox/variant.hpp>
+#include <variant>
 
 #include <string>
-#include <vector>
 
-namespace osrm
-{
-namespace server
-{
-namespace service
+namespace osrm::server::service
 {
 
 class BaseService
@@ -31,8 +26,6 @@ class BaseService
   protected:
     OSRM &routing_machine;
 };
-} // namespace service
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server::service
 
 #endif

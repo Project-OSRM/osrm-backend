@@ -67,10 +67,10 @@ Feature: Compass bearing
     Scenario: Bearing in a roundabout
         Given the node map
             """
-            k d c j
-            e     b
-            f     a
-            l g h i
+            k d 1c j
+            e      b
+            f      a
+            l g2 h i
             """
 
         And the ways
@@ -94,8 +94,8 @@ Feature: Compass bearing
 
         When I route I should get
             | from | to | route                   | bearing                                                     |
-            | c    | b  | cd,de,ef,fg,gh,ha,ab,ab | 0->270,270->225,225->180,180->135,135->90,90->45,45->0,0->0 |
-            | g    | f  | gh,ha,ab,bc,cd,de,ef,ef | 0->90,90->45,45->0,0->315,315->270,270->225,225->180,180->0 |
+            | 1    | b  | cd,de,ef,fg,gh,ha,ab,ab | 0->270,270->225,225->180,180->135,135->90,90->45,45->0,0->0 |
+            | 2    | f  | gh,ha,ab,bc,cd,de,ef,ef | 0->90,90->45,45->0,0->315,315->270,270->225,225->180,180->0 |
 
     Scenario: Bearing should stay constant when zig-zagging
         Given the node map

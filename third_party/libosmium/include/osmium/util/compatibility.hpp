@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,15 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-// Workarounds for MSVC which doesn't support [[noreturn]]
-// This is not needed any more, but kept here for the time being, because
-// older versions of osmium-tool need it.
-#ifdef _MSC_VER
-# define OSMIUM_NORETURN __declspec(noreturn)
-#else
-# define OSMIUM_NORETURN [[noreturn]]
-#endif
-
 // [[deprecated]] is only available in C++14, use this for the time being
 #ifdef __GNUC__
 # define OSMIUM_DEPRECATED __attribute__((deprecated))
@@ -49,6 +40,18 @@ DEALINGS IN THE SOFTWARE.
 # define OSMIUM_DEPRECATED __declspec(deprecated)
 #else
 # define OSMIUM_DEPRECATED
+#endif
+
+// Set OSMIUM_DEFINE_EXPORT before including any osmium headers to add
+// the special attributes to all exception classes.
+#ifdef OSMIUM_DEFINE_EXPORT
+# ifdef _MSC_VER
+#  define OSMIUM_EXPORT __declspec(dllexport)
+# else
+#  define OSMIUM_EXPORT __attribute__ ((visibility("default")))
+# endif
+#else
+#  define OSMIUM_EXPORT
 #endif
 
 #endif // OSMIUM_UTIL_COMPATIBILITY_HPP

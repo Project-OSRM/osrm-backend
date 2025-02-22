@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -78,7 +78,7 @@ namespace osmium {
             inline double distance(const osmium::WayNodeList& wnl) {
                 double sum_length = 0;
 
-                for (auto it = wnl.begin(); it != wnl.end(); ++it) {
+                for (const auto* it = wnl.begin(); it != wnl.end(); ++it) {
                     if (std::next(it) != wnl.end()) {
                         sum_length += distance(it->location(), std::next(it)->location());
                     }
@@ -93,7 +93,7 @@ namespace osmium {
             inline double distance(const osmium::NodeRefList& nrl) {
                 double sum_length = 0;
 
-                for (auto it = nrl.begin(); it != nrl.end(); ++it) {
+                for (const auto* it = nrl.begin(); it != nrl.end(); ++it) {
                     if (std::next(it) != nrl.end()) {
                         sum_length += distance(it->location(), std::next(it)->location());
                     }

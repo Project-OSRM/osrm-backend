@@ -22,7 +22,6 @@
 
 */
 
-#include <cstdlib>   // for std::exit
 #include <cstring>   // for std::strcmp
 #include <exception> // for std::exception
 #include <iostream>  // for std::cout, std::cerr
@@ -150,12 +149,12 @@ public:
 int main(int argc, char* argv[]) {
     if (argc != 3) {
         std::cerr << "Usage: " << argv[0] << " INFILE OUTFILE\n";
-        std::exit(1);
+        return 1;
     }
 
     // Get input and output file names from command line.
-    std::string input_file_name{argv[1]};
-    std::string output_file_name{argv[2]};
+    const std::string input_file_name{argv[1]};
+    const std::string output_file_name{argv[2]};
 
     try {
         // Initialize Reader
@@ -197,7 +196,7 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
         std::cerr << e.what() << '\n';
-        std::exit(1);
+        return 1;
     }
 }
 

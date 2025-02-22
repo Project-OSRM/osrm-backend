@@ -36,12 +36,7 @@
 #include "util/vector_view.hpp"
 
 #include "util/filtered_graph.hpp"
-#include "util/packed_vector.hpp"
-#include "util/vector_view.hpp"
-
-namespace osrm
-{
-namespace storage
+namespace osrm::storage
 {
 
 template <typename T>
@@ -77,7 +72,7 @@ inline auto make_name_table_view(const SharedDataIndex &index, const std::string
     auto values =
         make_vector_view<extractor::NameTableView::IndexedData::ValueType>(index, name + "/values");
 
-    extractor::NameTableView::IndexedData index_data_view{std::move(blocks), std::move(values)};
+    extractor::NameTableView::IndexedData index_data_view{blocks, values};
     return extractor::NameTableView{index_data_view};
 }
 
@@ -100,8 +95,7 @@ inline auto make_ebn_data_view(const SharedDataIndex &index, const std::string &
     auto annotation_data =
         make_vector_view<extractor::NodeBasedEdgeAnnotation>(index, name + "/annotations");
 
-    return extractor::EdgeBasedNodeDataView(std::move(edge_based_node_data),
-                                            std::move(annotation_data));
+    return extractor::EdgeBasedNodeDataView(edge_based_node_data, annotation_data);
 }
 
 inline auto make_turn_data_view(const SharedDataIndex &index, const std::string &name)
@@ -119,11 +113,8 @@ inline auto make_turn_data_view(const SharedDataIndex &index, const std::string 
     const auto post_turn_bearings =
         make_vector_view<guidance::TurnBearing>(index, name + "/post_turn_bearings");
 
-    return guidance::TurnDataView(std::move(turn_instructions),
-                                  std::move(lane_data_ids),
-                                  std::move(entry_class_ids),
-                                  std::move(pre_turn_bearings),
-                                  std::move(post_turn_bearings));
+    return guidance::TurnDataView(
+        turn_instructions, lane_data_ids, entry_class_ids, pre_turn_bearings, post_turn_bearings);
 }
 
 inline auto make_segment_data_view(const SharedDataIndex &index, const std::string &name)
@@ -160,14 +151,14 @@ inline auto make_segment_data_view(const SharedDataIndex &index, const std::stri
     auto rev_datasources_list =
         make_vector_view<DatasourceID>(index, name + "/reverse_data_sources");
 
-    return extractor::SegmentDataView{std::move(geometry_begin_indices),
-                                      std::move(node_list),
-                                      std::move(fwd_weight_list),
-                                      std::move(rev_weight_list),
-                                      std::move(fwd_duration_list),
-                                      std::move(rev_duration_list),
-                                      std::move(fwd_datasources_list),
-                                      std::move(rev_datasources_list)};
+    return extractor::SegmentDataView{geometry_begin_indices,
+                                      node_list,
+                                      fwd_weight_list,
+                                      rev_weight_list,
+                                      fwd_duration_list,
+                                      rev_duration_list,
+                                      fwd_datasources_list,
+                                      rev_datasources_list};
 }
 
 inline auto make_coordinates_view(const SharedDataIndex &index, const std::string &name)
@@ -211,14 +202,14 @@ inline auto make_search_tree_view(const SharedDataIndex &index, const std::strin
 
     const char *path = index.template GetBlockPtr<char>(name + "/file_index_path");
 
-    if (!boost::filesystem::exists(boost::filesystem::path{path}))
+    if (!std::filesystem::exists(std::filesystem::path{path}))
     {
         throw util::exception("Could not load " + std::string(path) + "Does the leaf file exist?" +
                               SOURCE_REF);
     }
 
     return util::StaticRTree<RTreeLeaf, storage::Ownership::View>{
-        std::move(search_tree), std::move(rtree_level_starts), path, std::move(coordinates)};
+        search_tree, rtree_level_starts, path, coordinates};
 }
 
 inline auto make_intersection_bearings_view(const SharedDataIndex &index, const std::string &name)
@@ -229,13 +220,11 @@ inline auto make_intersection_bearings_view(const SharedDataIndex &index, const 
         index, name + "/class_id_to_ranges/diff_blocks");
     auto bearing_values = make_vector_view<DiscreteBearing>(index, name + "/bearing_values");
     util::RangeTable<16, storage::Ownership::View> bearing_range_table(
-        std::move(bearing_offsets),
-        std::move(bearing_blocks),
-        static_cast<unsigned>(bearing_values.size()));
+        bearing_offsets, bearing_blocks, static_cast<unsigned>(bearing_values.size()));
 
     auto bearing_class_id = make_vector_view<BearingClassID>(index, name + "/node_to_class_id");
     return extractor::IntersectionBearingsView{
-        std::move(bearing_values), std::move(bearing_class_id), std::move(bearing_range_table)};
+        bearing_values, bearing_class_id, bearing_range_table};
 }
 
 inline auto make_entry_classes_view(const SharedDataIndex &index, const std::string &name)
@@ -252,12 +241,11 @@ inline auto make_contracted_metric_view(const SharedDataIndex &index, const std:
 
     std::vector<util::vector_view<bool>> edge_filter;
     index.List(name + "/exclude",
-               boost::make_function_output_iterator([&](const auto &filter_name) {
-                   edge_filter.push_back(make_vector_view<bool>(index, filter_name));
-               }));
+               boost::make_function_output_iterator(
+                   [&](const auto &filter_name)
+                   { edge_filter.push_back(make_vector_view<bool>(index, filter_name)); }));
 
-    return contractor::ContractedMetricView{{std::move(node_list), std::move(edge_list)},
-                                            std::move(edge_filter)};
+    return contractor::ContractedMetricView{{node_list, edge_list}, std::move(edge_filter)};
 }
 
 inline auto make_partition_view(const SharedDataIndex &index, const std::string &name)
@@ -268,13 +256,12 @@ inline auto make_partition_view(const SharedDataIndex &index, const std::string 
     auto partition = make_vector_view<PartitionID>(index, name + "/partition");
     auto cell_to_children = make_vector_view<CellID>(index, name + "/cell_to_children");
 
-    return partitioner::MultiLevelPartitionView{
-        level_data_ptr, std::move(partition), std::move(cell_to_children)};
+    return partitioner::MultiLevelPartitionView{level_data_ptr, partition, cell_to_children};
 }
 
 inline auto make_timestamp_view(const SharedDataIndex &index, const std::string &name)
 {
-    return util::StringView(index.GetBlockPtr<char>(name), index.GetBlockEntries(name));
+    return std::string_view(index.GetBlockPtr<char>(name), index.GetBlockEntries(name));
 }
 
 inline auto make_cell_storage_view(const SharedDataIndex &index, const std::string &name)
@@ -284,10 +271,8 @@ inline auto make_cell_storage_view(const SharedDataIndex &index, const std::stri
     auto cells = make_vector_view<partitioner::CellStorageView::CellData>(index, name + "/cells");
     auto level_offsets = make_vector_view<std::uint64_t>(index, name + "/level_to_cell_offset");
 
-    return partitioner::CellStorageView{std::move(source_boundary),
-                                        std::move(destination_boundary),
-                                        std::move(cells),
-                                        std::move(level_offsets)};
+    return partitioner::CellStorageView{
+        source_boundary, destination_boundary, cells, level_offsets};
 }
 
 inline auto make_filtered_cell_metric_view(const SharedDataIndex &index,
@@ -305,8 +290,7 @@ inline auto make_filtered_cell_metric_view(const SharedDataIndex &index,
     auto durations = make_vector_view<EdgeDuration>(index, durations_block_id);
     auto distances = make_vector_view<EdgeDistance>(index, distances_block_id);
 
-    return customizer::CellMetricView{
-        std::move(weights), std::move(durations), std::move(distances)};
+    return customizer::CellMetricView{weights, durations, distances};
 }
 
 inline auto make_cell_metric_view(const SharedDataIndex &index, const std::string &name)
@@ -325,8 +309,7 @@ inline auto make_cell_metric_view(const SharedDataIndex &index, const std::strin
         auto durations = make_vector_view<EdgeDuration>(index, durations_block_id);
         auto distances = make_vector_view<EdgeDistance>(index, distances_block_id);
 
-        cell_metric_excludes.push_back(customizer::CellMetricView{
-            std::move(weights), std::move(durations), std::move(distances)});
+        cell_metric_excludes.push_back(customizer::CellMetricView{weights, durations, distances});
     }
 
     return cell_metric_excludes;
@@ -346,14 +329,14 @@ inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std:
     auto is_forward_edge = make_vector_view<bool>(index, name + "/is_forward_edge");
     auto is_backward_edge = make_vector_view<bool>(index, name + "/is_backward_edge");
 
-    return customizer::MultiLevelEdgeBasedGraphView(std::move(node_list),
-                                                    std::move(edge_list),
-                                                    std::move(node_to_offset),
-                                                    std::move(node_weights),
-                                                    std::move(node_durations),
-                                                    std::move(node_distances),
-                                                    std::move(is_forward_edge),
-                                                    std::move(is_backward_edge));
+    return customizer::MultiLevelEdgeBasedGraphView(node_list,
+                                                    edge_list,
+                                                    node_to_offset,
+                                                    node_weights,
+                                                    node_durations,
+                                                    node_distances,
+                                                    is_forward_edge,
+                                                    is_backward_edge);
 }
 
 inline auto make_maneuver_overrides_views(const SharedDataIndex &index, const std::string &name)
@@ -379,7 +362,6 @@ inline auto make_filtered_graph_view(const SharedDataIndex &index,
 
     return util::FilteredGraphView<contractor::QueryGraphView>({node_list, edge_list}, edge_filter);
 }
-} // namespace storage
-} // namespace osrm
+} // namespace osrm::storage
 
 #endif

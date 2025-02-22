@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -57,42 +57,42 @@ namespace osmium {
                 case osmium::item_type::undefined:
                     break;
                 case osmium::item_type::node:
-                    std::forward<THandler>(handler).osm_object(static_cast<ConstIfConst<TItem, osmium::OSMObject>&>(item));
-                    std::forward<THandler>(handler).node(static_cast<ConstIfConst<TItem, osmium::Node>&>(item));
+                    handler.osm_object(static_cast<ConstIfConst<TItem, osmium::OSMObject>&>(item));
+                    handler.node(static_cast<ConstIfConst<TItem, osmium::Node>&>(item));
                     break;
                 case osmium::item_type::way:
-                    std::forward<THandler>(handler).osm_object(static_cast<ConstIfConst<TItem, osmium::OSMObject>&>(item));
-                    std::forward<THandler>(handler).way(static_cast<ConstIfConst<TItem, osmium::Way>&>(item));
+                    handler.osm_object(static_cast<ConstIfConst<TItem, osmium::OSMObject>&>(item));
+                    handler.way(static_cast<ConstIfConst<TItem, osmium::Way>&>(item));
                     break;
                 case osmium::item_type::relation:
-                    std::forward<THandler>(handler).osm_object(static_cast<ConstIfConst<TItem, osmium::OSMObject>&>(item));
-                    std::forward<THandler>(handler).relation(static_cast<ConstIfConst<TItem, osmium::Relation>&>(item));
+                    handler.osm_object(static_cast<ConstIfConst<TItem, osmium::OSMObject>&>(item));
+                    handler.relation(static_cast<ConstIfConst<TItem, osmium::Relation>&>(item));
                     break;
                 case osmium::item_type::area:
-                    std::forward<THandler>(handler).osm_object(static_cast<ConstIfConst<TItem, osmium::OSMObject>&>(item));
-                    std::forward<THandler>(handler).area(static_cast<ConstIfConst<TItem, osmium::Area>&>(item));
+                    handler.osm_object(static_cast<ConstIfConst<TItem, osmium::OSMObject>&>(item));
+                    handler.area(static_cast<ConstIfConst<TItem, osmium::Area>&>(item));
                     break;
                 case osmium::item_type::changeset:
-                    std::forward<THandler>(handler).changeset(static_cast<ConstIfConst<TItem, osmium::Changeset>&>(item));
+                    handler.changeset(static_cast<ConstIfConst<TItem, osmium::Changeset>&>(item));
                     break;
                 case osmium::item_type::tag_list:
-                    std::forward<THandler>(handler).tag_list(static_cast<ConstIfConst<TItem, osmium::TagList>&>(item));
+                    handler.tag_list(static_cast<ConstIfConst<TItem, osmium::TagList>&>(item));
                     break;
                 case osmium::item_type::way_node_list:
-                    std::forward<THandler>(handler).way_node_list(static_cast<ConstIfConst<TItem, osmium::WayNodeList>&>(item));
+                    handler.way_node_list(static_cast<ConstIfConst<TItem, osmium::WayNodeList>&>(item));
                     break;
                 case osmium::item_type::relation_member_list:
                 case osmium::item_type::relation_member_list_with_full_members:
-                    std::forward<THandler>(handler).relation_member_list(static_cast<ConstIfConst<TItem, osmium::RelationMemberList>&>(item));
+                    handler.relation_member_list(static_cast<ConstIfConst<TItem, osmium::RelationMemberList>&>(item));
                     break;
                 case osmium::item_type::outer_ring:
-                    std::forward<THandler>(handler).outer_ring(static_cast<ConstIfConst<TItem, osmium::OuterRing>&>(item));
+                    handler.outer_ring(static_cast<ConstIfConst<TItem, osmium::OuterRing>&>(item));
                     break;
                 case osmium::item_type::inner_ring:
-                    std::forward<THandler>(handler).inner_ring(static_cast<ConstIfConst<TItem, osmium::InnerRing>&>(item));
+                    handler.inner_ring(static_cast<ConstIfConst<TItem, osmium::InnerRing>&>(item));
                     break;
                 case osmium::item_type::changeset_discussion:
-                    std::forward<THandler>(handler).changeset_discussion(static_cast<ConstIfConst<TItem, osmium::ChangesetDiscussion>&>(item));
+                    handler.changeset_discussion(static_cast<ConstIfConst<TItem, osmium::ChangesetDiscussion>&>(item));
                     break;
             }
         }
@@ -101,23 +101,23 @@ namespace osmium {
         inline void apply_item_impl(const osmium::OSMEntity& item, THandler&& handler) {
             switch (item.type()) {
                 case osmium::item_type::node:
-                    std::forward<THandler>(handler).osm_object(static_cast<const osmium::OSMObject&>(item));
-                    std::forward<THandler>(handler).node(static_cast<const osmium::Node&>(item));
+                    handler.osm_object(static_cast<const osmium::OSMObject&>(item));
+                    handler.node(static_cast<const osmium::Node&>(item));
                     break;
                 case osmium::item_type::way:
-                    std::forward<THandler>(handler).osm_object(static_cast<const osmium::OSMObject&>(item));
-                    std::forward<THandler>(handler).way(static_cast<const osmium::Way&>(item));
+                    handler.osm_object(static_cast<const osmium::OSMObject&>(item));
+                    handler.way(static_cast<const osmium::Way&>(item));
                     break;
                 case osmium::item_type::relation:
-                    std::forward<THandler>(handler).osm_object(static_cast<const osmium::OSMObject&>(item));
-                    std::forward<THandler>(handler).relation(static_cast<const osmium::Relation&>(item));
+                    handler.osm_object(static_cast<const osmium::OSMObject&>(item));
+                    handler.relation(static_cast<const osmium::Relation&>(item));
                     break;
                 case osmium::item_type::area:
-                    std::forward<THandler>(handler).osm_object(static_cast<const osmium::OSMObject&>(item));
-                    std::forward<THandler>(handler).area(static_cast<const osmium::Area&>(item));
+                    handler.osm_object(static_cast<const osmium::OSMObject&>(item));
+                    handler.area(static_cast<const osmium::Area&>(item));
                     break;
                 case osmium::item_type::changeset:
-                    std::forward<THandler>(handler).changeset(static_cast<const osmium::Changeset&>(item));
+                    handler.changeset(static_cast<const osmium::Changeset&>(item));
                     break;
                 default:
                     throw osmium::unknown_type{};
@@ -128,23 +128,23 @@ namespace osmium {
         inline void apply_item_impl(osmium::OSMEntity& item, THandler&& handler) {
             switch (item.type()) {
                 case osmium::item_type::node:
-                    std::forward<THandler>(handler).osm_object(static_cast<osmium::OSMObject&>(item));
-                    std::forward<THandler>(handler).node(static_cast<osmium::Node&>(item));
+                    handler.osm_object(static_cast<osmium::OSMObject&>(item));
+                    handler.node(static_cast<osmium::Node&>(item));
                     break;
                 case osmium::item_type::way:
-                    std::forward<THandler>(handler).osm_object(static_cast<osmium::OSMObject&>(item));
-                    std::forward<THandler>(handler).way(static_cast<osmium::Way&>(item));
+                    handler.osm_object(static_cast<osmium::OSMObject&>(item));
+                    handler.way(static_cast<osmium::Way&>(item));
                     break;
                 case osmium::item_type::relation:
-                    std::forward<THandler>(handler).osm_object(static_cast<osmium::OSMObject&>(item));
-                    std::forward<THandler>(handler).relation(static_cast<osmium::Relation&>(item));
+                    handler.osm_object(static_cast<osmium::OSMObject&>(item));
+                    handler.relation(static_cast<osmium::Relation&>(item));
                     break;
                 case osmium::item_type::area:
-                    std::forward<THandler>(handler).osm_object(static_cast<osmium::OSMObject&>(item));
-                    std::forward<THandler>(handler).area(static_cast<osmium::Area&>(item));
+                    handler.osm_object(static_cast<osmium::OSMObject&>(item));
+                    handler.area(static_cast<osmium::Area&>(item));
                     break;
                 case osmium::item_type::changeset:
-                    std::forward<THandler>(handler).changeset(static_cast<osmium::Changeset&>(item));
+                    handler.changeset(static_cast<osmium::Changeset&>(item));
                     break;
                 default:
                     throw osmium::unknown_type{};
@@ -155,20 +155,20 @@ namespace osmium {
         inline void apply_item_impl(const osmium::OSMObject& item, THandler&& handler) {
             switch (item.type()) {
                 case osmium::item_type::node:
-                    std::forward<THandler>(handler).osm_object(item);
-                    std::forward<THandler>(handler).node(static_cast<const osmium::Node&>(item));
+                    handler.osm_object(item);
+                    handler.node(static_cast<const osmium::Node&>(item));
                     break;
                 case osmium::item_type::way:
-                    std::forward<THandler>(handler).osm_object(item);
-                    std::forward<THandler>(handler).way(static_cast<const osmium::Way&>(item));
+                    handler.osm_object(item);
+                    handler.way(static_cast<const osmium::Way&>(item));
                     break;
                 case osmium::item_type::relation:
-                    std::forward<THandler>(handler).osm_object(item);
-                    std::forward<THandler>(handler).relation(static_cast<const osmium::Relation&>(item));
+                    handler.osm_object(item);
+                    handler.relation(static_cast<const osmium::Relation&>(item));
                     break;
                 case osmium::item_type::area:
-                    std::forward<THandler>(handler).osm_object(item);
-                    std::forward<THandler>(handler).area(static_cast<const osmium::Area&>(item));
+                    handler.osm_object(item);
+                    handler.area(static_cast<const osmium::Area&>(item));
                     break;
                 default:
                     throw osmium::unknown_type{};
@@ -179,20 +179,20 @@ namespace osmium {
         inline void apply_item_impl(osmium::OSMObject& item, THandler&& handler) {
             switch (item.type()) {
                 case osmium::item_type::node:
-                    std::forward<THandler>(handler).osm_object(item);
-                    std::forward<THandler>(handler).node(static_cast<osmium::Node&>(item));
+                    handler.osm_object(item);
+                    handler.node(static_cast<osmium::Node&>(item));
                     break;
                 case osmium::item_type::way:
-                    std::forward<THandler>(handler).osm_object(item);
-                    std::forward<THandler>(handler).way(static_cast<osmium::Way&>(item));
+                    handler.osm_object(item);
+                    handler.way(static_cast<osmium::Way&>(item));
                     break;
                 case osmium::item_type::relation:
-                    std::forward<THandler>(handler).osm_object(item);
-                    std::forward<THandler>(handler).relation(static_cast<osmium::Relation&>(item));
+                    handler.osm_object(item);
+                    handler.relation(static_cast<osmium::Relation&>(item));
                     break;
                 case osmium::item_type::area:
-                    std::forward<THandler>(handler).osm_object(item);
-                    std::forward<THandler>(handler).area(static_cast<osmium::Area&>(item));
+                    handler.osm_object(item);
+                    handler.area(static_cast<osmium::Area&>(item));
                     break;
                 default:
                     throw osmium::unknown_type{};
@@ -202,7 +202,7 @@ namespace osmium {
         template <typename TFunc>
         struct wrapper_handler : TFunc {
 
-            template<typename T>
+            template <typename T>
             explicit wrapper_handler(T&& func) : TFunc(std::forward<T>(func)) { // NOLINT(bugprone-forwarding-reference-overload)
             }
 
@@ -220,6 +220,7 @@ namespace osmium {
                 operator()(node);
             }
 
+            // cppcheck-suppress constParameter
             void node(osmium::Node& node) const {
                 operator()(node);
             }
@@ -228,6 +229,7 @@ namespace osmium {
                 operator()(way);
             }
 
+            // cppcheck-suppress constParameter
             void way(osmium::Way& way) const {
                 operator()(way);
             }
@@ -236,6 +238,7 @@ namespace osmium {
                 operator()(relation);
             }
 
+            // cppcheck-suppress constParameter
             void relation(osmium::Relation& relation) const {
                 operator()(relation);
             }
@@ -244,6 +247,7 @@ namespace osmium {
                 operator()(area);
             }
 
+            // cppcheck-suppress constParameter
             void area(osmium::Area& area) const {
                 operator()(area);
             }
@@ -252,6 +256,7 @@ namespace osmium {
                 operator()(changeset);
             }
 
+            // cppcheck-suppress constParameter
             void changeset(osmium::Changeset& changeset) const {
                 operator()(changeset);
             }
@@ -300,21 +305,19 @@ namespace osmium {
     template <typename TItem, typename... THandlers>
     inline void apply_item(TItem& item, THandlers&&... handlers) {
         (void)std::initializer_list<int>{
-            (detail::apply_item_impl(item, std::forward<THandlers>(handlers)), 0)...
-        };
+            (detail::apply_item_impl(item, std::forward<THandlers>(handlers)), 0)...};
     }
 
     template <typename... THandlers>
     inline void apply_flush(THandlers&&... handlers) {
         (void)std::initializer_list<int>{
-            (std::forward<THandlers>(handlers).flush(), 0)...
-        };
+            (std::forward<THandlers>(handlers).flush(), 0)...};
     }
 
     template <typename TIterator, typename... THandlers>
     inline void apply_impl(TIterator it, TIterator end, THandlers&&... handlers) {
         for (; it != end; ++it) {
-            apply_item(*it, std::forward<THandlers>(handlers)...);
+            apply_item(*it, handlers...);
         }
         apply_flush(std::forward<THandlers>(handlers)...);
     }

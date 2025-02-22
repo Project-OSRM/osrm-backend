@@ -1,7 +1,6 @@
 #include "contractor/contractor.hpp"
 #include "contractor/contract_excludable_graph.hpp"
 #include "contractor/contracted_edge_container.hpp"
-#include "contractor/crc32_processor.hpp"
 #include "contractor/files.hpp"
 #include "contractor/graph_contractor.hpp"
 #include "contractor/graph_contractor_adaptors.hpp"
@@ -27,35 +26,19 @@
 #include "util/typedefs.hpp"
 
 #include <algorithm>
-#include <bitset>
 #include <cstdint>
-#include <fstream>
 #include <iterator>
-#include <memory>
 #include <vector>
 
-#include <boost/assert.hpp>
-
-#if TBB_VERSION_MAJOR == 2020
 #include <tbb/global_control.h>
-#else
-#include <tbb/task_scheduler_init.h>
-#endif
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 int Contractor::Run()
 {
-#if TBB_VERSION_MAJOR == 2020
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
-#else
-    tbb::task_scheduler_init init(config.requested_num_threads);
-    BOOST_ASSERT(init.is_active());
-#endif
 
     if (config.core_factor != 1.0)
     {
@@ -88,7 +71,8 @@ int Contractor::Run()
     // Convert node weights for oneway streets to INVALID_EDGE_WEIGHT
     for (auto &weight : node_weights)
     {
-        weight = (weight & 0x80000000) ? INVALID_EDGE_WEIGHT : weight;
+        weight = (from_alias<EdgeWeight::value_type>(weight) & 0x80000000) ? INVALID_EDGE_WEIGHT
+                                                                           : weight;
     }
 
     // Contracting the edge-expanded graph
@@ -115,7 +99,7 @@ int Contractor::Run()
     std::tie(query_graph, edge_filters) = contractExcludableGraph(
         toContractorGraph(number_of_edge_based_nodes, std::move(edge_based_edge_list)),
         std::move(node_weights),
-        std::move(node_filters));
+        node_filters);
     TIMER_STOP(contraction);
     util::Log() << "Contracted graph has " << query_graph.GetNumberOfEdges() << " edges.";
     util::Log() << "Contraction took " << TIMER_SEC(contraction) << " sec";
@@ -134,5 +118,4 @@ int Contractor::Run()
     return 0;
 }
 
-} // namespace contractor
-} // namespace osrm
+} // namespace osrm::contractor

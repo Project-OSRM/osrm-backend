@@ -3,13 +3,9 @@
 
 #include "util/coordinate.hpp"
 
-#include <boost/math/constants/constants.hpp>
+#include <numbers>
 
-namespace osrm
-{
-namespace util
-{
-namespace web_mercator
+namespace osrm::util::web_mercator
 {
 namespace detail
 {
@@ -18,7 +14,7 @@ const constexpr double RAD_TO_DEGREE = 1. / DEGREE_TO_RAD;
 // radius used by WGS84
 const constexpr double EARTH_RADIUS_WGS84 = 6378137.0;
 // earth circumference devided by 2
-const constexpr double MAXEXTENT = EARTH_RADIUS_WGS84 * boost::math::constants::pi<double>();
+const constexpr double MAXEXTENT = EARTH_RADIUS_WGS84 * std::numbers::pi;
 // ^ math functions are not constexpr since they have side-effects (setting errno) :(
 const constexpr double EPSG3857_MAX_LATITUDE = 85.051128779806592378; // 90(4*atan(exp(pi))/pi-1)
 const constexpr double MAX_LONGITUDE = 180.0;
@@ -107,8 +103,8 @@ inline void pixelToDegree(const double shift, double &x, double &y)
     const double b = shift / 2.0;
     x = (x - b) / shift * 360.0;
     // FIXME needs to be simplified
-    const double g = (y - b) / -(shift / (2 * M_PI)) / detail::DEGREE_TO_RAD;
-    static_assert(detail::DEGREE_TO_RAD / (2 * M_PI) - 1 / 360. < 0.0001, "");
+    const double g = (y - b) / -(shift * 0.5 * std::numbers::inv_pi) / detail::DEGREE_TO_RAD;
+    static_assert(detail::DEGREE_TO_RAD * 0.5 * std::numbers::inv_pi - 1 / 360. < 0.0001, "");
     y = static_cast<double>(yToLat(g));
 }
 
@@ -169,8 +165,6 @@ inline void xyzToMercator(
     maxx = static_cast<double>(clamp(util::FloatLongitude{maxx})) * DEGREE_TO_PX;
     maxy = latToY(util::FloatLatitude{maxy}) * DEGREE_TO_PX;
 }
-} // namespace web_mercator
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util::web_mercator
 
 #endif

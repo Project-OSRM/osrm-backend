@@ -8,18 +8,10 @@
 #include "storage/shared_memory_ownership.hpp"
 #include "storage/tar_fwd.hpp"
 
-#include <boost/filesystem/path.hpp>
-#include <boost/range/adaptor/reversed.hpp>
-#include <boost/range/iterator_range.hpp>
-
-#include <unordered_map>
-
+#include <ranges>
 #include <string>
-#include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class CompressedEdgeContainer;
@@ -27,7 +19,7 @@ class CompressedEdgeContainer;
 namespace detail
 {
 template <storage::Ownership Ownership> class SegmentDataContainerImpl;
-}
+} // namespace detail
 
 namespace serialization
 {
@@ -82,12 +74,12 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         const auto begin = nodes.begin() + index[id];
         const auto end = nodes.begin() + index[id + 1];
 
-        return boost::make_iterator_range(begin, end);
+        return std::ranges::subrange(begin, end);
     }
 
     auto GetReverseGeometry(const DirectionalGeometryID id)
     {
-        return boost::adaptors::reverse(GetForwardGeometry(id));
+        return GetForwardGeometry(id) | std::views::reverse;
     }
 
     auto GetForwardDurations(const DirectionalGeometryID id)
@@ -95,7 +87,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         const auto begin = fwd_durations.begin() + index[id] + 1;
         const auto end = fwd_durations.begin() + index[id + 1];
 
-        return boost::make_iterator_range(begin, end);
+        return std::ranges::subrange(begin, end);
     }
 
     auto GetReverseDurations(const DirectionalGeometryID id)
@@ -103,7 +95,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         const auto begin = rev_durations.begin() + index[id];
         const auto end = rev_durations.begin() + index[id + 1] - 1;
 
-        return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
+        return std::ranges::subrange(begin, end) | std::views::reverse;
     }
 
     auto GetForwardWeights(const DirectionalGeometryID id)
@@ -111,7 +103,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         const auto begin = fwd_weights.begin() + index[id] + 1;
         const auto end = fwd_weights.begin() + index[id + 1];
 
-        return boost::make_iterator_range(begin, end);
+        return std::ranges::subrange(begin, end);
     }
 
     auto GetReverseWeights(const DirectionalGeometryID id)
@@ -119,7 +111,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         const auto begin = rev_weights.begin() + index[id];
         const auto end = rev_weights.begin() + index[id + 1] - 1;
 
-        return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
+        return std::ranges::subrange(begin, end) | std::views::reverse;
     }
 
     auto GetForwardDatasources(const DirectionalGeometryID id)
@@ -127,7 +119,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         const auto begin = fwd_datasources.begin() + index[id] + 1;
         const auto end = fwd_datasources.begin() + index[id + 1];
 
-        return boost::make_iterator_range(begin, end);
+        return std::ranges::subrange(begin, end);
     }
 
     auto GetReverseDatasources(const DirectionalGeometryID id)
@@ -135,7 +127,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         const auto begin = rev_datasources.begin() + index[id];
         const auto end = rev_datasources.begin() + index[id + 1] - 1;
 
-        return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
+        return std::ranges::subrange(begin, end) | std::views::reverse;
     }
 
     auto GetForwardGeometry(const DirectionalGeometryID id) const
@@ -143,12 +135,12 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         const auto begin = nodes.cbegin() + index[id];
         const auto end = nodes.cbegin() + index[id + 1];
 
-        return boost::make_iterator_range(begin, end);
+        return std::ranges::subrange(begin, end);
     }
 
     auto GetReverseGeometry(const DirectionalGeometryID id) const
     {
-        return boost::adaptors::reverse(GetForwardGeometry(id));
+        return GetForwardGeometry(id) | std::views::reverse;
     }
 
     auto GetForwardDurations(const DirectionalGeometryID id) const
@@ -156,7 +148,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         const auto begin = fwd_durations.cbegin() + index[id] + 1;
         const auto end = fwd_durations.cbegin() + index[id + 1];
 
-        return boost::make_iterator_range(begin, end);
+        return std::ranges::subrange(begin, end);
     }
 
     auto GetReverseDurations(const DirectionalGeometryID id) const
@@ -164,7 +156,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         const auto begin = rev_durations.cbegin() + index[id];
         const auto end = rev_durations.cbegin() + index[id + 1] - 1;
 
-        return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
+        return std::ranges::subrange(begin, end) | std::views::reverse;
     }
 
     auto GetForwardWeights(const DirectionalGeometryID id) const
@@ -172,7 +164,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         const auto begin = fwd_weights.cbegin() + index[id] + 1;
         const auto end = fwd_weights.cbegin() + index[id + 1];
 
-        return boost::make_iterator_range(begin, end);
+        return std::ranges::subrange(begin, end);
     }
 
     auto GetReverseWeights(const DirectionalGeometryID id) const
@@ -180,7 +172,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         const auto begin = rev_weights.cbegin() + index[id];
         const auto end = rev_weights.cbegin() + index[id + 1] - 1;
 
-        return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
+        return std::ranges::subrange(begin, end) | std::views::reverse;
     }
 
     auto GetForwardDatasources(const DirectionalGeometryID id) const
@@ -188,7 +180,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         const auto begin = fwd_datasources.cbegin() + index[id] + 1;
         const auto end = fwd_datasources.cbegin() + index[id + 1];
 
-        return boost::make_iterator_range(begin, end);
+        return std::ranges::subrange(begin, end);
     }
 
     auto GetReverseDatasources(const DirectionalGeometryID id) const
@@ -196,7 +188,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         const auto begin = rev_datasources.cbegin() + index[id];
         const auto end = rev_datasources.cbegin() + index[id + 1] - 1;
 
-        return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
+        return std::ranges::subrange(begin, end) | std::views::reverse;
     }
 
     auto GetNumberOfGeometries() const { return index.size() - 1; }
@@ -225,7 +217,6 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
 using SegmentDataView = detail::SegmentDataContainerImpl<storage::Ownership::View>;
 using SegmentDataContainer = detail::SegmentDataContainerImpl<storage::Ownership::Container>;
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

@@ -19,7 +19,6 @@
 
 */
 
-#include <cstdlib>   // for std::exit
 #include <cstring>   // for std::strcmp
 #include <ctime>     // for std::time
 #include <exception> // for std::exception
@@ -37,15 +36,15 @@
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " OUTFILE\n";
-        std::exit(1);
+        return 1;
     }
 
     // Get output file name from command line.
-    std::string output_file_name{argv[1]};
+    const std::string output_file_name{argv[1]};
 
     // If output file name is "-", this means STDOUT. Set the OPL file type
     // in this case. Otherwise take the file type from the file name suffix.
-    osmium::io::File output_file{output_file_name, output_file_name == "-" ? ".opl" : ""};
+    const osmium::io::File output_file{output_file_name, output_file_name == "-" ? ".opl" : ""};
 
     try {
         // Create a buffer where all objects will live. Use a sensible initial
@@ -94,7 +93,7 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
         std::cerr << e.what() << '\n';
-        std::exit(1);
+        return 1;
     }
 }
 

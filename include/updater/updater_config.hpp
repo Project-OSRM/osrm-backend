@@ -28,17 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_UPDATER_UPDATER_CONFIG_HPP
 #define OSRM_UPDATER_UPDATER_CONFIG_HPP
 
-#include <boost/filesystem/path.hpp>
-
-#include <chrono>
-#include <string>
-
 #include "storage/io_config.hpp"
 #include "storage/storage_config.hpp"
 
-namespace osrm
-{
-namespace updater
+#include <filesystem>
+#include <string>
+
+namespace osrm::updater
 {
 
 struct UpdaterConfig final : storage::IOConfig
@@ -61,19 +57,18 @@ struct UpdaterConfig final : storage::IOConfig
     {
     }
 
-    void UseDefaultOutputNames(const boost::filesystem::path &base)
+    void UseDefaultOutputNames(const std::filesystem::path &base)
     {
         IOConfig::UseDefaultOutputNames(base);
     }
 
-    double log_edge_updates_factor;
+    double log_edge_updates_factor = 0.0;
     std::time_t valid_now;
 
     std::vector<std::string> segment_speed_lookup_paths;
     std::vector<std::string> turn_penalty_lookup_paths;
     std::string tz_file_path;
 };
-} // namespace updater
-} // namespace osrm
+} // namespace osrm::updater
 
 #endif // EXTRACTOR_OPTIONS_HPP

@@ -3,16 +3,13 @@
 #include "util/geojson_validation.hpp"
 #include "util/log.hpp"
 
-#include <boost/filesystem/fstream.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/optional.hpp>
-
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
 #include <rapidjson/istreamwrapper.h>
 
+#include <filesystem>
 #include <fstream>
-#include <regex>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
@@ -21,9 +18,7 @@
 // Function loads time zone shape polygons, computes a zone local time for utc_time,
 // creates a lookup R-tree and returns a lambda function that maps a point
 // to the corresponding local time
-namespace osrm
-{
-namespace updater
+namespace osrm::updater
 {
 
 Timezoner::Timezoner(const char geojson[], std::time_t utc_time_now)
@@ -42,7 +37,7 @@ Timezoner::Timezoner(const char geojson[], std::time_t utc_time_now)
     LoadLocalTimesRTree(doc, utc_time_now);
 }
 
-Timezoner::Timezoner(const boost::filesystem::path &tz_shapes_filename, std::time_t utc_time_now)
+Timezoner::Timezoner(const std::filesystem::path &tz_shapes_filename, std::time_t utc_time_now)
 {
     util::Log() << "Time zone validation based on UTC time : " << utc_time_now;
 
@@ -81,7 +76,8 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
     // Lambda function that returns local time in the tzname time zone
     // Thread safety: MT-Unsafe const:env
     std::unordered_map<std::string, struct tm> local_time_memo;
-    auto get_local_time_in_tz = [utc_time, &local_time_memo](const char *tzname) {
+    auto get_local_time_in_tz = [utc_time, &local_time_memo](const char *tzname)
+    {
         auto it = local_time_memo.find(tzname);
         if (it == local_time_memo.end())
         {
@@ -159,7 +155,7 @@ void Timezoner::LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t ut
     rtree = rtree_t(polygons);
 }
 
-boost::optional<struct tm> Timezoner::operator()(const point_t &point) const
+std::optional<struct tm> Timezoner::operator()(const point_t &point) const
 {
     std::vector<rtree_t::value_type> result;
     rtree.query(boost::geometry::index::intersects(point), std::back_inserter(result));
@@ -169,7 +165,6 @@ boost::optional<struct tm> Timezoner::operator()(const point_t &point) const
         if (boost::geometry::within(point, local_times[index].first))
             return local_times[index].second;
     }
-    return boost::none;
+    return std::nullopt;
 }
-} // namespace updater
-} // namespace osrm
+} // namespace osrm::updater

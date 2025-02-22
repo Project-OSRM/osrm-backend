@@ -22,18 +22,33 @@
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
-#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-namespace osrm
+namespace osrm::engine::datafacade
 {
-namespace engine
-{
-namespace datafacade
-{
+
+static const std::string DATASET_TURN_DATA = "TurnData";
+static const std::string DATASET_TURN_LANE_DATA = "NameLaneData";
+static const std::string DATASET_NAME_DATA = "NameData";
+static const std::string DATASET_INTERSECTION_BEARINGS = "IntersectionBearings";
+static const std::string DATASET_ENTRY_CLASS = "EntryClass";
+
+/**
+ * Macro is not ideal. But without it we either have to:
+ * a) Write this boiler-plate for every usage of an optional dataset.
+ * b) Convert to a function and add lots of polluting NOLINT(bugprone-unchecked-optional-access)
+ * comments. This macro keeps the API code readable.
+ */
+#define CHECK_DATASET_DISABLED(val, dataset)                                                       \
+    {                                                                                              \
+        if (!(val))                                                                                \
+        {                                                                                          \
+            throw osrm::util::DisabledDatasetException((dataset));                                 \
+        }                                                                                          \
+    }
 
 template <typename AlgorithmT> class ContiguousInternalMemoryAlgorithmDataFacade;
 
@@ -73,45 +88,53 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
 
     unsigned GetNumberOfEdges() const override final { return m_query_graph.GetNumberOfEdges(); }
 
-    unsigned GetOutDegree(const NodeID n) const override final
+    unsigned GetOutDegree(const NodeID edge_based_node_id) const override final
     {
-        return m_query_graph.GetOutDegree(n);
+        return m_query_graph.GetOutDegree(edge_based_node_id);
     }
 
-    NodeID GetTarget(const EdgeID e) const override final { return m_query_graph.GetTarget(e); }
-
-    const EdgeData &GetEdgeData(const EdgeID e) const override final
+    NodeID GetTarget(const EdgeID edge_based_edge_id) const override final
     {
-        return m_query_graph.GetEdgeData(e);
+        return m_query_graph.GetTarget(edge_based_edge_id);
     }
 
-    EdgeRange GetAdjacentEdgeRange(const NodeID node) const override final
+    const EdgeData &GetEdgeData(const EdgeID edge_based_edge_id) const override final
     {
-        return m_query_graph.GetAdjacentEdgeRange(node);
+        return m_query_graph.GetEdgeData(edge_based_edge_id);
+    }
+
+    EdgeRange GetAdjacentEdgeRange(const NodeID edge_based_node_id) const override final
+    {
+        return m_query_graph.GetAdjacentEdgeRange(edge_based_node_id);
     }
 
     // searches for a specific edge
-    EdgeID FindEdge(const NodeID from, const NodeID to) const override final
+    EdgeID FindEdge(const NodeID edge_based_node_from,
+                    const NodeID edge_based_node_to) const override final
     {
-        return m_query_graph.FindEdge(from, to);
+        return m_query_graph.FindEdge(edge_based_node_from, edge_based_node_to);
     }
 
-    EdgeID FindEdgeInEitherDirection(const NodeID from, const NodeID to) const override final
+    EdgeID FindEdgeInEitherDirection(const NodeID edge_based_node_from,
+                                     const NodeID edge_based_node_to) const override final
     {
-        return m_query_graph.FindEdgeInEitherDirection(from, to);
+        return m_query_graph.FindEdgeInEitherDirection(edge_based_node_from, edge_based_node_to);
+    }
+
+    EdgeID FindEdgeIndicateIfReverse(const NodeID edge_based_node_from,
+                                     const NodeID edge_based_node_to,
+                                     bool &result) const override final
+    {
+        return m_query_graph.FindEdgeIndicateIfReverse(
+            edge_based_node_from, edge_based_node_to, result);
     }
 
     EdgeID
-    FindEdgeIndicateIfReverse(const NodeID from, const NodeID to, bool &result) const override final
+    FindSmallestEdge(const NodeID edge_based_node_from,
+                     const NodeID edge_based_node_to,
+                     const std::function<bool(const EdgeData &)> &filter) const override final
     {
-        return m_query_graph.FindEdgeIndicateIfReverse(from, to, result);
-    }
-
-    EdgeID FindSmallestEdge(const NodeID from,
-                            const NodeID to,
-                            std::function<bool(EdgeData)> filter) const override final
-    {
-        return m_query_graph.FindSmallestEdge(from, to, filter);
+        return m_query_graph.FindSmallestEdge(edge_based_node_from, edge_based_node_to, filter);
     }
 };
 
@@ -126,49 +149,52 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 {
   private:
     using super = BaseDataFacade;
-    using IndexBlock = util::RangeTable<16, storage::Ownership::View>::BlockT;
     using RTreeLeaf = super::RTreeLeaf;
     using SharedRTree = util::StaticRTree<RTreeLeaf, storage::Ownership::View>;
     using SharedGeospatialQuery = GeospatialQuery<SharedRTree, BaseDataFacade>;
-    using RTreeNode = SharedRTree::TreeNode;
 
     extractor::ClassData exclude_mask;
     extractor::ProfileProperties *m_profile_properties;
     extractor::Datasources *m_datasources;
 
     std::uint32_t m_check_sum;
-    StringView m_data_timestamp;
+    std::string_view m_data_timestamp;
     util::vector_view<util::Coordinate> m_coordinate_list;
     extractor::PackedOSMIDsView m_osmnodeid_list;
-    util::vector_view<std::uint32_t> m_lane_description_offsets;
-    util::vector_view<extractor::TurnLaneType::Mask> m_lane_description_masks;
+    std::optional<util::vector_view<std::uint32_t>> m_lane_description_offsets;
+    std::optional<util::vector_view<extractor::TurnLaneType::Mask>> m_lane_description_masks;
     util::vector_view<TurnPenalty> m_turn_weight_penalties;
     util::vector_view<TurnPenalty> m_turn_duration_penalties;
     extractor::SegmentDataView segment_data;
     extractor::EdgeBasedNodeDataView edge_based_node_data;
-    guidance::TurnDataView turn_data;
+    std::optional<guidance::TurnDataView> turn_data;
 
-    util::vector_view<char> m_datasource_name_data;
-    util::vector_view<std::size_t> m_datasource_name_offsets;
-    util::vector_view<std::size_t> m_datasource_name_lengths;
-    util::vector_view<util::guidance::LaneTupleIdPair> m_lane_tupel_id_pairs;
+    std::optional<util::vector_view<util::guidance::LaneTupleIdPair>> m_lane_tuple_id_pairs;
 
     util::vector_view<extractor::StorageManeuverOverride> m_maneuver_overrides;
     util::vector_view<NodeID> m_maneuver_override_node_sequences;
 
     SharedRTree m_static_rtree;
     std::unique_ptr<SharedGeospatialQuery> m_geospatial_query;
-    boost::filesystem::path file_index_path;
+    std::filesystem::path file_index_path;
 
-    extractor::IntersectionBearingsView intersection_bearings_view;
+    std::optional<extractor::IntersectionBearingsView> intersection_bearings_view;
 
-    extractor::NameTableView m_name_table;
+    std::optional<extractor::NameTableView> m_name_table;
     // the look-up table for entry classes. An entry class lists the possibility of entry for all
     // available turns. Such a class id is stored with every edge.
-    util::vector_view<util::guidance::EntryClass> m_entry_class_table;
+    std::optional<util::vector_view<util::guidance::EntryClass>> m_entry_class_table;
 
     // allocator that keeps the allocation data
     std::shared_ptr<ContiguousBlockAllocator> allocator;
+
+    bool isIndexed(const storage::SharedDataIndex &index, const std::string &name)
+    {
+        bool result = false;
+        index.List(name,
+                   boost::make_function_output_iterator([&](const auto &) { result = true; }));
+        return result;
+    }
 
     void InitializeInternalPointers(const storage::SharedDataIndex &index,
                                     const std::string &metric_name,
@@ -182,7 +208,17 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
         exclude_mask = m_profile_properties->excludable_classes[exclude_index];
 
-        m_check_sum = *index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum");
+        // We no longer use "/common/connectivity_checksum", as osrm.edges is an optional dataset.
+        // Instead, we load the value from the MLD or CH graph, whichever is loaded.
+        if (isIndexed(index, "/mld/connectivity_checksum"))
+        {
+            m_check_sum = *index.GetBlockPtr<std::uint32_t>("/mld/connectivity_checksum");
+        }
+        else
+        {
+            BOOST_ASSERT(isIndexed(index, "/ch/connectivity_checksum"));
+            m_check_sum = *index.GetBlockPtr<std::uint32_t>("/ch/connectivity_checksum");
+        }
 
         m_data_timestamp = make_timestamp_view(index, "/common/timestamp");
 
@@ -195,13 +231,23 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
         edge_based_node_data = make_ebn_data_view(index, "/common/ebg_node_data");
 
-        turn_data = make_turn_data_view(index, "/common/turn_data");
+        if (isIndexed(index, "/common/turn_data"))
+        {
+            turn_data = make_turn_data_view(index, "/common/turn_data");
+        }
 
-        m_name_table = make_name_table_view(index, "/common/names");
+        if (isIndexed(index, "/common/names"))
+        {
+            m_name_table = make_name_table_view(index, "/common/names");
+        }
 
-        std::tie(m_lane_description_offsets, m_lane_description_masks) =
-            make_turn_lane_description_views(index, "/common/turn_lanes");
-        m_lane_tupel_id_pairs = make_lane_data_view(index, "/common/turn_lanes");
+        if (isIndexed(index, "/common/turn_lanes"))
+        {
+            std::tie(m_lane_description_offsets, m_lane_description_masks) =
+                make_turn_lane_description_views(index, "/common/turn_lanes");
+
+            m_lane_tuple_id_pairs = make_lane_data_view(index, "/common/turn_lanes");
+        }
 
         m_turn_weight_penalties = make_turn_weight_view(index, "/common/turn_penalty");
         m_turn_duration_penalties = make_turn_duration_view(index, "/common/turn_penalty");
@@ -210,10 +256,12 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
         m_datasources = index.GetBlockPtr<extractor::Datasources>("/common/data_sources_names");
 
-        intersection_bearings_view =
-            make_intersection_bearings_view(index, "/common/intersection_bearings");
-
-        m_entry_class_table = make_entry_classes_view(index, "/common/entry_classes");
+        if (isIndexed(index, "/common/intersection_bearings"))
+        {
+            intersection_bearings_view =
+                make_intersection_bearings_view(index, "/common/intersection_bearings");
+            m_entry_class_table = make_entry_classes_view(index, "/common/entry_classes");
+        }
 
         std::tie(m_maneuver_overrides, m_maneuver_override_node_sequences) =
             make_maneuver_overrides_views(index, "/common/maneuver_overrides");
@@ -231,76 +279,81 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     }
 
     // node and edge information access
-    util::Coordinate GetCoordinateOfNode(const NodeID id) const override final
+    util::Coordinate GetCoordinateOfNode(const NodeID node_based_node_id) const override final
     {
-        return m_coordinate_list[id];
+        return m_coordinate_list[node_based_node_id];
     }
 
-    OSMNodeID GetOSMNodeIDOfNode(const NodeID id) const override final
+    OSMNodeID GetOSMNodeIDOfNode(const NodeID node_based_node_id) const override final
     {
-        return m_osmnodeid_list[id];
+        return m_osmnodeid_list[node_based_node_id];
     }
 
-    NodeForwardRange GetUncompressedForwardGeometry(const EdgeID id) const override final
+    NodeForwardRange GetUncompressedForwardGeometry(const PackedGeometryID id) const override final
     {
         return segment_data.GetForwardGeometry(id);
     }
 
-    NodeReverseRange GetUncompressedReverseGeometry(const EdgeID id) const override final
+    NodeReverseRange GetUncompressedReverseGeometry(const PackedGeometryID id) const override final
     {
         return segment_data.GetReverseGeometry(id);
     }
 
-    DurationForwardRange GetUncompressedForwardDurations(const EdgeID id) const override final
+    DurationForwardRange
+    GetUncompressedForwardDurations(const PackedGeometryID id) const override final
     {
         return segment_data.GetForwardDurations(id);
     }
 
-    DurationReverseRange GetUncompressedReverseDurations(const EdgeID id) const override final
+    DurationReverseRange
+    GetUncompressedReverseDurations(const PackedGeometryID id) const override final
     {
         return segment_data.GetReverseDurations(id);
     }
 
-    WeightForwardRange GetUncompressedForwardWeights(const EdgeID id) const override final
+    WeightForwardRange GetUncompressedForwardWeights(const PackedGeometryID id) const override final
     {
         return segment_data.GetForwardWeights(id);
     }
 
-    WeightReverseRange GetUncompressedReverseWeights(const EdgeID id) const override final
+    WeightReverseRange GetUncompressedReverseWeights(const PackedGeometryID id) const override final
     {
         return segment_data.GetReverseWeights(id);
     }
 
     // Returns the data source ids that were used to supply the edge
     // weights.
-    DatasourceForwardRange GetUncompressedForwardDatasources(const EdgeID id) const override final
+    DatasourceForwardRange
+    GetUncompressedForwardDatasources(const PackedGeometryID id) const override final
     {
         return segment_data.GetForwardDatasources(id);
     }
 
     // Returns the data source ids that were used to supply the edge
     // weights.
-    DatasourceReverseRange GetUncompressedReverseDatasources(const EdgeID id) const override final
+    DatasourceReverseRange
+    GetUncompressedReverseDatasources(const PackedGeometryID id) const override final
     {
         return segment_data.GetReverseDatasources(id);
     }
 
-    TurnPenalty GetWeightPenaltyForEdgeID(const EdgeID id) const override final
+    TurnPenalty GetWeightPenaltyForEdgeID(const EdgeID edge_based_edge_id) const override final
     {
-        BOOST_ASSERT(m_turn_weight_penalties.size() > id);
-        return m_turn_weight_penalties[id];
+        BOOST_ASSERT(m_turn_weight_penalties.size() > edge_based_edge_id);
+        return m_turn_weight_penalties[edge_based_edge_id];
     }
 
-    TurnPenalty GetDurationPenaltyForEdgeID(const EdgeID id) const override final
+    TurnPenalty GetDurationPenaltyForEdgeID(const EdgeID edge_based_edge_id) const override final
     {
-        BOOST_ASSERT(m_turn_duration_penalties.size() > id);
-        return m_turn_duration_penalties[id];
+        BOOST_ASSERT(m_turn_duration_penalties.size() > edge_based_edge_id);
+        return m_turn_duration_penalties[edge_based_edge_id];
     }
 
     osrm::guidance::TurnInstruction
-    GetTurnInstructionForEdgeID(const EdgeID id) const override final
+    GetTurnInstructionForEdgeID(const EdgeID edge_based_edge_id) const override final
     {
-        return turn_data.GetTurnInstruction(id);
+        CHECK_DATASET_DISABLED(turn_data, DATASET_TURN_DATA);
+        return turn_data->GetTurnInstruction(edge_based_edge_id);
     }
 
     std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,
@@ -314,127 +367,41 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
-                               const float max_distance,
+                               const double max_distance,
+                               const std::optional<Bearing> bearing,
                                const Approach approach,
                                const bool use_all_edges) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
-        return m_geospatial_query->NearestPhantomNodesInRange(
-            input_coordinate, max_distance, approach, use_all_edges);
-    }
-
-    std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
-                               const float max_distance,
-                               const int bearing,
-                               const int bearing_range,
-                               const Approach approach,
-                               const bool use_all_edges) const override final
-    {
-        BOOST_ASSERT(m_geospatial_query.get());
-
-        return m_geospatial_query->NearestPhantomNodesInRange(
-            input_coordinate, max_distance, bearing, bearing_range, approach, use_all_edges);
+        return m_geospatial_query->NearestPhantomNodes(
+            input_coordinate, approach, max_distance, bearing, use_all_edges);
     }
 
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results,
-                        const Approach approach) const override final
-    {
-        BOOST_ASSERT(m_geospatial_query.get());
-
-        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, approach);
-    }
-
-    std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results,
-                        const double max_distance,
+                        const size_t max_results,
+                        const std::optional<double> max_distance,
+                        const std::optional<Bearing> bearing,
                         const Approach approach) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(
-            input_coordinate, max_results, max_distance, approach);
+            input_coordinate, approach, max_results, max_distance, bearing, std::nullopt);
     }
 
-    std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results,
-                        const int bearing,
-                        const int bearing_range,
-                        const Approach approach) const override final
+    PhantomCandidateAlternatives
+    NearestCandidatesWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                     const std::optional<double> max_distance,
+                                                     const std::optional<Bearing> bearing,
+                                                     const Approach approach,
+                                                     const bool use_all_edges) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
-        return m_geospatial_query->NearestPhantomNodes(
-            input_coordinate, max_results, bearing, bearing_range, approach);
-    }
-
-    std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results,
-                        const double max_distance,
-                        const int bearing,
-                        const int bearing_range,
-                        const Approach approach) const override final
-    {
-        BOOST_ASSERT(m_geospatial_query.get());
-
-        return m_geospatial_query->NearestPhantomNodes(
-            input_coordinate, max_results, max_distance, bearing, bearing_range, approach);
-    }
-
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const Approach approach,
-                                                      const bool use_all_edges) const override final
-    {
-        BOOST_ASSERT(m_geospatial_query.get());
-
-        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
-            input_coordinate, approach, use_all_edges);
-    }
-
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const double max_distance,
-                                                      const Approach approach,
-                                                      const bool use_all_edges) const override final
-    {
-        BOOST_ASSERT(m_geospatial_query.get());
-
-        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
-            input_coordinate, max_distance, approach, use_all_edges);
-    }
-
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const double max_distance,
-                                                      const int bearing,
-                                                      const int bearing_range,
-                                                      const Approach approach,
-                                                      const bool use_all_edges) const override final
-    {
-        BOOST_ASSERT(m_geospatial_query.get());
-
-        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
-            input_coordinate, max_distance, bearing, bearing_range, approach, use_all_edges);
-    }
-
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const int bearing,
-                                                      const int bearing_range,
-                                                      const Approach approach,
-                                                      const bool use_all_edges) const override final
-    {
-        BOOST_ASSERT(m_geospatial_query.get());
-
-        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
-            input_coordinate, bearing, bearing_range, approach, use_all_edges);
+        return m_geospatial_query->NearestCandidatesWithAlternativeFromBigComponent(
+            input_coordinate, approach, max_distance, bearing, use_all_edges);
     }
 
     std::uint32_t GetCheckSum() const override final { return m_check_sum; }
@@ -444,73 +411,80 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return std::string(m_data_timestamp.begin(), m_data_timestamp.end());
     }
 
-    GeometryID GetGeometryIndex(const NodeID id) const override final
+    GeometryID GetGeometryIndex(const NodeID edge_based_node_id) const override final
     {
-        return edge_based_node_data.GetGeometryID(id);
+        return edge_based_node_data.GetGeometryID(edge_based_node_id);
     }
 
-    ComponentID GetComponentID(const NodeID id) const override final
+    ComponentID GetComponentID(const NodeID edge_based_node_id) const override final
     {
-        return edge_based_node_data.GetComponentID(id);
+        return edge_based_node_data.GetComponentID(edge_based_node_id);
     }
 
-    extractor::TravelMode GetTravelMode(const NodeID id) const override final
+    extractor::TravelMode GetTravelMode(const NodeID edge_based_node_id) const override final
     {
-        return edge_based_node_data.GetTravelMode(id);
+        return edge_based_node_data.GetTravelMode(edge_based_node_id);
     }
 
-    extractor::ClassData GetClassData(const NodeID id) const override final
+    extractor::ClassData GetClassData(const NodeID edge_based_node_id) const override final
     {
-        return edge_based_node_data.GetClassData(id);
+        return edge_based_node_data.GetClassData(edge_based_node_id);
     }
 
-    bool ExcludeNode(const NodeID id) const override final
+    bool ExcludeNode(const NodeID edge_based_node_id) const override final
     {
-        return (edge_based_node_data.GetClassData(id) & exclude_mask) > 0;
+        return (edge_based_node_data.GetClassData(edge_based_node_id) & exclude_mask) > 0;
     }
 
     std::vector<std::string> GetClasses(const extractor::ClassData class_data) const override final
     {
         auto indexes = extractor::getClassIndexes(class_data);
         std::vector<std::string> classes(indexes.size());
-        std::transform(indexes.begin(), indexes.end(), classes.begin(), [this](const auto index) {
-            return m_profile_properties->GetClassName(index);
-        });
+        std::transform(indexes.begin(),
+                       indexes.end(),
+                       classes.begin(),
+                       [this](const auto index)
+                       { return m_profile_properties->GetClassName(index); });
 
         return classes;
     }
 
-    NameID GetNameIndex(const NodeID id) const override final
+    NameID GetNameIndex(const NodeID edge_based_node_id) const override final
     {
-        return edge_based_node_data.GetNameID(id);
+        return edge_based_node_data.GetNameID(edge_based_node_id);
     }
 
-    StringView GetNameForID(const NameID id) const override final
+    std::string_view GetNameForID(const NameID id) const override final
     {
-        return m_name_table.GetNameForID(id);
+        CHECK_DATASET_DISABLED(m_name_table, DATASET_NAME_DATA);
+        return m_name_table->GetNameForID(id);
     }
 
-    StringView GetRefForID(const NameID id) const override final
+    std::string_view GetRefForID(const NameID id) const override final
     {
-        return m_name_table.GetRefForID(id);
+        CHECK_DATASET_DISABLED(m_name_table, DATASET_NAME_DATA);
+        return m_name_table->GetRefForID(id);
     }
 
-    StringView GetPronunciationForID(const NameID id) const override final
+    std::string_view GetPronunciationForID(const NameID id) const override final
     {
-        return m_name_table.GetPronunciationForID(id);
+        CHECK_DATASET_DISABLED(m_name_table, DATASET_NAME_DATA);
+        return m_name_table->GetPronunciationForID(id);
     }
 
-    StringView GetDestinationsForID(const NameID id) const override final
+    std::string_view GetDestinationsForID(const NameID id) const override final
     {
-        return m_name_table.GetDestinationsForID(id);
+        CHECK_DATASET_DISABLED(m_name_table, DATASET_NAME_DATA);
+        return m_name_table->GetDestinationsForID(id);
     }
 
-    StringView GetExitsForID(const NameID id) const override final
+    std::string_view GetExitsForID(const NameID id) const override final
     {
-        return m_name_table.GetExitsForID(id);
+        CHECK_DATASET_DISABLED(m_name_table, DATASET_NAME_DATA);
+        return m_name_table->GetExitsForID(id);
     }
 
-    StringView GetDatasourceName(const DatasourceID id) const override final
+    std::string_view GetDatasourceName(const DatasourceID id) const override final
     {
         return m_datasources->GetSourceName(id);
     }
@@ -537,55 +511,74 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return m_profile_properties->GetWeightMultiplier();
     }
 
-    util::guidance::BearingClass GetBearingClass(const NodeID node) const override final
+    util::guidance::BearingClass
+    GetBearingClass(const NodeID node_based_node_id) const override final
     {
-        return intersection_bearings_view.GetBearingClass(node);
+        CHECK_DATASET_DISABLED(intersection_bearings_view, DATASET_INTERSECTION_BEARINGS);
+        return intersection_bearings_view->GetBearingClass(node_based_node_id);
     }
 
-    guidance::TurnBearing PreTurnBearing(const EdgeID eid) const override final
+    guidance::TurnBearing PreTurnBearing(const EdgeID edge_based_edge_id) const override final
     {
-        return turn_data.GetPreTurnBearing(eid);
+        CHECK_DATASET_DISABLED(turn_data, DATASET_TURN_DATA);
+        return turn_data->GetPreTurnBearing(edge_based_edge_id);
     }
-    guidance::TurnBearing PostTurnBearing(const EdgeID eid) const override final
+    guidance::TurnBearing PostTurnBearing(const EdgeID edge_based_edge_id) const override final
     {
-        return turn_data.GetPostTurnBearing(eid);
-    }
-
-    util::guidance::EntryClass GetEntryClass(const EdgeID turn_id) const override final
-    {
-        auto entry_class_id = turn_data.GetEntryClassID(turn_id);
-        return m_entry_class_table.at(entry_class_id);
+        CHECK_DATASET_DISABLED(turn_data, DATASET_TURN_DATA);
+        return turn_data->GetPostTurnBearing(edge_based_edge_id);
     }
 
-    bool HasLaneData(const EdgeID id) const override final { return turn_data.HasLaneData(id); }
-
-    util::guidance::LaneTupleIdPair GetLaneData(const EdgeID id) const override final
+    util::guidance::EntryClass GetEntryClass(const EdgeID edge_based_edge_id) const override final
     {
-        BOOST_ASSERT(HasLaneData(id));
-        return m_lane_tupel_id_pairs.at(turn_data.GetLaneDataID(id));
+        CHECK_DATASET_DISABLED(m_entry_class_table, DATASET_ENTRY_CLASS);
+        CHECK_DATASET_DISABLED(turn_data, DATASET_TURN_DATA);
+
+        auto entry_class_id = turn_data->GetEntryClassID(edge_based_edge_id);
+        return m_entry_class_table->at(entry_class_id);
+    }
+
+    bool HasLaneData(const EdgeID edge_based_edge_id) const override final
+    {
+        CHECK_DATASET_DISABLED(turn_data, DATASET_TURN_DATA);
+        return turn_data->HasLaneData(edge_based_edge_id);
+    }
+
+    util::guidance::LaneTupleIdPair
+    GetLaneData(const EdgeID edge_based_edge_id) const override final
+    {
+        CHECK_DATASET_DISABLED(turn_data, DATASET_TURN_DATA);
+        CHECK_DATASET_DISABLED(m_lane_tuple_id_pairs, DATASET_TURN_LANE_DATA);
+
+        BOOST_ASSERT(HasLaneData(edge_based_edge_id));
+        return m_lane_tuple_id_pairs->at(turn_data->GetLaneDataID(edge_based_edge_id));
     }
 
     extractor::TurnLaneDescription
     GetTurnDescription(const LaneDescriptionID lane_description_id) const override final
     {
+        CHECK_DATASET_DISABLED(m_lane_description_offsets, DATASET_TURN_LANE_DATA);
+        CHECK_DATASET_DISABLED(m_lane_description_masks, DATASET_TURN_LANE_DATA);
+
         if (lane_description_id == INVALID_LANE_DESCRIPTIONID)
             return {};
         else
             return extractor::TurnLaneDescription(
-                m_lane_description_masks.begin() + m_lane_description_offsets[lane_description_id],
-                m_lane_description_masks.begin() +
-                    m_lane_description_offsets[lane_description_id + 1]);
+                m_lane_description_masks->begin() +
+                    m_lane_description_offsets->at(lane_description_id),
+                m_lane_description_masks->begin() +
+                    m_lane_description_offsets->at(lane_description_id + 1));
     }
 
-    bool IsLeftHandDriving(const NodeID id) const override final
+    bool IsLeftHandDriving(const NodeID edge_based_node_id) const override final
     {
         // TODO: can be moved to a data block indexed by GeometryID
-        return edge_based_node_data.IsLeftHandDriving(id);
+        return edge_based_node_data.IsLeftHandDriving(edge_based_node_id);
     }
 
-    bool IsSegregated(const NodeID id) const override final
+    bool IsSegregated(const NodeID edge_based_node_id) const override final
     {
-        return edge_based_node_data.IsSegregated(id);
+        return edge_based_node_data.IsSegregated(edge_based_node_id);
     }
 
     std::vector<extractor::ManeuverOverride>
@@ -609,15 +602,21 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         auto found_range = std::equal_range(
             m_maneuver_overrides.begin(), m_maneuver_overrides.end(), edge_based_node_id, Comp{});
 
-        std::for_each(found_range.first, found_range.second, [&](const auto &override) {
-            std::vector<NodeID> sequence(
-                m_maneuver_override_node_sequences.begin() + override.node_sequence_offset_begin,
-                m_maneuver_override_node_sequences.begin() + override.node_sequence_offset_end);
-            results.push_back(extractor::ManeuverOverride{std::move(sequence),
-                                                          override.instruction_node,
-                                                          override.override_type,
-                                                          override.direction});
-        });
+        results.reserve(std::distance(found_range.first, found_range.second));
+
+        std::for_each(found_range.first,
+                      found_range.second,
+                      [&](const auto &override)
+                      {
+                          std::vector<NodeID> sequence(m_maneuver_override_node_sequences.begin() +
+                                                           override.node_sequence_offset_begin,
+                                                       m_maneuver_override_node_sequences.begin() +
+                                                           override.node_sequence_offset_end);
+                          results.push_back(extractor::ManeuverOverride{std::move(sequence),
+                                                                        override.instruction_node,
+                                                                        override.override_type,
+                                                                        override.direction});
+                      });
         return results;
     }
 };
@@ -630,7 +629,7 @@ class ContiguousInternalMemoryDataFacade<CH>
       public ContiguousInternalMemoryAlgorithmDataFacade<CH>
 {
   public:
-    ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator,
+    ContiguousInternalMemoryDataFacade(const std::shared_ptr<ContiguousBlockAllocator> &allocator,
                                        const std::string &metric_name,
                                        const std::size_t exclude_index)
         : ContiguousInternalMemoryDataFacadeBase(allocator, metric_name, exclude_index),
@@ -691,57 +690,62 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
 
     unsigned GetNumberOfEdges() const override final { return query_graph.GetNumberOfEdges(); }
 
-    unsigned GetOutDegree(const NodeID n) const override final
+    unsigned GetOutDegree(const NodeID edge_based_node_id) const override final
     {
-        return query_graph.GetOutDegree(n);
+        return query_graph.GetOutDegree(edge_based_node_id);
     }
 
-    EdgeRange GetAdjacentEdgeRange(const NodeID node) const override final
+    EdgeRange GetAdjacentEdgeRange(const NodeID edge_based_node_id) const override final
     {
-        return query_graph.GetAdjacentEdgeRange(node);
+        return query_graph.GetAdjacentEdgeRange(edge_based_node_id);
     }
 
-    EdgeWeight GetNodeWeight(const NodeID node) const override final
+    EdgeWeight GetNodeWeight(const NodeID edge_based_node_id) const override final
     {
-        return query_graph.GetNodeWeight(node);
+        return query_graph.GetNodeWeight(edge_based_node_id);
     }
 
-    EdgeDuration GetNodeDuration(const NodeID node) const override final
+    EdgeDuration GetNodeDuration(const NodeID edge_based_node_id) const override final
     {
-        return query_graph.GetNodeDuration(node);
+        return query_graph.GetNodeDuration(edge_based_node_id);
     }
 
-    EdgeDistance GetNodeDistance(const NodeID node) const override final
+    EdgeDistance GetNodeDistance(const NodeID edge_based_node_id) const override final
     {
-        return query_graph.GetNodeDistance(node);
+        return query_graph.GetNodeDistance(edge_based_node_id);
     }
 
-    bool IsForwardEdge(const NodeID node) const override final
+    bool IsForwardEdge(const NodeID edge_based_node_id) const override final
     {
-        return query_graph.IsForwardEdge(node);
+        return query_graph.IsForwardEdge(edge_based_node_id);
     }
 
-    bool IsBackwardEdge(const NodeID node) const override final
+    bool IsBackwardEdge(const NodeID edge_based_node_id) const override final
     {
-        return query_graph.IsBackwardEdge(node);
+        return query_graph.IsBackwardEdge(edge_based_node_id);
     }
 
-    NodeID GetTarget(const EdgeID e) const override final { return query_graph.GetTarget(e); }
-
-    const EdgeData &GetEdgeData(const EdgeID e) const override final
+    NodeID GetTarget(const EdgeID edge_based_edge_id) const override final
     {
-        return query_graph.GetEdgeData(e);
+        return query_graph.GetTarget(edge_based_edge_id);
     }
 
-    EdgeRange GetBorderEdgeRange(const LevelID level, const NodeID node) const override final
+    const EdgeData &GetEdgeData(const EdgeID edge_based_edge_id) const override final
     {
-        return query_graph.GetBorderEdgeRange(level, node);
+        return query_graph.GetEdgeData(edge_based_edge_id);
+    }
+
+    EdgeRange GetBorderEdgeRange(const LevelID level,
+                                 const NodeID edge_based_node_id) const override final
+    {
+        return query_graph.GetBorderEdgeRange(level, edge_based_node_id);
     }
 
     // searches for a specific edge
-    EdgeID FindEdge(const NodeID from, const NodeID to) const override final
+    EdgeID FindEdge(const NodeID edge_based_node_from,
+                    const NodeID edge_based_node_to) const override final
     {
-        return query_graph.FindEdge(from, to);
+        return query_graph.FindEdge(edge_based_node_from, edge_based_node_to);
     }
 };
 
@@ -752,7 +756,7 @@ class ContiguousInternalMemoryDataFacade<MLD> final
 {
   private:
   public:
-    ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator,
+    ContiguousInternalMemoryDataFacade(const std::shared_ptr<ContiguousBlockAllocator> &allocator,
                                        const std::string &metric_name,
                                        const std::size_t exclude_index)
         : ContiguousInternalMemoryDataFacadeBase(allocator, metric_name, exclude_index),
@@ -760,8 +764,6 @@ class ContiguousInternalMemoryDataFacade<MLD> final
     {
     }
 };
-} // namespace datafacade
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::datafacade
 
 #endif // CONTIGUOUS_INTERNALMEM_DATAFACADE_HPP

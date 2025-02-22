@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -136,6 +136,15 @@ namespace osmium {
             bool is_true(const std::string& key) const noexcept {
                 const std::string value{get(key)};
                 return (value == "true" || value == "yes");
+            }
+
+            /**
+             * Is this option set to a false value ("false" or "no")?
+             * Will return false if the value is unset.
+             */
+            bool is_false(const std::string& key) const noexcept {
+                const std::string value{get(key)};
+                return (value == "false" || value == "no");
             }
 
             /**

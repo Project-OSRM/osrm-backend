@@ -7,9 +7,7 @@
 #include "contractor/graph_contractor_adaptors.hpp"
 #include "contractor/query_graph.hpp"
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 using GraphAndFilter = std::tuple<QueryGraph, std::vector<std::vector<bool>>>;
@@ -18,12 +16,12 @@ inline auto contractFullGraph(ContractorGraph contractor_graph,
                               std::vector<EdgeWeight> node_weights)
 {
     auto num_nodes = contractor_graph.GetNumberOfNodes();
-    contractGraph(contractor_graph, node_weights);
+    contractGraph(contractor_graph, std::move(node_weights));
 
     auto edges = toEdges<QueryEdge>(std::move(contractor_graph));
     std::vector<bool> edge_filter(edges.size(), true);
 
-    return GraphAndFilter{QueryGraph{num_nodes, std::move(edges)}, {std::move(edge_filter)}};
+    return GraphAndFilter{QueryGraph{num_nodes, edges}, {std::move(edge_filter)}};
 }
 
 inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
@@ -56,17 +54,19 @@ inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
         // By not contracting all contractable nodes we avoid creating
         // a very dense core. This increases the overall graph sizes a little bit
         // but increases the final CH quality and contraction speed.
-        constexpr float BASE_CORE = 0.9;
+        constexpr float BASE_CORE = 0.9f;
         is_shared_core =
             contractGraph(contractor_graph, std::move(always_allowed), node_weights, BASE_CORE);
 
         // Add all non-core edges to container
         {
             auto non_core_edges = toEdges<QueryEdge>(contractor_graph);
-            auto new_end =
-                std::remove_if(non_core_edges.begin(), non_core_edges.end(), [&](const auto &edge) {
-                    return is_shared_core[edge.source] && is_shared_core[edge.target];
-                });
+            auto new_end = std::remove_if(non_core_edges.begin(),
+                                          non_core_edges.end(),
+                                          [&](const auto &edge) {
+                                              return is_shared_core[edge.source] &&
+                                                     is_shared_core[edge.target];
+                                          });
             non_core_edges.resize(new_end - non_core_edges.begin());
             edge_container.Insert(std::move(non_core_edges));
 
@@ -77,8 +77,8 @@ inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
         }
 
         // Extract core graph for further contraction
-        shared_core_graph = contractor_graph.Filter(
-            [&is_shared_core](const NodeID node) { return is_shared_core[node]; });
+        shared_core_graph = contractor_graph.Filter([&is_shared_core](const NodeID node)
+                                                    { return is_shared_core[node]; });
     }
 
     for (const auto &filter : filters)
@@ -91,10 +91,9 @@ inline auto contractExcludableGraph(ContractorGraph contractor_graph_,
         edge_container.Merge(toEdges<QueryEdge>(std::move(filtered_core_graph)));
     }
 
-    return GraphAndFilter{QueryGraph{num_nodes, std::move(edge_container.edges)},
+    return GraphAndFilter{QueryGraph{num_nodes, edge_container.edges},
                           edge_container.MakeEdgeFilters()};
 }
-} // namespace contractor
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif

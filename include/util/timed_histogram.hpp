@@ -3,20 +3,20 @@
 
 #include "util/integer_range.hpp"
 
+#include <boost/assert.hpp>
+
 #include <algorithm>
 #include <atomic>
 #include <mutex>
 #include <sstream>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 namespace detail
 {
 extern std::atomic_uint operation;
-}
+} // namespace detail
 
 /**
  * Captures a histogram with a bin size of `IndexBinSize` every `TimeBinSize` count operations.
@@ -53,16 +53,20 @@ template <std::size_t TimeBinSize = 1000, std::size_t IndexBinSize = 1000> class
     {
         std::stringstream out;
 
-        const auto print_bins = [&out](auto frame_index, auto begin, auto end) {
+        const auto print_bins = [&out](auto frame_index, auto begin, auto end)
+        {
             auto bin_index = 0;
-            std::for_each(begin, end, [&](const auto count) {
-                if (count > 0)
-                {
-                    out << (frame_index * TimeBinSize) << "," << (bin_index * IndexBinSize) << ","
-                        << count << std::endl;
-                }
-                bin_index++;
-            });
+            std::for_each(begin,
+                          end,
+                          [&](const auto count)
+                          {
+                              if (count > 0)
+                              {
+                                  out << (frame_index * TimeBinSize) << ","
+                                      << (bin_index * IndexBinSize) << "," << count << std::endl;
+                              }
+                              bin_index++;
+                          });
         };
 
         if (frame_offsets.size() == 0)
@@ -88,7 +92,6 @@ template <std::size_t TimeBinSize = 1000, std::size_t IndexBinSize = 1000> class
     std::vector<std::uint32_t> frame_offsets;
     std::vector<std::uint32_t> frame_counters;
 };
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

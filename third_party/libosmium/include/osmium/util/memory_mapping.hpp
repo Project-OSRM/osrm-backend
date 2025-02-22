@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <osmium/util/compatibility.hpp>
 #include <osmium/util/file.hpp>
 
 #include <cassert>
@@ -157,7 +156,7 @@ namespace osmium {
 #ifdef _WIN32
                 return 0;
 #else
-                struct statvfs stat;
+                struct statvfs stat{};
                 const int result = ::fstatvfs(fd, &stat);
                 if (result != 0) {
                     return 0;
@@ -166,7 +165,7 @@ namespace osmium {
 #endif
             }
 
-            int resize_fd(int fd) {
+            int resize_fd(int fd) const {
                 // Anonymous mapping doesn't need resizing.
                 if (fd == -1) {
                     return -1;
@@ -204,15 +203,6 @@ namespace osmium {
              * @throws std::system_error if the mapping fails
              */
             MemoryMapping(std::size_t size, mapping_mode mode, int fd = -1, off_t offset = 0);
-
-            /**
-             * @deprecated
-             * For backwards compatibility only. Use the constructor taking
-             * a mapping_mode as second argument instead.
-             */
-            OSMIUM_DEPRECATED MemoryMapping(std::size_t size, bool writable = true, int fd = -1, off_t offset = 0) : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
-                MemoryMapping(size, writable ? mapping_mode::write_shared : mapping_mode::readonly, fd, offset)  {
-            }
 
             /// You can not copy construct a MemoryMapping.
             MemoryMapping(const MemoryMapping&) = delete;
@@ -375,18 +365,6 @@ namespace osmium {
              */
             TypedMemoryMapping(std::size_t size, MemoryMapping::mapping_mode mode, int fd, off_t offset = 0) :
                 m_mapping(sizeof(T) * size, mode, fd, sizeof(T) * offset) {
-            }
-
-            /**
-             * @deprecated
-             * For backwards compatibility only. Use the constructor taking
-             * a mapping_mode as second argument instead.
-             */
-            OSMIUM_DEPRECATED TypedMemoryMapping(std::size_t size, bool writable, int fd, off_t offset = 0) :
-                m_mapping(sizeof(T) * size,
-                          writable ? MemoryMapping::mapping_mode::write_shared : MemoryMapping::mapping_mode::readonly,
-                          fd,
-                          sizeof(T) * offset) {
             }
 
             /// You can not copy construct a TypedMemoryMapping.
@@ -558,11 +536,11 @@ namespace osmium {
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 
 inline bool osmium::util::MemoryMapping::is_valid() const noexcept {
-    return m_addr != MAP_FAILED; // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
+    return m_addr != MAP_FAILED; // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,performance-no-int-to-ptr)
 }
 
 inline void osmium::util::MemoryMapping::make_invalid() noexcept {
-    m_addr = MAP_FAILED; // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
+    m_addr = MAP_FAILED; // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,performance-no-int-to-ptr)
 }
 
 #pragma GCC diagnostic pop
@@ -781,7 +759,12 @@ inline osmium::util::MemoryMapping::MemoryMapping(MemoryMapping&& other) noexcep
 }
 
 inline osmium::util::MemoryMapping& osmium::util::MemoryMapping::operator=(osmium::util::MemoryMapping&& other) noexcept {
-    unmap();
+    try {
+        unmap();
+    } catch (const std::system_error&) {
+        // Ignore unmap error. It should never happen anyway and we can't do
+        // anything about it here.
+    }
     m_size         = other.m_size;
     m_offset       = other.m_offset;
     m_fd           = other.m_fd;

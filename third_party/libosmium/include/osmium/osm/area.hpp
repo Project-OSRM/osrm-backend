@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -41,7 +41,6 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/node_ref_list.hpp>
 #include <osmium/osm/object.hpp>
 #include <osmium/osm/types.hpp>
-#include <osmium/util/compatibility.hpp>
 
 #include <cassert>
 #include <cstdlib>
@@ -209,32 +208,6 @@ namespace osmium {
         }
 
         /**
-         * @deprecated Use inner_rings() instead.
-         *
-         * Get iterator for iterating over all inner rings in a specified outer
-         * ring.
-         *
-         * @param it Iterator specifying outer ring.
-         * @returns Iterator to first inner ring in specified outer ring.
-         */
-        OSMIUM_DEPRECATED osmium::memory::ItemIterator<const osmium::InnerRing> inner_ring_cbegin(const osmium::memory::ItemIterator<const osmium::OuterRing>& it) const {
-            return it.cast<const osmium::InnerRing>();
-        }
-
-        /**
-         * @deprecated Use inner_rings() instead.
-         *
-         * Get iterator for iterating over all inner rings in a specified outer
-         * ring.
-         *
-         * @param it Iterator specifying outer ring.
-         * @returns Iterator one past last inner ring in specified outer ring.
-         */
-        OSMIUM_DEPRECATED osmium::memory::ItemIterator<const osmium::InnerRing> inner_ring_cend(const osmium::memory::ItemIterator<const osmium::OuterRing>& it) const {
-            return std::next(it).cast<const osmium::InnerRing>();
-        }
-
-        /**
          * Return an iterator range for all outer rings.
          * You can use the usual begin() and end() functions to iterate over
          * all outer rings.
@@ -250,7 +223,7 @@ namespace osmium {
          * all inner rings.
          */
         osmium::memory::ItemIteratorRange<const osmium::InnerRing> inner_rings(const osmium::OuterRing& outer) const {
-            osmium::memory::ItemIteratorRange<const osmium::OuterRing> outer_range{outer.data(), next()};
+            const osmium::memory::ItemIteratorRange<const osmium::OuterRing> outer_range{outer.data(), next()};
             return osmium::memory::ItemIteratorRange<const osmium::InnerRing>{outer_range.cbegin().data(), std::next(outer_range.cbegin()).data()};
         }
 

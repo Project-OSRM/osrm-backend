@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -124,11 +124,11 @@ namespace osmium {
              * Returns an empty, invalid box if there is none.
              */
             osmium::Box joined_boxes() const {
-                osmium::Box box;
+                osmium::Box result_box;
                 for (const auto& b : m_boxes) {
-                    box.extend(b);
+                    result_box.extend(b);
                 }
-                return box;
+                return result_box;
             }
 
             /**

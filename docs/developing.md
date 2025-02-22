@@ -32,9 +32,9 @@ For outputting data into our file (debug.geojson), we simply need to call the ma
 ### Possible Scopeguard Location
 Think of the scopeguard as you would do of any reference. If you wan't to access to logging during a call, the guard object must be alive and valid.
 
-As an example: a good location to create the a scopeguard to log decisions in the edge-based-graph-factory would be right before we run it ([here](https://github.com/Project-OSRM/osrm-backend/blob/a933b5d94943bf3edaf42c84a614a99650d23cba/src/extractor/extractor.cpp#L497)). If you put `util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString> geojson_guard( "debug.geojson", node_coordinate_vector);` at that location, you can then print `util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString>::Write(list_of_node_ids);` anywhere within the `edge-based-graph-factory`.
+As an example: a good location to create a scopeguard to log decisions in the edge-based-graph-factory would be right before we run it ([here](https://github.com/Project-OSRM/osrm-backend/blob/a933b5d94943bf3edaf42c84a614a99650d23cba/src/extractor/extractor.cpp#L497)). If you put `util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString> geojson_guard( "debug.geojson", node_coordinate_vector);` at that location, you can then print `util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString>::Write(list_of_node_ids);` anywhere within the `edge-based-graph-factory`.
 
-This location would enable call for all guidance related pre-processing which is called in the edge-based-graph-factory.
+This location would enable calls for all guidance related pre-processing which is called in the edge-based-graph-factory.
 Logging any turn-handler decisions, for example, would now be possible.
 
 ## Limitations

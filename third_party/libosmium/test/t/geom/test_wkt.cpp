@@ -16,7 +16,7 @@ TEST_CASE("WKT geometry for point") {
 
 TEST_CASE("WKT geometry for empty point") {
     const osmium::geom::WKTFactory<> factory;
-    REQUIRE_THROWS_AS(factory.create_point(osmium::Location()), const osmium::invalid_location&);
+    REQUIRE_THROWS_AS(factory.create_point(osmium::Location()), osmium::invalid_location);
 }
 
 TEST_CASE("WKT geometry for point in ekwt") {
@@ -89,17 +89,17 @@ TEST_CASE("WKT geometry factory") {
     SECTION("empty linestring") {
         const auto& wnl = create_test_wnl_empty(buffer);
 
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl), const osmium::geometry_error&);
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), const osmium::geometry_error&);
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all), const osmium::geometry_error&);
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward), const osmium::geometry_error&);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::geometry_error);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), osmium::geometry_error);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all), osmium::geometry_error);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward), osmium::geometry_error);
     }
 
     SECTION("linestring with two same locations") {
         const auto& wnl = create_test_wnl_same_location(buffer);
 
         SECTION("unique forwards") {
-            REQUIRE_THROWS_AS(factory.create_linestring(wnl), const osmium::geometry_error&);
+            REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::geometry_error);
 
             try {
                 factory.create_linestring(wnl);
@@ -110,7 +110,7 @@ TEST_CASE("WKT geometry factory") {
         }
 
         SECTION("unique backwards") {
-            REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), const osmium::geometry_error&);
+            REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), osmium::geometry_error);
         }
 
         SECTION("all forwards") {
@@ -127,7 +127,7 @@ TEST_CASE("WKT geometry factory") {
     SECTION("linestring with undefined location") {
         const auto& wnl = create_test_wnl_undefined_location(buffer);
 
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl), const osmium::invalid_location&);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::invalid_location);
     }
 
     SECTION("area with one outer and no inner rings") {

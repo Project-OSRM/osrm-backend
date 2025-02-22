@@ -25,7 +25,6 @@
 */
 
 #include <cstdio>   // for std::printf
-#include <cstdlib>  // for std::exit
 #include <iostream> // for std::cerr
 #include <string>   // for std::string
 
@@ -75,15 +74,17 @@ class AmenityHandler : public osmium::handler::Handler {
             c.y += nr.lat();
         }
 
-        c.x /= nr_list.size();
-        c.y /= nr_list.size();
+        c.x /= static_cast<double>(nr_list.size());
+        c.y /= static_cast<double>(nr_list.size());
 
         return c;
     }
 
 public:
 
-    void node(const osmium::Node& node) {
+    // The callback functions can be either static or not depending on whether
+    // you need to access any member variables of the handler.
+    static void node(const osmium::Node& node) {
         // Getting a tag value can be expensive, because a list of tags has
         // to be gone through and each tag has to be checked. So we store the
         // result and reuse it.
@@ -93,7 +94,9 @@ public:
         }
     }
 
-    void area(const osmium::Area& area) {
+    // The callback functions can be either static or not depending on whether
+    // you need to access any member variables of the handler.
+    static void area(const osmium::Area& area) {
         const char* amenity = area.tags()["amenity"];
         if (amenity) {
             // Use the center of the first outer ring. Because we set
@@ -110,7 +113,7 @@ public:
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " OSMFILE\n";
-        std::exit(1);
+        return 1;
     }
 
     try {
@@ -171,7 +174,7 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
         std::cerr << e.what() << '\n';
-        std::exit(1);
+        return 1;
     }
 }
 

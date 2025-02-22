@@ -10,25 +10,19 @@
 #include <algorithm>
 #include <cstdlib>
 #include <iterator>
-#include <limits>
 #include <numeric>
-#include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace trip
+namespace osrm::engine::trip
 {
 
 // computes the distance of a given permutation
-inline EdgeWeight ReturnDistance(const util::DistTableWrapper<EdgeWeight> &dist_table,
-                                 const std::vector<NodeID> &location_order,
-                                 const EdgeWeight min_route_dist,
-                                 const std::size_t number_of_locations)
+inline EdgeDuration ReturnDistance(const util::DistTableWrapper<EdgeDuration> &dist_table,
+                                   const std::vector<NodeID> &location_order,
+                                   const EdgeDuration min_route_dist,
+                                   const std::size_t number_of_locations)
 {
-    EdgeWeight route_dist = 0;
+    EdgeDuration route_dist = {0};
     std::size_t current_index = 0;
     while (current_index < location_order.size() && (route_dist < min_route_dist))
     {
@@ -36,12 +30,13 @@ inline EdgeWeight ReturnDistance(const util::DistTableWrapper<EdgeWeight> &dist_
         std::size_t next_index = (current_index + 1) % number_of_locations;
         auto edge_weight = dist_table(location_order[current_index], location_order[next_index]);
 
-        // If the edge_weight is very large (INVALID_EDGE_WEIGHT) then the algorithm will not choose
-        // this edge in final minimal path. So instead of computing all the permutations after this
-        // large edge, discard this edge right here and don't consider the path after this edge.
-        if (edge_weight == INVALID_EDGE_WEIGHT)
+        // If the edge_weight is very large (INVALID_EDGE_DURATION) then the algorithm will not
+        // choose this edge in final minimal path. So instead of computing all the permutations
+        // after this large edge, discard this edge right here and don't consider the path after
+        // this edge.
+        if (edge_weight == INVALID_EDGE_DURATION)
         {
-            return INVALID_EDGE_WEIGHT;
+            return INVALID_EDGE_DURATION;
         }
         else
         {
@@ -50,7 +45,7 @@ inline EdgeWeight ReturnDistance(const util::DistTableWrapper<EdgeWeight> &dist_
 
         // This boost assert should not be reached if TFSE table
         BOOST_ASSERT_MSG(dist_table(location_order[current_index], location_order[next_index]) !=
-                             INVALID_EDGE_WEIGHT,
+                             INVALID_EDGE_DURATION,
                          "invalid route found");
         ++current_index;
     }
@@ -60,14 +55,14 @@ inline EdgeWeight ReturnDistance(const util::DistTableWrapper<EdgeWeight> &dist_
 
 // computes the route by computing all permutations and selecting the shortest
 inline std::vector<NodeID> BruteForceTrip(const std::size_t number_of_locations,
-                                          const util::DistTableWrapper<EdgeWeight> &dist_table)
+                                          const util::DistTableWrapper<EdgeDuration> &dist_table)
 {
     // set initial order in which nodes are visited to 0, 1, 2, 3, ...
     std::vector<NodeID> node_order(number_of_locations);
     std::iota(std::begin(node_order), std::end(node_order), 0);
     std::vector<NodeID> route = node_order;
 
-    EdgeWeight min_route_dist = INVALID_EDGE_WEIGHT;
+    EdgeDuration min_route_dist = INVALID_EDGE_DURATION;
 
     // check length of all possible permutation of the component ids
     BOOST_ASSERT_MSG(node_order.size() > 0, "no order permutation given");
@@ -92,8 +87,6 @@ inline std::vector<NodeID> BruteForceTrip(const std::size_t number_of_locations,
     return route;
 }
 
-} // namespace trip
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::trip
 
 #endif // TRIP_BRUTE_FORCE_HPP

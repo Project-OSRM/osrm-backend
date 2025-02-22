@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -42,7 +42,7 @@ namespace osmium {
         namespace detail {
 
             // directly translated from
-            // https://github.com/scrosby/OSM-binary/blob/master/src/fileformat.proto
+            // https://github.com/openstreetmap/OSM-binary/blob/master/src/fileformat.proto
 
             namespace FileFormat {
 
@@ -50,7 +50,9 @@ namespace osmium {
                     optional_bytes_raw       = 1,
                     optional_int32_raw_size  = 2,
                     optional_bytes_zlib_data = 3,
-                    optional_bytes_lzma_data = 4
+                    optional_bytes_lzma_data = 4,
+                    optional_bytes_lz4_data  = 6,
+                    optional_bytes_zstd_data = 7
                 };
 
                 enum class BlobHeader : protozero::pbf_tag_type {
@@ -62,7 +64,7 @@ namespace osmium {
             } // namespace FileFormat
 
             // directly translated from
-            // https://github.com/scrosby/OSM-binary/blob/master/src/osmformat.proto
+            // https://github.com/openstreetmap/OSM-binary/blob/master/src/osmformat.proto
 
             namespace OSMFormat {
 

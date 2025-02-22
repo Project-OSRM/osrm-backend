@@ -11,6 +11,8 @@
 
 using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
+constexpr const std::size_t test_buffer_size = 1024UL * 10UL;
+
 TEST_CASE("Object ID comparisons") {
     const osmium::object_id_type a =   0;
     const osmium::object_id_type b =  -1;
@@ -77,9 +79,75 @@ TEST_CASE("Object ID comparisons") {
     REQUIRE_FALSE(osmium::id_order{}(g, g));
 }
 
+TEST_CASE("Object ID comparisons - the other way around") {
+    const osmium::object_id_type a =   0;
+    const osmium::object_id_type b =  -1;
+    const osmium::object_id_type c = -10;
+    const osmium::object_id_type d = -11;
+    const osmium::object_id_type e =   1;
+    const osmium::object_id_type f =  11;
+    const osmium::object_id_type g =  12;
+
+    REQUIRE_FALSE(osmium::id_order{}(a, a));
+    REQUIRE_FALSE(osmium::id_order{}(b, a));
+    REQUIRE_FALSE(osmium::id_order{}(c, a));
+    REQUIRE_FALSE(osmium::id_order{}(d, a));
+    REQUIRE_FALSE(osmium::id_order{}(e, a));
+    REQUIRE_FALSE(osmium::id_order{}(f, a));
+    REQUIRE_FALSE(osmium::id_order{}(g, a));
+
+    REQUIRE(osmium::id_order{}(a, b));
+    REQUIRE_FALSE(osmium::id_order{}(b, b));
+    REQUIRE_FALSE(osmium::id_order{}(c, b));
+    REQUIRE_FALSE(osmium::id_order{}(d, b));
+    REQUIRE_FALSE(osmium::id_order{}(e, b));
+    REQUIRE_FALSE(osmium::id_order{}(f, b));
+    REQUIRE_FALSE(osmium::id_order{}(g, b));
+
+    REQUIRE(osmium::id_order{}(a, c));
+    REQUIRE(osmium::id_order{}(b, c));
+    REQUIRE_FALSE(osmium::id_order{}(c, c));
+    REQUIRE_FALSE(osmium::id_order{}(d, c));
+    REQUIRE_FALSE(osmium::id_order{}(e, c));
+    REQUIRE_FALSE(osmium::id_order{}(f, c));
+    REQUIRE_FALSE(osmium::id_order{}(g, c));
+
+    REQUIRE(osmium::id_order{}(a, d));
+    REQUIRE(osmium::id_order{}(b, d));
+    REQUIRE(osmium::id_order{}(c, d));
+    REQUIRE_FALSE(osmium::id_order{}(d, d));
+    REQUIRE_FALSE(osmium::id_order{}(e, d));
+    REQUIRE_FALSE(osmium::id_order{}(f, d));
+    REQUIRE_FALSE(osmium::id_order{}(g, d));
+
+    REQUIRE(osmium::id_order{}(a, e));
+    REQUIRE(osmium::id_order{}(b, e));
+    REQUIRE(osmium::id_order{}(c, e));
+    REQUIRE(osmium::id_order{}(d, e));
+    REQUIRE_FALSE(osmium::id_order{}(e, e));
+    REQUIRE_FALSE(osmium::id_order{}(f, e));
+    REQUIRE_FALSE(osmium::id_order{}(g, e));
+
+    REQUIRE(osmium::id_order{}(a, f));
+    REQUIRE(osmium::id_order{}(b, f));
+    REQUIRE(osmium::id_order{}(c, f));
+    REQUIRE(osmium::id_order{}(d, f));
+    REQUIRE(osmium::id_order{}(e, f));
+    REQUIRE_FALSE(osmium::id_order{}(f, f));
+    REQUIRE_FALSE(osmium::id_order{}(g, f));
+
+    REQUIRE(osmium::id_order{}(a, g));
+    REQUIRE(osmium::id_order{}(b, g));
+    REQUIRE(osmium::id_order{}(c, g));
+    REQUIRE(osmium::id_order{}(d, g));
+    REQUIRE(osmium::id_order{}(e, g));
+    REQUIRE(osmium::id_order{}(f, g));
+    REQUIRE_FALSE(osmium::id_order{}(g, g));
+}
+
 TEST_CASE("Node comparisons") {
 
-    osmium::memory::Buffer buffer{10 * 1000};
+    osmium::memory::Buffer buffer{test_buffer_size};
     std::vector<std::reference_wrapper<osmium::Node>> nodes;
 
     SECTION("nodes are ordered by id, version, and timestamp") {
@@ -130,7 +198,7 @@ TEST_CASE("Node comparisons") {
 }
 
 TEST_CASE("Object comparisons: types are ordered nodes, then ways, then relations") {
-    osmium::memory::Buffer buffer{10 * 1000};
+    osmium::memory::Buffer buffer{test_buffer_size};
     std::vector<std::reference_wrapper<osmium::OSMObject>> objects;
 
     objects.emplace_back(buffer.get<osmium::Node>(    osmium::builder::add_node(    buffer, _id(3))));
@@ -141,11 +209,9 @@ TEST_CASE("Object comparisons: types are ordered nodes, then ways, then relation
 }
 
 TEST_CASE("Object comparisons with partially missing timestamp") {
-    osmium::memory::Buffer buffer{10 * 1000};
-    osmium::OSMObject& obj1 = buffer.get<osmium::Node>(    osmium::builder::add_node(    buffer,
-            _id(3), _version(2), _timestamp(("2016-01-01T00:00:00Z"))));
-    osmium::OSMObject& obj2 = buffer.get<osmium::Node>(    osmium::builder::add_node(    buffer,
-            _id(3), _version(2)));
+    osmium::memory::Buffer buffer{test_buffer_size};
+    const osmium::OSMObject& obj1 = buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(3), _version(2), _timestamp(("2016-01-01T00:00:00Z"))));
+    const osmium::OSMObject& obj2 = buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(3), _version(2)));
 
     SECTION("OSMObject::operator<") {
         REQUIRE_FALSE(obj1 < obj2);

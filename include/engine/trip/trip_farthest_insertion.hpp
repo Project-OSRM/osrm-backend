@@ -10,28 +10,23 @@
 #include <algorithm>
 #include <cstdlib>
 #include <limits>
-#include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace trip
+namespace osrm::engine::trip
 {
 
 // given a route and a new location, find the best place of insertion and
 // check the distance of roundtrip when the new location is additionally visited
 using NodeIDIter = std::vector<NodeID>::iterator;
-inline std::pair<EdgeWeight, NodeIDIter>
+inline std::pair<EdgeDuration, NodeIDIter>
 GetShortestRoundTrip(const NodeID new_loc,
-                     const util::DistTableWrapper<EdgeWeight> &dist_table,
+                     const util::DistTableWrapper<EdgeDuration> &dist_table,
                      const std::size_t number_of_locations,
                      std::vector<NodeID> &route)
 {
     (void)number_of_locations; // unused
 
-    auto min_trip_distance = INVALID_EDGE_WEIGHT;
+    auto min_trip_distance = INVALID_EDGE_DURATION;
     NodeIDIter next_insert_point_candidate;
 
     // for all nodes in the current trip find the best insertion resulting in the shortest path
@@ -48,13 +43,15 @@ GetShortestRoundTrip(const NodeID new_loc,
 
         const auto dist_from = dist_table(*from_node, new_loc);
         const auto dist_to = dist_table(new_loc, *to_node);
+        // If the edge_weight is very large (INVALID_EDGE_DURATION) then the algorithm will not
+        // choose this edge in final minimal path. So instead of computing all the permutations
+        // after this large edge, discard this edge right here and don't consider the path after
+        // this edge.
+        if (dist_from == INVALID_EDGE_DURATION || dist_to == INVALID_EDGE_DURATION)
+            continue;
+
         const auto trip_dist = dist_from + dist_to - dist_table(*from_node, *to_node);
 
-        // If the edge_weight is very large (INVALID_EDGE_WEIGHT) then the algorithm will not choose
-        // this edge in final minimal path. So instead of computing all the permutations after this
-        // large edge, discard this edge right here and don't consider the path after this edge.
-        if (dist_from == INVALID_EDGE_WEIGHT || dist_to == INVALID_EDGE_WEIGHT)
-            continue;
         // This is not neccessarily true:
         // Lets say you have an edge (u, v) with duration 100. If you place a coordinate exactly in
         // the middle of the segment yielding (u, v'), the adjusted duration will be 100 * 0.5 = 50.
@@ -70,14 +67,14 @@ GetShortestRoundTrip(const NodeID new_loc,
             next_insert_point_candidate = to_node;
         }
     }
-    BOOST_ASSERT_MSG(min_trip_distance != INVALID_EDGE_WEIGHT, "trip has invalid edge weight");
+    BOOST_ASSERT_MSG(min_trip_distance != INVALID_EDGE_DURATION, "trip has invalid edge weight");
 
     return std::make_pair(min_trip_distance, next_insert_point_candidate);
 }
 
 // given two initial start nodes, find a roundtrip route using the farthest insertion algorithm
 inline std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
-                                     const util::DistTableWrapper<EdgeWeight> &dist_table,
+                                     const util::DistTableWrapper<EdgeDuration> &dist_table,
                                      const NodeID &start1,
                                      const NodeID &start2)
 {
@@ -98,7 +95,7 @@ inline std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
     // two nodes are already in the initial start trip, so we need to add all other nodes
     for (std::size_t added_nodes = 2; added_nodes < number_of_locations; ++added_nodes)
     {
-        auto farthest_distance = std::numeric_limits<int>::min();
+        auto farthest_distance = EdgeDuration{std::numeric_limits<EdgeDuration::value_type>::min()};
         auto next_node = -1;
         NodeIDIter next_insert_point;
 
@@ -111,7 +108,7 @@ inline std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
                 const auto insert_candidate =
                     GetShortestRoundTrip(id, dist_table, number_of_locations, route);
 
-                BOOST_ASSERT_MSG(insert_candidate.first != INVALID_EDGE_WEIGHT,
+                BOOST_ASSERT_MSG(insert_candidate.first != INVALID_EDGE_DURATION,
                                  "shortest round trip is invalid");
 
                 // add the location to the current trip such that it results in the shortest total
@@ -136,7 +133,7 @@ inline std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
 
 inline std::vector<NodeID>
 FarthestInsertionTrip(const std::size_t number_of_locations,
-                      const util::DistTableWrapper<EdgeWeight> &dist_table)
+                      const util::DistTableWrapper<EdgeDuration> &dist_table)
 {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START FARTHEST INSERTION HERE
@@ -173,8 +170,6 @@ FarthestInsertionTrip(const std::size_t number_of_locations,
     return FindRoute(number_of_locations, dist_table, max_from, max_to);
 }
 
-} // namespace trip
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::trip
 
 #endif // TRIP_FARTHEST_INSERTION_HPP

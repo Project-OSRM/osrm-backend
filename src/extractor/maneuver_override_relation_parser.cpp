@@ -1,9 +1,9 @@
 #include "extractor/maneuver_override_relation_parser.hpp"
 #include "extractor/maneuver_override.hpp"
 
-#include <boost/optional/optional.hpp>
 #include <boost/ref.hpp>
 
+#include <optional>
 #include <osmium/osm.hpp>
 #include <osmium/tags/filter.hpp>
 #include <osmium/tags/taglist.hpp>
@@ -11,9 +11,7 @@
 #include <algorithm>
 #include <iterator>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 ManeuverOverrideRelationParser::ManeuverOverrideRelationParser() {}
@@ -23,7 +21,7 @@ ManeuverOverrideRelationParser::ManeuverOverrideRelationParser() {}
  * into an InputManeuverOverride object, if the relation is considered
  * valid (i.e. has the minimum tags we expect).
  */
-boost::optional<InputManeuverOverride>
+std::optional<InputManeuverOverride>
 ManeuverOverrideRelationParser::TryParse(const osmium::Relation &relation) const
 {
 
@@ -37,7 +35,7 @@ ManeuverOverrideRelationParser::TryParse(const osmium::Relation &relation) const
     if (osmium::tags::match_none_of(tag_list, filter))
     // if it's not a maneuver, continue;
     {
-        return boost::none;
+        return std::nullopt;
     }
 
     // we pretend every restriction is a conditional restriction. If we do not find any restriction,
@@ -119,16 +117,21 @@ ManeuverOverrideRelationParser::TryParse(const osmium::Relation &relation) const
 
     if (valid_relation)
     {
-        maneuver_override.via_ways.push_back(from);
-        std::copy(via_ways.begin(), via_ways.end(), std::back_inserter(maneuver_override.via_ways));
-        maneuver_override.via_ways.push_back(to);
+        if (via_ways.empty())
+        {
+            maneuver_override.turn_path.node_or_way = InputViaNodePath{{from}, {via_node}, {to}};
+        }
+        else
+        {
+            maneuver_override.turn_path.node_or_way =
+                InputViaWayPath{{from}, std::move(via_ways), {to}};
+        }
         maneuver_override.via_node = via_node;
     }
     else
     {
-        return boost::none;
+        return std::nullopt;
     }
     return maneuver_override;
 }
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

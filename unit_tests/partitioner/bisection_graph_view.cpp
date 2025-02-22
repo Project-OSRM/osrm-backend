@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <climits>
+#include <random>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -14,6 +15,16 @@ using namespace osrm::partitioner;
 using namespace osrm::util;
 
 BOOST_AUTO_TEST_SUITE(graph_view)
+
+namespace
+{
+void shuffle(std::vector<EdgeWithSomeAdditionalData> &grid_edges)
+{
+    std::random_device rd;
+    std::mt19937 rng(rd());
+    std::shuffle(grid_edges.begin(), grid_edges.end(), rng);
+}
+} // namespace
 
 BOOST_AUTO_TEST_CASE(separate_top_bottom)
 {
@@ -25,7 +36,7 @@ BOOST_AUTO_TEST_CASE(separate_top_bottom)
 
     auto grid_edges = makeGridEdges(rows, cols, 0);
 
-    std::random_shuffle(grid_edges.begin(), grid_edges.end());
+    shuffle(grid_edges);
     groupEdgesBySource(grid_edges.begin(), grid_edges.end());
 
     auto graph = makeBisectionGraph(coordinates, adaptToBisectionEdge(std::move(grid_edges)));
@@ -74,7 +85,7 @@ BOOST_AUTO_TEST_CASE(separate_top_bottom_copy)
 
     auto grid_edges = makeGridEdges(rows, cols, 0);
 
-    std::random_shuffle(grid_edges.begin(), grid_edges.end());
+    shuffle(grid_edges);
     groupEdgesBySource(grid_edges.begin(), grid_edges.end());
 
     auto graph = makeBisectionGraph(coordinates, adaptToBisectionEdge(std::move(grid_edges)));
@@ -125,7 +136,7 @@ BOOST_AUTO_TEST_CASE(separate_left_right)
 
     auto grid_edges = makeGridEdges(rows, cols, 0);
 
-    std::random_shuffle(grid_edges.begin(), grid_edges.end());
+    shuffle(grid_edges);
     groupEdgesBySource(grid_edges.begin(), grid_edges.end());
 
     auto graph = makeBisectionGraph(coordinates, adaptToBisectionEdge(std::move(grid_edges)));

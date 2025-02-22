@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -288,7 +288,7 @@ namespace osmium {
                 }
 
                 member_type_string(char type, osmium::object_id_type ref, std::string&& role) noexcept :
-                    member_type_string(osmium::char_to_item_type(type), ref, std::forward<std::string>(role)) {
+                    member_type_string(osmium::char_to_item_type(type), ref, std::move(role)) {
                 }
 
                 osmium::item_type type() const noexcept {
@@ -682,7 +682,7 @@ namespace osmium {
                         return;
                     }
                     const char* key = tag.value.first;
-                    auto const equal_sign = std::strchr(key, '=');
+                    const char* const equal_sign = std::strchr(key, '=');
                     if (!equal_sign) {
                         builder.add_tag(key, "");
                         return;

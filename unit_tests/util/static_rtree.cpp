@@ -5,33 +5,23 @@
 #include "util/coordinate_calculation.hpp"
 #include "util/exception.hpp"
 #include "util/rectangle.hpp"
+#include "util/std_hash.hpp"
 #include "util/typedefs.hpp"
 
 #include "../common/temporary_file.hpp"
 #include "mocks/mock_datafacade.hpp"
 
-#include <boost/functional/hash.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <cmath>
 #include <cstdint>
 
 #include <algorithm>
-#include <memory>
 #include <random>
 #include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-// explicit TBB scheduler init to register resources cleanup at exit
-#if TBB_VERSION_MAJOR == 2020
-#include <tbb/global_control.h>
-tbb::global_control scheduler(tbb::global_control::max_allowed_parallelism, 2);
-#else
-#include <tbb/task_scheduler_init.h>
-tbb::task_scheduler_init init(2);
-#endif
 
 BOOST_AUTO_TEST_SUITE(static_rtree)
 
@@ -70,8 +60,8 @@ template <typename DataT> class LinearSearchNN
         std::vector<DataT> local_edges(edges);
 
         auto projected_input = web_mercator::fromWGS84(input_coordinate);
-        const auto segment_comparator = [this, &projected_input](const DataT &lhs,
-                                                                 const DataT &rhs) {
+        const auto segment_comparator = [this, &projected_input](const DataT &lhs, const DataT &rhs)
+        {
             using web_mercator::fromWGS84;
             const auto lhs_result = coordinate_calculation::projectPointOnSegment(
                 fromWGS84(coords[lhs.u]), fromWGS84(coords[lhs.v]), projected_input);
@@ -100,20 +90,6 @@ template <typename DataT> class LinearSearchNN
 
 template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
 {
-    struct TupleHash
-    {
-        typedef std::pair<unsigned, unsigned> argument_type;
-        typedef std::size_t result_type;
-
-        result_type operator()(const argument_type &t) const
-        {
-            std::size_t val{0};
-            boost::hash_combine(val, t.first);
-            boost::hash_combine(val, t.second);
-            return val;
-        }
-    };
-
     RandomGraphFixture()
     {
         std::mt19937 g(RANDOM_SEED);
@@ -130,7 +106,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
 
         std::uniform_int_distribution<> edge_udist(0, coords.size() - 1);
 
-        std::unordered_set<std::pair<unsigned, unsigned>, TupleHash> used_edges;
+        std::unordered_set<std::pair<unsigned, unsigned>> used_edges;
 
         while (edges.size() < NUM_EDGES)
         {
@@ -183,19 +159,19 @@ struct GraphFixture
     std::vector<TestData> edges;
 };
 
-typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * 3, TEST_LEAF_NODE_SIZE / 2>
-    TestRandomGraphFixture_LeafHalfFull;
-typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * 5, TEST_LEAF_NODE_SIZE>
-    TestRandomGraphFixture_LeafFull;
-typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * 10, TEST_LEAF_NODE_SIZE * 2>
-    TestRandomGraphFixture_TwoLeaves;
-typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
-                           TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR>
-    TestRandomGraphFixture_Branch;
-typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
-                           TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 2>
-    TestRandomGraphFixture_MultipleLevels;
-typedef RandomGraphFixture<10, 30> TestRandomGraphFixture_10_30;
+using TestRandomGraphFixture_LeafHalfFull =
+    RandomGraphFixture<TEST_LEAF_NODE_SIZE * 3, TEST_LEAF_NODE_SIZE / 2>;
+using TestRandomGraphFixture_LeafFull =
+    RandomGraphFixture<TEST_LEAF_NODE_SIZE * 5, TEST_LEAF_NODE_SIZE>;
+using TestRandomGraphFixture_TwoLeaves =
+    RandomGraphFixture<TEST_LEAF_NODE_SIZE * 10, TEST_LEAF_NODE_SIZE * 2>;
+using TestRandomGraphFixture_Branch =
+    RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
+                       TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR>;
+using TestRandomGraphFixture_MultipleLevels =
+    RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
+                       TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 2>;
+using TestRandomGraphFixture_10_30 = RandomGraphFixture<10, 30>;
 
 template <typename RTreeT>
 void simple_verify_rtree(RTreeT &rtree,
@@ -209,8 +185,8 @@ void simple_verify_rtree(RTreeT &rtree,
         auto result_u = rtree.Nearest(pu, 1);
         auto result_v = rtree.Nearest(pv, 1);
         BOOST_CHECK(result_u.size() == 1 && result_v.size() == 1);
-        BOOST_CHECK(result_u.front().u == e.u || result_u.front().v == e.u);
-        BOOST_CHECK(result_v.front().u == e.v || result_v.front().v == e.v);
+        BOOST_CHECK(result_u.front().data.u == e.u || result_u.front().data.v == e.u);
+        BOOST_CHECK(result_v.front().data.u == e.v || result_v.front().data.v == e.v);
     }
 }
 
@@ -235,8 +211,8 @@ void sampling_verify_rtree(RTreeT &rtree,
         auto result_lsnn = lsnn.Nearest(q, 1);
         BOOST_CHECK(result_rtree.size() == 1);
         BOOST_CHECK(result_lsnn.size() == 1);
-        auto rtree_u = result_rtree.back().u;
-        auto rtree_v = result_rtree.back().v;
+        auto rtree_u = result_rtree.back().data.u;
+        auto rtree_v = result_rtree.back().data.v;
         auto lsnn_u = result_lsnn.back().u;
         auto lsnn_v = result_lsnn.back().v;
 
@@ -250,7 +226,7 @@ void sampling_verify_rtree(RTreeT &rtree,
 }
 
 template <typename RTreeT, typename FixtureT>
-auto make_rtree(const boost::filesystem::path &path, FixtureT &fixture)
+auto make_rtree(const std::filesystem::path &path, FixtureT &fixture)
 {
     return RTreeT(fixture.edges, fixture.coords, path);
 }
@@ -258,8 +234,6 @@ auto make_rtree(const boost::filesystem::path &path, FixtureT &fixture)
 template <typename RTreeT = TestStaticRTree, typename FixtureT>
 void construction_test(const std::string &path, FixtureT &fixture)
 {
-    std::string leaves_path;
-    std::string nodes_path;
     auto rtree = make_rtree<RTreeT>(path, fixture);
     LinearSearchNN<TestData> lsnn(fixture.coords, fixture.edges);
 
@@ -331,8 +305,8 @@ BOOST_AUTO_TEST_CASE(regression_test)
     BOOST_CHECK(result_rtree.size() == 1);
     BOOST_CHECK(result_ls.size() == 1);
 
-    BOOST_CHECK_EQUAL(result_ls.front().u, result_rtree.front().u);
-    BOOST_CHECK_EQUAL(result_ls.front().v, result_rtree.front().v);
+    BOOST_CHECK_EQUAL(result_ls.front().u, result_rtree.front().data.u);
+    BOOST_CHECK_EQUAL(result_ls.front().v, result_rtree.front().data.v);
 }
 
 // Bug: If you querry a point with a narrow radius, no result should be returned
@@ -356,8 +330,14 @@ BOOST_AUTO_TEST_CASE(radius_regression_test)
     Coordinate input(FloatLongitude{5.2}, FloatLatitude{5.0});
 
     {
-        auto results = query.NearestPhantomNodesInRange(
-            input, 0.01, osrm::engine::Approach::UNRESTRICTED, true);
+        auto results = query.NearestPhantomNodes(
+            input, osrm::engine::Approach::UNRESTRICTED, 0.01, std::nullopt, true);
+        BOOST_CHECK_EQUAL(results.size(), 0);
+    }
+
+    {
+        auto results = query.NearestPhantomNodes(
+            input, osrm::engine::Approach::UNRESTRICTED, 1, 0.01, std::nullopt, true);
         BOOST_CHECK_EQUAL(results.size(), 0);
     }
 }
@@ -382,14 +362,26 @@ BOOST_AUTO_TEST_CASE(permissive_edge_snapping)
     Coordinate input(FloatLongitude{0.0005}, FloatLatitude{0.0005});
 
     {
-        auto results = query.NearestPhantomNodesInRange(
-            input, 1000, osrm::engine::Approach::UNRESTRICTED, false);
+        auto results = query.NearestPhantomNodes(
+            input, osrm::engine::Approach::UNRESTRICTED, 1000, std::nullopt, false);
         BOOST_CHECK_EQUAL(results.size(), 1);
     }
 
     {
-        auto results = query.NearestPhantomNodesInRange(
-            input, 1000, osrm::engine::Approach::UNRESTRICTED, true);
+        auto results = query.NearestPhantomNodes(
+            input, osrm::engine::Approach::UNRESTRICTED, 1000, std::nullopt, true);
+        BOOST_CHECK_EQUAL(results.size(), 2);
+    }
+
+    {
+        auto results = query.NearestPhantomNodes(
+            input, osrm::engine::Approach::UNRESTRICTED, 10, 1000, std::nullopt, false);
+        BOOST_CHECK_EQUAL(results.size(), 1);
+    }
+
+    {
+        auto results = query.NearestPhantomNodes(
+            input, osrm::engine::Approach::UNRESTRICTED, 10, 1000, std::nullopt, true);
         BOOST_CHECK_EQUAL(results.size(), 2);
     }
 }
@@ -414,21 +406,30 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     Coordinate input(FloatLongitude{5.1}, FloatLatitude{5.0});
 
     {
-        auto results = query.NearestPhantomNodes(input, 5, osrm::engine::Approach::UNRESTRICTED);
+        auto results = query.NearestPhantomNodes(
+            input, osrm::engine::Approach::UNRESTRICTED, 5, std::nullopt, std::nullopt, false);
         BOOST_CHECK_EQUAL(results.size(), 2);
         BOOST_CHECK_EQUAL(results.back().phantom_node.forward_segment_id.id, 0);
         BOOST_CHECK_EQUAL(results.back().phantom_node.reverse_segment_id.id, 1);
     }
 
     {
-        auto results =
-            query.NearestPhantomNodes(input, 5, 270, 10, osrm::engine::Approach::UNRESTRICTED);
+        auto results = query.NearestPhantomNodes(input,
+                                                 osrm::engine::Approach::UNRESTRICTED,
+                                                 5,
+                                                 std::nullopt,
+                                                 engine::Bearing{270, 10},
+                                                 false);
         BOOST_CHECK_EQUAL(results.size(), 0);
     }
 
     {
-        auto results =
-            query.NearestPhantomNodes(input, 5, 45, 10, osrm::engine::Approach::UNRESTRICTED);
+        auto results = query.NearestPhantomNodes(input,
+                                                 osrm::engine::Approach::UNRESTRICTED,
+                                                 5,
+                                                 std::nullopt,
+                                                 engine::Bearing{45, 10},
+                                                 false);
         BOOST_CHECK_EQUAL(results.size(), 2);
 
         BOOST_CHECK(results[0].phantom_node.forward_segment_id.enabled);
@@ -441,20 +442,46 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     }
 
     {
-        auto results = query.NearestPhantomNodesInRange(
-            input, 11000, osrm::engine::Approach::UNRESTRICTED, true);
+        auto results = query.NearestPhantomNodes(
+            input, osrm::engine::Approach::UNRESTRICTED, 11000, std::nullopt, true);
         BOOST_CHECK_EQUAL(results.size(), 2);
     }
 
     {
-        auto results = query.NearestPhantomNodesInRange(
-            input, 11000, 270, 10, osrm::engine::Approach::UNRESTRICTED, true);
+        auto results = query.NearestPhantomNodes(
+            input, osrm::engine::Approach::UNRESTRICTED, 10, 11000, std::nullopt, true);
+        BOOST_CHECK_EQUAL(results.size(), 2);
+    }
+
+    {
+        auto results = query.NearestPhantomNodes(
+            input, osrm::engine::Approach::UNRESTRICTED, 11000, engine::Bearing{270, 10}, true);
         BOOST_CHECK_EQUAL(results.size(), 0);
     }
 
     {
-        auto results = query.NearestPhantomNodesInRange(
-            input, 11000, 45, 10, osrm::engine::Approach::UNRESTRICTED, true);
+        auto results = query.NearestPhantomNodes(
+            input, osrm::engine::Approach::UNRESTRICTED, 10, 11000, engine::Bearing{270, 10}, true);
+        BOOST_CHECK_EQUAL(results.size(), 0);
+    }
+
+    {
+        auto results = query.NearestPhantomNodes(
+            input, osrm::engine::Approach::UNRESTRICTED, 11000, engine::Bearing{45, 10}, true);
+        BOOST_CHECK_EQUAL(results.size(), 2);
+
+        BOOST_CHECK(results[0].phantom_node.forward_segment_id.enabled);
+        BOOST_CHECK(!results[0].phantom_node.reverse_segment_id.enabled);
+        BOOST_CHECK_EQUAL(results[0].phantom_node.forward_segment_id.id, 1);
+
+        BOOST_CHECK(!results[1].phantom_node.forward_segment_id.enabled);
+        BOOST_CHECK(results[1].phantom_node.reverse_segment_id.enabled);
+        BOOST_CHECK_EQUAL(results[1].phantom_node.reverse_segment_id.id, 1);
+    }
+
+    {
+        auto results = query.NearestPhantomNodes(
+            input, osrm::engine::Approach::UNRESTRICTED, 10, 11000, engine::Bearing{45, 10}, true);
         BOOST_CHECK_EQUAL(results.size(), 2);
 
         BOOST_CHECK(results[0].phantom_node.forward_segment_id.enabled);

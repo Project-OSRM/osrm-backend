@@ -43,6 +43,10 @@ module.exports = function () {
                         got.message = json.message;
                     }
 
+                    if (headers.has('data_version')) {
+                        got.data_version = json.data_version || '';
+                    }
+
                     if (headers.has('geometry')) {
                         if (this.queryParams['geometries'] === 'polyline') {
                             got.geometry = polyline.decode(json.trips[0].geometry).toString();
@@ -61,7 +65,8 @@ module.exports = function () {
                     var subTrips;
                     var trip_durations;
                     var trip_distance;
-                    if (res.statusCode === 200) {
+                    var ok = res.statusCode === 200;
+                    if (ok) {
                         if (headers.has('trips')) {
                             subTrips = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map((sl, i) => {
                                 var toAdd = [];
@@ -84,10 +89,9 @@ module.exports = function () {
                         }
                     }
 
-                    var ok = true,
-                        encodedResult = '';
+                    var encodedResult = '';
 
-                    if (json.trips) row.trips.split(',').forEach((sub, si) => {
+                    if (json.trips && row.trips) row.trips.split(',').forEach((sub, si) => {
                         if (si >= subTrips.length) {
                             ok = false;
                         } else {
@@ -130,7 +134,6 @@ module.exports = function () {
                 } else {
                     var params = this.queryParams,
                         waypoints = [];
-                    params['steps'] = 'true';
                     if (row.from && row.to) {
                         var fromNode = this.findNodeByName(row.from);
                         if (!fromNode) throw new Error(util.format('*** unknown from-node "%s"', row.from));

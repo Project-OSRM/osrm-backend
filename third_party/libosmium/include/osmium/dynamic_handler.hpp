@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -62,7 +62,7 @@ namespace osmium {
                 HandlerWrapperBase(HandlerWrapperBase&&) noexcept = default;
                 HandlerWrapperBase& operator=(HandlerWrapperBase&&) noexcept = default;
 
-                virtual ~HandlerWrapperBase() = default;
+                virtual ~HandlerWrapperBase() noexcept = default;
 
                 virtual void node(const osmium::Node& /*node*/) {
                 }
@@ -125,6 +125,14 @@ auto _name_##_dispatch(THandler& handler, const osmium::_type_& object, long) ->
                 explicit HandlerWrapper(TArgs&&... args) :
                     m_handler(std::forward<TArgs>(args)...) {
                 }
+
+                HandlerWrapper(const HandlerWrapper&) = default;
+                HandlerWrapper& operator=(const HandlerWrapper&) = default;
+
+                HandlerWrapper(HandlerWrapper&&) noexcept = default;
+                HandlerWrapper& operator=(HandlerWrapper&&) noexcept = default;
+
+                ~HandlerWrapper() noexcept override = default;
 
                 void node(const osmium::Node& node) final {
                     node_dispatch(m_handler, node, 0);

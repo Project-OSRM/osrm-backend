@@ -13,21 +13,13 @@
 
 #include <boost/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
-#include <boost/range/iterator_range.hpp>
-
-#include "engine/guidance/collapsing_utility.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <limits>
 #include <utility>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 using namespace osrm::guidance;
 
@@ -83,7 +75,8 @@ void processRoundaboutExits(const RouteStepIterator begin, const RouteStepIterat
         return;
     }
 
-    const auto passes_exit_or_leaves_roundabout = [](auto const &step) {
+    const auto passes_exit_or_leaves_roundabout = [](auto const &step)
+    {
         return staysOnRoundabout(step.maneuver.instruction) ||
                leavesRoundabout(step.maneuver.instruction);
     };
@@ -148,9 +141,8 @@ void processRoundaboutExits(const RouteStepIterator begin, const RouteStepIterat
 // instructions in between
 void processRoundaboutGroups(const std::pair<RouteStepIterator, RouteStepIterator> &range)
 {
-    const auto leaves_roundabout = [](auto const &step) {
-        return leavesRoundabout(step.maneuver.instruction);
-    };
+    const auto leaves_roundabout = [](auto const &step)
+    { return leavesRoundabout(step.maneuver.instruction); };
 
     auto itr = range.first;
     while (itr != range.second)
@@ -180,9 +172,8 @@ void processRoundaboutGroups(const std::pair<RouteStepIterator, RouteStepIterato
 std::vector<RouteStep> handleRoundabouts(std::vector<RouteStep> steps)
 {
     // check if a step has roundabout type
-    const auto has_roundabout_type = [](auto const &step) {
-        return hasRoundaboutType(step.maneuver.instruction);
-    };
+    const auto has_roundabout_type = [](auto const &step)
+    { return hasRoundaboutType(step.maneuver.instruction); };
     const auto first_roundabout_type =
         std::find_if(steps.begin(), steps.end(), has_roundabout_type);
 
@@ -199,7 +190,8 @@ std::vector<RouteStep> handleRoundabouts(std::vector<RouteStep> steps)
     // this group by paradigm does might contain intermediate roundabout instructions, when they are
     // directly connected. Otherwise it will be a sequence containing everything from enter to exit.
     // If we already start on the roundabout, the first valid place will be steps.begin().
-    const auto is_on_roundabout = [&currently_on_roundabout](const auto &step) {
+    const auto is_on_roundabout = [&currently_on_roundabout](const auto &step)
+    {
         if (currently_on_roundabout)
         {
             if (leavesRoundabout(step.maneuver.instruction))
@@ -263,7 +255,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     BOOST_ASSERT(geometry.locations.size() >= steps.size());
     // Look for distances under 1m
     const bool zero_length_step = steps.front().distance <= 1 && steps.size() > 2;
-    const bool duplicated_coordinate = util::coordinate_calculation::haversineDistance(
+    const bool duplicated_coordinate = util::coordinate_calculation::greatCircleDistance(
                                            geometry.locations[0], geometry.locations[1]) <= 1;
     if (zero_length_step || duplicated_coordinate)
     {
@@ -279,8 +271,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
                                      geometry.locations.begin() + offset);
             geometry.annotations.erase(geometry.annotations.begin(),
                                        geometry.annotations.begin() + offset);
-            geometry.osm_node_ids.erase(geometry.osm_node_ids.begin(),
-                                        geometry.osm_node_ids.begin() + offset);
+            geometry.node_ids.erase(geometry.node_ids.begin(), geometry.node_ids.begin() + offset);
         }
 
         auto const first_bearing = steps.front().maneuver.bearing_after;
@@ -334,10 +325,13 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         }
 
         // and update the leg geometry indices for the removed entry
-        std::for_each(steps.begin(), steps.end(), [offset](RouteStep &step) {
-            step.geometry_begin -= offset;
-            step.geometry_end -= offset;
-        });
+        std::for_each(steps.begin(),
+                      steps.end(),
+                      [offset](RouteStep &step)
+                      {
+                          step.geometry_begin -= offset;
+                          step.geometry_end -= offset;
+                      });
 
         auto &first_step = steps.front();
         auto bearing = first_bearing;
@@ -377,7 +371,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         // remove all the last coordinates from the geometry
         geometry.locations.resize(geometry.segment_offsets.back() + 1);
         geometry.annotations.resize(geometry.segment_offsets.back());
-        geometry.osm_node_ids.resize(geometry.segment_offsets.back() + 1);
+        geometry.node_ids.resize(geometry.segment_offsets.back() + 1);
 
         BOOST_ASSERT(geometry.segment_distances.back() <= 1);
         geometry.segment_distances.pop_back();
@@ -406,7 +400,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         next_to_last_step.mode = new_next_to_last.mode;
         // the geometry indices of the last step are already correct;
     }
-    else if (util::coordinate_calculation::haversineDistance(
+    else if (util::coordinate_calculation::greatCircleDistance(
                  geometry.locations[geometry.locations.size() - 2],
                  geometry.locations[geometry.locations.size() - 1]) <= 1)
     {
@@ -414,7 +408,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         // This can happen if the last coordinate snaps to a node in the unpacked geometry
         geometry.locations.pop_back();
         geometry.annotations.pop_back();
-        geometry.osm_node_ids.pop_back();
+        geometry.node_ids.pop_back();
         geometry.segment_offsets.back()--;
         // since the last geometry includes the location of arrival, the arrival instruction
         // geometry overlaps with the previous segment
@@ -436,7 +430,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     }
 
     BOOST_ASSERT(geometry.segment_offsets.back() + 1 == geometry.locations.size());
-    BOOST_ASSERT(geometry.segment_offsets.back() + 1 == geometry.osm_node_ids.size());
+    BOOST_ASSERT(geometry.segment_offsets.back() + 1 == geometry.node_ids.size());
     BOOST_ASSERT(geometry.segment_offsets.back() == geometry.annotations.size());
 
     BOOST_ASSERT(steps.back().geometry_end == geometry.locations.size());
@@ -463,7 +457,7 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
     BOOST_ASSERT(steps.size() >= 2);
     BOOST_ASSERT(leg_geometry.locations.size() >= 2);
     const constexpr double MINIMAL_RELATIVE_DISTANCE = 5., MAXIMAL_RELATIVE_DISTANCE = 300.;
-    const auto distance_to_start = util::coordinate_calculation::haversineDistance(
+    const auto distance_to_start = util::coordinate_calculation::greatCircleDistance(
         source_node.input_location, leg_geometry.locations[0]);
     const auto initial_modifier =
         distance_to_start >= MINIMAL_RELATIVE_DISTANCE &&
@@ -474,7 +468,7 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
 
     steps.front().maneuver.instruction.direction_modifier = initial_modifier;
 
-    const auto distance_from_end = util::coordinate_calculation::haversineDistance(
+    const auto distance_from_end = util::coordinate_calculation::greatCircleDistance(
         target_node.input_location, leg_geometry.locations.back());
     const auto final_modifier =
         distance_from_end >= MINIMAL_RELATIVE_DISTANCE &&
@@ -541,7 +535,7 @@ std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps)
         {
 
             // End of road is a turn that helps to identify the location of a turn. If the turn does
-            // not pass by any oter intersections, the end-of-road characteristic does not improve
+            // not pass by any other intersections, the end-of-road characteristic does not improve
             // the instructions.
             // Here we reduce the verbosity of our output by reducing end-of-road emissions in cases
             // where no intersections have been passed in between.
@@ -652,16 +646,18 @@ void applyOverrides(const datafacade::BaseDataFacade &facade,
                 auto step_to_update = std::find_if(
                     current_step_it,
                     route_iter,
-                    [&leg_geometry, &via_node_coords](const auto &step) {
+                    [&leg_geometry, &via_node_coords](const auto &step)
+                    {
                         util::Log(logDEBUG) << "Leg geom from " << step.geometry_begin << " to  "
                                             << step.geometry_end << std::endl;
 
                         // iterators over geometry of current step
                         auto begin = leg_geometry.locations.begin() + step.geometry_begin;
                         auto end = leg_geometry.locations.begin() + step.geometry_end;
-                        auto via_match = std::find_if(begin, end, [&](const auto &location) {
-                            return location == via_node_coords;
-                        });
+                        auto via_match = std::find_if(begin,
+                                                      end,
+                                                      [&](const auto &location)
+                                                      { return location == via_node_coords; });
                         if (via_match != end)
                         {
                             util::Log(logDEBUG)
@@ -721,6 +717,4 @@ void applyOverrides(const datafacade::BaseDataFacade &facade,
     }
 }
 
-} // namespace guidance
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::guidance

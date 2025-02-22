@@ -3,11 +3,7 @@
 
 #include "storage/shared_data_index.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace datafacade
+namespace osrm::engine::datafacade
 {
 
 class ContiguousBlockAllocator
@@ -19,8 +15,6 @@ class ContiguousBlockAllocator
     virtual const storage::SharedDataIndex &GetIndex() = 0;
 };
 
-} // namespace datafacade
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::datafacade
 
 #endif // OSRM_ENGINE_DATAFACADE_CONTIGUOUS_BLOCK_ALLOCATOR_HPP_

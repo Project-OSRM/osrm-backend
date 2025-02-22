@@ -7,12 +7,9 @@
 
 #include <unordered_map>
 
-#include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class CompressedEdgeContainer
@@ -44,8 +41,8 @@ class CompressedEdgeContainer
 
     void AddUncompressedEdge(const EdgeID edge_id,
                              const NodeID target_node,
-                             const SegmentWeight weight,
-                             const SegmentWeight duration);
+                             const EdgeWeight weight,
+                             const EdgeDuration duration);
 
     void InitializeBothwayVector();
     unsigned ZipEdges(const unsigned f_edge_pos, const unsigned r_edge_pos);
@@ -67,8 +64,8 @@ class CompressedEdgeContainer
     std::unique_ptr<SegmentDataContainer> ToSegmentData();
 
   private:
-    SegmentWeight ClipWeight(const SegmentWeight weight);
-    SegmentDuration ClipDuration(const SegmentDuration duration);
+    SegmentWeight ClipWeight(const EdgeWeight weight);
+    SegmentDuration ClipDuration(const EdgeDuration duration);
 
     int free_list_maximum = 0;
     std::atomic_size_t clipped_weights{0};
@@ -82,7 +79,6 @@ class CompressedEdgeContainer
     std::unordered_map<EdgeID, unsigned> m_reverse_edge_id_to_zipped_index_map;
     std::unique_ptr<SegmentDataContainer> segment_data;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // GEOMETRY_COMPRESSOR_HPP_

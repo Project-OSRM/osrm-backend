@@ -14,26 +14,22 @@ PROFILE:=$(PROFILE_ROOT)/car.lua
 
 all: data
 
-data: ch/$(DATA_NAME).osrm.hsgr corech/$(DATA_NAME).osrm.hsgr mld/$(DATA_NAME).osrm.partition
+data: ch/$(DATA_NAME).osrm.hsgr mld/$(DATA_NAME).osrm.partition
 
 clean:
 	-rm -r $(DATA_NAME).*
-	-rm -r ch corech mld
+	-rm -r ch mld
 
 ch/$(DATA_NAME).osrm: $(DATA_NAME).osrm
 	mkdir -p ch
-	cp $(DATA_NAME).osrm $(DATA_NAME).osrm.* ch/
-
-corech/$(DATA_NAME).osrm: $(DATA_NAME).osrm
-	mkdir -p corech
-	cp $(DATA_NAME).osrm $(DATA_NAME).osrm.* corech/
+	cp $(DATA_NAME).osrm.* ch/
 
 mld/$(DATA_NAME).osrm: $(DATA_NAME).osrm
 	mkdir -p mld
-	cp $(DATA_NAME).osrm $(DATA_NAME).osrm.* mld/
+	cp $(DATA_NAME).osrm.* mld/
 
 $(DATA_NAME).osrm: $(DATA_NAME).osm.pbf $(DATA_NAME).poly $(PROFILE) $(OSRM_EXTRACT)
-	@echo "Verifiyng data file integrity..."
+	@echo "Verifying data file integrity..."
 	$(MD5SUM) -c data.md5sum
 	@echo "Running osrm-extract..."
 	$(TIMER) "osrm-extract\t$@" $(OSRM_EXTRACT) $< -p $(PROFILE)
@@ -41,10 +37,6 @@ $(DATA_NAME).osrm: $(DATA_NAME).osm.pbf $(DATA_NAME).poly $(PROFILE) $(OSRM_EXTR
 ch/$(DATA_NAME).osrm.hsgr: ch/$(DATA_NAME).osrm $(PROFILE) $(OSRM_CONTRACT)
 	@echo "Running osrm-contract..."
 	$(TIMER) "osrm-contract\t$@" $(OSRM_CONTRACT) $<
-
-corech/$(DATA_NAME).osrm.hsgr: corech/$(DATA_NAME).osrm $(PROFILE) $(OSRM_CONTRACT)
-	@echo "Running osrm-contract..."
-	$(TIMER) "osrm-contract\t$@" $(OSRM_CONTRACT) --core=0.5 $<
 
 mld/$(DATA_NAME).osrm.partition: mld/$(DATA_NAME).osrm $(PROFILE) $(OSRM_PARTITION)
 	@echo "Running osrm-partition..."
@@ -59,11 +51,6 @@ benchmark: data $(DATA_NAME).requests
 	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=CH ch/$(DATA_NAME).osrm > /dev/null & echo "$$!" > osrm-routed.pid'
 	@sleep 1
 	$(TIMER) "queries\tCH" "cat $(DATA_NAME).requests | xargs curl &> /dev/null"
-	@cat osrm-routed.pid | xargs kill
-	@rm osrm-routed.pid
-	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=CoreCH corech/$(DATA_NAME).osrm > /dev/null & echo "$$!" > osrm-routed.pid'
-	@sleep 1
-	$(TIMER) "queries\tCoreCH" "cat $(DATA_NAME).requests | xargs curl &> /dev/null"
 	@cat osrm-routed.pid | xargs kill
 	@rm osrm-routed.pid
 	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=MLD mld/$(DATA_NAME).osrm > /dev/null & echo "$$!" > osrm-routed.pid'

@@ -65,9 +65,7 @@ while (auto feature = layer.next_feature()) {
     if (keep_feature(feature)) {
         // instantiate a feature builder as usual and copy id and geometry
         vtzero::geometry_feature_builder feature_builder{layer_builder};
-        if (feature.has_id()) {
-            feature_builder.set_id(feature.id());
-        }
+        feature_builder.copy_id(feature);
         feature_builder.set_geometry(feature.geometry());
 
         // now iterate over all properties...

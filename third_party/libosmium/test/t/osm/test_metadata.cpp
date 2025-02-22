@@ -92,18 +92,18 @@ TEST_CASE("Metadata options: timestamp,uid,user") {
 }
 
 TEST_CASE("Metadata options: fail") {
-    REQUIRE_THROWS_AS(osmium::metadata_options{"timestamp+foo"}, const std::invalid_argument&);
+    REQUIRE_THROWS_AS(osmium::metadata_options{"timestamp+foo"}, std::invalid_argument);
 }
 
 TEST_CASE("Metdata options: constructor using OSMObject") {
-    osmium::memory::Buffer buffer{10 * 1000};
+    osmium::memory::Buffer buffer{10UL * 1024UL};
     using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
     SECTION("only version") {
         const osmium::OSMObject& obj = buffer.get<osmium::OSMObject>(osmium::builder::add_node(buffer,
                 _id(1),
                 _version(2)));
-        osmium::metadata_options options = osmium::detect_available_metadata(obj);
+        const osmium::metadata_options options = osmium::detect_available_metadata(obj);
         REQUIRE_FALSE(options.user());
         REQUIRE_FALSE(options.uid());
         REQUIRE_FALSE(options.changeset());
@@ -119,7 +119,7 @@ TEST_CASE("Metdata options: constructor using OSMObject") {
                 _cid(30),
                 _uid(8),
                 _user("foo")));
-        osmium::metadata_options options = osmium::detect_available_metadata(obj);
+        const osmium::metadata_options options = osmium::detect_available_metadata(obj);
         REQUIRE(options.all());
     }
 
@@ -129,7 +129,7 @@ TEST_CASE("Metdata options: constructor using OSMObject") {
                 _version(2),
                 _timestamp("2018-01-01T23:00:00Z"),
                 _cid(30)));
-        osmium::metadata_options options = osmium::detect_available_metadata(obj);
+        const osmium::metadata_options options = osmium::detect_available_metadata(obj);
         REQUIRE(options.version());
         REQUIRE(options.timestamp());
         REQUIRE(options.changeset());

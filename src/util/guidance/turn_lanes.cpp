@@ -1,16 +1,8 @@
 #include "util/guidance/turn_lanes.hpp"
 
-#include <algorithm>
-#include <iostream>
 #include <tuple>
 
-#include <boost/assert.hpp>
-
-namespace osrm
-{
-namespace util
-{
-namespace guidance
+namespace osrm::util::guidance
 {
 LaneTuple::LaneTuple() : lanes_in_turn(0), first_lane_from_the_right(INVALID_LANEID)
 {
@@ -36,6 +28,4 @@ bool LaneTupleIdPair::operator==(const LaneTupleIdPair &other) const
     return other.first == first && other.second == second;
 }
 
-} // namespace guidance
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util::guidance

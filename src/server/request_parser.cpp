@@ -6,11 +6,7 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 
-#include <string>
-
-namespace osrm
-{
-namespace server
+namespace osrm::server
 {
 
 RequestParser::RequestParser()
@@ -298,5 +294,4 @@ bool RequestParser::is_digit(const int character) const
 {
     return character >= '0' && character <= '9';
 }
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server

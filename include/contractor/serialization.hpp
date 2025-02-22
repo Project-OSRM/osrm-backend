@@ -8,11 +8,7 @@
 #include "storage/serialization.hpp"
 #include "storage/tar.hpp"
 
-namespace osrm
-{
-namespace contractor
-{
-namespace serialization
+namespace osrm::contractor::serialization
 {
 
 template <storage::Ownership Ownership>
@@ -46,8 +42,6 @@ void read(storage::tar::FileReader &reader,
                                      metric.edge_filter[index]);
     }
 }
-} // namespace serialization
-} // namespace contractor
-} // namespace osrm
+} // namespace osrm::contractor::serialization
 
 #endif

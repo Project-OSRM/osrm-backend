@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -87,8 +87,24 @@ namespace osmium {
     struct id_order {
 
         bool operator()(const object_id_type lhs, const object_id_type rhs) const noexcept {
-            return const_tie(lhs > 0, std::abs(lhs)) <
-                   const_tie(rhs > 0, std::abs(rhs));
+            if (rhs == 0) {
+                return false;
+            }
+            if (lhs == 0) {
+                return true;
+            }
+            if (lhs < 0) {
+                if (rhs > 0) {
+                    return true;
+                }
+                // rhs < 0
+                return lhs > rhs;
+            }
+            // lhs > 0
+            if (rhs < 0) {
+                return false;
+            }
+            return lhs < rhs;
         }
 
     }; // struct id_order

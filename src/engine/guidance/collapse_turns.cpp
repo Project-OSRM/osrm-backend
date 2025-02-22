@@ -10,11 +10,7 @@
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 using osrm::util::angularDeviation;
 using namespace osrm::guidance;
@@ -63,7 +59,8 @@ double findTotalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_ste
     //        c
     //        |
     //        d
-    const auto use_total_angle = [&]() {
+    const auto use_total_angle = [&]()
+    {
         // only consider actual turns in combination:
         if (angularDeviation(total_angle, 180) < 0.5 * NARROW_TURN_ANGLE)
             return false;
@@ -103,7 +100,8 @@ inline void handleSliproad(RouteStepIterator sliproad_step)
 {
     // find the next step after the sliproad step itself (this is not necessarily the next step,
     // since we might have to skip over traffic lights/node penalties)
-    auto next_step = [&sliproad_step]() {
+    auto next_step = [&sliproad_step]()
+    {
         auto next_step = findNextTurn(sliproad_step);
         while (isTrafficLightStep(*next_step))
         {
@@ -200,7 +198,8 @@ void AdjustToCombinedTurnStrategy::operator()(RouteStep &step_at_turn_location,
                                   : getTurnDirection(angle);
 
     // a turn that is a new name or straight (turn/continue)
-    const auto is_non_turn = [](const RouteStep &step) {
+    const auto is_non_turn = [](const RouteStep &step)
+    {
         return hasTurnType(step, TurnType::NewName) ||
                (hasTurnType(step, TurnType::Turn) &&
                 hasModifier(step, DirectionModifier::Straight)) ||
@@ -311,7 +310,8 @@ void SegregatedTurnStrategy::operator()(RouteStep &step_at_turn_location,
     // Used to control updating of the modifier based on turn direction
     bool update_modifier_for_turn_direction = true;
 
-    const auto calculate_turn_angle = [](const RouteStep &entry_step, const RouteStep &exit_step) {
+    const auto calculate_turn_angle = [](const RouteStep &entry_step, const RouteStep &exit_step)
+    {
         return util::bearing::angleBetween(entry_step.maneuver.bearing_before,
                                            exit_step.maneuver.bearing_after);
     };
@@ -320,7 +320,8 @@ void SegregatedTurnStrategy::operator()(RouteStep &step_at_turn_location,
     const auto turn_angle = calculate_turn_angle(step_at_turn_location, transfer_from_step);
     const auto turn_direction = getTurnDirection(turn_angle);
 
-    const auto is_straight_step = [](const RouteStep &step) {
+    const auto is_straight_step = [](const RouteStep &step)
+    {
         return ((hasTurnType(step, TurnType::NewName) || hasTurnType(step, TurnType::Continue) ||
                  hasTurnType(step, TurnType::Suppressed) || hasTurnType(step, TurnType::Turn)) &&
                 (hasModifier(step, DirectionModifier::Straight) ||
@@ -328,7 +329,8 @@ void SegregatedTurnStrategy::operator()(RouteStep &step_at_turn_location,
                  hasModifier(step, DirectionModifier::SlightRight)));
     };
 
-    const auto is_turn_step = [](const RouteStep &step) {
+    const auto is_turn_step = [](const RouteStep &step)
+    {
         return (hasTurnType(step, TurnType::Turn) || hasTurnType(step, TurnType::Continue) ||
                 hasTurnType(step, TurnType::NewName) || hasTurnType(step, TurnType::Suppressed));
     };
@@ -431,8 +433,7 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
 }
 
 // OTHER IMPLEMENTATIONS
-OSRM_ATTR_WARN_UNUSED
-RouteSteps collapseTurnInstructions(RouteSteps steps)
+[[nodiscard]] RouteSteps collapseTurnInstructions(RouteSteps steps)
 {
     // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)
     BOOST_ASSERT(!hasTurnType(steps.front()) && !hasTurnType(steps.back()));
@@ -587,8 +588,7 @@ RouteSteps collapseTurnInstructions(RouteSteps steps)
 }
 
 // OTHER IMPLEMENTATIONS
-OSRM_ATTR_WARN_UNUSED
-RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
+[[nodiscard]] RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
 {
     // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)
     BOOST_ASSERT(!hasTurnType(steps.front()) && !hasTurnType(steps.back()));
@@ -667,6 +667,4 @@ RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
     return steps;
 }
 
-} // namespace guidance
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::guidance

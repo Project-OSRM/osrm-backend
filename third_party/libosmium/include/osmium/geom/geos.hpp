@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -54,7 +54,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/geom/factory.hpp>
-#include <osmium/util/compatibility.hpp>
 
 #include <geos/geom/Coordinate.h>
 #include <geos/geom/CoordinateSequence.h>
@@ -70,19 +69,12 @@ DEALINGS IN THE SOFTWARE.
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <exception>
 #include <iterator>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-
-// MSVC doesn't support throw_with_nested yet
-#ifdef _MSC_VER
-# define THROW throw
-#else
-# include <exception>
-# define THROW std::throw_with_nested
-#endif
 
 namespace osmium {
 
@@ -123,16 +115,6 @@ namespace osmium {
                     m_geos_factory(&geos_factory) {
                 }
 
-                /**
-                 * @deprecated Do not set SRID explicitly. It will be set to the
-                 *             correct value automatically.
-                 */
-                OSMIUM_DEPRECATED explicit GEOSFactoryImpl(int /* srid */, int srid) :
-                    m_precision_model(new geos::geom::PrecisionModel),
-                    m_our_geos_factory(new geos::geom::GeometryFactory{m_precision_model.get(), srid}),
-                    m_geos_factory(m_our_geos_factory.get()) {
-                }
-
                 explicit GEOSFactoryImpl(int srid) :
                     m_precision_model(new geos::geom::PrecisionModel),
                     m_our_geos_factory(new geos::geom::GeometryFactory{m_precision_model.get(), srid}),
@@ -145,7 +127,7 @@ namespace osmium {
                     try {
                         return point_type{m_geos_factory->createPoint(geos::geom::Coordinate{xy.x, xy.y})};
                     } catch (const geos::util::GEOSException& e) {
-                        THROW(osmium::geos_geometry_error(e.what()));
+                        std::throw_with_nested(osmium::geos_geometry_error(e.what()));
                     }
                 }
 
@@ -155,7 +137,7 @@ namespace osmium {
                     try {
                         m_coordinate_sequence.reset(m_geos_factory->getCoordinateSequenceFactory()->create(static_cast<std::size_t>(0), 2));
                     } catch (const geos::util::GEOSException& e) {
-                        THROW(osmium::geos_geometry_error(e.what()));
+                        std::throw_with_nested(osmium::geos_geometry_error(e.what()));
                     }
                 }
 
@@ -163,7 +145,7 @@ namespace osmium {
                     try {
                         m_coordinate_sequence->add(geos::geom::Coordinate{xy.x, xy.y});
                     } catch (const geos::util::GEOSException& e) {
-                        THROW(osmium::geos_geometry_error(e.what()));
+                        std::throw_with_nested(osmium::geos_geometry_error(e.what()));
                     }
                 }
 
@@ -171,7 +153,7 @@ namespace osmium {
                     try {
                         return linestring_type{m_geos_factory->createLineString(m_coordinate_sequence.release())};
                     } catch (const geos::util::GEOSException& e) {
-                        THROW(osmium::geos_geometry_error(e.what()));
+                        std::throw_with_nested(osmium::geos_geometry_error(e.what()));
                     }
                 }
 
@@ -195,7 +177,7 @@ namespace osmium {
                         m_polygons.emplace_back(m_geos_factory->createPolygon(m_rings[0].release(), inner_rings));
                         m_rings.clear();
                     } catch (const geos::util::GEOSException& e) {
-                        THROW(osmium::geos_geometry_error(e.what()));
+                        std::throw_with_nested(osmium::geos_geometry_error(e.what()));
                     }
                 }
 
@@ -203,7 +185,7 @@ namespace osmium {
                     try {
                         m_coordinate_sequence.reset(m_geos_factory->getCoordinateSequenceFactory()->create(static_cast<std::size_t>(0), 2));
                     } catch (const geos::util::GEOSException& e) {
-                        THROW(osmium::geos_geometry_error(e.what()));
+                        std::throw_with_nested(osmium::geos_geometry_error(e.what()));
                     }
                 }
 
@@ -211,7 +193,7 @@ namespace osmium {
                     try {
                         m_rings.emplace_back(m_geos_factory->createLinearRing(m_coordinate_sequence.release()));
                     } catch (const geos::util::GEOSException& e) {
-                        THROW(osmium::geos_geometry_error(e.what()));
+                        std::throw_with_nested(osmium::geos_geometry_error(e.what()));
                     }
                 }
 
@@ -219,7 +201,7 @@ namespace osmium {
                     try {
                         m_coordinate_sequence.reset(m_geos_factory->getCoordinateSequenceFactory()->create(static_cast<std::size_t>(0), 2));
                     } catch (const geos::util::GEOSException& e) {
-                        THROW(osmium::geos_geometry_error(e.what()));
+                        std::throw_with_nested(osmium::geos_geometry_error(e.what()));
                     }
                 }
 
@@ -227,7 +209,7 @@ namespace osmium {
                     try {
                         m_rings.emplace_back(m_geos_factory->createLinearRing(m_coordinate_sequence.release()));
                     } catch (const geos::util::GEOSException& e) {
-                        THROW(osmium::geos_geometry_error(e.what()));
+                        std::throw_with_nested(osmium::geos_geometry_error(e.what()));
                     }
                 }
 
@@ -235,7 +217,7 @@ namespace osmium {
                     try {
                         m_coordinate_sequence->add(geos::geom::Coordinate{xy.x, xy.y});
                     } catch (const geos::util::GEOSException& e) {
-                        THROW(osmium::geos_geometry_error(e.what()));
+                        std::throw_with_nested(osmium::geos_geometry_error(e.what()));
                     }
                 }
 
@@ -248,7 +230,7 @@ namespace osmium {
                         m_polygons.clear();
                         return multipolygon_type{m_geos_factory->createMultiPolygon(polygons)};
                     } catch (const geos::util::GEOSException& e) {
-                        THROW(osmium::geos_geometry_error(e.what()));
+                        std::throw_with_nested(osmium::geos_geometry_error(e.what()));
                     }
                 }
 
@@ -263,8 +245,6 @@ namespace osmium {
     } // namespace geom
 
 } // namespace osmium
-
-#undef THROW
 
 #endif
 

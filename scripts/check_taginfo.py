@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import json
 import sys
@@ -7,7 +7,7 @@ import re
 WHITELIST = set(["mph"])
 
 if len(sys.argv) < 3:
-    print "Not enough arguments.\nUsage: " + sys.argv[0] + " taginfo.json profile.lua"
+    print("Not enough arguments.\nUsage: " + sys.argv[0] + " taginfo.json profile.lua")
     sys.exit(1)
 
 taginfo_path = sys.argv[1]

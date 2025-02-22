@@ -2,30 +2,21 @@
 
 #include "engine/api/table_api.hpp"
 #include "engine/api/table_parameters.hpp"
-#include "engine/routing_algorithms/many_to_many.hpp"
-#include "engine/search_engine_data.hpp"
 #include "util/coordinate_calculation.hpp"
-#include "util/json_container.hpp"
 #include "util/string_util.hpp"
 
 #include <cstdlib>
 
-#include <algorithm>
-#include <memory>
-#include <string>
 #include <vector>
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
-TablePlugin::TablePlugin(const int max_locations_distance_table)
-    : max_locations_distance_table(max_locations_distance_table)
+TablePlugin::TablePlugin(const int max_locations_distance_table,
+                         const std::optional<double> default_radius)
+    : BasePlugin(default_radius), max_locations_distance_table(max_locations_distance_table)
 {
 }
 
@@ -47,7 +38,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error("InvalidOptions", "Coordinates are invalid", result);
     }
 
-    if (params.bearings.size() > 0 && params.coordinates.size() != params.bearings.size())
+    if (!params.bearings.empty() && params.coordinates.size() != params.bearings.size())
     {
         return Error(
             "InvalidOptions", "Number of bearings does not match number of coordinates", result);
@@ -79,7 +70,7 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             "NoSegment", MissingPhantomErrorMessage(phantom_nodes, params.coordinates), result);
     }
 
-    auto snapped_phantoms = SnapPhantomNodes(phantom_nodes);
+    auto snapped_phantoms = SnapPhantomNodes(std::move(phantom_nodes));
 
     bool request_distance = params.annotations & api::TableParameters::AnnotationsType::Distance;
     bool request_duration = params.annotations & api::TableParameters::AnnotationsType::Duration;
@@ -96,7 +87,8 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     std::vector<api::TableAPI::TableCellRef> estimated_pairs;
 
     // Scan table for null results - if any exist, replace with distance estimates
-    if (params.fallback_speed != INVALID_FALLBACK_SPEED || params.scale_factor != 1)
+    if (params.fallback_speed != from_alias<double>(INVALID_FALLBACK_SPEED) ||
+        params.scale_factor != 1)
     {
         for (std::size_t row = 0; row < num_sources; row++)
         {
@@ -104,7 +96,8 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             {
                 const auto &table_index = row * num_destinations + column;
                 BOOST_ASSERT(table_index < result_tables_pair.first.size());
-                if (params.fallback_speed != INVALID_FALLBACK_SPEED && params.fallback_speed > 0 &&
+                if (params.fallback_speed != from_alias<double>(INVALID_FALLBACK_SPEED) &&
+                    params.fallback_speed > 0 &&
                     result_tables_pair.first[table_index] == MAXIMAL_EDGE_DURATION)
                 {
                     const auto &source =
@@ -116,35 +109,40 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                     auto distance_estimate =
                         params.fallback_coordinate_type ==
                                 api::TableParameters::FallbackCoordinateType::Input
-                            ? util::coordinate_calculation::fccApproximateDistance(
-                                  source.input_location, destination.input_location)
-                            : util::coordinate_calculation::fccApproximateDistance(
-                                  source.location, destination.location);
+                            ? util::coordinate_calculation::greatCircleDistance(
+                                  candidatesInputLocation(source),
+                                  candidatesInputLocation(destination))
+                            : util::coordinate_calculation::greatCircleDistance(
+                                  candidatesSnappedLocation(source),
+                                  candidatesSnappedLocation(destination));
 
                     result_tables_pair.first[table_index] =
-                        distance_estimate / (double)params.fallback_speed;
+                        to_alias<EdgeDuration>(distance_estimate / params.fallback_speed);
                     if (!result_tables_pair.second.empty())
                     {
-                        result_tables_pair.second[table_index] = distance_estimate;
+                        result_tables_pair.second[table_index] =
+                            to_alias<EdgeDistance>(distance_estimate);
                     }
 
                     estimated_pairs.emplace_back(row, column);
                 }
                 if (params.scale_factor > 0 && params.scale_factor != 1 &&
                     result_tables_pair.first[table_index] != MAXIMAL_EDGE_DURATION &&
-                    result_tables_pair.first[table_index] != 0)
+                    result_tables_pair.first[table_index] != EdgeDuration{0})
                 {
                     EdgeDuration diff =
                         MAXIMAL_EDGE_DURATION / result_tables_pair.first[table_index];
 
-                    if (params.scale_factor >= diff)
+                    if (params.scale_factor >= from_alias<double>(diff))
                     {
-                        result_tables_pair.first[table_index] = MAXIMAL_EDGE_DURATION - 1;
+                        result_tables_pair.first[table_index] =
+                            MAXIMAL_EDGE_DURATION - EdgeDuration{1};
                     }
                     else
                     {
-                        result_tables_pair.first[table_index] = std::lround(
-                            result_tables_pair.first[table_index] * params.scale_factor);
+                        result_tables_pair.first[table_index] = to_alias<EdgeDuration>(
+                            std::lround(from_alias<double>(result_tables_pair.first[table_index]) *
+                                        params.scale_factor));
                     }
                 }
             }
@@ -156,6 +154,4 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     return Status::Ok;
 }
-} // namespace plugins
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::plugins

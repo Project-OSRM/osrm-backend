@@ -4,15 +4,10 @@
 #include <cmath>
 
 #include <utility>
-#include <vector>
 
-#include <boost/math/constants/constants.hpp>
+#include <numbers>
 
-namespace osrm
-{
-namespace engine
-{
-namespace map_matching
+namespace osrm::engine::map_matching
 {
 
 struct NormalDistribution
@@ -25,10 +20,8 @@ struct NormalDistribution
     // FIXME implement log-probability version since it's faster
     double Density(const double val) const
     {
-        using namespace boost::math::constants;
-
         const double x = val - mean;
-        return 1.0 / (std::sqrt(two_pi<double>()) * standard_deviation) *
+        return 1.0 / (std::sqrt(2 * std::numbers::pi) * standard_deviation) *
                std::exp(-x * x / (standard_deviation * standard_deviation));
     }
 
@@ -98,8 +91,6 @@ class BayesClassifier
     double positive_apriori_probability;
     double negative_apriori_probability;
 };
-} // namespace map_matching
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::map_matching
 
 #endif // BAYES_CLASSIFIER_HPP

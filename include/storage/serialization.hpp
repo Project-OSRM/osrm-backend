@@ -10,18 +10,13 @@
 #include "storage/tar.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/function_output_iterator.hpp>
 #include <boost/iterator/function_input_iterator.hpp>
+#include <boost/iterator/function_output_iterator.hpp>
 
 #include <cmath>
 #include <cstdint>
-#include <tuple>
 
-namespace osrm
-{
-namespace storage
-{
-namespace serialization
+namespace osrm::storage::serialization
 {
 
 namespace detail
@@ -70,7 +65,8 @@ void readBoolVector(tar::FileReader &reader, const std::string &name, VectorT &d
     using BlockType = std::uint64_t;
     constexpr std::uint64_t BLOCK_BITS = CHAR_BIT * sizeof(BlockType);
 
-    const auto decode = [&](const BlockType block) {
+    const auto decode = [&](const BlockType block)
+    {
         auto read_size = std::min<std::size_t>(count - index, BLOCK_BITS);
         unpackBits<VectorT, BlockType>(data, index, read_size, block);
         index += BLOCK_BITS;
@@ -91,7 +87,8 @@ void writeBoolVector(tar::FileWriter &writer, const std::string &name, const Vec
 
     // FIXME on old boost version the function_input_iterator does not work with lambdas
     // so we need to wrap it in a function here.
-    const std::function<BlockType()> encode_function = [&]() -> BlockType {
+    const std::function<BlockType()> encode_function = [&]() -> BlockType
+    {
         auto write_size = std::min<std::size_t>(count - index, BLOCK_BITS);
         auto packed = packBits<VectorT, BlockType>(data, index, write_size);
         index += BLOCK_BITS;
@@ -268,8 +265,6 @@ inline void write(io::BufferWriter &writer, const BaseDataLayout &layout)
 {
     write(writer, layout.blocks);
 }
-} // namespace serialization
-} // namespace storage
-} // namespace osrm
+} // namespace osrm::storage::serialization
 
 #endif

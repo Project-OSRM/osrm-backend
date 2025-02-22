@@ -32,10 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/numeric/conversion/cast.hpp>
 
-#include <cstddef>
-#include <iosfwd> //for std::ostream
-#include <sstream>
-#include <string>
+#include <cstdint>
 #include <type_traits>
 
 namespace osrm
@@ -71,12 +68,20 @@ using FloatLongitude = Alias<double, tag::longitude>;
 // range checks on these (toFixed/toFloat, etc)
 using UnsafeFloatLatitude = Alias<double, tag::unsafelatitude>;
 using UnsafeFloatLongitude = Alias<double, tag::unsafelongitude>;
-static_assert(std::is_pod<FixedLatitude>(), "FixedLatitude is not a valid alias");
-static_assert(std::is_pod<FixedLongitude>(), "FixedLongitude is not a valid alias");
-static_assert(std::is_pod<FloatLatitude>(), "FloatLatitude is not a valid alias");
-static_assert(std::is_pod<FloatLongitude>(), "FloatLongitude is not a valid alias");
-static_assert(std::is_pod<UnsafeFloatLatitude>(), "UnsafeFloatLatitude is not a valid alias");
-static_assert(std::is_pod<UnsafeFloatLongitude>(), "UnsafeFloatLongitude is not a valid alias");
+static_assert(std::is_standard_layout<FixedLatitude>() && std::is_trivial<FixedLatitude>(),
+              "FixedLatitude is not a valid alias");
+static_assert(std::is_standard_layout<FixedLongitude>() && std::is_trivial<FixedLongitude>(),
+              "FixedLongitude is not a valid alias");
+static_assert(std::is_standard_layout<FloatLatitude>() && std::is_trivial<FloatLatitude>(),
+              "FloatLatitude is not a valid alias");
+static_assert(std::is_standard_layout<FloatLongitude>() && std::is_trivial<FloatLongitude>(),
+              "FloatLongitude is not a valid alias");
+static_assert(std::is_standard_layout<UnsafeFloatLatitude>() &&
+                  std::is_trivial<UnsafeFloatLatitude>(),
+              "UnsafeFloatLatitude is not a valid alias");
+static_assert(std::is_standard_layout<UnsafeFloatLongitude>() &&
+                  std::is_trivial<UnsafeFloatLongitude>(),
+              "UnsafeFloatLongitude is not a valid alias");
 
 /**
  * Converts a typed latitude from floating to fixed representation.

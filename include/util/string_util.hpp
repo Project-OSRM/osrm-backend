@@ -1,68 +1,43 @@
 #ifndef STRING_UTIL_HPP
 #define STRING_UTIL_HPP
 
+#include <array>
 #include <cctype>
-
-#include <random>
+#include <cstddef>
+#include <cstdint>
 #include <string>
-#include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
-// precision:  position after decimal point
-// length: maximum number of digits including comma and decimals
-// work with negative values to prevent overflowing when taking -value
-template <int length, int precision> char *printInt(char *buffer, int value)
+// implements Lemire's table-based escape needs check
+// cf. https://lemire.me/blog/2024/05/31/quickly-checking-whether-a-string-needs-escaping/
+inline static constexpr std::array<uint8_t, 256> json_quotable_character = []() constexpr
 {
-    static_assert(length > 0, "length must be positive");
-    static_assert(precision > 0, "precision must be positive");
-
-    const bool minus = [&value] {
-        if (value >= 0)
-        {
-            value = -value;
-            return false;
-        }
-        return true;
-    }();
-
-    buffer += length - 1;
-    for (int i = 0; i < precision; ++i)
+    std::array<uint8_t, 256> result{};
+    for (auto i = 0; i < 32; i++)
     {
-        *buffer = '0' - (value % 10);
-        value /= 10;
-        --buffer;
+        result[i] = 1;
     }
-    *buffer = '.';
-    --buffer;
-
-    for (int i = precision + 1; i < length; ++i)
+    for (auto i : {'"', '\\'})
     {
-        *buffer = '0' - (value % 10);
-        value /= 10;
-        if (value == 0)
-        {
-            break;
-        }
-        --buffer;
+        result[i] = 1;
     }
+    return result;
+}();
 
-    if (minus)
+inline bool RequiresJSONStringEscaping(const std::string &string)
+{
+    uint8_t needs = 0;
+    for (uint8_t c : string)
     {
-        --buffer;
-        *buffer = '-';
+        needs |= json_quotable_character[c];
     }
-    return buffer;
+    return needs;
 }
 
-inline std::string escape_JSON(const std::string &input)
+inline void EscapeJSONString(const std::string &input, std::string &output)
 {
-    // escape and skip reallocations if possible
-    std::string output;
-    output.reserve(input.size() + 4); // +4 assumes two backslashes on avg
     for (const char letter : input)
     {
         switch (letter)
@@ -96,7 +71,6 @@ inline std::string escape_JSON(const std::string &input)
             break;
         }
     }
-    return output;
 }
 
 inline std::size_t URIDecode(const std::string &input, std::string &output)
@@ -125,7 +99,6 @@ inline std::size_t URIDecode(const std::string &input, std::string &output)
 }
 
 inline std::size_t URIDecodeInPlace(std::string &URI) { return URIDecode(URI, URI); }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // STRING_UTIL_HPP

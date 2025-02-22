@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -84,8 +84,7 @@ namespace osmium {
             m_top_right(top_right) {
             assert(
                 (!!bottom_left && !!top_right) ||
-                (bottom_left.x() <= top_right.x() && bottom_left.y() <= top_right.y())
-            );
+                (bottom_left.x() <= top_right.x() && bottom_left.y() <= top_right.y()));
         }
 
         /**
@@ -137,7 +136,7 @@ namespace osmium {
          * Box is defined, ie. contains defined locations.
          */
         explicit constexpr operator bool() const noexcept {
-            return bool(m_bottom_left) && bool(m_top_right);
+            return static_cast<bool>(m_bottom_left) && static_cast<bool>(m_top_right);
         }
 
         /**
@@ -174,6 +173,46 @@ namespace osmium {
          */
         Location& top_right() noexcept {
             return m_top_right;
+        }
+
+        /**
+         * Get left boundary.
+         *
+         * @pre @code valid() == true @encode
+         */
+        double left() const noexcept {
+            assert(valid());
+            return m_bottom_left.lon_without_check();
+        }
+
+        /**
+         * Get right boundary.
+         *
+         * @pre @code valid() == true @encode
+         */
+        double right() const noexcept {
+            assert(valid());
+            return m_top_right.lon_without_check();
+        }
+
+        /**
+         * Get top boundary.
+         *
+         * @pre @code valid() == true @encode
+         */
+        double top() const noexcept {
+            assert(valid());
+            return m_top_right.lat_without_check();
+        }
+
+        /**
+         * Get bottom boundary.
+         *
+         * @pre @code valid() == true @encode
+         */
+        double bottom() const noexcept {
+            assert(valid());
+            return m_bottom_left.lat_without_check();
         }
 
         /**

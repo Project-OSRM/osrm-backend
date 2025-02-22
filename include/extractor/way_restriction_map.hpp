@@ -1,20 +1,15 @@
 #ifndef OSRM_EXTRACTOR_WAY_RESTRICTION_MAP_HPP_
 #define OSRM_EXTRACTOR_WAY_RESTRICTION_MAP_HPP_
 
-#include <utility>
-#include <vector>
-
-// to access the turn restrictions
-#include <boost/unordered_map.hpp>
-
 #include "extractor/restriction.hpp"
 #include "extractor/restriction_graph.hpp"
 #include "util/integer_range.hpp"
 #include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace extractor
+// to access the turn restrictions
+#include <vector>
+
+namespace osrm::extractor
 {
 
 // Given the compressed representation of via-way turn restrictions, we provide a fast access into
@@ -70,7 +65,6 @@ class WayRestrictionMap
     const RestrictionGraph &restriction_graph;
 };
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_WAY_RESTRICTION_MAP_HPP_

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -197,22 +197,22 @@ namespace osmium {
 
         /// Returns an iterator to the beginning.
         iterator begin() noexcept {
-            return iterator(data() + sizeof(NodeRefList));
+            return reinterpret_cast<iterator>(data() + sizeof(NodeRefList));
         }
 
         /// Returns an iterator to the end.
         iterator end() noexcept {
-            return iterator(data() + byte_size());
+            return reinterpret_cast<iterator>(data() + byte_size());
         }
 
         /// Returns an iterator to the beginning.
         const_iterator cbegin() const noexcept {
-            return const_iterator(data() + sizeof(NodeRefList));
+            return reinterpret_cast<const_iterator>(data() + sizeof(NodeRefList));
         }
 
         /// Returns an iterator to the end.
         const_iterator cend() const noexcept {
-            return const_iterator(data() + byte_size());
+            return reinterpret_cast<const_iterator>(data() + byte_size());
         }
 
         /// Returns an iterator to the beginning.

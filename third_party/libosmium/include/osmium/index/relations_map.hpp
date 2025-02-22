@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -212,7 +212,7 @@ namespace osmium {
             void for_each_parent(const osmium::unsigned_object_id_type member_id, TFunc&& func) const {
                 const auto parents = m_map.get(member_id);
                 for (auto it = parents.first; it != parents.second; ++it) {
-                    std::forward<TFunc>(func)(it->value);
+                    func(it->value);
                 }
             }
 
@@ -234,7 +234,7 @@ namespace osmium {
             void for_each(const osmium::unsigned_object_id_type id, TFunc&& func) const {
                 const auto parents = m_map.get(id);
                 for (auto it = parents.first; it != parents.second; ++it) {
-                    std::forward<TFunc>(func)(it->value);
+                    func(it->value);
                 }
             }
 

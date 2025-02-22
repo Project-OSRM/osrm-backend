@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -36,6 +36,8 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/io/detail/opl_parser_functions.hpp>
 #include <osmium/memory/buffer.hpp>
 
+#include <cassert>
+
 namespace osmium {
 
     /**
@@ -51,9 +53,9 @@ namespace osmium {
      * @throws osmium::opl_error If the parsing fails.
      */
     inline bool opl_parse(const char* data, osmium::memory::Buffer& buffer) {
+        assert(data);
         try {
             const bool wrote_something = osmium::io::detail::opl_parse_line(0, data, buffer);
-            buffer.commit();
             return wrote_something;
         } catch (const osmium::opl_error&) {
             buffer.rollback();

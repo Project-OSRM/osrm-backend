@@ -117,6 +117,10 @@ module.exports = function () {
                         got.duration = duration.toString();
                     }
 
+                    if (headers.has('data_version')) {
+                        got.data_version = json.data_version || '';
+                    }
+
                     // if header matches 'a:*', parse out the values for *
                     // and return in that header
                     headers.forEach((k) => {

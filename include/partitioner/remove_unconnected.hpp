@@ -9,9 +9,7 @@
 #include <algorithm>
 #include <vector>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 using Partition = std::vector<CellID>;
 
@@ -61,11 +59,13 @@ std::size_t removeUnconnectedBoundaryNodes(const GraphT &edge_based_graph,
 
                 if (level_index < static_cast<int>(partitions.size() - 1))
                 {
-                    auto new_end = std::remove_if(
-                        witnesses.begin(), witnesses.end(), [&](const auto &witness) {
-                            return partitions[level_index + 1][node] !=
-                                   partitions[level_index + 1][witness.id];
-                        });
+                    auto new_end =
+                        std::remove_if(witnesses.begin(),
+                                       witnesses.end(),
+                                       [&](const auto &witness) {
+                                           return partitions[level_index + 1][node] !=
+                                                  partitions[level_index + 1][witness.id];
+                                       });
                     witnesses.resize(new_end - witnesses.begin());
                 }
                 if (witnesses.size() == 0)
@@ -89,10 +89,12 @@ std::size_t removeUnconnectedBoundaryNodes(const GraphT &edge_based_graph,
                     }
                 }
 
-                auto best_witness = std::min_element(
-                    witnesses.begin(), witnesses.end(), [](const auto &lhs, const auto &rhs) {
-                        return lhs.induced_border_edges < rhs.induced_border_edges;
-                    });
+                auto best_witness =
+                    std::min_element(witnesses.begin(),
+                                     witnesses.end(),
+                                     [](const auto &lhs, const auto &rhs) {
+                                         return lhs.induced_border_edges < rhs.induced_border_edges;
+                                     });
                 BOOST_ASSERT(best_witness != witnesses.end());
 
                 // assign `node` to same subcells as `best_witness`
@@ -109,7 +111,6 @@ std::size_t removeUnconnectedBoundaryNodes(const GraphT &edge_based_graph,
 
     return num_unconnected;
 }
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif

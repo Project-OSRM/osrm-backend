@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -273,6 +273,10 @@ namespace osmium {
         int32_t m_x; // NOLINT(modernize-use-default-member-init)
         int32_t m_y; // NOLINT(modernize-use-default-member-init)
 
+        constexpr static double precision() noexcept {
+            return static_cast<double>(detail::coordinate_precision);
+        }
+
     public:
 
         // this value is used for a coordinate to mark it as undefined
@@ -284,11 +288,11 @@ namespace osmium {
         };
 
         static int32_t double_to_fix(const double c) noexcept {
-            return static_cast<int32_t>(std::round(c * detail::coordinate_precision));
+            return static_cast<int32_t>(std::round(c * precision()));
         }
 
         static constexpr double fix_to_double(const int32_t c) noexcept {
-            return static_cast<double>(c) / detail::coordinate_precision;
+            return static_cast<double>(c) / precision();
         }
 
         /**
@@ -346,10 +350,10 @@ namespace osmium {
          * See also is_defined() and is_undefined().
          */
         constexpr bool valid() const noexcept {
-            return m_x >= -180 * detail::coordinate_precision
-                && m_x <=  180 * detail::coordinate_precision
-                && m_y >=  -90 * detail::coordinate_precision
-                && m_y <=   90 * detail::coordinate_precision;
+            return m_x >= -180 * precision()
+                && m_x <=  180 * precision()
+                && m_y >=  -90 * precision()
+                && m_y <=   90 * precision();
         }
 
         /**
@@ -403,7 +407,7 @@ namespace osmium {
         /**
          * Get longitude without checking the validity.
          */
-        double lon_without_check() const {
+        double lon_without_check() const noexcept {
             return fix_to_double(m_x);
         }
 
@@ -422,7 +426,7 @@ namespace osmium {
         /**
          * Get latitude without checking the validity.
          */
-        double lat_without_check() const {
+        double lat_without_check() const noexcept {
             return fix_to_double(m_y);
         }
 

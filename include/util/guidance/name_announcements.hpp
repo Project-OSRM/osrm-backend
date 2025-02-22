@@ -6,7 +6,6 @@
 #include "extractor/name_table.hpp"
 #include "extractor/suffix_table.hpp"
 
-#include "util/attributes.hpp"
 #include "util/typedefs.hpp"
 
 #include <algorithm>
@@ -15,20 +14,13 @@
 #include <utility>
 #include <vector>
 
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-
-namespace osrm
-{
-namespace util
-{
-namespace guidance
+namespace osrm::util::guidance
 {
 // Name Change Logic
 // Used both during Extraction as well as during Post-Processing
 
-inline util::StringView longest_common_substring(const util::StringView &lhs,
-                                                 const util::StringView &rhs)
+inline std::string_view longest_common_substring(const std::string_view lhs,
+                                                 const std::string_view rhs)
 {
     if (lhs.empty() || rhs.empty())
         return "";
@@ -67,16 +59,22 @@ template <typename StringView> inline auto decompose(const StringView &lhs, cons
     auto const lcs = longest_common_substring(lhs, rhs);
 
     // trim spaces, transform to lower
-    const auto trim = [](StringView view) {
+    const auto trim = [](StringView view)
+    {
         // we compare suffixes based on this value, it might break UTF chars, but as long as we are
         // consistent in handling, we do not create bad results
-        std::string str = boost::to_lower_copy(view.to_string());
-        auto front = str.find_first_not_of(" ");
+        std::string str;
+        str.reserve(view.size());
+        std::transform(view.begin(),
+                       view.end(),
+                       std::back_inserter(str),
+                       [](unsigned char c) { return std::tolower(c); });
+        auto front = str.find_first_not_of(' ');
 
         if (front == std::string::npos)
             return str;
 
-        auto back = str.find_last_not_of(" ");
+        auto back = str.find_last_not_of(' ');
         return str.substr(front, back - front + 1);
     };
 
@@ -126,22 +124,21 @@ inline bool requiresNameAnnounced(const StringView &from_name,
 
     // check similarity of names
     const auto names_are_empty = from_name.empty() && to_name.empty();
-    const auto name_is_contained =
-        boost::starts_with(from_name, to_name) || boost::starts_with(to_name, from_name);
+    const auto name_is_contained = from_name.starts_with(to_name) || to_name.starts_with(from_name);
 
-    const auto checkForPrefixOrSuffixChange =
-        [](const StringView &first, const StringView &second, const SuffixTable &suffix_table) {
-            std::string first_prefix, first_suffix, second_prefix, second_suffix;
-            std::tie(first_prefix, first_suffix, second_prefix, second_suffix) =
-                decompose(first, second);
+    const auto checkForPrefixOrSuffixChange = [](const std::string_view first,
+                                                 const std::string_view second,
+                                                 const SuffixTable &suffix_table)
+    {
+        std::string first_prefix, first_suffix, second_prefix, second_suffix;
+        std::tie(first_prefix, first_suffix, second_prefix, second_suffix) =
+            decompose(first, second);
+        const auto checkTable = [&](const std::string &str)
+        { return str.empty() || suffix_table.isSuffix(str); };
 
-            const auto checkTable = [&](const std::string &str) {
-                return str.empty() || suffix_table.isSuffix(str);
-            };
-
-            return checkTable(first_prefix) && checkTable(first_suffix) &&
-                   checkTable(second_prefix) && checkTable(second_suffix);
-        };
+        return checkTable(first_prefix) && checkTable(first_suffix) && checkTable(second_prefix) &&
+               checkTable(second_suffix);
+    };
 
     const auto is_suffix_change = checkForPrefixOrSuffixChange(from_name, to_name, suffix_table);
     const auto names_are_equal = from_name == to_name || name_is_contained || is_suffix_change;
@@ -201,17 +198,17 @@ inline bool requiresNameAnnounced(const std::string &from_name,
     struct NopSuffixTable final
     {
         NopSuffixTable() {}
-        bool isSuffix(const StringView &) const { return false; }
+        bool isSuffix(const std::string_view) const { return false; }
     } static const table;
 
-    return requiresNameAnnounced(util::StringView(from_name),
-                                 util::StringView(from_ref),
-                                 util::StringView(from_pronunciation),
-                                 util::StringView(from_exits),
-                                 util::StringView(to_name),
-                                 util::StringView(to_ref),
-                                 util::StringView(to_pronunciation),
-                                 util::StringView(to_exits),
+    return requiresNameAnnounced(std::string_view(from_name),
+                                 std::string_view(from_ref),
+                                 std::string_view(from_pronunciation),
+                                 std::string_view(from_exits),
+                                 std::string_view(to_name),
+                                 std::string_view(to_ref),
+                                 std::string_view(to_pronunciation),
+                                 std::string_view(to_exits),
                                  table);
 }
 
@@ -236,8 +233,6 @@ inline bool requiresNameAnnounced(const NameID from_name_id,
                                      suffix_table);
 }
 
-} // namespace guidance
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util::guidance
 
 #endif /* OSRM_UTIL_GUIDANCE_NAME_ANNOUNCEMENT_HPP_ */

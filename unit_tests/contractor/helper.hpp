@@ -3,9 +3,7 @@
 
 #include "contractor/contractor_graph.hpp"
 
-namespace osrm
-{
-namespace unit_test
+namespace osrm::unit_test
 {
 
 using TestEdge = std::tuple<unsigned, unsigned, int>;
@@ -27,18 +25,17 @@ inline contractor::ContractorGraph makeGraph(const std::vector<TestEdge> &edges)
             start,
             target,
             contractor::ContractorEdgeData{
-                weight, duration, distance, id++, 0, false, true, false}});
+                {weight}, {duration}, {distance}, id++, 0, false, true, false}});
         input_edges.push_back(contractor::ContractorEdge{
             target,
             start,
             contractor::ContractorEdgeData{
-                weight, duration, distance, id++, 0, false, false, true}});
+                {weight}, {duration}, {distance}, id++, 0, false, false, true}});
     }
     std::sort(input_edges.begin(), input_edges.end());
 
-    return contractor::ContractorGraph{max_id + 1, std::move(input_edges)};
+    return contractor::ContractorGraph{max_id + 1, input_edges};
 }
-} // namespace unit_test
-} // namespace osrm
+} // namespace osrm::unit_test
 
 #endif

@@ -1,8 +1,3 @@
-# mason #
-#########
-/.mason
-/mason_packages
-
 # pre compiled dependencies #
 #############################
 osrm-deps
@@ -51,7 +46,6 @@ Thumbs.db
 /example/build/
 /test/data/monaco.osrm*
 /test/data/ch
-/test/data/corech
 /test/data/mld
 /cmake/postinst
 
@@ -67,6 +61,7 @@ Thumbs.db
 /.vs*
 /*.local.bat
 /CMakeSettings.json
+/.cache
 
 # Jetbrains related files #
 ###########################
@@ -109,3 +104,4 @@ debug.lua
 
 # node-osrm artifacts
 lib/binding
+

@@ -31,37 +31,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JSON_CONTAINER_HPP
 #define JSON_CONTAINER_HPP
 
-#include <mapbox/variant.hpp>
-
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 #include <vector>
 
-namespace osrm
-{
-
-namespace util
-{
-
-/**
- * JSON types representing OSRM responses.
- *
- * The json::Value type represents the basic sum-type, implemented as a variant.
- *
- * There are two ways for destructuring such types:
- *  - Either provide a visitor and use the apply_visitor function or
- *  - use the get function and explicitely specify the type
- *
- * See the following documentations on variants:
- *  - https://github.com/mapbox/variant
- *  - http://www.boost.org/doc/libs/1_55_0/doc/html/variant.html
- *
- * And take a look at the example we provide.
- *
- * \see OSRM
- */
-namespace json
+namespace osrm::util::json
 {
 
 // fwd. decls.
@@ -119,13 +95,7 @@ struct Null
  *
  * Dispatch on its type by either by using apply_visitor or its get function.
  */
-using Value = mapbox::util::variant<String,
-                                    Number,
-                                    mapbox::util::recursive_wrapper<Object>,
-                                    mapbox::util::recursive_wrapper<Array>,
-                                    True,
-                                    False,
-                                    Null>;
+using Value = std::variant<String, Number, Object, Array, True, False, Null>;
 
 /**
  * Typed Object.
@@ -134,7 +104,7 @@ using Value = mapbox::util::variant<String,
  */
 struct Object
 {
-    std::unordered_map<std::string, Value> values;
+    std::unordered_map<std::string_view, Value> values;
 };
 
 /**
@@ -147,8 +117,6 @@ struct Array
     std::vector<Value> values;
 };
 
-} // namespace json
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util::json
 
 #endif // JSON_CONTAINER_HPP

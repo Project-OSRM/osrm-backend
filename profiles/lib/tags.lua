@@ -17,13 +17,10 @@ function Tags.get_forward_backward_by_key(way,data,key)
   if not forward or not backward then
      local common = way:get_value_by_key(key)
 
-     if (data.oneway) then
-        if data.is_forward_oneway then
-           forward = forward or common
-        end
-        if data.is_reverse_oneway then
-           backward = backward or common
-        end
+     if data.is_forward_oneway then
+        forward = forward or common
+     elseif data.is_reverse_oneway then
+        backward = backward or common
      else
         forward = forward or common
         backward = backward or common

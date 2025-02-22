@@ -8,9 +8,7 @@
 #include "util/static_graph.hpp"
 #include "util/vector_view.hpp"
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 namespace detail
 {
@@ -39,9 +37,9 @@ class FilteredGraphImpl<util::StaticGraph<EdgeDataT, Ownership>, Ownership>
     unsigned GetOutDegree(const NodeIterator n) const
     {
         auto range = graph.GetAdjacentEdgeRange(n);
-        return std::count_if(range.begin(), range.end(), [this](const EdgeIterator edge) {
-            return edge_filter[edge];
-        });
+        return std::count_if(range.begin(),
+                             range.end(),
+                             [this](const EdgeIterator edge) { return edge_filter[edge]; });
     }
 
     inline NodeIterator GetTarget(const EdgeIterator e) const
@@ -126,8 +124,8 @@ class FilteredGraphImpl<util::StaticGraph<EdgeDataT, Ownership>, Ownership>
 
     FilteredGraphImpl() = default;
 
-    FilteredGraphImpl(Graph graph, Vector<bool> edge_filter_)
-        : graph(std::move(graph)), edge_filter(std::move(edge_filter_))
+    FilteredGraphImpl(Graph graph_, Vector<bool> edge_filter_)
+        : graph(std::move(graph_)), edge_filter(std::move(edge_filter_))
     {
         BOOST_ASSERT(edge_filter.empty() || edge_filter.size() == graph.GetNumberOfEdges());
     }
@@ -159,7 +157,6 @@ template <typename GraphT>
 using FilteredGraphContainer = detail::FilteredGraphImpl<GraphT, storage::Ownership::Container>;
 template <typename GraphT>
 using FilteredGraphView = detail::FilteredGraphImpl<GraphT, storage::Ownership::View>;
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

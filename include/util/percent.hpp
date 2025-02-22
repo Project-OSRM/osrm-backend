@@ -2,14 +2,11 @@
 #define PERCENT_HPP
 
 #include <atomic>
-#include <iostream>
 
 #include "util/isatty.hpp"
 #include "util/log.hpp"
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 class Percent
@@ -87,7 +84,6 @@ class Percent
         }
     }
 };
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // PERCENT_HPP

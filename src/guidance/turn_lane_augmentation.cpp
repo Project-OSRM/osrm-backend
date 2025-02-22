@@ -8,11 +8,7 @@
 #include <cstddef>
 #include <utility>
 
-namespace osrm
-{
-namespace guidance
-{
-namespace lanes
+namespace osrm::guidance::lanes
 {
 
 namespace
@@ -30,9 +26,9 @@ const constexpr extractor::TurnLaneType::Mask tag_by_modifier[] = {
 
 std::size_t getNumberOfTurns(const Intersection &intersection)
 {
-    return std::count_if(intersection.begin(), intersection.end(), [](const ConnectedRoad &road) {
-        return road.entry_allowed;
-    });
+    return std::count_if(intersection.begin(),
+                         intersection.end(),
+                         [](const ConnectedRoad &road) { return road.entry_allowed; });
 }
 
 LaneDataVector augmentMultiple(const std::size_t none_index,
@@ -45,7 +41,8 @@ LaneDataVector augmentMultiple(const std::size_t none_index,
     // entries?
 
     // looking at the left side first
-    const auto range = [&]() {
+    const auto range = [&]()
+    {
         if (none_index == 0)
         {
             // find first connection_count - lane_data.size() valid turns
@@ -110,17 +107,18 @@ LaneDataVector augmentMultiple(const std::size_t none_index,
     const auto intersection_range_first = intersection.begin() + range.first;
     const auto intersection_range_end = intersection.begin() + range.second;
     const auto allowed_in_range =
-        std::count_if(intersection_range_first, intersection_range_end, [](const auto &road) {
-            return road.entry_allowed;
-        });
+        std::count_if(intersection_range_first,
+                      intersection_range_end,
+                      [](const auto &road) { return road.entry_allowed; });
 
     if (allowed_in_range > 1 && lane_data[none_index].to - lane_data[none_index].from >= 1)
     {
         // check if there is a straight turn
-        auto straight_itr =
-            std::find_if(intersection_range_first, intersection_range_end, [](const auto &road) {
-                return road.instruction.direction_modifier == DirectionModifier::Straight;
-            });
+        auto straight_itr = std::find_if(
+            intersection_range_first,
+            intersection_range_end,
+            [](const auto &road)
+            { return road.instruction.direction_modifier == DirectionModifier::Straight; });
 
         // we have a straight turn?
         if (straight_itr != intersection_range_end)
@@ -349,6 +347,4 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
     return lane_data;
 }
 
-} // namespace lanes
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance::lanes

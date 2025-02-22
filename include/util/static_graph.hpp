@@ -14,14 +14,11 @@
 #include <boost/assert.hpp>
 
 #include <algorithm>
-#include <limits>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 template <typename EdgeDataT, storage::Ownership Ownership> class StaticGraph;
 
@@ -96,7 +93,7 @@ template <typename EdgeDataT> struct SortableEdgeWithData : SortableEdgeWithData
     SortableEdgeWithData() = default;
 
     template <typename... Ts>
-    SortableEdgeWithData(NodeIterator source, NodeIterator target, Ts &&... data)
+    SortableEdgeWithData(NodeIterator source, NodeIterator target, Ts &&...data)
         : Base{source, target}, data{std::forward<Ts>(data)...}
     {
     }
@@ -306,21 +303,24 @@ class StaticGraph
         BOOST_ASSERT(node_array.size() == number_of_nodes + 1);
 
         edge_array.resize(number_of_edges);
-        std::transform(begin, end, edge_array.begin(), [](const auto &from) {
-            return static_graph_details::edgeToEntry<EdgeArrayEntry>(
-                from, traits::HasDataMember<EdgeArrayEntry>{});
-        });
+        std::transform(begin,
+                       end,
+                       edge_array.begin(),
+                       [](const auto &from)
+                       {
+                           return static_graph_details::edgeToEntry<EdgeArrayEntry>(
+                               from, traits::HasDataMember<EdgeArrayEntry>{});
+                       });
     }
 
   protected:
-    NodeIterator number_of_nodes;
-    EdgeIterator number_of_edges;
+    NodeIterator number_of_nodes = 0;
+    EdgeIterator number_of_edges = 0;
 
     Vector<NodeArrayEntry> node_array;
     Vector<EdgeArrayEntry> edge_array;
 };
 
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // STATIC_GRAPH_HPP

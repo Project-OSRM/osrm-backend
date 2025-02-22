@@ -11,10 +11,9 @@
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
+#include <bitset>
 #include <iomanip>
-#include <iostream>
-#include <sstream>
-#include <string>
+#include <ostream>
 #include <vector>
 
 namespace osrm
@@ -29,9 +28,7 @@ inline std::ostream &operator<<(std::ostream &out, const Coordinate &coordinate)
 }
 } // namespace util
 
-namespace engine
-{
-namespace guidance
+namespace engine::guidance
 {
 inline std::ostream &operator<<(std::ostream &out, const RouteStep &step)
 {
@@ -62,8 +59,7 @@ inline std::ostream &operator<<(std::ostream &out, const RouteStep &step)
 
     return out;
 }
-} // namespace guidance
-} // namespace engine
+} // namespace engine::guidance
 
 namespace guidance
 {

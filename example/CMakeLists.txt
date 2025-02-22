@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 3.18)
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR AND NOT MSVC_IDE)
   message(FATAL_ERROR "In-source builds are not allowed.
@@ -12,19 +12,19 @@ endif()
 
 project(osrm-example C CXX)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-set(bitness 32)
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  set(bitness 64)
   message(STATUS "Building on a 64 bit system")
 else()
   message(STATUS "Building on a 32 bit system")
 endif()
 
-if(WIN32 AND MSVC_VERSION LESS 1900)
-  message(FATAL_ERROR "Building with Microsoft compiler needs Latest Visual Studio 2015 (Community or better)")
-endif()
+find_package(Boost REQUIRED CONFIG COMPONENTS date_time iostreams thread)
 
 link_directories(${LibOSRM_LIBRARY_DIRS})
 add_executable(osrm-example example.cpp)

@@ -3,14 +3,12 @@
 
 #include "storage/shared_datatype.hpp"
 
-#include <boost/function_output_iterator.hpp>
+#include <boost/iterator/function_output_iterator.hpp>
 
 #include <type_traits>
 #include <unordered_map>
 
-namespace osrm
-{
-namespace storage
+namespace osrm::storage
 {
 
 // This class wraps one or more shared memory regions with the associated data layout
@@ -30,10 +28,10 @@ class SharedDataIndex
         // Build mapping from block name to region
         for (auto index : util::irange<std::uint32_t>(0, regions.size()))
         {
-            regions[index].layout->List("",
-                                        boost::make_function_output_iterator([&](const auto &name) {
-                                            block_to_region[name] = index;
-                                        }));
+            regions[index].layout->List(
+                "",
+                boost::make_function_output_iterator([&](const auto &name)
+                                                     { block_to_region[name] = index; }));
         }
     }
 
@@ -95,7 +93,6 @@ class SharedDataIndex
     std::vector<AllocatedRegion> regions;
     std::unordered_map<std::string, std::uint32_t> block_to_region;
 };
-} // namespace storage
-} // namespace osrm
+} // namespace osrm::storage
 
 #endif

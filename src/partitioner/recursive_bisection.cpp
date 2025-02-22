@@ -7,19 +7,16 @@
 #include "util/log.hpp"
 #include "util/timing_util.hpp"
 
-#include <tbb/parallel_do.h>
+#include <tbb/parallel_for_each.h>
 
 #include <algorithm>
 #include <climits> // for CHAR_BIT
 #include <cstddef>
 #include <iterator>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 RecursiveBisection::RecursiveBisection(BisectionGraph &bisection_graph_,
@@ -60,40 +57,48 @@ RecursiveBisection::RecursiveBisection(BisectionGraph &bisection_graph_,
     std::vector<TreeNode> forest;
     forest.reserve(last - first);
 
-    std::transform(first, last, std::back_inserter(forest), [this](auto graph) {
-        return TreeNode{std::move(graph), internal_state.SCCDepth()};
-    });
+    std::transform(first,
+                   last,
+                   std::back_inserter(forest),
+                   [this](auto graph) {
+                       return TreeNode{std::move(graph), internal_state.SCCDepth()};
+                   });
 
-    using Feeder = tbb::parallel_do_feeder<TreeNode>;
+    using Feeder = tbb::feeder<TreeNode>;
 
     TIMER_START(bisection);
 
     // Bisect graph into two parts. Get partition point and recurse left and right in parallel.
-    tbb::parallel_do(begin(forest), end(forest), [&](const TreeNode &node, Feeder &feeder) {
-        const auto cut =
-            computeInertialFlowCut(node.graph, num_optimizing_cuts, balance, boundary_factor);
-        const auto center = internal_state.ApplyBisection(
-            node.graph.Begin(), node.graph.End(), node.depth, cut.flags);
+    tbb::parallel_for_each(
+        begin(forest),
+        end(forest),
+        [&](const TreeNode &node, Feeder &feeder)
+        {
+            const auto cut =
+                computeInertialFlowCut(node.graph, num_optimizing_cuts, balance, boundary_factor);
+            const auto center = internal_state.ApplyBisection(
+                node.graph.Begin(), node.graph.End(), node.depth, cut.flags);
 
-        const auto terminal = [&](const auto &node) {
-            const auto maximum_depth = sizeof(BisectionID) * CHAR_BIT;
-            const auto too_small = node.graph.NumberOfNodes() < maximum_cell_size;
-            const auto too_deep = node.depth >= maximum_depth;
-            return too_small || too_deep;
-        };
+            const auto terminal = [&](const auto &node)
+            {
+                const auto maximum_depth = sizeof(BisectionID) * CHAR_BIT;
+                const auto too_small = node.graph.NumberOfNodes() < maximum_cell_size;
+                const auto too_deep = node.depth >= maximum_depth;
+                return too_small || too_deep;
+            };
 
-        BisectionGraphView left_graph{bisection_graph, node.graph.Begin(), center};
-        TreeNode left_node{std::move(left_graph), node.depth + 1};
+            BisectionGraphView left_graph{bisection_graph, node.graph.Begin(), center};
+            TreeNode left_node{std::move(left_graph), node.depth + 1};
 
-        if (!terminal(left_node))
-            feeder.add(std::move(left_node));
+            if (!terminal(left_node))
+                feeder.add(left_node);
 
-        BisectionGraphView right_graph{bisection_graph, center, node.graph.End()};
-        TreeNode right_node{std::move(right_graph), node.depth + 1};
+            BisectionGraphView right_graph{bisection_graph, center, node.graph.End()};
+            TreeNode right_node{std::move(right_graph), node.depth + 1};
 
-        if (!terminal(right_node))
-            feeder.add(std::move(right_node));
-    });
+            if (!terminal(right_node))
+                feeder.add(right_node);
+        });
 
     TIMER_STOP(bisection);
 
@@ -107,5 +112,4 @@ const std::vector<BisectionID> &RecursiveBisection::BisectionIDs() const
 
 std::uint32_t RecursiveBisection::SCCDepth() const { return internal_state.SCCDepth(); }
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner

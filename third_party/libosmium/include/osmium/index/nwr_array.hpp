@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -65,6 +65,30 @@ namespace osmium {
 
         const T& operator()(const osmium::item_type type) const noexcept {
             return m_data[osmium::item_type_to_nwr_index(type)];
+        }
+
+        T& nodes() noexcept {
+            return m_data[0];
+        }
+
+        const T& nodes() const noexcept {
+            return m_data[0];
+        }
+
+        T& ways() noexcept {
+            return m_data[1];
+        }
+
+        const T& ways() const noexcept {
+            return m_data[1];
+        }
+
+        T& relations() noexcept {
+            return m_data[2];
+        }
+
+        const T& relations() const noexcept {
+            return m_data[2];
         }
 
         iterator begin() noexcept {

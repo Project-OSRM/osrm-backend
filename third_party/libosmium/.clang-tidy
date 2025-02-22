@@ -1,10 +1,16 @@
 ---
-Checks: '*,-android-cloexec-*,-bugprone-branch-clone,-bugprone-macro-parentheses,-cert-dcl21-cpp,-cert-err58-cpp,-clang-analyzer-optin.cplusplus.VirtualCall,-cppcoreguidelines-avoid-c-arrays,-cppcoreguidelines-avoid-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-non-private-member-variables-in-classes,-cppcoreguidelines-owning-memory,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-vararg,-fuchsia-*,-google-runtime-references,-hicpp-avoid-c-arrays,-hicpp-invalid-access-moved,-hicpp-no-array-decay,-hicpp-no-assembler,-hicpp-vararg,-misc-macro-parentheses,-misc-non-private-member-variables-in-classes,-misc-unused-parameters,-modernize-avoid-c-arrays,-modernize-make-unique,-modernize-raw-string-literal,-modernize-use-trailing-return-type,-readability-avoid-const-params-in-decls,-readability-implicit-bool-cast,-readability-implicit-bool-conversion,-readability-magic-numbers'
+Checks: '*,-abseil-string-find-str-contains,-altera-*,-android-cloexec-*,-bugprone-branch-clone,-bugprone-easily-swappable-parameters,-bugprone-macro-parentheses,-cert-dcl21-cpp,-cert-err58-cpp,-clang-analyzer-optin.cplusplus.VirtualCall,-cppcoreguidelines-avoid-c-arrays,-cppcoreguidelines-avoid-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-non-private-member-variables-in-classes,-cppcoreguidelines-owning-memory,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-vararg,-fuchsia-*,-google-runtime-references,-hicpp-avoid-c-arrays,-hicpp-invalid-access-moved,-hicpp-no-array-decay,-hicpp-no-assembler,-hicpp-vararg,-llvmlibc-*,-llvm-qualified-auto,-misc-macro-parentheses,-misc-non-private-member-variables-in-classes,-misc-no-recursion,-misc-unused-parameters,-modernize-avoid-c-arrays,-modernize-make-unique,-modernize-raw-string-literal,-modernize-use-trailing-return-type,-readability-avoid-const-params-in-decls,-readability-convert-member-functions-to-static,-readability-function-cognitive-complexity,-readability-identifier-length,-readability-implicit-bool-cast,-readability-implicit-bool-conversion,-readability-magic-numbers,-readability-qualified-auto'
 #
 #  For a list of check options, see:
 #  https://clang.llvm.org/extra/clang-tidy/checks/list.html
 #
 #  Disabled checks:
+#
+#  abseil-string-find-str-contains
+#    We don't want the dependency.
+#
+#  altera-*
+#    Doesn't apply.
 #
 #  android-cloexec-*
 #    O_CLOEXEC isn't available on Windows making this non-portable.
@@ -12,6 +18,9 @@ Checks: '*,-android-cloexec-*,-bugprone-branch-clone,-bugprone-macro-parentheses
 #  bugprone-branch-clone
 #    Nice idea but collides but with switch statements we'll need to use
 #    fall-throughs to fix this, which is also bad.
+#
+#  bugprone-easily-swappable-parameters
+#    Interesting test, but not something we can do much about in many places.
 #
 #  bugprone-macro-parentheses
 #    False positive in the only place where it reports something and
@@ -87,6 +96,14 @@ Checks: '*,-android-cloexec-*,-bugprone-branch-clone,-bugprone-macro-parentheses
 #  hicpp-vararg
 #    Too strict, sometimes calling vararg functions is necessary.
 #
+#  llvm-qualified-auto
+#  readability-qualified-auto
+#    This reports too many cases. Typical case is an iterator that might be
+#    a pointer on one system but some special type on another.
+#
+#  llvmlibc-*
+#    Doesn't apply to us.
+#
 #  misc-macro-parentheses
 #    Old name for bugprone-macro-parentheses.
 #
@@ -94,6 +111,9 @@ Checks: '*,-android-cloexec-*,-bugprone-branch-clone,-bugprone-macro-parentheses
 #    Reports this also for structs, which doesn't make any sense. There is
 #    an option "IgnoreClassesWithAllMemberVariablesBeingPublic" which should
 #    disable this, but it didn't work for me.
+#
+#  misc-no-recursion
+#    There is nothing wrong with recursion.
 #
 #  misc-unused-parameters
 #    Can't be fixed, because then Doxygen will complain. (In file
@@ -116,6 +136,15 @@ Checks: '*,-android-cloexec-*,-bugprone-branch-clone,-bugprone-macro-parentheses
 #  readability-avoid-const-params-in-decls
 #    This is header only library, so the declaration and implementation are
 #    often the same and we want to have the const in implementations.
+#
+#  readability-convert-member-functions-to-static
+#    Reports too many false positives
+#
+#  readability-function-cognitive-complexity
+#    Sometimes the large functions are needed.
+#
+#  readability-identifier-length
+#    Too strict.
 #
 #  readability-implicit-bool-cast
 #    Old name for readability-implicit-bool-conversion.

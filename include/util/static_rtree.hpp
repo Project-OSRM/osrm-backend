@@ -2,8 +2,9 @@
 #define STATIC_RTREE_HPP
 
 #include "storage/tar_fwd.hpp"
-
+#include "osrm/coordinate.hpp"
 #include "util/bearing.hpp"
+#include "util/binary_heap.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/deallocating_vector.hpp"
 #include "util/exception.hpp"
@@ -11,17 +12,14 @@
 #include "util/integer_range.hpp"
 #include "util/mmap_file.hpp"
 #include "util/rectangle.hpp"
+#include "util/timing_util.hpp"
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 #include "util/web_mercator.hpp"
 
-#include "osrm/coordinate.hpp"
-
 #include "storage/shared_memory_ownership.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 
 #include <tbb/blocked_range.h>
@@ -29,16 +27,13 @@
 #include <tbb/parallel_sort.h>
 
 #include <algorithm>
-#include <array>
+#include <filesystem>
 #include <limits>
-#include <memory>
 #include <queue>
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 template <class EdgeDataT,
           storage::Ownership Ownership = storage::Ownership::Container,
@@ -68,7 +63,7 @@ write(storage::tar::FileWriter &writer,
 
 /***
  * Static RTree for serving nearest neighbour queries
- * // All coordinates are pojected first to Web Mercator before the bounding boxes
+ * // All coordinates are projected first to Web Mercator before the bounding boxes
  * // are computed, this means the internal distance metric doesn not represent meters!
  */
 
@@ -273,7 +268,7 @@ class StaticRTree
     // Construct a packed Hilbert-R-Tree with Kamel-Faloutsos algorithm [1]
     explicit StaticRTree(const std::vector<EdgeDataT> &input_data_vector,
                          const Vector<Coordinate> &coordinate_list,
-                         const boost::filesystem::path &on_disk_file_name)
+                         const std::filesystem::path &on_disk_file_name)
         : m_coordinate_list(coordinate_list.data(), coordinate_list.size())
     {
         const auto element_count = input_data_vector.size();
@@ -283,7 +278,8 @@ class StaticRTree
         tbb::parallel_for(
             tbb::blocked_range<uint64_t>(0, element_count),
             [&input_data_vector, &input_wrapper_vector, this](
-                const tbb::blocked_range<uint64_t> &range) {
+                const tbb::blocked_range<uint64_t> &range)
+            {
                 for (uint64_t element_counter = range.begin(), end = range.end();
                      element_counter != end;
                      ++element_counter)
@@ -459,11 +455,11 @@ class StaticRTree
      * Constructs an empty RTree for de-serialization.
      */
     template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
-    explicit StaticRTree(const boost::filesystem::path &on_disk_file_name,
+    explicit StaticRTree(const std::filesystem::path &on_disk_file_name,
                          const Vector<Coordinate> &coordinate_list)
-        : m_coordinate_list(coordinate_list.data(), coordinate_list.size())
+        : m_coordinate_list(coordinate_list.data(), coordinate_list.size()),
+          m_objects(mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region))
     {
-        m_objects = mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region);
     }
 
     /**
@@ -474,7 +470,7 @@ class StaticRTree
      */
     explicit StaticRTree(Vector<TreeNode> search_tree_,
                          Vector<std::uint64_t> tree_level_starts,
-                         const boost::filesystem::path &on_disk_file_name,
+                         const std::filesystem::path &on_disk_file_name,
                          const Vector<Coordinate> &coordinate_list)
         : m_search_tree(std::move(search_tree_)),
           m_coordinate_list(coordinate_list.data(), coordinate_list.size()),
@@ -488,6 +484,136 @@ class StaticRTree
        Rectangle needs to be projected!*/
     std::vector<EdgeDataT> SearchInBox(const Rectangle &search_rectangle) const
     {
+        std::vector<EdgeDataT> results;
+        SearchInBox(search_rectangle,
+                    [&results](const auto &edge_data) { results.push_back(edge_data); });
+        return results;
+    }
+
+    // Override filter and terminator for the desired behaviour.
+    std::vector<CandidateSegment> Nearest(const Coordinate input_coordinate,
+                                          const std::size_t max_results) const
+    {
+        return Nearest(
+            input_coordinate,
+            [](const CandidateSegment &) { return std::make_pair(true, true); },
+            [max_results](const std::size_t num_results, const CandidateSegment &)
+            { return num_results >= max_results; });
+    }
+
+    // NB 1: results are not guaranteed to be sorted by distance
+    // NB 2: maxDistanceMeters is not a hard limit, it's just a way to reduce the number of edges
+    // returned
+    template <typename FilterT>
+    std::vector<CandidateSegment> SearchInRange(const Coordinate input_coordinate,
+                                                double maxDistanceMeters,
+                                                const FilterT filter) const
+    {
+        auto projected_coordinate = web_mercator::fromWGS84(input_coordinate);
+        Coordinate fixed_projected_coordinate{projected_coordinate};
+
+        auto bbox = Rectangle::ExpandMeters(input_coordinate, maxDistanceMeters);
+        std::vector<CandidateSegment> results;
+
+        SearchInBox(
+            bbox,
+            [&results, &filter, fixed_projected_coordinate, this](const EdgeDataT &current_edge)
+            {
+                const auto projected_u = web_mercator::fromWGS84(m_coordinate_list[current_edge.u]);
+                const auto projected_v = web_mercator::fromWGS84(m_coordinate_list[current_edge.v]);
+
+                auto [_, projected_nearest] = coordinate_calculation::projectPointOnSegment(
+                    projected_u, projected_v, fixed_projected_coordinate);
+
+                CandidateSegment current_candidate{projected_nearest, current_edge};
+                auto use_segment = filter(current_candidate);
+                if (!use_segment.first && !use_segment.second)
+                {
+                    return;
+                }
+                current_candidate.data.forward_segment_id.enabled &= use_segment.first;
+                current_candidate.data.reverse_segment_id.enabled &= use_segment.second;
+
+                results.push_back(current_candidate);
+            });
+
+        return results;
+    }
+
+    // Return edges in distance order with the coordinate of the closest point on the edge.
+    template <typename FilterT, typename TerminationT>
+    std::vector<CandidateSegment> Nearest(const Coordinate input_coordinate,
+                                          const FilterT filter,
+                                          const TerminationT terminate) const
+    {
+        std::vector<CandidateSegment> results;
+
+        auto projected_coordinate = web_mercator::fromWGS84(input_coordinate);
+        Coordinate fixed_projected_coordinate{projected_coordinate};
+
+        // we re-use queue for each query to avoid re-allocating memory
+        static thread_local util::BinaryHeap<QueryCandidate> traversal_queue;
+
+        traversal_queue.clear();
+        // initialize queue with root element
+        traversal_queue.emplace(QueryCandidate{0, TreeIndex{}});
+
+        while (!traversal_queue.empty())
+        {
+            QueryCandidate current_query_node = traversal_queue.top();
+            traversal_queue.pop();
+
+            const TreeIndex &current_tree_index = current_query_node.tree_index;
+            if (!current_query_node.is_segment())
+            { // current object is a tree node
+                if (is_leaf(current_tree_index))
+                {
+                    ExploreLeafNode(current_tree_index,
+                                    fixed_projected_coordinate,
+                                    projected_coordinate,
+                                    traversal_queue);
+                }
+                else
+                {
+                    ExploreTreeNode(
+                        current_tree_index, fixed_projected_coordinate, traversal_queue);
+                }
+            }
+            else
+            { // current candidate is an actual road segment
+                const auto &edge_data = m_objects[current_query_node.segment_index];
+                // We deliberately make an edge data copy here, we mutate the value below
+                CandidateSegment current_candidate{current_query_node.fixed_projected_coordinate,
+                                                   edge_data};
+
+                // to allow returns of no-results if too restrictive filtering, this needs to be
+                // done here even though performance would indicate that we want to stop after
+                // adding the first candidate
+                if (terminate(results.size(), current_candidate))
+                {
+                    break;
+                }
+
+                auto use_segment = filter(current_candidate);
+                if (!use_segment.first && !use_segment.second)
+                {
+                    continue;
+                }
+                current_candidate.data.forward_segment_id.enabled &= use_segment.first;
+                current_candidate.data.reverse_segment_id.enabled &= use_segment.second;
+
+                // store phantom node in result vector
+                results.push_back(std::move(current_candidate));
+            }
+        }
+
+        return results;
+    }
+
+  private:
+    template <typename Callback>
+    void SearchInBox(const Rectangle &search_rectangle, Callback &&callback) const
+    {
         const Rectangle projected_rectangle{
             search_rectangle.min_lon,
             search_rectangle.max_lon,
@@ -495,8 +621,6 @@ class StaticRTree
                 web_mercator::latToY(toFloating(FixedLatitude(search_rectangle.min_lat)))}),
             toFixed(FloatLatitude{
                 web_mercator::latToY(toFloating(FixedLatitude(search_rectangle.max_lat)))})};
-        std::vector<EdgeDataT> results;
-
         std::queue<TreeIndex> traversal_queue;
         traversal_queue.push(TreeIndex{});
 
@@ -530,7 +654,7 @@ class StaticRTree
                     // use the _unprojected_ input rectangle here
                     if (bbox.Intersects(search_rectangle))
                     {
-                        results.push_back(current_edge);
+                        callback(current_edge);
                     }
                 }
             }
@@ -552,87 +676,8 @@ class StaticRTree
                 }
             }
         }
-        return results;
     }
 
-    // Override filter and terminator for the desired behaviour.
-    std::vector<EdgeDataT> Nearest(const Coordinate input_coordinate,
-                                   const std::size_t max_results) const
-    {
-        return Nearest(
-            input_coordinate,
-            [](const CandidateSegment &) { return std::make_pair(true, true); },
-            [max_results](const std::size_t num_results, const CandidateSegment &) {
-                return num_results >= max_results;
-            });
-    }
-
-    // Override filter and terminator for the desired behaviour.
-    template <typename FilterT, typename TerminationT>
-    std::vector<EdgeDataT> Nearest(const Coordinate input_coordinate,
-                                   const FilterT filter,
-                                   const TerminationT terminate) const
-    {
-        std::vector<EdgeDataT> results;
-        auto projected_coordinate = web_mercator::fromWGS84(input_coordinate);
-        Coordinate fixed_projected_coordinate{projected_coordinate};
-        // initialize queue with root element
-        std::priority_queue<QueryCandidate> traversal_queue;
-        traversal_queue.push(QueryCandidate{0, TreeIndex{}});
-
-        while (!traversal_queue.empty())
-        {
-            QueryCandidate current_query_node = traversal_queue.top();
-            traversal_queue.pop();
-
-            const TreeIndex &current_tree_index = current_query_node.tree_index;
-            if (!current_query_node.is_segment())
-            { // current object is a tree node
-                if (is_leaf(current_tree_index))
-                {
-                    ExploreLeafNode(current_tree_index,
-                                    fixed_projected_coordinate,
-                                    projected_coordinate,
-                                    traversal_queue);
-                }
-                else
-                {
-                    ExploreTreeNode(
-                        current_tree_index, fixed_projected_coordinate, traversal_queue);
-                }
-            }
-            else
-            { // current candidate is an actual road segment
-                // We deliberatly make a copy here, we mutate the value below
-                auto edge_data = m_objects[current_query_node.segment_index];
-                const auto &current_candidate =
-                    CandidateSegment{current_query_node.fixed_projected_coordinate, edge_data};
-
-                // to allow returns of no-results if too restrictive filtering, this needs to be
-                // done here even though performance would indicate that we want to stop after
-                // adding the first candidate
-                if (terminate(results.size(), current_candidate))
-                {
-                    break;
-                }
-
-                auto use_segment = filter(current_candidate);
-                if (!use_segment.first && !use_segment.second)
-                {
-                    continue;
-                }
-                edge_data.forward_segment_id.enabled &= use_segment.first;
-                edge_data.reverse_segment_id.enabled &= use_segment.second;
-
-                // store phantom node in result vector
-                results.push_back(std::move(edge_data));
-            }
-        }
-
-        return results;
-    }
-
-  private:
     /**
      * Iterates over all the objects in a leaf node and inserts them into our
      * search priority queue.  The speed of this function is very much governed
@@ -665,10 +710,11 @@ class StaticRTree
             // distance must be non-negative
             BOOST_ASSERT(0. <= squared_distance);
             BOOST_ASSERT(i < std::numeric_limits<std::uint32_t>::max());
-            traversal_queue.push(QueryCandidate{squared_distance,
-                                                leaf_id,
-                                                static_cast<std::uint32_t>(i),
-                                                Coordinate{projected_nearest}});
+
+            traversal_queue.emplace(QueryCandidate{squared_distance,
+                                                   leaf_id,
+                                                   static_cast<std::uint32_t>(i),
+                                                   Coordinate{projected_nearest}});
         }
     }
 
@@ -676,7 +722,7 @@ class StaticRTree
      * Iterates over all the children of a TreeNode and inserts them into the search
      * priority queue using their distance from the search coordinate as the
      * priority metric.
-     * The closests distance to a box from our point is also the closest distance
+     * The closest distance to a box from our point is also the closest distance
      * to the closest line in that box (assuming the boxes hug their contents).
      */
     template <class QueueT>
@@ -697,7 +743,7 @@ class StaticRTree
                 child.minimum_bounding_rectangle.GetMinSquaredDist(
                     fixed_projected_input_coordinate);
 
-            traversal_queue.push(QueryCandidate{
+            traversal_queue.emplace(QueryCandidate{
                 squared_lower_bound_to_element,
                 TreeIndex(parent.level + 1, child_index - m_tree_level_starts[parent.level + 1])});
         }
@@ -774,7 +820,6 @@ class StaticRTree
 //[2] "Nearest Neighbor Queries", N. Roussopulos et al; 1995; DOI: 10.1145/223784.223794
 //[3] "Distance Browsing in Spatial Databases"; G. Hjaltason, H. Samet; 1999; ACM Trans. DB Sys
 // Vol.24 No.2, pp.265-318
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // STATIC_RTREE_HPP

@@ -10,14 +10,12 @@
 
 #include <numeric>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 namespace detail
 {
 template <storage::Ownership Ownership> class IntersectionBearingsContainer;
-}
+} // namespace detail
 
 namespace serialization
 {
@@ -46,42 +44,44 @@ template <storage::Ownership Ownership> class IntersectionBearingsContainer
     IntersectionBearingsContainer &operator=(IntersectionBearingsContainer &&) = default;
     IntersectionBearingsContainer &operator=(const IntersectionBearingsContainer &) = default;
 
-    IntersectionBearingsContainer(std::vector<BearingClassID> node_to_class_id_,
+    // NOLINTNEXTLINE(performance-unnecessary-value-param)
+    IntersectionBearingsContainer(std::vector<BearingClassID> node_to_class_id,
                                   const std::vector<util::guidance::BearingClass> &bearing_classes)
-        : node_to_class_id(std::move(node_to_class_id_))
+        : node_to_class_id_(std::move(node_to_class_id))
     {
         std::vector<unsigned> bearing_counts(bearing_classes.size());
         std::transform(bearing_classes.begin(),
                        bearing_classes.end(),
                        bearing_counts.begin(),
                        [](const auto &bearings) { return bearings.getAvailableBearings().size(); });
+        // NOLINTNEXTLINE(bugprone-fold-init-type)
         auto total_bearings = std::accumulate(bearing_counts.begin(), bearing_counts.end(), 0);
-        class_id_to_ranges_table = RangeTable<16>{bearing_counts};
+        class_id_to_ranges_table_ = RangeTable<16>{bearing_counts};
 
-        values.reserve(total_bearings);
+        values_.reserve(total_bearings);
         for (const auto &bearing_class : bearing_classes)
         {
             const auto &bearings = bearing_class.getAvailableBearings();
-            values.insert(values.end(), bearings.begin(), bearings.end());
+            values_.insert(values_.end(), bearings.begin(), bearings.end());
         }
     }
 
-    IntersectionBearingsContainer(Vector<DiscreteBearing> values_,
-                                  Vector<BearingClassID> node_to_class_id_,
-                                  RangeTable<16> class_id_to_ranges_table_)
-        : values(std::move(values_)), node_to_class_id(std::move(node_to_class_id_)),
-          class_id_to_ranges_table(std::move(class_id_to_ranges_table_))
+    IntersectionBearingsContainer(Vector<DiscreteBearing> values,
+                                  Vector<BearingClassID> node_to_class_id,
+                                  RangeTable<16> class_id_to_ranges_table)
+        : values_(std::move(values)), node_to_class_id_(std::move(node_to_class_id)),
+          class_id_to_ranges_table_(std::move(class_id_to_ranges_table))
     {
     }
 
     // Returns the bearing class for an intersection node
     util::guidance::BearingClass GetBearingClass(const NodeID node) const
     {
-        auto class_id = node_to_class_id[node];
-        auto range = class_id_to_ranges_table.GetRange(class_id);
+        auto class_id = node_to_class_id_[node];
+        auto range = class_id_to_ranges_table_.GetRange(class_id);
         util::guidance::BearingClass result;
-        std::for_each(values.begin() + range.front(),
-                      values.begin() + range.back() + 1,
+        std::for_each(values_.begin() + range.front(),
+                      values_.begin() + range.back() + 1,
                       [&](const DiscreteBearing &bearing) { result.add(bearing); });
         return result;
     }
@@ -95,16 +95,15 @@ template <storage::Ownership Ownership> class IntersectionBearingsContainer
                                     const IntersectionBearingsContainer &turn_data_container);
 
   private:
-    Vector<DiscreteBearing> values;
-    Vector<BearingClassID> node_to_class_id;
-    RangeTable<16> class_id_to_ranges_table;
+    Vector<DiscreteBearing> values_;
+    Vector<BearingClassID> node_to_class_id_;
+    RangeTable<16> class_id_to_ranges_table_;
 };
 } // namespace detail
 
 using IntersectionBearingsContainer =
     detail::IntersectionBearingsContainer<storage::Ownership::Container>;
 using IntersectionBearingsView = detail::IntersectionBearingsContainer<storage::Ownership::View>;
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

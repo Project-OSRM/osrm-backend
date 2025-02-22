@@ -12,11 +12,7 @@
 
 #include "util/integer_range.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 class MatchAPI final : public RouteAPI
@@ -34,14 +30,14 @@ class MatchAPI final : public RouteAPI
                       osrm::engine::api::ResultT &response) const
     {
         BOOST_ASSERT(sub_matchings.size() == sub_routes.size());
-        if (response.is<flatbuffers::FlatBufferBuilder>())
+        if (std::holds_alternative<flatbuffers::FlatBufferBuilder>(response))
         {
-            auto &fb_result = response.get<flatbuffers::FlatBufferBuilder>();
+            auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(response);
             MakeResponse(sub_matchings, sub_routes, fb_result);
         }
         else
         {
-            auto &json_result = response.get<util::json::Object>();
+            auto &json_result = std::get<util::json::Object>(response);
             MakeResponse(sub_matchings, sub_routes, json_result);
         }
     }
@@ -56,9 +52,10 @@ class MatchAPI final : public RouteAPI
             data_version_string = fb_result.CreateString(data_timestamp);
         }
 
-        auto response = MakeFBResponse(sub_routes, fb_result, [this, &fb_result, &sub_matchings]() {
-            return MakeTracepoints(fb_result, sub_matchings);
-        });
+        auto response = MakeFBResponse(sub_routes,
+                                       fb_result,
+                                       [this, &fb_result, &sub_matchings]()
+                                       { return MakeTracepoints(fb_result, sub_matchings); });
 
         if (!data_timestamp.empty())
         {
@@ -76,19 +73,24 @@ class MatchAPI final : public RouteAPI
         routes.values.reserve(number_of_routes);
         for (auto index : util::irange<std::size_t>(0UL, sub_matchings.size()))
         {
-            auto route = MakeRoute(sub_routes[index].segment_end_coordinates,
+            auto route = MakeRoute(sub_routes[index].leg_endpoints,
                                    sub_routes[index].unpacked_path_segments,
                                    sub_routes[index].source_traversed_in_reverse,
                                    sub_routes[index].target_traversed_in_reverse);
-            route.values["confidence"] = sub_matchings[index].confidence;
-            routes.values.push_back(std::move(route));
+            route.values.emplace("confidence", sub_matchings[index].confidence);
+            routes.values.emplace_back(std::move(route));
         }
         if (!parameters.skip_waypoints)
         {
-            response.values["tracepoints"] = MakeTracepoints(sub_matchings);
+            response.values.emplace("tracepoints", MakeTracepoints(sub_matchings));
         }
-        response.values["matchings"] = std::move(routes);
-        response.values["code"] = "Ok";
+        response.values.emplace("matchings", std::move(routes));
+        response.values.emplace("code", "Ok");
+        auto data_timestamp = facade.GetTimestamp();
+        if (!data_timestamp.empty())
+        {
+            response.values.emplace("data_version", data_timestamp);
+        }
     }
 
   protected:
@@ -130,18 +132,18 @@ class MatchAPI final : public RouteAPI
 
             if (tidy_result.can_be_removed[trace_index])
             {
-                waypoints.push_back(fbresult::WaypointBuilder(fb_result).Finish());
+                waypoints.emplace_back(fbresult::WaypointBuilder(fb_result).Finish());
                 continue;
             }
             auto matching_index = trace_idx_to_matching_idx[trace_index];
             if (matching_index.NotMatched())
             {
-                waypoints.push_back(fbresult::WaypointBuilder(fb_result).Finish());
+                waypoints.emplace_back(fbresult::WaypointBuilder(fb_result).Finish());
                 continue;
             }
             const auto &phantom =
                 sub_matchings[matching_index.sub_matching_index].nodes[matching_index.point_index];
-            auto waypoint = BaseAPI::MakeWaypoint(&fb_result, phantom);
+            auto waypoint = BaseAPI::MakeWaypoint(&fb_result, {phantom});
             waypoint->add_matchings_index(matching_index.sub_matching_index);
             waypoint->add_alternatives_count(sub_matchings[matching_index.sub_matching_index]
                                                  .alternatives_count[matching_index.point_index]);
@@ -163,7 +165,7 @@ class MatchAPI final : public RouteAPI
             {
                 waypoint->add_waypoint_index(matching_index.point_index);
             }
-            waypoints.push_back(waypoint->Finish());
+            waypoints.emplace_back(waypoint->Finish());
         }
 
         return fb_result.CreateVector(waypoints);
@@ -184,23 +186,23 @@ class MatchAPI final : public RouteAPI
         {
             if (tidy_result.can_be_removed[trace_index])
             {
-                waypoints.values.push_back(util::json::Null());
+                waypoints.values.emplace_back(util::json::Null());
                 continue;
             }
             auto matching_index = trace_idx_to_matching_idx[trace_index];
             if (matching_index.NotMatched())
             {
-                waypoints.values.push_back(util::json::Null());
+                waypoints.values.emplace_back(util::json::Null());
                 continue;
             }
             const auto &phantom =
                 sub_matchings[matching_index.sub_matching_index].nodes[matching_index.point_index];
-            auto waypoint = BaseAPI::MakeWaypoint(phantom);
-            waypoint.values["matchings_index"] = matching_index.sub_matching_index;
-            waypoint.values["waypoint_index"] = matching_index.point_index;
-            waypoint.values["alternatives_count"] =
-                sub_matchings[matching_index.sub_matching_index]
-                    .alternatives_count[matching_index.point_index];
+            auto waypoint = BaseAPI::MakeWaypoint({phantom});
+            waypoint.values.emplace("matchings_index", matching_index.sub_matching_index);
+            waypoint.values.emplace("waypoint_index", matching_index.point_index);
+            waypoint.values.emplace("alternatives_count",
+                                    sub_matchings[matching_index.sub_matching_index]
+                                        .alternatives_count[matching_index.point_index]);
             // waypoint indices need to be adjusted if route legs were collapsed
             // waypoint parameter assumes there is only one match object
             if (!parameters.waypoints.empty())
@@ -215,7 +217,7 @@ class MatchAPI final : public RouteAPI
                     waypoint.values["waypoint_index"] = util::json::Null();
                 }
             }
-            waypoints.values.push_back(std::move(waypoint));
+            waypoints.values.emplace_back(std::move(waypoint));
         }
 
         return waypoints;
@@ -248,8 +250,6 @@ class MatchAPI final : public RouteAPI
     const tidy::Result &tidy_result;
 };
 
-} // namespace api
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

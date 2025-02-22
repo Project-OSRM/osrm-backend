@@ -1,31 +1,25 @@
 #ifndef OSRM_ENGINE_GUIDANCE_COLLAPSE_HPP
 
 #include "engine/guidance/route_step.hpp"
-#include "util/attributes.hpp"
 
 #include <type_traits>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 
 // Multiple possible reasons can result in unnecessary/confusing instructions
 // Collapsing such turns into a single turn instruction, we give a clearer
 // set of instructions that is not cluttered by unnecessary turns/name changes.
-OSRM_ATTR_WARN_UNUSED
-std::vector<RouteStep> collapseTurnInstructions(std::vector<RouteStep> steps);
+[[nodiscard]] std::vector<RouteStep> collapseTurnInstructions(std::vector<RouteStep> steps);
 
 // Multiple possible reasons can result in unnecessary/confusing instructions
 // A prime example would be a segregated intersection. Turning around at this
 // intersection would result in two instructions to turn left.
 // Collapsing such turns into a single turn instruction, we give a clearer
 // set of instructions that is not cluttered by unnecessary turns/name changes.
-OSRM_ATTR_WARN_UNUSED
-std::vector<RouteStep> collapseSegregatedTurnInstructions(std::vector<RouteStep> steps);
+[[nodiscard]] std::vector<RouteStep>
+collapseSegregatedTurnInstructions(std::vector<RouteStep> steps);
 
 // A combined turn is a set of two instructions that actually form a single turn, as far as we
 // perceive it. A u-turn consisting of two left turns is one such example. But there are also lots
@@ -162,8 +156,6 @@ void combineRouteSteps(RouteStep &step_at_turn_location,
 // alias for suppressing a step, using CombineRouteStep with NoModificationStrategy only
 void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_location);
 
-} /* namespace guidance */
-} // namespace engine
-} /* namespace osrm */
+} // namespace osrm::engine::guidance
 
 #endif /* OSRM_ENGINE_GUIDANCE_COLLAPSE_HPP_ */

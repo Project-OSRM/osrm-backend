@@ -3,9 +3,7 @@
 
 #include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 // Mapping betweenn the node based graph u,v nodes and the edge based graph head,tail edge ids.
@@ -15,7 +13,6 @@ struct NBGToEBG
     NodeID u, v;
     NodeID forward_ebg_node, backward_ebg_node;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

@@ -15,11 +15,10 @@
 #include "util/integer_range.hpp"
 #include "util/typedefs.hpp"
 
+#include <optional>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 struct PathData
@@ -28,49 +27,28 @@ struct PathData
     NodeID from_edge_based_node;
     // the internal OSRM id of the OSM node id that is the via node of the turn
     NodeID turn_via_node;
-    // name of the street that leads to the turn
-    unsigned name_id;
-    // segregated edge-based node that leads to the turn
-    bool is_segregated;
     // weight that is traveled on the segment until the turn is reached
     // including the turn weight, if one exists
     EdgeWeight weight_until_turn;
-    // If this segment immediately preceeds a turn, then duration_of_turn
+    // If this segment immediately precedes a turn, then duration_of_turn
     // will contain the weight of the turn.  Otherwise it will be 0.
     EdgeWeight weight_of_turn;
     // duration that is traveled on the segment until the turn is reached,
-    // including a turn if the segment preceeds one.
-    EdgeWeight duration_until_turn;
-    // If this segment immediately preceeds a turn, then duration_of_turn
+    // including a turn if the segment precedes one.
+    EdgeDuration duration_until_turn;
+    // If this segment immediately precedes a turn, then duration_of_turn
     // will contain the duration of the turn.  Otherwise it will be 0.
-    EdgeWeight duration_of_turn;
-    // instruction to execute at the turn
-    osrm::guidance::TurnInstruction turn_instruction;
-    // turn lane data
-    util::guidance::LaneTupleIdPair lane_data;
-    // travel mode of the street that leads to the turn
-    extractor::TravelMode travel_mode : 4;
-    // user defined classed of the street that leads to the turn
-    extractor::ClassData classes;
-    // entry class of the turn, indicating possibility of turns
-    util::guidance::EntryClass entry_class;
-
+    EdgeDuration duration_of_turn;
     // Source of the speed value on this road segment
     DatasourceID datasource_id;
-
-    // bearing (as seen from the intersection) pre-turn
-    osrm::guidance::TurnBearing pre_turn_bearing;
-    // bearing (as seen from the intersection) post-turn
-    osrm::guidance::TurnBearing post_turn_bearing;
-
-    // Driving side of the turn
-    bool is_left_hand_driving;
+    // If segment precedes a turn, ID of the turn itself
+    std::optional<EdgeID> turn_edge;
 };
 
 struct InternalRouteResult
 {
     std::vector<std::vector<PathData>> unpacked_path_segments;
-    std::vector<PhantomNodes> segment_end_coordinates;
+    std::vector<PhantomEndpoints> leg_endpoints;
     std::vector<bool> source_traversed_in_reverse;
     std::vector<bool> target_traversed_in_reverse;
     EdgeWeight shortest_path_weight = INVALID_EDGE_WEIGHT;
@@ -83,9 +61,9 @@ struct InternalRouteResult
     }
 
     // Note: includes duration for turns, except for at start and end node.
-    EdgeWeight duration() const
+    EdgeDuration duration() const
     {
-        EdgeWeight ret{0};
+        EdgeDuration ret{0};
 
         for (const auto &leg : unpacked_path_segments)
             for (const auto &segment : leg)
@@ -116,7 +94,7 @@ inline InternalRouteResult CollapseInternalRouteResult(const InternalRouteResult
     if (leggy_result.unpacked_path_segments.size() == 1)
         return leggy_result;
 
-    BOOST_ASSERT(leggy_result.segment_end_coordinates.size() > 1);
+    BOOST_ASSERT(leggy_result.leg_endpoints.size() > 1);
 
     InternalRouteResult collapsed;
     collapsed.shortest_path_weight = leggy_result.shortest_path_weight;
@@ -127,7 +105,7 @@ inline InternalRouteResult CollapseInternalRouteResult(const InternalRouteResult
             // start another leg vector
             collapsed.unpacked_path_segments.push_back(leggy_result.unpacked_path_segments[i]);
             // save new phantom node pair
-            collapsed.segment_end_coordinates.push_back(leggy_result.segment_end_coordinates[i]);
+            collapsed.leg_endpoints.push_back(leggy_result.leg_endpoints[i]);
             // save data about phantom nodes
             collapsed.source_traversed_in_reverse.push_back(
                 leggy_result.source_traversed_in_reverse[i]);
@@ -139,9 +117,9 @@ inline InternalRouteResult CollapseInternalRouteResult(const InternalRouteResult
         {
             BOOST_ASSERT(!collapsed.unpacked_path_segments.empty());
             auto &last_segment = collapsed.unpacked_path_segments.back();
-            BOOST_ASSERT(!collapsed.segment_end_coordinates.empty());
-            collapsed.segment_end_coordinates.back().target_phantom =
-                leggy_result.segment_end_coordinates[i].target_phantom;
+            BOOST_ASSERT(!collapsed.leg_endpoints.empty());
+            collapsed.leg_endpoints.back().target_phantom =
+                leggy_result.leg_endpoints[i].target_phantom;
             collapsed.target_traversed_in_reverse.back() =
                 leggy_result.target_traversed_in_reverse[i];
             // copy path segments into current leg
@@ -158,22 +136,20 @@ inline InternalRouteResult CollapseInternalRouteResult(const InternalRouteResult
                 last_segment[old_size].weight_until_turn +=
 
                     leggy_result.source_traversed_in_reverse[i]
-                        ? leggy_result.segment_end_coordinates[i].source_phantom.reverse_weight
-                        : leggy_result.segment_end_coordinates[i].source_phantom.forward_weight;
+                        ? leggy_result.leg_endpoints[i].source_phantom.reverse_weight
+                        : leggy_result.leg_endpoints[i].source_phantom.forward_weight;
 
                 last_segment[old_size].duration_until_turn +=
                     leggy_result.source_traversed_in_reverse[i]
-                        ? leggy_result.segment_end_coordinates[i].source_phantom.reverse_duration
-                        : leggy_result.segment_end_coordinates[i].source_phantom.forward_duration;
+                        ? leggy_result.leg_endpoints[i].source_phantom.reverse_duration
+                        : leggy_result.leg_endpoints[i].source_phantom.forward_duration;
             }
         }
     }
 
-    BOOST_ASSERT(collapsed.segment_end_coordinates.size() ==
-                 collapsed.unpacked_path_segments.size());
+    BOOST_ASSERT(collapsed.leg_endpoints.size() == collapsed.unpacked_path_segments.size());
     return collapsed;
 }
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif // RAW_ROUTE_DATA_H

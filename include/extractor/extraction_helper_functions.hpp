@@ -1,7 +1,7 @@
 #ifndef EXTRACTION_HELPER_FUNCTIONS_HPP
 #define EXTRACTION_HELPER_FUNCTIONS_HPP
 
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -14,9 +14,7 @@
 
 #include "guidance/parsing_toolkit.hpp"
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 namespace detail
@@ -127,16 +125,14 @@ inline std::string canonicalizeStringList(std::string strlist, const std::string
 
     // collapse spaces; this is needed in case we expand "; X" => ";  X" above
     // but also makes sense to do irregardless of the fact - canonicalizing strings.
-    const auto spaces = [](unsigned char lhs, unsigned char rhs) {
-        return ::isspace(lhs) && ::isspace(rhs);
-    };
+    const auto spaces = [](unsigned char lhs, unsigned char rhs)
+    { return ::isspace(lhs) && ::isspace(rhs); };
     auto it = std::unique(begin(strlist), end(strlist), spaces);
     strlist.erase(it, end(strlist));
 
     return strlist;
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // EXTRACTION_HELPER_FUNCTIONS_HPP

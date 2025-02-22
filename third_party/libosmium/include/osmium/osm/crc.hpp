@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -155,7 +155,7 @@ namespace osmium {
         }
 
         void update(const Timestamp& timestamp) noexcept {
-            update_int32(uint32_t(timestamp));
+            update_int32(static_cast<uint32_t>(timestamp));
         }
 
         void update(const osmium::Location& location) noexcept {
@@ -169,7 +169,7 @@ namespace osmium {
         }
 
         void update(const NodeRef& node_ref) noexcept {
-            update_int64(node_ref.ref());
+            update_int64(static_cast<uint64_t>(node_ref.ref()));
             update(node_ref.location());
         }
 
@@ -187,8 +187,8 @@ namespace osmium {
         }
 
         void update(const osmium::RelationMember& member) noexcept {
-            update_int64(member.ref());
-            update_int16(uint16_t(member.type()));
+            update_int64(static_cast<uint64_t>(member.ref()));
+            update_int16(static_cast<uint16_t>(member.type()));
             update_string(member.role());
         }
 
@@ -198,8 +198,10 @@ namespace osmium {
             }
         }
 
+        // XXX Changeset id is not added to the CRC. This is an oversight,
+        // but we don't want to change this now to keep compatibility.
         void update(const osmium::OSMObject& object) noexcept {
-            update_int64(object.id());
+            update_int64(static_cast<uint64_t>(object.id()));
             update_bool(object.visible());
             update_int32(object.version());
             update(object.timestamp());
@@ -243,7 +245,9 @@ namespace osmium {
         }
 
         void update(const osmium::Changeset& changeset) noexcept {
-            update_int64(changeset.id());
+            // The static_cast and use of update_int64 is necessary here
+            // for backwards compatibility. It should have used update_int32.
+            update_int64(static_cast<uint64_t>(changeset.id()));
             update(changeset.created_at());
             update(changeset.closed_at());
             update(changeset.bounds());

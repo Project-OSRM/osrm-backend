@@ -10,13 +10,15 @@
 
 using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
+constexpr const std::size_t test_buffer_size = 1024UL * 10UL;
+
 TEST_CASE("Build changeset") {
-    osmium::memory::Buffer buffer{10 * 1000};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     osmium::builder::add_changeset(buffer,
         _cid(42),
-        _created_at(time_t(100)),
-        _closed_at(time_t(200)),
+        _created_at(static_cast<std::time_t>(100)),
+        _closed_at(static_cast<std::time_t>(200)),
         _num_changes(7),
         _num_comments(3),
         _uid(9),
@@ -42,15 +44,15 @@ TEST_CASE("Build changeset") {
 
     const auto pos = osmium::builder::add_changeset(buffer,
         _cid(43),
-        _created_at(time_t(120)),
+        _created_at(static_cast<std::time_t>(120)),
         _num_changes(21),
         _num_comments(0),
         _uid(9),
         _user("user"),
         _tag("comment", "foo"),
         _tag("foo", "bar"),
-        _comment({time_t(300), 10, "user2", "foo"}),
-        _comments({{time_t(400), 9, "user", "bar"}})
+        _comment({static_cast<std::time_t>(300), 10, "user2", "foo"}),
+        _comments({{static_cast<std::time_t>(400), 9, "user", "bar"}})
     );
 
     const osmium::Changeset& cs2 = buffer.get<osmium::Changeset>(pos);
@@ -90,7 +92,7 @@ TEST_CASE("Build changeset") {
 }
 
 TEST_CASE("Create changeset without helper") {
-    osmium::memory::Buffer buffer{10 * 1000};
+    osmium::memory::Buffer buffer{test_buffer_size};
     {
         osmium::builder::ChangesetBuilder builder{buffer};
 
@@ -145,12 +147,12 @@ TEST_CASE("Create changeset without helper") {
 }
 
 TEST_CASE("Change changeset") {
-    osmium::memory::Buffer buffer{10 * 1000};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     osmium::builder::add_changeset(buffer,
         _cid(42),
-        _created_at(time_t(100)),
-        _closed_at(time_t(200)),
+        _created_at(static_cast<std::time_t>(100)),
+        _closed_at(static_cast<std::time_t>(200)),
         _num_changes(7),
         _num_comments(3),
         _uid(9),
@@ -161,8 +163,8 @@ TEST_CASE("Change changeset") {
     auto& cs = buffer.get<osmium::Changeset>(0);
 
     cs.set_id(12);
-    cs.set_created_at(time_t(200));
-    cs.set_closed_at(time_t(300));
+    cs.set_created_at(static_cast<std::time_t>(200));
+    cs.set_closed_at(static_cast<std::time_t>(300));
     cs.set_num_changes(3);
     cs.set_num_comments(4);
     cs.set_uid(10);

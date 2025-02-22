@@ -5,9 +5,7 @@
 #include "util/typedefs.hpp"
 #include "util/xor_fast_hash_storage.hpp"
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 struct ContractorHeapData
 {
@@ -24,7 +22,6 @@ using ContractorHeap = util::QueryHeap<NodeID,
                                        ContractorHeapData,
                                        util::XORFastHashStorage<NodeID, NodeID>>;
 
-} // namespace contractor
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif // OSRM_CONTRACTOR_CONTRACTOR_HEAP_HPP_

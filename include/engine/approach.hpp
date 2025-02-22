@@ -30,17 +30,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdint>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 enum class Approach : std::uint8_t
 {
     CURB = 0,
-    UNRESTRICTED = 1
+    UNRESTRICTED = 1,
+    OPPOSITE = 2
 
 };
-}
-} // namespace osrm
+} // namespace osrm::engine
 #endif

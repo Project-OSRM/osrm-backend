@@ -1,13 +1,10 @@
 #include "partitioner/bisection_graph_view.hpp"
 
-#include <iostream>
 #include <iterator>
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 BisectionGraphView::BisectionGraphView(const BisectionGraph &bisection_graph_)
@@ -52,5 +49,4 @@ const BisectionGraphView::EdgeT &BisectionGraphView::Edge(const EdgeID eid) cons
     return bisection_graph.Edge(eid);
 }
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner

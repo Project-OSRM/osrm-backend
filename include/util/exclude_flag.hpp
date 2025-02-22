@@ -4,9 +4,7 @@
 #include "extractor/node_data_container.hpp"
 #include "extractor/profile_properties.hpp"
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 inline std::vector<std::vector<bool>>
@@ -29,7 +27,6 @@ excludeFlagsToNodeFilter(const NodeID number_of_nodes,
     }
     return filters;
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

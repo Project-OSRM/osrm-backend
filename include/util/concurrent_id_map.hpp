@@ -7,9 +7,7 @@
 
 #include <unordered_map>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 /**
@@ -28,7 +26,7 @@ struct ConcurrentIDMap
     mutable UpgradableMutex mutex;
 
     ConcurrentIDMap() = default;
-    ConcurrentIDMap(ConcurrentIDMap &&other)
+    ConcurrentIDMap(ConcurrentIDMap &&other) noexcept
     {
         if (this != &other)
         {
@@ -38,7 +36,7 @@ struct ConcurrentIDMap
             data = std::move(other.data);
         }
     }
-    ConcurrentIDMap &operator=(ConcurrentIDMap &&other)
+    ConcurrentIDMap &operator=(ConcurrentIDMap &&other) noexcept
     {
         if (this != &other)
         {
@@ -74,7 +72,6 @@ struct ConcurrentIDMap
     }
 };
 
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // CONCURRENT_ID_MAP_HPP

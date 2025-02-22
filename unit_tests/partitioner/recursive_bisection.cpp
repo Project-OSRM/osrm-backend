@@ -7,15 +7,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-// make sure not to leak in recursive bisection
-#if TBB_VERSION_MAJOR == 2020
-#include <tbb/global_control.h>
-tbb::global_control scheduler(tbb::global_control::max_allowed_parallelism, 2);
-#else
-#include <tbb/task_scheduler_init.h>
-tbb::task_scheduler_init init(2);
-#endif
-
 using namespace osrm::partitioner;
 using namespace osrm::util;
 
@@ -29,18 +20,19 @@ BOOST_AUTO_TEST_CASE(dividing_four_grid_cells)
     const int cols = 10;
     const int cut_edges = 4;
 
-    auto graph = [&]() {
+    auto graph = [&]()
+    {
         std::vector<Coordinate> grid_coordinates;
         std::vector<EdgeWithSomeAdditionalData> grid_edges;
 
-        const auto connect =
-            [&grid_edges](int min_left, int max_left, int min_right, int max_right) {
-                const NodeID source = (rand() % (max_left - min_left)) + min_left;
-                const NodeID target = (rand() % (max_right - min_right)) + min_right;
+        const auto connect = [&grid_edges](int min_left, int max_left, int min_right, int max_right)
+        {
+            const NodeID source = (rand() % (max_left - min_left)) + min_left;
+            const NodeID target = (rand() % (max_right - min_right)) + min_right;
 
-                grid_edges.push_back({source, target, 1});
-                grid_edges.push_back({target, source, 1});
-            };
+            grid_edges.push_back({source, target, 1});
+            grid_edges.push_back({target, source, 1});
+        };
 
         // generate 10 big components
         for (int i = 0; i < 4; ++i)
@@ -72,7 +64,7 @@ BOOST_AUTO_TEST_CASE(dividing_four_grid_cells)
 
     RecursiveBisection bisection(graph, 120, 1.1, 0.25, 10, 1);
 
-    const auto result = bisection.BisectionIDs();
+    const auto &result = bisection.BisectionIDs();
     // all same IDs withing a group
     for (int i = 0; i < 4; ++i)
         for (int j = 0; j < rows * cols; ++j)

@@ -21,8 +21,27 @@ Feature: Basic Map Matching
             | abcd  | no     |
 
         When I match I should get
-            | trace | timestamps | matchings |
-            | ab1d  | 0 1 2 3    | ad        |
+            | trace | timestamps | matchings | data_version |
+            | ab1d  | 0 1 2 3    | ad        |              |
+
+    Scenario: Data_version test on matching
+        Given a grid size of 100 meters
+        Given the node map
+            """
+            a b c d
+
+                1
+            """
+
+        And the extract extra arguments "--data_version cucumber_data_version"
+
+        And the ways
+            | nodes | oneway |
+            | abcd  | no     |
+
+        When I match I should get
+            | trace | timestamps | matchings | data_version          |
+            | ab1d  | 0 1 2 3    | ad        | cucumber_data_version |
 
     Scenario: Testbot - Map matching with trace splitting
         Given the node map
@@ -116,22 +135,6 @@ Feature: Basic Map Matching
         When I match I should get
             | trace | matchings |
             | abcbd | abbd      |
-
-    Scenario: Testbot - Map matching with core factor
-        Given the contract extra arguments "--core 0.8"
-        Given the node map
-            """
-            a b c d
-                e
-            """
-
-        And the ways
-            | nodes | oneway |
-            | abcd  | no     |
-
-        When I match I should get
-            | trace | timestamps | matchings |
-            | abcd  | 0 1 2 3    | abcd      |
 
     Scenario: Testbot - Map matching with small distortion
         Given the node map
@@ -279,8 +282,8 @@ Feature: Basic Map Matching
             | fb    | yes    |
 
         When I match I should get
-            | trace | matchings | geometry                                      |
-            | efbc  | efbc      | 1,0.99964,1.00036,0.99964,1.00036,1,1.000719,1 |
+            | trace | matchings | geometry                                           |
+            | efbc  | efbc      | 1,0.999638,1.000359,0.999638,1.000359,1,1.000719,1 |
 
     Scenario: Testbot - Geometry details using geojson
         Given the query options
@@ -356,7 +359,7 @@ Feature: Basic Map Matching
 
         When I match I should get
             | trace  | matchings | alternatives         |
-            | abcdef | abcde     | 0,0,0,0,1,1          |
+            | abcdef | abcde     | 0,0,0,1,1,1          |
 
     Scenario: Testbot - Speed greater than speed threshold
         Given a grid size of 100 meters
@@ -652,7 +655,7 @@ Feature: Basic Map Matching
 
         When I match I should get
             | trace    | geometry                           | code |
-            | defgh    | 1,1,1,0.999461,1.000674,0.999461   | Ok   |
+            | defgh    | 1,1,1,0.999457,1.000674,0.999457   | Ok   |
 
     @match @testbot
     Scenario: Regression test - waypoints trimming too much geometry
@@ -682,8 +685,8 @@ Feature: Basic Map Matching
           | waypoints | 0;3  |
           | overview  | full |
         When I match I should get
-          | trace | geometry                                      | code |
-          | bgkj  | 1.000135,1,1.000135,0.99964,1.000387,0.999137 | Ok   |
+          | trace | geometry                                       | code |
+          | bgkj  | 1.000135,1,1.000135,0.999638,1.000386,0.999132 | Ok   |
 
 
     @match @testbot
@@ -712,12 +715,12 @@ Feature: Basic Map Matching
           | overview  | full |
           | steps     | true |
         When I match I should get
-          | trace | geometry                                   | turns                    | code |
-          | abc   | 1,0.99973,1.00027,0.99973,1.000539,0.99973 | depart,arrive            | Ok   |
-          | abd   | 1,0.99973,1.00027,0.99973,1.00027,0.999461 | depart,turn right,arrive | Ok   |
-          | abe   | 1,0.99973,1.00027,0.99973,1.00027,1        | depart,turn left,arrive  | Ok   |
-          | ahd   | 1,0.99973,1.00027,0.99973,1.00027,0.999461 | depart,turn right,arrive | Ok   |
-          | ahe   | 1,0.99973,1.00027,0.99973,1.00027,1        | depart,turn left,arrive  | Ok   |
+          | trace | geometry                                       | turns                    | code |
+          | abc   | 1,0.999729,1.000269,0.999729,1.000539,0.999729 | depart,arrive            | Ok   |
+          | abd   | 1,0.999729,1.000269,0.999729,1.000269,0.999457 | depart,turn right,arrive | Ok   |
+          | abe   | 1,0.999729,1.000269,0.999729,1.000269,1        | depart,turn left,arrive  | Ok   |
+          | ahd   | 1,0.999729,1.000269,0.999729,1.000269,0.999457 | depart,turn right,arrive | Ok   |
+          | ahe   | 1,0.999729,1.000269,0.999729,1.000269,1        | depart,turn left,arrive  | Ok   |
 
     @match @testbot
     Scenario: Regression test - add source phantoms properly (one phantom on one edge)
@@ -740,9 +743,9 @@ Feature: Basic Map Matching
           | annotations    | duration,weight |
           | generate_hints | false           |
         When I match I should get
-          | trace | geometry                                             | a:duration    | a:weight      | duration |
-          | 123   | 1.000135,1,1.000225,1,1.00036,1,1.000405,1,1.00045,1 | 1:1.5:0.5:0.5 | 1:1.5:0.5:0.5 | 3.5      |
-          | 321   | 1.00045,1,1.000405,1,1.00036,1,1.000225,1,1.000135,1 | 0.5:0.5:1.5:1 | 0.5:0.5:1.5:1 | 3.5      |
+          | trace | geometry                                               | a:duration    | a:weight      | duration |
+          | 123   | 1.000135,1,1.000225,1,1.000359,1,1.000404,1,1.000449,1 | 1:1.5:0.5:0.4 | 1:1.5:0.5:0.4 | 3.4      |
+          | 321   | 1.000449,1,1.000404,1,1.000359,1,1.000225,1,1.000135,1 | 0.4:0.5:1.5:1 | 0.4:0.5:1.5:1 | 3.4      |
 
     @match @testbot
     Scenario: Regression test - add source phantom properly (two phantoms on one edge)
@@ -765,9 +768,9 @@ Feature: Basic Map Matching
           | annotations    | duration,weight |
           | generate_hints | false           |
         When I match I should get
-          | trace | geometry                                   | a:duration | a:weight | duration |
-          | 1234  | 1.000135,1,1.000225,1,1.000405,1,1.00045,1 | 1:2:0.5    | 1:2:0.5  | 3.5      |
-          | 4321  | 1.00045,1,1.000405,1,1.000225,1,1.000135,1 | 0.5:2:1    | 0.5:2:1  | 3.5      |
+          | trace | geometry                                    | a:duration | a:weight | duration |
+          | 1234  | 1.000135,1,1.000225,1,1.000404,1,1.000449,1 | 1:2:0.4    | 1:2:0.4  | 3.4      |
+          | 4321  | 1.000449,1,1.000404,1,1.000225,1,1.000135,1 | 0.4:2:1    | 0.4:2:1  | 3.4      |
 
     @match @testbot
     Scenario: Regression test - add source phantom properly (two phantoms on one edge)
@@ -790,6 +793,7 @@ Feature: Basic Map Matching
 
         # These should have the same weights/duration in either direction
         When I match I should get
-          | trace | geometry             | a:distance | a:duration | a:weight | duration |
-          | 2345  | 1.00018,1,1.000315,1 | 15.013264  | 1.5        | 1.5      | 1.5      |
-          | 4321  | 1.00027,1,1.000135,1 | 15.013264  | 1.5        | 1.5      | 1.5      |
+          | trace | geometry             | a:distance    | a:duration | a:weight | duration |
+          | 2345  | 1.00018,1,1.000314,1 | 14.91466649  | 1.4        | 1.4      | 1.4      |
+          | 4321  | 1.00027,1,1.000135,1 | 15.02596997  | 1.5        | 1.5      | 1.5      |
+

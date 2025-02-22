@@ -1,8 +1,6 @@
 #include "partitioner/bisection_to_partition.hpp"
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 namespace
@@ -66,9 +64,8 @@ void partitionLevel(const std::vector<BisectionID> &node_to_bisection_id,
                 std::accumulate(permutation.begin() + cell.begin,
                                 permutation.begin() + cell.end,
                                 BisectionID{0},
-                                [&node_to_bisection_id](const BisectionID lhs, const NodeID rhs) {
-                                    return lhs | node_to_bisection_id[rhs];
-                                });
+                                [&node_to_bisection_id](const BisectionID lhs, const NodeID rhs)
+                                { return lhs | node_to_bisection_id[rhs]; });
             // masks all bit strictly higher then cell.bit
             BOOST_ASSERT(sizeof(unsigned long long) * CHAR_BIT > sizeof(BisectionID) * CHAR_BIT);
             const BisectionID mask = (1ULL << (cell.bit + 1)) - 1;
@@ -90,9 +87,8 @@ void partitionLevel(const std::vector<BisectionID> &node_to_bisection_id,
             std::uint32_t middle =
                 std::partition(permutation.begin() + cell.begin,
                                permutation.begin() + cell.end,
-                               [is_left_mask, &node_to_bisection_id](const auto node_id) {
-                                   return node_to_bisection_id[node_id] & is_left_mask;
-                               }) -
+                               [is_left_mask, &node_to_bisection_id](const auto node_id)
+                               { return node_to_bisection_id[node_id] & is_left_mask; }) -
                 permutation.begin();
 
             if (bit > 0)
@@ -128,7 +124,7 @@ bisectionToPartition(const std::vector<BisectionID> &node_to_bisection_id,
     std::vector<std::uint32_t> num_cells(max_cell_sizes.size());
 
     int level_idx = max_cell_sizes.size() - 1;
-    for (auto max_cell_size : boost::adaptors::reverse(max_cell_sizes))
+    for (auto max_cell_size : std::ranges::reverse_view(max_cell_sizes))
     {
         BOOST_ASSERT(level_idx >= 0);
         partitionLevel(node_to_bisection_id, max_cell_size, permutation, cells);
@@ -140,5 +136,4 @@ bisectionToPartition(const std::vector<BisectionID> &node_to_bisection_id,
 
     return std::make_tuple(std::move(partitions), std::move(num_cells));
 }
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner

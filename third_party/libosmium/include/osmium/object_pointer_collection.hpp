@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -36,8 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/handler.hpp>
 #include <osmium/osm/object.hpp>
 
-#include <boost/iterator/indirect_iterator.hpp>
-
 #include <algorithm>
 #include <utility>
 #include <vector>
@@ -45,6 +43,31 @@ DEALINGS IN THE SOFTWARE.
 // IWYU pragma: no_forward_declare osmium::OSMObject
 
 namespace osmium {
+
+    template <typename TBaseIterator, typename TValue>
+    class indirect_iterator : public TBaseIterator {
+
+    public:
+
+        using iterator_category = std::random_access_iterator_tag;
+        using value_type        = TValue;
+        using difference_type   = std::ptrdiff_t;
+        using pointer           = value_type*;
+        using reference         = value_type&;
+
+        explicit indirect_iterator(TBaseIterator it) :
+            TBaseIterator(it) {
+        }
+
+        reference operator*() const noexcept {
+            return *TBaseIterator::operator*();
+        }
+
+        pointer operator->() const noexcept {
+            return &*TBaseIterator::operator*();
+        }
+
+    }; // class indirect_iterator
 
     /**
      * A collection of pointers to OSM objects. The pointers can be easily
@@ -71,8 +94,10 @@ namespace osmium {
 
     public:
 
-        using iterator       = boost::indirect_iterator<std::vector<osmium::OSMObject*>::iterator, osmium::OSMObject>;
-        using const_iterator = boost::indirect_iterator<std::vector<osmium::OSMObject*>::const_iterator, const osmium::OSMObject>;
+        using iterator       = indirect_iterator<std::vector<osmium::OSMObject*>::iterator, osmium::OSMObject>;
+        using const_iterator = indirect_iterator<std::vector<osmium::OSMObject*>::const_iterator, const osmium::OSMObject>;
+
+        using ptr_iterator = std::vector<osmium::OSMObject*>::iterator;
 
         ObjectPointerCollection() = default;
 
@@ -84,11 +109,12 @@ namespace osmium {
         }
 
         /**
-         * Sort objects according to the specified order functor.
+         * Sort objects according to the specified order functor. This function
+         * uses a stable sort.
          */
         template <typename TCompare>
         void sort(TCompare&& compare) {
-            std::sort(m_objects.begin(), m_objects.end(), std::forward<TCompare>(compare));
+            std::stable_sort(m_objects.begin(), m_objects.end(), std::forward<TCompare>(compare));
         }
 
         /**
@@ -126,19 +152,29 @@ namespace osmium {
         }
 
         iterator begin() {
-            return {m_objects.begin()};
+            return iterator{m_objects.begin()};
         }
 
         iterator end() {
-            return {m_objects.end()};
+            return iterator{m_objects.end()};
         }
 
         const_iterator cbegin() const {
-            return {m_objects.cbegin()};
+            return const_iterator{m_objects.cbegin()};
         }
 
         const_iterator cend() const {
-            return {m_objects.cend()};
+            return const_iterator{m_objects.cend()};
+        }
+
+        /// Access to begin of pointer vector.
+        ptr_iterator ptr_begin() noexcept {
+            return m_objects.begin();
+        }
+
+        /// Access to end of pointer vector.
+        ptr_iterator ptr_end() noexcept {
+            return m_objects.end();
         }
 
     }; // class ObjectPointerCollection

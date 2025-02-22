@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -39,7 +39,6 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/object.hpp>
 #include <osmium/osm/types.hpp>
-#include <osmium/util/compatibility.hpp>
 
 #include <cstdint>
 #include <cstdlib>
@@ -112,12 +111,6 @@ namespace osmium {
 
         object_id_type ref() const noexcept {
             return m_ref;
-        }
-
-        /// @deprecated Use set_ref() instead.
-        OSMIUM_DEPRECATED RelationMember& ref(object_id_type ref) noexcept {
-            m_ref = ref;
-            return *this;
         }
 
         unsigned_object_id_type positive_ref() const noexcept {

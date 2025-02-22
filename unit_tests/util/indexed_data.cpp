@@ -5,8 +5,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <iomanip>
-#include <iostream>
-#include <sstream>
 #include <typeinfo>
 #include <vector>
 
@@ -113,12 +111,10 @@ BOOST_AUTO_TEST_CASE(check_max_size)
     std::vector<unsigned char> name_data(0x1000000, '#');
     std::vector<std::uint32_t> name_offsets;
 
-    auto test_variable = [&name_offsets, &name_data]() {
-        test_rw<IndexedData<VariableGroupBlock<16, std::string>>>(name_offsets, name_data);
-    };
-    auto test_fixed = [&name_offsets, &name_data]() {
-        test_rw<IndexedData<FixedGroupBlock<16, std::string>>>(name_offsets, name_data);
-    };
+    auto test_variable = [&name_offsets, &name_data]()
+    { test_rw<IndexedData<VariableGroupBlock<16, std::string>>>(name_offsets, name_data); };
+    auto test_fixed = [&name_offsets, &name_data]()
+    { test_rw<IndexedData<FixedGroupBlock<16, std::string>>>(name_offsets, name_data); };
 
     name_offsets = {0, 0x1000000};
     BOOST_CHECK_THROW(test_variable(), osrm::util::exception);
@@ -136,7 +132,7 @@ BOOST_AUTO_TEST_CASE(check_string_view)
     std::string name_data = "hellostringview";
     std::vector<std::uint32_t> name_offsets = {0, 5, 11, 15};
 
-    IndexedData<VariableGroupBlock<16, StringView>> indexed_data(
+    IndexedData<VariableGroupBlock<16, std::string_view>> indexed_data(
         name_offsets.begin(), name_offsets.end(), name_data.begin());
 
     BOOST_CHECK_EQUAL(indexed_data.at(0), "hello");

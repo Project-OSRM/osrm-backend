@@ -4,6 +4,24 @@ var data_path = require('./constants').data_path;
 var mld_data_path = require('./constants').mld_data_path;
 var three_test_coordinates = require('./constants').three_test_coordinates;
 var two_test_coordinates = require('./constants').two_test_coordinates;
+const flatbuffers = require('../../features/support/flatbuffers').flatbuffers;
+const FBResult = require('../../features/support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
+
+test('table: flatbuffer format', function(assert) {
+    assert.plan(3);
+    var osrm = new OSRM(data_path);
+    var options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+        format: 'flatbuffers'
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table instanceof Buffer);
+        const fb = FBResult.getRootAsFBResult(new flatbuffers.ByteBuffer(table));
+        assert.ok(fb.table());
+
+    });
+});
 
 test('table: test annotations paramater combination', function(assert) {
     assert.plan(12);
@@ -58,6 +76,30 @@ test('table: returns buffer', function(assert) {
         assert.ifError(err);
         assert.ok(table instanceof Buffer);
         table = JSON.parse(table);
+        assert.ok(table['durations'], 'distances table result should exist');
+    });
+});
+
+test('table: throws on invalid snapping values', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM(data_path);
+    var options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+        snapping: 'zing'
+    };
+    assert.throws(function () { osrm.table(options, function (err, response) { }); },
+        /'snapping' param must be one of \[default, any\]/);
+});
+
+test('table: snapping parameter passed through OK', function (assert) {
+    assert.plan(2);
+    var osrm = new OSRM(data_path);
+    var options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+        snapping: 'any'
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
         assert.ok(table['durations'], 'distances table result should exist');
     });
 });
@@ -130,7 +172,7 @@ tables.forEach(function(annotation) {
     });
 
     test('table: ' + annotation + ' throws on invalid arguments', function(assert) {
-        assert.plan(17);
+        assert.plan(18);
         var osrm = new OSRM(data_path);
         var options = {annotations: [annotation.slice(0,-1)]};
         assert.throws(function() { osrm.table(options); },
@@ -190,6 +232,8 @@ tables.forEach(function(annotation) {
 
         assert.throws(function() { osrm.route({coordinates: two_test_coordinates, generate_hints: null}, function(err, route) {}) },
             /generate_hints must be of type Boolean/);
+        assert.throws(function() { osrm.route({coordinates: two_test_coordinates, skip_waypoints: null}, function(err, route) {}) },
+            /skip_waypoints must be of type Boolean/);
     });
 
     test('table: throws on invalid arguments', function(assert) {
@@ -236,6 +280,20 @@ tables.forEach(function(annotation) {
 
             table.sources.map(assertHasNoHints);
             table.destinations.map(assertHasNoHints);
+        });
+    });
+
+    test('table: ' + annotation + ' table in Monaco without waypoints', function(assert) {
+        assert.plan(2);
+        var osrm = new OSRM(data_path);
+        var options = {
+            coordinates: two_test_coordinates,
+            skip_waypoints: true,  // false is default
+            annotations: [annotation.slice(0,-1)]
+        };
+        osrm.table(options, function(err, table) {
+            assert.strictEqual(table.sources, undefined);
+            assert.strictEqual(table.destinations, undefined);
         });
     });
 
@@ -311,3 +369,43 @@ tables.forEach(function(annotation) {
     });
 });
 
+test('table: throws on disabled geometry', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    var options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+    };
+    osrm.table(options, function(err, table) {
+        console.log(err)
+        assert.match(err.message, /DisabledDatasetException/);
+    });
+});
+
+test('table: ok on disabled geometry', function (assert) {
+    assert.plan(4);
+    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    var options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+        skip_waypoints: true
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table.durations, 'distances table result should exist');
+        assert.notok(table.sources)
+        assert.notok(table.destinations)
+    });
+});
+
+test('table: ok on disabled steps', function (assert) {
+    assert.plan(4);
+    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    var options = {
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
+    };
+    osrm.table(options, function(err, table) {
+        assert.ifError(err);
+        assert.ok(table.durations, 'distances table result should exist');
+        assert.ok(table.sources.length, 2)
+        assert.ok(table.destinations.length, 2)
+    });
+});

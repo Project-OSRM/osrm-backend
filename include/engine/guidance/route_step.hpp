@@ -14,13 +14,9 @@
 #include <string>
 #include <vector>
 
-#include <boost/range/iterator_range.hpp>
+#include <ranges>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 // Given the following turn from a,b to b,c over b:
 //  a --> b --> c
@@ -224,18 +220,16 @@ inline auto RouteStep::LanesToTheLeft() const
 {
     const auto &description = intersections.front().lane_description;
     LaneID num_lanes_left = NumLanesToTheLeft();
-    return boost::make_iterator_range(description.begin(), description.begin() + num_lanes_left);
+    return std::ranges::subrange(description.begin(), description.begin() + num_lanes_left);
 }
 
 inline auto RouteStep::LanesToTheRight() const
 {
     const auto &description = intersections.front().lane_description;
     LaneID num_lanes_right = NumLanesToTheRight();
-    return boost::make_iterator_range(description.end() - num_lanes_right, description.end());
+    return std::ranges::subrange(description.end() - num_lanes_right, description.end());
 }
 
-} // namespace guidance
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif

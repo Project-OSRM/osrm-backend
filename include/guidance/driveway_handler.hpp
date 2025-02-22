@@ -3,9 +3,7 @@
 
 #include "guidance/intersection_handler.hpp"
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 // Intersection handlers deal with all issues related to intersections.
@@ -35,7 +33,6 @@ class DrivewayHandler final : public IntersectionHandler
                             Intersection intersection) const override final;
 };
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /* OSRM_GUIDANCE_DRIVEWAY_HANDLER_HPP */

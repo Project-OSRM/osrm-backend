@@ -12,11 +12,9 @@
 #include <mutex>
 #include <string>
 
-#include <sol.hpp>
+#include <sol/sol.hpp>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 struct LuaScriptingContext final
@@ -38,17 +36,17 @@ struct LuaScriptingContext final
     RasterContainer raster_sources;
     sol::state state;
 
-    bool has_turn_penalty_function;
-    bool has_node_function;
-    bool has_way_function;
-    bool has_segment_function;
+    bool has_turn_penalty_function = false;
+    bool has_node_function = false;
+    bool has_way_function = false;
+    bool has_segment_function = false;
 
-    sol::function turn_function;
-    sol::function way_function;
-    sol::function node_function;
-    sol::function segment_function;
+    sol::protected_function turn_function;
+    sol::protected_function way_function;
+    sol::protected_function node_function;
+    sol::protected_function segment_function;
 
-    int api_version;
+    int api_version = 4;
     sol::table profile_table;
 
     // Reference to immutable location dependent data and locations memo
@@ -72,7 +70,7 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
 
     explicit Sol2ScriptingEnvironment(
         const std::string &file_name,
-        const std::vector<boost::filesystem::path> &location_dependent_data_paths);
+        const std::vector<std::filesystem::path> &location_dependent_data_paths);
     ~Sol2ScriptingEnvironment() override = default;
 
     const ProfileProperties &GetProfileProperties() override;
@@ -110,7 +108,6 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     tbb::enumerable_thread_specific<std::unique_ptr<LuaScriptingContext>> script_contexts;
     const LocationDependentData location_dependent_data;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* SCRIPTING_ENVIRONMENT_LUA_HPP */

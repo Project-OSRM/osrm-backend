@@ -4,18 +4,11 @@
 #include "util/coordinate.hpp"
 #include "util/web_mercator.hpp"
 
-#include <boost/assert.hpp>
-
 #include <cmath>
-#include <tuple>
 
 // Port of https://github.com/mapbox/geo-viewport
 
-namespace osrm
-{
-namespace util
-{
-namespace viewport
+namespace osrm::util::viewport
 {
 
 namespace detail
@@ -25,7 +18,7 @@ static constexpr unsigned MIN_ZOOM = 1;
 // this is an upper bound to current display sizes
 static constexpr double VIEWPORT_WIDTH = 8 * web_mercator::TILE_SIZE;
 static constexpr double VIEWPORT_HEIGHT = 5 * web_mercator::TILE_SIZE;
-static double INV_LOG_2 = 1. / std::log(2);
+static const double INV_LOG_2 = 1. / std::log(2);
 } // namespace detail
 
 inline unsigned getFittedZoom(util::Coordinate south_west, util::Coordinate north_east)
@@ -44,8 +37,6 @@ inline unsigned getFittedZoom(util::Coordinate south_west, util::Coordinate nort
     else
         return detail::MIN_ZOOM;
 }
-} // namespace viewport
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util::viewport
 
 #endif

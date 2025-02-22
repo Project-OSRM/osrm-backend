@@ -1,22 +1,27 @@
 #include "engine/polyline_compressor.hpp"
 
 #include <algorithm>
-#include <boost/assert.hpp>
 #include <climits>
 #include <cmath>
 #include <cstddef>
 #include <cstdlib>
 
-namespace osrm
-{
-namespace engine
-{
-namespace detail // anonymous to keep TU local
+namespace osrm::engine::detail // anonymous to keep TU local
 {
 
-std::string encode(int number_to_encode)
+void encode(int number_to_encode, std::string &output)
 {
-    std::string output;
+    if (number_to_encode < 0)
+    {
+        const unsigned binary = std::llabs(number_to_encode);
+        const unsigned twos = (~binary) + 1u;
+        const unsigned shl = twos << 1u;
+        number_to_encode = static_cast<int>(~shl);
+    }
+    else
+    {
+        number_to_encode <<= 1u;
+    }
     while (number_to_encode >= 0x20)
     {
         const int next_value = (0x20 | (number_to_encode & 0x1f)) + 63;
@@ -26,31 +31,6 @@ std::string encode(int number_to_encode)
 
     number_to_encode += 63;
     output += static_cast<char>(number_to_encode);
-    return output;
-}
-
-std::string encode(std::vector<int> &numbers)
-{
-    std::string output;
-    for (auto &number : numbers)
-    {
-        if (number < 0)
-        {
-            const unsigned binary = std::llabs(number);
-            const unsigned twos = (~binary) + 1u;
-            const unsigned shl = twos << 1u;
-            number = static_cast<int>(~shl);
-        }
-        else
-        {
-            number <<= 1u;
-        }
-    }
-    for (const int number : numbers)
-    {
-        output += encode(number);
-    }
-    return output;
 }
 
 // https://developers.google.com/maps/documentation/utilities/polylinealgorithm
@@ -75,6 +55,4 @@ std::int32_t decode_polyline_integer(std::string::const_iterator &first,
     result = ((result & 1) == 1) ? ~(result >> 1) : (result >> 1);
     return static_cast<std::int32_t>(result);
 }
-} // namespace detail
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::detail

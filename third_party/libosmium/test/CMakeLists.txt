@@ -87,7 +87,7 @@ function(add_unit_test _tgroup _tname)
             ENVIRONMENT "OSMIUM_TEST_DATA_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
         )
     else()
-        message("Skipped test ${_tpath} because a dependency was not found")
+        message("Skipped test ${_tpath} because a dependency was disabled/not found")
         set(OSMIUM_SKIPPED_TESTS
             "${OSMIUM_SKIPPED_TESTS} ${_tpath}"
             CACHE STRING "Tests that were skipped because of missing dependecies")
@@ -170,7 +170,7 @@ add_unit_test(geom test_tile)
 add_unit_test(geom test_wkb)
 add_unit_test(geom test_wkt)
 
-add_unit_test(handler test_apply LIBS "${OSMIUM_XML_LIBRARIES};${OSMIUM_PBF_LIBRARIES}")
+add_unit_test(handler test_apply LIBS "${OSMIUM_XML_LIBRARIES}")
 add_unit_test(handler test_check_order_handler)
 add_unit_test(handler test_dynamic_handler)
 
@@ -219,7 +219,6 @@ add_unit_test(thread test_pool ENABLE_IF ${Threads_FOUND} LIBS ${CMAKE_THREAD_LI
 add_unit_test(thread test_queue ENABLE_IF ${Threads_FOUND} LIBS ${CMAKE_THREAD_LIBS_INIT})
 add_unit_test(thread test_util ENABLE_IF ${Threads_FOUND} LIBS ${CMAKE_THREAD_LIBS_INIT})
 
-add_unit_test(util test_cast_with_assert)
 add_unit_test(util test_config)
 add_unit_test(util test_delta)
 add_unit_test(util test_double)

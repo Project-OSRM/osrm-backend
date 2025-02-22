@@ -9,20 +9,15 @@
 
 #include <boost/iostreams/device/mapped_file.hpp>
 
-#include <memory>
 #include <string>
 
-namespace osrm
-{
-namespace engine
-{
-namespace datafacade
+namespace osrm::engine::datafacade
 {
 
 /**
  * This allocator uses file backed mmap memory block as the data location.
  */
-class MMapMemoryAllocator : public ContiguousBlockAllocator
+class MMapMemoryAllocator final : public ContiguousBlockAllocator
 {
   public:
     explicit MMapMemoryAllocator(const storage::StorageConfig &config);
@@ -37,8 +32,6 @@ class MMapMemoryAllocator : public ContiguousBlockAllocator
     std::string rtree_filename;
 };
 
-} // namespace datafacade
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::datafacade
 
 #endif // OSRM_ENGINE_DATAFACADE_SHARED_MEMORY_ALLOCATOR_HPP_

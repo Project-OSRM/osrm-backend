@@ -7,12 +7,8 @@
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
-#include <mapbox/variant.hpp>
-#include <utility>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 namespace detail
@@ -63,8 +59,8 @@ struct InternalExtractorEdge
                                    WeightData weight_data,
                                    DurationData duration_data,
                                    util::Coordinate source_coordinate)
-        : result(source, target, 0, 0, 0, {}, -1, {}), weight_data(std::move(weight_data)),
-          duration_data(std::move(duration_data)), source_coordinate(std::move(source_coordinate))
+        : result(source, target, {0}, {0}, {0}, {}, -1, {}), weight_data(weight_data),
+          duration_data(duration_data), source_coordinate(source_coordinate)
     {
     }
 
@@ -72,7 +68,7 @@ struct InternalExtractorEdge
                                    WeightData weight_data,
                                    DurationData duration_data,
                                    util::Coordinate source_coordinate)
-        : result(std::move(edge)), weight_data(weight_data), duration_data(duration_data),
+        : result(edge), weight_data(weight_data), duration_data(duration_data),
           source_coordinate(source_coordinate)
     {
     }
@@ -86,7 +82,6 @@ struct InternalExtractorEdge
     // coordinate of the source node
     util::Coordinate source_coordinate;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // INTERNAL_EXTRACTOR_EDGE_HPP

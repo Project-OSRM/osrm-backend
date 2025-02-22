@@ -1,6 +1,6 @@
 #include "util/opening_hours.hpp"
 
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 #include <boost/io/ios_state.hpp>
@@ -10,9 +10,7 @@
 #include <iomanip>
 #include <iterator>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 #ifndef NDEBUG
@@ -329,13 +327,9 @@ struct opening_hours_grammar : qi::grammar<Iterator, Skipper, std::vector<Openin
 
         // clang-format on
 
-        BOOST_SPIRIT_DEBUG_NODES((time_domain)(rule_sequence)(any_rule_separator)(
-            selector_sequence)(wide_range_selectors)(small_range_selectors)(time_selector)(
-            timespan)(time)(extended_time)(variable_time)(weekday_selector)(weekday_sequence)(
-            weekday_range)(holiday_sequence)(nth_entry)(nth)(day_offset)(week_selector)(week)(
-            monthday_selector)(monthday_range)(date_offset)(date_from)(date_to)(variable_date)(
-            year_selector)(year_range)(plus_or_minus)(hour_minutes)(extended_hour_minutes)(comment)(
-            hour)(extended_hour)(minute)(daynum)(weeknum)(year));
+        BOOST_SPIRIT_DEBUG_NODES(
+            (
+                time_domain)(rule_sequence)(any_rule_separator)(selector_sequence)(wide_range_selectors)(small_range_selectors)(time_selector)(timespan)(time)(extended_time)(variable_time)(weekday_selector)(weekday_sequence)(weekday_range)(holiday_sequence)(nth_entry)(nth)(day_offset)(week_selector)(week)(monthday_selector)(monthday_range)(date_offset)(date_from)(date_to)(variable_date)(year_selector)(year_range)(plus_or_minus)(hour_minutes)(extended_hour_minutes)(comment)(hour)(extended_hour)(minute)(daynum)(weeknum)(year));
     }
 
     qi::rule<Iterator, Skipper, std::vector<OpeningHours>()> time_domain;
@@ -431,5 +425,4 @@ bool CheckOpeningHours(const std::vector<OpeningHours> &input, const struct tm &
     return is_open;
 }
 
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util

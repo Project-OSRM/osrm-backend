@@ -12,7 +12,7 @@
 
 TEST_CASE("WKB geometry factory (byte-order-dependent), point in WKB") {
     const osmium::Location loc{3.2, 4.2};
-    osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
+    const osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
 
     const std::string wkb{factory.create_point(loc)};
     REQUIRE(wkb == "01010000009A99999999990940CDCCCCCCCCCC1040");
@@ -20,7 +20,7 @@ TEST_CASE("WKB geometry factory (byte-order-dependent), point in WKB") {
 
 TEST_CASE("WKB geometry factory (byte-order-dependent), point in EWKB") {
     const osmium::Location loc{3.2, 4.2};
-    osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
+    const osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
 
     const std::string wkb{factory.create_point(loc)};
     REQUIRE(wkb == "0101000020E61000009A99999999990940CDCCCCCCCCCC1040");
@@ -29,7 +29,7 @@ TEST_CASE("WKB geometry factory (byte-order-dependent), point in EWKB") {
 #ifndef OSMIUM_USE_SLOW_MERCATOR_PROJECTION
 TEST_CASE("WKB geometry factory (byte-order-dependent), point in web mercator WKB") {
     const osmium::Location loc{3.2, 4.2};
-    osmium::geom::WKBFactory<osmium::geom::MercatorProjection> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
+    const osmium::geom::WKBFactory<osmium::geom::MercatorProjection> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
 
     const std::string wkb{factory.create_point(loc)};
     REQUIRE(wkb.substr(0, 10) == "0101000000"); // little endian, point type
@@ -39,7 +39,7 @@ TEST_CASE("WKB geometry factory (byte-order-dependent), point in web mercator WK
 
 TEST_CASE("WKB geometry factory (byte-order-dependent), point in web mercator EWKB") {
     const osmium::Location loc{3.2, 4.2};
-    osmium::geom::WKBFactory<osmium::geom::MercatorProjection> factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
+    const osmium::geom::WKBFactory<osmium::geom::MercatorProjection> factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
 
     const std::string wkb{factory.create_point(loc)};
     REQUIRE(wkb.substr(0, 10) == "0101000020"); // little endian, point type (extended)
@@ -92,11 +92,11 @@ TEST_CASE("WKB geometry factory (byte-order-dependent): linestring with two same
     const auto& wnl = create_test_wnl_same_location(buffer);
 
     SECTION("unique forwards (default)") {
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl), const osmium::geometry_error&);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::geometry_error);
     }
 
     SECTION("unique backwards") {
-        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), const osmium::geometry_error&);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), osmium::geometry_error);
     }
 
     SECTION("all forwards") {
@@ -116,14 +116,23 @@ TEST_CASE("WKB geometry factory (byte-order-dependent): linestring with undefine
 
     const auto& wnl = create_test_wnl_undefined_location(buffer);
 
-    REQUIRE_THROWS_AS(factory.create_linestring(wnl), const osmium::invalid_location&);
+    REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::invalid_location);
+}
+
+TEST_CASE("WKB geometry factory (byte-order-dependent): polygon") {
+    osmium::memory::Buffer buffer{10000};
+    osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
+    const auto& wnl = create_test_wnl_closed(buffer);
+
+    const std::string wkb{factory.create_polygon(wnl)};
+    REQUIRE(wkb == "010300000001000000050000000000000000000840000000000000084066666666666610406666666666661040CDCCCCCCCCCC0C406666666666661040CDCCCCCCCCCC08400000000000000C4000000000000008400000000000000840");
 }
 
 #endif
 
 TEST_CASE("WKB geometry (byte-order-independent) of empty point") {
-    osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
-    REQUIRE_THROWS_AS(factory.create_point(osmium::Location{}), const osmium::invalid_location&);
+    const osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
+    REQUIRE_THROWS_AS(factory.create_point(osmium::Location{}), osmium::invalid_location);
 }
 
 TEST_CASE("WKB geometry (byte-order-independent) of empty linestring") {
@@ -131,9 +140,9 @@ TEST_CASE("WKB geometry (byte-order-independent) of empty linestring") {
     osmium::memory::Buffer buffer{10000};
     const auto& wnl = create_test_wnl_empty(buffer);
 
-    REQUIRE_THROWS_AS(factory.create_linestring(wnl), const osmium::geometry_error&);
-    REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), const osmium::geometry_error&);
-    REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all), const osmium::geometry_error&);
-    REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward), const osmium::geometry_error&);
+    REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::geometry_error);
+    REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), osmium::geometry_error);
+    REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all), osmium::geometry_error);
+    REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward), osmium::geometry_error);
 }
 

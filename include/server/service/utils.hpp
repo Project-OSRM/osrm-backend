@@ -1,10 +1,6 @@
 #include <boost/format.hpp>
 
-namespace osrm
-{
-namespace server
-{
-namespace service
+namespace osrm::server::service
 {
 
 const constexpr char PARAMETER_SIZE_MISMATCH_MSG[] =
@@ -24,6 +20,4 @@ bool constrainParamSize(const char *msg_template,
     }
     return false;
 }
-} // namespace service
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server::service

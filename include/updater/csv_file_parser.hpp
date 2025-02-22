@@ -12,18 +12,14 @@
 #include <tbb/spin_mutex.h>
 
 #include <boost/exception/diagnostic_information.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
-#include <exception>
-#include <stdexcept>
+#include <filesystem>
 #include <vector>
 
-namespace osrm
-{
-namespace updater
+namespace osrm::updater
 {
 
 // Functor to parse a list of CSV files using "key,value,comment" grammar.
@@ -41,44 +37,49 @@ template <typename Key, typename Value> struct CSVFilesParser
     {
     }
 
-    // Operator returns a lambda function that maps input Key to boost::optional<Value>.
+    // Operator returns a lambda function that maps input Key to std::optional<Value>.
     auto operator()(const std::vector<std::string> &csv_filenames) const
     {
         try
         {
             tbb::spin_mutex mutex;
             std::vector<std::pair<Key, Value>> lookup;
-            tbb::parallel_for(std::size_t{0}, csv_filenames.size(), [&](const std::size_t idx) {
-                auto local = ParseCSVFile(csv_filenames[idx], start_index + idx);
+            tbb::parallel_for(std::size_t{0},
+                              csv_filenames.size(),
+                              [&](const std::size_t idx)
+                              {
+                                  auto local = ParseCSVFile(csv_filenames[idx], start_index + idx);
 
-                { // Merge local CSV results into a flat global vector
-                    tbb::spin_mutex::scoped_lock _{mutex};
-                    lookup.insert(end(lookup),
-                                  std::make_move_iterator(begin(local)),
-                                  std::make_move_iterator(end(local)));
-                }
-            });
+                                  { // Merge local CSV results into a flat global vector
+                                      tbb::spin_mutex::scoped_lock _{mutex};
+                                      lookup.insert(end(lookup),
+                                                    std::make_move_iterator(begin(local)),
+                                                    std::make_move_iterator(end(local)));
+                                  }
+                              });
 
             // With flattened map-ish view of all the files, make a stable sort on key and source
             // and unique them on key to keep only the value with the largest file index
             // and the largest line number in a file.
             // The operands order is swapped to make descending ordering on (key, source)
-            tbb::parallel_sort(begin(lookup), end(lookup), [](const auto &lhs, const auto &rhs) {
-                return std::tie(rhs.first, rhs.second.source) <
-                       std::tie(lhs.first, lhs.second.source);
-            });
+            tbb::parallel_sort(begin(lookup),
+                               end(lookup),
+                               [](const auto &lhs, const auto &rhs) {
+                                   return std::tie(rhs.first, rhs.second.source) <
+                                          std::tie(lhs.first, lhs.second.source);
+                               });
 
             // Unique only on key to take the source precedence into account and remove duplicates.
-            const auto it =
-                std::unique(begin(lookup), end(lookup), [](const auto &lhs, const auto &rhs) {
-                    return lhs.first == rhs.first;
-                });
+            const auto it = std::unique(begin(lookup),
+                                        end(lookup),
+                                        [](const auto &lhs, const auto &rhs)
+                                        { return lhs.first == rhs.first; });
             lookup.erase(it, end(lookup));
 
             util::Log() << "In total loaded " << csv_filenames.size() << " file(s) with a total of "
                         << lookup.size() << " unique values";
 
-            return LookupTable<Key, Value>{lookup};
+            return LookupTable<Key, Value>{std::move(lookup)};
         }
         catch (const std::exception &e)
         // TBB should capture to std::exception_ptr and automatically rethrow in this thread.
@@ -97,7 +98,7 @@ template <typename Key, typename Value> struct CSVFilesParser
         std::vector<std::pair<Key, Value>> result;
         try
         {
-            if (boost::filesystem::file_size(filename) == 0)
+            if (std::filesystem::file_size(filename) == 0)
                 return result;
 
             boost::iostreams::mapped_file_source mmap(filename);
@@ -138,7 +139,6 @@ template <typename Key, typename Value> struct CSVFilesParser
     const KeyRule key_rule;
     const ValueRule value_rule;
 };
-} // namespace updater
-} // namespace osrm
+} // namespace osrm::updater
 
 #endif

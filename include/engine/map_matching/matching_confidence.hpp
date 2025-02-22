@@ -2,14 +2,10 @@
 #define ENGINE_MAP_MATCHING_CONFIDENCE_HPP
 
 #include "engine/map_matching/bayes_classifier.hpp"
-
+#include <boost/assert.hpp>
 #include <cmath>
 
-namespace osrm
-{
-namespace engine
-{
-namespace map_matching
+namespace osrm::engine::map_matching
 {
 
 struct MatchingConfidence
@@ -51,8 +47,6 @@ struct MatchingConfidence
   private:
     ClassifierT classifier;
 };
-} // namespace map_matching
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::map_matching
 
 #endif

@@ -8,9 +8,7 @@
 
 #include <cstddef>
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 void search(ContractorHeap &heap,
@@ -20,7 +18,6 @@ void search(ContractorHeap &heap,
             const EdgeWeight weight_limit,
             const NodeID forbidden_node);
 
-} // namespace contractor
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif // OSRM_CONTRACTOR_DIJKSTRA_HPP

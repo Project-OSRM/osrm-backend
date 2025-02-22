@@ -3,11 +3,7 @@
 
 #include "server/service_handler.hpp"
 
-#include <string>
-
-namespace osrm
-{
-namespace server
+namespace osrm::server
 {
 
 namespace http
@@ -31,7 +27,6 @@ class RequestHandler
   private:
     std::unique_ptr<ServiceHandlerInterface> service_handler;
 };
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server
 
 #endif // REQUEST_HANDLER_HPP

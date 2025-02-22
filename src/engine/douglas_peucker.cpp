@@ -12,9 +12,7 @@
 #include <stack>
 #include <utility>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 // Normed to the thresholds table
@@ -45,9 +43,11 @@ std::vector<util::Coordinate> douglasPeucker(std::vector<util::Coordinate>::cons
     }
 
     std::vector<util::FloatCoordinate> projected_coordinates(size);
-    std::transform(begin, end, projected_coordinates.begin(), [](const util::Coordinate coord) {
-        return util::web_mercator::fromWGS84(coord);
-    });
+    std::transform(begin,
+                   end,
+                   projected_coordinates.begin(),
+                   [](const util::Coordinate coord)
+                   { return util::web_mercator::fromWGS84(coord); });
 
     std::vector<bool> is_necessary(size, false);
     BOOST_ASSERT(is_necessary.size() >= 2);
@@ -119,5 +119,4 @@ std::vector<util::Coordinate> douglasPeucker(std::vector<util::Coordinate>::cons
 
     return simplified_geometry;
 }
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine

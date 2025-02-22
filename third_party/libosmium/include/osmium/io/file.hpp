@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -163,7 +163,7 @@ namespace osmium {
                     if (pos == std::string::npos) {
                         set(option, true);
                     } else {
-                        std::string value{option.substr(pos + 1)};
+                        const std::string value{option.substr(pos + 1)};
                         option.erase(pos);
                         set(option, value);
                     }
@@ -224,6 +224,9 @@ namespace osmium {
                     suffixes.pop_back();
                 } else if (suffixes.back() == "blackhole") {
                     m_file_format = file_format::blackhole;
+                    suffixes.pop_back();
+                } else if (suffixes.back() == "ids") {
+                    m_file_format = file_format::ids;
                     suffixes.pop_back();
                 }
 

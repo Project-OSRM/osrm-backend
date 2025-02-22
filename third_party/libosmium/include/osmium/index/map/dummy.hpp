@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -55,6 +55,14 @@ namespace osmium {
             public:
 
                 Dummy() = default;
+
+                Dummy(const Dummy&) = default;
+                Dummy& operator=(const Dummy&) = default;
+
+                Dummy(Dummy&&) noexcept = default;
+                Dummy& operator=(Dummy&&) noexcept = default;
+
+                ~Dummy() noexcept override = default;
 
                 void set(const TId /*id*/, const TValue /*value*/) final {
                     // intentionally left blank

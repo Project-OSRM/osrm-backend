@@ -116,6 +116,36 @@ Feature: Car - Turn restrictions
             | c    | b  | cj,bj,bj |
 
     @no_turning
+    Scenario: Car - No u-turn
+    # https://www.openstreetmap.org/edit?node=54878482#map=19/34.05242/-117.19067
+        Given the node map
+            """
+                c
+                3
+            a 1 x 2 b
+                4
+                d
+            """
+
+        And the ways
+            | nodes |
+            | ax    |
+            | xb    |
+            | cx    |
+            | xd    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction |
+            | restriction | ax       | ax     | x        | no_u_turn   |
+            | restriction | bx       | bx     | x        | no_u_turn   |
+            | restriction | cx       | cx     | x        | no_u_turn   |
+            | restriction | dx       | dx     | x        | no_u_turn   |
+
+        When I route I should get
+            | waypoints | route             | turns                                                        |
+            | a,x,a     | ax,xb,xb,xb,ax,ax | depart,new name straight,continue uturn,arrive,depart,arrive |
+
+    @no_turning
     Scenario: Car - Handle any no_* relation
         Given the node map
             """
@@ -411,7 +441,7 @@ Feature: Car - Turn restrictions
                     y
             i j f b x a e g h
 
-                  c   d
+                  c1   d
             """
 
         And the ways
@@ -438,7 +468,7 @@ Feature: Car - Turn restrictions
         When I route I should get
             | from | to | route                               |
             | e    | f  | ae,xa,bx,fb,fb                      |
-            | c    | f  | dc,da,ae,ge,hg,hg,ge,ae,xa,bx,fb,fb |
+            | 1    | f  | dc,da,ae,ge,hg,hg,ge,ae,xa,bx,fb,fb |
             | d    | f  | da,ae,ge,hg,hg,ge,ae,xa,bx,fb,fb    |
 
     @except
@@ -1008,3 +1038,123 @@ Feature: Car - Turn restrictions
             | from | to | route        |
             | d    | x  | bd,abc,xa,xa |
             | d    | z  | bd,abc,cz,cz |
+
+
+    Scenario: Multiple restricted entrances
+        Given the node map
+            """
+                 b
+                 |
+            a----e----c
+                 |
+                 d
+            """
+
+        And the ways
+            | nodes |
+            | ae    |
+            | be    |
+            | ce    |
+            | de    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction  |
+            | restriction | ae,be    | ed     | e        | no_entry     |
+
+        When I route I should get
+            | from | to | route          |
+            | a    | d  | ae,ce,ce,de,de |
+            | b    | d  | be,ce,ce,de,de |
+            | c    | d  | ce,de,de       |
+
+
+    Scenario: Multiple restricted exits
+        Given the node map
+            """
+                 b
+                 |
+            a----e----c
+                 |
+                 d
+            """
+
+        And the ways
+            | nodes |
+            | ae    |
+            | be    |
+            | ce    |
+            | de    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction  |
+            | restriction | ae       | ce,de  | e        | no_exit      |
+
+        When I route I should get
+            | from | to | route          |
+            | a    | b  | ae,be,be       |
+            | a    | c  | ae,be,be,ce,ce |
+            | a    | d  | ae,be,be,de,de |
+
+
+    Scenario: Invalid restricted entrances/exits
+        Given the node map
+            """
+                 b
+                 |
+            a----e----c
+                 |
+                 d
+            """
+
+        And the ways
+            | nodes |
+            | ae    |
+            | be    |
+            | ce    |
+            | de    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction  |
+            | restriction | ae       | ce,de  | e        | no_entry     |
+            | restriction | ae,be    | ed     | e        | no_exit      |
+
+        When I route I should get
+            | from | to | route     |
+            | a    | b  | ae,be,be  |
+            | a    | c  | ae,ce,ce  |
+            | a    | d  | ae,de,de  |
+            | b    | d  | be,de,de  |
+            | c    | d  | ce,de,de  |
+
+
+    Scenario: Invalid multi from/to restrictions
+        Given the node map
+            """
+                 b
+                 |
+            a----e----c
+                 |
+                 d
+            """
+
+        And the ways
+            | nodes |
+            | ae    |
+            | be    |
+            | ce    |
+            | de    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction      |
+            | restriction | ae,de    | ce,de  | e        | no_right_turn    |
+            | restriction | ae,be    | ce,de  | e        | no_straight_on   |
+            | restriction | ae,be    | be,ce  | e        | only_left_turn   |
+            | restriction | ae,be    | ce,de  | e        | only_straight_on |
+
+        When I route I should get
+            | from | to | route     |
+            | a    | b  | ae,be,be  |
+            | a    | c  | ae,ce,ce  |
+            | a    | d  | ae,de,de  |
+            | b    | d  | be,de,de  |
+            | c    | d  | ce,de,de  |

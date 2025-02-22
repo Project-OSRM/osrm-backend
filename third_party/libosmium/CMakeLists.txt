@@ -6,7 +6,7 @@
 #
 #-----------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 
@@ -39,8 +39,8 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;MinSizeRel;Dev;Cover
 project(libosmium)
 
 set(LIBOSMIUM_VERSION_MAJOR 2)
-set(LIBOSMIUM_VERSION_MINOR 15)
-set(LIBOSMIUM_VERSION_PATCH 6)
+set(LIBOSMIUM_VERSION_MINOR 20)
+set(LIBOSMIUM_VERSION_PATCH 0)
 
 set(LIBOSMIUM_VERSION
     "${LIBOSMIUM_VERSION_MAJOR}.${LIBOSMIUM_VERSION_MINOR}.${LIBOSMIUM_VERSION_PATCH}")
@@ -79,6 +79,8 @@ option(BUILD_DATA_TESTS "compile data tests, please run them with ctest" ${data_
 option(INSTALL_GDALCPP   "also install gdalcpp headers" OFF)
 
 option(WITH_PROFILING    "add flags needed for profiling" OFF)
+
+option(WITH_PROJ         "build/test with proj" ON)
 
 
 #-----------------------------------------------------------------------------
@@ -167,7 +169,11 @@ set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 include_directories(${OSMIUM_INCLUDE_DIR})
 
-find_package(Osmium COMPONENTS io gdal geos proj sparsehash)
+if(WITH_PROJ)
+    find_package(Osmium COMPONENTS lz4 io gdal geos proj)
+else()
+    find_package(Osmium COMPONENTS lz4 io gdal geos)
+endif()
 
 # The find_package put the directory where it found the libosmium includes
 # into OSMIUM_INCLUDE_DIRS. We remove it again, because we want to make
@@ -326,9 +332,6 @@ if(CPPCHECK)
         --force
         -Uassert -DPROTOZERO_STRICT_API -DPROTOZERO_USE_BUILTIN_BSWAP -UPROTOZERO_USE_VIEW)
 
-    # cpp doesn't find system includes for some reason, suppress that report
-    set(CPPCHECK_OPTIONS ${CPPCHECK_OPTIONS} --suppress=missingIncludeSystem)
-
     file(GLOB_RECURSE ALL_INCLUDES   include/osmium/*.hpp)
     file(GLOB         ALL_EXAMPLES   examples/*.cpp)
     file(GLOB         ALL_BENCHMARKS benchmarks/*.cpp)
@@ -398,14 +401,14 @@ if(BUILD_HEADERS)
     file(MAKE_DIRECTORY header_check)
 
     foreach(hpp ${ALL_HPPS})
-        if(GDAL_FOUND OR NOT ((hpp STREQUAL "osmium/area/problem_reporter_ogr.hpp") OR (hpp STREQUAL "osmium/geom/ogr.hpp")))
+        if((GDAL_FOUND AND PROJ_FOUND) OR NOT ((hpp STREQUAL "osmium/area/problem_reporter_ogr.hpp") OR (hpp STREQUAL "osmium/geom/ogr.hpp") OR (hpp STREQUAL "osmium/geom/projection.hpp")))
             string(REPLACE ".hpp" "" tmp ${hpp})
             string(REPLACE "/" "__" libname ${tmp})
 
             # Create a dummy .cpp file that includes the header file we want to
             # check.
             set(DUMMYCPP ${CMAKE_BINARY_DIR}/header_check/${libname}.cpp)
-            file(WRITE ${DUMMYCPP} "#define OSMIUM_UTIL_COMPATIBILITY_HPP\n#define OSMIUM_DEPRECATED\n#include <${hpp}> // IWYU pragma: keep\n")
+            file(WRITE ${DUMMYCPP} "#define OSMIUM_UTIL_COMPATIBILITY_HPP\n#define OSMIUM_DEPRECATED\n#define OSMIUM_EXPORT\n#include <${hpp}> // IWYU pragma: keep\n")
 
             # There is no way in CMake to just compile but not link a C++ file,
             # so we pretend to build a library here.
@@ -424,7 +427,7 @@ endif()
 #
 #-----------------------------------------------------------------------------
 message(STATUS "Looking for clang-tidy")
-find_program(CLANG_TIDY NAMES clang-tidy clang-tidy-10 clang-tidy-9 clang-tidy-8 clang-tidy-7 clang-tidy-7.0 clang-tidy-6.0 clang-tidy-5.0)
+find_program(CLANG_TIDY NAMES clang-tidy clang-tidy-16 clang-tidy-15 clang-tidy-14 clang-tidy-13 clang-tidy-12 clang-tidy-11)
 
 if(CLANG_TIDY)
     message(STATUS "Looking for clang-tidy - found ${CLANG_TIDY}")

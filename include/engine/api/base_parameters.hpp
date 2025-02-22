@@ -33,16 +33,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "engine/hint.hpp"
 #include "util/coordinate.hpp"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <algorithm>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 /**
@@ -51,14 +47,15 @@ namespace api
  * Holds member attributes:
  *  - coordinates: for specifying location(s) to services
  *  - hints: hint for the service to derive the position(s) in the road network more efficiently,
- *           optional per coordinate
+ *           optional per coordinate. Multiple hints can be provided for a coordinate.
  *  - radiuses: limits the search for segments in the road network to given radius(es) in meter,
  *              optional per coordinate
  *  - bearings: limits the search for segments in the road network to given bearing(s) in degree
  *              towards true north in clockwise direction, optional per coordinate
- *  - approaches: force the phantom node to start towards the node with the road country side.
+ *  - approaches: force the phantom node to start towards the node with the road country side or
+ *                its opposite
  *
- * \see OSRM, Coordinate, Hint, Bearing, RouteParame, RouteParameters, TableParameters,
+ * \see OSRM, Coordinate, Hint, Bearing, RouteParameters, TableParameters,
  *      NearestParameters, TripParameters, MatchParameters and TileParameters
  */
 struct BaseParameters
@@ -77,12 +74,12 @@ struct BaseParameters
     };
 
     std::vector<util::Coordinate> coordinates;
-    std::vector<boost::optional<Hint>> hints;
-    std::vector<boost::optional<double>> radiuses;
-    std::vector<boost::optional<Bearing>> bearings;
-    std::vector<boost::optional<Approach>> approaches;
+    std::vector<std::optional<Hint>> hints;
+    std::vector<std::optional<double>> radiuses;
+    std::vector<std::optional<Bearing>> bearings;
+    std::vector<std::optional<Approach>> approaches;
     std::vector<std::string> exclude;
-    boost::optional<OutputFormatType> format = OutputFormatType::JSON;
+    std::optional<OutputFormatType> format = OutputFormatType::JSON;
 
     // Adds hints to response which can be included in subsequent requests, see `hints` above.
     bool generate_hints = true;
@@ -93,10 +90,10 @@ struct BaseParameters
     SnappingType snapping = SnappingType::Default;
 
     BaseParameters(std::vector<util::Coordinate> coordinates_ = {},
-                   std::vector<boost::optional<Hint>> hints_ = {},
-                   std::vector<boost::optional<double>> radiuses_ = {},
-                   std::vector<boost::optional<Bearing>> bearings_ = {},
-                   std::vector<boost::optional<Approach>> approaches_ = {},
+                   std::vector<std::optional<Hint>> hints_ = {},
+                   std::vector<std::optional<double>> radiuses_ = {},
+                   std::vector<std::optional<Bearing>> bearings_ = {},
+                   std::vector<std::optional<Approach>> approaches_ = {},
                    bool generate_hints_ = true,
                    std::vector<std::string> exclude = {},
                    const SnappingType snapping_ = SnappingType::Default)
@@ -115,7 +112,8 @@ struct BaseParameters
                (approaches.empty() || approaches.size() == coordinates.size()) &&
                std::all_of(bearings.begin(),
                            bearings.end(),
-                           [](const boost::optional<Bearing> &bearing_and_range) {
+                           [](const std::optional<Bearing> &bearing_and_range)
+                           {
                                if (bearing_and_range)
                                {
                                    return bearing_and_range->IsValid();
@@ -124,8 +122,6 @@ struct BaseParameters
                            });
     }
 };
-} // namespace api
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif // ROUTE_PARAMETERS_HPP

@@ -8,13 +8,13 @@
 
 TEST_CASE("Invalid file descriptor of uncompressed file") {
     osmium::io::NoDecompressor decomp{-1};
-    REQUIRE_THROWS_AS(decomp.read(), const std::system_error&);
+    REQUIRE_THROWS_AS(decomp.read(), std::system_error);
 }
 
 TEST_CASE("Non-open file descriptor of uncompressed file") {
     // 12345 is just a random file descriptor that should not be open
     osmium::io::NoDecompressor decomp{12345};
-    REQUIRE_THROWS_AS(decomp.read(), const std::system_error&);
+    REQUIRE_THROWS_AS(decomp.read(), std::system_error);
 }
 
 TEST_CASE("Empty uncompressed file") {
@@ -82,13 +82,13 @@ TEST_CASE("Read uncompressed file without explicit close") {
 
 TEST_CASE("Compressor: Invalid file descriptor for uncompressed file") {
     osmium::io::NoCompressor comp{-1, osmium::io::fsync::yes};
-    REQUIRE_THROWS_AS(comp.write("foo"), const std::system_error&);
+    REQUIRE_THROWS_AS(comp.write("foo"), std::system_error);
 }
 
 TEST_CASE("Compressor: Non-open file descriptor for uncompressed file") {
     // 12345 is just a random file descriptor that should not be open
     osmium::io::NoCompressor comp{12345, osmium::io::fsync::yes};
-    REQUIRE_THROWS_AS(comp.write("foo"), const std::system_error&);
+    REQUIRE_THROWS_AS(comp.write("foo"), std::system_error);
 }
 
 TEST_CASE("Write uncompressed file with explicit close") {

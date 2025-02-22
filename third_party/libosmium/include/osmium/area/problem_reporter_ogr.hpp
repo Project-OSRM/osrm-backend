@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -75,15 +75,15 @@ namespace osmium {
             void set_object(gdalcpp::Feature& feature) {
                 const char t[2] = {osmium::item_type_to_char(m_object_type), '\0'};
                 feature.set_field("obj_type", t);
-                feature.set_field("obj_id", int32_t(m_object_id));
-                feature.set_field("nodes", int32_t(m_nodes));
+                feature.set_field("obj_id", static_cast<int32_t>(m_object_id));
+                feature.set_field("nodes", static_cast<int32_t>(m_nodes));
             }
 
             void write_point(const char* problem_type, osmium::object_id_type id1, osmium::object_id_type id2, osmium::Location location) {
                 gdalcpp::Feature feature{m_layer_perror, m_ogr_factory.create_point(location)};
                 set_object(feature);
-                feature.set_field("id1", double(id1));
-                feature.set_field("id2", double(id2));
+                feature.set_field("id1", static_cast<double>(id1));
+                feature.set_field("id2", static_cast<double>(id2));
                 feature.set_field("problem", problem_type);
                 feature.add_to_layer();
             }
@@ -117,8 +117,7 @@ namespace osmium {
                     .add_field("nodes", OFTInteger, 8)
                     .add_field("id1", OFTReal, 12, 1)
                     .add_field("id2", OFTReal, 12, 1)
-                    .add_field("problem", OFTString, 30)
-                ;
+                    .add_field("problem", OFTString, 30);
 
                 m_layer_lerror
                     .add_field("obj_type", OFTString, 1)
@@ -126,15 +125,13 @@ namespace osmium {
                     .add_field("nodes", OFTInteger, 8)
                     .add_field("id1", OFTReal, 12, 1)
                     .add_field("id2", OFTReal, 12, 1)
-                    .add_field("problem", OFTString, 30)
-                ;
+                    .add_field("problem", OFTString, 30);
 
                 m_layer_ways
                     .add_field("obj_type", OFTString, 1)
                     .add_field("obj_id", OFTInteger, 10)
                     .add_field("way_id", OFTInteger, 10)
-                    .add_field("nodes", OFTInteger, 8)
-                ;
+                    .add_field("nodes", OFTInteger, 8);
             }
 
             void report_duplicate_node(osmium::object_id_type node_id1, osmium::object_id_type node_id2, osmium::Location location) override {
@@ -179,7 +176,7 @@ namespace osmium {
                 try {
                     gdalcpp::Feature feature{m_layer_lerror, m_ogr_factory.create_linestring(way)};
                     set_object(feature);
-                    feature.set_field("id1", int32_t(way.id()));
+                    feature.set_field("id1", static_cast<int32_t>(way.id()));
                     feature.set_field("id2", 0);
                     feature.set_field("problem", "way_in_multiple_rings");
                     feature.add_to_layer();
@@ -195,7 +192,7 @@ namespace osmium {
                 try {
                     gdalcpp::Feature feature{m_layer_lerror, m_ogr_factory.create_linestring(way)};
                     set_object(feature);
-                    feature.set_field("id1", int32_t(way.id()));
+                    feature.set_field("id1", static_cast<int32_t>(way.id()));
                     feature.set_field("id2", 0);
                     feature.set_field("problem", "inner_with_same_tags");
                     feature.add_to_layer();
@@ -211,7 +208,7 @@ namespace osmium {
                 try {
                     gdalcpp::Feature feature{m_layer_lerror, m_ogr_factory.create_linestring(way)};
                     set_object(feature);
-                    feature.set_field("id1", int32_t(way.id()));
+                    feature.set_field("id1", static_cast<int32_t>(way.id()));
                     feature.set_field("id2", 0);
                     feature.set_field("problem", "duplicate_way");
                     feature.add_to_layer();
@@ -232,7 +229,7 @@ namespace osmium {
                 try {
                     gdalcpp::Feature feature{m_layer_ways, m_ogr_factory.create_linestring(way)};
                     set_object(feature);
-                    feature.set_field("way_id", int32_t(way.id()));
+                    feature.set_field("way_id", static_cast<int32_t>(way.id()));
                     feature.add_to_layer();
                 } catch (const osmium::geometry_error&) {
                     // XXX

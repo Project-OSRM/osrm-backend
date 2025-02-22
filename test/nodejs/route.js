@@ -2,9 +2,53 @@ var OSRM = require('../../');
 var test = require('tape');
 var monaco_path = require('./constants').data_path;
 var monaco_mld_path = require('./constants').mld_data_path;
-var monaco_corech_path = require('./constants').corech_data_path;
 var three_test_coordinates = require('./constants').three_test_coordinates;
 var two_test_coordinates = require('./constants').two_test_coordinates;
+const flatbuffers = require('../../features/support/flatbuffers').flatbuffers;
+const FBResult = require('../../features/support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
+
+test('route: routes Monaco and can return result in flatbuffers', function(assert) {
+    assert.plan(5);
+    var osrm = new OSRM(monaco_path);
+    osrm.route({coordinates: two_test_coordinates, format: 'flatbuffers'}, function(err, result) {
+        assert.ifError(err);
+        assert.ok(result instanceof Buffer);
+        const fb = FBResult.getRootAsFBResult(new flatbuffers.ByteBuffer(result));
+        assert.equals(fb.waypointsLength(), 2);
+        assert.equals(fb.routesLength(), 1);
+        assert.ok(fb.routes(0).polyline);
+    });
+});
+
+test('route: routes Monaco and can return result in flatbuffers if output format is passed explicitly', function(assert) {
+    assert.plan(5);
+    var osrm = new OSRM(monaco_path);
+    osrm.route({coordinates: two_test_coordinates, format: 'flatbuffers'}, {output: 'buffer'}, function(err, result) {
+        assert.ifError(err);
+        assert.ok(result instanceof Buffer);
+        var buf = new flatbuffers.ByteBuffer(result);
+        const fb = FBResult.getRootAsFBResult(buf);
+        assert.equals(fb.waypointsLength(), 2);
+        assert.equals(fb.routesLength(), 1);
+        assert.ok(fb.routes(0).polyline);
+    });
+});
+
+test('route: throws error if required output is object in flatbuffers format', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    assert.throws(function() {
+        osrm.route({coordinates: two_test_coordinates, format: 'flatbuffers'}, {format: 'object'}, function(err, result) {});
+    });
+});
+
+test('route: throws error if required output is json_buffer in flatbuffers format', function(assert) {
+    assert.plan(1);
+    var osrm = new OSRM(monaco_path);
+    assert.throws(function() {
+        osrm.route({coordinates: two_test_coordinates, format: 'flatbuffers'}, {format: 'json_buffer'}, function(err, result) {});
+    });
+});
 
 
 test('route: routes Monaco', function(assert) {
@@ -24,32 +68,6 @@ test('route: routes Monaco on MLD', function(assert) {
     var osrm = new OSRM({path: monaco_mld_path, algorithm: 'MLD'});
     osrm.route({coordinates: [[13.43864,52.51993],[13.415852,52.513191]]}, function(err, route) {
         assert.ifError(err);
-        assert.ok(route.waypoints);
-        assert.ok(route.routes);
-        assert.ok(route.routes.length);
-        assert.ok(route.routes[0].geometry);
-    });
-});
-
-test('route: routes Monaco on CoreCH', function(assert) {
-    assert.plan(5);
-    var osrm = new OSRM({path: monaco_corech_path, algorithm: 'CoreCH'});
-    osrm.route({coordinates: [[13.43864,52.51993],[13.415852,52.513191]]}, function(err, route) {
-        assert.ifError(err);
-        assert.ok(route.waypoints);
-        assert.ok(route.routes);
-        assert.ok(route.routes.length);
-        assert.ok(route.routes[0].geometry);
-    });
-});
-
-test('route: routes Monaco and returns a JSON buffer', function(assert) {
-    assert.plan(6);
-    var osrm = new OSRM({path: monaco_corech_path, algorithm: 'CoreCH'});
-    osrm.route({coordinates: [[13.43864,52.51993],[13.415852,52.513191]]}, { format: 'json_buffer'}, function(err, result) {
-        assert.ifError(err);
-        assert.ok(result instanceof Buffer);
-        const route = JSON.parse(result);
         assert.ok(route.waypoints);
         assert.ok(route.routes);
         assert.ok(route.routes.length);
@@ -241,9 +259,9 @@ test('route: routes Monaco with several (duration, distance, nodes) annotations 
         assert.ok(first.routes[0].legs.every(l => { return l.annotation.distance;}), 'every leg has annotations for distance');
         assert.ok(first.routes[0].legs.every(l => { return l.annotation.duration;}), 'every leg has annotations for durations');
         assert.ok(first.routes[0].legs.every(l => { return l.annotation.nodes;}), 'every leg has annotations for nodes');
-        assert.notOk(first.routes[0].legs.every(l => { return l.annotation.weight; }), 'has no annotations for weight')
-        assert.notOk(first.routes[0].legs.every(l => { return l.annotation.datasources; }), 'has no annotations for datasources')
-        assert.notOk(first.routes[0].legs.every(l => { return l.annotation.speed; }), 'has no annotations for speed')
+        assert.notOk(first.routes[0].legs.every(l => { return l.annotation.weight; }), 'has no annotations for weight');
+        assert.notOk(first.routes[0].legs.every(l => { return l.annotation.datasources; }), 'has no annotations for datasources');
+        assert.notOk(first.routes[0].legs.every(l => { return l.annotation.speed; }), 'has no annotations for speed');
 
         options.overview = 'full';
         osrm.route(options, function(err, full) {
@@ -258,7 +276,7 @@ test('route: routes Monaco with several (duration, distance, nodes) annotations 
 });
 
 test('route: routes Monaco with options', function(assert) {
-    assert.plan(11);
+    assert.plan(17);
     var osrm = new OSRM(monaco_path);
     var options = {
         coordinates: two_test_coordinates,
@@ -277,6 +295,12 @@ test('route: routes Monaco with options', function(assert) {
         assert.ok(first.routes[0].legs[0]);
         assert.ok(first.routes[0].legs.every(l => { return l.steps.length > 0; }), 'every leg has steps');
         assert.ok(first.routes[0].legs.every(l => { return l.annotation;}), 'every leg has annotations');
+        assert.ok(first.routes[0].legs.every(l => { return l.annotation.distance;}), 'every leg has annotations for distance');
+        assert.ok(first.routes[0].legs.every(l => { return l.annotation.duration;}), 'every leg has annotations for durations');
+        assert.ok(first.routes[0].legs.every(l => { return l.annotation.nodes;}), 'every leg has annotations for nodes');
+        assert.ok(first.routes[0].legs.every(l => { return l.annotation.weight; }), 'every leg has annotations for weight');
+        assert.ok(first.routes[0].legs.every(l => { return l.annotation.datasources; }), 'every leg has annotations for datasources');
+        assert.ok(first.routes[0].legs.every(l => { return l.annotation.speed; }), 'every leg has annotations for speed');
 
         options.overview = 'full';
         osrm.route(options, function(err, full) {
@@ -522,7 +546,7 @@ test('route: throws on bad radiuses', function(assert) {
 });
 
 test('route: routes Monaco with valid approaches values', function(assert) {
-    assert.plan(3);
+    assert.plan(4);
     var osrm = new OSRM(monaco_path);
     var options = {
         coordinates: two_test_coordinates,
@@ -532,6 +556,10 @@ test('route: routes Monaco with valid approaches values', function(assert) {
         assert.ifError(err);
     });
     options.approaches = [null, null];
+    osrm.route(options, function(err, route) {
+        assert.ifError(err);
+    });
+    options.approaches = ['opposite', 'opposite'];
     osrm.route(options, function(err, route) {
         assert.ifError(err);
     });
@@ -558,12 +586,12 @@ test('route: throws on bad approaches', function(assert) {
         coordinates: two_test_coordinates,
         approaches: ['curb', 'test']
     }, function(err, route) {}) },
-        /'approaches' param must be one of \[curb, unrestricted\]/);
+        /'approaches' param must be one of \[curb, opposite, unrestricted\]/);
     assert.throws(function() { osrm.route({
         coordinates: two_test_coordinates,
         approaches: [10, 15]
     }, function(err, route) {}) },
-        /Approach must be a string: \[curb, unrestricted\] or null/);
+        /Approach must be a string: \[curb, opposite, unrestricted\] or null/);
 });
 
 test('route: routes Monaco with custom limits on MLD', function(assert) {
@@ -708,6 +736,68 @@ test('route: snapping parameter passed through OK', function(assert) {
     var osrm = new OSRM(monaco_path);
     osrm.route({snapping: "any", coordinates: [[7.448205209414596,43.754001097311544],[7.447122039202185,43.75306156811368]]}, function(err, route) {
         assert.ifError(err);
-        assert.equal(Math.round(route.routes[0].distance * 10), 1314); // Round it to nearest 0.1m to eliminate floating point comparison error
+        assert.equal(Math.round(route.routes[0].distance * 10), 1315); // Round it to nearest 0.1m to eliminate floating point comparison error
+    });
+});
+
+test('route: throws on disabled geometry', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM({'path': monaco_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    var options = {
+        coordinates: three_test_coordinates,
+    };
+    osrm.route(options, function(err, route) {
+        console.log(err)
+        assert.match(err.message, /DisabledDatasetException/);
+    });
+});
+
+test('route: ok on disabled geometry', function (assert) {
+    assert.plan(2);
+    var osrm = new OSRM({'path': monaco_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    var options = {
+        steps: false,
+        overview: 'false',
+        annotations: false,
+        skip_waypoints: true,
+        coordinates: three_test_coordinates,
+    };
+    osrm.route(options, function(err, response) {
+        assert.ifError(err);
+        assert.equal(response.routes.length, 1);
+    });
+});
+
+test('route: throws on disabled steps', function (assert) {
+    assert.plan(1);
+    var osrm = new OSRM({'path': monaco_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    var options = {
+        steps: true,
+        coordinates: three_test_coordinates,
+    };
+    osrm.route(options, function(err, route) {
+        console.log(err)
+        assert.match(err.message, /DisabledDatasetException/);
+    });
+});
+
+test('route: ok on disabled steps', function (assert) {
+    assert.plan(8);
+    var osrm = new OSRM({'path': monaco_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    var options = {
+        steps: false,
+        overview: 'simplified',
+        annotations: true,
+        coordinates: three_test_coordinates,
+    };
+    osrm.route(options, function(err, response) {
+        assert.ifError(err);
+        assert.ok(response.waypoints);
+        assert.ok(response.routes);
+        assert.equal(response.routes.length, 1);
+        assert.ok(response.routes[0].geometry, "the route has geometry");
+        assert.ok(response.routes[0].legs, "the route has legs");
+        assert.notok(response.routes[0].legs.every(l => { return l.steps.length > 0; }), 'every leg has steps');
+        assert.ok(response.routes[0].legs.every(l => { return l.annotation;}), 'every leg has annotations');
     });
 });

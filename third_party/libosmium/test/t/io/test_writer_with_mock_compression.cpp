@@ -30,7 +30,7 @@ public:
     MockCompressor(MockCompressor&&) = delete;
     MockCompressor& operator=(MockCompressor&&) = delete;
 
-    ~MockCompressor() noexcept = default;
+    ~MockCompressor() noexcept override = default;
 
     void write(const std::string& /*data*/) override {
         if (m_fail_in == "write") {
@@ -46,9 +46,9 @@ public:
 
 }; // class MockCompressor
 
-TEST_CASE("Write with mock compressor") {
+std::string fail_in;
 
-    std::string fail_in;
+TEST_CASE("Write with mock compressor") {
 
     osmium::io::CompressionFactory::instance().register_compression(osmium::io::file_compression::gzip,
         [&](int /*unused*/, osmium::io::fsync /*unused*/) { return new MockCompressor(fail_in); },
@@ -74,7 +74,7 @@ TEST_CASE("Write with mock compressor") {
             osmium::io::Writer writer("test-writer-mock-fail-on-construction.osm.gz", header, osmium::io::overwrite::allow);
             writer(std::move(buffer));
             writer.close();
-        }(), const std::logic_error&);
+        }(), std::logic_error);
 
     }
 
@@ -86,7 +86,7 @@ TEST_CASE("Write with mock compressor") {
             osmium::io::Writer writer("test-writer-mock-fail-on-write.osm.gz", header, osmium::io::overwrite::allow);
             writer(std::move(buffer));
             writer.close();
-        }(), const std::logic_error&);
+        }(), std::logic_error);
 
     }
 
@@ -98,7 +98,7 @@ TEST_CASE("Write with mock compressor") {
             osmium::io::Writer writer("test-writer-mock-fail-on-close.osm.gz", header, osmium::io::overwrite::allow);
             writer(std::move(buffer));
             writer.close();
-        }(), const std::logic_error&);
+        }(), std::logic_error);
 
     }
 

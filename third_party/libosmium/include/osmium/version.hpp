@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,10 +33,15 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+// NOLINTNEXTLINE(modernize-macro-to-enum)
 #define LIBOSMIUM_VERSION_MAJOR 2
-#define LIBOSMIUM_VERSION_MINOR 15
-#define LIBOSMIUM_VERSION_PATCH 6
 
-#define LIBOSMIUM_VERSION_STRING "2.15.6"
+// NOLINTNEXTLINE(modernize-macro-to-enum)
+#define LIBOSMIUM_VERSION_MINOR 20
+
+// NOLINTNEXTLINE(modernize-macro-to-enum)
+#define LIBOSMIUM_VERSION_PATCH 0
+
+#define LIBOSMIUM_VERSION_STRING "2.20.0"
 
 #endif // OSMIUM_VERSION_HPP

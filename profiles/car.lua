@@ -6,6 +6,7 @@ Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 Relations = require("lib/relations")
+TrafficSignal = require("lib/traffic_signal")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
 Utils = require("lib/utils")
@@ -273,8 +274,10 @@ function setup()
       ["be-bru:rural"] = 70,
       ["be-bru:urban"] = 30,
       ["be-vlg:rural"] = 70,
+      ["bg:motorway"] = 140,
       ["by:urban"] = 60,
       ["by:motorway"] = 110,
+      ["ca-on:rural"] = 80,
       ["ch:rural"] = 80,
       ["ch:trunk"] = 100,
       ["ch:motorway"] = 120,
@@ -284,6 +287,7 @@ function setup()
       ["de:rural"] = 100,
       ["de:motorway"] = 0,
       ["dk:rural"] = 80,
+      ["es:trunk"] = 90,
       ["fr:rural"] = 80,
       ["gb:nsl_single"] = (60*1609)/1000,
       ["gb:nsl_dual"] = (70*1609)/1000,
@@ -292,8 +296,11 @@ function setup()
       ["nl:trunk"] = 100,
       ['no:rural'] = 80,
       ['no:motorway'] = 110,
+      ['ph:urban'] = 40,
+      ['ph:rural'] = 80,
+      ['ph:motorway'] = 100,
       ['pl:rural'] = 100,
-      ['pl:trunk'] = 120,
+      ['pl:expressway'] = 120,
       ['pl:motorway'] = 140,
       ["ro:trunk"] = 100,
       ["ru:living_street"] = 20,
@@ -360,10 +367,7 @@ function process_node(profile, node, result, relations)
   end
 
   -- check if node is a traffic light
-  local tag = node:get_value_by_key("highway")
-  if "traffic_signals" == tag then
-    result.traffic_lights = true
-  end
+  result.traffic_lights = TrafficSignal.get_value(node)
 end
 
 function process_way(profile, way, result, relations)

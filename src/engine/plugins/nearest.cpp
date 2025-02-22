@@ -1,23 +1,19 @@
 #include "engine/plugins/nearest.hpp"
 #include "engine/api/nearest_api.hpp"
 #include "engine/api/nearest_parameters.hpp"
-#include "engine/phantom_node.hpp"
-#include "util/integer_range.hpp"
 
-#include <cstddef>
 #include <string>
 
 #include <boost/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
-NearestPlugin::NearestPlugin(const int max_results_) : max_results{max_results_} {}
+NearestPlugin::NearestPlugin(const int max_results_, const std::optional<double> default_radius_)
+    : BasePlugin(default_radius_), max_results{max_results_}
+{
+}
 
 Status NearestPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                     const api::NearestParameters &params,
@@ -60,6 +56,4 @@ Status NearestPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms
 
     return Status::Ok;
 }
-} // namespace plugins
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::plugins

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -121,7 +121,7 @@ namespace osmium {
             /**
              * @returns true if this relation is complete, false otherwise.
              */
-            bool operator()(RelationMeta& relation_info) const {
+            bool operator()(const RelationMeta& relation_info) const {
                 return relation_info.has_all_members();
             }
 

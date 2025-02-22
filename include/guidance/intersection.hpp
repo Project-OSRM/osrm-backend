@@ -4,9 +4,7 @@
 #include "extractor/intersection/intersection_view.hpp"
 #include "guidance/turn_instruction.hpp"
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 // A Connected Road is the internal representation of a potential turn. Internally, we require
@@ -122,7 +120,6 @@ inline std::string toString(const ConnectedRoad &road)
     return result;
 }
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /* OSRM_GUIDANCE_INTERSECTION_HPP_*/

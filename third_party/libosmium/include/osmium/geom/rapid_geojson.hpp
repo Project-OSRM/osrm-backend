@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -47,6 +47,9 @@ namespace osmium {
             /**
              * A geometry factory implementation that can be used with the
              * RapidJSON (https://github.com/miloyip/rapidjson) JSON writer.
+             *
+             * @deprecated The RapidJSON support will be removed in a future
+             *             version of libosmium.
              */
             template <typename TWriter>
             class RapidGeoJSONFactoryImpl {

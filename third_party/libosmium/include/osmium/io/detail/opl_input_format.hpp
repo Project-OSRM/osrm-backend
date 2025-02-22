@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -98,21 +98,14 @@ namespace osmium {
                 }
             }
 
-            class OPLParser final : public Parser {
-
-                enum {
-                    initial_buffer_size = 1024UL * 1024UL
-                };
-
-                osmium::memory::Buffer m_buffer{initial_buffer_size,
-                                                osmium::memory::Buffer::auto_grow::internal};
+            class OPLParser final : public ParserWithBuffer {
 
                 uint64_t m_line_count = 0;
 
             public:
 
                 explicit OPLParser(parser_arguments& args) :
-                    Parser(args) {
+                    ParserWithBuffer(args) {
                     set_header_value(osmium::io::Header{});
                 }
 
@@ -122,14 +115,26 @@ namespace osmium {
                 OPLParser(OPLParser&&) = delete;
                 OPLParser& operator=(OPLParser&&) = delete;
 
-                ~OPLParser() noexcept = default;
+                ~OPLParser() noexcept override = default;
 
                 void parse_line(const char* data) {
-                    if (opl_parse_line(m_line_count, data, m_buffer, read_types())) {
-                        if (m_buffer.has_nested_buffers()) {
-                            std::unique_ptr<osmium::memory::Buffer> buffer_ptr{m_buffer.get_last_nested()};
-                            send_to_output_queue(std::move(*buffer_ptr));
-                        }
+                    switch (*data) {
+                        case 'n':
+                            maybe_new_buffer(osmium::item_type::node);
+                            break;
+                        case 'w':
+                            maybe_new_buffer(osmium::item_type::way);
+                            break;
+                        case 'r':
+                            maybe_new_buffer(osmium::item_type::relation);
+                            break;
+                        case 'c':
+                            maybe_new_buffer(osmium::item_type::way);
+                            break;
+                    }
+
+                    if (opl_parse_line(m_line_count, data, buffer(), read_types())) {
+                        flush_nested_buffer();
                     }
                     ++m_line_count;
                 }
@@ -139,9 +144,7 @@ namespace osmium {
 
                     line_by_line(*this);
 
-                    if (m_buffer.committed() > 0) {
-                        send_to_output_queue(std::move(m_buffer));
-                    }
+                    flush_final_buffer();
                 }
 
             }; // class OPLParser
@@ -152,7 +155,7 @@ namespace osmium {
                 file_format::opl,
                 [](parser_arguments& args) {
                     return std::unique_ptr<Parser>(new OPLParser{args});
-            });
+                });
 
             // dummy function to silence the unused variable warning from above
             inline bool get_registered_opl_parser() noexcept {

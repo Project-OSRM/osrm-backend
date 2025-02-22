@@ -13,9 +13,7 @@
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class Extractor;
@@ -24,7 +22,7 @@ class EdgeBasedGraphFactory;
 namespace detail
 {
 template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl;
-}
+} // namespace detail
 
 namespace serialization
 {
@@ -129,7 +127,6 @@ using EdgeBasedNodeDataExternalContainer =
 using EdgeBasedNodeDataContainer =
     detail::EdgeBasedNodeDataContainerImpl<storage::Ownership::Container>;
 using EdgeBasedNodeDataView = detail::EdgeBasedNodeDataContainerImpl<storage::Ownership::View>;
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

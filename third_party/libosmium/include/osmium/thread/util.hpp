@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -38,8 +38,10 @@ DEALINGS IN THE SOFTWARE.
 #include <thread>
 #include <utility>
 
-#ifdef __linux__
+#if defined(__linux__)
 # include <sys/prctl.h>
+#elif defined(__FreeBSD__)
+# include <pthread.h>
 #endif
 
 namespace osmium {
@@ -70,11 +72,15 @@ namespace osmium {
         }
 
         /**
-         * Set name of current thread for debugging. This only works on Linux.
+         * Set name of current thread for debugging. This currently only works on Linux and FreeBSD.
          */
-#ifdef __linux__
+#if defined(__linux__)
         inline void set_thread_name(const char* name) noexcept {
             prctl(PR_SET_NAME, name, 0, 0, 0);
+        }
+#elif defined(__FreeBSD__)
+        inline void set_thread_name(const char* name) noexcept {
+            pthread_setname_np(pthread_self(), name);
         }
 #else
         inline void set_thread_name(const char*) noexcept {

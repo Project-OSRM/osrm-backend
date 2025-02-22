@@ -29,12 +29,12 @@ osrm::Status run_tile(const osrm::OSRM &osrm,
     }
     osrm::engine::api::ResultT result = std::string();
     auto rc = osrm.Tile(params, result);
-    string_result = result.get<std::string>();
+    string_result = std::get<std::string>(result);
     return rc;
 }
 
 #define CHECK_EQUAL_RANGE(R1, R2)                                                                  \
-    BOOST_CHECK_EQUAL_COLLECTIONS(R1.begin(), R1.end(), R2.begin(), R2.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS((R1).begin(), (R1).end(), (R2).begin(), (R2).end());
 
 BOOST_AUTO_TEST_SUITE(tile)
 
@@ -87,10 +87,10 @@ void validate_feature_layer(vtzero::layer layer)
     }
 
     auto number_of_uint_values =
-        std::count_if(layer.value_table().begin(), layer.value_table().end(), [](auto v) {
-            return v.type() == vtzero::property_value_type::uint_value;
-        });
-    BOOST_CHECK_EQUAL(number_of_uint_values, 78);
+        std::count_if(layer.value_table().begin(),
+                      layer.value_table().end(),
+                      [](auto v) { return v.type() == vtzero::property_value_type::uint_value; });
+    BOOST_CHECK_EQUAL(number_of_uint_values, 79);
 }
 
 void validate_turn_layer(vtzero::layer layer)
@@ -129,11 +129,11 @@ void validate_turn_layer(vtzero::layer layer)
     }
 
     auto number_of_float_values =
-        std::count_if(layer.value_table().begin(), layer.value_table().end(), [](auto v) {
-            return v.type() == vtzero::property_value_type::float_value;
-        });
+        std::count_if(layer.value_table().begin(),
+                      layer.value_table().end(),
+                      [](auto v) { return v.type() == vtzero::property_value_type::float_value; });
 
-    BOOST_CHECK_EQUAL(number_of_float_values, 74);
+    BOOST_CHECK_EQUAL(number_of_float_values, 73);
 }
 
 void validate_node_layer(vtzero::layer layer)
@@ -197,18 +197,6 @@ void test_tile_ch(bool use_string_only_api)
 }
 BOOST_AUTO_TEST_CASE(test_tile_ch_old_api) { test_tile_ch(true); }
 BOOST_AUTO_TEST_CASE(test_tile_ch_new_api) { test_tile_ch(false); }
-
-void test_tile_corech(bool use_string_only_api)
-{
-    // Note: this tests that given the CoreCH algorithm config option, configuration falls back to
-    // CH and is compatible with CH data
-    using namespace osrm;
-    auto osrm =
-        getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm", osrm::EngineConfig::Algorithm::CoreCH);
-    validate_tile(osrm, use_string_only_api);
-}
-BOOST_AUTO_TEST_CASE(test_tile_corech_old_api) { test_tile_corech(true); }
-BOOST_AUTO_TEST_CASE(test_tile_corech_new_api) { test_tile_corech(false); }
 
 void test_tile_mld(bool use_string_only_api)
 {
@@ -322,13 +310,13 @@ void test_tile_turns(const osrm::OSRM &osrm, bool use_string_only_api)
     // Verify the expected turn angles
     std::sort(actual_turn_angles.begin(), actual_turn_angles.end());
     const std::vector<std::int64_t> expected_turn_angles = {
-        -122, -120, -117, -65, -57, -30, -28, -3, -2, 2, 3, 28, 30, 57, 65, 117, 120, 122};
+        -122, -120, -117, -65, -58, -30, -28, -2, -2, 2, 2, 28, 30, 58, 65, 117, 120, 122};
     CHECK_EQUAL_RANGE(actual_turn_angles, expected_turn_angles);
 
     // Verify the expected bearings
     std::sort(actual_turn_bearings.begin(), actual_turn_bearings.end());
     const std::vector<std::int64_t> expected_turn_bearings = {
-        49, 49, 107, 107, 169, 169, 171, 171, 229, 229, 257, 257, 286, 286, 349, 349, 352, 352};
+        49, 49, 107, 107, 169, 169, 171, 171, 229, 229, 257, 257, 286, 286, 349, 349, 351, 351};
     CHECK_EQUAL_RANGE(actual_turn_bearings, expected_turn_bearings);
 }
 
@@ -346,14 +334,6 @@ BOOST_AUTO_TEST_CASE(test_tile_turns_ch_old_api)
 BOOST_AUTO_TEST_CASE(test_tile_turns_ch_new_api)
 {
     test_tile_turns_ch(osrm::EngineConfig::Algorithm::CH, false);
-}
-BOOST_AUTO_TEST_CASE(test_tile_turns_corech_old_api)
-{
-    test_tile_turns_ch(osrm::EngineConfig::Algorithm::CoreCH, true);
-}
-BOOST_AUTO_TEST_CASE(test_tile_turns_corech_new_api)
-{
-    test_tile_turns_ch(osrm::EngineConfig::Algorithm::CoreCH, false);
 }
 
 void test_tile_turns_mld(bool use_string_only_api)
@@ -432,14 +412,6 @@ BOOST_AUTO_TEST_CASE(test_tile_speeds_ch_new_api)
 {
     test_tile_speeds_ch(osrm::EngineConfig::Algorithm::CH, false);
 }
-BOOST_AUTO_TEST_CASE(test_tile_speeds_corech_old_api)
-{
-    test_tile_speeds_ch(osrm::EngineConfig::Algorithm::CoreCH, true);
-}
-BOOST_AUTO_TEST_CASE(test_tile_speeds_corech_new_api)
-{
-    test_tile_speeds_ch(osrm::EngineConfig::Algorithm::CoreCH, false);
-}
 
 void test_tile_speeds_mld(bool use_string_only_api)
 {
@@ -500,14 +472,6 @@ BOOST_AUTO_TEST_CASE(test_tile_node_ch_old_api)
 BOOST_AUTO_TEST_CASE(test_tile_node_ch_new_api)
 {
     test_tile_nodes_ch(osrm::EngineConfig::Algorithm::CH, false);
-}
-BOOST_AUTO_TEST_CASE(test_tile_node_corech_old_api)
-{
-    test_tile_nodes_ch(osrm::EngineConfig::Algorithm::CoreCH, true);
-}
-BOOST_AUTO_TEST_CASE(test_tile_node_corech_new_api)
-{
-    test_tile_nodes_ch(osrm::EngineConfig::Algorithm::CoreCH, false);
 }
 
 void test_tile_nodes_mld(bool use_string_only_api)

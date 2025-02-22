@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -43,6 +43,7 @@ DEALINGS IN THE SOFTWARE.
  */
 
 #include <osmium/io/detail/pbf_output_format.hpp> // IWYU pragma: export
+#include <osmium/io/pbf.hpp> // IWYU pragma: export
 #include <osmium/io/writer.hpp> // IWYU pragma: export
 
 #endif // OSMIUM_IO_PBF_OUTPUT_HPP

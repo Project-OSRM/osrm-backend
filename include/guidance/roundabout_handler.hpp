@@ -17,9 +17,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 namespace detail
@@ -35,7 +33,7 @@ struct RoundaboutFlags
 // The roundabout handler processes all roundabout related instructions.
 // It performs both the distinction between rotaries and roundabouts and
 // assigns appropriate entry/exit instructions.
-class RoundaboutHandler : public IntersectionHandler
+class RoundaboutHandler final : public IntersectionHandler
 {
   public:
     RoundaboutHandler(const util::NodeBasedDynamicGraph &node_based_graph,
@@ -84,7 +82,6 @@ class RoundaboutHandler : public IntersectionHandler
     const extractor::intersection::CoordinateExtractor coordinate_extractor;
 };
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /*OSRM_GUIDANCE_ROUNDABOUT_HANDLER_HPP_*/

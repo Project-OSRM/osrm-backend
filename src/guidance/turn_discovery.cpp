@@ -7,11 +7,7 @@
 
 using osrm::util::angularDeviation;
 
-namespace osrm
-{
-namespace guidance
-{
-namespace lanes
+namespace osrm::guidance::lanes
 {
 
 bool findPreviousIntersection(const NodeID node_v,
@@ -51,7 +47,7 @@ bool findPreviousIntersection(const NodeID node_v,
     const auto via_edge_length =
         util::coordinate_calculation::getLength(coordinates_along_via_edge.begin(),
                                                 coordinates_along_via_edge.end(),
-                                                &util::coordinate_calculation::haversineDistance);
+                                                &util::coordinate_calculation::greatCircleDistance);
 
     // we check if via-edge is too short. In this case the previous turn cannot influence the turn
     // at via_edge and the intersection at NODE_W
@@ -131,9 +127,8 @@ bool findPreviousIntersection(const NodeID node_v,
         result_intersection.end() !=
         std::find_if(result_intersection.begin(),
                      result_intersection.end(),
-                     [via_edge](const extractor::intersection::IntersectionViewData &road) {
-                         return road.eid == via_edge;
-                     });
+                     [via_edge](const extractor::intersection::IntersectionViewData &road)
+                     { return road.eid == via_edge; });
 
     if (!check_via_edge)
     {
@@ -145,6 +140,4 @@ bool findPreviousIntersection(const NodeID node_v,
     return true;
 }
 
-} // namespace lanes
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance::lanes

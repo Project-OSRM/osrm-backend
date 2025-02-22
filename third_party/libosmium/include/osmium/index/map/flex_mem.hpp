@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -244,7 +244,7 @@ namespace osmium {
                     if (m_dense) {
                         return;
                     }
-                    for (const auto entry : m_sparse_entries) {
+                    for (const auto& entry : m_sparse_entries) {
                         set_dense(entry.id, entry.value);
                     }
                     m_sparse_entries.clear();
@@ -257,8 +257,8 @@ namespace osmium {
                     std::size_t used_blocks = 0;
                     std::size_t empty_blocks = 0;
 
-                    for (const auto& block : m_dense_blocks) {
-                        if (block.empty()) {
+                    for (const auto& dense_block : m_dense_blocks) {
+                        if (dense_block.empty()) {
                             ++empty_blocks;
                         } else {
                             ++used_blocks;

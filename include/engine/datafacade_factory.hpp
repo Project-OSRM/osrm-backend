@@ -12,13 +12,10 @@
 
 #include "storage/shared_datatype.hpp"
 
-#include <array>
 #include <memory>
 #include <unordered_map>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 // This class selects the right facade for
 template <template <typename A> class FacadeT, typename AlgorithmT> class DataFacadeFactory
@@ -65,7 +62,7 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
 
         for (const auto &exclude_prefix : exclude_prefixes)
         {
-            auto index_begin = exclude_prefix.find_last_of("/");
+            auto index_begin = exclude_prefix.find_last_of('/');
             BOOST_ASSERT_MSG(index_begin != std::string::npos,
                              "The exclude prefix needs to be a valid data path.");
             std::size_t index =
@@ -152,7 +149,6 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
     std::unordered_map<std::string, extractor::ClassData> name_to_class;
     const extractor::ProfileProperties *properties = nullptr;
 };
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

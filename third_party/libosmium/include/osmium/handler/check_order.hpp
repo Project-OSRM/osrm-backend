@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -39,8 +39,8 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/relation.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/way.hpp>
+#include <osmium/util/compatibility.hpp>
 
-#include <limits>
 #include <stdexcept>
 #include <string>
 
@@ -50,7 +50,7 @@ namespace osmium {
      * Exception thrown when a method in the CheckOrder class detects
      * that the input is out of order.
      */
-    struct out_of_order_error : public std::runtime_error {
+    struct OSMIUM_EXPORT out_of_order_error : public std::runtime_error {
 
         osmium::object_id_type object_id;
 
@@ -86,51 +86,69 @@ namespace osmium {
          */
         class CheckOrder : public osmium::handler::Handler {
 
-            osmium::object_id_type m_max_node_id     = std::numeric_limits<osmium::object_id_type>::min();
-            osmium::object_id_type m_max_way_id      = std::numeric_limits<osmium::object_id_type>::min();
-            osmium::object_id_type m_max_relation_id = std::numeric_limits<osmium::object_id_type>::min();
+            osmium::object_id_type m_max_node_id = 0;
+            osmium::object_id_type m_max_way_id = 0;
+            osmium::object_id_type m_max_relation_id = 0;
+            bool m_has_node = false;
+            bool m_has_way = false;
+            bool m_has_relation = false;
 
         public:
 
             void node(const osmium::Node& node) {
-                if (m_max_way_id > std::numeric_limits<osmium::object_id_type>::min()) {
+                if (m_has_way) {
                     throw out_of_order_error{"Found a node after a way.", node.id()};
                 }
-                if (m_max_relation_id > std::numeric_limits<osmium::object_id_type>::min()) {
+                if (m_has_relation) {
                     throw out_of_order_error{"Found a node after a relation.", node.id()};
                 }
 
-                if (m_max_node_id == node.id()) {
-                    throw out_of_order_error{"Node ID twice in input. Maybe you are using a history or change file?", node.id()};
+                if (m_has_node) {
+                    if (m_max_node_id == node.id()) {
+                        throw out_of_order_error{"Node ID twice in input. Maybe you are using a history or change file?", node.id()};
+                    }
+                    if (id_order{}(node.id(), m_max_node_id)) {
+                        throw out_of_order_error{"Node IDs out of order: " + std::to_string(node.id()), node.id()};
+                    }
+                    m_max_node_id = node.id();
+                } else {
+                    m_max_node_id = node.id();
+                    m_has_node = true;
                 }
-                if (id_order{}(node.id(), m_max_node_id)) {
-                    throw out_of_order_error{"Node IDs out of order.", node.id()};
-                }
-                m_max_node_id = node.id();
             }
 
             void way(const osmium::Way& way) {
-                if (m_max_relation_id > std::numeric_limits<osmium::object_id_type>::min()) {
+                if (m_has_relation) {
                     throw out_of_order_error{"Found a way after a relation.", way.id()};
                 }
 
-                if (m_max_way_id == way.id()) {
-                    throw out_of_order_error{"Way ID twice in input. Maybe you are using a history or change file?", way.id()};
+                if (m_has_way) {
+                    if (m_max_way_id == way.id()) {
+                        throw out_of_order_error{"Way ID twice in input. Maybe you are using a history or change file?", way.id()};
+                    }
+                    if (id_order{}(way.id(), m_max_way_id)) {
+                        throw out_of_order_error{"Way IDs out of order: " + std::to_string(way.id()), way.id()};
+                    }
+                    m_max_way_id = way.id();
+                } else {
+                    m_max_way_id = way.id();
+                    m_has_way = true;
                 }
-                if (id_order{}(way.id(), m_max_way_id)) {
-                    throw out_of_order_error{"Way IDs out of order.", way.id()};
-                }
-                m_max_way_id = way.id();
             }
 
             void relation(const osmium::Relation& relation) {
-                if (m_max_relation_id == relation.id()) {
-                    throw out_of_order_error{"Relation ID twice in input. Maybe you are using a history or change file?", relation.id()};
+                if (m_has_relation) {
+                    if (m_max_relation_id == relation.id()) {
+                        throw out_of_order_error{"Relation ID twice in input. Maybe you are using a history or change file?", relation.id()};
+                    }
+                    if (id_order{}(relation.id(), m_max_relation_id)) {
+                        throw out_of_order_error{"Relation IDs out of order: " + std::to_string(relation.id()), relation.id()};
+                    }
+                    m_max_relation_id = relation.id();
+                } else {
+                    m_max_relation_id = relation.id();
+                    m_has_relation = true;
                 }
-                if (id_order{}(relation.id(), m_max_relation_id)) {
-                    throw out_of_order_error{"Relation IDs out of order.", relation.id()};
-                }
-                m_max_relation_id = relation.id();
             }
 
             osmium::object_id_type max_node_id() const noexcept {

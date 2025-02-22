@@ -12,11 +12,7 @@
 #include <cstdlib>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 
 // locations 0---1---2-...-n-1---n
@@ -32,7 +28,7 @@ struct LegGeometry
     // length of the segment in meters
     std::vector<double> segment_distances;
     // original OSM node IDs for each coordinate
-    std::vector<OSMNodeID> osm_node_ids;
+    std::vector<NodeID> node_ids;
 
     // Per-coordinate metadata
     struct Annotation
@@ -64,8 +60,6 @@ struct LegGeometry
         return segment_offsets.size() - 1;
     }
 };
-} // namespace guidance
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif

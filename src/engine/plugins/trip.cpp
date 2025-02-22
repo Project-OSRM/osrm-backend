@@ -4,31 +4,20 @@
 #include "engine/api/trip_parameters.hpp"
 #include "engine/trip/trip_brute_force.hpp"
 #include "engine/trip/trip_farthest_insertion.hpp"
-#include "engine/trip/trip_nearest_neighbour.hpp"
 #include "util/dist_table_wrapper.hpp" // to access the dist table more easily
-#include "util/json_container.hpp"
 
 #include <boost/assert.hpp>
 
 #include <algorithm>
-#include <cstdlib>
-#include <iterator>
-#include <limits>
-#include <memory>
-#include <string>
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
-bool IsStronglyConnectedComponent(const util::DistTableWrapper<EdgeWeight> &result_table)
+bool IsStronglyConnectedComponent(const util::DistTableWrapper<EdgeDuration> &result_table)
 {
-    return std::find(std::begin(result_table), std::end(result_table), INVALID_EDGE_WEIGHT) ==
+    return std::find(std::begin(result_table), std::end(result_table), INVALID_EDGE_DURATION) ==
            std::end(result_table);
 }
 
@@ -36,63 +25,45 @@ bool IsSupportedParameterCombination(const bool fixed_start,
                                      const bool fixed_end,
                                      const bool roundtrip)
 {
-    if (fixed_start && fixed_end && !roundtrip)
-    {
-        return true;
-    }
-    else if (roundtrip)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return roundtrip || fixed_start || fixed_end;
 }
 
 // given the node order in which to visit, compute the actual route (with geometry, travel time and
 // so on) and return the result
-InternalRouteResult TripPlugin::ComputeRoute(const RoutingAlgorithmsInterface &algorithms,
-                                             const std::vector<PhantomNode> &snapped_phantoms,
-                                             const std::vector<NodeID> &trip,
-                                             const bool roundtrip) const
+InternalRouteResult
+TripPlugin::ComputeRoute(const RoutingAlgorithmsInterface &algorithms,
+                         const std::vector<PhantomNodeCandidates> &waypoint_candidates,
+                         const std::vector<NodeID> &trip,
+                         const bool roundtrip) const
 {
-    InternalRouteResult min_route;
-    // given the final trip, compute total duration and return the route and location permutation
-    PhantomNodes viapoint;
 
-    // computes a roundtrip from the nodes in trip
-    for (auto node = trip.begin(); node < trip.end() - 1; ++node)
-    {
-        const auto from_node = *node;
-        const auto to_node = *std::next(node);
-
-        viapoint = PhantomNodes{snapped_phantoms[from_node], snapped_phantoms[to_node]};
-        min_route.segment_end_coordinates.emplace_back(viapoint);
-    }
-
+    // TODO make a more efficient solution that doesn't require copying all the waypoints vectors.
+    std::vector<PhantomNodeCandidates> trip_candidates;
+    std::transform(trip.begin(),
+                   trip.end(),
+                   std::back_inserter(trip_candidates),
+                   [&](const auto &node) { return waypoint_candidates[node]; });
     // return back to the first node if it is a round trip
     if (roundtrip)
     {
-        viapoint = PhantomNodes{snapped_phantoms[trip.back()], snapped_phantoms[trip.front()]};
-        min_route.segment_end_coordinates.emplace_back(viapoint);
+        trip_candidates.push_back(waypoint_candidates[trip.front()]);
         // trip comes out to be something like 0 1 4 3 2 0
-        BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size());
+        BOOST_ASSERT(trip_candidates.size() == trip.size() + 1);
     }
     else
     {
-        // trip comes out to be something like 0 1 4 3 2, so the sizes don't match
-        BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size() - 1);
+        // trip comes out to be something like 0 1 4 3 2
+        BOOST_ASSERT(trip_candidates.size() == trip.size());
     }
 
-    min_route = algorithms.ShortestPathSearch(min_route.segment_end_coordinates, {false});
+    auto min_route = algorithms.ShortestPathSearch(trip_candidates, {false});
     BOOST_ASSERT_MSG(min_route.shortest_path_weight < INVALID_EDGE_WEIGHT, "unroutable route");
     return min_route;
 }
 
 void ManipulateTableForFSE(const std::size_t source_id,
                            const std::size_t destination_id,
-                           util::DistTableWrapper<EdgeWeight> &result_table)
+                           util::DistTableWrapper<EdgeDuration> &result_table)
 {
     // ****************** Change Table *************************
     // The following code manipulates the table and produces the new table for
@@ -118,7 +89,7 @@ void ManipulateTableForFSE(const std::size_t source_id,
     {
         if (i == source_id)
             continue;
-        result_table.SetValue(i, source_id, INVALID_EDGE_WEIGHT);
+        result_table.SetValue(i, source_id, INVALID_EDGE_DURATION);
     }
 
     // change parameters.destination row
@@ -128,18 +99,44 @@ void ManipulateTableForFSE(const std::size_t source_id,
     {
         if (i == destination_id)
             continue;
-        result_table.SetValue(destination_id, i, INVALID_EDGE_WEIGHT);
+        result_table.SetValue(destination_id, i, INVALID_EDGE_DURATION);
     }
 
     // set destination->source to zero so roundtrip treats source and
     // destination as one location
-    result_table.SetValue(destination_id, source_id, 0);
+    result_table.SetValue(destination_id, source_id, {0});
 
     // set source->destination as very high number so algorithm is forced
     // to find another path to get to destination
-    result_table.SetValue(source_id, destination_id, INVALID_EDGE_WEIGHT);
+    result_table.SetValue(source_id, destination_id, INVALID_EDGE_DURATION);
 
     //*********  End of changes to table  *************************************
+}
+
+void ManipulateTableForNonRoundtripFS(const std::size_t source_id,
+                                      util::DistTableWrapper<EdgeDuration> &result_table)
+{
+    // We can use the round-trip calculation to simulate non-round-trip fixed start
+    // by making all paths to the source location zero. Effectively finding an 'optimal'
+    // round-trip path that ignores the cost of getting back from any destination to the
+    // source.
+    for (const auto i : util::irange<size_t>(0, result_table.GetNumberOfNodes()))
+    {
+        result_table.SetValue(i, source_id, {0});
+    }
+}
+
+void ManipulateTableForNonRoundtripFE(const std::size_t destination_id,
+                                      util::DistTableWrapper<EdgeDuration> &result_table)
+{
+    // We can use the round-trip calculation to simulate non-round-trip fixed end
+    // by making all paths from the destination to other locations zero.
+    // Effectively, finding an 'optimal' round-trip path that ignores the cost of getting
+    // from the destination to any source.
+    for (const auto i : util::irange<size_t>(0, result_table.GetNumberOfNodes()))
+    {
+        result_table.SetValue(destination_id, i, {0});
+    }
 }
 
 Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
@@ -211,12 +208,12 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error("InvalidValue", "Invalid source or destination value.", result);
     }
 
-    auto snapped_phantoms = SnapPhantomNodes(phantom_node_pairs);
+    auto snapped_phantoms = SnapPhantomNodes(std::move(phantom_node_pairs));
 
     BOOST_ASSERT(snapped_phantoms.size() == number_of_locations);
 
     // compute the duration table of all phantom nodes
-    auto result_duration_table = util::DistTableWrapper<EdgeWeight>(
+    auto result_duration_table = util::DistTableWrapper<EdgeDuration>(
         algorithms.ManyToManySearch(snapped_phantoms, {}, {}, /*requestDistance*/ false).first,
         number_of_locations);
 
@@ -225,7 +222,7 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Status::Error;
     }
 
-    const constexpr std::size_t BF_MAX_FEASABLE = 10;
+    const constexpr std::size_t BF_MAX_FEASIBLE = 10;
     BOOST_ASSERT_MSG(result_duration_table.size() == number_of_locations * number_of_locations,
                      "Distance Table has wrong size");
 
@@ -238,11 +235,19 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     {
         ManipulateTableForFSE(source_id, destination_id, result_duration_table);
     }
+    else if (!parameters.roundtrip && fixed_start)
+    {
+        ManipulateTableForNonRoundtripFS(source_id, result_duration_table);
+    }
+    else if (!parameters.roundtrip && fixed_end)
+    {
+        ManipulateTableForNonRoundtripFE(destination_id, result_duration_table);
+    }
 
     std::vector<NodeID> duration_trip;
     duration_trip.reserve(number_of_locations);
     // get an optimized order in which the destinations should be visited
-    if (number_of_locations < BF_MAX_FEASABLE)
+    if (number_of_locations < BF_MAX_FEASIBLE)
     {
         duration_trip = trip::BruteForceTrip(number_of_locations, result_duration_table);
     }
@@ -251,20 +256,28 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         duration_trip = trip::FarthestInsertionTrip(number_of_locations, result_duration_table);
     }
 
-    // rotate result such that roundtrip starts at node with index 0
-    // thist first if covers scenarios: !fixed_end || fixed_start || (fixed_start && fixed_end)
     if (!fixed_end || fixed_start)
     {
+        // rotate result such that trip starts at node with index 0
         auto desired_start_index = std::find(std::begin(duration_trip), std::end(duration_trip), 0);
         BOOST_ASSERT(desired_start_index != std::end(duration_trip));
         std::rotate(std::begin(duration_trip), desired_start_index, std::end(duration_trip));
     }
-    else if (fixed_end && !fixed_start && parameters.roundtrip)
-    {
-        auto desired_start_index =
+    else
+    { // fixed_end
+        auto destination_index =
             std::find(std::begin(duration_trip), std::end(duration_trip), destination_id);
-        BOOST_ASSERT(desired_start_index != std::end(duration_trip));
-        std::rotate(std::begin(duration_trip), desired_start_index, std::end(duration_trip));
+        BOOST_ASSERT(destination_index != std::end(duration_trip));
+        if (!parameters.roundtrip)
+        {
+            // We want the location after destination to be at the front
+            std::advance(destination_index, 1);
+            if (destination_index == std::end(duration_trip))
+            {
+                destination_index = std::begin(duration_trip);
+            }
+        }
+        std::rotate(std::begin(duration_trip), destination_index, std::end(duration_trip));
     }
 
     // get the route when visiting all destinations in optimized order
@@ -279,6 +292,4 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     return Status::Ok;
 }
-} // namespace plugins
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::plugins

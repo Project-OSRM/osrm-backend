@@ -14,9 +14,7 @@
 #include <iterator>
 #include <utility>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 // Node in the bisection graph. We require the original node id (since we remap the nodes all the
@@ -24,9 +22,10 @@ namespace partitioner
 // located at for use in the inertial flow sorting by slope.
 struct BisectionNode
 {
-    BisectionNode(util::Coordinate coordinate_ = {util::FloatLongitude{0}, util::FloatLatitude{0}},
+    BisectionNode(const util::Coordinate &coordinate_ = {util::FloatLongitude{0},
+                                                         util::FloatLatitude{0}},
                   const NodeID original_id_ = SPECIAL_NODEID)
-        : coordinate(std::move(coordinate_)), original_id(original_id_)
+        : coordinate(coordinate_), original_id(original_id_)
     {
     }
 
@@ -66,8 +65,8 @@ inline BisectionGraph makeBisectionGraph(const std::vector<util::Coordinate> &co
     result_edges.reserve(edges.size());
 
     // find the end of edges that belong to node_id
-    const auto advance_edge_itr = [&edges, &result_edges](const std::size_t node_id,
-                                                          auto edge_itr) {
+    const auto advance_edge_itr = [&edges, &result_edges](const std::size_t node_id, auto edge_itr)
+    {
         while (edge_itr != edges.end() && edge_itr->source == node_id)
         {
             result_edges.push_back(edge_itr->Reduce());
@@ -77,9 +76,9 @@ inline BisectionGraph makeBisectionGraph(const std::vector<util::Coordinate> &co
     };
 
     // create a bisection node, requires the ID of the node as well as the lower bound to its edges
-    const auto make_bisection_node = [&edges, &coordinates](const std::size_t node_id,
-                                                            const auto begin_itr,
-                                                            const auto end_itr) {
+    const auto make_bisection_node =
+        [&edges, &coordinates](const std::size_t node_id, const auto begin_itr, const auto end_itr)
+    {
         std::size_t range_begin = std::distance(edges.begin(), begin_itr);
         std::size_t range_end = std::distance(edges.begin(), end_itr);
         return BisectionGraph::NodeT(range_begin, range_end, coordinates[node_id], node_id);
@@ -103,14 +102,16 @@ std::vector<BisectionInputEdge> adaptToBisectionEdge(std::vector<InputEdge> edge
     std::vector<BisectionInputEdge> result;
     result.reserve(edges.size());
 
-    std::transform(begin(edges), end(edges), std::back_inserter(result), [](const auto &edge) {
-        return BisectionInputEdge{edge.source, edge.target};
-    });
+    std::transform(begin(edges),
+                   end(edges),
+                   std::back_inserter(result),
+                   [](const auto &edge) {
+                       return BisectionInputEdge{edge.source, edge.target};
+                   });
 
     return result;
 }
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif // OSRM_PARTITIONER_BISECTION_GRAPH_HPP_

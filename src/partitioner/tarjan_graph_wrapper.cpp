@@ -1,8 +1,6 @@
 #include "partitioner/tarjan_graph_wrapper.hpp"
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 TarjanGraphWrapper::TarjanGraphWrapper(const BisectionGraph &bisection_graph_)
@@ -22,5 +20,4 @@ NodeID TarjanGraphWrapper::GetTarget(const EdgeID eid) const
     return bisection_graph.Edge(eid).target;
 }
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner

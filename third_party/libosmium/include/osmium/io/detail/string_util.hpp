@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -58,13 +58,11 @@ namespace osmium {
                                        const std::size_t old_size,
                                        const std::size_t max_size,
                                        const char* format,
-                                       TArgs&&... args) {
+                                       TArgs... args) {
                 out.resize(old_size + max_size);
 
                 return SNPRINTF(max_size ? &out[old_size] : nullptr,
-                                max_size,
-                                format,
-                                std::forward<TArgs>(args)...);
+                                max_size, format, args...);
             }
 
 #undef SNPRINTF
@@ -82,7 +80,7 @@ namespace osmium {
             template <typename... TArgs>
             inline void append_printf_formatted_string(std::string& out,
                                                        const char* format,
-                                                       TArgs&&... args) {
+                                                       TArgs... args) {
 
                 // First try to write string with the max_size, if that doesn't
                 // work snprintf will tell us how much space it needs. We
@@ -106,7 +104,7 @@ namespace osmium {
                                                 old_size,
                                                 max_size,
                                                 format,
-                                                std::forward<TArgs>(args)...);
+                                                args...);
                 assert(len > 0);
 
                 if (static_cast<std::size_t>(len) >= max_size) {
@@ -115,9 +113,9 @@ namespace osmium {
 #endif
                                      string_snprintf(out,
                                                      old_size,
-                                                     std::size_t(len) + 1,
+                                                     static_cast<std::size_t>(len) + 1,
                                                      format,
-                                                     std::forward<TArgs>(args)...);
+                                                     args...);
                     assert(len2 == len);
                 }
 
@@ -145,7 +143,7 @@ namespace osmium {
             }
 
             inline uint32_t next_utf8_codepoint(char const** begin, const char* end) {
-                auto it = reinterpret_cast<const uint8_t*>(*begin);
+                const auto* it = reinterpret_cast<const uint8_t*>(*begin);
                 uint32_t cp = 0xffU & *it;
                 const auto length = utf8_sequence_length(cp);
                 if (length == 0) {
@@ -205,11 +203,12 @@ namespace osmium {
 
             inline void append_utf8_encoded_string(std::string& out, const char* data) {
                 static const char* lookup_hex = "0123456789abcdef";
-                const char* end = data + std::strlen(data);
+                assert(data);
+                const char* end_ptr = data + std::strlen(data);
 
-                while (data != end) {
-                    const char* last = data;
-                    const uint32_t c = next_utf8_codepoint(&data, end);
+                while (data != end_ptr) {
+                    const char* prev = data;
+                    const uint32_t c = next_utf8_codepoint(&data, end_ptr);
 
                     // This is a list of Unicode code points that we let
                     // through instead of escaping them. It is incomplete
@@ -224,7 +223,7 @@ namespace osmium {
                         (0x0041 <= c && c <= 0x007e) ||
                         (0x00a1 <= c && c <= 0x00ac) ||
                         (0x00ae <= c && c <= 0x05ff)) {
-                        out.append(last, data);
+                        out.append(prev, data);
                     } else {
                         out += '%';
                         if (c <= 0xff) {
@@ -238,6 +237,7 @@ namespace osmium {
             }
 
             inline void append_xml_encoded_string(std::string& out, const char* data) {
+                assert(data);
                 for (; *data != '\0'; ++data) {
                     switch (*data) {
                         case '&':  out += "&amp;";  break;
@@ -255,11 +255,11 @@ namespace osmium {
 
             inline void append_debug_encoded_string(std::string& out, const char* data, const char* prefix, const char* suffix) {
                 static const char* lookup_hex = "0123456789ABCDEF";
-                const char* end = data + std::strlen(data);
+                const char* end_ptr = data + std::strlen(data);
 
-                while (data != end) {
-                    const char* last = data;
-                    uint32_t c = next_utf8_codepoint(&data, end);
+                while (data != end_ptr) {
+                    const char* prev = data;
+                    const uint32_t c = next_utf8_codepoint(&data, end_ptr);
 
                     // This is a list of Unicode code points that we let
                     // through instead of escaping them. It is incomplete
@@ -272,7 +272,7 @@ namespace osmium {
                         (0x003f <= c && c <= 0x007e) ||
                         (0x00a1 <= c && c <= 0x00ac) ||
                         (0x00ae <= c && c <= 0x05ff)) {
-                        out.append(last, data);
+                        out.append(prev, data);
                     } else {
                         out.append(prefix);
                         out.append("<U+");
@@ -284,22 +284,21 @@ namespace osmium {
             }
 
             template <typename TOutputIterator>
-            TOutputIterator append_codepoint_as_utf8(uint32_t cp, TOutputIterator out)
-            {
+            TOutputIterator append_codepoint_as_utf8(uint32_t cp, TOutputIterator out) {
                 if (cp < 0x80UL) {
-                    *(out++) = static_cast<uint8_t>(cp);
+                    *(out++) = static_cast<char>(cp);
                 } else if (cp < 0x800UL) {
-                    *(out++) = static_cast<uint8_t>( (cp >>  6U)          | 0xc0U);
-                    *(out++) = static_cast<uint8_t>(( cp         & 0x3fU) | 0x80U);
+                    *(out++) = static_cast<char>( (cp >>  6U)          | 0xc0U);
+                    *(out++) = static_cast<char>(( cp         & 0x3fU) | 0x80U);
                 } else if (cp < 0x10000UL) {
-                    *(out++) = static_cast<uint8_t>( (cp >> 12U)          | 0xe0U);
-                    *(out++) = static_cast<uint8_t>(((cp >>  6U) & 0x3fU) | 0x80U);
-                    *(out++) = static_cast<uint8_t>(( cp         & 0x3fU) | 0x80U);
+                    *(out++) = static_cast<char>( (cp >> 12U)          | 0xe0U);
+                    *(out++) = static_cast<char>(((cp >>  6U) & 0x3fU) | 0x80U);
+                    *(out++) = static_cast<char>(( cp         & 0x3fU) | 0x80U);
                 } else {
-                    *(out++) = static_cast<uint8_t>( (cp >> 18U)          | 0xf0U);
-                    *(out++) = static_cast<uint8_t>(((cp >> 12U) & 0x3fU) | 0x80U);
-                    *(out++) = static_cast<uint8_t>(((cp >>  6U) & 0x3fU) | 0x80U);
-                    *(out++) = static_cast<uint8_t>(( cp         & 0x3fU) | 0x80U);
+                    *(out++) = static_cast<char>( (cp >> 18U)          | 0xf0U);
+                    *(out++) = static_cast<char>(((cp >> 12U) & 0x3fU) | 0x80U);
+                    *(out++) = static_cast<char>(((cp >>  6U) & 0x3fU) | 0x80U);
+                    *(out++) = static_cast<char>(( cp         & 0x3fU) | 0x80U);
                 }
                 return out;
             }

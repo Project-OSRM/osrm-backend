@@ -25,8 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_ENGINE_PHANTOM_NODES_H
-#define OSRM_ENGINE_PHANTOM_NODES_H
+#ifndef OSRM_ENGINE_PHANTOM_NODE_H
+#define OSRM_ENGINE_PHANTOM_NODE_H
+
+#include <vector>
 
 #include "extractor/travel_mode.hpp"
 
@@ -36,9 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 struct PhantomNode
@@ -46,12 +46,13 @@ struct PhantomNode
     PhantomNode()
         : forward_segment_id{SPECIAL_SEGMENTID, false}, reverse_segment_id{SPECIAL_SEGMENTID,
                                                                            false},
-          forward_weight(INVALID_EDGE_WEIGHT), reverse_weight(INVALID_EDGE_WEIGHT),
-          forward_weight_offset(0), reverse_weight_offset(0),
+          forward_weight(INVALID_EDGE_WEIGHT),
+          reverse_weight(INVALID_EDGE_WEIGHT), forward_weight_offset{0}, reverse_weight_offset{0},
           forward_distance(INVALID_EDGE_DISTANCE), reverse_distance(INVALID_EDGE_DISTANCE),
-          forward_distance_offset(0), reverse_distance_offset(0),
+          forward_distance_offset{0}, reverse_distance_offset{0},
           forward_duration(MAXIMAL_EDGE_DURATION), reverse_duration(MAXIMAL_EDGE_DURATION),
-          forward_duration_offset(0), reverse_duration_offset(0),
+          forward_duration_offset{0}, reverse_duration_offset{0},
+          component({INVALID_COMPONENTID, 0}),
           fwd_segment_position(0), is_valid_forward_source{false}, is_valid_forward_target{false},
           is_valid_reverse_source{false}, is_valid_reverse_target{false}, bearing(0)
 
@@ -70,13 +71,13 @@ struct PhantomNode
         return reverse_weight_offset + reverse_weight;
     }
 
-    EdgeWeight GetForwardDuration() const
+    EdgeDuration GetForwardDuration() const
     {
         BOOST_ASSERT(forward_segment_id.enabled);
         return forward_duration + forward_duration_offset;
     }
 
-    EdgeWeight GetReverseDuration() const
+    EdgeDuration GetReverseDuration() const
     {
         BOOST_ASSERT(reverse_segment_id.enabled);
         return reverse_duration + reverse_duration_offset;
@@ -165,10 +166,10 @@ struct PhantomNode
                          EdgeDistance reverse_distance,
                          EdgeDistance forward_distance_offset,
                          EdgeDistance reverse_distance_offset,
-                         EdgeWeight forward_duration,
-                         EdgeWeight reverse_duration,
-                         EdgeWeight forward_duration_offset,
-                         EdgeWeight reverse_duration_offset,
+                         EdgeDuration forward_duration,
+                         EdgeDuration reverse_duration,
+                         EdgeDuration forward_duration_offset,
+                         EdgeDuration reverse_duration_offset,
                          bool is_valid_forward_source,
                          bool is_valid_forward_target,
                          bool is_valid_reverse_source,
@@ -203,10 +204,10 @@ struct PhantomNode
     EdgeDistance reverse_distance;
     EdgeDistance forward_distance_offset; // TODO: try to remove -> requires path unpacking changes
     EdgeDistance reverse_distance_offset; // TODO: try to remove -> requires path unpacking changes
-    EdgeWeight forward_duration;
-    EdgeWeight reverse_duration;
-    EdgeWeight forward_duration_offset; // TODO: try to remove -> requires path unpacking changes
-    EdgeWeight reverse_duration_offset; // TODO: try to remove -> requires path unpacking changes
+    EdgeDuration forward_duration;
+    EdgeDuration reverse_duration;
+    EdgeDuration forward_duration_offset; // TODO: try to remove -> requires path unpacking changes
+    EdgeDuration reverse_duration_offset; // TODO: try to remove -> requires path unpacking changes
     ComponentID component;
 
     util::Coordinate location; // this is the coordinate of x
@@ -223,7 +224,8 @@ struct PhantomNode
 
 static_assert(sizeof(PhantomNode) == 80, "PhantomNode has more padding then expected");
 
-using PhantomNodePair = std::pair<PhantomNode, PhantomNode>;
+using PhantomNodeCandidates = std::vector<PhantomNode>;
+using PhantomCandidateAlternatives = std::pair<PhantomNodeCandidates, PhantomNodeCandidates>;
 
 struct PhantomNodeWithDistance
 {
@@ -231,12 +233,44 @@ struct PhantomNodeWithDistance
     double distance;
 };
 
-struct PhantomNodes
+struct PhantomEndpointCandidates
+{
+    const PhantomNodeCandidates &source_phantoms;
+    const PhantomNodeCandidates &target_phantoms;
+};
+
+struct PhantomCandidatesToTarget
+{
+    const PhantomNodeCandidates &source_phantoms;
+    const PhantomNode &target_phantom;
+};
+
+inline util::Coordinate candidatesSnappedLocation(const PhantomNodeCandidates &candidates)
+{
+    BOOST_ASSERT(!candidates.empty());
+    return candidates.front().location;
+}
+
+inline util::Coordinate candidatesInputLocation(const PhantomNodeCandidates &candidates)
+{
+    BOOST_ASSERT(!candidates.empty());
+    return candidates.front().input_location;
+}
+
+inline bool candidatesHaveComponent(const PhantomNodeCandidates &candidates, uint32_t component_id)
+{
+    return std::any_of(candidates.begin(),
+                       candidates.end(),
+                       [component_id](const PhantomNode &node)
+                       { return node.component.id == component_id; });
+}
+
+struct PhantomEndpoints
 {
     PhantomNode source_phantom;
     PhantomNode target_phantom;
 };
-} // namespace engine
-} // namespace osrm
 
-#endif // PHANTOM_NODES_H
+} // namespace osrm::engine
+
+#endif // OSRM_ENGINE_PHANTOM_NODE_H

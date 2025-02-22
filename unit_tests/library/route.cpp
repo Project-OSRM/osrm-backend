@@ -26,7 +26,7 @@ osrm::Status run_route_json(const osrm::OSRM &osrm,
     }
     osrm::engine::api::ResultT result = osrm::json::Object();
     auto rc = osrm.Route(params, result);
-    json_result = result.get<osrm::json::Object>();
+    json_result = std::get<osrm::json::Object>(result);
     return rc;
 }
 
@@ -48,14 +48,14 @@ void test_route_same_coordinates_fixture(bool use_json_only_api)
     BOOST_CHECK(rc == Status::Ok);
 
     // unset snapping dependent hint
-    for (auto &itr : json_result.values["waypoints"].get<json::Array>().values)
+    for (auto &itr : std::get<json::Array>(json_result.values["waypoints"]).values)
     {
         // Hint values aren't stable, so blank it out
-        itr.get<json::Object>().values["hint"] = "";
+        std::get<json::Object>(itr).values["hint"] = "";
 
         // Round value to 6 decimal places for double comparison later
-        itr.get<json::Object>().values["distance"] =
-            round(itr.get<json::Object>().values["distance"].get<json::Number>().value * 1000000);
+        std::get<json::Object>(itr).values["distance"] = std::round(
+            std::get<json::Number>(std::get<json::Object>(itr).values["distance"]).value * 1000000);
     }
 
     const auto location = json::Array{{{7.437070}, {43.749248}}};
@@ -65,11 +65,11 @@ void test_route_same_coordinates_fixture(bool use_json_only_api)
          {"waypoints",
           json::Array{{json::Object{{{"name", "Boulevard du Larvotto"},
                                      {"location", location},
-                                     {"distance", round(0.137249 * 1000000)},
+                                     {"distance", std::round(0.137249 * 1000000)},
                                      {"hint", ""}}},
                        json::Object{{{"name", "Boulevard du Larvotto"},
                                      {"location", location},
-                                     {"distance", round(0.137249 * 1000000)},
+                                     {"distance", std::round(0.137249 * 1000000)},
                                      {"hint", ""}}}}}},
          {"routes",
           json::Array{{json::Object{
@@ -154,127 +154,132 @@ void test_route_same_coordinates(bool use_json_only_api)
     const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = std::get<json::Array>(json_result.values.at("waypoints")).values;
     BOOST_CHECK(waypoints.size() == params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
     {
-        const auto &waypoint_object = waypoint.get<json::Object>();
+        const auto &waypoint_object = std::get<json::Object>(waypoint);
 
         // nothing can be said about name, empty or contains name of the street
-        const auto name = waypoint_object.values.at("name").get<json::String>().value;
+        const auto name = std::get<json::String>(waypoint_object.values.at("name")).value;
         BOOST_CHECK(((void)name, true));
 
-        const auto location = waypoint_object.values.at("location").get<json::Array>().values;
-        const auto longitude = location[0].get<json::Number>().value;
-        const auto latitude = location[1].get<json::Number>().value;
+        const auto location = std::get<json::Array>(waypoint_object.values.at("location")).values;
+        const auto longitude = std::get<json::Number>(location[0]).value;
+        const auto latitude = std::get<json::Number>(location[1]).value;
         BOOST_CHECK(longitude >= -180. && longitude <= 180.);
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
 
-        const auto hint = waypoint_object.values.at("hint").get<json::String>().value;
+        const auto hint = std::get<json::String>(waypoint_object.values.at("hint")).value;
         BOOST_CHECK(!hint.empty());
     }
 
-    const auto &routes = json_result.values.at("routes").get<json::Array>().values;
+    const auto &routes = std::get<json::Array>(json_result.values.at("routes")).values;
     BOOST_REQUIRE_GT(routes.size(), 0);
 
     for (const auto &route : routes)
     {
-        const auto &route_object = route.get<json::Object>();
+        const auto &route_object = std::get<json::Object>(route);
 
-        const auto distance = route_object.values.at("distance").get<json::Number>().value;
+        const auto distance = std::get<json::Number>(route_object.values.at("distance")).value;
         BOOST_CHECK_EQUAL(distance, 0);
 
-        const auto duration = route_object.values.at("duration").get<json::Number>().value;
+        const auto duration = std::get<json::Number>(route_object.values.at("duration")).value;
         BOOST_CHECK_EQUAL(duration, 0);
 
         // geometries=polyline by default
-        const auto geometry = route_object.values.at("geometry").get<json::String>().value;
+        const auto geometry = std::get<json::String>(route_object.values.at("geometry")).value;
         BOOST_CHECK(!geometry.empty());
 
-        const auto &legs = route_object.values.at("legs").get<json::Array>().values;
+        const auto &legs = std::get<json::Array>(route_object.values.at("legs")).values;
         BOOST_CHECK(!legs.empty());
 
         for (const auto &leg : legs)
         {
-            const auto &leg_object = leg.get<json::Object>();
+            const auto &leg_object = std::get<json::Object>(leg);
 
-            const auto distance = leg_object.values.at("distance").get<json::Number>().value;
+            const auto distance = std::get<json::Number>(leg_object.values.at("distance")).value;
             BOOST_CHECK_EQUAL(distance, 0);
 
-            const auto duration = leg_object.values.at("duration").get<json::Number>().value;
+            const auto duration = std::get<json::Number>(leg_object.values.at("duration")).value;
             BOOST_CHECK_EQUAL(duration, 0);
 
             // nothing can be said about summary, empty or contains human readable summary
-            const auto summary = leg_object.values.at("summary").get<json::String>().value;
+            const auto summary = std::get<json::String>(leg_object.values.at("summary")).value;
             BOOST_CHECK(((void)summary, true));
 
-            const auto &steps = leg_object.values.at("steps").get<json::Array>().values;
+            const auto &steps = std::get<json::Array>(leg_object.values.at("steps")).values;
             BOOST_CHECK(!steps.empty());
 
             std::size_t step_count = 0;
 
             for (const auto &step : steps)
             {
-                const auto &step_object = step.get<json::Object>();
+                const auto &step_object = std::get<json::Object>(step);
 
-                const auto distance = step_object.values.at("distance").get<json::Number>().value;
+                const auto distance =
+                    std::get<json::Number>(step_object.values.at("distance")).value;
                 BOOST_CHECK_EQUAL(distance, 0);
 
-                const auto duration = step_object.values.at("duration").get<json::Number>().value;
+                const auto duration =
+                    std::get<json::Number>(step_object.values.at("duration")).value;
                 BOOST_CHECK_EQUAL(duration, 0);
 
                 // geometries=polyline by default
-                const auto geometry = step_object.values.at("geometry").get<json::String>().value;
+                const auto geometry =
+                    std::get<json::String>(step_object.values.at("geometry")).value;
                 BOOST_CHECK(!geometry.empty());
 
                 // nothing can be said about name, empty or contains way name
-                const auto name = step_object.values.at("name").get<json::String>().value;
+                const auto name = std::get<json::String>(step_object.values.at("name")).value;
                 BOOST_CHECK(((void)name, true));
 
                 // nothing can be said about mode, contains mode of transportation
-                const auto mode = step_object.values.at("mode").get<json::String>().value;
                 BOOST_CHECK(!name.empty());
 
-                const auto &maneuver = step_object.values.at("maneuver").get<json::Object>().values;
+                const auto &maneuver =
+                    std::get<json::Object>(step_object.values.at("maneuver")).values;
 
-                const auto type = maneuver.at("type").get<json::String>().value;
+                const auto type = std::get<json::String>(maneuver.at("type")).value;
                 BOOST_CHECK(!type.empty());
 
                 const auto &intersections =
-                    step_object.values.at("intersections").get<json::Array>().values;
+                    std::get<json::Array>(step_object.values.at("intersections")).values;
 
                 for (auto &intersection : intersections)
                 {
-                    const auto &intersection_object = intersection.get<json::Object>().values;
+                    const auto &intersection_object = std::get<json::Object>(intersection).values;
                     const auto location =
-                        intersection_object.at("location").get<json::Array>().values;
-                    const auto longitude = location[0].get<json::Number>().value;
-                    const auto latitude = location[1].get<json::Number>().value;
+                        std::get<json::Array>(intersection_object.at("location")).values;
+                    const auto longitude = std::get<json::Number>(location[0]).value;
+                    const auto latitude = std::get<json::Number>(location[1]).value;
                     BOOST_CHECK(longitude >= -180. && longitude <= 180.);
                     BOOST_CHECK(latitude >= -90. && latitude <= 90.);
 
                     const auto &bearings =
-                        intersection_object.at("bearings").get<json::Array>().values;
+                        std::get<json::Array>(intersection_object.at("bearings")).values;
                     BOOST_CHECK(!bearings.empty());
-                    const auto &entries = intersection_object.at("entry").get<json::Array>().values;
+                    const auto &entries =
+                        std::get<json::Array>(intersection_object.at("entry")).values;
                     BOOST_CHECK(bearings.size() == entries.size());
 
                     for (const auto &bearing : bearings)
-                        BOOST_CHECK(0. <= bearing.get<json::Number>().value &&
-                                    bearing.get<json::Number>().value <= 360.);
+                        BOOST_CHECK(0. <= std::get<json::Number>(bearing).value &&
+                                    std::get<json::Number>(bearing).value <= 360.);
 
                     if (step_count > 0)
                     {
-                        const auto in = intersection_object.at("in").get<json::Number>().value;
+                        const auto in = std::get<json::Number>(intersection_object.at("in")).value;
                         BOOST_CHECK(in < bearings.size());
                     }
                     if (step_count + 1 < steps.size())
                     {
-                        const auto out = intersection_object.at("out").get<json::Number>().value;
+                        const auto out =
+                            std::get<json::Number>(intersection_object.at("out")).value;
                         BOOST_CHECK(out < bearings.size());
                     }
                 }
@@ -309,29 +314,29 @@ void test_route_same_coordinates_no_waypoints(bool use_json_only_api)
     const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
     BOOST_CHECK(json_result.values.find("waypoints") == json_result.values.end());
 
-    const auto &routes = json_result.values.at("routes").get<json::Array>().values;
+    const auto &routes = std::get<json::Array>(json_result.values.at("routes")).values;
     BOOST_REQUIRE_GT(routes.size(), 0);
 
     for (const auto &route : routes)
     {
-        const auto &route_object = route.get<json::Object>();
+        const auto &route_object = std::get<json::Object>(route);
 
-        const auto distance = route_object.values.at("distance").get<json::Number>().value;
+        const auto distance = std::get<json::Number>(route_object.values.at("distance")).value;
         BOOST_CHECK_EQUAL(distance, 0);
 
-        const auto duration = route_object.values.at("duration").get<json::Number>().value;
+        const auto duration = std::get<json::Number>(route_object.values.at("duration")).value;
         BOOST_CHECK_EQUAL(duration, 0);
 
         // geometries=polyline by default
-        const auto geometry = route_object.values.at("geometry").get<json::String>().value;
+        const auto geometry = std::get<json::String>(route_object.values.at("geometry")).value;
         BOOST_CHECK(!geometry.empty());
 
-        const auto &legs = route_object.values.at("legs").get<json::Array>().values;
+        const auto &legs = std::get<json::Array>(route_object.values.at("legs")).values;
         BOOST_CHECK(!legs.empty());
 
         // The rest of legs contents is verified by test_route_same_coordinates
@@ -363,19 +368,19 @@ void test_route_response_for_locations_in_small_component(bool use_json_only_api
     const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = std::get<json::Array>(json_result.values.at("waypoints")).values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
     {
-        const auto &waypoint_object = waypoint.get<json::Object>();
+        const auto &waypoint_object = std::get<json::Object>(waypoint);
 
-        const auto location = waypoint_object.values.at("location").get<json::Array>().values;
-        const auto longitude = location[0].get<json::Number>().value;
-        const auto latitude = location[1].get<json::Number>().value;
+        const auto location = std::get<json::Array>(waypoint_object.values.at("location")).values;
+        const auto longitude = std::get<json::Number>(location[0]).value;
+        const auto latitude = std::get<json::Number>(location[1]).value;
         BOOST_CHECK(longitude >= -180. && longitude <= 180.);
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
     }
@@ -406,19 +411,19 @@ void test_route_response_for_locations_in_big_component(bool use_json_only_api)
     const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = std::get<json::Array>(json_result.values.at("waypoints")).values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
     {
-        const auto &waypoint_object = waypoint.get<json::Object>();
+        const auto &waypoint_object = std::get<json::Object>(waypoint);
 
-        const auto location = waypoint_object.values.at("location").get<json::Array>().values;
-        const auto longitude = location[0].get<json::Number>().value;
-        const auto latitude = location[1].get<json::Number>().value;
+        const auto location = std::get<json::Array>(waypoint_object.values.at("location")).values;
+        const auto longitude = std::get<json::Number>(location[0]).value;
+        const auto latitude = std::get<json::Number>(location[1]).value;
         BOOST_CHECK(longitude >= -180. && longitude <= 180.);
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
     }
@@ -451,19 +456,19 @@ void test_route_response_for_locations_across_components(bool use_json_only_api)
     const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = std::get<json::Array>(json_result.values.at("waypoints")).values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
     {
-        const auto &waypoint_object = waypoint.get<json::Object>();
+        const auto &waypoint_object = std::get<json::Object>(waypoint);
 
-        const auto location = waypoint_object.values.at("location").get<json::Array>().values;
-        const auto longitude = location[0].get<json::Number>().value;
-        const auto latitude = location[1].get<json::Number>().value;
+        const auto location = std::get<json::Array>(waypoint_object.values.at("location")).values;
+        const auto longitude = std::get<json::Number>(location[0]).value;
+        const auto latitude = std::get<json::Number>(location[1]).value;
         BOOST_CHECK(longitude >= -180. && longitude <= 180.);
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
     }
@@ -493,8 +498,8 @@ void test_route_user_disables_generating_hints(bool use_json_only_api)
     const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    for (auto waypoint : json_result.values["waypoints"].get<json::Array>().values)
-        BOOST_CHECK_EQUAL(waypoint.get<json::Object>().values.count("hint"), 0);
+    for (auto waypoint : std::get<json::Array>(json_result.values["waypoints"]).values)
+        BOOST_CHECK_EQUAL(std::get<json::Object>(waypoint).values.count("hint"), 0);
 }
 BOOST_AUTO_TEST_CASE(test_route_user_disables_generating_hints_old_api)
 {
@@ -522,21 +527,22 @@ void speed_annotation_matches_duration_and_distance(bool use_json_only_api)
     const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto &routes = json_result.values["routes"].get<json::Array>().values;
-    const auto &legs = routes[0].get<json::Object>().values.at("legs").get<json::Array>().values;
+    const auto &routes = std::get<json::Array>(json_result.values["routes"]).values;
+    const auto &legs =
+        std::get<json::Array>(std::get<json::Object>(routes[0]).values.at("legs")).values;
     const auto &annotation =
-        legs[0].get<json::Object>().values.at("annotation").get<json::Object>();
-    const auto &speeds = annotation.values.at("speed").get<json::Array>().values;
-    const auto &durations = annotation.values.at("duration").get<json::Array>().values;
-    const auto &distances = annotation.values.at("distance").get<json::Array>().values;
+        std::get<json::Object>(std::get<json::Object>(legs[0]).values.at("annotation"));
+    const auto &speeds = std::get<json::Array>(annotation.values.at("speed")).values;
+    const auto &durations = std::get<json::Array>(annotation.values.at("duration")).values;
+    const auto &distances = std::get<json::Array>(annotation.values.at("distance")).values;
     int length = speeds.size();
 
     BOOST_CHECK_EQUAL(length, 1);
     for (int i = 0; i < length; i++)
     {
-        auto speed = speeds[i].get<json::Number>().value;
-        auto duration = durations[i].get<json::Number>().value;
-        auto distance = distances[i].get<json::Number>().value;
+        auto speed = std::get<json::Number>(speeds[i]).value;
+        auto duration = std::get<json::Number>(durations[i]).value;
+        auto distance = std::get<json::Number>(distances[i]).value;
         auto calc = std::round(distance / duration * 10.) / 10.;
         BOOST_CHECK_EQUAL(speed, std::isnan(calc) ? 0 : calc);
 
@@ -570,21 +576,20 @@ void test_manual_setting_of_annotations_property(bool use_json_only_api)
     const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    auto annotations = json_result.values["routes"]
-                           .get<json::Array>()
-                           .values[0]
-                           .get<json::Object>()
-                           .values["legs"]
-                           .get<json::Array>()
-                           .values[0]
-                           .get<json::Object>()
-                           .values["annotation"]
-                           .get<json::Object>()
-                           .values;
-    BOOST_CHECK_EQUAL(annotations.size(), 6);
+    auto annotations =
+        std::get<json::Object>(
+            std::get<json::Object>(
+                std::get<json::Array>(
+                    std::get<json::Object>(
+                        std::get<json::Array>(json_result.values["routes"]).values[0])
+                        .values["legs"])
+                    .values[0])
+                .values["annotation"])
+            .values;
+    BOOST_CHECK_EQUAL(annotations.size(), 7);
 }
 BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property_old_api)
 {
@@ -611,7 +616,7 @@ BOOST_AUTO_TEST_CASE(test_route_serialize_fb)
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(result);
     auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
     BOOST_CHECK(!fb->error());
 
@@ -710,7 +715,7 @@ BOOST_AUTO_TEST_CASE(test_route_serialize_fb_skip_waypoints)
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(result);
     auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
     BOOST_CHECK(!fb->error());
 

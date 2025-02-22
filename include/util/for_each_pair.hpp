@@ -2,12 +2,9 @@
 #define FOR_EACH_PAIR_HPP
 
 #include <iterator>
-#include <numeric>
 #include <utility>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 // TODO: check why this is not an option here:
@@ -39,7 +36,6 @@ void for_each_pair(ContainerT &container, Function &&function)
     for_each_pair(begin(container), end(container), std::forward<Function>(function));
 }
 
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif /* FOR_EACH_PAIR_HPP */

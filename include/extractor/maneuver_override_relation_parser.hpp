@@ -3,18 +3,14 @@
 
 #include "maneuver_override.hpp"
 
-#include <boost/optional.hpp>
-#include <string>
-#include <vector>
+#include <optional>
 
 namespace osmium
 {
 class Relation;
-}
+} // namespace osmium
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class ScriptingEnvironment;
@@ -57,9 +53,8 @@ class ManeuverOverrideRelationParser
 {
   public:
     ManeuverOverrideRelationParser();
-    boost::optional<InputManeuverOverride> TryParse(const osmium::Relation &relation) const;
+    std::optional<InputManeuverOverride> TryParse(const osmium::Relation &relation) const;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* RESTRICTION_PARSER_HPP */

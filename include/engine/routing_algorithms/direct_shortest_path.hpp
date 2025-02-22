@@ -8,11 +8,7 @@
 
 #include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 /// This is a stripped down version of the general shortest path algorithm.
@@ -24,10 +20,8 @@ namespace routing_algorithms
 template <typename Algorithm>
 InternalRouteResult directShortestPathSearch(SearchEngineData<Algorithm> &engine_working_data,
                                              const DataFacade<Algorithm> &facade,
-                                             const PhantomNodes &phantom_nodes);
+                                             const PhantomEndpointCandidates &endpoint_candidates);
 
-} // namespace routing_algorithms
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms
 
 #endif /* DIRECT_SHORTEST_PATH_HPP */

@@ -7,8 +7,9 @@ namespace osmium {
 
     namespace detail {
 
-        const char* env = nullptr;
-        std::string name;
+        static const char* env = nullptr; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+        static std::string name; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+
 
         inline const char* getenv_wrapper(const char* var) noexcept {
             name = var;

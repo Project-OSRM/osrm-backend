@@ -26,7 +26,7 @@ namespace osrm
 namespace util
 {
 struct Coordinate;
-}
+} // namespace util
 
 namespace extractor
 {

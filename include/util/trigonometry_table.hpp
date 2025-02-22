@@ -6,11 +6,9 @@
 
 #include <limits>
 
-#include <boost/math/constants/constants.hpp>
+#include <numbers>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 constexpr unsigned short atan_table[4096] = {
@@ -358,26 +356,21 @@ constexpr unsigned short atan_table[4096] = {
     0xffe0, 0xffea, 0xfff4, 0xffff};
 
 // max value is pi/4
-#ifdef _MSC_VER // TODO: remove as soon as boost allows C++14 features with Visual Studio
-const constexpr double SCALING_FACTOR = 4. / M_PI * 0xFFFF;
-#else
-const constexpr double SCALING_FACTOR = 4. / boost::math::constants::pi<double>() * 0xFFFF;
-#endif
+const constexpr double SCALING_FACTOR = 4. * std::numbers::inv_pi * 0xFFFF;
 
 inline double atan2_lookup(double y, double x)
 {
-
-    using namespace boost::math::constants;
+    static constexpr auto half_pi = std::numbers::pi * 0.5;
 
     if (std::abs(x) < std::numeric_limits<double>::epsilon())
     {
         if (y >= 0.)
         {
-            return half_pi<double>();
+            return half_pi;
         }
         else
         {
-            return -half_pi<double>();
+            return -half_pi;
         }
     }
 
@@ -408,30 +401,29 @@ inline double atan2_lookup(double y, double x)
     case 0:
         break;
     case 1:
-        angle = pi<double>() - angle;
+        angle = std::numbers::pi - angle;
         break;
     case 2:
         angle = -angle;
         break;
     case 3:
-        angle = -pi<double>() + angle;
+        angle = -std::numbers::pi + angle;
         break;
     case 4:
-        angle = half_pi<double>() - angle;
+        angle = half_pi - angle;
         break;
     case 5:
-        angle = half_pi<double>() + angle;
+        angle = half_pi + angle;
         break;
     case 6:
-        angle = -half_pi<double>() + angle;
+        angle = -half_pi + angle;
         break;
     case 7:
-        angle = -half_pi<double>() - angle;
+        angle = -half_pi - angle;
         break;
     }
     return angle;
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // TRIGONOMETRY_TABLE_HPP

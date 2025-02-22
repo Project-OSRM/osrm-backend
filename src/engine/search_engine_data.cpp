@@ -1,19 +1,43 @@
 #include "engine/search_engine_data.hpp"
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 // CH heaps
 using CH = routing_algorithms::ch::Algorithm;
-SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::forward_heap_1;
-SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::reverse_heap_1;
-SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::forward_heap_2;
-SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::reverse_heap_2;
-SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::forward_heap_3;
-SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::reverse_heap_3;
-SearchEngineData<CH>::ManyToManyHeapPtr SearchEngineData<CH>::many_to_many_heap;
+thread_local SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::forward_heap_1;
+thread_local SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::reverse_heap_1;
+thread_local SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::forward_heap_2;
+thread_local SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::reverse_heap_2;
+thread_local SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::forward_heap_3;
+thread_local SearchEngineData<CH>::SearchEngineHeapPtr SearchEngineData<CH>::reverse_heap_3;
+thread_local SearchEngineData<CH>::SearchEngineHeapPtr
+    SearchEngineData<CH>::map_matching_forward_heap_1;
+thread_local SearchEngineData<CH>::SearchEngineHeapPtr
+    SearchEngineData<CH>::map_matching_reverse_heap_1;
+
+thread_local SearchEngineData<CH>::ManyToManyHeapPtr SearchEngineData<CH>::many_to_many_heap;
+
+void SearchEngineData<CH>::InitializeOrClearMapMatchingThreadLocalStorage(unsigned number_of_nodes)
+{
+    if (map_matching_forward_heap_1.get())
+    {
+        map_matching_forward_heap_1->Clear();
+    }
+    else
+    {
+        map_matching_forward_heap_1.reset(new QueryHeap(number_of_nodes));
+    }
+
+    if (map_matching_reverse_heap_1.get())
+    {
+        map_matching_reverse_heap_1->Clear();
+    }
+    else
+    {
+        map_matching_reverse_heap_1.reset(new QueryHeap(number_of_nodes));
+    }
+}
 
 void SearchEngineData<CH>::InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes)
 {
@@ -92,9 +116,37 @@ void SearchEngineData<CH>::InitializeOrClearManyToManyThreadLocalStorage(unsigne
 
 // MLD
 using MLD = routing_algorithms::mld::Algorithm;
-SearchEngineData<MLD>::SearchEngineHeapPtr SearchEngineData<MLD>::forward_heap_1;
-SearchEngineData<MLD>::SearchEngineHeapPtr SearchEngineData<MLD>::reverse_heap_1;
-SearchEngineData<MLD>::ManyToManyHeapPtr SearchEngineData<MLD>::many_to_many_heap;
+thread_local SearchEngineData<MLD>::SearchEngineHeapPtr SearchEngineData<MLD>::forward_heap_1;
+thread_local SearchEngineData<MLD>::SearchEngineHeapPtr SearchEngineData<MLD>::reverse_heap_1;
+thread_local SearchEngineData<MLD>::MapMatchingHeapPtr
+    SearchEngineData<MLD>::map_matching_forward_heap_1;
+thread_local SearchEngineData<MLD>::MapMatchingHeapPtr
+    SearchEngineData<MLD>::map_matching_reverse_heap_1;
+thread_local SearchEngineData<MLD>::ManyToManyHeapPtr SearchEngineData<MLD>::many_to_many_heap;
+
+void SearchEngineData<MLD>::InitializeOrClearMapMatchingThreadLocalStorage(
+    unsigned number_of_nodes, unsigned number_of_boundary_nodes)
+{
+    if (map_matching_forward_heap_1.get())
+    {
+        map_matching_forward_heap_1->Clear();
+    }
+    else
+    {
+        map_matching_forward_heap_1.reset(
+            new MapMatchingQueryHeap(number_of_nodes, number_of_boundary_nodes));
+    }
+
+    if (map_matching_reverse_heap_1.get())
+    {
+        map_matching_reverse_heap_1->Clear();
+    }
+    else
+    {
+        map_matching_reverse_heap_1.reset(
+            new MapMatchingQueryHeap(number_of_nodes, number_of_boundary_nodes));
+    }
+}
 
 void SearchEngineData<MLD>::InitializeOrClearFirstThreadLocalStorage(
     unsigned number_of_nodes, unsigned number_of_boundary_nodes)
@@ -130,5 +182,4 @@ void SearchEngineData<MLD>::InitializeOrClearManyToManyThreadLocalStorage(
         many_to_many_heap.reset(new ManyToManyQueryHeap(number_of_nodes, number_of_boundary_nodes));
     }
 }
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <osmium/memory/buffer.hpp>
 #include <osmium/memory/item.hpp>
-#include <osmium/util/compatibility.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -87,8 +86,12 @@ namespace osmium {
             }
 #endif
 
-            osmium::memory::Item& item() const {
-                return *reinterpret_cast<osmium::memory::Item*>(m_buffer.data() + m_buffer.committed() + m_item_offset);
+            unsigned char* item_pos() const noexcept {
+                return m_buffer.data() + m_buffer.committed() + m_item_offset;
+            }
+
+            osmium::memory::Item& item() const noexcept {
+                return *reinterpret_cast<osmium::memory::Item*>(item_pos());
             }
 
             unsigned char* reserve_space(std::size_t size) {
@@ -183,18 +186,6 @@ namespace osmium {
                 return append(str, static_cast<osmium::memory::item_size_type>(std::strlen(str) + 1));
             }
 
-            /**
-             * Append '\0' to the buffer.
-             *
-             * @deprecated Use append_with_zero() instead.
-             *
-             * @returns The number of bytes appended (always 1).
-             */
-            OSMIUM_DEPRECATED osmium::memory::item_size_type append_zero() {
-                *reserve_space(1) = '\0';
-                return 1;
-            }
-
         public:
 
             Builder(const Builder&) = delete;
@@ -215,15 +206,6 @@ namespace osmium {
             void add_item(const osmium::memory::Item& item) {
                 m_buffer.add_item(item);
                 add_size(item.padded_size());
-            }
-
-            /**
-             * @deprecated Use the version of add_item() taking a
-             *             reference instead.
-             */
-            OSMIUM_DEPRECATED void add_item(const osmium::memory::Item* item) {
-                assert(item);
-                add_item(*item);
             }
 
         }; // class Builder

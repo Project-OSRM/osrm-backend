@@ -6,11 +6,9 @@
 
 #include <boost/numeric/conversion/cast.hpp>
 
-#include <cstdint>
+#include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 struct ExtractionTurnLeg
@@ -130,7 +128,6 @@ struct ExtractionTurn
     double weight;
     double duration;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

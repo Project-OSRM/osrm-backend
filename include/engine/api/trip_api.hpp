@@ -10,11 +10,7 @@
 
 #include "util/integer_range.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 class TripAPI final : public RouteAPI
@@ -26,25 +22,25 @@ class TripAPI final : public RouteAPI
     }
     void MakeResponse(const std::vector<std::vector<NodeID>> &sub_trips,
                       const std::vector<InternalRouteResult> &sub_routes,
-                      const std::vector<PhantomNode> &phantoms,
+                      const std::vector<PhantomNodeCandidates> &candidates,
                       osrm::engine::api::ResultT &response) const
     {
         BOOST_ASSERT(sub_trips.size() == sub_routes.size());
 
-        if (response.is<flatbuffers::FlatBufferBuilder>())
+        if (std::holds_alternative<flatbuffers::FlatBufferBuilder>(response))
         {
-            auto &fb_result = response.get<flatbuffers::FlatBufferBuilder>();
-            MakeResponse(sub_trips, sub_routes, phantoms, fb_result);
+            auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(response);
+            MakeResponse(sub_trips, sub_routes, candidates, fb_result);
         }
         else
         {
-            auto &json_result = response.get<util::json::Object>();
-            MakeResponse(sub_trips, sub_routes, phantoms, json_result);
+            auto &json_result = std::get<util::json::Object>(response);
+            MakeResponse(sub_trips, sub_routes, candidates, json_result);
         }
     }
     void MakeResponse(const std::vector<std::vector<NodeID>> &sub_trips,
                       const std::vector<InternalRouteResult> &sub_routes,
-                      const std::vector<PhantomNode> &phantoms,
+                      const std::vector<PhantomNodeCandidates> &candidates,
                       flatbuffers::FlatBufferBuilder &fb_result) const
     {
         auto data_timestamp = facade.GetTimestamp();
@@ -54,10 +50,10 @@ class TripAPI final : public RouteAPI
             data_version_string = fb_result.CreateString(data_timestamp);
         }
 
-        auto response =
-            MakeFBResponse(sub_routes, fb_result, [this, &fb_result, &sub_trips, &phantoms]() {
-                return MakeWaypoints(fb_result, sub_trips, phantoms);
-            });
+        auto response = MakeFBResponse(sub_routes,
+                                       fb_result,
+                                       [this, &fb_result, &sub_trips, &candidates]()
+                                       { return MakeWaypoints(fb_result, sub_trips, candidates); });
 
         if (!data_timestamp.empty())
         {
@@ -67,7 +63,7 @@ class TripAPI final : public RouteAPI
     }
     void MakeResponse(const std::vector<std::vector<NodeID>> &sub_trips,
                       const std::vector<InternalRouteResult> &sub_routes,
-                      const std::vector<PhantomNode> &phantoms,
+                      const std::vector<PhantomNodeCandidates> &candidates,
                       util::json::Object &response) const
     {
         auto number_of_routes = sub_trips.size();
@@ -75,7 +71,7 @@ class TripAPI final : public RouteAPI
         routes.values.reserve(number_of_routes);
         for (auto index : util::irange<std::size_t>(0UL, sub_trips.size()))
         {
-            auto route = MakeRoute(sub_routes[index].segment_end_coordinates,
+            auto route = MakeRoute(sub_routes[index].leg_endpoints,
                                    sub_routes[index].unpacked_path_segments,
                                    sub_routes[index].source_traversed_in_reverse,
                                    sub_routes[index].target_traversed_in_reverse);
@@ -83,10 +79,15 @@ class TripAPI final : public RouteAPI
         }
         if (!parameters.skip_waypoints)
         {
-            response.values["waypoints"] = MakeWaypoints(sub_trips, phantoms);
+            response.values.emplace("waypoints", MakeWaypoints(sub_trips, candidates));
         }
-        response.values["trips"] = std::move(routes);
-        response.values["code"] = "Ok";
+        response.values.emplace("trips", std::move(routes));
+        response.values.emplace("code", "Ok");
+        auto data_timestamp = facade.GetTimestamp();
+        if (!data_timestamp.empty())
+        {
+            response.values.emplace("data_version", data_timestamp);
+        }
     }
 
   protected:
@@ -115,7 +116,7 @@ class TripAPI final : public RouteAPI
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
     MakeWaypoints(flatbuffers::FlatBufferBuilder &fb_result,
                   const std::vector<std::vector<NodeID>> &sub_trips,
-                  const std::vector<PhantomNode> &phantoms) const
+                  const std::vector<PhantomNodeCandidates> &candidates) const
     {
         std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
         waypoints.reserve(parameters.coordinates.size());
@@ -127,7 +128,7 @@ class TripAPI final : public RouteAPI
             auto trip_index = input_idx_to_trip_idx[input_index];
             BOOST_ASSERT(!trip_index.NotUsed());
 
-            auto waypoint = BaseAPI::MakeWaypoint(&fb_result, phantoms[input_index]);
+            auto waypoint = BaseAPI::MakeWaypoint(&fb_result, candidates[input_index]);
             waypoint->add_waypoint_index(trip_index.point_index);
             waypoint->add_trips_index(trip_index.sub_trip_index);
             waypoints.push_back(waypoint->Finish());
@@ -137,7 +138,7 @@ class TripAPI final : public RouteAPI
     }
 
     util::json::Array MakeWaypoints(const std::vector<std::vector<NodeID>> &sub_trips,
-                                    const std::vector<PhantomNode> &phantoms) const
+                                    const std::vector<PhantomNodeCandidates> &candidates) const
     {
         util::json::Array waypoints;
         waypoints.values.reserve(parameters.coordinates.size());
@@ -149,9 +150,9 @@ class TripAPI final : public RouteAPI
             auto trip_index = input_idx_to_trip_idx[input_index];
             BOOST_ASSERT(!trip_index.NotUsed());
 
-            auto waypoint = BaseAPI::MakeWaypoint(phantoms[input_index]);
-            waypoint.values["trips_index"] = trip_index.sub_trip_index;
-            waypoint.values["waypoint_index"] = trip_index.point_index;
+            auto waypoint = BaseAPI::MakeWaypoint(candidates[input_index]);
+            waypoint.values.emplace("trips_index", trip_index.sub_trip_index);
+            waypoint.values.emplace("waypoint_index", trip_index.point_index);
             waypoints.values.push_back(std::move(waypoint));
         }
 
@@ -175,8 +176,6 @@ class TripAPI final : public RouteAPI
     const TripParameters &parameters;
 };
 
-} // namespace api
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

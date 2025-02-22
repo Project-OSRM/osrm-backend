@@ -19,15 +19,11 @@
 #include "util/guidance/entry_class.hpp"
 #include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace test
+namespace osrm::test
 {
 
 class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
 {
-    using StringView = util::StringView;
-
   public:
     bool ExcludeNode(const NodeID) const override { return false; };
 
@@ -47,18 +43,18 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     }
     TurnPenalty GetWeightPenaltyForEdgeID(const unsigned /* id */) const override final
     {
-        return 0;
+        return {0};
     }
     TurnPenalty GetDurationPenaltyForEdgeID(const unsigned /* id */) const override final
     {
-        return 0;
+        return {0};
     }
     std::string GetTimestamp() const override { return ""; }
     NodeForwardRange GetUncompressedForwardGeometry(const EdgeID /* id */) const override
     {
         static NodeID data[] = {0, 1, 2, 3};
         static extractor::SegmentDataView::SegmentNodeVector nodes(data, 4);
-        return boost::make_iterator_range(nodes.cbegin(), nodes.cend());
+        return std::ranges::subrange(nodes.cbegin(), nodes.cend());
     }
     NodeReverseRange GetUncompressedReverseGeometry(const EdgeID id) const override
     {
@@ -95,7 +91,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
         return DatasourceReverseRange(DatasourceForwardRange());
     }
 
-    StringView GetDatasourceName(const DatasourceID) const override final { return {}; }
+    std::string_view GetDatasourceName(const DatasourceID) const override final { return {}; }
 
     osrm::guidance::TurnInstruction
     GetTurnInstructionForEdgeID(const EdgeID /* id */) const override
@@ -110,99 +106,33 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
 
     std::vector<engine::PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate /*input_coordinate*/,
-                               const float /*max_distance*/,
-                               const int /*bearing*/,
-                               const int /*bearing_range*/,
+                               const double /*max_distance*/,
+                               const std::optional<engine::Bearing> /*bearing*/,
                                const engine::Approach /*approach*/,
                                const bool /*use_all_edges*/) const override
     {
         return {};
-    }
-
-    std::vector<engine::PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::Coordinate /*input_coordinate*/,
-                               const float /*max_distance*/,
-                               const engine::Approach /*approach*/,
-                               const bool /*use_all_edges*/) const override
-    {
-        return {};
-    }
+    };
 
     std::vector<engine::PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
-                        const unsigned /*max_results*/,
-                        const double /*max_distance*/,
-                        const int /*bearing*/,
-                        const int /*bearing_range*/,
+                        const size_t /*max_results*/,
+                        const std::optional<double> /*max_distance*/,
+                        const std::optional<engine::Bearing> /*bearing*/,
                         const engine::Approach /*approach*/) const override
     {
         return {};
-    }
+    };
 
-    std::vector<engine::PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
-                        const unsigned /*max_results*/,
-                        const int /*bearing*/,
-                        const int /*bearing_range*/,
-                        const engine::Approach /*approach*/) const override
+    engine::PhantomCandidateAlternatives NearestCandidatesWithAlternativeFromBigComponent(
+        const util::Coordinate /*input_coordinate*/,
+        const std::optional<double> /*max_distance*/,
+        const std::optional<engine::Bearing> /*bearing*/,
+        const engine::Approach /*approach*/,
+        const bool /*use_all_edges*/) const override
     {
         return {};
-    }
-
-    std::vector<engine::PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
-                        const unsigned /*max_results*/,
-                        const engine::Approach /*approach*/) const override
-    {
-        return {};
-    }
-
-    std::vector<engine::PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
-                        const unsigned /*max_results*/,
-                        const double /*max_distance*/,
-                        const engine::Approach /*approach*/) const override
-    {
-        return {};
-    }
-
-    std::pair<engine::PhantomNode, engine::PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
-                                                      const engine::Approach /*approach*/,
-                                                      const bool /* use_all_edges */) const override
-    {
-        return {};
-    }
-
-    std::pair<engine::PhantomNode, engine::PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
-                                                      const double /*max_distance*/,
-                                                      const engine::Approach /*approach*/,
-                                                      const bool /* use_all_edges */) const override
-    {
-        return {};
-    }
-
-    std::pair<engine::PhantomNode, engine::PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
-                                                      const double /*max_distance*/,
-                                                      const int /*bearing*/,
-                                                      const int /*bearing_range*/,
-                                                      const engine::Approach /*approach*/,
-                                                      const bool /* use_all_edges */) const override
-    {
-        return {};
-    }
-
-    std::pair<engine::PhantomNode, engine::PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
-                                                      const int /*bearing*/,
-                                                      const int /*bearing_range*/,
-                                                      const engine::Approach /*approach*/,
-                                                      const bool /* use_all_edges */) const override
-    {
-        return {};
-    }
+    };
 
     std::uint32_t GetCheckSum() const override { return 0; }
 
@@ -220,11 +150,11 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
 
     NameID GetNameIndex(const NodeID /* id */) const override { return 0; }
 
-    StringView GetNameForID(const NameID) const override final { return {}; }
-    StringView GetRefForID(const NameID) const override final { return {}; }
-    StringView GetPronunciationForID(const NameID) const override final { return {}; }
-    StringView GetDestinationsForID(const NameID) const override final { return {}; }
-    StringView GetExitsForID(const NameID) const override final { return {}; }
+    std::string_view GetNameForID(const NameID) const override final { return {}; }
+    std::string_view GetRefForID(const NameID) const override final { return {}; }
+    std::string_view GetPronunciationForID(const NameID) const override final { return {}; }
+    std::string_view GetDestinationsForID(const NameID) const override final { return {}; }
+    std::string_view GetExitsForID(const NameID) const override final { return {}; }
 
     bool GetContinueStraightDefault() const override { return true; }
     double GetMapMatchingMaxSpeed() const override { return 180 / 3.6; }
@@ -308,9 +238,10 @@ class MockAlgorithmDataFacade<engine::datafacade::CH>
         return SPECIAL_EDGEID;
     }
 
-    EdgeID FindSmallestEdge(const NodeID /* from */,
-                            const NodeID /* to */,
-                            std::function<bool(EdgeData)> /* filter */) const override
+    EdgeID
+    FindSmallestEdge(const NodeID /* from */,
+                     const NodeID /* to */,
+                     const std::function<bool(const EdgeData &)> & /* filter */) const override
     {
         return SPECIAL_EDGEID;
     }
@@ -328,7 +259,6 @@ class MockDataFacade final : public MockBaseDataFacade, public MockAlgorithmData
 {
 };
 
-} // namespace test
-} // namespace osrm
+} // namespace osrm::test
 
 #endif // MOCK_DATAFACADE_HPP

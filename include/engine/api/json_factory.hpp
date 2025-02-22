@@ -12,23 +12,19 @@
 #include "util/coordinate.hpp"
 #include "util/json_container.hpp"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <algorithm>
 #include <iterator>
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 struct Hint;
 
-namespace api
-{
-namespace json
+namespace api::json
 {
 namespace detail
 {
@@ -45,7 +41,7 @@ inline bool hasValidLanes(const guidance::IntermediateIntersection &intersection
     return intersection.lanes.lanes_in_turn > 0;
 }
 
-util::json::Array coordinateToLonLat(const util::Coordinate &coordinate);
+util::json::Value coordinateToLonLat(const util::Coordinate &coordinate);
 
 /**
  * Ensures that a bearing value is a whole number, and clamped to the range 0-359
@@ -83,7 +79,7 @@ util::json::Object makeGeoJSONGeometry(ForwardIter begin, ForwardIter end)
         coordinates.values.push_back(location);
         coordinates.values.push_back(location);
     }
-    geojson.values["coordinates"] = std::move(coordinates);
+    geojson.values["coordinates"] = util::json::Value{std::move(coordinates)};
 
     return geojson;
 }
@@ -94,7 +90,7 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
 
 util::json::Object makeRoute(const guidance::Route &route,
                              util::json::Array legs,
-                             boost::optional<util::json::Value> geometry,
+                             std::optional<util::json::Value> geometry,
                              const char *weight_name);
 
 // Creates a Waypoint without Hint, see the Hint overload below
@@ -112,9 +108,7 @@ util::json::Object makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps)
 util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
                                 std::vector<util::json::Value> step_geometries,
                                 std::vector<util::json::Object> annotations);
-} // namespace json
-} // namespace api
-} // namespace engine
-} // namespace osrm
+} // namespace api::json
+} // namespace osrm::engine
 
 #endif // ENGINE_GUIDANCE_API_RESPONSE_GENERATOR_HPP_

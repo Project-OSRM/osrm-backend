@@ -115,4 +115,4 @@ Feature: Annotations
 
         When I route I should get
             | from | to | route    | a:speed | a:distance            | a:duration | a:nodes |
-            | a    | c  | abc,abc  | 10:10   | 249.998641:299.931643 | 25:30      | 1:2:3   |
+            | a    | c  | abc,abc  | 10:10   | 249.9876189:299.962882 | 25:30      | 1:2:3   |

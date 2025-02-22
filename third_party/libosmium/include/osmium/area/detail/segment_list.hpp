@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -296,14 +296,14 @@ namespace osmium {
                             }
                         }
 
-                        if (it+2 != m_segments.end() && *it == *(it+2)) {
+                        if (it + 2 != m_segments.end() && *it == *(it + 2)) {
                             ++overlapping_segments;
                             if (problem_reporter) {
                                 problem_reporter->report_overlapping_segment(it->first(), it->second());
                             }
                         }
 
-                        m_segments.erase(it, it+2);
+                        m_segments.erase(it, it + 2);
                     }
                 }
 
@@ -323,7 +323,7 @@ namespace osmium {
 
                     for (auto it1 = m_segments.cbegin(); it1 != m_segments.cend() - 1; ++it1) {
                         const NodeRefSegment& s1 = *it1;
-                        for (auto it2 = it1+1; it2 != m_segments.end(); ++it2) {
+                        for (auto it2 = it1 + 1; it2 != m_segments.end(); ++it2) {
                             const NodeRefSegment& s2 = *it2;
 
                             assert(s1 != s2); // erase_duplicate_segments() should have made sure of that
@@ -333,7 +333,7 @@ namespace osmium {
                             }
 
                             if (y_range_overlap(s1, s2)) {
-                                osmium::Location intersection{calculate_intersection(s1, s2)};
+                                const osmium::Location intersection{calculate_intersection(s1, s2)};
                                 if (intersection) {
                                     ++found_intersections;
                                     if (m_debug) {

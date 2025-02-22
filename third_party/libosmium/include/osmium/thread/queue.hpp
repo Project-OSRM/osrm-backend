@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <cstddef>
@@ -42,7 +43,6 @@ DEALINGS IN THE SOFTWARE.
 #include <utility> // IWYU pragma: keep
 
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
-# include <atomic>
 # include <iostream>
 #endif
 
@@ -72,6 +72,8 @@ namespace osmium {
 
             /// Used to signal producers when queue is not full.
             std::condition_variable m_space_available;
+
+            std::atomic<bool> m_in_use{true};
 
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
             /// The largest size the queue has been so far.
@@ -145,6 +147,9 @@ namespace osmium {
              * this call will block if the queue is full.
              */
             void push(T value) {
+                if (!m_in_use) {
+                    return;
+                }
                 constexpr const std::chrono::milliseconds max_wait{10};
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
                 ++m_push_counter;
@@ -160,7 +165,7 @@ namespace osmium {
 #endif
                     }
                 }
-                std::lock_guard<std::mutex> lock{m_mutex};
+                const std::lock_guard<std::mutex> lock{m_mutex};
                 m_queue.push(std::move(value));
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
                 if (m_largest_size < m_queue.size()) {
@@ -181,7 +186,7 @@ namespace osmium {
                 }
 #endif
                 m_data_available.wait(lock, [this] {
-                    return !m_queue.empty();
+                    return !m_in_use || !m_queue.empty();
                 });
                 if (!m_queue.empty()) {
                     value = std::move(m_queue.front());
@@ -198,7 +203,7 @@ namespace osmium {
                 ++m_pop_counter;
 #endif
                 {
-                    std::lock_guard<std::mutex> lock{m_mutex};
+                    const std::lock_guard<std::mutex> lock{m_mutex};
                     if (m_queue.empty()) {
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
                         ++m_empty_counter;
@@ -215,13 +220,26 @@ namespace osmium {
             }
 
             bool empty() const {
-                std::lock_guard<std::mutex> lock{m_mutex};
+                const std::lock_guard<std::mutex> lock{m_mutex};
                 return m_queue.empty();
             }
 
             std::size_t size() const {
-                std::lock_guard<std::mutex> lock{m_mutex};
+                const std::lock_guard<std::mutex> lock{m_mutex};
                 return m_queue.size();
+            }
+
+            bool in_use() const noexcept {
+                return m_in_use;
+            }
+
+            void shutdown() {
+                m_in_use = false;
+                const std::lock_guard<std::mutex> lock{m_mutex};
+                while (!m_queue.empty()) {
+                    m_queue.pop();
+                }
+                m_data_available.notify_all();
             }
 
         }; // class Queue

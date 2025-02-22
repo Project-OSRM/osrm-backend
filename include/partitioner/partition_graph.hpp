@@ -3,16 +3,12 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <functional>
 #include <iterator>
 #include <vector>
 
 #include "util/typedefs.hpp"
-#include <boost/range/iterator_range.hpp>
-
-namespace osrm
-{
-namespace partitioner
+#include <ranges>
+namespace osrm::partitioner
 {
 
 // forward declaration to allow finding friends
@@ -23,7 +19,7 @@ template <typename Base> class NodeEntryWrapper : public Base
 {
   public:
     template <typename... Args>
-    NodeEntryWrapper(std::size_t edges_begin_, std::size_t edges_end_, Args &&... args)
+    NodeEntryWrapper(std::size_t edges_begin_, std::size_t edges_end_, Args &&...args)
         : Base(std::forward<Args>(args)...), edges_begin(edges_begin_), edges_end(edges_end_)
     {
     }
@@ -43,7 +39,7 @@ template <typename Base> class GraphConstructionWrapper : public Base
 {
   public:
     template <typename... Args>
-    GraphConstructionWrapper(const NodeID source_, Args &&... args)
+    GraphConstructionWrapper(const NodeID source_, Args &&...args)
         : Base(std::forward<Args>(args)...), source(source_)
     {
     }
@@ -86,26 +82,26 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
 
     auto Edges(const NodeID nid)
     {
-        return boost::make_iterator_range(edges.begin() + nodes[nid].edges_begin,
-                                          edges.begin() + nodes[nid].edges_end);
+        return std::ranges::subrange(edges.begin() + nodes[nid].edges_begin,
+                                     edges.begin() + nodes[nid].edges_end);
     }
 
     auto Edges(const NodeID nid) const
     {
-        return boost::make_iterator_range(edges.begin() + nodes[nid].edges_begin,
-                                          edges.begin() + nodes[nid].edges_end);
+        return std::ranges::subrange(edges.begin() + nodes[nid].edges_begin,
+                                     edges.begin() + nodes[nid].edges_end);
     }
 
     auto Edges(const NodeT &node)
     {
-        return boost::make_iterator_range(edges.begin() + node.edges_begin,
-                                          edges.begin() + node.edges_end);
+        return std::ranges::subrange(edges.begin() + node.edges_begin,
+                                     edges.begin() + node.edges_end);
     }
 
     auto Edges(const NodeT &node) const
     {
-        return boost::make_iterator_range(edges.begin() + node.edges_begin,
-                                          edges.begin() + node.edges_end);
+        return std::ranges::subrange(edges.begin() + node.edges_begin,
+                                     edges.begin() + node.edges_end);
     }
 
     auto BeginEdges(const NodeID nid) const { return edges.begin() + nodes[nid].edges_begin; }
@@ -120,18 +116,18 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
     EdgeID EndEdgeID(const NodeID nid) const { return nodes[nid].edges_end; }
 
     // iterate over all nodes
-    auto Nodes() { return boost::make_iterator_range(nodes.begin(), nodes.end()); }
-    auto Nodes() const { return boost::make_iterator_range(nodes.begin(), nodes.end()); }
+    auto Nodes() { return std::ranges::subrange(nodes.begin(), nodes.end()); }
+    auto Nodes() const { return std::ranges::subrange(nodes.begin(), nodes.end()); }
 
     NodeID GetID(const NodeT &node) const
     {
-        BOOST_ASSERT(&node >= &nodes[0] && &node <= &nodes.back());
-        return (&node - &nodes[0]);
+        BOOST_ASSERT(&node >= nodes.data() && &node <= &nodes.back());
+        return (&node - nodes.data());
     }
     EdgeID GetID(const EdgeT &edge) const
     {
-        BOOST_ASSERT(&edge >= &edges[0] && &edge <= &edges.back());
-        return (&edge - &edges[0]);
+        BOOST_ASSERT(&edge >= edges.data() && &edge <= &edges.back());
+        return (&edge - edges.data());
     }
 
     NodeIterator Begin() { return nodes.begin(); }
@@ -142,7 +138,7 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
     // removes the edges from the graph that return true for the filter, returns new end
     template <typename FilterT> auto RemoveEdges(NodeT &node, FilterT filter)
     {
-        BOOST_ASSERT(&node >= &nodes[0] && &node <= &nodes.back());
+        BOOST_ASSERT(&node >= nodes.data() && &node <= &nodes.back());
         // required since we are not on std++17 yet, otherwise we are missing an argument_type
         const auto negate_filter = [&](const EdgeT &edge) { return !filter(edge); };
         const auto center = std::stable_partition(BeginEdges(node), EndEdges(node), negate_filter);
@@ -156,7 +152,6 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
     std::vector<EdgeT> edges;
 };
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif // OSRM_PARTITIONER_GRAPH_HPP_

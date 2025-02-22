@@ -3,12 +3,11 @@
 
 #include <boost/date_time/gregorian/gregorian.hpp>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 // Helper classes for "opening hours" format http://wiki.openstreetmap.org/wiki/Key:opening_hours
@@ -194,23 +193,20 @@ struct OpeningHours
                && (times.empty() ||
                    std::any_of(times.begin(),
                                times.end(),
-                               [&time, &use_curr_day, &use_next_day](const auto &x) {
-                                   return x.IsInRange(time, use_curr_day, use_next_day);
-                               }))
+                               [&time, &use_curr_day, &use_next_day](const auto &x)
+                               { return x.IsInRange(time, use_curr_day, use_next_day); }))
                // .. and if weekdays are not specified or matches weekdays range
                && (weekdays.empty() ||
                    std::any_of(weekdays.begin(),
                                weekdays.end(),
-                               [&time, use_curr_day, use_next_day](const auto &x) {
-                                   return x.IsInRange(time, use_curr_day, use_next_day);
-                               }))
+                               [&time, use_curr_day, use_next_day](const auto &x)
+                               { return x.IsInRange(time, use_curr_day, use_next_day); }))
                // .. and if month-day ranges are not specified or is in any month-day range
                && (monthdays.empty() ||
                    std::any_of(monthdays.begin(),
                                monthdays.end(),
-                               [&time, use_curr_day, use_next_day](const auto &x) {
-                                   return x.IsInRange(time, use_curr_day, use_next_day);
-                               }));
+                               [&time, use_curr_day, use_next_day](const auto &x)
+                               { return x.IsInRange(time, use_curr_day, use_next_day); }));
     }
 
     std::vector<TimeSpan> times;
@@ -223,7 +219,6 @@ std::vector<OpeningHours> ParseOpeningHours(const std::string &str);
 
 bool CheckOpeningHours(const std::vector<OpeningHours> &input, const struct tm &time);
 
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // OSRM_OPENING_HOURS_HPP

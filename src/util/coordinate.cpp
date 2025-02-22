@@ -1,20 +1,10 @@
-#include "util/coordinate_calculation.hpp"
-
-#ifndef NDEBUG
-#include "util/log.hpp"
-#endif
 #include "osrm/coordinate.hpp"
 
-#ifndef NDEBUG
-#include <bitset>
-#endif
-#include <iomanip>
-#include <iostream>
-#include <limits>
+#include "util/coordinate_calculation.hpp"
 
-namespace osrm
-{
-namespace util
+#include <cstdint>
+
+namespace osrm::util
 {
 
 bool Coordinate::IsValid() const
@@ -42,5 +32,4 @@ bool operator==(const FloatCoordinate lhs, const FloatCoordinate rhs)
 
 bool operator!=(const Coordinate lhs, const Coordinate rhs) { return !(lhs == rhs); }
 bool operator!=(const FloatCoordinate lhs, const FloatCoordinate rhs) { return !(lhs == rhs); }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util

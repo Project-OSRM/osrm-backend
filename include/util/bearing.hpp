@@ -2,56 +2,12 @@
 #define BEARING_HPP
 
 #include <algorithm>
-#include <boost/assert.hpp>
 #include <cmath>
-#include <string>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 namespace bearing
 {
-
-inline std::string get(const double heading)
-{
-    BOOST_ASSERT(heading >= 0);
-    BOOST_ASSERT(heading <= 360);
-
-    if (heading <= 22.5)
-    {
-        return "N";
-    }
-    if (heading <= 67.5)
-    {
-        return "NE";
-    }
-    if (heading <= 112.5)
-    {
-        return "E";
-    }
-    if (heading <= 157.5)
-    {
-        return "SE";
-    }
-    if (heading <= 202.5)
-    {
-        return "S";
-    }
-    if (heading <= 247.5)
-    {
-        return "SW";
-    }
-    if (heading <= 292.5)
-    {
-        return "W";
-    }
-    if (heading <= 337.5)
-    {
-        return "NW";
-    }
-    return "N";
-}
 
 // Checks whether A is between B-range and B+range, all modulo 360
 // e.g. A = 5, B = 5, range = 10 == true
@@ -144,7 +100,6 @@ inline double restrictAngleToValidRange(const double angle)
         return angle;
 }
 
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // BEARING_HPP

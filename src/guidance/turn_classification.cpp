@@ -4,11 +4,8 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <cstdint>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 std::pair<util::guidance::EntryClass, util::guidance::BearingClass>
@@ -19,14 +16,14 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
 
     std::sort(intersection.begin(),
               intersection.end(),
-              [](const ConnectedRoad &left, const ConnectedRoad &right) {
-                  return left.perceived_bearing < right.perceived_bearing;
-              });
+              [](const ConnectedRoad &left, const ConnectedRoad &right)
+              { return left.perceived_bearing < right.perceived_bearing; });
 
     util::guidance::EntryClass entry_class;
     util::guidance::BearingClass bearing_class;
 
-    const bool canBeDiscretized = [&]() {
+    const bool canBeDiscretized = [&]()
+    {
         if (intersection.size() <= 1)
             return true;
 
@@ -93,5 +90,4 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
     return std::make_pair(entry_class, bearing_class);
 }
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance

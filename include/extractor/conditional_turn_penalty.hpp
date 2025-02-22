@@ -8,10 +8,7 @@
 
 #include <type_traits>
 
-namespace osrm
-
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 struct ConditionalTurnPenalty
@@ -22,7 +19,6 @@ struct ConditionalTurnPenalty
     std::vector<util::OpeningHours> conditions;
 };
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_CONDITIONAL_TURN_PENALTY_HPP_

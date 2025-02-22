@@ -5,20 +5,14 @@
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/phantom_node.hpp"
-#include "util/attributes.hpp"
 
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 
 // passed as none-reference to modify in-place and move out again
-OSRM_ATTR_WARN_UNUSED
-std::vector<RouteStep> handleRoundabouts(std::vector<RouteStep> steps);
+[[nodiscard]] std::vector<RouteStep> handleRoundabouts(std::vector<RouteStep> steps);
 
 // trim initial/final segment of very short length.
 // This function uses in/out parameter passing to modify both steps and geometry in place.
@@ -28,23 +22,21 @@ std::vector<RouteStep> handleRoundabouts(std::vector<RouteStep> steps);
 void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry);
 
 // assign relative locations to depart/arrive instructions
-OSRM_ATTR_WARN_UNUSED
-std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
-                                               const LegGeometry &geometry,
-                                               const PhantomNode &source_node,
-                                               const PhantomNode &target_node);
+[[nodiscard]] std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
+                                                             const LegGeometry &geometry,
+                                                             const PhantomNode &source_node,
+                                                             const PhantomNode &target_node);
 
 // collapse suppressed instructions remaining into intersections array
-OSRM_ATTR_WARN_UNUSED
-std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps);
+[[nodiscard]] std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps);
 
 // postProcess will break the connection between the leg geometry
 // for which a segment is supposed to represent exactly the coordinates
 // between routing maneuvers and the route steps itself.
 // If required, we can get both in sync again using this function.
 // Move in LegGeometry for modification in place.
-OSRM_ATTR_WARN_UNUSED
-LegGeometry resyncGeometry(LegGeometry leg_geometry, const std::vector<RouteStep> &steps);
+[[nodiscard]] LegGeometry resyncGeometry(LegGeometry leg_geometry,
+                                         const std::vector<RouteStep> &steps);
 
 /**
  * Apply maneuver override relations to the selected route.
@@ -58,8 +50,6 @@ void applyOverrides(const datafacade::BaseDataFacade &facade,
                     std::vector<RouteStep> &steps,
                     const LegGeometry &geometry);
 
-} // namespace guidance
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif // ENGINE_GUIDANCE_POST_PROCESSING_HPP

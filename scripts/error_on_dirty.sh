@@ -10,6 +10,7 @@ dirty=$(git ls-files --modified)
 if [[ $dirty ]]; then
     echo $MSG
     echo $dirty
+    git diff
     exit 1
 else
     exit 0

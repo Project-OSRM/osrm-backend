@@ -4,23 +4,16 @@
 #include "util/integer_range.hpp"
 
 #include <boost/test/unit_test.hpp>
+#include <ranges>
 
-namespace osrm
+namespace osrm::engine
 {
-namespace engine
-{
-namespace routing_algorithms
-{
-
-// Declare offline data facade algorithm
-namespace offline
+namespace routing_algorithms::offline
 {
 struct Algorithm final
 {
 };
-} // namespace offline
-
-} // namespace routing_algorithms
+} // namespace routing_algorithms::offline
 
 // Define engine data for offline data facade
 template <> struct SearchEngineData<routing_algorithms::offline::Algorithm>
@@ -79,23 +72,17 @@ struct ExternalCellStorage
     {
         auto GetOutWeight(NodeID /*node*/) const
         {
-            return boost::make_iterator_range((EdgeWeight *)0, (EdgeWeight *)0);
+            return std::ranges::subrange((EdgeWeight *)0, (EdgeWeight *)0);
         }
 
         auto GetInWeight(NodeID /*node*/) const
         {
-            return boost::make_iterator_range((EdgeWeight *)0, (EdgeWeight *)0);
+            return std::ranges::subrange((EdgeWeight *)0, (EdgeWeight *)0);
         }
 
-        auto GetSourceNodes() const
-        {
-            return boost::make_iterator_range((EdgeWeight *)0, (EdgeWeight *)0);
-        }
+        auto GetSourceNodes() const { return std::ranges::subrange((NodeID *)0, (NodeID *)0); }
 
-        auto GetDestinationNodes() const
-        {
-            return boost::make_iterator_range((EdgeWeight *)0, (EdgeWeight *)0);
-        }
+        auto GetDestinationNodes() const { return std::ranges::subrange((NodeID *)0, (NodeID *)0); }
     };
 
     using Cell = CellImpl;
@@ -119,7 +106,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
 
     ContiguousInternalMemoryDataFacade() {}
 
-    ~ContiguousInternalMemoryDataFacade() {}
+    ~ContiguousInternalMemoryDataFacade() override {}
 
     unsigned GetNumberOfNodes() const { return 0; }
 
@@ -206,7 +193,10 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
         return DatasourceReverseRange(DatasourceForwardRange());
     }
 
-    StringView GetDatasourceName(const DatasourceID /*id*/) const override { return StringView{}; }
+    std::string_view GetDatasourceName(const DatasourceID /*id*/) const override
+    {
+        return std::string_view{};
+    }
 
     guidance::TurnInstruction GetTurnInstructionForEdgeID(const EdgeID /*id*/) const override
     {
@@ -224,101 +214,35 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
         return {};
     }
 
-    std::vector<PhantomNodeWithDistance>
+    std::vector<engine::PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate /*input_coordinate*/,
-                               const float /*max_distance*/,
-                               const int /*bearing*/,
-                               const int /*bearing_range*/,
-                               const Approach /*approach*/,
+                               const double /*max_distance*/,
+                               const std::optional<engine::Bearing> /*bearing*/,
+                               const engine::Approach /*approach*/,
                                const bool /*use_all_edges*/) const override
     {
         return {};
-    }
+    };
 
-    std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::Coordinate /*input_coordinate*/,
-                               const float /*max_distance*/,
-                               const Approach /*approach*/,
-                               const bool /*use_all_edges*/) const override
-    {
-        return {};
-    }
-
-    std::vector<PhantomNodeWithDistance>
+    std::vector<engine::PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
-                        const unsigned /*max_results*/,
-                        const double /*max_distance*/,
-                        const int /*bearing*/,
-                        const int /*bearing_range*/,
-                        const Approach /*approach*/) const override
+                        const size_t /*max_results*/,
+                        const std::optional<double> /*max_distance*/,
+                        const std::optional<engine::Bearing> /*bearing*/,
+                        const engine::Approach /*approach*/) const override
     {
         return {};
-    }
+    };
 
-    std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
-                        const unsigned /*max_results*/,
-                        const int /*bearing*/,
-                        const int /*bearing_range*/,
-                        const Approach /*approach*/) const override
+    engine::PhantomCandidateAlternatives NearestCandidatesWithAlternativeFromBigComponent(
+        const util::Coordinate /*input_coordinate*/,
+        const std::optional<double> /*max_distance*/,
+        const std::optional<engine::Bearing> /*bearing*/,
+        const engine::Approach /*approach*/,
+        const bool /*use_all_edges*/) const override
     {
         return {};
-    }
-
-    std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
-                        const unsigned /*max_results*/,
-                        const Approach /*approach*/) const override
-    {
-        return {};
-    }
-
-    std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
-                        const unsigned /*max_results*/,
-                        const double /*max_distance*/,
-                        const Approach /*approach*/) const override
-    {
-        return {};
-    }
-
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
-                                                      const Approach /*approach*/,
-                                                      const bool /* use_all_edges */) const override
-    {
-        return {};
-    }
-
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
-                                                      const double /*max_distance*/,
-                                                      const Approach /*approach*/,
-                                                      const bool /* use_all_edges */) const override
-    {
-        return {};
-    }
-
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
-                                                      const double /*max_distance*/,
-                                                      const int /*bearing*/,
-                                                      const int /*bearing_range*/,
-                                                      const Approach /*approach*/,
-                                                      const bool /* use_all_edges */) const override
-    {
-        return {};
-    }
-
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
-                                                      const int /*bearing*/,
-                                                      const int /*bearing_range*/,
-                                                      const Approach /*approach*/,
-                                                      const bool /* use_all_edges */) const override
-    {
-        return {};
-    }
+    };
 
     util::guidance::LaneTupleIdPair GetLaneData(const EdgeID /*id*/) const override
     {
@@ -331,7 +255,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
         return {};
     }
 
-    EdgeWeight GetNodeWeight(const NodeID /*node*/) const { return 0; }
+    EdgeWeight GetNodeWeight(const NodeID /*node*/) const { return {0}; }
 
     bool IsForwardEdge(const NodeID /*edge*/) const { return true; }
 
@@ -339,11 +263,20 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
 
     bool HasLaneData(const EdgeID /*id*/) const override { return false; }
     NameID GetNameIndex(const NodeID /*nodeID*/) const override { return EMPTY_NAMEID; }
-    StringView GetNameForID(const NameID /*id*/) const override { return StringView{}; }
-    StringView GetRefForID(const NameID /*id*/) const override { return StringView{}; }
-    StringView GetPronunciationForID(const NameID /*id*/) const override { return StringView{}; }
-    StringView GetDestinationsForID(const NameID /*id*/) const override { return StringView{}; }
-    StringView GetExitsForID(const NameID /*id*/) const override { return StringView{}; }
+    std::string_view GetNameForID(const NameID /*id*/) const override { return std::string_view{}; }
+    std::string_view GetRefForID(const NameID /*id*/) const override { return std::string_view{}; }
+    std::string_view GetPronunciationForID(const NameID /*id*/) const override
+    {
+        return std::string_view{};
+    }
+    std::string_view GetDestinationsForID(const NameID /*id*/) const override
+    {
+        return std::string_view{};
+    }
+    std::string_view GetExitsForID(const NameID /*id*/) const override
+    {
+        return std::string_view{};
+    }
     bool GetContinueStraightDefault() const override { return false; }
     std::string GetTimestamp() const override { return ""; }
     double GetMapMatchingMaxSpeed() const override { return 0; }
@@ -389,20 +322,18 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
 } // namespace datafacade
 
 // Fallback to MLD algorithm: requires from data facade MLD specific members
-namespace routing_algorithms
-{
-namespace offline
+namespace routing_algorithms::offline
 {
 
+template <typename PhantomT>
 inline void search(SearchEngineData<Algorithm> &engine_working_data,
                    const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                    typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                    typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                    EdgeWeight &weight,
                    std::vector<NodeID> &packed_leg,
-                   const bool force_loop_forward,
-                   const bool force_loop_reverse,
-                   const PhantomNodes &phantom_nodes,
+                   const std::vector<NodeID> &loop_nodes,
+                   const PhantomT &endpoints,
                    const EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
 {
     mld::search(engine_working_data,
@@ -411,9 +342,8 @@ inline void search(SearchEngineData<Algorithm> &engine_working_data,
                 reverse_heap,
                 weight,
                 packed_leg,
-                force_loop_forward,
-                force_loop_reverse,
-                phantom_nodes,
+                loop_nodes,
+                endpoints,
                 weight_upper_bound);
 }
 
@@ -421,17 +351,15 @@ template <typename RandomIter, typename FacadeT>
 void unpackPath(const FacadeT &facade,
                 RandomIter packed_path_begin,
                 RandomIter packed_path_end,
-                const PhantomNodes &phantom_nodes,
+                const PhantomEndpoints &endpoints,
                 std::vector<PathData> &unpacked_path)
 {
-    mld::unpackPath(facade, packed_path_begin, packed_path_end, phantom_nodes, unpacked_path);
+    mld::unpackPath(facade, packed_path_begin, packed_path_end, endpoints, unpacked_path);
 }
 
-} // namespace offline
-} // namespace routing_algorithms
+} // namespace routing_algorithms::offline
 
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 BOOST_AUTO_TEST_SUITE(offline_facade)
 
@@ -442,11 +370,12 @@ BOOST_AUTO_TEST_CASE(shortest_path)
     osrm::engine::SearchEngineData<Algorithm> heaps;
     osrm::engine::datafacade::ContiguousInternalMemoryDataFacade<Algorithm> facade;
 
-    std::vector<osrm::engine::PhantomNodes> phantom_nodes;
-    phantom_nodes.push_back({osrm::engine::PhantomNode{}, osrm::engine::PhantomNode{}});
+    std::vector<osrm::engine::PhantomNodeCandidates> waypoints;
+    waypoints.push_back({osrm::engine::PhantomNode{}});
+    waypoints.push_back({osrm::engine::PhantomNode{}});
 
     auto route =
-        osrm::engine::routing_algorithms::shortestPathSearch(heaps, facade, phantom_nodes, false);
+        osrm::engine::routing_algorithms::shortestPathSearch(heaps, facade, waypoints, false);
 
     BOOST_CHECK_EQUAL(route.shortest_path_weight, INVALID_EDGE_WEIGHT);
 }

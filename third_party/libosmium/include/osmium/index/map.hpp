@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/util/compatibility.hpp>
 #include <osmium/util/string.hpp>
 
 #include <algorithm>
@@ -47,7 +48,7 @@ DEALINGS IN THE SOFTWARE.
 
 namespace osmium {
 
-    struct map_factory_error : public std::runtime_error {
+    struct OSMIUM_EXPORT map_factory_error : public std::runtime_error {
 
         explicit map_factory_error(const char* message) :
             std::runtime_error(message) {
@@ -218,7 +219,7 @@ namespace osmium {
             MapFactory(MapFactory&&) = delete;
             MapFactory& operator=(MapFactory&&) = delete;
 
-            ~MapFactory() = default;
+            ~MapFactory() noexcept = default;
 
             static MapFactory<id_type, value_type>& instance() {
                 static MapFactory<id_type, value_type> factory;
@@ -235,6 +236,7 @@ namespace osmium {
 
             std::vector<std::string> map_types() const {
                 std::vector<std::string> result;
+                result.reserve(m_callbacks.size());
 
                 for (const auto& cb : m_callbacks) {
                     result.push_back(cb.first);

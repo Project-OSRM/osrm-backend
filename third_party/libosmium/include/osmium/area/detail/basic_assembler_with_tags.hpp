@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -56,13 +56,13 @@ namespace osmium {
                         return false;
                     }
                     return stats().duplicate_nodes ||
-                        stats().duplicate_segments ||
-                        stats().intersections ||
-                        stats().open_rings ||
-                        stats().short_ways ||
-                        stats().touching_rings ||
-                        stats().ways_in_multiple_rings ||
-                        stats().wrong_role;
+                           stats().duplicate_segments ||
+                           stats().intersections ||
+                           stats().open_rings ||
+                           stats().short_ways ||
+                           stats().touching_rings ||
+                           stats().ways_in_multiple_rings ||
+                           stats().wrong_role;
                 }
 
                 static void copy_tags_without_type(osmium::builder::AreaBuilder& builder, const osmium::TagList& tags) {

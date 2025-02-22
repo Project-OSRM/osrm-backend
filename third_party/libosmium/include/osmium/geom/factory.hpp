@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -44,6 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/node_ref_list.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/way.hpp>
+#include <osmium/util/compatibility.hpp>
 
 #include <cstddef>
 #include <stdexcept>
@@ -56,7 +57,7 @@ namespace osmium {
      * Exception thrown when an invalid geometry is encountered. An example
      * would be a linestring with less than two points.
      */
-    class geometry_error : public std::runtime_error {
+    class OSMIUM_EXPORT geometry_error : public std::runtime_error {
 
         std::string m_message;
         osmium::object_id_type m_id;
@@ -131,11 +132,11 @@ namespace osmium {
                 return Coordinates{location.lon(), location.lat()};
             }
 
-            int epsg() const noexcept {
+            static int epsg() noexcept {
                 return 4326;
             }
 
-            std::string proj_string() const {
+            static std::string proj_string() noexcept {
                 return "+proj=longlat +datum=WGS84 +no_defs";
             }
 
@@ -165,7 +166,7 @@ namespace osmium {
 
         public:
 
-            GeometryFactory<TGeomImpl, TProjection>() :
+            GeometryFactory() :
                 m_projection(),
                 m_impl(m_projection.epsg()) {
             }
@@ -174,7 +175,7 @@ namespace osmium {
              * Constructor for default initialized projection.
              */
             template <typename... TArgs>
-            explicit GeometryFactory<TGeomImpl, TProjection>(TArgs&&... args) :
+            explicit GeometryFactory(TArgs&&... args) :
                 m_projection(),
                 m_impl(m_projection.epsg(), std::forward<TArgs>(args)...) {
             }
@@ -184,7 +185,7 @@ namespace osmium {
              * projection is moved into the GeometryFactory.
              */
             template <typename... TArgs>
-            explicit GeometryFactory<TGeomImpl, TProjection>(TProjection&& projection, TArgs&&... args) :
+            explicit GeometryFactory(TProjection&& projection, TArgs&&... args) :
                 m_projection(std::move(projection)),
                 m_impl(m_projection.epsg(), std::forward<TArgs>(args)...) {
             }
@@ -385,7 +386,7 @@ namespace osmium {
 
                     for (const auto& item : area) {
                         if (item.type() == osmium::item_type::outer_ring) {
-                            auto& ring = static_cast<const osmium::OuterRing&>(item);
+                            const auto& ring = static_cast<const osmium::OuterRing&>(item);
                             if (num_polygons > 0) {
                                 m_impl.multipolygon_polygon_finish();
                             }
@@ -396,7 +397,7 @@ namespace osmium {
                             ++num_rings;
                             ++num_polygons;
                         } else if (item.type() == osmium::item_type::inner_ring) {
-                            auto& ring = static_cast<const osmium::InnerRing&>(item);
+                            const auto& ring = static_cast<const osmium::InnerRing&>(item);
                             m_impl.multipolygon_inner_ring_start();
                             add_points(ring);
                             m_impl.multipolygon_inner_ring_finish();

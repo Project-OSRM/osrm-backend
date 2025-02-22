@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -93,7 +93,7 @@ namespace osmium {
                 return data.empty();
             }
 
-            inline bool at_end_of_data(osmium::memory::Buffer& buffer) noexcept {
+            inline bool at_end_of_data(const osmium::memory::Buffer& buffer) noexcept {
                 return !buffer;
             }
 
@@ -101,13 +101,11 @@ namespace osmium {
             class queue_wrapper {
 
                 future_queue_type<T>& m_queue;
-                bool m_has_reached_end_of_data;
 
             public:
 
                 explicit queue_wrapper(future_queue_type<T>& queue) :
-                    m_queue(queue),
-                    m_has_reached_end_of_data(false) {
+                    m_queue(queue) {
                 }
 
                 queue_wrapper(const queue_wrapper&) = delete;
@@ -117,32 +115,30 @@ namespace osmium {
                 queue_wrapper& operator=(queue_wrapper&&) = delete;
 
                 ~queue_wrapper() noexcept {
-                    drain();
-                }
-
-                void drain() {
-                    while (!m_has_reached_end_of_data) {
-                        try {
-                            pop();
-                        } catch (...) {
-                            // Ignore any exceptions.
-                        }
+                    try {
+                        shutdown();
+                    } catch (...) {
                     }
                 }
 
+                void shutdown() {
+                    m_queue.shutdown();
+                }
+
                 bool has_reached_end_of_data() const noexcept {
-                    return m_has_reached_end_of_data;
+                    return !m_queue.in_use();
                 }
 
                 T pop() {
                     T data;
-                    if (!m_has_reached_end_of_data) {
+                    if (m_queue.in_use()) {
                         std::future<T> data_future;
                         m_queue.wait_and_pop(data_future);
-                        assert(data_future.valid());
-                        data = std::move(data_future.get());
-                        if (at_end_of_data(data)) {
-                            m_has_reached_end_of_data = true;
+                        if (data_future.valid()) {
+                            data = std::move(data_future.get());
+                            if (at_end_of_data(data)) {
+                                m_queue.shutdown();
+                            }
                         }
                     }
                     return data;

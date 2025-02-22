@@ -5,14 +5,11 @@
 
 #include <boost/iterator/filter_iterator.hpp>
 #include <boost/iterator/iterator_facade.hpp>
-#include <boost/range/iterator_range.hpp>
+#include <ranges>
 
 #include <cstddef>
-#include <cstdint>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 // Non-owning immutable sub-graph view into a base graph.
@@ -42,7 +39,7 @@ class BisectionGraphView
     // Iteration over all nodes (direct access into the node)
     ConstNodeIterator Begin() const;
     ConstNodeIterator End() const;
-    auto Nodes() const { return boost::make_iterator_range(begin, end); }
+    auto Nodes() const { return std::ranges::subrange(begin, end); }
 
     // Re-Construct the ID of a node from a reference
     NodeID GetID(const NodeT &node) const;
@@ -64,7 +61,6 @@ class BisectionGraphView
     const BisectionGraph::ConstNodeIterator end;
 };
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif // OSRM_PARTITIONER_GRAPHVIEW_HPP_

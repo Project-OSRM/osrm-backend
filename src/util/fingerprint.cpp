@@ -3,17 +3,13 @@
 #include "util/exception_utils.hpp"
 #include "util/version.hpp"
 
-#include <boost/assert.hpp>
 #include <boost/crc.hpp>
 
 #include <cstring>
 
 #include <algorithm>
-#include <string>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 /**
@@ -91,5 +87,4 @@ bool FingerPrint::IsDataCompatible(const FingerPrint &other) const
     return IsValid() && other.major_version == major_version &&
            other.minor_version == minor_version;
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util

@@ -1,25 +1,16 @@
 #ifndef OSRM_UTIL_GUIDANCE_BEARING_CLASS_HPP_
 #define OSRM_UTIL_GUIDANCE_BEARING_CLASS_HPP_
 
-#include <cstddef>
-#include <cstdint>
-#include <functional>
-#include <vector>
-
-#include <boost/functional/hash.hpp>
-
+#include "util/std_hash.hpp"
 #include "util/typedefs.hpp"
 
-namespace osrm
-{
-namespace util
-{
-namespace guidance
+#include <cstddef>
+#include <vector>
+
+namespace osrm::util::guidance
 {
 class BearingClass;
-} // namespace guidance
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util::guidance
 
 namespace std
 {
@@ -29,11 +20,7 @@ template <> struct hash<::osrm::util::guidance::BearingClass>
 };
 } // namespace std
 
-namespace osrm
-{
-namespace util
-{
-namespace guidance
+namespace osrm::util::guidance
 {
 
 class BearingClass
@@ -64,9 +51,7 @@ class BearingClass
     friend std::size_t std::hash<BearingClass>::operator()(const BearingClass &) const;
 };
 
-} // namespace guidance
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util::guidance
 
 // make Bearing Class hasbable
 namespace std
@@ -74,7 +59,10 @@ namespace std
 inline size_t hash<::osrm::util::guidance::BearingClass>::operator()(
     const ::osrm::util::guidance::BearingClass &bearing_class) const
 {
-    return boost::hash_value(bearing_class.available_bearings);
+    std::size_t value = 0;
+    hash_range(
+        value, bearing_class.available_bearings.cbegin(), bearing_class.available_bearings.cend());
+    return value;
 }
 } // namespace std
 

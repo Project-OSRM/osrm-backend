@@ -6,11 +6,19 @@ on:
 
 jobs:
   publish:
+    strategy:
+      matrix:
+        docker-base-image: ["debian", "alpine"]
     runs-on: ubuntu-latest
     steps:       
       - name: Check out the repo
         uses: actions/checkout@v2
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
       - name: Docker meta
         id: meta
@@ -34,10 +42,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           flavor: |
             latest=true
-            suffix=-assertions,onlatest=true
-          
-
-
+            suffix=-assertions,onlatest=true        
 
       - name: Log in to GitHub Docker Registry
         uses: docker/login-action@v1
@@ -46,40 +51,34 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-
-
-
-
-
-
       - name: Build container image - debug
         uses: docker/build-push-action@v2
         with:
           push: true
-          file: ./docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metadebug.outputs.tags  }}
           build-args: |
-            DOCKER_TAG=${{ join(steps.metadebug.outputs.tags ) }}
+            DOCKER_TAG=${{ join(steps.metadebug.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
 
       - name: Build container image - assertions
         uses: docker/build-push-action@v2
         with:
           push: true
-          file: ./docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metaassertions.outputs.tags  }}
           build-args: |
-            DOCKER_TAG=${{ join(steps.metaassertions.outputs.tags ) }}
+            DOCKER_TAG=${{ join(steps.metaassertions.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
       # build and publish "normal" image as last to get it listed on top
       - name: Build container image - normal
         uses: docker/build-push-action@v2
         with:
           push: true
-          file: ./docker/Dockerfile
-          tags:  ${{ steps.meta.outputs.tags  }}
+          platforms: linux/amd64,linux/arm64
+          file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
+          tags: ${{ steps.meta.outputs.tags  }}
           build-args: |
-            DOCKER_TAG=${{ join(steps.meta.outputs.tags ) }}            
-
-
-            
+            DOCKER_TAG=${{ join(steps.meta.outputs.tags ) }}-${{ matrix.docker-base-image }}

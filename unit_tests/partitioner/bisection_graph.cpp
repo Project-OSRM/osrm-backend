@@ -4,6 +4,7 @@
 #include "util/debug.hpp"
 
 #include <algorithm>
+#include <random>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -27,7 +28,8 @@ BOOST_AUTO_TEST_CASE(access_nodes)
     const auto to_row = [cols](const NodeID nid) { return nid / cols; };
     const auto to_col = [cols](const NodeID nid) { return nid % cols; };
 
-    const auto get_expected = [&](const NodeID id) {
+    const auto get_expected = [&](const NodeID id)
+    {
         const auto expected_lon = FloatLongitude{to_col(id) * step_size};
         const auto expected_lat = FloatLatitude{to_row(id) * step_size};
         Coordinate compare(expected_lon, expected_lat);
@@ -90,8 +92,9 @@ BOOST_AUTO_TEST_CASE(access_edges)
     const auto coordinates = makeGridCoordinates(rows, cols, step_size, 0, 0);
 
     auto grid_edges = makeGridEdges(rows, cols, 0);
-
-    std::random_shuffle(grid_edges.begin(), grid_edges.end());
+    std::random_device rd;
+    std::mt19937 rng(rd());
+    std::shuffle(grid_edges.begin(), grid_edges.end(), rng);
     groupEdgesBySource(grid_edges.begin(), grid_edges.end());
 
     const auto graph = makeBisectionGraph(coordinates, adaptToBisectionEdge(std::move(grid_edges)));

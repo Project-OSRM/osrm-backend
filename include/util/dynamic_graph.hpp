@@ -18,9 +18,7 @@
 #include <tuple>
 #include <vector>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 namespace detail
 {
@@ -70,7 +68,7 @@ template <typename EdgeDataT> class DynamicGraph
         }
 
         template <typename... Ts>
-        InputEdge(NodeIterator source, NodeIterator target, Ts &&... data)
+        InputEdge(NodeIterator source, NodeIterator target, Ts &&...data)
             : source(source), target(target), data(std::forward<Ts>(data)...)
         {
         }
@@ -156,7 +154,7 @@ template <typename EdgeDataT> class DynamicGraph
         return *this;
     }
 
-    DynamicGraph(DynamicGraph &&other)
+    DynamicGraph(DynamicGraph &&other) noexcept
     {
         number_of_nodes = other.number_of_nodes;
         // atomics can't be moved this is why we need an own constructor
@@ -166,7 +164,7 @@ template <typename EdgeDataT> class DynamicGraph
         edge_list = std::move(other.edge_list);
     }
 
-    DynamicGraph &operator=(DynamicGraph &&other)
+    DynamicGraph &operator=(DynamicGraph &&other) noexcept
     {
         number_of_nodes = other.number_of_nodes;
         // atomics can't be moved this is why we need an own constructor
@@ -191,25 +189,28 @@ template <typename EdgeDataT> class DynamicGraph
         other.node_array.resize(node_array.size());
 
         NodeID node_id = 0;
-        std::transform(
-            node_array.begin(), node_array.end(), other.node_array.begin(), [&](const Node &node) {
-                const EdgeIterator first_edge = other.edge_list.size();
+        std::transform(node_array.begin(),
+                       node_array.end(),
+                       other.node_array.begin(),
+                       [&](const Node &node)
+                       {
+                           const EdgeIterator first_edge = other.edge_list.size();
 
-                BOOST_ASSERT(node_id < number_of_nodes);
-                if (filter(node_id++))
-                {
-                    std::copy_if(edge_list.begin() + node.first_edge,
-                                 edge_list.begin() + node.first_edge + node.edges,
-                                 std::back_inserter(other.edge_list),
-                                 [&](const auto &edge) { return filter(edge.target); });
-                    const unsigned num_edges = other.edge_list.size() - first_edge;
-                    return Node{first_edge, num_edges};
-                }
-                else
-                {
-                    return Node{first_edge, 0};
-                }
-            });
+                           BOOST_ASSERT(node_id < number_of_nodes);
+                           if (filter(node_id++))
+                           {
+                               std::copy_if(edge_list.begin() + node.first_edge,
+                                            edge_list.begin() + node.first_edge + node.edges,
+                                            std::back_inserter(other.edge_list),
+                                            [&](const auto &edge) { return filter(edge.target); });
+                               const unsigned num_edges = other.edge_list.size() - first_edge;
+                               return Node{first_edge, num_edges};
+                           }
+                           else
+                           {
+                               return Node{first_edge, 0};
+                           }
+                       });
 
         return other;
     }
@@ -468,7 +469,6 @@ template <typename EdgeDataT> class DynamicGraph
     std::vector<Node> node_array;
     DeallocatingVector<Edge> edge_list;
 };
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // DYNAMICGRAPH_HPP

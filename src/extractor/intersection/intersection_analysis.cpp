@@ -6,12 +6,9 @@
 #include "util/coordinate_calculation.hpp"
 
 #include <boost/optional/optional_io.hpp>
+#include <numbers>
 
-namespace osrm
-{
-namespace extractor
-{
-namespace intersection
+namespace osrm::extractor::intersection
 {
 
 IntersectionEdges getIncomingEdges(const util::NodeBasedDynamicGraph &graph,
@@ -71,9 +68,8 @@ getEdgeCoordinates(const extractor::CompressedEdgeContainer &compressed_geometri
     std::transform(geometry.begin(),
                    geometry.end(),
                    std::back_inserter(result),
-                   [&node_coordinates](const auto &compressed_edge) {
-                       return node_coordinates[compressed_edge.node_id];
-                   });
+                   [&node_coordinates](const auto &compressed_edge)
+                   { return node_coordinates[compressed_edge.node_id]; });
 
     // filter duplicated coordinates
     result.erase(std::unique(result.begin(), result.end()), result.end());
@@ -84,11 +80,11 @@ namespace
 {
 double findAngleBisector(double alpha, double beta)
 {
-    alpha *= M_PI / 180.;
-    beta *= M_PI / 180.;
+    alpha *= std::numbers::pi / 180.;
+    beta *= std::numbers::pi / 180.;
     const auto average =
-        180. * std::atan2(std::sin(alpha) + std::sin(beta), std::cos(alpha) + std::cos(beta)) /
-        M_PI;
+        180. * std::atan2(std::sin(alpha) + std::sin(beta), std::cos(alpha) + std::cos(beta)) *
+        std::numbers::inv_pi;
     return std::fmod(average + 360., 360.);
 }
 
@@ -99,7 +95,8 @@ double findClosestOppositeBearing(const IntersectionEdgeGeometries &edge_geometr
     const auto min = std::min_element(
         edge_geometries.begin(),
         edge_geometries.end(),
-        [bearing = util::bearing::reverse(bearing)](const auto &lhs, const auto &rhs) {
+        [bearing = util::bearing::reverse(bearing)](const auto &lhs, const auto &rhs)
+        {
             return util::angularDeviation(lhs.perceived_bearing, bearing) <
                    util::angularDeviation(rhs.perceived_bearing, bearing);
         });
@@ -132,7 +129,7 @@ std::pair<bool, double> findMergedBearing(const util::NodeBasedDynamicGraph &gra
     {
         // In some intersections, turning roads can introduce artificial turns if we merge here.
         // Consider a scenario like:
-        // 
+        //  
         //  a     .  g - f
         //  |   .
         //  | .
@@ -140,7 +137,7 @@ std::pair<bool, double> findMergedBearing(const util::NodeBasedDynamicGraph &gra
         // d-b--------e
         //  |
         //  c
-        // 
+        //  
         // Merging `bgf` and `be` would introduce an angle, even though d-b-e is perfectly straight
         // We don't change the angle, if such an opposite road exists
         return {false, entry.perceived_bearing};
@@ -237,15 +234,16 @@ getIntersectionOutgoingGeometries(const util::NodeBasedDynamicGraph &graph,
             util::coordinate_calculation::bearing(geometry[0], representative_coordinate);
 
         const auto edge_length = util::coordinate_calculation::getLength(
-            geometry.begin(), geometry.end(), util::coordinate_calculation::haversineDistance);
+            geometry.begin(), geometry.end(), util::coordinate_calculation::greatCircleDistance);
 
         edge_geometries.push_back({outgoing_edge, initial_bearing, perceived_bearing, edge_length});
     }
 
     // Sort edges in the clockwise bearings order
-    std::sort(edge_geometries.begin(), edge_geometries.end(), [](const auto &lhs, const auto &rhs) {
-        return lhs.perceived_bearing < rhs.perceived_bearing;
-    });
+    std::sort(edge_geometries.begin(),
+              edge_geometries.end(),
+              [](const auto &lhs, const auto &rhs)
+              { return lhs.perceived_bearing < rhs.perceived_bearing; });
     return edge_geometries;
 }
 } // namespace
@@ -321,9 +319,8 @@ getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
                 neighbor_geometries.begin(),
                 std::find_if(neighbor_geometries.begin(),
                              neighbor_geometries.end(),
-                             [&graph, &intersection_node](const auto &road) {
-                                 return graph.GetTarget(road.eid) == intersection_node;
-                             }));
+                             [&graph, &intersection_node](const auto &road)
+                             { return graph.GetTarget(road.eid) == intersection_node; }));
             BOOST_ASSERT(static_cast<std::size_t>(neighbor_curr) != neighbor_geometries.size());
             const auto neighbor_prev = (neighbor_curr + neighbor_edges - 1) % neighbor_edges;
             const auto neighbor_next = (neighbor_curr + 1) % neighbor_edges;
@@ -407,10 +404,11 @@ getIntersectionGeometries(const util::NodeBasedDynamicGraph &graph,
 
 inline auto findEdge(const IntersectionEdgeGeometries &geometries, const EdgeID &edge)
 {
-    const auto it = std::lower_bound(
-        geometries.begin(), geometries.end(), edge, [](const auto &geometry, const auto edge) {
-            return geometry.eid < edge;
-        });
+    const auto it =
+        std::lower_bound(geometries.begin(),
+                         geometries.end(),
+                         edge,
+                         [](const auto &geometry, const auto edge) { return geometry.eid < edge; });
     BOOST_ASSERT(it != geometries.end() && it->eid == edge);
     return it;
 }
@@ -426,12 +424,11 @@ double findEdgeLength(const IntersectionEdgeGeometries &geometries, const EdgeID
 }
 
 template <typename RestrictionsRange>
-bool isTurnRestricted(const RestrictionsRange &restrictions, const NodeID to)
+bool isTurnRestricted(RestrictionsRange restrictions, const NodeID to)
 {
     // Check if any of the restrictions would prevent a turn to 'to'
-    return std::any_of(restrictions.begin(), restrictions.end(), [&to](const auto &restriction) {
-        return restriction->IsTurnRestricted(to);
-    });
+    return std::ranges::any_of(
+        restrictions, [&to](const auto &restriction) { return restriction->IsTurnRestricted(to); });
 }
 
 bool isTurnAllowed(const util::NodeBasedDynamicGraph &graph,
@@ -617,14 +614,14 @@ IntersectionView convertToIntersectionView(const util::NodeBasedDynamicGraph &gr
     std::vector<IntersectionViewDataWithAngle> pre_intersection_view;
     IntersectionViewData uturn{{SPECIAL_EDGEID, 0., 0., 0.}, false, 0.};
     std::size_t allowed_uturns_number = 0;
+
+    const auto is_uturn = [](const auto angle)
+    { return std::fabs(angle) < std::numeric_limits<double>::epsilon(); };
+
     for (const auto &outgoing_edge : outgoing_edges)
     {
-        const auto is_uturn = [](const auto angle) {
-            return std::fabs(angle) < std::numeric_limits<double>::epsilon();
-        };
-
         const auto edge_it = findEdge(edge_geometries, outgoing_edge.edge);
-        const auto is_merged = merged_edges.count(outgoing_edge.edge) != 0;
+        const auto is_merged = merged_edges.contains(outgoing_edge.edge);
         const auto is_turn_allowed = intersection::isTurnAllowed(graph,
                                                                  node_data_container,
                                                                  restriction_map,
@@ -668,9 +665,9 @@ IntersectionView convertToIntersectionView(const util::NodeBasedDynamicGraph &gr
             // 2) use turn angle if the smallest arc between turn and initial angles passes 0°
             const auto use_turn_angle = (turn_angle > 270 && initial_angle < 90) ||
                                         (turn_angle < 90 && initial_angle > 270);
-            const auto adjusted_angle = is_uturn(initial_angle)
-                                            ? (turn_angle > 180. ? 360. : 0.)
-                                            : use_turn_angle ? turn_angle : initial_angle;
+            const auto adjusted_angle = is_uturn(initial_angle) ? (turn_angle > 180. ? 360. : 0.)
+                                        : use_turn_angle        ? turn_angle
+                                                                : initial_angle;
             pre_intersection_view.push_back({road, adjusted_angle});
         }
     }
@@ -678,16 +675,16 @@ IntersectionView convertToIntersectionView(const util::NodeBasedDynamicGraph &gr
     BOOST_ASSERT(uturn.eid != SPECIAL_EDGEID);
     if (uturn.entry_allowed || allowed_uturns_number == 0)
     { // Add the true U-turn if it is allowed or no other U-turns found
+        BOOST_ASSERT(uturn.angle == 0.);
         pre_intersection_view.insert(pre_intersection_view.begin(), {uturn, 0});
     }
 
     // Order roads in counter-clockwise order starting from the U-turn edge in the OSM order
-    std::stable_sort(pre_intersection_view.begin(),
-                     pre_intersection_view.end(),
-                     [](const auto &lhs, const auto &rhs) {
-                         return std::tie(lhs.second, lhs.first.angle) <
-                                std::tie(rhs.second, rhs.first.angle);
-                     });
+    std::stable_sort(
+        pre_intersection_view.begin(),
+        pre_intersection_view.end(),
+        [](const auto &lhs, const auto &rhs)
+        { return std::tie(lhs.second, lhs.first.angle) < std::tie(rhs.second, rhs.first.angle); });
 
     // Adjust perceived bearings to keep the initial OSM order with respect to the first edge
     for (auto curr = pre_intersection_view.begin(), next = std::next(curr);
@@ -704,6 +701,21 @@ IntersectionView convertToIntersectionView(const util::NodeBasedDynamicGraph &gr
             next->first.angle =
                 util::restrictAngleToValidRange(curr->first.angle + angle_adjustment);
         }
+    }
+
+    auto no_uturn = std::none_of(pre_intersection_view.begin(),
+                                 pre_intersection_view.end(),
+                                 [&is_uturn](const IntersectionViewDataWithAngle &road)
+                                 { return is_uturn(road.first.angle); });
+    // After all of this, if we now don't have a u-turn, let's add one to the intersection.
+    // This is a hack to fix the triggered assertion ( see:
+    // https://github.com/Project-OSRM/osrm-backend/issues/6218 ). Ideally we would fix this more
+    // robustly, but this will require overhauling all of the intersection logic.
+    if (no_uturn)
+    {
+        BOOST_ASSERT(!uturn.entry_allowed && allowed_uturns_number > 0);
+        BOOST_ASSERT(uturn.angle == 0.);
+        pre_intersection_view.insert(pre_intersection_view.begin(), {uturn, 0});
     }
 
     // Copy intersection view data
@@ -838,6 +850,4 @@ IntersectionEdge skipDegreeTwoNodes(const util::NodeBasedDynamicGraph &graph, In
 
     return road;
 }
-} // namespace intersection
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor::intersection

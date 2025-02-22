@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/entity_bits.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/types.hpp>
-#include <osmium/util/compatibility.hpp>
 
 #include <cassert>
 #include <cctype>
@@ -60,7 +59,7 @@ namespace osmium {
     inline object_id_type string_to_object_id(const char* input) {
         assert(input);
         if (*input != '\0' && !std::isspace(*input)) {
-            char* end;
+            char* end = nullptr;
             const auto id = std::strtoll(input, &end, 10);
             if (id != std::numeric_limits<long long>::min() && // NOLINT(google-runtime-int)
                 id != std::numeric_limits<long long>::max() && // NOLINT(google-runtime-int)
@@ -112,7 +111,7 @@ namespace osmium {
                 return 0;
             }
             if (*input != '\0' && *input != '-' && !std::isspace(*input)) {
-                char* end;
+                char* end = nullptr;
                 const auto value = std::strtoul(input, &end, 10);
                 if (value < std::numeric_limits<uint32_t>::max() && *end == '\0') {
                     return static_cast<uint32_t>(value);
@@ -149,29 +148,6 @@ namespace osmium {
     inline changeset_id_type string_to_changeset_id(const char* input) {
         assert(input);
         return detail::string_to_ulong(input, "changeset");
-    }
-
-    /**
-     * Convert string with user id to signed_user_id_type.
-     *
-     * @pre input must not be nullptr.
-     *
-     * @param input Input string.
-     *
-     * @throws std::range_error if the value is out of range.
-     *
-     * @deprecated Use string_to_uid() instead.
-     */
-    OSMIUM_DEPRECATED inline signed_user_id_type string_to_user_id(const char* input) {
-        assert(input);
-        if (input[0] == '-' && input[1] == '1' && input[2] == '\0') {
-            return -1;
-        }
-        const auto value = detail::string_to_ulong(input, "user id");
-        if (value > static_cast<uint32_t>(std::numeric_limits<int32_t>::max())) {
-            throw std::range_error{"illegal user id"};
-        }
-        return static_cast<signed_user_id_type>(value);
     }
 
     /**

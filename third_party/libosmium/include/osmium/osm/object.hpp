@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -103,10 +103,6 @@ namespace osmium {
             OSMEntity(size, type),
             m_deleted(false),
             m_version(0) {
-        }
-
-        void set_user_size(string_size_type size) {
-            *reinterpret_cast<string_size_type*>(user_position()) = size;
         }
 
     public:
@@ -311,8 +307,9 @@ namespace osmium {
          */
         OSMObject& set_timestamp(const char* timestamp) {
             assert(timestamp);
-            m_timestamp = detail::parse_timestamp(timestamp);
-            if (timestamp[20] != '\0') {
+            const char** str = &timestamp;
+            m_timestamp = detail::parse_timestamp(str);
+            if (**str != '\0') {
                 throw std::invalid_argument{"can not parse timestamp: garbage after timestamp"};
             }
             return *this;

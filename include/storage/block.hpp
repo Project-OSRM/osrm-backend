@@ -7,9 +7,7 @@
 #include <string>
 #include <tuple>
 
-namespace osrm
-{
-namespace storage
+namespace osrm::storage
 {
 
 struct Block
@@ -33,10 +31,10 @@ using NamedBlock = std::tuple<std::string, Block>;
 
 template <typename T> Block make_block(uint64_t num_entries)
 {
+    // NOLINTNEXTLINE(misc-redundant-expression)
     static_assert(sizeof(T) % alignof(T) == 0, "aligned T* can't be used as an array pointer");
     return Block{num_entries, sizeof(T) * num_entries, 0};
 }
-} // namespace storage
-} // namespace osrm
+} // namespace osrm::storage
 
 #endif

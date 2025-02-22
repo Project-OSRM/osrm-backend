@@ -7,9 +7,7 @@
 
 #include <ostream>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 namespace api
 {
@@ -60,7 +58,6 @@ inline std::ostream &operator<<(std::ostream &out, Approach approach)
     out << static_cast<int>(approach);
     return out;
 }
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif

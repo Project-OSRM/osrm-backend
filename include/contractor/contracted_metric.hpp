@@ -3,9 +3,7 @@
 
 #include "contractor/query_graph.hpp"
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 namespace detail
@@ -19,7 +17,6 @@ template <storage::Ownership Ownership> struct ContractedMetric
 
 using ContractedMetric = detail::ContractedMetric<storage::Ownership::Container>;
 using ContractedMetricView = detail::ContractedMetric<storage::Ownership::View>;
-} // namespace contractor
-} // namespace osrm
+} // namespace osrm::contractor
 
 #endif

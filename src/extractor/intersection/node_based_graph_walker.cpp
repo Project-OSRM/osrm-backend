@@ -7,11 +7,7 @@
 
 using osrm::util::angularDeviation;
 
-namespace osrm
-{
-namespace extractor
-{
-namespace intersection
+namespace osrm::extractor::intersection
 {
 
 // ---------------------------------------------------------------------------------
@@ -50,7 +46,7 @@ void LengthLimitedCoordinateAccumulator::update(const NodeID from_node,
     const auto length =
         util::coordinate_calculation::getLength(current_coordinates.begin(),
                                                 current_coordinates.end(),
-                                                util::coordinate_calculation::haversineDistance);
+                                                util::coordinate_calculation::greatCircleDistance);
 
     // in case we get too many coordinates, we limit them to our desired length
     if (length + accumulated_length > max_length)
@@ -70,7 +66,7 @@ SelectRoadByNameOnlyChoiceAndStraightness::SelectRoadByNameOnlyChoiceAndStraight
 {
 }
 
-boost::optional<EdgeID> SelectRoadByNameOnlyChoiceAndStraightness::operator()(
+std::optional<EdgeID> SelectRoadByNameOnlyChoiceAndStraightness::operator()(
     const NodeID /*nid*/,
     const EdgeID /*via_edge_id*/,
     const IntersectionView &intersection,
@@ -78,10 +74,12 @@ boost::optional<EdgeID> SelectRoadByNameOnlyChoiceAndStraightness::operator()(
     const EdgeBasedNodeDataContainer &node_data_container) const
 {
     BOOST_ASSERT(!intersection.empty());
-    const auto comparator = [&](const IntersectionViewData &lhs, const IntersectionViewData &rhs) {
+    const auto comparator = [&](const IntersectionViewData &lhs, const IntersectionViewData &rhs)
+    {
         // the score of an elemnt results in an ranking preferring valid entries, if required over
         // invalid requested name_ids over non-requested narrow deviations over non-narrow
-        const auto score = [&](const IntersectionViewData &road) {
+        const auto score = [&](const IntersectionViewData &road)
+        {
             double result_score = 0;
             // since angular deviation is limited by 0-180, we add 360 for invalid
             if (requires_entry && !road.entry_allowed)
@@ -120,7 +118,7 @@ SelectStraightmostRoadByNameAndOnlyChoice::SelectStraightmostRoadByNameAndOnlyCh
 {
 }
 
-boost::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
+std::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
     const NodeID /*nid*/,
     const EdgeID /*via_edge_id*/,
     const IntersectionView &intersection,
@@ -131,10 +129,12 @@ boost::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
     if (intersection.size() == 1)
         return {};
 
-    const auto comparator = [&](const IntersectionViewData &lhs, const IntersectionViewData &rhs) {
+    const auto comparator = [&](const IntersectionViewData &lhs, const IntersectionViewData &rhs)
+    {
         // the score of an elemnt results in an ranking preferring valid entries, if required over
         // invalid requested name_ids over non-requested narrow deviations over non-narrow
-        const auto score = [&](const IntersectionViewData &road) {
+        const auto score = [&](const IntersectionViewData &road)
+        {
             double result_score = 0;
             // since angular deviation is limited by 0-180, we add 360 for invalid
             if (requires_entry && !road.entry_allowed)
@@ -153,8 +153,11 @@ boost::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
         return score(lhs) < score(rhs);
     };
 
-    const auto count_desired_name =
-        std::count_if(std::begin(intersection), std::end(intersection), [&](const auto &road) {
+    const auto count_desired_name = std::count_if(
+        std::begin(intersection),
+        std::end(intersection),
+        [&](const auto &road)
+        {
             return node_data_container
                        .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
                        .name_id == desired_name_id;
@@ -238,7 +241,7 @@ boost::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
             return {};
     }
 
-    return is_only_choice_with_same_name ? boost::optional<EdgeID>(min_element->eid) : boost::none;
+    return is_only_choice_with_same_name ? std::optional<EdgeID>(min_element->eid) : std::nullopt;
 }
 
 // ---------------------------------------------------------------------------------
@@ -289,6 +292,4 @@ void IntersectionFinderAccumulator::update(const NodeID from_node,
                                                          {from_node, via_edge});
 }
 
-} // namespace intersection
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor::intersection

@@ -4,6 +4,7 @@
 
 #include <osmium/geom/tile.hpp>
 
+#include <cmath>
 #include <sstream>
 
 TEST_CASE("Helper functions") {
@@ -15,9 +16,9 @@ TEST_CASE("Helper functions") {
 }
 
 TEST_CASE("Tile from x0.0 y0.0 at zoom 0") {
-    osmium::Location l{0.0, 0.0};
+    const osmium::Location l{0.0, 0.0};
 
-    osmium::geom::Tile t{0, l};
+    const osmium::geom::Tile t{0, l};
 
     REQUIRE(t.x == 0);
     REQUIRE(t.y == 0);
@@ -26,9 +27,9 @@ TEST_CASE("Tile from x0.0 y0.0 at zoom 0") {
 }
 
 TEST_CASE("Tile from x180.0 y90.0 at zoom 0") {
-    osmium::Location l{180.0, 90.0};
+    const osmium::Location l{180.0, 90.0};
 
-    osmium::geom::Tile t{0, l};
+    const osmium::geom::Tile t{0, l};
 
     REQUIRE(t.x == 0);
     REQUIRE(t.y == 0);
@@ -37,9 +38,9 @@ TEST_CASE("Tile from x180.0 y90.0 at zoom 0") {
 }
 
 TEST_CASE("Tile from x180.0 y90.0 at zoom 4") {
-    osmium::Location l{180.0, 90.0};
+    const osmium::Location l{180.0, 90.0};
 
-    osmium::geom::Tile t{4, l};
+    const osmium::geom::Tile t{4, l};
 
     REQUIRE(t.x == (1U << 4U) - 1);
     REQUIRE(t.y == 0);
@@ -48,9 +49,9 @@ TEST_CASE("Tile from x180.0 y90.0 at zoom 4") {
 }
 
 TEST_CASE("Tile from x0.0 y0.0 at zoom 4") {
-    osmium::Location l{0.0, 0.0};
+    const osmium::Location l{0.0, 0.0};
 
-    osmium::geom::Tile t{4, l};
+    const osmium::geom::Tile t{4, l};
 
     const auto n = 1U << (4U - 1U);
     REQUIRE(t.x == n);
@@ -60,37 +61,37 @@ TEST_CASE("Tile from x0.0 y0.0 at zoom 4") {
 }
 
 TEST_CASE("Tile from max values at zoom 4") {
-    osmium::geom::Tile t{4U, 15U, 15U};
+    const osmium::geom::Tile t{4U, 15U, 15U};
     REQUIRE(t.valid());
 }
 
 TEST_CASE("Tile from max values at zoom 30") {
-    osmium::geom::Tile t{30U, (1U << 30U) - 1, (1U << 30U) - 1};
+    const osmium::geom::Tile t{30U, (1U << 30U) - 1, (1U << 30U) - 1};
     REQUIRE(t.valid());
 }
 
 TEST_CASE("Tile from coordinates") {
-    osmium::geom::Coordinates c{9.99312, 53.55078};
-    osmium::geom::Tile t{12, osmium::geom::lonlat_to_mercator(c)};
+    const osmium::geom::Coordinates c{9.99312, 53.55078};
+    const osmium::geom::Tile t{12, osmium::geom::lonlat_to_mercator(c)};
     REQUIRE(t.valid());
     REQUIRE(t.x == 2161);
     REQUIRE(t.y == 1323);
 }
 
 TEST_CASE("Tile equality") {
-    osmium::geom::Tile a{4, 3, 4};
-    osmium::geom::Tile b{4, 3, 4};
-    osmium::geom::Tile c{4, 4, 3};
+    const osmium::geom::Tile a{4, 3, 4};
+    const osmium::geom::Tile b{4, 3, 4};
+    const osmium::geom::Tile c{4, 4, 3};
     REQUIRE(a == b);
     REQUIRE(a != c);
     REQUIRE(b != c);
 }
 
 TEST_CASE("Tile order") {
-    osmium::geom::Tile a{4, 3, 4};
-    osmium::geom::Tile b{6, 3, 4};
-    osmium::geom::Tile c{6, 4, 3};
-    osmium::geom::Tile d{6, 4, 2};
+    const osmium::geom::Tile a{4, 3, 4};
+    const osmium::geom::Tile b{6, 3, 4};
+    const osmium::geom::Tile c{6, 4, 3};
+    const osmium::geom::Tile d{6, 4, 2};
     REQUIRE(a < b);
     REQUIRE(a < c);
     REQUIRE(b < c);
@@ -98,13 +99,15 @@ TEST_CASE("Tile order") {
 }
 
 TEST_CASE("Check a random list of tiles") {
-    std::istringstream input_data(s);
+    std::istringstream input_data{s};
+
+    int n = 0;
     while (input_data) {
-        double lon;
-        double lat;
-        uint32_t x;
-        uint32_t y;
-        uint32_t zoom;
+        double lon = NAN;
+        double lat = NAN;
+        uint32_t x = 0;
+        uint32_t y = 0;
+        uint32_t zoom = 0;
 
         input_data >> lon;
         input_data >> lat;
@@ -112,11 +115,19 @@ TEST_CASE("Check a random list of tiles") {
         input_data >> y;
         input_data >> zoom;
 
-        osmium::Location l{lon, lat};
-        osmium::geom::Tile t{zoom, l};
+        if (std::isnan(lon)) {
+            break;
+        }
+
+        const osmium::Location l{lon, lat};
+        const osmium::geom::Tile t{zoom, l};
         REQUIRE(t.x == x);
         REQUIRE(t.y == y);
+
+        ++n;
     }
+
+    REQUIRE(n == 472);
 }
 
 TEST_CASE("Invalid tiles") {

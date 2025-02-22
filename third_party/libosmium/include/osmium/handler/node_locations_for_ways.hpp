@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -113,6 +113,14 @@ namespace osmium {
 
             void ignore_errors() {
                 m_ignore_errors = true;
+            }
+
+            TStoragePosIDs& storage_pos() noexcept {
+                return m_storage_pos;
+            }
+
+            TStorageNegIDs& storage_neg() noexcept {
+                return m_storage_neg;
             }
 
             /**

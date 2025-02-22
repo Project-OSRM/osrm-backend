@@ -12,11 +12,7 @@
 #include "util/filtered_graph.hpp"
 #include "util/integer_range.hpp"
 
-namespace osrm
-{
-namespace engine
-{
-namespace datafacade
+namespace osrm::engine::datafacade
 {
 
 // Namespace local aliases for algorithms
@@ -31,30 +27,35 @@ template <> class AlgorithmDataFacade<CH>
     using EdgeData = contractor::QueryEdge::EdgeData;
     using EdgeRange = util::filtered_range<EdgeID, util::vector_view<bool>>;
 
+    virtual ~AlgorithmDataFacade() = default;
+
     // search graph access
     virtual unsigned GetNumberOfNodes() const = 0;
 
     virtual unsigned GetNumberOfEdges() const = 0;
 
-    virtual unsigned GetOutDegree(const NodeID n) const = 0;
+    virtual unsigned GetOutDegree(const NodeID edge_based_node_id) const = 0;
 
-    virtual NodeID GetTarget(const EdgeID e) const = 0;
+    virtual NodeID GetTarget(const EdgeID edge_based_edge_id) const = 0;
 
-    virtual const EdgeData &GetEdgeData(const EdgeID e) const = 0;
+    virtual const EdgeData &GetEdgeData(const EdgeID edge_based_edge_id) const = 0;
 
-    virtual EdgeRange GetAdjacentEdgeRange(const NodeID node) const = 0;
+    virtual EdgeRange GetAdjacentEdgeRange(const NodeID edge_based_node_id) const = 0;
 
     // searches for a specific edge
-    virtual EdgeID FindEdge(const NodeID from, const NodeID to) const = 0;
+    virtual EdgeID FindEdge(const NodeID edge_based_node_from,
+                            const NodeID edge_based_node_to) const = 0;
 
-    virtual EdgeID FindEdgeInEitherDirection(const NodeID from, const NodeID to) const = 0;
+    virtual EdgeID FindEdgeInEitherDirection(const NodeID edge_based_node_from,
+                                             const NodeID edge_based_node_to) const = 0;
 
-    virtual EdgeID
-    FindEdgeIndicateIfReverse(const NodeID from, const NodeID to, bool &result) const = 0;
+    virtual EdgeID FindEdgeIndicateIfReverse(const NodeID edge_based_node_from,
+                                             const NodeID edge_based_node_to,
+                                             bool &result) const = 0;
 
-    virtual EdgeID FindSmallestEdge(const NodeID from,
-                                    const NodeID to,
-                                    const std::function<bool(EdgeData)> filter) const = 0;
+    virtual EdgeID FindSmallestEdge(const NodeID edge_based_node_from,
+                                    const NodeID edge_based_node_to,
+                                    const std::function<bool(const EdgeData &)> &filter) const = 0;
 };
 
 template <> class AlgorithmDataFacade<MLD>
@@ -63,6 +64,8 @@ template <> class AlgorithmDataFacade<MLD>
     using EdgeData = customizer::EdgeBasedGraphEdgeData;
     using EdgeRange = util::range<EdgeID>;
 
+    virtual ~AlgorithmDataFacade() = default;
+
     // search graph access
     virtual unsigned GetNumberOfNodes() const = 0;
 
@@ -70,23 +73,24 @@ template <> class AlgorithmDataFacade<MLD>
 
     virtual unsigned GetNumberOfEdges() const = 0;
 
-    virtual unsigned GetOutDegree(const NodeID n) const = 0;
+    virtual unsigned GetOutDegree(const NodeID edge_based_node_id) const = 0;
 
-    virtual EdgeRange GetAdjacentEdgeRange(const NodeID node) const = 0;
+    virtual EdgeRange GetAdjacentEdgeRange(const NodeID edge_based_node_id) const = 0;
 
-    virtual EdgeWeight GetNodeWeight(const NodeID node) const = 0;
+    virtual EdgeWeight GetNodeWeight(const NodeID edge_based_node_id) const = 0;
 
-    virtual EdgeWeight GetNodeDuration(const NodeID node) const = 0; // TODO: to be removed
+    virtual EdgeDuration
+    GetNodeDuration(const NodeID edge_based_node_id) const = 0; // TODO: to be removed
 
-    virtual EdgeDistance GetNodeDistance(const NodeID node) const = 0;
+    virtual EdgeDistance GetNodeDistance(const NodeID edge_based_node_id) const = 0;
 
-    virtual bool IsForwardEdge(EdgeID edge) const = 0;
+    virtual bool IsForwardEdge(EdgeID edge_based_edge_id) const = 0;
 
-    virtual bool IsBackwardEdge(EdgeID edge) const = 0;
+    virtual bool IsBackwardEdge(EdgeID edge_based_edge_id) const = 0;
 
-    virtual NodeID GetTarget(const EdgeID e) const = 0;
+    virtual NodeID GetTarget(const EdgeID edge_based_edge_id) const = 0;
 
-    virtual const EdgeData &GetEdgeData(const EdgeID e) const = 0;
+    virtual const EdgeData &GetEdgeData(const EdgeID edge_based_edge_id) const = 0;
 
     virtual const partitioner::MultiLevelPartitionView &GetMultiLevelPartition() const = 0;
 
@@ -94,13 +98,13 @@ template <> class AlgorithmDataFacade<MLD>
 
     virtual const customizer::CellMetricView &GetCellMetric() const = 0;
 
-    virtual EdgeRange GetBorderEdgeRange(const LevelID level, const NodeID node) const = 0;
+    virtual EdgeRange GetBorderEdgeRange(const LevelID level,
+                                         const NodeID edge_based_node_id) const = 0;
 
     // searches for a specific edge
-    virtual EdgeID FindEdge(const NodeID from, const NodeID to) const = 0;
+    virtual EdgeID FindEdge(const NodeID edge_based_node_from,
+                            const NodeID edge_based_node_to) const = 0;
 };
-} // namespace datafacade
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::datafacade
 
 #endif

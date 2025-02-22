@@ -6,11 +6,7 @@
 
 #include <memory>
 
-namespace osrm
-{
-namespace engine
-{
-namespace datafacade
+namespace osrm::engine::datafacade
 {
 
 /**
@@ -20,7 +16,7 @@ namespace datafacade
  * This class holds a unique_ptr to the memory block, so it
  * is auto-freed upon destruction.
  */
-class ProcessMemoryAllocator : public ContiguousBlockAllocator
+class ProcessMemoryAllocator final : public ContiguousBlockAllocator
 {
   public:
     explicit ProcessMemoryAllocator(const storage::StorageConfig &config);
@@ -34,8 +30,6 @@ class ProcessMemoryAllocator : public ContiguousBlockAllocator
     std::unique_ptr<char[]> internal_memory;
 };
 
-} // namespace datafacade
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::datafacade
 
 #endif // OSRM_ENGINE_DATAFACADE_PROCESS_MEMORY_ALLOCATOR_HPP_

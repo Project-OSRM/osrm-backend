@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -80,7 +80,7 @@ namespace osmium {
             ProblemReporter(ProblemReporter&&) noexcept = default;
             ProblemReporter& operator=(ProblemReporter&&) noexcept = default;
 
-            virtual ~ProblemReporter() = default;
+            virtual ~ProblemReporter() noexcept = default;
 
             /**
              * Set the object the next problem reports will be on.

@@ -8,10 +8,10 @@
 #include "util/version.hpp"
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 
+#include <filesystem>
 #include <iostream>
 #include <iterator>
 #include <regex>
@@ -53,7 +53,8 @@ void validate(boost::any &v, const std::vector<std::string> &values, MaxCellSize
     std::transform(std::sregex_token_iterator(s.begin(), s.end(), re, -1),
                    std::sregex_token_iterator(),
                    std::back_inserter(output),
-                   [](const auto &x) {
+                   [](const auto &x)
+                   {
                        try
                        {
                            return boost::lexical_cast<std::size_t>(x);
@@ -118,8 +119,8 @@ return_code parseArguments(int argc,
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
         "input,i",
-        boost::program_options::value<boost::filesystem::path>(&config.base_path),
-        "Input file in .osrm format");
+        boost::program_options::value<std::filesystem::path>(&config.base_path),
+        "Input base file path");
 
     // positional option
     boost::program_options::positional_options_description positional_options;
@@ -131,7 +132,7 @@ return_code parseArguments(int argc,
 
     const auto *executable = argv[0];
     boost::program_options::options_description visible_options(
-        boost::filesystem::path(executable).filename().string() + " <input.osrm> [options]");
+        std::filesystem::path(executable).filename().string() + " <input.osrm> [options]");
     visible_options.add(generic_options).add(config_options);
 
     // parse command line options
@@ -215,8 +216,9 @@ try
         return EXIT_FAILURE;
     }
 
-    auto check_file = [](const boost::filesystem::path &path) {
-        if (!boost::filesystem::is_regular_file(path))
+    auto check_file = [](const std::filesystem::path &path)
+    {
+        if (!std::filesystem::is_regular_file(path))
         {
             util::Log(logERROR) << "Input file " << path << " not found!";
             return false;
@@ -249,7 +251,6 @@ catch (const osrm::RuntimeError &e)
 {
     util::DumpMemoryStats();
     util::Log(logERROR) << e.what();
-    return EXIT_FAILURE;
     return e.GetCode();
 }
 catch (const std::bad_alloc &e)

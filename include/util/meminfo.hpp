@@ -2,33 +2,40 @@
 #define MEMINFO_HPP
 
 #include "util/log.hpp"
+#include <cstddef>
 
 #ifndef _WIN32
 #include <sys/resource.h>
 #endif
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
-inline void DumpMemoryStats()
+inline size_t PeakRAMUsedInBytes()
 {
 #ifndef _WIN32
     rusage usage;
     getrusage(RUSAGE_SELF, &usage);
 #ifdef __linux__
     // Under linux, ru.maxrss is in kb
-    util::Log() << "RAM: peak bytes used: " << usage.ru_maxrss * 1024;
+    return usage.ru_maxrss * 1024;
 #else  // __linux__
     // Under BSD systems (OSX), it's in bytes
-    util::Log() << "RAM: peak bytes used: " << usage.ru_maxrss;
+    return usage.ru_maxrss;
 #endif // __linux__
+#else  // _WIN32
+    return 0;
+#endif // _WIN32
+}
+
+inline void DumpMemoryStats()
+{
+#ifndef _WIN32
+    util::Log() << "RAM: peak bytes used: " << PeakRAMUsedInBytes();
 #else  // _WIN32
     util::Log() << "RAM: peak bytes used: <not implemented on Windows>";
 #endif // _WIN32
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

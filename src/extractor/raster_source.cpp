@@ -8,9 +8,7 @@
 
 #include <cmath>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 RasterSource::RasterSource(RasterGrid _raster_data,
@@ -42,8 +40,8 @@ RasterDatum RasterSource::GetRasterData(const int lon, const int lat) const
         return {};
     }
 
-    const std::size_t xth = static_cast<std::size_t>(round((lon - xmin) / xstep));
-    const std::size_t yth = static_cast<std::size_t>(round((ymax - lat) / ystep));
+    const std::size_t xth = static_cast<std::size_t>(std::round((lon - xmin) / xstep));
+    const std::size_t yth = static_cast<std::size_t>(std::round((ymax - lat) / ystep));
 
     return {raster_data(xth, yth)};
 }
@@ -105,8 +103,8 @@ int RasterContainer::LoadRasterSource(const std::string &path_string,
     util::Log() << "[source loader] Loading from " << path_string << "  ... ";
     TIMER_START(loading_source);
 
-    boost::filesystem::path filepath(path_string);
-    if (!boost::filesystem::exists(filepath))
+    std::filesystem::path filepath(path_string);
+    if (!std::filesystem::exists(filepath))
     {
         throw util::RuntimeError(
             path_string, ErrorCode::FileOpenError, SOURCE_REF, "File not found");
@@ -169,5 +167,4 @@ RasterContainer::GetRasterInterpolateFromSource(unsigned int source_id, double l
 }
 
 RasterCache *RasterCache::g_instance = NULL;
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

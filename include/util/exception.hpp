@@ -29,17 +29,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OSRM_EXCEPTION_HPP
 
 #include <array>
-#include <exception>
-#include <iostream>
 #include <string>
 #include <utility>
 
 #include "osrm/error_codes.hpp"
 #include <boost/format.hpp>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 class exception : public std::exception
@@ -47,7 +43,7 @@ class exception : public std::exception
   public:
     explicit exception(const char *message) : message(message) {}
     explicit exception(std::string message) : message(std::move(message)) {}
-    explicit exception(boost::format message) : message(message.str()) {}
+    explicit exception(const boost::format &message) : message(message.str()) {}
     const char *what() const noexcept override { return message.c_str(); }
 
   private:
@@ -64,19 +60,21 @@ class exception : public std::exception
  * user supplied bad data, etc).
  */
 
-constexpr const std::array<const char *, 11> ErrorDescriptions = {{
-    "",                                                      // Dummy - ErrorCode values start at 2
-    "",                                                      // Dummy - ErrorCode values start at 2
-    "Fingerprint did not match the expected value",          // InvalidFingerprint
-    "File is incompatible with this version of OSRM",        // IncompatibleFileVersion
-    "Problem opening file",                                  // FileOpenError
-    "Problem reading from file",                             // FileReadError
-    "Problem writing to file",                               // FileWriteError
-    "I/O error occurred",                                    // FileIOError
-    "Unexpected end of file",                                // UnexpectedEndOfFile
-    "The dataset you are trying to load is not "             // IncompatibleDataset
-    "compatible with the routing algorithm you want to use." // ...continued...
-    "Incompatible algorithm"                                 // IncompatibleAlgorithm
+constexpr const std::array<const char *, 12> ErrorDescriptions = {{
+    "",                                               // Dummy - ErrorCode values start at 2
+    "",                                               // Dummy - ErrorCode values start at 2
+    "Fingerprint did not match the expected value",   // InvalidFingerprint
+    "File is incompatible with this version of OSRM", // IncompatibleFileVersion
+    "Problem opening file",                           // FileOpenError
+    "Problem reading from file",                      // FileReadError
+    "Problem writing to file",                        // FileWriteError
+    "I/O error occurred",                             // FileIOError
+    "Unexpected end of file",                         // UnexpectedEndOfFile
+    // NOLINTNEXTLINE(bugprone-suspicious-missing-comma)
+    "The dataset you are trying to load is not "              // IncompatibleDataset
+    "compatible with the routing algorithm you want to use.", // ...continued...
+    "Incompatible algorithm",                                 // IncompatibleAlgorithm
+    "Unknown feature dataset"                                 // UnknownFeatureDataset
 }};
 
 #ifndef NDEBUG
@@ -84,6 +82,32 @@ constexpr const std::array<const char *, 11> ErrorDescriptions = {{
 static_assert(ErrorDescriptions.size() == ErrorCode::__ENDMARKER__,
               "ErrorCode list and ErrorDescription lists are different sizes");
 #endif
+
+class DisabledDatasetException : public exception
+{
+  public:
+    explicit DisabledDatasetException(const std::string &dataset_)
+        : exception(BuildMessage(dataset_)), dataset(dataset_)
+    {
+    }
+
+    const std::string &Dataset() const { return dataset; }
+
+  private:
+    // This function exists to 'anchor' the class, and stop the compiler from
+    // copying vtable and RTTI info into every object file that includes
+    // this header. (Caught by -Wweak-vtables under Clang.)
+    virtual void anchor() const override;
+    const std::string dataset;
+
+    static std::string BuildMessage(const std::string &dataset)
+    {
+        return "DisabledDatasetException: Your query tried to access the disabled dataset " +
+               dataset +
+               ". Please check your configuration: "
+               "https://github.com/Project-OSRM/osrm-backend/wiki/Disabled-Datasets";
+    }
+};
 
 class RuntimeError : public exception
 {
@@ -105,7 +129,7 @@ class RuntimeError : public exception
     // This function exists to 'anchor' the class, and stop the compiler from
     // copying vtable and RTTI info into every object file that includes
     // this header. (Caught by -Wweak-vtables under Clang.)
-    virtual void anchor() const;
+    virtual void anchor() const override;
     const ErrorCode code;
 
     static std::string BuildMessage(const std::string &message,
@@ -123,7 +147,6 @@ class RuntimeError : public exception
         return result;
     }
 };
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif /* OSRM_EXCEPTION_HPP */

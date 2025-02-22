@@ -1,8 +1,6 @@
 #ifndef OSRM_ERRORCODES_HPP
 #define OSRM_ERRORCODES_HPP
 
-#include <string>
-
 namespace osrm
 {
 
@@ -23,7 +21,8 @@ enum ErrorCode
     FileIOError,
     UnexpectedEndOfFile,
     IncompatibleDataset,
-    UnknownAlgorithm
+    UnknownAlgorithm,
+    UnknownFeatureDataset
 #ifndef NDEBUG
     // Leave this at the end.  In debug mode, we assert that the size of
     // this enum matches the number of messages we have documented, and __ENDMARKER__

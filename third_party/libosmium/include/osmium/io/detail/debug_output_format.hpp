@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -125,8 +125,8 @@ namespace osmium {
                 }
 
                 template <typename... TArgs>
-                void output_formatted(const char* format, TArgs&&... args) {
-                    append_printf_formatted_string(*m_out, format, std::forward<TArgs>(args)...);
+                void output_formatted(const char* format, TArgs... args) {
+                    append_printf_formatted_string(*m_out, format, args...);
                 }
 
                 void write_color(const char* color) {
@@ -261,7 +261,7 @@ namespace osmium {
                     }
                 }
 
-                void write_tags(const osmium::TagList& tags, const char* padding="") {
+                void write_tags(const osmium::TagList& tags, const char* padding = "") {
                     if (tags.empty()) {
                         return;
                     }
@@ -392,7 +392,7 @@ namespace osmium {
                         *m_out += " (open)\n";
                     }
 
-                    const int width = int(std::log10(way.nodes().size())) + 1;
+                    const int width = static_cast<int>(std::log10(way.nodes().size())) + 1;
                     int n = 0;
                     for (const auto& node_ref : way.nodes()) {
                         write_diff();
@@ -427,7 +427,7 @@ namespace osmium {
                     output_int(relation.members().size());
                     *m_out += '\n';
 
-                    const int width = int(std::log10(relation.members().size())) + 1;
+                    const int width = static_cast<int>(std::log10(relation.members().size())) + 1;
                     int n = 0;
                     for (const auto& member : relation.members()) {
                         write_diff();
@@ -485,7 +485,7 @@ namespace osmium {
                         output_int(changeset.num_comments());
                         *m_out += '\n';
 
-                        const int width = int(std::log10(changeset.num_comments())) + 1;
+                        const int width = static_cast<int>(std::log10(changeset.num_comments())) + 1;
                         int n = 0;
                         for (const auto& comment : changeset.discussion()) {
                             write_counter(width, n++);
@@ -519,7 +519,7 @@ namespace osmium {
 
                 debug_output_options m_options;
 
-                void write_fieldname(std::string& out, const char* name) {
+                void write_fieldname(std::string& out, const char* name) const {
                     out += "  ";
                     if (m_options.use_color) {
                         out += color_cyan;

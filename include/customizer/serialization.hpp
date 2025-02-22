@@ -9,11 +9,7 @@
 #include "storage/shared_memory_ownership.hpp"
 #include "storage/tar.hpp"
 
-namespace osrm
-{
-namespace customizer
-{
-namespace serialization
+namespace osrm::customizer::serialization
 {
 
 template <storage::Ownership Ownership>
@@ -65,8 +61,6 @@ inline void write(storage::tar::FileWriter &writer,
     storage::serialization::write(writer, name + "/is_backward_edge", graph.is_backward_edge);
     storage::serialization::write(writer, name + "/node_to_edge_offset", graph.node_to_edge_offset);
 }
-} // namespace serialization
-} // namespace customizer
-} // namespace osrm
+} // namespace osrm::customizer::serialization
 
 #endif

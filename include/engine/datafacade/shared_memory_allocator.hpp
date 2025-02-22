@@ -8,11 +8,7 @@
 
 #include <memory>
 
-namespace osrm
-{
-namespace engine
-{
-namespace datafacade
+namespace osrm::engine::datafacade
 {
 
 /**
@@ -20,7 +16,7 @@ namespace datafacade
  * Many SharedMemoryDataFacade objects can be created that point to the same shared
  * memory block.
  */
-class SharedMemoryAllocator : public ContiguousBlockAllocator
+class SharedMemoryAllocator final : public ContiguousBlockAllocator
 {
   public:
     explicit SharedMemoryAllocator(
@@ -35,8 +31,6 @@ class SharedMemoryAllocator : public ContiguousBlockAllocator
     std::vector<std::unique_ptr<storage::SharedMemory>> memory_regions;
 };
 
-} // namespace datafacade
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::datafacade
 
 #endif // OSRM_ENGINE_DATAFACADE_SHARED_MEMORY_ALLOCATOR_HPP_

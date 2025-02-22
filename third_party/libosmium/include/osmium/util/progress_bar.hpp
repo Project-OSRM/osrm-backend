@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -91,7 +91,7 @@ namespace osmium {
             }
             m_prev_percent = percent;
 
-            const auto num = static_cast<std::size_t>(percent * (full_length / 100.0));
+            const auto num = static_cast<std::size_t>(static_cast<double>(percent) * (static_cast<double>(full_length) / 100.0));
             std::cerr << '[';
             if (num >= full_length) {
                 std::cerr << bar();

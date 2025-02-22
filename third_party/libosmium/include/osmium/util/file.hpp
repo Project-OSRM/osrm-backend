@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -190,7 +190,7 @@ namespace osmium {
         /**
          * Get the page size for this system.
          */
-        inline std::size_t get_pagesize() {
+        inline std::size_t get_pagesize() noexcept {
 #ifdef _WIN32
             // Windows implementation
             SYSTEM_INFO si;
@@ -208,7 +208,7 @@ namespace osmium {
          * @param fd Open file descriptor.
          * @returns File offset or 0 if it is not available.
          */
-        inline std::size_t file_offset(int fd) {
+        inline std::size_t file_offset(int fd) noexcept {
 #ifdef _MSC_VER
             osmium::detail::disable_invalid_parameter_handler diph;
             // https://msdn.microsoft.com/en-us/library/1yee101t.aspx
@@ -224,8 +224,10 @@ namespace osmium {
 
         /**
          * Check whether the file descriptor refers to a TTY.
+         *
+         * @param fd Open file descriptor.
          */
-        inline bool isatty(int fd) {
+        inline bool isatty(int fd) noexcept {
 #ifdef _MSC_VER
             osmium::detail::disable_invalid_parameter_handler diph;
             // https://msdn.microsoft.com/en-us/library/f4s0ddew.aspx

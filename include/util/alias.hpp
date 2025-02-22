@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_UTIL_ALIAS_HPP
 #define OSRM_UTIL_ALIAS_HPP
 
-#include <functional>
-#include <iostream>
+#include <cstddef>
+#include <ostream>
 #include <type_traits>
 
 namespace osrm
@@ -45,7 +45,7 @@ template <typename From, typename Tag> struct Alias final
     static_assert(std::is_arithmetic<From>::value, "Needs to be based on an arithmetic type");
 
     From __value;
-    friend std::ostream &operator<<<From, Tag>(std::ostream &stream, const Alias &inst);
+    friend std::ostream &operator<< <From, Tag>(std::ostream &stream, const Alias &inst);
 
     explicit operator From &() { return __value; }
     explicit operator From() const { return __value; }
@@ -125,6 +125,40 @@ template <typename From, typename Tag> struct Alias final
     }
 };
 
+template <typename ToAlias, typename FromAlias> inline ToAlias alias_cast(const FromAlias &from)
+{
+    static_assert(std::is_arithmetic<typename FromAlias::value_type>::value,
+                  "Alias From needs to be based on an arithmetic type");
+    static_assert(std::is_arithmetic<typename ToAlias::value_type>::value,
+                  "Alias Other needs to be based on an arithmetic type");
+    return {static_cast<typename ToAlias::value_type>(
+        static_cast<const typename FromAlias::value_type>(from))};
+}
+
+template <typename ToNumeric, typename FromAlias> inline ToNumeric from_alias(const FromAlias &from)
+{
+    static_assert(std::is_arithmetic<typename FromAlias::value_type>::value,
+                  "Alias From needs to be based on an arithmetic type");
+    static_assert(std::is_arithmetic<ToNumeric>::value, "Numeric needs to be an arithmetic type");
+    return {static_cast<ToNumeric>(static_cast<const typename FromAlias::value_type>(from))};
+}
+
+template <typename ToAlias,
+          typename FromNumeric,
+          typename = std::enable_if_t<!std::is_same<ToAlias, FromNumeric>::value>>
+inline ToAlias to_alias(const FromNumeric &from)
+{
+    static_assert(std::is_arithmetic<FromNumeric>::value, "Numeric needs to be an arithmetic type");
+    static_assert(std::is_arithmetic<typename ToAlias::value_type>::value,
+                  "Alias needs to be based on an arithmetic type");
+    return {static_cast<typename ToAlias::value_type>(from)};
+}
+
+// Sometimes metrics are stored either as bitfields or the alias itself.
+// So we'll try to convert to alias without knowing which is the case.
+// Therefore, we need this no-op overload, otherwise it will fail on the arithmetic requirement.
+template <typename ToAlias> inline ToAlias to_alias(const ToAlias &from) { return from; }
+
 template <typename From, typename Tag>
 inline std::ostream &operator<<(std::ostream &stream, const Alias<From, Tag> &inst)
 {
@@ -136,8 +170,8 @@ namespace std
 {
 template <typename From, typename Tag> struct hash<osrm::Alias<From, Tag>>
 {
-    typedef osrm::Alias<From, Tag> argument_type;
-    typedef std::size_t result_type;
+    using argument_type = osrm::Alias<From, Tag>;
+    using result_type = std::size_t;
     result_type operator()(argument_type const &s) const
     {
         return std::hash<From>()(static_cast<const From>(s));

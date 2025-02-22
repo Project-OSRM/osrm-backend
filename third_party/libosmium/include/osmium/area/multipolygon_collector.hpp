@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -172,7 +172,7 @@ namespace osmium {
                 }
             }
 
-            void complete_relation(osmium::relations::RelationMeta& relation_meta) {
+            void complete_relation(const osmium::relations::RelationMeta& relation_meta) {
                 const osmium::Relation& relation = this->get_relation(relation_meta);
                 const osmium::memory::Buffer& buffer = this->members_buffer();
 

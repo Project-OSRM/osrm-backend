@@ -20,11 +20,8 @@
 
 #include <limits>
 #include <string>
-#include <vector>
 
 #ifdef _MSC_VER
-#if (_MSC_VER >= 1928)
-#ifdef _DEBUG
 namespace osrm
 {
 namespace extractor
@@ -37,12 +34,8 @@ const ByEdgeOrByMeterValue::ValueByMeter ByEdgeOrByMeterValue::by_meter;
 } // namespace extractor
 } // namespace osrm
 #endif
-#endif
-#endif
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers_,
                                        std::unordered_map<std::string, ClassData> &classes_map,
@@ -78,9 +71,9 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
     {
         external_memory.barrier_nodes.push_back(id);
     }
-    if (result_node.traffic_lights)
+    if (result_node.traffic_lights != TrafficLightClass::NONE)
     {
-        external_memory.traffic_signals.push_back(id);
+        external_memory.external_traffic_signals.push_back({id, result_node.traffic_lights});
     }
 }
 
@@ -142,7 +135,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     InternalExtractorEdge::WeightData forward_weight_data;
     InternalExtractorEdge::WeightData backward_weight_data;
 
-    const auto toValueByEdgeOrByMeter = [&nodes](const double by_way, const double by_meter) {
+    const auto toValueByEdgeOrByMeter = [&nodes](const double by_way, const double by_meter)
+    {
         using Value = detail::ByEdgeOrByMeterValue;
         // get value by weight per edge
         if (by_way >= 0)
@@ -196,7 +190,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         }
     }
 
-    const auto classStringToMask = [this](const std::string &class_name) {
+    const auto classStringToMask = [this](const std::string &class_name)
+    {
         auto iter = classes_map.find(class_name);
         if (iter == classes_map.end())
         {
@@ -214,7 +209,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
             return iter->second;
         }
     };
-    const auto classesToMask = [&](const auto &classes) {
+    const auto classesToMask = [&](const auto &classes)
+    {
         ClassData mask = 0;
         for (const auto &name_and_flag : classes)
         {
@@ -234,13 +230,14 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     const ClassData forward_classes = classesToMask(parsed_way.forward_classes);
     const ClassData backward_classes = classesToMask(parsed_way.backward_classes);
 
-    const auto laneStringToDescription = [](const std::string &lane_string) -> TurnLaneDescription {
+    const auto laneStringToDescription = [](const std::string &lane_string) -> TurnLaneDescription
+    {
         if (lane_string.empty())
             return {};
 
         TurnLaneDescription lane_description;
 
-        typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
+        using tokenizer = boost::tokenizer<boost::char_separator<char>>;
         boost::char_separator<char> sep("|", "", boost::keep_empty_tokens);
         boost::char_separator<char> inner_sep(";", "");
         tokenizer tokens(lane_string, sep);
@@ -334,7 +331,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     road_classification.SetNumberOfLanes(std::max(road_deduced_num_lanes, // len(turn:lanes)
                                                   road_classification.GetNumberOfLanes()));
 
-    const auto GetNameID = [this, &parsed_way](bool is_forward) -> NameID {
+    const auto GetNameID = [this, &parsed_way](bool is_forward) -> NameID
+    {
         const std::string &ref = is_forward ? parsed_way.forward_ref : parsed_way.backward_ref;
         // Get the unique identifier for the street name, destination, and ref
         const auto name_iterator = string_map.find(MapKey(parsed_way.name,
@@ -380,7 +378,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                             parsed_way.pronunciation,
                             parsed_way.exits};
             auto v = MapVal{name_id};
-            string_map.emplace(std::move(k), std::move(v));
+            string_map.emplace(std::move(k), v);
         }
         else
         {
@@ -420,32 +418,31 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                                                   forward_classes,
                                                                   parsed_way.forward_travel_mode,
                                                                   parsed_way.is_left_hand_driving});
-        util::for_each_pair(
-            nodes.cbegin(),
-            nodes.cend(),
-            [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
-                NodeBasedEdgeWithOSM edge = {
-                    OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
-                    OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
-                    0,  // weight
-                    0,  // duration
-                    0,  // distance
-                    {}, // geometry id
-                    static_cast<AnnotationID>(annotation_data_id),
-                    {true,
-                     in_backward_direction && !split_edge,
-                     split_edge,
-                     parsed_way.roundabout,
-                     parsed_way.circular,
-                     parsed_way.is_startpoint,
-                     parsed_way.forward_restricted,
-                     road_classification,
-                     parsed_way.highway_turn_classification,
-                     parsed_way.access_turn_classification}};
+        util::for_each_pair(nodes,
+                            [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
+                            {
+                                NodeBasedEdgeWithOSM edge = {
+                                    OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
+                                    OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
+                                    {0}, // weight
+                                    {0}, // duration
+                                    {0}, // distance
+                                    {},  // geometry id
+                                    static_cast<AnnotationID>(annotation_data_id),
+                                    {true,
+                                     in_backward_direction && !split_edge,
+                                     split_edge,
+                                     parsed_way.roundabout,
+                                     parsed_way.circular,
+                                     parsed_way.is_startpoint,
+                                     parsed_way.forward_restricted,
+                                     road_classification,
+                                     parsed_way.highway_turn_classification,
+                                     parsed_way.access_turn_classification}};
 
-                external_memory.all_edges_list.push_back(InternalExtractorEdge(
-                    std::move(edge), forward_weight_data, forward_duration_data, {}));
-            });
+                                external_memory.all_edges_list.push_back(InternalExtractorEdge(
+                                    edge, forward_weight_data, forward_duration_data, {}));
+                            });
     }
 
     if (in_backward_direction && (!in_forward_direction || split_edge))
@@ -456,45 +453,42 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                                                   backward_classes,
                                                                   parsed_way.backward_travel_mode,
                                                                   parsed_way.is_left_hand_driving});
-        util::for_each_pair(
-            nodes.cbegin(),
-            nodes.cend(),
-            [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
-                NodeBasedEdgeWithOSM edge = {
-                    OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
-                    OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
-                    0,  // weight
-                    0,  // duration
-                    0,  // distance
-                    {}, // geometry id
-                    static_cast<AnnotationID>(annotation_data_id),
-                    {false,
-                     true,
-                     split_edge,
-                     parsed_way.roundabout,
-                     parsed_way.circular,
-                     parsed_way.is_startpoint,
-                     parsed_way.backward_restricted,
-                     road_classification,
-                     parsed_way.highway_turn_classification,
-                     parsed_way.access_turn_classification}};
+        util::for_each_pair(nodes,
+                            [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
+                            {
+                                NodeBasedEdgeWithOSM edge = {
+                                    OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
+                                    OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
+                                    {0}, // weight
+                                    {0}, // duration
+                                    {0}, // distance
+                                    {},  // geometry id
+                                    static_cast<AnnotationID>(annotation_data_id),
+                                    {false,
+                                     true,
+                                     split_edge,
+                                     parsed_way.roundabout,
+                                     parsed_way.circular,
+                                     parsed_way.is_startpoint,
+                                     parsed_way.backward_restricted,
+                                     road_classification,
+                                     parsed_way.highway_turn_classification,
+                                     parsed_way.access_turn_classification}};
 
-                external_memory.all_edges_list.push_back(InternalExtractorEdge(
-                    std::move(edge), backward_weight_data, backward_duration_data, {}));
-            });
+                                external_memory.all_edges_list.push_back(InternalExtractorEdge(
+                                    edge, backward_weight_data, backward_duration_data, {}));
+                            });
     }
 
     std::transform(nodes.begin(),
                    nodes.end(),
                    std::back_inserter(external_memory.used_node_id_list),
-                   [](const osmium::NodeRef &ref) {
-                       return OSMNodeID{static_cast<std::uint64_t>(ref.ref())};
-                   });
+                   [](const osmium::NodeRef &ref)
+                   { return OSMNodeID{static_cast<std::uint64_t>(ref.ref())}; });
 
     auto way_id = OSMWayID{static_cast<std::uint64_t>(input_way.id())};
     external_memory.ways_list.push_back(way_id);
     external_memory.way_node_id_offsets.push_back(external_memory.used_node_id_list.size());
 }
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

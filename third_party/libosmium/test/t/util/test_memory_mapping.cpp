@@ -11,8 +11,6 @@
 #include "win_mkstemp.hpp"
 #endif
 
-static const size_t huge = std::numeric_limits<size_t>::max();
-
 TEST_CASE("Anonymous mapping: simple memory mapping should work") {
     osmium::MemoryMapping mapping{1000, osmium::MemoryMapping::mapping_mode::write_private};
     REQUIRE(mapping.get_addr() != nullptr);
@@ -33,7 +31,7 @@ TEST_CASE("Anonymous mapping: simple memory mapping should work") {
 }
 
 TEST_CASE("Anonymous mapping: memory mapping of zero length should result in memory mapping of pagesize length") {
-    osmium::MemoryMapping mapping{0, osmium::MemoryMapping::mapping_mode::write_private};
+    const osmium::MemoryMapping mapping{0, osmium::MemoryMapping::mapping_mode::write_private};
     REQUIRE(mapping.size() == osmium::get_pagesize());
 }
 
@@ -67,6 +65,7 @@ TEST_CASE("Anonymous mapping: move assignment should work") {
 
     mapping2 = std::move(mapping1);
     REQUIRE(!!mapping2);
+    // cppcheck-suppress accessMoved
     REQUIRE(!mapping1); // NOLINT(bugprone-use-after-move,misc-use-after-move) okay here, we are checking our own code
 
     const auto* addr2 = mapping2.get_addr<int>();
@@ -273,7 +272,7 @@ TEST_CASE("Typed anonymous mapping: moving a memory mapping should work") {
     REQUIRE(!mapping1); // NOLINT(bugprone-use-after-move,misc-use-after-move) okay here, we are checking our own code
     mapping1.unmap(); // NOLINT(clang-analyzer-cplusplus.Move) okay here, we are checking our own code
 
-    const auto addr2 = mapping2.begin();
+    const auto* const addr2 = mapping2.begin();
     REQUIRE(*addr2 == 42);
 
     mapping2.unmap();
@@ -287,14 +286,15 @@ TEST_CASE("Typed anonymous mapping: move assignment should work") {
     REQUIRE(!!mapping1);
     REQUIRE(!!mapping2);
 
-    auto addr1 = mapping1.begin();
+    auto* const addr1 = mapping1.begin();
     *addr1 = 42;
 
     mapping2 = std::move(mapping1);
     REQUIRE(!!mapping2);
+    // cppcheck-suppress accessMoved
     REQUIRE(!mapping1); // NOLINT(bugprone-use-after-move,misc-use-after-move) okay here, we are checking our own code
 
-    const auto addr2 = mapping2.begin();
+    const auto* const addr2 = mapping2.begin();
     REQUIRE(*addr2 == 42);
 
     mapping2.unmap();
@@ -306,12 +306,12 @@ TEST_CASE("Typed anonymous mapping: remapping to larger size should work") {
     osmium::TypedMemoryMapping<uint32_t> mapping{1000};
     REQUIRE(mapping.size() >= 1000);
 
-    auto addr1 = mapping.begin();
+    auto* const addr1 = mapping.begin();
     *addr1 = 42;
 
     mapping.resize(8000);
 
-    const auto addr2 = mapping.begin();
+    const auto* const addr2 = mapping.begin();
     REQUIRE(*addr2 == 42);
 }
 
@@ -319,12 +319,12 @@ TEST_CASE("Typed anonymous mapping: remapping to smaller size should work") {
     osmium::TypedMemoryMapping<uint32_t> mapping{8000};
     REQUIRE(mapping.size() >= 8000);
 
-    auto addr1 = mapping.begin();
+    auto* const addr1 = mapping.begin();
     *addr1 = 42;
 
     mapping.resize(500);
 
-    const auto addr2 = mapping.begin();
+    const auto* const addr2 = mapping.begin();
     REQUIRE(*addr2 == 42);
 }
 #endif

@@ -48,11 +48,35 @@ struct osm_way_id
 struct duplicated_node
 {
 };
+struct edge_weight
+{
+};
+struct edge_duration
+{
+};
+struct edge_distance
+{
+};
+struct segment_weight
+{
+};
+struct segment_duration
+{
+};
+struct turn_penalty
+{
+};
 } // namespace tag
+
 using OSMNodeID = osrm::Alias<std::uint64_t, tag::osm_node_id>;
-static_assert(std::is_pod<OSMNodeID>(), "OSMNodeID is not a valid alias");
+// clang-tidy fires `bugprone-throw-keyword-missing` here for unknown reason
+// NOLINTNEXTLINE(bugprone-throw-keyword-missing)
+static_assert(std::is_standard_layout<OSMNodeID>() && std::is_trivial<OSMNodeID>(),
+              "OSMNodeID is not a valid alias");
 using OSMWayID = osrm::Alias<std::uint64_t, tag::osm_way_id>;
-static_assert(std::is_pod<OSMWayID>(), "OSMWayID is not a valid alias");
+// NOLINTNEXTLINE(bugprone-throw-keyword-missing)
+static_assert(std::is_standard_layout<OSMWayID>() && std::is_trivial<OSMWayID>(),
+              "OSMWayID is not a valid alias");
 
 using DuplicatedNodeID = std::uint64_t;
 using RestrictionID = std::uint64_t;
@@ -73,13 +97,14 @@ using NodeID = std::uint32_t;
 using EdgeID = std::uint32_t;
 using NameID = std::uint32_t;
 using AnnotationID = std::uint32_t;
-using EdgeWeight = std::int32_t;
-using EdgeDuration = std::int32_t;
-using EdgeDistance = float;
-using SegmentWeight = std::uint32_t;
-using SegmentDuration = std::uint32_t;
-using TurnPenalty = std::int16_t; // turn penalty in 100ms units
-using DataTimestamp = std::string;
+using PackedGeometryID = std::uint32_t;
+
+using EdgeWeight = osrm::Alias<std::int32_t, tag::edge_weight>;
+using EdgeDuration = osrm::Alias<std::int32_t, tag::edge_duration>;
+using EdgeDistance = osrm::Alias<float, tag::edge_distance>;
+using SegmentWeight = osrm::Alias<std::uint32_t, tag::segment_weight>;
+using SegmentDuration = osrm::Alias<std::uint32_t, tag::segment_duration>;
+using TurnPenalty = osrm::Alias<std::int16_t, tag::turn_penalty>; // turn penalty in 100ms units
 
 static const std::size_t INVALID_INDEX = std::numeric_limits<std::size_t>::max();
 
@@ -92,16 +117,13 @@ static const LaneDescriptionID INVALID_LANE_DESCRIPTIONID =
     std::numeric_limits<LaneDescriptionID>::max();
 
 using BearingClassID = std::uint32_t;
-static const BearingClassID INVALID_BEARING_CLASSID = std::numeric_limits<BearingClassID>::max();
-
 using DiscreteBearing = std::uint16_t;
-
 using EntryClassID = std::uint16_t;
-static const EntryClassID INVALID_ENTRY_CLASSID = std::numeric_limits<EntryClassID>::max();
 
 static const NodeID SPECIAL_NODEID = std::numeric_limits<NodeID>::max();
 static const NodeID SPECIAL_SEGMENTID = std::numeric_limits<NodeID>::max() >> 1;
-static const NodeID SPECIAL_GEOMETRYID = std::numeric_limits<NodeID>::max() >> 1;
+static const PackedGeometryID SPECIAL_GEOMETRYID =
+    std::numeric_limits<PackedGeometryID>::max() >> 1;
 static const EdgeID SPECIAL_EDGEID = std::numeric_limits<EdgeID>::max();
 static const RestrictionID SPECIAL_RESTRICTIONID = std::numeric_limits<RestrictionID>::max();
 static const NameID INVALID_NAMEID = std::numeric_limits<NameID>::max();
@@ -109,23 +131,30 @@ static const NameID EMPTY_NAMEID = 0;
 static const unsigned INVALID_COMPONENTID = 0;
 static const std::size_t SEGMENT_WEIGHT_BITS = 22;
 static const std::size_t SEGMENT_DURATION_BITS = 22;
-static const SegmentWeight INVALID_SEGMENT_WEIGHT = (1u << SEGMENT_WEIGHT_BITS) - 1;
-static const SegmentDuration INVALID_SEGMENT_DURATION = (1u << SEGMENT_DURATION_BITS) - 1;
-static const SegmentWeight MAX_SEGMENT_WEIGHT = INVALID_SEGMENT_WEIGHT - 1;
-static const SegmentDuration MAX_SEGMENT_DURATION = INVALID_SEGMENT_DURATION - 1;
-static const EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<EdgeWeight>::max();
-static const EdgeDuration MAXIMAL_EDGE_DURATION = std::numeric_limits<EdgeDuration>::max();
-static const EdgeDistance MAXIMAL_EDGE_DISTANCE = std::numeric_limits<EdgeDistance>::max();
-static const TurnPenalty INVALID_TURN_PENALTY = std::numeric_limits<TurnPenalty>::max();
-static const EdgeDistance INVALID_EDGE_DISTANCE = std::numeric_limits<EdgeDistance>::max();
-static const EdgeDistance INVALID_FALLBACK_SPEED = std::numeric_limits<double>::max();
-
-// FIXME the bitfields we use require a reduced maximal duration, this should be kept consistent
-// within the code base. For now we have to ensure that we don't case 30 bit to -1 and break any
-// min() / operator< checks due to the invalid truncation. In addition, using signed and unsigned
-// weights produces problems. As a result we can only store 1 << 29 since the MSB is still reserved
-// for the sign bit. See https://github.com/Project-OSRM/osrm-backend/issues/3677
-static const EdgeWeight MAXIMAL_EDGE_DURATION_INT_30 = (1 << 29) - 1;
+static const SegmentWeight INVALID_SEGMENT_WEIGHT = SegmentWeight{(1u << SEGMENT_WEIGHT_BITS) - 1};
+static const SegmentDuration INVALID_SEGMENT_DURATION =
+    SegmentDuration{(1u << SEGMENT_DURATION_BITS) - 1};
+static const SegmentWeight MAX_SEGMENT_WEIGHT = INVALID_SEGMENT_WEIGHT - SegmentWeight{1};
+static const SegmentDuration MAX_SEGMENT_DURATION = INVALID_SEGMENT_DURATION - SegmentDuration{1};
+static const EdgeWeight INVALID_EDGE_WEIGHT =
+    EdgeWeight{std::numeric_limits<EdgeWeight::value_type>::max()};
+static const EdgeDuration INVALID_EDGE_DURATION =
+    EdgeDuration{std::numeric_limits<EdgeDuration::value_type>::max()};
+static const EdgeDistance INVALID_EDGE_DISTANCE =
+    EdgeDistance{std::numeric_limits<EdgeDistance::value_type>::max()};
+static const TurnPenalty INVALID_TURN_PENALTY =
+    TurnPenalty{std::numeric_limits<TurnPenalty::value_type>::max()};
+static const EdgeDistance INVALID_FALLBACK_SPEED =
+    EdgeDistance{std::numeric_limits<EdgeDistance::value_type>::max()};
+// TODO: These are the same as the invalid values. Do we need both?
+static const EdgeWeight MAXIMAL_EDGE_WEIGHT =
+    EdgeWeight{std::numeric_limits<EdgeWeight::value_type>::max()};
+static const EdgeDuration MAXIMAL_EDGE_DURATION =
+    EdgeDuration{std::numeric_limits<EdgeDuration::value_type>::max()};
+static const EdgeDistance MAXIMAL_EDGE_DISTANCE =
+    EdgeDistance{std::numeric_limits<EdgeDistance::value_type>::max()};
+static const TurnPenalty MAXIMAL_TURN_PENALTY =
+    TurnPenalty{std::numeric_limits<TurnPenalty::value_type>::max()};
 
 using DatasourceID = std::uint8_t;
 
@@ -155,11 +184,11 @@ struct SegmentID
  */
 struct GeometryID
 {
-    GeometryID(const NodeID id_, const bool forward_) : id{id_}, forward{forward_} {}
+    GeometryID(const PackedGeometryID id_, const bool forward_) : id{id_}, forward{forward_} {}
 
     GeometryID() : id(std::numeric_limits<unsigned>::max() >> 1), forward(false) {}
 
-    NodeID id : 31;
+    PackedGeometryID id : 31;
     std::uint32_t forward : 1;
 };
 

@@ -14,9 +14,7 @@ enum LogLevel
     logDEBUG
 };
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 class LogPolicy
@@ -73,7 +71,7 @@ class Log
         return *this;
     }
 
-    typedef std::ostream &(manip)(std::ostream &);
+    using manip = std::ostream &(std::ostream &);
 
     inline Log &operator<<(manip &m)
     {
@@ -84,6 +82,9 @@ class Log
         }
         return *this;
     }
+
+  private:
+    void Init();
 
   protected:
     const LogLevel level;
@@ -101,7 +102,6 @@ class UnbufferedLog : public Log
   public:
     UnbufferedLog(LogLevel level_ = logINFO);
 };
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif /* LOG_HPP */

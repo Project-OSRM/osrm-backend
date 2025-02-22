@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -122,7 +122,7 @@ namespace osmium {
              * Check whether s points to something else than the end of the
              * string or a space or tab.
              */
-            inline bool opl_non_empty(const char *s) {
+            inline bool opl_non_empty(const char* s) {
                 return *s != '\0' && *s != ' ' && *s != '\t';
             }
 
@@ -144,6 +144,8 @@ namespace osmium {
              * Returns a pointer to next character that needs to be consumed.
              */
             inline void opl_parse_escaped(const char** data, std::string& result) {
+                assert(data);
+                assert(*data);
                 const char* s = *data;
                 uint32_t value = 0;
                 const int max_length = sizeof(value) * 2 /* hex chars per byte */;
@@ -154,7 +156,11 @@ namespace osmium {
                     }
                     if (*s == '%') {
                         ++s;
-                        append_codepoint_as_utf8(value, std::back_inserter(result));
+                        if (value == 0) {
+                            result += '%';
+                        } else {
+                            append_codepoint_as_utf8(value, std::back_inserter(result));
+                        }
                         *data = s;
                         return;
                     }
@@ -182,6 +188,8 @@ namespace osmium {
              * Returns a pointer to next character that needs to be consumed.
              */
             inline void opl_parse_string(const char** data, std::string& result) {
+                assert(data);
+                assert(*data);
                 const char* s = *data;
                 while (true) {
                     if (*s == '\0' || *s == ' ' || *s == '\t' || *s == ',' || *s == '=') {
@@ -198,49 +206,44 @@ namespace osmium {
                 *data = s;
             }
 
-            // Arbitrary limit how long integers can get
-            enum {
-                max_int_len = 16
-            };
-
             template <typename T>
             inline T opl_parse_int(const char** s) {
-                if (**s == '\0') {
-                    throw opl_error{"expected integer", *s};
-                }
                 const bool negative = (**s == '-');
                 if (negative) {
                     ++*s;
                 }
 
-                int64_t value = 0;
-
-                int n = max_int_len;
-                while (**s >= '0' && **s <= '9') {
-                    if (--n == 0) {
-                        throw opl_error{"integer too long", *s};
-                    }
-                    value *= 10;
-                    value += **s - '0';
-                    ++*s;
-                }
-
-                if (n == max_int_len) {
+                if (**s < '0' || **s > '9') {
                     throw opl_error{"expected integer", *s};
                 }
 
+                int64_t value = 0;
+                while (**s >= '0' && **s <= '9') {
+                    if (value <= -922337203685477580) {
+                        if ((value < -922337203685477580) || (**s > '8')) {
+                            throw opl_error("integer too long", *s);
+                        }
+                    }
+                    value *= 10;
+                    value -= **s - '0';
+                    ++*s;
+                }
+
                 if (negative) {
-                    value = -value;
                     if (value < std::numeric_limits<T>::min()) {
                         throw opl_error{"integer too long", *s};
                     }
                 } else {
+                    if (value == std::numeric_limits<int64_t>::min()) {
+                        throw opl_error{"integer too long", *s};
+                    }
+                    value = -value;
                     if (value > std::numeric_limits<T>::max()) {
                         throw opl_error{"integer too long", *s};
                     }
                 }
 
-                return T(value);
+                return static_cast<T>(value);
             }
 
             inline osmium::object_id_type opl_parse_id(const char** s) {
@@ -589,7 +592,7 @@ namespace osmium {
                 osmium::builder::RelationMemberListBuilder builder{buffer, parent_builder};
 
                 while (s < e) {
-                    osmium::item_type type = osmium::char_to_item_type(*s);
+                    const osmium::item_type type = osmium::char_to_item_type(*s);
                     if (type != osmium::item_type::node &&
                         type != osmium::item_type::way &&
                         type != osmium::item_type::relation) {
@@ -600,7 +603,7 @@ namespace osmium {
                     if (s == e) {
                         throw opl_error{"expected integer", s};
                     }
-                    osmium::object_id_type ref = opl_parse_id(&s);
+                    const osmium::object_id_type ref = opl_parse_id(&s);
                     opl_parse_char(&s, '@');
                     if (s == e) {
                         builder.add_member(type, ref, "");

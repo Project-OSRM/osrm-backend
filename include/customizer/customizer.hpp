@@ -3,9 +3,7 @@
 
 #include "customizer/customizer_config.hpp"
 
-namespace osrm
-{
-namespace customizer
+namespace osrm::customizer
 {
 
 class Customizer
@@ -14,7 +12,6 @@ class Customizer
     int Run(const CustomizationConfig &config);
 };
 
-} // namespace customizer
-} // namespace osrm
+} // namespace osrm::customizer
 
 #endif // OSRM_CUSTOMIZE_CUSTOMIZER_HPP

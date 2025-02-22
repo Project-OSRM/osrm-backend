@@ -7,19 +7,17 @@
 #include <rapidjson/error/en.h>
 #include <rapidjson/istreamwrapper.h>
 
-#include <boost/filesystem.hpp>
-#include <boost/function_output_iterator.hpp>
 #include <boost/geometry/algorithms/equals.hpp>
+#include <boost/iterator/function_output_iterator.hpp>
 
+#include <filesystem>
 #include <fstream>
 #include <string>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
-LocationDependentData::LocationDependentData(const std::vector<boost::filesystem::path> &file_paths)
+LocationDependentData::LocationDependentData(const std::vector<std::filesystem::path> &file_paths)
 {
     std::vector<rtree_t::value_type> bounding_boxes;
     for (const auto &path : file_paths)
@@ -34,12 +32,12 @@ LocationDependentData::LocationDependentData(const std::vector<boost::filesystem
 }
 
 void LocationDependentData::loadLocationDependentData(
-    const boost::filesystem::path &file_path, std::vector<rtree_t::value_type> &bounding_boxes)
+    const std::filesystem::path &file_path, std::vector<rtree_t::value_type> &bounding_boxes)
 {
     if (file_path.empty())
         return;
 
-    if (!boost::filesystem::exists(file_path) || !boost::filesystem::is_regular_file(file_path))
+    if (!std::filesystem::exists(file_path) || !std::filesystem::is_regular_file(file_path))
     {
         throw osrm::util::exception(std::string("File with location-dependent data ") +
                                     file_path.string() + " does not exists");
@@ -67,7 +65,8 @@ void LocationDependentData::loadLocationDependentData(
 
     const auto &features_array = geojson["features"].GetArray();
 
-    auto convert_value = [](const auto &property) -> property_t {
+    auto convert_value = [](const auto &property) -> property_t
+    {
         if (property.IsString())
             return std::string(property.GetString());
         if (property.IsNumber())
@@ -77,7 +76,8 @@ void LocationDependentData::loadLocationDependentData(
         return {};
     };
 
-    auto collect_properties = [this, &convert_value](const auto &object) -> std::size_t {
+    auto collect_properties = [this, &convert_value](const auto &object) -> std::size_t
+    {
         properties_t object_properties;
         for (const auto &property : object)
         {
@@ -88,18 +88,21 @@ void LocationDependentData::loadLocationDependentData(
         return index;
     };
 
-    auto index_polygon = [this, &bounding_boxes](const auto &rings, auto properties_index) {
+    auto index_polygon = [this, &bounding_boxes](const auto &rings, auto properties_index)
+    {
         // At least an outer ring in polygon https://tools.ietf.org/html/rfc7946#section-3.1.6
         BOOST_ASSERT(rings.Size() > 0);
 
-        auto to_point = [](const auto &json) -> point_t {
+        auto to_point = [](const auto &json) -> point_t
+        {
             util::validateCoordinate(json);
             const auto &coords = json.GetArray();
             return {coords[0].GetDouble(), coords[1].GetDouble()};
         };
 
         std::vector<segment_t> segments;
-        auto append_ring_segments = [&segments, &to_point](const auto &coordinates_array) -> box_t {
+        auto append_ring_segments = [&segments, &to_point](const auto &coordinates_array) -> box_t
+        {
             using coord_t = boost::geometry::traits::coordinate_type<point_t>::type;
             auto x_min = std::numeric_limits<coord_t>::max();
             auto y_min = std::numeric_limits<coord_t>::max();
@@ -210,70 +213,73 @@ LocationDependentData::FindByKey(const std::vector<std::size_t> &property_indexe
 std::vector<std::size_t> LocationDependentData::GetPropertyIndexes(const point_t &point) const
 {
     std::vector<std::size_t> result;
-    auto inserter = [this, &result](const rtree_t::value_type &rtree_entry) {
+    auto inserter = [this, &result](const rtree_t::value_type &rtree_entry)
+    {
         const auto properties_index = polygons[rtree_entry.second].second;
         result.push_back(properties_index);
     };
 
     // Search the R-tree and collect a Lua table of tags that correspond to the location
-    rtree.query(boost::geometry::index::intersects(point) &&
-                    boost::geometry::index::satisfies([this, &point](const rtree_t::value_type &v) {
-                        // Simple point-in-polygon algorithm adapted from
-                        // https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+    rtree.query(
+        boost::geometry::index::intersects(point) &&
+            boost::geometry::index::satisfies(
+                [this, &point](const rtree_t::value_type &v)
+                {
+                    // Simple point-in-polygon algorithm adapted from
+                    // https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
 
-                        const auto &envelop = v.first;
-                        const auto &bands = polygons[v.second].first;
+                    const auto &envelop = v.first;
+                    const auto &bands = polygons[v.second].first;
 
-                        const auto y_min = envelop.min_corner().y();
-                        const auto y_max = envelop.max_corner().y();
-                        const auto dy = (y_max - y_min) / bands.size();
+                    const auto y_min = envelop.min_corner().y();
+                    const auto y_max = envelop.max_corner().y();
+                    const auto dy = (y_max - y_min) / bands.size();
 
-                        std::size_t band = (point.y() - y_min) / dy;
-                        if (band >= bands.size())
-                        {
-                            band = bands.size() - 1;
+                    std::size_t band = (point.y() - y_min) / dy;
+                    if (band >= bands.size())
+                    {
+                        band = bands.size() - 1;
+                    }
+
+                    bool inside = false;
+
+                    for (const auto &segment : bands[band])
+                    {
+                        const auto point_x = point.x(), point_y = point.y();
+                        const auto from_x = segment.first.x(), from_y = segment.first.y();
+                        const auto to_x = segment.second.x(), to_y = segment.second.y();
+
+                        if (to_y == from_y)
+                        { // handle horizontal segments: check if on boundary or skip
+                            if ((to_y == point_y) &&
+                                (from_x == point_x || (to_x > point_x) != (from_x > point_x)))
+                                return true;
+                            continue;
                         }
 
-                        bool inside = false;
-
-                        for (const auto &segment : bands[band])
+                        if ((to_y > point_y) != (from_y > point_y))
                         {
-                            const auto point_x = point.x(), point_y = point.y();
-                            const auto from_x = segment.first.x(), from_y = segment.first.y();
-                            const auto to_x = segment.second.x(), to_y = segment.second.y();
+                            const auto ax = to_x - from_x;
+                            const auto ay = to_y - from_y;
+                            const auto tx = point_x - from_x;
+                            const auto ty = point_y - from_y;
 
-                            if (to_y == from_y)
-                            { // handle horizontal segments: check if on boundary or skip
-                                if ((to_y == point_y) &&
-                                    (from_x == point_x || (to_x > point_x) != (from_x > point_x)))
-                                    return true;
-                                continue;
-                            }
+                            const auto cross_product = tx * ay - ax * ty;
 
-                            if ((to_y > point_y) != (from_y > point_y))
+                            if (cross_product == 0)
+                                return true;
+
+                            if ((ay > 0) == (cross_product > 0))
                             {
-                                const auto ax = to_x - from_x;
-                                const auto ay = to_y - from_y;
-                                const auto tx = point_x - from_x;
-                                const auto ty = point_y - from_y;
-
-                                const auto cross_product = tx * ay - ax * ty;
-
-                                if (cross_product == 0)
-                                    return true;
-
-                                if ((ay > 0) == (cross_product > 0))
-                                {
-                                    inside = !inside;
-                                }
+                                inside = !inside;
                             }
                         }
+                    }
 
-                        return inside;
-                    }),
-                boost::make_function_output_iterator(std::ref(inserter)));
+                    return inside;
+                }),
+        boost::make_function_output_iterator(std::ref(inserter)));
 
     return result;
 }
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

@@ -22,7 +22,7 @@ osrm::Status run_nearest_json(const osrm::OSRM &osrm,
     }
     osrm::engine::api::ResultT result = osrm::json::Object();
     auto rc = osrm.Nearest(params, result);
-    json_result = result.get<osrm::json::Object>();
+    json_result = std::get<osrm::json::Object>(result);
     return rc;
 }
 
@@ -41,16 +41,16 @@ void test_nearest_response(bool use_json_only_api)
     const auto rc = run_nearest_json(osrm, params, json_result, use_json_only_api);
     BOOST_REQUIRE(rc == Status::Ok);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = std::get<json::Array>(json_result.values.at("waypoints")).values;
     BOOST_CHECK(!waypoints.empty()); // the dataset has at least one nearest coordinate
 
     for (const auto &waypoint : waypoints)
     {
-        const auto &waypoint_object = waypoint.get<json::Object>();
-        const auto distance = waypoint_object.values.at("distance").get<json::Number>().value;
+        const auto &waypoint_object = std::get<json::Object>(waypoint);
+        const auto distance = std::get<json::Number>(waypoint_object.values.at("distance")).value;
         BOOST_CHECK(distance >= 0);
     }
 }
@@ -71,7 +71,7 @@ void test_nearest_response_skip_waypoints(bool use_json_only_api)
     const auto rc = run_nearest_json(osrm, params, json_result, use_json_only_api);
     BOOST_REQUIRE(rc == Status::Ok);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
     BOOST_CHECK(json_result.values.find("waypoints") == json_result.values.end());
@@ -97,7 +97,7 @@ void test_nearest_response_no_coordinates(bool use_json_only_api)
     const auto rc = run_nearest_json(osrm, params, json_result, use_json_only_api);
     BOOST_REQUIRE(rc == Status::Error);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "InvalidOptions");
 }
 BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates_old_api)
@@ -123,7 +123,7 @@ void test_nearest_response_multiple_coordinates(bool use_json_only_api)
     const auto rc = run_nearest_json(osrm, params, json_result, use_json_only_api);
     BOOST_REQUIRE(rc == Status::Error);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "InvalidOptions");
 }
 BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates_old_api)
@@ -151,25 +151,25 @@ void test_nearest_response_for_location_in_small_component(bool use_json_only_ap
     const auto rc = run_nearest_json(osrm, params, json_result, use_json_only_api);
     BOOST_REQUIRE(rc == Status::Ok);
 
-    const auto code = json_result.values.at("code").get<json::String>().value;
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    const auto &waypoints = json_result.values.at("waypoints").get<json::Array>().values;
+    const auto &waypoints = std::get<json::Array>(json_result.values.at("waypoints")).values;
     BOOST_CHECK(!waypoints.empty());
 
     for (const auto &waypoint : waypoints)
     {
-        const auto &waypoint_object = waypoint.get<json::Object>();
+        const auto &waypoint_object = std::get<json::Object>(waypoint);
 
         // Everything within ~20m (actually more) is still in small component.
         // Nearest service should snap to road network without considering components.
-        const auto distance = waypoint_object.values.at("distance").get<json::Number>().value;
+        const auto distance = std::get<json::Number>(waypoint_object.values.at("distance")).value;
         BOOST_CHECK_LT(distance, 20);
 
-        const auto &nodes = waypoint_object.values.at("nodes").get<json::Array>().values;
+        const auto &nodes = std::get<json::Array>(waypoint_object.values.at("nodes")).values;
         BOOST_CHECK(nodes.size() == 2);
-        BOOST_CHECK(nodes[0].get<util::json::Number>().value != 0);
-        BOOST_CHECK(nodes[1].get<util::json::Number>().value != 0);
+        BOOST_CHECK(std::get<util::json::Number>(nodes[0]).value != 0);
+        BOOST_CHECK(std::get<util::json::Number>(nodes[1]).value != 0);
     }
 }
 BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component_old_api)
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_fb_serialization)
     const auto rc = osrm.Nearest(params, result);
     BOOST_REQUIRE(rc == Status::Ok);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(result);
     auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
     BOOST_CHECK(!fb->error());
 
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_fb_serialization_skip_waypoints)
     const auto rc = osrm.Nearest(params, result);
     BOOST_REQUIRE(rc == Status::Ok);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(result);
     auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
     BOOST_CHECK(!fb->error());
 
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_fb_error)
     const auto rc = osrm.Nearest(params, result);
     BOOST_REQUIRE(rc == Status::Error);
 
-    auto &fb_result = result.get<flatbuffers::FlatBufferBuilder>();
+    auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(result);
     auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
     BOOST_CHECK(fb->error());
     BOOST_CHECK_EQUAL(fb->code()->code()->str(), "InvalidOptions");

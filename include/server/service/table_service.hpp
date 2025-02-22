@@ -8,13 +8,8 @@
 #include "util/coordinate.hpp"
 
 #include <string>
-#include <vector>
 
-namespace osrm
-{
-namespace server
-{
-namespace service
+namespace osrm::server::service
 {
 
 class TableService final : public BaseService
@@ -28,8 +23,6 @@ class TableService final : public BaseService
 
     unsigned GetVersion() final override { return 1; }
 };
-} // namespace service
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server::service
 
 #endif

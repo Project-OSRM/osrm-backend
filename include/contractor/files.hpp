@@ -5,15 +5,11 @@
 
 #include <unordered_map>
 
-namespace osrm
-{
-namespace contractor
-{
-namespace files
+namespace osrm::contractor::files
 {
 // reads .osrm.hsgr file
 template <typename ContractedMetricT>
-inline void readGraph(const boost::filesystem::path &path,
+inline void readGraph(const std::filesystem::path &path,
                       std::unordered_map<std::string, ContractedMetricT> &metrics,
                       std::uint32_t &connectivity_checksum)
 {
@@ -34,7 +30,7 @@ inline void readGraph(const boost::filesystem::path &path,
 
 // writes .osrm.hsgr file
 template <typename ContractedMetricT>
-inline void writeGraph(const boost::filesystem::path &path,
+inline void writeGraph(const std::filesystem::path &path,
                        const std::unordered_map<std::string, ContractedMetricT> &metrics,
                        const std::uint32_t connectivity_checksum)
 {
@@ -52,8 +48,6 @@ inline void writeGraph(const boost::filesystem::path &path,
         serialization::write(writer, "/ch/metrics/" + pair.first, pair.second);
     }
 }
-} // namespace files
-} // namespace contractor
-} // namespace osrm
+} // namespace osrm::contractor::files
 
 #endif

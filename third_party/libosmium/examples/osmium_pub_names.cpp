@@ -18,7 +18,6 @@
 
 */
 
-#include <cstdlib>  // for std::exit
 #include <cstring>  // for std::strncmp
 #include <iostream> // for std::cout, std::cerr
 
@@ -57,13 +56,17 @@ class NamesHandler : public osmium::handler::Handler {
 
 public:
 
+    // The callback functions can be either static or not depending on whether
+    // you need to access any member variables of the handler.
     // Nodes can be tagged amenity=pub.
-    void node(const osmium::Node& node) {
+    static void node(const osmium::Node& node) {
         output_pubs(node);
     }
 
+    // The callback functions can be either static or not depending on whether
+    // you need to access any member variables of the handler.
     // Ways can be tagged amenity=pub, too (typically buildings).
-    void way(const osmium::Way& way) {
+    static void way(const osmium::Way& way) {
         output_pubs(way);
     }
 
@@ -72,7 +75,7 @@ public:
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " OSMFILE\n";
-        std::exit(1);
+        return 1;
     }
 
     try {
@@ -89,7 +92,7 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
         std::cerr << e.what() << '\n';
-        std::exit(1);
+        return 1;
     }
 }
 

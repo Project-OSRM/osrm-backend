@@ -5,16 +5,11 @@
 #include "util/query_heap.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/thread/tss.hpp>
-
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 // Algorithm-dependent heaps
 // - CH algorithms use CH heaps
-// - CoreCH algorithms use CH
 // - MLD algorithms use MLD heaps
 
 template <typename Algorithm> struct SearchEngineData
@@ -29,9 +24,9 @@ struct HeapData
 
 struct ManyToManyHeapData : HeapData
 {
-    EdgeWeight duration;
+    EdgeDuration duration;
     EdgeDistance distance;
-    ManyToManyHeapData(NodeID p, EdgeWeight duration, EdgeDistance distance)
+    ManyToManyHeapData(NodeID p, EdgeDuration duration, EdgeDistance distance)
         : HeapData(p), duration(duration), distance(distance)
     {
     }
@@ -48,16 +43,21 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
                                                 ManyToManyHeapData,
                                                 util::UnorderedMapStorage<NodeID, int>>;
 
-    using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
-    using ManyToManyHeapPtr = boost::thread_specific_ptr<ManyToManyQueryHeap>;
+    using SearchEngineHeapPtr = std::unique_ptr<QueryHeap>;
 
-    static SearchEngineHeapPtr forward_heap_1;
-    static SearchEngineHeapPtr reverse_heap_1;
-    static SearchEngineHeapPtr forward_heap_2;
-    static SearchEngineHeapPtr reverse_heap_2;
-    static SearchEngineHeapPtr forward_heap_3;
-    static SearchEngineHeapPtr reverse_heap_3;
-    static ManyToManyHeapPtr many_to_many_heap;
+    using ManyToManyHeapPtr = std::unique_ptr<ManyToManyQueryHeap>;
+
+    static thread_local SearchEngineHeapPtr forward_heap_1;
+    static thread_local SearchEngineHeapPtr reverse_heap_1;
+    static thread_local SearchEngineHeapPtr forward_heap_2;
+    static thread_local SearchEngineHeapPtr reverse_heap_2;
+    static thread_local SearchEngineHeapPtr forward_heap_3;
+    static thread_local SearchEngineHeapPtr reverse_heap_3;
+    static thread_local ManyToManyHeapPtr many_to_many_heap;
+    static thread_local SearchEngineHeapPtr map_matching_forward_heap_1;
+    static thread_local SearchEngineHeapPtr map_matching_reverse_heap_1;
+
+    void InitializeOrClearMapMatchingThreadLocalStorage(unsigned number_of_nodes);
 
     void InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes);
 
@@ -76,17 +76,30 @@ struct MultiLayerDijkstraHeapData
     MultiLayerDijkstraHeapData(NodeID p, bool from) : parent(p), from_clique_arc(from) {}
 };
 
+struct MapMatchingMultiLayerDijkstraHeapData
+{
+    NodeID parent;
+    bool from_clique_arc;
+    EdgeDistance distance = {0};
+    MapMatchingMultiLayerDijkstraHeapData(NodeID p) : parent(p), from_clique_arc(false) {}
+    MapMatchingMultiLayerDijkstraHeapData(NodeID p, bool from) : parent(p), from_clique_arc(from) {}
+    MapMatchingMultiLayerDijkstraHeapData(NodeID p, bool from, EdgeDistance d)
+        : parent(p), from_clique_arc(from), distance(d)
+    {
+    }
+};
+
 struct ManyToManyMultiLayerDijkstraHeapData : MultiLayerDijkstraHeapData
 {
-    EdgeWeight duration;
+    EdgeDuration duration;
     EdgeDistance distance;
-    ManyToManyMultiLayerDijkstraHeapData(NodeID p, EdgeWeight duration, EdgeDistance distance)
+    ManyToManyMultiLayerDijkstraHeapData(NodeID p, EdgeDuration duration, EdgeDistance distance)
         : MultiLayerDijkstraHeapData(p), duration(duration), distance(distance)
     {
     }
     ManyToManyMultiLayerDijkstraHeapData(NodeID p,
                                          bool from,
-                                         EdgeWeight duration,
+                                         EdgeDuration duration,
                                          EdgeDistance distance)
         : MultiLayerDijkstraHeapData(p, from), duration(duration), distance(distance)
     {
@@ -106,21 +119,31 @@ template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
                                                 EdgeWeight,
                                                 ManyToManyMultiLayerDijkstraHeapData,
                                                 util::TwoLevelStorage<NodeID, int>>;
+    using MapMatchingQueryHeap = util::QueryHeap<NodeID,
+                                                 NodeID,
+                                                 EdgeWeight,
+                                                 MapMatchingMultiLayerDijkstraHeapData,
+                                                 util::TwoLevelStorage<NodeID, int>>;
 
-    using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
-    using ManyToManyHeapPtr = boost::thread_specific_ptr<ManyToManyQueryHeap>;
+    using SearchEngineHeapPtr = std::unique_ptr<QueryHeap>;
+    using ManyToManyHeapPtr = std::unique_ptr<ManyToManyQueryHeap>;
+    using MapMatchingHeapPtr = std::unique_ptr<MapMatchingQueryHeap>;
 
-    static SearchEngineHeapPtr forward_heap_1;
-    static SearchEngineHeapPtr reverse_heap_1;
-    static ManyToManyHeapPtr many_to_many_heap;
+    static thread_local SearchEngineHeapPtr forward_heap_1;
+    static thread_local SearchEngineHeapPtr reverse_heap_1;
+    static thread_local MapMatchingHeapPtr map_matching_forward_heap_1;
+    static thread_local MapMatchingHeapPtr map_matching_reverse_heap_1;
+
+    static thread_local ManyToManyHeapPtr many_to_many_heap;
 
     void InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes,
                                                   unsigned number_of_boundary_nodes);
+    void InitializeOrClearMapMatchingThreadLocalStorage(unsigned number_of_nodes,
+                                                        unsigned number_of_boundary_nodes);
 
     void InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes,
                                                        unsigned number_of_boundary_nodes);
 };
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif // SEARCH_ENGINE_DATA_HPP

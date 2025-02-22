@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -60,7 +60,7 @@ namespace osmium {
     namespace config {
 
         inline int get_pool_threads() noexcept {
-            auto env = osmium::detail::getenv_wrapper("OSMIUM_POOL_THREADS");
+            const char* env = osmium::detail::getenv_wrapper("OSMIUM_POOL_THREADS");
             if (env) {
                 return osmium::detail::str_to_int<int>(env);
             }
@@ -68,7 +68,7 @@ namespace osmium {
         }
 
         inline bool use_pool_threads_for_pbf_parsing() noexcept {
-            auto env = osmium::detail::getenv_wrapper("OSMIUM_USE_POOL_THREADS_FOR_PBF_PARSING");
+            const char* env = osmium::detail::getenv_wrapper("OSMIUM_USE_POOL_THREADS_FOR_PBF_PARSING");
             if (env) {
                 if (!strcasecmp(env, "off") ||
                     !strcasecmp(env, "false") ||
@@ -85,7 +85,7 @@ namespace osmium {
             std::string name{"OSMIUM_MAX_"};
             name += queue_name;
             name += "_QUEUE_SIZE";
-            const auto env = osmium::detail::getenv_wrapper(name.c_str());
+            const char* env = osmium::detail::getenv_wrapper(name.c_str());
 
             std::size_t value = default_value;
 
@@ -101,6 +101,19 @@ namespace osmium {
             }
 
             return value;
+        }
+
+        inline int8_t clean_page_cache_after_read() noexcept {
+            const char* env = osmium::detail::getenv_wrapper("OSMIUM_CLEAN_PAGE_CACHE_AFTER_READ");
+            if (env) {
+                if (!strcasecmp(env, "yes")) {
+                    return 1;
+                }
+                if (!strcasecmp(env, "no")) {
+                    return -1;
+                }
+            }
+            return 0;
         }
 
     } // namespace config

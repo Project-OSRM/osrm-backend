@@ -1,9 +1,7 @@
 #ifndef SHARED_MEMORY_OWNERSHIP_HPP
 #define SHARED_MEMORY_OWNERSHIP_HPP
 
-namespace osrm
-{
-namespace storage
+namespace osrm::storage
 {
 
 enum class Ownership
@@ -12,7 +10,6 @@ enum class Ownership
     View,
     External
 };
-}
-} // namespace osrm
+} // namespace osrm::storage
 
 #endif // SHARED_MEMORY_OWNERSHIP_HPP

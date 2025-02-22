@@ -7,9 +7,7 @@
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 
-namespace osrm
-{
-namespace customizer
+namespace osrm::customizer
 {
 namespace detail
 {
@@ -26,7 +24,6 @@ template <storage::Ownership Ownership> struct CellMetricImpl
 
 using CellMetric = detail::CellMetricImpl<storage::Ownership::Container>;
 using CellMetricView = detail::CellMetricImpl<storage::Ownership::View>;
-} // namespace customizer
-} // namespace osrm
+} // namespace osrm::customizer
 
 #endif

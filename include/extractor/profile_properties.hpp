@@ -7,15 +7,13 @@
 
 #include <boost/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
-#include <boost/optional.hpp>
 
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <optional>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 const constexpr auto DEFAULT_MAX_SPEED = 180 / 3.6; // 180kmph -> m/s
@@ -82,7 +80,7 @@ struct ProfileProperties
     }
 
     // Check if this classes are excludable
-    boost::optional<std::size_t> ClassesAreExcludable(ClassData classes) const
+    std::optional<std::size_t> ClassesAreExcludable(ClassData classes) const
     {
         auto iter = std::find(excludable_classes.begin(), excludable_classes.end(), classes);
         if (iter != excludable_classes.end())
@@ -114,7 +112,7 @@ struct ProfileProperties
 
     double GetMaxTurnWeight() const
     {
-        return std::numeric_limits<TurnPenalty>::max() / GetWeightMultiplier();
+        return from_alias<double>(MAXIMAL_TURN_PENALTY) / GetWeightMultiplier();
     }
 
     //! penalty to cross a traffic light in deci-seconds
@@ -138,7 +136,6 @@ struct ProfileProperties
     bool force_split_edges = false;
     bool call_tagless_node_function = true;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

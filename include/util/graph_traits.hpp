@@ -3,12 +3,7 @@
 
 #include <type_traits>
 
-namespace osrm
-{
-namespace util
-{
-
-namespace traits
+namespace osrm::util::traits
 {
 
 // Introspection for an arbitrary .data member attribute
@@ -49,8 +44,6 @@ struct HasFirstEdgeMember<T, decltype((void)(sizeof(std::declval<T>().first_edge
 {
 };
 
-} // namespace traits
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util::traits
 
 #endif // STATIC_GRAPH_TRAITS_HPP

@@ -4,9 +4,7 @@
 
 #include <algorithm>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 //----------------------------------------------------------------
@@ -19,7 +17,7 @@ NodeIdVectorToLineString::NodeIdVectorToLineString(
 // converts a vector of node ids into a linestring geojson feature
 util::json::Object
 NodeIdVectorToLineString::operator()(const std::vector<NodeID> &node_ids,
-                                     const boost::optional<json::Object> &properties) const
+                                     const std::optional<json::Object> &properties) const
 {
     util::json::Array coordinates;
     std::transform(node_ids.begin(),
@@ -39,7 +37,7 @@ NodeIdVectorToMultiPoint::NodeIdVectorToMultiPoint(
 
 util::json::Object
 NodeIdVectorToMultiPoint::operator()(const std::vector<NodeID> &node_ids,
-                                     const boost::optional<json::Object> &properties) const
+                                     const std::optional<json::Object> &properties) const
 {
     util::json::Array coordinates;
     std::transform(node_ids.begin(),
@@ -53,20 +51,19 @@ NodeIdVectorToMultiPoint::operator()(const std::vector<NodeID> &node_ids,
 //----------------------------------------------------------------
 util::json::Object
 CoordinateVectorToMultiPoint::operator()(const std::vector<util::Coordinate> &input_coordinates,
-                                         const boost::optional<json::Object> &properties) const
+                                         const std::optional<json::Object> &properties) const
 {
-    const auto coordinates = makeJsonArray(input_coordinates);
+    auto coordinates = makeJsonArray(input_coordinates);
     return makeFeature("MultiPoint", std::move(coordinates), properties);
 }
 
 //----------------------------------------------------------------
 util::json::Object
 CoordinateVectorToLineString::operator()(const std::vector<util::Coordinate> &input_coordinates,
-                                         const boost::optional<json::Object> &properties) const
+                                         const std::optional<json::Object> &properties) const
 {
-    const auto coordinates = makeJsonArray(input_coordinates);
+    auto coordinates = makeJsonArray(input_coordinates);
     return makeFeature("LineString", std::move(coordinates), properties);
 }
 
-} /* namespace util */
-} /* namespace osrm */
+} // namespace osrm::util

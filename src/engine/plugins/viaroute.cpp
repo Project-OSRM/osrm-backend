@@ -5,24 +5,21 @@
 
 #include "util/for_each_pair.hpp"
 #include "util/integer_range.hpp"
-#include "util/json_container.hpp"
 
 #include <cstdlib>
 
 #include <algorithm>
-#include <memory>
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace plugins
+namespace osrm::engine::plugins
 {
 
-ViaRoutePlugin::ViaRoutePlugin(int max_locations_viaroute, int max_alternatives)
-    : max_locations_viaroute(max_locations_viaroute), max_alternatives(max_alternatives)
+ViaRoutePlugin::ViaRoutePlugin(int max_locations_viaroute,
+                               int max_alternatives,
+                               std::optional<double> default_radius)
+    : BasePlugin(default_radius), max_locations_viaroute(max_locations_viaroute),
+      max_alternatives(max_alternatives)
 {
 }
 
@@ -95,18 +92,9 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
     }
     BOOST_ASSERT(phantom_node_pairs.size() == route_parameters.coordinates.size());
 
-    auto snapped_phantoms = SnapPhantomNodes(phantom_node_pairs);
-
-    std::vector<PhantomNodes> start_end_nodes;
-    auto build_phantom_pairs = [&start_end_nodes](const PhantomNode &first_node,
-                                                  const PhantomNode &second_node) {
-        start_end_nodes.push_back(PhantomNodes{first_node, second_node});
-    };
-    util::for_each_pair(snapped_phantoms, build_phantom_pairs);
+    auto snapped_phantoms = SnapPhantomNodes(std::move(phantom_node_pairs));
 
     api::RouteAPI route_api{facade, route_parameters};
-
-    InternalManyRoutesResult routes;
 
     // TODO: in v6 we should remove the boolean and only keep the number parameter.
     // For now just force them to be in sync. and keep backwards compatibility.
@@ -115,20 +103,23 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
         (route_parameters.alternatives || route_parameters.number_of_alternatives > 0);
     const auto number_of_alternatives = std::max(1u, route_parameters.number_of_alternatives);
 
+    InternalManyRoutesResult routes;
     // Alternatives do not support vias, only direct s,t queries supported
     // See the implementation notes and high-level outline.
     // https://github.com/Project-OSRM/osrm-backend/issues/3905
-    if (1 == start_end_nodes.size() && algorithms.HasAlternativePathSearch() && wants_alternatives)
+    if (2 == snapped_phantoms.size() && algorithms.HasAlternativePathSearch() && wants_alternatives)
     {
-        routes = algorithms.AlternativePathSearch(start_end_nodes.front(), number_of_alternatives);
+        routes = algorithms.AlternativePathSearch({snapped_phantoms[0], snapped_phantoms[1]},
+                                                  number_of_alternatives);
     }
-    else if (1 == start_end_nodes.size() && algorithms.HasDirectShortestPathSearch())
+    else if (2 == snapped_phantoms.size() && algorithms.HasDirectShortestPathSearch())
     {
-        routes = algorithms.DirectShortestPathSearch(start_end_nodes.front());
+        routes = algorithms.DirectShortestPathSearch({snapped_phantoms[0], snapped_phantoms[1]});
     }
     else
     {
-        routes = algorithms.ShortestPathSearch(start_end_nodes, route_parameters.continue_straight);
+        routes =
+            algorithms.ShortestPathSearch(snapped_phantoms, route_parameters.continue_straight);
     }
 
     // The post condition for all path searches is we have at least one route in our result.
@@ -146,7 +137,8 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
             std::vector<bool> waypoint_legs(route_parameters.coordinates.size(), false);
             std::for_each(route_parameters.waypoints.begin(),
                           route_parameters.waypoints.end(),
-                          [&](const std::size_t waypoint_index) {
+                          [&](const std::size_t waypoint_index)
+                          {
                               BOOST_ASSERT(waypoint_index < waypoint_legs.size());
                               waypoint_legs[waypoint_index] = true;
                           });
@@ -160,18 +152,30 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
             }
         }
 
-        route_api.MakeResponse(routes, start_end_nodes, result);
+        route_api.MakeResponse(routes, snapped_phantoms, result);
     }
     else
     {
-        auto first_component_id = snapped_phantoms.front().component.id;
-        auto not_in_same_component = std::any_of(snapped_phantoms.begin(),
-                                                 snapped_phantoms.end(),
-                                                 [first_component_id](const PhantomNode &node) {
-                                                     return node.component.id != first_component_id;
-                                                 });
+        const auto all_in_same_component =
+            [](const std::vector<PhantomNodeCandidates> &waypoint_candidates)
+        {
+            return std::any_of(waypoint_candidates.front().begin(),
+                               waypoint_candidates.front().end(),
+                               // For each of the first possible phantoms, check if all other
+                               // positions in the list have a phantom from the same component.
+                               [&](const PhantomNode &phantom)
+                               {
+                                   const auto component_id = phantom.component.id;
+                                   return std::all_of(
+                                       std::next(waypoint_candidates.begin()),
+                                       std::end(waypoint_candidates),
+                                       [component_id](const PhantomNodeCandidates &candidates) {
+                                           return candidatesHaveComponent(candidates, component_id);
+                                       });
+                               });
+        };
 
-        if (not_in_same_component)
+        if (!all_in_same_component(snapped_phantoms))
         {
             return Error("NoRoute", "Impossible route between points", result);
         }
@@ -183,6 +187,4 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
 
     return Status::Ok;
 }
-} // namespace plugins
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::plugins

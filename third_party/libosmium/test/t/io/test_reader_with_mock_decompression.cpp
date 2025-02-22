@@ -34,7 +34,7 @@ public:
     MockDecompressor(MockDecompressor&&) = delete;
     MockDecompressor& operator=(MockDecompressor&&) = delete;
 
-    ~MockDecompressor() noexcept = default;
+    ~MockDecompressor() noexcept override = default;
 
     static void add_node(std::string& s, int i) {
         s += "<node id='";
@@ -76,9 +76,9 @@ public:
 
 }; // class MockDecompressor
 
-TEST_CASE("Test Reader using MockDecompressor") {
+std::string fail_in;
 
-    std::string fail_in;
+TEST_CASE("Test Reader using MockDecompressor") {
 
     osmium::io::CompressionFactory::instance().register_compression(osmium::io::file_compression::gzip,
         [](int /*unused*/, osmium::io::fsync /*unused*/) { return nullptr; },
@@ -90,7 +90,7 @@ TEST_CASE("Test Reader using MockDecompressor") {
         fail_in = "constructor";
 
         try {
-            osmium::io::Reader reader{with_data_dir("t/io/data.osm.gz")};
+            const osmium::io::Reader reader{with_data_dir("t/io/data.osm.gz")};
             REQUIRE(false);
         } catch (const std::runtime_error& e) {
             REQUIRE(std::string{e.what()} == "error constructor");

@@ -25,7 +25,6 @@
 
 */
 
-#include <cstdlib>  // for std::exit
 #include <cstring>  // for std::strcmp
 #include <iostream> // for std::cout, std::cerr
 
@@ -93,18 +92,18 @@ void print_help() {
 
 void print_usage(const char* prgname) {
     std::cerr << "Usage: " << prgname << " [OPTIONS] OSMFILE\n";
-    std::exit(1);
 }
 
 int main(int argc, char* argv[]) {
     if (argc > 1 && (!std::strcmp(argv[1], "-h") ||
                      !std::strcmp(argv[1], "--help"))) {
         print_help();
-        std::exit(0);
+        return 0;
     }
 
     if (argc != 3) {
         print_usage(argv[0]);
+        return 1;
     }
 
     try {
@@ -120,13 +119,14 @@ int main(int argc, char* argv[]) {
             handler.set<osmium::handler::Dump>(std::cout);
         } else {
             print_usage(argv[0]);
+            return 1;
         }
 
-        osmium::io::File input_file{argv[2]};
+        const osmium::io::File input_file{argv[2]};
 
         // Configuration for the multipolygon assembler. Here the default settings
         // are used, but you could change multiple settings.
-        osmium::area::Assembler::config_type assembler_config;
+        const osmium::area::Assembler::config_type assembler_config;
 
         // Set up a filter matching only forests. This will be used to only build
         // areas with matching tags.
@@ -198,7 +198,7 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
         std::cerr << e.what() << '\n';
-        std::exit(1);
+        return 1;
     }
 }
 

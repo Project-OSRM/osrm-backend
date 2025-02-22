@@ -1061,7 +1061,7 @@ Feature: Collapse
         #    i
         #    """
 
-        And the node locations
+        Given the node locations
           | node |         lat |         lon |        #id |
           | a    | -33.9644254 | 151.1378673 |   33226063 |
           | b    | -33.9644373 | 151.1377172 | 1072787030 |

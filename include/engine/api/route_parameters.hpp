@@ -32,11 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 /**
@@ -86,8 +82,8 @@ struct RouteParameters : public BaseParameters
                     const bool alternatives_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,
-                    const boost::optional<bool> continue_straight_,
-                    Args &&... args_)
+                    const std::optional<bool> continue_straight_,
+                    Args &&...args_)
         // Once we perfectly-forward `args` (see #2990) this constructor can delegate to the one
         // below.
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
@@ -104,8 +100,8 @@ struct RouteParameters : public BaseParameters
                     const bool annotations_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,
-                    const boost::optional<bool> continue_straight_,
-                    Args &&... args_)
+                    const std::optional<bool> continue_straight_,
+                    Args &&...args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{annotations_},
           annotations_type{annotations_ ? AnnotationsType::All : AnnotationsType::None},
@@ -122,8 +118,8 @@ struct RouteParameters : public BaseParameters
                     const AnnotationsType annotations_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,
-                    const boost::optional<bool> continue_straight_,
-                    Args &&... args_)
+                    const std::optional<bool> continue_straight_,
+                    Args &&...args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           number_of_alternatives{alternatives_ ? 1u : 0u},
           annotations{annotations_ != AnnotationsType::None}, annotations_type{annotations_},
@@ -139,9 +135,9 @@ struct RouteParameters : public BaseParameters
                     const bool annotations_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,
-                    const boost::optional<bool> continue_straight_,
+                    const std::optional<bool> continue_straight_,
                     std::vector<std::size_t> waypoints_,
-                    const Args &&... args_)
+                    const Args &&...args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{annotations_},
           annotations_type{annotations_ ? AnnotationsType::All : AnnotationsType::None},
@@ -157,9 +153,9 @@ struct RouteParameters : public BaseParameters
                     const AnnotationsType annotations_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,
-                    const boost::optional<bool> continue_straight_,
+                    const std::optional<bool> continue_straight_,
                     std::vector<std::size_t> waypoints_,
-                    Args &&... args_)
+                    Args &&...args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           number_of_alternatives{alternatives_ ? 1u : 0u}, annotations{annotations_ !=
                                                                        AnnotationsType::None},
@@ -176,7 +172,7 @@ struct RouteParameters : public BaseParameters
     AnnotationsType annotations_type = AnnotationsType::None;
     GeometriesType geometries = GeometriesType::Polyline;
     OverviewType overview = OverviewType::Simplified;
-    boost::optional<bool> continue_straight;
+    std::optional<bool> continue_straight;
     std::vector<std::size_t> waypoints;
 
     bool IsValid() const
@@ -184,9 +180,9 @@ struct RouteParameters : public BaseParameters
         const auto coordinates_ok = coordinates.size() >= 2;
         const auto base_params_ok = BaseParameters::IsValid();
         const auto valid_waypoints =
-            std::all_of(waypoints.begin(), waypoints.end(), [this](const auto &w) {
-                return w < coordinates.size();
-            });
+            std::all_of(waypoints.begin(),
+                        waypoints.end(),
+                        [this](const auto &w) { return w < coordinates.size(); });
         return coordinates_ok && base_params_ok && valid_waypoints;
     }
 };
@@ -206,13 +202,11 @@ inline RouteParameters::AnnotationsType operator|(RouteParameters::AnnotationsTy
         static_cast<std::underlying_type_t<RouteParameters::AnnotationsType>>(rhs));
 }
 
-inline RouteParameters::AnnotationsType operator|=(RouteParameters::AnnotationsType lhs,
-                                                   RouteParameters::AnnotationsType rhs)
+inline RouteParameters::AnnotationsType &operator|=(RouteParameters::AnnotationsType &lhs,
+                                                    RouteParameters::AnnotationsType rhs)
 {
     return lhs = lhs | rhs;
 }
-} // namespace api
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif

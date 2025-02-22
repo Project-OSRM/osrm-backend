@@ -19,11 +19,11 @@ using Graph = util::NodeBasedDynamicGraph;
 BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
 {
     std::unordered_set<NodeID> barrier_nodes{6};
-    std::unordered_set<NodeID> traffic_lights;
+    TrafficSignals traffic_lights;
     std::vector<NodeBasedEdgeAnnotation> annotations{
         {EMPTY_NAMEID, 0, INAVLID_CLASS_DATA, TRAVEL_MODE_DRIVING, false},
         {EMPTY_NAMEID, 1, INAVLID_CLASS_DATA, TRAVEL_MODE_DRIVING, false}};
-    std::vector<TurnRestriction> restrictions{TurnRestriction{NodeRestriction{0, 2, 1}, false}};
+    std::vector<TurnRestriction> restrictions{TurnRestriction{{ViaNodePath{0, 2, 1}}, false}};
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
     std::vector<UnresolvedManeuverOverride> maneuver_overrides;
@@ -40,17 +40,18 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
     //   ↓
     //   4
     const auto unit_edge =
-        [](const NodeID from, const NodeID to, bool allowed, AnnotationID annotation) {
-            return InputEdge{from,
-                             to,
-                             1,
-                             1,
-                             1,
-                             GeometryID{0, false},
-                             !allowed,
-                             NodeBasedEdgeClassification(),
-                             annotation};
-        };
+        [](const NodeID from, const NodeID to, bool allowed, AnnotationID annotation)
+    {
+        return InputEdge{from,
+                         to,
+                         EdgeWeight{1},
+                         EdgeDuration{1},
+                         EdgeDistance{1},
+                         GeometryID{0, false},
+                         !allowed,
+                         NodeBasedEdgeClassification(),
+                         annotation};
+    };
 
     std::vector<InputEdge> edges = {unit_edge(0, 2, true, 1),
                                     unit_edge(0, 5, true, 0),
@@ -102,7 +103,8 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
     RestrictionGraph restriction_graph = constructRestrictionGraph(restrictions);
     RestrictionMap restriction_map(restriction_graph);
 
-    const auto connectivity_matrix = [&](NodeID node) {
+    const auto connectivity_matrix = [&](NodeID node)
+    {
         std::vector<bool> result;
         const auto incoming_edges = getIncomingEdges(graph, node);
         const auto outgoing_edges = getOutgoingEdges(graph, node);
@@ -152,7 +154,7 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
 BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
 {
     std::unordered_set<NodeID> barrier_nodes;
-    std::unordered_set<NodeID> traffic_lights;
+    TrafficSignals traffic_lights;
     std::vector<NodeBasedEdgeAnnotation> annotations;
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
@@ -167,12 +169,13 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
     //     0
     //   ↙ ↑ ↘
     //  4  5  6
-    const auto unit_edge = [](const NodeID from, const NodeID to, bool allowed, bool roundabout) {
+    const auto unit_edge = [](const NodeID from, const NodeID to, bool allowed, bool roundabout)
+    {
         return InputEdge{from,
                          to,
-                         1,
-                         1,
-                         1,
+                         EdgeWeight{1},
+                         EdgeDuration{1},
+                         EdgeDistance{1},
                          GeometryID{0, false},
                          !allowed,
                          NodeBasedEdgeClassification{
@@ -226,7 +229,8 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
     RestrictionGraph restriction_graph = constructRestrictionGraph(restrictions);
     RestrictionMap restriction_map(restriction_graph);
 
-    const auto connectivity_matrix = [&](NodeID node) {
+    const auto connectivity_matrix = [&](NodeID node)
+    {
         std::vector<bool> result;
         const auto incoming_edges = getIncomingEdges(graph, node);
         const auto outgoing_edges = getOutgoingEdges(graph, node);
@@ -259,7 +263,7 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
 BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
 {
     std::unordered_set<NodeID> barrier_nodes{1};
-    std::unordered_set<NodeID> traffic_lights{2};
+    TrafficSignals traffic_lights = {{2}, {}};
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
@@ -274,9 +278,17 @@ BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
     //          ↑          ↕ ↕
     //          6         8 ↔ 9
     //
-    const auto unit_edge = [](const NodeID from, const NodeID to, bool allowed) {
-        return InputEdge{
-            from, to, 1, 1, 1, GeometryID{0, false}, !allowed, NodeBasedEdgeClassification{}, 0};
+    const auto unit_edge = [](const NodeID from, const NodeID to, bool allowed)
+    {
+        return InputEdge{from,
+                         to,
+                         EdgeWeight{1},
+                         EdgeDuration{1},
+                         EdgeDistance{1},
+                         GeometryID{0, false},
+                         !allowed,
+                         NodeBasedEdgeClassification{},
+                         0};
     };
     std::vector<InputEdge> edges = {unit_edge(0, 1, true), // 0
                                     unit_edge(1, 0, true),

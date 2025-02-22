@@ -8,11 +8,7 @@
 
 #include <type_traits>
 
-namespace osrm
-{
-namespace server
-{
-namespace api
+namespace osrm::server::api
 {
 
 // Note: this file provides only the interface for the generic parseParameters function.
@@ -30,21 +26,19 @@ using is_parameter_t =
 // Starts parsing and iter and modifies it until iter == end or parsing failed
 template <typename ParameterT,
           typename std::enable_if<detail::is_parameter_t<ParameterT>::value, int>::type = 0>
-boost::optional<ParameterT> parseParameters(std::string::iterator &iter,
-                                            const std::string::iterator end);
+std::optional<ParameterT> parseParameters(std::string::iterator &iter,
+                                          const std::string::iterator end);
 
 // Copy on purpose because we need mutability
 template <typename ParameterT,
           typename std::enable_if<detail::is_parameter_t<ParameterT>::value, int>::type = 0>
-boost::optional<ParameterT> parseParameters(std::string options_string)
+std::optional<ParameterT> parseParameters(std::string options_string)
 {
     auto first = options_string.begin();
     const auto last = options_string.end();
     return parseParameters<ParameterT>(first, last);
 }
 
-} // namespace api
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server::api
 
 #endif

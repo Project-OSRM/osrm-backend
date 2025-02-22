@@ -23,21 +23,14 @@
 #include "util/typedefs.hpp"
 
 #include "storage/io.hpp"
+#include "traffic_signals.hpp"
 
-#include <algorithm>
-#include <cstddef>
 #include <cstdint>
-#include <iosfwd>
-#include <memory>
-#include <queue>
 #include <string>
-#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class ScriptingEnvironment;
@@ -68,7 +61,7 @@ class EdgeBasedGraphFactory
                                    EdgeBasedNodeDataContainer &node_data_container,
                                    const CompressedEdgeContainer &compressed_edge_container,
                                    const std::unordered_set<NodeID> &barrier_nodes,
-                                   const std::unordered_set<NodeID> &traffic_lights,
+                                   const TrafficSignals &traffic_signals,
                                    const std::vector<util::Coordinate> &coordinates,
                                    const NameTable &name_table,
                                    const std::unordered_set<EdgeID> &segregated_edges,
@@ -90,7 +83,7 @@ class EdgeBasedGraphFactory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
     void GetEdgeBasedNodeSegments(std::vector<EdgeBasedNodeSegment> &nodes);
     void GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights);
-    void GetEdgeBasedNodeDurations(std::vector<EdgeWeight> &output_node_durations);
+    void GetEdgeBasedNodeDurations(std::vector<EdgeDuration> &output_node_durations);
     void GetEdgeBasedNodeDistances(std::vector<EdgeDistance> &output_node_distances);
     std::uint32_t GetConnectivityChecksum() const;
 
@@ -134,7 +127,7 @@ class EdgeBasedGraphFactory
     const util::NodeBasedDynamicGraph &m_node_based_graph;
 
     const std::unordered_set<NodeID> &m_barrier_nodes;
-    const std::unordered_set<NodeID> &m_traffic_lights;
+    const TrafficSignals &m_traffic_signals;
     const CompressedEdgeContainer &m_compressed_edge_container;
 
     const NameTable &name_table;
@@ -172,7 +165,6 @@ class EdgeBasedGraphFactory
     // mapping of node-based edges to edge-based nodes
     std::vector<NodeID> nbe_to_ebn_mapping;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* EDGE_BASED_GRAPH_FACTORY_HPP_ */

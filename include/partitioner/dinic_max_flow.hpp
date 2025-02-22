@@ -4,15 +4,11 @@
 #include "partitioner/bisection_graph_view.hpp"
 
 #include <cstdint>
-#include <functional>
 #include <set>
 #include <unordered_set>
-#include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 class DinicMaxFlow
@@ -88,8 +84,7 @@ class DinicMaxFlow
                    const std::size_t flow_value) const;
 };
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 // Implementation of Dinics [1] algorithm for max-flow/min-cut.
 // [1] https://www.cs.bgu.ac.il/~dinitz/D70.pdf

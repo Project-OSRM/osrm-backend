@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <osmium/osm/diff_object.hpp>
-#include <osmium/util/compatibility.hpp>
 
 #include <cstddef>
 #include <iterator>
@@ -62,26 +61,6 @@ namespace osmium {
 
             explicit OutputIterator(TDest& destination) :
                 m_destination(&destination) {
-            }
-
-            /**
-             * @deprecated
-             * Use of buffer size argument on OutputIterator
-             * constructor is deprecated. Call Writer::set_buffer_size()
-             * instead if you want to change the default.
-             */
-            OSMIUM_DEPRECATED OutputIterator(TDest& destination, const size_t buffer_size) :
-                m_destination(&destination) {
-                destination.set_buffer_size(buffer_size);
-            }
-
-            /**
-             * @deprecated
-             * Calling OutputIterator<Writer>::flush() is usually not
-             * needed any more. Call flush() on the Writer instead if needed.
-             */
-            OSMIUM_DEPRECATED void flush() {
-                m_destination->flush();
             }
 
             OutputIterator& operator=(const osmium::memory::Item& item) {
@@ -114,18 +93,6 @@ namespace osmium {
 
         template <typename TDest>
         OutputIterator<TDest> make_output_iterator(TDest& destination) {
-            return OutputIterator<TDest>{destination};
-        }
-
-        /**
-         * @deprecated
-         * Use of buffer size argument on make_output_iterator is deprecated.
-         * Call Writer::set_buffer_size() instead if you want to change the
-         * default.
-         */
-        template <typename TDest>
-        OSMIUM_DEPRECATED OutputIterator<TDest> make_output_iterator(TDest& destination, const size_t buffer_size) {
-            destination.set_buffer_size(buffer_size);
             return OutputIterator<TDest>{destination};
         }
 

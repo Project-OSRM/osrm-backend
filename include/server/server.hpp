@@ -18,39 +18,41 @@
 #include <sys/types.h>
 #endif
 
-#include <functional>
 #include <memory>
 #include <string>
 #include <thread>
 #include <vector>
 
-namespace osrm
-{
-namespace server
+namespace osrm::server
 {
 
 class Server
 {
   public:
     // Note: returns a shared instead of a unique ptr as it is captured in a lambda somewhere else
-    static std::shared_ptr<Server>
-    CreateServer(std::string &ip_address, int ip_port, unsigned requested_num_threads)
+    static std::shared_ptr<Server> CreateServer(std::string &ip_address,
+                                                int ip_port,
+                                                unsigned requested_num_threads,
+                                                short keepalive_timeout)
     {
         util::Log() << "http 1.1 compression handled by zlib version " << zlibVersion();
         const unsigned hardware_threads = std::max(1u, std::thread::hardware_concurrency());
         const unsigned real_num_threads = std::min(hardware_threads, requested_num_threads);
-        return std::make_shared<Server>(ip_address, ip_port, real_num_threads);
+        return std::make_shared<Server>(ip_address, ip_port, real_num_threads, keepalive_timeout);
     }
 
-    explicit Server(const std::string &address, const int port, const unsigned thread_pool_size)
-        : thread_pool_size(thread_pool_size), acceptor(io_context),
-          new_connection(std::make_shared<Connection>(io_context, request_handler))
+    explicit Server(const std::string &address,
+                    const int port,
+                    const unsigned thread_pool_size,
+                    const short keepalive_timeout)
+        : thread_pool_size(thread_pool_size), keepalive_timeout(keepalive_timeout),
+          acceptor(io_context), new_connection(std::make_shared<Connection>(
+                                    io_context, request_handler, keepalive_timeout))
     {
         const auto port_string = std::to_string(port);
 
         boost::asio::ip::tcp::resolver resolver(io_context);
-        boost::asio::ip::tcp::resolver::query query(address, port_string);
-        boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
+        boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(address, port_string).begin();
 
         acceptor.open(endpoint.protocol());
 #ifdef SO_REUSEPORT
@@ -77,7 +79,7 @@ class Server
                 boost::bind(&boost::asio::io_context::run, &io_context));
             threads.push_back(thread);
         }
-        for (auto thread : threads)
+        for (const auto &thread : threads)
         {
             thread->join();
         }
@@ -96,7 +98,8 @@ class Server
         if (!e)
         {
             new_connection->start();
-            new_connection = std::make_shared<Connection>(io_context, request_handler);
+            new_connection =
+                std::make_shared<Connection>(io_context, request_handler, keepalive_timeout);
             acceptor.async_accept(
                 new_connection->socket(),
                 boost::bind(&Server::HandleAccept, this, boost::asio::placeholders::error));
@@ -107,13 +110,13 @@ class Server
         }
     }
 
+    RequestHandler request_handler;
     unsigned thread_pool_size;
+    short keepalive_timeout;
     boost::asio::io_context io_context;
     boost::asio::ip::tcp::acceptor acceptor;
     std::shared_ptr<Connection> new_connection;
-    RequestHandler request_handler;
 };
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server
 
 #endif // SERVER_HPP

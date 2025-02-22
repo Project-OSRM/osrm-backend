@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -66,7 +66,7 @@ namespace osmium {
                 }
 
                 if (num_threads < 0) {
-                    num_threads += int(hardware_concurrency);
+                    num_threads += static_cast<int>(hardware_concurrency);
                 }
 
                 if (num_threads < 1) {
@@ -177,6 +177,12 @@ namespace osmium {
                 }
             }
 
+            /**
+             * Return a statically created "default pool". This is initialized
+             * the first time you use it.
+             *
+             * Do not use this if your program will fork.
+             */
             static Pool& default_instance() {
                 static Pool pool{};
                 return pool;
@@ -211,12 +217,21 @@ namespace osmium {
                 return m_work_queue.empty();
             }
 
+#if defined(__cpp_lib_is_invocable) && __cpp_lib_is_invocable >= 201703
+            // std::result_of is deprecated in C++17 and removed in C++20,
+            // so we use std::invoke_result_t.
             template <typename TFunction>
-            std::future<typename std::result_of<TFunction()>::type> submit(TFunction&& func) {
-                using result_type = typename std::result_of<TFunction()>::type;
+            using submit_func_result_type = std::invoke_result_t<TFunction>;
+#else
+            // For C++11 and C++14
+            template <typename TFunction>
+            using submit_func_result_type = typename std::result_of<TFunction()>::type;
+#endif
 
-                std::packaged_task<result_type()> task{std::forward<TFunction>(func)};
-                std::future<result_type> future_result{task.get_future()};
+            template <typename TFunction>
+            std::future<submit_func_result_type<TFunction>> submit(TFunction&& func) {
+                std::packaged_task<submit_func_result_type<TFunction>()> task{std::forward<TFunction>(func)};
+                std::future<submit_func_result_type<TFunction>> future_result{task.get_future()};
                 m_work_queue.push(std::move(task));
 
                 return future_result;

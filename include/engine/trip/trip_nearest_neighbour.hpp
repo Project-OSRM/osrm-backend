@@ -9,15 +9,9 @@
 
 #include <algorithm>
 #include <cstdlib>
-#include <limits>
-#include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace trip
+namespace osrm::engine::trip
 {
 
 template <typename NodeIDIterator>
@@ -92,8 +86,6 @@ std::vector<NodeID> NearestNeighbourTrip(const NodeIDIterator &start,
     }
     return route;
 }
-} // namespace trip
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::trip
 
 #endif // TRIP_NEAREST_NEIGHBOUR_HPP

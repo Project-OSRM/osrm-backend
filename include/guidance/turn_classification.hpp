@@ -9,15 +9,12 @@
 
 #include <utility>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 std::pair<util::guidance::EntryClass, util::guidance::BearingClass>
 classifyIntersection(Intersection intersection, const osrm::util::Coordinate &location);
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif // OSRM_GUIDANCE_TURN_CLASSIFICATION_HPP_

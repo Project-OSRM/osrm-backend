@@ -15,8 +15,10 @@
 
 using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
+constexpr const std::size_t test_buffer_size = 1024UL * 10UL;
+
 TEST_CASE("create node using builders: add node with only id") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     const auto pos = osmium::builder::add_node(buffer, _id(22));
 
@@ -33,7 +35,7 @@ TEST_CASE("create node using builders: add node with only id") {
 }
 
 TEST_CASE("create node using builders: add node with complete info but no tags") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     const osmium::Location loc{3.14, 1.59};
     const auto pos = osmium::builder::add_node(buffer,
@@ -60,7 +62,7 @@ TEST_CASE("create node using builders: add node with complete info but no tags")
 }
 
 TEST_CASE("create node using builders: visible/deleted flag") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     osmium::builder::add_node(buffer, _id(1), _deleted());
     osmium::builder::add_node(buffer, _id(2), _deleted(true));
@@ -80,7 +82,7 @@ TEST_CASE("create node using builders: visible/deleted flag") {
 }
 
 TEST_CASE("create node using builders: order of attributes doesn't matter") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     const osmium::Location loc{3.14, 1.59};
     const auto pos = osmium::builder::add_node(buffer,
@@ -106,10 +108,10 @@ TEST_CASE("create node using builders: order of attributes doesn't matter") {
 }
 
 TEST_CASE("create node with tags using builders: add tags using _tag") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
-    std::pair<const char*, const char*> t1 = {"name", "Node Inn"};
-    std::pair<std::string, std::string> t2 = {"phone", "+1-123-555-4567"};
+    const std::pair<const char*, const char*> t1 = {"name", "Node Inn"};
+    const std::pair<std::string, std::string> t2 = {"phone", "+1-123-555-4567"};
 
     const auto pos = osmium::builder::add_node(buffer,
         _id(2),
@@ -142,7 +144,7 @@ TEST_CASE("create node with tags using builders: add tags using _tag") {
 }
 
 TEST_CASE("create node with tags using builders: add tags using _tag with equal sign in single cstring") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     const auto pos = osmium::builder::add_node(buffer,
         _id(2),
@@ -175,7 +177,7 @@ TEST_CASE("create node with tags using builders: add tags using _tag with equal 
 }
 
 TEST_CASE("create node with tags using builders: add tags using _tags from initializer list") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     const auto pos = osmium::builder::add_node(buffer,
         _id(3),
@@ -196,7 +198,7 @@ TEST_CASE("create node with tags using builders: add tags using _tags from initi
 }
 
 TEST_CASE("create node with tags using builders: add tags using _tags from TagList") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     const auto pos1 = osmium::builder::add_node(buffer,
         _id(3),
@@ -226,7 +228,7 @@ TEST_CASE("create node with tags using builders: add tags using _tags from TagLi
 }
 
 TEST_CASE("create node with tags using builders: add tags using mixed tag sources") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     const std::vector<pair_of_cstrings> tags = {
         {"t5", "t5"},
@@ -264,7 +266,7 @@ TEST_CASE("create node with tags using builders: add tags using mixed tag source
 }
 
 TEST_CASE("create node with tags using builders: add tags using _t with string") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     const auto pos = osmium::builder::add_node(buffer,
         _id(5),
@@ -294,7 +296,7 @@ TEST_CASE("create node with tags using builders: add tags using _t with string")
 }
 
 TEST_CASE("create way using builders") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     SECTION("add way without nodes") {
         const auto pos = osmium::builder::add_way(buffer,
@@ -327,7 +329,7 @@ TEST_CASE("create way with nodes") {
         { 8, osmium::Location{8.8, 0.8} }
     };
 
-    osmium::memory::Buffer wbuffer{1024 * 10};
+    osmium::memory::Buffer wbuffer{test_buffer_size};
     osmium::builder::add_way(wbuffer,
         _id(1),
         _nodes({1, 2, 4, 8})
@@ -335,7 +337,7 @@ TEST_CASE("create way with nodes") {
 
     const osmium::NodeRefList& nodes = wbuffer.get<osmium::Way>(0).nodes();
 
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     SECTION("add nodes using an OSM object id or NodeRef") {
         osmium::builder::add_way(buffer,
@@ -415,7 +417,7 @@ TEST_CASE("create way with nodes") {
     REQUIRE(way.nodes().size() == 4);
     REQUIRE(std::distance(way.cbegin(), way.cend()) == 1);
 
-    auto it = way.nodes().cbegin();
+    const auto* it = way.nodes().cbegin();
 
     REQUIRE(it->ref() == 1);
     if (it->location().valid()) {
@@ -445,9 +447,9 @@ TEST_CASE("create way with nodes") {
 }
 
 TEST_CASE("create relation using builders: create relation") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
-    osmium::builder::attr::member_type m{osmium::item_type::way, 113, "inner"};
+    const osmium::builder::attr::member_type m{osmium::item_type::way, 113, "inner"};
 
     osmium::builder::add_relation(buffer,
         _id(123),
@@ -495,7 +497,7 @@ TEST_CASE("create relation using builders: create relation") {
 }
 
 TEST_CASE("create relation using builders: create relation member from existing relation member") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     osmium::builder::add_relation(buffer,
         _id(123),
@@ -532,7 +534,7 @@ TEST_CASE("create relation using builders: create relation member from existing 
 }
 
 TEST_CASE("create relation using builders: create relation with members from initializer list") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     const auto pos = osmium::builder::add_relation(buffer,
         _id(123),
@@ -561,7 +563,7 @@ TEST_CASE("create relation using builders: create relation with members from ini
 }
 
 TEST_CASE("create relation using builders: create relation with members from iterators and some tags") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     const std::vector<member_type> members = {
         {osmium::item_type::node, 123},
@@ -605,7 +607,7 @@ TEST_CASE("create relation using builders: create relation with members from ite
 }
 
 TEST_CASE("create area using builders") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     SECTION("add area without rings") {
         const auto pos = osmium::builder::add_area(buffer,

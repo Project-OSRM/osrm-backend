@@ -28,16 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTOR_CONFIG_HPP
 #define EXTRACTOR_CONFIG_HPP
 
-#include <boost/filesystem/path.hpp>
-
-#include <array>
-#include <string>
-
 #include "storage/io_config.hpp"
 
-namespace osrm
-{
-namespace extractor
+#include <filesystem>
+#include <string>
+
+namespace osrm::extractor
 {
 
 struct ExtractorConfig final : storage::IOConfig
@@ -48,7 +44,7 @@ struct ExtractorConfig final : storage::IOConfig
                   "",
               },
               {},
-              {".osrm",
+              {".osrm.nbg",
                ".osrm.restrictions",
                ".osrm.names",
                ".osrm.tls",
@@ -69,31 +65,28 @@ struct ExtractorConfig final : storage::IOConfig
                ".osrm.icd",
                ".osrm.cnbg",
                ".osrm.cnbg_to_ebg",
-               ".osrm.maneuver_overrides"}),
-          requested_num_threads(0), parse_conditionals(false), use_locations_cache(true)
+               ".osrm.maneuver_overrides"})
     {
     }
 
-    void UseDefaultOutputNames(const boost::filesystem::path &base)
+    void UseDefaultOutputNames(const std::filesystem::path &base)
     {
         IOConfig::UseDefaultOutputNames(base);
     }
 
-    boost::filesystem::path input_path;
-    boost::filesystem::path profile_path;
-    std::vector<boost::filesystem::path> location_dependent_data_paths;
+    std::filesystem::path input_path;
+    std::filesystem::path profile_path;
+    std::vector<std::filesystem::path> location_dependent_data_paths;
     std::string data_version;
 
-    unsigned requested_num_threads;
-    unsigned small_component_size;
+    unsigned requested_num_threads = 0;
+    unsigned small_component_size = 1000;
 
-    bool generate_edge_lookup;
-
-    bool use_metadata;
-    bool parse_conditionals;
-    bool use_locations_cache;
+    bool use_metadata = false;
+    bool parse_conditionals = false;
+    bool use_locations_cache = true;
+    bool dump_nbg_graph = false;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // EXTRACTOR_CONFIG_HPP

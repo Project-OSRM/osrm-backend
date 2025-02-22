@@ -3,9 +3,7 @@
 
 #include "partitioner/partitioner_config.hpp"
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 // tool access to the recursive partitioner
@@ -15,7 +13,6 @@ class Partitioner
     int Run(const PartitionerConfig &config);
 };
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif // OSRM_PARTITIONER_PARTITIONER_HPP_

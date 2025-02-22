@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -63,7 +63,7 @@ namespace osmium {
         }
 
         void process_bytes(const void* buffer, std::size_t byte_count) noexcept {
-            m_crc32 = ::crc32(m_crc32, reinterpret_cast<const unsigned char *>(buffer), static_cast<unsigned int>(byte_count));
+            m_crc32 = ::crc32(m_crc32, reinterpret_cast<const unsigned char*>(buffer), static_cast<unsigned int>(byte_count));
         }
 
         unsigned long checksum() const noexcept { // NOLINT(google-runtime-int)

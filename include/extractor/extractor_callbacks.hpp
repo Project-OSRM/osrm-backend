@@ -3,10 +3,8 @@
 
 #include "extractor/class_data.hpp"
 #include "extractor/turn_lane_types.hpp"
+#include "util/std_hash.hpp"
 #include "util/typedefs.hpp"
-
-#include <boost/functional/hash.hpp>
-#include <boost/optional/optional_fwd.hpp>
 
 #include <string>
 #include <unordered_map>
@@ -18,28 +16,7 @@ class Way;
 class Relation;
 } // namespace osmium
 
-namespace std
-{
-template <> struct hash<std::tuple<std::string, std::string, std::string, std::string, std::string>>
-{
-    std::size_t operator()(
-        const std::tuple<std::string, std::string, std::string, std::string, std::string> &mk)
-        const noexcept
-    {
-        std::size_t seed = 0;
-        boost::hash_combine(seed, std::get<0>(mk));
-        boost::hash_combine(seed, std::get<1>(mk));
-        boost::hash_combine(seed, std::get<2>(mk));
-        boost::hash_combine(seed, std::get<3>(mk));
-        boost::hash_combine(seed, std::get<4>(mk));
-        return seed;
-    }
-};
-} // namespace std
-
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class ExtractionContainers;
@@ -95,7 +72,6 @@ class ExtractorCallbacks
     // warning: caller needs to take care of synchronization!
     void ProcessManeuverOverride(const InputManeuverOverride &override);
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* EXTRACTOR_CALLBACKS_HPP */

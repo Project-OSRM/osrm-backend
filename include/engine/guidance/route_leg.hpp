@@ -3,16 +3,12 @@
 
 #include "engine/guidance/route_step.hpp"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 
 struct RouteLeg
@@ -23,8 +19,6 @@ struct RouteLeg
     std::string summary;
     std::vector<RouteStep> steps;
 };
-} // namespace guidance
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::guidance
 
 #endif

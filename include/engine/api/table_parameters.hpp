@@ -36,11 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iterator>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-namespace api
+namespace osrm::engine::api
 {
 
 /**
@@ -59,7 +55,7 @@ struct TableParameters : public BaseParameters
 {
     std::vector<std::size_t> sources;
     std::vector<std::size_t> destinations;
-    double fallback_speed = INVALID_FALLBACK_SPEED;
+    double fallback_speed = from_alias<double>(INVALID_FALLBACK_SPEED);
 
     enum class FallbackCoordinateType
     {
@@ -85,7 +81,7 @@ struct TableParameters : public BaseParameters
     template <typename... Args>
     TableParameters(std::vector<std::size_t> sources_,
                     std::vector<std::size_t> destinations_,
-                    Args &&... args_)
+                    Args &&...args_)
         : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
           destinations{std::move(destinations_)}
     {
@@ -95,7 +91,7 @@ struct TableParameters : public BaseParameters
     TableParameters(std::vector<std::size_t> sources_,
                     std::vector<std::size_t> destinations_,
                     const AnnotationsType annotations_,
-                    Args &&... args_)
+                    Args &&...args_)
         : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
           destinations{std::move(destinations_)}, annotations{annotations_}
     {
@@ -108,7 +104,7 @@ struct TableParameters : public BaseParameters
                     double fallback_speed_,
                     FallbackCoordinateType fallback_coordinate_type_,
                     double scale_factor_,
-                    Args &&... args_)
+                    Args &&...args_)
         : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
           destinations{std::move(destinations_)}, fallback_speed{fallback_speed_},
           fallback_coordinate_type{fallback_coordinate_type_}, annotations{annotations_},
@@ -166,8 +162,6 @@ inline TableParameters::AnnotationsType &operator|=(TableParameters::Annotations
 {
     return lhs = lhs | rhs;
 }
-} // namespace api
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::api
 
 #endif // ENGINE_API_TABLE_PARAMETERS_HPP

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -55,7 +55,7 @@ namespace osmium {
      * to write data into a buffer and it doesn't fit. Buffers with internal
      * memory management will not throw this exception, but increase their size.
      */
-    struct buffer_is_full : public std::runtime_error {
+    struct OSMIUM_EXPORT buffer_is_full : public std::runtime_error {
 
         buffer_is_full() :
             std::runtime_error{"Osmium buffer is full"} {
@@ -87,12 +87,6 @@ namespace osmium {
          * the buffer isn't used any more. If you don't have memory already, you can
          * create a Buffer object and have it manage the memory internally. It will
          * dynamically allocate memory and free it again after use.
-         *
-         * By default, if a buffer gets full it will throw a buffer_is_full exception.
-         * You can use the set_full_callback() method to set a callback functor
-         * which will be called instead of throwing an exception. The full
-         * callback functionality is deprecated and will be removed in the
-         * future. See the documentation for set_full_callback() for alternatives.
          */
         class Buffer {
 
@@ -119,7 +113,6 @@ namespace osmium {
             uint8_t m_builder_count = 0;
 #endif
             auto_grow m_auto_grow{auto_grow::no};
-            std::function<void(Buffer&)> m_full;
 
             static std::size_t calculate_capacity(std::size_t capacity) noexcept {
                 enum {
@@ -161,9 +154,7 @@ namespace osmium {
              * Most methods of the Buffer class will not work with an invalid
              * buffer.
              */
-            Buffer() noexcept :
-                m_next_buffer() {
-            }
+            Buffer() noexcept = default;
 
             /**
              * Constructs a valid externally memory-managed buffer using the
@@ -176,7 +167,6 @@ namespace osmium {
              *         the alignment.
              */
             explicit Buffer(unsigned char* data, std::size_t size) :
-                m_next_buffer(),
                 m_data(data),
                 m_capacity(size),
                 m_written(size),
@@ -199,7 +189,6 @@ namespace osmium {
              *         than capacity.
              */
             explicit Buffer(unsigned char* data, std::size_t capacity, std::size_t committed) :
-                m_next_buffer(),
                 m_data(data),
                 m_capacity(capacity),
                 m_written(committed),
@@ -229,7 +218,6 @@ namespace osmium {
              *         than capacity.
              */
             explicit Buffer(std::unique_ptr<unsigned char[]> data, std::size_t capacity, std::size_t committed) :
-                m_next_buffer(),
                 m_memory(std::move(data)),
                 m_data(m_memory.get()),
                 m_capacity(capacity),
@@ -259,7 +247,6 @@ namespace osmium {
              *        becomes to small?
              */
             explicit Buffer(std::size_t capacity, auto_grow auto_grow = auto_grow::yes) :
-                m_next_buffer(),
                 m_memory(new unsigned char[calculate_capacity(capacity)]),
                 m_data(m_memory.get()),
                 m_capacity(calculate_capacity(capacity)),
@@ -281,8 +268,7 @@ namespace osmium {
 #ifndef NDEBUG
                 m_builder_count(other.m_builder_count),
 #endif
-                m_auto_grow(other.m_auto_grow),
-                m_full(std::move(other.m_full)) {
+                m_auto_grow(other.m_auto_grow) {
                 other.m_data = nullptr;
                 other.m_capacity = 0;
                 other.m_written = 0;
@@ -303,7 +289,6 @@ namespace osmium {
                 m_builder_count = other.m_builder_count;
 #endif
                 m_auto_grow = other.m_auto_grow;
-                m_full = std::move(other.m_full);
                 other.m_data = nullptr;
                 other.m_capacity = 0;
                 other.m_written = 0;
@@ -375,26 +360,6 @@ namespace osmium {
             bool is_aligned() const noexcept {
                 assert(m_data && "This must be a valid buffer");
                 return (m_written % align_bytes == 0) && (m_committed % align_bytes == 0);
-            }
-
-            /**
-             * Set functor to be called whenever the buffer is full
-             * instead of throwing buffer_is_full.
-             *
-             * The behaviour is undefined if you call this on an invalid
-             * buffer.
-             *
-             * @pre The buffer must be valid.
-             *
-             * @deprecated
-             * Callback functionality will be removed in the future. Either
-             * detect the buffer_is_full exception or use a buffer with
-             * auto_grow::yes. If you want to avoid growing buffers, check
-             * the CallbackBuffer class.
-             */
-            OSMIUM_DEPRECATED void set_full_callback(const std::function<void(Buffer&)>& full) {
-                assert(m_data && "This must be a valid buffer");
-                m_full = full;
             }
 
             /**
@@ -498,10 +463,10 @@ namespace osmium {
              */
             std::size_t clear() {
                 assert(m_builder_count == 0 && "Make sure there are no Builder objects still in scope");
-                const std::size_t committed = m_committed;
+                const std::size_t num_used_bytes = m_committed;
                 m_written = 0;
                 m_committed = 0;
-                return committed;
+                return num_used_bytes;
             }
 
             /**
@@ -529,18 +494,11 @@ namespace osmium {
              * Note that you have to eventually call commit() to actually
              * commit this data.
              *
-             * If there isn't enough space in the buffer, one of three things
+             * If there isn't enough space in the buffer, one of two things
              * can happen:
              *
-             * * If you have set a callback with set_full_callback(), it is
-             *   called. After the call returns, you must have either grown
-             *   the buffer or cleared it by calling buffer.clear(). (Usage
-             *   of the full callback is deprecated and this functionality
-             *   will be removed in the future. See the documentation for
-             *   set_full_callback() for alternatives.
-             * * If no callback is defined and this buffer uses internal
-             *   memory management, the buffers capacity is grown, so that
-             *   the new data will fit.
+             * * If this buffer uses internal memory management, the buffers
+             *   capacity is grown, so that the new data will fit.
              * * Else the buffer_is_full exception is thrown.
              *
              * @pre The buffer must be valid.
@@ -556,10 +514,6 @@ namespace osmium {
              */
             unsigned char* reserve_space(const std::size_t size) {
                 assert(m_data && "This must be a valid buffer");
-                // try to flush the buffer empty first.
-                if (m_written + size > m_capacity && m_full) {
-                    m_full(*this);
-                }
                 // if there's still not enough space, then try growing the buffer.
                 if (m_written + size > m_capacity) {
                     if (!m_memory || m_auto_grow == auto_grow::no) {
@@ -577,9 +531,9 @@ namespace osmium {
                         grow(new_capacity);
                     }
                 }
-                unsigned char* data = &m_data[m_written];
+                unsigned char* reserved_space = &m_data[m_written];
                 m_written += size;
-                return data;
+                return reserved_space;
             }
 
             /**
@@ -831,7 +785,6 @@ namespace osmium {
                 swap(m_written, other.m_written);
                 swap(m_committed, other.m_committed);
                 swap(m_auto_grow, other.m_auto_grow);
-                swap(m_full, other.m_full);
             }
 
             /**
@@ -849,10 +802,13 @@ namespace osmium {
              * indexes.
              *
              * @pre The buffer must be valid.
+             * @pre @code callback != nullptr @endptr
              */
             template <typename TCallbackClass>
             void purge_removed(TCallbackClass* callback) {
                 assert(m_data && "This must be a valid buffer");
+                assert(callback);
+
                 if (begin() == end()) {
                     return;
                 }
@@ -869,6 +825,42 @@ namespace osmium {
                             const auto old_offset = static_cast<std::size_t>(it_read.data() - data());
                             const auto new_offset = static_cast<std::size_t>(it_write.data() - data());
                             callback->moving_in_buffer(old_offset, new_offset);
+                            std::memmove(it_write.data(), it_read.data(), it_read->padded_size());
+                        }
+                        it_write.advance_once();
+                    }
+                }
+
+                assert(it_write.data() >= data());
+                m_written = static_cast<std::size_t>(it_write.data() - data());
+                m_committed = m_written;
+            }
+
+            /**
+             * Purge removed items from the buffer. This is done by moving all
+             * non-removed items forward in the buffer overwriting removed
+             * items and then correcting the m_written and m_committed numbers.
+             *
+             * Note that calling this function invalidates all iterators on
+             * this buffer and all offsets in this buffer.
+             *
+             * @pre The buffer must be valid.
+             */
+            void purge_removed() {
+                assert(m_data && "This must be a valid buffer");
+                if (begin() == end()) {
+                    return;
+                }
+
+                iterator it_write = begin();
+
+                iterator next;
+                for (iterator it_read = begin(); it_read != end(); it_read = next) {
+                    next = std::next(it_read);
+                    if (!it_read->removed()) {
+                        if (it_read != it_write) {
+                            assert(it_read.data() >= data());
+                            assert(it_write.data() >= data());
                             std::memmove(it_write.data(), it_read.data(), it_read->padded_size());
                         }
                         it_write.advance_once();

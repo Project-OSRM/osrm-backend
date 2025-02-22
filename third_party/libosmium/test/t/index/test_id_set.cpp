@@ -64,7 +64,7 @@ TEST_CASE("Copying IdSetDense") {
     REQUIRE(s2.get(28));
     REQUIRE(s2.size() == 2);
 
-    osmium::index::IdSetDense<osmium::unsigned_object_id_type> s3{s1};
+    const osmium::index::IdSetDense<osmium::unsigned_object_id_type> s3{s1};
     REQUIRE(s3.get(17));
     REQUIRE(s3.get(28));
     REQUIRE(s3.size() == 2);
@@ -181,7 +181,7 @@ TEST_CASE("Copying IdSetSmall") {
     REQUIRE(s2.get(28));
     REQUIRE(s2.size() == 2);
 
-    osmium::index::IdSetSmall<osmium::unsigned_object_id_type> s3{s1};
+    const osmium::index::IdSetSmall<osmium::unsigned_object_id_type> s3{s1};
     REQUIRE(s3.get(17));
     REQUIRE(s3.get(28));
     REQUIRE(s3.size() == 2);

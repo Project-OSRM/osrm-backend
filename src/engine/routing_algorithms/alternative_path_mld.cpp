@@ -7,19 +7,14 @@
 
 #include <algorithm>
 #include <iterator>
-#include <memory>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
-#include <boost/function_output_iterator.hpp>
+#include <boost/iterator/function_output_iterator.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace routing_algorithms
+namespace osrm::engine::routing_algorithms
 {
 
 // Unqualified calls below are from the mld namespace.
@@ -85,9 +80,9 @@ struct WeightedViaNodeUnpackedPath
 // Scale the maximum allowed weight increase based on its magnitude:
 //  - Shortest path 10 minutes, alternative 13 minutes => Factor of 0.30 ok
 //  - Shortest path 10 hours, alternative 13 hours     => Factor of 0.30 unreasonable
-double getLongerByFactorBasedOnDuration(const EdgeWeight duration)
+double getLongerByFactorBasedOnDuration(const EdgeDuration duration)
 {
-    BOOST_ASSERT(duration != INVALID_EDGE_WEIGHT);
+    BOOST_ASSERT(duration != INVALID_EDGE_DURATION);
 
     // We only have generic weights here and no durations without unpacking.
     // We also have restricted way penalties which are huge and will screw scaling here.
@@ -118,27 +113,29 @@ double getLongerByFactorBasedOnDuration(const EdgeWeight duration)
     const constexpr auto c = 2.45437877e+09;
     const constexpr auto d = -2.07944571e+03;
 
-    if (duration < EdgeWeight(5 * 60))
+    if (duration < EdgeDuration{5 * 60})
     {
         return 1.0;
     }
-    else if (duration > EdgeWeight(10 * 60 * 60))
+    else if (duration > EdgeDuration{10 * 60 * 60})
     {
         return 0.20;
     }
 
     // Bigger than 10 minutes but smaller than 10 hours
-    BOOST_ASSERT(duration >= 5 * 60 && duration <= 10 * 60 * 60);
+    BOOST_ASSERT(duration >= EdgeDuration{5 * 60} && duration <= EdgeDuration{10 * 60 * 60});
 
-    return a + b / (duration - d) + c / std::pow(duration - d, 3);
+    return a + b / (from_alias<double>(duration) - d) +
+           c / std::pow(from_alias<double>(duration) - d, 3);
 }
 
-Parameters parametersFromRequest(const PhantomNodes &phantom_node_pair)
+Parameters parametersFromRequest(const PhantomEndpointCandidates &endpoint_candidates)
 {
     Parameters parameters;
 
-    const auto distance = util::coordinate_calculation::haversineDistance(
-        phantom_node_pair.source_phantom.location, phantom_node_pair.target_phantom.location);
+    const auto distance = util::coordinate_calculation::greatCircleDistance(
+        candidatesSnappedLocation(endpoint_candidates.source_phantoms),
+        candidatesSnappedLocation(endpoint_candidates.target_phantoms));
 
     // 10km
     if (distance < 10000.)
@@ -222,11 +219,11 @@ RandIt filterViaCandidatesByStretch(RandIt first,
     // Assumes weight roughly corresponds to duration-ish. If this is not the case e.g.
     // because users are setting weight to be distance in the profiles, then we might
     // either generate more candidates than we have to or not enough. But is okay.
-    const auto stretch_weight_limit = (1. + parameters.kAtMostLongerBy) * weight;
+    const auto stretch_weight_limit =
+        (1. + parameters.kAtMostLongerBy) * from_alias<double>(weight);
 
-    const auto over_weight_limit = [=](const auto via) {
-        return via.weight > stretch_weight_limit;
-    };
+    const auto over_weight_limit = [=](const auto via)
+    { return from_alias<double>(via.weight) > stretch_weight_limit; };
 
     return std::remove_if(first, last, over_weight_limit);
 }
@@ -250,7 +247,7 @@ filterViaCandidatesByViaNotOnPath(const WeightedViaNodePackedPath &path, RandIt 
     for (const auto &edge : path.path)
         nodes.insert(std::get<1>(edge));
 
-    const auto via_on_path = [&](const auto via) { return nodes.count(via.node) > 0; };
+    const auto via_on_path = [&](const auto via) { return nodes.contains(via.node); };
 
     return std::remove_if(first, last, via_on_path);
 }
@@ -299,16 +296,18 @@ RandIt filterPackedPathsByCellSharing(RandIt first,
     for (const auto &edge : shortest_path.path)
         cells.insert(get_cell(std::get<1>(edge)));
 
-    const auto over_sharing_limit = [&](const auto &packed) {
+    const auto over_sharing_limit = [&](const auto &packed)
+    {
         if (packed.path.empty())
         { // don't remove routes with single-node (empty) path
             return false;
         }
 
-        const auto not_seen = [&](const PackedEdge edge) {
+        const auto not_seen = [&](const PackedEdge edge)
+        {
             const auto source_cell = get_cell(std::get<0>(edge));
             const auto target_cell = get_cell(std::get<1>(edge));
-            return cells.count(source_cell) < 1 && cells.count(target_cell) < 1;
+            return !cells.contains(source_cell) && !cells.contains(target_cell);
         };
 
         const auto different = std::count_if(begin(packed.path), end(packed.path), not_seen);
@@ -365,7 +364,8 @@ RandIt filterPackedPathsByLocalOptimality(const WeightedViaNodePackedPath &path,
     BOOST_ASSERT(path.via.weight != INVALID_EDGE_WEIGHT);
 
     // node == parent_in_main_heap(parent_in_side_heap(v)) -> plateaux at `node`
-    const auto has_plateaux_at_node = [&](const NodeID node, const Heap &fst, const Heap &snd) {
+    const auto has_plateaux_at_node = [&](const NodeID node, const Heap &fst, const Heap &snd)
+    {
         BOOST_ASSERT(fst.WasInserted(node));
         auto const parent = fst.GetData(node).parent;
         return snd.WasInserted(parent) && snd.GetData(parent).parent == node;
@@ -375,7 +375,8 @@ RandIt filterPackedPathsByLocalOptimality(const WeightedViaNodePackedPath &path,
     // tree from t overlap. An edge is part of such a plateaux around `v` if:
     // v == parent_in_reverse_search(parent_in_forward_search(v)).
     // Here we calculate the last node on the plateaux in either direction.
-    const auto plateaux_end = [&](NodeID node, const Heap &fst, const Heap &snd) {
+    const auto plateaux_end = [&](NodeID node, const Heap &fst, const Heap &snd)
+    {
         BOOST_ASSERT(node != SPECIAL_NODEID);
         BOOST_ASSERT(fst.WasInserted(node));
         BOOST_ASSERT(snd.WasInserted(node));
@@ -389,7 +390,8 @@ RandIt filterPackedPathsByLocalOptimality(const WeightedViaNodePackedPath &path,
         return node;
     };
 
-    const auto is_not_locally_optimal = [&](const auto &packed) {
+    const auto is_not_locally_optimal = [&](const auto &packed)
+    {
         BOOST_ASSERT(packed.via.node != path.via.node);
         BOOST_ASSERT(packed.via.weight != INVALID_EDGE_WEIGHT);
         BOOST_ASSERT(packed.via.node != SPECIAL_NODEID);
@@ -443,7 +445,8 @@ RandIt filterPackedPathsByLocalOptimality(const WeightedViaNodePackedPath &path,
         const auto detour_length = forward_heap.GetKey(via) - forward_heap.GetKey(a) +
                                    reverse_heap.GetKey(via) - reverse_heap.GetKey(b);
 
-        return plateaux_length < parameters.kAtLeastOptimalAroundViaBy * detour_length;
+        return from_alias<double>(plateaux_length) <
+               parameters.kAtLeastOptimalAroundViaBy * from_alias<double>(detour_length);
     };
 
     return std::remove_if(first, last, is_not_locally_optimal);
@@ -475,17 +478,19 @@ RandIt filterUnpackedPathsBySharing(RandIt first,
 
     nodes.insert(begin(shortest_path.nodes), end(shortest_path.nodes));
 
-    const auto over_sharing_limit = [&](auto &unpacked) {
+    const auto over_sharing_limit = [&](auto &unpacked)
+    {
         if (unpacked.edges.empty())
         { // don't remove routes with single-node (empty) path
             return false;
         }
 
-        EdgeWeight total_duration = 0;
-        const auto add_if_seen = [&](const EdgeWeight duration, const NodeID node) {
+        EdgeDuration total_duration = {0};
+        const auto add_if_seen = [&](const EdgeDuration duration, const NodeID node)
+        {
             auto node_duration = facade.GetNodeDuration(node);
             total_duration += node_duration;
-            if (nodes.count(node) > 0)
+            if (nodes.contains(node))
             {
                 return duration + node_duration;
             }
@@ -495,7 +500,7 @@ RandIt filterUnpackedPathsBySharing(RandIt first,
         const auto shared_duration = std::accumulate(
             begin(unpacked.nodes), end(unpacked.nodes), EdgeDuration{0}, add_if_seen);
 
-        unpacked.sharing = shared_duration / static_cast<double>(total_duration);
+        unpacked.sharing = from_alias<double>(shared_duration) / from_alias<double>(total_duration);
         BOOST_ASSERT(unpacked.sharing >= 0.);
         BOOST_ASSERT(unpacked.sharing <= 1.);
 
@@ -530,11 +535,11 @@ RandIt filterAnnotatedRoutesByStretch(RandIt first,
     BOOST_ASSERT(shortest_route.is_valid());
 
     const auto shortest_route_duration = shortest_route.duration();
-    const auto stretch_duration_limit = (1. + parameters.kAtMostLongerBy) * shortest_route_duration;
+    const auto stretch_duration_limit =
+        (1. + parameters.kAtMostLongerBy) * from_alias<double>(shortest_route_duration);
 
-    const auto over_duration_limit = [=](const auto &route) {
-        return route.duration() > stretch_duration_limit;
-    };
+    const auto over_duration_limit = [=](const auto &route)
+    { return from_alias<double>(route.duration()) > stretch_duration_limit; };
 
     return std::remove_if(first, last, over_duration_limit);
 }
@@ -547,7 +552,7 @@ void unpackPackedPaths(InputIt first,
                        OutIt out,
                        SearchEngineData<Algorithm> &search_engine_data,
                        const Facade &facade,
-                       const PhantomNodes &phantom_node_pair)
+                       const PhantomEndpointCandidates &endpoint_candidates)
 {
     util::static_assert_iter_category<InputIt, std::input_iterator_tag>();
     util::static_assert_iter_category<OutIt, std::output_iterator_tag>();
@@ -600,7 +605,7 @@ void unpackPackedPaths(InputIt first,
             }
             else
             { // an overlay graph edge
-                LevelID level = getNodeQueryLevel(partition, source, phantom_node_pair); // XXX
+                LevelID level = getNodeQueryLevel(partition, source, endpoint_candidates); // XXX
                 CellID parent_cell_id = partition.GetCell(level, source);
                 BOOST_ASSERT(parent_cell_id == partition.GetCell(level, target));
 
@@ -609,34 +614,30 @@ void unpackPackedPaths(InputIt first,
                 // Here heaps can be reused, let's go deeper!
                 forward_heap.Clear();
                 reverse_heap.Clear();
-                forward_heap.Insert(source, 0, {source});
-                reverse_heap.Insert(target, 0, {target});
+                forward_heap.Insert(source, {0}, {source});
+                reverse_heap.Insert(target, {0}, {target});
 
                 BOOST_ASSERT(!facade.ExcludeNode(source));
                 BOOST_ASSERT(!facade.ExcludeNode(target));
 
-                // TODO: when structured bindings will be allowed change to
-                // auto [subpath_weight, subpath_source, subpath_target, subpath] = ...
-                EdgeWeight subpath_weight;
-                std::vector<NodeID> subpath_nodes;
-                std::vector<EdgeID> subpath_edges;
-                std::tie(subpath_weight, subpath_nodes, subpath_edges) = search(search_engine_data,
-                                                                                facade,
-                                                                                forward_heap,
-                                                                                reverse_heap,
-                                                                                DO_NOT_FORCE_LOOPS,
-                                                                                DO_NOT_FORCE_LOOPS,
-                                                                                INVALID_EDGE_WEIGHT,
-                                                                                sublevel,
-                                                                                parent_cell_id);
-                BOOST_ASSERT(!subpath_edges.empty());
-                BOOST_ASSERT(subpath_nodes.size() > 1);
-                BOOST_ASSERT(subpath_nodes.front() == source);
-                BOOST_ASSERT(subpath_nodes.back() == target);
-                unpacked_nodes.insert(
-                    unpacked_nodes.end(), std::next(subpath_nodes.begin()), subpath_nodes.end());
-                unpacked_edges.insert(
-                    unpacked_edges.end(), subpath_edges.begin(), subpath_edges.end());
+                auto unpacked_subpath = search(search_engine_data,
+                                               facade,
+                                               forward_heap,
+                                               reverse_heap,
+                                               {},
+                                               INVALID_EDGE_WEIGHT,
+                                               sublevel,
+                                               parent_cell_id);
+                BOOST_ASSERT(!unpacked_subpath.edges.empty());
+                BOOST_ASSERT(unpacked_subpath.nodes.size() > 1);
+                BOOST_ASSERT(unpacked_subpath.nodes.front() == source);
+                BOOST_ASSERT(unpacked_subpath.nodes.back() == target);
+                unpacked_nodes.insert(unpacked_nodes.end(),
+                                      std::next(unpacked_subpath.nodes.begin()),
+                                      unpacked_subpath.nodes.end());
+                unpacked_edges.insert(unpacked_edges.end(),
+                                      unpacked_subpath.edges.begin(),
+                                      unpacked_subpath.edges.end());
             }
         }
 
@@ -656,13 +657,13 @@ void unpackPackedPaths(InputIt first,
 inline std::vector<WeightedViaNode>
 makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
                   const Facade &facade,
-                  const PhantomNodes &phantom_node_pair,
+                  const PhantomEndpointCandidates &endpoint_candidates,
                   const Parameters &parameters)
 {
     Heap &forward_heap = *search_engine_data.forward_heap_1;
     Heap &reverse_heap = *search_engine_data.reverse_heap_1;
 
-    insertNodesInHeaps(forward_heap, reverse_heap, phantom_node_pair);
+    insertNodesInHeaps(forward_heap, reverse_heap, endpoint_candidates);
     if (forward_heap.Empty() || reverse_heap.Empty())
     {
         return {};
@@ -693,7 +694,8 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
     while (forward_heap.Size() + reverse_heap.Size() > 0)
     {
         if (shortest_path_weight != INVALID_EDGE_WEIGHT)
-            overlap_weight = shortest_path_weight * parameters.kSearchSpaceOverlapFactor;
+            overlap_weight = to_alias<EdgeWeight>(from_alias<double>(shortest_path_weight) *
+                                                  parameters.kSearchSpaceOverlapFactor);
 
         // Termination criteria - when we have a shortest path this will guarantee for our overlap.
         const bool keep_going = forward_heap_min + reverse_heap_min < overlap_weight;
@@ -712,9 +714,8 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
                                            reverse_heap,
                                            overlap_via,
                                            overlap_weight,
-                                           DO_NOT_FORCE_LOOPS,
-                                           DO_NOT_FORCE_LOOPS,
-                                           phantom_node_pair);
+                                           {},
+                                           endpoint_candidates);
 
             if (!forward_heap.Empty())
                 forward_heap_min = forward_heap.MinKey();
@@ -738,9 +739,8 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
                                            forward_heap,
                                            overlap_via,
                                            overlap_weight,
-                                           DO_NOT_FORCE_LOOPS,
-                                           DO_NOT_FORCE_LOOPS,
-                                           phantom_node_pair);
+                                           {},
+                                           endpoint_candidates);
 
             if (!reverse_heap.Empty())
                 reverse_heap_min = reverse_heap.MinKey();
@@ -776,10 +776,10 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
 // https://github.com/Project-OSRM/osrm-backend/issues/3905
 InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &search_engine_data,
                                                const Facade &facade,
-                                               const PhantomNodes &phantom_node_pair,
+                                               const PhantomEndpointCandidates &endpoint_candidates,
                                                unsigned number_of_alternatives)
 {
-    Parameters parameters = parametersFromRequest(phantom_node_pair);
+    Parameters parameters = parametersFromRequest(endpoint_candidates);
 
     const auto max_number_of_alternatives = number_of_alternatives;
     const auto max_number_of_alternatives_to_unpack =
@@ -798,7 +798,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
 
     // Do forward and backward search, save search space overlap as via candidates.
     auto candidate_vias =
-        makeCandidateVias(search_engine_data, facade, phantom_node_pair, parameters);
+        makeCandidateVias(search_engine_data, facade, endpoint_candidates, parameters);
 
     const auto by_weight = [](const auto &lhs, const auto &rhs) { return lhs.weight < rhs.weight; };
     auto shortest_path_via_it =
@@ -813,16 +813,16 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     if (!has_shortest_path)
     {
         InternalRouteResult invalid;
-        invalid.shortest_path_weight = INVALID_EDGE_WEIGHT;
-        invalid.segment_end_coordinates = {phantom_node_pair};
         return invalid;
     }
 
     NodeID shortest_path_via = shortest_path_via_it->node;
     EdgeWeight shortest_path_weight = shortest_path_via_it->weight;
 
-    const double duration_estimation = shortest_path_weight / facade.GetWeightMultiplier();
-    parameters.kAtMostLongerBy = getLongerByFactorBasedOnDuration(duration_estimation);
+    const double duration_estimation =
+        from_alias<double>(shortest_path_weight) / facade.GetWeightMultiplier();
+    parameters.kAtMostLongerBy =
+        getLongerByFactorBasedOnDuration(to_alias<EdgeDuration>(duration_estimation));
 
     // Filters via candidate nodes with heuristics
 
@@ -835,9 +835,9 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     it = filterViaCandidatesByStretch(begin(candidate_vias), it, shortest_path_weight, parameters);
 
     // Pre-rank by weight; sharing filtering below then discards by similarity.
-    std::sort(begin(candidate_vias), it, [](const auto lhs, const auto rhs) {
-        return lhs.weight < rhs.weight;
-    });
+    std::sort(begin(candidate_vias),
+              it,
+              [](const auto lhs, const auto rhs) { return lhs.weight < rhs.weight; });
 
     // Filtered and ranked candidate range
     const auto candidate_vias_first = begin(candidate_vias);
@@ -848,10 +848,11 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     // The recursive path unpacking below destructs heaps.
     // We need to save all packed paths from the heaps upfront.
 
-    const auto extract_packed_path_from_heaps = [&](WeightedViaNode via) {
+    const auto extract_packed_path_from_heaps = [&](WeightedViaNode via)
+    {
         auto packed_path = retrievePackedPathFromHeap(forward_heap, reverse_heap, via.node);
 
-        return WeightedViaNodePackedPath{std::move(via), std::move(packed_path)};
+        return WeightedViaNodePackedPath{via, std::move(packed_path)};
     };
 
     std::vector<WeightedViaNodePackedPath> weighted_packed_paths;
@@ -900,7 +901,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
                       std::back_inserter(unpacked_paths),
                       search_engine_data,
                       facade,
-                      phantom_node_pair);
+                      endpoint_candidates);
 
     //
     // Filter and rank a second time. This time instead of being fast and doing
@@ -926,9 +927,8 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     std::vector<InternalRouteResult> routes;
     routes.reserve(number_of_unpacked_paths);
 
-    const auto unpacked_path_to_route = [&](const WeightedViaNodeUnpackedPath &path) {
-        return extractRoute(facade, path.via.weight, phantom_node_pair, path.nodes, path.edges);
-    };
+    const auto unpacked_path_to_route = [&](const WeightedViaNodeUnpackedPath &path)
+    { return extractRoute(facade, path.via.weight, endpoint_candidates, path.nodes, path.edges); };
 
     std::transform(unpacked_paths_first,
                    unpacked_paths_last,
@@ -954,6 +954,4 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     return InternalManyRoutesResult{std::move(routes)};
 }
 
-} // namespace routing_algorithms
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine::routing_algorithms

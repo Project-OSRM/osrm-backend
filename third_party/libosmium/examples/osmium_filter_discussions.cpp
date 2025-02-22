@@ -22,7 +22,6 @@
 */
 
 #include <algorithm> // for std::copy_if
-#include <cstdlib>   // for std::exit
 #include <iostream>  // for std::cout, std::cerr
 
 // We want to read OSM files in XML format
@@ -43,15 +42,15 @@
 int main(int argc, char* argv[]) {
     if (argc != 3) {
         std::cout << "Usage: " << argv[0] << " INFILE OUTFILE\n";
-        std::exit(1);
+        return 1;
     }
 
     try {
         // The input file, deduce file format from file suffix.
-        osmium::io::File input_file{argv[1]};
+        const osmium::io::File input_file{argv[1]};
 
         // The output file, force XML OSM file format.
-        osmium::io::File output_file{argv[2], "osm"};
+        const osmium::io::File output_file{argv[2], "osm"};
 
         // Initialize Reader for the input file.
         // Read only changesets (will ignore nodes, ways, and
@@ -92,7 +91,7 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         // All exceptions used by the Osmium library derive from std::exception.
         std::cerr << e.what() << '\n';
-        std::exit(1);
+        return 1;
     }
 }
 

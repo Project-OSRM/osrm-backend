@@ -18,12 +18,9 @@
 
 #include <algorithm>
 #include <iterator>
-#include <memory>
 #include <vector>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 
 // Bidirectional (s,t) to (s,t) and (t,s)
@@ -41,8 +38,8 @@ splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
         directed.emplace_back(edge.source,
                               edge.target,
                               edge.data.turn_id,
-                              std::max(edge.data.weight, 1),
-                              edge.data.duration,
+                              std::max(edge.data.weight, {1}),
+                              to_alias<EdgeDuration>(edge.data.duration),
                               edge.data.distance,
                               edge.data.forward,
                               edge.data.backward);
@@ -50,8 +47,8 @@ splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
         directed.emplace_back(edge.target,
                               edge.source,
                               edge.data.turn_id,
-                              std::max(edge.data.weight, 1),
-                              edge.data.duration,
+                              std::max(edge.data.weight, {1}),
+                              to_alias<EdgeDuration>(edge.data.duration),
                               edge.data.distance,
                               edge.data.backward,
                               edge.data.forward);
@@ -66,10 +63,13 @@ std::vector<OutputEdgeT> prepareEdgesForUsageInGraph(std::vector<extractor::Edge
     // sort into blocks of edges with same source + target
     // the we partition by the forward flag to sort all edges with a forward direction first.
     // the we sort by weight to ensure the first forward edge is the smallest forward edge
-    std::sort(begin(edges), end(edges), [](const auto &lhs, const auto &rhs) {
-        return std::tie(lhs.source, lhs.target, rhs.data.forward, lhs.data.weight) <
-               std::tie(rhs.source, rhs.target, lhs.data.forward, rhs.data.weight);
-    });
+    std::sort(begin(edges),
+              end(edges),
+              [](const auto &lhs, const auto &rhs)
+              {
+                  return std::tie(lhs.source, lhs.target, rhs.data.forward, lhs.data.weight) <
+                         std::tie(rhs.source, rhs.target, lhs.data.forward, rhs.data.weight);
+              });
 
     std::vector<OutputEdgeT> output_edges;
     output_edges.reserve(edges.size());
@@ -79,10 +79,11 @@ std::vector<OutputEdgeT> prepareEdgesForUsageInGraph(std::vector<extractor::Edge
         const NodeID source = begin_interval->source;
         const NodeID target = begin_interval->target;
 
-        auto end_interval =
-            std::find_if_not(begin_interval, edges.end(), [source, target](const auto &edge) {
-                return std::tie(edge.source, edge.target) == std::tie(source, target);
-            });
+        auto end_interval = std::find_if_not(
+            begin_interval,
+            edges.end(),
+            [source, target](const auto &edge)
+            { return std::tie(edge.source, edge.target) == std::tie(source, target); });
         BOOST_ASSERT(begin_interval != end_interval);
 
         // remove eigenloops
@@ -146,7 +147,8 @@ graphToEdges(const DynamicEdgeBasedGraph &edge_based_graph)
     auto max_turn_id = tbb::parallel_reduce(
         range,
         NodeID{0},
-        [&edge_based_graph](const auto range, NodeID initial) {
+        [&edge_based_graph](const auto range, NodeID initial)
+        {
             NodeID max_turn_id = initial;
             for (auto node = range.begin(); node < range.end(); ++node)
             {
@@ -161,31 +163,34 @@ graphToEdges(const DynamicEdgeBasedGraph &edge_based_graph)
         [](const NodeID lhs, const NodeID rhs) { return std::max(lhs, rhs); });
 
     std::vector<extractor::EdgeBasedEdge> edges(max_turn_id + 1);
-    tbb::parallel_for(range, [&](const auto range) {
-        for (auto node = range.begin(); node < range.end(); ++node)
+    tbb::parallel_for(
+        range,
+        [&](const auto range)
         {
-            for (auto edge : edge_based_graph.GetAdjacentEdgeRange(node))
+            for (auto node = range.begin(); node < range.end(); ++node)
             {
-                const auto &data = edge_based_graph.GetEdgeData(edge);
-                // we only need to save the forward edges, since the read method will
-                // convert from forward to bi-directional edges again
-                if (data.forward)
+                for (auto edge : edge_based_graph.GetAdjacentEdgeRange(node))
                 {
-                    auto target = edge_based_graph.GetTarget(edge);
-                    BOOST_ASSERT(data.turn_id <= max_turn_id);
-                    edges[data.turn_id] = extractor::EdgeBasedEdge{node, target, data};
-                    // only save the forward edge
-                    edges[data.turn_id].data.forward = true;
-                    edges[data.turn_id].data.backward = false;
+                    const auto &data = edge_based_graph.GetEdgeData(edge);
+                    // we only need to save the forward edges, since the read method
+                    // will convert from forward to bi-directional edges again
+                    if (data.forward)
+                    {
+                        auto target = edge_based_graph.GetTarget(edge);
+                        BOOST_ASSERT(data.turn_id <= max_turn_id);
+                        edges[data.turn_id] = extractor::EdgeBasedEdge{node, target, data};
+                        // only save the forward edge
+                        edges[data.turn_id].data.forward = true;
+                        edges[data.turn_id].data.backward = false;
+                    }
                 }
             }
-        }
-    });
+        });
 
     return edges;
 }
 
-inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const boost::filesystem::path &path)
+inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const std::filesystem::path &path)
 {
     EdgeID number_of_edge_based_nodes;
     std::vector<extractor::EdgeBasedEdge> edges;
@@ -195,10 +200,9 @@ inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const boost::filesystem::path &p
     auto directed = splitBidirectionalEdges(edges);
     auto tidied = prepareEdgesForUsageInGraph<DynamicEdgeBasedGraphEdge>(std::move(directed));
 
-    return DynamicEdgeBasedGraph(number_of_edge_based_nodes, std::move(tidied), checksum);
+    return DynamicEdgeBasedGraph(number_of_edge_based_nodes, tidied, checksum);
 }
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif

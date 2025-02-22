@@ -6,11 +6,7 @@
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace engine
-{
-namespace guidance
+namespace osrm::engine::guidance
 {
 using namespace osrm::guidance;
 
@@ -106,7 +102,8 @@ bool isStaggeredIntersection(const RouteStepIterator step_prior_to_intersection,
     // If adjusted, make sure to check validity of the is_right/is_left classification below
     const constexpr auto MAX_STAGGERED_DISTANCE = 3; // debatable, but keep short to be on safe side
 
-    const auto angle = [](const RouteStep &step) {
+    const auto angle = [](const RouteStep &step)
+    {
         const auto &intersection = step.intersections.front();
         const auto entry_bearing = util::bearing::reverse(intersection.bearings[intersection.in]);
         const auto exit_bearing = intersection.bearings[intersection.out];
@@ -419,6 +416,4 @@ bool straightTurnFollowedByChoiceless(const RouteStepIterator step_entering_inte
            noIntermediaryIntersections(*step_entering_intersection);
 }
 
-} /* namespace guidance */
-} /* namespace engine */
-} /* namespace osrm */
+} // namespace osrm::engine::guidance

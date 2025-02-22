@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -61,13 +61,13 @@ namespace osmium {
         class VerboseOutput {
 
             /// all time output will be relative to this start time
-            time_t m_start;
+            std::time_t m_start;
 
             /// is verbose mode enabled?
             bool m_verbose;
 
             /// a newline was written, start next output with runtime
-            bool m_newline;
+            bool m_newline = true;
 
             /**
              * If we remember that a newline was written as the last thing
@@ -75,7 +75,7 @@ namespace osmium {
              */
             void start_line() {
                 if (m_newline) {
-                    const time_t elapsed = runtime();
+                    const std::time_t elapsed = runtime();
 
                     const char old_fill = std::cerr.fill();
                     std::cerr << '[' << std::setw(2) << (elapsed / 60) << ':' << std::setw(2) << std::setfill('0') << (elapsed % 60) << "] ";
@@ -88,13 +88,12 @@ namespace osmium {
         public:
 
             explicit VerboseOutput(bool verbose = false) noexcept :
-                m_start(time(nullptr)),
-                m_verbose(verbose),
-                m_newline(true) {
+                m_start(std::time(nullptr)),
+                m_verbose(verbose) {
             }
 
-            time_t runtime() const noexcept {
-                return time(nullptr) - m_start;
+            std::time_t runtime() const noexcept {
+                return std::time(nullptr) - m_start;
             }
 
             /// Get "verbose" setting.

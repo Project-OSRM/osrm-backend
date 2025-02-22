@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2020 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -138,7 +138,7 @@ namespace osmium {
              *
              * @param type osmium::item_type::node, way, or relation.
              */
-            relations::MembersDatabaseCommon& member_database(osmium::item_type type) {
+            relations::MembersDatabaseCommon& member_database(osmium::item_type type) noexcept {
                 switch (type) {
                     case osmium::item_type::node:
                         return m_member_nodes_db;
@@ -149,7 +149,9 @@ namespace osmium {
                     default:
                         break;
                 }
-                throw std::logic_error{"Should not be here."};
+
+                assert(false && "Should not be here");
+                return m_member_nodes_db;
             }
 
             /**
@@ -158,7 +160,7 @@ namespace osmium {
              *
              * @param type osmium::item_type::node, way, or relation.
              */
-            const relations::MembersDatabaseCommon& member_database(osmium::item_type type) const {
+            const relations::MembersDatabaseCommon& member_database(osmium::item_type type) const noexcept {
                 switch (type) {
                     case osmium::item_type::node:
                         return m_member_nodes_db;
@@ -169,7 +171,9 @@ namespace osmium {
                     default:
                         break;
                 }
-                throw std::logic_error{"Should not be here."};
+
+                assert(false && "Should not be here");
+                return m_member_nodes_db;
             }
 
             /**

@@ -29,7 +29,7 @@ Feature: Foot - Turn restrictions
         When I route I should get
             | from | to | route    |
             | s    | w  | sj,wj,wj |
-            | s    | n  | sj,nj,nj |
+            | s    | n  | sj,nj    |
             | s    | e  | sj,ej,ej |
 
     @only_turning
@@ -55,7 +55,7 @@ Feature: Foot - Turn restrictions
         When I route I should get
             | from | to | route    |
             | s    | w  | sj,wj,wj |
-            | s    | n  | sj,nj,nj |
+            | s    | n  | sj,nj    |
             | s    | e  | sj,ej,ej |
 
     @except

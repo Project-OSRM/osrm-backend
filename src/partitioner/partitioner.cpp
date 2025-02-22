@@ -15,33 +15,21 @@
 
 #include "util/coordinate.hpp"
 #include "util/geojson_debug_logger.hpp"
-#include "util/geojson_debug_policies.hpp"
 #include "util/integer_range.hpp"
 #include "util/json_container.hpp"
 #include "util/log.hpp"
 #include "util/mmap_file.hpp"
+#include "util/timing_util.hpp"
+
+#include <boost/assert.hpp>
+#include <tbb/global_control.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <iterator>
 #include <vector>
 
-#include <boost/assert.hpp>
-#include <boost/filesystem/operations.hpp>
-
-#if TBB_VERSION_MAJOR == 2020
-#include <tbb/global_control.h>
-#else
-#include <tbb/task_scheduler_init.h>
-#endif
-
-#include "util/geojson_debug_logger.hpp"
-#include "util/geojson_debug_policies.hpp"
-#include "util/json_container.hpp"
-#include "util/timing_util.hpp"
-
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 auto getGraphBisection(const PartitionerConfig &config)
 {
@@ -74,13 +62,8 @@ auto getGraphBisection(const PartitionerConfig &config)
 
 int Partitioner::Run(const PartitionerConfig &config)
 {
-#if TBB_VERSION_MAJOR == 2020
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
-#else
-    tbb::task_scheduler_init init(config.requested_num_threads);
-    BOOST_ASSERT(init.is_active());
-#endif
 
     const std::vector<BisectionID> &node_based_partition_ids = getGraphBisection(config);
 
@@ -177,13 +160,21 @@ int Partitioner::Run(const PartitionerConfig &config)
         extractor::files::readManeuverOverrides(filename, maneuver_overrides, node_sequences);
         renumber(maneuver_overrides, permutation);
         renumber(node_sequences, permutation);
+
+        // Although the vector is already sorted, the rename function changes the identifiers, so
+        // the order is not sorted now. So we sort by `from_node` again, so that later lookups can
+        // be done with a binary search.
+        std::sort(maneuver_overrides.begin(),
+                  maneuver_overrides.end(),
+                  [](const auto &a, const auto &b) { return a.start_node < b.start_node; });
+
         extractor::files::writeManeuverOverrides(filename, maneuver_overrides, node_sequences);
     }
-    if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
+    if (std::filesystem::exists(config.GetPath(".osrm.hsgr")))
     {
         util::Log(logWARNING) << "Found existing .osrm.hsgr file, removing. You need to re-run "
                                  "osrm-contract after osrm-partition.";
-        boost::filesystem::remove(config.GetPath(".osrm.hsgr"));
+        std::filesystem::remove(config.GetPath(".osrm.hsgr"));
     }
     TIMER_STOP(renumber);
     util::Log() << "Renumbered data in " << TIMER_SEC(renumber) << " seconds";
@@ -213,5 +204,4 @@ int Partitioner::Run(const PartitionerConfig &config)
     return 0;
 }
 
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner

@@ -3,18 +3,14 @@
 
 #include "util/coordinate.hpp"
 
-#include <algorithm>
-#include <boost/assert.hpp>
 #include <string>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 namespace detail
 {
-std::string encode(std::vector<int> &numbers);
+void encode(int number_to_encode, std::string &output);
 std::int32_t decode_polyline_integer(std::string::const_iterator &first,
                                      std::string::const_iterator last);
 } // namespace detail
@@ -32,26 +28,24 @@ std::string encodePolyline(CoordVectorForwardIter begin, CoordVectorForwardIter 
         return {};
     }
 
-    std::vector<int> delta_numbers;
-    BOOST_ASSERT(size > 0);
-    delta_numbers.reserve((size - 1) * 2);
+    std::string output;
+    // just a guess that we will need ~4 bytes per coordinate to avoid reallocations
+    output.reserve(size * 4);
+
     int current_lat = 0;
     int current_lon = 0;
-    std::for_each(
-        begin,
-        end,
-        [&delta_numbers, &current_lat, &current_lon, coordinate_to_polyline](
-            const util::Coordinate loc) {
-            const int lat_diff =
-                std::round(static_cast<int>(loc.lat) * coordinate_to_polyline) - current_lat;
-            const int lon_diff =
-                std::round(static_cast<int>(loc.lon) * coordinate_to_polyline) - current_lon;
-            delta_numbers.emplace_back(lat_diff);
-            delta_numbers.emplace_back(lon_diff);
-            current_lat += lat_diff;
-            current_lon += lon_diff;
-        });
-    return detail::encode(delta_numbers);
+    for (auto it = begin; it != end; ++it)
+    {
+        const int lat_diff =
+            std::round(static_cast<int>(it->lat) * coordinate_to_polyline) - current_lat;
+        const int lon_diff =
+            std::round(static_cast<int>(it->lon) * coordinate_to_polyline) - current_lon;
+        detail::encode(lat_diff, output);
+        detail::encode(lon_diff, output);
+        current_lat += lat_diff;
+        current_lon += lon_diff;
+    }
+    return output;
 }
 
 // Decodes geometry from polyline format
@@ -80,7 +74,6 @@ std::vector<util::Coordinate> decodePolyline(const std::string &polyline)
     }
     return coordinates;
 }
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif /* POLYLINECOMPRESSOR_H_ */

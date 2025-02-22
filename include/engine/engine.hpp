@@ -21,11 +21,8 @@
 #include "util/json_container.hpp"
 
 #include <memory>
-#include <string>
 
-namespace osrm
-{
-namespace engine
+namespace osrm::engine
 {
 
 class EngineInterface
@@ -45,12 +42,16 @@ template <typename Algorithm> class Engine final : public EngineInterface
 {
   public:
     explicit Engine(const EngineConfig &config)
-        : route_plugin(config.max_locations_viaroute, config.max_alternatives),            //
-          table_plugin(config.max_locations_distance_table),                               //
-          nearest_plugin(config.max_results_nearest),                                      //
-          trip_plugin(config.max_locations_trip),                                          //
-          match_plugin(config.max_locations_map_matching, config.max_radius_map_matching), //
-          tile_plugin()                                                                    //
+        : route_plugin(config.max_locations_viaroute,
+                       config.max_alternatives,
+                       config.default_radius),                                      //
+          table_plugin(config.max_locations_distance_table, config.default_radius), //
+          nearest_plugin(config.max_results_nearest, config.default_radius),        //
+          trip_plugin(config.max_locations_trip, config.default_radius),            //
+          match_plugin(config.max_locations_map_matching,
+                       config.max_radius_map_matching,
+                       config.default_radius), //
+          tile_plugin()                        //
 
     {
         if (config.use_shared_memory)
@@ -83,7 +84,7 @@ template <typename Algorithm> class Engine final : public EngineInterface
 
     Engine(const Engine &) = delete;
     Engine &operator=(const Engine &) = delete;
-    virtual ~Engine() = default;
+    virtual ~Engine() override = default;
 
     Status Route(const api::RouteParameters &params, api::ResultT &result) const override final
     {
@@ -130,7 +131,6 @@ template <typename Algorithm> class Engine final : public EngineInterface
     const plugins::MatchPlugin match_plugin;
     const plugins::TilePlugin tile_plugin;
 };
-} // namespace engine
-} // namespace osrm
+} // namespace osrm::engine
 
 #endif // OSRM_IMPL_HPP

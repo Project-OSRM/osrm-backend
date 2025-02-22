@@ -7,18 +7,14 @@
 #include "util/log.hpp"
 
 #include "util/bearing.hpp"
-#include "util/coordinate_calculation.hpp"
 
 #include <algorithm>
 #include <cstddef>
 
 using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
-using osrm::guidance::getTurnDirection;
 using osrm::util::angularDeviation;
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 namespace detail
@@ -183,7 +179,7 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
                     // duration/weight of the traversal. We can only approximate the distance here
                     // or actually follow the full road. When 2399 lands, we can exchange here for a
                     // precalculated distance value.
-                    const auto distance = util::coordinate_calculation::haversineDistance(
+                    const auto distance = util::coordinate_calculation::greatCircleDistance(
                         node_coordinates[node_based_graph.GetTarget(via_edge)],
                         node_coordinates[node_based_graph.GetTarget(road.eid)]);
 
@@ -360,7 +356,8 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
                                      ConnectedRoad &right) const
 {
     // TODO handle low priority road classes in a reasonable way
-    const auto suppressed_type = [&](const ConnectedRoad &road) {
+    const auto suppressed_type = [&](const ConnectedRoad &road)
+    {
         const auto in_mode =
             node_data_container
                 .GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data)
@@ -430,7 +427,7 @@ void IntersectionHandler::assignTrivialTurns(const EdgeID via_eid,
         }
 }
 
-boost::optional<IntersectionHandler::IntersectionViewAndNode>
+std::optional<IntersectionHandler::IntersectionViewAndNode>
 IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) const
 {
     // We use the intersection generator to jump over traffic signals, barriers. The intersection
@@ -453,7 +450,7 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
     if (intersection_parameters.node == SPECIAL_NODEID ||
         intersection_parameters.edge == SPECIAL_EDGEID)
     {
-        return boost::none;
+        return std::nullopt;
     }
 
     auto intersection = extractor::intersection::getConnectedRoads<false>(node_based_graph,
@@ -468,11 +465,10 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
 
     if (intersection.size() <= 2 || intersection.isTrafficSignalOrBarrier())
     {
-        return boost::none;
+        return std::nullopt;
     }
 
-    return boost::make_optional(
-        IntersectionViewAndNode{std::move(intersection), intersection_node});
+    return std::make_optional(IntersectionViewAndNode{std::move(intersection), intersection_node});
 }
 
 bool IntersectionHandler::isSameName(const EdgeID source_edge_id, const EdgeID target_edge_id) const
@@ -490,5 +486,4 @@ bool IntersectionHandler::isSameName(const EdgeID source_edge_id, const EdgeID t
                                                   street_name_suffix_table); //
 }
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance

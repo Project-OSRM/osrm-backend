@@ -34,16 +34,16 @@ TEST_CASE("check_for_exception with exception") {
         p.set_exception(std::current_exception());
     }
 
-    REQUIRE_THROWS_AS(osmium::thread::check_for_exception(f), const std::runtime_error&);
+    REQUIRE_THROWS_AS(osmium::thread::check_for_exception(f), std::runtime_error);
 }
 
 static_assert(std::is_nothrow_move_constructible<osmium::thread::thread_handler>::value, "thread_handler must have noexcept move constructor");
 
 TEST_CASE("empty thread_handler") {
-    osmium::thread::thread_handler th;
+    const osmium::thread::thread_handler th;
 }
 
-int foo;
+int foo; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 void test_func(int value) {
     foo = value;
@@ -54,7 +54,7 @@ TEST_CASE("valid thread_handler") {
     test_func(17);
     REQUIRE(foo == 17);
     {
-        osmium::thread::thread_handler th{test_func, 5};
+        const osmium::thread::thread_handler th{test_func, 5};
     }
     REQUIRE(foo == 5);
 }
