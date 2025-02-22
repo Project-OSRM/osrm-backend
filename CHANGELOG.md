@@ -9,6 +9,7 @@
       - ADDED: Add support for opposite approach request parameter. [#6842](https://github.com/Project-OSRM/osrm-backend/pull/6842)
       - ADDED: Add support for accessing edge flags in `process_segment` [#6658](https://github.com/Project-OSRM/osrm-backend/pull/6658)
     - Build:
+      - CHANGED: Fix compilation with upcoming Boost 1.87.0 [#7073](https://github.com/Project-OSRM/osrm-backend/pull/7073)
       - CHANGED: Upgrade clang-format to version 15. [#6919](https://github.com/Project-OSRM/osrm-backend/pull/6919)
       - CHANGED: Use Debian Bookworm as base Docker image [#6904](https://github.com/Project-OSRM/osrm-backend/pull/6904)
       - CHANGED: Upgrade CI actions to latest versions [#6893](https://github.com/Project-OSRM/osrm-backend/pull/6893)
@@ -25,6 +26,8 @@
     - NodeJS:
       - CHANGED: Use node-api instead of NAN. [#6452](https://github.com/Project-OSRM/osrm-backend/pull/6452)
     - Misc:
+      - CHANGED: Migrate to Conan 2.x. [#7042](https://github.com/Project-OSRM/osrm-backend/pull/7042)
+      - CHANGED: Use std::string_view for key type in json::Object. [#7062](https://github.com/Project-OSRM/osrm-backend/pull/7062)
       - CHANGED: Use thread_local instead of boost::thread_specific_ptr. [#6991](https://github.com/Project-OSRM/osrm-backend/pull/6991)
       - CHANGED: Bump flatbuffers to v24.3.25 version. [#6988](https://github.com/Project-OSRM/osrm-backend/pull/6988)
       - CHANGED: Add .reserve(...) to assembleGeometry function. [#6983](https://github.com/Project-OSRM/osrm-backend/pull/6983)
@@ -77,6 +80,8 @@
       - FIXED: Ensure required file check in osrm-routed is correctly enforced. [#6655](https://github.com/Project-OSRM/osrm-backend/pull/6655)
       - FIXED: Correct HTTP docs to reflect summary output dependency on steps parameter. [#6655](https://github.com/Project-OSRM/osrm-backend/pull/6655)
       - ADDED: Extract prerelease/build information from package semver [#6839](https://github.com/Project-OSRM/osrm-backend/pull/6839)
+      - FIXED: Segfault in `UnresolvedManeuverOverride::Turns()` on Australia extracts [#7112](https://github.com/Project-OSRM/osrm-backend/pull/7112)
+      - CHANGED: Replaced PL:trunk with PL:expressway to match the latest changes in Polish tagging [#7079](https://github.com/Project-OSRM/osrm-backend/pull/7079)
     - Profiles:
       - FIXED: Bicycle and foot profiles now don't route on proposed ways [#6615](https://github.com/Project-OSRM/osrm-backend/pull/6615)
       - ADDED: Add optional support of cargo bike exclusion and width to bicyle profile [#7044](https://github.com/Project-OSRM/osrm-backend/pull/7044)
