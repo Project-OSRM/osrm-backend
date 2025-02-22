@@ -32,6 +32,11 @@
                                           (R2)[i]->segment_hints.end());                           \
         }                                                                                          \
     }
+// TODO: we should be able to somehow make Boost.Test to print std::optional types
+BOOST_TEST_DONT_PRINT_LOG_VALUE(std::optional<double>)
+BOOST_TEST_DONT_PRINT_LOG_VALUE(std::optional<osrm::engine::Approach>)
+BOOST_TEST_DONT_PRINT_LOG_VALUE(std::optional<osrm::engine::Bearing>)
+BOOST_TEST_DONT_PRINT_LOG_VALUE(std::optional<bool>)
 
 BOOST_AUTO_TEST_SUITE(api_parameters_parser)
 
@@ -216,7 +221,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     phantom_1.input_location = coords_1[0];
     engine::PhantomNode phantom_2;
     phantom_2.input_location = coords_1[1];
-    std::vector<boost::optional<engine::Hint>> hints_4 = {
+    std::vector<std::optional<engine::Hint>> hints_4 = {
         engine::Hint{{engine::SegmentHint{phantom_1, 0x1337}}},
         engine::Hint{{engine::SegmentHint{phantom_2, 0x1337}}}};
     RouteParameters reference_4{false,
@@ -224,11 +229,11 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                 false,
                                 RouteParameters::GeometriesType::Polyline,
                                 RouteParameters::OverviewType::Simplified,
-                                boost::optional<bool>{},
+                                std::optional<bool>{},
                                 coords_1,
                                 hints_4,
-                                std::vector<boost::optional<double>>{},
-                                std::vector<boost::optional<engine::Bearing>>{}};
+                                std::vector<std::optional<double>>{},
+                                std::vector<std::optional<engine::Bearing>>{}};
     auto result_4 = parseParameters<RouteParameters>(
         "1,2;3,4?steps=false&hints=" + hints_4[0]->ToBase64() + ";" + hints_4[1]->ToBase64());
     BOOST_CHECK(result_4);
@@ -244,8 +249,8 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_4.coordinates, result_4->coordinates);
     CHECK_EQUAL_RANGE_OF_HINTS(reference_4.hints, result_4->hints);
 
-    std::vector<boost::optional<engine::Bearing>> bearings_4 = {
-        boost::none,
+    std::vector<std::optional<engine::Bearing>> bearings_4 = {
+        std::nullopt,
         engine::Bearing{200, 10},
         engine::Bearing{100, 5},
     };
@@ -254,10 +259,10 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                 false,
                                 RouteParameters::GeometriesType::Polyline,
                                 RouteParameters::OverviewType::Simplified,
-                                boost::optional<bool>{},
+                                std::optional<bool>{},
                                 coords_1,
-                                std::vector<boost::optional<engine::Hint>>{},
-                                std::vector<boost::optional<double>>{},
+                                std::vector<std::optional<engine::Hint>>{},
+                                std::vector<std::optional<double>>{},
                                 bearings_4};
     auto result_5 = parseParameters<RouteParameters>("1,2;3,4?steps=false&bearings=;200,10;100,5");
     BOOST_CHECK(result_5);
@@ -296,8 +301,8 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     auto result_7 = parseParameters<RouteParameters>("1,2;3,4?radiuses=;unlimited");
     RouteParameters reference_7{};
     reference_7.coordinates = coords_1;
-    reference_7.radiuses = {boost::none,
-                            boost::make_optional(std::numeric_limits<double>::infinity())};
+    reference_7.radiuses = {std::nullopt,
+                            std::make_optional(std::numeric_limits<double>::infinity())};
     BOOST_CHECK(result_7);
     BOOST_CHECK_EQUAL(reference_7.steps, result_7->steps);
     BOOST_CHECK_EQUAL(reference_7.alternatives, result_7->alternatives);
@@ -314,14 +319,14 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     auto result_8 = parseParameters<RouteParameters>("1,2;3,4?radiuses=;");
     RouteParameters reference_8{};
     reference_8.coordinates = coords_1;
-    reference_8.radiuses = {boost::none, boost::none};
+    reference_8.radiuses = {std::nullopt, std::nullopt};
     BOOST_CHECK(result_8);
     CHECK_EQUAL_RANGE(reference_8.radiuses, result_8->radiuses);
 
     auto result_9 = parseParameters<RouteParameters>("1,2?radiuses=");
     RouteParameters reference_9{};
     reference_9.coordinates = coords_1;
-    reference_9.radiuses = {boost::none};
+    reference_9.radiuses = {std::nullopt};
     BOOST_CHECK(result_9);
     CHECK_EQUAL_RANGE(reference_9.radiuses, result_9->radiuses);
 
@@ -335,7 +340,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     phantom_3.input_location = coords_3[0];
     engine::PhantomNode phantom_4;
     phantom_4.input_location = coords_3[2];
-    std::vector<boost::optional<engine::Hint>> hints_10 = {
+    std::vector<std::optional<engine::Hint>> hints_10 = {
         engine::Hint{{engine::SegmentHint{phantom_3, 0x1337}}},
         {},
         engine::Hint{{engine::SegmentHint{phantom_4, 0x1337}}},
@@ -346,11 +351,11 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                  false,
                                  RouteParameters::GeometriesType::Polyline,
                                  RouteParameters::OverviewType::Simplified,
-                                 boost::optional<bool>{},
+                                 std::optional<bool>{},
                                  coords_3,
                                  hints_10,
-                                 std::vector<boost::optional<double>>{},
-                                 std::vector<boost::optional<engine::Bearing>>{}};
+                                 std::vector<std::optional<double>>{},
+                                 std::vector<std::optional<engine::Bearing>>{}};
     auto result_10 = parseParameters<RouteParameters>(
         "1,2;3,4;5,6;7,8?steps=false&hints=" + hints_10[0]->ToBase64() + ";;" +
         hints_10[2]->ToBase64() + ";");
@@ -447,26 +452,26 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK_EQUAL(result_2->annotations_type == RouteParameters::AnnotationsType::All, true);
     BOOST_CHECK_EQUAL(result_17->annotations, true);
 
-    std::vector<boost::optional<engine::Approach>> approaches_18 = {
-        boost::none,
+    std::vector<std::optional<engine::Approach>> approaches_18 = {
+        std::nullopt,
         engine::Approach::CURB,
         engine::Approach::UNRESTRICTED,
-        engine::Approach::CURB,
+        engine::Approach::OPPOSITE,
     };
     RouteParameters reference_18{false,
                                  false,
                                  false,
                                  RouteParameters::GeometriesType::Polyline,
                                  RouteParameters::OverviewType::Simplified,
-                                 boost::optional<bool>{},
+                                 std::optional<bool>{},
                                  coords_3,
-                                 std::vector<boost::optional<engine::Hint>>{},
-                                 std::vector<boost::optional<double>>{},
-                                 std::vector<boost::optional<engine::Bearing>>{},
+                                 std::vector<std::optional<engine::Hint>>{},
+                                 std::vector<std::optional<double>>{},
+                                 std::vector<std::optional<engine::Bearing>>{},
                                  approaches_18};
 
     auto result_18 = parseParameters<RouteParameters>(
-        "1,2;3,4;5,6;7,8?steps=false&approaches=;curb;unrestricted;curb");
+        "1,2;3,4;5,6;7,8?steps=false&approaches=;curb;unrestricted;opposite");
     BOOST_CHECK(result_18);
     BOOST_CHECK_EQUAL(reference_18.steps, result_18->steps);
     BOOST_CHECK_EQUAL(reference_18.alternatives, result_18->alternatives);
@@ -778,6 +783,7 @@ BOOST_AUTO_TEST_CASE(valid_trip_urls)
     reference_1.coordinates = coords_1;
     auto result_1 = parseParameters<TripParameters>("1,2;3,4");
     BOOST_CHECK(result_1);
+
     CHECK_EQUAL_RANGE(reference_1.radiuses, result_1->radiuses);
     CHECK_EQUAL_RANGE(reference_1.coordinates, result_1->coordinates);
 

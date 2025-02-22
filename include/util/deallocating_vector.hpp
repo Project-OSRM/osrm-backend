@@ -166,7 +166,7 @@ class DeallocatingVectorIterator
 
 template <typename ElementT> class DeallocatingVector;
 
-template <typename T> void swap(DeallocatingVector<T> &lhs, DeallocatingVector<T> &rhs);
+template <typename T> void swap(DeallocatingVector<T> &lhs, DeallocatingVector<T> &rhs) noexcept;
 
 template <typename ElementT> class DeallocatingVector
 {
@@ -204,8 +204,8 @@ template <typename ElementT> class DeallocatingVector
     }
 
     // moving is fine
-    DeallocatingVector(DeallocatingVector &&other) { swap(other); }
-    DeallocatingVector &operator=(DeallocatingVector &&other)
+    DeallocatingVector(DeallocatingVector &&other) noexcept { swap(other); }
+    DeallocatingVector &operator=(DeallocatingVector &&other) noexcept
     {
         swap(other);
         return *this;
@@ -221,9 +221,10 @@ template <typename ElementT> class DeallocatingVector
 
     ~DeallocatingVector() { clear(); }
 
-    friend void swap<>(DeallocatingVector<ElementT> &lhs, DeallocatingVector<ElementT> &rhs);
+    friend void swap<>(DeallocatingVector<ElementT> &lhs,
+                       DeallocatingVector<ElementT> &rhs) noexcept;
 
-    void swap(DeallocatingVector<ElementT> &other)
+    void swap(DeallocatingVector<ElementT> &other) noexcept
     {
         std::swap(current_size, other.current_size);
         bucket_list.swap(other.bucket_list);
@@ -254,7 +255,7 @@ template <typename ElementT> class DeallocatingVector
         ++current_size;
     }
 
-    template <typename... Ts> void emplace_back(Ts &&... element)
+    template <typename... Ts> void emplace_back(Ts &&...element)
     {
         const std::size_t current_capacity = capacity();
         if (current_size == current_capacity)
@@ -342,7 +343,7 @@ template <typename ElementT> class DeallocatingVector
     }
 };
 
-template <typename T> void swap(DeallocatingVector<T> &lhs, DeallocatingVector<T> &rhs)
+template <typename T> void swap(DeallocatingVector<T> &lhs, DeallocatingVector<T> &rhs) noexcept
 {
     lhs.swap(rhs);
 }

@@ -2,7 +2,7 @@
 #include "engine/routing_algorithms/routing_base_ch.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/range/iterator_range_core.hpp>
+#include <ranges>
 
 #include <limits>
 #include <memory>
@@ -106,7 +106,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                                                search_space_with_buckets.end(),
                                                heapNode.node,
                                                NodeBucket::Compare());
-    for (const auto &current_bucket : boost::make_iterator_range(bucket_list))
+    for (const auto &current_bucket : std::ranges::subrange(bucket_list.first, bucket_list.second))
     {
         // Get target id from bucket entry
         const auto column_index = current_bucket.column_index;

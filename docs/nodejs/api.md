@@ -21,7 +21,7 @@ var osrm = new OSRM('network.osrm');
 **Parameters**
 
 -   `options` **([Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object) \| [String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String))** Options for creating an OSRM object or string to the `.osrm` file. (optional, default `{shared_memory:true}`)
-    -   `options.algorithm` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** The algorithm to use for routing. Can be 'CH', 'CoreCH' or 'MLD'. Default is 'CH'.
+    -   `options.algorithm` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** The algorithm to use for routing. Can be 'CH', or 'MLD'. Default is 'CH'.
                Make sure you prepared the dataset with the correct toolchain.
     -   `options.shared_memory` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Connects to the persistent shared memory datastore.
                This requires you to run `osrm-datastore` prior to creating an `OSRM` object.
@@ -31,6 +31,7 @@ var osrm = new OSRM('network.osrm');
                Old behaviour: Path to a file on disk to store the memory using mmap.  Current behaviour: setting this value is the same as setting `mmap_memory: true`.
     -   `options.mmap_memory` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Map on-disk files to virtual memory addresses (mmap), rather than loading into RAM.
     -   `options.path` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** The path to the `.osrm` files. This is mutually exclusive with setting {options.shared_memory} to true.
+    -   `options.disable_feature_dataset` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Disables a feature dataset from being loaded into memory if not needed. Options: `ROUTE_STEPS`, `ROUTE_GEOMETRY`.
     -   `options.max_locations_trip` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in trip query (default: unlimited).
     -   `options.max_locations_viaroute` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in viaroute query (default: unlimited).
     -   `options.max_locations_distance_table` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Max. locations supported in distance table query (default: unlimited).
@@ -62,7 +63,7 @@ Returns the fastest route between two or more coordinates while visiting the way
     -   `options.geometries` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** Returned route geometry format (influences overview and per step). Can also be `geojson`. (optional, default `polyline`)
     -   `options.overview` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** Add overview geometry either `full`, `simplified` according to highest zoom level it could be display on, or not at all (`false`). (optional, default `simplified`)
     -   `options.continue_straight` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Forces the route to keep going straight at waypoints and don't do a uturn even if it would be faster. Default value depends on the profile.
-    -   `options.approaches` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
+    -   `options.approaches` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Restrict the direction on the road network at a waypoint, relative to the input coordinate. Can be `null` (unrestricted, default), `curb` or `opposite`.
                          `null`/`true`/`false`
     -   `options.waypoints` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Indices to coordinates to treat as waypoints. If not supplied, all coordinates are waypoints.  Must include first and last coordinate index.
     -   `options.format` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which output format to use, either `json`, or [`flatbuffers`](https://github.com/Project-OSRM/osrm-backend/tree/master/include/engine/api/flatbuffers).
@@ -100,7 +101,7 @@ Note: `coordinates` in the general options only supports a single `{longitude},{
     -   `options.generate_hints` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Whether or not adds a Hint to the response which can be used in subsequent requests. (optional, default `true`)
     -   `options.number` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** Number of nearest segments that should be returned.
         Must be an integer greater than or equal to `1`. (optional, default `1`)
-    -   `options.approaches` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
+    -   `options.approaches` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Restrict the direction on the road network at a waypoint, relative to the input coordinate. Can be `null` (unrestricted, default), `curb` or `opposite`.
     -   `options.format` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which output format to use, either `json`, or [`flatbuffers`](https://github.com/Project-OSRM/osrm-backend/tree/master/include/engine/api/flatbuffers).
     -   `options.snapping` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which edges can be snapped to, either `default`, or `any`.  `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
 -   `callback` **[Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)** 
@@ -140,7 +141,7 @@ Optionally returns distance table.
     -   `options.sources` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** An array of `index` elements (`0 <= integer < #coordinates`) to use
                                          location with given index as source. Default is to use all.
     -   `options.destinations` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** An array of `index` elements (`0 <= integer < #coordinates`) to use location with given index as destination. Default is to use all.
-    -   `options.approaches` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
+    -   `options.approaches` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Restrict the direction on the road network at a waypoint, relative to the input coordinate.. Can be `null` (unrestricted, default), `curb` or `opposite`.
     -   `options.fallback_speed` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Replace `null` responses in result with as-the-crow-flies estimates based on `fallback_speed`.  Value is in metres/second.
     -   `options.fallback_coordinate` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Either `input` (default) or `snapped`.  If using a `fallback_speed`, use either the user-supplied coordinate (`input`), or the snapped coordinate (`snapped`) for calculating the as-the-crow-flies distance between two points.
     -   `options.scale_factor` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Multiply the table duration values in the table by this number for more controlled input into a route optimization solver.
@@ -297,7 +298,7 @@ Right now, the following combinations are possible:
     -   `options.roundtrip` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Return route is a roundtrip. (optional, default `true`)
     -   `options.source` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** Return route starts at `any` or `first` coordinate. (optional, default `any`)
     -   `options.destination` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** Return route ends at `any` or `last` coordinate. (optional, default `any`)
-    -   `options.approaches` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Keep waypoints on curb side. Can be `null` (unrestricted, default) or `curb`.
+    -   `options.approaches` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)?** Restrict the direction on the road network at a waypoint, relative to the input coordinate. Can be `null` (unrestricted, default), `curb` or `opposite`.
     -   `options.snapping` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Which edges can be snapped to, either `default`, or `any`. `default` only snaps to edges marked by the profile as `is_startpoint`, `any` will allow snapping to any edge in the routing graph.
 -   `callback` **[Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)** 
 

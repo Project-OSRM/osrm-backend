@@ -34,7 +34,6 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<ch::Algorithm> &en
            weight,
            packed_leg,
            {},
-           {},
            endpoint_candidates);
 
     std::vector<NodeID> unpacked_nodes;
@@ -45,15 +44,16 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<ch::Algorithm> &en
         unpacked_nodes.reserve(packed_leg.size());
         unpacked_edges.reserve(packed_leg.size());
         unpacked_nodes.push_back(packed_leg.front());
-        ch::unpackPath(facade,
-                       packed_leg.begin(),
-                       packed_leg.end(),
-                       [&unpacked_nodes, &unpacked_edges](std::pair<NodeID, NodeID> &edge,
-                                                          const auto &edge_id) {
-                           BOOST_ASSERT(edge.first == unpacked_nodes.back());
-                           unpacked_nodes.push_back(edge.second);
-                           unpacked_edges.push_back(edge_id);
-                       });
+        ch::unpackPath(
+            facade,
+            packed_leg.begin(),
+            packed_leg.end(),
+            [&unpacked_nodes, &unpacked_edges](std::pair<NodeID, NodeID> &edge, const auto &edge_id)
+            {
+                BOOST_ASSERT(edge.first == unpacked_nodes.back());
+                unpacked_nodes.push_back(edge.second);
+                unpacked_edges.push_back(edge_id);
+            });
     }
 
     return extractRoute(facade, weight, endpoint_candidates, unpacked_nodes, unpacked_edges);
@@ -70,21 +70,19 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<mld::Algorithm> &e
     auto &reverse_heap = *engine_working_data.reverse_heap_1;
     insertNodesInHeaps(forward_heap, reverse_heap, endpoint_candidates);
 
-    // TODO: when structured bindings will be allowed change to
-    // auto [weight, source_node, target_node, unpacked_edges] = ...
-    EdgeWeight weight = INVALID_EDGE_WEIGHT;
-    std::vector<NodeID> unpacked_nodes;
-    std::vector<EdgeID> unpacked_edges;
-    std::tie(weight, unpacked_nodes, unpacked_edges) = mld::search(engine_working_data,
-                                                                   facade,
-                                                                   forward_heap,
-                                                                   reverse_heap,
-                                                                   {},
-                                                                   {},
-                                                                   INVALID_EDGE_WEIGHT,
-                                                                   endpoint_candidates);
+    auto unpacked_path = mld::search(engine_working_data,
+                                     facade,
+                                     forward_heap,
+                                     reverse_heap,
+                                     {},
+                                     INVALID_EDGE_WEIGHT,
+                                     endpoint_candidates);
 
-    return extractRoute(facade, weight, endpoint_candidates, unpacked_nodes, unpacked_edges);
+    return extractRoute(facade,
+                        unpacked_path.weight,
+                        endpoint_candidates,
+                        unpacked_path.nodes,
+                        unpacked_path.edges);
 }
 
 } // namespace osrm::engine::routing_algorithms

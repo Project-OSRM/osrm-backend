@@ -160,7 +160,7 @@ TEST_CASE("Relationship between boxes: overlaps") {
     overlap.extend(osmium::Location{3, 3});
     overlap.extend(osmium::Location{5, 5});
 
-    osmium::Box outside{};
+    const osmium::Box outside{};
     overlap.extend(osmium::Location{30, 30});
     overlap.extend(osmium::Location{50, 50});
 

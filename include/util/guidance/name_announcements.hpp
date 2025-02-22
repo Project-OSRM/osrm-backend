@@ -6,7 +6,6 @@
 #include "extractor/name_table.hpp"
 #include "extractor/suffix_table.hpp"
 
-#include "util/attributes.hpp"
 #include "util/typedefs.hpp"
 
 #include <algorithm>
@@ -14,9 +13,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 
 namespace osrm::util::guidance
 {
@@ -63,14 +59,16 @@ template <typename StringView> inline auto decompose(const StringView &lhs, cons
     auto const lcs = longest_common_substring(lhs, rhs);
 
     // trim spaces, transform to lower
-    const auto trim = [](StringView view) {
+    const auto trim = [](StringView view)
+    {
         // we compare suffixes based on this value, it might break UTF chars, but as long as we are
         // consistent in handling, we do not create bad results
         std::string str;
         str.reserve(view.size());
-        std::transform(view.begin(), view.end(), std::back_inserter(str), [](unsigned char c) {
-            return std::tolower(c);
-        });
+        std::transform(view.begin(),
+                       view.end(),
+                       std::back_inserter(str),
+                       [](unsigned char c) { return std::tolower(c); });
         auto front = str.find_first_not_of(' ');
 
         if (front == std::string::npos)
@@ -126,18 +124,17 @@ inline bool requiresNameAnnounced(const StringView &from_name,
 
     // check similarity of names
     const auto names_are_empty = from_name.empty() && to_name.empty();
-    const auto name_is_contained =
-        boost::starts_with(from_name, to_name) || boost::starts_with(to_name, from_name);
+    const auto name_is_contained = from_name.starts_with(to_name) || to_name.starts_with(from_name);
 
     const auto checkForPrefixOrSuffixChange = [](const std::string_view first,
                                                  const std::string_view second,
-                                                 const SuffixTable &suffix_table) {
+                                                 const SuffixTable &suffix_table)
+    {
         std::string first_prefix, first_suffix, second_prefix, second_suffix;
         std::tie(first_prefix, first_suffix, second_prefix, second_suffix) =
             decompose(first, second);
-        const auto checkTable = [&](const std::string &str) {
-            return str.empty() || suffix_table.isSuffix(str);
-        };
+        const auto checkTable = [&](const std::string &str)
+        { return str.empty() || suffix_table.isSuffix(str); };
 
         return checkTable(first_prefix) && checkTable(first_suffix) && checkTable(second_prefix) &&
                checkTable(second_suffix);

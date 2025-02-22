@@ -51,16 +51,20 @@ template <std::size_t TimeBinSize = 1000, std::size_t IndexBinSize = 1000> class
     {
         std::stringstream out;
 
-        const auto print_bins = [&out](auto frame_index, auto begin, auto end) {
+        const auto print_bins = [&out](auto frame_index, auto begin, auto end)
+        {
             auto bin_index = 0;
-            std::for_each(begin, end, [&](const auto count) {
-                if (count > 0)
-                {
-                    out << (frame_index * TimeBinSize) << "," << (bin_index * IndexBinSize) << ","
-                        << count << std::endl;
-                }
-                bin_index++;
-            });
+            std::for_each(begin,
+                          end,
+                          [&](const auto count)
+                          {
+                              if (count > 0)
+                              {
+                                  out << (frame_index * TimeBinSize) << ","
+                                      << (bin_index * IndexBinSize) << "," << count << std::endl;
+                              }
+                              bin_index++;
+                          });
         };
 
         if (frame_offsets.size() == 0)

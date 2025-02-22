@@ -93,10 +93,10 @@ Hint Hint::FromBase64(const std::string &base64Hint)
 bool Hint::IsValid(const util::Coordinate new_input_coordinates,
                    const datafacade::BaseDataFacade &facade) const
 {
-    const auto all_valid =
-        std::all_of(segment_hints.begin(), segment_hints.end(), [&](const auto &seg_hint) {
-            return seg_hint.IsValid(new_input_coordinates, facade);
-        });
+    const auto all_valid = std::all_of(segment_hints.begin(),
+                                       segment_hints.end(),
+                                       [&](const auto &seg_hint)
+                                       { return seg_hint.IsValid(new_input_coordinates, facade); });
     if (!all_valid)
     {
         return false;

@@ -3,6 +3,7 @@
 
 #include <boost/date_time/gregorian/gregorian.hpp>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -192,23 +193,20 @@ struct OpeningHours
                && (times.empty() ||
                    std::any_of(times.begin(),
                                times.end(),
-                               [&time, &use_curr_day, &use_next_day](const auto &x) {
-                                   return x.IsInRange(time, use_curr_day, use_next_day);
-                               }))
+                               [&time, &use_curr_day, &use_next_day](const auto &x)
+                               { return x.IsInRange(time, use_curr_day, use_next_day); }))
                // .. and if weekdays are not specified or matches weekdays range
                && (weekdays.empty() ||
                    std::any_of(weekdays.begin(),
                                weekdays.end(),
-                               [&time, use_curr_day, use_next_day](const auto &x) {
-                                   return x.IsInRange(time, use_curr_day, use_next_day);
-                               }))
+                               [&time, use_curr_day, use_next_day](const auto &x)
+                               { return x.IsInRange(time, use_curr_day, use_next_day); }))
                // .. and if month-day ranges are not specified or is in any month-day range
                && (monthdays.empty() ||
                    std::any_of(monthdays.begin(),
                                monthdays.end(),
-                               [&time, use_curr_day, use_next_day](const auto &x) {
-                                   return x.IsInRange(time, use_curr_day, use_next_day);
-                               }));
+                               [&time, use_curr_day, use_next_day](const auto &x)
+                               { return x.IsInRange(time, use_curr_day, use_next_day); }));
     }
 
     std::vector<TimeSpan> times;

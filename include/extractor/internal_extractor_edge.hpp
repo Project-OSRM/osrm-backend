@@ -7,8 +7,8 @@
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
-#include <mapbox/variant.hpp>
 #include <utility>
+#include <variant>
 
 namespace osrm::extractor
 {

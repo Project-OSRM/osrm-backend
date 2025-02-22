@@ -5,7 +5,7 @@ runs:
   steps:
     - name: Install packages
       run: |
-        sudo apt-get update -q
+        sudo apt-get update -qq
         sudo apt-get install -yq \
              doxygen \
              libboost-dev \
@@ -16,8 +16,5 @@ runs:
              libsparsehash-dev \
              ruby-json \
              spatialite-bin
-        test "$CC" = clang-6.0 && sudo apt-get install -yq --no-install-suggests --no-install-recommends clang-6.0
-        test "$CC" = clang-8   && sudo apt-get install -yq --no-install-suggests --no-install-recommends clang-8
-        test "$CC" = clang-13  && sudo apt-get install -yq --no-install-suggests --no-install-recommends clang-13
       shell: bash
 

@@ -5,7 +5,7 @@
 #include "osrm/osrm.hpp"
 #include "util/coordinate.hpp"
 
-#include <mapbox/variant.hpp>
+#include <variant>
 
 #include <string>
 #include <vector>

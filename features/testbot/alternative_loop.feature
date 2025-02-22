@@ -40,7 +40,7 @@ Feature: Alternative route
             | 7    | 8  | ca,ab,bd,dc,ca,ca |             |
 
 
-    @mld-only
+    @mld
     Scenario: Alternative loop paths on a single node with an asymmetric circle
         # The test checks only MLD implementation, alternatives results are unpredictable for CH on windows (#4691, #4693)
         Given a grid size of 10 meters

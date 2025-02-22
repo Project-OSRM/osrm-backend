@@ -7,8 +7,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
 
-#include "util/attributes.hpp"
-
 namespace osrm::extractor::guidance
 {
 
@@ -21,8 +19,7 @@ namespace osrm::extractor::guidance
 // will be corrected to left|throught, since the final lane is not drivable.
 // This is in contrast to a situation with lanes:psv:forward=0 (or not set) where left|through|
 // represents left|through|through
-OSRM_ATTR_WARN_UNUSED
-inline std::string
+[[nodiscard]] inline std::string
 trimLaneString(std::string lane_string, std::int32_t count_left, std::int32_t count_right)
 {
     if (count_left)
@@ -68,10 +65,10 @@ trimLaneString(std::string lane_string, std::int32_t count_left, std::int32_t co
 // turn:lanes=left|through|through|right
 // vehicle:lanes=yes|yes|no|yes
 // bicycle:lanes=yes|no|designated|yes
-OSRM_ATTR_WARN_UNUSED
-inline std::string applyAccessTokens(std::string lane_string, const std::string &access_tokens)
+[[nodiscard]] inline std::string applyAccessTokens(std::string lane_string,
+                                                   const std::string &access_tokens)
 {
-    typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
+    using tokenizer = boost::tokenizer<boost::char_separator<char>>;
     boost::char_separator<char> sep("|", "", boost::keep_empty_tokens);
     tokenizer tokens(lane_string, sep);
     tokenizer access(access_tokens, sep);

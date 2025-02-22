@@ -20,7 +20,7 @@ documentation.
 #include "property_value.hpp"
 #include "types.hpp"
 
-#include <protozero/pbf_builder.hpp>
+#include <protozero/basic_pbf_builder.hpp>
 #include <protozero/pbf_message.hpp>
 
 #include <cstdlib>
@@ -32,27 +32,12 @@ namespace vtzero {
 
     namespace detail {
 
-        class layer_builder_base {
+        class layer_builder_impl {
 
-        public:
-
-            layer_builder_base() noexcept = default;
-
-            virtual ~layer_builder_base() noexcept = default;
-
-            layer_builder_base(const layer_builder_base&) noexcept = default;
-            layer_builder_base& operator=(const layer_builder_base&) noexcept = default;
-
-            layer_builder_base(layer_builder_base&&) noexcept = default;
-            layer_builder_base& operator=(layer_builder_base&&) noexcept = default;
-
-            virtual std::size_t estimated_size() const = 0;
-
-            virtual void build(protozero::pbf_builder<detail::pbf_tile>& pbf_tile_builder) const = 0;
-
-        }; // class layer_builder_base
-
-        class layer_builder_impl : public layer_builder_base {
+            // If this layer is copied from an existing layer, this points
+            // to the data of the original layer. For newly built layers,
+            // this is empty.
+            data_view m_data_view{};
 
             // Buffer containing the encoded layer metadata and features
             std::string m_data;
@@ -63,12 +48,15 @@ namespace vtzero {
             // Buffer containing the encoded values table
             std::string m_values_data;
 
-            protozero::pbf_builder<detail::pbf_layer> m_pbf_message_layer;
-            protozero::pbf_builder<detail::pbf_layer> m_pbf_message_keys;
-            protozero::pbf_builder<detail::pbf_layer> m_pbf_message_values;
+            protozero::pbf_builder<detail::pbf_layer> m_pbf_message_layer{};
+            protozero::pbf_builder<detail::pbf_layer> m_pbf_message_keys{};
+            protozero::pbf_builder<detail::pbf_layer> m_pbf_message_values{};
 
             // The number of features in the layer
             std::size_t m_num_features = 0;
+
+            // Vector tile spec version
+            uint32_t m_version = 0;
 
             // The number of keys in the keys table
             uint32_t m_num_keys = 0;
@@ -160,23 +148,34 @@ namespace vtzero {
 
         public:
 
+            // This layer should be a copy of an existing layer
+            explicit layer_builder_impl(const data_view data) :
+                m_data_view(data) {
+            }
+
+            // This layer is being created from scratch
             template <typename TString>
             layer_builder_impl(TString&& name, uint32_t version, uint32_t extent) :
                 m_pbf_message_layer(m_data),
                 m_pbf_message_keys(m_keys_data),
-                m_pbf_message_values(m_values_data) {
+                m_pbf_message_values(m_values_data),
+                m_version(version) {
                 m_pbf_message_layer.add_uint32(detail::pbf_layer::version, version);
                 m_pbf_message_layer.add_string(detail::pbf_layer::name, std::forward<TString>(name));
                 m_pbf_message_layer.add_uint32(detail::pbf_layer::extent, extent);
             }
 
-            ~layer_builder_impl() noexcept override = default;
+            ~layer_builder_impl() noexcept = default;
 
             layer_builder_impl(const layer_builder_impl&) = delete;
             layer_builder_impl& operator=(const layer_builder_impl&) = delete;
 
             layer_builder_impl(layer_builder_impl&&) = default;
             layer_builder_impl& operator=(layer_builder_impl&&) = default;
+
+            uint32_t version() const noexcept {
+                return m_version;
+            }
 
             index_value add_key_without_dup_check(const data_view text) {
                 m_pbf_message_keys.add_string(detail::pbf_layer::keys, text);
@@ -227,7 +226,14 @@ namespace vtzero {
                 ++m_num_features;
             }
 
-            std::size_t estimated_size() const override {
+            std::size_t estimated_size() const {
+                if (m_data_view.data()) {
+                    // This is a layer created as copy from an existing layer
+                    constexpr const std::size_t estimated_overhead_for_pbf_encoding = 8;
+                    return m_data_view.size() + estimated_overhead_for_pbf_encoding;
+                }
+
+                // This is a layer created from scratch
                 constexpr const std::size_t estimated_overhead_for_pbf_encoding = 8;
                 return data().size() +
                        keys_data().size() +
@@ -235,7 +241,15 @@ namespace vtzero {
                        estimated_overhead_for_pbf_encoding;
             }
 
-            void build(protozero::pbf_builder<detail::pbf_tile>& pbf_tile_builder) const override {
+            template <typename TBuffer>
+            void build(protozero::basic_pbf_builder<TBuffer, detail::pbf_tile>& pbf_tile_builder) const {
+                if (m_data_view.data()) {
+                    // This is a layer created as copy from an existing layer
+                    pbf_tile_builder.add_bytes(detail::pbf_tile::layers, m_data_view);
+                    return;
+                }
+
+                // This is a layer created from scratch
                 if (m_num_features > 0) {
                     pbf_tile_builder.add_bytes_vectored(detail::pbf_tile::layers,
                                                         data(),
@@ -245,27 +259,6 @@ namespace vtzero {
             }
 
         }; // class layer_builder_impl
-
-        class layer_builder_existing : public layer_builder_base {
-
-            data_view m_data;
-
-        public:
-
-            explicit layer_builder_existing(const data_view data) :
-                m_data(data) {
-            }
-
-            std::size_t estimated_size() const override {
-                constexpr const std::size_t estimated_overhead_for_pbf_encoding = 8;
-                return m_data.size() + estimated_overhead_for_pbf_encoding;
-            }
-
-            void build(protozero::pbf_builder<detail::pbf_tile>& pbf_tile_builder) const override {
-                pbf_tile_builder.add_bytes(detail::pbf_tile::layers, m_data);
-            }
-
-        }; // class layer_builder_existing
 
     } // namespace detail
 

@@ -36,3 +36,9 @@ Feature: Foot - Accessability of different way types
             | highway | leisure  | forw |
             | (nil)   | track    |   x  |
 
+    Scenario: Foot - Proposed ways
+        Then routability should be
+            | highway  | foot  | proposed | forw |
+            | footway  |       |          | x    |
+            | proposed |       |          |      |
+            | proposed | yes   | yes      |      |

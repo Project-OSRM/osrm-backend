@@ -57,15 +57,15 @@ int main(int argc, const char *argv[])
     // Execute routing request, this does the heavy lifting
     const auto status = osrm.Route(params, result);
 
-    auto &json_result = result.get<json::Object>();
+    auto &json_result = std::get<json::Object>(result);
     if (status == Status::Ok)
     {
-        auto &routes = json_result.values["routes"].get<json::Array>();
+        auto &routes = std::get<json::Array>(json_result.values["routes"]);
 
         // Let's just use the first route
-        auto &route = routes.values.at(0).get<json::Object>();
-        const auto distance = route.values["distance"].get<json::Number>().value;
-        const auto duration = route.values["duration"].get<json::Number>().value;
+        auto &route = std::get<json::Object>(routes.values.at(0));
+        const auto distance = std::get<json::Number>(route.values["distance"]).value;
+        const auto duration = std::get<json::Number>(route.values["duration"]).value;
 
         // Warn users if extract does not contain the default coordinates from above
         if (distance == 0 || duration == 0)
@@ -80,8 +80,8 @@ int main(int argc, const char *argv[])
     }
     else if (status == Status::Error)
     {
-        const auto code = json_result.values["code"].get<json::String>().value;
-        const auto message = json_result.values["message"].get<json::String>().value;
+        const auto code = std::get<json::String>(json_result.values["code"]).value;
+        const auto message = std::get<json::String>(json_result.values["message"]).value;
 
         std::cout << "Code: " << code << "\n";
         std::cout << "Message: " << code << "\n";

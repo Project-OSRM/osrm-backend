@@ -29,9 +29,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ENGINE_CONFIG_HPP
 
 #include "storage/storage_config.hpp"
+#include "osrm/datasets.hpp"
 
-#include <boost/filesystem/path.hpp>
-
+#include <filesystem>
+#include <set>
 #include <string>
 
 namespace osrm::engine
@@ -52,14 +53,10 @@ namespace osrm::engine
  *
  * In addition, shared memory can be used for datasets loaded with osrm-datastore.
  *
- * You can chose between three algorithms:
+ * You can chose between two algorithms:
  *  - Algorithm::CH
  *      Contraction Hierarchies, extremely fast queries but slow pre-processing. The default right
  * now.
- *  - Algorithm::CoreCH
- *      Deprecated, to be removed in v6.0
- *      Contraction Hierachies with partial contraction for faster pre-processing but slower
- * queries.
  *  - Algorithm::MLD
  *      Multi Level Dijkstra, moderately fast in both pre-processing and query.
  *
@@ -72,7 +69,6 @@ struct EngineConfig final
     enum class Algorithm
     {
         CH,
-        CoreCH, // Deprecated, will be removed in v6.0
         MLD
     };
 
@@ -83,12 +79,13 @@ struct EngineConfig final
     int max_locations_map_matching = -1;
     double max_radius_map_matching = -1.0;
     int max_results_nearest = -1;
-    boost::optional<double> default_radius;
+    double default_radius = -1.0;
     int max_alternatives = 3; // set an arbitrary upper bound; can be adjusted by user
     bool use_shared_memory = true;
-    boost::filesystem::path memory_file;
+    std::filesystem::path memory_file;
     bool use_mmap = true;
     Algorithm algorithm = Algorithm::CH;
+    std::vector<storage::FeatureDataset> disable_feature_dataset;
     std::string verbosity;
     std::string dataset_name;
 };

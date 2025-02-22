@@ -1,16 +1,8 @@
-#include "util/coordinate_calculation.hpp"
-
-#ifndef NDEBUG
-#include "util/log.hpp"
-#endif
 #include "osrm/coordinate.hpp"
 
-#ifndef NDEBUG
-#include <bitset>
-#endif
-#include <iomanip>
-#include <iostream>
-#include <limits>
+#include "util/coordinate_calculation.hpp"
+
+#include <cstdint>
 
 namespace osrm::util
 {

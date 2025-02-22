@@ -15,12 +15,12 @@ The following services are available via HTTP API, C++ library interface and Nod
 
 To quickly try OSRM use our [demo server](http://map.project-osrm.org) which comes with both the backend and a frontend on top.
 
-For a quick introduction about how the road network is represented in OpenStreetMap and how to map specific road network features have a look at [this guide about mapping for navigation](https://www.mapbox.com/mapping/mapping-for-navigation/).
+For a quick introduction about how the road network is represented in OpenStreetMap and how to map specific road network features have a look at [the OSM wiki on routing](https://wiki.openstreetmap.org/wiki/Routing) or [this guide about mapping for navigation](https://web.archive.org/web/20221206013651/https://labs.mapbox.com/mapping/mapping-for-navigation/).
 
 Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 - [osrm-frontend](https://github.com/Project-OSRM/osrm-frontend) - User-facing frontend with map. The demo server runs this on top of the backend
 - [osrm-text-instructions](https://github.com/Project-OSRM/osrm-text-instructions) - Text instructions from OSRM route response
-- [osrm-backend-docker](https://hub.docker.com/r/osrm/osrm-backend/) - Ready to use Docker images
+- [osrm-backend-docker](https://github.com/project-osrm/osrm-backend/pkgs/container/osrm-backend) - Ready to use Docker images
 
 ## Documentation
 
@@ -58,12 +58,12 @@ Download OpenStreetMap extracts for example from [Geofabrik](http://download.geo
 
 Pre-process the extract with the car profile and start a routing engine HTTP server on port 5000
 
-    docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-extract -p /opt/car.lua /data/berlin-latest.osm.pbf || "osrm-extract failed"
+    docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-extract -p /opt/car.lua /data/berlin-latest.osm.pbf || echo "osrm-extract failed"
 
 The flag `-v "${PWD}:/data"` creates the directory `/data` inside the docker container and makes the current working directory `"${PWD}"` available there. The file `/data/berlin-latest.osm.pbf` inside the container is referring to `"${PWD}/berlin-latest.osm.pbf"` on the host. Noting that this process can take a long time to complete with little changes on the terminal output, for example, a Mexico's OSM file of 550.7MB took around 30 minutes to finish extraction and generate edge-expanded graph representation.
 
-    docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-partition /data/berlin-latest.osrm || "osrm-partition failed"
-    docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-customize /data/berlin-latest.osrm || "osrm-customize failed"
+    docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-partition /data/berlin-latest.osrm || echo "osrm-partition failed"
+    docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-customize /data/berlin-latest.osrm || echo "osrm-customize failed"
 
 Note there is no `berlin-latest.osrm` file, but multiple `berlin-latest.osrm.*` files, i.e. `berlin-latest.osrm` is not file path, but "base" path referring to set of files and there is an option to omit this `.osrm` suffix completely(e.g. `osrm-partition /data/berlin-latest`).
 

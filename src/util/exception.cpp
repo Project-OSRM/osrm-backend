@@ -16,4 +16,5 @@ namespace osrm::util
 
 void exception::anchor() const {}
 void RuntimeError::anchor() const {}
+void DisabledDatasetException::anchor() const {}
 } // namespace osrm::util
