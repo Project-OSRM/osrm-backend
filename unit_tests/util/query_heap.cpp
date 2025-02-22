@@ -120,6 +120,28 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(delete_all_test, T, storage_types, RandomDataFi
     BOOST_CHECK(heap.Empty());
 }
 
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(smoke_test, T, storage_types, RandomDataFixture<NUM_NODES>)
+{
+    QueryHeap<TestNodeID, TestKey, TestWeight, TestData, T> heap(NUM_NODES);
+
+    for (unsigned idx : order)
+    {
+        heap.Insert(ids[idx], weights[idx], data[idx]);
+    }
+
+    while (!heap.Empty())
+    {
+        auto old_weight = heap.MinKey();
+        auto node = heap.GetHeapNodeIfWasInserted(heap.Min());
+        BOOST_CHECK(old_weight == node->weight);
+        BOOST_CHECK(node);
+        node->weight = node->weight - 1;
+        heap.DecreaseKey(*node);
+        BOOST_CHECK(heap.MinKey() == node->weight);
+        heap.DeleteMin();
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(decrease_key_test, T, storage_types, RandomDataFixture<10>)
 {
     QueryHeap<TestNodeID, TestKey, TestWeight, TestData, T> heap(10);

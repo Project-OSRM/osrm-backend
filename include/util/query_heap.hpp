@@ -4,8 +4,10 @@
 #include <boost/assert.hpp>
 #include <boost/heap/d_ary_heap.hpp>
 
+#include "d_ary_heap.hpp"
 #include <algorithm>
 #include <cstdint>
+#include <cstdlib>
 #include <limits>
 #include <map>
 #include <optional>
@@ -133,20 +135,17 @@ class QueryHeap
         Weight weight;
         Key index;
 
-        bool operator>(const HeapData &other) const
+        bool operator<(const HeapData &other) const
         {
             if (weight == other.weight)
             {
-                return index > other.index;
+                return index < other.index;
             }
-            return weight > other.weight;
+            return weight < other.weight;
         }
     };
-    using HeapContainer = boost::heap::d_ary_heap<HeapData,
-                                                  boost::heap::arity<4>,
-                                                  boost::heap::mutable_<true>,
-                                                  boost::heap::compare<std::greater<HeapData>>>;
-    using HeapHandle = typename HeapContainer::handle_type;
+    using HeapContainer = DAryHeap<HeapData, 4>;
+    using HeapHandle = typename HeapContainer::HeapHandle;
 
   public:
     using WeightType = Weight;
@@ -178,11 +177,31 @@ class QueryHeap
 
     void Insert(NodeID node, Weight weight, const Data &data)
     {
+        checkInvariants();
+
         BOOST_ASSERT(node < std::numeric_limits<NodeID>::max());
         const auto index = static_cast<Key>(inserted_nodes.size());
-        const auto handle = heap.emplace(HeapData{weight, index});
-        inserted_nodes.emplace_back(HeapNode{handle, node, weight, data});
+        inserted_nodes.emplace_back(HeapNode{heap.size(), node, weight, data});
+
+        heap.emplace(HeapData{weight, index},
+                     [this](const auto &heapData, auto new_handle)
+                     { inserted_nodes[heapData.index].handle = new_handle; });
         node_index[node] = index;
+
+        checkInvariants();
+    }
+
+    void checkInvariants()
+    {
+#ifndef NDEBUG
+        for (size_t handle = 0; handle < heap.size(); ++handle)
+        {
+            auto &in_heap = heap[handle];
+            auto &inserted = inserted_nodes[in_heap.index];
+            BOOST_ASSERT(in_heap.weight == inserted.weight);
+            BOOST_ASSERT(inserted.handle == handle);
+        }
+#endif // !NDEBUG
     }
 
     Data &GetData(NodeID node)
@@ -216,16 +235,7 @@ class QueryHeap
     {
         BOOST_ASSERT(WasInserted(node));
         const Key index = node_index.peek_index(node);
-
-        // Use end iterator as a reliable "non-existent" handle.
-        // Default-constructed handles are singular and
-        // can only be checked-compared to another singular instance.
-        // Behaviour investigated at https://lists.boost.org/boost-users/2017/08/87787.php,
-        // eventually confirmation at https://stackoverflow.com/a/45622940/151641.
-        // Corrected in https://github.com/Project-OSRM/osrm-backend/pull/4396
-        auto const end_it = const_cast<HeapContainer &>(heap).end();  // non-const iterator
-        auto const none_handle = heap.s_handle_from_iterator(end_it); // from non-const iterator
-        return inserted_nodes[index].handle == none_handle;
+        return inserted_nodes[index].handle == HeapContainer::INVALID_HANDLE;
     }
 
     bool WasInserted(const NodeID node) const
@@ -276,26 +286,30 @@ class QueryHeap
     {
         BOOST_ASSERT(!heap.empty());
         const Key removedIndex = heap.top().index;
-        heap.pop();
-        inserted_nodes[removedIndex].handle = heap.s_handle_from_iterator(heap.end());
+        inserted_nodes[removedIndex].handle = HeapContainer::INVALID_HANDLE;
+
+        heap.pop([this](const auto &heapData, auto new_handle)
+                 { inserted_nodes[heapData.index].handle = new_handle; });
         return inserted_nodes[removedIndex].node;
     }
 
     HeapNode &DeleteMinGetHeapNode()
     {
         BOOST_ASSERT(!heap.empty());
+        checkInvariants();
         const Key removedIndex = heap.top().index;
-        heap.pop();
-        inserted_nodes[removedIndex].handle = heap.s_handle_from_iterator(heap.end());
+        inserted_nodes[removedIndex].handle = HeapContainer::INVALID_HANDLE;
+        heap.pop([this](const auto &heapData, auto new_handle)
+                 { inserted_nodes[heapData.index].handle = new_handle; });
+        checkInvariants();
         return inserted_nodes[removedIndex];
     }
 
     void DeleteAll()
     {
-        auto const none_handle = heap.s_handle_from_iterator(heap.end());
         std::for_each(inserted_nodes.begin(),
                       inserted_nodes.end(),
-                      [&none_handle](auto &node) { node.handle = none_handle; });
+                      [&](auto &node) { node.handle = HeapContainer::INVALID_HANDLE; });
         heap.clear();
     }
 
@@ -305,13 +319,19 @@ class QueryHeap
         const auto index = node_index.peek_index(node);
         auto &reference = inserted_nodes[index];
         reference.weight = weight;
-        heap.increase(reference.handle, HeapData{weight, static_cast<Key>(index)});
+        heap.decrease(reference.handle,
+                      HeapData{weight, static_cast<Key>(index)},
+                      [this](const auto &heapData, auto new_handle)
+                      { inserted_nodes[heapData.index].handle = new_handle; });
     }
 
     void DecreaseKey(const HeapNode &heapNode)
     {
         BOOST_ASSERT(!WasRemoved(heapNode.node));
-        heap.increase(heapNode.handle, HeapData{heapNode.weight, (*heapNode.handle).index});
+        heap.decrease(heapNode.handle,
+                      HeapData{heapNode.weight, heap[heapNode.handle].index},
+                      [this](const auto &heapData, auto new_handle)
+                      { inserted_nodes[heapData.index].handle = new_handle; });
     }
 
   private:
@@ -319,6 +339,7 @@ class QueryHeap
     HeapContainer heap;
     IndexStorage node_index;
 };
+
 } // namespace osrm::util
 
 #endif // OSRM_UTIL_QUERY_HEAP_HPP

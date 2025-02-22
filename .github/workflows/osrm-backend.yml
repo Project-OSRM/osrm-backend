@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  windows-release-node:
+  conan-windows-release-node:
     needs: format-taginfo-docs
     runs-on: windows-2022
     continue-on-error: false
@@ -31,8 +31,6 @@ jobs:
       BUILD_TYPE: Release
     steps:
     - uses: actions/checkout@v4
-    - run: pip install "conan<2.0.0"
-    - run: conan --version
     - run: cmake --version
     - uses: actions/setup-node@v4
       with:
@@ -51,6 +49,12 @@ jobs:
       run: |
         mkdir build
         cd build
+
+        python3 -m venv .venv
+        source .venv/Scripts/Activate
+        python3 -m pip install conan==2.7.1
+        conan profile detect --force
+
         cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
         cmake --build . --config Release
         
@@ -161,7 +165,7 @@ jobs:
           curl --retry-delay 3 --retry 10 --retry-all-errors "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
           docker stop osrm-container
 
-  build-test-publish:
+  build-matrix:
     needs: format-taginfo-docs
     strategy:
       matrix:
@@ -193,7 +197,7 @@ jobs:
 
           - name: clang-18-release
             continue-on-error: false
-            node: 18
+            node: 20
             runs-on: ubuntu-24.04
             BUILD_TOOLS: ON
             BUILD_TYPE: Release
@@ -338,7 +342,7 @@ jobs:
             build_node_package: true
             continue-on-error: true
             node: 20
-            runs-on: macos-14 # arm64 
+            runs-on: macos-15 # arm64 
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
@@ -393,10 +397,10 @@ jobs:
     - name: Enable Conan cache
       uses: actions/cache@v4
       with:
-        path: ~/.conan
-        key: v9-conan-${{ matrix.name }}-${{ github.sha }}
+        path: ~/.conan2
+        key: v10-conan-${{ matrix.name }}-${{ github.sha }}
         restore-keys: |
-          v9-conan-${{ matrix.name }}-
+          v10-conan-${{ matrix.name }}-
     - name: Enable test cache
       uses: actions/cache@v4
       with:
@@ -430,35 +434,16 @@ jobs:
     - name: Give tar root ownership 
       if: runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
       run: sudo chown root /bin/tar && sudo chmod u+s /bin/tar
-    - name: Cache Boost
-      if: runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
-      id: cache-boost
-      uses: actions/cache@v4
-      with:
-        path: |
-          /usr/local/include/boost
-          /usr/local/lib/libboost*
-        key: v1-boost-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}
-        restore-keys: |
-          v1-boost-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}
 
-    - name: Install Boost
-      if: steps.cache-boost.outputs.cache-hit != 'true' && runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
-      run: |
-        BOOST_VERSION="1.85.0"
-        BOOST_VERSION_UNDERSCORE="${BOOST_VERSION//./_}"
-        wget -q https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_UNDERSCORE}.tar.gz
-        tar xzf boost_${BOOST_VERSION_UNDERSCORE}.tar.gz
-        cd boost_${BOOST_VERSION_UNDERSCORE}
-        sudo ./bootstrap.sh
-        sudo ./b2 install
-        cd ..
-        sudo rm -rf boost_${BOOST_VERSION_UNDERSCORE}*
+    - name: Install boost
+      if: ${{ matrix.ENABLE_CONAN != 'ON' }}
+      uses: MarkusJx/install-boost@v2
+      id: install-boost
+      with:
+        boost_version: 1.85.0
     
     - name: Install dev dependencies
       run: |
-        python3 -m pip install "conan<2.0.0" || python3 -m pip install "conan<2.0.0" --break-system-packages
-
         # workaround for issue that GitHub Actions seems to not adding it to PATH after https://github.com/actions/runner-images/pull/6499
         # and that's why CI cannot find conan executable installed above
         if [[ "${RUNNER_OS}" == "macOS" ]]; then
@@ -495,20 +480,6 @@ jobs:
         tar zxvf onetbb.tgz
         sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
         sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
-    - name: Add Clang 18 to list of Conan compilers # workaround for the issue that Conan 1.x doesn't know about Clang 18
-      if: ${{ matrix.ENABLE_CONAN == 'ON' && matrix.CCOMPILER == 'clang-18' }}
-      run: |
-        sudo wget https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
-
-        conan config init
-        yq eval '.compiler.clang.version += ["18"]' -i "$HOME/.conan/settings.yml"
-    - name: Add Apple-clang 16 to list of Conan compilers # workaround for the issue that Conan 1.x doesn't know about Apple-clang 16
-      if: ${{ matrix.ENABLE_CONAN == 'ON' && matrix.runs-on == 'macos-14' }}
-      run: |
-        sudo wget https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_darwin_arm64 -O /usr/local/bin/yq && sudo chmod +x /usr/local/bin/yq
-
-        conan config init
-        yq eval '.compiler.apple-clang.version += ["16.0"]' -i "$HOME/.conan/settings.yml"
     - name: Prepare build
       run: |
         mkdir ${OSRM_BUILD_DIR}
@@ -530,7 +501,14 @@ jobs:
       run: |
         echo "Using ${JOBS} jobs"
         pushd ${OSRM_BUILD_DIR}
-        
+
+        if [[ "${ENABLE_CONAN}" == "ON" ]]; then
+          python3 -m venv .venv
+          source .venv/bin/activate
+          python3 -m pip install conan==2.7.1
+          conan profile detect --force
+        fi
+
         ccache --zero-stats
         cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                  -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
@@ -544,6 +522,7 @@ jobs:
                  -DENABLE_CCACHE=ON \
                  -DENABLE_LTO=${ENABLE_LTO:-ON} \
                  -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
+
         make --jobs=${JOBS}
 
         if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
@@ -557,11 +536,14 @@ jobs:
           echo "PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig" >> $GITHUB_ENV
         fi
         popd
+      env:
+        Boost_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
     - name: Build example
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && matrix.ENABLE_CONAN != 'ON' }}
       run: |
         mkdir example/build && pushd example/build
-        cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+        cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+                 -DBoost_ROOT=${{ steps.install-boost.outputs.BOOST_ROOT }}
         make --jobs=${JOBS}
         popd
     - name: Run all tests
@@ -570,8 +552,10 @@ jobs:
         make -C test/data benchmark
 
         # macOS SIP strips the linker path. Reset this inside the running shell
-        export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
-        ./example/build/osrm-example test/data/mld/monaco.osrm
+        if [[ "${ENABLE_CONAN}" == "OFF" ]]; then
+          export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
+          ./example/build/osrm-example test/data/mld/monaco.osrm
+        fi
 
         # All tests assume to be run from the build directory
         pushd ${OSRM_BUILD_DIR}
@@ -657,130 +641,9 @@ jobs:
         ccache -p
         ccache -s
 
-  benchmarks:
-    if: github.event_name == 'pull_request'
-    needs: [format-taginfo-docs]
-    runs-on: self-hosted
-    env:
-      CCOMPILER: clang-16
-      CXXCOMPILER: clang++-16
-      CC: clang-16
-      CXX: clang++-16
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PR_NUMBER: ${{ github.event.pull_request.number }}
-      GITHUB_REPOSITORY: ${{ github.repository }}
-      RUN_BIG_BENCHMARK: ${{ contains(github.event.pull_request.labels.*.name, 'Performance') }}
-    steps: 
-      - name: Checkout PR Branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-          path: pr
-      - name: Activate virtualenv
-        run: |
-          python3 -m venv .venv
-          source .venv/bin/activate
-          echo PATH=$PATH >> $GITHUB_ENV
-          pip install "conan<2.0.0" "requests==2.31.0" "numpy==1.26.4" 
-      - name: Prepare data
-        run: |
-          if [ "$RUN_BIG_BENCHMARK" = "true" ]; then
-              rm -rf ~/data.osm.pbf
-              wget http://download.geofabrik.de/europe/poland-latest.osm.pbf -O ~/data.osm.pbf --quiet
-              gunzip -c ./pr/test/data/poland_gps_traces.csv.gz > ~/gps_traces.csv
-          else
-              if [ ! -f "~/data.osm.pbf" ]; then
-                wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -O ~/data.osm.pbf
-              else
-                echo "Using cached data.osm.pbf"
-              fi
-              gunzip -c ./pr/test/data/berlin_gps_traces.csv.gz > ~/gps_traces.csv
-          fi
-      - name: Prepare environment
-        run: |
-          echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
-          mkdir -p $HOME/.ccache
-          ccache --zero-stats
-          ccache --max-size=256M
-      - name: Checkout Base Branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.base.ref }}
-          path: base
-      - name: Build Base Branch
-        run: |
-          cd base
-          npm ci --ignore-scripts
-          cd ..
-          mkdir base/build
-          cd base/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
-          make -j$(nproc)
-          make -j$(nproc) benchmarks
-          cd ..
-          make -C test/data 
-      - name: Build PR Branch
-        run: |
-          cd pr
-          npm ci --ignore-scripts
-          cd ..
-          mkdir -p pr/build
-          cd pr/build
-          cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=ON ..
-          make -j$(nproc) 
-          make -j$(nproc) benchmarks
-          cd ..
-          make -C test/data 
-      # we run benchmarks in tmpfs to avoid impact of disk IO
-      - name: Create folder for tmpfs 
-        run: |
-          # if by any chance it was mounted before(e.g. due to previous job failed), unmount it
-          sudo umount ~/benchmarks | true
-          rm -rf ~/benchmarks 
-          mkdir -p ~/benchmarks
-      # see https://llvm.org/docs/Benchmarking.html
-      - name: Run PR Benchmarks 
-        run: |
-          sudo cset shield -c 2-3 -k on
-          sudo mount -t tmpfs -o size=4g none ~/benchmarks
-          cp -rf pr/build ~/benchmarks/build
-          cp -rf pr/lib ~/benchmarks/lib
-          mkdir -p ~/benchmarks/test
-          cp -rf pr/test/data ~/benchmarks/test/data
-          cp -rf pr/profiles ~/benchmarks/profiles
-
-          sudo cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/pr_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
-          sudo umount ~/benchmarks
-          sudo cset shield --reset
-      - name: Run Base Benchmarks
-        run: |
-          sudo cset shield -c 2-3 -k on
-          sudo mount -t tmpfs -o size=4g none ~/benchmarks
-          cp -rf base/build ~/benchmarks/build
-          cp -rf base/lib ~/benchmarks/lib
-          mkdir -p ~/benchmarks/test
-          cp -rf base/test/data ~/benchmarks/test/data
-          cp -rf base/profiles ~/benchmarks/profiles
-
-          # TODO: remove it when base branch will have this file at needed location
-          if [ ! -f ~/benchmarks/test/data/portugal_to_korea.json ]; then
-            cp base/src/benchmarks/portugal_to_korea.json ~/benchmarks/test/data/portugal_to_korea.json
-          fi
-          # we intentionally use scripts from PR branch to be able to update them and see results in the same PR
-          sudo cset shield --exec -- cset shield --exec -- ./pr/scripts/ci/run_benchmarks.sh -f ~/benchmarks -r $(pwd)/base_results -s $(pwd)/pr -b ~/benchmarks/build -o ~/data.osm.pbf -g ~/gps_traces.csv
-          sudo umount ~/benchmarks
-          sudo cset shield --reset
-      - name: Post Benchmark Results
-        run: |
-          python3 pr/scripts/ci/post_benchmark_results.py base_results pr_results
-      - name: Show CCache statistics
-        run: |
-          ccache -p
-          ccache -s
-
   ci-complete:
-    runs-on: ubuntu-22.04
-    needs: [build-test-publish, docker-image-matrix, windows-release-node, benchmarks]
+    runs-on: ubuntu-latest
+    needs: [build-matrix, conan-windows-release-node, docker-image-matrix]
     steps:
     - run: echo "CI complete"
 
