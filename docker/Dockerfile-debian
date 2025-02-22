@@ -1,21 +1,24 @@
-FROM debian:bookworm-slim as builder
+FROM debian:bookworm-slim AS builder
 ARG DOCKER_TAG
 ARG BUILD_CONCURRENCY
-RUN mkdir -p /src  && mkdir -p /opt
 
-RUN apt-get update && \
-    apt-get -y --no-install-recommends install ca-certificates cmake make git gcc g++ libbz2-dev libxml2-dev wget \
-    libzip-dev libboost1.81-all-dev lua5.4 liblua5.4-dev pkg-config -o APT::Install-Suggests=0 -o APT::Install-Recommends=0
-
-RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
-    ldconfig /usr/local/lib && \
-    git clone --branch v2021.12.0 --single-branch https://github.com/oneapi-src/oneTBB.git && \
-    cd oneTBB && \
-    mkdir build && \
-    cd build && \
-    cmake -DTBB_TEST=OFF -DCMAKE_BUILD_TYPE=Release ..  && \
-    cmake --build . && \
-    cmake --install .
+RUN mkdir -p /src /opt && \
+    apt-get update && \
+    apt-get -y --no-install-recommends --no-install-suggests install \
+        ca-certificates \
+        cmake \
+        g++ \
+        gcc \
+        git \
+        libboost1.81-all-dev \
+        libbz2-dev \
+        liblua5.4-dev \
+        libtbb-dev \
+        libxml2-dev \
+        libzip-dev \
+        lua5.4 \
+        make \
+        pkg-config
 
 COPY . /src
 WORKDIR /src
@@ -40,19 +43,24 @@ RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
     rm -rf /src
 
 
-# Multistage build to reduce image size - https://docs.docker.com/engine/userguide/eng-image/multistage-build/#use-multi-stage-builds
+# Multistage build to reduce image size - https://docs.docker.com/build/building/multi-stage/#use-multi-stage-builds
 # Only the content below ends up in the image, this helps remove /src from the image (which is large)
-FROM debian:bookworm-slim as runstage
+FROM debian:bookworm-slim AS runstage
 
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        libboost-program-options1.81.0 libboost-date-time1.81.0 libboost-iostreams1.81.0 libboost-thread1.81.0 \
-        expat liblua5.4-0 && \
+    apt-get install -y --no-install-recommends --no-install-suggests \
+        expat \
+        libboost-date-time1.81.0 \
+        libboost-iostreams1.81.0 \
+        libboost-program-options1.81.0 \
+        libboost-thread1.81.0 \
+        liblua5.4-0 \
+        libtbb12 && \
     rm -rf /var/lib/apt/lists/* && \
-# add /usr/local/lib to ldconfig to allow loading libraries from there
+# Add /usr/local/lib to ldconfig to allow loading libraries from there
     ldconfig /usr/local/lib
 
 RUN /usr/local/bin/osrm-extract --help && \
@@ -64,3 +72,4 @@ RUN /usr/local/bin/osrm-extract --help && \
 WORKDIR /opt
 
 EXPOSE 5000
+

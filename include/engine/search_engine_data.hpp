@@ -5,8 +5,6 @@
 #include "util/query_heap.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/thread/tss.hpp>
-
 namespace osrm::engine
 {
 
@@ -45,19 +43,19 @@ template <> struct SearchEngineData<routing_algorithms::ch::Algorithm>
                                                 ManyToManyHeapData,
                                                 util::UnorderedMapStorage<NodeID, int>>;
 
-    using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
+    using SearchEngineHeapPtr = std::unique_ptr<QueryHeap>;
 
-    using ManyToManyHeapPtr = boost::thread_specific_ptr<ManyToManyQueryHeap>;
+    using ManyToManyHeapPtr = std::unique_ptr<ManyToManyQueryHeap>;
 
-    static SearchEngineHeapPtr forward_heap_1;
-    static SearchEngineHeapPtr reverse_heap_1;
-    static SearchEngineHeapPtr forward_heap_2;
-    static SearchEngineHeapPtr reverse_heap_2;
-    static SearchEngineHeapPtr forward_heap_3;
-    static SearchEngineHeapPtr reverse_heap_3;
-    static ManyToManyHeapPtr many_to_many_heap;
-    static SearchEngineHeapPtr map_matching_forward_heap_1;
-    static SearchEngineHeapPtr map_matching_reverse_heap_1;
+    static thread_local SearchEngineHeapPtr forward_heap_1;
+    static thread_local SearchEngineHeapPtr reverse_heap_1;
+    static thread_local SearchEngineHeapPtr forward_heap_2;
+    static thread_local SearchEngineHeapPtr reverse_heap_2;
+    static thread_local SearchEngineHeapPtr forward_heap_3;
+    static thread_local SearchEngineHeapPtr reverse_heap_3;
+    static thread_local ManyToManyHeapPtr many_to_many_heap;
+    static thread_local SearchEngineHeapPtr map_matching_forward_heap_1;
+    static thread_local SearchEngineHeapPtr map_matching_reverse_heap_1;
 
     void InitializeOrClearMapMatchingThreadLocalStorage(unsigned number_of_nodes);
 
@@ -127,16 +125,16 @@ template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
                                                  MapMatchingMultiLayerDijkstraHeapData,
                                                  util::TwoLevelStorage<NodeID, int>>;
 
-    using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
-    using ManyToManyHeapPtr = boost::thread_specific_ptr<ManyToManyQueryHeap>;
-    using MapMatchingHeapPtr = boost::thread_specific_ptr<MapMatchingQueryHeap>;
+    using SearchEngineHeapPtr = std::unique_ptr<QueryHeap>;
+    using ManyToManyHeapPtr = std::unique_ptr<ManyToManyQueryHeap>;
+    using MapMatchingHeapPtr = std::unique_ptr<MapMatchingQueryHeap>;
 
-    static SearchEngineHeapPtr forward_heap_1;
-    static SearchEngineHeapPtr reverse_heap_1;
-    static MapMatchingHeapPtr map_matching_forward_heap_1;
-    static MapMatchingHeapPtr map_matching_reverse_heap_1;
+    static thread_local SearchEngineHeapPtr forward_heap_1;
+    static thread_local SearchEngineHeapPtr reverse_heap_1;
+    static thread_local MapMatchingHeapPtr map_matching_forward_heap_1;
+    static thread_local MapMatchingHeapPtr map_matching_reverse_heap_1;
 
-    static ManyToManyHeapPtr many_to_many_heap;
+    static thread_local ManyToManyHeapPtr many_to_many_heap;
 
     void InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes,
                                                   unsigned number_of_boundary_nodes);

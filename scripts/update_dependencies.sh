@@ -10,7 +10,7 @@ set -o nounset
 # http://git.661346.n2.nabble.com/subtree-merges-lose-prefix-after-rebase-td7332850.html
 
 OSMIUM_PATH="osmcode/libosmium"
-OSMIUM_TAG=v2.14.0
+OSMIUM_TAG=v2.20.0
 
 SOL_PATH="ThePhD/sol2"
 SOL_TAG=v3.3.0
@@ -22,13 +22,16 @@ MICROTAR_PATH="rxi/microtar"
 MICROTAR_TAG=v0.1.0
 
 PROTOZERO_PATH="mapbox/protozero"
-PROTOZERO_TAG=v1.6.2
+PROTOZERO_TAG=v1.7.1
 
 VTZERO_PATH="mapbox/vtzero"
 VTZERO_TAG=v1.1.0
 
 FMT_PATH="fmtlib/fmt"
 FMT_TAG=v10.2.1
+
+FLATBUFFERS_PATH="google/flatbuffers"
+FLATBUFFERS_TAG=v24.3.25
 
 function update_subtree () {
     name=$(echo "$1" | tr '[:lower:]' '[:upper:]')
@@ -53,6 +56,6 @@ function update_subtree () {
 }
 
 ## Update dependencies
-for dep in osmium sol rapidjson microtar protozero vtzero fmt; do
+for dep in osmium sol rapidjson microtar protozero vtzero fmt flatbuffers; do
     update_subtree $dep
 done

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(OSRM C CXX)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -8,12 +8,6 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR AND NOT MSVC_IDE)
   message(FATAL_ERROR "In-source builds are not allowed.
 Please create a directory and run cmake from there, passing the path to this source directory as the last argument.
 This process created the file `CMakeCache.txt' and the directory `CMakeFiles'. Please delete them.")
-endif()
-
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  message(STATUS "Building on a 64 bit system")
-else()
-  message(FATAL_ERROR "Building on a 32 bit system is not supported")
 endif()
 
 # detect if this is included as subproject and if so expose
@@ -28,8 +22,6 @@ if (NOT WIN32 AND NOT DEFINED ENV{OSRM_BUILD_DIR})
   set(ENV{OSRM_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
 option(BUILD_PACKAGE "Build OSRM package" OFF)
 option(ENABLE_ASSERTIONS "Use assertions in release mode" OFF)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
@@ -42,11 +34,42 @@ option(ENABLE_LTO "Use Link Time Optimisation" ON)
 option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 
-if (ENABLE_CLANG_TIDY)
-  find_program(CLANG_TIDY_COMMAND NAMES clang-tidy REQUIRED)
-  message(STATUS "Found clang-tidy at ${CLANG_TIDY_COMMAND}")
-  set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};--warnings-as-errors=*;--header-filter=.*")
+if (ENABLE_CONAN)
+  message(STATUS "Installing Conan packages. It may take a while...")
+  find_program(CONAN_EXECUTABLE NAMES conan)
+
+  if (NOT CONAN_EXECUTABLE)
+    message(FATAL_ERROR "Conan not found! Please install Conan 2.x and try again.")
+  else()
+    set(CMAKE_TOOLCHAIN_FILE "./conan_toolchain.cmake")
+
+    execute_process(
+      COMMAND ${CONAN_EXECUTABLE} install .. --output-folder=. --build=missing --settings compiler.cppstd=20 --settings build_type=${CMAKE_BUILD_TYPE}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      OUTPUT_VARIABLE conan_stdout
+      ERROR_VARIABLE conan_stderr
+      RESULT_VARIABLE conan_install_result
+    )
+
+    if (NOT conan_install_result EQUAL 0)
+      message(FATAL_ERROR "Conan install failed: ${conan_install_result}. Stderr: ${conan_stderr}. Stdout: ${conan_stdout}")
+    endif()
+  endif()
 endif()
+
+if (ENABLE_CLANG_TIDY)
+  find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
+  if(NOT CLANG_TIDY_COMMAND)
+    message(FATAL_ERROR "ENABLE_CLANG_TIDY is ON but clang-tidy is not found!")
+  else()
+    message(STATUS "Found clang-tidy at ${CLANG_TIDY_COMMAND}")
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};--warnings-as-errors=*;--header-filter=.*")
+  endif()
+endif()
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+project(OSRM C CXX)
 
 if(ENABLE_LTO AND (CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
   include(CheckIPOSupported)
@@ -116,6 +139,7 @@ include(GNUInstallDirs)
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/generated/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sol2/include)
 
 set(BOOST_COMPONENTS date_time iostreams program_options thread unit_test_framework)
@@ -299,116 +323,74 @@ if (MSVC)
   add_definitions(-DBOOST_ALL_NO_LIB)
 endif()
 
-if(ENABLE_CONAN)
-  message(STATUS "Installing dependencies via Conan")
 
-  # Conan will generate Find*.cmake files to build directory, so we use them with the highest priority
-  list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_BINARY_DIR})
-  list(INSERT CMAKE_PREFIX_PATH 0 ${CMAKE_BINARY_DIR})
-
-  include(${CMAKE_CURRENT_LIST_DIR}/cmake/conan.cmake)
-
-  conan_check(REQUIRED)
-
-  set(CONAN_BOOST_VERSION "1.85.0@#14265ec82b25d91305bbb3b30d3357f8")
-  set(CONAN_BZIP2_VERSION "1.0.8@#d1b2d5816f25865acf978501dff1f897")
-  set(CONAN_EXPAT_VERSION "2.6.2@#2d385d0d50eb5561006a7ff9e356656b")
-  set(CONAN_LUA_VERSION "5.4.6@#658d6089093cf01992c2737ab2e96763")
-  set(CONAN_TBB_VERSION "2021.12.0@#e56e5b44be8d690530585dd3634c0106")
-
-  set(CONAN_SYSTEM_INCLUDES ON)
-
-
-  set(CONAN_ARGS
-    REQUIRES
-    "boost/${CONAN_BOOST_VERSION}"
-    "bzip2/${CONAN_BZIP2_VERSION}"
-    "expat/${CONAN_EXPAT_VERSION}"
-    "lua/${CONAN_LUA_VERSION}"
-    "onetbb/${CONAN_TBB_VERSION}"
-    BASIC_SETUP
-    GENERATORS cmake_find_package json  # json generator generates a conanbuildinfo.json in the build folder so (non-CMake) projects can easily parse OSRM's dependencies
-    KEEP_RPATHS
-    NO_OUTPUT_DIRS
-    OPTIONS boost:without_stacktrace=True # Apple Silicon cross-compilation fails without it
-    BUILD missing
-  )
-
-  # Enable revisions in the conan config
-  execute_process(COMMAND ${CONAN_CMD} config set general.revisions_enabled=1 RESULT_VARIABLE RET_CODE)
-  if(NOT "${RET_CODE}" STREQUAL "0")
-    message(FATAL_ERROR "Error setting revisions for Conan: '${RET_CODE}'")
-  endif()
-
-  # explicitly say Conan to use x86 dependencies if build for x86 platforms (https://github.com/conan-io/cmake-conan/issues/141)
-  if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-    conan_cmake_run("${CONAN_ARGS};ARCH;x86")
-  # cross-compilation for Apple Silicon
-  elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64" AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
-    conan_cmake_run("${CONAN_ARGS};ARCH;armv8")
-  else()
-    conan_cmake_run("${CONAN_ARGS}")
-  endif()
-
-  add_dependency_includes(${CONAN_INCLUDE_DIRS_BOOST})
-  add_dependency_includes(${CONAN_INCLUDE_DIRS_BZIP2})
-  add_dependency_includes(${CONAN_INCLUDE_DIRS_EXPAT})
-  add_dependency_includes(${CONAN_INCLUDE_DIRS_LUA})
-  add_dependency_includes(${CONAN_INCLUDE_DIRS_TBB})
-
+if (ENABLE_CONAN)
   set(Boost_USE_STATIC_LIBS ON)
   find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
-  set(Boost_DATE_TIME_LIBRARY "${Boost_date_time_LIB_TARGETS}")
-  set(Boost_PROGRAM_OPTIONS_LIBRARY "${Boost_program_options_LIB_TARGETS}")
-  set(Boost_IOSTREAMS_LIBRARY "${Boost_iostreams_LIB_TARGETS}")
-  set(Boost_THREAD_LIBRARY "${Boost_thread_LIB_TARGETS}")
-  set(Boost_ZLIB_LIBRARY "${Boost_zlib_LIB_TARGETS}")
-  set(Boost_UNIT_TEST_FRAMEWORK_LIBRARY "${Boost_unit_test_framework_LIB_TARGETS}")
-
-
-  find_package(BZip2 REQUIRED)
-  find_package(EXPAT REQUIRED)
-  find_package(lua REQUIRED)
-  set(LUA_LIBRARIES ${lua_LIBRARIES})
-
   find_package(TBB REQUIRED)
+  find_package(EXPAT REQUIRED)
+  find_package(BZip2 REQUIRED)
+  find_package(Lua 5.2 REQUIRED)
 
+  add_dependency_includes(${Boost_INCLUDE_DIRS})
+
+  set(BOOST_BASE_LIBRARIES ${Boost_LIBRARIES})
+  set(BOOST_ENGINE_LIBRARIES ${Boost_LIBRARIES})
+
+  add_dependency_includes(${TBB_INCLUDE_DIR})
+  set(TBB_LIBRARIES ${TBB_LIBRARIES})
+
+  add_dependency_includes(${expat_INCLUDE_DIRS})
+  set(EXPAT_LIBRARIES ${expat_LIBRARIES})
+  set(EXPAT_INCLUDE_DIRS ${expat_INCLUDE_DIRS})
+
+  add_dependency_includes(${BZIP2_INCLUDE_DIR})
+
+  set(LUA_LIBRARIES lua::lua)
+  if (LUA_FOUND)
+    message(STATUS "Using Lua ${LUA_VERSION_STRING}")
+  endif()
+
+  add_dependency_includes(${lua_INCLUDE_DIRS})
 
   # note: we avoid calling find_package(Osmium ...) here to ensure that the
   # expat and bzip2 are used from conan rather than the system
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
 else()
-  find_package(Boost 1.70 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
-  add_dependency_includes(${Boost_INCLUDE_DIRS})
-
+  find_package(Boost REQUIRED CONFIG COMPONENTS ${BOOST_COMPONENTS})
   find_package(TBB REQUIRED)
+  find_package(EXPAT REQUIRED)
+  find_package(BZip2 REQUIRED)
+  find_package(Lua 5.2 REQUIRED)
+
+  add_dependency_includes(${Boost_INCLUDE_DIRS})
   add_dependency_includes(${TBB_INCLUDE_DIR})
+  add_dependency_includes(${EXPAT_INCLUDE_DIRS})
+  add_dependency_includes(${BZIP2_INCLUDE_DIR})
+  add_dependency_includes(${LUA_INCLUDE_DIR})
+
   set(TBB_LIBRARIES TBB::tbb)
 
-  find_package(EXPAT REQUIRED)
-  add_dependency_includes(${EXPAT_INCLUDE_DIRS})
+  set(BOOST_BASE_LIBRARIES
+    ${Boost_DATE_TIME_LIBRARY}
+    ${Boost_IOSTREAMS_LIBRARY}
+    ${Boost_THREAD_LIBRARY})
 
-  find_package(BZip2 REQUIRED)
-  add_dependency_includes(${BZIP2_INCLUDE_DIR})
-
-  find_package(Lua 5.2 REQUIRED)
-  if (LUA_FOUND)
-    message(STATUS "Using Lua ${LUA_VERSION_STRING}")
-  endif()
-
-  add_dependency_includes(${LUA_INCLUDE_DIR})
+  set(BOOST_ENGINE_LIBRARIES
+    ${Boost_ZLIB_LIBRARY}
+    ${Boost_REGEX_LIBRARY}
+    ${BOOST_BASE_LIBRARIES})
 
   # add a target to generate API documentation with Doxygen
   find_package(Doxygen)
   if(DOXYGEN_FOUND)
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-  add_custom_target(doc
-  ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  COMMENT "Generating API documentation with Doxygen" VERBATIM
-  )
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+    add_custom_target(doc
+      ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Generating API documentation with Doxygen" VERBATIM
+    )
   endif()
-
   # note libosmium depends on expat and bzip2
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/cmake")
   if(NOT OSMIUM_INCLUDE_DIR)
@@ -417,6 +399,8 @@ else()
   find_package(Osmium REQUIRED COMPONENTS io)
   include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
 endif()
+
+
 
 # prefix compilation with ccache by default if available and on clang or gcc
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
@@ -432,6 +416,7 @@ endif()
 # to ensure that osrm binaries play well with other binaries like nodejs
 find_package(ZLIB REQUIRED)
 add_dependency_includes(${ZLIB_INCLUDE_DIRS})
+set(ZLIB_LIBRARY ${ZLIB_LIBRARIES})
 
 add_dependency_defines(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_dependency_defines(-DBOOST_RESULT_OF_USE_DECLTYPE)
@@ -442,15 +427,6 @@ add_dependency_defines(-DBOOST_PHOENIX_STL_TUPLE_H_)
 add_definitions(${OSRM_DEFINES})
 include_directories(SYSTEM ${DEPENDENCIES_INCLUDE_DIRS})
 
-set(BOOST_BASE_LIBRARIES
-   ${Boost_DATE_TIME_LIBRARY}
-   ${Boost_IOSTREAMS_LIBRARY}
-   ${Boost_THREAD_LIBRARY})
-
-set(BOOST_ENGINE_LIBRARIES
-  ${Boost_ZLIB_LIBRARY}
-  ${Boost_REGEX_LIBRARY}
-  ${BOOST_BASE_LIBRARIES})
 
 # Binaries
 target_link_libraries(osrm-datastore osrm_store ${Boost_PROGRAM_OPTIONS_LIBRARY})
@@ -481,10 +457,10 @@ set(PARTITIONER_LIBRARIES
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
-    ${MAYBE_COVERAGE_LIBRARIES}
-    ${ZLIB_LIBRARY})
+    ${MAYBE_COVERAGE_LIBRARIES})
 set(CUSTOMIZER_LIBRARIES
     ${BOOST_ENGINE_LIBRARIES}
+    ${ZLIB_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
@@ -574,7 +550,6 @@ install(DIRECTORY ${DefaultProfilesDir} DESTINATION share/osrm)
 set(DefaultProfilesDir data)
 install(DIRECTORY ${DefaultProfilesDir} DESTINATION share/osrm)
 
-# Setup exporting variables for pkgconfig and subproject
 if(BUILD_PACKAGE)
   include(CPackConfig)
   include(CPack)
@@ -612,16 +587,17 @@ list(APPEND DEPENDENCIES_INCLUDE_DIRS "${PKGCONFIG_INCLUDE_DIR}")
 list(APPEND DEPENDENCIES_INCLUDE_DIRS "${PKGCONFIG_INCLUDE_DIR}/osrm")
 JOIN("-I${DEPENDENCIES_INCLUDE_DIRS}" " -I" PKGCONFIG_OSRM_INCLUDE_FLAGS)
 
-# Boost uses imported targets, we need to use a generator expression to extract
-# the link libraries to be written to the pkg-config file.
-# Conan & TBB define dependencies as CMake targets too, that's why we do the same for them.
-foreach(engine_lib ${ENGINE_LIBRARIES})
-  if("${engine_lib}" MATCHES "^Boost.*" OR "${engine_lib}" MATCHES "^CONAN_LIB.*" OR "${engine_lib}" MATCHES "^TBB.*")
-    list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "$<TARGET_LINKER_FILE:${engine_lib}>")
-  else()
-    list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "${engine_lib}")
-  endif()
-endforeach(engine_lib)
+
+if (NOT ENABLE_CONAN)
+  foreach(engine_lib ${ENGINE_LIBRARIES})
+    if("${engine_lib}" MATCHES "^boost.*" OR "${engine_lib}" MATCHES "^TBB.*")
+      list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "$<TARGET_LINKER_FILE:${engine_lib}>")
+    else()
+      list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "${engine_lib}")
+    endif()
+  endforeach(engine_lib)
+endif()
+
 JOIN("${PKGCONFIG_DEPENDENT_LIBRARIES}" " " PKGCONFIG_OSRM_DEPENDENT_LIBRARIES)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgconfig.in pkgconfig.configured @ONLY)

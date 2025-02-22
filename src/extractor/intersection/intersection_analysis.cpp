@@ -424,13 +424,11 @@ double findEdgeLength(const IntersectionEdgeGeometries &geometries, const EdgeID
 }
 
 template <typename RestrictionsRange>
-bool isTurnRestricted(const RestrictionsRange &restrictions, const NodeID to)
+bool isTurnRestricted(RestrictionsRange restrictions, const NodeID to)
 {
     // Check if any of the restrictions would prevent a turn to 'to'
-    return std::any_of(restrictions.begin(),
-                       restrictions.end(),
-                       [&to](const auto &restriction)
-                       { return restriction->IsTurnRestricted(to); });
+    return std::ranges::any_of(
+        restrictions, [&to](const auto &restriction) { return restriction->IsTurnRestricted(to); });
 }
 
 bool isTurnAllowed(const util::NodeBasedDynamicGraph &graph,

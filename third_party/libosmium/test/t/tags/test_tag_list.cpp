@@ -73,7 +73,7 @@ TEST_CASE("create tag list") {
             osmium::builder::TagListBuilder builder(buffer);
             builder.add_tag(std::string("highway"), std::string("primary"));
             const std::string source = "name";
-            std::string gps = "Main Street";
+            const std::string gps = "Main Street";
             builder.add_tag(source, gps);
         }
         buffer.commit();
@@ -108,7 +108,7 @@ TEST_CASE("create tag list") {
     }
 
     SECTION("with add_tag_list from vector of pairs (const/const)") {
-        std::vector<std::pair<const char* const, const char* const>> v{
+        const std::vector<std::pair<const char* const, const char* const>> v{
             { "highway", "primary" },
             { "name", "Main Street" }
         };
@@ -116,7 +116,7 @@ TEST_CASE("create tag list") {
     }
 
     SECTION("with add_tag_list from vector of pairs (const/nc)") {
-        std::vector<std::pair<const char* const, const char*>> v{
+        const std::vector<std::pair<const char* const, const char*>> v{
             { "highway", "primary" },
             { "name", "Main Street" }
         };
@@ -124,7 +124,7 @@ TEST_CASE("create tag list") {
     }
 
     SECTION("with add_tag_list from vector of pairs (nc/const)") {
-        std::vector<std::pair<const char*, const char* const>> v{
+        const std::vector<std::pair<const char*, const char* const>> v{
             { "highway", "primary" },
             { "name", "Main Street" }
         };
@@ -132,7 +132,7 @@ TEST_CASE("create tag list") {
     }
 
     SECTION("with add_tag_list from vector of pairs (nc/nc)") {
-        std::vector<std::pair<const char*, const char*>> v{
+        const std::vector<std::pair<const char*, const char*>> v{
             { "highway", "primary" },
             { "name", "Main Street" }
         };
@@ -154,7 +154,7 @@ TEST_CASE("create tag list") {
     }
 
     SECTION("with add_tag_list from map") {
-        std::map<std::string, std::string> m{
+        const std::map<std::string, std::string> m{
             { "highway", "primary" },
             { "name", "Main Street" }
         };

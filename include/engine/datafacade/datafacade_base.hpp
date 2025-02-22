@@ -29,13 +29,11 @@
 #include "util/typedefs.hpp"
 
 #include "osrm/coordinate.hpp"
-
-#include <boost/range/adaptor/reversed.hpp>
-#include <boost/range/any_range.hpp>
 #include <cstddef>
 
 #include <engine/bearing.hpp>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -50,20 +48,21 @@ class BaseDataFacade
     using RTreeLeaf = extractor::EdgeBasedNodeSegment;
 
     using NodeForwardRange =
-        boost::iterator_range<extractor::SegmentDataView::SegmentNodeVector::const_iterator>;
-    using NodeReverseRange = boost::reversed_range<const NodeForwardRange>;
+        std::ranges::subrange<extractor::SegmentDataView::SegmentNodeVector::const_iterator>;
+    using NodeReverseRange = std::ranges::reverse_view<NodeForwardRange>;
 
     using WeightForwardRange =
-        boost::iterator_range<extractor::SegmentDataView::SegmentWeightVector::const_iterator>;
-    using WeightReverseRange = boost::reversed_range<const WeightForwardRange>;
+        std::ranges::subrange<extractor::SegmentDataView::SegmentWeightVector::const_iterator>;
+
+    using WeightReverseRange = std::ranges::reverse_view<WeightForwardRange>;
 
     using DurationForwardRange =
-        boost::iterator_range<extractor::SegmentDataView::SegmentDurationVector::const_iterator>;
-    using DurationReverseRange = boost::reversed_range<const DurationForwardRange>;
+        std::ranges::subrange<extractor::SegmentDataView::SegmentDurationVector::const_iterator>;
+    using DurationReverseRange = std::ranges::reverse_view<DurationForwardRange>;
 
     using DatasourceForwardRange =
-        boost::iterator_range<extractor::SegmentDataView::SegmentDatasourceVector::const_iterator>;
-    using DatasourceReverseRange = boost::reversed_range<const DatasourceForwardRange>;
+        std::ranges::subrange<extractor::SegmentDataView::SegmentDatasourceVector::const_iterator>;
+    using DatasourceReverseRange = std::ranges::reverse_view<DatasourceForwardRange>;
 
     BaseDataFacade() {}
     virtual ~BaseDataFacade() {}

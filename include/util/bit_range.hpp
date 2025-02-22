@@ -2,42 +2,12 @@
 #define OSRM_UTIL_BIT_RANGE_HPP
 
 #include "util/msb.hpp"
-
+#include <bit>
 #include <boost/iterator/iterator_facade.hpp>
-#include <boost/range/iterator_range.hpp>
+#include <ranges>
 
 namespace osrm::util
 {
-
-namespace detail
-{
-template <typename T> std::size_t countOnes(T value)
-{
-    static_assert(std::is_unsigned<T>::value, "Only unsigned types allowed");
-    std::size_t number_of_ones = 0;
-    while (value > 0)
-    {
-        auto index = msb(value);
-        value = value & ~(T{1} << index);
-        number_of_ones++;
-    }
-    return number_of_ones;
-}
-
-#if (defined(__clang__) || defined(__GNUC__) || defined(__GNUG__))
-inline std::size_t countOnes(std::uint8_t value)
-{
-    return __builtin_popcount(std::uint32_t{value});
-}
-inline std::size_t countOnes(std::uint16_t value)
-{
-    return __builtin_popcount(std::uint32_t{value});
-}
-inline std::size_t countOnes(unsigned int value) { return __builtin_popcount(value); }
-inline std::size_t countOnes(unsigned long value) { return __builtin_popcountl(value); }
-inline std::size_t countOnes(unsigned long long value) { return __builtin_popcountll(value); }
-#endif
-} // namespace detail
 
 // Investigate if we can replace this with
 // http://www.boost.org/doc/libs/1_64_0/libs/dynamic_bitset/dynamic_bitset.html
@@ -70,7 +40,7 @@ class BitIterator : public boost::iterator_facade<BitIterator<DataT>,
 
     difference_type distance_to(const BitIterator &other) const
     {
-        return detail::countOnes(m_value) - detail::countOnes(other.m_value);
+        return std::popcount(m_value) - std::popcount(other.m_value);
     }
 
     bool equal(const BitIterator &other) const { return m_value == other.m_value; }
@@ -88,7 +58,7 @@ class BitIterator : public boost::iterator_facade<BitIterator<DataT>,
 // Returns range over all 1 bits of value
 template <typename T> auto makeBitRange(const T value)
 {
-    return boost::make_iterator_range(BitIterator<T>{value}, BitIterator<T>{});
+    return std::ranges::subrange(BitIterator<T>{value}, BitIterator<T>{});
 }
 } // namespace osrm::util
 
