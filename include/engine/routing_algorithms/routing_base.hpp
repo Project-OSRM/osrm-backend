@@ -16,15 +16,11 @@
 #include <boost/assert.hpp>
 
 #include <cstddef>
-#include <cstdint>
 
 #include <algorithm>
-#include <functional>
 #include <iterator>
-#include <memory>
 #include <numeric>
 #include <stack>
-#include <utility>
 #include <vector>
 
 namespace osrm::engine::routing_algorithms
@@ -71,24 +67,27 @@ void insertTargetInReverseHeap(Heap &reverse_heap, const PhantomNode &target)
 static constexpr bool FORWARD_DIRECTION = true;
 static constexpr bool REVERSE_DIRECTION = false;
 
-// Identify nodes in the forward(reverse) search direction that will require loop forcing
+// Identify nodes in the forward(reverse) search direction that will require step forcing
 // e.g. if source and destination nodes are on the same segment.
-std::vector<NodeID> getForwardLoopNodes(const PhantomEndpointCandidates &candidates);
-std::vector<NodeID> getForwardLoopNodes(const PhantomCandidatesToTarget &candidates);
-std::vector<NodeID> getBackwardLoopNodes(const PhantomEndpointCandidates &candidates);
-std::vector<NodeID> getBackwardLoopNodes(const PhantomCandidatesToTarget &candidates);
+std::vector<NodeID> getForwardForceNodes(const PhantomEndpointCandidates &candidates);
+std::vector<NodeID> getForwardForceNodes(const PhantomCandidatesToTarget &candidates);
+std::vector<NodeID> getBackwardForceNodes(const PhantomEndpointCandidates &candidates);
+std::vector<NodeID> getBackwardForceNodes(const PhantomCandidatesToTarget &candidates);
 
 // Find the specific phantom node endpoints for a given path from a list of candidates.
 PhantomEndpoints endpointsFromCandidates(const PhantomEndpointCandidates &candidates,
                                          const std::vector<NodeID> &path);
 
 template <typename HeapNodeT>
-inline bool force_loop(const std::vector<NodeID> &force_nodes, const HeapNodeT &heap_node)
+inline bool shouldForceStep(const std::vector<NodeID> &force_nodes,
+                            const HeapNodeT &forward_heap_node,
+                            const HeapNodeT &reverse_heap_node)
 {
-    // if loops are forced, they are so at the source
-    return !force_nodes.empty() &&
-           std::find(force_nodes.begin(), force_nodes.end(), heap_node.node) != force_nodes.end() &&
-           heap_node.data.parent == heap_node.node;
+    // routing steps are forced when the node is a source of both forward and reverse search heaps.
+    return forward_heap_node.data.parent == forward_heap_node.node &&
+           reverse_heap_node.data.parent == reverse_heap_node.node &&
+           std::find(force_nodes.begin(), force_nodes.end(), forward_heap_node.node) !=
+               force_nodes.end();
 }
 
 template <typename Heap>
@@ -190,8 +189,10 @@ void annotatePath(const FacadeT &facade,
     std::vector<SegmentDuration> duration_vector;
     std::vector<DatasourceID> datasource_vector;
 
-    const auto get_segment_geometry = [&](const auto geometry_index) {
-        const auto copy = [](auto &vector, const auto range) {
+    const auto get_segment_geometry = [&](const auto geometry_index)
+    {
+        const auto copy = [](auto &vector, const auto range)
+        {
             vector.resize(range.size());
             std::copy(range.begin(), range.end(), vector.begin());
         };
@@ -253,7 +254,7 @@ void annotatePath(const FacadeT &facade,
                                              alias_cast<EdgeDuration>(duration_vector[segment_idx]),
                                              {0},
                                              datasource_vector[segment_idx],
-                                             boost::none});
+                                             std::nullopt});
         }
         BOOST_ASSERT(!unpacked_path.empty());
 
@@ -310,7 +311,7 @@ void annotatePath(const FacadeT &facade,
                      alias_cast<EdgeDuration>(duration_vector[segment_idx]),
                      {0},
                      datasource_vector[segment_idx],
-                     boost::none});
+                     std::nullopt});
     }
 
     if (!unpacked_path.empty())

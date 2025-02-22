@@ -8,7 +8,6 @@
 
 #include "osrm/json_container.hpp"
 
-#include <algorithm>
 #include <iterator>
 #include <ostream>
 #include <string>
@@ -67,7 +66,7 @@ template <typename Out> struct Renderer
             write('\"');
             write(it->first);
             write<>("\":");
-            mapbox::util::apply_visitor(Renderer(out), it->second);
+            std::visit(Renderer(out), it->second);
             if (++it != end)
             {
                 write(',');
@@ -81,7 +80,7 @@ template <typename Out> struct Renderer
         write('[');
         for (auto it = array.values.cbegin(), end = array.values.cend(); it != end;)
         {
-            mapbox::util::apply_visitor(Renderer(out), *it);
+            std::visit(Renderer(out), *it);
             if (++it != end)
             {
                 write(',');
@@ -97,7 +96,7 @@ template <typename Out> struct Renderer
     void operator()(const Null &) { write<>("null"); }
 
   private:
-    void write(const std::string &str);
+    void write(std::string_view str);
     void write(const char *str, size_t size);
     void write(char ch);
 
@@ -110,7 +109,7 @@ template <typename Out> struct Renderer
     Out &out;
 };
 
-template <> void Renderer<std::vector<char>>::write(const std::string &str)
+template <> void Renderer<std::vector<char>>::write(std::string_view str)
 {
     out.insert(out.end(), str.begin(), str.end());
 }
@@ -122,7 +121,7 @@ template <> void Renderer<std::vector<char>>::write(const char *str, size_t size
 
 template <> void Renderer<std::vector<char>>::write(char ch) { out.push_back(ch); }
 
-template <> void Renderer<std::ostream>::write(const std::string &str) { out << str; }
+template <> void Renderer<std::ostream>::write(std::string_view str) { out << str; }
 
 template <> void Renderer<std::ostream>::write(const char *str, size_t size)
 {
@@ -131,7 +130,7 @@ template <> void Renderer<std::ostream>::write(const char *str, size_t size)
 
 template <> void Renderer<std::ostream>::write(char ch) { out << ch; }
 
-template <> void Renderer<std::string>::write(const std::string &str) { out += str; }
+template <> void Renderer<std::string>::write(std::string_view str) { out += str; }
 
 template <> void Renderer<std::string>::write(const char *str, size_t size)
 {

@@ -100,9 +100,9 @@ class CellCustomizer
                 distances.front() =
                     inserted ? heap.GetData(destination).distance : INVALID_EDGE_DISTANCE;
 
-                weights.advance_begin(1);
-                durations.advance_begin(1);
-                distances.advance_begin(1);
+                weights.advance(1);
+                durations.advance(1);
+                distances.advance(1);
             }
             BOOST_ASSERT(weights.empty());
             BOOST_ASSERT(durations.empty());
@@ -122,7 +122,8 @@ class CellCustomizer
         for (std::size_t level = 1; level < partition.GetNumberOfLevels(); ++level)
         {
             tbb::parallel_for(tbb::blocked_range<std::size_t>(0, partition.GetNumberOfCells(level)),
-                              [&](const tbb::blocked_range<std::size_t> &range) {
+                              [&](const tbb::blocked_range<std::size_t> &range)
+                              {
                                   auto &heap = heaps.local();
                                   for (auto id = range.begin(), end = range.end(); id != end; ++id)
                                   {

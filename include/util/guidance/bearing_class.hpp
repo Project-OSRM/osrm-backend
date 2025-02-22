@@ -1,14 +1,11 @@
 #ifndef OSRM_UTIL_GUIDANCE_BEARING_CLASS_HPP_
 #define OSRM_UTIL_GUIDANCE_BEARING_CLASS_HPP_
 
-#include <cstddef>
-#include <cstdint>
-#include <functional>
-#include <vector>
-
-#include <boost/functional/hash.hpp>
-
+#include "util/std_hash.hpp"
 #include "util/typedefs.hpp"
+
+#include <cstddef>
+#include <vector>
 
 namespace osrm::util::guidance
 {
@@ -62,7 +59,10 @@ namespace std
 inline size_t hash<::osrm::util::guidance::BearingClass>::operator()(
     const ::osrm::util::guidance::BearingClass &bearing_class) const
 {
-    return boost::hash_value(bearing_class.available_bearings);
+    std::size_t value = 0;
+    hash_range(
+        value, bearing_class.available_bearings.cbegin(), bearing_class.available_bearings.cend());
+    return value;
 }
 } // namespace std
 

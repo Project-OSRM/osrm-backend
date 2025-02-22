@@ -2,8 +2,9 @@
 #define STATIC_RTREE_HPP
 
 #include "storage/tar_fwd.hpp"
-
+#include "osrm/coordinate.hpp"
 #include "util/bearing.hpp"
+#include "util/binary_heap.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/deallocating_vector.hpp"
 #include "util/exception.hpp"
@@ -11,17 +12,14 @@
 #include "util/integer_range.hpp"
 #include "util/mmap_file.hpp"
 #include "util/rectangle.hpp"
+#include "util/timing_util.hpp"
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 #include "util/web_mercator.hpp"
 
-#include "osrm/coordinate.hpp"
-
 #include "storage/shared_memory_ownership.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 
 #include <tbb/blocked_range.h>
@@ -29,9 +27,8 @@
 #include <tbb/parallel_sort.h>
 
 #include <algorithm>
-#include <array>
+#include <filesystem>
 #include <limits>
-#include <memory>
 #include <queue>
 #include <string>
 #include <vector>
@@ -271,7 +268,7 @@ class StaticRTree
     // Construct a packed Hilbert-R-Tree with Kamel-Faloutsos algorithm [1]
     explicit StaticRTree(const std::vector<EdgeDataT> &input_data_vector,
                          const Vector<Coordinate> &coordinate_list,
-                         const boost::filesystem::path &on_disk_file_name)
+                         const std::filesystem::path &on_disk_file_name)
         : m_coordinate_list(coordinate_list.data(), coordinate_list.size())
     {
         const auto element_count = input_data_vector.size();
@@ -281,7 +278,8 @@ class StaticRTree
         tbb::parallel_for(
             tbb::blocked_range<uint64_t>(0, element_count),
             [&input_data_vector, &input_wrapper_vector, this](
-                const tbb::blocked_range<uint64_t> &range) {
+                const tbb::blocked_range<uint64_t> &range)
+            {
                 for (uint64_t element_counter = range.begin(), end = range.end();
                      element_counter != end;
                      ++element_counter)
@@ -457,7 +455,7 @@ class StaticRTree
      * Constructs an empty RTree for de-serialization.
      */
     template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
-    explicit StaticRTree(const boost::filesystem::path &on_disk_file_name,
+    explicit StaticRTree(const std::filesystem::path &on_disk_file_name,
                          const Vector<Coordinate> &coordinate_list)
         : m_coordinate_list(coordinate_list.data(), coordinate_list.size()),
           m_objects(mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region))
@@ -472,7 +470,7 @@ class StaticRTree
      */
     explicit StaticRTree(Vector<TreeNode> search_tree_,
                          Vector<std::uint64_t> tree_level_starts,
-                         const boost::filesystem::path &on_disk_file_name,
+                         const std::filesystem::path &on_disk_file_name,
                          const Vector<Coordinate> &coordinate_list)
         : m_search_tree(std::move(search_tree_)),
           m_coordinate_list(coordinate_list.data(), coordinate_list.size()),
@@ -486,70 +484,9 @@ class StaticRTree
        Rectangle needs to be projected!*/
     std::vector<EdgeDataT> SearchInBox(const Rectangle &search_rectangle) const
     {
-        const Rectangle projected_rectangle{
-            search_rectangle.min_lon,
-            search_rectangle.max_lon,
-            toFixed(FloatLatitude{
-                web_mercator::latToY(toFloating(FixedLatitude(search_rectangle.min_lat)))}),
-            toFixed(FloatLatitude{
-                web_mercator::latToY(toFloating(FixedLatitude(search_rectangle.max_lat)))})};
         std::vector<EdgeDataT> results;
-
-        std::queue<TreeIndex> traversal_queue;
-        traversal_queue.push(TreeIndex{});
-
-        while (!traversal_queue.empty())
-        {
-            auto const current_tree_index = traversal_queue.front();
-            traversal_queue.pop();
-
-            // If we're at the bottom of the tree, we need to explore the
-            // element array
-            if (is_leaf(current_tree_index))
-            {
-
-                // Note: irange is [start,finish), so we need to +1 to make sure we visit the
-                // last
-                for (const auto current_child_index : child_indexes(current_tree_index))
-                {
-                    const auto &current_edge = m_objects[current_child_index];
-
-                    // we don't need to project the coordinates here,
-                    // because we use the unprojected rectangle to test against
-                    const Rectangle bbox{std::min(m_coordinate_list[current_edge.u].lon,
-                                                  m_coordinate_list[current_edge.v].lon),
-                                         std::max(m_coordinate_list[current_edge.u].lon,
-                                                  m_coordinate_list[current_edge.v].lon),
-                                         std::min(m_coordinate_list[current_edge.u].lat,
-                                                  m_coordinate_list[current_edge.v].lat),
-                                         std::max(m_coordinate_list[current_edge.u].lat,
-                                                  m_coordinate_list[current_edge.v].lat)};
-
-                    // use the _unprojected_ input rectangle here
-                    if (bbox.Intersects(search_rectangle))
-                    {
-                        results.push_back(current_edge);
-                    }
-                }
-            }
-            else
-            {
-                BOOST_ASSERT(current_tree_index.level + 1 < m_tree_level_starts.size());
-
-                for (const auto child_index : child_indexes(current_tree_index))
-                {
-                    const auto &child_rectangle =
-                        m_search_tree[child_index].minimum_bounding_rectangle;
-
-                    if (child_rectangle.Intersects(projected_rectangle))
-                    {
-                        traversal_queue.push(TreeIndex(
-                            current_tree_index.level + 1,
-                            child_index - m_tree_level_starts[current_tree_index.level + 1]));
-                    }
-                }
-            }
-        }
+        SearchInBox(search_rectangle,
+                    [&results](const auto &edge_data) { results.push_back(edge_data); });
         return results;
     }
 
@@ -560,9 +497,47 @@ class StaticRTree
         return Nearest(
             input_coordinate,
             [](const CandidateSegment &) { return std::make_pair(true, true); },
-            [max_results](const std::size_t num_results, const CandidateSegment &) {
-                return num_results >= max_results;
+            [max_results](const std::size_t num_results, const CandidateSegment &)
+            { return num_results >= max_results; });
+    }
+
+    // NB 1: results are not guaranteed to be sorted by distance
+    // NB 2: maxDistanceMeters is not a hard limit, it's just a way to reduce the number of edges
+    // returned
+    template <typename FilterT>
+    std::vector<CandidateSegment> SearchInRange(const Coordinate input_coordinate,
+                                                double maxDistanceMeters,
+                                                const FilterT filter) const
+    {
+        auto projected_coordinate = web_mercator::fromWGS84(input_coordinate);
+        Coordinate fixed_projected_coordinate{projected_coordinate};
+
+        auto bbox = Rectangle::ExpandMeters(input_coordinate, maxDistanceMeters);
+        std::vector<CandidateSegment> results;
+
+        SearchInBox(
+            bbox,
+            [&results, &filter, fixed_projected_coordinate, this](const EdgeDataT &current_edge)
+            {
+                const auto projected_u = web_mercator::fromWGS84(m_coordinate_list[current_edge.u]);
+                const auto projected_v = web_mercator::fromWGS84(m_coordinate_list[current_edge.v]);
+
+                auto [_, projected_nearest] = coordinate_calculation::projectPointOnSegment(
+                    projected_u, projected_v, fixed_projected_coordinate);
+
+                CandidateSegment current_candidate{projected_nearest, current_edge};
+                auto use_segment = filter(current_candidate);
+                if (!use_segment.first && !use_segment.second)
+                {
+                    return;
+                }
+                current_candidate.data.forward_segment_id.enabled &= use_segment.first;
+                current_candidate.data.reverse_segment_id.enabled &= use_segment.second;
+
+                results.push_back(current_candidate);
             });
+
+        return results;
     }
 
     // Return edges in distance order with the coordinate of the closest point on the edge.
@@ -572,11 +547,16 @@ class StaticRTree
                                           const TerminationT terminate) const
     {
         std::vector<CandidateSegment> results;
+
         auto projected_coordinate = web_mercator::fromWGS84(input_coordinate);
         Coordinate fixed_projected_coordinate{projected_coordinate};
+
+        // we re-use queue for each query to avoid re-allocating memory
+        static thread_local util::BinaryHeap<QueryCandidate> traversal_queue;
+
+        traversal_queue.clear();
         // initialize queue with root element
-        std::priority_queue<QueryCandidate> traversal_queue;
-        traversal_queue.push(QueryCandidate{0, TreeIndex{}});
+        traversal_queue.emplace(QueryCandidate{0, TreeIndex{}});
 
         while (!traversal_queue.empty())
         {
@@ -631,6 +611,73 @@ class StaticRTree
     }
 
   private:
+    template <typename Callback>
+    void SearchInBox(const Rectangle &search_rectangle, Callback &&callback) const
+    {
+        const Rectangle projected_rectangle{
+            search_rectangle.min_lon,
+            search_rectangle.max_lon,
+            toFixed(FloatLatitude{
+                web_mercator::latToY(toFloating(FixedLatitude(search_rectangle.min_lat)))}),
+            toFixed(FloatLatitude{
+                web_mercator::latToY(toFloating(FixedLatitude(search_rectangle.max_lat)))})};
+        std::queue<TreeIndex> traversal_queue;
+        traversal_queue.push(TreeIndex{});
+
+        while (!traversal_queue.empty())
+        {
+            auto const current_tree_index = traversal_queue.front();
+            traversal_queue.pop();
+
+            // If we're at the bottom of the tree, we need to explore the
+            // element array
+            if (is_leaf(current_tree_index))
+            {
+
+                // Note: irange is [start,finish), so we need to +1 to make sure we visit the
+                // last
+                for (const auto current_child_index : child_indexes(current_tree_index))
+                {
+                    const auto &current_edge = m_objects[current_child_index];
+
+                    // we don't need to project the coordinates here,
+                    // because we use the unprojected rectangle to test against
+                    const Rectangle bbox{std::min(m_coordinate_list[current_edge.u].lon,
+                                                  m_coordinate_list[current_edge.v].lon),
+                                         std::max(m_coordinate_list[current_edge.u].lon,
+                                                  m_coordinate_list[current_edge.v].lon),
+                                         std::min(m_coordinate_list[current_edge.u].lat,
+                                                  m_coordinate_list[current_edge.v].lat),
+                                         std::max(m_coordinate_list[current_edge.u].lat,
+                                                  m_coordinate_list[current_edge.v].lat)};
+
+                    // use the _unprojected_ input rectangle here
+                    if (bbox.Intersects(search_rectangle))
+                    {
+                        callback(current_edge);
+                    }
+                }
+            }
+            else
+            {
+                BOOST_ASSERT(current_tree_index.level + 1 < m_tree_level_starts.size());
+
+                for (const auto child_index : child_indexes(current_tree_index))
+                {
+                    const auto &child_rectangle =
+                        m_search_tree[child_index].minimum_bounding_rectangle;
+
+                    if (child_rectangle.Intersects(projected_rectangle))
+                    {
+                        traversal_queue.push(TreeIndex(
+                            current_tree_index.level + 1,
+                            child_index - m_tree_level_starts[current_tree_index.level + 1]));
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Iterates over all the objects in a leaf node and inserts them into our
      * search priority queue.  The speed of this function is very much governed
@@ -663,10 +710,11 @@ class StaticRTree
             // distance must be non-negative
             BOOST_ASSERT(0. <= squared_distance);
             BOOST_ASSERT(i < std::numeric_limits<std::uint32_t>::max());
-            traversal_queue.push(QueryCandidate{squared_distance,
-                                                leaf_id,
-                                                static_cast<std::uint32_t>(i),
-                                                Coordinate{projected_nearest}});
+
+            traversal_queue.emplace(QueryCandidate{squared_distance,
+                                                   leaf_id,
+                                                   static_cast<std::uint32_t>(i),
+                                                   Coordinate{projected_nearest}});
         }
     }
 
@@ -695,7 +743,7 @@ class StaticRTree
                 child.minimum_bounding_rectangle.GetMinSquaredDist(
                     fixed_projected_input_coordinate);
 
-            traversal_queue.push(QueryCandidate{
+            traversal_queue.emplace(QueryCandidate{
                 squared_lower_bound_to_element,
                 TreeIndex(parent.level + 1, child_index - m_tree_level_starts[parent.level + 1])});
         }

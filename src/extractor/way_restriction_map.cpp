@@ -1,8 +1,5 @@
 #include "extractor/way_restriction_map.hpp"
 
-#include <tuple>
-#include <utility>
-
 namespace osrm::extractor
 {
 
@@ -18,7 +15,7 @@ std::size_t WayRestrictionMap::NumberOfDuplicatedNodes() const
 
 bool WayRestrictionMap::IsViaWayEdge(const NodeID from, const NodeID to) const
 {
-    return restriction_graph.via_edge_to_node.count({from, to}) > 0;
+    return restriction_graph.via_edge_to_node.contains({from, to});
 }
 
 std::vector<DuplicatedNodeID> WayRestrictionMap::DuplicatedNodeIDs(const NodeID from,
@@ -38,9 +35,10 @@ bool WayRestrictionMap::IsRestricted(DuplicatedNodeID duplicated_node, const Nod
     // Checks if a turn to 'to' is restricted
     BOOST_ASSERT(duplicated_node < restriction_graph.num_via_nodes);
     const auto &restrictions = restriction_graph.GetRestrictions(duplicated_node);
-    return std::any_of(restrictions.begin(), restrictions.end(), [&to](const auto &restriction) {
-        return restriction->IsTurnRestricted(to);
-    });
+    return std::any_of(restrictions.begin(),
+                       restrictions.end(),
+                       [&to](const auto &restriction)
+                       { return restriction->IsTurnRestricted(to); });
 }
 
 std::vector<const TurnRestriction *>

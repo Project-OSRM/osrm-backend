@@ -5,12 +5,6 @@
 #include "restriction_graph.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/range/adaptor/filtered.hpp>
-
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
 namespace osrm::extractor
 {
 
@@ -26,16 +20,15 @@ template <typename RestrictionFilter> class NodeRestrictionMap
     // Find all restrictions applicable to (from,via,*) turns
     auto Restrictions(NodeID from, NodeID via) const
     {
-        return getRange(from, via) | boost::adaptors::filtered(index_filter);
+        return getRange(from, via) | std::views::filter(index_filter);
     };
 
     // Find all restrictions applicable to (from,via,to) turns
     auto Restrictions(NodeID from, NodeID via, NodeID to) const
     {
-        const auto turnFilter = [this, to](const auto &restriction) {
-            return index_filter(restriction) && restriction->IsTurnRestricted(to);
-        };
-        return getRange(from, via) | boost::adaptors::filtered(turnFilter);
+        const auto turnFilter = [this, to](const auto &restriction)
+        { return index_filter(restriction) && restriction->IsTurnRestricted(to); };
+        return getRange(from, via) | std::views::filter(turnFilter);
     };
 
   private:

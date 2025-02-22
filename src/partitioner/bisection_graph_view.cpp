@@ -1,6 +1,5 @@
 #include "partitioner/bisection_graph_view.hpp"
 
-#include <iostream>
 #include <iterator>
 
 #include <boost/assert.hpp>

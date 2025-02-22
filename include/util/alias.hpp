@@ -28,9 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_UTIL_ALIAS_HPP
 #define OSRM_UTIL_ALIAS_HPP
 
-#include <boost/numeric/conversion/cast.hpp>
-#include <functional>
-#include <iostream>
+#include <cstddef>
+#include <ostream>
 #include <type_traits>
 
 namespace osrm
@@ -46,7 +45,7 @@ template <typename From, typename Tag> struct Alias final
     static_assert(std::is_arithmetic<From>::value, "Needs to be based on an arithmetic type");
 
     From __value;
-    friend std::ostream &operator<<<From, Tag>(std::ostream &stream, const Alias &inst);
+    friend std::ostream &operator<< <From, Tag>(std::ostream &stream, const Alias &inst);
 
     explicit operator From &() { return __value; }
     explicit operator From() const { return __value; }

@@ -3,6 +3,8 @@
 
 #include "util/integer_range.hpp"
 
+#include <boost/assert.hpp>
+
 #include <vector>
 
 namespace osrm::util
@@ -10,9 +12,9 @@ namespace osrm::util
 
 namespace permutation_detail
 {
-template <typename T> static inline void swap(T &a, T &b) { std::swap(a, b); }
+template <typename T> static inline void swap(T &a, T &b) noexcept { std::swap(a, b); }
 
-static inline void swap(std::vector<bool>::reference a, std::vector<bool>::reference b)
+static inline void swap(std::vector<bool>::reference a, std::vector<bool>::reference b) noexcept
 {
     std::vector<bool>::swap(a, b);
 }

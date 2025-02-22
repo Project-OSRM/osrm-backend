@@ -15,7 +15,7 @@ TEST_CASE("Basic use of thread-safe queue") {
 }
 
 TEST_CASE("Queue can have max elements and can be named") {
-    osmium::thread::Queue<int> queue{100, "Queue of max size 100"};
+    const osmium::thread::Queue<int> queue{100, "Queue of max size 100"};
 }
 
 TEST_CASE("When queue is shut down, nothing goes in or out") {

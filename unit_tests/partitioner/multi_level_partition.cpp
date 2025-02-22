@@ -192,9 +192,10 @@ BOOST_AUTO_TEST_CASE(large_cell_number)
 
     for (auto l : util::irange<size_t>(1UL, num_levels))
     {
-        std::transform(levels[l - 1].begin(), levels[l - 1].end(), levels[l].begin(), [](auto val) {
-            return val / 2;
-        });
+        std::transform(levels[l - 1].begin(),
+                       levels[l - 1].end(),
+                       levels[l].begin(),
+                       [](auto val) { return val / 2; });
         levels_to_num_cells[l] = levels_to_num_cells[l - 1] / 2;
     }
 
@@ -244,7 +245,8 @@ BOOST_AUTO_TEST_CASE(cell_64_bits)
                                             std::vector<CellID>(level_cells[0]));
     std::vector<uint32_t> levels_to_num_cells(level_cells.size());
 
-    const auto set_level_cells = [&](size_t level, auto const num_cells) {
+    const auto set_level_cells = [&](size_t level, auto const num_cells)
+    {
         for (auto val : util::irange<size_t>(0ULL, NUM_PARTITIONS))
         {
             levels[level][val] = std::min(val, num_cells - 1);
@@ -273,7 +275,8 @@ BOOST_AUTO_TEST_CASE(cell_overflow_bits)
                                             std::vector<CellID>(level_cells[0]));
     std::vector<uint32_t> levels_to_num_cells(level_cells.size());
 
-    const auto set_level_cells = [&](size_t level, auto const num_cells) {
+    const auto set_level_cells = [&](size_t level, auto const num_cells)
+    {
         for (auto val : util::irange<size_t>(0ULL, NUM_PARTITIONS))
         {
             levels[level][val] = std::min(val, num_cells - 1);

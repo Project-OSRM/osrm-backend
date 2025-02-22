@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <iterator>
-#include <memory>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
@@ -223,9 +222,8 @@ RandIt filterViaCandidatesByStretch(RandIt first,
     const auto stretch_weight_limit =
         (1. + parameters.kAtMostLongerBy) * from_alias<double>(weight);
 
-    const auto over_weight_limit = [=](const auto via) {
-        return from_alias<double>(via.weight) > stretch_weight_limit;
-    };
+    const auto over_weight_limit = [=](const auto via)
+    { return from_alias<double>(via.weight) > stretch_weight_limit; };
 
     return std::remove_if(first, last, over_weight_limit);
 }
@@ -249,7 +247,7 @@ filterViaCandidatesByViaNotOnPath(const WeightedViaNodePackedPath &path, RandIt 
     for (const auto &edge : path.path)
         nodes.insert(std::get<1>(edge));
 
-    const auto via_on_path = [&](const auto via) { return nodes.count(via.node) > 0; };
+    const auto via_on_path = [&](const auto via) { return nodes.contains(via.node); };
 
     return std::remove_if(first, last, via_on_path);
 }
@@ -298,16 +296,18 @@ RandIt filterPackedPathsByCellSharing(RandIt first,
     for (const auto &edge : shortest_path.path)
         cells.insert(get_cell(std::get<1>(edge)));
 
-    const auto over_sharing_limit = [&](const auto &packed) {
+    const auto over_sharing_limit = [&](const auto &packed)
+    {
         if (packed.path.empty())
         { // don't remove routes with single-node (empty) path
             return false;
         }
 
-        const auto not_seen = [&](const PackedEdge edge) {
+        const auto not_seen = [&](const PackedEdge edge)
+        {
             const auto source_cell = get_cell(std::get<0>(edge));
             const auto target_cell = get_cell(std::get<1>(edge));
-            return cells.count(source_cell) < 1 && cells.count(target_cell) < 1;
+            return !cells.contains(source_cell) && !cells.contains(target_cell);
         };
 
         const auto different = std::count_if(begin(packed.path), end(packed.path), not_seen);
@@ -364,7 +364,8 @@ RandIt filterPackedPathsByLocalOptimality(const WeightedViaNodePackedPath &path,
     BOOST_ASSERT(path.via.weight != INVALID_EDGE_WEIGHT);
 
     // node == parent_in_main_heap(parent_in_side_heap(v)) -> plateaux at `node`
-    const auto has_plateaux_at_node = [&](const NodeID node, const Heap &fst, const Heap &snd) {
+    const auto has_plateaux_at_node = [&](const NodeID node, const Heap &fst, const Heap &snd)
+    {
         BOOST_ASSERT(fst.WasInserted(node));
         auto const parent = fst.GetData(node).parent;
         return snd.WasInserted(parent) && snd.GetData(parent).parent == node;
@@ -374,7 +375,8 @@ RandIt filterPackedPathsByLocalOptimality(const WeightedViaNodePackedPath &path,
     // tree from t overlap. An edge is part of such a plateaux around `v` if:
     // v == parent_in_reverse_search(parent_in_forward_search(v)).
     // Here we calculate the last node on the plateaux in either direction.
-    const auto plateaux_end = [&](NodeID node, const Heap &fst, const Heap &snd) {
+    const auto plateaux_end = [&](NodeID node, const Heap &fst, const Heap &snd)
+    {
         BOOST_ASSERT(node != SPECIAL_NODEID);
         BOOST_ASSERT(fst.WasInserted(node));
         BOOST_ASSERT(snd.WasInserted(node));
@@ -388,7 +390,8 @@ RandIt filterPackedPathsByLocalOptimality(const WeightedViaNodePackedPath &path,
         return node;
     };
 
-    const auto is_not_locally_optimal = [&](const auto &packed) {
+    const auto is_not_locally_optimal = [&](const auto &packed)
+    {
         BOOST_ASSERT(packed.via.node != path.via.node);
         BOOST_ASSERT(packed.via.weight != INVALID_EDGE_WEIGHT);
         BOOST_ASSERT(packed.via.node != SPECIAL_NODEID);
@@ -475,17 +478,19 @@ RandIt filterUnpackedPathsBySharing(RandIt first,
 
     nodes.insert(begin(shortest_path.nodes), end(shortest_path.nodes));
 
-    const auto over_sharing_limit = [&](auto &unpacked) {
+    const auto over_sharing_limit = [&](auto &unpacked)
+    {
         if (unpacked.edges.empty())
         { // don't remove routes with single-node (empty) path
             return false;
         }
 
         EdgeDuration total_duration = {0};
-        const auto add_if_seen = [&](const EdgeDuration duration, const NodeID node) {
+        const auto add_if_seen = [&](const EdgeDuration duration, const NodeID node)
+        {
             auto node_duration = facade.GetNodeDuration(node);
             total_duration += node_duration;
-            if (nodes.count(node) > 0)
+            if (nodes.contains(node))
             {
                 return duration + node_duration;
             }
@@ -533,9 +538,8 @@ RandIt filterAnnotatedRoutesByStretch(RandIt first,
     const auto stretch_duration_limit =
         (1. + parameters.kAtMostLongerBy) * from_alias<double>(shortest_route_duration);
 
-    const auto over_duration_limit = [=](const auto &route) {
-        return from_alias<double>(route.duration()) > stretch_duration_limit;
-    };
+    const auto over_duration_limit = [=](const auto &route)
+    { return from_alias<double>(route.duration()) > stretch_duration_limit; };
 
     return std::remove_if(first, last, over_duration_limit);
 }
@@ -616,28 +620,24 @@ void unpackPackedPaths(InputIt first,
                 BOOST_ASSERT(!facade.ExcludeNode(source));
                 BOOST_ASSERT(!facade.ExcludeNode(target));
 
-                // TODO: when structured bindings will be allowed change to
-                // auto [subpath_weight, subpath_source, subpath_target, subpath] = ...
-                EdgeWeight subpath_weight;
-                std::vector<NodeID> subpath_nodes;
-                std::vector<EdgeID> subpath_edges;
-                std::tie(subpath_weight, subpath_nodes, subpath_edges) = search(search_engine_data,
-                                                                                facade,
-                                                                                forward_heap,
-                                                                                reverse_heap,
-                                                                                {},
-                                                                                {},
-                                                                                INVALID_EDGE_WEIGHT,
-                                                                                sublevel,
-                                                                                parent_cell_id);
-                BOOST_ASSERT(!subpath_edges.empty());
-                BOOST_ASSERT(subpath_nodes.size() > 1);
-                BOOST_ASSERT(subpath_nodes.front() == source);
-                BOOST_ASSERT(subpath_nodes.back() == target);
-                unpacked_nodes.insert(
-                    unpacked_nodes.end(), std::next(subpath_nodes.begin()), subpath_nodes.end());
-                unpacked_edges.insert(
-                    unpacked_edges.end(), subpath_edges.begin(), subpath_edges.end());
+                auto unpacked_subpath = search(search_engine_data,
+                                               facade,
+                                               forward_heap,
+                                               reverse_heap,
+                                               {},
+                                               INVALID_EDGE_WEIGHT,
+                                               sublevel,
+                                               parent_cell_id);
+                BOOST_ASSERT(!unpacked_subpath.edges.empty());
+                BOOST_ASSERT(unpacked_subpath.nodes.size() > 1);
+                BOOST_ASSERT(unpacked_subpath.nodes.front() == source);
+                BOOST_ASSERT(unpacked_subpath.nodes.back() == target);
+                unpacked_nodes.insert(unpacked_nodes.end(),
+                                      std::next(unpacked_subpath.nodes.begin()),
+                                      unpacked_subpath.nodes.end());
+                unpacked_edges.insert(unpacked_edges.end(),
+                                      unpacked_subpath.edges.begin(),
+                                      unpacked_subpath.edges.end());
             }
         }
 
@@ -715,7 +715,6 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
                                            overlap_via,
                                            overlap_weight,
                                            {},
-                                           {},
                                            endpoint_candidates);
 
             if (!forward_heap.Empty())
@@ -740,7 +739,6 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
                                            forward_heap,
                                            overlap_via,
                                            overlap_weight,
-                                           {},
                                            {},
                                            endpoint_candidates);
 
@@ -837,9 +835,9 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     it = filterViaCandidatesByStretch(begin(candidate_vias), it, shortest_path_weight, parameters);
 
     // Pre-rank by weight; sharing filtering below then discards by similarity.
-    std::sort(begin(candidate_vias), it, [](const auto lhs, const auto rhs) {
-        return lhs.weight < rhs.weight;
-    });
+    std::sort(begin(candidate_vias),
+              it,
+              [](const auto lhs, const auto rhs) { return lhs.weight < rhs.weight; });
 
     // Filtered and ranked candidate range
     const auto candidate_vias_first = begin(candidate_vias);
@@ -850,7 +848,8 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     // The recursive path unpacking below destructs heaps.
     // We need to save all packed paths from the heaps upfront.
 
-    const auto extract_packed_path_from_heaps = [&](WeightedViaNode via) {
+    const auto extract_packed_path_from_heaps = [&](WeightedViaNode via)
+    {
         auto packed_path = retrievePackedPathFromHeap(forward_heap, reverse_heap, via.node);
 
         return WeightedViaNodePackedPath{via, std::move(packed_path)};
@@ -928,9 +927,8 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     std::vector<InternalRouteResult> routes;
     routes.reserve(number_of_unpacked_paths);
 
-    const auto unpacked_path_to_route = [&](const WeightedViaNodeUnpackedPath &path) {
-        return extractRoute(facade, path.via.weight, endpoint_candidates, path.nodes, path.edges);
-    };
+    const auto unpacked_path_to_route = [&](const WeightedViaNodeUnpackedPath &path)
+    { return extractRoute(facade, path.via.weight, endpoint_candidates, path.nodes, path.edges); };
 
     std::transform(unpacked_paths_first,
                    unpacked_paths_last,

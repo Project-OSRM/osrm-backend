@@ -1,8 +1,6 @@
 #include "util/vector_view.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/range/adaptor/reversed.hpp>
-#include <boost/range/iterator_range.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>

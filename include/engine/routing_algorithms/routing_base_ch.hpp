@@ -112,8 +112,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
                  NodeID &middle_node_id,
                  EdgeWeight &upper_bound,
                  EdgeWeight min_edge_offset,
-                 const std::vector<NodeID> &force_loop_forward_nodes,
-                 const std::vector<NodeID> &force_loop_reverse_nodes)
+                 const std::vector<NodeID> &force_step_nodes)
 {
     auto heapNode = forward_heap.DeleteMinGetHeapNode();
     const auto reverseHeapNode = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
@@ -123,13 +122,13 @@ void routingStep(const DataFacade<Algorithm> &facade,
         const EdgeWeight new_weight = reverseHeapNode->weight + heapNode.weight;
         if (new_weight < upper_bound)
         {
-            if (force_loop(force_loop_forward_nodes, heapNode) ||
-                force_loop(force_loop_reverse_nodes, heapNode) ||
+            if (shouldForceStep(force_step_nodes, heapNode, *reverseHeapNode) ||
                 // in this case we are looking at a bi-directional way where the source
                 // and target phantom are on the same edge based node
                 new_weight < EdgeWeight{0})
             {
-                // check whether there is a loop present at the node
+                // Before forcing step, check whether there is a loop present at the node.
+                // We may find a valid weight path by following the loop.
                 for (const auto edge : facade.GetAdjacentEdgeRange(heapNode.node))
                 {
                     const auto &data = facade.GetEdgeData(edge);
@@ -294,9 +293,9 @@ EdgeDistance calculateEBGNodeAnnotations(const DataFacade<Algorithm> &facade,
 
             // Look for an edge on the forward CH graph (.forward)
             EdgeID smaller_edge_id =
-                facade.FindSmallestEdge(std::get<0>(edge), std::get<1>(edge), [](const auto &data) {
-                    return data.forward;
-                });
+                facade.FindSmallestEdge(std::get<0>(edge),
+                                        std::get<1>(edge),
+                                        [](const auto &data) { return data.forward; });
 
             // If we didn't find one there, the we might be looking at a part of the path that
             // was found using the backward search.  Here, we flip the node order (.second,
@@ -381,7 +380,8 @@ void unpackPath(const FacadeT &facade,
         unpackPath(facade,
                    packed_path_begin,
                    packed_path_end,
-                   [&](std::pair<NodeID, NodeID> &edge, const auto &edge_id) {
+                   [&](std::pair<NodeID, NodeID> &edge, const auto &edge_id)
+                   {
                        BOOST_ASSERT(edge.first == unpacked_nodes.back());
                        unpacked_nodes.push_back(edge.second);
                        unpacked_edges.push_back(edge_id);
@@ -420,23 +420,22 @@ void retrievePackedPathFromSingleManyToManyHeap(
 // assumes that heaps are already setup correctly.
 // ATTENTION: This only works if no additional offset is supplied next to the Phantom Node
 // Offsets.
-// In case additional offsets are supplied, you might have to force a loop first.
-// A forced loop might be necessary, if source and target are on the same segment.
+// In case additional offsets are supplied, you might have to force a routing step first.
+// A forced step might be necessary, if source and target are on the same segment.
 // If this is the case and the offsets of the respective direction are larger for the source
 // than the target
-// then a force loop is required (e.g. source_phantom.forward_segment_id ==
+// then a force step is required (e.g. source_phantom.forward_segment_id ==
 // target_phantom.forward_segment_id
 // && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
 // requires
-// a force loop, if the heaps have been initialized with positive offsets.
+// a force step, if the heaps have been initialized with positive offsets.
 void search(SearchEngineData<Algorithm> &engine_working_data,
             const DataFacade<Algorithm> &facade,
             SearchEngineData<Algorithm>::QueryHeap &forward_heap,
             SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
             EdgeWeight &weight,
             std::vector<NodeID> &packed_leg,
-            const std::vector<NodeID> &force_loop_forward_node,
-            const std::vector<NodeID> &force_loop_reverse_node,
+            const std::vector<NodeID> &force_step_nodes,
             const EdgeWeight duration_upper_bound = INVALID_EDGE_WEIGHT);
 
 template <typename PhantomEndpointT>
@@ -446,8 +445,7 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
             SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
             EdgeWeight &weight,
             std::vector<NodeID> &packed_leg,
-            const std::vector<NodeID> &force_loop_forward_node,
-            const std::vector<NodeID> &force_loop_reverse_node,
+            const std::vector<NodeID> &force_step_nodes,
             const PhantomEndpointT & /*endpoints*/,
             const EdgeWeight duration_upper_bound = INVALID_EDGE_WEIGHT)
 {
@@ -458,14 +456,13 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                   reverse_heap,
                   weight,
                   packed_leg,
-                  force_loop_forward_node,
-                  force_loop_reverse_node,
+                  force_step_nodes,
                   duration_upper_bound);
 }
 
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
-// the addition of force_loop parameters might be required
+// the addition of force_step parameters might be required
 double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           const DataFacade<ch::Algorithm> &facade,
                           SearchEngineData<Algorithm>::QueryHeap &forward_heap,

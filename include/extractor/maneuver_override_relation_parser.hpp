@@ -3,9 +3,7 @@
 
 #include "maneuver_override.hpp"
 
-#include <boost/optional.hpp>
-#include <string>
-#include <vector>
+#include <optional>
 
 namespace osmium
 {
@@ -55,7 +53,7 @@ class ManeuverOverrideRelationParser
 {
   public:
     ManeuverOverrideRelationParser();
-    boost::optional<InputManeuverOverride> TryParse(const osmium::Relation &relation) const;
+    std::optional<InputManeuverOverride> TryParse(const osmium::Relation &relation) const;
 };
 } // namespace osrm::extractor
 

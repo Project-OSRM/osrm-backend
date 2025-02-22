@@ -74,7 +74,7 @@ TEST_CASE("Calling decode_polygon_geometry() with a point geometry fails") {
 
     SECTION("check exception type") {
         REQUIRE_THROWS_AS(decoder.decode_polygon(dummy_geom_handler{}),
-                          const vtzero::geometry_exception&);
+                          vtzero::geometry_exception);
     }
     SECTION("check exception message") {
         REQUIRE_THROWS_WITH(decoder.decode_polygon(dummy_geom_handler{}),
@@ -88,7 +88,7 @@ TEST_CASE("Calling decode_polygon_geometry() with a linestring geometry fails") 
 
     SECTION("check exception type") {
         REQUIRE_THROWS_AS(decoder.decode_polygon(dummy_geom_handler{}),
-                          const vtzero::geometry_exception&);
+                          vtzero::geometry_exception);
     }
     SECTION("check exception message") {
         REQUIRE_THROWS_WITH(decoder.decode_polygon(dummy_geom_handler{}),
@@ -102,7 +102,7 @@ TEST_CASE("Calling decode_polygon_geometry() with something other than MoveTo co
 
     SECTION("check exception type") {
         REQUIRE_THROWS_AS(decoder.decode_polygon(dummy_geom_handler{}),
-                          const vtzero::geometry_exception&);
+                          vtzero::geometry_exception);
     }
     SECTION("check exception message") {
         REQUIRE_THROWS_WITH(decoder.decode_polygon(dummy_geom_handler{}),
@@ -116,7 +116,7 @@ TEST_CASE("Calling decode_polygon_geometry() with a count of 0") {
 
     SECTION("check exception type") {
         REQUIRE_THROWS_AS(decoder.decode_polygon(dummy_geom_handler{}),
-                          const vtzero::geometry_exception&);
+                          vtzero::geometry_exception);
     }
     SECTION("check exception message") {
         REQUIRE_THROWS_WITH(decoder.decode_polygon(dummy_geom_handler{}),
@@ -130,7 +130,7 @@ TEST_CASE("Calling decode_polygon_geometry() with a count of 2") {
 
     SECTION("check exception type") {
         REQUIRE_THROWS_AS(decoder.decode_polygon(dummy_geom_handler{}),
-                          const vtzero::geometry_exception&);
+                          vtzero::geometry_exception);
     }
     SECTION("check exception message") {
         REQUIRE_THROWS_WITH(decoder.decode_polygon(dummy_geom_handler{}),
@@ -145,7 +145,7 @@ TEST_CASE("Calling decode_polygon_geometry() with 2nd command not a LineTo") {
 
     SECTION("check exception type") {
         REQUIRE_THROWS_AS(decoder.decode_polygon(dummy_geom_handler{}),
-                          const vtzero::geometry_exception&);
+                          vtzero::geometry_exception);
     }
     SECTION("check exception message") {
         REQUIRE_THROWS_WITH(decoder.decode_polygon(dummy_geom_handler{}),
@@ -183,7 +183,7 @@ TEST_CASE("Calling decode_polygon_geometry() with 3nd command not a ClosePath") 
 
     SECTION("check exception type") {
         REQUIRE_THROWS_AS(decoder.decode_polygon(dummy_geom_handler{}),
-                          const vtzero::geometry_exception&);
+                          vtzero::geometry_exception);
     }
     SECTION("check exception message") {
         REQUIRE_THROWS_WITH(decoder.decode_polygon(dummy_geom_handler{}),

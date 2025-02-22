@@ -5,9 +5,9 @@
 
 #include <algorithm>
 #include <iomanip>
+#include <iostream>
 #include <numeric>
 #include <random>
-#include <string>
 #include <vector>
 
 using namespace osrm;
@@ -72,10 +72,10 @@ int main(int, char **)
 
     auto write_slowdown = result_packed.random_write_ms / result_plain.random_write_ms;
     auto read_slowdown = result_packed.random_read_ms / result_plain.random_read_ms;
-    util::Log() << "random write: std::vector " << result_plain.random_write_ms
-                << " ms, util::packed_vector " << result_packed.random_write_ms << " ms. "
-                << write_slowdown;
-    util::Log() << "random read: std::vector " << result_plain.random_read_ms
-                << " ms, util::packed_vector " << result_packed.random_read_ms << " ms. "
-                << read_slowdown;
+    std::cout << "random write:\nstd::vector " << result_plain.random_write_ms
+              << " ms\nutil::packed_vector " << result_packed.random_write_ms << " ms\n"
+              << "slowdown: " << write_slowdown << std::endl;
+    std::cout << "random read:\nstd::vector " << result_plain.random_read_ms
+              << " ms\nutil::packed_vector " << result_packed.random_read_ms << " ms\n"
+              << "slowdown: " << read_slowdown << std::endl;
 }

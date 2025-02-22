@@ -28,7 +28,7 @@ bool SuffixTable::isSuffix(const std::string &possible_suffix) const
 
 bool SuffixTable::isSuffix(std::string_view possible_suffix) const
 {
-    return suffix_set.count(possible_suffix) > 0;
+    return suffix_set.contains(possible_suffix);
 }
 
 } // namespace osrm::extractor

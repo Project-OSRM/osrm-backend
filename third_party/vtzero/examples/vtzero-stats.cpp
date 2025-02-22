@@ -20,17 +20,23 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::string input_file{argv[1]};
-    const auto data = read_file(input_file);
+    try {
+        std::string input_file{argv[1]};
+        const auto data = read_file(input_file);
 
-    vtzero::vector_tile tile{data};
+        vtzero::vector_tile tile{data};
 
-    while (const auto layer = tile.next_layer()) {
-        std::cout.write(layer.name().data(), static_cast<std::streamsize>(layer.name().size()));
-        std::cout << ' '
-                  << layer.num_features() << ' '
-                  << layer.key_table().size() << ' '
-                  << layer.value_table().size() << '\n';
+        while (const auto layer = tile.next_layer()) {
+            std::cout.write(layer.name().data(), static_cast<std::streamsize>(layer.name().size()));
+            std::cout << ' '
+                      << layer.num_features() << ' '
+                      << layer.key_table().size() << ' '
+                      << layer.value_table().size() << '\n';
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << '\n';
+        return 1;
     }
-}
 
+    return 0;
+}

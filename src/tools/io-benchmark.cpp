@@ -3,9 +3,6 @@
 #include "util/log.hpp"
 #include "util/timing_util.hpp"
 
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-
 #include <cmath>
 #include <cstdio>
 #include <fcntl.h>
@@ -14,7 +11,8 @@
 #endif
 
 #include <algorithm>
-#include <chrono>
+#include <filesystem>
+#include <fstream>
 #include <iomanip>
 #include <numeric>
 #include <random>
@@ -45,7 +43,7 @@ void runStatistics(std::vector<double> &timings_vector, Statistics &stats)
 }
 } // namespace osrm::tools
 
-boost::filesystem::path test_path;
+std::filesystem::path test_path;
 
 int main(int argc, char *argv[])
 {
@@ -66,7 +64,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    test_path = boost::filesystem::path(argv[1]);
+    test_path = std::filesystem::path(argv[1]);
     test_path /= "osrm.tst";
     osrm::util::Log(logDEBUG) << "temporary file: " << test_path.string();
 
@@ -74,7 +72,7 @@ int main(int argc, char *argv[])
     if (2 == argc)
     {
         // create file to test
-        if (boost::filesystem::exists(test_path))
+        if (std::filesystem::exists(test_path))
         {
             throw osrm::util::exception("Data file already exists: " + test_path.string() +
                                         SOURCE_REF);
@@ -120,7 +118,7 @@ int main(int argc, char *argv[])
     else
     {
         // Run Non-Cached I/O benchmarks
-        if (!boost::filesystem::exists(test_path))
+        if (!std::filesystem::exists(test_path))
         {
             throw osrm::util::exception("data file does not exist" + SOURCE_REF);
         }
@@ -298,9 +296,9 @@ int main(int argc, char *argv[])
                           << "max: " << stats.max << "ms, "
                           << "dev: " << stats.dev << "ms";
 
-        if (boost::filesystem::exists(test_path))
+        if (std::filesystem::exists(test_path))
         {
-            boost::filesystem::remove(test_path);
+            std::filesystem::remove(test_path);
             osrm::util::Log(logDEBUG) << "removing temporary files";
         }
     }

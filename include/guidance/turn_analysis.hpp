@@ -17,16 +17,9 @@
 #include "guidance/turn_classification.hpp"
 #include "guidance/turn_handler.hpp"
 
-#include "util/attributes.hpp"
 #include "util/node_based_graph.hpp"
 
-#include <cstdint>
-
-#include <memory>
-#include <string>
-#include <tuple>
 #include <unordered_set>
-#include <utility>
 #include <vector>
 
 namespace osrm::guidance
@@ -47,13 +40,11 @@ class TurnAnalysis
 
     /* Full Analysis Process for a single node/edge combination. Use with caution, as the process is
      * relatively expensive */
-    OSRM_ATTR_WARN_UNUSED
-    Intersection operator()(const NodeID node_prior_to_intersection,
-                            const EdgeID entering_via_edge) const;
+    [[nodiscard]] Intersection operator()(const NodeID node_prior_to_intersection,
+                                          const EdgeID entering_via_edge) const;
 
     // Select turn types based on the intersection shape
-    OSRM_ATTR_WARN_UNUSED
-    Intersection
+    [[nodiscard]] Intersection
     AssignTurnTypes(const NodeID from_node,
                     const EdgeID via_eid,
                     const extractor::intersection::IntersectionView &intersection) const;

@@ -28,7 +28,8 @@ BOOST_AUTO_TEST_CASE(access_nodes)
     const auto to_row = [cols](const NodeID nid) { return nid / cols; };
     const auto to_col = [cols](const NodeID nid) { return nid % cols; };
 
-    const auto get_expected = [&](const NodeID id) {
+    const auto get_expected = [&](const NodeID id)
+    {
         const auto expected_lon = FloatLongitude{to_col(id) * step_size};
         const auto expected_lat = FloatLatitude{to_row(id) * step_size};
         Coordinate compare(expected_lon, expected_lat);

@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
+#include <limits>
+#include <string>
 
 namespace osrm::extractor
 {
@@ -27,9 +29,9 @@ inline auto getClassData(const std::size_t index)
 
 inline bool isValidClassName(const std::string &name)
 {
-    return std::find_if_not(name.begin(), name.end(), [](const auto c) {
-               return std::isalnum(c);
-           }) == name.end();
+    return std::find_if_not(name.begin(),
+                            name.end(),
+                            [](const auto c) { return std::isalnum(c); }) == name.end();
 }
 } // namespace osrm::extractor
 

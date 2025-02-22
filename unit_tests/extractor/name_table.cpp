@@ -3,12 +3,10 @@
 
 #include "../common/temporary_file.hpp"
 
-#include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <filesystem>
 #include <iomanip>
-#include <iostream>
-#include <sstream>
 #include <typeinfo>
 #include <vector>
 

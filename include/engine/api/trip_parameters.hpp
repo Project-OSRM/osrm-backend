@@ -30,8 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "engine/api/route_parameters.hpp"
 
-#include <boost/optional.hpp>
-#include <vector>
+#include <optional>
 
 namespace osrm::engine::api
 {
@@ -60,7 +59,7 @@ struct TripParameters : public RouteParameters
     TripParameters(SourceType source_,
                    DestinationType destination_,
                    bool roundtrip_,
-                   Args &&... args_)
+                   Args &&...args_)
         : RouteParameters{std::forward<Args>(args_)...}, source{source_},
           destination{destination_}, roundtrip{roundtrip_}
     {

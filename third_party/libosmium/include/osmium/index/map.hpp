@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -236,6 +236,7 @@ namespace osmium {
 
             std::vector<std::string> map_types() const {
                 std::vector<std::string> result;
+                result.reserve(m_callbacks.size());
 
                 for (const auto& cb : m_callbacks) {
                     result.push_back(cb.first);

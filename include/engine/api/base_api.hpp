@@ -40,10 +40,10 @@ class BaseAPI
         util::json::Array waypoints;
         waypoints.values.resize(parameters.coordinates.size());
 
-        boost::range::transform(
-            waypoint_candidates,
-            waypoints.values.begin(),
-            [this](const PhantomNodeCandidates &candidates) { return MakeWaypoint(candidates); });
+        boost::range::transform(waypoint_candidates,
+                                waypoints.values.begin(),
+                                [this](const PhantomNodeCandidates &candidates)
+                                { return MakeWaypoint(candidates); });
         return waypoints;
     }
 
@@ -104,9 +104,8 @@ class BaseAPI
         std::transform(waypoint_candidates.begin(),
                        waypoint_candidates.end(),
                        waypoints.begin(),
-                       [this, builder](const PhantomNodeCandidates &candidates) {
-                           return MakeWaypoint(builder, candidates)->Finish();
-                       });
+                       [this, builder](const PhantomNodeCandidates &candidates)
+                       { return MakeWaypoint(builder, candidates)->Finish(); });
         return builder->CreateVector(waypoints);
     }
 

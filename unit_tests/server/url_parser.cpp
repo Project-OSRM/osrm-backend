@@ -1,7 +1,5 @@
 #include "server/api/url_parser.hpp"
 
-#include <fstream>
-
 // needed for BOOST_CHECK_EQUAL
 namespace osrm::server::api
 {

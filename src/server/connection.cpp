@@ -186,6 +186,7 @@ void Connection::handle_timeout(boost::system::error_code ec)
     if (ec != boost::asio::error::operation_aborted)
     {
         boost::system::error_code ignore_error;
+        // NOLINTNEXTLINE(bugprone-unused-return-value)
         TCP_socket.cancel(ignore_error);
         handle_shutdown();
     }
@@ -197,6 +198,7 @@ void Connection::handle_shutdown()
     timer.cancel();
     // Initiate graceful connection closure.
     boost::system::error_code ignore_error;
+    // NOLINTNEXTLINE(bugprone-unused-return-value)
     TCP_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignore_error);
 }
 

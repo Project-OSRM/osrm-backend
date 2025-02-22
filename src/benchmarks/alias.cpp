@@ -5,9 +5,9 @@
 
 #include <algorithm>
 #include <iomanip>
+#include <iostream>
 #include <numeric>
 #include <random>
-#include <string>
 #include <vector>
 
 using namespace osrm;
@@ -64,7 +64,7 @@ int main(int, char **)
             return EXIT_FAILURE;
     }
     TIMER_STOP(aliased_u32);
-    util::Log() << "aliased u32: " << TIMER_MSEC(aliased_u32);
+    std::cout << "aliased u32: " << TIMER_MSEC(aliased_u32) << std::endl;
 
     TIMER_START(plain_u32);
     for (auto round : util::irange(0, num_rounds))
@@ -83,7 +83,7 @@ int main(int, char **)
             return EXIT_FAILURE;
     }
     TIMER_STOP(plain_u32);
-    util::Log() << "plain u32: " << TIMER_MSEC(plain_u32);
+    std::cout << "plain u32: " << TIMER_MSEC(plain_u32) << std::endl;
 
     TIMER_START(aliased_double);
     for (auto round : util::irange(0, num_rounds))
@@ -103,7 +103,7 @@ int main(int, char **)
             return EXIT_FAILURE;
     }
     TIMER_STOP(aliased_double);
-    util::Log() << "aliased double: " << TIMER_MSEC(aliased_double);
+    std::cout << "aliased double: " << TIMER_MSEC(aliased_double) << std::endl;
 
     TIMER_START(plain_double);
     for (auto round : util::irange(0, num_rounds))
@@ -123,5 +123,5 @@ int main(int, char **)
             return EXIT_FAILURE;
     }
     TIMER_STOP(plain_double);
-    util::Log() << "plain double: " << TIMER_MSEC(plain_double);
+    std::cout << "plain double: " << TIMER_MSEC(plain_double) << std::endl;
 }

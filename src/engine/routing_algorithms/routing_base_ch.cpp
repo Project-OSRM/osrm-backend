@@ -19,9 +19,8 @@ void unpackEdge(const DataFacade<Algorithm> &facade,
     unpackPath(facade,
                path.begin(),
                path.end(),
-               [&unpacked_path](const std::pair<NodeID, NodeID> &edge, const auto & /* data */) {
-                   unpacked_path.emplace_back(edge.first);
-               });
+               [&unpacked_path](const std::pair<NodeID, NodeID> &edge, const auto & /* data */)
+               { unpacked_path.emplace_back(edge.first); });
     unpacked_path.emplace_back(to);
 }
 
@@ -74,23 +73,22 @@ void retrievePackedPathFromSingleManyToManyHeap(
 // assumes that heaps are already setup correctly.
 // ATTENTION: This only works if no additional offset is supplied next to the Phantom Node
 // Offsets.
-// In case additional offsets are supplied, you might have to force a loop first.
-// A forced loop might be necessary, if source and target are on the same segment.
+// In case additional offsets are supplied, you might have to force a routing step first.
+// A forced step might be necessary, if source and target are on the same segment.
 // If this is the case and the offsets of the respective direction are larger for the source
 // than the target
-// then a force loop is required (e.g. source_phantom.forward_segment_id ==
+// then a force step is required (e.g. source_phantom.forward_segment_id ==
 // target_phantom.forward_segment_id
 // && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
 // requires
-// a force loop, if the heaps have been initialized with positive offsets.
+// a force step, if the heaps have been initialized with positive offsets.
 void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
             const DataFacade<Algorithm> &facade,
             SearchEngineData<Algorithm>::QueryHeap &forward_heap,
             SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
             EdgeWeight &weight,
             std::vector<NodeID> &packed_leg,
-            const std::vector<NodeID> &force_loop_forward_nodes,
-            const std::vector<NodeID> &force_loop_reverse_nodes,
+            const std::vector<NodeID> &force_step_nodes,
             const EdgeWeight weight_upper_bound)
 {
     if (forward_heap.Empty() || reverse_heap.Empty())
@@ -119,8 +117,7 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
                                            middle,
                                            weight,
                                            min_edge_offset,
-                                           force_loop_forward_nodes,
-                                           force_loop_reverse_nodes);
+                                           force_step_nodes);
         }
         if (!reverse_heap.Empty())
         {
@@ -130,8 +127,7 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
                                            middle,
                                            weight,
                                            min_edge_offset,
-                                           force_loop_reverse_nodes,
-                                           force_loop_forward_nodes);
+                                           force_step_nodes);
         }
     }
 
@@ -160,7 +156,7 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
 
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
-// the addition of force_loop parameters might be required
+// the addition of force_step parameters might be required
 double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                           const DataFacade<Algorithm> &facade,
                           SearchEngineData<Algorithm>::QueryHeap &forward_heap,
@@ -183,7 +179,6 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
            reverse_heap,
            weight,
            packed_path,
-           {},
            {},
            endpoints,
            weight_upper_bound);

@@ -4,10 +4,7 @@
 #include "util/coordinate.hpp"
 #include "util/web_mercator.hpp"
 
-#include <boost/assert.hpp>
-
 #include <cmath>
-#include <tuple>
 
 // Port of https://github.com/mapbox/geo-viewport
 

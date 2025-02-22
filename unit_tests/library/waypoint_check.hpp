@@ -5,19 +5,21 @@
 #include "osrm/coordinate.hpp"
 #include "osrm/json_container.hpp"
 #include "util/exception.hpp"
+#include <variant>
 
 inline bool waypoint_check(osrm::json::Value waypoint)
 {
     using namespace osrm;
 
-    if (!waypoint.is<mapbox::util::recursive_wrapper<util::json::Object>>())
+    if (!std::holds_alternative<util::json::Object>(waypoint))
     {
         throw util::exception("Must pass in a waypoint object");
     }
-    const auto waypoint_object = waypoint.get<json::Object>();
-    const auto waypoint_location = waypoint_object.values.at("location").get<json::Array>().values;
-    util::FloatLongitude lon{waypoint_location[0].get<json::Number>().value};
-    util::FloatLatitude lat{waypoint_location[1].get<json::Number>().value};
+    const auto waypoint_object = std::get<json::Object>(waypoint);
+    const auto waypoint_location =
+        std::get<json::Array>(waypoint_object.values.at("location")).values;
+    util::FloatLongitude lon{std::get<json::Number>(waypoint_location[0]).value};
+    util::FloatLatitude lat{std::get<json::Number>(waypoint_location[1]).value};
     util::Coordinate location_coordinate(lon, lat);
     return location_coordinate.IsValid();
 }

@@ -42,7 +42,7 @@ void test_index() {
     sparse_index.sort();
     sparse_index.dump_as_array(fd);
 
-    dense_file_array dense_index{fd};
+    const dense_file_array dense_index{fd};
     const auto max_id_in_refs = std::max_element(refs.begin(), refs.end())->ref();
 
     // Array index should be as large as necessary.

@@ -1,13 +1,10 @@
 #ifndef RESTRICTION_HPP
 #define RESTRICTION_HPP
 
+#include "turn_path.hpp"
 #include "util/coordinate.hpp"
 #include "util/opening_hours.hpp"
 #include "util/typedefs.hpp"
-
-#include "mapbox/variant.hpp"
-#include "turn_path.hpp"
-#include <limits>
 
 namespace osrm::extractor
 {

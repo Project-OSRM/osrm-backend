@@ -2,7 +2,6 @@
 #define FOR_EACH_PAIR_HPP
 
 #include <iterator>
-#include <numeric>
 #include <utility>
 
 namespace osrm::util

@@ -2,11 +2,8 @@
 #include "engine/routing_algorithms/routing_base_mld.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/range/iterator_range_core.hpp>
+#include <ranges>
 
-#include <limits>
-#include <memory>
-#include <unordered_map>
 #include <vector>
 
 namespace osrm::engine::routing_algorithms
@@ -95,7 +92,7 @@ void relaxOutgoingEdges(
     const DataFacade<mld::Algorithm> &facade,
     const typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap::HeapNode &heapNode,
     typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
-    const Args &... args)
+    const Args &...args)
 {
     BOOST_ASSERT(!facade.ExcludeNode(heapNode.node));
 
@@ -148,8 +145,8 @@ void relaxOutgoingEdges(
                     }
                 }
                 ++destination;
-                shortcut_durations.advance_begin(1);
-                shortcut_distances.advance_begin(1);
+                shortcut_durations.advance(1);
+                shortcut_distances.advance(1);
             }
             BOOST_ASSERT(shortcut_durations.empty());
             BOOST_ASSERT(shortcut_distances.empty());
@@ -169,8 +166,8 @@ void relaxOutgoingEdges(
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && heapNode.node != to)
                 {
                     const auto to_weight = heapNode.weight + shortcut_weight;
-                    const auto to_duration = heapNode.data.duration + shortcut_durations.front();
-                    const auto to_distance = heapNode.data.distance + shortcut_distances.front();
+                    const auto to_duration = heapNode.data.duration + *shortcut_durations.begin();
+                    const auto to_distance = heapNode.data.distance + *shortcut_distances.begin();
                     const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
@@ -189,8 +186,8 @@ void relaxOutgoingEdges(
                     }
                 }
                 ++source;
-                shortcut_durations.advance_begin(1);
-                shortcut_distances.advance_begin(1);
+                shortcut_durations.advance(1);
+                shortcut_distances.advance(1);
             }
             BOOST_ASSERT(shortcut_durations.empty());
             BOOST_ASSERT(shortcut_distances.empty());
@@ -222,7 +219,6 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
     std::vector<EdgeDuration> durations_table(target_indices.size(), MAXIMAL_EDGE_DURATION);
     std::vector<EdgeDistance> distances_table(calculate_distance ? target_indices.size() : 0,
                                               MAXIMAL_EDGE_DISTANCE);
-    std::vector<NodeID> middle_nodes_table(target_indices.size(), SPECIAL_NODEID);
 
     // Collect destination (source) nodes into a map
     std::unordered_multimap<NodeID, std::tuple<std::size_t, EdgeWeight, EdgeDuration, EdgeDistance>>
@@ -280,50 +276,51 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
 
     // Check if node is in the destinations list and update weights/durations
     auto update_values =
-        [&](NodeID node, EdgeWeight weight, EdgeDuration duration, EdgeDistance distance) {
-            auto candidates = target_nodes_index.equal_range(node);
-            for (auto it = candidates.first; it != candidates.second;)
+        [&](NodeID node, EdgeWeight weight, EdgeDuration duration, EdgeDistance distance)
+    {
+        auto candidates = target_nodes_index.equal_range(node);
+        for (auto it = candidates.first; it != candidates.second;)
+        {
+            std::size_t index;
+            EdgeWeight target_weight;
+            EdgeDuration target_duration;
+            EdgeDistance target_distance;
+            std::tie(index, target_weight, target_duration, target_distance) = it->second;
+
+            const auto path_weight = weight + target_weight;
+            if (path_weight >= EdgeWeight{0})
             {
-                std::size_t index;
-                EdgeWeight target_weight;
-                EdgeDuration target_duration;
-                EdgeDistance target_distance;
-                std::tie(index, target_weight, target_duration, target_distance) = it->second;
+                const auto path_duration = duration + target_duration;
+                const auto path_distance = distance + target_distance;
 
-                const auto path_weight = weight + target_weight;
-                if (path_weight >= EdgeWeight{0})
+                EdgeDistance nulldistance = {0};
+                auto &current_distance =
+                    distances_table.empty() ? nulldistance : distances_table[index];
+
+                if (std::tie(path_weight, path_duration, path_distance) <
+                    std::tie(weights_table[index], durations_table[index], current_distance))
                 {
-                    const auto path_duration = duration + target_duration;
-                    const auto path_distance = distance + target_distance;
-
-                    EdgeDistance nulldistance = {0};
-                    auto &current_distance =
-                        distances_table.empty() ? nulldistance : distances_table[index];
-
-                    if (std::tie(path_weight, path_duration, path_distance) <
-                        std::tie(weights_table[index], durations_table[index], current_distance))
-                    {
-                        weights_table[index] = path_weight;
-                        durations_table[index] = path_duration;
-                        current_distance = path_distance;
-                        middle_nodes_table[index] = node;
-                    }
-
-                    // Remove node from destinations list
-                    it = target_nodes_index.erase(it);
+                    weights_table[index] = path_weight;
+                    durations_table[index] = path_duration;
+                    current_distance = path_distance;
                 }
-                else
-                {
-                    ++it;
-                }
+
+                // Remove node from destinations list
+                it = target_nodes_index.erase(it);
             }
-        };
+            else
+            {
+                ++it;
+            }
+        }
+    };
 
     auto insert_node = [&](NodeID node,
                            EdgeWeight initial_weight,
                            EdgeDuration initial_duration,
-                           EdgeDistance initial_distance) {
-        if (target_nodes_index.count(node))
+                           EdgeDistance initial_distance)
+    {
+        if (target_nodes_index.contains(node))
         {
             // Source and target on the same edge node. If target is not reachable directly via
             // the node (e.g destination is before source on oneway segment) we want to allow
@@ -426,7 +423,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                                                search_space_with_buckets.end(),
                                                heapNode.node,
                                                NodeBucket::Compare());
-    for (const auto &current_bucket : boost::make_iterator_range(bucket_list))
+    for (const auto &current_bucket : std::ranges::subrange(bucket_list.first, bucket_list.second))
     {
         // Get target id from bucket entry
         const auto column_idx = current_bucket.column_index;

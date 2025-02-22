@@ -7,7 +7,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <exception>
 #include <numeric>
 #include <string>
 
@@ -17,7 +16,6 @@ const static std::string IO_TOO_SMALL_FILE = "file_too_small_test_io.tmp";
 const static std::string IO_CORRUPT_FINGERPRINT_FILE = "corrupt_fingerprint_file_test_io.tmp";
 const static std::string IO_INCOMPATIBLE_FINGERPRINT_FILE =
     "incompatible_fingerprint_file_test_io.tmp";
-const static std::string IO_TEXT_FILE = "plain_text_file.tmp";
 
 using namespace osrm;
 

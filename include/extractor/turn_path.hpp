@@ -4,7 +4,8 @@
 #include "util/typedefs.hpp"
 
 #include <algorithm>
-#include <mapbox/variant.hpp>
+#include <tuple>
+#include <variant>
 #include <vector>
 
 namespace osrm::extractor
@@ -61,50 +62,50 @@ struct InputViaWayPath
 
 struct InputTurnPath
 {
-    mapbox::util::variant<InputViaNodePath, InputViaWayPath> node_or_way;
+    std::variant<InputViaNodePath, InputViaWayPath> node_or_way;
 
     TurnPathType Type() const
     {
-        BOOST_ASSERT(node_or_way.which() < TurnPathType::NUM_TURN_PATH_TYPES);
-        return static_cast<TurnPathType>(node_or_way.which());
+        BOOST_ASSERT(node_or_way.index() < TurnPathType::NUM_TURN_PATH_TYPES);
+        return static_cast<TurnPathType>(node_or_way.index());
     }
 
     OSMWayID From() const
     {
-        return node_or_way.which() == TurnPathType::VIA_NODE_TURN_PATH
-                   ? mapbox::util::get<InputViaNodePath>(node_or_way).from
-                   : mapbox::util::get<InputViaWayPath>(node_or_way).from;
+        return node_or_way.index() == TurnPathType::VIA_NODE_TURN_PATH
+                   ? std::get<InputViaNodePath>(node_or_way).from
+                   : std::get<InputViaWayPath>(node_or_way).from;
     }
 
     OSMWayID To() const
     {
-        return node_or_way.which() == TurnPathType::VIA_NODE_TURN_PATH
-                   ? mapbox::util::get<InputViaNodePath>(node_or_way).to
-                   : mapbox::util::get<InputViaWayPath>(node_or_way).to;
+        return node_or_way.index() == TurnPathType::VIA_NODE_TURN_PATH
+                   ? std::get<InputViaNodePath>(node_or_way).to
+                   : std::get<InputViaWayPath>(node_or_way).to;
     }
 
     InputViaWayPath &AsViaWayPath()
     {
-        BOOST_ASSERT(node_or_way.which() == TurnPathType::VIA_WAY_TURN_PATH);
-        return mapbox::util::get<InputViaWayPath>(node_or_way);
+        BOOST_ASSERT(node_or_way.index() == TurnPathType::VIA_WAY_TURN_PATH);
+        return std::get<InputViaWayPath>(node_or_way);
     }
 
     const InputViaWayPath &AsViaWayPath() const
     {
-        BOOST_ASSERT(node_or_way.which() == TurnPathType::VIA_WAY_TURN_PATH);
-        return mapbox::util::get<InputViaWayPath>(node_or_way);
+        BOOST_ASSERT(node_or_way.index() == TurnPathType::VIA_WAY_TURN_PATH);
+        return std::get<InputViaWayPath>(node_or_way);
     }
 
     InputViaNodePath &AsViaNodePath()
     {
-        BOOST_ASSERT(node_or_way.which() == TurnPathType::VIA_NODE_TURN_PATH);
-        return mapbox::util::get<InputViaNodePath>(node_or_way);
+        BOOST_ASSERT(node_or_way.index() == TurnPathType::VIA_NODE_TURN_PATH);
+        return std::get<InputViaNodePath>(node_or_way);
     }
 
     const InputViaNodePath &AsViaNodePath() const
     {
-        BOOST_ASSERT(node_or_way.which() == TurnPathType::VIA_NODE_TURN_PATH);
-        return mapbox::util::get<InputViaNodePath>(node_or_way);
+        BOOST_ASSERT(node_or_way.index() == TurnPathType::VIA_NODE_TURN_PATH);
+        return std::get<InputViaNodePath>(node_or_way);
     }
 };
 
@@ -175,63 +176,63 @@ struct ViaWayPath
 // between node/way paths
 struct TurnPath
 {
-    mapbox::util::variant<ViaNodePath, ViaWayPath> node_or_way;
+    std::variant<ViaNodePath, ViaWayPath> node_or_way;
 
     NodeID To() const
     {
-        return node_or_way.which() == TurnPathType::VIA_NODE_TURN_PATH
-                   ? mapbox::util::get<ViaNodePath>(node_or_way).to
-                   : mapbox::util::get<ViaWayPath>(node_or_way).to;
+        return node_or_way.index() == TurnPathType::VIA_NODE_TURN_PATH
+                   ? std::get<ViaNodePath>(node_or_way).to
+                   : std::get<ViaWayPath>(node_or_way).to;
     }
 
     NodeID From() const
     {
-        return node_or_way.which() == TurnPathType::VIA_NODE_TURN_PATH
-                   ? mapbox::util::get<ViaNodePath>(node_or_way).from
-                   : mapbox::util::get<ViaWayPath>(node_or_way).from;
+        return node_or_way.index() == TurnPathType::VIA_NODE_TURN_PATH
+                   ? std::get<ViaNodePath>(node_or_way).from
+                   : std::get<ViaWayPath>(node_or_way).from;
     }
 
     NodeID FirstVia() const
     {
-        if (node_or_way.which() == TurnPathType::VIA_NODE_TURN_PATH)
+        if (node_or_way.index() == TurnPathType::VIA_NODE_TURN_PATH)
         {
-            return mapbox::util::get<ViaNodePath>(node_or_way).via;
+            return std::get<ViaNodePath>(node_or_way).via;
         }
         else
         {
-            BOOST_ASSERT(!mapbox::util::get<ViaWayPath>(node_or_way).via.empty());
-            return mapbox::util::get<ViaWayPath>(node_or_way).via[0];
+            BOOST_ASSERT(!std::get<ViaWayPath>(node_or_way).via.empty());
+            return std::get<ViaWayPath>(node_or_way).via[0];
         }
     }
 
     ViaWayPath &AsViaWayPath()
     {
-        BOOST_ASSERT(node_or_way.which() == TurnPathType::VIA_WAY_TURN_PATH);
-        return mapbox::util::get<ViaWayPath>(node_or_way);
+        BOOST_ASSERT(node_or_way.index() == TurnPathType::VIA_WAY_TURN_PATH);
+        return std::get<ViaWayPath>(node_or_way);
     }
 
     const ViaWayPath &AsViaWayPath() const
     {
-        BOOST_ASSERT(node_or_way.which() == TurnPathType::VIA_WAY_TURN_PATH);
-        return mapbox::util::get<ViaWayPath>(node_or_way);
+        BOOST_ASSERT(node_or_way.index() == TurnPathType::VIA_WAY_TURN_PATH);
+        return std::get<ViaWayPath>(node_or_way);
     }
 
     ViaNodePath &AsViaNodePath()
     {
-        BOOST_ASSERT(node_or_way.which() == TurnPathType::VIA_NODE_TURN_PATH);
-        return mapbox::util::get<ViaNodePath>(node_or_way);
+        BOOST_ASSERT(node_or_way.index() == TurnPathType::VIA_NODE_TURN_PATH);
+        return std::get<ViaNodePath>(node_or_way);
     }
 
     const ViaNodePath &AsViaNodePath() const
     {
-        BOOST_ASSERT(node_or_way.which() == TurnPathType::VIA_NODE_TURN_PATH);
-        return mapbox::util::get<ViaNodePath>(node_or_way);
+        BOOST_ASSERT(node_or_way.index() == TurnPathType::VIA_NODE_TURN_PATH);
+        return std::get<ViaNodePath>(node_or_way);
     }
 
     TurnPathType Type() const
     {
-        BOOST_ASSERT(node_or_way.which() < TurnPathType::NUM_TURN_PATH_TYPES);
-        return static_cast<TurnPathType>(node_or_way.which());
+        BOOST_ASSERT(node_or_way.index() < TurnPathType::NUM_TURN_PATH_TYPES);
+        return static_cast<TurnPathType>(node_or_way.index());
     }
 
     bool operator==(const TurnPath &other) const

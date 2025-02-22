@@ -15,12 +15,12 @@ The following services are available via HTTP API, C++ library interface and Nod
 
 To quickly try OSRM use our [demo server](http://map.project-osrm.org) which comes with both the backend and a frontend on top.
 
-For a quick introduction about how the road network is represented in OpenStreetMap and how to map specific road network features have a look at [this guide about mapping for navigation](https://www.mapbox.com/mapping/mapping-for-navigation/).
+For a quick introduction about how the road network is represented in OpenStreetMap and how to map specific road network features have a look at [the OSM wiki on routing](https://wiki.openstreetmap.org/wiki/Routing) or [this guide about mapping for navigation](https://web.archive.org/web/20221206013651/https://labs.mapbox.com/mapping/mapping-for-navigation/).
 
 Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 - [osrm-frontend](https://github.com/Project-OSRM/osrm-frontend) - User-facing frontend with map. The demo server runs this on top of the backend
 - [osrm-text-instructions](https://github.com/Project-OSRM/osrm-text-instructions) - Text instructions from OSRM route response
-- [osrm-backend-docker](https://hub.docker.com/r/osrm/osrm-backend/) - Ready to use Docker images
+- [osrm-backend-docker](https://github.com/project-osrm/osrm-backend/pkgs/container/osrm-backend) - Ready to use Docker images
 
 ## Documentation
 
