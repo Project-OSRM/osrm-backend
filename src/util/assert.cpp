@@ -1,6 +1,3 @@
-#include <boost/assert.hpp>
-
-#include <exception>
 #include <iostream>
 #include <thread>
 

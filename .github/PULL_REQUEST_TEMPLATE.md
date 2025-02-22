@@ -12,7 +12,7 @@ If your PR is still work in progress please attach the relevant label.
  - [ ] add tests (see [testing documentation](https://github.com/Project-OSRM/osrm-backend/blob/master/docs/testing.md))
  - [ ] review
  - [ ] adjust for comments
- - [ ] cherry pick to release branch
+
 
 ## Requirements / Relations
 

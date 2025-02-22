@@ -21,7 +21,6 @@
 #include "util/json_container.hpp"
 
 #include <memory>
-#include <string>
 
 namespace osrm::engine
 {

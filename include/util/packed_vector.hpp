@@ -13,7 +13,6 @@
 
 #include <array>
 #include <cmath>
-#include <vector>
 
 #if defined(_MSC_VER)
 // for `InterlockedCompareExchange64`

@@ -20,7 +20,6 @@
 
 #include <limits>
 #include <string>
-#include <vector>
 
 #ifdef _MSC_VER
 namespace osrm

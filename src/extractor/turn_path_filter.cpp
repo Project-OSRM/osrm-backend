@@ -5,7 +5,6 @@
 #include "util/typedefs.hpp"
 
 #include <algorithm>
-#include <boost/assert.hpp>
 
 namespace osrm::extractor
 {

@@ -9,9 +9,6 @@
 
 #include <tbb/parallel_sort.h>
 
-#include <memory>
-#include <utility>
-
 namespace osrm::util
 {
 

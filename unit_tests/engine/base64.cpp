@@ -5,7 +5,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
-#include <iostream>
 
 // RFC 4648 "The Base16, Base32, and Base64 Data Encodings"
 BOOST_AUTO_TEST_SUITE(base64)

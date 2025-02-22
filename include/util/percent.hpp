@@ -2,7 +2,6 @@
 #define PERCENT_HPP
 
 #include <atomic>
-#include <iostream>
 
 #include "util/isatty.hpp"
 #include "util/log.hpp"

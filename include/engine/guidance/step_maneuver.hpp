@@ -5,8 +5,6 @@
 #include "util/coordinate.hpp"
 
 #include <cstdint>
-#include <string>
-#include <vector>
 
 namespace osrm::engine::guidance
 {

@@ -9,7 +9,6 @@
 
 #include <boost/iostreams/device/mapped_file.hpp>
 
-#include <memory>
 #include <string>
 
 namespace osrm::engine::datafacade

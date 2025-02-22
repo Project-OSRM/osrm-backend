@@ -2,9 +2,7 @@
 #define BEARING_HPP
 
 #include <algorithm>
-#include <boost/assert.hpp>
 #include <cmath>
-#include <string>
 
 namespace osrm::util
 {
