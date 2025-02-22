@@ -27,6 +27,7 @@
 #include "util/integer_range.hpp"
 #include "util/json_util.hpp"
 
+#include <bitset>
 #include <iterator>
 #include <map>
 #include <vector>

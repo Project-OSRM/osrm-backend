@@ -32,7 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "updater/updater_config.hpp"
 
 #include <filesystem>
-#include <string>
 
 namespace osrm::contractor
 {

@@ -5,7 +5,6 @@
 #include <limits>
 #include <numeric>
 #include <queue>
-#include <set>
 #include <stack>
 
 namespace osrm::partitioner

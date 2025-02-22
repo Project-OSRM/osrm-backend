@@ -18,7 +18,6 @@
 #include <sys/types.h>
 #endif
 
-#include <functional>
 #include <memory>
 #include <string>
 #include <thread>

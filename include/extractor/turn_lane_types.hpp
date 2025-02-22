@@ -6,7 +6,6 @@
 #include "util/std_hash.hpp"
 #include "util/typedefs.hpp"
 
-#include <bitset>
 #include <cstddef>
 #include <cstdint>
 #include <numeric> //partial_sum

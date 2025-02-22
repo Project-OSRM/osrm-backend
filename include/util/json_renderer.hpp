@@ -8,7 +8,6 @@
 
 #include "osrm/json_container.hpp"
 
-#include <algorithm>
 #include <iterator>
 #include <ostream>
 #include <string>

@@ -1,6 +1,5 @@
 #include "guidance/intersection.hpp"
 
-#include <limits>
 #include <string>
 
 #include <boost/range/adaptors.hpp>
