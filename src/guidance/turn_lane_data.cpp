@@ -62,31 +62,31 @@ bool TurnLaneData::operator<(const TurnLaneData &other) const
 
 LaneDataVector laneDataFromDescription(const TurnLaneDescription &turn_lane_description)
 {
-    typedef std::unordered_map<TurnLaneType::Mask, std::pair<LaneID, LaneID>> LaneMap;
+    using LaneMap = std::unordered_map<TurnLaneType::Mask, std::pair<LaneID, LaneID>>;
     // TODO need to handle cases that have none-in between two identical values
     const auto num_lanes = boost::numeric_cast<LaneID>(turn_lane_description.size());
 
     const auto setLaneData =
-        [&](LaneMap &map, TurnLaneType::Mask full_mask, const LaneID current_lane) {
-            const auto isSet = [&](const TurnLaneType::Mask test_mask) -> bool {
-                return (test_mask & full_mask) == test_mask;
-            };
+        [&](LaneMap &map, TurnLaneType::Mask full_mask, const LaneID current_lane)
+    {
+        const auto isSet = [&](const TurnLaneType::Mask test_mask) -> bool
+        { return (test_mask & full_mask) == test_mask; };
 
-            for (const auto shift : util::irange<std::size_t>(0, TurnLaneType::NUM_TYPES))
+        for (const auto shift : util::irange<std::size_t>(0, TurnLaneType::NUM_TYPES))
+        {
+            TurnLaneType::Mask mask = 1 << shift;
+            if (isSet(mask))
             {
-                TurnLaneType::Mask mask = 1 << shift;
-                if (isSet(mask))
+                auto map_iterator = map.find(mask);
+                if (map_iterator == map.end())
+                    map[mask] = std::make_pair(current_lane, current_lane);
+                else
                 {
-                    auto map_iterator = map.find(mask);
-                    if (map_iterator == map.end())
-                        map[mask] = std::make_pair(current_lane, current_lane);
-                    else
-                    {
-                        map_iterator->second.first = current_lane;
-                    }
+                    map_iterator->second.first = current_lane;
                 }
             }
-        };
+        }
+    };
 
     LaneMap lane_map;
     LaneID lane_nr = num_lanes - 1;
@@ -108,7 +108,8 @@ LaneDataVector laneDataFromDescription(const TurnLaneDescription &turn_lane_desc
     std::sort(lane_data.begin(), lane_data.end());
 
     // check whether a given turn lane string resulted in valid lane data
-    const auto hasValidOverlaps = [](const LaneDataVector &lane_data) {
+    const auto hasValidOverlaps = [](const LaneDataVector &lane_data)
+    {
         // Allow an overlap of at most one. Larger overlaps would result in crossing another turn,
         // which is invalid
         for (std::size_t index = 1; index < lane_data.size(); ++index)
@@ -134,15 +135,17 @@ LaneDataVector laneDataFromDescription(const TurnLaneDescription &turn_lane_desc
 
 LaneDataVector::iterator findTag(const TurnLaneType::Mask tag, LaneDataVector &data)
 {
-    return std::find_if(data.begin(), data.end(), [&](const TurnLaneData &lane_data) {
-        return (tag & lane_data.tag) != TurnLaneType::empty;
-    });
+    return std::find_if(data.begin(),
+                        data.end(),
+                        [&](const TurnLaneData &lane_data)
+                        { return (tag & lane_data.tag) != TurnLaneType::empty; });
 }
 LaneDataVector::const_iterator findTag(const TurnLaneType::Mask tag, const LaneDataVector &data)
 {
-    return std::find_if(data.cbegin(), data.cend(), [&](const TurnLaneData &lane_data) {
-        return (tag & lane_data.tag) != TurnLaneType::empty;
-    });
+    return std::find_if(data.cbegin(),
+                        data.cend(),
+                        [&](const TurnLaneData &lane_data)
+                        { return (tag & lane_data.tag) != TurnLaneType::empty; });
 }
 
 bool hasTag(const TurnLaneType::Mask tag, const LaneDataVector &data)

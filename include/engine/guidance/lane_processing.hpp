@@ -1,10 +1,9 @@
 #ifndef OSRM_ENGINE_GUIDANCE_LANE_PROCESSING_HPP_
 #define OSRM_ENGINE_GUIDANCE_LANE_PROCESSING_HPP_
 
-#include <vector>
-
 #include "engine/guidance/route_step.hpp"
-#include "util/attributes.hpp"
+
+#include <vector>
 
 namespace osrm::engine::guidance
 {
@@ -14,9 +13,9 @@ namespace osrm::engine::guidance
 // we anticipate lane changes emitting only matching lanes early on.
 // the second parameter describes the duration that we feel two segments need to be apart to count
 // as separate maneuvers.
-OSRM_ATTR_WARN_UNUSED
-std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
-                                            const double min_distance_needed_for_lane_change = 200);
+[[nodiscard]] std::vector<RouteStep>
+anticipateLaneChange(std::vector<RouteStep> steps,
+                     const double min_distance_needed_for_lane_change = 200);
 
 } // namespace osrm::engine::guidance
 

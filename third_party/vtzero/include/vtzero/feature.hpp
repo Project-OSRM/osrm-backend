@@ -259,6 +259,19 @@ namespace vtzero {
         template <typename TFunc>
         bool for_each_property(TFunc&& func) const;
 
+        /**
+         * Call a function for each key/value index of this feature.
+         *
+         * @tparam TFunc The type of the function. It must take a single
+         *         argument of type index_value_pair&& and return a bool.
+         *         If the function returns false, the iteration will be stopped.
+         * @param func The function to call.
+         * @returns true if the iteration was completed and false otherwise.
+         * @pre @code valid() @endcode
+         */
+        template <typename TFunc>
+        bool for_each_property_indexes(TFunc&& func) const;
+
     }; // class feature
 
     /**

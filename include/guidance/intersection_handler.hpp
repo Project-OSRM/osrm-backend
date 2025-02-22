@@ -15,10 +15,9 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <optional>
 #include <utility>
 #include <vector>
-
-#include <boost/optional.hpp>
 
 namespace osrm::guidance
 {
@@ -129,7 +128,7 @@ class IntersectionHandler
     //     ^ via
     //
     // For this scenario returns intersection at `b` and `b`.
-    boost::optional<IntersectionHandler::IntersectionViewAndNode>
+    std::optional<IntersectionHandler::IntersectionViewAndNode>
     getNextIntersection(const NodeID at, const EdgeID via) const;
 
     bool isSameName(const EdgeID source_edge_id, const EdgeID target_edge_id) const;
@@ -187,11 +186,11 @@ IntersectionHandler::IsDistinctNarrowTurn(const EdgeID via_edge,
         node_data_container.GetAnnotation(candidate_data.annotation_data);
     auto const candidate_deviation = util::angularDeviation(candidate->angle, STRAIGHT_ANGLE);
 
-    auto const num_lanes = [](auto const &data) {
-        return data.flags.road_classification.GetNumberOfLanes();
-    };
+    auto const num_lanes = [](auto const &data)
+    { return data.flags.road_classification.GetNumberOfLanes(); };
 
-    auto const lanes_number_equal = [&](auto const &compare_data) {
+    auto const lanes_number_equal = [&](auto const &compare_data)
+    {
         // Check if the lanes number is the same going from the inbound edge to the compare road
         return num_lanes(compare_data) > 0 && num_lanes(compare_data) == num_lanes(via_edge_data);
     };
@@ -210,7 +209,8 @@ IntersectionHandler::IsDistinctNarrowTurn(const EdgeID via_edge,
 
     // check if there are other narrow turns are not considered passing a low category or simply
     // a link of the same type as the potentially obvious turn
-    auto const is_similar_turn = [&](auto const &road) {
+    auto const is_similar_turn = [&](auto const &road)
+    {
         // 1. Skip the candidate road
         if (road.eid == candidate->eid)
         {
@@ -405,7 +405,8 @@ IntersectionHandler::IsDistinctWideTurn(const EdgeID via_edge,
     // Deviation is larger than NARROW_TURN_ANGLE0 here for the candidate
     // check if there is any turn, that might look just as obvious, even though it might not
     // be allowed. Entry-allowed isn't considered a valid distinction criterion here
-    auto const is_similar_turn = [&](auto const &road) {
+    auto const is_similar_turn = [&](auto const &road)
+    {
         // 1. Skip over our candidate
         if (road.eid == candidate->eid)
             return false;
@@ -503,7 +504,8 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         node_data_container.GetAnnotation(via_edge_data.annotation_data);
 
     // implement a filter, taking out all roads of lower class or different names
-    auto const continues_on_name_with_higher_class = [&](auto const &road) {
+    auto const continues_on_name_with_higher_class = [&](auto const &road)
+    {
         // it needs to be possible to enter the road
         if (!road.entry_allowed)
             return true;
@@ -550,7 +552,8 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
 
     // this check is not part of the main conditions, so that if the turn looks obvious from all
     // other perspectives, a mode change will not result in different classification
-    auto const to_index_if_valid = [&](auto const iterator) -> std::size_t {
+    auto const to_index_if_valid = [&](auto const iterator) -> std::size_t
+    {
         auto const &from_data = node_based_graph.GetEdgeData(via_edge);
         auto const &to_data = node_based_graph.GetEdgeData(iterator->eid);
 
@@ -577,7 +580,8 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
 
     // opposed to before, we do not care about name changes, again: this is a filter, so internal
     // false/true will be negated for selection
-    auto const valid_of_higher_or_same_category = [&](auto const &road) {
+    auto const valid_of_higher_or_same_category = [&](auto const &road)
+    {
         if (!road.entry_allowed)
             return true;
 
@@ -640,7 +644,8 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
     const auto all_roads_have_same_name =
         std::all_of(intersection.begin(),
                     intersection.end(),
-                    [id = via_edge_annotation.name_id, this](auto const &road) {
+                    [id = via_edge_annotation.name_id, this](auto const &road)
+                    {
                         auto const data_id = node_based_graph.GetEdgeData(road.eid).annotation_data;
                         auto const name_id = node_data_container.GetAnnotation(data_id).name_id;
                         return (name_id != EMPTY_NAMEID) && (name_id == id);

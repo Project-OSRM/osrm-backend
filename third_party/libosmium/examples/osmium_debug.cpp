@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
         // Get entity types from command line if there is a 2nd argument.
         if (argc == 3) {
             read_types = osmium::osm_entity_bits::nothing;
-            std::string types = argv[2];
+            const std::string types = argv[2];
             if (types.find('n') != std::string::npos) {
                 read_types |= osmium::osm_entity_bits::node;
             }

@@ -20,14 +20,16 @@ template <typename Iter, typename Fn> inline Fn forEachRoundabout(Iter first, It
 {
     while (first != last)
     {
-        const auto enter = std::find_if(first, last, [](const RouteStep &step) {
-            return entersRoundabout(step.maneuver.instruction);
-        });
+        const auto enter = std::find_if(first,
+                                        last,
+                                        [](const RouteStep &step)
+                                        { return entersRoundabout(step.maneuver.instruction); });
 
         // enter has to come before leave, otherwise: faulty data / partial roundabout, skip those
-        const auto leave = std::find_if(enter, last, [](const RouteStep &step) {
-            return leavesRoundabout(step.maneuver.instruction);
-        });
+        const auto leave = std::find_if(enter,
+                                        last,
+                                        [](const RouteStep &step)
+                                        { return leavesRoundabout(step.maneuver.instruction); });
 
         // No roundabouts, or partial one (like start / end inside a roundabout)
         if (enter == last || leave == last)

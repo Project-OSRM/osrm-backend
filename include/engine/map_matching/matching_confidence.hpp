@@ -2,7 +2,7 @@
 #define ENGINE_MAP_MATCHING_CONFIDENCE_HPP
 
 #include "engine/map_matching/bayes_classifier.hpp"
-
+#include <boost/assert.hpp>
 #include <cmath>
 
 namespace osrm::engine::map_matching

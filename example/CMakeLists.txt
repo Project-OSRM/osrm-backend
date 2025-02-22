@@ -12,7 +12,7 @@ endif()
 
 project(osrm-example C CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -23,6 +23,8 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 else()
   message(STATUS "Building on a 32 bit system")
 endif()
+
+find_package(Boost REQUIRED CONFIG COMPONENTS date_time iostreams thread)
 
 link_directories(${LibOSRM_LIBRARY_DIRS})
 add_executable(osrm-example example.cpp)

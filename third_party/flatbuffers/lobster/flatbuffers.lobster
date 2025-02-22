@@ -175,25 +175,30 @@ class builder:
         while current_vtable.length <= slotnum: current_vtable.push(0)
         current_vtable[slotnum] = head
 
-    def __Finish(root_table:offset, size_prefix:int):
+    def __Finish(root_table:offset, size_prefix:int, file_identifier:string?):
         // Finish finalizes a buffer, pointing to the given root_table
         assert not finished
         assert not nested
         var prep_size = sz_32
+        if file_identifier:
+            prep_size += sz_32
         if size_prefix:
             prep_size += sz_32
         Prep(minalign, prep_size)
+        if file_identifier:
+            assert file_identifier.length == 4
+            buf, head = buf.write_substring_back(head, file_identifier, false)
         PrependUOffsetTRelative(root_table)
         if size_prefix:
             PrependInt32(head)
         finished = true
         return Start()
 
-    def Finish(root_table:offset):
-        return __Finish(root_table, false)
+    def Finish(root_table:offset, file_identifier:string? = nil):
+        return __Finish(root_table, false, file_identifier)
 
-    def FinishSizePrefixed(root_table:offset):
-        return __Finish(root_table, true)
+    def FinishSizePrefixed(root_table:offset, file_identifier:string? = nil):
+        return __Finish(root_table, true, file_identifier)
 
     def PrependBool(x):
         buf, head = buf.write_int8_le_back(head, x)
@@ -257,6 +262,10 @@ class builder:
             f(x)
             Slot(o)
 
+    def PrependSlot(o:int, x, f):
+        f(x)
+        Slot(o)
+
     def PrependBoolSlot(o, x, d): PrependSlot(o, x, d): PrependBool(_)
     def PrependByteSlot(o, x, d): PrependSlot(o, x, d): PrependByte(_)
     def PrependUint8Slot(o, x, d): PrependSlot(o, x, d): PrependUint8(_)
@@ -270,6 +279,19 @@ class builder:
     def PrependFloat32Slot(o, x, d): PrependSlot(o, x, d): PrependFloat32(_)
     def PrependFloat64Slot(o, x, d): PrependSlot(o, x, d): PrependFloat64(_)
 
+    def PrependBoolSlot(o, x): PrependSlot(o, x): PrependBool(_)
+    def PrependByteSlot(o, x): PrependSlot(o, x): PrependByte(_)
+    def PrependUint8Slot(o, x): PrependSlot(o, x): PrependUint8(_)
+    def PrependUint16Slot(o, x): PrependSlot(o, x): PrependUint16(_)
+    def PrependUint32Slot(o, x): PrependSlot(o, x): PrependUint32(_)
+    def PrependUint64Slot(o, x): PrependSlot(o, x): PrependUint64(_)
+    def PrependInt8Slot(o, x): PrependSlot(o, x): PrependInt8(_)
+    def PrependInt16Slot(o, x): PrependSlot(o, x): PrependInt16(_)
+    def PrependInt32Slot(o, x): PrependSlot(o, x): PrependInt32(_)
+    def PrependInt64Slot(o, x): PrependSlot(o, x): PrependInt64(_)
+    def PrependFloat32Slot(o, x): PrependSlot(o, x): PrependFloat32(_)
+    def PrependFloat64Slot(o, x): PrependSlot(o, x): PrependFloat64(_)
+
     def PrependUOffsetTRelativeSlot(o:int, x:offset):
         if x.o:
             PrependUOffsetTRelative(x)
@@ -282,3 +304,9 @@ class builder:
             // elsewhere.
             assert x.o == head
             Slot(v)
+
+def has_identifier(buf:string, file_identifier:string):
+    assert file_identifier.length == 4
+    return buf.length >= 8 and buf.substring(4, 4) == file_identifier
+
+

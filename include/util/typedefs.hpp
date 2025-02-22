@@ -71,10 +71,12 @@ struct turn_penalty
 using OSMNodeID = osrm::Alias<std::uint64_t, tag::osm_node_id>;
 // clang-tidy fires `bugprone-throw-keyword-missing` here for unknown reason
 // NOLINTNEXTLINE(bugprone-throw-keyword-missing)
-static_assert(std::is_pod<OSMNodeID>(), "OSMNodeID is not a valid alias");
+static_assert(std::is_standard_layout<OSMNodeID>() && std::is_trivial<OSMNodeID>(),
+              "OSMNodeID is not a valid alias");
 using OSMWayID = osrm::Alias<std::uint64_t, tag::osm_way_id>;
 // NOLINTNEXTLINE(bugprone-throw-keyword-missing)
-static_assert(std::is_pod<OSMWayID>(), "OSMWayID is not a valid alias");
+static_assert(std::is_standard_layout<OSMWayID>() && std::is_trivial<OSMWayID>(),
+              "OSMWayID is not a valid alias");
 
 using DuplicatedNodeID = std::uint64_t;
 using RestrictionID = std::uint64_t;

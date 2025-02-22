@@ -19,8 +19,8 @@ BOOST_AUTO_TEST_CASE(unchanged_collapse_route_result)
     PhantomNode target;
     source.forward_segment_id = {1, true};
     target.forward_segment_id = {6, true};
-    PathData pathy{0, 2, {2}, {3}, {4}, {5}, 2, boost::none};
-    PathData kathy{0, 1, {1}, {2}, {3}, {4}, 1, boost::none};
+    PathData pathy{0, 2, {2}, {3}, {4}, {5}, 2, std::nullopt};
+    PathData kathy{0, 1, {1}, {2}, {3}, {4}, 1, std::nullopt};
     InternalRouteResult one_leg_result;
     one_leg_result.unpacked_path_segments = {{pathy, kathy}};
     one_leg_result.leg_endpoints = {PhantomEndpoints{source, target}};
@@ -39,9 +39,9 @@ BOOST_AUTO_TEST_CASE(two_legs_to_one_leg)
 {
     // from_edge_based_node, turn_via_node, weight_until_turn, weight_of_turn,
     // duration_until_turn, duration_of_turn, datasource_id, turn_edge
-    PathData pathy{0, 2, {2}, {3}, {4}, {5}, 2, boost::none};
-    PathData kathy{0, 1, {1}, {2}, {3}, {4}, 1, boost::none};
-    PathData cathy{0, 3, {1}, {2}, {3}, {4}, 1, boost::none};
+    PathData pathy{0, 2, {2}, {3}, {4}, {5}, 2, std::nullopt};
+    PathData kathy{0, 1, {1}, {2}, {3}, {4}, 1, std::nullopt};
+    PathData cathy{0, 3, {1}, {2}, {3}, {4}, 1, std::nullopt};
     PhantomNode node_1;
     PhantomNode node_2;
     PhantomNode node_3;
@@ -74,11 +74,11 @@ BOOST_AUTO_TEST_CASE(two_legs_to_one_leg)
 
 BOOST_AUTO_TEST_CASE(three_legs_to_two_legs)
 {
-    PathData pathy{0, 2, {2}, {3}, {4}, {5}, 2, boost::none};
-    PathData kathy{0, 1, {1}, {2}, {3}, {4}, 1, boost::none};
-    PathData qathy{0, 5, {1}, {2}, {3}, {4}, 1, boost::none};
-    PathData cathy{0, 3, {1}, {2}, {3}, {4}, 1, boost::none};
-    PathData mathy{0, 4, {8}, {9}, {13}, {4}, 2, boost::none};
+    PathData pathy{0, 2, {2}, {3}, {4}, {5}, 2, std::nullopt};
+    PathData kathy{0, 1, {1}, {2}, {3}, {4}, 1, std::nullopt};
+    PathData qathy{0, 5, {1}, {2}, {3}, {4}, 1, std::nullopt};
+    PathData cathy{0, 3, {1}, {2}, {3}, {4}, 1, std::nullopt};
+    PathData mathy{0, 4, {8}, {9}, {13}, {4}, 2, std::nullopt};
     PhantomNode node_1;
     PhantomNode node_2;
     PhantomNode node_3;
@@ -131,9 +131,9 @@ BOOST_AUTO_TEST_CASE(three_legs_to_two_legs)
 
 BOOST_AUTO_TEST_CASE(two_legs_to_two_legs)
 {
-    PathData pathy{0, 2, {2}, {3}, {4}, {5}, 2, boost::none};
-    PathData kathy{0, 1, {1}, {2}, {3}, {4}, 1, boost::none};
-    PathData cathy{0, 3, {1}, {2}, {3}, {4}, 1, boost::none};
+    PathData pathy{0, 2, {2}, {3}, {4}, {5}, 2, std::nullopt};
+    PathData kathy{0, 1, {1}, {2}, {3}, {4}, 1, std::nullopt};
+    PathData cathy{0, 3, {1}, {2}, {3}, {4}, 1, std::nullopt};
     PhantomNode node_1;
     PhantomNode node_2;
     PhantomNode node_3;

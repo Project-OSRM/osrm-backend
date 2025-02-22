@@ -401,12 +401,12 @@ Feature: Snapping at intersections
         Given the extract extra arguments "--small-component-size=4"
 
         And the ways
-            | nodes | oneway |
-            | ab    | no     |
-            | bc    | no     |
-            | cd    | no     |
-            | fed   | no     |
-            | bg    | yes    | # small SCC
+            | nodes | oneway | # comment  |
+            | ab    | no     |            |
+            | bc    | no     |            |
+            | cd    | no     |            |
+            | fed   | no     |            |
+            | bg    | yes    | small SCC  |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
@@ -437,14 +437,14 @@ Feature: Snapping at intersections
         Given the extract extra arguments "--small-component-size=4"
 
         And the ways
-            | nodes | oneway |
-            | ab    | no     |
-            | bc    | no     |
-            | cd    | no     |
-            | fed   | no     |
-            | ghi   | no     |
-            | jkl   | no     |
-            | bm    | yes    | # small SCC
+            | nodes | oneway | # comment |
+            | ab    | no     |           |
+            | bc    | no     |           |
+            | cd    | no     |           |
+            | fed   | no     |           |
+            | ghi   | no     |           |
+            | jkl   | no     |           |
+            | bm    | yes    | small SCC |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |

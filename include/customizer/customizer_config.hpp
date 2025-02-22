@@ -1,9 +1,8 @@
 #ifndef OSRM_CUSTOMIZE_CUSTOMIZER_CONFIG_HPP
 #define OSRM_CUSTOMIZE_CUSTOMIZER_CONFIG_HPP
 
-#include <boost/filesystem/path.hpp>
-
 #include <array>
+#include <filesystem>
 #include <string>
 
 #include "storage/io_config.hpp"
@@ -27,7 +26,7 @@ struct CustomizationConfig final : storage::IOConfig
     {
     }
 
-    void UseDefaultOutputNames(const boost::filesystem::path &base)
+    void UseDefaultOutputNames(const std::filesystem::path &base)
     {
         IOConfig::UseDefaultOutputNames(base);
         updater_config.UseDefaultOutputNames(base);

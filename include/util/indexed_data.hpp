@@ -315,9 +315,8 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
             values_byte_iter = block.WriteBlockPrefix(curr, next, values_byte_iter);
             std::advance(next, std::min<diff_type>(1, std::distance(next, sentinel)));
 
-            auto to_bytes = [&](const auto &data) {
-                values_byte_iter = std::copy_n(&data, sizeof(ValueType), values_byte_iter);
-            };
+            auto to_bytes = [&](const auto &data)
+            { values_byte_iter = std::copy_n(&data, sizeof(ValueType), values_byte_iter); };
             std::copy(data + *curr,
                       data + *next,
                       boost::make_function_output_iterator(std::cref(to_bytes)));

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -245,7 +245,7 @@ namespace osmium {
                 // Parse the header in the PBF OSMHeader blob.
                 void parse_header_blob() {
                     const auto size = check_type_and_get_blob_size("OSMHeader");
-                    osmium::io::Header header{decode_header(read_from_input_queue_with_check(size))};
+                    const osmium::io::Header header{decode_header(read_from_input_queue_with_check(size))};
                     set_header_value(header);
                 }
 

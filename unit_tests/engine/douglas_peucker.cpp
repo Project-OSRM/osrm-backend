@@ -82,7 +82,8 @@ BOOST_AUTO_TEST_CASE(removed_middle_test_zoom_sensitive)
 BOOST_AUTO_TEST_CASE(remove_second_node_test)
 {
     // derived from the degreeToPixel function
-    const auto delta_pixel_to_delta_degree = [](const int pixel, const unsigned zoom) {
+    const auto delta_pixel_to_delta_degree = [](const int pixel, const unsigned zoom)
+    {
         const double shift = (1u << zoom) * 256;
         const double b = shift / 2.0;
         return pixel * 180. / b;

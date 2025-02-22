@@ -12,7 +12,6 @@
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/any.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/optional/optional_io.hpp>
 #include <boost/program_options.hpp>
 
@@ -22,6 +21,7 @@
 
 #include <chrono>
 #include <exception>
+#include <filesystem>
 #include <future>
 #include <iostream>
 #include <new>
@@ -61,7 +61,7 @@ std::istream &operator>>(std::istream &in, EngineConfig::Algorithm &algorithm)
     in >> token;
     boost::to_lower(token);
 
-    if (token == "ch" || token == "corech")
+    if (token == "ch")
         algorithm = EngineConfig::Algorithm::CH;
     else if (token == "mld")
         algorithm = EngineConfig::Algorithm::MLD;
@@ -102,7 +102,7 @@ void validate(boost::any &v, const std::vector<std::string> &values, double *, d
 // generate boost::program_options object for the routing part
 inline unsigned generateServerProgramOptions(const int argc,
                                              const char *argv[],
-                                             boost::filesystem::path &base_path,
+                                             std::filesystem::path &base_path,
                                              std::string &ip_address,
                                              int &ip_port,
                                              bool &trial,
@@ -110,8 +110,8 @@ inline unsigned generateServerProgramOptions(const int argc,
                                              int &requested_thread_num,
                                              short &keepalive_timeout)
 {
-    using boost::filesystem::path;
     using boost::program_options::value;
+    using std::filesystem::path;
 
     const auto hardware_threads = std::max<int>(1, std::thread::hardware_concurrency());
 
@@ -148,7 +148,7 @@ inline unsigned generateServerProgramOptions(const int argc,
          value<bool>(&config.use_shared_memory)->implicit_value(true)->default_value(false),
          "Load data from shared memory") //
         ("memory_file",
-         value<boost::filesystem::path>(&config.memory_file),
+         value<std::filesystem::path>(&config.memory_file),
          "DEPRECATED: Will behave the same as --mmap.")(
             "mmap,m",
             value<bool>(&config.use_mmap)->implicit_value(true)->default_value(false),
@@ -159,7 +159,7 @@ inline unsigned generateServerProgramOptions(const int argc,
         ("algorithm,a",
          value<EngineConfig::Algorithm>(&config.algorithm)
              ->default_value(EngineConfig::Algorithm::CH, "CH"),
-         "Algorithm to use for the data. Can be CH, CoreCH, MLD.") //
+         "Algorithm to use for the data. Can be CH, MLD.") //
         ("disable-feature-dataset",
          value<std::vector<storage::FeatureDataset>>(&config.disable_feature_dataset)->multitoken(),
          "Disables a feature dataset from being loaded into memory if not needed. Options: "
@@ -186,13 +186,13 @@ inline unsigned generateServerProgramOptions(const int argc,
          value<double>(&config.max_radius_map_matching)->default_value(-1.0),
          "Max. radius size supported in map matching query. Default: unlimited.") //
         ("default-radius",
-         value<boost::optional<double>>(&config.default_radius)->default_value(-1.0),
+         value<double>(&config.default_radius)->default_value(-1.0),
          "Default radius size for queries. Default: unlimited.");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
-        "base,b", value<boost::filesystem::path>(&base_path), "base path to .osrm file");
+        "base,b", value<std::filesystem::path>(&base_path), "base path to .osrm file");
 
     // positional option
     boost::program_options::positional_options_description positional_options;
@@ -204,7 +204,7 @@ inline unsigned generateServerProgramOptions(const int argc,
 
     const auto *executable = argv[0];
     boost::program_options::options_description visible_options(
-        boost::filesystem::path(executable).filename().string() + " <base.osrm> [<options>]");
+        std::filesystem::path(executable).filename().string() + " <base.osrm> [<options>]");
     visible_options.add(generic_options).add(config_options);
 
     // parse command line options
@@ -267,7 +267,7 @@ try
     int ip_port;
 
     EngineConfig config;
-    boost::filesystem::path base_path;
+    std::filesystem::path base_path;
 
     int requested_thread_num = 1;
     short keepalive_timeout = 5;
@@ -343,10 +343,12 @@ try
     }
     else
     {
-        std::packaged_task<int()> server_task([&] {
-            routing_server->Run();
-            return 0;
-        });
+        std::packaged_task<int()> server_task(
+            [&]
+            {
+                routing_server->Run();
+                return 0;
+            });
         auto future = server_task.get_future();
         std::thread server_thread(std::move(server_task));
 

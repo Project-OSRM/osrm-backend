@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
+#include <numbers>
 #include <tuple>
 #include <utility>
 
@@ -37,7 +38,7 @@ class CheapRuler
     static constexpr double FE = 1.0 / 298.257223563; // flattening
 
     static constexpr double E2 = FE * (2 - FE);
-    static constexpr double RAD = M_PI / 180.0;
+    static constexpr double RAD = std::numbers::pi / 180.0;
 
   public:
     explicit CheapRuler(double latitude)

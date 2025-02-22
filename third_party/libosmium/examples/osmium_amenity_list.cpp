@@ -74,8 +74,8 @@ class AmenityHandler : public osmium::handler::Handler {
             c.y += nr.lat();
         }
 
-        c.x /= nr_list.size();
-        c.y /= nr_list.size();
+        c.x /= static_cast<double>(nr_list.size());
+        c.y /= static_cast<double>(nr_list.size());
 
         return c;
     }

@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(test_json_issue_6531)
     BOOST_CHECK_EQUAL(output, "0.1234567892");
 
     output.clear();
-    renderer(123456789123456789);
+    renderer(123456789123456789.);
     BOOST_CHECK_EQUAL(output, "1.234567891e+17");
 }
 
