@@ -4,8 +4,6 @@
 #include "osrm/json_container.hpp"
 #include <napi.h>
 
-#include <functional>
-
 namespace node_osrm
 {
 
@@ -30,7 +28,7 @@ struct V8Renderer
         {
             Napi::Value child;
             std::visit(V8Renderer(env, child), keyValue.second);
-            obj.Set(keyValue.first, child);
+            obj.Set(keyValue.first.data(), child);
         }
         out = obj;
     }

@@ -47,14 +47,10 @@
 #include <tbb/parallel_pipeline.h>
 
 #include <algorithm>
-#include <atomic>
-#include <bitset>
-#include <chrono>
 #include <memory>
 #include <thread>
 #include <tuple>
 #include <type_traits>
-#include <unordered_map>
 #include <vector>
 
 namespace osrm::extractor

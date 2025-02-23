@@ -23,11 +23,9 @@
 
 #include <algorithm>
 #include <limits>
-#include <sstream>
 #include <string>
 #include <thread>
 #include <tuple>
-#include <unordered_map>
 
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
@@ -968,11 +966,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                 buffer->continuous_data.push_back(edge_with_data);
 
                                 // get conditional restrictions that apply to this turn
-                                const auto &restrictions =
-                                    conditional_node_restriction_map.Restrictions(
-                                        incoming_edge.node,
-                                        outgoing_edge.node,
-                                        outgoing_edge_target);
+                                auto restrictions = conditional_node_restriction_map.Restrictions(
+                                    incoming_edge.node, outgoing_edge.node, outgoing_edge_target);
                                 for (const auto &restriction : restrictions)
                                 {
                                     buffer->conditionals.push_back(

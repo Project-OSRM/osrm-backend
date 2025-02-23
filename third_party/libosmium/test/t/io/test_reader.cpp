@@ -28,7 +28,7 @@ struct ZeroPositionNodeCountHandler : public osmium::handler::Handler {
     // location.
     int count = 0;
     int total_count = 0; // total number of nodes seen
-    const osmium::Location zero = osmium::Location{int32_t(0), int32_t(0)};
+    const osmium::Location zero = osmium::Location{static_cast<int32_t>(0), static_cast<int32_t>(0)};
 
     void node(const osmium::Node& node) {
         // no nodes in the history file have a zero location, and
@@ -44,7 +44,7 @@ struct ZeroPositionNodeCountHandler : public osmium::handler::Handler {
 
 
 TEST_CASE("Reader can be initialized with file") {
-    osmium::io::File file{with_data_dir("t/io/data.osm")};
+    const osmium::io::File file{with_data_dir("t/io/data.osm")};
 
     const int count = count_fds();
     osmium::io::Reader reader{file};
@@ -72,7 +72,7 @@ TEST_CASE("Reader can be initialized with user-provided pool") {
     const int count = count_fds();
 
     osmium::thread::Pool pool{4};
-    osmium::io::File file{with_data_dir("t/io/data.osm")};
+    const osmium::io::File file{with_data_dir("t/io/data.osm")};
     osmium::io::Reader reader{file, pool};
     osmium::handler::Handler handler;
 
@@ -85,7 +85,7 @@ TEST_CASE("Reader can be initialized with user-provided pool") {
 TEST_CASE("Reader should throw after eof") {
     const int count = count_fds();
 
-    osmium::io::File file{with_data_dir("t/io/data.osm")};
+    const osmium::io::File file{with_data_dir("t/io/data.osm")};
     osmium::io::Reader reader{file};
 
     SECTION("Get header") {
@@ -96,7 +96,7 @@ TEST_CASE("Reader should throw after eof") {
 
     REQUIRE_FALSE(reader.eof());
 
-    while (osmium::memory::Buffer buffer = reader.read()) {
+    while (const osmium::memory::Buffer buffer = reader.read()) {
     }
 
     REQUIRE(reader.eof());
@@ -111,7 +111,7 @@ TEST_CASE("Reader should throw after eof") {
 TEST_CASE("Reader should not hang when apply() is called twice on reader") {
     const int count = count_fds();
 
-    osmium::io::File file{with_data_dir("t/io/data.osm")};
+    const osmium::io::File file{with_data_dir("t/io/data.osm")};
     osmium::io::Reader reader{file};
     osmium::handler::Handler handler;
 
@@ -134,7 +134,7 @@ TEST_CASE("Reader should work with a buffer with uncompressed data") {
     REQUIRE(length > 0);
     osmium::io::detail::reliable_close(fd);
 
-    osmium::io::File file{buffer, static_cast<size_t>(length), "osm"};
+    const osmium::io::File file{buffer, static_cast<size_t>(length), "osm"};
     osmium::io::Reader reader{file};
     CountHandler handler;
 
@@ -158,7 +158,7 @@ TEST_CASE("Reader should work with a buffer with gzip-compressed data") {
     REQUIRE(length > 0);
     osmium::io::detail::reliable_close(fd);
 
-    osmium::io::File file{buffer, static_cast<size_t>(length), "osm.gz"};
+    const osmium::io::File file{buffer, static_cast<size_t>(length), "osm.gz"};
     osmium::io::Reader reader{file};
     CountHandler handler;
 
@@ -182,7 +182,7 @@ TEST_CASE("Reader should work with a buffer with bzip2-compressed data") {
     REQUIRE(length > 0);
     osmium::io::detail::reliable_close(fd);
 
-    osmium::io::File file{buffer, static_cast<size_t>(length), "osm.bz2"};
+    const osmium::io::File file{buffer, static_cast<size_t>(length), "osm.bz2"};
     osmium::io::Reader reader{file};
     CountHandler handler;
 
@@ -260,7 +260,7 @@ TEST_CASE("Reader should work when there is an exception in main thread before g
     const int count = count_fds();
 
     try {
-        osmium::io::Reader reader{with_data_dir("t/io/data.osm")};
+        const osmium::io::Reader reader{with_data_dir("t/io/data.osm")};
         REQUIRE_FALSE(reader.eof());
         throw std::runtime_error{"foo"};
     } catch (...) {
@@ -297,7 +297,7 @@ TEST_CASE("Applying rvalue handler on reader") {
 TEST_CASE("Can call read() exactly once on Reader with entity_bits nothing") {
     const int count = count_fds();
 
-    osmium::io::File file{with_data_dir("t/io/data.osm")};
+    const osmium::io::File file{with_data_dir("t/io/data.osm")};
     osmium::io::Reader reader{file, osmium::osm_entity_bits::nothing};
     REQUIRE_FALSE(reader.eof());
 
@@ -307,7 +307,7 @@ TEST_CASE("Can call read() exactly once on Reader with entity_bits nothing") {
         REQUIRE_FALSE(reader.eof());
     }
 
-    osmium::memory::Buffer buffer = reader.read();
+    const osmium::memory::Buffer buffer = reader.read();
     REQUIRE_FALSE(buffer);
     REQUIRE(reader.eof());
     REQUIRE_THROWS_AS(reader.read(), osmium::io_error);
@@ -321,7 +321,7 @@ TEST_CASE("Can call read() exactly once on Reader with entity_bits nothing") {
 TEST_CASE("Can not read after close") {
     const int count = count_fds();
 
-    osmium::io::File file{with_data_dir("t/io/data.osm")};
+    const osmium::io::File file{with_data_dir("t/io/data.osm")};
     osmium::io::Reader reader{file};
 
     SECTION("Get header") {
@@ -332,7 +332,7 @@ TEST_CASE("Can not read after close") {
 
     REQUIRE_FALSE(reader.eof());
 
-    osmium::memory::Buffer buffer = reader.read();
+    const osmium::memory::Buffer buffer = reader.read();
     REQUIRE(buffer);
     REQUIRE_FALSE(reader.eof());
 
@@ -346,7 +346,7 @@ TEST_CASE("Can not read after close") {
 using object_counts = std::array<std::size_t, 3>;
 
 std::vector<object_counts> count_objects_per_buffer(const char* filename, osmium::io::buffers_type btype) {
-    osmium::io::File file{with_data_dir(filename)};
+    const osmium::io::File file{with_data_dir(filename)};
     osmium::io::Reader reader{file, btype};
 
     std::vector<object_counts> counts;

@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
+#include <limits>
+#include <string>
 
 namespace osrm::extractor
 {

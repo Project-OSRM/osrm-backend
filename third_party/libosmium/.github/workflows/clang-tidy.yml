@@ -3,7 +3,6 @@ name: clang-tidy
 on: workflow_dispatch
 
 jobs:
-
   clang-tidy:
     runs-on: ubuntu-latest
     strategy:
@@ -14,9 +13,9 @@ jobs:
           - image: "debian:bullseye"
             clang: 11
           - image: "debian:testing"
-            clang: 12
+            clang: 15
           - image: "debian:experimental"
-            clang: 14
+            clang: 15
     container:
       image: ${{ matrix.image }}
       env:
@@ -25,29 +24,29 @@ jobs:
         CXX: clang++-${{ matrix.clang }}
         CPP_VERSION: c++11
         WITH_PROJ: ON
+        APT_LISTCHANGES_FRONTEND: none
+        DEBIAN_FRONTEND: noninteractive
     steps:
       - name: Prepare container (apt)
         run: |
-          export APT_LISTCHANGES_FRONTEND=none
-          export DEBIAN_FRONTEND=noninteractive
           apt-get update -qq
-          apt-get install -y \
-            clang-${{ matrix.clang }} \
-            clang-tidy-${{ matrix.clang }} \
-            cmake \
-            git \
-            libboost-dev \
-            libbz2-dev \
-            libexpat1-dev \
-            libgdal-dev \
-            libgeos++-dev \
-            liblz4-dev \
-            libproj-dev \
-            libsparsehash-dev \
-            make \
-            zlib1g-dev
+          apt-get install -yq \
+                  clang-${{ matrix.clang }} \
+                  clang-tidy-${{ matrix.clang }} \
+                  cmake \
+                  git \
+                  libboost-dev \
+                  libbz2-dev \
+                  libexpat1-dev \
+                  libgdal-dev \
+                  libgeos++-dev \
+                  liblz4-dev \
+                  libproj-dev \
+                  libsparsehash-dev \
+                  make \
+                  zlib1g-dev
         shell: bash
-      # Use v1 of checkout because v2 doesn't work with submodules
+      # Use v1 of checkout because v3 doesn't work with submodules
       - uses: actions/checkout@v1
         with:
           submodules: true
@@ -58,7 +57,7 @@ jobs:
         shell: bash
         working-directory: build
       - name: Upload Log
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: clang-tidy-${{ matrix.clang }}-log

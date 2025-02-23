@@ -5,10 +5,6 @@
 #include <boost/numeric/conversion/cast.hpp>
 
 #include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <limits>
-#include <string>
 
 namespace osrm::extractor
 {

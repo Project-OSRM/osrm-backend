@@ -13,7 +13,6 @@
 
 #include <array>
 #include <cmath>
-#include <vector>
 
 #if defined(_MSC_VER)
 // for `InterlockedCompareExchange64`
@@ -339,6 +338,8 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
             : container(container), index(index)
         {
         }
+
+        ReferenceT operator[](difference_type n) const { return container->operator[](index + n); }
 
       private:
         void increment() { ++index; }

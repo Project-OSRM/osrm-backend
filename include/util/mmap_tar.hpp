@@ -7,7 +7,6 @@
 
 #include <boost/iostreams/device/mapped_file.hpp>
 
-#include <tuple>
 #include <unordered_map>
 
 namespace osrm::util

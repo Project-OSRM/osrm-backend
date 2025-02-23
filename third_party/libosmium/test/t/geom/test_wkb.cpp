@@ -12,7 +12,7 @@
 
 TEST_CASE("WKB geometry factory (byte-order-dependent), point in WKB") {
     const osmium::Location loc{3.2, 4.2};
-    osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
+    const osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
 
     const std::string wkb{factory.create_point(loc)};
     REQUIRE(wkb == "01010000009A99999999990940CDCCCCCCCCCC1040");
@@ -20,7 +20,7 @@ TEST_CASE("WKB geometry factory (byte-order-dependent), point in WKB") {
 
 TEST_CASE("WKB geometry factory (byte-order-dependent), point in EWKB") {
     const osmium::Location loc{3.2, 4.2};
-    osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
+    const osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
 
     const std::string wkb{factory.create_point(loc)};
     REQUIRE(wkb == "0101000020E61000009A99999999990940CDCCCCCCCCCC1040");
@@ -29,7 +29,7 @@ TEST_CASE("WKB geometry factory (byte-order-dependent), point in EWKB") {
 #ifndef OSMIUM_USE_SLOW_MERCATOR_PROJECTION
 TEST_CASE("WKB geometry factory (byte-order-dependent), point in web mercator WKB") {
     const osmium::Location loc{3.2, 4.2};
-    osmium::geom::WKBFactory<osmium::geom::MercatorProjection> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
+    const osmium::geom::WKBFactory<osmium::geom::MercatorProjection> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
 
     const std::string wkb{factory.create_point(loc)};
     REQUIRE(wkb.substr(0, 10) == "0101000000"); // little endian, point type
@@ -39,7 +39,7 @@ TEST_CASE("WKB geometry factory (byte-order-dependent), point in web mercator WK
 
 TEST_CASE("WKB geometry factory (byte-order-dependent), point in web mercator EWKB") {
     const osmium::Location loc{3.2, 4.2};
-    osmium::geom::WKBFactory<osmium::geom::MercatorProjection> factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
+    const osmium::geom::WKBFactory<osmium::geom::MercatorProjection> factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
 
     const std::string wkb{factory.create_point(loc)};
     REQUIRE(wkb.substr(0, 10) == "0101000020"); // little endian, point type (extended)
@@ -131,7 +131,7 @@ TEST_CASE("WKB geometry factory (byte-order-dependent): polygon") {
 #endif
 
 TEST_CASE("WKB geometry (byte-order-independent) of empty point") {
-    osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
+    const osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
     REQUIRE_THROWS_AS(factory.create_point(osmium::Location{}), osmium::invalid_location);
 }
 

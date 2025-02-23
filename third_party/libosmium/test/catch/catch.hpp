@@ -1,6 +1,6 @@
 /*
- *  Catch v2.13.8
- *  Generated: 2022-01-03 21:20:09.589503
+ *  Catch v2.13.10
+ *  Generated: 2022-10-16 11:01:23.452308
  *  ----------------------------------------------------------
  *  This file has been merged from multiple headers. Please don't edit it directly
  *  Copyright (c) 2022 Two Blue Cubes Ltd. All rights reserved.
@@ -15,7 +15,7 @@
 
 #define CATCH_VERSION_MAJOR 2
 #define CATCH_VERSION_MINOR 13
-#define CATCH_VERSION_PATCH 8
+#define CATCH_VERSION_PATCH 10
 
 #ifdef __clang__
 #    pragma clang system_header
@@ -7395,8 +7395,6 @@ namespace Catch {
             template <typename T, bool Destruct>
             struct ObjectStorage
             {
-                using TStorage = typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type;
-
                 ObjectStorage() : data() {}
 
                 ObjectStorage(const ObjectStorage& other)
@@ -7439,7 +7437,7 @@ namespace Catch {
                     return *static_cast<T*>(static_cast<void*>(&data));
                 }
 
-                TStorage data;
+                struct { alignas(T) unsigned char data[sizeof(T)]; }  data;
             };
         }
 
@@ -7949,7 +7947,7 @@ namespace Catch {
     #if defined(__i386__) || defined(__x86_64__)
         #define CATCH_TRAP() __asm__("int $3\n" : : ) /* NOLINT */
     #elif defined(__aarch64__)
-        #define CATCH_TRAP()  __asm__(".inst 0xd4200000")
+        #define CATCH_TRAP()  __asm__(".inst 0xd43e0000")
     #endif
 
 #elif defined(CATCH_PLATFORM_IPHONE)
@@ -13392,6 +13390,10 @@ namespace Catch {
                     filename.erase(0, lastSlash);
                     filename[0] = '#';
                 }
+                else
+                {
+                    filename.insert(0, "#");
+                }
 
                 auto lastDot = filename.find_last_of('.');
                 if (lastDot != std::string::npos) {
@@ -13554,7 +13556,7 @@ namespace Catch {
 
             // Handle list request
             if( Option<std::size_t> listed = list( m_config ) )
-                return static_cast<int>( *listed );
+                return (std::min) (MaxExitCode, static_cast<int>(*listed));
 
             TestGroup tests { m_config };
             auto const totals = tests.execute();
@@ -15387,7 +15389,7 @@ namespace Catch {
     }
 
     Version const& libraryVersion() {
-        static Version version( 2, 13, 8, "", 0 );
+        static Version version( 2, 13, 10, "", 0 );
         return version;
     }
 
@@ -17522,12 +17524,20 @@ namespace Catch {
 
 #ifndef __OBJC__
 
+#ifndef CATCH_INTERNAL_CDECL
+#ifdef _MSC_VER
+#define CATCH_INTERNAL_CDECL __cdecl
+#else
+#define CATCH_INTERNAL_CDECL
+#endif
+#endif
+
 #if defined(CATCH_CONFIG_WCHAR) && defined(CATCH_PLATFORM_WINDOWS) && defined(_UNICODE) && !defined(DO_NOT_USE_WMAIN)
 // Standard C/C++ Win32 Unicode wmain entry point
-extern "C" int wmain (int argc, wchar_t * argv[], wchar_t * []) {
+extern "C" int CATCH_INTERNAL_CDECL wmain (int argc, wchar_t * argv[], wchar_t * []) {
 #else
 // Standard C/C++ main entry point
-int main (int argc, char * argv[]) {
+int CATCH_INTERNAL_CDECL main (int argc, char * argv[]) {
 #endif
 
     return Catch::Session().run( argc, argv );
@@ -17890,7 +17900,7 @@ using Catch::Detail::Approx;
 #define INFO( msg ) (void)(0)
 #define UNSCOPED_INFO( msg ) (void)(0)
 #define WARN( msg ) (void)(0)
-#define CAPTURE( msg ) (void)(0)
+#define CAPTURE( ... ) (void)(0)
 
 #define TEST_CASE( ... )  INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME( C_A_T_C_H_T_E_S_T_ ))
 #define TEST_CASE_METHOD( className, ... ) INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME( C_A_T_C_H_T_E_S_T_ ))
