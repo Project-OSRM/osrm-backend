@@ -153,9 +153,10 @@ BOOST_AUTO_TEST_CASE(test_segment_runtime_error)
 //     }
 
 //     // We just look for the line number, file name, and error message. This avoids portability
-//     // issues since the output contains the full path to the file, which may change between systems
-//     BOOST_CHECK(boost::algorithm::contains(output.str(),
-//                                            "bad_turn.lua:122: attempt to compare number with nil"));
+//     // issues since the output contains the full path to the file, which may change between
+//     systems BOOST_CHECK(boost::algorithm::contains(output.str(),
+//                                            "bad_turn.lua:122: attempt to compare number with
+//                                            nil"));
 // }
 
 BOOST_AUTO_TEST_SUITE_END()
