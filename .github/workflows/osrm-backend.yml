@@ -34,7 +34,7 @@ jobs:
     - run: cmake --version
     - uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 18
     - run: node --version
     - run: npm --version
     - name: Prepare environment
@@ -100,7 +100,7 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 18
     - name: Enable Node.js cache
       uses: actions/cache@v4
       with:
@@ -172,7 +172,7 @@ jobs:
         include:
           - name: gcc-13-debug-cov
             continue-on-error: false
-            node: 22
+            node: 20
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: gcc-13
@@ -180,49 +180,18 @@ jobs:
             CXXCOMPILER: g++-13
             ENABLE_COVERAGE: ON
 
-          - name: clang-19-debug-asan-ubsan
+          - name: clang-18-debug-asan-ubsan
             continue-on-error: false
-            node: 22
+            node: 20
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
-            CCOMPILER: clang-19
+            CCOMPILER: clang-18
             CUCUMBER_TIMEOUT: 20000
-            CXXCOMPILER: clang++-19
+            CXXCOMPILER: clang++-18
             ENABLE_SANITIZER: ON
             TARGET_ARCH: x86_64-asan-ubsan
             OSRM_CONNECTION_RETRIES: 10
             OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
-
-          - name: clang-19-release
-            continue-on-error: false
-            node: 22
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-19
-            CXXCOMPILER: clang++-19
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_LTO: OFF
-
-          - name: clang-19-debug
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-19
-            CXXCOMPILER: clang++-19
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_LTO: OFF
-
-          - name: clang-19-debug-clang-tidy
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-19
-            CXXCOMPILER: clang++-19
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_CLANG_TIDY: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
 
           - name: clang-18-release
             continue-on-error: false
@@ -234,9 +203,31 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_LTO: OFF
 
+          - name: clang-18-debug
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-24.04
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_LTO: OFF
+
+          - name: clang-18-debug-clang-tidy
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-24.04
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_CLANG_TIDY: ON
+            NODE_PACKAGE_TESTS_ONLY: ON
+            ENABLE_LTO: OFF
+
           - name: clang-17-release
             continue-on-error: false
-            node: 20
+            node: 18
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-17
@@ -244,30 +235,40 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_LTO: OFF
 
-          - name: conan-linux-debug-asan-ubsan
+          - name: clang-16-release
             continue-on-error: false
-            node: 20
+            node: 18
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
-            CCOMPILER: clang-19
-            CXXCOMPILER: clang++-19
+            CCOMPILER: clang-16
+            CXXCOMPILER: clang++-16
+            CUCUMBER_TIMEOUT: 60000
+            ENABLE_LTO: OFF
+
+          - name: conan-linux-debug-asan-ubsan
+            continue-on-error: false
+            node: 18
+            runs-on: ubuntu-24.04
+            BUILD_TYPE: Release
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             ENABLE_CONAN: ON
             ENABLE_SANITIZER: ON
             ENABLE_LTO: OFF
 
           - name: conan-linux-release
             continue-on-error: false
-            node: 20
+            node: 18
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
-            CCOMPILER: clang-19
-            CXXCOMPILER: clang++-19
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             ENABLE_CONAN: ON
             ENABLE_LTO: OFF
 
           - name: gcc-14-release
             continue-on-error: false
-            node: 22
+            node: 20
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: gcc-14
@@ -276,7 +277,7 @@ jobs:
 
           - name: gcc-13-release
             continue-on-error: false
-            node: 22
+            node: 20
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: gcc-13
@@ -285,7 +286,7 @@ jobs:
 
           - name: gcc-12-release
             continue-on-error: false
-            node: 22
+            node: 20
             runs-on: ubuntu-22.04
             BUILD_TYPE: Release
             CCOMPILER: gcc-12
@@ -295,29 +296,29 @@ jobs:
           - name: conan-linux-release-node
             build_node_package: true
             continue-on-error: false
-            node: 22
+            node: 20
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
-            CCOMPILER: clang-17
-            CXXCOMPILER: clang++-17
+            CCOMPILER: clang-16
+            CXXCOMPILER: clang++-16
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
           - name: conan-linux-debug-node
             build_node_package: true
             continue-on-error: false
-            node: 22
+            node: 20
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
-            CCOMPILER: clang-17
-            CXXCOMPILER: clang++-17
+            CCOMPILER: clang-16
+            CXXCOMPILER: clang++-16
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
           - name: conan-macos-x64-release-node
             build_node_package: true
             continue-on-error: true
-            node: 22
+            node: 20
             runs-on: macos-13 # x86_64
             BUILD_TYPE: Release
             CCOMPILER: clang
@@ -329,7 +330,7 @@ jobs:
           - name: conan-macos-arm64-release-node
             build_node_package: true
             continue-on-error: true
-            node: 22
+            node: 20
             runs-on: macos-15 # arm64 
             BUILD_TYPE: Release
             CCOMPILER: clang
@@ -541,22 +542,22 @@ jobs:
         popd
         npm test
 
+    - name: Use Node 18
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+    - name: Run Node package tests on Node 18
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+      run: |
+        node --version
+        npm run nodejs-tests
     - name: Use Node 20
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       uses: actions/setup-node@v4
       with:
         node-version: 20
     - name: Run Node package tests on Node 20
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-      run: |
-        node --version
-        npm run nodejs-tests
-    - name: Use Node 22
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22
-    - name: Run Node package tests on Node 22
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       run: |
         node --version
