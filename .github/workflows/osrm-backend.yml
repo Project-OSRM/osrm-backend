@@ -172,7 +172,7 @@ jobs:
         include:
           - name: gcc-13-debug-cov
             continue-on-error: false
-            node: 20
+            node: 22
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: gcc-13
@@ -182,7 +182,7 @@ jobs:
 
           - name: clang-18-debug-asan-ubsan
             continue-on-error: false
-            node: 20
+            node: 22
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: clang-18
@@ -195,7 +195,7 @@ jobs:
 
           - name: clang-18-release
             continue-on-error: false
-            node: 20
+            node: 22
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-18
@@ -268,7 +268,7 @@ jobs:
 
           - name: gcc-14-release
             continue-on-error: false
-            node: 20
+            node: 22
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: gcc-14
@@ -277,7 +277,7 @@ jobs:
 
           - name: gcc-13-release
             continue-on-error: false
-            node: 20
+            node: 22
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: gcc-13
@@ -286,7 +286,7 @@ jobs:
 
           - name: gcc-12-release
             continue-on-error: false
-            node: 20
+            node: 22
             runs-on: ubuntu-22.04
             BUILD_TYPE: Release
             CCOMPILER: gcc-12
@@ -296,7 +296,7 @@ jobs:
           - name: conan-linux-release-node
             build_node_package: true
             continue-on-error: false
-            node: 20
+            node: 22
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-16
@@ -307,7 +307,7 @@ jobs:
           - name: conan-linux-debug-node
             build_node_package: true
             continue-on-error: false
-            node: 20
+            node: 22
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: clang-16
@@ -318,7 +318,7 @@ jobs:
           - name: conan-macos-x64-release-node
             build_node_package: true
             continue-on-error: true
-            node: 20
+            node: 22
             runs-on: macos-13 # x86_64
             BUILD_TYPE: Release
             CCOMPILER: clang
@@ -330,7 +330,7 @@ jobs:
           - name: conan-macos-arm64-release-node
             build_node_package: true
             continue-on-error: true
-            node: 20
+            node: 22
             runs-on: macos-15 # arm64 
             BUILD_TYPE: Release
             CCOMPILER: clang
@@ -552,12 +552,12 @@ jobs:
       run: |
         node --version
         npm run nodejs-tests
-    - name: Use Node 20
+    - name: Use Node 22
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       uses: actions/setup-node@v4
       with:
-        node-version: 20
-    - name: Run Node package tests on Node 20
+        node-version: 22
+    - name: Run Node package tests on Node 22
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       run: |
         node --version
