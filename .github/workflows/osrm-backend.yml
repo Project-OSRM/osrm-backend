@@ -205,7 +205,7 @@ jobs:
 
           - name: clang-18-debug
             continue-on-error: false
-            node: 18
+            node:
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: clang-18
