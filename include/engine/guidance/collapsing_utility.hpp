@@ -179,9 +179,7 @@ inline bool areSameSide(const RouteStep &lhs, const RouteStep &rhs)
                step.maneuver.waypoint_type == WaypointType::None;
     };
 
-    steps.erase(
-        std::remove_if(std::begin(steps), std::end(steps), not_is_valid),
-        std::end(steps));
+    steps.erase(std::remove_if(std::begin(steps), std::end(steps), not_is_valid), std::end(steps));
 
     // the steps should still include depart and arrive at least
     BOOST_ASSERT(steps.size() >= 2);

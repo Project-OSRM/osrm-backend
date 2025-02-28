@@ -37,9 +37,9 @@ class BaseAPI
         waypoints.values.resize(parameters.coordinates.size());
 
         std::ranges::transform(waypoint_candidates,
-                                waypoints.values.begin(),
-                                [this](const PhantomNodeCandidates &candidates)
-                                { return MakeWaypoint(candidates); });
+                               waypoints.values.begin(),
+                               [this](const PhantomNodeCandidates &candidates)
+                               { return MakeWaypoint(candidates); });
         return waypoints;
     }
 
@@ -55,11 +55,9 @@ class BaseAPI
 
         // At an intersection we may have multiple phantom node candidates.
         // Combine them to represent the waypoint name.
-        std::string waypoint_name = join(
-            candidates 
-                | std::views::transform(toName)
-                | std::views::filter(noEmpty),
-            INTERSECTION_DELIMITER);
+        std::string waypoint_name =
+            join(candidates | std::views::transform(toName) | std::views::filter(noEmpty),
+                 INTERSECTION_DELIMITER);
 
         const auto &snapped_location = candidatesSnappedLocation(candidates);
         const auto &input_location = candidatesInputLocation(candidates);
@@ -125,11 +123,9 @@ class BaseAPI
 
         // At an intersection we may have multiple phantom node candidates.
         // Combine them to represent the waypoint name.
-        std::string waypoint_name = join(
-            candidates 
-                | std::views::transform(toName)
-                | std::views::filter(noEmpty),
-            INTERSECTION_DELIMITER);
+        std::string waypoint_name =
+            join(candidates | std::views::transform(toName) | std::views::filter(noEmpty),
+                 INTERSECTION_DELIMITER);
         auto name_string = builder->CreateString(waypoint_name);
 
         flatbuffers::Offset<flatbuffers::String> hint_string;
@@ -161,17 +157,19 @@ class BaseAPI
     const datafacade::BaseDataFacade &facade;
     const BaseParameters &parameters;
 
-private:
+  private:
     // Helper join function using std
-    template<typename Range>
-    std::string join(Range&& range, const std::string& delimiter) const {
+    template <typename Range> std::string join(Range &&range, const std::string &delimiter) const
+    {
         std::ostringstream result;
         auto it = std::begin(range);
         const auto end = std::end(range);
-        
-        if (it != end) {
+
+        if (it != end)
+        {
             result << *it++;
-            while (it != end) {
+            while (it != end)
+            {
                 result << delimiter << *it++;
             }
         }
