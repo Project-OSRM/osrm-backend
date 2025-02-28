@@ -580,22 +580,6 @@ jobs:
         name: logs
         path: test/logs/
 
-    # - name: Generate code coverage
-    #   if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
-    #   run: |
-    #     lcov --directory . --capture --output-file coverage.info # capture coverage info
-    #     lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter out system
-    #     lcov --list coverage.info #debug info
-    
-    # # Uploading report to CodeCov
-    # - name: Upload code coverage
-    #   if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
-    #   uses: codecov/codecov-action@v4
-    #   with:
-    #     files: coverage.info
-    #     name: codecov-osrm-backend
-    #     fail_ci_if_error: true
-    #     verbose: true
     - name: Build Node package
       if: ${{ matrix.build_node_package }}
       run: ./scripts/ci/node_package.sh
@@ -622,4 +606,3 @@ jobs:
     needs: [build-matrix, conan-windows-release-node, docker-image-matrix]
     steps:
     - run: echo "CI complete"
-
