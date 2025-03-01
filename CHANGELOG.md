@@ -85,6 +85,7 @@
       - FIXED: Remove unused C++ headers [#7105](https://github.com/Project-OSRM/osrm-backend/pull/7105)
     - Profiles:
       - FIXED: Bicycle and foot profiles now don't route on proposed ways [#6615](https://github.com/Project-OSRM/osrm-backend/pull/6615)
+      - FIXED: Bicycle and foot profiles now don't route on motor roads [#6697](https://github.com/Project-OSRM/osrm-backend/pull/6697)
       - ADDED: Add optional support of cargo bike exclusion and width to bicyle profile [#7044](https://github.com/Project-OSRM/osrm-backend/pull/7044)
     - Routing:
       - FIXED: Fix adding traffic signal penalties during compression [#6419](https://github.com/Project-OSRM/osrm-backend/pull/6419)
