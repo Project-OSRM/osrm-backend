@@ -644,7 +644,8 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
                     auto node = remaining_nodes[x].id;
                     BOOST_ASSERT(node_data.contractable[node]);
                     node_data.priorities[node] = EvaluateNodePriority(
-                        SimulateNodeContraction(data, graph, node, node_data.weights, node_data.contractable),
+                        SimulateNodeContraction(
+                            data, graph, node, node_data.weights, node_data.contractable),
                         node_data.depths[node]);
                 }
             });
