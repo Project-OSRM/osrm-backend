@@ -35,7 +35,8 @@ void relaxNode(ContractorHeap &heap,
         // New Node discovered -> Add to Heap + Node Info Storage
         if (!toHeapNode)
         {
-            if (!contractable[to]) {
+            if (!contractable[to])
+            {
                 continue;
             }
             heap.Insert(to, to_weight, ContractorHeapData{current_hop, false});

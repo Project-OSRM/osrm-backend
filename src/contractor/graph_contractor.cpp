@@ -246,12 +246,24 @@ void ContractNode(ContractorThreadData *data,
         if (RUNSIMULATION)
         {
             const int constexpr SIMULATION_SEARCH_SPACE_SIZE = 1000;
-            search(heap, graph, contractable, number_of_targets, SIMULATION_SEARCH_SPACE_SIZE, max_weight, node);
+            search(heap,
+                   graph,
+                   contractable,
+                   number_of_targets,
+                   SIMULATION_SEARCH_SPACE_SIZE,
+                   max_weight,
+                   node);
         }
         else
         {
             const int constexpr FULL_SEARCH_SPACE_SIZE = 2000;
-            search(heap, graph, contractable, number_of_targets, FULL_SEARCH_SPACE_SIZE, max_weight, node);
+            search(heap,
+                   graph,
+                   contractable,
+                   number_of_targets,
+                   FULL_SEARCH_SPACE_SIZE,
+                   max_weight,
+                   node);
         }
         for (auto out_edge : graph.GetAdjacentEdgeRange(node))
         {
@@ -490,7 +502,8 @@ bool UpdateNodeNeighbours(ContractorNodeData &node_data,
         if (node_data.contractable[u])
         {
             node_data.priorities[u] = EvaluateNodePriority(
-                SimulateNodeContraction(data, graph, u, node_data.weights, node_data.contractable), node_data.depths[u]);
+                SimulateNodeContraction(data, graph, u, node_data.weights, node_data.contractable),
+                node_data.depths[u]);
         }
     }
     return true;
@@ -621,19 +634,20 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     {
         util::UnbufferedLog log;
         log << "initializing node priorities...";
-        tbb::parallel_for(tbb::blocked_range<std::size_t>(0, remaining_nodes.size(), PQGrainSize),
-                          [&](const auto &range)
-                          {
-                              ContractorThreadData *data = thread_data_list.GetThreadData();
-                              for (auto x = range.begin(), end = range.end(); x != end; ++x)
-                              {
-                                  auto node = remaining_nodes[x].id;
-                                  BOOST_ASSERT(node_data.contractable[node]);
-                                  node_data.priorities[node] = EvaluateNodePriority(
-                                      SimulateNodeContraction(data, graph, node, node_data.weights, node_data.contractable),
-                                      node_data.depths[node]);
-                              }
-                          });
+        tbb::parallel_for(
+            tbb::blocked_range<std::size_t>(0, remaining_nodes.size(), PQGrainSize),
+            [&](const auto &range)
+            {
+                ContractorThreadData *data = thread_data_list.GetThreadData();
+                for (auto x = range.begin(), end = range.end(); x != end; ++x)
+                {
+                    auto node = remaining_nodes[x].id;
+                    BOOST_ASSERT(node_data.contractable[node]);
+                    node_data.priorities[node] = EvaluateNodePriority(
+                        SimulateNodeContraction(data, graph, node, node_data.weights, node_data.contractable),
+                        node_data.depths[node]);
+                }
+            });
         log << " ok.";
     }
 
