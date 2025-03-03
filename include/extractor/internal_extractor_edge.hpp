@@ -7,8 +7,6 @@
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
-#include <utility>
-#include <variant>
 
 namespace osrm::extractor
 {

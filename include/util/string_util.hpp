@@ -4,9 +4,8 @@
 #include <array>
 #include <cctype>
 #include <cstddef>
-#include <random>
+#include <cstdint>
 #include <string>
-#include <vector>
 
 namespace osrm::util
 {

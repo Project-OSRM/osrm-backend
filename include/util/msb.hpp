@@ -3,7 +3,6 @@
 
 #include <bit>
 #include <boost/assert.hpp>
-#include <cstdint>
 #include <limits>
 
 namespace osrm::util

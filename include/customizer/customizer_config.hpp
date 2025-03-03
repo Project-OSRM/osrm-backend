@@ -1,9 +1,7 @@
 #ifndef OSRM_CUSTOMIZE_CUSTOMIZER_CONFIG_HPP
 #define OSRM_CUSTOMIZE_CUSTOMIZER_CONFIG_HPP
 
-#include <array>
 #include <filesystem>
-#include <string>
 
 #include "storage/io_config.hpp"
 #include "updater/updater_config.hpp"

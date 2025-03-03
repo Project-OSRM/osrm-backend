@@ -3,8 +3,6 @@
 
 #include "server/service_handler.hpp"
 
-#include <string>
-
 namespace osrm::server
 {
 

@@ -4,8 +4,6 @@
 #include "osrm/json_container.hpp"
 #include <napi.h>
 
-#include <functional>
-
 namespace node_osrm
 {
 

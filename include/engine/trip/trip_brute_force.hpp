@@ -10,9 +10,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <iterator>
-#include <limits>
 #include <numeric>
-#include <string>
 #include <vector>
 
 namespace osrm::engine::trip

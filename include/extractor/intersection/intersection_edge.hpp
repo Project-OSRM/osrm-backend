@@ -3,6 +3,7 @@
 
 #include "util/typedefs.hpp"
 
+#include <tuple>
 #include <vector>
 
 namespace osrm::extractor::intersection

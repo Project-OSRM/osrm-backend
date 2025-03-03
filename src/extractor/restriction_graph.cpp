@@ -5,6 +5,8 @@
 #include "util/timing_util.hpp"
 #include <util/for_each_pair.hpp>
 
+#include <numeric>
+
 namespace osrm::extractor
 {
 
