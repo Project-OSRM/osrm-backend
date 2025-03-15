@@ -11,6 +11,6 @@ var fs = require('fs');
  */
 module.exports =
       '# HTTP API\n' +
-      fs.readFileSync('./content/http.md', 'utf8') + '\n'+
-      '# libosrm C++ API\n' +
-      fs.readFileSync('./content/libosrm.md', 'utf8') + '\n';
+      fs.readFileSync('./content/http.md', 'utf8') + '\n'
+      // '# libosrm C++ API\n' +
+      // fs.readFileSync('./content/libosrm.md', 'utf8') + '\n';

@@ -46,20 +46,20 @@ IntersectionHandler::IntersectionHandler(
     const std::vector<util::Coordinate> &node_coordinates,
     const extractor::CompressedEdgeContainer &compressed_geometries,
     const extractor::RestrictionMap &node_restriction_map,
-    const std::unordered_set<NodeID> &barrier_nodes,
+    const extractor::ObstacleMap &obstacle_nodes,
     const extractor::TurnLanesIndexedArray &turn_lanes_data,
     const extractor::NameTable &name_table,
     const extractor::SuffixTable &street_name_suffix_table)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
       node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),
-      node_restriction_map(node_restriction_map), barrier_nodes(barrier_nodes),
+      node_restriction_map(node_restriction_map), obstacle_nodes(obstacle_nodes),
       turn_lanes_data(turn_lanes_data), name_table(name_table),
       street_name_suffix_table(street_name_suffix_table), graph_walker(node_based_graph,
                                                                        node_data_container,
                                                                        node_coordinates,
                                                                        compressed_geometries,
                                                                        node_restriction_map,
-                                                                       barrier_nodes,
+                                                                       obstacle_nodes,
                                                                        turn_lanes_data)
 {
 }
@@ -430,7 +430,7 @@ void IntersectionHandler::assignTrivialTurns(const EdgeID via_eid,
 std::optional<IntersectionHandler::IntersectionViewAndNode>
 IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) const
 {
-    // We use the intersection generator to jump over traffic signals, barriers. The intersection
+    // We use the intersection generator to jump over obstacles. The intersection
     // generater takes a starting node and a corresponding edge starting at this node. It returns
     // the next non-artificial intersection writing as out param. the source node and the edge
     // for which the target is the next intersection.
@@ -458,12 +458,12 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
                                                                           node_coordinates,
                                                                           compressed_geometries,
                                                                           node_restriction_map,
-                                                                          barrier_nodes,
+                                                                          obstacle_nodes,
                                                                           turn_lanes_data,
                                                                           intersection_parameters);
     auto intersection_node = node_based_graph.GetTarget(intersection_parameters.edge);
 
-    if (intersection.size() <= 2 || intersection.isTrafficSignalOrBarrier())
+    if (intersection.size() <= 2 || intersection.isObstacle())
     {
         return std::nullopt;
     }

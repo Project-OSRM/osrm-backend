@@ -16,7 +16,7 @@ struct UnresolvedManeuverOverride;
 // OSRM stores turn paths as node -> [node] -> node instead of way -> node -> way (or
 // way->[way]->way) as it is done in OSM. These paths need to match the state of graph
 // compression which we perform in the graph compressor that removes certain degree two nodes from
-// the graph (all but the ones with penalties/barriers, as of the state of writing).
+// the graph (all but the ones with obstacles, as of the state of writing).
 // Since this graph compression is performed after creating the turn paths in the extraction
 // phase, we need to update the involved nodes whenever one of the nodes is compressed.
 //
