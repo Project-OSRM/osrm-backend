@@ -66,7 +66,7 @@ Feature: Foot - Accessability of different way types
             | service        | x    |
             | unclassified   | x    |
             | living_street  | x    |
-            | road           | x    |
+            | road           |      |
             | track          | x    |
             | path           | x    |
             | footway        | x    |
