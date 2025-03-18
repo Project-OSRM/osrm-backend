@@ -476,16 +476,18 @@ function process_turn(profile, turn)
 
   for _, obs in pairs(obstacle_map:get(turn.from, turn.via)) do
     -- disregard a minor stop if entering by the major road
+    -- rationale: if a stop sign is tagged at the center of the intersection with stop=minor
+    -- it should only penalize the minor roads entering the intersection
     if obs.type == obstacle_type.stop_minor and not Obstacles.entering_by_minor_road(turn) then
         goto skip
     end
     -- heuristic to infer the direction of a stop without an explicit direction tag
-    -- rationale: a stop sign should not be placed farther than 10m from the intersection
+    -- rationale: a stop sign should not be placed farther than 20m from the intersection
     if turn.number_of_roads == 2
         and obs.type == obstacle_type.stop
         and obs.direction == obstacle_direction.none
-        and turn.source_road.distance < 10
-        and turn.target_road.distance > 10 then
+        and turn.source_road.distance < 20
+        and turn.target_road.distance > 20 then
             goto skip
     end
     turn.duration = turn.duration + obs.duration

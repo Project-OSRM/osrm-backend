@@ -18,7 +18,6 @@ namespace osrm::extractor
 {
 
 static constexpr int SECOND_TO_DECISECOND = 10;
-const std::vector<ExtractionTurnLeg> NO_OTHER_ROADS;
 
 void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
                                std::vector<TurnRestriction> &turn_restrictions,
@@ -29,6 +28,7 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
 {
     const unsigned original_number_of_nodes = graph.GetNumberOfNodes();
     const unsigned original_number_of_edges = graph.GetNumberOfEdges();
+    const std::vector<ExtractionTurnLeg> no_other_roads;
 
     TurnPathCompressor turn_path_compressor(turn_restrictions, maneuver_overrides);
 
@@ -255,16 +255,18 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
 
                 // Add the obstacle's penalties to the edge when compressing an edge with
                 // an obstacle
-                auto get_obstacle_penalty =
-                    [&scripting_environment, weight_multiplier](const NodeID from,
-                                                                const NodeID via,
-                                                                const NodeID to,
-                                                                const EdgeData &from_edge,
-                                                                const EdgeData &to_edge,
-                                                                EdgePenalties &penalties)
+                auto get_obstacle_penalty = [&scripting_environment,
+                                             weight_multiplier,
+                                             no_other_roads](const NodeID from,
+                                                             const NodeID via,
+                                                             const NodeID to,
+                                                             const EdgeData &from_edge,
+                                                             const EdgeData &to_edge,
+                                                             EdgePenalties &penalties)
                 {
                     // generate an artificial turn for the turn penalty generation
-                    ExtractionTurn fake_turn{from, via, to, from_edge, to_edge};
+                    ExtractionTurn fake_turn{
+                        from, via, to, from_edge, to_edge, no_other_roads, no_other_roads};
                     scripting_environment.ProcessTurn(fake_turn);
                     penalties.duration +=
                         to_alias<EdgeDuration>(fake_turn.duration * SECOND_TO_DECISECOND);

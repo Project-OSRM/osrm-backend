@@ -65,8 +65,6 @@ struct ExtractionTurnLeg
     bool is_outgoing;
 };
 
-extern const std::vector<ExtractionTurnLeg> NO_OTHER_ROADS;
-
 // Structure reflected into LUA scripting
 //
 // This structure backs the `turn` parameter in the LUA `process_turn` function.
@@ -146,8 +144,10 @@ struct ExtractionTurn
     ExtractionTurn(NodeID from,
                    NodeID via,
                    NodeID to,
-                   ExtractionTurnLeg::EdgeData source_edge,
-                   ExtractionTurnLeg::EdgeData target_edge)
+                   const ExtractionTurnLeg::EdgeData &source_edge,
+                   const ExtractionTurnLeg::EdgeData &target_edge,
+                   const std::vector<ExtractionTurnLeg> &roads_on_the_right,
+                   const std::vector<ExtractionTurnLeg> &roads_on_the_left)
         : ExtractionTurn{0,
                          2,
                          false,
@@ -176,8 +176,8 @@ struct ExtractionTurn
                          // other
                          ExtractionTurnLeg{source_edge, true, false},
                          ExtractionTurnLeg{target_edge, false, true},
-                         NO_OTHER_ROADS,
-                         NO_OTHER_ROADS,
+                         roads_on_the_right,
+                         roads_on_the_left,
                          from,
                          via,
                          to}

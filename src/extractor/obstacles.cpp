@@ -27,53 +27,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "extractor/obstacles.hpp"
 
-#include "util/for_each_indexed.hpp"
-#include "util/for_each_pair.hpp"
 #include "util/log.hpp"
 #include "util/timing_util.hpp"
 
-#include <boost/algorithm/cxx11/any_of.hpp>
-#include <boost/range.hpp>
-#include <boost/range/adaptor/filtered.hpp>
-#include <boost/range/adaptor/transformed.hpp>
-
 namespace osrm::extractor
 {
-
-ObstacleMap::GetType ObstacleMap::get(NodeID to) const
-{
-    return get(SPECIAL_NODEID, to, Obstacle::Type::All);
-}
-
-ObstacleMap::GetType ObstacleMap::get(NodeID from, NodeID to, Obstacle::Type type) const
-{
-    auto transf = [](const auto &kv) -> Obstacle
-    {
-        auto &[from_id, to_id, obstacle] = kv.second;
-        return obstacle;
-    };
-    auto [begin, end] = obstacles.equal_range(to);
-    auto iter = boost::make_iterator_range(begin, end);
-
-    if (from == SPECIAL_NODEID && type == Obstacle::Type::All)
-    {
-        // no need to filter
-        return iter | boost::adaptors::transformed(transf);
-    }
-
-    auto from_filter = [from, type](const auto &kv) -> bool
-    {
-        auto &[from_id, to_id, obstacle] = kv.second;
-        return (from_id == SPECIAL_NODEID || from_id == from) &&
-               (uint16_t(obstacle.type) & uint16_t(type));
-    };
-    return iter | boost::adaptors::filtered(from_filter) | boost::adaptors::transformed(transf);
-}
-
-bool ObstacleMap::any(NodeID from, NodeID to, Obstacle::Type type) const
-{
-    return any(to) && !get(from, to, type).empty();
-}
 
 void ObstacleMap::preProcess(const NodeIDVector &node_ids, const WayNodeIDOffsets &way_node_offsets)
 {
@@ -135,13 +93,15 @@ void ObstacleMap::preProcess(const NodeIDVector &node_ids, const WayNodeIDOffset
 
 void ObstacleMap::fixupNodes(const NodeIDVector &node_ids)
 {
-    const NodeIDVector::const_iterator begin = node_ids.cbegin();
-    const NodeIDVector::const_iterator end = node_ids.cend();
+    const auto begin = node_ids.cbegin();
+    const auto end = node_ids.cend();
 
     auto osm_to_internal = [&](const OSMNodeID &osm_node) -> NodeID
     {
         if (osm_node == SPECIAL_OSM_NODEID)
+        {
             return SPECIAL_NODEID;
+        }
         const auto it = std::lower_bound(begin, end, osm_node);
         return (it == end || osm_node < *it) ? SPECIAL_NODEID
                                              : static_cast<NodeID>(std::distance(begin, it));

@@ -30,10 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "util/typedefs.hpp"
 
-#include <boost/range/any_range.hpp>
 #include <osmium/osm/node.hpp>
 #include <tbb/concurrent_vector.h>
 
+#include <ranges>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -55,40 +55,59 @@ namespace osrm::extractor
 //
 struct Obstacle
 {
-    // clang-format off
-
     // The type of an obstacle
-    // Note: must be kept in sync with scripting_environment_lua.cpp
+    // Note: must be kept in sync with the initializer below
     enum class Type : uint16_t
     {
-        None           = 0x0000,
-        Barrier        = 0x0001,
+        None = 0x0000,
+        Barrier = 0x0001,
         TrafficSignals = 0x0002,
-        Stop           = 0x0004,
-        GiveWay        = 0x0008,
-        Crossing       = 0x0010,
+        Stop = 0x0004,
+        GiveWay = 0x0008,
+        Crossing = 0x0010,
         TrafficCalming = 0x0020,
         MiniRoundabout = 0x0040,
-        TurningLoop    = 0x0080,
-        TurningCircle  = 0x0100,
-        StopMinor      = 0x0200,
+        TurningLoop = 0x0080,
+        TurningCircle = 0x0100,
+        StopMinor = 0x0200,
 
-        Turning        = MiniRoundabout | TurningLoop | TurningCircle,
+        Turning = MiniRoundabout | TurningLoop | TurningCircle,
         Incompressible = Barrier | Turning,
-        All            = 0xFFFF
+        All = 0xFFFF
+    };
+
+    static constexpr std::initializer_list<std::pair<std::string_view, Type>> enum_type_initializer_list
+    {
+        {"none", Obstacle::Type::None},
+        {"barrier", Obstacle::Type::Barrier},
+        {"traffic_signals", Obstacle::Type::TrafficSignals},
+        {"stop", Obstacle::Type::Stop},
+        {"stop_minor", Obstacle::Type::StopMinor},
+        {"give_way", Obstacle::Type::GiveWay},
+        {"crossing", Obstacle::Type::Crossing},
+        {"traffic_calming", Obstacle::Type::TrafficCalming},
+        {"mini_roundabout", Obstacle::Type::MiniRoundabout},
+        {"turning_loop", Obstacle::Type::TurningLoop},
+        {"turning_circle", Obstacle::Type::TurningCircle}
     };
 
     // The directions in which an obstacle applies.
-    // Note: must be kept in sync with scripting_environment_lua.cpp
+    // Note: must be kept in sync with the initializer below
     enum class Direction : uint8_t
     {
-        None     = 0x0,
-        Forward  = 0x1,
+        None = 0x0,
+        Forward = 0x1,
         Backward = 0x2,
-        Both     = 0x3
+        Both = 0x3
     };
 
-    // clang-format on
+    static constexpr std::initializer_list<std::pair<std::string_view, Direction>> enum_direction_initializer_list
+    {
+        {"none", Obstacle::Direction::None},
+        {"forward", Obstacle::Direction::Forward},
+        {"backward", Obstacle::Direction::Backward},
+        {"both", Obstacle::Direction::Both}
+    };
 
     // use overloading instead of default arguments for sol::constructors
     Obstacle(Type t_type) : type{t_type} {};
@@ -122,7 +141,7 @@ class ObstacleMap
     using FromToObstacle = std::tuple<NodeID, NodeID, Obstacle>;
 
   public:
-    ObstacleMap(){};
+    ObstacleMap() = default;
 
     // Insert an obstacle using the OSM node id.
     //
@@ -141,6 +160,32 @@ class ObstacleMap
         obstacles.emplace(to, std::make_tuple(from, to, obstacle));
     };
 
+    // get all obstacles at node 'to' when coming from node 'from'
+    // pass SPECIAL_NODEID as 'from' to get all obstacles at 'to'
+    // 'type' can be a bitwise-or combination of Obstacle::Type
+    auto get(NodeID from, NodeID to, Obstacle::Type type = Obstacle::Type::All) const
+    {
+        auto from_filter = [from, type](const auto &kv) -> bool
+        {
+            auto &[from_id, to_id, obstacle] = kv.second;
+            return (from_id == SPECIAL_NODEID || from_id == from) &&
+                   (uint16_t(obstacle.type) & uint16_t(type));
+        };
+
+        auto transf = [](const auto &kv) -> Obstacle
+        {
+            auto &[from_id, to_id, obstacle] = kv.second;
+            return obstacle;
+        };
+
+        auto [begin, end] = obstacles.equal_range(to);
+        auto rng = std::ranges::subrange(begin, end) | std::views::filter(from_filter) |
+                   std::views::transform(transf);
+
+        return std::vector<Obstacle>(rng.begin(), rng.end());
+    }
+    auto get(NodeID to) const { return get(SPECIAL_NODEID, to, Obstacle::Type::All); }
+
     // is there any obstacle at node 'to'?
     // inexpensive general test
     bool any(NodeID to) const { return obstacles.contains(to); }
@@ -148,16 +193,10 @@ class ObstacleMap
     // is there any obstacle of type 'type' at node 'to' when coming from node 'from'?
     // pass SPECIAL_NODEID as 'from' to query all obstacles at 'to'
     // 'type' can be a bitwise-or combination of Obstacle::Type
-    bool any(NodeID from, NodeID to, Obstacle::Type type = Obstacle::Type::All) const;
-
-    // get all obstacles at node 'to' when coming from node 'from'
-    // pass SPECIAL_NODEID as 'from' to get all obstacles at 'to'
-    // 'type' can be a bitwise-or combination of Obstacle::Type
-    using GetType =
-        boost::any_range<Obstacle, boost::forward_traversal_tag, Obstacle, std::ptrdiff_t>;
-
-    GetType get(NodeID to) const;
-    GetType get(NodeID from, NodeID to, Obstacle::Type type = Obstacle::Type::All) const;
+    bool any(NodeID from, NodeID to, Obstacle::Type type = Obstacle::Type::All) const
+    {
+        return any(to) && !get(from, to, type).empty();
+    }
 
     // Preprocess the obstacles
     //
