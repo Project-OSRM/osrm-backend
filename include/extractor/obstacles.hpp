@@ -76,20 +76,18 @@ struct Obstacle
         All = 0xFFFF
     };
 
-    static constexpr std::initializer_list<std::pair<std::string_view, Type>> enum_type_initializer_list
-    {
-        {"none", Obstacle::Type::None},
-        {"barrier", Obstacle::Type::Barrier},
-        {"traffic_signals", Obstacle::Type::TrafficSignals},
-        {"stop", Obstacle::Type::Stop},
-        {"stop_minor", Obstacle::Type::StopMinor},
-        {"give_way", Obstacle::Type::GiveWay},
-        {"crossing", Obstacle::Type::Crossing},
-        {"traffic_calming", Obstacle::Type::TrafficCalming},
-        {"mini_roundabout", Obstacle::Type::MiniRoundabout},
-        {"turning_loop", Obstacle::Type::TurningLoop},
-        {"turning_circle", Obstacle::Type::TurningCircle}
-    };
+    static constexpr std::initializer_list<std::pair<std::string_view, Type>>
+        enum_type_initializer_list{{"none", Obstacle::Type::None},
+                                   {"barrier", Obstacle::Type::Barrier},
+                                   {"traffic_signals", Obstacle::Type::TrafficSignals},
+                                   {"stop", Obstacle::Type::Stop},
+                                   {"stop_minor", Obstacle::Type::StopMinor},
+                                   {"give_way", Obstacle::Type::GiveWay},
+                                   {"crossing", Obstacle::Type::Crossing},
+                                   {"traffic_calming", Obstacle::Type::TrafficCalming},
+                                   {"mini_roundabout", Obstacle::Type::MiniRoundabout},
+                                   {"turning_loop", Obstacle::Type::TurningLoop},
+                                   {"turning_circle", Obstacle::Type::TurningCircle}};
 
     // The directions in which an obstacle applies.
     // Note: must be kept in sync with the initializer below
@@ -101,13 +99,11 @@ struct Obstacle
         Both = 0x3
     };
 
-    static constexpr std::initializer_list<std::pair<std::string_view, Direction>> enum_direction_initializer_list
-    {
-        {"none", Obstacle::Direction::None},
-        {"forward", Obstacle::Direction::Forward},
-        {"backward", Obstacle::Direction::Backward},
-        {"both", Obstacle::Direction::Both}
-    };
+    static constexpr std::initializer_list<std::pair<std::string_view, Direction>>
+        enum_direction_initializer_list{{"none", Obstacle::Direction::None},
+                                        {"forward", Obstacle::Direction::Forward},
+                                        {"backward", Obstacle::Direction::Backward},
+                                        {"both", Obstacle::Direction::Both}};
 
     // use overloading instead of default arguments for sol::constructors
     Obstacle(Type t_type) : type{t_type} {};

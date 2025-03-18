@@ -312,38 +312,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                            Obstacle::Direction::Backward);
 
     context.state.new_enum("obstacle_type", Obstacle::enum_type_initializer_list);
-                           // "none",
-                           // Obstacle::Type::None,
-                           // "barrier",
-                           // Obstacle::Type::Barrier,
-                           // "traffic_signals",
-                           // Obstacle::Type::TrafficSignals,
-                           // "stop",
-                           // Obstacle::Type::Stop,
-                           // "stop_minor",
-                           // Obstacle::Type::StopMinor,
-                           // "give_way",
-                           // Obstacle::Type::GiveWay,
-                           // "crossing",
-                           // Obstacle::Type::Crossing,
-                           // "traffic_calming",
-                           // Obstacle::Type::TrafficCalming,
-                           // "mini_roundabout",
-                           // Obstacle::Type::MiniRoundabout,
-                           // "turning_loop",
-                           // Obstacle::Type::TurningLoop,
-                           // "turning_circle",
-                           // Obstacle::Type::TurningCircle);
-
     context.state.new_enum("obstacle_direction", Obstacle::enum_direction_initializer_list);
-                           // "none",
-                           // Obstacle::Direction::None,
-                           // "forward",
-                           // Obstacle::Direction::Forward,
-                           // "backward",
-                           // Obstacle::Direction::Backward,
-                           // "both",
-                           // Obstacle::Direction::Both);
 
     context.state.new_usertype<Obstacle>(
         "Obstacle",
