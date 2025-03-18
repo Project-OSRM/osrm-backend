@@ -33,6 +33,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace osrm::extractor
 {
 
+const std::initializer_list<std::pair<std::string_view, Obstacle::Type>>
+    Obstacle::enum_type_initializer_list{{"none", Obstacle::Type::None},
+                                         {"barrier", Obstacle::Type::Barrier},
+                                         {"traffic_signals", Obstacle::Type::TrafficSignals},
+                                         {"stop", Obstacle::Type::Stop},
+                                         {"stop_minor", Obstacle::Type::StopMinor},
+                                         {"give_way", Obstacle::Type::GiveWay},
+                                         {"crossing", Obstacle::Type::Crossing},
+                                         {"traffic_calming", Obstacle::Type::TrafficCalming},
+                                         {"mini_roundabout", Obstacle::Type::MiniRoundabout},
+                                         {"turning_loop", Obstacle::Type::TurningLoop},
+                                         {"turning_circle", Obstacle::Type::TurningCircle}};
+
+const std::initializer_list<std::pair<std::string_view, Obstacle::Direction>>
+    Obstacle::enum_direction_initializer_list{{"none", Obstacle::Direction::None},
+                                              {"forward", Obstacle::Direction::Forward},
+                                              {"backward", Obstacle::Direction::Backward},
+                                              {"both", Obstacle::Direction::Both}};
+
 void ObstacleMap::preProcess(const NodeIDVector &node_ids, const WayNodeIDOffsets &way_node_offsets)
 {
     util::UnbufferedLog log;

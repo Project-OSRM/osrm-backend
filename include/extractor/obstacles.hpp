@@ -56,7 +56,7 @@ namespace osrm::extractor
 struct Obstacle
 {
     // The type of an obstacle
-    // Note: must be kept in sync with the initializer below
+    // Note: must be kept in sync with the initializer_list in obstacles.cpp
     enum class Type : uint16_t
     {
         None = 0x0000,
@@ -76,21 +76,11 @@ struct Obstacle
         All = 0xFFFF
     };
 
-    static constexpr std::initializer_list<std::pair<std::string_view, Type>>
-        enum_type_initializer_list{{"none", Obstacle::Type::None},
-                                   {"barrier", Obstacle::Type::Barrier},
-                                   {"traffic_signals", Obstacle::Type::TrafficSignals},
-                                   {"stop", Obstacle::Type::Stop},
-                                   {"stop_minor", Obstacle::Type::StopMinor},
-                                   {"give_way", Obstacle::Type::GiveWay},
-                                   {"crossing", Obstacle::Type::Crossing},
-                                   {"traffic_calming", Obstacle::Type::TrafficCalming},
-                                   {"mini_roundabout", Obstacle::Type::MiniRoundabout},
-                                   {"turning_loop", Obstacle::Type::TurningLoop},
-                                   {"turning_circle", Obstacle::Type::TurningCircle}};
+    static const std::initializer_list<std::pair<std::string_view, Type>>
+        enum_type_initializer_list;
 
     // The directions in which an obstacle applies.
-    // Note: must be kept in sync with the initializer below
+    // Note: must be kept in sync with the initializer_list in obstacles.cpp
     enum class Direction : uint8_t
     {
         None = 0x0,
@@ -99,11 +89,8 @@ struct Obstacle
         Both = 0x3
     };
 
-    static constexpr std::initializer_list<std::pair<std::string_view, Direction>>
-        enum_direction_initializer_list{{"none", Obstacle::Direction::None},
-                                        {"forward", Obstacle::Direction::Forward},
-                                        {"backward", Obstacle::Direction::Backward},
-                                        {"both", Obstacle::Direction::Both}};
+    static const std::initializer_list<std::pair<std::string_view, Direction>>
+        enum_direction_initializer_list;
 
     // use overloading instead of default arguments for sol::constructors
     Obstacle(Type t_type) : type{t_type} {};
@@ -178,6 +165,9 @@ class ObstacleMap
         auto rng = std::ranges::subrange(begin, end) | std::views::filter(from_filter) |
                    std::views::transform(transf);
 
+        // Implementation note: sol does not recognize a std::ranges::subrange as a
+        // container. It does recognize a boost::any_range though. But the tendency in
+        // OSRM is to reduce the dependence on boost. As a compromise a std::vector must do.
         return std::vector<Obstacle>(rng.begin(), rng.end());
     }
     auto get(NodeID to) const { return get(SPECIAL_NODEID, to, Obstacle::Type::All); }
