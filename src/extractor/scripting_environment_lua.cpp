@@ -22,6 +22,7 @@
 #include "util/typedefs.hpp"
 
 #include <osmium/osm.hpp>
+#include <syncstream>
 
 namespace sol
 {
@@ -95,15 +96,17 @@ struct to_lua_object : public boost::static_visitor<sol::object>
 // function provides more useful error messages including Lua tracebacks and line numbers.
 void handle_lua_error(const sol::protected_function_result &luares)
 {
+    std::osyncstream serr(std::cerr);
+
     sol::error luaerr = luares;
     const auto msg = luaerr.what();
     if (msg != nullptr)
     {
-        std::cerr << msg << "\n";
+        serr << msg << "\n";
     }
     else
     {
-        std::cerr << "unknown error\n";
+        serr << "unknown error\n";
     }
     throw util::exception("Lua error (see stderr for traceback)");
 }
