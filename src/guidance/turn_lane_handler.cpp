@@ -34,14 +34,14 @@ TurnLaneHandler::TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_g
                                  const std::vector<util::Coordinate> &node_coordinates,
                                  const extractor::CompressedEdgeContainer &compressed_geometries,
                                  const extractor::RestrictionMap &node_restriction_map,
-                                 const std::unordered_set<NodeID> &barrier_nodes,
+                                 const extractor::ObstacleMap &obstacle_nodes,
                                  const extractor::TurnLanesIndexedArray &turn_lanes_data,
                                  extractor::LaneDescriptionMap &lane_description_map,
                                  const TurnAnalysis &turn_analysis,
                                  util::guidance::LaneDataIdMap &id_map)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
       node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),
-      node_restriction_map(node_restriction_map), barrier_nodes(barrier_nodes),
+      node_restriction_map(node_restriction_map), obstacle_nodes(obstacle_nodes),
       turn_lanes_data(turn_lanes_data), lane_description_map(lane_description_map),
       turn_analysis(turn_analysis), id_map(id_map)
 {
@@ -213,7 +213,7 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
                                  node_coordinates,
                                  compressed_geometries,
                                  node_restriction_map,
-                                 barrier_nodes,
+                                 obstacle_nodes,
                                  turn_lanes_data,
                                  previous_node,
                                  previous_via_edge,
@@ -268,7 +268,7 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
         return TurnLaneScenario::MERGE;
 
     // Dead end streets that don't have any left-tag. This can happen due to the fallbacks for
-    // broken data/barriers.
+    // broken data or obstacles.
     const bool has_non_usable_u_turn = (intersection[0].entry_allowed &&
                                         !hasTag(TurnLaneType::none | TurnLaneType::left |
                                                     TurnLaneType::sharp_left | TurnLaneType::uturn,
@@ -579,7 +579,7 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
                                                           node_coordinates,
                                                           compressed_geometries,
                                                           node_restriction_map,
-                                                          barrier_nodes,
+                                                          obstacle_nodes,
                                                           turn_lanes_data,
                                                           {at, straightmost->eid}));
 

@@ -99,7 +99,7 @@ class RoadClassification
     std::uint8_t GetNumberOfLanes() const { return number_of_lanes; }
     void SetNumberOfLanes(const std::uint8_t new_value) { number_of_lanes = new_value; }
 
-    std::uint32_t GetPriority() const { return static_cast<std::uint32_t>(road_priority_class); }
+    RoadPriorityClass::Enum GetPriority() const { return road_priority_class; }
 
     RoadPriorityClass::Enum GetClass() const { return road_priority_class; }
     void SetClass(const RoadPriorityClass::Enum new_value) { road_priority_class = new_value; }

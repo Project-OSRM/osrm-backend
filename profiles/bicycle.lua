@@ -17,7 +17,7 @@ function setup()
   return {
     properties = {
       u_turn_penalty                = 20,
-      traffic_light_penalty         = 2,
+      traffic_signal_penalty        = 2,
       --weight_name                   = 'cyclability',
       weight_name                   = 'duration',
       process_call_tagless_node     = false,
@@ -706,7 +706,7 @@ function process_turn(profile, turn)
   end
 
   if turn.has_traffic_light then
-     turn.duration = turn.duration + profile.properties.traffic_light_penalty
+     turn.duration = turn.duration + profile.properties.traffic_signal_penalty
   end
   if profile.properties.weight_name == 'cyclability' then
     turn.weight = turn.duration

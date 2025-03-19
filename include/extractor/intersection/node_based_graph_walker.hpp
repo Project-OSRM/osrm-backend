@@ -30,7 +30,7 @@ class NodeBasedGraphWalker
                          const std::vector<util::Coordinate> &node_coordinates,
                          const extractor::CompressedEdgeContainer &compressed_geometries,
                          const RestrictionMap &node_restriction_map,
-                         const std::unordered_set<NodeID> &barrier_nodes,
+                         const ObstacleMap &obstacle_nodes,
                          const TurnLanesIndexedArray &turn_lanes_data);
 
     /*
@@ -53,7 +53,7 @@ class NodeBasedGraphWalker
     const std::vector<util::Coordinate> &node_coordinates;
     const extractor::CompressedEdgeContainer &compressed_geometries;
     const RestrictionMap &node_restriction_map;
-    const std::unordered_set<NodeID> &barrier_nodes;
+    const ObstacleMap &obstacle_nodes;
     const TurnLanesIndexedArray &turn_lanes_data;
 };
 
@@ -160,7 +160,7 @@ struct IntersectionFinderAccumulator
                                   const std::vector<util::Coordinate> &node_coordinates,
                                   const extractor::CompressedEdgeContainer &compressed_geometries,
                                   const RestrictionMap &node_restriction_map,
-                                  const std::unordered_set<NodeID> &barrier_nodes,
+                                  const ObstacleMap &obstacle_nodes,
                                   const TurnLanesIndexedArray &turn_lanes_data);
     // true if the path has traversed enough distance
     bool terminate();
@@ -182,7 +182,7 @@ struct IntersectionFinderAccumulator
     const std::vector<util::Coordinate> &node_coordinates;
     const extractor::CompressedEdgeContainer &compressed_geometries;
     const RestrictionMap &node_restriction_map;
-    const std::unordered_set<NodeID> &barrier_nodes;
+    const ObstacleMap &obstacle_nodes;
     const TurnLanesIndexedArray &turn_lanes_data;
 };
 
@@ -223,7 +223,7 @@ NodeBasedGraphWalker::TraverseRoad(NodeID current_node_id,
                                                   node_coordinates,
                                                   compressed_geometries,
                                                   node_restriction_map,
-                                                  barrier_nodes,
+                                                  obstacle_nodes,
                                                   turn_lanes_data,
                                                   {current_node_id, current_edge_id});
 
@@ -252,7 +252,7 @@ NodeBasedGraphWalker::TraverseRoad(NodeID current_node_id,
     return {};
 }
 
-struct SkipTrafficSignalBarrierRoadSelector
+struct SkipObstacleRoadSelector
 {
     std::optional<EdgeID> operator()(const NodeID,
                                      const EdgeID,
@@ -260,7 +260,7 @@ struct SkipTrafficSignalBarrierRoadSelector
                                      const util::NodeBasedDynamicGraph &,
                                      const EdgeBasedNodeDataContainer &) const
     {
-        if (intersection.isTrafficSignalOrBarrier())
+        if (intersection.isObstacle())
         {
             return std::make_optional(intersection[1].eid);
         }
