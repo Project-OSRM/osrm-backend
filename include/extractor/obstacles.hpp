@@ -146,31 +146,28 @@ class ObstacleMap
     // get all obstacles at node 'to' when coming from node 'from'
     // pass SPECIAL_NODEID as 'from' to get all obstacles at 'to'
     // 'type' can be a bitwise-or combination of Obstacle::Type
-    auto get(NodeID from, NodeID to, Obstacle::Type type = Obstacle::Type::All) const
+    std::vector<Obstacle>
+    get(NodeID from, NodeID to, Obstacle::Type type = Obstacle::Type::All) const
     {
-        auto from_filter = [from, type](const auto &kv) -> bool
-        {
-            auto &[from_id, to_id, obstacle] = kv.second;
-            return (from_id == SPECIAL_NODEID || from_id == from) &&
-                   (uint16_t(obstacle.type) & uint16_t(type));
-        };
-
-        auto transf = [](const auto &kv) -> Obstacle
-        {
-            auto &[from_id, to_id, obstacle] = kv.second;
-            return obstacle;
-        };
+        std::vector<Obstacle> result;
 
         auto [begin, end] = obstacles.equal_range(to);
-        auto rng = std::ranges::subrange(begin, end) | std::views::filter(from_filter) |
-                   std::views::transform(transf);
-
-        // Implementation note: sol does not recognize a std::ranges::subrange as a
-        // container. It does recognize a boost::any_range though. But the tendency in
-        // OSRM is to reduce the dependence on boost. As a compromise a std::vector must do.
-        return std::vector<Obstacle>(rng.begin(), rng.end());
+        for (auto &[key, value] : std::ranges::subrange(begin, end))
+        {
+            auto &[from_id, to_id, obstacle] = value;
+            if ((from_id == SPECIAL_NODEID || from_id == from) &&
+                (static_cast<uint16_t>(obstacle.type) & static_cast<uint16_t>(type)))
+            {
+                result.push_back(obstacle);
+            }
+        }
+        return result; // vector has move semantics
     }
-    auto get(NodeID to) const { return get(SPECIAL_NODEID, to, Obstacle::Type::All); }
+
+    std::vector<Obstacle> get(NodeID to) const
+    {
+        return get(SPECIAL_NODEID, to, Obstacle::Type::All);
+    }
 
     // is there any obstacle at node 'to'?
     // inexpensive general test
