@@ -18,7 +18,7 @@ bool findPreviousIntersection(const NodeID node_v,
                               const std::vector<util::Coordinate> &node_coordinates,
                               const extractor::CompressedEdgeContainer &compressed_geometries,
                               const extractor::RestrictionMap &node_restriction_map,
-                              const std::unordered_set<NodeID> &barrier_nodes,
+                              const extractor::ObstacleMap &obstacle_nodes,
                               const extractor::TurnLanesIndexedArray &turn_lanes_data,
                               // output parameters
                               NodeID &result_node,
@@ -74,7 +74,7 @@ bool findPreviousIntersection(const NodeID node_v,
                                                          node_coordinates,
                                                          compressed_geometries,
                                                          node_restriction_map,
-                                                         barrier_nodes,
+                                                         obstacle_nodes,
                                                          turn_lanes_data,
                                                          {node_w, u_turn_at_node_w});
     // Continue along the straightmost turn. If there is no straight turn, we cannot find a valid
@@ -94,7 +94,7 @@ bool findPreviousIntersection(const NodeID node_v,
         node_coordinates,
         compressed_geometries,
         node_restriction_map,
-        barrier_nodes,
+        obstacle_nodes,
         turn_lanes_data,
         {node_v, straightmost_at_v_in_reverse->eid});
 
@@ -120,7 +120,7 @@ bool findPreviousIntersection(const NodeID node_v,
                                                           node_coordinates,
                                                           compressed_geometries,
                                                           node_restriction_map,
-                                                          barrier_nodes,
+                                                          obstacle_nodes,
                                                           turn_lanes_data,
                                                           {node_u, result_via_edge});
     const auto check_via_edge =

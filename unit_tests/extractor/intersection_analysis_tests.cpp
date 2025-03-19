@@ -18,8 +18,6 @@ using Graph = util::NodeBasedDynamicGraph;
 
 BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
 {
-    std::unordered_set<NodeID> barrier_nodes{6};
-    TrafficSignals traffic_lights;
     std::vector<NodeBasedEdgeAnnotation> annotations{
         {EMPTY_NAMEID, 0, INAVLID_CLASS_DATA, TRAVEL_MODE_DRIVING, false},
         {EMPTY_NAMEID, 1, INAVLID_CLASS_DATA, TRAVEL_MODE_DRIVING, false}};
@@ -27,6 +25,7 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
     std::vector<UnresolvedManeuverOverride> maneuver_overrides;
+    scripting_environment.m_obstacle_map.emplace(SPECIAL_NODEID, 6, {Obstacle::Type::Barrier});
 
     TurnLanesIndexedArray turn_lanes_data{{0, 0, 3},
                                           {TurnLaneType::uturn | TurnLaneType::left,
@@ -86,14 +85,8 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
 
     Graph graph(8, edges);
 
-    GraphCompressor().Compress(barrier_nodes,
-                               traffic_lights,
-                               scripting_environment,
-                               restrictions,
-                               maneuver_overrides,
-                               graph,
-                               annotations,
-                               container);
+    GraphCompressor().Compress(
+        scripting_environment, restrictions, maneuver_overrides, graph, annotations, container);
 
     REQUIRE_SIZE_RANGE(getIncomingEdges(graph, 2), 3);
     REQUIRE_SIZE_RANGE(getOutgoingEdges(graph, 2), 4);
@@ -115,7 +108,7 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
                 result.push_back(isTurnAllowed(graph,
                                                node_data_container,
                                                restriction_map,
-                                               barrier_nodes,
+                                               scripting_environment.m_obstacle_map,
                                                edge_geometries,
                                                turn_lanes_data,
                                                incoming_edge,
@@ -153,8 +146,6 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
 
 BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
 {
-    std::unordered_set<NodeID> barrier_nodes;
-    TrafficSignals traffic_lights;
     std::vector<NodeBasedEdgeAnnotation> annotations;
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
@@ -211,14 +202,8 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
 
     Graph graph(7, edges);
 
-    GraphCompressor().Compress(barrier_nodes,
-                               traffic_lights,
-                               scripting_environment,
-                               restrictions,
-                               maneuver_overrides,
-                               graph,
-                               annotations,
-                               container);
+    GraphCompressor().Compress(
+        scripting_environment, restrictions, maneuver_overrides, graph, annotations, container);
 
     REQUIRE_SIZE_RANGE(getIncomingEdges(graph, 0), 3);
     REQUIRE_SIZE_RANGE(getOutgoingEdges(graph, 0), 6);
@@ -241,7 +226,7 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
                 result.push_back(isTurnAllowed(graph,
                                                node_data_container,
                                                restriction_map,
-                                               barrier_nodes,
+                                               scripting_environment.m_obstacle_map,
                                                edge_geometries,
                                                turn_lanes_data,
                                                incoming_edge,
@@ -262,13 +247,14 @@ BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
 
 BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
 {
-    std::unordered_set<NodeID> barrier_nodes{1};
-    TrafficSignals traffic_lights = {{2}, {}};
     std::vector<NodeBasedEdgeAnnotation> annotations(1);
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
     std::vector<UnresolvedManeuverOverride> maneuver_overrides;
+    scripting_environment.m_obstacle_map.emplace(SPECIAL_NODEID, 1, {Obstacle::Type::Barrier});
+    scripting_environment.m_obstacle_map.emplace(
+        SPECIAL_NODEID, 2, {Obstacle::Type::TrafficSignals});
 
     TurnLanesIndexedArray turn_lanes_data;
 
@@ -312,14 +298,8 @@ BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
 
     Graph graph(10, edges);
 
-    GraphCompressor().Compress(barrier_nodes,
-                               traffic_lights,
-                               scripting_environment,
-                               restrictions,
-                               maneuver_overrides,
-                               graph,
-                               annotations,
-                               container);
+    GraphCompressor().Compress(
+        scripting_environment, restrictions, maneuver_overrides, graph, annotations, container);
 
     BOOST_CHECK_EQUAL(graph.GetTarget(skipDegreeTwoNodes(graph, {0, 0}).edge), 4);
     BOOST_CHECK_EQUAL(graph.GetTarget(skipDegreeTwoNodes(graph, {4, 7}).edge), 0);

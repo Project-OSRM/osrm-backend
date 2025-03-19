@@ -48,6 +48,8 @@ struct NodeBasedEdgeClassification
     {
     }
 
+    bool IsRestricted() const { return restricted; }
+
     bool operator==(const NodeBasedEdgeClassification &other) const
     {
         return (road_classification == other.road_classification) && (forward == other.forward) &&

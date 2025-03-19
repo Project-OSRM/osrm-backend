@@ -54,13 +54,13 @@ MergableRoadDetector::MergableRoadDetector(
     const std::vector<util::Coordinate> &node_coordinates,
     const extractor::CompressedEdgeContainer &compressed_geometries,
     const RestrictionMap &node_restriction_map,
-    const std::unordered_set<NodeID> &barrier_nodes,
+    const ObstacleMap &obstacle_nodes,
     const extractor::TurnLanesIndexedArray &turn_lanes_data,
     const NameTable &name_table,
     const SuffixTable &street_name_suffix_table)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
       node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),
-      node_restriction_map(node_restriction_map), barrier_nodes(barrier_nodes),
+      node_restriction_map(node_restriction_map), obstacle_nodes(obstacle_nodes),
       turn_lanes_data(turn_lanes_data), name_table(name_table),
       street_name_suffix_table(street_name_suffix_table),
       coordinate_extractor(node_based_graph, compressed_geometries, node_coordinates)
@@ -180,7 +180,7 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
                                                    node_coordinates,
                                                    compressed_geometries,
                                                    node_restriction_map,
-                                                   barrier_nodes,
+                                                   obstacle_nodes,
                                                    turn_lanes_data),
         right_accumulator(SMALL_RANDOM_HOPLIMIT,
                           node_based_graph,
@@ -188,7 +188,7 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
                           node_coordinates,
                           compressed_geometries,
                           node_restriction_map,
-                          barrier_nodes,
+                          obstacle_nodes,
                           turn_lanes_data);
 
     /* Standard following the straightmost road
@@ -206,7 +206,7 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
                                       node_coordinates,
                                       compressed_geometries,
                                       node_restriction_map,
-                                      barrier_nodes,
+                                      obstacle_nodes,
                                       turn_lanes_data);
     graph_walker.TraverseRoad(intersection_node, lhs.eid, left_accumulator, selector);
     /* if the intersection does not have a right turn, we continue onto the next one once
@@ -286,7 +286,7 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
                                                       node_coordinates,
                                                       compressed_geometries,
                                                       node_restriction_map,
-                                                      barrier_nodes,
+                                                      obstacle_nodes,
                                                       turn_lanes_data);
     graph_walker.TraverseRoad(node_based_graph.GetTarget(left_accumulator.via_edge_id),
                               connector_turn->eid,
@@ -307,7 +307,7 @@ bool MergableRoadDetector::IsCircularShape(const NodeID intersection_node,
                                       node_coordinates,
                                       compressed_geometries,
                                       node_restriction_map,
-                                      barrier_nodes,
+                                      obstacle_nodes,
                                       turn_lanes_data);
     const auto getCoordinatesAlongWay = [&](const EdgeID edge_id, const double max_length)
     {
@@ -351,7 +351,7 @@ bool MergableRoadDetector::IsCircularShape(const NodeID intersection_node,
     //      ----         ----
     //          \       /
     //           -------
-    const auto constexpr CIRCULAR_POLYGON_ISOPERIMETRIC_LOWER_BOUND = 0.85 / (4 * std::numbers::pi);
+    const auto CIRCULAR_POLYGON_ISOPERIMETRIC_LOWER_BOUND = 0.85 / (4 * std::numbers::pi);
     if (connect_again && coordinates_to_the_left.front() == coordinates_to_the_left.back())
     { // if the left and right roads connect again and are closed polygons ...
         const auto area = util::coordinate_calculation::computeArea(coordinates_to_the_left);
@@ -380,7 +380,7 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
                                       node_coordinates,
                                       compressed_geometries,
                                       node_restriction_map,
-                                      barrier_nodes,
+                                      obstacle_nodes,
                                       turn_lanes_data);
     const auto getCoordinatesAlongWay = [&](const EdgeID edge_id, const double max_length)
     {
@@ -565,7 +565,7 @@ bool MergableRoadDetector::IsLinkRoad(const NodeID intersection_node,
                                                node_coordinates,
                                                compressed_geometries,
                                                node_restriction_map,
-                                               barrier_nodes,
+                                               obstacle_nodes,
                                                turn_lanes_data,
                                                next_intersection_parameters);
     const auto extract_name_id = [this](const MergableRoadData &road)
