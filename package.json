@@ -1,6 +1,6 @@
 {
   "name": "@project-osrm/osrm",
-  "version": "6.0-RC1",
+  "version": "6.0.0",
   "private": false,
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++ designed to run on OpenStreetMap data.",
   "dependencies": {

@@ -1,6 +1,6 @@
 # Unreleased
 
-# 6.0-RC1
+# 6.0.0 RC1
   - Changes from 5.27.1
     - Features
       - ADDED: Add generic support for obstacles [#7130](https://github.com/Project-OSRM/osrm-backend/pull/7130)
