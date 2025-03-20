@@ -8,6 +8,11 @@
 #include <osmium/tags/taglist.hpp>
 
 #include <algorithm>
+#include <initializer_list>
+#include <iterator>
+#include <regex>
+#include <utility>
+#include <vector>
 
 template <class TFilter>
 void check_filter(const osmium::TagList& tag_list,
@@ -19,8 +24,8 @@ void check_filter(const osmium::TagList& tag_list,
         REQUIRE(filter(*t_it) == *it);
     }
 
-    typename TFilter::iterator fi_begin{filter, tag_list.begin(), tag_list.end()};
-    typename TFilter::iterator fi_end{filter, tag_list.end(), tag_list.end()};
+    const typename TFilter::iterator fi_begin{filter, tag_list.begin(), tag_list.end()};
+    const typename TFilter::iterator fi_end{filter, tag_list.end(), tag_list.end()};
 
     REQUIRE(std::distance(fi_begin, fi_end) == std::count(reference.begin(), reference.end(), true));
 }
@@ -183,39 +188,37 @@ TEST_CASE("KeyValueFilter") {
 
 }
 
-TEST_CASE("RegexFilter") {
+TEST_CASE("RegexFilter matches some tags") {
     osmium::memory::Buffer buffer{10240};
 
-    SECTION("RegexFilter matches some tags") {
-        osmium::tags::RegexFilter filter{false};
-        filter.add(true, "highway", std::regex{".*_link"});
+    osmium::tags::RegexFilter filter{false};
+    filter.add(true, "highway", std::regex{".*_link"});
 
-        const osmium::TagList& tag_list1 = make_tag_list(buffer, {
-            { "highway", "primary_link" },
-            { "source", "GPS" }
-        });
-        const osmium::TagList& tag_list2 = make_tag_list(buffer, {
-            { "highway", "primary" },
-            { "source", "GPS" }
-        });
+    const osmium::TagList& tag_list1 = make_tag_list(buffer, {
+        { "highway", "primary_link" },
+        { "source", "GPS" }
+    });
+    const osmium::TagList& tag_list2 = make_tag_list(buffer, {
+        { "highway", "primary" },
+        { "source", "GPS" }
+    });
 
-        check_filter(tag_list1, filter, {true, false});
-        check_filter(tag_list2, filter, {false, false});
-    }
+    check_filter(tag_list1, filter, {true, false});
+    check_filter(tag_list2, filter, {false, false});
+}
 
-    SECTION("RegexFilter matches some tags with lvalue regex") {
-        osmium::tags::RegexFilter filter{false};
-        std::regex r{".*straße"};
-        filter.add(true, "name", r);
+TEST_CASE("RegexFilter matches some tags with lvalue regex") {
+    osmium::memory::Buffer buffer{10240};
+    osmium::tags::RegexFilter filter{false};
+    const std::regex r{".*straße"};
+    filter.add(true, "name", r);
 
-        const osmium::TagList& tag_list = make_tag_list(buffer, {
-            { "highway", "primary" },
-            { "name", "Hauptstraße" }
-        });
+    const osmium::TagList& tag_list = make_tag_list(buffer, {
+        { "highway", "primary" },
+        { "name", "Hauptstraße" }
+    });
 
-        check_filter(tag_list, filter, {false, true});
-    }
-
+    check_filter(tag_list, filter, {false, true});
 }
 
 TEST_CASE("KeyPrefixFilter matches some keys") {

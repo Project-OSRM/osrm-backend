@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -116,7 +116,7 @@ namespace osmium {
                     op_delete = 3
                 }; // enum class operation
 
-                operation m_last_op {operation::op_none};
+                operation m_last_op{operation::op_none};
 
                 xml_output_options m_options;
 
@@ -126,7 +126,7 @@ namespace osmium {
                     }
                 }
 
-                int prefix_spaces() {
+                int prefix_spaces() const noexcept {
                     return m_options.use_change_ops ? 4 : 2;
                 }
 
@@ -152,7 +152,7 @@ namespace osmium {
 
                     if (m_options.add_metadata.timestamp() && object.timestamp()) {
                         *m_out += " timestamp=\"";
-                        *m_out += object.timestamp().to_iso();
+                        *m_out += object.timestamp().to_iso_all();
                         *m_out += "\"";
                     }
 
@@ -198,7 +198,7 @@ namespace osmium {
                         *m_out += " user=\"";
                         append_xml_encoded_string(*m_out, comment.user());
                         *m_out += "\" date=\"";
-                        *m_out += comment.date().to_iso();
+                        *m_out += comment.date().to_iso_all();
                         *m_out += "\">\n";
                         *m_out += "    <text>";
                         append_xml_encoded_string(*m_out, comment.text());

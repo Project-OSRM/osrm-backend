@@ -1,6 +1,14 @@
-// Copyright 2006 Nemanja Trifunovic
+#ifndef OSMIUM_IO_PBF_HPP
+#define OSMIUM_IO_PBF_HPP
 
 /*
+
+This file is part of Osmium (https://osmcode.org/libosmium).
+
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+
+Boost Software License - Version 1.0 - August 17th, 2003
+
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
 this license (the "Software") to use, reproduce, display, distribute,
@@ -22,13 +30,31 @@ SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE
 FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
+
 */
 
+#include <string>
+#include <vector>
 
-#ifndef UTF8_FOR_CPP_2675DCD0_9480_4c0c_B92A_CC14C027B731
-#define UTF8_FOR_CPP_2675DCD0_9480_4c0c_B92A_CC14C027B731
+namespace osmium {
 
-#include "utf8/checked.h"
-#include "utf8/unchecked.h"
+    namespace io {
 
-#endif // header guard
+        /**
+         * Get a list of all compression types supported for PBF files.
+         */
+        inline std::vector<std::string> supported_pbf_compression_types() {
+            std::vector<std::string> types{"none", "zlib"};
+
+#ifdef OSMIUM_WITH_LZ4
+            types.emplace_back("lz4");
+#endif
+
+            return types;
+        }
+
+    } // namespace io
+
+} // namespace osmium
+
+#endif // OSMIUM_IO_PBF_HPP

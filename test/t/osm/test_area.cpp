@@ -1,10 +1,12 @@
 #include "catch.hpp"
 
+#include "test_crc.hpp"
+
 #include <osmium/builder/attr.hpp>
 #include <osmium/osm/area.hpp>
 #include <osmium/osm/crc.hpp>
 
-#include <boost/crc.hpp>
+#include <string>
 
 using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
@@ -17,7 +19,7 @@ TEST_CASE("Build area") {
         _visible(),
         _cid(333),
         _uid(21),
-        _timestamp(time_t(123)),
+        _timestamp(static_cast<std::time_t>(123)),
         _user("foo"),
         _tag("landuse", "forest"),
         _tag("name", "Sherwood Forest"),
@@ -71,7 +73,7 @@ TEST_CASE("Build area") {
     REQUIRE(outer == 1);
     REQUIRE(inner == 1);
 
-    osmium::CRC<boost::crc_32_type> crc32;
+    osmium::CRC<crc_type> crc32;
     crc32.update(area);
     REQUIRE(crc32().checksum() == 0x2b2b7fa0);
 

@@ -8,7 +8,7 @@
 
 osmium::memory::Buffer fill_buffer() {
     using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
-    osmium::memory::Buffer buffer{1024 * 1024, osmium::memory::Buffer::auto_grow::yes};
+    osmium::memory::Buffer buffer{1024UL * 1024UL, osmium::memory::Buffer::auto_grow::yes};
 
     osmium::builder::add_relation(buffer,
         _id(20),
@@ -61,7 +61,7 @@ TEST_CASE("Fill member database") {
     int n = 0;
     int match = 0;
     for (const auto& way : buffer.select<osmium::Way>()) {
-        bool added = mdb.add(way, [&](osmium::relations::RelationHandle& rel_handle) {
+        const bool added = mdb.add(way, [&](osmium::relations::RelationHandle& rel_handle) {
             ++match;
             switch (n) {
                 case 0: // added w10
@@ -99,7 +99,7 @@ TEST_CASE("Fill member database") {
 
 TEST_CASE("Member database with duplicate member in relation") {
     using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
-    osmium::memory::Buffer buffer{1024 * 1024, osmium::memory::Buffer::auto_grow::yes};
+    osmium::memory::Buffer buffer{1024UL * 1024UL, osmium::memory::Buffer::auto_grow::yes};
 
     osmium::builder::add_relation(buffer,
         _id(20),
@@ -186,6 +186,8 @@ TEST_CASE("Remove non-existing object from members database doesn't do anything"
             ++n;
         }
     }
+
+    mdb.prepare_for_lookup();
 
     REQUIRE(mdb.size() == 6);
     mdb.remove(100, 100);

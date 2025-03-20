@@ -35,10 +35,14 @@ TEST_CASE("delta decode int") {
     osmium::DeltaDecode<int> x;
 
     REQUIRE(x.update(17) == 17);
+    REQUIRE(x.value() == 17);
     REQUIRE(x.update(10) == 27);
+    REQUIRE(x.value() == 27);
     REQUIRE(x.update(-40) == -13);
+    REQUIRE(x.value() == -13);
     x.clear();
     REQUIRE(x.update(17) == 17);
+    REQUIRE(x.value() == 17);
 }
 
 TEST_CASE("delta decode int with int32") {
@@ -73,14 +77,14 @@ TEST_CASE("delta encode and decode") {
     osmium::DeltaEncode<int, int> de;
     std::vector<int> b;
     b.reserve(a.size());
-    for (int x : a) {
+    for (const int x : a) {
         b.push_back(de.update(x));
     }
 
     osmium::DeltaDecode<int, int> dd;
     std::vector<int> c;
     c.reserve(b.size());
-    for (int x : b) {
+    for (const int x : b) {
         c.push_back(dd.update(x));
     }
 

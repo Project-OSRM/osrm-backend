@@ -25,6 +25,7 @@ set(EXAMPLES
     read
     read_with_progress
     road_length
+    tags_filter
     tiles
     CACHE STRING "Example programs"
 )

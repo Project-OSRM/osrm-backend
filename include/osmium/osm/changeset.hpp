@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -62,8 +62,8 @@ namespace osmium {
 
         osmium::Timestamp m_date;
         osmium::user_id_type m_uid = 0;
-        changeset_comment_size_type m_text_size;
-        string_size_type m_user_size;
+        changeset_comment_size_type m_text_size = 0;
+        string_size_type m_user_size = 0;
 
         unsigned char* endpos() {
             return data() + osmium::memory::padded_length(sizeof(ChangesetComment) + m_user_size + m_text_size);
@@ -80,7 +80,7 @@ namespace osmium {
             return endpos();
         }
 
-        unsigned const char* next() const {
+        const unsigned char* next() const {
             return endpos();
         }
 
@@ -98,9 +98,7 @@ namespace osmium {
 
         ChangesetComment(osmium::Timestamp date, osmium::user_id_type uid) noexcept :
             m_date(date),
-            m_uid(uid),
-            m_text_size(0),
-            m_user_size(0) {
+            m_uid(uid) {
         }
 
         ChangesetComment(const ChangesetComment&) = delete;
@@ -364,6 +362,11 @@ namespace osmium {
         /// Get user name.
         const char* user() const {
             return reinterpret_cast<const char*>(data() + sizeof(Changeset));
+        }
+
+        /// Clear user name.
+        void clear_user() noexcept {
+            std::memset(data() + sizeof(Changeset), 0, user_size());
         }
 
         /// Get the list of tags.

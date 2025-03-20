@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -80,7 +80,7 @@ namespace osmium {
             ProblemReporter(ProblemReporter&&) noexcept = default;
             ProblemReporter& operator=(ProblemReporter&&) noexcept = default;
 
-            virtual ~ProblemReporter() = default;
+            virtual ~ProblemReporter() noexcept = default;
 
             /**
              * Set the object the next problem reports will be on.
@@ -91,6 +91,10 @@ namespace osmium {
             void set_object(osmium::item_type object_type, osmium::object_id_type object_id) noexcept {
                 m_object_type = object_type;
                 m_object_id = object_id;
+            }
+
+            osmium::object_id_type object_id() const noexcept {
+                return m_object_id;
             }
 
             void set_nodes(size_t nodes) noexcept {

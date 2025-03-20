@@ -3,9 +3,9 @@
 
 /*
 
-This file is part of Osmium (http://osmcode.org/libosmium).
+This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2018 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/geom/factory.hpp>
-#include <osmium/util/cast.hpp>
 #include <osmium/util/endian.hpp>
 
 #include <algorithm>
@@ -69,9 +68,9 @@ namespace osmium {
                 std::string out;
                 out.reserve(str.size() * 2);
 
-                for (char c : str) {
-                    out += lookup_hex[(static_cast<unsigned int>(c) >> 4u) & 0xfu];
-                    out += lookup_hex[ static_cast<unsigned int>(c)        & 0xfu];
+                for (const char c : str) {
+                    out += lookup_hex[(static_cast<unsigned int>(c) >> 4U) & 0xfU];
+                    out += lookup_hex[ static_cast<unsigned int>(c)        & 0xfU];
                 }
 
                 return out;
@@ -190,6 +189,34 @@ namespace osmium {
 
                 linestring_type linestring_finish(std::size_t num_points) {
                     set_size(m_linestring_size_offset, num_points);
+                    std::string data;
+
+                    using std::swap;
+                    swap(data, m_data);
+
+                    if (m_out_type == out_type::hex) {
+                        return convert_to_hex(data);
+                    }
+
+                    return data;
+                }
+
+                /* Polygon */
+
+                void polygon_start() {
+                    m_data.clear();
+                    set_size(header(m_data, wkbPolygon, true), 1);
+                    m_ring_size_offset = m_data.size();
+                    str_push(m_data, static_cast<uint32_t>(0));
+                }
+
+                void polygon_add_location(const osmium::geom::Coordinates& xy) {
+                    str_push(m_data, xy.x);
+                    str_push(m_data, xy.y);
+                }
+
+                polygon_type polygon_finish(std::size_t num_points) {
+                    set_size(m_ring_size_offset, num_points);
                     std::string data;
 
                     using std::swap;

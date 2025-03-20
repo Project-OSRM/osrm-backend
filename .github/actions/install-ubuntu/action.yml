@@ -1,0 +1,20 @@
+name: Install apt packages on Ubuntu/Debian
+
+runs:
+  using: composite
+  steps:
+    - name: Install packages
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -yq \
+             doxygen \
+             libboost-dev \
+             libgdal-dev \
+             libgeos++-dev \
+             liblz4-dev \
+             libproj-dev \
+             libsparsehash-dev \
+             ruby-json \
+             spatialite-bin
+      shell: bash
+

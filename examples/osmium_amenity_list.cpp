@@ -25,7 +25,6 @@
 */
 
 #include <cstdio>   // for std::printf
-#include <cstdlib>  // for std::exit
 #include <iostream> // for std::cerr
 #include <string>   // for std::string
 
@@ -58,12 +57,12 @@ using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
 class AmenityHandler : public osmium::handler::Handler {
 
     // Print info about one amenity to stdout.
-    void print_amenity(const char* type, const char* name, const osmium::geom::Coordinates& c) {
+    static void print_amenity(const char* type, const char* name, const osmium::geom::Coordinates& c) {
         std::printf("%8.4f,%8.4f %-15s %s\n", c.x, c.y, type, name ? name : "");
     }
 
     // Calculate the center point of a NodeRefList.
-    osmium::geom::Coordinates calc_center(const osmium::NodeRefList& nr_list) {
+    static osmium::geom::Coordinates calc_center(const osmium::NodeRefList& nr_list) {
         // Coordinates simply store an X and Y coordinate pair as doubles.
         // (Unlike osmium::Location which stores them more efficiently as
         // 32 bit integers.) Use Coordinates when you want to do calculations
@@ -75,15 +74,17 @@ class AmenityHandler : public osmium::handler::Handler {
             c.y += nr.lat();
         }
 
-        c.x /= nr_list.size();
-        c.y /= nr_list.size();
+        c.x /= static_cast<double>(nr_list.size());
+        c.y /= static_cast<double>(nr_list.size());
 
         return c;
     }
 
 public:
 
-    void node(const osmium::Node& node) {
+    // The callback functions can be either static or not depending on whether
+    // you need to access any member variables of the handler.
+    static void node(const osmium::Node& node) {
         // Getting a tag value can be expensive, because a list of tags has
         // to be gone through and each tag has to be checked. So we store the
         // result and reuse it.
@@ -93,7 +94,9 @@ public:
         }
     }
 
-    void area(const osmium::Area& area) {
+    // The callback functions can be either static or not depending on whether
+    // you need to access any member variables of the handler.
+    static void area(const osmium::Area& area) {
         const char* amenity = area.tags()["amenity"];
         if (amenity) {
             // Use the center of the first outer ring. Because we set
@@ -110,62 +113,68 @@ public:
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " OSMFILE\n";
-        std::exit(1);
+        return 1;
     }
 
-    // The input file
-    const osmium::io::File input_file{argv[1]};
+    try {
+        // The input file
+        const osmium::io::File input_file{argv[1]};
 
-    // Configuration for the multipolygon assembler. We disable the option to
-    // create empty areas when invalid multipolygons are encountered. This
-    // means areas created have a valid geometry and invalid multipolygons
-    // are simply ignored.
-    osmium::area::Assembler::config_type assembler_config;
-    assembler_config.create_empty_areas = false;
+        // Configuration for the multipolygon assembler. We disable the option to
+        // create empty areas when invalid multipolygons are encountered. This
+        // means areas created have a valid geometry and invalid multipolygons
+        // are simply ignored.
+        osmium::area::Assembler::config_type assembler_config;
+        assembler_config.create_empty_areas = false;
 
-    // Initialize the MultipolygonManager. Its job is to collect all
-    // relations and member ways needed for each area. It then calls an
-    // instance of the osmium::area::Assembler class (with the given config)
-    // to actually assemble one area.
-    osmium::area::MultipolygonManager<osmium::area::Assembler> mp_manager{assembler_config};
+        // Initialize the MultipolygonManager. Its job is to collect all
+        // relations and member ways needed for each area. It then calls an
+        // instance of the osmium::area::Assembler class (with the given config)
+        // to actually assemble one area.
+        osmium::area::MultipolygonManager<osmium::area::Assembler> mp_manager{assembler_config};
 
-    // We read the input file twice. In the first pass, only relations are
-    // read and fed into the multipolygon manager.
-    std::cerr << "Pass 1...\n";
-    osmium::relations::read_relations(input_file, mp_manager);
-    std::cerr << "Pass 1 done\n";
+        // We read the input file twice. In the first pass, only relations are
+        // read and fed into the multipolygon manager.
+        std::cerr << "Pass 1...\n";
+        osmium::relations::read_relations(input_file, mp_manager);
+        std::cerr << "Pass 1 done\n";
 
-    // The index storing all node locations.
-    index_type index;
+        // The index storing all node locations.
+        index_type index;
 
-    // The handler that stores all node locations in the index and adds them
-    // to the ways.
-    location_handler_type location_handler{index};
+        // The handler that stores all node locations in the index and adds them
+        // to the ways.
+        location_handler_type location_handler{index};
 
-    // If a location is not available in the index, we ignore it. It might
-    // not be needed (if it is not part of a multipolygon relation), so why
-    // create an error?
-    location_handler.ignore_errors();
+        // If a location is not available in the index, we ignore it. It might
+        // not be needed (if it is not part of a multipolygon relation), so why
+        // create an error?
+        location_handler.ignore_errors();
 
-    // Create our handler.
-    AmenityHandler data_handler;
+        // Create our handler.
+        AmenityHandler data_handler;
 
-    // On the second pass we read all objects and run them first through the
-    // node location handler and then the multipolygon manager. The manager
-    // will put the areas it has created into the "buffer" which are then
-    // fed through our handler.
-    //
-    // The read_meta::no option disables reading of meta data (such as version
-    // numbers, timestamps, etc.) which are not needed in this case. Disabling
-    // this can speed up your program.
-    std::cerr << "Pass 2...\n";
-    osmium::io::Reader reader{input_file, osmium::io::read_meta::no};
+        // On the second pass we read all objects and run them first through the
+        // node location handler and then the multipolygon manager. The manager
+        // will put the areas it has created into the "buffer" which are then
+        // fed through our handler.
+        //
+        // The read_meta::no option disables reading of meta data (such as version
+        // numbers, timestamps, etc.) which are not needed in this case. Disabling
+        // this can speed up your program.
+        std::cerr << "Pass 2...\n";
+        osmium::io::Reader reader{input_file, osmium::io::read_meta::no};
 
-    osmium::apply(reader, location_handler, data_handler, mp_manager.handler([&data_handler](const osmium::memory::Buffer& area_buffer) {
-        osmium::apply(area_buffer, data_handler);
-    }));
+        osmium::apply(reader, location_handler, data_handler, mp_manager.handler([&data_handler](const osmium::memory::Buffer& area_buffer) {
+            osmium::apply(area_buffer, data_handler);
+        }));
 
-    reader.close();
-    std::cerr << "Pass 2 done\n";
+        reader.close();
+        std::cerr << "Pass 2 done\n";
+    } catch (const std::exception& e) {
+        // All exceptions used by the Osmium library derive from std::exception.
+        std::cerr << e.what() << '\n';
+        return 1;
+    }
 }
 

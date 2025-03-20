@@ -4,8 +4,12 @@
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm.hpp>
 
+#include <string>
+
+constexpr const std::size_t test_buffer_size = 1024UL * 10UL;
+
 TEST_CASE("create objects using builder") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
     std::string user;
 
     SECTION("complete node with tags") {
@@ -364,10 +368,10 @@ TEST_CASE("create objects using builder") {
 }
 
 TEST_CASE("no call to set_user on node") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     {
-        osmium::builder::NodeBuilder builder{buffer};
+        const osmium::builder::NodeBuilder builder{buffer};
     }
 
     const auto& node = buffer.get<osmium::Node>(buffer.commit());
@@ -376,8 +380,8 @@ TEST_CASE("no call to set_user on node") {
 }
 
 TEST_CASE("set_user with length on node") {
-    osmium::memory::Buffer buffer{1024 * 10};
-    std::string user = "userx";
+    osmium::memory::Buffer buffer{test_buffer_size};
+    const std::string user = "userx";
 
     {
         osmium::builder::NodeBuilder builder{buffer};
@@ -390,10 +394,10 @@ TEST_CASE("set_user with length on node") {
 }
 
 TEST_CASE("no call to set_user on way") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     {
-        osmium::builder::WayBuilder builder{buffer};
+        const osmium::builder::WayBuilder builder{buffer};
     }
 
     const auto& way = buffer.get<osmium::Way>(buffer.commit());
@@ -402,8 +406,8 @@ TEST_CASE("no call to set_user on way") {
 }
 
 TEST_CASE("set_user with length on way") {
-    osmium::memory::Buffer buffer{1024 * 10};
-    std::string user = "userx";
+    osmium::memory::Buffer buffer{test_buffer_size};
+    const std::string user = "userx";
 
     {
         osmium::builder::WayBuilder builder{buffer};
@@ -416,10 +420,10 @@ TEST_CASE("set_user with length on way") {
 }
 
 TEST_CASE("no call to set_user on changeset") {
-    osmium::memory::Buffer buffer{1024 * 10};
+    osmium::memory::Buffer buffer{test_buffer_size};
 
     {
-        osmium::builder::ChangesetBuilder builder{buffer};
+        const osmium::builder::ChangesetBuilder builder{buffer};
     }
 
     const auto& changeset = buffer.get<osmium::Changeset>(buffer.commit());
@@ -428,8 +432,8 @@ TEST_CASE("no call to set_user on changeset") {
 }
 
 TEST_CASE("set_user with length on changeset") {
-    osmium::memory::Buffer buffer{1024 * 10};
-    std::string user = "userx";
+    osmium::memory::Buffer buffer{test_buffer_size};
+    const std::string user = "userx";
 
     {
         osmium::builder::ChangesetBuilder builder{buffer};
@@ -439,5 +443,42 @@ TEST_CASE("set_user with length on changeset") {
     const auto& changeset = buffer.get<osmium::Changeset>(buffer.commit());
 
     REQUIRE(std::string{"user"} == changeset.user());
+}
+
+TEST_CASE("clear_user should clear the user field but nothing else") {
+    osmium::memory::Buffer buffer{test_buffer_size};
+    const std::string user = "user";
+
+    {
+        osmium::builder::NodeBuilder builder{buffer};
+        builder.set_id(17)
+            .set_visible(true)
+            .set_version(1)
+            .set_changeset(123)
+            .set_uid(555)
+            .set_timestamp("2015-07-01T00:00:01Z")
+            .set_location(osmium::Location{1.2, 3.4})
+            .set_user(user);
+        builder.add_tags({{"highway", "primary"}, {"oneway", "yes"}});
+    }
+
+    auto& node = buffer.get<osmium::Node>(buffer.commit());
+
+    REQUIRE(std::string{"user"} == node.user());
+
+    node.clear_user();
+
+    REQUIRE(std::string{""} == node.user());
+    REQUIRE(node.uid() == 555);
+    REQUIRE(node.tags().size() == 2);
+
+    auto it = node.tags().begin();
+    REQUIRE(it->key() == std::string{"highway"});
+    REQUIRE(it->value() == std::string{"primary"});
+    ++it;
+    REQUIRE(it->key() == std::string{"oneway"});
+    REQUIRE(it->value() == std::string{"yes"});
+    ++it;
+    REQUIRE(it == node.tags().end());
 }
 

@@ -67,10 +67,10 @@ public:
     IndexAccess(const IndexAccess&) = delete;
     IndexAccess& operator=(const IndexAccess&) = delete;
 
-    IndexAccess(IndexAccess&&) = delete;
-    IndexAccess& operator=(IndexAccess&&) = delete;
+    IndexAccess(IndexAccess&&) noexcept = delete;
+    IndexAccess& operator=(IndexAccess&&) noexcept = delete;
 
-    virtual ~IndexAccess() = default;
+    virtual ~IndexAccess() noexcept = default;
 
     virtual void dump() const = 0;
 
@@ -97,8 +97,16 @@ public:
         IndexAccess<TValue>(fd) {
     }
 
+    IndexAccessDense(const IndexAccessDense&) = default;
+    IndexAccessDense& operator=(const IndexAccessDense&) = default;
+
+    IndexAccessDense(IndexAccessDense&&) noexcept = default;
+    IndexAccessDense& operator=(IndexAccessDense&&) noexcept = default;
+
+    ~IndexAccessDense() noexcept override = default;
+
     void dump() const override {
-        index_type index{this->fd()};
+        const index_type index{this->fd()};
 
         for (std::size_t i = 0; i < index.size(); ++i) {
             if (index.get(i) != TValue{}) {
@@ -108,7 +116,7 @@ public:
     }
 
     bool search(const osmium::unsigned_object_id_type& key) const override {
-        index_type index{this->fd()};
+        const index_type index{this->fd()};
 
         try {
             TValue value = index.get(key);
@@ -136,8 +144,16 @@ public:
         IndexAccess<TValue>(fd) {
     }
 
+    IndexAccessSparse(const IndexAccessSparse&) = default;
+    IndexAccessSparse& operator=(const IndexAccessSparse&) = default;
+
+    IndexAccessSparse(IndexAccessSparse&&) noexcept = default;
+    IndexAccessSparse& operator=(IndexAccessSparse&&) noexcept = default;
+
+    ~IndexAccessSparse() noexcept override = default;
+
     void dump() const override {
-        index_type index{this->fd()};
+        const index_type index{this->fd()};
 
         for (const auto& element : index) {
             std::cout << element.first << " " << element.second << "\n";
@@ -148,7 +164,7 @@ public:
         using element_type = typename index_type::element_type;
         index_type index{this->fd()};
 
-        element_type elem{key, TValue{}};
+        const element_type elem{key, TValue{}};
         const auto positions = std::equal_range(index.begin(),
                                                 index.end(),
                                                 elem,
@@ -182,7 +198,7 @@ class Options {
     bool m_array_format = false;
     bool m_list_format = false;
 
-    void print_help() {
+    static void print_help() {
         std::cout << "Usage: osmium_index_lookup [OPTIONS]\n\n"
                   << "-h, --help        Print this help message\n"
                   << "-a, --array=FILE  Read given index file in array format\n"
@@ -193,7 +209,7 @@ class Options {
         ;
     }
 
-    void print_usage(const char* prgname) {
+    static void print_usage(const char* prgname) {
         std::cout << "Usage: " << prgname << " [OPTIONS]\n\n";
         std::exit(0);
     }
@@ -331,14 +347,14 @@ int run(const IndexAccess<TValue>& index, const Options& options) {
 
 int main(int argc, char* argv[]) {
     // Parse command line options.
-    Options options{argc, argv};
+    const Options options{argc, argv};
 
     // Open the index file.
     const int fd = ::open(options.filename(), O_RDWR);
     if (fd < 0) {
         std::cerr << "Can not open file '" << options.filename()
                   << "': " << std::strerror(errno) << '\n';
-        std::exit(2);
+        return 2;
     }
 
 #ifdef _WIN32
@@ -363,8 +379,9 @@ int main(int argc, char* argv[]) {
         const auto index = create<std::size_t>(options.dense_format(), fd);
         return run(*index, options);
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << '\n';
-        std::exit(1);
+        // All exceptions used by the Osmium library derive from std::exception.
+        std::cerr << e.what() << '\n';
+        return 1;
     }
 }
 
