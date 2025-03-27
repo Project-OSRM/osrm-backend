@@ -563,6 +563,15 @@ install(TARGETS osrm-contract DESTINATION bin)
 install(TARGETS osrm-datastore DESTINATION bin)
 install(TARGETS osrm-routed DESTINATION bin)
 
+install(TARGETS osrm DESTINATION lib)
+install(TARGETS osrm_extract DESTINATION lib)
+install(TARGETS osrm_partition DESTINATION lib)
+install(TARGETS osrm_customize DESTINATION lib)
+install(TARGETS osrm_update DESTINATION lib)
+install(TARGETS osrm_contract DESTINATION lib)
+install(TARGETS osrm_store DESTINATION lib)
+install(TARGETS osrm_guidance DESTINATION lib)
+
 # Install profiles and support library to /usr/local/share/osrm/profiles by default
 set(DefaultProfilesDir profiles)
 install(DIRECTORY ${DefaultProfilesDir} DESTINATION share/osrm)
