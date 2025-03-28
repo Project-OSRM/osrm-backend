@@ -16,6 +16,7 @@ BOOST_AUTO_TEST_SUITE(graph_contractor)
 
 BOOST_AUTO_TEST_CASE(contract_exclude_graph)
 {
+    tbb::global_control scheduler(tbb::global_control::max_allowed_parallelism, 1);
     /* Edge 0 is labeled with toll,
      * no edge will be contracted
      *
