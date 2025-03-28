@@ -67,8 +67,8 @@ public:
     IndexAccess(const IndexAccess&) = delete;
     IndexAccess& operator=(const IndexAccess&) = delete;
 
-    IndexAccess(IndexAccess&&) = delete;
-    IndexAccess& operator=(IndexAccess&&) = delete;
+    IndexAccess(IndexAccess&&) noexcept = delete;
+    IndexAccess& operator=(IndexAccess&&) noexcept = delete;
 
     virtual ~IndexAccess() noexcept = default;
 
@@ -106,7 +106,7 @@ public:
     ~IndexAccessDense() noexcept override = default;
 
     void dump() const override {
-        index_type index{this->fd()};
+        const index_type index{this->fd()};
 
         for (std::size_t i = 0; i < index.size(); ++i) {
             if (index.get(i) != TValue{}) {
@@ -116,7 +116,7 @@ public:
     }
 
     bool search(const osmium::unsigned_object_id_type& key) const override {
-        index_type index{this->fd()};
+        const index_type index{this->fd()};
 
         try {
             TValue value = index.get(key);
@@ -153,7 +153,7 @@ public:
     ~IndexAccessSparse() noexcept override = default;
 
     void dump() const override {
-        index_type index{this->fd()};
+        const index_type index{this->fd()};
 
         for (const auto& element : index) {
             std::cout << element.first << " " << element.second << "\n";
@@ -164,7 +164,7 @@ public:
         using element_type = typename index_type::element_type;
         index_type index{this->fd()};
 
-        element_type elem{key, TValue{}};
+        const element_type elem{key, TValue{}};
         const auto positions = std::equal_range(index.begin(),
                                                 index.end(),
                                                 elem,
@@ -347,7 +347,7 @@ int run(const IndexAccess<TValue>& index, const Options& options) {
 
 int main(int argc, char* argv[]) {
     // Parse command line options.
-    Options options{argc, argv};
+    const Options options{argc, argv};
 
     // Open the index file.
     const int fd = ::open(options.filename(), O_RDWR);

@@ -20,7 +20,6 @@
 
 #include <limits>
 #include <string>
-#include <vector>
 
 #ifdef _MSC_VER
 namespace osrm
@@ -42,10 +41,9 @@ ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containe
                                        std::unordered_map<std::string, ClassData> &classes_map,
                                        LaneDescriptionMap &lane_description_map,
                                        const ProfileProperties &properties)
-    : external_memory(extraction_containers_), classes_map(classes_map),
-      lane_description_map(lane_description_map),
+    : classes_map(classes_map), lane_description_map(lane_description_map),
       fallback_to_duration(properties.fallback_to_duration),
-      force_split_edges(properties.force_split_edges)
+      force_split_edges(properties.force_split_edges), external_memory(extraction_containers_)
 {
     // we reserved 0, 1, 2, 3, 4 for the empty case
     string_map[MapKey("", "", "", "", "")] = 0;
@@ -58,24 +56,13 @@ ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containe
  *
  * warning: caller needs to take care of synchronization!
  */
-void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
-                                     const ExtractionNode &result_node)
+void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node, const ExtractionNode &)
 {
-    const auto id = OSMNodeID{static_cast<std::uint64_t>(input_node.id())};
-
+    const auto id = to_alias<OSMNodeID>(input_node.id());
     external_memory.all_nodes_list.push_back(
         QueryNode{util::toFixed(util::UnsafeFloatLongitude{input_node.location().lon()}),
                   util::toFixed(util::UnsafeFloatLatitude{input_node.location().lat()}),
                   id});
-
-    if (result_node.barrier)
-    {
-        external_memory.barrier_nodes.push_back(id);
-    }
-    if (result_node.traffic_lights != TrafficLightClass::NONE)
-    {
-        external_memory.external_traffic_signals.push_back({id, result_node.traffic_lights});
-    }
 }
 
 void ExtractorCallbacks::ProcessRestriction(const InputTurnRestriction &restriction)

@@ -8,8 +8,6 @@
 #include "util/range_table.hpp"
 #include "util/serialization.hpp"
 
-#include <boost/assert.hpp>
-
 #include <cstdint>
 #include <filesystem>
 #include <type_traits>

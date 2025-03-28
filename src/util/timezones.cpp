@@ -10,7 +10,6 @@
 #include <filesystem>
 #include <fstream>
 #include <optional>
-#include <regex>
 #include <string>
 #include <unordered_map>
 

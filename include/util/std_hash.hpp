@@ -2,7 +2,6 @@
 #define STD_HASH_HPP
 
 #include <cstddef>
-#include <functional>
 #include <tuple>
 #include <utility>
 #include <vector>

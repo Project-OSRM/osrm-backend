@@ -1,12 +1,9 @@
 #ifndef INTEGER_RANGE_HPP
 #define INTEGER_RANGE_HPP
 
-#include <boost/assert.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 
 #include <type_traits>
-
-#include <cstdint>
 
 namespace osrm::util
 {

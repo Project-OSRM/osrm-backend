@@ -14,6 +14,7 @@
 #include <optional>
 
 #include <algorithm>
+#include <bitset>
 #include <iterator>
 #include <string>
 #include <utility>

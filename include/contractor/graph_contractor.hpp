@@ -5,7 +5,6 @@
 
 #include "util/filtered_graph.hpp"
 
-#include <tuple>
 #include <vector>
 
 namespace osrm::contractor

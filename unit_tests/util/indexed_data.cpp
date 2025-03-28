@@ -5,8 +5,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <iomanip>
-#include <iostream>
-#include <sstream>
 #include <typeinfo>
 #include <vector>
 

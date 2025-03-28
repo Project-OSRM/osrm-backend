@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -193,7 +193,7 @@ namespace osmium {
 
                 const char* role_name() const noexcept {
                     static const std::array<const char*, 4> names = {{"unknown", "outer", "inner", "empty"}};
-                    return names[int(m_role)];
+                    return names[static_cast<int>(m_role)];
                 }
 
                 const osmium::Way* way() const noexcept {
@@ -327,9 +327,9 @@ namespace osmium {
 
                     if ((d > 0 && na >= 0 && na <= d && nb >= 0 && nb <= d) ||
                         (d < 0 && na <= 0 && na >= d && nb <= 0 && nb >= d)) {
-                        const double ua = double(na) / d;
+                        const double ua = static_cast<double>(na) / static_cast<double>(d);
                         const vec i = p0 + ua * (p1 - p0);
-                        return osmium::Location{int32_t(i.x), int32_t(i.y)};
+                        return osmium::Location{static_cast<int32_t>(i.x), static_cast<int32_t>(i.y)};
                     }
 
                     return osmium::Location{};

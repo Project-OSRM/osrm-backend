@@ -4,6 +4,7 @@
 #include "util/integer_range.hpp"
 
 #include <boost/test/unit_test.hpp>
+#include <ranges>
 
 namespace osrm::engine
 {
@@ -71,20 +72,17 @@ struct ExternalCellStorage
     {
         auto GetOutWeight(NodeID /*node*/) const
         {
-            return boost::make_iterator_range((EdgeWeight *)0, (EdgeWeight *)0);
+            return std::ranges::subrange((EdgeWeight *)0, (EdgeWeight *)0);
         }
 
         auto GetInWeight(NodeID /*node*/) const
         {
-            return boost::make_iterator_range((EdgeWeight *)0, (EdgeWeight *)0);
+            return std::ranges::subrange((EdgeWeight *)0, (EdgeWeight *)0);
         }
 
-        auto GetSourceNodes() const { return boost::make_iterator_range((NodeID *)0, (NodeID *)0); }
+        auto GetSourceNodes() const { return std::ranges::subrange((NodeID *)0, (NodeID *)0); }
 
-        auto GetDestinationNodes() const
-        {
-            return boost::make_iterator_range((NodeID *)0, (NodeID *)0);
-        }
+        auto GetDestinationNodes() const { return std::ranges::subrange((NodeID *)0, (NodeID *)0); }
     };
 
     using Cell = CellImpl;
