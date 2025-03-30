@@ -2,7 +2,6 @@
 #define TIMING_UTIL_HPP
 
 #include <chrono>
-#include <cstdint>
 
 namespace osrm::util
 {

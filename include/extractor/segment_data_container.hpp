@@ -7,11 +7,9 @@
 
 #include "storage/shared_memory_ownership.hpp"
 #include "storage/tar_fwd.hpp"
-#include <filesystem>
+
 #include <ranges>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 namespace osrm::extractor
 {

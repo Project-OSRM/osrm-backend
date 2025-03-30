@@ -8,8 +8,6 @@
 #include "util/log.hpp"
 #include "util/mmap_file.hpp"
 
-#include <boost/assert.hpp>
-
 namespace osrm::engine::datafacade
 {
 

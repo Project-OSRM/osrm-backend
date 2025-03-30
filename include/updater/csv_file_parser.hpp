@@ -16,9 +16,7 @@
 #include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
-#include <exception>
 #include <filesystem>
-#include <stdexcept>
 #include <vector>
 
 namespace osrm::updater

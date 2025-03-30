@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OSRM_EXCEPTION_HPP
 
 #include <array>
-#include <exception>
 #include <string>
 #include <utility>
 

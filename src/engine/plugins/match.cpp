@@ -11,8 +11,6 @@
 #include <cstdlib>
 
 #include <algorithm>
-#include <functional>
-#include <memory>
 #include <set>
 #include <vector>
 

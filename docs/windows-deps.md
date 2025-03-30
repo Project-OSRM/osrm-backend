@@ -5,7 +5,7 @@ There is experimental support for building OSRM on Windows.
 ## Dependencies
 
 You will need a modern Windows development stack (e.g. Visual Studio 17). The published binaries are built with
-[Windows Server 2022](https://github.com/actions/runner-images/blob/main/images/win/Windows2022-Readme.md) Github hosted runners.
+[Windows Server 2025](https://github.com/actions/runner-images/blob/main/images/win/Windows2025-Readme.md) Github hosted runners.
 
 Dependencies are managed via [Conan](https://conan.io/) and built with [CMake](https://cmake.org/).
 

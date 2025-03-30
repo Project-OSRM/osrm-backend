@@ -1,8 +1,11 @@
 # Unreleased
+
+# 6.0.0 RC1
   - Changes from 5.27.1
     - API:
       - CHANGED: Require a `radius` parameter when using `bearings`. [#6572](https://github.com/Project-OSRM/osrm-backend/pull/6572)
     - Features
+      - ADDED: Add generic support for obstacles [#7130](https://github.com/Project-OSRM/osrm-backend/pull/7130)
       - ADDED: Route pedestrians over highway=platform [#6993](https://github.com/Project-OSRM/osrm-backend/pull/6993)
       - REMOVED: Remove all core-CH left-overs [#6920](https://github.com/Project-OSRM/osrm-backend/pull/6920)
       - ADDED: Add support for a keepalive_timeout flag. [#6674](https://github.com/Project-OSRM/osrm-backend/pull/6674)
@@ -84,6 +87,7 @@
       - ADDED: Extract prerelease/build information from package semver [#6839](https://github.com/Project-OSRM/osrm-backend/pull/6839)
       - FIXED: Segfault in `UnresolvedManeuverOverride::Turns()` on Australia extracts [#7112](https://github.com/Project-OSRM/osrm-backend/pull/7112)
       - CHANGED: Replaced PL:trunk with PL:expressway to match the latest changes in Polish tagging [#7079](https://github.com/Project-OSRM/osrm-backend/pull/7079)
+      - FIXED: Remove unused C++ headers [#7105](https://github.com/Project-OSRM/osrm-backend/pull/7105)
     - Profiles:
       - FIXED: Bicycle and foot profiles now don't route on proposed ways [#6615](https://github.com/Project-OSRM/osrm-backend/pull/6615)
       - ADDED: Add optional support of cargo bike exclusion and width to bicyle profile [#7044](https://github.com/Project-OSRM/osrm-backend/pull/7044)

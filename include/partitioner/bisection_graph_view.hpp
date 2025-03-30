@@ -8,7 +8,6 @@
 #include <ranges>
 
 #include <cstddef>
-#include <cstdint>
 
 namespace osrm::partitioner
 {

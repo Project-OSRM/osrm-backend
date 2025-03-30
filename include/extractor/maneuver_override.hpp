@@ -11,8 +11,6 @@
 #include "util/std_hash.hpp"
 #include "util/vector_view.hpp"
 
-#include <variant>
-
 #include <algorithm>
 
 namespace osrm::extractor

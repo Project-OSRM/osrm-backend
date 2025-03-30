@@ -17,11 +17,11 @@ NodeBasedGraphWalker::NodeBasedGraphWalker(
     const std::vector<util::Coordinate> &node_coordinates,
     const extractor::CompressedEdgeContainer &compressed_geometries,
     const RestrictionMap &node_restriction_map,
-    const std::unordered_set<NodeID> &barrier_nodes,
+    const ObstacleMap &obstacle_nodes,
     const TurnLanesIndexedArray &turn_lanes_data)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
       node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),
-      node_restriction_map(node_restriction_map), barrier_nodes(barrier_nodes),
+      node_restriction_map(node_restriction_map), obstacle_nodes(obstacle_nodes),
       turn_lanes_data(turn_lanes_data)
 {
 }
@@ -252,12 +252,12 @@ IntersectionFinderAccumulator::IntersectionFinderAccumulator(
     const std::vector<util::Coordinate> &node_coordinates,
     const extractor::CompressedEdgeContainer &compressed_geometries,
     const RestrictionMap &node_restriction_map,
-    const std::unordered_set<NodeID> &barrier_nodes,
+    const ObstacleMap &obstacle_nodes,
     const TurnLanesIndexedArray &turn_lanes_data)
     : hops(0), hop_limit(hop_limit), node_based_graph(node_based_graph),
       node_data_container(node_data_container), node_coordinates(node_coordinates),
       compressed_geometries(compressed_geometries), node_restriction_map(node_restriction_map),
-      barrier_nodes(barrier_nodes), turn_lanes_data(turn_lanes_data)
+      obstacle_nodes(obstacle_nodes), turn_lanes_data(turn_lanes_data)
 {
 }
 
@@ -287,7 +287,7 @@ void IntersectionFinderAccumulator::update(const NodeID from_node,
                                                          node_coordinates,
                                                          compressed_geometries,
                                                          node_restriction_map,
-                                                         barrier_nodes,
+                                                         obstacle_nodes,
                                                          turn_lanes_data,
                                                          {from_node, via_edge});
 }

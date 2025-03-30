@@ -144,14 +144,11 @@ BOOST_AUTO_TEST_CASE(test_turn_runtime_error)
     config.profile_path = OSRM_TEST_DATA_DIR "/profiles/bad_turn.lua";
     config.small_component_size = 1000;
     config.requested_num_threads = std::thread::hardware_concurrency();
-
     std::stringstream output;
-
     {
         redirect_stderr redir(output.rdbuf());
         BOOST_CHECK_THROW(osrm::extract(config), osrm::util::exception);
     }
-
     // We just look for the line number, file name, and error message. This avoids portability
     // issues since the output contains the full path to the file, which may change between systems
     BOOST_CHECK(boost::algorithm::contains(output.str(),

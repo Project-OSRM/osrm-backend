@@ -25,7 +25,7 @@ concurrency:
 jobs:
   conan-windows-release-node:
     needs: format-taginfo-docs
-    runs-on: windows-2022
+    runs-on: windows-2025
     continue-on-error: false
     env:
       BUILD_TYPE: Release
@@ -172,9 +172,8 @@ jobs:
         include:
           - name: gcc-13-debug-cov
             continue-on-error: false
-            node: 20
+            node: 22
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Debug
             CCOMPILER: gcc-13
             CUCUMBER_TIMEOUT: 20000
@@ -183,9 +182,8 @@ jobs:
 
           - name: clang-18-debug-asan-ubsan
             continue-on-error: false
-            node: 20
+            node: 22
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Debug
             CCOMPILER: clang-18
             CUCUMBER_TIMEOUT: 20000
@@ -197,9 +195,8 @@ jobs:
 
           - name: clang-18-release
             continue-on-error: false
-            node: 20
+            node: 22
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
@@ -208,9 +205,8 @@ jobs:
 
           - name: clang-18-debug
             continue-on-error: false
-            node: 18
+            node:
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Debug
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
@@ -221,19 +217,18 @@ jobs:
             continue-on-error: false
             node: 18
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Debug
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
             CUCUMBER_TIMEOUT: 60000
             ENABLE_CLANG_TIDY: ON
-
+            NODE_PACKAGE_TESTS_ONLY: ON
+            ENABLE_LTO: OFF
 
           - name: clang-17-release
             continue-on-error: false
             node: 18
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: clang-17
             CXXCOMPILER: clang++-17
@@ -244,7 +239,6 @@ jobs:
             continue-on-error: false
             node: 18
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: clang-16
             CXXCOMPILER: clang++-16
@@ -255,7 +249,6 @@ jobs:
             continue-on-error: false
             node: 18
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
@@ -267,7 +260,6 @@ jobs:
             continue-on-error: false
             node: 18
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
@@ -276,9 +268,8 @@ jobs:
 
           - name: gcc-14-release
             continue-on-error: false
-            node: 20
+            node: 22
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: gcc-14
             CXXCOMPILER: g++-14
@@ -286,9 +277,8 @@ jobs:
 
           - name: gcc-13-release
             continue-on-error: false
-            node: 20
+            node: 22
             runs-on: ubuntu-24.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: gcc-13
             CXXCOMPILER: g++-13
@@ -296,9 +286,8 @@ jobs:
 
           - name: gcc-12-release
             continue-on-error: false
-            node: 20
+            node: 22
             runs-on: ubuntu-22.04
-            BUILD_TOOLS: ON
             BUILD_TYPE: Release
             CCOMPILER: gcc-12
             CXXCOMPILER: g++-12
@@ -307,7 +296,7 @@ jobs:
           - name: conan-linux-release-node
             build_node_package: true
             continue-on-error: false
-            node: 20
+            node: 22
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-16
@@ -318,7 +307,7 @@ jobs:
           - name: conan-linux-debug-node
             build_node_package: true
             continue-on-error: false
-            node: 20
+            node: 22
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: clang-16
@@ -329,7 +318,7 @@ jobs:
           - name: conan-macos-x64-release-node
             build_node_package: true
             continue-on-error: true
-            node: 20
+            node: 22
             runs-on: macos-13 # x86_64
             BUILD_TYPE: Release
             CCOMPILER: clang
@@ -341,7 +330,7 @@ jobs:
           - name: conan-macos-arm64-release-node
             build_node_package: true
             continue-on-error: true
-            node: 20
+            node: 22
             runs-on: macos-15 # arm64 
             BUILD_TYPE: Release
             CCOMPILER: clang
@@ -354,7 +343,6 @@ jobs:
     continue-on-error: ${{ matrix.continue-on-error }}
     runs-on: ${{ matrix.runs-on }}
     env:
-      BUILD_TOOLS: ${{ matrix.BUILD_TOOLS }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
       BUILD_SHARED_LIBS: ${{ matrix.BUILD_SHARED_LIBS }}
       CCOMPILER: ${{ matrix.CCOMPILER }}
@@ -518,7 +506,6 @@ jobs:
                  -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} \
                  -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
                  -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
-                 -DBUILD_TOOLS=${BUILD_TOOLS:-OFF} \
                  -DENABLE_CCACHE=ON \
                  -DENABLE_LTO=${ENABLE_LTO:-ON} \
                  -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
@@ -538,24 +525,13 @@ jobs:
         popd
       env:
         Boost_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
-    - name: Build example
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && matrix.ENABLE_CONAN != 'ON' }}
-      run: |
-        mkdir example/build && pushd example/build
-        cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-                 -DBoost_ROOT=${{ steps.install-boost.outputs.BOOST_ROOT }}
-        make --jobs=${JOBS}
-        popd
     - name: Run all tests
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
       run: |
         make -C test/data benchmark
 
         # macOS SIP strips the linker path. Reset this inside the running shell
-        if [[ "${ENABLE_CONAN}" == "OFF" ]]; then
-          export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
-          ./example/build/osrm-example test/data/mld/monaco.osrm
-        fi
+        export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
 
         # All tests assume to be run from the build directory
         pushd ${OSRM_BUILD_DIR}
@@ -576,12 +552,12 @@ jobs:
       run: |
         node --version
         npm run nodejs-tests
-    - name: Use Node 20
+    - name: Use Node 22
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       uses: actions/setup-node@v4
       with:
-        node-version: 20
-    - name: Run Node package tests on Node 20
+        node-version: 22
+    - name: Run Node package tests on Node 22
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       run: |
         node --version
@@ -604,22 +580,6 @@ jobs:
         name: logs
         path: test/logs/
 
-    # - name: Generate code coverage
-    #   if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
-    #   run: |
-    #     lcov --directory . --capture --output-file coverage.info # capture coverage info
-    #     lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter out system
-    #     lcov --list coverage.info #debug info
-    
-    # # Uploading report to CodeCov
-    # - name: Upload code coverage
-    #   if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
-    #   uses: codecov/codecov-action@v4
-    #   with:
-    #     files: coverage.info
-    #     name: codecov-osrm-backend
-    #     fail_ci_if_error: true
-    #     verbose: true
     - name: Build Node package
       if: ${{ matrix.build_node_package }}
       run: ./scripts/ci/node_package.sh
@@ -646,4 +606,3 @@ jobs:
     needs: [build-matrix, conan-windows-release-node, docker-image-matrix]
     steps:
     - run: echo "CI complete"
-

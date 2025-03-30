@@ -19,13 +19,7 @@
 
 #include "util/node_based_graph.hpp"
 
-#include <cstdint>
-
-#include <memory>
-#include <string>
-#include <tuple>
 #include <unordered_set>
-#include <utility>
 #include <vector>
 
 namespace osrm::guidance
@@ -39,7 +33,7 @@ class TurnAnalysis
                  const std::vector<util::Coordinate> &node_coordinates,
                  const extractor::CompressedEdgeContainer &compressed_edge_container,
                  const extractor::RestrictionMap &restriction_map,
-                 const std::unordered_set<NodeID> &barrier_nodes,
+                 const extractor::ObstacleMap &obstacle_nodes,
                  const extractor::TurnLanesIndexedArray &turn_lanes_data,
                  const extractor::NameTable &name_table,
                  const extractor::SuffixTable &street_name_suffix_table);

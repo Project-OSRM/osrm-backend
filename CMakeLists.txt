@@ -22,20 +22,17 @@ if (NOT WIN32 AND NOT DEFINED ENV{OSRM_BUILD_DIR})
   set(ENV{OSRM_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
-option(ENABLE_CONAN "Use conan for dependencies" OFF)
-option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
-option(BUILD_TOOLS "Build OSRM tools" OFF)
 option(BUILD_PACKAGE "Build OSRM package" OFF)
-option(BUILD_ROUTED "Build osrm-routed HTTP server" ON)
 option(ENABLE_ASSERTIONS "Use assertions in release mode" OFF)
-option(ENABLE_DEBUG_LOGGING "Use debug logging in release mode" OFF)
-option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
-option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
-option(ENABLE_LTO "Use Link Time Optimisation" ON)
-option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
-option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
+option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_CLANG_TIDY "Enables clang-tidy checks" OFF)
-
+option(ENABLE_CONAN "Use conan for dependencies" OFF)
+option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
+option(ENABLE_DEBUG_LOGGING "Use debug logging in release mode" OFF)
+option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
+option(ENABLE_LTO "Use Link Time Optimisation" ON)
+option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
+option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 
 if (ENABLE_CONAN)
   message(STATUS "Installing Conan packages. It may take a while...")
@@ -72,18 +69,7 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-# be compatible with version handling before cmake 3.x
-if (POLICY CMP0057)
-  cmake_policy(SET CMP0057 NEW)
-endif()
-if (POLICY CMP0074)
-  cmake_policy(SET CMP0074 NEW)
-endif()
-if (POLICY CMP0167)
-  cmake_policy(SET CMP0167 NEW)
-endif()
 project(OSRM C CXX)
-
 
 if(ENABLE_LTO AND (CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
   include(CheckIPOSupported)
@@ -112,14 +98,14 @@ sbeParseJson(packagejson packagejsonraw)
 # This regex is not strict enough, but the correct one is too complicated for cmake matching.
 # https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
 if (packagejson.version MATCHES "^([0-9]+)\.([0-9]+)\.([0-9]+)([-+][0-9a-zA-Z.-]+)?$")
-    set(OSRM_VERSION_MAJOR            ${CMAKE_MATCH_1})
-    set(OSRM_VERSION_MINOR            ${CMAKE_MATCH_2})
-    set(OSRM_VERSION_PATCH            ${CMAKE_MATCH_3})
-    set(OSRM_VERSION_PRERELEASE_BUILD ${CMAKE_MATCH_4})
+  set(OSRM_VERSION_MAJOR            ${CMAKE_MATCH_1})
+  set(OSRM_VERSION_MINOR            ${CMAKE_MATCH_2})
+  set(OSRM_VERSION_PATCH            ${CMAKE_MATCH_3})
+  set(OSRM_VERSION_PRERELEASE_BUILD ${CMAKE_MATCH_4})
 
-    set(OSRM_VERSION packagejson.version)
+  set(OSRM_VERSION packagejson.version)
 else()
-    message(FATAL_ERROR "Version from package.json cannot be parsed, expected semver compatible label, but found ${packagejson.version}")
+  message(FATAL_ERROR "Version from package.json cannot be parsed, expected semver compatible label, but found ${packagejson.version}")
 endif()
 
 if (MSVC)
@@ -151,12 +137,6 @@ include(CheckCXXCompilerFlag)
 include(FindPackageHandleStandardArgs)
 include(GNUInstallDirs)
 
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  message(STATUS "Building on a 64 bit system")
-else()
-  message(FATAL_ERROR "Building on a 32 bit system is not supported")
-endif()
-
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/generated/include/)
@@ -178,7 +158,6 @@ file(GLOB UpdaterGlob src/updater/*.cpp)
 file(GLOB StorageGlob src/storage/*.cpp)
 file(GLOB ServerGlob src/server/*.cpp src/server/**/*.cpp)
 file(GLOB EngineGlob src/engine/*.cpp src/engine/**/*.cpp)
-file(GLOB ErrorcodesGlob src/osrm/errorcodes.cpp)
 
 add_library(UTIL OBJECT ${UtilGlob})
 add_library(EXTRACTOR OBJECT ${ExtractorGlob})
@@ -189,14 +168,11 @@ add_library(CONTRACTOR OBJECT ${ContractorGlob})
 add_library(UPDATER OBJECT ${UpdaterGlob})
 add_library(STORAGE OBJECT ${StorageGlob})
 add_library(ENGINE OBJECT ${EngineGlob})
-
-if (BUILD_ROUTED)
-  add_library(SERVER OBJECT ${ServerGlob})
-  add_executable(osrm-routed src/tools/routed.cpp $<TARGET_OBJECTS:SERVER> $<TARGET_OBJECTS:UTIL>)
-endif()
+add_library(SERVER OBJECT ${ServerGlob})
 
 set_target_properties(UTIL PROPERTIES LINKER_LANGUAGE CXX)
 
+add_executable(osrm-routed src/tools/routed.cpp $<TARGET_OBJECTS:SERVER> $<TARGET_OBJECTS:UTIL>)
 add_executable(osrm-extract src/tools/extract.cpp)
 add_executable(osrm-partition src/tools/partition.cpp)
 add_executable(osrm-customize src/tools/customize.cpp)
@@ -458,9 +434,7 @@ target_link_libraries(osrm-extract osrm_extract ${Boost_PROGRAM_OPTIONS_LIBRARY}
 target_link_libraries(osrm-partition osrm_partition ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-customize osrm_customize ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-contract osrm_contract ${Boost_PROGRAM_OPTIONS_LIBRARY})
-if (BUILD_ROUTED)
-  target_link_libraries(osrm-routed osrm ${Boost_PROGRAM_OPTIONS_LIBRARY} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
-endif()
+target_link_libraries(osrm-routed osrm ${Boost_PROGRAM_OPTIONS_LIBRARY} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
 
 set(EXTRACTOR_LIBRARIES
     ${BZIP2_LIBRARIES}
@@ -534,18 +508,13 @@ target_link_libraries(osrm_partition ${PARTITIONER_LIBRARIES})
 target_link_libraries(osrm_customize ${CUSTOMIZER_LIBRARIES} osrm_update osrm_store)
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
 
-# BUILD_COMPONENTS
 add_executable(osrm-components src/tools/components.cpp $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
 target_link_libraries(osrm-components ${TBB_LIBRARIES} ${BOOST_BASE_LIBRARIES} ${UTIL_LIBRARIES})
 install(TARGETS osrm-components DESTINATION bin)
 
-if(BUILD_TOOLS)
-  message(STATUS "Activating OSRM internal tools")
-  add_executable(osrm-io-benchmark src/tools/io-benchmark.cpp $<TARGET_OBJECTS:UTIL>)
-  target_link_libraries(osrm-io-benchmark ${BOOST_BASE_LIBRARIES} ${TBB_LIBRARIES})
-
-  install(TARGETS osrm-io-benchmark DESTINATION bin)
-endif()
+add_executable(osrm-io-benchmark src/tools/io-benchmark.cpp $<TARGET_OBJECTS:UTIL>)
+target_link_libraries(osrm-io-benchmark ${BOOST_BASE_LIBRARIES} ${TBB_LIBRARIES})
+install(TARGETS osrm-io-benchmark DESTINATION bin)
 
 if (ENABLE_ASSERTIONS)
   message(STATUS "Enabling assertions")
@@ -564,9 +533,7 @@ set_property(TARGET osrm-extract PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-partition PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-contract PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-datastore PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
-if (BUILD_ROUTED)
-  set_property(TARGET osrm-routed PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
-endif()
+set_property(TARGET osrm-routed PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 file(GLOB FlatbuffersGlob third_party/flatbuffers/include/flatbuffers/*.h)
 file(GLOB LibraryGlob include/osrm/*.hpp)
@@ -588,14 +555,14 @@ install(FILES ${LibraryGlob} DESTINATION include/osrm)
 install(FILES ${ParametersGlob} DESTINATION include/osrm/engine/api)
 install(FILES ${ApiHeader} DESTINATION include/osrm/engine/api)
 install(FILES ${FlatbuffersGlob} DESTINATION include/flatbuffers)
+
 install(TARGETS osrm-extract DESTINATION bin)
 install(TARGETS osrm-partition DESTINATION bin)
 install(TARGETS osrm-customize DESTINATION bin)
 install(TARGETS osrm-contract DESTINATION bin)
 install(TARGETS osrm-datastore DESTINATION bin)
-if (BUILD_ROUTED)
-  install(TARGETS osrm-routed DESTINATION bin)
-endif()
+install(TARGETS osrm-routed DESTINATION bin)
+
 install(TARGETS osrm DESTINATION lib)
 install(TARGETS osrm_extract DESTINATION lib)
 install(TARGETS osrm_partition DESTINATION lib)
@@ -605,7 +572,6 @@ install(TARGETS osrm_contract DESTINATION lib)
 install(TARGETS osrm_store DESTINATION lib)
 install(TARGETS osrm_guidance DESTINATION lib)
 
-
 # Install profiles and support library to /usr/local/share/osrm/profiles by default
 set(DefaultProfilesDir profiles)
 install(DIRECTORY ${DefaultProfilesDir} DESTINATION share/osrm)
@@ -613,9 +579,6 @@ install(DIRECTORY ${DefaultProfilesDir} DESTINATION share/osrm)
 # Install data geojson files to /usr/local/share/osrm/data by default
 set(DefaultProfilesDir data)
 install(DIRECTORY ${DefaultProfilesDir} DESTINATION share/osrm)
-
-# Setup exporting variables for pkgconfig and subproject
-#
 
 if(BUILD_PACKAGE)
   include(CPackConfig)
@@ -694,7 +657,6 @@ if (ENABLE_NODE_BINDINGS)
   add_subdirectory(src/nodejs)
 endif()
 
-
 if (ENABLE_FUZZING)
   # Requires libosrm being built with sanitizers; make configurable and default to ubsan
   set(FUZZ_SANITIZER "undefined" CACHE STRING "Sanitizer to be used for Fuzz testing")
@@ -728,4 +690,3 @@ foreach(header ${headers_to_check})
 endforeach()
 add_library(check-headers STATIC EXCLUDE_FROM_ALL ${sources})
 set_target_properties(check-headers PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${check_headers_dir})
-

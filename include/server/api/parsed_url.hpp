@@ -4,7 +4,6 @@
 #include "util/coordinate.hpp"
 
 #include <string>
-#include <vector>
 
 namespace osrm::server::api
 {

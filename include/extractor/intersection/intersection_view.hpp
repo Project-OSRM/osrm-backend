@@ -15,9 +15,7 @@
 #include <boost/range/algorithm/min_element.hpp>
 
 #include <algorithm>
-#include <functional>
 #include <limits>
-#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -168,7 +166,7 @@ template <typename Self> struct EnableIntersectionOps
     }
 
     // Can this be skipped over?
-    auto isTrafficSignalOrBarrier() const { return self()->size() == 2; }
+    auto isObstacle() const { return self()->size() == 2; }
 
     // Checks if there is at least one road available (except UTurn road) on which to continue.
     auto isDeadEnd() const

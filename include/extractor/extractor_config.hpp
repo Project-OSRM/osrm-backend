@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "storage/io_config.hpp"
 
-#include <array>
 #include <filesystem>
 #include <string>
 
