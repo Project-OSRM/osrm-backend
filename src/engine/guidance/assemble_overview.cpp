@@ -5,8 +5,6 @@
 #include <iterator>
 #include <limits>
 #include <numeric>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 namespace osrm::engine::guidance
@@ -40,22 +38,21 @@ unsigned calculateOverviewZoomLevel(const std::vector<LegGeometry> &leg_geometri
 std::vector<util::Coordinate> assembleOverview(const std::vector<LegGeometry> &leg_geometries,
                                                const bool use_simplification)
 {
-    auto overview_size =
-        std::accumulate(leg_geometries.begin(),
-                        leg_geometries.end(),
-                        0,
-                        [](const std::size_t sum, const LegGeometry &leg_geometry) {
-                            return sum + leg_geometry.locations.size();
-                        }) -
-        leg_geometries.size() + 1;
+    auto overview_size = std::accumulate(leg_geometries.begin(),
+                                         leg_geometries.end(),
+                                         0,
+                                         [](const std::size_t sum, const LegGeometry &leg_geometry)
+                                         { return sum + leg_geometry.locations.size(); }) -
+                         leg_geometries.size() + 1;
     std::vector<util::Coordinate> overview_geometry;
     overview_geometry.reserve(overview_size);
 
     using GeometryIter = decltype(overview_geometry)::const_iterator;
 
     auto leg_reverse_index = leg_geometries.size();
-    const auto insert_without_overlap = [&leg_reverse_index, &overview_geometry](GeometryIter begin,
-                                                                                 GeometryIter end) {
+    const auto insert_without_overlap =
+        [&leg_reverse_index, &overview_geometry](GeometryIter begin, GeometryIter end)
+    {
         // not the last leg
         if (leg_reverse_index > 1)
         {

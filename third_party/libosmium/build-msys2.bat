@@ -16,8 +16,9 @@ call C:\msys64\mingw64\bin\gem.cmd install json
 REM Workaround for problem with spatialite (see https://github.com/osmcode/libosmium/issues/262)
 copy /y C:\msys64\mingw64\bin\libreadline8.dll C:\msys64\mingw64\bin\libreadline7.dll
 
-echo "Setting PROJ_LIB variable for correct PROJ.4 working"
+echo "Setting PROJ_LIB/DATA variable for correct PROJ.4 working"
 set PROJ_LIB=c:\msys64\mingw64\share\proj
+set PROJ_DATA=c:\msys64\mingw64\share\proj
 
 set CXXFLAGS=-Wno-stringop-overflow
 

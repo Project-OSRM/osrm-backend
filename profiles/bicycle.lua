@@ -17,7 +17,7 @@ function setup()
   return {
     properties = {
       u_turn_penalty                = 20,
-      traffic_light_penalty         = 2,
+      traffic_signal_penalty        = 2,
       --weight_name                   = 'cyclability',
       weight_name                   = 'duration',
       process_call_tagless_node     = false,
@@ -34,6 +34,10 @@ function setup()
     turn_penalty              = 6,
     turn_bias                 = 1.4,
     use_public_transport      = true,
+
+    -- Exclude narrow ways, in particular to route with cargo bike
+    width                     = nil, -- Cargo bike could 0.5 width, in meters
+    exclude_cargo_bike        = false,
 
     allowed_start_modes = Set {
       mode.cycling,
@@ -216,7 +220,8 @@ function setup()
 
     avoid = Set {
       'impassable',
-      'construction'
+      'construction',
+      'proposed'
     }
   }
 end
@@ -239,6 +244,27 @@ function process_node(profile, node, result)
       if profile.barrier_blacklist[barrier] then
         result.barrier = true
       end
+    end
+  end
+
+  if profile.exclude_cargo_bike then
+    local cargo_bike = node:get_value_by_key("cargo_bike")
+    if cargo_bike and cargo_bike == "no" then
+      result.barrier = true
+    end
+  end
+
+  -- width
+  if profile.width then
+    -- From barrier=cycle_barrier or other barriers
+    local maxwidth_physical = node:get_value_by_key("maxwidth:physical")
+    local maxwidth_physical_meter = maxwidth_physical and Measure.parse_value_meters(maxwidth_physical) or 99
+    local opening = node:get_value_by_key("opening")
+    local opening_meter = opening and Measure.parse_value_meters(opening) or 99
+    local width_meter = math.min(maxwidth_physical_meter, opening_meter)
+
+    if width_meter and width_meter < profile.width then
+      result.barrier = true
     end
   end
 
@@ -298,6 +324,8 @@ function handle_bicycle_tags(profile,way,result,data)
 
   bike_push_handler(profile,way,result,data)
 
+  -- width should be after bike_push
+  width_handler(profile,way,result,data)
 
   -- maxspeed
   limit( result, data.maxspeed, data.maxspeed_forward, data.maxspeed_backward )
@@ -449,6 +477,27 @@ function cycleway_handler(profile,way,result,data)
   if data.has_cycleway_forward then
     result.forward_mode = mode.cycling
     result.forward_speed = profile.bicycle_speeds["cycleway"]
+  end
+end
+
+function width_handler(profile,way,result,data)
+  if profile.exclude_cargo_bike then
+    local cargo_bike = way:get_value_by_key("cargo_bike")
+    if cargo_bike and cargo_bike == "no" then
+      result.forward_mode = mode.inaccessible
+      result.backward_mode = mode.inaccessible
+    end
+  end
+
+  if profile.width then
+    local width = way:get_value_by_key("width")
+    if width then
+      local width_meter = Measure.parse_value_meters(width)
+      if width_meter and width_meter < profile.width then
+        result.forward_mode = mode.inaccessible
+        result.backward_mode = mode.inaccessible
+      end
+    end
   end
 end
 
@@ -657,7 +706,7 @@ function process_turn(profile, turn)
   end
 
   if turn.has_traffic_light then
-     turn.duration = turn.duration + profile.properties.traffic_light_penalty
+     turn.duration = turn.duration + profile.properties.traffic_signal_penalty
   end
   if profile.properties.weight_name == 'cyclability' then
     turn.weight = turn.duration

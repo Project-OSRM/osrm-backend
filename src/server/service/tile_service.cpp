@@ -6,8 +6,6 @@
 
 #include "util/json_container.hpp"
 
-#include <boost/format.hpp>
-
 namespace osrm::server::service
 {
 
@@ -22,7 +20,7 @@ engine::Status TileService::RunQuery(std::size_t prefix_length,
     {
         const auto position = std::distance(query.begin(), query_iterator);
         result = util::json::Object();
-        auto &json_result = result.get<util::json::Object>();
+        auto &json_result = std::get<util::json::Object>(result);
         json_result.values["code"] = "InvalidQuery";
         json_result.values["message"] =
             "Query string malformed close to position " + std::to_string(prefix_length + position);
@@ -33,7 +31,7 @@ engine::Status TileService::RunQuery(std::size_t prefix_length,
     if (!parameters->IsValid())
     {
         result = util::json::Object();
-        auto &json_result = result.get<util::json::Object>();
+        auto &json_result = std::get<util::json::Object>(result);
         json_result.values["code"] = "InvalidOptions";
         json_result.values["message"] = "Invalid coodinates. Only zoomlevel 12+ is supported";
         return engine::Status::Error;

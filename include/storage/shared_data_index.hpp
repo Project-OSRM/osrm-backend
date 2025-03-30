@@ -28,10 +28,10 @@ class SharedDataIndex
         // Build mapping from block name to region
         for (auto index : util::irange<std::uint32_t>(0, regions.size()))
         {
-            regions[index].layout->List("",
-                                        boost::make_function_output_iterator([&](const auto &name) {
-                                            block_to_region[name] = index;
-                                        }));
+            regions[index].layout->List(
+                "",
+                boost::make_function_output_iterator([&](const auto &name)
+                                                     { block_to_region[name] = index; }));
         }
     }
 

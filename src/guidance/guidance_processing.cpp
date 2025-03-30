@@ -20,7 +20,7 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                    const extractor::EdgeBasedNodeDataContainer &edge_based_node_container,
                    const std::vector<util::Coordinate> &node_coordinates,
                    const extractor::CompressedEdgeContainer &compressed_edge_container,
-                   const std::unordered_set<NodeID> &barrier_nodes,
+                   const extractor::ObstacleMap &obstacle_nodes,
                    const extractor::RestrictionMap &node_restriction_map,
                    const extractor::WayRestrictionMap &way_restriction_map,
                    const extractor::NameTable &name_table,
@@ -41,7 +41,7 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                                                                          node_coordinates,
                                                                          compressed_edge_container,
                                                                          node_restriction_map,
-                                                                         barrier_nodes,
+                                                                         obstacle_nodes,
                                                                          turn_lanes_data,
                                                                          name_table,
                                                                          suffix_table);
@@ -51,7 +51,7 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                                          node_coordinates,
                                          compressed_edge_container,
                                          node_restriction_map,
-                                         barrier_nodes,
+                                         obstacle_nodes,
                                          turn_lanes_data,
                                          name_table,
                                          suffix_table);
@@ -61,7 +61,7 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                                                        node_coordinates,
                                                        compressed_edge_container,
                                                        node_restriction_map,
-                                                       barrier_nodes,
+                                                       obstacle_nodes,
                                                        turn_lanes_data,
                                                        lane_description_map,
                                                        turn_analysis,
@@ -96,7 +96,9 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
 
         // First part of the pipeline generates iterator ranges of IDs in sets of GRAINSIZE
         tbb::filter<void, tbb::blocked_range<NodeID>> generator_stage(
-            tbb::filter_mode::serial_in_order, [&](tbb::flow_control &fc) {
+            tbb::filter_mode::serial_in_order,
+            [&](tbb::flow_control &fc)
+            {
                 if (current_node < node_count)
                 {
                     auto next_node = std::min(current_node + GRAINSIZE, node_count);
@@ -116,7 +118,8 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
         //
         tbb::filter<tbb::blocked_range<NodeID>, TurnsPipelineBufferPtr> guidance_stage(
             tbb::filter_mode::parallel,
-            [&](const tbb::blocked_range<NodeID> &intersection_node_range) {
+            [&](const tbb::blocked_range<NodeID> &intersection_node_range)
+            {
                 auto buffer = std::make_shared<TurnsPipelineBuffer>();
                 buffer->nodes_processed = intersection_node_range.size();
 
@@ -170,7 +173,7 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                                 node_based_graph,
                                 edge_based_node_container,
                                 node_restriction_map,
-                                barrier_nodes,
+                                obstacle_nodes,
                                 edge_geometries,
                                 turn_lanes_data,
                                 incoming_edge,
@@ -210,7 +213,7 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                                 extractor::intersection::isTurnAllowed(node_based_graph,
                                                                        edge_based_node_container,
                                                                        node_restriction_map,
-                                                                       barrier_nodes,
+                                                                       obstacle_nodes,
                                                                        edge_geometries,
                                                                        turn_lanes_data,
                                                                        incoming_edge,
@@ -224,9 +227,8 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                             const auto turn =
                                 std::find_if(intersection.begin(),
                                              intersection.end(),
-                                             [edge = outgoing_edge.edge](const auto &road) {
-                                                 return road.eid == edge;
-                                             });
+                                             [edge = outgoing_edge.edge](const auto &road)
+                                             { return road.eid == edge; });
 
                             OSRM_ASSERT(turn != intersection.end(),
                                         node_coordinates[intersection_node]);
@@ -267,9 +269,8 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                                         auto has_unconditional =
                                             std::any_of(restrictions.begin(),
                                                         restrictions.end(),
-                                                        [](const auto &restriction) {
-                                                            return restriction->IsUnconditional();
-                                                        });
+                                                        [](const auto &restriction)
+                                                        { return restriction->IsUnconditional(); });
 
                                         if (has_unconditional)
                                             continue;
@@ -307,7 +308,9 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
         std::vector<guidance::TurnData> delayed_turn_data;
 
         tbb::filter<TurnsPipelineBufferPtr, void> guidance_output_stage(
-            tbb::filter_mode::serial_in_order, [&](auto buffer) {
+            tbb::filter_mode::serial_in_order,
+            [&](auto buffer)
+            {
                 guidance_progress.PrintAddition(buffer->nodes_processed);
 
                 connectivity_checksum = buffer->checksum.update_checksum(connectivity_checksum);
@@ -315,9 +318,8 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                 // Guidance data
                 std::for_each(buffer->continuous_turn_data.begin(),
                               buffer->continuous_turn_data.end(),
-                              [&turn_data_container](const auto &turn_data) {
-                                  turn_data_container.push_back(turn_data);
-                              });
+                              [&turn_data_container](const auto &turn_data)
+                              { turn_data_container.push_back(turn_data); });
 
                 // Copy via-way restrictions delayed data
                 delayed_turn_data.insert(delayed_turn_data.end(),
@@ -336,9 +338,8 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
         // NOTE: EBG edges delayed_data and turns delayed_turn_data have the same index
         std::for_each(delayed_turn_data.begin(),
                       delayed_turn_data.end(),
-                      [&turn_data_container](const auto &turn_data) {
-                          turn_data_container.push_back(turn_data);
-                      });
+                      [&turn_data_container](const auto &turn_data)
+                      { turn_data_container.push_back(turn_data); });
     }
 
     util::Log() << "done.";

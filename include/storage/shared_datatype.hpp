@@ -7,8 +7,6 @@
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 
-#include <boost/assert.hpp>
-
 #include <array>
 #include <cstdint>
 #include <map>
@@ -223,9 +221,12 @@ struct SharedRegionRegister
     // Returns the key of the region with the given name
     RegionID Find(const std::string &name) const
     {
-        auto iter = std::find_if(regions.begin(), regions.end(), [&](const auto &region) {
-            return std::strncmp(region.name, name.c_str(), SharedRegion::MAX_NAME_LENGTH) == 0;
-        });
+        auto iter = std::find_if(
+            regions.begin(),
+            regions.end(),
+            [&](const auto &region) {
+                return std::strncmp(region.name, name.c_str(), SharedRegion::MAX_NAME_LENGTH) == 0;
+            });
 
         if (iter == regions.end())
         {

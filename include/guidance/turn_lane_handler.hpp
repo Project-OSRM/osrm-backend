@@ -9,7 +9,6 @@
 #include "guidance/turn_analysis.hpp"
 #include "guidance/turn_lane_data.hpp"
 
-#include "util/attributes.hpp"
 #include "util/guidance/turn_lanes.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
@@ -17,8 +16,6 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
-#include <map>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -60,7 +57,7 @@ class TurnLaneHandler
                     const std::vector<util::Coordinate> &node_coordinates,
                     const extractor::CompressedEdgeContainer &compressed_geometries,
                     const extractor::RestrictionMap &node_restriction_map,
-                    const std::unordered_set<NodeID> &barrier_nodes,
+                    const extractor::ObstacleMap &obstacle_nodes,
                     const extractor::TurnLanesIndexedArray &turn_lanes_data,
                     extractor::LaneDescriptionMap &lane_description_map,
                     const TurnAnalysis &turn_analysis,
@@ -68,8 +65,8 @@ class TurnLaneHandler
 
     ~TurnLaneHandler();
 
-    OSRM_ATTR_WARN_UNUSED
-    Intersection assignTurnLanes(const NodeID at, const EdgeID via_edge, Intersection intersection);
+    [[nodiscard]] Intersection
+    assignTurnLanes(const NodeID at, const EdgeID via_edge, Intersection intersection);
 
   private:
     mutable std::atomic<std::size_t> count_handled;
@@ -81,7 +78,7 @@ class TurnLaneHandler
     const std::vector<util::Coordinate> &node_coordinates;
     const extractor::CompressedEdgeContainer &compressed_geometries;
     const extractor::RestrictionMap &node_restriction_map;
-    const std::unordered_set<NodeID> &barrier_nodes;
+    const extractor::ObstacleMap &obstacle_nodes;
     const extractor::TurnLanesIndexedArray &turn_lanes_data;
 
     std::vector<std::uint32_t> turn_lane_offsets;
@@ -108,24 +105,23 @@ class TurnLaneHandler
                               const Intersection &intersection) const;
 
     // in case of a simple intersection, assign the lane entries
-    OSRM_ATTR_WARN_UNUSED
-    Intersection simpleMatchTuplesToTurns(Intersection intersection,
-                                          const LaneDataVector &lane_data,
-                                          const LaneDescriptionID lane_string_id);
+    [[nodiscard]] Intersection simpleMatchTuplesToTurns(Intersection intersection,
+                                                        const LaneDataVector &lane_data,
+                                                        const LaneDescriptionID lane_string_id);
 
     // partition lane data into lane data relevant at current turn and at next turn
-    OSRM_ATTR_WARN_UNUSED
-    std::pair<TurnLaneHandler::LaneDataVector, TurnLaneHandler::LaneDataVector> partitionLaneData(
-        const NodeID at, LaneDataVector turn_lane_data, const Intersection &intersection) const;
+    [[nodiscard]] std::pair<TurnLaneHandler::LaneDataVector, TurnLaneHandler::LaneDataVector>
+    partitionLaneData(const NodeID at,
+                      LaneDataVector turn_lane_data,
+                      const Intersection &intersection) const;
 
     // Sliproad turns have a separated lane to the right/left of other depicted lanes. These lanes
     // are not necessarily separated clearly from the rest of the way. As a result, we combine both
     // lane entries for our output, while performing the matching with the separated lanes only.
-    OSRM_ATTR_WARN_UNUSED
-    Intersection handleSliproadTurn(Intersection intersection,
-                                    const LaneDescriptionID lane_description_id,
-                                    LaneDataVector lane_data,
-                                    const Intersection &previous_intersection);
+    [[nodiscard]] Intersection handleSliproadTurn(Intersection intersection,
+                                                  const LaneDescriptionID lane_description_id,
+                                                  LaneDataVector lane_data,
+                                                  const Intersection &previous_intersection);
 
     // get the lane data for an intersection
     void extractLaneData(const EdgeID via_edge,

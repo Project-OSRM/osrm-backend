@@ -1,3 +1,4 @@
+#include "engine/engine_config.hpp"
 #include "util/timing_util.hpp"
 
 #include "osrm/match_parameters.hpp"
@@ -9,14 +10,13 @@
 #include "osrm/osrm.hpp"
 #include "osrm/status.hpp"
 
-#include <boost/assert.hpp>
-
+#include <cstdlib>
 #include <exception>
 #include <iostream>
+#include <optional>
+#include <stdexcept>
 #include <string>
 #include <utility>
-
-#include <cstdlib>
 
 int main(int argc, const char *argv[])
 try
@@ -32,6 +32,8 @@ try
     // Configure based on a .osrm base path, and no datasets in shared mem from osrm-datastore
     EngineConfig config;
     config.storage_config = {argv[1]};
+    config.algorithm = (argc > 2 && std::string{argv[2]} == "mld") ? EngineConfig::Algorithm::MLD
+                                                                   : EngineConfig::Algorithm::CH;
     config.use_shared_memory = false;
 
     // Routing machine with several services (such as Route, Table, Nearest, Trip, Match)
@@ -211,24 +213,49 @@ try
     params.coordinates.push_back(
         FloatCoordinate{FloatLongitude{7.415342330932617}, FloatLatitude{43.733251335381205}});
 
-    TIMER_START(routes);
-    auto NUM = 100;
-    for (int i = 0; i < NUM; ++i)
+    auto run_benchmark = [&](std::optional<double> radiusInMeters)
     {
-        engine::api::ResultT result = json::Object();
-        const auto rc = osrm.Match(params, result);
-        auto &json_result = result.get<json::Object>();
-        if (rc != Status::Ok ||
-            json_result.values.at("matchings").get<json::Array>().values.size() != 1)
+        params.radiuses = {};
+        if (radiusInMeters)
         {
-            return EXIT_FAILURE;
+            for (size_t index = 0; index < params.coordinates.size(); ++index)
+            {
+                params.radiuses.emplace_back(*radiusInMeters);
+            }
         }
+
+        TIMER_START(routes);
+        auto NUM = 100;
+        for (int i = 0; i < NUM; ++i)
+        {
+            engine::api::ResultT result = json::Object();
+            const auto rc = osrm.Match(params, result);
+            auto &json_result = std::get<json::Object>(result);
+            if (rc != Status::Ok ||
+                std::get<json::Array>(json_result.values.at("matchings")).values.size() != 1)
+            {
+                throw std::runtime_error{"Couldn't match"};
+            }
+        }
+        TIMER_STOP(routes);
+        if (radiusInMeters)
+        {
+            std::cout << "Radius " << *radiusInMeters << "m: " << std::endl;
+        }
+        else
+        {
+            std::cout << "Default radius: " << std::endl;
+        }
+        std::cout << (TIMER_MSEC(routes) / NUM) << "ms/req at " << params.coordinates.size()
+                  << " coordinate" << std::endl;
+        std::cout << (TIMER_MSEC(routes) / NUM / params.coordinates.size()) << "ms/coordinate"
+                  << std::endl;
+    };
+
+    for (auto radius : std::vector<std::optional<double>>{std::nullopt, 10.0})
+    {
+        run_benchmark(radius);
     }
-    TIMER_STOP(routes);
-    std::cout << (TIMER_MSEC(routes) / NUM) << "ms/req at " << params.coordinates.size()
-              << " coordinate" << std::endl;
-    std::cout << (TIMER_MSEC(routes) / NUM / params.coordinates.size()) << "ms/coordinate"
-              << std::endl;
 
     return EXIT_SUCCESS;
 }

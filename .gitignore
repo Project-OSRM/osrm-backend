@@ -43,10 +43,8 @@ Thumbs.db
 #######################
 /_build*
 /build/
-/example/build/
 /test/data/monaco.osrm*
 /test/data/ch
-/test/data/corech
 /test/data/mld
 /cmake/postinst
 

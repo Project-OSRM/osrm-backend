@@ -17,11 +17,11 @@ NodeBasedGraphWalker::NodeBasedGraphWalker(
     const std::vector<util::Coordinate> &node_coordinates,
     const extractor::CompressedEdgeContainer &compressed_geometries,
     const RestrictionMap &node_restriction_map,
-    const std::unordered_set<NodeID> &barrier_nodes,
+    const ObstacleMap &obstacle_nodes,
     const TurnLanesIndexedArray &turn_lanes_data)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
       node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),
-      node_restriction_map(node_restriction_map), barrier_nodes(barrier_nodes),
+      node_restriction_map(node_restriction_map), obstacle_nodes(obstacle_nodes),
       turn_lanes_data(turn_lanes_data)
 {
 }
@@ -66,7 +66,7 @@ SelectRoadByNameOnlyChoiceAndStraightness::SelectRoadByNameOnlyChoiceAndStraight
 {
 }
 
-boost::optional<EdgeID> SelectRoadByNameOnlyChoiceAndStraightness::operator()(
+std::optional<EdgeID> SelectRoadByNameOnlyChoiceAndStraightness::operator()(
     const NodeID /*nid*/,
     const EdgeID /*via_edge_id*/,
     const IntersectionView &intersection,
@@ -74,10 +74,12 @@ boost::optional<EdgeID> SelectRoadByNameOnlyChoiceAndStraightness::operator()(
     const EdgeBasedNodeDataContainer &node_data_container) const
 {
     BOOST_ASSERT(!intersection.empty());
-    const auto comparator = [&](const IntersectionViewData &lhs, const IntersectionViewData &rhs) {
+    const auto comparator = [&](const IntersectionViewData &lhs, const IntersectionViewData &rhs)
+    {
         // the score of an elemnt results in an ranking preferring valid entries, if required over
         // invalid requested name_ids over non-requested narrow deviations over non-narrow
-        const auto score = [&](const IntersectionViewData &road) {
+        const auto score = [&](const IntersectionViewData &road)
+        {
             double result_score = 0;
             // since angular deviation is limited by 0-180, we add 360 for invalid
             if (requires_entry && !road.entry_allowed)
@@ -116,7 +118,7 @@ SelectStraightmostRoadByNameAndOnlyChoice::SelectStraightmostRoadByNameAndOnlyCh
 {
 }
 
-boost::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
+std::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
     const NodeID /*nid*/,
     const EdgeID /*via_edge_id*/,
     const IntersectionView &intersection,
@@ -127,10 +129,12 @@ boost::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
     if (intersection.size() == 1)
         return {};
 
-    const auto comparator = [&](const IntersectionViewData &lhs, const IntersectionViewData &rhs) {
+    const auto comparator = [&](const IntersectionViewData &lhs, const IntersectionViewData &rhs)
+    {
         // the score of an elemnt results in an ranking preferring valid entries, if required over
         // invalid requested name_ids over non-requested narrow deviations over non-narrow
-        const auto score = [&](const IntersectionViewData &road) {
+        const auto score = [&](const IntersectionViewData &road)
+        {
             double result_score = 0;
             // since angular deviation is limited by 0-180, we add 360 for invalid
             if (requires_entry && !road.entry_allowed)
@@ -149,8 +153,11 @@ boost::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
         return score(lhs) < score(rhs);
     };
 
-    const auto count_desired_name =
-        std::count_if(std::begin(intersection), std::end(intersection), [&](const auto &road) {
+    const auto count_desired_name = std::count_if(
+        std::begin(intersection),
+        std::end(intersection),
+        [&](const auto &road)
+        {
             return node_data_container
                        .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
                        .name_id == desired_name_id;
@@ -234,7 +241,7 @@ boost::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
             return {};
     }
 
-    return is_only_choice_with_same_name ? boost::optional<EdgeID>(min_element->eid) : boost::none;
+    return is_only_choice_with_same_name ? std::optional<EdgeID>(min_element->eid) : std::nullopt;
 }
 
 // ---------------------------------------------------------------------------------
@@ -245,12 +252,12 @@ IntersectionFinderAccumulator::IntersectionFinderAccumulator(
     const std::vector<util::Coordinate> &node_coordinates,
     const extractor::CompressedEdgeContainer &compressed_geometries,
     const RestrictionMap &node_restriction_map,
-    const std::unordered_set<NodeID> &barrier_nodes,
+    const ObstacleMap &obstacle_nodes,
     const TurnLanesIndexedArray &turn_lanes_data)
     : hops(0), hop_limit(hop_limit), node_based_graph(node_based_graph),
       node_data_container(node_data_container), node_coordinates(node_coordinates),
       compressed_geometries(compressed_geometries), node_restriction_map(node_restriction_map),
-      barrier_nodes(barrier_nodes), turn_lanes_data(turn_lanes_data)
+      obstacle_nodes(obstacle_nodes), turn_lanes_data(turn_lanes_data)
 {
 }
 
@@ -280,7 +287,7 @@ void IntersectionFinderAccumulator::update(const NodeID from_node,
                                                          node_coordinates,
                                                          compressed_geometries,
                                                          node_restriction_map,
-                                                         barrier_nodes,
+                                                         obstacle_nodes,
                                                          turn_lanes_data,
                                                          {from_node, via_edge});
 }

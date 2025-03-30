@@ -6,8 +6,6 @@
 
 #include "util/json_container.hpp"
 
-#include <boost/format.hpp>
-
 namespace osrm::server::service
 {
 namespace
@@ -42,7 +40,7 @@ engine::Status MatchService::RunQuery(std::size_t prefix_length,
                                       osrm::engine::api::ResultT &result)
 {
     result = util::json::Object();
-    auto &json_result = result.get<util::json::Object>();
+    auto &json_result = std::get<util::json::Object>(result);
 
     auto query_iterator = query.begin();
     auto parameters =

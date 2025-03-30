@@ -13,6 +13,7 @@
 #include "util/for_each_indexed.hpp"
 #include "util/for_each_pair.hpp"
 #include "util/log.hpp"
+#include "util/std_hash.hpp"
 #include "util/timing_util.hpp"
 
 #include <boost/assert.hpp>
@@ -21,10 +22,7 @@
 
 #include <tbb/parallel_sort.h>
 
-#include <chrono>
 #include <limits>
-#include <mutex>
-#include <sstream>
 
 namespace
 {
@@ -397,7 +395,9 @@ ExtractionContainers::ExtractionContainers()
 
 /**
  * Processes the collected data and serializes it.
- * At this point nodes are still referenced by their OSM id.
+ *
+ * In this function the nodes will eventually be converted from their 64bit OSM id to the
+ * internal 32bit OSRM id.
  *
  * - Identify nodes of ways used in restrictions and maneuver overrides
  * - Filter nodes list to nodes that are referenced by ways
@@ -410,12 +410,12 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
 {
     const auto restriction_ways = IdentifyRestrictionWays();
     const auto maneuver_override_ways = IdentifyManeuverOverrideWays();
-    const auto traffic_signals = IdentifyTrafficSignals();
+    scripting_environment.m_obstacle_map.preProcess(used_node_id_list, way_node_id_offsets);
 
     PrepareNodes();
     PrepareEdges(scripting_environment);
+    scripting_environment.m_obstacle_map.fixupNodes(used_node_id_list);
 
-    PrepareTrafficSignals(traffic_signals);
     PrepareManeuverOverrides(maneuver_override_ways);
     PrepareRestrictions(restriction_ways);
     WriteCharData(name_file_name);
@@ -460,10 +460,10 @@ void ExtractionContainers::PrepareNodes()
         util::UnbufferedLog log;
         log << "Sorting all nodes         ... " << std::flush;
         TIMER_START(sorting_nodes);
-        tbb::parallel_sort(
-            all_nodes_list.begin(), all_nodes_list.end(), [](const auto &left, const auto &right) {
-                return left.node_id < right.node_id;
-            });
+        tbb::parallel_sort(all_nodes_list.begin(),
+                           all_nodes_list.end(),
+                           [](const auto &left, const auto &right)
+                           { return left.node_id < right.node_id; });
         TIMER_STOP(sorting_nodes);
         log << "ok, after " << TIMER_SEC(sorting_nodes) << "s";
     }
@@ -547,22 +547,6 @@ void ExtractionContainers::PrepareNodes()
         log << "ok, after " << TIMER_SEC(write_nodes) << "s";
     }
 
-    {
-        util::UnbufferedLog log;
-        log << "Writing barrier nodes     ... ";
-        TIMER_START(write_nodes);
-        for (const auto osm_id : barrier_nodes)
-        {
-            const auto node_id = mapExternalToInternalNodeID(
-                used_node_id_list.begin(), used_node_id_list.end(), osm_id);
-            if (node_id != SPECIAL_NODEID)
-            {
-                used_barrier_nodes.emplace(node_id);
-            }
-        }
-        log << "ok, after " << TIMER_SEC(write_nodes) << "s";
-    }
-
     util::Log() << "Processed " << max_internal_node_id << " nodes";
 }
 
@@ -629,7 +613,8 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
 
         // Remove all remaining edges. They are invalid because there are no corresponding nodes for
         // them. This happens when using osmosis with bbox or polygon to extract smaller areas.
-        auto markSourcesInvalid = [](InternalExtractorEdge &edge) {
+        auto markSourcesInvalid = [](InternalExtractorEdge &edge)
+        {
             util::Log(logDEBUG) << "Found invalid node reference " << edge.result.source;
             edge.result.source = SPECIAL_NODEID;
             edge.result.osm_source_id = SPECIAL_OSM_NODEID;
@@ -706,7 +691,12 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             const auto accurate_distance =
                 util::coordinate_calculation::greatCircleDistance(source_coord, target_coord);
 
-            ExtractionSegment segment(source_coord, target_coord, distance, weight, duration);
+            ExtractionSegment segment(source_coord,
+                                      target_coord,
+                                      distance,
+                                      weight,
+                                      duration,
+                                      edge_iterator->result.flags);
             scripting_environment.ProcessSegment(segment);
 
             auto &edge = edge_iterator->result;
@@ -738,7 +728,8 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
 
         // Remove all remaining edges. They are invalid because there are no corresponding nodes for
         // them. This happens when using osmosis with bbox or polygon to extract smaller areas.
-        auto markTargetsInvalid = [](InternalExtractorEdge &edge) {
+        auto markTargetsInvalid = [](InternalExtractorEdge &edge)
+        {
             util::Log(logDEBUG) << "Found invalid node reference " << edge.result.target;
             edge.result.target = SPECIAL_NODEID;
         };
@@ -893,7 +884,8 @@ ExtractionContainers::ReferencedWays ExtractionContainers::IdentifyManeuverOverr
         << " maneuver overrides...";
     TIMER_START(identify_maneuver_override_ways);
 
-    const auto mark_ids = [&](auto const &external_maneuver_override) {
+    const auto mark_ids = [&](auto const &external_maneuver_override)
+    {
         NodesOfWay dummy_segment{MAX_OSM_WAYID, {MAX_OSM_NODEID, MAX_OSM_NODEID}};
         const auto &turn_path = external_maneuver_override.turn_path;
         maneuver_override_ways[turn_path.From()] = dummy_segment;
@@ -913,7 +905,8 @@ ExtractionContainers::ReferencedWays ExtractionContainers::IdentifyManeuverOverr
     std::for_each(
         external_maneuver_overrides_list.begin(), external_maneuver_overrides_list.end(), mark_ids);
 
-    const auto set_ids = [&](size_t way_list_idx, auto const &way_id) {
+    const auto set_ids = [&](size_t way_list_idx, auto const &way_id)
+    {
         auto itr = maneuver_override_ways.find(way_id);
         if (itr != maneuver_override_ways.end())
         {
@@ -933,53 +926,10 @@ ExtractionContainers::ReferencedWays ExtractionContainers::IdentifyManeuverOverr
     return maneuver_override_ways;
 }
 
-void ExtractionContainers::PrepareTrafficSignals(
-    const ExtractionContainers::ReferencedTrafficSignals &referenced_traffic_signals)
-{
-    const auto &bidirectional_signal_nodes = referenced_traffic_signals.first;
-    const auto &unidirectional_signal_segments = referenced_traffic_signals.second;
-
-    util::UnbufferedLog log;
-    log << "Preparing traffic light signals for " << bidirectional_signal_nodes.size()
-        << " bidirectional, " << unidirectional_signal_segments.size()
-        << " unidirectional nodes ...";
-    TIMER_START(prepare_traffic_signals);
-
-    std::unordered_set<NodeID> bidirectional;
-    std::unordered_set<std::pair<NodeID, NodeID>, boost::hash<std::pair<NodeID, NodeID>>>
-        unidirectional;
-
-    for (const auto &osm_node : bidirectional_signal_nodes)
-    {
-        const auto node_id = mapExternalToInternalNodeID(
-            used_node_id_list.begin(), used_node_id_list.end(), osm_node);
-        if (node_id != SPECIAL_NODEID)
-        {
-            bidirectional.insert(node_id);
-        }
-    }
-    for (const auto &to_from : unidirectional_signal_segments)
-    {
-        const auto to_node_id = mapExternalToInternalNodeID(
-            used_node_id_list.begin(), used_node_id_list.end(), to_from.first);
-        const auto from_node_id = mapExternalToInternalNodeID(
-            used_node_id_list.begin(), used_node_id_list.end(), to_from.second);
-        if (from_node_id != SPECIAL_NODEID && to_node_id != SPECIAL_NODEID)
-        {
-            unidirectional.insert({from_node_id, to_node_id});
-        }
-    }
-
-    internal_traffic_signals.bidirectional_nodes = std::move(bidirectional);
-    internal_traffic_signals.unidirectional_segments = std::move(unidirectional);
-
-    TIMER_STOP(prepare_traffic_signals);
-    log << "ok, after " << TIMER_SEC(prepare_traffic_signals) << "s";
-}
-
 void ExtractionContainers::PrepareManeuverOverrides(const ReferencedWays &maneuver_override_ways)
 {
-    auto const osm_node_to_internal_nbn = [&](auto const osm_node) {
+    auto const osm_node_to_internal_nbn = [&](auto const osm_node)
+    {
         auto internal = mapExternalToInternalNodeID(
             used_node_id_list.begin(), used_node_id_list.end(), osm_node);
         if (internal == SPECIAL_NODEID)
@@ -989,8 +939,9 @@ void ExtractionContainers::PrepareManeuverOverrides(const ReferencedWays &maneuv
         return internal;
     };
 
-    const auto strings_to_turn_type_and_direction = [](const std::string &turn_string,
-                                                       const std::string &direction_string) {
+    const auto strings_to_turn_type_and_direction =
+        [](const std::string &turn_string, const std::string &direction_string)
+    {
         auto result = std::make_pair(guidance::TurnType::MaxTurnType,
                                      guidance::DirectionModifier::MaxDirectionModifier);
 
@@ -1054,7 +1005,8 @@ void ExtractionContainers::PrepareManeuverOverrides(const ReferencedWays &maneuv
     // Returns true on successful transformation, false in case of invalid references.
     // Later, the UnresolvedManeuverOverride will be converted into a final ManeuverOverride
     // once the edge-based-node IDs are generated by the edge-based-graph-factory
-    const auto transform = [&](const auto &external_type, auto &internal_type) {
+    const auto transform = [&](const auto &external_type, auto &internal_type)
+    {
         if (external_type.turn_path.Type() == TurnPathType::VIA_WAY_TURN_PATH)
         {
             auto const &external = external_type.turn_path.AsViaWayPath();
@@ -1087,11 +1039,12 @@ void ExtractionContainers::PrepareManeuverOverrides(const ReferencedWays &maneuv
     };
 
     const auto transform_into_internal_types =
-        [&](const InputManeuverOverride &external_maneuver_override) {
-            UnresolvedManeuverOverride internal_maneuver_override;
-            if (transform(external_maneuver_override, internal_maneuver_override))
-                internal_maneuver_overrides.push_back(std::move(internal_maneuver_override));
-        };
+        [&](const InputManeuverOverride &external_maneuver_override)
+    {
+        UnresolvedManeuverOverride internal_maneuver_override;
+        if (transform(external_maneuver_override, internal_maneuver_override))
+            internal_maneuver_overrides.push_back(std::move(internal_maneuver_override));
+    };
 
     // Transforming the overrides into the dedicated internal types
     {
@@ -1119,7 +1072,8 @@ ExtractionContainers::ReferencedWays ExtractionContainers::IdentifyRestrictionWa
 
     // Enter invalid IDs into the map to indicate that we want to find out about
     // nodes of these ways.
-    const auto mark_ids = [&](auto const &turn_restriction) {
+    const auto mark_ids = [&](auto const &turn_restriction)
+    {
         NodesOfWay dummy_segment{MAX_OSM_WAYID, {MAX_OSM_NODEID, MAX_OSM_NODEID}};
         const auto &turn_path = turn_restriction.turn_path;
         restriction_ways[turn_path.From()] = dummy_segment;
@@ -1137,7 +1091,8 @@ ExtractionContainers::ReferencedWays ExtractionContainers::IdentifyRestrictionWa
     std::for_each(restrictions_list.begin(), restrictions_list.end(), mark_ids);
 
     // Update the values for all ways already sporting SPECIAL_NODEID
-    const auto set_ids = [&](const size_t way_list_idx, auto const &way_id) {
+    const auto set_ids = [&](const size_t way_list_idx, auto const &way_id)
+    {
         auto itr = restriction_ways.find(way_id);
         if (itr != restriction_ways.end())
         {
@@ -1157,97 +1112,11 @@ ExtractionContainers::ReferencedWays ExtractionContainers::IdentifyRestrictionWa
     return restriction_ways;
 }
 
-ExtractionContainers::ReferencedTrafficSignals ExtractionContainers::IdentifyTrafficSignals()
-{
-    util::UnbufferedLog log;
-    log << "Collecting traffic signal information on " << external_traffic_signals.size()
-        << " signals...";
-    TIMER_START(identify_traffic_signals);
-
-    // Temporary store for nodes containing a unidirectional signal.
-    std::unordered_map<OSMNodeID, TrafficLightClass::Direction> unidirectional_signals;
-
-    // For each node that has a unidirectional traffic signal, we store the node(s)
-    // that lead up to the signal.
-    std::unordered_multimap<OSMNodeID, OSMNodeID> signal_segments;
-
-    std::unordered_set<OSMNodeID> bidirectional_signals;
-
-    const auto mark_signals = [&](auto const &traffic_signal) {
-        if (traffic_signal.second == TrafficLightClass::DIRECTION_FORWARD ||
-            traffic_signal.second == TrafficLightClass::DIRECTION_REVERSE)
-        {
-            unidirectional_signals.insert({traffic_signal.first, traffic_signal.second});
-        }
-        else
-        {
-            BOOST_ASSERT(traffic_signal.second == TrafficLightClass::DIRECTION_ALL);
-            bidirectional_signals.insert(traffic_signal.first);
-        }
-    };
-    std::for_each(external_traffic_signals.begin(), external_traffic_signals.end(), mark_signals);
-
-    // Extract all the segments that lead up to unidirectional traffic signals.
-    const auto set_segments = [&](const size_t way_list_idx, auto const & /*unused*/) {
-        const auto node_start_offset =
-            used_node_id_list.begin() + way_node_id_offsets[way_list_idx];
-        const auto node_end_offset =
-            used_node_id_list.begin() + way_node_id_offsets[way_list_idx + 1];
-
-        for (auto node_it = node_start_offset; node_it < node_end_offset; node_it++)
-        {
-            const auto sig = unidirectional_signals.find(*node_it);
-            if (sig != unidirectional_signals.end())
-            {
-                if (sig->second == TrafficLightClass::DIRECTION_FORWARD)
-                {
-                    if (node_it != node_start_offset)
-                    {
-                        // Previous node leads to signal
-                        signal_segments.insert({*node_it, *(node_it - 1)});
-                    }
-                }
-                else
-                {
-                    BOOST_ASSERT(sig->second == TrafficLightClass::DIRECTION_REVERSE);
-                    if (node_it + 1 != node_end_offset)
-                    {
-                        // Next node leads to signal
-                        signal_segments.insert({*node_it, *(node_it + 1)});
-                    }
-                }
-            }
-        }
-    };
-    util::for_each_indexed(ways_list.cbegin(), ways_list.cend(), set_segments);
-
-    util::for_each_pair(
-        signal_segments, [](const auto pair_a, const auto pair_b) {
-            if (pair_a.first == pair_b.first)
-            {
-                // If a node is appearing multiple times in this map, then it's ambiguous.
-                // The node is an intersection and the traffic direction is being use for multiple
-                // ways. We can't be certain of the original intent. See:
-                // https://wiki.openstreetmap.org/wiki/Key:traffic_signals:direction
-
-                // OSRM will include the signal for all intersecting ways in the specified
-                // direction, but let's flag this as a concern.
-                util::Log(logWARNING)
-                    << "OSM node " << pair_a.first
-                    << " has a unidirectional traffic signal ambiguously applied to multiple ways";
-            }
-        });
-
-    TIMER_STOP(identify_traffic_signals);
-    log << "ok, after " << TIMER_SEC(identify_traffic_signals) << "s";
-
-    return {std::move(bidirectional_signals), std::move(signal_segments)};
-}
-
 void ExtractionContainers::PrepareRestrictions(const ReferencedWays &restriction_ways)
 {
 
-    auto const to_internal = [&](auto const osm_node) {
+    auto const to_internal = [&](auto const osm_node)
+    {
         auto internal = mapExternalToInternalNodeID(
             used_node_id_list.begin(), used_node_id_list.end(), osm_node);
         if (internal == SPECIAL_NODEID)
@@ -1259,7 +1128,8 @@ void ExtractionContainers::PrepareRestrictions(const ReferencedWays &restriction
 
     // Transform an OSMRestriction (based on WayIDs) into an OSRM restriction (base on NodeIDs).
     // Returns true on successful transformation, false in case of invalid references.
-    const auto transform = [&](const auto &external_type, auto &internal_type) {
+    const auto transform = [&](const auto &external_type, auto &internal_type)
+    {
         if (external_type.turn_path.Type() == TurnPathType::VIA_WAY_TURN_PATH)
         {
             auto const &external = external_type.turn_path.AsViaWayPath();
@@ -1288,7 +1158,8 @@ void ExtractionContainers::PrepareRestrictions(const ReferencedWays &restriction
         return internal_type.Valid();
     };
 
-    const auto transform_into_internal_types = [&](InputTurnRestriction &external_restriction) {
+    const auto transform_into_internal_types = [&](InputTurnRestriction &external_restriction)
+    {
         TurnRestriction restriction;
         if (transform(external_restriction, restriction))
         {

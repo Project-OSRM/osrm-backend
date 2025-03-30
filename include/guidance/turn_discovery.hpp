@@ -2,6 +2,7 @@
 #define OSRM_GUIDANCE_TURN_DISCOVERY_HPP_
 
 #include "extractor/node_restriction_map.hpp"
+#include "extractor/obstacles.hpp"
 #include "guidance/intersection.hpp"
 #include "guidance/turn_lane_data.hpp"
 #include "util/typedefs.hpp"
@@ -35,7 +36,7 @@ bool findPreviousIntersection(
     const std::vector<util::Coordinate> &node_coordinates,
     const extractor::CompressedEdgeContainer &compressed_geometries,
     const extractor::RestrictionMap &node_restriction_map,
-    const std::unordered_set<NodeID> &barrier_nodes,
+    const extractor::ObstacleMap &obstacle_nodes,
     const extractor::TurnLanesIndexedArray &turn_lanes_data,
     // output parameters, will be in an arbitrary state on failure
     NodeID &result_node,

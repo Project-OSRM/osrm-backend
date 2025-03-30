@@ -202,7 +202,7 @@ inline auto make_search_tree_view(const SharedDataIndex &index, const std::strin
 
     const char *path = index.template GetBlockPtr<char>(name + "/file_index_path");
 
-    if (!boost::filesystem::exists(boost::filesystem::path{path}))
+    if (!std::filesystem::exists(std::filesystem::path{path}))
     {
         throw util::exception("Could not load " + std::string(path) + "Does the leaf file exist?" +
                               SOURCE_REF);
@@ -241,9 +241,9 @@ inline auto make_contracted_metric_view(const SharedDataIndex &index, const std:
 
     std::vector<util::vector_view<bool>> edge_filter;
     index.List(name + "/exclude",
-               boost::make_function_output_iterator([&](const auto &filter_name) {
-                   edge_filter.push_back(make_vector_view<bool>(index, filter_name));
-               }));
+               boost::make_function_output_iterator(
+                   [&](const auto &filter_name)
+                   { edge_filter.push_back(make_vector_view<bool>(index, filter_name)); }));
 
     return contractor::ContractedMetricView{{node_list, edge_list}, std::move(edge_filter)};
 }

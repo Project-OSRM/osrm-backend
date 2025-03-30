@@ -15,8 +15,8 @@ function setup()
       max_speed_for_map_matching    = 30/3.6, --km -> m/s
       weight_name                   = 'duration',
       process_call_tagless_node     = false,
-      u_turn_penalty                 = 20,
-      traffic_light_penalty         = 7,     -- seconds
+      u_turn_penalty                = 20,
+      traffic_signal_penalty        = 7,     -- seconds
       use_turn_restrictions         = true
     },
 
@@ -131,7 +131,7 @@ function process_turn (profile, turn)
     turn.weight = turn.weight + profile.properties.u_turn_penalty
   end
   if turn.has_traffic_light then
-     turn.duration = turn.duration + profile.properties.traffic_light_penalty
+     turn.duration = turn.duration + profile.properties.traffic_signal_penalty
   end
 end
 

@@ -46,20 +46,20 @@ IntersectionHandler::IntersectionHandler(
     const std::vector<util::Coordinate> &node_coordinates,
     const extractor::CompressedEdgeContainer &compressed_geometries,
     const extractor::RestrictionMap &node_restriction_map,
-    const std::unordered_set<NodeID> &barrier_nodes,
+    const extractor::ObstacleMap &obstacle_nodes,
     const extractor::TurnLanesIndexedArray &turn_lanes_data,
     const extractor::NameTable &name_table,
     const extractor::SuffixTable &street_name_suffix_table)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
       node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),
-      node_restriction_map(node_restriction_map), barrier_nodes(barrier_nodes),
+      node_restriction_map(node_restriction_map), obstacle_nodes(obstacle_nodes),
       turn_lanes_data(turn_lanes_data), name_table(name_table),
       street_name_suffix_table(street_name_suffix_table), graph_walker(node_based_graph,
                                                                        node_data_container,
                                                                        node_coordinates,
                                                                        compressed_geometries,
                                                                        node_restriction_map,
-                                                                       barrier_nodes,
+                                                                       obstacle_nodes,
                                                                        turn_lanes_data)
 {
 }
@@ -356,7 +356,8 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
                                      ConnectedRoad &right) const
 {
     // TODO handle low priority road classes in a reasonable way
-    const auto suppressed_type = [&](const ConnectedRoad &road) {
+    const auto suppressed_type = [&](const ConnectedRoad &road)
+    {
         const auto in_mode =
             node_data_container
                 .GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data)
@@ -426,10 +427,10 @@ void IntersectionHandler::assignTrivialTurns(const EdgeID via_eid,
         }
 }
 
-boost::optional<IntersectionHandler::IntersectionViewAndNode>
+std::optional<IntersectionHandler::IntersectionViewAndNode>
 IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) const
 {
-    // We use the intersection generator to jump over traffic signals, barriers. The intersection
+    // We use the intersection generator to jump over obstacles. The intersection
     // generater takes a starting node and a corresponding edge starting at this node. It returns
     // the next non-artificial intersection writing as out param. the source node and the edge
     // for which the target is the next intersection.
@@ -449,7 +450,7 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
     if (intersection_parameters.node == SPECIAL_NODEID ||
         intersection_parameters.edge == SPECIAL_EDGEID)
     {
-        return boost::none;
+        return std::nullopt;
     }
 
     auto intersection = extractor::intersection::getConnectedRoads<false>(node_based_graph,
@@ -457,18 +458,17 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
                                                                           node_coordinates,
                                                                           compressed_geometries,
                                                                           node_restriction_map,
-                                                                          barrier_nodes,
+                                                                          obstacle_nodes,
                                                                           turn_lanes_data,
                                                                           intersection_parameters);
     auto intersection_node = node_based_graph.GetTarget(intersection_parameters.edge);
 
-    if (intersection.size() <= 2 || intersection.isTrafficSignalOrBarrier())
+    if (intersection.size() <= 2 || intersection.isObstacle())
     {
-        return boost::none;
+        return std::nullopt;
     }
 
-    return boost::make_optional(
-        IntersectionViewAndNode{std::move(intersection), intersection_node});
+    return std::make_optional(IntersectionViewAndNode{std::move(intersection), intersection_node});
 }
 
 bool IntersectionHandler::isSameName(const EdgeID source_edge_id, const EdgeID target_edge_id) const

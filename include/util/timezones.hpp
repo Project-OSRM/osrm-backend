@@ -3,14 +3,13 @@
 
 #include "util/log.hpp"
 
-#include <boost/filesystem/path.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>
-#include <boost/optional.hpp>
 
 #include <rapidjson/document.h>
 
-#include <chrono>
+#include <filesystem>
+#include <optional>
 
 namespace osrm::updater
 {
@@ -32,9 +31,9 @@ class Timezoner
     Timezoner() = default;
 
     Timezoner(const char geojson[], std::time_t utc_time_now);
-    Timezoner(const boost::filesystem::path &tz_shapes_filename, std::time_t utc_time_now);
+    Timezoner(const std::filesystem::path &tz_shapes_filename, std::time_t utc_time_now);
 
-    boost::optional<struct tm> operator()(const point_t &point) const;
+    std::optional<struct tm> operator()(const point_t &point) const;
 
   private:
     void LoadLocalTimesRTree(rapidjson::Document &geojson, std::time_t utc_time);

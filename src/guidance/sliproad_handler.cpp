@@ -22,7 +22,7 @@ SliproadHandler::SliproadHandler(const util::NodeBasedDynamicGraph &node_based_g
                                  const std::vector<util::Coordinate> &node_coordinates,
                                  const extractor::CompressedEdgeContainer &compressed_geometries,
                                  const extractor::RestrictionMap &node_restriction_map,
-                                 const std::unordered_set<NodeID> &barrier_nodes,
+                                 const extractor::ObstacleMap &obstacle_nodes,
                                  const extractor::TurnLanesIndexedArray &turn_lanes_data,
                                  const extractor::NameTable &name_table,
                                  const extractor::SuffixTable &street_name_suffix_table)
@@ -31,7 +31,7 @@ SliproadHandler::SliproadHandler(const util::NodeBasedDynamicGraph &node_based_g
                           node_coordinates,
                           compressed_geometries,
                           node_restriction_map,
-                          barrier_nodes,
+                          obstacle_nodes,
                           turn_lanes_data,
                           name_table,
                           street_name_suffix_table),
@@ -91,7 +91,8 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
     }
 
     // Link-check for (bc) and later on (cd) which both are getting shortcutted by Sliproad
-    const auto is_potential_link = [this, main_road](const ConnectedRoad &road) {
+    const auto is_potential_link = [this, main_road](const ConnectedRoad &road)
+    {
         if (!road.entry_allowed)
         {
             return false;
@@ -188,7 +189,8 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
         const auto is_left_sliproad_turn = road_index > *obvious;
 
         // Road at the intersection the main road leads onto which the sliproad arrives onto
-        const auto crossing_road = [&] {
+        const auto crossing_road = [&]
+        {
             if (is_left_sliproad_turn)
                 return main_road_intersection->intersection.getLeftmostRoad();
 
@@ -253,9 +255,9 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
             node_coordinates,
             compressed_geometries,
             node_restriction_map,
-            barrier_nodes,
+            obstacle_nodes,
             turn_lanes_data};
-        const extractor::intersection::SkipTrafficSignalBarrierRoadSelector road_selector{};
+        const extractor::intersection::SkipObstacleRoadSelector road_selector{};
         (void)graph_walker.TraverseRoad(intersection_node_id, // start node
                                         sliproad_edge,        // onto edge
                                         intersection_finder,  // accumulator
@@ -266,7 +268,8 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
         if (target_intersection.isDeadEnd())
             continue;
 
-        const auto find_valid = [](const extractor::intersection::IntersectionView &view) {
+        const auto find_valid = [](const extractor::intersection::IntersectionView &view)
+        {
             // according to our current sliproad idea, there should only be one valid turn
             auto itr = std::find_if(
                 view.begin(), view.end(), [](const auto &road) { return road.entry_allowed; });
@@ -326,16 +329,19 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
                 is_left_sliproad_turn ? main_road_intersection->intersection.size() - 2 : 2;
             auto next_to_crossing_road = main_road_intersection->intersection[next_to_crossing_idx];
             auto next_to_crossing_node = node_based_graph.GetTarget(next_to_crossing_road.eid);
-            auto found_common_node = std::find_if(
-                begin(target_intersection), end(target_intersection), [&](const auto &road) {
-                    if (next_to_crossing_node == node_based_graph.GetTarget(road.eid))
-                    {
-                        auto direction = getTurnDirection(road.angle);
-                        return direction == DirectionModifier::SharpRight ||
-                               direction == DirectionModifier::SharpLeft;
-                    }
-                    return false;
-                });
+            auto found_common_node =
+                std::find_if(begin(target_intersection),
+                             end(target_intersection),
+                             [&](const auto &road)
+                             {
+                                 if (next_to_crossing_node == node_based_graph.GetTarget(road.eid))
+                                 {
+                                     auto direction = getTurnDirection(road.angle);
+                                     return direction == DirectionModifier::SharpRight ||
+                                            direction == DirectionModifier::SharpLeft;
+                                 }
+                                 return false;
+                             });
             if (found_common_node == target_intersection.end())
                 continue;
         }
@@ -499,7 +505,8 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
                 node_based_graph.GetEdgeData(candidate_road.eid).annotation_data);
 
             // Name mismatch: check roads at `c` and `d` for same name
-            const auto name_mismatch = [&](const NameID road_name_id) {
+            const auto name_mismatch = [&](const NameID road_name_id)
+            {
                 return util::guidance::requiresNameAnnounced(road_name_id,              //
                                                              candidate_data.name_id,    //
                                                              name_table,                //
@@ -578,10 +585,10 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
                         node_coordinates,
                         compressed_geometries,
                         node_restriction_map,
-                        barrier_nodes,
+                        obstacle_nodes,
                         turn_lanes_data,
                         {node_based_graph.GetTarget(sliproad_edge), candidate_road.eid});
-                if (skip_traffic_light_intersection.isTrafficSignalOrBarrier() &&
+                if (skip_traffic_light_intersection.isObstacle() &&
                     node_based_graph.GetTarget(skip_traffic_light_intersection[1].eid) ==
                         main_road_intersection->node)
                 {
@@ -627,7 +634,7 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
 
 // Implementation details
 
-boost::optional<std::size_t> SliproadHandler::getObviousIndexWithSliproads(
+std::optional<std::size_t> SliproadHandler::getObviousIndexWithSliproads(
     const EdgeID from, const Intersection &intersection, const NodeID at) const
 {
     BOOST_ASSERT(from != SPECIAL_EDGEID);
@@ -638,14 +645,14 @@ boost::optional<std::size_t> SliproadHandler::getObviousIndexWithSliproads(
 
     if (index != 0)
     {
-        return boost::make_optional(index);
+        return std::make_optional(index);
     }
 
     // Otherwise check if the road is forking into two and one of them is a Sliproad;
     // then the non-Sliproad is the obvious one.
     if (intersection.size() != 3)
     {
-        return boost::none;
+        return std::nullopt;
     }
 
     const auto forking = intersection[1].instruction.type == TurnType::Fork &&
@@ -653,7 +660,7 @@ boost::optional<std::size_t> SliproadHandler::getObviousIndexWithSliproads(
 
     if (!forking)
     {
-        return boost::none;
+        return std::nullopt;
     }
 
     const auto first = getNextIntersection(at, intersection.getRightmostRoad().eid);
@@ -661,27 +668,27 @@ boost::optional<std::size_t> SliproadHandler::getObviousIndexWithSliproads(
 
     if (!first || !second)
     {
-        return boost::none;
+        return std::nullopt;
     }
 
     if (first->intersection.isDeadEnd() || second->intersection.isDeadEnd())
     {
-        return boost::none;
+        return std::nullopt;
     }
 
     // In case of loops at the end of the road, we will arrive back at the intersection
     // itself. If that is the case, the road is obviously not a sliproad.
     if (canBeTargetOfSliproad(first->intersection) && at != second->node)
     {
-        return boost::make_optional(std::size_t{2});
+        return std::make_optional(std::size_t{2});
     }
 
     if (canBeTargetOfSliproad(second->intersection) && at != first->node)
     {
-        return boost::make_optional(std::size_t{1});
+        return std::make_optional(std::size_t{1});
     }
 
-    return boost::none;
+    return std::nullopt;
 }
 
 bool SliproadHandler::nextIntersectionIsTooFarAway(const NodeID start, const EdgeID onto) const
@@ -696,7 +703,7 @@ bool SliproadHandler::nextIntersectionIsTooFarAway(const NodeID start, const Edg
 
     extractor::intersection::DistanceToNextIntersectionAccumulator accumulator{
         coordinate_extractor, node_based_graph, threshold};
-    const extractor::intersection::SkipTrafficSignalBarrierRoadSelector selector{};
+    const extractor::intersection::SkipObstacleRoadSelector selector{};
 
     (void)graph_walker.TraverseRoad(start, onto, accumulator, selector);
 

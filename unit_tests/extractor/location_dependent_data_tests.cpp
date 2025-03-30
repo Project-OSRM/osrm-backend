@@ -1,12 +1,13 @@
 #include "extractor/location_dependent_data.hpp"
 
 #include "../common/range_tools.hpp"
+#include "../common/temporary_file.hpp"
 
-#include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <cstdlib>
+#include <filesystem>
 #include <fstream>
-#include <vector>
 
 BOOST_AUTO_TEST_SUITE(location_dependent_data_tests)
 
@@ -16,14 +17,13 @@ using point_t = LocationDependentData::point_t;
 
 struct LocationDataFixture
 {
-    LocationDataFixture(const std::string &json) : temporary_file(boost::filesystem::unique_path())
+    LocationDataFixture(const std::string &json)
     {
-        std::ofstream file(temporary_file.string());
+        std::ofstream file(temporary_file.path.string());
         file << json;
     }
-    ~LocationDataFixture() { remove(temporary_file); }
 
-    boost::filesystem::path temporary_file;
+    TemporaryFile temporary_file;
 };
 
 BOOST_AUTO_TEST_CASE(polygon_tests)
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(polygon_tests)
 }
 ]})json");
 
-    LocationDependentData data({fixture.temporary_file});
+    LocationDependentData data({fixture.temporary_file.path});
 
     BOOST_CHECK(data.GetPropertyIndexes(point_t(0, 0)).empty());
     CHECK_EQUAL_RANGE(data.GetPropertyIndexes(point_t(1, 1)), 0);
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(multy_polygon_tests)
 }
 ]})json");
 
-    LocationDependentData data({fixture.temporary_file});
+    LocationDependentData data({fixture.temporary_file.path});
 
     BOOST_CHECK(data.GetPropertyIndexes(point_t(0, 2)).empty());
     BOOST_CHECK(data.GetPropertyIndexes(point_t(0, -3)).empty());
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(polygon_merging_tests)
 }
 ]})json");
 
-    LocationDependentData data({fixture.temporary_file});
+    LocationDependentData data({fixture.temporary_file.path});
 
     CHECK_EQUAL_RANGE(data.GetPropertyIndexes(point_t(-3, 3)), 0);
     CHECK_EQUAL_RANGE(data.GetPropertyIndexes(point_t(-3, 1)), 0);
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(staircase_polygon)
 }
 ]})json");
 
-    LocationDependentData data({fixture.temporary_file});
+    LocationDependentData data({fixture.temporary_file.path});
 
     // all corners
     BOOST_CHECK(!data.GetPropertyIndexes(point_t(0, 0)).empty());

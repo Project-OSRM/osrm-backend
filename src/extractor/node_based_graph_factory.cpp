@@ -17,17 +17,15 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
     ScriptingEnvironment &scripting_environment,
     std::vector<TurnRestriction> &turn_restrictions,
     std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
-    const TrafficSignals &traffic_signals,
-    std::unordered_set<NodeID> &&barriers,
     std::vector<util::Coordinate> &&coordinates,
     extractor::PackedOSMIDs &&osm_node_ids,
     const std::vector<NodeBasedEdge> &edge_list,
     std::vector<NodeBasedEdgeAnnotation> &&annotation_data)
-    : annotation_data(std::move(annotation_data)), barriers(std::move(barriers)),
-      coordinates(std::move(coordinates)), osm_node_ids(std::move(osm_node_ids))
+    : annotation_data(std::move(annotation_data)), coordinates(std::move(coordinates)),
+      osm_node_ids(std::move(osm_node_ids))
 {
     BuildCompressedOutputGraph(edge_list);
-    Compress(scripting_environment, turn_restrictions, maneuver_overrides, traffic_signals);
+    Compress(scripting_environment, turn_restrictions, maneuver_overrides);
     CompressGeometry();
     CompressAnnotationData();
 }
@@ -46,38 +44,39 @@ void NodeBasedGraphFactory::BuildCompressedOutputGraph(const std::vector<NodeBas
         util::NodeBasedDynamicGraphFromEdges(number_of_node_based_nodes, edge_list);
 
     // check whether the graph is sane
-    BOOST_ASSERT([this]() {
-        for (const auto nbg_node_u : util::irange(0u, compressed_output_graph.GetNumberOfNodes()))
+    BOOST_ASSERT(
+        [this]()
         {
-            for (EdgeID nbg_edge_id : compressed_output_graph.GetAdjacentEdgeRange(nbg_node_u))
+            for (const auto nbg_node_u :
+                 util::irange(0u, compressed_output_graph.GetNumberOfNodes()))
             {
-                // we cannot have invalid edge-ids in the graph
-                if (nbg_edge_id == SPECIAL_EDGEID)
-                    return false;
+                for (EdgeID nbg_edge_id : compressed_output_graph.GetAdjacentEdgeRange(nbg_node_u))
+                {
+                    // we cannot have invalid edge-ids in the graph
+                    if (nbg_edge_id == SPECIAL_EDGEID)
+                        return false;
 
-                const auto nbg_node_v = compressed_output_graph.GetTarget(nbg_edge_id);
+                    const auto nbg_node_v = compressed_output_graph.GetTarget(nbg_edge_id);
 
-                auto reverse = compressed_output_graph.FindEdge(nbg_node_v, nbg_node_u);
+                    auto reverse = compressed_output_graph.FindEdge(nbg_node_v, nbg_node_u);
 
-                // found an edge that is reversed in both directions, should be two distinct edges
-                if (compressed_output_graph.GetEdgeData(nbg_edge_id).reversed &&
-                    compressed_output_graph.GetEdgeData(reverse).reversed)
-                    return false;
+                    // found an edge that is reversed in both directions, should be two distinct
+                    // edges
+                    if (compressed_output_graph.GetEdgeData(nbg_edge_id).reversed &&
+                        compressed_output_graph.GetEdgeData(reverse).reversed)
+                        return false;
+                }
             }
-        }
-        return true;
-    }());
+            return true;
+        }());
 }
 
 void NodeBasedGraphFactory::Compress(ScriptingEnvironment &scripting_environment,
                                      std::vector<TurnRestriction> &turn_restrictions,
-                                     std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
-                                     const TrafficSignals &traffic_signals)
+                                     std::vector<UnresolvedManeuverOverride> &maneuver_overrides)
 {
     GraphCompressor graph_compressor;
-    graph_compressor.Compress(barriers,
-                              traffic_signals,
-                              scripting_environment,
+    graph_compressor.Compress(scripting_environment,
                               turn_restrictions,
                               maneuver_overrides,
                               compressed_output_graph,
@@ -208,13 +207,15 @@ void NodeBasedGraphFactory::CompressAnnotationData()
     }
 
     // remove unreferenced entries, shifting other entries to the front
-    const auto new_end =
-        std::remove_if(annotation_data.begin(), annotation_data.end(), [&](auto const &data) {
-            // both elements are considered equal (to remove the second
-            // one) if the annotation mapping of the second one is
-            // invalid
-            return data.name_id == INVALID_NAMEID;
-        });
+    const auto new_end = std::remove_if(annotation_data.begin(),
+                                        annotation_data.end(),
+                                        [&](auto const &data)
+                                        {
+                                            // both elements are considered equal (to remove the
+                                            // second one) if the annotation mapping of the second
+                                            // one is invalid
+                                            return data.name_id == INVALID_NAMEID;
+                                        });
 
     const auto old_size = annotation_data.size();
     // remove all remaining elements

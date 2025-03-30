@@ -8,10 +8,10 @@
 #include "turn_path.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
+#include "util/std_hash.hpp"
 #include "util/vector_view.hpp"
+
 #include <algorithm>
-#include <boost/functional/hash.hpp>
-#include <mapbox/variant.hpp>
 
 namespace osrm::extractor
 {
@@ -147,7 +147,6 @@ struct UnresolvedManeuverOverride
 namespace std
 {
 template <> struct hash<osrm::extractor::NodeBasedTurn>
-
 {
     using argument_type = osrm::extractor::NodeBasedTurn;
     using result_type = std::size_t;
@@ -155,9 +154,9 @@ template <> struct hash<osrm::extractor::NodeBasedTurn>
     {
 
         std::size_t seed = 0;
-        boost::hash_combine(seed, s.from);
-        boost::hash_combine(seed, s.via);
-        boost::hash_combine(seed, s.to);
+        hash_combine(seed, s.from);
+        hash_combine(seed, s.via);
+        hash_combine(seed, s.to);
 
         return seed;
     }

@@ -26,7 +26,15 @@ Feature: Foot - Access tags on ways
             | motorway | no     |      |       |
             | motorway | no     | yes  | x     |
             | motorway | no     | no   |       |
-
+            | platform |        |      | x     |
+            | platform |        | yes  | x     |
+            | platform |        | no   |       |
+            | platform | yes    |      | x     |
+            | platform | yes    | yes  | x     |
+            | platform | yes    | no   |       |
+            | platform | no     |      |       |
+            | platform | no     | yes  | x     |
+            | platform | no     | no   |       |
 
     Scenario: Foot - Overwriting implied acccess on ways
         Then routability should be

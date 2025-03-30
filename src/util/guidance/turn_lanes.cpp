@@ -1,10 +1,6 @@
 #include "util/guidance/turn_lanes.hpp"
 
-#include <algorithm>
-#include <iostream>
 #include <tuple>
-
-#include <boost/assert.hpp>
 
 namespace osrm::util::guidance
 {

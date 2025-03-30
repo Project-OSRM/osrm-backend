@@ -40,7 +40,7 @@ TEST_CASE("check_for_exception with exception") {
 static_assert(std::is_nothrow_move_constructible<osmium::thread::thread_handler>::value, "thread_handler must have noexcept move constructor");
 
 TEST_CASE("empty thread_handler") {
-    osmium::thread::thread_handler th;
+    const osmium::thread::thread_handler th;
 }
 
 int foo; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
@@ -54,7 +54,7 @@ TEST_CASE("valid thread_handler") {
     test_func(17);
     REQUIRE(foo == 17);
     {
-        osmium::thread::thread_handler th{test_func, 5};
+        const osmium::thread::thread_handler th{test_func, 5};
     }
     REQUIRE(foo == 5);
 }

@@ -31,11 +31,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JSON_CONTAINER_HPP
 #define JSON_CONTAINER_HPP
 
-#include <mapbox/variant.hpp>
-
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace osrm::util::json
@@ -96,13 +95,7 @@ struct Null
  *
  * Dispatch on its type by either by using apply_visitor or its get function.
  */
-using Value = mapbox::util::variant<String,
-                                    Number,
-                                    mapbox::util::recursive_wrapper<Object>,
-                                    mapbox::util::recursive_wrapper<Array>,
-                                    True,
-                                    False,
-                                    Null>;
+using Value = std::variant<String, Number, Object, Array, True, False, Null>;
 
 /**
  * Typed Object.
@@ -111,7 +104,7 @@ using Value = mapbox::util::variant<String,
  */
 struct Object
 {
-    std::unordered_map<std::string, Value> values;
+    std::unordered_map<std::string_view, Value> values;
 };
 
 /**

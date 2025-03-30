@@ -5,8 +5,6 @@
 #include "util/exception_utils.hpp"
 #include "util/log.hpp"
 
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #ifndef _WIN32
 #include <boost/interprocess/xsi_shared_memory.hpp>
@@ -22,7 +20,8 @@
 #include <cstdint>
 
 #include <algorithm>
-#include <exception>
+#include <filesystem>
+#include <fstream>
 #include <thread>
 
 #include "storage/shared_memory_ownership.hpp"
@@ -32,10 +31,10 @@ namespace osrm::storage
 
 struct OSRMLockFile
 {
-    template <typename IdentifierT> boost::filesystem::path operator()(const IdentifierT &id)
+    template <typename IdentifierT> std::filesystem::path operator()(const IdentifierT &id)
     {
-        boost::filesystem::path temp_dir = boost::filesystem::temp_directory_path();
-        boost::filesystem::path lock_file = temp_dir / ("osrm-" + std::to_string(id) + ".lock");
+        std::filesystem::path temp_dir = std::filesystem::temp_directory_path();
+        std::filesystem::path lock_file = temp_dir / ("osrm-" + std::to_string(id) + ".lock");
         return lock_file;
     }
 };
@@ -51,7 +50,7 @@ class SharedMemory
     SharedMemory &operator=(const SharedMemory &) = delete;
 
     template <typename IdentifierT>
-    SharedMemory(const boost::filesystem::path &lock_file,
+    SharedMemory(const std::filesystem::path &lock_file,
                  const IdentifierT id,
                  const uint64_t size = 0)
         : key(lock_file.string().c_str(), id)
@@ -61,7 +60,7 @@ class SharedMemory
         {
             shm = boost::interprocess::xsi_shared_memory(boost::interprocess::open_only, key);
 
-            util::Log(logDEBUG) << "opening " << (int)shm.get_shmid() << " from id " << (int)id;
+            util::Log(logDEBUG) << "opening " << shm.get_shmid() << " from id " << (int)id;
 
             region = boost::interprocess::mapped_region(shm, boost::interprocess::read_only);
         }
@@ -113,7 +112,8 @@ class SharedMemory
     {
         auto shmid = shm.get_shmid();
         ::shmid_ds xsi_ds;
-        const auto errorToMessage = [](int error) -> std::string {
+        const auto errorToMessage = [](int error) -> std::string
+        {
             switch (error)
             {
             case EPERM:
@@ -201,7 +201,7 @@ class SharedMemory
     void *Ptr() const { return region.get_address(); }
     std::size_t Size() const { return region.get_size(); }
 
-    SharedMemory(const boost::filesystem::path &lock_file, const int id, const uint64_t size = 0)
+    SharedMemory(const std::filesystem::path &lock_file, const int id, const uint64_t size = 0)
     {
         sprintf(key, "%s.%d", "osrm.lock", id);
         if (0 == size)
@@ -289,7 +289,7 @@ std::unique_ptr<SharedMemory> makeSharedMemory(const IdentifierT &id, const uint
     try
     {
         LockFileT lock_file;
-        if (!boost::filesystem::exists(lock_file(id)))
+        if (!std::filesystem::exists(lock_file(id)))
         {
             if (0 == size)
             {
@@ -297,7 +297,7 @@ std::unique_ptr<SharedMemory> makeSharedMemory(const IdentifierT &id, const uint
             }
             else
             {
-                boost::filesystem::ofstream ofs(lock_file(id));
+                std::ofstream ofs(lock_file(id));
             }
         }
         return std::make_unique<SharedMemory>(lock_file(id), id, size);

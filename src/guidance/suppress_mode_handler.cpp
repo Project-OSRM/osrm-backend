@@ -13,7 +13,7 @@ SuppressModeHandler::SuppressModeHandler(
     const std::vector<util::Coordinate> &coordinates,
     const extractor::CompressedEdgeContainer &compressed_geometries,
     const extractor::RestrictionMap &node_restriction_map,
-    const std::unordered_set<NodeID> &barrier_nodes,
+    const extractor::ObstacleMap &obstacle_nodes,
     const extractor::TurnLanesIndexedArray &turn_lanes_data,
     const extractor::NameTable &name_table,
     const extractor::SuffixTable &street_name_suffix_table)
@@ -22,7 +22,7 @@ SuppressModeHandler::SuppressModeHandler(
                           coordinates,
                           compressed_geometries,
                           node_restriction_map,
-                          barrier_nodes,
+                          obstacle_nodes,
                           turn_lanes_data,
                           name_table,
                           street_name_suffix_table)
@@ -50,11 +50,15 @@ bool SuppressModeHandler::canProcess(const NodeID,
     const auto first = begin(intersection);
     const auto last = end(intersection);
 
-    const auto all_share_mode = std::all_of(first, last, [this, &in_mode](const auto &road) {
-        return node_data_container
-                   .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
-                   .travel_mode == in_mode;
-    });
+    const auto all_share_mode = std::all_of(
+        first,
+        last,
+        [this, &in_mode](const auto &road)
+        {
+            return node_data_container
+                       .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+                       .travel_mode == in_mode;
+        });
 
     return (suppress_in_mode != end(suppressed)) && all_share_mode;
 }
@@ -65,13 +69,16 @@ SuppressModeHandler::operator()(const NodeID, const EdgeID, Intersection interse
     const auto first = begin(intersection);
     const auto last = end(intersection);
 
-    std::for_each(first, last, [&](auto &road) {
-        const auto modifier = road.instruction.direction_modifier;
-        // use NoTurn, to not even have it as an IntermediateIntersection
-        const auto type = TurnType::NoTurn;
+    std::for_each(first,
+                  last,
+                  [&](auto &road)
+                  {
+                      const auto modifier = road.instruction.direction_modifier;
+                      // use NoTurn, to not even have it as an IntermediateIntersection
+                      const auto type = TurnType::NoTurn;
 
-        road.instruction = {type, modifier};
-    });
+                      road.instruction = {type, modifier};
+                  });
 
     return intersection;
 }

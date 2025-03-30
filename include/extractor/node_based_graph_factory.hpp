@@ -8,14 +8,9 @@
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/scripting_environment.hpp"
 
-#include "traffic_signals.hpp"
 #include "util/coordinate.hpp"
 #include "util/node_based_graph.hpp"
 
-#include <boost/filesystem/path.hpp>
-
-#include <memory>
-#include <string>
 #include <unordered_set>
 #include <vector>
 
@@ -27,7 +22,7 @@ namespace osrm::extractor
 // edge-based graph and is also the basic concept for annotating paths. All information from ways
 // that is transferred into the API response is connected to the edges of the node-based graph.
 //
-// The input to the graph creation is the set of edges, traffic signals, barriers, meta-data,...
+// The input to the graph creation is the set of edges, obstacles, meta-data,...
 // which is generated during extraction and stored within the extraction containers.
 class NodeBasedGraphFactory
 {
@@ -39,15 +34,12 @@ class NodeBasedGraphFactory
     NodeBasedGraphFactory(ScriptingEnvironment &scripting_environment,
                           std::vector<TurnRestriction> &turn_restrictions,
                           std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
-                          const TrafficSignals &traffic_signals,
-                          std::unordered_set<NodeID> &&barriers,
                           std::vector<util::Coordinate> &&coordinates,
                           extractor::PackedOSMIDs &&osm_node_ids,
                           const std::vector<NodeBasedEdge> &edge_list,
                           std::vector<NodeBasedEdgeAnnotation> &&annotation_data);
 
     auto const &GetGraph() const { return compressed_output_graph; }
-    auto const &GetBarriers() const { return barriers; }
     auto const &GetCompressedEdges() const { return compressed_edge_container; }
     auto const &GetCoordinates() const { return coordinates; }
     auto const &GetAnnotationData() const { return annotation_data; }
@@ -70,8 +62,7 @@ class NodeBasedGraphFactory
     // edges into a single representative form
     void Compress(ScriptingEnvironment &scripting_environment,
                   std::vector<TurnRestriction> &turn_restrictions,
-                  std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
-                  const TrafficSignals &traffic_signals);
+                  std::vector<UnresolvedManeuverOverride> &maneuver_overrides);
 
     // Most ways are bidirectional, making the geometry in forward and backward direction the same,
     // except for reversal. We make use of this fact by keeping only one representation of the
@@ -91,8 +82,6 @@ class NodeBasedGraphFactory
     std::vector<NodeBasedEdgeAnnotation> annotation_data;
 
     // General Information about the graph, not used outside of extractor
-    std::unordered_set<NodeID> barriers;
-
     std::vector<util::Coordinate> coordinates;
 
     // data to keep in sync with the node-based graph

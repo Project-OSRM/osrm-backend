@@ -7,7 +7,6 @@
 #include "guidance/intersection_handler.hpp"
 #include "guidance/is_through_street.hpp"
 
-#include "util/attributes.hpp"
 #include "util/node_based_graph.hpp"
 
 #include <vector>
@@ -24,7 +23,7 @@ class MotorwayHandler final : public IntersectionHandler
                     const std::vector<util::Coordinate> &coordinates,
                     const extractor::CompressedEdgeContainer &compressed_geometries,
                     const extractor::RestrictionMap &node_restriction_map,
-                    const std::unordered_set<NodeID> &barrier_nodes,
+                    const extractor::ObstacleMap &obstacle_nodes,
                     const extractor::TurnLanesIndexedArray &turn_lanes_data,
                     const extractor::NameTable &name_table,
                     const extractor::SuffixTable &street_name_suffix_table);
@@ -42,18 +41,14 @@ class MotorwayHandler final : public IntersectionHandler
                             Intersection intersection) const override final;
 
   private:
-    OSRM_ATTR_WARN_UNUSED
-    Intersection handleSliproads(const NodeID intersection_node_id,
-                                 Intersection intersection) const;
+    [[nodiscard]] Intersection handleSliproads(const NodeID intersection_node_id,
+                                               Intersection intersection) const;
 
-    OSRM_ATTR_WARN_UNUSED
-    Intersection fromMotorway(const EdgeID via_edge, Intersection intersection) const;
+    [[nodiscard]] Intersection fromMotorway(const EdgeID via_edge, Intersection intersection) const;
 
-    OSRM_ATTR_WARN_UNUSED
-    Intersection fromRamp(const EdgeID via_edge, Intersection intersection) const;
+    [[nodiscard]] Intersection fromRamp(const EdgeID via_edge, Intersection intersection) const;
 
-    OSRM_ATTR_WARN_UNUSED
-    Intersection fallback(Intersection intersection) const;
+    [[nodiscard]] Intersection fallback(Intersection intersection) const;
 };
 
 } // namespace osrm::guidance

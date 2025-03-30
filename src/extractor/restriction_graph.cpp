@@ -5,7 +5,7 @@
 #include "util/timing_util.hpp"
 #include <util/for_each_pair.hpp>
 
-#include <boost/range/algorithm/copy.hpp>
+#include <numeric>
 
 namespace osrm::extractor
 {
@@ -123,9 +123,10 @@ struct transferBuilder
         for (const auto &suffix_node : suffix_nodes)
         {
             const auto &edges = rg.GetEdges(suffix_node);
-            const auto edge_it = std::find_if(edges.begin(), edges.end(), [&to](const auto &edge) {
-                return edge.node_based_to == to && !edge.is_transfer;
-            });
+            const auto edge_it = std::find_if(
+                edges.begin(),
+                edges.end(),
+                [&to](const auto &edge) { return edge.node_based_to == to && !edge.is_transfer; });
             if (edge_it != edges.end())
             {
                 *(new_suffix_it++) = edge_it->target;
@@ -154,18 +155,22 @@ struct transferBuilder
             // the transfer
             const auto &restrictions = rg.GetRestrictions(cur_node);
             const auto is_restricted =
-                std::any_of(restrictions.begin(), restrictions.end(), [&](const auto &restriction) {
-                    return restriction->IsTurnRestricted(suffix_edge.node_based_to) &&
-                           restriction->IsUnconditional();
-                });
+                std::any_of(restrictions.begin(),
+                            restrictions.end(),
+                            [&](const auto &restriction)
+                            {
+                                return restriction->IsTurnRestricted(suffix_edge.node_based_to) &&
+                                       restriction->IsUnconditional();
+                            });
             if (is_restricted)
                 continue;
 
             const auto &edges = rg.GetEdges(cur_node);
             // Check that the suffix edge is not a next edge along the current path.
-            const auto can_transfer = std::none_of(edges.begin(), edges.end(), [&](auto &edge) {
-                return edge.node_based_to == suffix_edge.node_based_to;
-            });
+            const auto can_transfer = std::none_of(
+                edges.begin(),
+                edges.end(),
+                [&](auto &edge) { return edge.node_based_to == suffix_edge.node_based_to; });
             if (can_transfer)
             {
                 insertEdge(rg,
@@ -186,9 +191,9 @@ struct transferBuilder
 
         this->next_suffixes(from, to);
 
-        std::for_each(suffix_nodes.begin(), suffix_nodes.end(), [&](const auto &suffix_node) {
-            this->add_suffix_transfer(suffix_node);
-        });
+        std::for_each(suffix_nodes.begin(),
+                      suffix_nodes.end(),
+                      [&](const auto &suffix_node) { this->add_suffix_transfer(suffix_node); });
 
         for (const auto &suffix_node : suffix_nodes)
         {
@@ -207,7 +212,8 @@ struct transferBuilder
 template <typename builder_type>
 void buildGraph(RestrictionGraph &rg, const std::vector<TurnRestriction> &restrictions)
 {
-    const auto run_builder = [&](const auto &restriction) {
+    const auto run_builder = [&](const auto &restriction)
+    {
         builder_type builder(rg);
 
         builder.start(restriction.turn_path.From(), restriction.turn_path.FirstVia());
@@ -248,9 +254,9 @@ RestrictionGraph constructRestrictionGraph(const std::vector<TurnRestriction> &t
     // Start renumbering
     const auto permutation = util::orderingToPermutation(ordering);
     util::inplacePermutation(rg.nodes.begin(), rg.nodes.end(), permutation);
-    std::for_each(rg.edges.begin(), rg.edges.end(), [&](auto &edge) {
-        edge.target = permutation[edge.target];
-    });
+    std::for_each(rg.edges.begin(),
+                  rg.edges.end(),
+                  [&](auto &edge) { edge.target = permutation[edge.target]; });
     rg.num_via_nodes = std::count(is_via_node.begin(), is_via_node.end(), true);
     for (auto &entry : rg.via_edge_to_node)
     {
@@ -270,16 +276,16 @@ RestrictionGraph constructRestrictionGraph(const std::vector<TurnRestriction> &t
 RestrictionGraph::RestrictionRange RestrictionGraph::GetRestrictions(RestrictionID id) const
 {
     const auto &node = nodes[id];
-    return boost::make_iterator_range(restrictions.begin() + node.restrictions_begin_idx,
-                                      restrictions.begin() + node.restrictions_begin_idx +
-                                          node.num_restrictions);
+    return std::ranges::subrange(restrictions.begin() + node.restrictions_begin_idx,
+                                 restrictions.begin() + node.restrictions_begin_idx +
+                                     node.num_restrictions);
 }
 
 RestrictionGraph::EdgeRange RestrictionGraph::GetEdges(RestrictionID id) const
 {
     const auto &node = nodes[id];
-    return boost::make_iterator_range(edges.begin() + node.edges_begin_idx,
-                                      edges.begin() + node.edges_begin_idx + node.num_edges);
+    return std::ranges::subrange(edges.begin() + node.edges_begin_idx,
+                                 edges.begin() + node.edges_begin_idx + node.num_edges);
 }
 
 } // namespace osrm::extractor

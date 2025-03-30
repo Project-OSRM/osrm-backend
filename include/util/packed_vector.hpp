@@ -13,7 +13,6 @@
 
 #include <array>
 #include <cmath>
-#include <vector>
 
 #if defined(_MSC_VER)
 // for `InterlockedCompareExchange64`
@@ -153,8 +152,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
     // number of words per block
     static constexpr std::size_t BLOCK_WORDS = (Bits * BLOCK_ELEMENTS) / WORD_BITS;
 
-    // C++14 does not allow operator[] to be constexpr, this is fixed in C++17.
-    static /* constexpr */ std::array<WordT, BLOCK_ELEMENTS> initialize_lower_mask()
+    static constexpr std::array<WordT, BLOCK_ELEMENTS> initialize_lower_mask()
     {
         std::array<WordT, BLOCK_ELEMENTS> lower_mask;
 
@@ -170,7 +168,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         return lower_mask;
     }
 
-    static /* constexpr */ std::array<WordT, BLOCK_ELEMENTS> initialize_upper_mask()
+    static constexpr std::array<WordT, BLOCK_ELEMENTS> initialize_upper_mask()
     {
         std::array<WordT, BLOCK_ELEMENTS> upper_mask;
 
@@ -194,7 +192,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         return upper_mask;
     }
 
-    static /* constexpr */ std::array<std::uint8_t, BLOCK_ELEMENTS> initialize_lower_offset()
+    static constexpr std::array<std::uint8_t, BLOCK_ELEMENTS> initialize_lower_offset()
     {
         std::array<std::uint8_t, WORD_BITS> lower_offset;
 
@@ -209,7 +207,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         return lower_offset;
     }
 
-    static /* constexpr */ std::array<std::uint8_t, BLOCK_ELEMENTS> initialize_upper_offset()
+    static constexpr std::array<std::uint8_t, BLOCK_ELEMENTS> initialize_upper_offset()
     {
         std::array<std::uint8_t, BLOCK_ELEMENTS> upper_offset;
 
@@ -232,7 +230,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         return upper_offset;
     }
 
-    static /* constexpr */ std::array<std::uint8_t, BLOCK_ELEMENTS> initialize_word_offset()
+    static constexpr std::array<std::uint8_t, BLOCK_ELEMENTS> initialize_word_offset()
     {
         std::array<std::uint8_t, BLOCK_ELEMENTS> word_offset;
 
@@ -246,28 +244,15 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         return word_offset;
     }
 
-    // For now we need to call these on object creation
-    void initialize()
-    {
-        lower_mask = initialize_lower_mask();
-        upper_mask = initialize_upper_mask();
-        lower_offset = initialize_lower_offset();
-        upper_offset = initialize_upper_offset();
-        word_offset = initialize_word_offset();
-    }
-
     // mask for the lower/upper word of a record
-    // TODO: With C++17 these could be constexpr
-    /* static constexpr */ std::array<WordT, BLOCK_ELEMENTS>
-        lower_mask /* = initialize_lower_mask()*/;
-    /* static constexpr */ std::array<WordT, BLOCK_ELEMENTS>
-        upper_mask /* = initialize_upper_mask()*/;
-    /* static constexpr */ std::array<std::uint8_t, BLOCK_ELEMENTS>
-        lower_offset /* = initialize_lower_offset()*/;
-    /* static constexpr */ std::array<std::uint8_t, BLOCK_ELEMENTS>
-        upper_offset /* = initialize_upper_offset()*/;
+    static constexpr std::array<WordT, BLOCK_ELEMENTS> lower_mask = initialize_lower_mask();
+    static constexpr std::array<WordT, BLOCK_ELEMENTS> upper_mask = initialize_upper_mask();
+    static constexpr std::array<std::uint8_t, BLOCK_ELEMENTS> lower_offset =
+        initialize_lower_offset();
+    static constexpr std::array<std::uint8_t, BLOCK_ELEMENTS> upper_offset =
+        initialize_upper_offset();
     // in which word of the block is the element
-    /* static constexpr */ std::array<std::uint8_t, BLOCK_ELEMENTS> word_offset =
+    static constexpr std::array<std::uint8_t, BLOCK_ELEMENTS> word_offset =
         initialize_word_offset();
 
     struct InternalIndex
@@ -354,6 +339,8 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         {
         }
 
+        ReferenceT operator[](difference_type n) const { return container->operator[](index + n); }
+
       private:
         void increment() { ++index; }
         void decrement() { --index; }
@@ -378,27 +365,21 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
     PackedVector(std::initializer_list<T> list)
     {
-        initialize();
         reserve(list.size());
         for (const auto value : list)
             push_back(value);
     }
 
-    PackedVector() { initialize(); };
+    PackedVector(){};
     PackedVector(const PackedVector &) = default;
     PackedVector(PackedVector &&) = default;
     PackedVector &operator=(const PackedVector &) = default;
     PackedVector &operator=(PackedVector &&) = default;
 
-    PackedVector(std::size_t size)
-    {
-        initialize();
-        resize(size);
-    }
+    PackedVector(std::size_t size) { resize(size); }
 
     PackedVector(std::size_t size, T initial_value)
     {
-        initialize();
         resize(size);
         fill(initial_value);
     }
@@ -406,7 +387,6 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
     PackedVector(util::ViewOrVector<WordT, Ownership> vec_, std::size_t num_elements)
         : vec(std::move(vec_)), num_elements(num_elements)
     {
-        initialize();
     }
 
     // forces the efficient read-only lookup

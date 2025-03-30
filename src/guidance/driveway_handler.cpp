@@ -10,7 +10,7 @@ DrivewayHandler::DrivewayHandler(const util::NodeBasedDynamicGraph &node_based_g
                                  const std::vector<util::Coordinate> &node_coordinates,
                                  const extractor::CompressedEdgeContainer &compressed_geometries,
                                  const extractor::RestrictionMap &node_restriction_map,
-                                 const std::unordered_set<NodeID> &barrier_nodes,
+                                 const extractor::ObstacleMap &obstacle_nodes,
                                  const extractor::TurnLanesIndexedArray &turn_lanes_data,
                                  const extractor::NameTable &name_table,
                                  const extractor::SuffixTable &street_name_suffix_table)
@@ -19,7 +19,7 @@ DrivewayHandler::DrivewayHandler(const util::NodeBasedDynamicGraph &node_based_g
                           node_coordinates,
                           compressed_geometries,
                           node_restriction_map,
-                          barrier_nodes,
+                          obstacle_nodes,
                           turn_lanes_data,
                           name_table,
                           street_name_suffix_table)
@@ -43,10 +43,13 @@ bool DrivewayHandler::canProcess(const NodeID /*nid*/,
         return false;
 
     auto low_priority_count =
-        std::count_if(intersection.begin(), intersection.end(), [this](const auto &road) {
-            return node_based_graph.GetEdgeData(road.eid)
-                .flags.road_classification.IsLowPriorityRoadClass();
-        });
+        std::count_if(intersection.begin(),
+                      intersection.end(),
+                      [this](const auto &road)
+                      {
+                          return node_based_graph.GetEdgeData(road.eid)
+                              .flags.road_classification.IsLowPriorityRoadClass();
+                      });
 
     // Process intersection if it has two edges with normal priority and one is the entry edge,
     // and also has at least one edge with lower priority
@@ -57,11 +60,13 @@ Intersection DrivewayHandler::operator()(const NodeID nid,
                                          const EdgeID source_edge_id,
                                          Intersection intersection) const
 {
-    auto road =
-        std::find_if(intersection.begin() + 1, intersection.end(), [this](const auto &road) {
-            return !node_based_graph.GetEdgeData(road.eid)
-                        .flags.road_classification.IsLowPriorityRoadClass();
-        });
+    auto road = std::find_if(intersection.begin() + 1,
+                             intersection.end(),
+                             [this](const auto &road)
+                             {
+                                 return !node_based_graph.GetEdgeData(road.eid)
+                                             .flags.road_classification.IsLowPriorityRoadClass();
+                             });
 
     (void)nid;
     OSRM_ASSERT(road != intersection.end(), node_coordinates[nid]);
@@ -76,14 +81,22 @@ Intersection DrivewayHandler::operator()(const NodeID nid,
 
     if (road->instruction.direction_modifier == DirectionModifier::Straight)
     {
-        std::for_each(intersection.begin() + 1, road, [](auto &side_road) {
-            if (side_road.instruction.direction_modifier == DirectionModifier::Straight)
-                side_road.instruction.direction_modifier = DirectionModifier::SlightRight;
-        });
-        std::for_each(road + 1, intersection.end(), [](auto &side_road) {
-            if (side_road.instruction.direction_modifier == DirectionModifier::Straight)
-                side_road.instruction.direction_modifier = DirectionModifier::SlightLeft;
-        });
+        std::for_each(
+            intersection.begin() + 1,
+            road,
+            [](auto &side_road)
+            {
+                if (side_road.instruction.direction_modifier == DirectionModifier::Straight)
+                    side_road.instruction.direction_modifier = DirectionModifier::SlightRight;
+            });
+        std::for_each(
+            road + 1,
+            intersection.end(),
+            [](auto &side_road)
+            {
+                if (side_road.instruction.direction_modifier == DirectionModifier::Straight)
+                    side_road.instruction.direction_modifier = DirectionModifier::SlightLeft;
+            });
     }
 
     return intersection;

@@ -73,7 +73,8 @@ void Log::Init()
     {
         const bool is_terminal = IsStdoutATTY();
 
-        auto format = [is_terminal](const char *level, const char *color) {
+        auto format = [is_terminal](const char *level, const char *color)
+        {
             const auto timestamp = std::chrono::system_clock::now();
             return fmt::format("{}[{:%FT%H:%M:}{:%S}] [{}] ",
                                is_terminal ? color : "",

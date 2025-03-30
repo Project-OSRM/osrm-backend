@@ -4,8 +4,6 @@
 #include "osrm/json_container.hpp"
 #include <napi.h>
 
-#include <functional>
-
 namespace node_osrm
 {
 
@@ -29,8 +27,8 @@ struct V8Renderer
         for (const auto &keyValue : object.values)
         {
             Napi::Value child;
-            mapbox::util::apply_visitor(V8Renderer(env, child), keyValue.second);
-            obj.Set(keyValue.first, child);
+            std::visit(V8Renderer(env, child), keyValue.second);
+            obj.Set(keyValue.first.data(), child);
         }
         out = obj;
     }
@@ -41,7 +39,7 @@ struct V8Renderer
         for (auto i = 0u; i < array.values.size(); ++i)
         {
             Napi::Value child;
-            mapbox::util::apply_visitor(V8Renderer(env, child), array.values[i]);
+            std::visit(V8Renderer(env, child), array.values[i]);
             a.Set(i, child);
         }
         out = a;

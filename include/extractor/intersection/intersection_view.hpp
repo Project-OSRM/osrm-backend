@@ -15,9 +15,7 @@
 #include <boost/range/algorithm/min_element.hpp>
 
 #include <algorithm>
-#include <functional>
 #include <limits>
-#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -26,16 +24,14 @@ namespace osrm::extractor::intersection
 
 inline auto makeCompareAngularDeviation(const double angle)
 {
-    return [angle](const auto &lhs, const auto &rhs) {
-        return util::angularDeviation(lhs.angle, angle) < util::angularDeviation(rhs.angle, angle);
-    };
+    return [angle](const auto &lhs, const auto &rhs)
+    { return util::angularDeviation(lhs.angle, angle) < util::angularDeviation(rhs.angle, angle); };
 }
 
 inline auto makeExtractLanesForRoad(const util::NodeBasedDynamicGraph &node_based_graph)
 {
-    return [&node_based_graph](const auto &road) {
-        return node_based_graph.GetEdgeData(road.eid).road_classification.GetNumberOfLanes();
-    };
+    return [&node_based_graph](const auto &road)
+    { return node_based_graph.GetEdgeData(road.eid).road_classification.GetNumberOfLanes(); };
 }
 
 // When viewing an intersection from an incoming edge, we can transform a shape into a view which
@@ -63,7 +59,10 @@ template <typename Self> struct EnableShapeOps
     auto FindClosestBearing(double base_bearing) const
     {
         return std::min_element(
-            self()->begin(), self()->end(), [base_bearing](const auto &lhs, const auto &rhs) {
+            self()->begin(),
+            self()->end(),
+            [base_bearing](const auto &lhs, const auto &rhs)
+            {
                 return util::angularDeviation(lhs.perceived_bearing, base_bearing) <
                        util::angularDeviation(rhs.perceived_bearing, base_bearing);
             });
@@ -81,7 +80,8 @@ template <typename Self> struct EnableShapeOps
         BOOST_ASSERT(!self()->empty());
         auto initial = converter(self()->front());
 
-        const auto extract_maximal_value = [&initial, converter](const auto &road) {
+        const auto extract_maximal_value = [&initial, converter](const auto &road)
+        {
             initial = std::max(initial, converter(road));
             return false;
         };
@@ -166,7 +166,7 @@ template <typename Self> struct EnableIntersectionOps
     }
 
     // Can this be skipped over?
-    auto isTrafficSignalOrBarrier() const { return self()->size() == 2; }
+    auto isObstacle() const { return self()->size() == 2; }
 
     // Checks if there is at least one road available (except UTurn road) on which to continue.
     auto isDeadEnd() const
@@ -191,8 +191,10 @@ template <typename Self> struct EnableIntersectionOps
     auto findClosestTurn(const double angle, const UnaryPredicate filter) const
     {
         BOOST_ASSERT(!self()->empty());
-        const auto candidate =
-            boost::range::min_element(*self(), [angle, &filter](const auto &lhs, const auto &rhs) {
+        const auto candidate = boost::range::min_element(
+            *self(),
+            [angle, &filter](const auto &lhs, const auto &rhs)
+            {
                 const auto filtered_lhs = filter(lhs), filtered_rhs = filter(rhs);
                 const auto deviation_lhs = util::angularDeviation(lhs.angle, angle),
                            deviation_rhs = util::angularDeviation(rhs.angle, angle);

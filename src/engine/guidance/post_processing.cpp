@@ -13,12 +13,10 @@
 
 #include <boost/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
-#include <boost/range/iterator_range.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <limits>
 #include <utility>
 
 namespace osrm::engine::guidance
@@ -77,7 +75,8 @@ void processRoundaboutExits(const RouteStepIterator begin, const RouteStepIterat
         return;
     }
 
-    const auto passes_exit_or_leaves_roundabout = [](auto const &step) {
+    const auto passes_exit_or_leaves_roundabout = [](auto const &step)
+    {
         return staysOnRoundabout(step.maneuver.instruction) ||
                leavesRoundabout(step.maneuver.instruction);
     };
@@ -142,9 +141,8 @@ void processRoundaboutExits(const RouteStepIterator begin, const RouteStepIterat
 // instructions in between
 void processRoundaboutGroups(const std::pair<RouteStepIterator, RouteStepIterator> &range)
 {
-    const auto leaves_roundabout = [](auto const &step) {
-        return leavesRoundabout(step.maneuver.instruction);
-    };
+    const auto leaves_roundabout = [](auto const &step)
+    { return leavesRoundabout(step.maneuver.instruction); };
 
     auto itr = range.first;
     while (itr != range.second)
@@ -174,9 +172,8 @@ void processRoundaboutGroups(const std::pair<RouteStepIterator, RouteStepIterato
 std::vector<RouteStep> handleRoundabouts(std::vector<RouteStep> steps)
 {
     // check if a step has roundabout type
-    const auto has_roundabout_type = [](auto const &step) {
-        return hasRoundaboutType(step.maneuver.instruction);
-    };
+    const auto has_roundabout_type = [](auto const &step)
+    { return hasRoundaboutType(step.maneuver.instruction); };
     const auto first_roundabout_type =
         std::find_if(steps.begin(), steps.end(), has_roundabout_type);
 
@@ -193,7 +190,8 @@ std::vector<RouteStep> handleRoundabouts(std::vector<RouteStep> steps)
     // this group by paradigm does might contain intermediate roundabout instructions, when they are
     // directly connected. Otherwise it will be a sequence containing everything from enter to exit.
     // If we already start on the roundabout, the first valid place will be steps.begin().
-    const auto is_on_roundabout = [&currently_on_roundabout](const auto &step) {
+    const auto is_on_roundabout = [&currently_on_roundabout](const auto &step)
+    {
         if (currently_on_roundabout)
         {
             if (leavesRoundabout(step.maneuver.instruction))
@@ -327,10 +325,13 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         }
 
         // and update the leg geometry indices for the removed entry
-        std::for_each(steps.begin(), steps.end(), [offset](RouteStep &step) {
-            step.geometry_begin -= offset;
-            step.geometry_end -= offset;
-        });
+        std::for_each(steps.begin(),
+                      steps.end(),
+                      [offset](RouteStep &step)
+                      {
+                          step.geometry_begin -= offset;
+                          step.geometry_end -= offset;
+                      });
 
         auto &first_step = steps.front();
         auto bearing = first_bearing;
@@ -645,16 +646,18 @@ void applyOverrides(const datafacade::BaseDataFacade &facade,
                 auto step_to_update = std::find_if(
                     current_step_it,
                     route_iter,
-                    [&leg_geometry, &via_node_coords](const auto &step) {
+                    [&leg_geometry, &via_node_coords](const auto &step)
+                    {
                         util::Log(logDEBUG) << "Leg geom from " << step.geometry_begin << " to  "
                                             << step.geometry_end << std::endl;
 
                         // iterators over geometry of current step
                         auto begin = leg_geometry.locations.begin() + step.geometry_begin;
                         auto end = leg_geometry.locations.begin() + step.geometry_end;
-                        auto via_match = std::find_if(begin, end, [&](const auto &location) {
-                            return location == via_node_coords;
-                        });
+                        auto via_match = std::find_if(begin,
+                                                      end,
+                                                      [&](const auto &location)
+                                                      { return location == via_node_coords; });
                         if (via_match != end)
                         {
                             util::Log(logDEBUG)

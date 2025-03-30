@@ -7,13 +7,19 @@
 
 #include <string>
 
+static void read_from_decompressor(int fd) {
+    osmium::io::Bzip2Decompressor decomp{fd};
+    decomp.read();
+    decomp.close();
+}
+
 TEST_CASE("Invalid file descriptor of bzip2-compressed file") {
-    REQUIRE_THROWS_AS(osmium::io::Bzip2Decompressor{-1}, std::system_error);
+    REQUIRE_THROWS(read_from_decompressor(-1));
 }
 
 TEST_CASE("Non-open file descriptor of bzip2-compressed file") {
     // 12345 is just a random file descriptor that should not be open
-    REQUIRE_THROWS_AS(osmium::io::Bzip2Decompressor{12345}, std::system_error);
+    REQUIRE_THROWS(read_from_decompressor(12345));
 }
 
 TEST_CASE("Empty bzip2-compressed file") {
@@ -93,13 +99,19 @@ TEST_CASE("Corrupted bzip2-compressed file") {
     REQUIRE(count == count_fds());
 }
 
+static void write_to_compressor(int fd) {
+    osmium::io::Bzip2Compressor comp{fd, osmium::io::fsync::yes};
+    comp.write("foo");
+    comp.close();
+}
+
 TEST_CASE("Compressor: Invalid file descriptor for bzip2-compressed file") {
-    REQUIRE_THROWS_AS(osmium::io::Bzip2Compressor(-1, osmium::io::fsync::yes), std::system_error);
+    REQUIRE_THROWS(write_to_compressor(-1));
 }
 
 TEST_CASE("Compressor: Non-open file descriptor for bzip2-compressed file") {
     // 12345 is just a random file descriptor that should not be open
-    REQUIRE_THROWS_AS(osmium::io::Bzip2Compressor(12345, osmium::io::fsync::yes), std::system_error);
+    REQUIRE_THROWS(write_to_compressor(12345));
 }
 
 TEST_CASE("Write bzip2-compressed file with explicit close") {

@@ -1,12 +1,9 @@
 #ifndef INTEGER_RANGE_HPP
 #define INTEGER_RANGE_HPP
 
-#include <boost/assert.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 
 #include <type_traits>
-
-#include <cstdint>
 
 namespace osrm::util
 {
@@ -43,11 +40,10 @@ class integer_iterator : public boost::iterator_facade<integer_iterator<Integer>
 
     difference_type distance_to(const integer_iterator &other) const
     {
-        return std::is_signed<value_type>::value
-                   ? (other.m_value - m_value)
-                   : (other.m_value >= m_value)
-                         ? static_cast<difference_type>(other.m_value - m_value)
-                         : -static_cast<difference_type>(m_value - other.m_value);
+        return std::is_signed<value_type>::value ? (other.m_value - m_value)
+               : (other.m_value >= m_value)
+                   ? static_cast<difference_type>(other.m_value - m_value)
+                   : -static_cast<difference_type>(m_value - other.m_value);
     }
 
     friend class ::boost::iterator_core_access;

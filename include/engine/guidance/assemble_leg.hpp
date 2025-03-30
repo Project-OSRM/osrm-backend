@@ -20,7 +20,6 @@
 #include <array>
 #include <numeric>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace osrm::engine::guidance
@@ -43,7 +42,8 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const datafacade::BaseDa
                                                         const bool target_traversed_in_reverse)
 {
     // merges segments with same name id
-    const auto collapse_segments = [](std::vector<NamedSegment> &segments) {
+    const auto collapse_segments = [](std::vector<NamedSegment> &segments)
+    {
         auto out = segments.begin();
         auto end = segments.end();
 
@@ -75,7 +75,8 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const datafacade::BaseDa
     std::transform(route_data.begin(),
                    route_data.end(),
                    segments.begin(),
-                   [&index, &facade](const PathData &point) {
+                   [&index, &facade](const PathData &point)
+                   {
                        return NamedSegment{point.duration_until_turn,
                                            index++,
                                            facade.GetNameIndex(point.from_edge_based_node)};
@@ -87,33 +88,37 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const datafacade::BaseDa
     if (target_duration > EdgeDuration{1})
         segments.push_back({target_duration, index++, facade.GetNameIndex(target_node_id)});
     // this makes sure that the segment with the lowest position comes first
-    std::sort(
-        segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs) {
-            return lhs.name_id < rhs.name_id ||
-                   (lhs.name_id == rhs.name_id && lhs.position < rhs.position);
-        });
+    std::sort(segments.begin(),
+              segments.end(),
+              [](const NamedSegment &lhs, const NamedSegment &rhs)
+              {
+                  return lhs.name_id < rhs.name_id ||
+                         (lhs.name_id == rhs.name_id && lhs.position < rhs.position);
+              });
     auto new_end = collapse_segments(segments);
     segments.resize(new_end - segments.begin());
 
     // Filter out segments with an empty name (name_id == 0)
-    new_end = std::remove_if(segments.begin(), segments.end(), [](const NamedSegment &segment) {
-        return segment.name_id == 0;
-    });
+    new_end = std::remove_if(segments.begin(),
+                             segments.end(),
+                             [](const NamedSegment &segment) { return segment.name_id == 0; });
     segments.resize(new_end - segments.begin());
 
     // sort descending
-    std::sort(
-        segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs) {
-            return lhs.duration > rhs.duration ||
-                   (lhs.duration == rhs.duration && lhs.position < rhs.position);
-        });
+    std::sort(segments.begin(),
+              segments.end(),
+              [](const NamedSegment &lhs, const NamedSegment &rhs)
+              {
+                  return lhs.duration > rhs.duration ||
+                         (lhs.duration == rhs.duration && lhs.position < rhs.position);
+              });
 
     // make sure the segments are sorted by position
     segments.resize(std::min(segments.size(), SegmentNumber));
-    std::sort(
-        segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs) {
-            return lhs.position < rhs.position;
-        });
+    std::sort(segments.begin(),
+              segments.end(),
+              [](const NamedSegment &lhs, const NamedSegment &rhs)
+              { return lhs.position < rhs.position; });
 
     std::array<std::uint32_t, SegmentNumber> summary;
     std::fill(summary.begin(), summary.end(), EMPTY_NAMEID);
@@ -138,7 +143,8 @@ inline std::string assembleSummary(const datafacade::BaseDataFacade &facade,
 
     // transform a name_id into a string containing either the name, or -if the name is empty-
     // the reference.
-    const auto name_id_to_string = [&](const NameID name_id) {
+    const auto name_id_to_string = [&](const NameID name_id)
+    {
         const auto name = facade.GetNameForID(name_id);
         if (!name.empty())
             return std::string(name);
@@ -178,14 +184,16 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
     const auto target_weight =
         (target_traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight);
 
-    auto duration = std::accumulate(
-        route_data.begin(), route_data.end(), 0, [](const double sum, const PathData &data) {
-            return sum + from_alias<double>(data.duration_until_turn);
-        });
-    auto weight = std::accumulate(
-        route_data.begin(), route_data.end(), 0, [](const double sum, const PathData &data) {
-            return sum + from_alias<double>(data.weight_until_turn);
-        });
+    auto duration = std::accumulate(route_data.begin(),
+                                    route_data.end(),
+                                    0,
+                                    [](const double sum, const PathData &data)
+                                    { return sum + from_alias<double>(data.duration_until_turn); });
+    auto weight = std::accumulate(route_data.begin(),
+                                  route_data.end(),
+                                  0,
+                                  [](const double sum, const PathData &data)
+                                  { return sum + from_alias<double>(data.weight_until_turn); });
 
     //                 s
     //                 |

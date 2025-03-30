@@ -11,8 +11,8 @@
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/optional.hpp>
 #include <cstdint>
+#include <optional>
 #include <utility>
 
 namespace osrm::extractor::intersection
@@ -30,7 +30,7 @@ class NodeBasedGraphWalker
                          const std::vector<util::Coordinate> &node_coordinates,
                          const extractor::CompressedEdgeContainer &compressed_geometries,
                          const RestrictionMap &node_restriction_map,
-                         const std::unordered_set<NodeID> &barrier_nodes,
+                         const ObstacleMap &obstacle_nodes,
                          const TurnLanesIndexedArray &turn_lanes_data);
 
     /*
@@ -42,10 +42,10 @@ class NodeBasedGraphWalker
      * selector not provinding any further edge to traverse)
      */
     template <class accumulator_type, class selector_type>
-    boost::optional<std::pair<NodeID, EdgeID>> TraverseRoad(NodeID starting_at_node_id,
-                                                            EdgeID following_edge_id,
-                                                            accumulator_type &accumulator,
-                                                            const selector_type &selector) const;
+    std::optional<std::pair<NodeID, EdgeID>> TraverseRoad(NodeID starting_at_node_id,
+                                                          EdgeID following_edge_id,
+                                                          accumulator_type &accumulator,
+                                                          const selector_type &selector) const;
 
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;
@@ -53,7 +53,7 @@ class NodeBasedGraphWalker
     const std::vector<util::Coordinate> &node_coordinates;
     const extractor::CompressedEdgeContainer &compressed_geometries;
     const RestrictionMap &node_restriction_map;
-    const std::unordered_set<NodeID> &barrier_nodes;
+    const ObstacleMap &obstacle_nodes;
     const TurnLanesIndexedArray &turn_lanes_data;
 };
 
@@ -111,11 +111,11 @@ struct SelectRoadByNameOnlyChoiceAndStraightness
      * traversal. If no such edge is found, return {} is allowed. Usually you want to choose some
      * form of obious turn to follow.
      */
-    boost::optional<EdgeID> operator()(const NodeID nid,
-                                       const EdgeID via_edge_id,
-                                       const IntersectionView &intersection,
-                                       const util::NodeBasedDynamicGraph &node_based_graph,
-                                       const EdgeBasedNodeDataContainer &node_data_container) const;
+    std::optional<EdgeID> operator()(const NodeID nid,
+                                     const EdgeID via_edge_id,
+                                     const IntersectionView &intersection,
+                                     const util::NodeBasedDynamicGraph &node_based_graph,
+                                     const EdgeBasedNodeDataContainer &node_data_container) const;
 
   private:
     const NameID desired_name_id;
@@ -138,11 +138,11 @@ struct SelectStraightmostRoadByNameAndOnlyChoice
      * traversal. If no such edge is found, return {} is allowed. Usually you want to choose some
      * form of obious turn to follow.
      */
-    boost::optional<EdgeID> operator()(const NodeID nid,
-                                       const EdgeID via_edge_id,
-                                       const IntersectionView &intersection,
-                                       const util::NodeBasedDynamicGraph &node_based_graph,
-                                       const EdgeBasedNodeDataContainer &node_data_container) const;
+    std::optional<EdgeID> operator()(const NodeID nid,
+                                     const EdgeID via_edge_id,
+                                     const IntersectionView &intersection,
+                                     const util::NodeBasedDynamicGraph &node_based_graph,
+                                     const EdgeBasedNodeDataContainer &node_data_container) const;
 
   private:
     const NameID desired_name_id;
@@ -160,7 +160,7 @@ struct IntersectionFinderAccumulator
                                   const std::vector<util::Coordinate> &node_coordinates,
                                   const extractor::CompressedEdgeContainer &compressed_geometries,
                                   const RestrictionMap &node_restriction_map,
-                                  const std::unordered_set<NodeID> &barrier_nodes,
+                                  const ObstacleMap &obstacle_nodes,
                                   const TurnLanesIndexedArray &turn_lanes_data);
     // true if the path has traversed enough distance
     bool terminate();
@@ -182,12 +182,12 @@ struct IntersectionFinderAccumulator
     const std::vector<util::Coordinate> &node_coordinates;
     const extractor::CompressedEdgeContainer &compressed_geometries;
     const RestrictionMap &node_restriction_map;
-    const std::unordered_set<NodeID> &barrier_nodes;
+    const ObstacleMap &obstacle_nodes;
     const TurnLanesIndexedArray &turn_lanes_data;
 };
 
 template <class accumulator_type, class selector_type>
-boost::optional<std::pair<NodeID, EdgeID>>
+std::optional<std::pair<NodeID, EdgeID>>
 NodeBasedGraphWalker::TraverseRoad(NodeID current_node_id,
                                    EdgeID current_edge_id,
                                    accumulator_type &accumulator,
@@ -223,7 +223,7 @@ NodeBasedGraphWalker::TraverseRoad(NodeID current_node_id,
                                                   node_coordinates,
                                                   compressed_geometries,
                                                   node_restriction_map,
-                                                  barrier_nodes,
+                                                  obstacle_nodes,
                                                   turn_lanes_data,
                                                   {current_node_id, current_edge_id});
 
@@ -252,21 +252,21 @@ NodeBasedGraphWalker::TraverseRoad(NodeID current_node_id,
     return {};
 }
 
-struct SkipTrafficSignalBarrierRoadSelector
+struct SkipObstacleRoadSelector
 {
-    boost::optional<EdgeID> operator()(const NodeID,
-                                       const EdgeID,
-                                       const IntersectionView &intersection,
-                                       const util::NodeBasedDynamicGraph &,
-                                       const EdgeBasedNodeDataContainer &) const
+    std::optional<EdgeID> operator()(const NodeID,
+                                     const EdgeID,
+                                     const IntersectionView &intersection,
+                                     const util::NodeBasedDynamicGraph &,
+                                     const EdgeBasedNodeDataContainer &) const
     {
-        if (intersection.isTrafficSignalOrBarrier())
+        if (intersection.isObstacle())
         {
-            return boost::make_optional(intersection[1].eid);
+            return std::make_optional(intersection[1].eid);
         }
         else
         {
-            return boost::none;
+            return std::nullopt;
         }
     }
 };

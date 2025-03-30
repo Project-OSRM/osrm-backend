@@ -18,7 +18,7 @@
 #include <numeric>
 #include <vector>
 
-#include <boost/range/adaptor/reversed.hpp>
+#include <ranges>
 
 namespace osrm::partitioner
 {
@@ -207,7 +207,8 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
         auto lidx = 0UL;
         util::for_each_pair(level_offsets.begin(),
                             level_offsets.begin() + num_level,
-                            [&](const auto offset, const auto next_offset) {
+                            [&](const auto offset, const auto next_offset)
+                            {
                                 // create mask that has `bits` ones at its LSBs.
                                 // 000011
                                 BOOST_ASSERT(offset <= NUM_PARTITION_BITS);
@@ -274,14 +275,13 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
         {
             std::stable_sort(permutation.begin(),
                              permutation.end(),
-                             [&partition](const auto lhs, const auto rhs) {
-                                 return partition[lhs] < partition[rhs];
-                             });
+                             [&partition](const auto lhs, const auto rhs)
+                             { return partition[lhs] < partition[rhs]; });
         }
 
         // top down assign new cell ids
         LevelID level = partitions.size();
-        for (const auto &partition : boost::adaptors::reverse(partitions))
+        for (const auto &partition : std::ranges::reverse_view(partitions))
         {
             BOOST_ASSERT(permutation.size() > 0);
             CellID last_cell_id = partition[permutation.front()];

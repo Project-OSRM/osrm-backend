@@ -1,7 +1,6 @@
 #include "contractor/contractor.hpp"
 #include "contractor/contract_excludable_graph.hpp"
 #include "contractor/contracted_edge_container.hpp"
-#include "contractor/crc32_processor.hpp"
 #include "contractor/files.hpp"
 #include "contractor/graph_contractor.hpp"
 #include "contractor/graph_contractor_adaptors.hpp"
@@ -27,14 +26,10 @@
 #include "util/typedefs.hpp"
 
 #include <algorithm>
-#include <bitset>
 #include <cstdint>
-#include <fstream>
 #include <iterator>
-#include <memory>
 #include <vector>
 
-#include <boost/assert.hpp>
 #include <tbb/global_control.h>
 
 namespace osrm::contractor

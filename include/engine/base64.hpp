@@ -3,17 +3,13 @@
 
 #include <iterator>
 #include <string>
-#include <type_traits>
-#include <vector>
 
 #include <climits>
 #include <cstddef>
 
-#include <boost/algorithm/string/trim.hpp>
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
-#include <boost/range/algorithm/copy.hpp>
 
 namespace osrm
 {
@@ -47,24 +43,29 @@ namespace engine
 // Encodes a chunk of memory to Base64.
 inline std::string encodeBase64(const unsigned char *first, std::size_t size)
 {
-    std::vector<unsigned char> bytes{first, first + size};
-    BOOST_ASSERT(!bytes.empty());
+    BOOST_ASSERT(size > 0);
 
-    std::size_t bytes_to_pad{0};
+    std::string encoded;
+    encoded.reserve(((size + 2) / 3) * 4);
 
-    while (bytes.size() % 3 != 0)
+    auto padding = (3 - size % 3) % 3;
+
+    BOOST_ASSERT(padding == 0 || padding == 1 || padding == 2);
+
+    for (auto itr = detail::Base64FromBinary(first); itr != detail::Base64FromBinary(first + size);
+         ++itr)
     {
-        bytes_to_pad += 1;
-        bytes.push_back(0);
+        encoded.push_back(*itr);
     }
 
-    BOOST_ASSERT(bytes_to_pad == 0 || bytes_to_pad == 1 || bytes_to_pad == 2);
-    BOOST_ASSERT_MSG(0 == bytes.size() % 3, "base64 input data size is not a multiple of 3");
+    for (size_t index = 0; index < padding; ++index)
+    {
+        encoded.push_back('=');
+    }
 
-    std::string encoded{detail::Base64FromBinary{bytes.data()},
-                        detail::Base64FromBinary{bytes.data() + (bytes.size() - bytes_to_pad)}};
+    BOOST_ASSERT(encoded.size() == (size + 2) / 3 * 4);
 
-    return encoded.append(bytes_to_pad, '=');
+    return encoded;
 }
 
 // C++11 standard 3.9.1/1: Plain char, signed char, and unsigned char are three distinct types

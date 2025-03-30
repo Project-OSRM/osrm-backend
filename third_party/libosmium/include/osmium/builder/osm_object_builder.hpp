@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2022 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -125,8 +125,8 @@ namespace osmium {
                 if (value_length > osmium::max_osm_string_length) {
                     throw std::length_error{"OSM tag value is too long"};
                 }
-                add_size(append_with_zero(key,   osmium::memory::item_size_type(key_length)));
-                add_size(append_with_zero(value, osmium::memory::item_size_type(value_length)));
+                add_size(append_with_zero(key,   static_cast<osmium::memory::item_size_type>(key_length)));
+                add_size(append_with_zero(value, static_cast<osmium::memory::item_size_type>(value_length)));
             }
 
             /**
@@ -142,8 +142,8 @@ namespace osmium {
                 if (value.size() > osmium::max_osm_string_length) {
                     throw std::length_error{"OSM tag value is too long"};
                 }
-                add_size(append(key.data(),   osmium::memory::item_size_type(key.size())   + 1));
-                add_size(append(value.data(), osmium::memory::item_size_type(value.size()) + 1));
+                add_size(append(key.data(),   static_cast<osmium::memory::item_size_type>(key.size())   + 1));
+                add_size(append(value.data(), static_cast<osmium::memory::item_size_type>(value.size()) + 1));
             }
 
             /**
@@ -240,8 +240,8 @@ namespace osmium {
                 if (length > osmium::max_osm_string_length) {
                     throw std::length_error{"OSM relation member role is too long"};
                 }
-                member.set_role_size(osmium::string_size_type(length) + 1);
-                add_size(append_with_zero(role, osmium::memory::item_size_type(length)));
+                member.set_role_size(static_cast<osmium::string_size_type>(length) + 1);
+                add_size(append_with_zero(role, static_cast<osmium::memory::item_size_type>(length)));
                 add_padding(true);
             }
 
@@ -330,16 +330,16 @@ namespace osmium {
                 if (length > osmium::max_osm_string_length) {
                     throw std::length_error{"OSM user name is too long"};
                 }
-                comment.set_user_size(osmium::string_size_type(length) + 1);
-                add_size(append_with_zero(user, osmium::memory::item_size_type(length)));
+                comment.set_user_size(static_cast<osmium::string_size_type>(length) + 1);
+                add_size(append_with_zero(user, static_cast<osmium::memory::item_size_type>(length)));
             }
 
             void add_text(osmium::ChangesetComment& comment, const char* text, const std::size_t length) {
                 if (length > std::numeric_limits<osmium::changeset_comment_size_type>::max() - 1) {
                     throw std::length_error{"OSM changeset comment is too long"};
                 }
-                comment.set_text_size(osmium::changeset_comment_size_type(length) + 1);
-                add_size(append_with_zero(text, osmium::memory::item_size_type(length)));
+                comment.set_text_size(static_cast<osmium::changeset_comment_size_type>(length) + 1);
+                add_size(append_with_zero(text, static_cast<osmium::memory::item_size_type>(length)));
                 add_padding(true);
             }
 

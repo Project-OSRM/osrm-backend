@@ -39,9 +39,9 @@ SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths)
     // Check consistency of keys in the result lookup table
     auto result = parser(paths);
     const auto found_inconsistency =
-        std::find_if(std::begin(result.lookup), std::end(result.lookup), [](const auto &entry) {
-            return entry.first.from == entry.first.to;
-        });
+        std::find_if(std::begin(result.lookup),
+                     std::end(result.lookup),
+                     [](const auto &entry) { return entry.first.from == entry.first.to; });
     if (found_inconsistency != std::end(result.lookup))
     {
         util::Log(logWARNING) << "Empty segment in CSV with node " +

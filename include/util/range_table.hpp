@@ -7,7 +7,6 @@
 #include "util/vector_view.hpp"
 
 #include <array>
-#include <fstream>
 #include <utility>
 
 namespace osrm::util
@@ -64,7 +63,8 @@ template <unsigned BLOCK_SIZE, storage::Ownership Ownership> class RangeTable
     // construct table from length vector
     template <typename VectorT> explicit RangeTable(const VectorT &lengths)
     {
-        const unsigned number_of_blocks = [&lengths]() {
+        const unsigned number_of_blocks = [&lengths]()
+        {
             unsigned num = (lengths.size() + 1) / (BLOCK_SIZE + 1);
             if ((lengths.size() + 1) % (BLOCK_SIZE + 1) != 0)
             {

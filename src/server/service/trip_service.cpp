@@ -6,8 +6,6 @@
 
 #include "util/json_container.hpp"
 
-#include <boost/format.hpp>
-
 namespace osrm::server::service
 {
 namespace
@@ -42,7 +40,7 @@ engine::Status TripService::RunQuery(std::size_t prefix_length,
                                      osrm::engine::api::ResultT &result)
 {
     result = util::json::Object();
-    auto &json_result = result.get<util::json::Object>();
+    auto &json_result = std::get<util::json::Object>(result);
 
     auto query_iterator = query.begin();
     auto parameters =
@@ -51,7 +49,7 @@ engine::Status TripService::RunQuery(std::size_t prefix_length,
     {
         const auto position = std::distance(query.begin(), query_iterator);
         result = util::json::Object();
-        auto &json_result = result.get<util::json::Object>();
+        auto &json_result = std::get<util::json::Object>(result);
         json_result.values["code"] = "InvalidQuery";
         json_result.values["message"] =
             "Query string malformed close to position " + std::to_string(prefix_length + position);

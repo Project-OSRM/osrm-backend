@@ -11,20 +11,7 @@
 #include <boost/config.hpp>
 #include <boost/version.hpp>
 
-#include <memory>
 #include <vector>
-
-// workaround for incomplete std::shared_ptr compatibility in old boost versions
-#if BOOST_VERSION < 105300 || defined BOOST_NO_CXX11_SMART_PTR
-
-namespace boost
-{
-template <class T> const T *get_pointer(std::shared_ptr<T> const &p) { return p.get(); }
-
-template <class T> T *get_pointer(std::shared_ptr<T> &p) { return p.get(); }
-} // namespace boost
-
-#endif
 
 namespace osrm::server
 {
@@ -35,7 +22,9 @@ class RequestHandler;
 class Connection : public std::enable_shared_from_this<Connection>
 {
   public:
-    explicit Connection(boost::asio::io_context &io_context, RequestHandler &handler);
+    explicit Connection(boost::asio::io_context &io_context,
+                        RequestHandler &handler,
+                        short keepalive_timeout);
     Connection(const Connection &) = delete;
     Connection &operator=(const Connection &) = delete;
 

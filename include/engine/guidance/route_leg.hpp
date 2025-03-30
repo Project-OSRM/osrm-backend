@@ -3,7 +3,7 @@
 
 #include "engine/guidance/route_step.hpp"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <string>
 #include <vector>

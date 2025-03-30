@@ -4,6 +4,7 @@
 #include "util/integer_range.hpp"
 
 #include <boost/test/unit_test.hpp>
+#include <ranges>
 
 namespace osrm::engine
 {
@@ -71,20 +72,17 @@ struct ExternalCellStorage
     {
         auto GetOutWeight(NodeID /*node*/) const
         {
-            return boost::make_iterator_range((EdgeWeight *)0, (EdgeWeight *)0);
+            return std::ranges::subrange((EdgeWeight *)0, (EdgeWeight *)0);
         }
 
         auto GetInWeight(NodeID /*node*/) const
         {
-            return boost::make_iterator_range((EdgeWeight *)0, (EdgeWeight *)0);
+            return std::ranges::subrange((EdgeWeight *)0, (EdgeWeight *)0);
         }
 
-        auto GetSourceNodes() const { return boost::make_iterator_range((NodeID *)0, (NodeID *)0); }
+        auto GetSourceNodes() const { return std::ranges::subrange((NodeID *)0, (NodeID *)0); }
 
-        auto GetDestinationNodes() const
-        {
-            return boost::make_iterator_range((NodeID *)0, (NodeID *)0);
-        }
+        auto GetDestinationNodes() const { return std::ranges::subrange((NodeID *)0, (NodeID *)0); }
     };
 
     using Cell = CellImpl;
@@ -219,7 +217,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     std::vector<engine::PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate /*input_coordinate*/,
                                const double /*max_distance*/,
-                               const boost::optional<engine::Bearing> /*bearing*/,
+                               const std::optional<engine::Bearing> /*bearing*/,
                                const engine::Approach /*approach*/,
                                const bool /*use_all_edges*/) const override
     {
@@ -229,8 +227,8 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     std::vector<engine::PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
                         const size_t /*max_results*/,
-                        const boost::optional<double> /*max_distance*/,
-                        const boost::optional<engine::Bearing> /*bearing*/,
+                        const std::optional<double> /*max_distance*/,
+                        const std::optional<engine::Bearing> /*bearing*/,
                         const engine::Approach /*approach*/) const override
     {
         return {};
@@ -238,8 +236,8 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
 
     engine::PhantomCandidateAlternatives NearestCandidatesWithAlternativeFromBigComponent(
         const util::Coordinate /*input_coordinate*/,
-        const boost::optional<double> /*max_distance*/,
-        const boost::optional<engine::Bearing> /*bearing*/,
+        const std::optional<double> /*max_distance*/,
+        const std::optional<engine::Bearing> /*bearing*/,
         const engine::Approach /*approach*/,
         const bool /*use_all_edges*/) const override
     {
@@ -334,8 +332,7 @@ inline void search(SearchEngineData<Algorithm> &engine_working_data,
                    typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                    EdgeWeight &weight,
                    std::vector<NodeID> &packed_leg,
-                   const std::vector<NodeID> &forward_loop_nodes,
-                   const std::vector<NodeID> &reverse_loop_nodes,
+                   const std::vector<NodeID> &loop_nodes,
                    const PhantomT &endpoints,
                    const EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
 {
@@ -345,8 +342,7 @@ inline void search(SearchEngineData<Algorithm> &engine_working_data,
                 reverse_heap,
                 weight,
                 packed_leg,
-                forward_loop_nodes,
-                reverse_loop_nodes,
+                loop_nodes,
                 endpoints,
                 weight_upper_bound);
 }
