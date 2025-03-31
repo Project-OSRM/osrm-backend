@@ -1,6 +1,0 @@
-coverage:
-
-  ignore:
-    - third_party/.*
-
-comment: off

@@ -14,7 +14,7 @@ function setup()
       weight_name                   = 'duration',
       max_speed_for_map_matching    = 40/3.6, -- kmph -> m/s
       call_tagless_node_function    = false,
-      traffic_light_penalty         = 2,
+      traffic_signal_penalty        = 2,
       u_turn_penalty                = 2,
       continue_straight_at_waypoint = false,
       use_turn_restrictions         = false,
@@ -253,7 +253,7 @@ function process_turn (profile, turn)
   end
 
   if turn.has_traffic_light then
-     turn.duration = profile.properties.traffic_light_penalty
+     turn.duration = profile.properties.traffic_signal_penalty
   end
   if profile.properties.weight_name == 'routability' then
       -- penalize turns from non-local access only segments onto local access only tags

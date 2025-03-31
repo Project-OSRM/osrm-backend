@@ -22,7 +22,7 @@ SliproadHandler::SliproadHandler(const util::NodeBasedDynamicGraph &node_based_g
                                  const std::vector<util::Coordinate> &node_coordinates,
                                  const extractor::CompressedEdgeContainer &compressed_geometries,
                                  const extractor::RestrictionMap &node_restriction_map,
-                                 const std::unordered_set<NodeID> &barrier_nodes,
+                                 const extractor::ObstacleMap &obstacle_nodes,
                                  const extractor::TurnLanesIndexedArray &turn_lanes_data,
                                  const extractor::NameTable &name_table,
                                  const extractor::SuffixTable &street_name_suffix_table)
@@ -31,7 +31,7 @@ SliproadHandler::SliproadHandler(const util::NodeBasedDynamicGraph &node_based_g
                           node_coordinates,
                           compressed_geometries,
                           node_restriction_map,
-                          barrier_nodes,
+                          obstacle_nodes,
                           turn_lanes_data,
                           name_table,
                           street_name_suffix_table),
@@ -255,9 +255,9 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
             node_coordinates,
             compressed_geometries,
             node_restriction_map,
-            barrier_nodes,
+            obstacle_nodes,
             turn_lanes_data};
-        const extractor::intersection::SkipTrafficSignalBarrierRoadSelector road_selector{};
+        const extractor::intersection::SkipObstacleRoadSelector road_selector{};
         (void)graph_walker.TraverseRoad(intersection_node_id, // start node
                                         sliproad_edge,        // onto edge
                                         intersection_finder,  // accumulator
@@ -585,10 +585,10 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
                         node_coordinates,
                         compressed_geometries,
                         node_restriction_map,
-                        barrier_nodes,
+                        obstacle_nodes,
                         turn_lanes_data,
                         {node_based_graph.GetTarget(sliproad_edge), candidate_road.eid});
-                if (skip_traffic_light_intersection.isTrafficSignalOrBarrier() &&
+                if (skip_traffic_light_intersection.isObstacle() &&
                     node_based_graph.GetTarget(skip_traffic_light_intersection[1].eid) ==
                         main_road_intersection->node)
                 {
@@ -703,7 +703,7 @@ bool SliproadHandler::nextIntersectionIsTooFarAway(const NodeID start, const Edg
 
     extractor::intersection::DistanceToNextIntersectionAccumulator accumulator{
         coordinate_extractor, node_based_graph, threshold};
-    const extractor::intersection::SkipTrafficSignalBarrierRoadSelector selector{};
+    const extractor::intersection::SkipObstacleRoadSelector selector{};
 
     (void)graph_walker.TraverseRoad(start, onto, accumulator, selector);
 
