@@ -21,6 +21,11 @@ struct V8Renderer
         out = Napi::Number::New(env, number.value);
     }
 
+    void operator()(const osrm::json::OSMID &osmid) const
+    {
+        out = Napi::BigInt::New(env, osmid.value);
+    }
+
     void operator()(const osrm::json::Object &object) const
     {
         Napi::Object obj = Napi::Object::New(env);

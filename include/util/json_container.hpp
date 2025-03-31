@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JSON_CONTAINER_HPP
 #define JSON_CONTAINER_HPP
 
+#include "util/typedefs.hpp"
+
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -70,6 +72,17 @@ struct Number
 };
 
 /**
+ * Typed OSM id.
+ */
+struct OSMID
+{
+    OSMID() = default;
+    OSMID(OSMNodeID id) : value{from_alias<uint64_t>(id)} {};
+    OSMID(OSMWayID id) : value{from_alias<uint64_t>(id)} {};
+    uint64_t value;
+};
+
+/**
  * Typed True.
  */
 struct True
@@ -95,7 +108,7 @@ struct Null
  *
  * Dispatch on its type by either by using apply_visitor or its get function.
  */
-using Value = std::variant<String, Number, Object, Array, True, False, Null>;
+using Value = std::variant<String, Number, Object, Array, True, False, Null, OSMID>;
 
 /**
  * Typed Object.
