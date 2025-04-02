@@ -52,7 +52,7 @@
     "cucumber": "^1.2.1",
     "d3-queue": "^2.0.3",
     "docbox": "^1.0.11",
-    "documentation": "^4.0.0",
+    "documentation": "^14.0.2",
     "eslint": "^5.16.0",
     "faucet": "^0.0.1",
     "jsonpath": "^1.1.1",
