@@ -42,13 +42,11 @@ template <std::size_t MaxNumElements = (1u << 16u)> class XORFastHash
   public:
     XORFastHash()
     {
-        std::mt19937 generator; // impl. defined but deterministic default seed
+        std::mt19937 generator(1);
+        std::uniform_int_distribution<> distrib(0, UINT16_MAX);
 
-        std::iota(begin(table1), end(table1), 0u);
-        std::shuffle(begin(table1), end(table1), generator);
-
-        std::iota(begin(table2), end(table2), 0u);
-        std::shuffle(begin(table2), end(table2), generator);
+        std::fill(begin(table1), end(table1), distrib(generator));
+        std::fill(begin(table2), end(table2), distrib(generator));
     }
 
     inline std::uint16_t operator()(const std::uint32_t originalValue) const
