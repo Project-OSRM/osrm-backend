@@ -1,5 +1,6 @@
 #include "util/json_container.hpp"
 #include "util/json_renderer.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/test/unit_test.hpp>
 
@@ -23,6 +24,19 @@ BOOST_AUTO_TEST_CASE(integer)
     Renderer<std::string> renderer(str);
     renderer(Number{42.0});
     BOOST_CHECK_EQUAL(str, "42");
+}
+
+BOOST_AUTO_TEST_CASE(osmid)
+{
+    std::string str;
+    Renderer<std::string> renderer(str);
+
+    renderer(OSMNodeID{std::numeric_limits<uint64_t>::min()});
+    BOOST_CHECK_EQUAL(str, "0");
+    str.clear();
+
+    renderer(OSMNodeID{std::numeric_limits<uint64_t>::max()});
+    BOOST_CHECK_EQUAL(str, "18446744073709551615");
 }
 
 BOOST_AUTO_TEST_CASE(test_json_issue_6531)
