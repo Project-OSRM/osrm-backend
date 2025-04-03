@@ -42,7 +42,7 @@ template <std::size_t MaxNumElements = (1u << 16u)> class XORFastHash
   public:
     XORFastHash()
     {
-        std::mt19937 generator(1);
+        std::mt19937 generator(0xdeadbeef);
         std::uniform_int_distribution<> distrib(0, UINT16_MAX);
 
         std::fill(begin(table1), end(table1), distrib(generator));
