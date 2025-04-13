@@ -1,9 +1,7 @@
 # Unreleased
 
-# 6.0.0 RC1
+# 6.0.0 RC2
   - Changes from 6.0.0 RC1
-    - Features
-      - REMOVED: Remove deprecated contractor config settings []()
     - Build:
       - CHANGED: Back to installing header files and lib [#7140](https://github.com/Project-OSRM/osrm-backend/pull/7140)
     - Misc:
