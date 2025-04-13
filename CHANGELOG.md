@@ -1,4 +1,7 @@
 # Unreleased
+  - Changes from 6.0.0 RC1
+    - Features
+      - REMOVED: Remove deprecated contractor config settings [#7149](https://github.com/Project-OSRM/osrm-backend/pull/7149)
 
 # 6.0.0 RC1
   - Changes from 5.27.1
