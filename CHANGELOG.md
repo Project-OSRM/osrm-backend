@@ -2,6 +2,8 @@
   - Changes from 6.0.0 RC1
     - Features
       - REMOVED: Remove deprecated contractor config settings [#7149](https://github.com/Project-OSRM/osrm-backend/pull/7149)
+    - Build:
+      - CHANGED: Updated Conan to v2.15.0 [#7148](https://github.com/Project-OSRM/osrm-backend/pull/7148)
 
 # 6.0.0 RC1
   - Changes from 5.27.1
