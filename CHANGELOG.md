@@ -3,6 +3,7 @@
 # 6.0.0 RC2
   - Changes from 6.0.0 RC1
     - Build:
+      - CHANGED: Updated Conan to v2.15.0 [#7148](https://github.com/Project-OSRM/osrm-backend/pull/7148)
       - CHANGED: Back to installing header files and lib [#7140](https://github.com/Project-OSRM/osrm-backend/pull/7140)
     - Misc:
       - CHANGED: Updated documentation library [#6677](https://github.com/Project-OSRM/osrm-backend/pull/6677)
