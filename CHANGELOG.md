@@ -1,6 +1,15 @@
 # Unreleased
 
 # 6.0.0 RC1
+  - Changes from 6.0.0 RC1
+    - Features
+      - REMOVED: Remove deprecated contractor config settings []()
+    - Build:
+      - CHANGED: Back to installing header files and lib [#7140](https://github.com/Project-OSRM/osrm-backend/pull/7140)
+    - Misc:
+      - CHANGED: Updated documentation library [#6677](https://github.com/Project-OSRM/osrm-backend/pull/6677)
+
+# 6.0.0 RC1
   - Changes from 5.27.1
     - Features
       - ADDED: Add generic support for obstacles [#7130](https://github.com/Project-OSRM/osrm-backend/pull/7130)
