@@ -55,17 +55,7 @@ struct ContractorConfig final : storage::IOConfig
 
     updater::UpdaterConfig updater_config;
 
-    // DEPRECATED to be removed in v6.0
-    bool use_cached_priority = false;
-
     unsigned requested_num_threads = 0;
-
-    // DEPRECATED to be removed in v6.0
-    // A percentage of vertices that will be contracted for the hierarchy.
-    // Offers a trade-off between preprocessing and query time.
-    // The remaining vertices form the core of the hierarchy
-    //(e.g. 0.8 contracts 80 percent of the hierarchy, leaving a core of 20%)
-    double core_factor = 1.0;
 };
 } // namespace osrm::contractor
 
