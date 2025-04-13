@@ -40,18 +40,6 @@ int Contractor::Run()
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
 
-    if (config.core_factor != 1.0)
-    {
-        util::Log(logWARNING)
-            << "Using core factor is deprecated and will be ignored. Falling back to CH.";
-        config.core_factor = 1.0;
-    }
-
-    if (config.use_cached_priority)
-    {
-        util::Log(logWARNING) << "Using cached priorities is deprecated and they will be ignored.";
-    }
-
     TIMER_START(preparing);
 
     util::Log() << "Reading node weights.";
