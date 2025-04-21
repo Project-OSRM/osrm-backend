@@ -1,5 +1,8 @@
 # Unreleased
-  - Changes from 6.0.0 RC2
+  - Changes from 6.0.0
+
+# 6.0.0
+  - Changes from 6.0.0 RC2: None
 
 # 6.0.0 RC2
   - Changes from 6.0.0 RC1
