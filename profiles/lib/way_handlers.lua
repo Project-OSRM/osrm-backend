@@ -276,6 +276,16 @@ function WayHandlers.speed(profile,way,result,data)
 
   local key,value,speed = Tags.get_constant_by_key_value(way,profile.speeds)
 
+  -- if the highway is trunk or trunk_link and locationtag disables it
+  -- then noroute available
+
+  if not speed and data.highway and profile.uselocationtags and profile.uselocationtags.trunk then
+    if profile.trunk_speeds[data.highway] and
+       (not way:get_location_tag(data.highway) or way:get_location_tag(data.highway) ~= "no") then
+      speed = profile.trunk_speeds[data.highway]
+    end
+  end
+
   if speed then
     -- set speed by way type
     result.forward_speed = speed
@@ -631,6 +641,11 @@ function WayHandlers.blocked_ways(profile,way,result,data)
   -- construction
   -- TODO if highway is valid then we shouldn't check railway, and vica versa
   if profile.avoid.construction and (data.highway == 'construction' or way:get_value_by_key('railway') == 'construction') then
+    return false
+  end
+
+  -- motorroad
+  if profile.avoid.motorroad and way:get_value_by_key("motorroad") == "yes" then
     return false
   end
 
