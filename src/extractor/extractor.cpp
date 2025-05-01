@@ -35,7 +35,6 @@
 #include "util/timing_util.hpp"
 
 // Keep debug include to make sure the debug header is in sync with types.
-// NOLINTNEXTLINE(unused-includes)
 #include "util/debug.hpp"
 
 #include <boost/assert.hpp>

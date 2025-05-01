@@ -4,7 +4,7 @@ Feature: Foot - Pedestrian areas
     Background:
         Given the profile "foot_area"
         Given a grid size of 50 meters
-        Given the extract extra arguments "--verbosity DEBUG"
+        # Given the extract extra arguments "--verbosity DEBUG"
         Given the query options
             | annotations | nodes |
 
@@ -30,6 +30,29 @@ Feature: Foot - Pedestrian areas
             | g    | e  | gcae    |
             | h    | f  | hdbf    |
             | f    | h  | fbdh    |
+
+    Scenario: Foot - Do not route across a closed way w/o area
+        Given the node map
+            """
+            e-a---b-f
+              |   |
+            h-d---c-g
+            """
+
+        And the ways
+            | nodes | highway    |
+            | abcda | pedestrian |
+            | ea    | pedestrian |
+            | bf    | pedestrian |
+            | hd    | pedestrian |
+            | cg    | pedestrian |
+
+        When I route I should get
+            | from | to | a:nodes |
+            | e    | g  | eabcg   |
+            | g    | e  | gcbae   |
+            | h    | f  | hdabf   |
+            | f    | h  | fbadh   |
 
     Scenario: Foot - Route across a multipolygon area
         Given the node map

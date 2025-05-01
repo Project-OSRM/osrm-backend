@@ -195,7 +195,7 @@ function process_way(profile, way, result, relations)
     public_transport = way:get_value_by_key('public_transport')
   }
 
-  if data.highway == 'pedestrian' then
+  if data.highway == 'pedestrian' and way:get_value_by_key('area') == 'yes' then
     area_manager:way(way)
   end
 

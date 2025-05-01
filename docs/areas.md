@@ -76,7 +76,7 @@ Example of a process_way function:
 ```lua
 function process_way(profile, way, result, relations)
   ...
-  if way:get_value_by_key('highway') == 'pedestrian' then
+  if way:get_value_by_key('highway') == 'pedestrian' and way:get_value_by_key('area') == 'yes' then
     -- register the way
     area_manager:way(way)
   end
@@ -86,6 +86,7 @@ function process_way(profile, way, result, relations)
     -- we have to set at least one defining tag
     local rel = relations:relation(rel_id)
     data.highway = rel:get_value_by_key('highway')
+    WayHandlers.names(profile, rel, result, data)
   end
   ...
 end
