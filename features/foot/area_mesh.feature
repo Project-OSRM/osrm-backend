@@ -34,8 +34,8 @@ Feature: Foot - Pedestrian areas
     Scenario: Foot - Do not route across a closed way w/o area
         Given the node map
             """
-            e-a---b-f
-              |   |
+            e-a--b-f
+              |   \
             h-d---c-g
             """
 
