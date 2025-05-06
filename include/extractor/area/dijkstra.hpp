@@ -1,75 +1,159 @@
 #ifndef OSRM_EXTRACTOR_AREA_DIJKSTRA_HPP
 #define OSRM_EXTRACTOR_AREA_DIJKSTRA_HPP
 
-#include "extractor/area/typedefs.hpp"
+#include "index_priority_queue.hpp"
 
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/dijkstra_shortest_paths.hpp>
-#include <boost/graph/dijkstra_shortest_paths_no_color_map.hpp>
-#include <boost/graph/graph_traits.hpp>
-
-#include <iterator>
-#include <osmium/osm.hpp>
-#include <osmium/osm/node_ref.hpp>
-#include <osmium/osm/types.hpp>
+#include <cmath>
+#include <limits>
+#include <map>
+#include <vector>
 
 namespace osrm::extractor::area
 {
 
 /**
- * Runs the Dijkstra shortest path algorithm on the area polygon and the visibility
- * graph.
+ * @brief Implements the Dijkstra shortest-path algorithm.
  *
- * We do not want to keep all visible edges we found, only those that are part of a
- * shortest path between any two entry points to the area. We use Dijkstra to find all
- * these shortest paths.
+ * @tparam vertex_t The type of a vertex.
  */
-class Dijkstra
+template <class vertex_t> class DijkstraImpl
 {
-    using vertices_t = std::vector<osmium::NodeRef>;
-    using vertices_iter_t = vertices_t::iterator;
-    using graph_t = boost::adjacency_list<boost::vecS,
-                                          boost::vecS,
-                                          boost::undirectedS,
-                                          boost::no_property,
-                                          boost::property<boost::edge_weight_t, double>>;
-    using vertex_descriptor = boost::graph_traits<graph_t>::vertex_descriptor;
-    using Edge = std::pair<vertex_descriptor, vertex_descriptor>;
+    struct Edge
+    {
+        size_t other;
+        double weight;
+    };
+    std::vector<vertex_t> vertices;
+    std::map<vertex_t, size_t> seen_vertices;
+
+    std::vector<double> distances;
+    std::vector<size_t> predecessors;
+    std::vector<std::vector<Edge>> adj;
+
+    /**
+     * @brief Initialize the data structures before each run.
+     */
+    void init_data()
+    {
+        double inf = std::numeric_limits<double>::infinity();
+        distances.resize(vertices.size());
+        predecessors.resize(vertices.size());
+        for (size_t i = 0; i < vertices.size(); ++i)
+        {
+            distances[i] = inf;
+            predecessors[i] = i;
+        }
+    }
 
   public:
-    Dijkstra(const OsmiumPolygon &poly, std::set<OsmiumSegment> &vis_map);
-    std::set<OsmiumSegment> run(const NodeRefSet &entry_points);
-
-  private:
-    vertices_iter_t find(const osmium::NodeRef &n)
+    /**
+     * @brief Add one vertex to the graph.
+     *
+     * If a vertex is already present it will not be inserted again and the index of the
+     * present vertex will be returned.
+     *
+     * @param v The vertex
+     * @return size_t The index of the vertex.
+     */
+    size_t add_vertex(const vertex_t &v)
     {
-        return std::lower_bound(vertices.begin(),
-                                vertices.end(),
-                                n,
-                                [](const osmium::NodeRef &u, const osmium::NodeRef &v)
-                                { return u < v; });
-    }
-    vertex_descriptor indexOf(const osmium::NodeRef &n)
-    {
-        return std::distance(vertices.begin(), find(n));
-    }
-    vertex_descriptor insert(const osmium::NodeRef &n)
-    {
-        vertices_iter_t found = find(n);
-        if (found != vertices.end() && *found == n)
-            return std::distance(vertices.begin(), found);
-        return std::distance(vertices.begin(), vertices.insert(found, n));
+        if (seen_vertices.contains(v))
+            return seen_vertices.at(v);
+        size_t pos = vertices.size();
+        seen_vertices.emplace(v, pos);
+        vertices.push_back(v);
+        return pos;
     };
 
-    /** The vertices, unique and sorted. */
-    vertices_t vertices;
     /**
-     * Temporary store for segments. We must have inserted all vertices before starting
-     * on edges because edges are defined as pair of indices into the (sorted) vertices
-     * vector.
+     * @brief Return the index of the vertex.
+     *
+     * @param v The vertex
+     * @return size_t The index of the vertex.
      */
-    std::set<OsmiumSegment> poly_segments;
-    std::set<OsmiumSegment> &vis_map;
+    size_t index_of(const vertex_t &v) { return seen_vertices.at(v); }
+
+    /**
+     * @brief Get the vertex object
+     *
+     * @param i The index of the vertex
+     * @return const vertex_t& The vertex
+     */
+    const vertex_t &get_vertex(size_t i) { return vertices.at(i); };
+
+    /**
+     * @brief Add one edge to the graph.
+     *
+     * @param u The first vertex.
+     * @param v The second vertex.
+     * @param weight The weight of the edge.
+     */
+    void add_edge(const vertex_t &u, const vertex_t &v, double weight)
+    {
+        size_t iu = add_vertex(u);
+        size_t iv = add_vertex(v);
+        adj.resize(vertices.size());
+        adj[iu].emplace_back(iv, weight);
+        adj[iv].emplace_back(iu, weight);
+    }
+
+    const std::vector<size_t> &get_predecessors() { return predecessors; }
+    const std::vector<double> &get_distances() { return distances; }
+
+    /**
+     * @brief Run the Dijkstra shortest-path algorithm starting at vertex s.
+     *
+     * After this function completes the predecessor for each vertex will be stored in
+     * {@code predecessors} and the distance from {@code s} to each vertex will be
+     * stored in {@code distances}.
+     *
+     * @param s The index of the "start" vertex.
+     */
+    void run(size_t s)
+    {
+        init_data();
+
+        IndexPriorityQueue pq(vertices.size(),
+                              [this](size_t u, size_t v) -> bool
+                              { return distances[u] < distances[v]; });
+
+        distances[s] = 0;
+        pq.insert(s);
+
+        while (!pq.empty())
+        {
+            size_t u = pq.pop();
+            double dist_u = distances[u];
+            for (Edge e : adj[u])
+            {
+                size_t v = e.other;
+                if (dist_u + e.weight < distances[v])
+                {
+                    distances[v] = dist_u + e.weight;
+                    predecessors[v] = u;
+                    pq.insert_or_decrease(v);
+                }
+            }
+        }
+    }
+
+    /**
+     * @brief Return the number of vertices.
+     */
+    size_t num_vertices() { return vertices.size(); }
+
+    /**
+     * @brief Return the number of edges.
+     */
+    size_t num_edges()
+    {
+        size_t n = 0;
+        for (auto &a : adj)
+        {
+            n += a.size();
+        }
+        return n / 2;
+    }
 };
 
 } // namespace osrm::extractor::area

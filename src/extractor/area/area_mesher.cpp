@@ -52,7 +52,7 @@ void copy_tags(osmium::builder::Builder &parent, const osmium::TagList &tags)
 } // namespace
 
 /**
- * \brief Build a boost multi-polygon from an osmium area.
+ * @brief Build a boost multi-polygon from an osmium area.
  *
  * It is hard to adapt osmium::Area to a boost::multi_polygon because the latter is a
  * vector of boost::polygon, while libosmium has no equivalent for boost::polygon. So
@@ -236,20 +236,20 @@ NodeRefSet AreaMesher::get_obstacle_vertices(const OsmiumPolygon &poly)
 {
     NodeRefSet obstacle_vertices;
 
-    auto obstacle =
-        [&](const osmium::NodeRef &prev, const osmium::NodeRef &n, const osmium::NodeRef &next)
-    {
-        if (right(&prev, &n, &next))
-        {
-            obstacle_vertices.emplace(n);
-        }
-    };
-
-    for_each_triplet_in_ring(poly.outer(), obstacle);
-    for (const auto &inner : poly.inners())
-    {
-        for_each_triplet_in_ring(inner, obstacle);
-    }
+    for_each_ring(poly,
+                  [&](const auto &ring)
+                  {
+                      for_each_triplet_in_ring(ring,
+                                               [&](const osmium::NodeRef &prev,
+                                                   const osmium::NodeRef &n,
+                                                   const osmium::NodeRef &next)
+                                               {
+                                                   if (right(&prev, &n, &next))
+                                                   {
+                                                       obstacle_vertices.emplace(n);
+                                                   }
+                                               });
+                  });
 
     util::Log(logDEBUG) << "Obstacle vertices: " << obstacle_vertices.size();
     return obstacle_vertices;
@@ -367,11 +367,9 @@ void AreaMesher::mesh_area(const osmium::Area &area,
         write_debug("/tmp/osrm-area-routing-visgraph-debug.osm", vis_map);
 #endif
 
-        Dijkstra dijkstra(poly, vis_map);
-        std::set<OsmiumSegment> segments = dijkstra.run(entry_points);
+        std::set<OsmiumSegment> segments = run_dijkstra(poly, vis_map, entry_points);
         util::Log(logINFO) << "  After running Dijkstra there are " << segments.size()
                            << " edges left.";
-
         add_to_buffer(segments, out_buffer);
         out_buffer.commit();
 
@@ -380,6 +378,88 @@ void AreaMesher::mesh_area(const osmium::Area &area,
 #endif
     }
 };
+
+/**
+ * Penalty added to generated segments. Generated segments are kept only if they are
+ * somewhat shorter than following the area perimeter.
+ */
+const double PENALTY = 1.1;
+
+/**
+ * Run the Dijkstra shortest-path algorithm on the visibility graph.
+ */
+std::set<OsmiumSegment> AreaMesher::run_dijkstra(const OsmiumPolygon &poly,
+                                                 std::set<OsmiumSegment> &vis_map,
+                                                 const NodeRefSet &entry_points)
+{
+    DijkstraImpl<osmium::NodeRef> d;
+
+    std::set<OsmiumSegment> poly_segments;
+    for_each_ring(poly,
+                  [&](auto &ring)
+                  {
+                      for_each_pair_in_ring(ring,
+                                            [&](const osmium::NodeRef &u, const osmium::NodeRef &v)
+                                            {
+                                                poly_segments.emplace(OsmiumSegment(u, v));
+                                                double weight = bg::distance(u, v);
+                                                d.add_edge(u, v, weight);
+                                            });
+                  });
+
+    util::Log(logDEBUG) << "  The polygon has " << poly_segments.size() << " edges:";
+    util::Log(logDEBUG) << "  The vis_map has " << vis_map.size() << " edges:";
+
+    // Add only those segments in the visibility graph that are not also in the polygon.
+    // Add a small penalty to virtual ways so that Dijkstra will prefer using the
+    // polygon ways if possible and we'll have to add some less virtual ways.
+    for (const OsmiumSegment &s : vis_map)
+    {
+        if (!poly_segments.contains(s))
+        {
+            double weight = bg::distance(s.first, s.second);
+            d.add_edge(s.first, s.second, weight * PENALTY);
+            util::Log(logDEBUG) << "    " << s.first.ref() << " -> " << s.second.ref() << " "
+                                << weight;
+        }
+    }
+
+    util::Log(logDEBUG) << "Running Dijkstra on: " << entry_points.size() << " entry points, "
+                        << d.num_vertices() << " vertices and " << d.num_edges() << " edges.";
+
+    std::set<OsmiumSegment> result;
+
+    using index_t = size_t;
+    for (const osmium::NodeRef &entry_point : entry_points)
+    {
+        index_t u = d.index_of(entry_point);
+        d.run(u);
+
+        const std::vector<index_t> &predecessors(d.get_predecessors());
+
+        // starting from each exit point report all generated edges that are on the
+        // shortest path from the entry point
+
+        for (const osmium::NodeRef &exit_point : entry_points)
+        {
+            util::Log(logDEBUG) << "  Collecting segments from " << entry_point.ref() << " -> "
+                                << exit_point.ref();
+            index_t v = d.index_of(exit_point);
+            while (v != u && v != predecessors.at(v))
+            {
+                auto s = OsmiumSegment(d.get_vertex(v), d.get_vertex(predecessors.at(v)));
+                if (!poly_segments.contains(s))
+                {
+                    util::Log(logDEBUG)
+                        << "    Collecting: " << s.first.ref() << " -> " << s.second.ref();
+                    result.emplace(s);
+                }
+                v = predecessors.at(v);
+            }
+        }
+    }
+    return result;
+}
 
 /**
  * Meshes all areas in the buffer.

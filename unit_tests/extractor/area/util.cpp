@@ -1,6 +1,5 @@
 #include "extractor/area/util.hpp"
 
-// NOLINTNEXTLINE(unused-includes)
 #include "extractor/area/typedefs.hpp"
 
 #include <boost/geometry.hpp>
@@ -18,7 +17,7 @@ using namespace osrm::extractor::area;
 
 using point_t = boost::tuple<int, int>;
 
-BOOST_AUTO_TEST_CASE(area_util_test)
+BOOST_AUTO_TEST_CASE(area_util_test_geometry)
 {
     point_t o(0, 0);
     point_t x(10, 0);

@@ -26,23 +26,23 @@ srs::projection<srs::static_epsg<3857>> osm_mercator;
 } // namespace
 
 /**
- * Builds the visibility graph of a given polygon.
+ * @brief Builds the visibility graph of a given polygon.
  *
- * This implementation follows the outline in Chapter 15 of "de Berg, Cheong, van
- * Kreveld, Overmars. Computational Geometry. Third Edition. Springer 2008."
- *
- * tldr: To compute the visibility graph, we use a circular sweep algorithm. We maintain
- * the sweep status in tau. Edges are not supposed to cross each other.
+ * This implementation follows the outline in Chapter 15 of: *de Berg, Cheong, van
+ * Kreveld, Overmars. Computational Geometry. Third Edition. Springer 2008.* Tldr: To
+ * compute the visibility graph we do a circular sweep around the observer. We
+ * maintain the sweep status in tau. Edges are not supposed to cross each other.
  *
  * Define "interesting" as a vertex that either:
  * - is incident to an external way,
  * - otherwise represents an entrance to the area,
- * - is reflex (aka. sticks into the area).
+ * - is reflex (sticks into the area).
  *
  * For each interesting vertex in turn:
- * - set the vertex as observer
- * - initialize the status in tau
- * - sweep a ray clockwise around the observer
+ * - put the observer at the vertex
+ * - sort all other vertices in clockwise order around the observer
+ * - shoot a ray from the observer through the first vertex and initialize the status in tau
+ * - sweep the ray clockwise around the observer and
  * - for each vertex intersected by the ray
  *   - report the vertex if it is visible
  *   - update the status in tau
@@ -50,14 +50,6 @@ srs::projection<srs::static_epsg<3857>> osm_mercator;
 class VisibilityGraph
 {
   public:
-    /**
-     * Calculates the visibility graph.
-     *
-     * For each node in the work_set, and for each vertex of poly visible from that
-     * node, it returns the segment from the node to the vertex.
-     */
-    std::set<OsmiumSegment> run(const OsmiumPolygon &poly, NodeRefSet &work_set);
-
     struct Vertex
     {
         // The std::sort code expects a default constructor, using pointers here instead
@@ -114,22 +106,10 @@ class VisibilityGraph
     /** an open polygon of Vertex */
     using VertexPoly = bg::model::polygon<Vertex, false, false>;
 
-    /**
-     * Returns all vertices of poly that the observer can see.
-     *
-     * @param poly the polygon
-     * @param observer the vertex where the observer stands
-     */
+    std::set<OsmiumSegment> run(const OsmiumPolygon &poly, NodeRefSet &work_set);
+
     std::vector<Vertex *> visible_vertices(VertexPoly &poly, const Vertex &observer);
 
-    /**
-     * Return true if the vertex w is visible for the observer.
-     *
-     * @param observer the center of the circular clockwise sweep
-     * @param prev_w the previous vertex in clockwise order around the sweep center
-     * @param w the current vertex
-     * @param tau maintains the sweep status
-     */
     bool visible(const Vertex *observer,
                  const Vertex *prev_w,
                  const Vertex *w,
@@ -176,6 +156,12 @@ template <std::size_t K> struct access<VisibilityGraph::Vertex, K>
 namespace osrm::extractor::area
 {
 
+/**
+ * @brief Calculates the visibility graph.
+ *
+ * For each node in the work_set, and for each vertex of poly visible from that
+ * node, it returns the segment from the node to the vertex.
+ */
 std::set<OsmiumSegment> VisibilityGraph::run(const OsmiumPolygon &poly, NodeRefSet &work_set)
 {
     // copy the NodeRef polygon into a Vertex polygon
@@ -197,14 +183,14 @@ std::set<OsmiumSegment> VisibilityGraph::run(const OsmiumPolygon &poly, NodeRefS
 
     // for each ring, for each vertex, link it to the previous and the next one
     for_each_ring(vpoly,
-                  [&](auto &ring)
+                  [](auto &ring)
                   {
-                      for_each_triplet_in_ring(ring,
-                                               [](Vertex &prev, Vertex &v, Vertex &next)
-                                               {
-                                                   v.prev = &prev;
-                                                   v.next = &next;
-                                               });
+                      for_each_pair_in_ring(ring,
+                                            [](Vertex &v, Vertex &next)
+                                            {
+                                                v.next = &next;
+                                                next.prev = &v;
+                                            });
                   });
 
     // for each node in the working set, find the visible vertices
@@ -223,6 +209,12 @@ std::set<OsmiumSegment> VisibilityGraph::run(const OsmiumPolygon &poly, NodeRefS
     return result;
 }
 
+/**
+ * @brief Returns all vertices of poly that the observer can see.
+ *
+ * @param poly the polygon
+ * @param observer the vertex where the observer stands
+ */
 std::vector<VisibilityGraph::Vertex *> VisibilityGraph::visible_vertices(VertexPoly &poly,
                                                                          const Vertex &observer)
 {
@@ -402,6 +394,14 @@ std::vector<VisibilityGraph::Vertex *> VisibilityGraph::visible_vertices(VertexP
     return vertices_cw; // visible vertices have "visible" set
 }
 
+/**
+ * @brief Return true if the vertex w is visible for the observer.
+ *
+ * @param observer the center of the circular clockwise sweep
+ * @param prev_w the previous vertex in clockwise order around the sweep center
+ * @param w the current vertex
+ * @param tau maintains the sweep status
+ */
 bool VisibilityGraph::visible(const Vertex *observer,
                               const Vertex *prev_w, // the last visited vertex
                               const Vertex *w,

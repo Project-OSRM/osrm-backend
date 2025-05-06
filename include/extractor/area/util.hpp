@@ -2,6 +2,7 @@
 #define OSRM_EXTRACTOR_AREA_UTIL_HPP
 
 #include <boost/geometry/core/access.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
 #include <functional>
 #include <ranges>
 
@@ -72,7 +73,7 @@ template <class TPoint> bool collinear(const TPoint *a, const TPoint *b, const T
  *
  * The test does not include endpoints. To include endpoints, use TComp=std::less<>
  *
- * Adapted from "O'Rourke. Computational Geometry in C. 2nd ed. Cambridge 1998" Code 7.2
+ * Adapted from: *O'Rourke. Computational Geometry in C. 2nd ed. Cambridge 1998* Code 7.2
  */
 template <class TPoint, typename TComp = std::less_equal<>>
 bool intersect(const TPoint *a,
@@ -146,7 +147,7 @@ bool intersect_closed(const TPoint *a,
  * Note: the "closed" means that we will find edges belonging to the polygon rings,
  * which is important for Dijkstra.
  *
- * Adapted from "O'Rourke. Computational Geometry in C. 2nd ed. Cambridge 1998" Code 1.11
+ * Adapted from: *O'Rourke. Computational Geometry in C. 2nd ed. Cambridge 1998* Code 1.11
  */
 template <class TPoint>
 bool in_cone(const TPoint *a0, const TPoint *a, const TPoint *a1, const TPoint *b)

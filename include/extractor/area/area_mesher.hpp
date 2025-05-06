@@ -26,6 +26,14 @@ namespace osrm::extractor::area
 
 class AreaManager;
 
+/**
+ * @brief A class that "meshes" areas
+ *
+ * A class that "meshes" an area by creating OSM ways that follow each shortest path
+ * between all pairs of entry points to the area. It first generates a visibility map,
+ * then uses Dijkstra's shortest path algorithm to reduce the number of edges. The
+ * generated ways are returned in an osmium buffer.
+ */
 class AreaMesher
 {
   public:
@@ -46,6 +54,10 @@ class AreaMesher
     using NodeIDVector = std::vector<OSMNodeID>;
     using WayNodeIDOffsets = std::vector<size_t>;
     using WayIDVector = std::vector<OSMWayID>;
+
+    std::set<OsmiumSegment> run_dijkstra(const OsmiumPolygon &poly,
+                                         std::set<OsmiumSegment> &vis_map,
+                                         const NodeRefSet &entry_points);
 
     ExtractionRelationContainer::RelationIDList
     get_relations(const osmium::Area &area, const ExtractionRelationContainer &relations);

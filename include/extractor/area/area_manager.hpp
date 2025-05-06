@@ -16,6 +16,13 @@
 namespace osrm::extractor::area
 {
 
+/**
+ * @brief Registers area objects from LUA.
+ *
+ * An object of this class is a global variable in LUA scripts. Call way() if you want
+ * to turn a closed way into an area, call relation() if you want to turn a multipolygon
+ * relation into an area.
+ */
 class AreaManager
     : public osmium::relations::RelationsManager<AreaManager, false, true, false, false>
 {
