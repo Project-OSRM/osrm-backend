@@ -20,6 +20,8 @@ template <class vertex_t> class DijkstraImpl
 {
     struct Edge
     {
+        Edge(size_t other, double weight)
+            : other{other}, weight{weight} {}; // for macos-x64 clang-14
         size_t other;
         double weight;
     };
