@@ -23,9 +23,9 @@ Feature: Annotations
 
         When I route I should get
             | from | to | route    | a:speed     | a:weight | a:nodes |
-            | h    | j  | hk,jk,jk | 6.7:6.7     | 15:15    | 1:4:3   |
-            | i    | m  | il,lm,lm | 6.7:6.7     | 15:15    | 2:5:6   |
-            | j    | m  | jk,lm    | 6.7:6.7:6.7 | 15:15:15 | 3:4:5:6 |
+            | h    | j  | hk,jk,jk | 6.7:6.7     | 15:15    | hkj     |
+            | i    | m  | il,lm,lm | 6.7:6.7     | 15:15    | ilm     |
+            | j    | m  | jk,lm    | 6.7:6.7:6.7 | 15:15:15 | jklm    |
 
 
     Scenario: There should be different forward/reverse datasources
@@ -114,5 +114,5 @@ Feature: Annotations
           | bearings    | 90,5;180,5                    |
 
         When I route I should get
-            | from | to | route    | a:speed | a:distance            | a:duration | a:nodes |
-            | a    | c  | abc,abc  | 10:10   | 249.9876189:299.962882 | 25:30      | 1:2:3   |
+            | from | to | route    | a:speed | a:distance             | a:duration | a:nodes |
+            | a    | c  | abc,abc  | 10:10   | 249.9876189:299.962882 | 25:30      | abc     |

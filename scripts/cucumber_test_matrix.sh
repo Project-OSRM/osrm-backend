@@ -12,7 +12,7 @@ do
   for loadmethod in "${loadmethods[@]}"
   do
     set -x
-    node ./node_modules/cucumber/bin/cucumber.js features/ -p $profile -m $loadmethod
+    node ./node_modules/cucumber/bin/cucumber.js features/ -p $profile -m $loadmethod -f summary
     { set +x; } 2>/dev/null
   done
 done

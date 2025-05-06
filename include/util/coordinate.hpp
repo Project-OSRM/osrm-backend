@@ -33,12 +33,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/numeric/conversion/cast.hpp>
 
 #include <cstdint>
+#include <osmium/osm/location.hpp>
 #include <type_traits>
 
 namespace osrm
 {
 
-constexpr const double COORDINATE_PRECISION = 1e6;
+constexpr const double COORDINATE_PRECISION = 1e6; // (double)osmium::detail::coordinate_precision;
 
 namespace util
 {

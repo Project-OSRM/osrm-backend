@@ -117,9 +117,9 @@ end
 -- highway = primary          => 40
 -- amenity = parking          => 10
 
-function Tags.get_constant_by_key_value(way,lookup)
+function Tags.get_constant_by_key_value(way,lookup,data)
   for key,set in pairs(lookup) do
-    local way_value = way:get_value_by_key(key)
+    local way_value = data[key] or way:get_value_by_key(key)
     for value,t in pairs(set) do
       if way_value == value then
         return key,value,t

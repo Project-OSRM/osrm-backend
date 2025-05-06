@@ -224,7 +224,7 @@ end
 
 -- set highway and access classification by user preference
 function WayHandlers.way_classification_for_turn(profile,way,result,data)
-  local highway = way:get_value_by_key("highway")
+  local highway = data.highway
   local access = way:get_value_by_key("access")
 
   if highway and profile.highway_turn_classification[highway] then
@@ -274,7 +274,7 @@ function WayHandlers.speed(profile,way,result,data)
     return        -- abort if already set, eg. by a route
   end
 
-  local key,value,speed = Tags.get_constant_by_key_value(way,profile.speeds)
+  local key,value,speed = Tags.get_constant_by_key_value(way,profile.speeds,data)
 
   if speed then
     -- set speed by way type

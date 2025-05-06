@@ -35,6 +35,7 @@ struct ExtractionRelation
     using MembersRolesList = std::vector<std::pair<std::uint64_t, std::string>>;
 
     explicit ExtractionRelation(const OsmIDTyped &_id) : id(_id) {}
+    ExtractionRelation() : id{-1, osmium::item_type::relation} {};
 
     void Clear()
     {

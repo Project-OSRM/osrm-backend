@@ -1,12 +1,12 @@
 #include "extractor/scripting_environment_lua.hpp"
 
+#include "extractor/area/area_manager.hpp"
 #include "extractor/extraction_helper_functions.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_relation.hpp"
 #include "extractor/extraction_segment.hpp"
 #include "extractor/extraction_turn.hpp"
 #include "extractor/extraction_way.hpp"
-#include "extractor/graph_compressor.hpp"
 #include "extractor/internal_extractor_edge.hpp"
 #include "extractor/maneuver_override_relation_parser.hpp"
 #include "extractor/profile_properties.hpp"
@@ -86,7 +86,6 @@ struct to_lua_object : public boost::static_visitor<sol::object>
     auto operator()(boost::blank &) const { return sol::lua_nil; }
     sol::state &state;
 };
-} // namespace
 
 // Handle a lua error thrown in a protected function by printing the traceback and bubbling
 // exception up to caller. Lua errors are generally unrecoverable, so this exception should not be
@@ -108,6 +107,7 @@ void handle_lua_error(const sol::protected_function_result &luares)
     }
     throw util::exception("Lua error (see stderr for traceback)");
 }
+} // namespace
 
 Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(
     const std::string &file_name,
@@ -267,6 +267,14 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         return boost::apply_visitor(to_lua_object(context.state), value);
     };
 
+    context.state.new_usertype<osmium::Relation>("Relation",
+                                                 "get_value_by_key",
+                                                 &get_value_by_key<osmium::Relation>,
+                                                 "id",
+                                                 &osmium::Relation::id,
+                                                 "version",
+                                                 &osmium::Relation::version);
+
     context.state.new_usertype<osmium::Way>(
         "Way",
         "get_value_by_key",
@@ -350,7 +358,18 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                       [](const ObstacleMap &om, NodeID from, NodeID to, Obstacle::Type type)
                       { return om.any(from, to, type); }));
 
+    context.state.new_usertype<area::AreaManager>(
+        "AreaManager",
+        "get_relations",
+        &area::AreaManager::get_relations,
+        "way",
+        [](area::AreaManager &manager, const osmium::Way &way) { manager.way(way); },
+        "relation",
+        [](area::AreaManager &manager, const osmium::Relation &relation)
+        { manager.relation(relation); });
+
     context.state["obstacle_map"] = std::ref(m_obstacle_map);
+    context.state["area_manager"] = std::ref(m_area_manager);
 
     context.state.new_usertype<ExtractionNode>(
         "ResultNode",
@@ -944,6 +963,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             "duration",
             &ExtractionTurn::duration);
         initV2Context();
+        context.relation_function = function_table.value()["process_relation"];
+        context.has_relation_function = context.relation_function.valid();
         break;
     }
     case 3:
@@ -1010,6 +1031,11 @@ const ProfileProperties &Sol2ScriptingEnvironment::GetProfileProperties()
     return GetSol2Context().properties;
 }
 
+bool Sol2ScriptingEnvironment::HasRelationFunction()
+{
+    return GetSol2Context().has_relation_function;
+}
+
 LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
 {
     std::lock_guard<std::mutex> lock(init_mutex);
@@ -1024,15 +1050,33 @@ LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
     return *ref;
 }
 
+/**
+ * Calls the LUA process_relation function.
+ */
+void Sol2ScriptingEnvironment::ProcessRelation(const osmium::memory::Buffer &buffer,
+                                               const ExtractionRelationContainer &relations,
+                                               ScriptingResults &)
+{
+    auto &local_context = this->GetSol2Context();
+    for (auto entity = buffer.cbegin(), end = buffer.cend(); entity != end; ++entity)
+    {
+        if (entity->type() == osmium::item_type::relation)
+        {
+            const auto &relation = static_cast<const osmium::Relation &>(*entity);
+            if (local_context.has_relation_function)
+            {
+                local_context.ProcessRelation(relation, relations);
+            }
+        }
+    }
+}
+
 void Sol2ScriptingEnvironment::ProcessElements(
     const osmium::memory::Buffer &buffer,
     const RestrictionParser &restriction_parser,
     const ManeuverOverrideRelationParser &maneuver_override_parser,
     const ExtractionRelationContainer &relations,
-    std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
-    std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
-    std::vector<InputTurnRestriction> &resulting_restrictions,
-    std::vector<InputManeuverOverride> &resulting_maneuver_overrides)
+    ScriptingResults &result_buffer)
 {
     ExtractionNode result_node;
     ExtractionWay result_way;
@@ -1052,7 +1096,7 @@ void Sol2ScriptingEnvironment::ProcessElements(
                 local_context.ProcessNode(node, result_node, relations);
             }
             result_node.node = nullptr;
-            resulting_nodes.push_back({node, result_node});
+            result_buffer.resulting_nodes.push_back({node, result_node});
         }
         break;
         case osmium::item_type::way:
@@ -1064,7 +1108,7 @@ void Sol2ScriptingEnvironment::ProcessElements(
             {
                 local_context.ProcessWay(way, result_way, relations);
             }
-            resulting_ways.push_back({way, std::move(result_way)});
+            result_buffer.resulting_ways.push_back({way, std::move(result_way)});
         }
         break;
         case osmium::item_type::relation:
@@ -1073,12 +1117,13 @@ void Sol2ScriptingEnvironment::ProcessElements(
             auto results = restriction_parser.TryParse(relation);
             if (!results.empty())
             {
-                std::move(
-                    results.begin(), results.end(), std::back_inserter(resulting_restrictions));
+                std::move(results.begin(),
+                          results.end(),
+                          std::back_inserter(result_buffer.resulting_restrictions));
             }
             else if (auto result_res = maneuver_override_parser.TryParse(relation))
             {
-                resulting_maneuver_overrides.push_back(std::move(*result_res));
+                result_buffer.resulting_maneuver_overrides.push_back(std::move(*result_res));
             }
         }
         break;
@@ -1344,6 +1389,24 @@ void Sol2ScriptingEnvironment::ProcessSegment(ExtractionSegment &segment)
         if (!luares.valid())
             handle_lua_error(luares);
     }
+}
+
+void LuaScriptingContext::ProcessRelation(const osmium::Relation &relation,
+                                          const ExtractionRelationContainer &relations)
+{
+    BOOST_ASSERT(state.lua_state() != nullptr);
+
+    sol::protected_function_result luares;
+
+    switch (api_version)
+    {
+    case 4:
+        luares = relation_function(profile_table, std::ref(relation), std::cref(relations));
+        break;
+    }
+
+    if (!luares.valid())
+        handle_lua_error(luares);
 }
 
 void LuaScriptingContext::ProcessNode(const osmium::Node &node,

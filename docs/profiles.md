@@ -95,7 +95,7 @@ The following global properties can be set under `properties` in the hash you re
 
 Attribute                            | Type     | Notes
 -------------------------------------|----------|----------------------------------------------------------------------------
-weight_name                          | String   | Name used in output for the routing weight property (default `'duration'`)
+weight_name                          | String   | Name used in output for the routing weight property (default `"duration"`)
 weight_precision                     | Unsigned | Decimal precision of edge weights (default `1`)
 left_hand_driving                    | Boolean  | Are vehicles assumed to drive on the left? (used in guidance, default `false`)
 use_turn_restrictions                | Boolean  | Are turn restrictions followed? (default `false`)
@@ -167,28 +167,28 @@ weight    | read-only | float              | The weight
 #### obstacle_type
 An enum with the following keys:
 
-Keys            |
-----------------|
-none            |
-barrier         |
-traffic_signals |
-stop            |
-give_way        |
-crossing        |
-traffic_calming |
-mini_roundabout |
-turning_loop    |
-turning_circle  |
+| Keys            |
+|-----------------|
+| none            |
+| barrier         |
+| traffic_signals |
+| stop            |
+| give_way        |
+| crossing        |
+| traffic_calming |
+| mini_roundabout |
+| turning_loop    |
+| turning_circle  |
 
 #### obstacle_direction
 An enum with the following keys:
 
-Keys     |
----------|
-none     |
-forward  |
-backward |
-both     |
+| Keys     |
+|----------|
+| none     |
+| forward  |
+| backward |
+| both     |
 
 ### obstacle_map
 A global user type. It stores obstacles.
@@ -409,10 +409,10 @@ weight                             | Read/write    | Float                     |
 duration                           | Read/write    | Float                     | Penalty to be applied for this turn (duration in deciseconds)
 
 
-#### `from`, `via`, and `to`
+#### from, via, and to
 Use these node IDs to retrieve obstacles. See: `obstacle_map:get`.
 
-#### `source_road`, `target_road`, `roads_on_the_right`, and `roads_on_the_left`
+#### source_road, target_road, roads_on_the_right, and roads_on_the_left
 
 The information of `source_road`, `target_road`, `roads_on_the_right`, and
 `roads_on_the_left` that can be read are as follows:
@@ -455,7 +455,7 @@ When turning from `a` to `b` via `x`,
 
 Note that indices of arrays in lua are 1-based.
 
-#### `highway_turn_classification` and `access_turn_classification`
+#### highway_turn_classification and access_turn_classification
 When setting appropriate turn weights and duration, information about the highway and access tags of roads that are involved in the turn are necessary. The lua turn function `process_turn` does not have access to the original osrm tags anymore. However, `highway_turn_classification` and `access_turn_classification` can be set during setup. The classification set during setup can be later used in `process_turn`.
 
 **Example**
