@@ -3,6 +3,7 @@
   "version": "6.0.0",
   "private": false,
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++ designed to run on OpenStreetMap data.",
+  "type": "module",
   "dependencies": {
     "@mapbox/node-pre-gyp": "2.0.0",
     "seedrandom": "^3.0.5"
@@ -14,7 +15,7 @@
     ]
   },
   "scripts": {
-    "lint": "node ./node_modules/eslint/bin/eslint.js -c ./.eslintrc features/step_definitions/ features/support/",
+    "lint": "node ./node_modules/eslint/bin/eslint.js -c ./eslint.config.js features/step_definitions/ features/support/",
     "test": "npm run lint && ./scripts/cucumber_test_matrix.sh",
     "clean": "rm -rf test/cache",
     "docs": "./scripts/build_api_docs.sh",
@@ -55,7 +56,7 @@
     "d3-queue": "3.0.7",
     "docbox": "^1.0.11",
     "documentation": "^14.0.2",
-    "eslint": "^5.16.0",
+    "eslint": "9.26.0",
     "faucet": "^0.0.4",
     "jsonpath": "^1.1.1",
     "node-addon-api": "8.3.1",
