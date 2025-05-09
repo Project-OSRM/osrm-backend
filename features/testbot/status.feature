@@ -58,7 +58,7 @@ Feature: Status messages
             | nonsense/v1/driving/1,1;1,2         | 400    | Service nonsense not found!                       |
             |                                     | 400    | URL string malformed close to position 1: "/"     |
             | /                                   | 400    | URL string malformed close to position 1: "//"    |
-            | ?                                   | 400    | URL string malformed close to position 1: "/?"    |
+            | ?                                   | 400    | URL string malformed close to position 1: "/"    |
             | route/v1/driving                    | 400    | URL string malformed close to position 17: "ing"  |
             | route/v1/driving/                   | 400    | URL string malformed close to position 18: "ng/"  |
             | route/v1/driving/1                  | 400    | Query string malformed close to position 19       |

@@ -40,7 +40,7 @@ function tableCodeOnlyParse(table, annotation, format, callback) {
     this.reprocessAndLoadData((e) => {
         if (e) return callback(e);
         var testRow = (row, ri, cb) => {
-            var afterRequest = (err, res) => {
+            var afterRequest = (err, res, body) => {
                 if (err) return cb(err);
 
                 for (var k in row) {
@@ -57,8 +57,8 @@ function tableCodeOnlyParse(table, annotation, format, callback) {
 
                 var json;
                 got.code = 'unknown';
-                if (res.body.length) {
-                    json = JSON.parse(res.body);
+                if (body.length) {
+                    json = JSON.parse(body);
                     got.code = json.code;
                 }
 
@@ -126,13 +126,13 @@ function tableParse(table, noRoute, annotation, format, callback) {
         if (e) return callback(e);
         // compute matrix
 
-        this.requestTable(waypoints, params, (err, response) => {
+        this.requestTable(waypoints, params, (err, response, body) => {
             if (err) return callback(err);
-            if (!response.body.length) return callback(new Error('Invalid response body'));
+            if (!body.length) return callback(new Error('Invalid response body'));
 
             var result = [];
             if (format === 'json') {
-                var json = JSON.parse(response.body);
+                var json = JSON.parse(body);
 
                 if (annotation === 'fallback_speed_cells') {
                     result = table.raw().map(row => row.map(() => ''));
@@ -154,7 +154,6 @@ function tableParse(table, noRoute, annotation, format, callback) {
                     });
                 }
             } else { //flatbuffers
-                var body = response.body;
                 var bytes = new Uint8Array(body.length);
                 for (var indx = 0; indx < body.length; ++indx) {
                     bytes[indx] = body.charCodeAt(indx);

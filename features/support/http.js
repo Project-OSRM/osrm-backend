@@ -1,6 +1,30 @@
-var Timeout = require('node-timeout');
-var request = require('request');
+const { Timeout } = require('../lib/utils');
+const http = require('http');
+const https = require('https');
 
+function httpRequest(url, callback) {
+    const client = url.startsWith('https') ? https : http;
+    const req = client.get(url, (res) => {
+        let data = '';
+
+        // Collect data chunks
+        res.on('data', (chunk) => {
+            data += chunk;
+        });
+
+        // Handle end of response
+        res.on('end', () => {
+            callback(null, res, data);
+        });
+    });
+
+    // Handle errors
+    req.on('error', (err) => {
+        callback(err);
+    });
+
+    req.end();
+}
 module.exports = function () {
     this.paramsToString = (params) => {
         var paramString = '';
@@ -20,22 +44,19 @@ module.exports = function () {
     };
 
     // FIXME this needs to be simplified!
-    // - remove usage of node-timeout
-    // - replace with node's native timout mechanism
     this.sendRequest = (baseUri, parameters, callback) => {
-        var limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
 
+        var limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
         var runRequest = (cb) => {
             var params = this.paramsToString(parameters);
             this.query = baseUri + (params.length ? '/' + params : '');
 
-            request(this.query, (err, res, body) => {
+            httpRequest(this.query, (err, res, body) => {
                 if (err && err.code === 'ECONNREFUSED') {
                     return cb(new Error('*** osrm-routed is not running.'));
                 } else if (err && err.statusCode === 408) {
                     return cb(new Error());
                 }
-
                 return cb(err, res, body);
             });
         };

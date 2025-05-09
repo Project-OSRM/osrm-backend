@@ -1,7 +1,5 @@
 'use strict';
 
-const Timeout = require('node-timeout');
-const request = require('request');
 const ensureDecimal = require('../lib/utils').ensureDecimal;
 
 module.exports = function () {
@@ -17,21 +15,8 @@ module.exports = function () {
     };
 
     this.requestUrl = (path, callback) => {
-        var uri = this.query = [this.HOST, path].join('/'),
-            limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
-
-        function runRequest (cb) {
-            request(uri, cb);
-        }
-
-        runRequest(limit((err, res, body) => {
-            if (err) {
-                if (err.statusCode === 408) return callback(this.RoutedError('*** osrm-routed did not respond'));
-                else if (err.code === 'ECONNREFUSED')
-                    return callback(this.RoutedError('*** osrm-routed is not running'));
-            } else
-                return callback(err, res, body);
-        }));
+        var uri = this.query = [this.HOST, path].join('/');
+        this.sendRequest(uri, '', callback);
     };
 
     // Overwrites the default values in defaults

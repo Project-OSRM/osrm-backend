@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const util = require('util');
-const Timeout = require('node-timeout');
+const { Timeout } = require('./utils');
 const tryConnect = require('../lib/try_connect');
 const errorReason = require('./utils').errorReason;
 

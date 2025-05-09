@@ -216,7 +216,6 @@ module.exports = function () {
                                 got[key] = row[key];
                             }
                         }
-
                         cb(null, got);
                     } else {
                         cb(new Error('request failed to return valid body'));

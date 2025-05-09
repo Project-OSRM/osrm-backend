@@ -12,15 +12,15 @@ module.exports = function () {
                 var inNode = this.findNodeByName(row.in);
                 if (!inNode) throw new Error(util.format('*** unknown in-node "%s"', row.in));
 
-                this.requestNearest(inNode, this.queryParams, (err, response) => {
+                this.requestNearest(inNode, this.queryParams, (err, response, body) => {
                     if (err) return cb(err);
                     var coord;
                     var headers = new Set(table.raw()[0]);
 
-                    var got = { in: row.in};
+                    var got = { in: row.in };
 
-                    if (response.body.length) {
-                        var json = JSON.parse(response.body);
+                    if (body.length) {
+                        var json = JSON.parse(body);
                         got.code = json.code;
 
                         if (response.statusCode === 200) {
@@ -72,12 +72,11 @@ module.exports = function () {
                 if (!outNode) throw new Error(util.format('*** unknown out-node "%s"', row.out));
 
                 this.queryParams.output = 'flatbuffers';
-                this.requestNearest(inNode, this.queryParams, (err, response) => {
+                this.requestNearest(inNode, this.queryParams, (err, response, body) => {
                     if (err) return cb(err);
                     var coord;
 
-                    if (response.statusCode === 200 && response.body.length) {
-                        var body = response.body;
+                    if (response.statusCode === 200 && body.length) {
                         var bytes = new Uint8Array(body.length);
                         for (var indx = 0; indx < body.length; ++indx) {
                             bytes[indx] = body.charCodeAt(indx);

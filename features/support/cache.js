@@ -4,11 +4,11 @@ const d3 = require('d3-queue');
 const fs = require('fs');
 const util = require('util');
 const path = require('path');
-const mkdirp = require('mkdirp');
 const hash = require('../lib/hash');
 const rimraf = require('rimraf');
+const { createDir } = require('../lib/utils');
 
-module.exports = function() {
+module.exports = function () {
     this.initializeCache = (callback) => {
         this.getOSRMHash((err, osrmHash) => {
             if (err) return callback(err);
@@ -45,7 +45,7 @@ module.exports = function() {
                 this.featureProcessedCacheDirectories[uri] = featureProcessedCacheDirectory;
 
                 d3.queue(1)
-                    .defer(mkdirp, featureProcessedCacheDirectory)
+                    .defer(createDir, featureProcessedCacheDirectory)
                     .defer(this.cleanupFeatureCache.bind(this), featureCacheDirectory, hash)
                     .defer(this.cleanupProcessedFeatureCache.bind(this), featureProcessedCacheDirectory, this.osrmHash)
                     .awaitAll(callback);
@@ -65,7 +65,7 @@ module.exports = function() {
             function runStats(path, callback) {
                 fs.stat(path, (err, stat) => {
                     if (err) return callback(err);
-                    callback(null, {file: path, stat: stat});
+                    callback(null, { file: path, stat: stat });
                 });
             }
             files.map(f => { q.defer(runStats, path.join(parentPath, f)); });
@@ -86,7 +86,7 @@ module.exports = function() {
         let parentPath = path.resolve(path.join(directory, '..'));
         fs.readdir(parentPath, (err, files) => {
             let q = d3.queue();
-            files.filter(name => { return name !== featureHash;})
+            files.filter(name => { return name !== featureHash; })
                 .map((f) => { q.defer(rimraf, path.join(parentPath, f)); });
             q.awaitAll(callback);
         });
