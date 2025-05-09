@@ -68,7 +68,7 @@ module.exports = function () {
                 fs.stat(filePath, (err, stat) => {
                     if (err) return callback(err);
                     if (stat.isDirectory() && filePath.search(osrmHash) < 0) {
-                        q.defer((cb) => rm(filePath, { recursive: true, force: true }).then(() => cb()).catch(cb));
+                        rm(filePath, { recursive: true, force: true });
                     }
                 });
             });
@@ -82,7 +82,7 @@ module.exports = function () {
             if (err) return callback(err);
             let q = d3.queue();
             files.filter((name) => name !== featureHash).forEach((f) => {
-                q.defer((cb) => rm(path.join(parentPath, f), { recursive: true, force: true }).then(() => cb()).catch(cb));
+                rm(path.join(parentPath, f), { recursive: true, force: true });
             });
             q.awaitAll(callback);
         });
