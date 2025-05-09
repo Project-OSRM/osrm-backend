@@ -3,7 +3,6 @@
   "version": "6.0.0",
   "private": false,
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++ designed to run on OpenStreetMap data.",
-  "type": "module",
   "dependencies": {
     "@mapbox/node-pre-gyp": "2.0.0",
     "seedrandom": "^3.0.5"
