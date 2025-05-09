@@ -289,6 +289,7 @@ test('trip: service combinations that are not implemented', function(assert) {
 });
 
 test('trip: fixed start and end combinations', function(assert) {
+    assert.plan(21);
     var osrm = new OSRM(data_path);
 
     var options = {
@@ -350,8 +351,6 @@ test('trip: fixed start and end combinations', function(assert) {
     options.source = 'any';
     options.destination = 'any';
     roundtripChecks(options);
-
-    assert.end();
 });
 
 test('trip: trip in Monaco without motorways', function(assert) {
