@@ -2,7 +2,7 @@
 
 var d3 = require('d3-queue');
 var path = require('path');
-var rimraf = require('rimraf');
+var fs = require('fs');
 var OSM = require('../lib/osm');
 var OSRMLoader = require('../lib/osrm_loader');
 const { createDir } = require('../lib/utils');
@@ -49,7 +49,7 @@ module.exports = function () {
         this.scenarioLogFile = path.join(logDir, this.scenarioID) + '.log';
         d3.queue(1)
             .defer(createDir, logDir)
-            .defer(rimraf, this.scenarioLogFile)
+            .defer((callback) => fs.rm(this.scenarioLogFile, { force: true }, callback))
             .awaitAll(callback);
         // uncomment to get path to logfile
         // console.log('  Writing logging output to ' + this.scenarioLogFile);

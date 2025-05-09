@@ -60,8 +60,6 @@
     "jsonpath": "^1.1.1",
     "node-addon-api": "8.3.1",
     "node-cmake": "^2.5.1",
-    "request": "^2.88.2",
-    "rimraf": "^2.7.1",
     "tape": "5.9.0",
     "uglify-js": "^3.17.0",
     "xmlbuilder": "^4.2.1"
