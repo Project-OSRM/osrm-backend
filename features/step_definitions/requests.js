@@ -6,6 +6,7 @@ module.exports = function () {
             if (e) return callback(e);
             this.requestUrl(path, (err, res, body) => {
                 this.response = res;
+                this.body = body;
                 callback(err, res, body);
             });
         });
@@ -25,7 +26,7 @@ module.exports = function () {
 
     this.Then(/^status code should be (.+)$/, (code, callback) => {
         try {
-            this.json = JSON.parse(this.response.body);
+            this.json = JSON.parse(this.body);
         } catch(e) {
             return callback(e);
         }
@@ -35,7 +36,7 @@ module.exports = function () {
 
     this.Then(/^status message should be "(.*?)"$/, (message, callback) => {
         try {
-            this.json = JSON.parse(this.response.body);
+            this.json = JSON.parse(this.body);
         } catch(e) {
             return callback(e);
         }

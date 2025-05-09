@@ -1,5 +1,5 @@
 var util = require('util');
-var polyline = require('polyline');
+var polyline = require('@mapbox/polyline');
 
 module.exports = function () {
     function add(a, b) {
@@ -12,7 +12,7 @@ module.exports = function () {
         this.reprocessAndLoadData((e) => {
             if (e) return callback(e);
             var testRow = (row, ri, cb) => {
-                var afterRequest = (err, res) => {
+                var afterRequest = (err, res, body) => {
                     if (err) return cb(err);
                     var headers = new Set(table.raw()[0]);
 
@@ -30,8 +30,8 @@ module.exports = function () {
 
                     var json;
                     got.code = 'unknown';
-                    if (res.body.length) {
-                        json = JSON.parse(res.body);
+                    if (body.length) {
+                        json = JSON.parse(body);
                         got.code = json.code;
                     }
 

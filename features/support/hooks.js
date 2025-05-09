@@ -2,13 +2,13 @@
 
 var d3 = require('d3-queue');
 var path = require('path');
-var mkdirp = require('mkdirp');
-var rimraf = require('rimraf');
+var fs = require('fs');
 var OSM = require('../lib/osm');
 var OSRMLoader = require('../lib/osrm_loader');
+const { createDir } = require('../lib/utils');
 
 module.exports = function () {
-    this.registerHandler('BeforeFeatures', {timeout: 30000},  (features, callback) => {
+    this.registerHandler('BeforeFeatures', { timeout: 30000 }, (features, callback) => {
         this.osrmLoader = new OSRMLoader(this);
         this.OSMDB = new OSM.DB();
 
@@ -48,8 +48,8 @@ module.exports = function () {
         let logDir = path.join(this.LOGS_PATH, this.featureID);
         this.scenarioLogFile = path.join(logDir, this.scenarioID) + '.log';
         d3.queue(1)
-            .defer(mkdirp, logDir)
-            .defer(rimraf, this.scenarioLogFile)
+            .defer(createDir, logDir)
+            .defer((callback) => fs.rm(this.scenarioLogFile, { force: true }, callback))
             .awaitAll(callback);
         // uncomment to get path to logfile
         // console.log('  Writing logging output to ' + this.scenarioLogFile);
