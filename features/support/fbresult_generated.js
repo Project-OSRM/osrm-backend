@@ -437,7 +437,7 @@ osrm.engine.api.fbresult.Waypoint.createWaypoint = function(builder, hintOffset,
   osrm.engine.api.fbresult.Waypoint.addAlternativesCount(builder, alternativesCount);
   osrm.engine.api.fbresult.Waypoint.addTripsIndex(builder, tripsIndex);
   return osrm.engine.api.fbresult.Waypoint.endWaypoint(builder);
-}
+};
 
 /**
  * @constructor
@@ -555,7 +555,7 @@ osrm.engine.api.fbresult.Metadata.createMetadata = function(builder, datasourceN
   osrm.engine.api.fbresult.Metadata.startMetadata(builder);
   osrm.engine.api.fbresult.Metadata.addDatasourceNames(builder, datasourceNamesOffset);
   return osrm.engine.api.fbresult.Metadata.endMetadata(builder);
-}
+};
 
 /**
  * @constructor
@@ -979,7 +979,7 @@ osrm.engine.api.fbresult.Annotation.createAnnotation = function(builder, distanc
   osrm.engine.api.fbresult.Annotation.addSpeed(builder, speedOffset);
   osrm.engine.api.fbresult.Annotation.addMetadata(builder, metadataOffset);
   return osrm.engine.api.fbresult.Annotation.endAnnotation(builder);
-}
+};
 
 /**
  * @constructor
@@ -1157,7 +1157,7 @@ osrm.engine.api.fbresult.StepManeuver.createStepManeuver = function(builder, loc
   osrm.engine.api.fbresult.StepManeuver.addModifier(builder, modifier);
   osrm.engine.api.fbresult.StepManeuver.addExit(builder, exit);
   return osrm.engine.api.fbresult.StepManeuver.endStepManeuver(builder);
-}
+};
 
 /**
  * @constructor
@@ -1300,7 +1300,7 @@ osrm.engine.api.fbresult.Lane.createLane = function(builder, indicationsOffset, 
   osrm.engine.api.fbresult.Lane.addIndications(builder, indicationsOffset);
   osrm.engine.api.fbresult.Lane.addValid(builder, valid);
   return osrm.engine.api.fbresult.Lane.endLane(builder);
-}
+};
 
 /**
  * @constructor
@@ -1634,7 +1634,7 @@ osrm.engine.api.fbresult.Intersection.createIntersection = function(builder, loc
   osrm.engine.api.fbresult.Intersection.addOutBearing(builder, outBearing);
   osrm.engine.api.fbresult.Intersection.addLanes(builder, lanesOffset);
   return osrm.engine.api.fbresult.Intersection.endIntersection(builder);
-}
+};
 
 /**
  * @constructor
@@ -2050,7 +2050,7 @@ osrm.engine.api.fbresult.Step.createStep = function(builder, distance, duration,
   osrm.engine.api.fbresult.Step.addRotaryPronunciation(builder, rotaryPronunciationOffset);
   osrm.engine.api.fbresult.Step.addDrivingSide(builder, drivingSide);
   return osrm.engine.api.fbresult.Step.endStep(builder);
-}
+};
 
 /**
  * @constructor
@@ -2260,7 +2260,7 @@ osrm.engine.api.fbresult.Leg.createLeg = function(builder, distance, duration, w
   osrm.engine.api.fbresult.Leg.addAnnotations(builder, annotationsOffset);
   osrm.engine.api.fbresult.Leg.addSteps(builder, stepsOffset);
   return osrm.engine.api.fbresult.Leg.endLeg(builder);
-}
+};
 
 /**
  * @constructor
@@ -2524,7 +2524,7 @@ osrm.engine.api.fbresult.RouteObject.createRouteObject = function(builder, dista
   osrm.engine.api.fbresult.RouteObject.addCoordinates(builder, coordinatesOffset);
   osrm.engine.api.fbresult.RouteObject.addLegs(builder, legsOffset);
   return osrm.engine.api.fbresult.RouteObject.endRouteObject(builder);
-}
+};
 
 /**
  * @constructor
@@ -2846,7 +2846,7 @@ osrm.engine.api.fbresult.Table.createTable = function(builder, durationsOffset, 
   osrm.engine.api.fbresult.Table.addDestinations(builder, destinationsOffset);
   osrm.engine.api.fbresult.Table.addFallbackSpeedCells(builder, fallbackSpeedCellsOffset);
   return osrm.engine.api.fbresult.Table.endTable(builder);
-}
+};
 
 /**
  * @constructor
@@ -2953,7 +2953,7 @@ osrm.engine.api.fbresult.Error.createError = function(builder, codeOffset, messa
   osrm.engine.api.fbresult.Error.addCode(builder, codeOffset);
   osrm.engine.api.fbresult.Error.addMessage(builder, messageOffset);
   return osrm.engine.api.fbresult.Error.endError(builder);
-}
+};
 
 /**
  * @constructor
@@ -3211,7 +3211,7 @@ osrm.engine.api.fbresult.FBResult.createFBResult = function(builder, error, code
   osrm.engine.api.fbresult.FBResult.addRoutes(builder, routesOffset);
   osrm.engine.api.fbresult.FBResult.addTable(builder, tableOffset);
   return osrm.engine.api.fbresult.FBResult.endFBResult(builder);
-}
+};
 
 // Exports for Node.js and RequireJS
 this.osrm = osrm;

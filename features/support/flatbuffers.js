@@ -642,7 +642,7 @@ flatbuffers.Builder.prototype.endObject = function() {
   // Search for an existing vtable that matches the current one.
   var existing_vtable = 0;
   var vt1 = this.space;
-outer_loop:
+  outer_loop:
   for (i = 0; i < this.vtables.length; i++) {
     var vt2 = this.bb.capacity() - this.vtables[i];
     if (len == this.bb.readInt16(vt2)) {
@@ -1015,8 +1015,8 @@ flatbuffers.ByteBuffer.prototype.writeInt16 = function(offset, value) {
  * @param {number} value
  */
 flatbuffers.ByteBuffer.prototype.writeUint16 = function(offset, value) {
-    this.bytes_[offset] = value;
-    this.bytes_[offset + 1] = value >> 8;
+  this.bytes_[offset] = value;
+  this.bytes_[offset + 1] = value >> 8;
 };
 
 /**
@@ -1035,10 +1035,10 @@ flatbuffers.ByteBuffer.prototype.writeInt32 = function(offset, value) {
  * @param {number} value
  */
 flatbuffers.ByteBuffer.prototype.writeUint32 = function(offset, value) {
-    this.bytes_[offset] = value;
-    this.bytes_[offset + 1] = value >> 8;
-    this.bytes_[offset + 2] = value >> 16;
-    this.bytes_[offset + 3] = value >> 24;
+  this.bytes_[offset] = value;
+  this.bytes_[offset + 1] = value >> 8;
+  this.bytes_[offset + 2] = value >> 16;
+  this.bytes_[offset + 3] = value >> 24;
 };
 
 /**
@@ -1055,8 +1055,8 @@ flatbuffers.ByteBuffer.prototype.writeInt64 = function(offset, value) {
  * @param {flatbuffers.Long} value
  */
 flatbuffers.ByteBuffer.prototype.writeUint64 = function(offset, value) {
-    this.writeUint32(offset, value.low);
-    this.writeUint32(offset + 4, value.high);
+  this.writeUint32(offset, value.low);
+  this.writeUint32(offset + 4, value.high);
 };
 
 /**
@@ -1088,12 +1088,12 @@ flatbuffers.ByteBuffer.prototype.getBufferIdentifier = function() {
   if (this.bytes_.length < this.position_ + flatbuffers.SIZEOF_INT +
       flatbuffers.FILE_IDENTIFIER_LENGTH) {
     throw new Error(
-        'FlatBuffers: ByteBuffer is too short to contain an identifier.');
+      'FlatBuffers: ByteBuffer is too short to contain an identifier.');
   }
-  var result = "";
+  var result = '';
   for (var i = 0; i < flatbuffers.FILE_IDENTIFIER_LENGTH; i++) {
     result += String.fromCharCode(
-        this.readInt8(this.position_ + flatbuffers.SIZEOF_INT + i));
+      this.readInt8(this.position_ + flatbuffers.SIZEOF_INT + i));
   }
   return result;
 };
