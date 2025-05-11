@@ -842,8 +842,7 @@ class RouteAPI : public BaseAPI
                     nodes.values.reserve(leg_geometry.node_ids.size());
                     for (const auto node_id : leg_geometry.node_ids)
                     {
-                        nodes.values.push_back(
-                            static_cast<std::uint64_t>(facade.GetOSMNodeIDOfNode(node_id)));
+                        nodes.values.push_back(facade.GetOSMNodeIDOfNode(node_id));
                     }
                     annotation.values.emplace("nodes", std::move(nodes));
                 }
