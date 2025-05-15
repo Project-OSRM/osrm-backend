@@ -40,3 +40,9 @@ Feature: Bike - Accessability of different way types
             | highway | man_made | bothw |
             | (nil)   | (nil)    |       |
             | (nil)   | pier     | x     |
+
+    Scenario: Bike - Motorroad
+        Then routability should be
+            | highway | motorroad  | bothw |
+            | (nil)   | (nil)      | x     |
+            | (nil)   | yes        |       |
