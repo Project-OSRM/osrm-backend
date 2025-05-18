@@ -3,13 +3,13 @@
 const fs = require('fs');
 const util = require('util');
 const d3 = require('d3-queue');
+const CheapRuler = require('cheap-ruler').default;
 
 const OSM = require('../lib/osm');
 const classes = require('./data_classes');
 const tableDiff = require('../lib/table_diff');
 const ensureDecimal = require('../lib/utils').ensureDecimal;
 const errorReason = require('../lib/utils').errorReason;
-const CheapRuler = require('cheap-ruler');
 
 module.exports = function () {
   this.setGridSize = (meters) => {
