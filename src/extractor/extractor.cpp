@@ -1,18 +1,20 @@
 #include "extractor/extractor.hpp"
 
+#include "extractor/area/area_manager.hpp"
+#include "extractor/area/area_mesher.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/compressed_node_based_graph_edge.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/extraction_containers.hpp"
-#include "extractor/extraction_node.hpp"
 #include "extractor/extraction_relation.hpp"
-#include "extractor/extraction_way.hpp"
 #include "extractor/extractor_callbacks.hpp"
 #include "extractor/files.hpp"
 #include "extractor/maneuver_override_relation_parser.hpp"
 #include "extractor/name_table.hpp"
 #include "extractor/node_based_graph_factory.hpp"
+#include "extractor/node_locations_for_ways.hpp"
 #include "extractor/node_restriction_map.hpp"
+#include "extractor/profile_properties.hpp"
 #include "extractor/restriction_graph.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
@@ -38,19 +40,22 @@
 
 #include <boost/assert.hpp>
 
+#include <oneapi/tbb/global_control.h>
+#include <oneapi/tbb/parallel_for_each.h>
+#include <oneapi/tbb/parallel_pipeline.h>
+
 #include <osmium/handler/node_locations_for_ways.hpp>
 #include <osmium/index/map/flex_mem.hpp>
 #include <osmium/io/any_input.hpp>
+#include <osmium/io/xml_output.hpp>
+#include <osmium/storage/item_stash.hpp>
 #include <osmium/thread/pool.hpp>
 #include <osmium/visitor.hpp>
-#include <tbb/global_control.h>
-#include <tbb/parallel_pipeline.h>
 
 #include <algorithm>
 #include <memory>
 #include <thread>
 #include <tuple>
-#include <type_traits>
 #include <vector>
 
 namespace osrm::extractor
@@ -58,6 +63,17 @@ namespace osrm::extractor
 
 namespace
 {
+template <typename Map> auto convertIDMapToVector(const Map &map)
+{
+    std::vector<typename Map::key_type> result(map.size());
+    for (const auto &pair : map)
+    {
+        BOOST_ASSERT(pair.second < map.size());
+        result[pair.second] = pair.first;
+    }
+    return result;
+}
+
 // Converts the class name map into a fixed mapping of index to name
 void SetClassNames(const std::vector<std::string> &class_names,
                    ExtractorCallbacks::ClassesMap &classes_map,
@@ -363,7 +379,7 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
     const osmium::io::File input_file(config.input_path.string());
     osmium::thread::Pool pool(number_of_threads);
 
-    util::Log() << "Parsing in progress..";
+    util::Log() << "Parsing in progress ...";
     TIMER_START(parsing);
 
     { // Parse OSM header
@@ -393,59 +409,35 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
         }
         util::Log() << "timestamp: " << timestamp;
     }
+    ProfileProperties profile_properties = scripting_environment.GetProfileProperties();
 
     // Extraction containers and restriction parser
     ExtractionContainers extraction_containers;
     ExtractorCallbacks::ClassesMap classes_map;
     LaneDescriptionMap turn_lane_map;
-    auto extractor_callbacks =
-        std::make_unique<ExtractorCallbacks>(extraction_containers,
-                                             classes_map,
-                                             turn_lane_map,
-                                             scripting_environment.GetProfileProperties());
-
-    // get list of supported relation types
-    auto relation_types = scripting_environment.GetRelations();
-    std::sort(relation_types.begin(), relation_types.end());
+    auto extractor_callbacks = std::make_unique<ExtractorCallbacks>(
+        extraction_containers, classes_map, turn_lane_map, profile_properties);
 
     std::vector<std::string> restrictions = scripting_environment.GetRestrictions();
     // setup restriction parser
     const RestrictionParser restriction_parser(
-        scripting_environment.GetProfileProperties().use_turn_restrictions,
-        config.parse_conditionals,
-        restrictions);
+        profile_properties.use_turn_restrictions, config.parse_conditionals, restrictions);
 
     const ManeuverOverrideRelationParser maneuver_override_parser;
 
     // OSM data reader
-    using SharedBuffer = std::shared_ptr<osmium::memory::Buffer>;
-    struct ParsedBuffer
-    {
-        SharedBuffer buffer;
-        std::vector<std::pair<const osmium::Node &, ExtractionNode>> resulting_nodes;
-        std::vector<std::pair<const osmium::Way &, ExtractionWay>> resulting_ways;
-        std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> resulting_relations;
-        std::vector<InputTurnRestriction> resulting_restrictions;
-        std::vector<InputManeuverOverride> resulting_maneuver_overrides;
-    };
+    using OsmiumBuffer = std::shared_ptr<osmium::memory::Buffer>;
 
-    ExtractionRelationContainer relations;
-
-    const auto buffer_reader = [](osmium::io::Reader &reader)
+    const auto reader_source = [](auto &reader)
     {
-        return tbb::filter<void, SharedBuffer>(
+        return tbb::filter<void, OsmiumBuffer>(
             tbb::filter_mode::serial_in_order,
             [&reader](tbb::flow_control &fc)
             {
-                if (auto buffer = reader.read())
-                {
-                    return std::make_shared<osmium::memory::Buffer>(std::move(buffer));
-                }
-                else
-                {
+                OsmiumBuffer buffer = std::make_shared<osmium::memory::Buffer>(reader.read());
+                if (!*buffer)
                     fc.stop();
-                    return SharedBuffer{};
-                }
+                return buffer;
             });
     };
 
@@ -457,31 +449,36 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
     osmium_index_type location_cache;
     osmium_location_handler_type location_handler(location_cache);
 
-    tbb::filter<SharedBuffer, SharedBuffer> location_cacher(
+    tbb::filter<OsmiumBuffer, OsmiumBuffer> location_cache_filter(
         tbb::filter_mode::serial_in_order,
-        [&location_handler](SharedBuffer buffer)
+        [&location_handler](const OsmiumBuffer &buffer)
         {
             osmium::apply(buffer->begin(), buffer->end(), location_handler);
             return buffer;
         });
 
     // OSM elements Lua parser
-    tbb::filter<SharedBuffer, ParsedBuffer> buffer_transformer(
+    tbb::filter<OsmiumBuffer, ScriptingResults> process_elements_filter(
         tbb::filter_mode::parallel,
-        // NOLINTNEXTLINE(performance-unnecessary-value-param)
-        [&](const SharedBuffer buffer)
+        [&](const OsmiumBuffer &buffer)
         {
-            ParsedBuffer parsed_buffer;
-            parsed_buffer.buffer = buffer;
-            scripting_environment.ProcessElements(*buffer,
-                                                  restriction_parser,
-                                                  maneuver_override_parser,
-                                                  relations,
-                                                  parsed_buffer.resulting_nodes,
-                                                  parsed_buffer.resulting_ways,
-                                                  parsed_buffer.resulting_restrictions,
-                                                  parsed_buffer.resulting_maneuver_overrides);
-            return parsed_buffer;
+            ScriptingResults results;
+            // keeps the buffer alive until the end of the pipe
+            results.osmium_buffer = buffer;
+            scripting_environment.ProcessElements(
+                results, restriction_parser, maneuver_override_parser);
+            return results;
+        });
+
+    // OSM elements Lua parser
+    tbb::filter<OsmiumBuffer, void> process_relation_filter(
+        tbb::filter_mode::parallel,
+        [&](const OsmiumBuffer &buffer) -> void
+        {
+            ScriptingResults results;
+            // keeps the buffer alive until the end of the pipe
+            results.osmium_buffer = buffer;
+            scripting_environment.ProcessRelation(results);
         });
 
     // Parsed nodes and ways handler
@@ -489,82 +486,51 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
     unsigned number_of_ways = 0;
     unsigned number_of_restrictions = 0;
     unsigned number_of_maneuver_overrides = 0;
-    tbb::filter<ParsedBuffer, void> buffer_storage(
+    tbb::filter<ScriptingResults, void> extractor_callbacks_filter(
         tbb::filter_mode::serial_in_order,
-        [&](const ParsedBuffer &parsed_buffer)
+        [&](const ScriptingResults &results)
         {
-            number_of_nodes += parsed_buffer.resulting_nodes.size();
+            number_of_nodes += results.resulting_nodes.size();
             // put parsed objects thru extractor callbacks
-            for (const auto &result : parsed_buffer.resulting_nodes)
+            for (const auto &result : results.resulting_nodes)
             {
                 extractor_callbacks->ProcessNode(result.first, result.second);
             }
 
-            number_of_ways += parsed_buffer.resulting_ways.size();
-            for (const auto &result : parsed_buffer.resulting_ways)
+            number_of_ways += results.resulting_ways.size();
+            for (const auto &result : results.resulting_ways)
             {
                 extractor_callbacks->ProcessWay(result.first, result.second);
             }
 
-            number_of_restrictions += parsed_buffer.resulting_restrictions.size();
-            for (const auto &result : parsed_buffer.resulting_restrictions)
+            number_of_restrictions += results.resulting_restrictions.size();
+            for (const auto &result : results.resulting_restrictions)
             {
                 extractor_callbacks->ProcessRestriction(result);
             }
 
-            number_of_maneuver_overrides = parsed_buffer.resulting_maneuver_overrides.size();
-            for (const auto &result : parsed_buffer.resulting_maneuver_overrides)
+            number_of_maneuver_overrides = results.resulting_maneuver_overrides.size();
+            for (const auto &result : results.resulting_maneuver_overrides)
             {
                 extractor_callbacks->ProcessManeuverOverride(result);
             }
         });
 
-    tbb::filter<SharedBuffer, std::shared_ptr<ExtractionRelationContainer>> buffer_relation_cache(
+    osmium::TagsFilter tags_filter{false};
+    tbb::filter<OsmiumBuffer, void> stash_relations_filter(
         tbb::filter_mode::parallel,
-        // NOLINTNEXTLINE(performance-unnecessary-value-param)
-        [&](const SharedBuffer buffer)
+        [&](const OsmiumBuffer &buffer) -> void
         {
             if (!buffer)
-                return std::shared_ptr<ExtractionRelationContainer>{};
+                return;
 
-            auto relations = std::make_shared<ExtractionRelationContainer>();
-            for (auto entity = buffer->cbegin(), end = buffer->cend(); entity != end; ++entity)
+            for (const osmium::Relation &rel : buffer->select<osmium::Relation>())
             {
-                if (entity->type() != osmium::item_type::relation)
-                    continue;
-
-                const auto &rel = static_cast<const osmium::Relation &>(*entity);
-
-                const char *rel_type = rel.get_value_by_key("type");
-                if (!rel_type || !std::binary_search(relation_types.begin(),
-                                                     relation_types.end(),
-                                                     std::string(rel_type)))
-                    continue;
-
-                ExtractionRelation extracted_rel({rel.id(), osmium::item_type::relation});
-                for (auto const &t : rel.tags())
-                    extracted_rel.attributes.emplace_back(std::make_pair(t.key(), t.value()));
-
-                for (auto const &m : rel.members())
+                if (osmium::tags::match_any_of(rel.tags(), tags_filter))
                 {
-                    ExtractionRelation::OsmIDTyped const mid(m.ref(), m.type());
-                    extracted_rel.AddMember(mid, m.role());
-                    relations->AddRelationMember(extracted_rel.id, mid);
+                    scripting_environment.m_relations_stash.add_relation(rel);
                 }
-
-                relations->AddRelation(std::move(extracted_rel));
             };
-            return relations;
-        });
-
-    unsigned number_of_relations = 0;
-    tbb::filter<std::shared_ptr<ExtractionRelationContainer>, void> buffer_storage_relation(
-        tbb::filter_mode::serial_in_order,
-        // NOLINTNEXTLINE(performance-unnecessary-value-param)
-        [&](const std::shared_ptr<ExtractionRelationContainer> parsed_relations)
-        {
-            number_of_relations += parsed_relations->GetRelationsNum();
-            relations.Merge(std::move(*parsed_relations));
         });
 
     // Parse OSM elements with parallel transformer
@@ -573,15 +539,52 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
     const auto read_meta =
         config.use_metadata ? osmium::io::read_meta::yes : osmium::io::read_meta::no;
 
-    { // Relations reading pipeline
-        util::Log() << "Parse relations ...";
-        osmium::io::Reader reader(input_file, pool, osmium::osm_entity_bits::relation, read_meta);
-        tbb::parallel_pipeline(
-            num_threads, buffer_reader(reader) & buffer_relation_cache & buffer_storage_relation);
+    // get list of supported relation types
+    std::vector<std::string> relation_types = scripting_environment.GetRelations();
+    if (relation_types.empty())
+    {
+        util::Log() << "No relation_types in properties.relation_types";
     }
+    else
+    {
+        util::Log() << "Stashing relations of following types ...";
+        for (auto &rel_type : relation_types)
+        {
+            tags_filter.add_rule(true, osmium::TagMatcher("type", rel_type));
+            util::Log() << "  " << rel_type;
+        }
+        // Read the relations configured in `profile.relation_types`. We must read them
+        // first because they are passed as argument to the LUA process_* functions.
+        TIMER_START(parse_relations);
 
-    { // Nodes and ways reading pipeline
-        util::Log() << "Parse ways and nodes ...";
+        osmium::io::Reader reader(input_file, pool, osmium::osm_entity_bits::relation, read_meta);
+        tbb::parallel_pipeline(num_threads, reader_source(reader) & stash_relations_filter);
+
+        TIMER_STOP(parse_relations);
+        util::Log() << "... " << scripting_environment.m_relations_stash.get_relations_num()
+                    << " relations in " << TIMER_SEC(parse_relations) << " seconds";
+    }
+    auto &area_manager = scripting_environment.m_area_manager;
+    if (area_manager.is_enabled())
+    {
+        // Next we read the relations again and pass them to LUA's process_relation
+        // function, so they can be registered for meshing.  Unfortunately we cannot
+        // combine this run with the run above because we need its results, for example:
+        // The user may want to mesh only those areas that are part of a hiking route.
+        util::Log() << "Register pedestrian areas ...";
+        TIMER_START(areas_first_pass);
+
+        osmium::io::Reader reader(input_file, pool, osmium::osm_entity_bits::relation, read_meta);
+        tbb::parallel_pipeline(num_threads, reader_source(reader) & process_relation_filter);
+
+        TIMER_STOP(areas_first_pass);
+        util::Log() << "... " << area_manager.number_of_relations << " pedestrian areas in "
+                    << TIMER_SEC(areas_first_pass) << " seconds";
+        // At this point we know the relations and the way ids of their members.
+    }
+    {
+        util::Log() << "Parse ways and nodes and restrictions ...";
+        TIMER_START(parse_ways);
         osmium::io::Reader reader(input_file,
                                   pool,
                                   osmium::osm_entity_bits::node | osmium::osm_entity_bits::way |
@@ -590,17 +593,96 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
 
         const auto pipeline =
             scripting_environment.HasLocationDependentData() && config.use_locations_cache
-                ? buffer_reader(reader) & location_cacher & buffer_transformer & buffer_storage
-                : buffer_reader(reader) & buffer_transformer & buffer_storage;
+                ? reader_source(reader) & location_cache_filter & process_elements_filter &
+                      extractor_callbacks_filter
+                : reader_source(reader) & process_elements_filter & extractor_callbacks_filter;
         tbb::parallel_pipeline(num_threads, pipeline);
+        TIMER_STOP(parse_ways);
+        util::Log() << "... in " << TIMER_SEC(parse_ways) << " seconds";
+    }
+
+    if (area_manager.number_of_ways + area_manager.number_of_relations)
+    {
+        util::Log() << "Parse pedestrian areas ...";
+        TIMER_START(areas_second_pass);
+
+        area_manager.prepare_for_lookup();
+
+        // After the first pass the manager knows which ways and which relations we want
+        // to mesh. In the second pass it will complete the relations with ways, nodes
+        // and locations. This is the second pass.
+
+        tbb::filter<OsmiumBuffer, void> manager_second_pass_filter(
+            tbb::filter_mode::serial_out_of_order,
+            [&area_manager](const OsmiumBuffer &buffer)
+            { osmium::apply(buffer->begin(), buffer->end(), area_manager.handler()); });
+
+        osmium::io::Reader reader(input_file, pool, osmium::osm_entity_bits::way, read_meta);
+        if (config.use_locations_cache)
+        {
+            auto area_location_handler = NodeLocationsForWays(extraction_containers.all_nodes_list);
+            area_location_handler.prepare_for_lookup();
+
+            tbb::filter<OsmiumBuffer, OsmiumBuffer> area_location_cache_filter(
+                tbb::filter_mode::parallel,
+                [&area_location_handler](const OsmiumBuffer &buffer)
+                {
+                    osmium::apply(buffer->begin(), buffer->end(), area_location_handler);
+                    return buffer;
+                });
+
+            tbb::parallel_pipeline(num_threads,
+                                   reader_source(reader) & area_location_cache_filter &
+                                       manager_second_pass_filter);
+        }
+        else
+        {
+            // location data has been provided by preprocessing the OSM file
+            tbb::parallel_pipeline(num_threads, reader_source(reader) & manager_second_pass_filter);
+        }
+        reader.close();
+        TIMER_STOP(areas_second_pass);
+
+        util::Log() << "... " << area_manager.number_of_relations << " multipolygon relations and "
+                    << area_manager.number_of_ways << " closed ways in "
+                    << TIMER_SEC(areas_second_pass) << " seconds";
+
+        util::Log() << "Mesh pedestrian areas ...";
+        TIMER_START(mesh);
+        // The manager has collected all information and assembled it into osmium::areas
+        // in a big buffer.
+
+        area::AreaMesher mesher;
+        mesher.init(area_manager, extraction_containers);
+
+        tbb::filter<OsmiumBuffer, OsmiumBuffer> mesh_areas_filter(
+            tbb::filter_mode::parallel,
+            [&](const OsmiumBuffer &buffer)
+            {
+                osmium::memory::Buffer out_buffer{16 * 1024,
+                                                  osmium::memory::Buffer::auto_grow::yes};
+                mesher.mesh_buffer(*buffer, out_buffer, scripting_environment.m_relations_stash);
+                return std::make_shared<osmium::memory::Buffer>(std::move(out_buffer));
+            });
+
+        // Mesh areas and feed the resulting virtual ways through the usual pipeline
+        area::BufferReader areader(area_manager.buffer());
+        const auto pipeline2 = reader_source(areader) & mesh_areas_filter &
+                               process_elements_filter & extractor_callbacks_filter;
+        tbb::parallel_pipeline(num_threads, pipeline2);
+        TIMER_STOP(mesh);
+
+        util::Log() << "... " << area_manager.number_of_ways + area_manager.number_of_relations
+                    << " areas, yielding " << mesher.added_ways << " ways in " << TIMER_SEC(mesh)
+                    << " seconds";
     }
 
     TIMER_STOP(parsing);
     util::Log() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";
 
     util::Log() << "Raw input contains " << number_of_nodes << " nodes, " << number_of_ways
-                << " ways, and " << number_of_relations << " relations, " << number_of_restrictions
-                << " restrictions";
+                << " ways, and " << scripting_environment.m_relations_stash.get_relations_num()
+                << " relations, " << number_of_restrictions << " restrictions";
 
     extractor_callbacks.reset();
 
@@ -613,7 +695,6 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
     extraction_containers.PrepareData(scripting_environment,
                                       config.GetPath(".osrm.names").string());
 
-    auto profile_properties = scripting_environment.GetProfileProperties();
     SetClassNames(scripting_environment.GetClassNames(), classes_map, profile_properties);
     auto excludable_classes = scripting_environment.GetExcludableClasses();
     SetExcludableClasses(classes_map, excludable_classes, profile_properties);
@@ -807,17 +888,6 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_seg
 
     TIMER_STOP(construction);
     util::Log() << "finished r-tree construction in " << TIMER_SEC(construction) << " seconds";
-}
-
-template <typename Map> auto convertIDMapToVector(const Map &map)
-{
-    std::vector<typename Map::key_type> result(map.size());
-    for (const auto &pair : map)
-    {
-        BOOST_ASSERT(pair.second < map.size());
-        result[pair.second] = pair.first;
-    }
-    return result;
 }
 
 void Extractor::ProcessGuidanceTurns(

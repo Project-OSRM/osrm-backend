@@ -1,4 +1,9 @@
 # OSRM profiles
+
+@sa
+@ref LUA <br>
+@subpage pedestrian_areas
+
 OSRM supports "profiles". Profiles representing routing behavior for different transport modes like car, bike and foot. You can also create profiles for variations like a fastest/shortest car profile or fastest/safest/greenest bicycles profile.
 
 A profile describes whether or not it's possible to route along a particular type of way, whether we can pass a particular node, and how quickly we'll be traveling when we do. This feeds into the way the routing graph is created and thus influences the output routes.
@@ -35,7 +40,7 @@ A profile can also define various local functions it needs.
 
 Looking at [car.lua](../profiles/car.lua) as an example, at the top of the file the api version is defined and then required library files are included.
 
-Then follows the `setup` function, which is called once when the profile is loaded. It returns a big hash table of configurations, specifying things like what speed to use for different way types. The configurations are used later in the various processing functions. Many adjustments can be done just by modifying this configuration table.
+Then follows the @ref setup function, which is called once when the profile is loaded. It returns a big hash table of configurations, specifying things like what speed to use for different way types. The configurations are used later in the various processing functions. Many adjustments can be done just by modifying this configuration table.
 
 The setup function is also where you can do other setup, like loading an elevation data source if you want to consider that when processing ways.
 
@@ -67,6 +72,7 @@ If you set rate = speed on all ways, the result will be fastest path routing.
 If you want to prioritize certain streets, increase the rate on these.
 
 ## Elements
+
 ### api_version
 A profile should set `api_version` at the top of your profile. This is done to ensure that older profiles are still supported when the api changes. If `api_version` is not defined, 0 will be assumed. The current api version is 4.
 
@@ -86,226 +92,77 @@ guidance.lua      | Function for processing guidance attributes
 
 They all return a table of functions when you use `require` to load them. You can either store this table and reference its functions later, or if you need only a single function you can store that directly.
 
-### setup()
+### setup() {#setup}
 The `setup` function is called once when the profile is loaded and must return a table of configurations. It's also where you can do other global setup, like loading data sources that are used during processing.
 
 Note that processing of data is parallelized and several unconnected LUA interpreters will be running at the same time. The `setup` function will be called once for each. Each LUA interpreter will have its own set of globals.
 
+@anchor properties
 The following global properties can be set under `properties` in the hash you return in the `setup` function:
 
-Attribute                            | Type     | Notes
--------------------------------------|----------|----------------------------------------------------------------------------
-weight_name                          | String   | Name used in output for the routing weight property (default `'duration'`)
-weight_precision                     | Unsigned | Decimal precision of edge weights (default `1`)
-left_hand_driving                    | Boolean  | Are vehicles assumed to drive on the left? (used in guidance, default `false`)
-use_turn_restrictions                | Boolean  | Are turn restrictions followed? (default `false`)
-continue_straight_at_waypoint        | Boolean  | Must the route continue straight on at a via point, or are U-turns allowed? (default `true`)
-max_speed_for_map_matching           | Float    | Maximum vehicle speed to be assumed in matching (in m/s)
-max_turn_weight                      | Float    | Maximum turn penalty weight
-force_split_edges                    | Boolean  | True value forces a split of forward and backward edges of extracted ways and guarantees that `process_segment` will be called for all segments (default `false`)
-
+Attribute                     | Type     | Notes
+------------------------------|----------|----------------------------------------------------------------------------
+weight_name                   | String   | Name used in output for the routing weight property (default `"duration"`)
+weight_precision              | Unsigned | Decimal precision of edge weights (default `1`)
+left_hand_driving             | Boolean  | Are vehicles assumed to drive on the left? (used in guidance, default `false`)
+use_turn_restrictions         | Boolean  | Are turn restrictions followed? (default `false`)
+continue_straight_at_waypoint | Boolean  | Must the route continue straight on at a via point, or are U-turns allowed? (default `true`)
+max_speed_for_map_matching    | Float    | Maximum vehicle speed to be assumed in matching (in m/s)
+max_turn_weight               | Float    | Maximum turn penalty weight
+force_split_edges             | Boolean  | True value forces a split of forward and backward edges of extracted ways and guarantees that `process_segment` will be called for all segments (default `false`)
 
 The following additional global properties can be set in the hash you return in the `setup` function:
 
-Attribute                            | Type             | Notes
--------------------------------------|------------------|----------------------------------------------------------------------------
-excludable                           | Sequence of Sets | Determines which class-combinations are supported by the `exclude` option at query time. E.g. `Sequence{Set{"ferry", "motorway"}, Set{"motorway"}}` will allow you to exclude ferries and motorways, or only motorways.
-classes                              | Sequence         | Determines the allowed classes that can be referenced using `{forward,backward}_classes` on the way in the `process_way` function.
-restrictions                         | Sequence         | Determines which turn restrictions will be used for this profile.
-suffix_list                          | Set              | List of name suffixes needed for determining if "Highway 101 NW" the same road as "Highway 101 ES".
-relation_types                       | Sequence         | Determines which relations should be cached for processing in this profile. It contains relations types
+Attribute                             | Type             | Notes
+--------------------------------------|------------------|----------------------------------------------------------------------------
+excludable                            | Sequence of Sets | Determines which class-combinations are supported by the `exclude` option at query time. E.g. `Sequence{Set{"ferry", "motorway"}, Set{"motorway"}}` will allow you to exclude ferries and motorways, or only motorways.
+classes                               | Sequence         | Determines the allowed classes that can be referenced using `{forward,backward}_classes` on the way in the `process_way` function.
+restrictions                          | Sequence         | Determines which turn restrictions will be used for this profile.
+suffix_list                           | Set              | List of name suffixes needed for determining if "Highway 101 NW" the same road as "Highway 101 ES".
+relation_types @anchor relation_types | Sequence         | Determines which relation types should be stored for reference. Only these relation types will be queryable using the `relations` parameter in @ref process_node, @ref process_way, and @ref process_relation.
 
-### process_node(profile, node, result, relations)
+### process_relation(profile, relation, relations) {#process_relation}
+
+@note This function is called only if @ref pedestrian_areas "area meshing" is
+configured.  At present the only thing you can do here is to register areas for meshing.
+
+The `process_relation` function is called for every relation in an early stage, before
+@ref process_node and @ref process_way are being called.
+
+Argument  | Type       | Description
+----------|------------|-------------------------------------------
+profile   | Properties | The @ref properties configured in `setup`.
+relation  | Relation   | The relation to process.
+relations | Relations  | Contains the parent relations of `relation`.
+
+### process_node(profile, node, result, relations) {#process_node}
 Process an OSM node to determine whether this node is an obstacle, if it can be passed at all and whether passing it incurs a delay.
 
-Argument | Description
----------|-------------------------------------------------------
-profile  | The configuration table you returned in `setup`.
-node     | The input node to process (read-only).
-result   | The output that you will modify.
-relations| Storage of relations to access relations, where `node` is a member.
+Argument  | Type       | Description
+----------|------------|-------------------------------------------
+profile   | Properties | The @ref properties configured in `setup`.
+node      | Node       | The input node to process (read-only).
+result    |            | The output that you will modify.
+relations | Relations  | Contains the parent relations of `node`.
+
+@note For new code use ObstacleMap instead of `result`.
 
 The following attributes can be set on `result`:
-(Note: for new code use the `obstacle_map`.
 
 Attribute       | Type    | Notes
-----------------|---------|---------------------------------------------------------
+----------------|---------|--------------------------------------------------------
 barrier         | Boolean | Is it an impassable barrier?
 traffic_lights  | Boolean | Is it a traffic light (incurs delay in `process_turn`)?
 
-### Obstacle
-A user type that represents an obstacle on the road or a place where you can turn
-around.
-
-This may be a completely impassable obstacle like a barrier, a temporary obstacle like a
-traffic light or a stop sign, or an obstacle that just slows you down like a
-traffic_calming. The obstacle may be present in both directions or in one direction
-only.
-
-This also represents a good turning point like a mini_roundabout, turning_loop, or
-turning_circle.
-
-An object of this type is immutable once constructed.
-
-```lua
-local obs = Obstacle.new(
-  obstacle_type.traffic_signals,
-  obstacle_direction.forward,
-  2.5,
-  0
-)
-assert(obs.duration == 2.5)
-```
-
-Member    | Mode      | Type               | Notes
-----------|-----------|--------------------|----------------------------------
-type      | read-only | obstacle_type      | eg. `obstacle_type.barrier`
-direction | read-only | obstacle_direction | eg. `obstacle_direction.forward`
-duration  | read-only | float              | The expected delay in seconds
-weight    | read-only | float              | The weight
-
-#### obstacle_type
-An enum with the following keys:
-
-Keys            |
-----------------|
-none            |
-barrier         |
-traffic_signals |
-stop            |
-give_way        |
-crossing        |
-traffic_calming |
-mini_roundabout |
-turning_loop    |
-turning_circle  |
-
-#### obstacle_direction
-An enum with the following keys:
-
-Keys     |
----------|
-none     |
-forward  |
-backward |
-both     |
-
-### obstacle_map
-A global user type. It stores obstacles.
-
-The canonical workflow is: to store obstacles in `process_node()` and retrieve them in
-`process_turn()`.
-
-Note: In the course of processing, between the `process_node()` stage and the
-`process_turn()` stage, the extractor switches from using OSM nodes to using
-internal nodes. Both types have different ids. You can only store OSM nodes and only
-retrieve internal nodes. This implies that, in `process_node()`, you cannot retrieve an
-obstacle you have just stored.
-
-#### obstacle_map:add(node, obstacle)
-Call this function inside `process_node()` to register an obstacle on a node. You can
-register as many different obstacles as you wish on any given node. It is your
-responsibility to register the same obstacle only once.
-
-In a following step -- likely in `process_turn()` -- you can retrieve all obstacles
-registered at any given node. This function works with OSM nodes.
-
-Argument | Type     | Notes
----------|----------|--------------------------------------------
-node     | OSMNode  | The same node as passed to `process_node`.
-obstacle | Obstacle | The obstacle
-
-Usage example:
-
-```lua
-function process_node(profile, node, result, relations)
-  ...
-  obstacle_map:add(node,
-    Obstacle.new(
-      obstacle_type.traffic_signal,
-      obstacle_direction.forward,
-      2, 0))
-end
-```
-
-#### obstacle_map:any(from, to, type)
-Return true if there are any obstacles at node `to` when coming from node
-`from` and having the type `type`.
-
-You will likely call this function inside `process_turn()`.
-Note that this works only with internal nodes, not with OSM nodes.
-
-```lua
-bool obstacle_map:any(to)
-bool obstacle_map:any(from, to)
-bool obstacle_map:any(from, to, type)
-```
-
-Argument | Type          | Notes
----------|---------------|-------------------------------------------------------------------------------------
-from     | Node          | The leading node. Optional.
-to       | Node          | The node with the obstacle.
-type     | obstacle_type | The obstacle type. Defaults to all types. May be a bitwise-or combination of types.
-returns  | bool          | True if there are any obstacles satisfiying the given criteria.
-
-Usage examples:
-
-```lua
-function process_turn(profile, turn)
-  if obstacle_map:any(turn.via) then
-    ...
-  end
-  if obstacle_map:any(turn.from, turn.via, obstacle_type.traffic_signal) then
-    turn.duration = turn.duration + 2
-  end
-end
-```
-
-#### obstacle_map:get(from, to, type)
-This function retrieves all registered obstacles at node `to` when coming from the node
-`from` and having the type `type`.
-
-You will likely call this function inside `process_turn()`.
-Note that this works only with internal nodes, not with OSM nodes.
-
-```lua
-obstacle_map:get(to)
-obstacle_map:get(from, to)
-obstacle_map:get(from, to, type)
-```
-
-Argument | Type          | Notes
----------|---------------|-------------------------------------------------------------------------------------
-from     | Node          | The leading node. Optional.
-to       | Node          | The node with the obstacle.
-type     | obstacle_type | The obstacle type. Defaults to all types. May be a bitwise-or combination of types.
-returns  | table         | A table of `Obstacle`s.
-
-Usage examples:
-
-```lua
-function process_turn(profile, turn)
-  for _, obs in pairs(obstacle_map:get(turn.via)) do
-    if obs.type == obstacle_type.barrier then
-      turn.duration = turn.duration + obs.duration
-    end
-  end
-  for _, obs in pairs(obstacle_map:get(
-      turn.from, turn.via, obstacle_type.traffic_signal)) do
-    turn.duration = turn.duration + obs.duration
-  end
-end
-```
-
-### process_way(profile, way, result, relations)
+### process_way(profile, way, result, relations) {#process_way}
 Given an OpenStreetMap way, the `process_way` function will either return nothing (meaning we are not going to route over this way at all), or it will set up a result hash.
 
-Argument | Description
----------|-------------------------------------------------------
-profile  | The configuration table you returned in `setup`.
-way      | The input way to process (read-only).
-result   | The output that you will modify.
-relations| Storage of relations to access relations, where `way` is a member.
+Argument  | Type       | Description
+----------|------------|-------------------------------------------------
+profile   | Properties | The @ref properties configured in `setup`.
+way       | Way        | The input way to process (read-only).
+result    |            | The output that you will modify.
+relations | Relations  | Contains the parent relations of `way`.
 
 Importantly it will set `result.forward_mode` and `result.backward_mode` to indicate the travel mode in each direction, as well as set `result.forward_speed` and `result.backward_speed` to integer values representing the speed for traversing the way.
 
@@ -347,7 +204,7 @@ road_classification.road_priority_class | Enum     | Guidance: order in priority
 road_classification.may_be_ignored      | Boolean  | Guidance: way is non-highway
 road_classification.num_lanes           | Unsigned | Guidance: total number of lanes in way
 
-### process_segment(profile, segment)
+### process_segment(profile, segment) {#process_segment}
 The `process_segment` function is called for every segment of OSM ways. A segment is a straight line between two OSM nodes.
 
 On OpenStreetMap way cannot have different tags on different parts of a way. Instead you would split the way into several smaller ways. However many ways are long. For example, many ways pass hills without any change in tags.
@@ -368,7 +225,7 @@ distance           | Read        | Float   | Length of segment
 weight             | Read/write  | Float   | Routing weight for this segment
 duration           | Read/write  | Float   | Duration for this segment
 
-### process_turn(profile, turn)
+### process_turn(profile, turn) {#process_turn}
 The `process_turn` function is called for every possible turn in the network. Based on the angle and type of turn you assign the weight and duration of the movement.
 
 The following attributes can be read and set on the result in `process_turn`:
@@ -409,10 +266,10 @@ weight                             | Read/write    | Float                     |
 duration                           | Read/write    | Float                     | Penalty to be applied for this turn (duration in deciseconds)
 
 
-#### `from`, `via`, and `to`
-Use these node IDs to retrieve obstacles. See: `obstacle_map:get`.
+#### from, via, and to
+Use these node IDs to retrieve obstacles. See: @ref ObstacleMap::get.
 
-#### `source_road`, `target_road`, `roads_on_the_right`, and `roads_on_the_left`
+#### source_road, target_road, roads_on_the_right, and roads_on_the_left
 
 The information of `source_road`, `target_road`, `roads_on_the_right`, and
 `roads_on_the_left` that can be read are as follows:
@@ -455,7 +312,7 @@ When turning from `a` to `b` via `x`,
 
 Note that indices of arrays in lua are 1-based.
 
-#### `highway_turn_classification` and `access_turn_classification`
+#### highway_turn_classification and access_turn_classification
 When setting appropriate turn weights and duration, information about the highway and access tags of roads that are involved in the turn are necessary. The lua turn function `process_turn` does not have access to the original osrm tags anymore. However, `highway_turn_classification` and `access_turn_classification` can be set during setup. The classification set during setup can be later used in `process_turn`.
 
 **Example**
@@ -495,7 +352,7 @@ Forks can be emitted between roads of similar priority category only. Obvious ch
 ### Using raster data
 OSRM has built-in support for loading an interpolating raster data in ASCII format. This can be used e.g. for factoring in elevation when computing routes.
 
-Use `raster:load()` in your `setup` function to load data and store the source in your configuration hash:
+Use `raster:load()` in your @ref setup function to load data and store the source in your configuration hash:
 
 ```lua
 function setup()
@@ -551,3 +408,5 @@ There are a few helper functions defined in the global scope that profiles can u
 - `trimLaneString`
 - `applyAccessTokens`
 - `canonicalizeStringList`
+- @ref is_true
+- @ref is_false

@@ -8,7 +8,8 @@ file(GLOB ContractorTestsSources
 
 file(GLOB ExtractorTestsSources
     extractor_tests.cpp
-    extractor/*.cpp)
+    extractor/*.cpp
+    extractor/area/*.cpp)
 
 file(GLOB PartitionTestsSources
     partitioner_tests.cpp
