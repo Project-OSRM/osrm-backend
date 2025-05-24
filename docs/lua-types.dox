@@ -1,0 +1,466 @@
+/**
+ * @defgroup LUA LUA Types
+ *
+ * This page is about types as seen from inside the LUA scripting language.
+ *
+ * @{
+ */
+
+class Boolean;
+class Float;
+class Integer;
+class String;
+class Table;
+class Location;
+
+/**
+ * @brief The type of an OSM object
+ */
+enum class item_type
+{
+    node = 1,    /**< An OSM node */
+    way = 2,     /**< An OSM way */
+    relation = 3 /**< An OSM relation */
+};
+
+/** @brief Represents an OSM object
+
+    Example:
+
+    ```.lua
+    if object:type() == item_type.way and object:id() == 42 then
+      local highway = object:get_key_by_value("highway")
+      local oneway = object:has_true_tag("oneway")
+      ...
+    end
+    ```
+ */
+class OSMObject
+{
+  public:
+    /** @brief Return the id of the OSM object. */
+    Integer id();
+
+    /** @brief Return the item type of the OSM object. */
+    item_type type();
+
+    /** @brief Return the version of the OSM object. */
+    Integer version();
+
+    /** @brief Return the value of the tag identified by key. If the key is not found, return
+     * `nil`. */
+    String get_value_by_key(String key);
+
+    /** @brief Return the value of the tag identified by key. If the key is not found, return the
+    default value. */
+    String get_value_by_key(String key, String default_value);
+
+    /** @brief Return true if a tag identified by the given key is found. */
+    Boolean has_key(String key);
+
+    /** @brief Return true if a tag with the given key and value is found. */
+    Boolean has_tag(String key, String value);
+
+    /**
+     * @brief Return true if a tag with the given key and a truthy value is found.
+     *
+     * Truthy values are: "yes", "true", and "1".
+     */
+    Boolean has_true_tag(String key);
+
+    /**
+     * @brief Return true if a tag with the given key and a falsey value is found.
+     *
+     * Falsey values are: "no", "false", and "0".
+     */
+    Boolean has_false_tag(String key);
+};
+
+/**
+ * @brief Represents a node
+ */
+class Node : public OSMObject
+{
+  public:
+    /** @brief Return the Location of the node. */
+    Location location();
+
+    /**
+    @brief Return location data for the node.
+
+    Location data is compiled by geographic region.
+
+    ```.lua
+    local driving_side = way:get_location_tag('driving_side')
+    ```
+    */
+    String get_location_tag(String key);
+};
+
+/**
+ * @brief Represents a way
+ */
+class Way : public OSMObject
+{
+  public:
+    /**
+     * @brief Return the number of nodes.
+     */
+    Integer size();
+
+    /**
+     * @brief Return true if the way is closed.
+     */
+    Boolean is_closed();
+
+    /**
+     * @brief Return the nodes.
+     * @return A table of Node objects.
+     */
+    Table get_nodes();
+
+    /**
+     * @brief Return location data for the way.
+     */
+    String get_location_tag(String key);
+};
+
+/**
+ * @brief Represents a relation
+ */
+class Relation : public OSMObject
+{
+  public:
+    /** @brief Return the role the given objects has in the relation or nil. */
+    String get_role(OSMObject);
+
+    /**
+     * @brief Return the members of the relation.
+     * @return A table of RelationMember objects.
+     */
+    Table get_members();
+};
+
+/**
+ * @brief Represents a relation member
+ */
+class RelationMember
+{
+  public:
+    /** @brief Return the OSM id of the member. */
+    Integer ref();
+    /** @brief Return the @ref item_type of the member: node, way, or relation. */
+    item_type type();
+    /** @brief Return the role of the member, eg. `outer`. */
+    String role();
+};
+
+/** @brief A storage container for relations.
+
+This container stores all relations that have one of the types configured in @ref
+relation_types plus all multipolygon relations registered for area meshing.  It is
+passed as parameter `relations` to the @ref process_node, @ref process_way, and @ref
+process_relation functions.  By querying this container you can find out if a node or
+way or relation is member of any stored relation.
+
+Example:
+
+```lua
+for _, rel_id in pairs(relations:get_relations(way))
+  local rel = relations:relation(rel_id)
+  if rel:get_value_by_key('type') == 'route' then
+    local role = rel:get_role(way)
+    local dir = rel:get_value_by_key('direction')
+    ...
+  end
+end
+```
+*/
+class Relations
+{
+  public:
+    /**
+     * @brief Return the ids of the relations that contain the given object.
+     *
+     * OSMObject may be a Node, Way or Relation.
+     *
+     * @return A table of Integer.
+     */
+    Table get_relations(OSMObject);
+    /**
+     * @brief Return the relation with the given id.
+     */
+    Relation relation(Integer relation_id);
+};
+
+/**
+ * @brief Represents the location of a node.
+ */
+class Location
+{
+  public:
+    /** @brief Return the latitude. */
+    Float lat();
+    /** @brief Return the longitude. */
+    Float lon();
+    /** @brief Return true if the location is valid. */
+    Boolean valid();
+};
+
+/**
+ * @brief The type of the obstacle
+ */
+enum class obstacle_type
+{
+    none, /**< No obstacle */
+    /**
+     * This and the following values have the same semantics as in the `highway` tag in
+     * OSM.
+     */
+    barrier,
+    traffic_signals,
+    stop,
+    give_way,
+    crossing,
+    traffic_calming,
+    mini_roundabout,
+    turning_loop,
+    turning_circle
+};
+
+/**
+ * @brief The direction of the obstacle
+ *
+ * The direction always refers to the way that the node is in. If the node is at either
+ * end of a way the direction may be undefined.
+ */
+enum class obstacle_direction
+{
+    none,     /**< No obstacle */
+    forward,  /**< The obstacle is present only in the forward direction. */
+    backward, /**< The obstacle is present only in the backward direction. */
+    both      /**< The obstacle is present in both directions. */
+};
+
+/** @brief An obstacle on the road or a place where you can turn around.
+
+This may be a completely impassable obstacle like a barrier, a temporary obstacle like a
+traffic light or a stop sign, or an obstacle that just slows you down like a
+traffic_calming. The obstacle may be present in both directions or in one direction
+only.
+
+This also represents a good turning point like a `mini_roundabout`, `turning_loop`, or
+`turning_circle`.
+
+An object of this type is immutable once constructed.
+
+```lua
+local obs = Obstacle.new(
+  obstacle_type.traffic_signals,
+  obstacle_direction.forward,
+  2.5,
+  0
+)
+assert(obs.duration == 2.5)
+```
+*/
+
+class Obstacle
+{
+  public:
+    /** The type of the obstacle */
+    obstacle_type type;
+    /** The direction of the obstacle */
+    obstacle_direction direction;
+    /** The expected delay in seconds */
+    Float duration;
+    /** The obstacle weight */
+    Float weight;
+};
+
+/** @brief A registry for obstacles.
+
+The LUA global variable `obstacle_map` is an instance of this class.
+
+The canonical workflow is: to store obstacles in @ref process_node and retrieve them in
+@ref process_turn.
+
+Note: In the course of processing, between the `process_node()` stage and the
+`process_turn()` stage, the extractor switches from using OSM nodes to using internal
+nodes. Both types have different ids. You can only store OSM nodes and only retrieve
+internal nodes. This implies that, in `process_node()`, you cannot retrieve an obstacle
+you have just stored.
+*/
+
+class ObstacleMap
+{
+  public:
+    /**
+    @brief Register a new obstacle
+
+    Call this function inside @ref process_node to register an obstacle on a node. You
+    can register as many different obstacles as you wish on any given node. It is your
+    responsibility to register the same obstacle only once.
+
+    In a following step -- likely in @ref process_turn -- you can retrieve all
+    obstacles registered at any given node. This function works with OSM nodes.
+
+    Example:
+
+    ```lua
+    function process_node(profile, node, result, relations)
+      ...
+      obstacle_map:add(node,
+        Obstacle.new(
+          obstacle_type.traffic_signal,
+          obstacle_direction.forward,
+          2, 0))
+    end
+    ```
+    */
+    void add(Node, Obstacle);
+
+    /**
+    @brief Return true if there are any obstacles
+
+    Return true if there are any obstacles at node `to` when coming from node
+    `from` and having the type `type`.
+
+    You will likely call this function inside @ref process_turn.
+    Note that this works only with internal nodes, not with OSM nodes.
+
+    Usage examples:
+
+    ```lua
+    function process_turn(profile, turn)
+      if obstacle_map:any(turn.via) then
+        ...
+      end
+      if obstacle_map:any(turn.from, turn.via, obstacle_type.traffic_signal) then
+        turn.duration = turn.duration + 2
+      end
+    end
+    ```
+
+    @param from The leading node. Optional.
+    @param to   The node with the obstacle.
+    @param type The obstacle type. Defaults to all types. May be a bitwise-or
+    combination of types.
+
+    @return True if there are any obstacles satisfiying the given criteria.
+    */
+    Boolean any(Node from, Node to, obstacle_type type);
+    /** @overload */
+    Boolean any(Node from, Node to);
+    /** @overload */
+    Boolean any(Node to);
+
+    /** @brief Return all obstacles located at node.
+
+    This function retrieves all registered obstacles at node `to` when coming from the node
+    `from` and having the type `type`.
+
+    You will likely call this function inside @ref process_turn.  Note that this works only
+    with internal nodes, not with OSM nodes.
+
+    @param from The leading node. Optional.
+    @param to   The node with the obstacle.
+    @param type The obstacle type. Defaults to all types. May be a bitwise-or
+                combination of types.
+
+    @return A table of Obstacle objects.
+
+    Example:
+
+    ```lua
+    function process_turn(profile, turn)
+      for _, obs in pairs(obstacle_map:get(turn.via)) do
+        if obs.type == obstacle_type.barrier then
+          turn.duration = turn.duration + obs.duration
+        end
+      end
+      for _, obs in pairs(obstacle_map:get(
+          turn.from, turn.via, obstacle_type.traffic_signal)) do
+        turn.duration = turn.duration + obs.duration
+      end
+    end
+    ```
+    */
+    Table get(Node from, Node to, obstacle_type type);
+    /** @overload */
+    Table get(Node from, Node to);
+    /** @overload */
+    Table get(Node to);
+};
+
+/**
+ * @brief A registry for pedestrian areas.
+ *
+ * The LUA global variable `area_manager` is an instance of this class.
+ */
+class AreaManager
+{
+  public:
+    /**
+     * @brief Initialize the area manager
+     *
+     * Call this function inside @ref setup to initialize the area manager.
+     * The supplied algorithm will be used for meshing.
+     *
+     * @param algorithm_name The algorithm to use for meshing. At present only one
+     *                       algorithm is supported: 'visgraph+dijkstra'.
+     */
+    void init(String algorithm_name);
+
+    /**
+     * @brief Register a multipolygon relation for meshing.
+     *
+     * Call this function inside @ref process_relation to register a relation for
+     * meshing. The relation must be a multipolygon relation.
+     */
+    void relation(Relation);
+
+    /**
+     * @brief Register a closed way for meshing.
+     *
+     * Call this function inside @ref process_way to register a way for
+     * meshing. The way must be closed.
+     */
+    void way(Way);
+
+    /**
+     * @brief Return the registered relations for this node.
+     *
+     * Call this functions inside @ref process_node. If this node is a member of a
+     * relation that was registered for meshing, those relations will be returned.
+     *
+     * @return A Table of Relation objects.
+     */
+    Table get_relations(Node);
+
+    /**
+    @brief Return the registered relations for this way.
+
+    Call this functions inside @ref process_way. If this way is a member of a
+    relation that was registered for meshing, those relations will be returned.
+
+    @return A Table of Relation objects.
+    */
+    Table get_relations(Way);
+};
+
+/**
+ * @brief Return true if the value is truthy.
+ *
+ * Truthy values are: "yes", "true", and "1".
+ */
+Boolean is_true(String value); // NOLINT
+
+/**
+ * @brief Return true if the value is falsey.
+ *
+ * Falsey values are: "no", "false", and "0".
+ */
+Boolean is_false(String value); // NOLINT
+
+/** @} */

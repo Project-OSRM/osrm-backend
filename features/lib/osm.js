@@ -80,6 +80,7 @@ class DB {
         this.relations.forEach((r) => {
             var relation = xml.ele('relation', {
                 id: r.id,
+                version: 1,
                 user: r.OSM_USER,
                 timestamp: r.OSM_TIMESTAMP,
                 uid: r.OSM_UID

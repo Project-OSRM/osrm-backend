@@ -1,11 +1,11 @@
-## Open Source Routing Machine
-
+# Open Source Routing Machine
 
 [![osrm-backend CI](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml/badge.svg)](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml) [![Discord](https://img.shields.io/discord/1034487840219860992)](https://discord.gg/es9CdcCXcb)
 
 High performance routing engine written in C++ designed to run on OpenStreetMap data.
 
 The following services are available via HTTP API, C++ library interface and NodeJs wrapper:
+
 - Nearest - Snaps coordinates to the street network and returns the nearest matches
 - Route - Finds the fastest route between coordinates
 - Table - Computes the duration or distances of the fastest route between all pairs of supplied coordinates
@@ -18,6 +18,7 @@ To quickly try OSRM use our [demo server](http://map.project-osrm.org) which com
 For a quick introduction about how the road network is represented in OpenStreetMap and how to map specific road network features have a look at [the OSM wiki on routing](https://wiki.openstreetmap.org/wiki/Routing) or [this guide about mapping for navigation](https://web.archive.org/web/20221206013651/https://labs.mapbox.com/mapping/mapping-for-navigation/).
 
 Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
+
 - [osrm-frontend](https://github.com/Project-OSRM/osrm-frontend) - User-facing frontend with map. The demo server runs this on top of the backend
 - [osrm-text-instructions](https://github.com/Project-OSRM/osrm-text-instructions) - Text instructions from OSRM route response
 - [osrm-backend-docker](https://github.com/project-osrm/osrm-backend/pkgs/container/osrm-backend) - Ready to use Docker images
@@ -28,7 +29,6 @@ Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 
 - [Hosted documentation](http://project-osrm.org)
 - [osrm-routed HTTP API documentation](docs/http.md)
-- [libosrm API documentation](docs/libosrm.md)
 
 ## Contact
 
@@ -41,6 +41,7 @@ Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 The easiest and quickest way to setup your own routing engine is to use Docker images we provide.
 
 There are two pre-processing pipelines available:
+
 - Contraction Hierarchies (CH)
 - Multi-Level Dijkstra (MLD)
 
@@ -86,13 +87,13 @@ After adding yourself to the `docker` group make sure to log out and back in aga
 
 We support the following images in the Container Registry:
 
-Name | Description
------|------
-`latest` | `master` compiled with release flag
-`latest-assertions` | `master` compiled with with release flag, assertions enabled and debug symbols
-`latest-debug` | `master` compiled with debug flag
-`<tag>` | specific tag compiled with release flag
-`<tag>-debug` | specific tag compiled with debug flag
+| Name                | Description                                                                    |
+| ------------------- | ------------------------------------------------------------------------------ |
+| `latest`            | `master` compiled with release flag                                            |
+| `latest-assertions` | `master` compiled with with release flag, assertions enabled and debug symbols |
+| `latest-debug`      | `master` compiled with debug flag                                              |
+| `<tag>`             | specific tag compiled with release flag                                        |
+| `<tag>-debug`       | specific tag compiled with debug flag                                          |
 
 ### Building from Source
 
@@ -165,7 +166,6 @@ npm install @project-osrm/osrm --save
 For usage details have a look [these API docs](docs/nodejs/api.md).
 
 An exemplary implementation by a 3rd party with Docker and Node.js can be found [here](https://github.com/door2door-io/osrm-express-server-demo).
-
 
 ## References in publications
 

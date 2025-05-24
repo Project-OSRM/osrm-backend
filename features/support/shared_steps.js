@@ -178,6 +178,10 @@ module.exports = function () {
                 if (annotation && !annotation[a_type])
                   return cb(new Error('Annotation not found in response', a_type));
                 got[k] = annotation && annotation[a_type] || '';
+                // replaces node ids by their names: "0:1:2:3" -> "abcd"
+                if (a_type == 'nodes') {
+                  got[k] = got[k].split(':').map(this.nodeNameById).join('');
+                }
               } else if (k.match(/^am:/)) {
                 let a_type = k.slice(3);
                 if (metadata_whitelist.indexOf(a_type) == -1)
