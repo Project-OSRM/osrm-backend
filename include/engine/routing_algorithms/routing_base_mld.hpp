@@ -334,7 +334,15 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && heapNode.node != to)
                 {
                     const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
-                    BOOST_ASSERT(to_weight >= heapNode.weight);
+                    if (to_weight < heapNode.weight || to_weight == INVALID_EDGE_WEIGHT)
+                    {
+                        ++destination;
+                        if constexpr (IS_MAP_MATCHING)
+                        {
+                            ++distance;
+                        }
+                        continue;
+                    }
 
                     if constexpr (IS_MAP_MATCHING)
                     {
@@ -382,7 +390,15 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 if (shortcut_weight != INVALID_EDGE_WEIGHT && heapNode.node != to)
                 {
                     const EdgeWeight to_weight = heapNode.weight + shortcut_weight;
-                    BOOST_ASSERT(to_weight >= heapNode.weight);
+                    if (to_weight < heapNode.weight || to_weight == INVALID_EDGE_WEIGHT)
+                    {
+                        ++source;
+                        if constexpr (IS_MAP_MATCHING)
+                        {
+                            ++distance;
+                        }
+                        continue;
+                    }
                     if constexpr (IS_MAP_MATCHING)
                     {
                         const EdgeDistance to_distance = heapNode.data.distance + *distance;
