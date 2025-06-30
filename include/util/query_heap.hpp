@@ -324,7 +324,10 @@ class QueryHeap
 
     void DecreaseKey(const HeapNode &heapNode)
     {
-        BOOST_ASSERT(!WasRemoved(heapNode.node));
+        if (WasRemoved(heapNode.node))
+        {
+            return;
+        }
         heap.decrease(heapNode.handle,
                       HeapData{heapNode.weight, heap[heapNode.handle].index},
                       [this](const auto &heapData, auto new_handle)

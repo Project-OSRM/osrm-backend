@@ -34,7 +34,10 @@ template <typename HeapData, int Arity, typename Comparator = std::less<HeapData
     template <typename ReorderHandler>
     void decrease(HeapHandle handle, HeapData &&data, ReorderHandler &&reorderHandler)
     {
-        BOOST_ASSERT(handle < heap.size());
+        if (handle >= heap.size())
+        {
+            return;
+        }
 
         heap[handle] = std::forward<HeapData>(data);
         heapifyUp(handle, std::forward<ReorderHandler>(reorderHandler));
