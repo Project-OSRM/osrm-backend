@@ -1,0 +1,65 @@
+services:
+  osrm-extract_partition_customize:
+    image: ghcr.io/project-osrm/osrm-backend:v6.0.0 
+    volumes:
+      - /mnt/graid/projects/osrm:/data
+      - ./prepare_osrm.sh:/prepare_osrm.sh
+    command: /prepare_osrm.sh
+
+    restart: "no"
+    networks:
+      - osrm_osrm-network
+
+
+  osrm-routed:
+    hostname: osrm-routed
+    image: ghcr.io/project-osrm/osrm-backend:v6.0.0
+    ports:
+      - "5050:5000"
+    volumes:
+      - /mnt/graid/projects/osrm:/data
+    command: >
+      osrm-routed
+      --algorithm mld
+      --max-matching-size 100
+      --max-trip-size 100
+      --max-table-size 100
+      --max-nearest-size 100
+      --max-alternatives 3
+      --ip 0.0.0.0
+      --port 5000
+      /data/iran-latest.osrm
+    networks:
+      - nginx-network
+      - osrm_osrm-network
+    restart: always
+
+    depends_on:
+      osrm-frontend:
+        condition: service_healthy
+
+  osrm-frontend:
+    hostname: osrm-frontend
+    image: osrm/osrm-frontend
+      #ports:
+      #      - "9966:9966"
+    restart: always
+    environment:
+      - OSRM_BACKEND_URL=https://osrmapi.buluttakin.com:443
+    networks:
+      - nginx-network
+      - osrm_osrm-network
+    volumes:
+      - /mnt/graid/projects/osrm:/data
+    healthcheck:
+      test: ["CMD", "test", "-f", "/data/osrm_map_generated"]
+      interval: 6s
+      timeout: 600s
+      retries: 60000
+
+
+networks:
+  nginx-network:
+    external: true
+  osrm_osrm-network:
+    driver: bridge
