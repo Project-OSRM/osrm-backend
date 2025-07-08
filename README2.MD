@@ -10,7 +10,7 @@ With this way:
 
 ---
 
-## 📂 Directory Structure
+##  Directory Structure
 
 ```
 osrm-backend/
@@ -59,7 +59,7 @@ cd osrm-backend
 
 ---
 
-## �ힺ Health Check Logic
+##  Health Check Logic
 
 The **frontend** container performs a health check by verifying:
 
@@ -69,11 +69,11 @@ The **frontend** container performs a health check by verifying:
 
 Once the file exists, the health check reports `healthy`. This ensures that:
 
-✅ Data preparation is complete before routing starts.
+ Data preparation is complete before routing starts.
 
 ---
 
-## 🧹 Clean Up
+##  Clean Up
 
 To stop and remove all containers:
 
@@ -91,7 +91,7 @@ docker compose up -d
 
 ---
 
-## ✨ Contribution
+##  Contribution
 
 This Docker Compose configuration was contributed by [elshan2000](https://github.com/elshan2000).
 
@@ -99,6 +99,6 @@ Feel free to open issues or submit improvements!
 
 ---
 
-## 📄 License
+##  License
 
 This project follows the [Project OSRM](https://github.com/Project-OSRM/osrm-backend) license (BSD-2-Clause).
