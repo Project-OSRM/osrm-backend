@@ -31,9 +31,8 @@ cd osrm-backend
 
 ###
 
-```
-### How It Works
-```
+
+## How It Works
 
 ### Init Service
 
