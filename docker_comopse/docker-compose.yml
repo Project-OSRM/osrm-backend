@@ -15,7 +15,7 @@ services:
     hostname: osrm-routed
     image: ghcr.io/project-osrm/osrm-backend:v6.0.0
     ports:
-      - "5050:5000"
+      #- "5050:5000"
     volumes:
       - /mnt/graid/projects/osrm:/data
     command: >
@@ -45,7 +45,8 @@ services:
       #      - "9966:9966"
     restart: always
     environment:
-      - OSRM_BACKEND_URL=https://osrmapi.buluttakin.com:443
+    # - OSRM_BACKEND_URL=https://osrmapi.buluttakin.com:443
+      - OSRM_BACKEND_URL=osrm-routed:5000
     networks:
       - nginx-network
       - osrm_osrm-network
