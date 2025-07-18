@@ -289,10 +289,11 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         // possible uturns
         sub_routes[index] = algorithms.ShortestPathSearch(waypoint_candidates, {false});
         BOOST_ASSERT(sub_routes[index].shortest_path_weight != INVALID_EDGE_WEIGHT);
+        
+        std::vector<bool> waypoint_legs;
+        waypoint_legs.reserve(sub_matchings[index].indices.size());
         if (collapse_legs)
         {
-            std::vector<bool> waypoint_legs;
-            waypoint_legs.reserve(sub_matchings[index].indices.size());
             for (unsigned i = 0, j = 0; i < sub_matchings[index].indices.size(); ++i)
             {
                 auto current_wp = tidied.parameters.waypoints[j];
@@ -306,8 +307,17 @@ Status MatchPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                     waypoint_legs.push_back(false);
                 }
             }
-            sub_routes[index] = CollapseInternalRouteResult(sub_routes[index], waypoint_legs);
         }
+        else 
+        {
+            waypoint_legs.push_back(true);
+            for (unsigned i = 1; i < sub_matchings[index].indices.size()-1; ++i)
+            {
+                waypoint_legs.push_back(false);
+            }
+            waypoint_legs.push_back(true);
+        }
+        sub_routes[index] = CollapseInternalRouteResult(sub_routes[index], waypoint_legs);
     }
 
     api::MatchAPI match_api{facade, parameters, tidied};
