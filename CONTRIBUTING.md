@@ -28,8 +28,8 @@ if [ x"$remote" = xorigin  ] ; then
     fi
 fi
 ```
-could check code format, modify a local repository and reject push due to unstaged formatting changes.
-Also `pre-push` hook  rejects direct pushes to `origin/master`.
+could check code format, modify a local repository and reject the push due to unstaged formatting changes.
+Also the `pre-push` hook rejects direct pushes to `origin/master`.
 
 ⚠️ `scripts/format.sh` checks all local files that match `*.cpp` or `*.hpp` patterns.
 
@@ -49,7 +49,7 @@ If your work is going in entirely the wrong direction, there is a good chance so
 Everyone is encouraged to read PRs of other people and give feedback.
 
 For every significant code change we require a pull request review before it is merged.
-If your pull request modifies the API this need to be signed of by a team discussion.
+If your pull request modifies the API this needs to be signed off by a team discussion.
 This means you will need to find another member of the team with commit access and request a review of your pull request.
 
 Once your pull request is reviewed you can merge it! If you don't have commit access, ping someone that has commit access.

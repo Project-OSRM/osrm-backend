@@ -94,7 +94,7 @@ Every response object has a `code` property containing one of the strings below 
 | `TooBig`          | The request size violates one of the service-specific request size restrictions. |
 | `DisabledDataset` | The request tried to access a disabled dataset.                                  |
 
-- `message` is a **optional** human-readable error message. All other status types are service-dependent.
+- `message` is an **optional** human-readable error message. All other status types are service-dependent.
 - In case of an error the HTTP status code will be `400`. Otherwise, the HTTP status code will be `200` and `code` will be `Ok`.
 
 #### Data version
@@ -130,7 +130,7 @@ In addition to the [general options](#general-options) the following options are
 |------------|------------------------------|----------------------------------------------------|
 |number      |`integer >= 1` (default `1`)  |Number of nearest segments that should be returned. |
 
-As `waypoints` is a single thing, returned by that service, using it with the option `skip_waypoints` set to `true` is quite useless, but still
+As `waypoints` is a single thing returned by that service, using it with the option `skip_waypoints` set to `true` is quite useless, but still
 possible. In that case, only the `code` field will be returned.
 
 **Response**
@@ -211,7 +211,7 @@ In addition to the [general options](#general-options) the following options are
 |steps       |`true`, `false` (default)                    |Returned route steps for each route leg                                        |
 |annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`  |Returns additional metadata for each coordinate along the route geometry.      |
 |geometries  |`polyline` (default), `polyline6`, `geojson` |Returned route geometry format (influences overview and per step)              |
-|overview    |`simplified` (default), `full`, `false`      |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
+|overview    |`simplified` (default), `full`, `false`      |Add overview geometry either full, simplified according to highest zoom level it could be displayed on, or not at all.|
 |continue\_straight |`default` (default), `true`, `false`  |Forces the route to keep going straight at waypoints constraining uturns there even if it would be faster. Default value depends on the profile. |
 |waypoints   | `{index};{index};{index}...`                |Treats input coordinates indicated by given indices as waypoints in returned Match object. Default is to treat all input coordinates as waypoints.    |
 
@@ -432,7 +432,7 @@ In addition to the [general options](#general-options) the following options are
 |steps       |`true`, `false` (default)                       |Returned route steps for each route                                                       |
 |geometries  |`polyline` (default), `polyline6`, `geojson`    |Returned route geometry format (influences overview and per step)                         |
 |annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`  |Returns additional metadata for each coordinate along the route geometry.                 |
-|overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
+|overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be displayed on, or not at all.|
 |timestamps  |`{timestamp};{timestamp}[;{timestamp} ...]`     |Timestamps for the input locations in seconds since UNIX epoch. Timestamps need to be monotonically increasing. |
 |radiuses    |`{radius};{radius}[;{radius} ...]`              |Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy.|
 |gaps        |`split` (default), `ignore`                     |Allows the input track splitting based on huge timestamp gaps between points.             |
@@ -489,7 +489,7 @@ In addition to the [general options](#general-options) the following options are
 |steps       |`true`, `false` (default)                       |Returned route instructions for each trip                                  |
 |annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed` |Returns additional metadata for each coordinate along the route geometry.  |
 |geometries  |`polyline` (default), `polyline6`, `geojson`    |Returned route geometry format (influences overview and per step)          |
-|overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
+|overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be displayed on, or not at all.|
 
 **Fixing Start and End Points**
 
@@ -1036,7 +1036,7 @@ Almost the same as `json` Step object. The following properties differ:
 | `ExitRoundabout` | Describes a maneuver exiting a roundabout (usually preceded by a `roundabout` instruction)                                                                                                                                                                                                                                  |
 | `ExitRotary`     | Describes the maneuver exiting a rotary (large named roundabout)                                                                                                                                                                                                                                                             |
 
-- `driving_side`: `bool` Ttrue stands for the left side driving.
+- `driving_side`: `bool` True stands for left side driving.
 - `intersections`: `[Intersection]` Same as `json` intersections field, but different format.
 
 ### Intersection object
@@ -1102,7 +1102,7 @@ Exactly the same as `json` annotation object.
 A point on Earth.
 
 ***Properties***
-- `longitute`: `float` Point's longitude
+- `longitude`: `float` Point's longitude
 - `latitude`: `float` Point's latitude
 
 ### Uint64Pair
