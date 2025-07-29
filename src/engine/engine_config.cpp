@@ -5,7 +5,7 @@ namespace osrm::engine
 
 bool EngineConfig::IsValid() const
 {
-    // check whether a base_bath has been defined by verifying an empty extension
+    // check whether a base_path has been defined by verifying an empty extension
     // leads to an empty path
     const bool all_path_are_empty = storage_config.GetPath("").empty();
 
