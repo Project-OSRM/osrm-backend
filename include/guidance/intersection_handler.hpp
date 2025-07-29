@@ -514,7 +514,7 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             !via_edge_data.flags.road_classification.IsLowPriorityRoadClass())
             return true;
 
-        // and we cannot yloose it (roads loosing their name will be handled after this check
+        // and we cannot lose it (roads losing their name will be handled after this check
         // here)
         auto const &road_data = node_based_graph.GetEdgeData(road.eid);
         const auto &road_annotation = node_data_container.GetAnnotation(road_data.annotation_data);
