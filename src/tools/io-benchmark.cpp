@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
 #ifdef __linux__
         lseek(file_desc, 0, SEEK_SET);
 #endif
-        // make 1000 random access, time each I/O seperately
+        // make 1000 random access, time each I/O separately
         unsigned number_of_blocks = (osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned) - 1) / 4096;
         std::random_device rd;
         std::default_random_engine e1(rd());

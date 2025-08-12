@@ -428,7 +428,7 @@ class StaticRTree
 
         // The first level starts at 0
         m_tree_level_starts = {0};
-        // The remaining levels start at the partial sum of the preceeding level sizes
+        // The remaining levels start at the partial sum of the preceding level sizes
         std::partial_sum(tree_level_sizes.begin(),
                          tree_level_sizes.end(),
                          std::back_inserter(m_tree_level_starts));
