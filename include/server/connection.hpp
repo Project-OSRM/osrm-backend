@@ -8,6 +8,7 @@
 
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
+#include <boost/asio/deadline_timer.hpp>
 #include <boost/config.hpp>
 #include <boost/version.hpp>
 
