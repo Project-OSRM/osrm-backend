@@ -189,8 +189,8 @@ Given(
       if (row.highway === '(nil)') delete tags.highway;
 
       if (row.name === undefined) tags.name = nodes;
-      else if (row.name === '""' || row.name === "''")
-        // eslint-disable-line quotes
+      else if (row.name === '""' || row.name === '\'\'')
+         
         tags.name = '';
       else if (row.name === '' || row.name === '(nil)') delete tags.name;
       else tags.name = row.name;

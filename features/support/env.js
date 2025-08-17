@@ -38,8 +38,8 @@ module.exports = function () {
     this.DEFAULT_LOAD_METHOD = loadMethod.match('mmap')
       ? 'mmap'
       : loadMethod.match('directly')
-      ? 'directly'
-      : 'datastore';
+        ? 'directly'
+        : 'datastore';
     this.DEFAULT_ORIGIN = [1, 1];
     this.OSM_USER = 'osrm';
     this.OSM_UID = 1;
@@ -115,31 +115,31 @@ module.exports = function () {
       this.BIN_PATH,
       'osrm_extract'
     )),
-      (this.LIB_OSRM_CONTRACT_PATH = util.format(
-        '%s/' + this.LIB,
-        this.BIN_PATH,
-        'osrm_contract'
-      )),
-      (this.LIB_OSRM_CUSTOMIZE_PATH = util.format(
-        '%s/' + this.LIB,
-        this.BIN_PATH,
-        'osrm_customize'
-      )),
-      (this.LIB_OSRM_PARTITION_PATH = util.format(
-        '%s/' + this.LIB,
-        this.BIN_PATH,
-        'osrm_partition'
-      )),
-      (this.LIB_OSRM_PATH = util.format(
-        '%s/' + this.LIB,
-        this.BIN_PATH,
-        'osrm'
-      ));
+    (this.LIB_OSRM_CONTRACT_PATH = util.format(
+      '%s/' + this.LIB,
+      this.BIN_PATH,
+      'osrm_contract'
+    )),
+    (this.LIB_OSRM_CUSTOMIZE_PATH = util.format(
+      '%s/' + this.LIB,
+      this.BIN_PATH,
+      'osrm_customize'
+    )),
+    (this.LIB_OSRM_PARTITION_PATH = util.format(
+      '%s/' + this.LIB,
+      this.BIN_PATH,
+      'osrm_partition'
+    )),
+    (this.LIB_OSRM_PATH = util.format(
+      '%s/' + this.LIB,
+      this.BIN_PATH,
+      'osrm'
+    ));
 
 
     fs.exists(this.TEST_PATH, (exists) => {
       if (exists) return callback();
-      else return callback(new Error("*** Test folder doesn't exist."));
+      else return callback(new Error('*** Test folder doesn\'t exist.'));
     });
   };
 
