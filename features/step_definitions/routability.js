@@ -2,9 +2,9 @@
 const util = require('util');
 const d3 = require('d3-queue');
 const classes = require('../support/data_classes');
+const { Then } = require('@cucumber/cucumber');
 
-module.exports = function () {
-  this.Then(/^routability should be$/, (table, callback) => {
+Then(/^routability should be$/, function (table, callback) {
     this.buildWaysFromTable(table, () => {
       var directions = ['forw','backw','bothw'],
         testedHeaders = ['forw','backw','bothw','forw_rate','backw_rate','bothw_rate'],
@@ -189,4 +189,3 @@ module.exports = function () {
         sq.awaitAll((err) => { cb(err, result); });
       });
   };
-};
