@@ -8,6 +8,8 @@ var d3 = require('d3-queue');
 var OSM = require('../lib/osm');
 const { Given } = require('@cucumber/cucumber');
 
+console.log('=== data.js step definitions file loaded ===');
+
 Given(/^the profile "([^"]*)"$/, function (profile, callback) {
   this.profile = this.OSRM_PROFILE || profile;
   this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');

@@ -15,6 +15,7 @@ console.log('=== hooks.js file loaded ===');
 // Global flags for initialization
 let supportFunctionsLoaded = false;
 let globalInitialized = false;
+let collectedFeatures = new Set(); // Collect unique features from testCases
 
 // Initialization function to set up scenario-specific state
 function setupCurrentScenario(testCase, callback) {
@@ -32,27 +33,8 @@ function setupCurrentScenario(testCase, callback) {
   this.environment = Object.assign({}, this.DEFAULT_ENVIRONMENT);
   this.resetOSM();
 
-  // Set up feature cache for Cucumber v12 API - manually initialize since setupFeatures was called with empty array
-  // testCase.pickle.uri replaces scenario.uri from v1
-  const uri = testCase.pickle.uri;
-  
-  // Manually populate feature cache directories if not already done
-  if (!this.featureCacheDirectories[uri]) {
-    const hash = require('../lib/hash');
-    const path = require('path');
-    
-    // Simplified synchronous setup - just create a basic cache directory structure
-    let featurePath = path.relative(path.resolve('./features'), uri);
-    let featureID = featurePath.replace(/\//g, '_').replace(/\.feature$/, '');
-    let featureCacheDirectory = this.getFeatureCacheDirectory(featureID);
-    let featureProcessedCacheDirectory = this.getFeatureProcessedCacheDirectory(featureCacheDirectory, this.osrmHash);
-    
-    this.featureIDs[uri] = featureID;
-    this.featureCacheDirectories[uri] = featureCacheDirectory;
-    this.featureProcessedCacheDirectories[uri] = featureProcessedCacheDirectory;
-  }
-  
-  const mockFeature = { getUri: () => uri };
+  // Set up feature cache for Cucumber v12 API - recreate original BeforeFeature behavior
+  const mockFeature = { getUri: () => testCase.pickle.uri };
   this.setupFeatureCache(mockFeature);
 
   this.scenarioID = this.getScenarioID(testCase);
@@ -63,9 +45,7 @@ function setupCurrentScenario(testCase, callback) {
   this.scenarioLogFile = path.join(logDir, this.scenarioID) + '.log';
   d3.queue(1)
     .defer(createDir, logDir)
-    .defer((callback) =>
-      fs.rm(this.scenarioLogFile, { force: true }, callback)
-    )
+    .defer((callback) => fs.rm(this.scenarioLogFile, { force: true }, callback))
     .awaitAll(callback);
 }
 
@@ -81,11 +61,15 @@ Before(function () {
     require('./route').call(this);
     require('./shared_steps').call(this);
     require('./fuzzy').call(this);
+    require('../step_definitions/options').call(this);
     supportFunctionsLoaded = true;
   }
 });
 
 Before({ timeout: 30000 }, function (testCase, callback) {
+  // Collect features from testCases to recreate original BeforeFeatures behavior
+  collectedFeatures.add(testCase.pickle.uri);
+
   if (!globalInitialized) {
     this.osrmLoader = new OSRMLoader(this);
     this.OSMDB = new OSM.DB();
@@ -95,7 +79,13 @@ Before({ timeout: 30000 }, function (testCase, callback) {
     queue.defer(this.verifyOSRMIsNotRunning.bind(this));
     queue.defer(this.verifyExistenceOfBinaries.bind(this));
     queue.defer(this.initializeCache.bind(this));
-    queue.defer(this.setupFeatures.bind(this, [])); // features not available here
+
+    // Recreate original BeforeFeatures behavior - create mock features array from collected URIs
+    const mockFeatures = Array.from(collectedFeatures).map((uri) => ({
+      getUri: () => uri,
+    }));
+    queue.defer(this.setupFeatures.bind(this, mockFeatures));
+
     queue.awaitAll((err) => {
       if (err) return callback(err);
       globalInitialized = true;
@@ -106,7 +96,7 @@ Before({ timeout: 30000 }, function (testCase, callback) {
   }
 });
 
-After(function (scenario, callback) {
+After(function (testCase, callback) {
   this.resetOptionsOutput();
   callback();
 });

@@ -2,6 +2,8 @@
 var d3 = require('d3-queue');
 const { When, Given } = require('@cucumber/cucumber');
 
+console.log('=== routing.js step definitions file loaded ===');
+
 When(/^I route I should get$/, function (table, callback) {
   this.WhenIRouteIShouldGet(table, callback);
 });
