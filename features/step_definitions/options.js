@@ -5,7 +5,6 @@ const assert = require('assert');
 const fs = require('fs');
 const { When, Then, Given } = require('@cucumber/cucumber');
 
-console.log('=== options.js step definitions file loaded ===');
 
 module.exports = function () {
   this.resetOptionsOutput = function () {

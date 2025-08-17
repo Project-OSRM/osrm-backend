@@ -10,7 +10,6 @@ const { createDir } = require('../lib/utils');
 
 const { BeforeAll, Before, After, AfterAll } = require('@cucumber/cucumber');
 
-console.log('=== hooks.js file loaded ===');
 
 // Global flags for initialization
 let collectedFeatures = new Set(); // Collect unique features from testCases
@@ -50,8 +49,6 @@ function setupCurrentScenario(testCase, callback) {
 // In Cucumber v12, each scenario gets a fresh World instance, so support functions 
 // must be attached to each new World instance
 Before(function () {
-  console.log('=== Before hook called for loading support functions ===');
-  console.log('=== Loading support functions onto World ===');
   require('./env').call(this);
   require('./cache').call(this);
   require('./data').call(this);
@@ -90,11 +87,9 @@ Before({ timeout: 30000 }, function (testCase, callback) {
 });
 
 After(function (testCase, callback) {
-  console.log('=== After hook: shutting down osrm-routed ===');
   this.resetOptionsOutput();
   if (this.osrmLoader) {
     this.osrmLoader.shutdown(() => {
-      console.log('=== After hook: osrm-routed shutdown completed ===');
       callback();
     });
   } else {

@@ -4,7 +4,6 @@
 const { Given, When, Then } = require('@cucumber/cucumber');
 const assert = require('assert');
 
-console.log('=== hello.js step definitions file loaded ===');
 
 Given('I have a hello message', function () {
   this.message = 'Hello World';

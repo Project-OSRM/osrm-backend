@@ -136,12 +136,6 @@ module.exports = function () {
         'osrm'
       ));
 
-    // eslint-disable-next-line no-console
-    console.info(util.format('Node Version', process.version));
-    if (parseInt(process.version.match(/v(\d+)/)[1]) < 4)
-      throw new Error(
-        '*** Please upgrade to Node 4.+ to run OSRM cucumber tests'
-      );
 
     fs.exists(this.TEST_PATH, (exists) => {
       if (exists) return callback();
@@ -196,13 +190,8 @@ module.exports = function () {
   };
 
   process.on('exit', () => {
-    console.log('=== Process exit handler called, shutting down osrmLoader ===');
     if (this.osrmLoader) {
-      this.osrmLoader.shutdown(() => {
-        console.log('=== osrmLoader shutdown completed ===');
-      });
-    } else {
-      console.log('=== osrmLoader is undefined, cannot shutdown ===');
+      this.osrmLoader.shutdown(() => {});
     }
   });
 

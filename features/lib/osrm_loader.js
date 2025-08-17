@@ -27,13 +27,8 @@ class OSRMBaseLoader{
 
     // Terminates OSRM server process gracefully
     shutdown (callback) {
-        console.log('=== OSRMLoader.shutdown() called, osrmIsRunning:', this.osrmIsRunning());
-        if (!this.osrmIsRunning()) {
-            console.log('=== OSRM not running, returning early ===');
-            return callback();
-        }
+        if (!this.osrmIsRunning()) return callback();
 
-        console.log('=== Shutting down OSRM process ===');
         var limit = Timeout(this.scope.TIMEOUT, { err: new Error('*** Shutting down osrm-routed timed out.')});
 
         this.osrmDown(limit(callback));
