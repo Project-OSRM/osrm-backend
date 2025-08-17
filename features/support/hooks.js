@@ -13,7 +13,6 @@ const { BeforeAll, Before, After, AfterAll } = require('@cucumber/cucumber');
 console.log('=== hooks.js file loaded ===');
 
 // Global flags for initialization
-let globalInitialized = false;
 let collectedFeatures = new Set(); // Collect unique features from testCases
 
 // Initialization function to set up scenario-specific state
@@ -68,30 +67,26 @@ Before({ timeout: 30000 }, function (testCase, callback) {
   // Collect features from testCases to recreate original BeforeFeatures behavior
   collectedFeatures.add(testCase.pickle.uri);
 
-  if (!globalInitialized) {
-    this.osrmLoader = new OSRMLoader(this);
-    this.OSMDB = new OSM.DB();
+  // Each World instance needs full initialization in Cucumber v12
+  this.osrmLoader = new OSRMLoader(this);
+  this.OSMDB = new OSM.DB();
 
-    let queue = d3.queue(1);
-    queue.defer(this.initializeEnv.bind(this));
-    queue.defer(this.verifyOSRMIsNotRunning.bind(this));
-    queue.defer(this.verifyExistenceOfBinaries.bind(this));
-    queue.defer(this.initializeCache.bind(this));
+  let queue = d3.queue(1);
+  queue.defer(this.initializeEnv.bind(this));
+  queue.defer(this.verifyOSRMIsNotRunning.bind(this));
+  queue.defer(this.verifyExistenceOfBinaries.bind(this));
+  queue.defer(this.initializeCache.bind(this));
 
-    // Recreate original BeforeFeatures behavior - create mock features array from collected URIs
-    const mockFeatures = Array.from(collectedFeatures).map((uri) => ({
-      getUri: () => uri,
-    }));
-    queue.defer(this.setupFeatures.bind(this, mockFeatures));
+  // Recreate original BeforeFeatures behavior - create mock features array from collected URIs
+  const mockFeatures = Array.from(collectedFeatures).map((uri) => ({
+    getUri: () => uri,
+  }));
+  queue.defer(this.setupFeatures.bind(this, mockFeatures));
 
-    queue.awaitAll((err) => {
-      if (err) return callback(err);
-      globalInitialized = true;
-      setupCurrentScenario.call(this, testCase, callback);
-    });
-  } else {
+  queue.awaitAll((err) => {
+    if (err) return callback(err);
     setupCurrentScenario.call(this, testCase, callback);
-  }
+  });
 });
 
 After(function (testCase, callback) {
