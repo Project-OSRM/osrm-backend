@@ -1,6 +1,8 @@
 #include "updater/updater.hpp"
 #include "updater/csv_source.hpp"
 
+#include <cstdio>
+
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/files.hpp"
@@ -219,21 +221,63 @@ updateSegmentData(const UpdaterConfig &config,
                 for (const auto segment_offset :
                      util::irange<std::size_t>(0, fwd_weights_range.size()))
                 {
-                    auto u = osm_node_ids[nodes_range[segment_offset]];
-                    auto v = osm_node_ids[nodes_range[segment_offset + 1]];
+                    auto node_u = nodes_range[segment_offset];
+                    auto node_v = nodes_range[segment_offset + 1];
+                    auto u = osm_node_ids[node_u];
+                    auto v = osm_node_ids[node_v];
 
                     // Self-loops are artifical segments (e.g. traffic light nodes), do not
                     // waste time updating them with traffic data
                     if (u == v)
                         continue;
 
-                    if (auto value = segment_speed_lookup({u, v}))
+                    // Debug: Log first few segment lookups
+                    static std::atomic<int> debug_count{0};
+                    if (debug_count < 20)
                     {
+                        debug_count++;
+                    }
+
+                    // Convert OSMNodeID to uint64_t for lookup
+                    std::uint64_t u_id = static_cast<std::uint64_t>(u);
+                    std::uint64_t v_id = static_cast<std::uint64_t>(v);
+                    auto lookup_result = segment_speed_lookup({u_id, v_id});
+                    if (lookup_result)
+                    {
+                        auto value = lookup_result;
                         auto segment_length = segment_lengths[segment_offset];
-                        auto new_duration = convertToDuration(value->speed, segment_length);
+                        
+                        // Get old values first
+                        SegmentWeight old_weight = fwd_weights_range[segment_offset];
+                        SegmentDuration old_duration = fwd_durations_range[segment_offset];
+                        // Duration is in deciseconds (0.1s), so multiply by 10 to get correct speed
+                        double old_speed = (static_cast<unsigned>(old_duration) > 0) ? (segment_length / (static_cast<double>(static_cast<unsigned>(old_duration)) / 10.0)) * 3.6 : 0.0;
+                        
+                        // Calculate effective speed based on operation type
+                        double effective_speed = value->speed;
+                        if (value->operation == SpeedSource::MULTIPLY)
+                        {
+                            effective_speed = old_speed * value->speed;
+                        }
+                        else if (value->operation == SpeedSource::DIVIDE)
+                        {
+                            effective_speed = (value->speed > 0) ? (old_speed / value->speed) : old_speed;
+                        }
+                        // Create a modified SpeedSource with the effective speed for conversion functions
+                        SpeedSource modified_value = *value;
+                        modified_value.speed = effective_speed;
+                        
+                        auto new_duration = convertToDuration(effective_speed, segment_length);
                         auto new_weight = convertToWeight(
-                            fwd_weights_range[segment_offset], *value, segment_length);
+                            fwd_weights_range[segment_offset], modified_value, segment_length);
                         fwd_was_updated = true;
+                        const char* op_str = (value->operation == SpeedSource::MULTIPLY) ? "*" : 
+                                            (value->operation == SpeedSource::DIVIDE) ? "/" : "=";
+                        util::Log(logDEBUG) << "[FWD] Segment " << u << "->" << v 
+                                           << " (offset " << segment_offset << ", length " << segment_length << "m)"
+                                           << " | Old: weight=" << old_weight << ", duration=" << old_duration << ", speed=" << old_speed << " km/h"
+                                           << " | New: weight=" << new_weight << ", duration=" << new_duration
+                                           << ", speed=" << effective_speed << " km/h (op: " << op_str << value->speed << "), source=" << static_cast<int>(value->source);
 
                         fwd_weights_range[segment_offset] = new_weight;
                         fwd_durations_range[segment_offset] = new_duration;
@@ -260,21 +304,57 @@ updateSegmentData(const UpdaterConfig &config,
                 for (const auto segment_offset :
                      util::irange<std::size_t>(0, rev_weights_range.size()))
                 {
-                    auto u = osm_node_ids[nodes_range[segment_offset]];
-                    auto v = osm_node_ids[nodes_range[segment_offset + 1]];
+                    auto node_u = nodes_range[segment_offset];
+                    auto node_v = nodes_range[segment_offset + 1];
+                    auto u = osm_node_ids[node_u];
+                    auto v = osm_node_ids[node_v];
 
                     // Self-loops are artifical segments (e.g. traffic light nodes), do not
                     // waste time updating them with traffic data
                     if (u == v)
                         continue;
 
-                    if (auto value = segment_speed_lookup({v, u}))
+                    // Convert OSMNodeID to uint64_t for lookup
+                    std::uint64_t u_id = static_cast<std::uint64_t>(u);
+                    std::uint64_t v_id = static_cast<std::uint64_t>(v);
+                    auto lookup_result = segment_speed_lookup({v_id, u_id});
+                    if (lookup_result)
                     {
+                        auto value = lookup_result;
                         auto segment_length = segment_lengths[segment_offset];
-                        auto new_duration = convertToDuration(value->speed, segment_length);
+                        
+                        // Get old values first
+                        SegmentWeight old_weight = rev_weights_range[segment_offset];
+                        SegmentDuration old_duration = rev_durations_range[segment_offset];
+                        // Duration is in deciseconds (0.1s), so multiply by 10 to get correct speed
+                        double old_speed = (static_cast<unsigned>(old_duration) > 0) ? (segment_length / (static_cast<double>(static_cast<unsigned>(old_duration)) / 10.0)) * 3.6 : 0.0;
+                        
+                        // Calculate effective speed based on operation type
+                        double effective_speed = value->speed;
+                        if (value->operation == SpeedSource::MULTIPLY)
+                        {
+                            effective_speed = old_speed * value->speed;
+                        }
+                        else if (value->operation == SpeedSource::DIVIDE)
+                        {
+                            effective_speed = (value->speed > 0) ? (old_speed / value->speed) : old_speed;
+                        }
+                        
+                        // Create a modified SpeedSource with the effective speed for conversion functions
+                        SpeedSource modified_value = *value;
+                        modified_value.speed = effective_speed;
+                        
+                        auto new_duration = convertToDuration(effective_speed, segment_length);
                         auto new_weight = convertToWeight(
-                            rev_weights_range[segment_offset], *value, segment_length);
+                            rev_weights_range[segment_offset], modified_value, segment_length);
                         rev_was_updated = true;
+                        const char* op_str = (value->operation == SpeedSource::MULTIPLY) ? "*" : 
+                                            (value->operation == SpeedSource::DIVIDE) ? "/" : "=";
+                        util::Log(logDEBUG) << "[REV] Segment " << v << "->" << u 
+                                           << " (offset " << segment_offset << ", length " << segment_length << "m)"
+                                           << " | Old: weight=" << old_weight << ", duration=" << old_duration << ", speed=" << old_speed << " km/h"
+                                           << " | New: weight=" << new_weight << ", duration=" << new_duration
+                                           << ", speed=" << effective_speed << " km/h (op: " << op_str << value->speed << "), source=" << static_cast<int>(value->source);
 
                         rev_weights_range[segment_offset] = new_weight;
                         rev_durations_range[segment_offset] = new_duration;

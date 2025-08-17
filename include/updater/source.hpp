@@ -3,6 +3,7 @@
 
 #include "util/typedefs.hpp"
 
+#include <cstdio>
 #include <optional>
 #include <tuple>
 #include <vector>
@@ -19,8 +20,9 @@ template <typename Key, typename Value> struct LookupTable
             std::lower_bound(lookup.begin(),
                              lookup.end(),
                              key,
-                             [](const auto &lhs, const auto &rhs) { return rhs < lhs.first; });
-        return it != std::end(lookup) && !(it->first < key) ? Result(it->second) : Result();
+                             [](const auto &lhs, const auto &rhs) { return lhs.first < rhs; });
+
+        return it != std::end(lookup) && it->first == key ? Result(it->second) : Result();
     }
 
     std::vector<std::pair<Key, Value>> lookup;
@@ -48,10 +50,18 @@ struct Segment final
 
 struct SpeedSource final
 {
-    SpeedSource() : speed(0.), rate() {}
+    enum Operation
+    {
+        ABSOLUTE,  // Set absolute speed value
+        MULTIPLY,  // Multiply current speed by factor
+        DIVIDE     // Divide current speed by factor
+    };
+    
+    SpeedSource() : speed(0.), rate(), operation(ABSOLUTE) {}
     double speed;
     std::optional<double> rate;
     std::uint8_t source;
+    Operation operation;
 };
 
 struct Turn final
