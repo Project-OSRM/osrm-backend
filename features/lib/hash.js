@@ -1,3 +1,4 @@
+// File content hashing utilities for cache invalidation and content verification
 'use strict';
 
 const fs = require('fs');
@@ -5,6 +6,7 @@ const crypto = require('crypto');
 const d3 = require('d3-queue');
 
 module.exports =  {
+    // Computes MD5 hash of multiple files concatenated together
     hashOfFiles: (paths, cb) => {
         let queue = d3.queue();
         for (let i = 0; i < paths.length; ++i) {
@@ -20,6 +22,7 @@ module.exports =  {
         });
     },
 
+     // Computes MD5 hash of single file with optional additional content
      hashOfFile: (path, additional_content, cb) => {
         fs.readFile(path, (err, result) => {
             if (err) return cb(err);

@@ -1,3 +1,4 @@
+// Table comparison utility for displaying colorized differences between expected and actual test results
 'use strict';
 
 var util = require('util');

@@ -1,3 +1,4 @@
+// OSRM binary process management and data loading strategies (datastore, mmap, direct)
 'use strict';
 
 const fs = require('fs');
@@ -6,12 +7,14 @@ const { Timeout } = require('./utils');
 const tryConnect = require('../lib/try_connect');
 const errorReason = require('./utils').errorReason;
 
+// Base class for managing OSRM routing server process lifecycle
 class OSRMBaseLoader{
     constructor (scope) {
         this.scope = scope;
         this.child = null;
     }
 
+    // Starts OSRM server and waits for it to accept connections
     launch (callback) {
         var limit = Timeout(this.scope.TIMEOUT, { err: new Error('*** Launching osrm-routed timed out.') });
 
@@ -22,6 +25,7 @@ class OSRMBaseLoader{
         runLaunch(limit((e) => { if (e) callback(e); else callback(); }));
     }
 
+    // Terminates OSRM server process gracefully
     shutdown (callback) {
         if (!this.osrmIsRunning()) return callback();
 
@@ -63,6 +67,7 @@ class OSRMBaseLoader{
     }
 };
 
+// Loads data directly from .osrm files into memory
 class OSRMDirectLoader extends OSRMBaseLoader {
     constructor (scope) {
         super(scope);
@@ -97,6 +102,7 @@ class OSRMDirectLoader extends OSRMBaseLoader {
     }
 };
 
+// Uses memory-mapped files for efficient data access
 class OSRMmmapLoader extends OSRMBaseLoader {
     constructor (scope) {
         super(scope);
@@ -131,6 +137,7 @@ class OSRMmmapLoader extends OSRMBaseLoader {
     }
 };
 
+// Loads data into shared memory for multiple processes to access
 class OSRMDatastoreLoader extends OSRMBaseLoader {
     constructor (scope) {
         super(scope);

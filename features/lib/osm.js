@@ -1,8 +1,10 @@
+// OpenStreetMap data structures and XML generation utilities for synthetic test data
 'use strict';
 
 const builder = require('xmlbuilder');
 const ensureDecimal = require('./utils').ensureDecimal;
 
+// OpenStreetMap database for storing nodes, ways, and relations
 class DB {
     constructor () {
         this.nodes = new Array();
@@ -10,10 +12,12 @@ class DB {
         this.relations = new Array();
     }
 
+    // Adds OSM node to database
     addNode (node) {
         this.nodes.push(node);
     }
 
+    // Adds OSM way to database
     addWay (way) {
         this.ways.push(way);
     }
@@ -28,6 +32,7 @@ class DB {
         this.relations = [];
     }
 
+    // Converts database to OSM XML format for OSRM processing
     toXML (callback) {
         var xml = builder.create('osm', {'encoding':'UTF-8'});
         xml.att('generator', 'osrm-test')
