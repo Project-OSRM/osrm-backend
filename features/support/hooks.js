@@ -90,8 +90,16 @@ Before({ timeout: 30000 }, function (testCase, callback) {
 });
 
 After(function (testCase, callback) {
+  console.log('=== After hook: shutting down osrm-routed ===');
   this.resetOptionsOutput();
-  callback();
+  if (this.osrmLoader) {
+    this.osrmLoader.shutdown(() => {
+      console.log('=== After hook: osrm-routed shutdown completed ===');
+      callback();
+    });
+  } else {
+    callback();
+  }
 });
 
 AfterAll(function (callback) {

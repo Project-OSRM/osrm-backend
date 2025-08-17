@@ -196,7 +196,14 @@ module.exports = function () {
   };
 
   process.on('exit', () => {
-    this.osrmLoader.shutdown(() => {});
+    console.log('=== Process exit handler called, shutting down osrmLoader ===');
+    if (this.osrmLoader) {
+      this.osrmLoader.shutdown(() => {
+        console.log('=== osrmLoader shutdown completed ===');
+      });
+    } else {
+      console.log('=== osrmLoader is undefined, cannot shutdown ===');
+    }
   });
 
   process.on('SIGINT', () => {
