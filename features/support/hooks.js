@@ -1,3 +1,4 @@
+// Cucumber before/after hooks for test setup, teardown, and environment initialization
 'use strict';
 
 const { BeforeAll, Before, After, AfterAll } = require('@cucumber/cucumber');

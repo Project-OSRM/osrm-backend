@@ -1,3 +1,4 @@
+// Common step definitions shared across multiple feature test scenarios
 'use strict';
 
 var util = require('util');

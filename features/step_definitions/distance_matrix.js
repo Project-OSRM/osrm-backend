@@ -1,3 +1,4 @@
+// Step definitions for testing distance/duration matrix API endpoints
 var util = require('util');
 
 var flatbuffers = require('../support/flatbuffers').flatbuffers;

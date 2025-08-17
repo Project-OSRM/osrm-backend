@@ -1,3 +1,4 @@
+// Step definitions for testing map matching API functionality
 'use strict';
 
 var util = require('util');

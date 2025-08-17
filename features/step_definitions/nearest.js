@@ -1,3 +1,4 @@
+// Step definitions for testing nearest point snapping API
 var util = require('util');
 
 var flatbuffers = require('../support/flatbuffers').flatbuffers;

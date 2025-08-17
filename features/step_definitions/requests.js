@@ -1,3 +1,4 @@
+// Step definitions for generic HTTP request testing and response validation
 var assert = require('assert');
 
 module.exports = function () {

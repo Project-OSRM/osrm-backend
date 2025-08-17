@@ -1,3 +1,4 @@
+// Core data manipulation utilities for building synthetic test scenarios and OSM data
 'use strict';
 
 const fs = require('fs');
@@ -12,6 +13,7 @@ const errorReason = require('../lib/utils').errorReason;
 const CheapRuler = require('cheap-ruler');
 
 module.exports = function () {
+  // Sets grid spacing in meters for coordinate calculations
   this.setGridSize = (meters) => {
     this.gridSize = parseFloat(meters);
 
@@ -21,6 +23,7 @@ module.exports = function () {
     this.zoom = this.gridSize * 0.8990679362704610899694577444566908445396483347536032203503E-5;
   };
 
+  // Sets base coordinate for test scenario positioning
   this.setOrigin = (origin) => {
     this.origin = origin;
     // we use C++ version of `cheap-ruler` inside OSRM in order to do distance calculations,
@@ -28,10 +31,12 @@ module.exports = function () {
     this.ruler = new CheapRuler(this.origin[1], 'meters');
   };
 
+  // Calculates coordinate offset by grid cells from origin
   this.offsetOriginBy = (xCells, yCells) => {
     return this.ruler.offset(this.origin, xCells * this.gridSize, yCells * this.gridSize);
   };
 
+  // Builds OSM ways from test table data with synthetic coordinates
   this.buildWaysFromTable = (table, callback) => {
     // add one unconnected way for each row
     var buildRow = (row, ri, cb) => {
@@ -44,6 +49,7 @@ module.exports = function () {
 
       // add some nodes
 
+      // Creates synthetic OSM node with calculated coordinates
       var makeFakeNode = (namePrefix, offset) => {
         const coord = this.offsetOriginBy(offset + this.WAY_SPACING * ri, 0);
         return new OSM.Node(this.makeOSMId(), this.OSM_USER, this.OSM_TIMESTAMP,
@@ -108,10 +114,12 @@ module.exports = function () {
     q.awaitAll(callback);
   };
 
+  // Converts table grid coordinates to longitude/latitude
   this.tableCoordToLonLat = (ci, ri) => {
     return this.offsetOriginBy(ci, -ri).map(ensureDecimal);
   };
 
+  // Adds named OSM node to test database
   this.addOSMNode = (name, lon, lat, id) => {
     id = id || this.makeOSMId();
     var node = new OSM.Node(id, this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID, lon, lat, {name: name});
@@ -119,10 +127,12 @@ module.exports = function () {
     this.nameNodeHash[name] = node;
   };
 
+  // Adds named location for test coordinate references
   this.addLocation = (name, lon, lat) => {
     this.locationHash[name] = new classes.Location(lon, lat);
   };
 
+  // Finds OSM node or location by single character name
   this.findNodeByName = (s) => {
     if (s.length !== 1) throw new Error(util.format('*** invalid node name "%s", must be single characters', s));
     if (!s.match(/[a-z0-9]/)) throw new Error(util.format('*** invalid node name "%s", must be alphanumeric', s));

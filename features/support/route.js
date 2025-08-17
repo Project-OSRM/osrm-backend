@@ -1,3 +1,4 @@
+// Route response validation and geometry processing utilities
 'use strict';
 
 const ensureDecimal = require('../lib/utils').ensureDecimal;

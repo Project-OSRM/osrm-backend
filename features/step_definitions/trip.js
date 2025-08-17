@@ -1,3 +1,4 @@
+// Step definitions for testing trip planning and traveling salesman problem API
 var util = require('util');
 var polyline = require('@mapbox/polyline');
 

@@ -1,3 +1,4 @@
+// Data class definitions for test result validation and comparison
 'use strict';
 
 const util = require('util');

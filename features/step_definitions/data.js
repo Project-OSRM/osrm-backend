@@ -1,3 +1,4 @@
+// Step definitions for setting up test data, profiles, and OSM scenarios
 'use strict';
 
 var util = require('util');

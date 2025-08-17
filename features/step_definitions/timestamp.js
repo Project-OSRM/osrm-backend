@@ -1,3 +1,4 @@
+// Step definitions for testing timestamp validation in API responses
 var assert = require('assert');
 
 module.exports = function () {

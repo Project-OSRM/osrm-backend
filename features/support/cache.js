@@ -1,3 +1,4 @@
+// Manages test data caching system with hashing for performance optimization
 'use strict';
 
 const d3 = require('d3-queue');
@@ -9,6 +10,7 @@ const { rm } = require('fs/promises');
 const { createDir } = require('../lib/utils');
 
 module.exports = function () {
+  // Initializes caching system with OSRM binary hash
   this.initializeCache = (callback) => {
     this.getOSRMHash((err, osrmHash) => {
       if (err) return callback(err);
@@ -18,6 +20,7 @@ module.exports = function () {
   };
 
   // computes all paths for every feature
+  // Sets up cache directories and hashes for all test features
   this.setupFeatures = (features, callback) => {
     this.featureIDs = {};
     this.featureCacheDirectories = {};

@@ -1,3 +1,4 @@
+// Step definitions for testing OSRM binary options and command-line functionality
 'use strict';
 
 const assert = require('assert');

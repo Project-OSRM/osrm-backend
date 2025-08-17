@@ -1,3 +1,4 @@
+// Sets up global environment constants and configuration for test execution
 'use strict';
 
 const path = require('path');
@@ -9,6 +10,7 @@ const tryConnect = require('../lib/try_connect');
 
 // Sets up all constants that are valid for all features
 module.exports = function () {
+  // Initializes all environment constants and paths for test execution
   this.initializeEnv = (callback) => {
     this.TIMEOUT =
       (process.env.CUCUMBER_TIMEOUT &&

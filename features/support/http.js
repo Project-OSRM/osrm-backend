@@ -1,3 +1,4 @@
+// HTTP client utilities for making API requests to OSRM routing server
 const { Timeout } = require('../lib/utils');
 const http = require('http');
 const https = require('https');
