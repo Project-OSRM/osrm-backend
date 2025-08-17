@@ -32,11 +32,27 @@ function setupCurrentScenario(testCase, callback) {
   this.environment = Object.assign({}, this.DEFAULT_ENVIRONMENT);
   this.resetOSM();
 
-  // Set up feature cache for Cucumber v12 API
+  // Set up feature cache for Cucumber v12 API - manually initialize since setupFeatures was called with empty array
   // testCase.pickle.uri replaces scenario.uri from v1
-  const mockFeature = {
-    getUri: () => testCase.pickle.uri
-  };
+  const uri = testCase.pickle.uri;
+  
+  // Manually populate feature cache directories if not already done
+  if (!this.featureCacheDirectories[uri]) {
+    const hash = require('../lib/hash');
+    const path = require('path');
+    
+    // Simplified synchronous setup - just create a basic cache directory structure
+    let featurePath = path.relative(path.resolve('./features'), uri);
+    let featureID = featurePath.replace(/\//g, '_').replace(/\.feature$/, '');
+    let featureCacheDirectory = this.getFeatureCacheDirectory(featureID);
+    let featureProcessedCacheDirectory = this.getFeatureProcessedCacheDirectory(featureCacheDirectory, this.osrmHash);
+    
+    this.featureIDs[uri] = featureID;
+    this.featureCacheDirectories[uri] = featureCacheDirectory;
+    this.featureProcessedCacheDirectories[uri] = featureProcessedCacheDirectory;
+  }
+  
+  const mockFeature = { getUri: () => uri };
   this.setupFeatureCache(mockFeature);
 
   this.scenarioID = this.getScenarioID(testCase);
