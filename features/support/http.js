@@ -27,7 +27,7 @@ function httpRequest(url, callback) {
   req.end();
 }
 module.exports = function () {
-  this.paramsToString = (params) => {
+  this.paramsToString = function (params) {
     var paramString = '';
     if (params.coordinates !== undefined) {
       // FIXME this disables passing the output if its a default
@@ -45,7 +45,7 @@ module.exports = function () {
   };
 
   // FIXME this needs to be simplified!
-  this.sendRequest = (baseUri, parameters, callback) => {
+  this.sendRequest = function (baseUri, parameters, callback) {
 
     var limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
     var runRequest = (cb) => {

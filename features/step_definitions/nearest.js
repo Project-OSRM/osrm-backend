@@ -8,7 +8,7 @@ module.exports = function () {
   this.When(/^I request nearest I should get$/, (table, callback) => {
     this.reprocessAndLoadData((e) => {
       if (e) return callback(e);
-      var testRow = (row, ri, cb) => {
+      var testRow = function (row, ri, cb) {
 
         var inNode = this.findNodeByName(row.in);
         if (!inNode) throw new Error(util.format('*** unknown in-node "%s"', row.in));
@@ -65,7 +65,7 @@ module.exports = function () {
   this.When(/^I request nearest with flatbuffers I should get$/, (table, callback) => {
     this.reprocessAndLoadData((e) => {
       if (e) return callback(e);
-      var testRow = (row, ri, cb) => {
+      var testRow = function (row, ri, cb) {
         var inNode = this.findNodeByName(row.in);
         if (!inNode) throw new Error(util.format('*** unknown in-node "%s"', row.in));
 

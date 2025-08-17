@@ -12,8 +12,8 @@ module.exports = function () {
 
     this.reprocessAndLoadData((e) => {
       if (e) return callback(e);
-      var testRow = (row, ri, cb) => {
-        var afterRequest = (err, res, body) => {
+      var testRow = function (row, ri, cb) {
+        var afterRequest = function (err, res, body) {
           if (err) return cb(err);
           var headers = new Set(table.raw()[0]);
 

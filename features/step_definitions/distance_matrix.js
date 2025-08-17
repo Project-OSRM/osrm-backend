@@ -40,8 +40,8 @@ function tableCodeOnlyParse(table, annotation, format, callback) {
 
   this.reprocessAndLoadData((e) => {
     if (e) return callback(e);
-    var testRow = (row, ri, cb) => {
-      var afterRequest = (err, res, body) => {
+    var testRow = function (row, ri, cb) {
+      var afterRequest = function (err, res, body) {
         if (err) return cb(err);
 
         for (var k in row) {
@@ -179,7 +179,7 @@ function tableParse(table, noRoute, annotation, format, callback) {
         }
       }
 
-      var testRow = (row, ri, cb) => {
+      var testRow = function (row, ri, cb) {
         for (var k in result[ri]) {
           if (this.FuzzyMatch.match(result[ri][k], row[k])) {
             result[ri][k] = row[k];

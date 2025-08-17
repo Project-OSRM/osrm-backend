@@ -4,7 +4,7 @@
 const ensureDecimal = require('../lib/utils').ensureDecimal;
 
 module.exports = function () {
-  this.requestPath = (service, params, callback) => {
+  this.requestPath = function (service, params, callback) {
     var uri;
     if (service == 'timestamp') {
       uri = [this.HOST, service].join('/');
@@ -15,24 +15,24 @@ module.exports = function () {
     return this.sendRequest(uri, params, callback);
   };
 
-  this.requestUrl = (path, callback) => {
+  this.requestUrl = function (path, callback) {
     var uri = this.query = [this.HOST, path].join('/');
     this.sendRequest(uri, '', callback);
   };
 
   // Overwrites the default values in defaults
   // e.g. [[a, 1], [b, 2]], [[a, 5], [d, 10]] => [[a, 5], [b, 2], [d, 10]]
-  this.overwriteParams = (defaults, other) => {
+  this.overwriteParams = function (defaults, other) {
     var otherMap = {};
     for (var key in other) otherMap[key] = other[key];
     return Object.assign({}, defaults, otherMap);
   };
 
-  var encodeWaypoints = (waypoints) => {
+  var encodeWaypoints = function (waypoints) {
     return waypoints.map(w => [w.lon, w.lat].map(ensureDecimal).join(','));
   };
 
-  this.requestRoute = (waypoints, bearings, approaches, userParams, callback) => {
+  this.requestRoute = function (waypoints, bearings, approaches, userParams, callback) {
     if (bearings.length && bearings.length !== waypoints.length) throw new Error('*** number of bearings does not equal the number of waypoints');
     if (approaches.length && approaches.length !== waypoints.length) throw new Error('*** number of approaches does not equal the number of waypoints');
 
@@ -60,7 +60,7 @@ module.exports = function () {
     return this.requestPath('route', params, callback);
   };
 
-  this.requestNearest = (node, userParams, callback) => {
+  this.requestNearest = function (node, userParams, callback) {
     var defaults = {
         output: 'json'
       },
@@ -70,7 +70,7 @@ module.exports = function () {
     return this.requestPath('nearest', params, callback);
   };
 
-  this.requestTable = (waypoints, userParams, callback) => {
+  this.requestTable = function (waypoints, userParams, callback) {
     var defaults = {
         output: 'json'
       },
@@ -85,7 +85,7 @@ module.exports = function () {
     return this.requestPath('table', params, callback);
   };
 
-  this.requestTrip = (waypoints, userParams, callback) => {
+  this.requestTrip = function (waypoints, userParams, callback) {
     var defaults = {
         output: 'json',
         steps: 'true'
@@ -97,7 +97,7 @@ module.exports = function () {
     return this.requestPath('trip', params, callback);
   };
 
-  this.requestMatching = (waypoints, timestamps, userParams, callback) => {
+  this.requestMatching = function (waypoints, timestamps, userParams, callback) {
     var defaults = {
         output: 'json'
       },
@@ -112,7 +112,7 @@ module.exports = function () {
     return this.requestPath('match', params, callback);
   };
 
-  this.extractInstructionList = (instructions, keyFinder) => {
+  this.extractInstructionList = function (instructions, keyFinder) {
     if (instructions) {
       return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
         .map(keyFinder)
@@ -120,45 +120,45 @@ module.exports = function () {
     }
   };
 
-  this.summary = (instructions) => {
+  this.summary = function (instructions) {
     if (instructions) {
       return instructions.legs.map(l => l.summary).join(';');
     }
   };
 
-  this.wayList = (instructions) => {
+  this.wayList = function (instructions) {
     return this.extractInstructionList(instructions, s => s.name);
   };
 
-  this.refList = (instructions) => {
+  this.refList = function (instructions) {
     return this.extractInstructionList(instructions, s => s.ref || '');
   };
 
-  this.pronunciationList = (instructions) => {
+  this.pronunciationList = function (instructions) {
     return this.extractInstructionList(instructions, s => s.pronunciation || '');
   };
 
-  this.destinationsList = (instructions) => {
+  this.destinationsList = function (instructions) {
     return this.extractInstructionList(instructions, s => s.destinations || '');
   };
 
-  this.exitsList = (instructions) => {
+  this.exitsList = function (instructions) {
     return this.extractInstructionList(instructions, s => s.exits || '');
   };
 
-  this.reverseBearing = (bearing) => {
+  this.reverseBearing = function (bearing) {
     if (bearing >= 180)
       return bearing - 180.;
     return bearing + 180;
   };
 
-  this.bearingList = (instructions) => {
+  this.bearingList = function (instructions) {
     return this.extractInstructionList(instructions, s => ('in' in s.intersections[0] ? this.reverseBearing(s.intersections[0].bearings[s.intersections[0].in]) : 0)
                                                               + '->' +
                                                               ('out' in s.intersections[0] ? s.intersections[0].bearings[s.intersections[0].out] : 0));
   };
 
-  this.lanesList = (instructions) => {
+  this.lanesList = function (instructions) {
     return this.extractInstructionList(instructions, s => {
       return s.intersections.map( i => {
         if(i.lanes)
@@ -176,11 +176,11 @@ module.exports = function () {
     });
   };
 
-  this.approachList = (instructions) => {
+  this.approachList = function (instructions) {
     return this.extractInstructionList(instructions, s => s.approaches || '');
   };
 
-  this.annotationList = (instructions) => {
+  this.annotationList = function (instructions) {
     if (!('annotation' in instructions.legs[0]))
       return '';
 
@@ -209,12 +209,12 @@ module.exports = function () {
     return merged;
   };
 
-  this.alternativesList = (instructions) => {
+  this.alternativesList = function (instructions) {
     // alternatives_count come from tracepoints list
     return instructions.tracepoints.map(t => t.alternatives_count.toString()).join(',');
   };
 
-  this.turnList = (instructions) => {
+  this.turnList = function (instructions) {
     return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
       .map(v => {
         switch (v.maneuver.type) {
@@ -241,7 +241,7 @@ module.exports = function () {
       .join(',');
   };
 
-  this.locations = (instructions) => {
+  this.locations = function (instructions) {
     return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
       .map(v => {
         return this.findNodeByLocation(v.maneuver.location);
@@ -249,7 +249,7 @@ module.exports = function () {
       .join(',');
   };
 
-  this.intersectionList = (instructions) => {
+  this.intersectionList = function (instructions) {
     return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
       .map( v => {
         return v.intersections
@@ -262,31 +262,31 @@ module.exports = function () {
       }).join(';');
   };
 
-  this.modeList = (instructions) => {
+  this.modeList = function (instructions) {
     return this.extractInstructionList(instructions, s => s.mode);
   };
 
-  this.drivingSideList = (instructions) => {
+  this.drivingSideList = function (instructions) {
     return this.extractInstructionList(instructions, s => s.driving_side);
   };
 
-  this.classesList = (instructions) => {
+  this.classesList = function (instructions) {
     return this.extractInstructionList(instructions, s => '[' + s.intersections.map(i => '(' + (i.classes ? i.classes.join(',') : '') + ')').join(',') + ']');
   };
 
-  this.timeList = (instructions) => {
+  this.timeList = function (instructions) {
     return this.extractInstructionList(instructions, s => s.duration + 's');
   };
 
-  this.distanceList = (instructions) => {
+  this.distanceList = function (instructions) {
     return this.extractInstructionList(instructions, s => s.distance + 'm');
   };
 
-  this.weightName = (instructions) => {
+  this.weightName = function (instructions) {
     return instructions ? instructions.weight_name : '';
   };
 
-  this.weightList = (instructions) => {
+  this.weightList = function (instructions) {
     return this.extractInstructionList(instructions, s => s.weight);
   };
 };

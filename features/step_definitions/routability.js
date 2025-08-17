@@ -16,7 +16,7 @@ module.exports = function () {
 
       this.reprocessAndLoadData((e) => {
         if (e) return callback(e);
-        var testRow = (row, i, cb) => {
+        var testRow = function (row, i, cb) {
           var outputRow = Object.assign({}, row);
           // clear the fields that are tested for in the copied response object
           for (var field in outputRow) {
@@ -112,10 +112,10 @@ module.exports = function () {
   // result is an object containing the calculated values for 'rate', 'status',
   // 'time', 'distance', 'speed' and 'mode', for forwards and backwards routing, as well as
   // a bothw object that diffs forwards/backwards
-  var testRoutabilityRow = (i, cb) => {
+  var testRoutabilityRow = function (i, cb) {
     var result = {};
 
-    var testDirection = (dir, callback) => {
+    var testDirection = function (dir, callback) {
       const coordA = this.offsetOriginBy(1+this.WAY_SPACING*i, 0);
       const coordB = this.offsetOriginBy(3+this.WAY_SPACING*i, 0);
 
@@ -173,7 +173,7 @@ module.exports = function () {
 
         var sq = d3.queue();
 
-        var parseRes = (key, scb) => {
+        var parseRes = function (key, scb) {
           if (result.forw[key] === result.backw[key]) {
             result.bothw[key] = result.forw[key];
           } else {

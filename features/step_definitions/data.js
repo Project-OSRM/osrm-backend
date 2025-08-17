@@ -57,7 +57,7 @@ Given(
 Given(/^the shortcuts$/, function (table, callback) {
   let q = d3.queue();
 
-  let addShortcut = (row, cb) => {
+  let addShortcut = function (row, cb) {
     this.shortcutsHash[row.key] = row.value;
     cb();
   };
@@ -100,7 +100,7 @@ Given(/^the node map$/, function (docstring, callback) {
 Given(/^the node locations$/, function (table, callback) {
   let q = d3.queue();
 
-  let addNodeLocations = (row, cb) => {
+  let addNodeLocations = function (row, cb) {
     let name = row.node;
     if (this.findNodeByName(name))
       throw new Error(util.format('*** duplicate node %s', name));
@@ -123,7 +123,7 @@ Given(/^the node locations$/, function (table, callback) {
 Given(/^the nodes$/, function (table, callback) {
   let q = d3.queue();
 
-  let addNode = (row, cb) => {
+  let addNode = function (row, cb) {
     let name = row.node,
       node = this.findNodeByName(name);
     delete row.node;
@@ -216,7 +216,7 @@ Given(/^the relations$/, function (table, callback) {
 
   let q = d3.queue();
 
-  let addRelation = (headers, row, cb) => {
+  let addRelation = function (headers, row, cb) {
     let relation = new OSM.Relation(
       this.makeOSMId(),
       this.OSM_USER,

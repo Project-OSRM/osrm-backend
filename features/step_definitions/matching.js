@@ -10,8 +10,8 @@ module.exports = function () {
 
     this.reprocessAndLoadData((e) => {
       if (e) return callback(e);
-      var testRow = (row, ri, cb) => {
-        var afterRequest = (err, res, body) => {
+      var testRow = function (row, ri, cb) {
+        var afterRequest = function (err, res, body) {
           if (err) return cb(err);
           var json;
 
@@ -158,8 +158,8 @@ module.exports = function () {
             extendedTarget = '',
             resultWaypoints = [];
 
-          var testSubMatching = (sub, si) => {
-            var testSubNode = (ni) => {
+          var testSubMatching = function (sub, si) {
+            var testSubNode = function (ni) {
               var node = this.findNodeByName(sub[ni]),
                 outNode = subMatchings[si][ni];
 

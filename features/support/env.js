@@ -11,7 +11,7 @@ const tryConnect = require('../lib/try_connect');
 // Sets up all constants that are valid for all features
 module.exports = function () {
   // Initializes all environment constants and paths for test execution
-  this.initializeEnv = (callback) => {
+  this.initializeEnv = function (callback) {
     this.TIMEOUT =
       (process.env.CUCUMBER_TIMEOUT &&
         parseInt(process.env.CUCUMBER_TIMEOUT)) ||
@@ -149,11 +149,11 @@ module.exports = function () {
     });
   };
 
-  this.getProfilePath = (profile) => {
+  this.getProfilePath = function (profile) {
     return path.resolve(this.PROFILES_PATH, profile + '.lua');
   };
 
-  this.verifyOSRMIsNotRunning = (callback) => {
+  this.verifyOSRMIsNotRunning = function (callback) {
     tryConnect(this.OSRM_IP, this.OSRM_PORT, (err) => {
       if (!err)
         return callback(new Error('*** osrm-routed is already running.'));
@@ -161,8 +161,8 @@ module.exports = function () {
     });
   };
 
-  this.verifyExistenceOfBinaries = (callback) => {
-    var verify = (binPath, cb) => {
+  this.verifyExistenceOfBinaries = function (callback) {
+    var verify = function (binPath, cb) {
       fs.exists(binPath, (exists) => {
         if (!exists)
           return cb(

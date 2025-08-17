@@ -5,13 +5,13 @@ var util = require('util');
 var assert = require('assert');
 
 module.exports = function () {
-  this.ShouldGetAResponse = () => {
+  this.ShouldGetAResponse = function () {
     assert.equal(this.response.statusCode, 200);
     assert.ok(this.response.body);
     assert.ok(this.response.body.length);
   };
 
-  this.ShouldBeValidJSON = (callback) => {
+  this.ShouldBeValidJSON = function (callback) {
     try {
       this.json = JSON.parse(this.response.body);
       callback();
@@ -20,11 +20,11 @@ module.exports = function () {
     }
   };
 
-  this.ShouldBeWellFormed = () => {
+  this.ShouldBeWellFormed = function () {
     assert.equal(typeof this.json.status, 'number');
   };
 
-  this.WhenIRouteIShouldGet = (table, callback) => {
+  this.WhenIRouteIShouldGet = function (table, callback) {
     this.reprocessAndLoadData((e) => {
       if (e) return callback(e);
       var headers = new Set(table.raw()[0]);
@@ -189,7 +189,7 @@ module.exports = function () {
               }
             });
 
-            var putValue = (key, value) => {
+            var putValue = function (key, value) {
               if (headers.has(key)) got[key] = instructions ? value : '';
             };
 

@@ -8,7 +8,7 @@ const child_process = require('child_process');
 
 module.exports = function () {
   // replaces placeholders for in user supplied commands
-  this.expandOptions = (options) => {
+  this.expandOptions = function (options) {
     let opts = options.slice();
     let table = {
       '{osm_file}': this.inputCacheFile,
@@ -27,7 +27,7 @@ module.exports = function () {
     return opts;
   };
 
-  this.setupOutputLog = (process, log) => {
+  this.setupOutputLog = function (process, log) {
     if (process.logFunc) {
       process.stdout.removeListener('data', process.logFunc);
       process.stderr.removeListener('data', process.logFunc);
@@ -38,7 +38,7 @@ module.exports = function () {
     process.stderr.on('data', process.logFunc);
   };
 
-  this.runBin = (bin, options, env, callback) => {
+  this.runBin = function (bin, options, env, callback) {
     let cmd = path.resolve(util.format('%s/%s%s', this.BIN_PATH, bin, this.EXE));
     let opts = options.split(' ').filter((x) => { return x && x.length > 0; });
     let log = fs.createWriteStream(this.scenarioLogFile, {'flags': 'a'});
