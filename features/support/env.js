@@ -189,14 +189,4 @@ module.exports = function () {
     q.awaitAll(callback);
   };
 
-  process.on('exit', () => {
-    if (this.osrmLoader) {
-      this.osrmLoader.shutdown(() => {});
-    }
-  });
-
-  process.on('SIGINT', () => {
-    process.exit(2);
-    // TODO need to handle for windows??
-  });
 };
