@@ -12,9 +12,46 @@ const { BeforeAll, Before, After, AfterAll } = require('@cucumber/cucumber');
 
 console.log('=== hooks.js file loaded ===');
 
-// Global flag to ensure support functions are loaded only once
-// TODO: In the future, this should be done in a custom World constructor
+// Global flags for initialization
 let supportFunctionsLoaded = false;
+let globalInitialized = false;
+
+// Initialization function to set up scenario-specific state
+function setupCurrentScenario(testCase, callback) {
+  this.profile = this.OSRM_PROFILE || this.DEFAULT_PROFILE;
+  this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
+  this.osrmLoader.setLoadMethod(this.DEFAULT_LOAD_METHOD);
+  this.setGridSize(this.DEFAULT_GRID_SIZE);
+  this.setOrigin(this.DEFAULT_ORIGIN);
+  this.queryParams = {};
+  this.extractArgs = '';
+  this.contractArgs = '';
+  this.partitionArgs = '';
+  this.customizeArgs = '';
+  this.loaderArgs = '';
+  this.environment = Object.assign({}, this.DEFAULT_ENVIRONMENT);
+  this.resetOSM();
+
+  // Set up feature cache for Cucumber v12 API
+  // testCase.pickle.uri replaces scenario.uri from v1
+  const mockFeature = {
+    getUri: () => testCase.pickle.uri
+  };
+  this.setupFeatureCache(mockFeature);
+
+  this.scenarioID = this.getScenarioID(testCase);
+  this.setupScenarioCache(this.scenarioID);
+
+  // setup output logging
+  let logDir = path.join(this.LOGS_PATH, this.featureID || 'default');
+  this.scenarioLogFile = path.join(logDir, this.scenarioID) + '.log';
+  d3.queue(1)
+    .defer(createDir, logDir)
+    .defer((callback) =>
+      fs.rm(this.scenarioLogFile, { force: true }, callback)
+    )
+    .awaitAll(callback);
+}
 
 Before(function () {
   console.log('=== Before hook called for loading support functions ===');
@@ -32,10 +69,7 @@ Before(function () {
   }
 });
 
-// Note: BeforeAll doesn't have access to World context, so we'll move this to the first Before hook
-let globalInitialized = false;
-
-Before({ timeout: 30000 }, function (scenario, callback) {
+Before({ timeout: 30000 }, function (testCase, callback) {
   if (!globalInitialized) {
     this.osrmLoader = new OSRMLoader(this);
     this.OSMDB = new OSM.DB();
@@ -49,43 +83,11 @@ Before({ timeout: 30000 }, function (scenario, callback) {
     queue.awaitAll((err) => {
       if (err) return callback(err);
       globalInitialized = true;
-      this.setupCurrentScenario(scenario, callback);
+      setupCurrentScenario.call(this, testCase, callback);
     });
   } else {
-    this.setupCurrentScenario(scenario, callback);
+    setupCurrentScenario.call(this, testCase, callback);
   }
-});
-
-Before(function (scenario, callback) {
-  this.setupCurrentScenario = (scenario, callback) => {
-    this.profile = this.OSRM_PROFILE || this.DEFAULT_PROFILE;
-    this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
-    this.osrmLoader.setLoadMethod(this.DEFAULT_LOAD_METHOD);
-    this.setGridSize(this.DEFAULT_GRID_SIZE);
-    this.setOrigin(this.DEFAULT_ORIGIN);
-    this.queryParams = {};
-    this.extractArgs = '';
-    this.contractArgs = '';
-    this.partitionArgs = '';
-    this.customizeArgs = '';
-    this.loaderArgs = '';
-    this.environment = Object.assign({}, this.DEFAULT_ENVIRONMENT);
-    this.resetOSM();
-
-    this.scenarioID = this.getScenarioID(scenario);
-    this.setupScenarioCache(this.scenarioID);
-
-    // setup output logging
-    let logDir = path.join(this.LOGS_PATH, this.featureID || 'default');
-    this.scenarioLogFile = path.join(logDir, this.scenarioID) + '.log';
-    d3.queue(1)
-      .defer(createDir, logDir)
-      .defer((callback) =>
-        fs.rm(this.scenarioLogFile, { force: true }, callback)
-      )
-      .awaitAll(callback);
-  };
-  callback();
 });
 
 After(function (scenario, callback) {

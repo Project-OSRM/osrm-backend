@@ -8,6 +8,7 @@ const path = require('path');
 const hash = require('../lib/hash');
 const { rm } = require('fs/promises');
 const { createDir } = require('../lib/utils');
+const { formatterHelpers } = require('@cucumber/cucumber');
 
 module.exports = function () {
   // Initializes caching system with OSRM binary hash
@@ -146,11 +147,18 @@ module.exports = function () {
   };
 
   // converts the scenario titles in file prefixes
-  this.getScenarioID = (scenario) => {
-    let name = scenario.getName().toLowerCase().replace(/[/\-'=,():*#]/g, '')
+  // Cucumber v12 API: testCase parameter contains { gherkinDocument, pickle } 
+  // Use formatterHelpers.PickleParser.getPickleLocation() to get line numbers like scenario.getLine() in v1
+  this.getScenarioID = (testCaseParam) => {
+    const { gherkinDocument, pickle } = testCaseParam;
+    let name = pickle.name.toLowerCase().replace(/[/\-'=,():*#]/g, '')
       .replace(/\s/g, '_').replace(/__/g, '_').replace(/\.\./g, '.')
       .substring(0, 64);
-    return util.format('%d_%s', scenario.getLine(), name);
+    
+    // Get line number using Cucumber v12 API
+    const { line } = formatterHelpers.PickleParser.getPickleLocation({ gherkinDocument, pickle });
+    
+    return util.format('%d_%s', line, name);
   };
 
   // test/cache/{feature_path}/{feature_hash}/{scenario}_raster.asc
