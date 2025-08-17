@@ -13,7 +13,6 @@ const { BeforeAll, Before, After, AfterAll } = require('@cucumber/cucumber');
 console.log('=== hooks.js file loaded ===');
 
 // Global flags for initialization
-let supportFunctionsLoaded = false;
 let globalInitialized = false;
 let collectedFeatures = new Set(); // Collect unique features from testCases
 
@@ -49,21 +48,20 @@ function setupCurrentScenario(testCase, callback) {
     .awaitAll(callback);
 }
 
+// In Cucumber v12, each scenario gets a fresh World instance, so support functions 
+// must be attached to each new World instance
 Before(function () {
   console.log('=== Before hook called for loading support functions ===');
-  if (!supportFunctionsLoaded) {
-    console.log('=== Loading support functions onto World ===');
-    require('./env').call(this);
-    require('./cache').call(this);
-    require('./data').call(this);
-    require('./http').call(this);
-    require('./run').call(this);
-    require('./route').call(this);
-    require('./shared_steps').call(this);
-    require('./fuzzy').call(this);
-    require('../step_definitions/options').call(this);
-    supportFunctionsLoaded = true;
-  }
+  console.log('=== Loading support functions onto World ===');
+  require('./env').call(this);
+  require('./cache').call(this);
+  require('./data').call(this);
+  require('./http').call(this);
+  require('./run').call(this);
+  require('./route').call(this);
+  require('./shared_steps').call(this);
+  require('./fuzzy').call(this);
+  require('../step_definitions/options').call(this);
 });
 
 Before({ timeout: 30000 }, function (testCase, callback) {

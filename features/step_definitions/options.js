@@ -8,14 +8,14 @@ const { When, Then, Given } = require('@cucumber/cucumber');
 console.log('=== options.js step definitions file loaded ===');
 
 module.exports = function () {
-  this.resetOptionsOutput = () => {
+  this.resetOptionsOutput = function () {
     this.stdout = null;
     this.stderr = null;
     this.exitCode = null;
     this.termSignal = null;
   };
 
-  this.runAndSafeOutput = (binary, options, callback) => {
+  this.runAndSafeOutput = function (binary, options, callback) {
     return this.runBin(
       binary,
       this.expandOptions(options),
