@@ -1,12 +1,12 @@
 module.exports = {
   default: {
     strict: true,
-    tags: '~@stress and ~@todo and ~@mld',
+    tags: 'not @stress and not @todo and not @mld',
     require: ['features/support', 'features/step_definitions'],
   },
   ch: {
     strict: true,
-    tags: '~@stress and ~@todo and ~@mld',
+    tags: 'not @stress and not @todo and not @mld',
     format: ['progress'],
     require: ['features/support', 'features/step_definitions'],
   },
@@ -21,7 +21,6 @@ module.exports = {
   },
   mld: {
     strict: true,
-    tags: '~@stress and ~@todo and ~@ch',
     format: ['progress'],
     require: ['features/support', 'features/step_definitions'],
   },

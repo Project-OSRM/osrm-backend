@@ -1,7 +1,6 @@
 // Cucumber before/after hooks for test setup, teardown, and environment initialization
 'use strict';
 
-const { BeforeAll, Before, After, AfterAll, setWorldConstructor } = require('@cucumber/cucumber');
 var d3 = require('d3-queue');
 var path = require('path');
 var fs = require('fs');
@@ -9,26 +8,34 @@ var OSM = require('../lib/osm');
 var OSRMLoader = require('../lib/osrm_loader');
 const { createDir } = require('../lib/utils');
 
-// Define World constructor that loads all support functions
-function CustomWorld() {
-  // Load all support functions onto this context
-  require('./env').call(this);
-  require('./cache').call(this);
-  require('./data').call(this);
-  require('./http').call(this);
-  require('./run').call(this);
-  require('./route').call(this);
-  require('./shared_steps').call(this);
-  require('./fuzzy').call(this);
-}
+const { BeforeAll, Before, After, AfterAll } = require('@cucumber/cucumber');
 
-setWorldConstructor(CustomWorld);
+console.log('=== hooks.js file loaded ===');
 
-// Global initialization flag to ensure setup runs only once
+// Global flag to ensure support functions are loaded only once
+// TODO: In the future, this should be done in a custom World constructor
+let supportFunctionsLoaded = false;
+
+Before(function () {
+  console.log('=== Before hook called for loading support functions ===');
+  if (!supportFunctionsLoaded) {
+    console.log('=== Loading support functions onto World ===');
+    require('./env').call(this);
+    require('./cache').call(this);
+    require('./data').call(this);
+    require('./http').call(this);
+    require('./run').call(this);
+    require('./route').call(this);
+    require('./shared_steps').call(this);
+    require('./fuzzy').call(this);
+    supportFunctionsLoaded = true;
+  }
+});
+
+// Note: BeforeAll doesn't have access to World context, so we'll move this to the first Before hook
 let globalInitialized = false;
 
 Before({ timeout: 30000 }, function (scenario, callback) {
-  // Run global initialization once on first scenario
   if (!globalInitialized) {
     this.osrmLoader = new OSRMLoader(this);
     this.OSMDB = new OSM.DB();
@@ -38,12 +45,10 @@ Before({ timeout: 30000 }, function (scenario, callback) {
     queue.defer(this.verifyOSRMIsNotRunning.bind(this));
     queue.defer(this.verifyExistenceOfBinaries.bind(this));
     queue.defer(this.initializeCache.bind(this));
-    queue.defer(this.setupFeatures.bind(this, [])); // features parameter not available
+    queue.defer(this.setupFeatures.bind(this, [])); // features not available here
     queue.awaitAll((err) => {
       if (err) return callback(err);
       globalInitialized = true;
-      
-      // Now setup this scenario
       this.setupCurrentScenario(scenario, callback);
     });
   } else {
@@ -51,12 +56,10 @@ Before({ timeout: 30000 }, function (scenario, callback) {
   }
 });
 
-// Add method to setup individual scenarios
 Before(function (scenario, callback) {
   this.setupCurrentScenario = (scenario, callback) => {
     this.profile = this.OSRM_PROFILE || this.DEFAULT_PROFILE;
     this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
-    
     this.osrmLoader.setLoadMethod(this.DEFAULT_LOAD_METHOD);
     this.setGridSize(this.DEFAULT_GRID_SIZE);
     this.setOrigin(this.DEFAULT_ORIGIN);
@@ -77,7 +80,9 @@ Before(function (scenario, callback) {
     this.scenarioLogFile = path.join(logDir, this.scenarioID) + '.log';
     d3.queue(1)
       .defer(createDir, logDir)
-      .defer((callback) => fs.rm(this.scenarioLogFile, { force: true }, callback))
+      .defer((callback) =>
+        fs.rm(this.scenarioLogFile, { force: true }, callback)
+      )
       .awaitAll(callback);
   };
   callback();
