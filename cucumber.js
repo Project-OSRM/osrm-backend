@@ -21,6 +21,7 @@ module.exports = {
   },
   mld: {
     strict: true,
+    tags: 'not @stress and not @todo and not @ch',
     format: ['progress'],
     require: ['features/support', 'features/step_definitions'],
   },
