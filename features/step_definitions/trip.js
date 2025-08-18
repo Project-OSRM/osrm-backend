@@ -127,7 +127,7 @@ When(/^I plan a trip I should get$/, function (table, callback) {
         }
 
         cb(null, got);
-      };
+      }.bind(this);
 
       if (row.request) {
         got.request = row.request;
@@ -171,7 +171,7 @@ When(/^I plan a trip I should get$/, function (table, callback) {
           throw new Error('*** no waypoints');
         }
       }
-    };
+    }.bind(this);
 
     this.processRowsAndDiff(table, testRow, callback);
   });
