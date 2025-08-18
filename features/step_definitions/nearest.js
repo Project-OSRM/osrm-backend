@@ -5,9 +5,6 @@ var flatbuffers = require('../support/flatbuffers').flatbuffers;
 var FBResult = require('../support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
 const { When } = require('@cucumber/cucumber');
 
-module.exports = function () {
-};
-
 When(/^I request nearest I should get$/, function (table, callback) {
   this.reprocessAndLoadData((e) => {
     if (e) return callback(e);

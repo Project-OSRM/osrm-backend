@@ -7,9 +7,6 @@ function add(a, b) {
   return a + b;
 }
 
-module.exports = function () {
-};
-
 When(/^I plan a trip I should get$/, function (table, callback) {
   var got;
 

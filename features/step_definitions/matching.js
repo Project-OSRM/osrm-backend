@@ -5,8 +5,6 @@ var util = require('util');
 var polyline = require('@mapbox/polyline');
 const { When } = require('@cucumber/cucumber');
 
-module.exports = function () {};
-
 When(/^I match I should get$/, function (table, callback) {
   var got;
 

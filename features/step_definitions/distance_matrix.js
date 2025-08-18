@@ -18,9 +18,6 @@ const DISTANCES_NO_ROUTE = 3.40282e+38;    // MAX_FLOAT
 const FORMAT_JSON = 'json';
 const FORMAT_FB = 'flatbuffers';
 
-module.exports = function () {
-};
-
 When(durationsRegex, function(table, callback) {tableParse.call(this, table, DURATIONS_NO_ROUTE, 'durations', FORMAT_JSON, callback);});
 When(durationsCodeOnlyRegex, function(table, callback) {tableCodeOnlyParse.call(this, table, 'durations', FORMAT_JSON, callback);});
 When(distancesRegex, function(table, callback) {tableParse.call(this, table, DISTANCES_NO_ROUTE, 'distances', FORMAT_JSON, callback);});

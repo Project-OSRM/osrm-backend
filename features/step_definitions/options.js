@@ -5,31 +5,6 @@ const assert = require('assert');
 const fs = require('fs');
 const { When, Then, Given } = require('@cucumber/cucumber');
 
-
-module.exports = function () {
-  this.resetOptionsOutput = function () {
-    this.stdout = null;
-    this.stderr = null;
-    this.exitCode = null;
-    this.termSignal = null;
-  };
-
-  this.runAndSafeOutput = function (binary, options, callback) {
-    return this.runBin(
-      binary,
-      this.expandOptions(options),
-      this.environment,
-      (err, stdout, stderr) => {
-        this.stdout = stdout;
-        this.stderr = stderr;
-        this.exitCode = (err && err.code) || 0;
-        this.termSignal = (err && err.signal) || '';
-        callback(err);
-      }
-    );
-  };
-};
-
 // TODO: Use global timeout configuration instead of hardcoded value when setDefaultTimeout is implemented
 When(
   /^I run "osrm-routed\s?(.*?)"$/,

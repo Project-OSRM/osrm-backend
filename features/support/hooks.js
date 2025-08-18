@@ -56,7 +56,7 @@ Before(function () {
   require('./route').call(this);
   require('./shared_steps').call(this);
   require('./fuzzy').call(this);
-  require('../step_definitions/options').call(this);
+  require('./options').call(this);
 });
 
 Before({ timeout: 30000 }, function (testCase, callback) {

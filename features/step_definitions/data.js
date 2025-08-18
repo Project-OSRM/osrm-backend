@@ -62,7 +62,7 @@ Given(/^the shortcuts$/, function (table, callback) {
   };
 
   table.hashes().forEach((row) => {
-    q.defer(addShortcut, row);
+    q.defer(addShortcut.bind(this), row);
   });
 
   q.awaitAll(callback);
@@ -88,7 +88,7 @@ Given(/^the node map$/, function (docstring, callback) {
   docstring.split(/\n/).forEach((row, ri) => {
     row.split('').forEach((cell, ci) => {
       if (cell.match(/[a-z0-9]/)) {
-        q.defer(addNode, cell, ri, ci * 0.5);
+        q.defer(addNode.bind(this), cell, ri, ci * 0.5);
       }
     });
   });
@@ -114,7 +114,7 @@ Given(/^the node locations$/, function (table, callback) {
     cb();
   };
 
-  table.hashes().forEach((row) => q.defer(addNodeLocations, row));
+  table.hashes().forEach((row) => q.defer(addNodeLocations.bind(this), row));
 
   q.awaitAll(callback);
 });
@@ -137,7 +137,7 @@ Given(/^the nodes$/, function (table, callback) {
     cb();
   };
 
-  table.hashes().forEach((row) => q.defer(addNode, row));
+  table.hashes().forEach((row) => q.defer(addNode.bind(this), row));
 
   q.awaitAll(callback);
 });
@@ -201,7 +201,7 @@ Given(
       cb();
     };
 
-    table.hashes().forEach((row) => q.defer(addWay, row));
+    table.hashes().forEach((row) => q.defer(addWay.bind(this), row));
 
     q.awaitAll(callback);
   }
@@ -305,7 +305,7 @@ Given(/^the relations$/, function (table, callback) {
   };
 
   var headers = table.raw()[0];
-  table.rows().forEach((row) => q.defer(addRelation, headers, row));
+  table.rows().forEach((row) => q.defer(addRelation.bind(this), headers, row));
 
   q.awaitAll(callback);
 });
