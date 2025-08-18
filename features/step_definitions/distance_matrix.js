@@ -63,7 +63,7 @@ function tableCodeOnlyParse(table, annotation, format, callback) {
         }
 
         cb(null, got);
-      };
+      }.bind(this);
 
       var params = this.queryParams,
         waypoints = [];
@@ -80,7 +80,7 @@ function tableCodeOnlyParse(table, annotation, format, callback) {
       } else {
         throw new Error('*** no waypoints');
       }
-    };
+    }.bind(this);
 
     this.processRowsAndDiff(table, testRow, callback);
   });
