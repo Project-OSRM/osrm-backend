@@ -7,6 +7,10 @@ const fs = require('fs');
 const d3 = require('d3-queue');
 const child_process = require('child_process');
 const tryConnect = require('../lib/try_connect');
+const { setDefaultTimeout } = require('@cucumber/cucumber');
+
+// Set global timeout for all steps and hooks
+setDefaultTimeout((process.env.CUCUMBER_TIMEOUT && parseInt(process.env.CUCUMBER_TIMEOUT)) || 5000);
 
 // Sets up all constants that are valid for all features
 module.exports = function () {
@@ -16,8 +20,6 @@ module.exports = function () {
       (process.env.CUCUMBER_TIMEOUT &&
         parseInt(process.env.CUCUMBER_TIMEOUT)) ||
       5000;
-    // TODO: setDefaultTimeout must be called globally in Cucumber v12, not within support code
-    // this.setDefaultTimeout(this.TIMEOUT);
     this.ROOT_PATH = process.cwd();
 
     this.TEST_PATH = path.resolve(this.ROOT_PATH, 'test');

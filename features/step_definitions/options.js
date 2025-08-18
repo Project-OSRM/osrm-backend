@@ -5,10 +5,8 @@ const assert = require('assert');
 const fs = require('fs');
 const { When, Then, Given } = require('@cucumber/cucumber');
 
-// TODO: Use global timeout configuration instead of hardcoded value when setDefaultTimeout is implemented
 When(
   /^I run "osrm-routed\s?(.*?)"$/,
-  { timeout: 5000 },
   function (options, callback) {
     this.runAndSafeOutput('osrm-routed', options, callback);
   }
