@@ -3,28 +3,30 @@ var util = require('util');
 
 var flatbuffers = require('../support/flatbuffers').flatbuffers;
 var FBResult = require('../support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
+const { When } = require('@cucumber/cucumber');
+
+const durationsRegex = new RegExp(/^I request a travel time matrix I should get$/);
+const durationsCodeOnlyRegex = new RegExp(/^I request a travel time matrix with these waypoints I should get the response code$/);
+const distancesRegex = new RegExp(/^I request a travel distance matrix I should get$/);
+const estimatesRegex = new RegExp(/^I request a travel time matrix I should get estimates for$/);
+const durationsRegexFb = new RegExp(/^I request a travel time matrix with flatbuffers I should get$/);
+const distancesRegexFb = new RegExp(/^I request a travel distance matrix with flatbuffers I should get$/);
+
+const DURATIONS_NO_ROUTE = 2147483647;     // MAX_INT
+const DISTANCES_NO_ROUTE = 3.40282e+38;    // MAX_FLOAT
+
+const FORMAT_JSON = 'json';
+const FORMAT_FB = 'flatbuffers';
 
 module.exports = function () {
-  const durationsRegex = new RegExp(/^I request a travel time matrix I should get$/);
-  const durationsCodeOnlyRegex = new RegExp(/^I request a travel time matrix with these waypoints I should get the response code$/);
-  const distancesRegex = new RegExp(/^I request a travel distance matrix I should get$/);
-  const estimatesRegex = new RegExp(/^I request a travel time matrix I should get estimates for$/);
-  const durationsRegexFb = new RegExp(/^I request a travel time matrix with flatbuffers I should get$/);
-  const distancesRegexFb = new RegExp(/^I request a travel distance matrix with flatbuffers I should get$/);
-
-  const DURATIONS_NO_ROUTE = 2147483647;     // MAX_INT
-  const DISTANCES_NO_ROUTE = 3.40282e+38;    // MAX_FLOAT
-
-  const FORMAT_JSON = 'json';
-  const FORMAT_FB = 'flatbuffers';
-
-  this.When(durationsRegex, function(table, callback) {tableParse.call(this, table, DURATIONS_NO_ROUTE, 'durations', FORMAT_JSON, callback);}.bind(this));
-  this.When(durationsCodeOnlyRegex, function(table, callback) {tableCodeOnlyParse.call(this, table, 'durations', FORMAT_JSON, callback);}.bind(this));
-  this.When(distancesRegex, function(table, callback) {tableParse.call(this, table, DISTANCES_NO_ROUTE, 'distances', FORMAT_JSON, callback);}.bind(this));
-  this.When(estimatesRegex, function(table, callback) {tableParse.call(this, table, DISTANCES_NO_ROUTE, 'fallback_speed_cells', FORMAT_JSON, callback);}.bind(this));
-  this.When(durationsRegexFb, function(table, callback) {tableParse.call(this, table, DURATIONS_NO_ROUTE, 'durations', FORMAT_FB, callback);}.bind(this));
-  this.When(distancesRegexFb, function(table, callback) {tableParse.call(this, table, DISTANCES_NO_ROUTE, 'distances', FORMAT_FB, callback);}.bind(this));
 };
+
+When(durationsRegex, function(table, callback) {tableParse.call(this, table, DURATIONS_NO_ROUTE, 'durations', FORMAT_JSON, callback);});
+When(durationsCodeOnlyRegex, function(table, callback) {tableCodeOnlyParse.call(this, table, 'durations', FORMAT_JSON, callback);});
+When(distancesRegex, function(table, callback) {tableParse.call(this, table, DISTANCES_NO_ROUTE, 'distances', FORMAT_JSON, callback);});
+When(estimatesRegex, function(table, callback) {tableParse.call(this, table, DISTANCES_NO_ROUTE, 'fallback_speed_cells', FORMAT_JSON, callback);});
+When(durationsRegexFb, function(table, callback) {tableParse.call(this, table, DURATIONS_NO_ROUTE, 'durations', FORMAT_FB, callback);});
+When(distancesRegexFb, function(table, callback) {tableParse.call(this, table, DISTANCES_NO_ROUTE, 'distances', FORMAT_FB, callback);});
 
 const durationsParse = function(v) { return isNaN(parseInt(v)); };
 const distancesParse = function(v) { return isNaN(parseFloat(v)); };
