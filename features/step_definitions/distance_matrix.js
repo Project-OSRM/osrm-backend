@@ -191,7 +191,7 @@ function tableParse(table, noRoute, annotation, format, callback) {
 
         result[ri][''] = row[''];
         cb(null, result[ri]);
-      };
+      }.bind(this);
 
       this.processRowsAndDiff(table, testRow, callback);
     });
