@@ -10,7 +10,6 @@ const { createDir } = require('../lib/utils');
 
 const { BeforeAll, Before, After, AfterAll } = require('@cucumber/cucumber');
 
-
 // Global flags for initialization
 let collectedFeatures = new Set(); // Collect unique features from testCases
 
@@ -46,8 +45,8 @@ function setupCurrentScenario(testCase, callback) {
     .awaitAll(callback);
 }
 
-// In Cucumber v12, each scenario gets a fresh World instance, so support functions 
-// must be attached to each new World instance
+// In Cucumber v12, each scenario gets a fresh World instance,
+// so support functions must be attached to each new World instance
 Before(function () {
   require('./env').call(this);
   require('./cache').call(this);
