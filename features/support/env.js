@@ -36,7 +36,7 @@ module.exports = function () {
     this.DEFAULT_ENVIRONMENT = process.env;
     this.DEFAULT_PROFILE = 'bicycle';
     this.DEFAULT_INPUT_FORMAT = 'osm';
-    let loadMethod = process.argv[process.argv.indexOf('-m') + 1];
+    let loadMethod = process.env.OSRM_LOAD_METHOD || 'datastore';
     this.DEFAULT_LOAD_METHOD = loadMethod.match('mmap')
       ? 'mmap'
       : loadMethod.match('directly')
