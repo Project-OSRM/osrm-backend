@@ -24,7 +24,7 @@ Then(/^routability should be$/, function (table, callback) {
             outputRow[field] = '';
         }
 
-        testRoutabilityRow(i, (err, result) => {
+        testRoutabilityRow.call(this, i, (err, result) => {
           if (err) return cb(err);
           directions.filter(d => headers.has(d + '_rate')).forEach((direction) => {
             var rate = direction + '_rate';
@@ -102,7 +102,7 @@ Then(/^routability should be$/, function (table, callback) {
 
           cb(null, outputRow);
         });
-      };
+      }.bind(this);
       this.processRowsAndDiff(table, testRow, callback);
     });
   });
@@ -155,7 +155,7 @@ var testRoutabilityRow = function (i, cb) {
 
       callback(null, r);
     });
-  };
+  }.bind(this);
 
   d3.queue(1)
     .defer(testDirection, 'forw')
