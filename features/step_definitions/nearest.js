@@ -56,7 +56,7 @@ When(/^I request nearest I should get$/, function (table, callback) {
           cb();
         }
       });
-    };
+    }.bind(this);
 
     this.processRowsAndDiff(table, testRow, callback);
   });
@@ -106,7 +106,7 @@ When(/^I request nearest with flatbuffers I should get$/, function (table, callb
           cb();
         }
       });
-    };
+    }.bind(this);
 
     this.processRowsAndDiff(table, testRow, callback);
   });
