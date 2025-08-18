@@ -206,12 +206,12 @@ When(/^I match I should get$/, function (table, callback) {
               extendedTarget += util.format('%s [%d,%d]', node.lat, node.lon);
               ok = false;
             }
-          };
+          }.bind(this);
 
           for (var i = 0; i < sub.length; i++) {
             testSubNode(i);
           }
-        };
+        }.bind(this);
 
         if (headers.has('matchings')) {
           if (subMatchings.length != row.matchings.split(',').length) {
@@ -272,7 +272,7 @@ When(/^I match I should get$/, function (table, callback) {
         }
 
         cb(null, got);
-      };
+      }.bind(this);
 
       if (row.request) {
         got = {};
@@ -316,7 +316,7 @@ When(/^I match I should get$/, function (table, callback) {
           throw new Error('*** no trace');
         }
       }
-    };
+    }.bind(this);
 
     this.processRowsAndDiff(table, testRow, callback);
   });
