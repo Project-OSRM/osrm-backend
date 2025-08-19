@@ -1,30 +1,30 @@
 // Common step definitions shared across multiple feature test scenarios
-'use strict';
+import util from 'util';
+import assert from 'assert';
 
-var util = require('util');
-var assert = require('assert');
+export default class SharedSteps {
+  constructor() {}
 
-module.exports = function () {
-  this.ShouldGetAResponse = function () {
+  ShouldGetAResponse() {
     assert.equal(this.response.statusCode, 200);
     assert.ok(this.response.body);
     assert.ok(this.response.body.length);
-  };
+  }
 
-  this.ShouldBeValidJSON = function (callback) {
+  ShouldBeValidJSON(callback) {
     try {
       this.json = JSON.parse(this.response.body);
       callback();
     } catch (e) {
       callback(e);
     }
-  };
+  }
 
-  this.ShouldBeWellFormed = function () {
+  ShouldBeWellFormed() {
     assert.equal(typeof this.json.status, 'number');
-  };
+  }
 
-  this.WhenIRouteIShouldGet = function (table, callback) {
+  WhenIRouteIShouldGet(table, callback) {
     this.reprocessAndLoadData((e) => {
       if (e) return callback(e);
       var headers = new Set(table.raw()[0]);
@@ -285,5 +285,5 @@ module.exports = function () {
 
       this.processRowsAndDiff(table, requestRow, callback);
     });
-  };
+  }
 };

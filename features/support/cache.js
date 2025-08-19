@@ -1,28 +1,28 @@
 // Manages test data caching system with hashing for performance optimization
-'use strict';
+import d3 from 'd3-queue';
+import fs from 'fs';
+import util from 'util';
+import path from 'path';
+import * as hash from '../lib/hash.js';
+import { rm } from 'fs/promises';
+import { createDir } from '../lib/utils.js';
+import { formatterHelpers } from '@cucumber/cucumber';
 
-const d3 = require('d3-queue');
-const fs = require('fs');
-const util = require('util');
-const path = require('path');
-const hash = require('../lib/hash');
-const { rm } = require('fs/promises');
-const { createDir } = require('../lib/utils');
-const { formatterHelpers } = require('@cucumber/cucumber');
+export default class Cache {
+  constructor() {}
 
-module.exports = function () {
   // Initializes caching system with OSRM binary hash
-  this.initializeCache = function (callback) {
+  initializeCache(callback) {
     this.getOSRMHash((err, osrmHash) => {
       if (err) return callback(err);
       this.osrmHash = osrmHash;
       callback();
     });
-  };
+  }
 
   // computes all paths for every feature
   // Sets up cache directories and hashes for all test features
-  this.setupFeatures = function (features, callback) {
+  setupFeatures(features, callback) {
     this.featureIDs = {};
     this.featureCacheDirectories = {};
     this.featureProcessedCacheDirectories = {};
@@ -60,9 +60,9 @@ module.exports = function () {
       queue.defer(initializeFeature.bind(this), features[i]);
     }
     queue.awaitAll(callback);
-  };
+  }
 
-  this.cleanupProcessedFeatureCache = function (directory, osrmHash, callback) {
+  cleanupProcessedFeatureCache(directory, osrmHash, callback) {
     let parentPath = path.resolve(path.join(directory, '..'));
     fs.readdir(parentPath, (err, files) => {
       if (err) return callback(err);
@@ -78,9 +78,9 @@ module.exports = function () {
       });
       q.awaitAll(callback);
     });
-  };
+  }
 
-  this.cleanupFeatureCache = function (directory, featureHash, callback) {
+  cleanupFeatureCache(directory, featureHash, callback) {
     let parentPath = path.resolve(path.join(directory, '..'));
     fs.readdir(parentPath, (err, files) => {
       if (err) return callback(err);
@@ -90,16 +90,16 @@ module.exports = function () {
       });
       q.awaitAll(callback);
     });
-  };
+  }
 
-  this.setupFeatureCache = function (feature) {
+  setupFeatureCache(feature) {
     let uri = feature.getUri();
     this.featureID = this.featureIDs[uri];
     this.featureCacheDirectory = this.featureCacheDirectories[uri];
     this.featureProcessedCacheDirectory = this.featureProcessedCacheDirectories[uri];
-  };
+  }
 
-  this.setupScenarioCache = function (scenarioID) {
+  setupScenarioCache(scenarioID) {
     this.scenarioCacheFile = this.getScenarioCacheFile(this.featureCacheDirectory, scenarioID);
     this.processedCacheFile = this.getProcessedCacheFile(this.featureProcessedCacheDirectory, scenarioID);
     this.inputCacheFile = this.getInputCacheFile(this.featureProcessedCacheDirectory, scenarioID);
@@ -107,10 +107,10 @@ module.exports = function () {
     this.speedsCacheFile = this.getSpeedsCacheFile(this.featureProcessedCacheDirectory, scenarioID);
     this.penaltiesCacheFile = this.getPenaltiesCacheFile(this.featureProcessedCacheDirectory, scenarioID);
     this.profileCacheFile = this.getProfileCacheFile(this.featureProcessedCacheDirectory, scenarioID);
-  };
+  }
 
   // returns a hash of all OSRM code side dependencies
-  this.getOSRMHash = function (callback) {
+  getOSRMHash(callback) {
     let dependencies = [
       this.OSRM_EXTRACT_PATH,
       this.OSRM_CONTRACT_PATH,
@@ -139,17 +139,17 @@ module.exports = function () {
       .defer(addLuaFiles, this.PROFILES_PATH)
       .defer(addLuaFiles, this.PROFILES_PATH + '/lib')
       .awaitAll(hash.hashOfFiles.bind(hash, dependencies, callback));
-  };
+  }
 
   // test/cache/bicycle/bollards/{HASH}/
-  this.getFeatureCacheDirectory = function (featureID) {
+  getFeatureCacheDirectory(featureID) {
     return path.join(this.CACHE_PATH, featureID);
-  };
+  }
 
   // converts the scenario titles in file prefixes
   // Cucumber v12 API: testCase parameter contains { gherkinDocument, pickle } 
   // Use formatterHelpers.PickleParser.getPickleLocation() to get line numbers like scenario.getLine() in v1
-  this.getScenarioID = function (testCaseParam) {
+  getScenarioID(testCaseParam) {
     const { gherkinDocument, pickle } = testCaseParam;
     let name = pickle.name.toLowerCase().replace(/[/\-'=,():*#]/g, '')
       .replace(/\s/g, '_').replace(/__/g, '_').replace(/\.\./g, '.')
@@ -159,48 +159,45 @@ module.exports = function () {
     const { line } = formatterHelpers.PickleParser.getPickleLocation({ gherkinDocument, pickle });
     
     return util.format('%d_%s', line, name);
-  };
+  }
 
   // test/cache/{feature_path}/{feature_hash}/{scenario}_raster.asc
-  this.getRasterCacheFile = function (featureCacheDirectory, scenarioID) {
+  getRasterCacheFile(featureCacheDirectory, scenarioID) {
     return path.join(featureCacheDirectory, scenarioID) + '_raster.asc';
-  };
+  }
 
   // test/cache/{feature_path}/{feature_hash}/{scenario}_speeds.csv
-  this.getSpeedsCacheFile = function (featureCacheDirectory, scenarioID) {
+  getSpeedsCacheFile(featureCacheDirectory, scenarioID) {
     return path.join(featureCacheDirectory, scenarioID) + '_speeds.csv';
-  };
+  }
 
   // test/cache/{feature_path}/{feature_hash}/{scenario}_penalties.csv
-  this.getPenaltiesCacheFile = function (featureCacheDirectory, scenarioID) {
+  getPenaltiesCacheFile(featureCacheDirectory, scenarioID) {
     return path.join(featureCacheDirectory, scenarioID) + '_penalties.csv';
-  };
+  }
 
   // test/cache/{feature_path}/{feature_hash}/{scenario}_profile.lua
-  this.getProfileCacheFile = function (featureCacheDirectory, scenarioID) {
+  getProfileCacheFile(featureCacheDirectory, scenarioID) {
     return path.join(featureCacheDirectory, scenarioID) + '_profile.lua';
-  };
+  }
 
   // test/cache/{feature_path}/{feature_hash}/{scenario}.osm
-  this.getScenarioCacheFile = function (featureCacheDirectory, scenarioID) {
+  getScenarioCacheFile(featureCacheDirectory, scenarioID) {
     return path.join(featureCacheDirectory, scenarioID) + '.osm';
-  };
+  }
 
   // test/cache/{feature_path}/{feature_hash}/{osrm_hash}/
-  this.getFeatureProcessedCacheDirectory = function (featureCacheDirectory, osrmHash) {
+  getFeatureProcessedCacheDirectory(featureCacheDirectory, osrmHash) {
     return path.join(featureCacheDirectory, osrmHash);
-  };
+  }
 
   // test/cache/{feature_path}/{feature_hash}/{osrm_hash}/{scenario}.osrm
-  this.getProcessedCacheFile = function (featureProcessedCacheDirectory, scenarioID) {
+  getProcessedCacheFile(featureProcessedCacheDirectory, scenarioID) {
     return path.join(featureProcessedCacheDirectory, scenarioID) + '.osrm';
-  };
+  }
 
   // test/cache/{feature_path}/{feature_hash}/{osrm_hash}/{scenario}.osm
-  this.getInputCacheFile = function (featureProcessedCacheDirectory, scenarioID) {
+  getInputCacheFile(featureProcessedCacheDirectory, scenarioID) {
     return path.join(featureProcessedCacheDirectory, scenarioID) + '.osm';
-  };
-
-
-  return this;
-};
+  }
+}

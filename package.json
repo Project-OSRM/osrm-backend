@@ -2,6 +2,7 @@
   "name": "@project-osrm/osrm",
   "version": "6.0.0",
   "private": false,
+  "type": "module",
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++ designed to run on OpenStreetMap data.",
   "dependencies": {
     "@mapbox/node-pre-gyp": "2.0.0",
@@ -57,6 +58,7 @@
     "documentation": "^14.0.2",
     "eslint": "9.26.0",
     "faucet": "^0.0.4",
+    "flatbuffers": "24.3.25",
     "jsonpath": "^1.1.1",
     "node-addon-api": "8.3.1",
     "node-cmake": "^2.5.1",

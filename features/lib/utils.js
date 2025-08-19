@@ -1,8 +1,6 @@
 // General utility functions for timeouts, decimal formatting, and file operations
-'use strict';
-
-const util = require('util');
-const { mkdir } = require('fs/promises');
+import util from 'util';
+import { mkdir } from 'fs/promises';
 
 // Creates timeout wrapper that calls callback with error if operation exceeds time limit
 function Timeout(ms, options) {
@@ -32,20 +30,17 @@ function createDir(dir, callback) {
         .catch(err => callback(err));
 }
 
-module.exports = {
-
-    createDir,
-    // Ensures numeric values have decimal point for OSM XML compatibility
-    ensureDecimal: (i) => {
-        if (parseInt(i) === i) return i.toFixed(1);
-        else return i;
-    },
-
-    // Formats error information from child process exits
-    errorReason: (err) => {
-        return err.signal ?
-            'killed by signal ' + err.signal :
-            'exited with code ' + err.code;
-    },
-    Timeout
+// Ensures numeric values have decimal point for OSM XML compatibility
+const ensureDecimal = (i) => {
+    if (parseInt(i) === i) return i.toFixed(1);
+    else return i;
 };
+
+// Formats error information from child process exits
+const errorReason = (err) => {
+    return err.signal ?
+        'killed by signal ' + err.signal :
+        'exited with code ' + err.code;
+};
+
+export { createDir, ensureDecimal, errorReason, Timeout };

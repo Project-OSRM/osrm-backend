@@ -1,9 +1,7 @@
 // Data class definitions for test result validation and comparison
-'use strict';
+import util from 'util';
 
-const util = require('util');
-
-module.exports = {
+export default {
   Location: class {
     constructor (lon, lat) {
       this.lon = lon;

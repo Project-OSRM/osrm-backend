@@ -1,9 +1,8 @@
 // Step definitions for testing map matching API functionality
-'use strict';
 
-var util = require('util');
-var polyline = require('@mapbox/polyline');
-const { When } = require('@cucumber/cucumber');
+import util from 'util';
+import polyline from '@mapbox/polyline';
+import { When } from '@cucumber/cucumber';
 
 When(/^I match I should get$/, function (table, callback) {
   var got;

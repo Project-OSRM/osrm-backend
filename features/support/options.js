@@ -1,15 +1,15 @@
 // Support functions for OSRM binary options and output handling
-'use strict';
+export default class Options {
+  constructor() {}
 
-module.exports = function () {
-  this.resetOptionsOutput = function () {
+  resetOptionsOutput() {
     this.stdout = null;
     this.stderr = null;
     this.exitCode = null;
     this.termSignal = null;
-  };
+  }
 
-  this.runAndSafeOutput = function (binary, options, callback) {
+  runAndSafeOutput(binary, options, callback) {
     return this.runBin(
       binary,
       this.expandOptions(options),
@@ -22,5 +22,5 @@ module.exports = function () {
         callback(err);
       }
     );
-  };
-};
+  }
+}

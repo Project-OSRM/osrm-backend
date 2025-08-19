@@ -1,21 +1,21 @@
 // Sets up global environment constants and configuration for test execution
-'use strict';
-
-const path = require('path');
-const util = require('util');
-const fs = require('fs');
-const d3 = require('d3-queue');
-const child_process = require('child_process');
-const tryConnect = require('../lib/try_connect');
-const { setDefaultTimeout } = require('@cucumber/cucumber');
+import path from 'path';
+import util from 'util';
+import fs from 'fs';
+import d3 from 'd3-queue';
+import child_process from 'child_process';
+import tryConnect from '../lib/try_connect.js';
+import { setDefaultTimeout } from '@cucumber/cucumber';
 
 // Set global timeout for all steps and hooks
 setDefaultTimeout((process.env.CUCUMBER_TIMEOUT && parseInt(process.env.CUCUMBER_TIMEOUT)) || 5000);
 
 // Sets up all constants that are valid for all features
-module.exports = function () {
+export default class Env {
+  constructor() {}
+
   // Initializes all environment constants and paths for test execution
-  this.initializeEnv = function (callback) {
+  initializeEnv(callback) {
     this.TIMEOUT =
       (process.env.CUCUMBER_TIMEOUT &&
         parseInt(process.env.CUCUMBER_TIMEOUT)) ||
@@ -143,21 +143,21 @@ module.exports = function () {
       if (exists) return callback();
       else return callback(new Error('*** Test folder doesn\'t exist.'));
     });
-  };
+  }
 
-  this.getProfilePath = function (profile) {
+  getProfilePath(profile) {
     return path.resolve(this.PROFILES_PATH, profile + '.lua');
-  };
+  }
 
-  this.verifyOSRMIsNotRunning = function (callback) {
+  verifyOSRMIsNotRunning(callback) {
     tryConnect(this.OSRM_IP, this.OSRM_PORT, (err) => {
       if (!err)
         return callback(new Error('*** osrm-routed is already running.'));
       else callback();
     });
-  };
+  }
 
-  this.verifyExistenceOfBinaries = function (callback) {
+  verifyExistenceOfBinaries(callback) {
     var verify = function (binPath, cb) {
       fs.exists(binPath, (exists) => {
         if (!exists)
@@ -189,6 +189,5 @@ module.exports = function () {
       q.defer(verify, bin);
     });
     q.awaitAll(callback);
-  };
-
-};
+  }
+}

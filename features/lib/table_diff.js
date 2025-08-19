@@ -1,10 +1,8 @@
 // Table comparison utility for displaying colorized differences between expected and actual test results
-'use strict';
-
-var util = require('util');
-var path = require('path');
-var fs = require('fs');
-var chalk = require('chalk');
+import util from 'util';
+import path from 'path';
+import fs from 'fs';
+import chalk from 'chalk';
 
 var unescapeStr = (str) => str.replace(/\\\|/g, '\|').replace(/\\\\/g, '\\');
 
@@ -16,7 +14,7 @@ String.prototype.padRight = function(char, length) {
     return this + char.repeat(Math.max(0, length - this.length));
 }
 
-module.exports = function (expected, actual) {
+export default function (expected, actual) {
     let headers = expected.raw()[0];
     let expectedRows = expected.hashes();
     let tableError = false;
@@ -121,4 +119,4 @@ module.exports = function (expected, actual) {
         }
     });
     return lines.join('\n');
-};
+}

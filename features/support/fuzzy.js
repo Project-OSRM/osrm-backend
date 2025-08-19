@@ -1,6 +1,8 @@
 // Fuzzy matching utilities for approximate test result validation
-var classes = require('./data_classes');
+import classes from './data_classes.js';
 
-module.exports = function() {
-  this.FuzzyMatch = new classes.FuzzyMatch();
-};
+export default class Fuzzy {
+  constructor() {
+    this.FuzzyMatch = new classes.FuzzyMatch();
+  }
+}

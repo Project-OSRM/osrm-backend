@@ -1,9 +1,8 @@
 // Step definitions for testing OSRM binary options and command-line functionality
-'use strict';
 
-const assert = require('assert');
-const fs = require('fs');
-const { When, Then, Given } = require('@cucumber/cucumber');
+import assert from 'assert';
+import fs from 'fs';
+import { When, Then, Given } from '@cucumber/cucumber';
 
 When(
   /^I run "osrm-routed\s?(.*?)"$/,

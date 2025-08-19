@@ -1,11 +1,8 @@
 // OSRM binary process management and data loading strategies (datastore, mmap, direct)
-'use strict';
-
-const fs = require('fs');
-const util = require('util');
-const { Timeout } = require('./utils');
-const tryConnect = require('../lib/try_connect');
-const errorReason = require('./utils').errorReason;
+import fs from 'fs';
+import util from 'util';
+import { Timeout, errorReason } from './utils.js';
+import tryConnect from './try_connect.js';
 
 // Base class for managing OSRM routing server process lifecycle
 class OSRMBaseLoader{
@@ -232,4 +229,4 @@ class OSRMLoader {
     }
 };
 
-module.exports = OSRMLoader;
+export default OSRMLoader;

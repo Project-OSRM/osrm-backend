@@ -1,10 +1,8 @@
 // Cucumber before/after hooks for test setup, teardown, and environment initialization
-'use strict';
-
-const { BeforeAll, Before, After, AfterAll } = require('@cucumber/cucumber');
+import { BeforeAll, Before, After, AfterAll } from '@cucumber/cucumber';
 
 // Import the custom World constructor (registers itself via setWorldConstructor)
-require('./world');
+import './world.js';
 
 Before({ timeout: 30000 }, function (testCase, callback) {
   // Initialize the World instance for this test case

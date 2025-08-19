@@ -1,6 +1,6 @@
 // Step definitions for generic HTTP request testing and response validation
-var assert = require('assert');
-const { When, Then } = require('@cucumber/cucumber');
+import assert from 'assert';
+import { When, Then } from '@cucumber/cucumber';
 
 When(/^I request \/(.*)$/, function (path, callback) {
   this.reprocessAndLoadData((e) => {

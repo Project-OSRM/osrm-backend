@@ -1,7 +1,7 @@
 // Step definitions for testing trip planning and traveling salesman problem API
-var util = require('util');
-var polyline = require('@mapbox/polyline');
-const { When } = require('@cucumber/cucumber');
+import util from 'util';
+import polyline from '@mapbox/polyline';
+import { When } from '@cucumber/cucumber';
 
 function add(a, b) {
   return a + b;

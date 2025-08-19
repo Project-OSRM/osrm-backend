@@ -3213,5 +3213,14 @@ osrm.engine.api.fbresult.FBResult.createFBResult = function(builder, error, code
   return osrm.engine.api.fbresult.FBResult.endFBResult(builder);
 };
 
-// Exports for Node.js and RequireJS
-this.osrm = osrm;
+// Exports for Node.js, RequireJS, and ES modules
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { osrm };
+} else if (typeof this !== 'undefined') {
+  this.osrm = osrm;
+} else if (typeof globalThis !== 'undefined') {
+  globalThis.osrm = osrm;
+}
+
+// ES module export for compatibility
+export { osrm };

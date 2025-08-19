@@ -1,9 +1,10 @@
 // Step definitions for testing distance/duration matrix API endpoints
-var util = require('util');
+import util from 'util';
 
-var flatbuffers = require('../support/flatbuffers').flatbuffers;
-var FBResult = require('../support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
-const { When } = require('@cucumber/cucumber');
+import flatbuffers from 'flatbuffers';
+import { osrm } from '../support/fbresult_generated.js';
+const FBResult = osrm.engine.api.fbresult.FBResult;
+import { When } from '@cucumber/cucumber';
 
 const durationsRegex = new RegExp(/^I request a travel time matrix I should get$/);
 const durationsCodeOnlyRegex = new RegExp(/^I request a travel time matrix with these waypoints I should get the response code$/);

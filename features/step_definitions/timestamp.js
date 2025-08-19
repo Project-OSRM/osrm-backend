@@ -1,6 +1,6 @@
 // Step definitions for testing timestamp validation in API responses
-var assert = require('assert');
-const { Then } = require('@cucumber/cucumber');
+import assert from 'assert';
+import { Then } from '@cucumber/cucumber';
 
 Then(/^I should get a valid timestamp/, function (callback) {
   this.ShouldGetAResponse();

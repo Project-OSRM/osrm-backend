@@ -1,7 +1,7 @@
 // HTTP client utilities for making API requests to OSRM routing server
-const { Timeout } = require('../lib/utils');
-const http = require('http');
-const https = require('https');
+import { Timeout } from '../lib/utils.js';
+import http from 'http';
+import https from 'https';
 
 function httpRequest(url, callback) {
   const client = url.startsWith('https') ? https : http;
@@ -26,8 +26,11 @@ function httpRequest(url, callback) {
 
   req.end();
 }
-module.exports = function () {
-  this.paramsToString = function (params) {
+
+export default class Http {
+  constructor() {}
+
+  paramsToString(params) {
     var paramString = '';
     if (params.coordinates !== undefined) {
       // FIXME this disables passing the output if its a default
@@ -42,10 +45,10 @@ module.exports = function () {
     }
 
     return paramString;
-  };
+  }
 
   // FIXME this needs to be simplified!
-  this.sendRequest = function (baseUri, parameters, callback) {
+  sendRequest(baseUri, parameters, callback) {
 
     var limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
     var runRequest = (cb) => {
@@ -71,5 +74,5 @@ module.exports = function () {
       }
       return callback(err, res, body);
     }));
-  };
-};
+  }
+}

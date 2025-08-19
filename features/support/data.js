@@ -1,43 +1,42 @@
 // Core data manipulation utilities for building synthetic test scenarios and OSM data
-'use strict';
+import fs from 'fs';
+import util from 'util';
+import d3 from 'd3-queue';
 
-const fs = require('fs');
-const util = require('util');
-const d3 = require('d3-queue');
+import * as OSM from '../lib/osm.js';
+import classes from './data_classes.js';
+import tableDiff from '../lib/table_diff.js';
+import { ensureDecimal, errorReason } from '../lib/utils.js';
+import CheapRuler from 'cheap-ruler';
 
-const OSM = require('../lib/osm');
-const classes = require('./data_classes');
-const tableDiff = require('../lib/table_diff');
-const ensureDecimal = require('../lib/utils').ensureDecimal;
-const errorReason = require('../lib/utils').errorReason;
-const CheapRuler = require('cheap-ruler');
+export default class Data {
+  constructor() {}
 
-module.exports = function () {
   // Sets grid spacing in meters for coordinate calculations
-  this.setGridSize = function (meters) {
+  setGridSize(meters) {
     this.gridSize = parseFloat(meters);
 
     // the constant is calculated (with BigDecimal as: 1.0/(DEG_TO_RAD*EARTH_RADIUS_IN_METERS
     // see ApproximateDistance() in ExtractorStructs.h
     // it's only accurate when measuring along the equator, or going exactly north-south
     this.zoom = this.gridSize * 0.8990679362704610899694577444566908445396483347536032203503E-5;
-  };
+  }
 
   // Sets base coordinate for test scenario positioning
-  this.setOrigin = function (origin) {
+  setOrigin(origin) {
     this.origin = origin;
     // we use C++ version of `cheap-ruler` inside OSRM in order to do distance calculations,
     // so here we use it too to have a bit more precise assertions
     this.ruler = new CheapRuler(this.origin[1], 'meters');
-  };
+  }
 
   // Calculates coordinate offset by grid cells from origin
-  this.offsetOriginBy = function (xCells, yCells) {
+  offsetOriginBy(xCells, yCells) {
     return this.ruler.offset(this.origin, xCells * this.gridSize, yCells * this.gridSize);
-  };
+  }
 
   // Builds OSM ways from test table data with synthetic coordinates
-  this.buildWaysFromTable = function (table, callback) {
+  buildWaysFromTable(table, callback) {
     // add one unconnected way for each row
     var buildRow = function (row, ri, cb) {
       // comments ported directly from ruby suite:
@@ -112,28 +111,28 @@ module.exports = function () {
     });
 
     q.awaitAll(callback);
-  };
+  }
 
   // Converts table grid coordinates to longitude/latitude
-  this.tableCoordToLonLat = function (ci, ri) {
+  tableCoordToLonLat(ci, ri) {
     return this.offsetOriginBy(ci, -ri).map(ensureDecimal);
-  };
+  }
 
   // Adds named OSM node to test database
-  this.addOSMNode = function (name, lon, lat, id) {
+  addOSMNode(name, lon, lat, id) {
     id = id || this.makeOSMId();
     var node = new OSM.Node(id, this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID, lon, lat, {name: name});
     this.OSMDB.addNode(node);
     this.nameNodeHash[name] = node;
-  };
+  }
 
   // Adds named location for test coordinate references
-  this.addLocation = function (name, lon, lat) {
+  addLocation(name, lon, lat) {
     this.locationHash[name] = new classes.Location(lon, lat);
-  };
+  }
 
   // Finds OSM node or location by single character name
-  this.findNodeByName = function (s) {
+  findNodeByName(s) {
     if (s.length !== 1) throw new Error(util.format('*** invalid node name "%s", must be single characters', s));
     if (!s.match(/[a-z0-9]/)) throw new Error(util.format('*** invalid node name "%s", must be alphanumeric', s));
 
@@ -145,10 +144,10 @@ module.exports = function () {
     }
 
     return fromNode;
-  };
+  }
 
   // find a node based on an array containing lon/lat
-  this.findNodeByLocation = function (node_location) {
+  findNodeByLocation(node_location) {
     var searched_coordinate = new classes.Location(node_location[0],node_location[1]);
     for (var node in this.nameNodeHash)
     {
@@ -159,22 +158,22 @@ module.exports = function () {
       }
     }
     return '_';
-  };
+  }
 
-  this.findWayByName = function (s) {
+  findWayByName(s) {
     return this.nameWayHash[s.toString()] || this.nameWayHash[s.toString().split('').reverse().join('')];
-  };
+  }
 
-  this.findRelationByName = function (s) {
+  findRelationByName(s) {
     return this.nameRelationHash[s.toString()] || this.nameRelationHash[s.toString().split('').reverse().join('')];
-  };
+  }
 
-  this.makeOSMId = function () {
+  makeOSMId() {
     this.osmID = this.osmID + 1;
     return this.osmID;
-  };
+  }
 
-  this.resetOSM = function () {
+  resetOSM() {
     this.OSMDB.clear();
     this.nameNodeHash = {};
     this.locationHash = {};
@@ -182,9 +181,9 @@ module.exports = function () {
     this.nameWayHash = {};
     this.nameRelationHash = {};
     this.osmID = 0;
-  };
+  }
 
-  this.writeOSM = function (callback) {
+  writeOSM(callback) {
     fs.exists(this.scenarioCacheFile, (exists) => {
       if (exists) callback();
       else {
@@ -193,18 +192,18 @@ module.exports = function () {
         });
       }
     });
-  };
+  }
 
-  this.linkOSM = function (callback) {
+  linkOSM(callback) {
     fs.exists(this.inputCacheFile, (exists) => {
       if (exists) callback();
       else {
         fs.link(this.scenarioCacheFile, this.inputCacheFile, callback);
       }
     });
-  };
+  }
 
-  this.extractData = function (p, callback) {
+  extractData(p, callback) {
     let stamp = p.processedCacheFile + '.stamp_extract';
     fs.exists(stamp, (exists) => {
       if (exists) return callback();
@@ -216,9 +215,9 @@ module.exports = function () {
         fs.writeFile(stamp, 'ok', callback);
       });
     });
-  };
+  }
 
-  this.contractData = function (p, callback) {
+  contractData(p, callback) {
     let stamp = p.processedCacheFile + '.stamp_contract';
     fs.exists(stamp, (exists) => {
       if (exists) return callback();
@@ -230,9 +229,9 @@ module.exports = function () {
         fs.writeFile(stamp, 'ok', callback);
       });
     });
-  };
+  }
 
-  this.partitionData = function (p, callback) {
+  partitionData(p, callback) {
     let stamp = p.processedCacheFile + '.stamp_partition';
     fs.exists(stamp, (exists) => {
       if (exists) return callback();
@@ -244,9 +243,9 @@ module.exports = function () {
         fs.writeFile(stamp, 'ok', callback);
       });
     });
-  };
+  }
 
-  this.customizeData = function (p, callback) {
+  customizeData(p, callback) {
     let stamp = p.processedCacheFile + '.stamp_customize';
     fs.exists(stamp, (exists) => {
       if (exists) return callback();
@@ -258,9 +257,9 @@ module.exports = function () {
         fs.writeFile(stamp, 'ok', callback);
       });
     });
-  };
+  }
 
-  this.extractContractPartitionAndCustomize = function (callback) {
+  extractContractPartitionAndCustomize(callback) {
     // a shallow copy of scenario parameters to avoid data inconsistency
     // if a cucumber timeout occurs during deferred jobs
     let p = {extractArgs: this.extractArgs, contractArgs: this.contractArgs,
@@ -273,32 +272,32 @@ module.exports = function () {
     queue.defer(this.contractData.bind(this), p);
     queue.defer(this.customizeData.bind(this), p);
     queue.awaitAll(callback);
-  };
+  }
 
-  this.writeAndLinkOSM = function (callback) {
+  writeAndLinkOSM(callback) {
     let queue = d3.queue(1);
     queue.defer(this.writeOSM.bind(this));
     queue.defer(this.linkOSM.bind(this));
     queue.awaitAll(callback);
-  };
+  }
 
-  this.reprocess = function (callback) {
+  reprocess(callback) {
     let queue = d3.queue(1);
     queue.defer(this.writeAndLinkOSM.bind(this));
     queue.defer(this.extractContractPartitionAndCustomize.bind(this));
     queue.awaitAll(callback);
-  };
+  }
 
-  this.reprocessAndLoadData = function (callback) {
+  reprocessAndLoadData(callback) {
     let p = {loaderArgs: this.loaderArgs, inputFile: this.processedCacheFile};
     let queue = d3.queue(1);
     queue.defer(this.writeAndLinkOSM.bind(this));
     queue.defer(this.extractContractPartitionAndCustomize.bind(this));
     queue.defer(this.osrmLoader.load.bind(this.osrmLoader), p);
     queue.awaitAll(callback);
-  };
+  }
 
-  this.processRowsAndDiff = function (table, fn, callback) {
+  processRowsAndDiff(table, fn, callback) {
     var q = d3.queue(1);
 
     table.hashes().forEach((row, i) => { q.defer(fn, row, i); });
@@ -309,5 +308,5 @@ module.exports = function () {
       if (diff) callback(diff);
       else callback();
     });
-  };
-};
+  }
+}

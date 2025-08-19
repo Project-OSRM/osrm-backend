@@ -1,12 +1,10 @@
 // Step definitions for setting up test data, profiles, and OSM scenarios
-'use strict';
-
-var util = require('util');
-var path = require('path');
-var fs = require('fs');
-var d3 = require('d3-queue');
-var OSM = require('../lib/osm');
-const { Given } = require('@cucumber/cucumber');
+import util from 'util';
+import path from 'path';
+import fs from 'fs';
+import d3 from 'd3-queue';
+import * as OSM from '../lib/osm.js';
+import { Given } from '@cucumber/cucumber';
 
 
 Given(/^the profile "([^"]*)"$/, function (profile, callback) {

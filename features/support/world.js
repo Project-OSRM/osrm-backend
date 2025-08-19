@@ -1,28 +1,85 @@
 // Custom World constructor for OSRM test environment
-'use strict';
+import d3 from 'd3-queue';
+import path from 'path';
+import fs from 'fs';
+import * as OSM from '../lib/osm.js';
+import OSRMLoader from '../lib/osrm_loader.js';
+import { createDir } from '../lib/utils.js';
+import { setWorldConstructor } from '@cucumber/cucumber';
 
-var d3 = require('d3-queue');
-var path = require('path');
-var fs = require('fs');
-var OSM = require('../lib/osm');
-var OSRMLoader = require('../lib/osrm_loader');
-const { createDir } = require('../lib/utils');
-const { setWorldConstructor } = require('@cucumber/cucumber');
+import Env from './env.js';
+import Cache from './cache.js';
+import Data from './data.js';
+import Http from './http.js';
+import Route from './route.js';
+import Run from './run.js';
+import Options from './options.js';
+import Fuzzy from './fuzzy.js';
+import SharedSteps from './shared_steps.js';
 
 // Global flags for initialization
 let collectedFeatures = new Set(); // Collect unique features from testCases
 
 function OSRMWorld(options) {
-  // Attach all support functions to the World instance
-  require('./env').call(this);
-  require('./cache').call(this);
-  require('./data').call(this);
-  require('./http').call(this);
-  require('./run').call(this);
-  require('./route').call(this);
-  require('./shared_steps').call(this);
-  require('./fuzzy').call(this);
-  require('./options').call(this);
+  // Attach all support functions to the World instance using mixin pattern
+  const env = new Env();
+  const cache = new Cache();
+  const data = new Data();
+  const http = new Http();
+  const route = new Route();
+  const run = new Run();
+  const sharedSteps = new SharedSteps();
+  const fuzzy = new Fuzzy();
+  const optionsClass = new Options();
+
+  // Bind methods to this context
+  Object.getOwnPropertyNames(Object.getPrototypeOf(env)).forEach(name => {
+    if (name !== 'constructor' && typeof env[name] === 'function') {
+      this[name] = env[name].bind(this);
+    }
+  });
+  Object.getOwnPropertyNames(Object.getPrototypeOf(cache)).forEach(name => {
+    if (name !== 'constructor' && typeof cache[name] === 'function') {
+      this[name] = cache[name].bind(this);
+    }
+  });
+  Object.getOwnPropertyNames(Object.getPrototypeOf(data)).forEach(name => {
+    if (name !== 'constructor' && typeof data[name] === 'function') {
+      this[name] = data[name].bind(this);
+    }
+  });
+  Object.getOwnPropertyNames(Object.getPrototypeOf(http)).forEach(name => {
+    if (name !== 'constructor' && typeof http[name] === 'function') {
+      this[name] = http[name].bind(this);
+    }
+  });
+  Object.getOwnPropertyNames(Object.getPrototypeOf(route)).forEach(name => {
+    if (name !== 'constructor' && typeof route[name] === 'function') {
+      this[name] = route[name].bind(this);
+    }
+  });
+  Object.getOwnPropertyNames(Object.getPrototypeOf(run)).forEach(name => {
+    if (name !== 'constructor' && typeof run[name] === 'function') {
+      this[name] = run[name].bind(this);
+    }
+  });
+  Object.getOwnPropertyNames(Object.getPrototypeOf(sharedSteps)).forEach(name => {
+    if (name !== 'constructor' && typeof sharedSteps[name] === 'function') {
+      this[name] = sharedSteps[name].bind(this);
+    }
+  });
+  Object.getOwnPropertyNames(Object.getPrototypeOf(fuzzy)).forEach(name => {
+    if (name !== 'constructor' && typeof fuzzy[name] === 'function') {
+      this[name] = fuzzy[name].bind(this);
+    }
+  });
+  // Copy properties from instances
+  Object.assign(this, fuzzy);
+  Object.getOwnPropertyNames(Object.getPrototypeOf(optionsClass)).forEach(name => {
+    if (name !== 'constructor' && typeof optionsClass[name] === 'function') {
+      this[name] = optionsClass[name].bind(this);
+    }
+  });
 
   // Initialize core objects
   this.osrmLoader = new OSRMLoader(this);
@@ -100,5 +157,3 @@ function OSRMWorld(options) {
 
 // Register the custom World constructor
 setWorldConstructor(OSRMWorld);
-
-module.exports = OSRMWorld;

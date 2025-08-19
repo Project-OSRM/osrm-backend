@@ -1,14 +1,14 @@
 // Process execution utilities for running OSRM binaries and managing subprocesses
-'use strict';
+import path from 'path';
+import fs from 'fs';
+import util from 'util';
+import child_process from 'child_process';
 
-const path = require('path');
-const fs = require('fs');
-const util = require('util');
-const child_process = require('child_process');
+export default class Run {
+  constructor() {}
 
-module.exports = function () {
   // replaces placeholders for in user supplied commands
-  this.expandOptions = function (options) {
+  expandOptions(options) {
     let opts = options.slice();
     let table = {
       '{osm_file}': this.inputCacheFile,
@@ -25,9 +25,9 @@ module.exports = function () {
     }
 
     return opts;
-  };
+  }
 
-  this.setupOutputLog = function (process, log) {
+  setupOutputLog(process, log) {
     if (process.logFunc) {
       process.stdout.removeListener('data', process.logFunc);
       process.stderr.removeListener('data', process.logFunc);
@@ -36,9 +36,9 @@ module.exports = function () {
     process.logFunc = (message) => { log.write(message); };
     process.stdout.on('data', process.logFunc);
     process.stderr.on('data', process.logFunc);
-  };
+  }
 
-  this.runBin = function (bin, options, env, callback) {
+  runBin(bin, options, env, callback) {
     let cmd = path.resolve(util.format('%s/%s%s', this.BIN_PATH, bin, this.EXE));
     let opts = options.split(' ').filter((x) => { return x && x.length > 0; });
     let log = fs.createWriteStream(this.scenarioLogFile, {'flags': 'a'});
@@ -55,5 +55,5 @@ module.exports = function () {
     }.bind(this));
     this.setupOutputLog(child, log);
     return child;
-  };
-};
+  }
+}

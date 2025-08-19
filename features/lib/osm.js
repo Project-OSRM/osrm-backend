@@ -1,8 +1,6 @@
 // OpenStreetMap data structures and XML generation utilities for synthetic test data
-'use strict';
-
-const builder = require('xmlbuilder');
-const ensureDecimal = require('./utils').ensureDecimal;
+import builder from 'xmlbuilder';
+import { ensureDecimal } from './utils.js';
 
 // OpenStreetMap database for storing nodes, ways, and relations
 class DB {
@@ -169,9 +167,4 @@ class Relation {
     }
 }
 
-module.exports = {
-    DB: DB,
-    Node: Node,
-    Way: Way,
-    Relation: Relation
-};
+export { DB, Node, Way, Relation };

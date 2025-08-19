@@ -1,9 +1,10 @@
 // Step definitions for testing nearest point snapping API
-var util = require('util');
+import util from 'util';
 
-var flatbuffers = require('../support/flatbuffers').flatbuffers;
-var FBResult = require('../support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
-const { When } = require('@cucumber/cucumber');
+import flatbuffers from 'flatbuffers';
+import { osrm } from '../support/fbresult_generated.js';
+const FBResult = osrm.engine.api.fbresult.FBResult;
+import { When } from '@cucumber/cucumber';
 
 When(/^I request nearest I should get$/, function (table, callback) {
   this.reprocessAndLoadData((e) => {
