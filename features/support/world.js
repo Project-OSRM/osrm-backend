@@ -22,19 +22,36 @@ let collectedFeatures = new Set(); // Collect unique features from testCases
 
 class OSRMWorld extends World {
   // Private instances of support classes for clean composition
-  #env = new Env();
-  #cache = new Cache();
-  #data = new Data();
-  #http = new Http();
-  #route = new Route();
-  #run = new Run();
-  #sharedSteps = new SharedSteps();
-  #fuzzy = new Fuzzy();
-  #options = new Options();
+  #env;
+  #cache;
+  #data;
+  #http;
+  #route;
+  #run;
+  #sharedSteps;
+  #fuzzy;
+  #options;
 
   constructor(options) {
     // Get built-in Cucumber helpers: this.attach, this.log, this.parameters
     super(options);
+
+    // Initialize Env constants directly in constructor first
+    this.#initializeEnvConstants();
+
+    // Initialize service instances with access to world
+    this.#env = new Env();
+    this.#cache = new Cache();
+    this.#data = new Data();
+    this.#http = new Http();
+    this.#route = new Route();
+    this.#run = new Run();
+    this.#sharedSteps = new SharedSteps();
+    this.#fuzzy = new Fuzzy();
+    this.#options = new Options();
+
+    // Copy methods from services to world for compatibility
+    this.#copyMethodsFromServices();
 
     // Initialize core objects
     this.osrmLoader = new OSRMLoader(this);
@@ -42,36 +59,75 @@ class OSRMWorld extends World {
 
     // Copy properties that need direct access
     this.FuzzyMatch = this.#fuzzy.FuzzyMatch;
+  }
 
-    // Copy all methods and properties from support classes (cleaner than complex delegation)
-    this.#copyMethodsFromClass(this.#env);
-    this.#copyMethodsFromClass(this.#cache); 
-    this.#copyMethodsFromClass(this.#data);
-    this.#copyMethodsFromClass(this.#http);
-    this.#copyMethodsFromClass(this.#route);
-    this.#copyMethodsFromClass(this.#run);
-    this.#copyMethodsFromClass(this.#sharedSteps);
-    this.#copyMethodsFromClass(this.#options);
+  // Copy methods from service classes (temporary compatibility layer)
+  #copyMethodsFromServices() {
+    [
+      this.#env,
+      this.#cache,
+      this.#data,
+      this.#http,
+      this.#route,
+      this.#run,
+      this.#sharedSteps,
+      this.#options,
+    ].forEach((service) => {
+      Object.getOwnPropertyNames(Object.getPrototypeOf(service)).forEach(
+        (name) => {
+          if (name !== 'constructor' && typeof service[name] === 'function') {
+            this[name] = service[name].bind(this);
+          }
+        }
+      );
+    });
+  }
 
-    // Initialize Env constants
-    this.TIMEOUT = (process.env.CUCUMBER_TIMEOUT && parseInt(process.env.CUCUMBER_TIMEOUT)) || 5000;
+  // Initialize environment constants (extracted from Env class)
+  #initializeEnvConstants() {
+    this.TIMEOUT =
+      (process.env.CUCUMBER_TIMEOUT &&
+        parseInt(process.env.CUCUMBER_TIMEOUT)) ||
+      5000;
     this.ROOT_PATH = process.cwd();
     this.TEST_PATH = path.resolve(this.ROOT_PATH, 'test');
     this.CACHE_PATH = path.resolve(this.TEST_PATH, 'cache');
     this.LOGS_PATH = path.resolve(this.TEST_PATH, 'logs');
     this.PROFILES_PATH = path.resolve(this.ROOT_PATH, 'profiles');
     this.FIXTURES_PATH = path.resolve(this.ROOT_PATH, 'unit_tests/fixtures');
-    this.BIN_PATH = (process.env.OSRM_BUILD_DIR && process.env.OSRM_BUILD_DIR) || path.resolve(this.ROOT_PATH, 'build');
+    this.BIN_PATH =
+      (process.env.OSRM_BUILD_DIR && process.env.OSRM_BUILD_DIR) ||
+      path.resolve(this.ROOT_PATH, 'build');
     this.DATASET_NAME = 'cucumber';
   }
 
-  // Private helper to copy methods from support classes
-  #copyMethodsFromClass(instance) {
-    Object.getOwnPropertyNames(Object.getPrototypeOf(instance)).forEach(name => {
-      if (name !== 'constructor' && typeof instance[name] === 'function') {
-        this[name] = instance[name].bind(this);
-      }
-    });
+  // Clean getter access to services
+  get env() {
+    return this.#env;
+  }
+  get cache() {
+    return this.#cache;
+  }
+  get data() {
+    return this.#data;
+  }
+  get http() {
+    return this.#http;
+  }
+  get route() {
+    return this.#route;
+  }
+  get run() {
+    return this.#run;
+  }
+  get sharedSteps() {
+    return this.#sharedSteps;
+  }
+  get fuzzy() {
+    return this.#fuzzy;
+  }
+  get options() {
+    return this.#options;
   }
 
   // Initialize the world for a specific test case
@@ -142,7 +198,6 @@ class OSRMWorld extends World {
       callback();
     }
   }
-
 }
 
 // Register the custom World constructor
