@@ -1,11 +1,11 @@
-// Custom World constructor for OSRM test environment
+// Custom World class for OSRM test environment using modern Cucumber.js v13 patterns
 import d3 from 'd3-queue';
 import path from 'path';
 import fs from 'fs';
 import * as OSM from '../lib/osm.js';
 import OSRMLoader from '../lib/osrm_loader.js';
 import { createDir } from '../lib/utils.js';
-import { setWorldConstructor } from '@cucumber/cucumber';
+import { World, setWorldConstructor } from '@cucumber/cucumber';
 
 import Env from './env.js';
 import Cache from './cache.js';
@@ -20,74 +20,63 @@ import SharedSteps from './shared_steps.js';
 // Global flags for initialization
 let collectedFeatures = new Set(); // Collect unique features from testCases
 
-function OSRMWorld(options) {
-  // Attach all support functions to the World instance using mixin pattern
-  const env = new Env();
-  const cache = new Cache();
-  const data = new Data();
-  const http = new Http();
-  const route = new Route();
-  const run = new Run();
-  const sharedSteps = new SharedSteps();
-  const fuzzy = new Fuzzy();
-  const optionsClass = new Options();
+class OSRMWorld extends World {
+  // Private instances of support classes for clean composition
+  #env = new Env();
+  #cache = new Cache();
+  #data = new Data();
+  #http = new Http();
+  #route = new Route();
+  #run = new Run();
+  #sharedSteps = new SharedSteps();
+  #fuzzy = new Fuzzy();
+  #options = new Options();
 
-  // Bind methods to this context
-  Object.getOwnPropertyNames(Object.getPrototypeOf(env)).forEach(name => {
-    if (name !== 'constructor' && typeof env[name] === 'function') {
-      this[name] = env[name].bind(this);
-    }
-  });
-  Object.getOwnPropertyNames(Object.getPrototypeOf(cache)).forEach(name => {
-    if (name !== 'constructor' && typeof cache[name] === 'function') {
-      this[name] = cache[name].bind(this);
-    }
-  });
-  Object.getOwnPropertyNames(Object.getPrototypeOf(data)).forEach(name => {
-    if (name !== 'constructor' && typeof data[name] === 'function') {
-      this[name] = data[name].bind(this);
-    }
-  });
-  Object.getOwnPropertyNames(Object.getPrototypeOf(http)).forEach(name => {
-    if (name !== 'constructor' && typeof http[name] === 'function') {
-      this[name] = http[name].bind(this);
-    }
-  });
-  Object.getOwnPropertyNames(Object.getPrototypeOf(route)).forEach(name => {
-    if (name !== 'constructor' && typeof route[name] === 'function') {
-      this[name] = route[name].bind(this);
-    }
-  });
-  Object.getOwnPropertyNames(Object.getPrototypeOf(run)).forEach(name => {
-    if (name !== 'constructor' && typeof run[name] === 'function') {
-      this[name] = run[name].bind(this);
-    }
-  });
-  Object.getOwnPropertyNames(Object.getPrototypeOf(sharedSteps)).forEach(name => {
-    if (name !== 'constructor' && typeof sharedSteps[name] === 'function') {
-      this[name] = sharedSteps[name].bind(this);
-    }
-  });
-  Object.getOwnPropertyNames(Object.getPrototypeOf(fuzzy)).forEach(name => {
-    if (name !== 'constructor' && typeof fuzzy[name] === 'function') {
-      this[name] = fuzzy[name].bind(this);
-    }
-  });
-  // Copy properties from instances
-  Object.assign(this, fuzzy);
-  Object.getOwnPropertyNames(Object.getPrototypeOf(optionsClass)).forEach(name => {
-    if (name !== 'constructor' && typeof optionsClass[name] === 'function') {
-      this[name] = optionsClass[name].bind(this);
-    }
-  });
+  constructor(options) {
+    // Get built-in Cucumber helpers: this.attach, this.log, this.parameters
+    super(options);
 
-  // Initialize core objects
-  this.osrmLoader = new OSRMLoader(this);
-  this.OSMDB = new OSM.DB();
+    // Initialize core objects
+    this.osrmLoader = new OSRMLoader(this);
+    this.OSMDB = new OSM.DB();
+
+    // Copy properties that need direct access
+    this.FuzzyMatch = this.#fuzzy.FuzzyMatch;
+
+    // Copy all methods and properties from support classes (cleaner than complex delegation)
+    this.#copyMethodsFromClass(this.#env);
+    this.#copyMethodsFromClass(this.#cache); 
+    this.#copyMethodsFromClass(this.#data);
+    this.#copyMethodsFromClass(this.#http);
+    this.#copyMethodsFromClass(this.#route);
+    this.#copyMethodsFromClass(this.#run);
+    this.#copyMethodsFromClass(this.#sharedSteps);
+    this.#copyMethodsFromClass(this.#options);
+
+    // Initialize Env constants
+    this.TIMEOUT = (process.env.CUCUMBER_TIMEOUT && parseInt(process.env.CUCUMBER_TIMEOUT)) || 5000;
+    this.ROOT_PATH = process.cwd();
+    this.TEST_PATH = path.resolve(this.ROOT_PATH, 'test');
+    this.CACHE_PATH = path.resolve(this.TEST_PATH, 'cache');
+    this.LOGS_PATH = path.resolve(this.TEST_PATH, 'logs');
+    this.PROFILES_PATH = path.resolve(this.ROOT_PATH, 'profiles');
+    this.FIXTURES_PATH = path.resolve(this.ROOT_PATH, 'unit_tests/fixtures');
+    this.BIN_PATH = (process.env.OSRM_BUILD_DIR && process.env.OSRM_BUILD_DIR) || path.resolve(this.ROOT_PATH, 'build');
+    this.DATASET_NAME = 'cucumber';
+  }
+
+  // Private helper to copy methods from support classes
+  #copyMethodsFromClass(instance) {
+    Object.getOwnPropertyNames(Object.getPrototypeOf(instance)).forEach(name => {
+      if (name !== 'constructor' && typeof instance[name] === 'function') {
+        this[name] = instance[name].bind(this);
+      }
+    });
+  }
 
   // Initialize the world for a specific test case
   // This method is called from Before hook since constructors can't be async
-  this.init = function (testCase, callback) {
+  init(testCase, callback) {
     // Collect features from testCases
     collectedFeatures.add(testCase.pickle.uri);
 
@@ -107,9 +96,9 @@ function OSRMWorld(options) {
       if (err) return callback(err);
       this.setupCurrentScenario(testCase, callback);
     });
-  };
+  }
 
-  this.setupCurrentScenario = function (testCase, callback) {
+  setupCurrentScenario(testCase, callback) {
     this.profile = this.OSRM_PROFILE || this.DEFAULT_PROFILE;
     this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
     this.osrmLoader.setLoadMethod(this.DEFAULT_LOAD_METHOD);
@@ -140,10 +129,10 @@ function OSRMWorld(options) {
         fs.rm(this.scenarioLogFile, { force: true }, callback)
       )
       .awaitAll(callback);
-  };
+  }
 
   // Cleanup method called from After hook
-  this.cleanup = function (callback) {
+  cleanup(callback) {
     this.resetOptionsOutput();
     if (this.osrmLoader) {
       this.osrmLoader.shutdown(() => {
@@ -152,7 +141,8 @@ function OSRMWorld(options) {
     } else {
       callback();
     }
-  };
+  }
+
 }
 
 // Register the custom World constructor
