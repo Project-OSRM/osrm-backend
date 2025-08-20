@@ -5,7 +5,9 @@ import util from 'util';
 import child_process from 'child_process';
 
 export default class Run {
-  constructor() {}
+  constructor(world) {
+    this.world = world;
+  }
 
   // replaces placeholders for in user supplied commands
   expandOptions(options) {

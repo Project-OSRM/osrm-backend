@@ -2,7 +2,9 @@
 import { ensureDecimal } from '../lib/utils.js';
 
 export default class Route {
-  constructor() {}
+  constructor(world) {
+    this.world = world;
+  }
 
   requestPath(service, params, callback) {
     var uri;

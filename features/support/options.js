@@ -1,6 +1,8 @@
 // Support functions for OSRM binary options and output handling
 export default class Options {
-  constructor() {}
+  constructor(world) {
+    this.world = world;
+  }
 
   resetOptionsOutput() {
     this.stdout = null;

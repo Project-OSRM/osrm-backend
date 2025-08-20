@@ -3,7 +3,9 @@ import util from 'util';
 import assert from 'assert';
 
 export default class SharedSteps {
-  constructor() {}
+  constructor(world) {
+    this.world = world;
+  }
 
   ShouldGetAResponse() {
     assert.equal(this.response.statusCode, 200);

@@ -10,7 +10,9 @@ import { ensureDecimal, errorReason } from '../lib/utils.js';
 import CheapRuler from 'cheap-ruler';
 
 export default class Data {
-  constructor() {}
+  constructor(world) {
+    this.world = world;
+  }
 
   // Sets grid spacing in meters for coordinate calculations
   setGridSize(meters) {

@@ -12,7 +12,9 @@ setDefaultTimeout((process.env.CUCUMBER_TIMEOUT && parseInt(process.env.CUCUMBER
 
 // Sets up all constants that are valid for all features
 export default class Env {
-  constructor() {}
+  constructor(world) {
+    this.world = world;
+  }
 
   // Initializes all environment constants and paths for test execution
   initializeEnv(callback) {

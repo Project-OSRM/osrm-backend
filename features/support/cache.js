@@ -9,7 +9,9 @@ import { createDir } from '../lib/utils.js';
 import { formatterHelpers } from '@cucumber/cucumber';
 
 export default class Cache {
-  constructor() {}
+  constructor(world) {
+    this.world = world;
+  }
 
   // Initializes caching system with OSRM binary hash
   initializeCache(callback) {

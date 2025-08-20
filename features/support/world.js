@@ -40,15 +40,15 @@ class OSRMWorld extends World {
     this.#initializeEnvConstants();
 
     // Initialize service instances with access to world
-    this.#env = new Env();
-    this.#cache = new Cache();
-    this.#data = new Data();
-    this.#http = new Http();
-    this.#route = new Route();
-    this.#run = new Run();
-    this.#sharedSteps = new SharedSteps();
-    this.#fuzzy = new Fuzzy();
-    this.#options = new Options();
+    this.#env = new Env(this);
+    this.#cache = new Cache(this);
+    this.#data = new Data(this);
+    this.#http = new Http(this);
+    this.#route = new Route(this);
+    this.#run = new Run(this);
+    this.#sharedSteps = new SharedSteps(this);
+    this.#fuzzy = new Fuzzy(this);
+    this.#options = new Options(this);
 
     // Copy methods from services to world for compatibility
     this.#copyMethodsFromServices();

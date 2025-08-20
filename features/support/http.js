@@ -28,7 +28,9 @@ function httpRequest(url, callback) {
 }
 
 export default class Http {
-  constructor() {}
+  constructor(world) {
+    this.world = world;
+  }
 
   paramsToString(params) {
     var paramString = '';

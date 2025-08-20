@@ -2,7 +2,8 @@
 import classes from './data_classes.js';
 
 export default class Fuzzy {
-  constructor() {
+  constructor(world) {
+    this.world = world;
     this.FuzzyMatch = new classes.FuzzyMatch();
   }
 }
