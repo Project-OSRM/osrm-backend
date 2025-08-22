@@ -43,13 +43,13 @@ class ExtractorCallbacks
     using MapVal = unsigned;
     using StringMap = std::unordered_map<MapKey, MapVal>;
     StringMap string_map;
-    ExtractionContainers &external_memory;
     std::unordered_map<std::string, ClassData> &classes_map;
     LaneDescriptionMap &lane_description_map;
     bool fallback_to_duration;
     bool force_split_edges;
 
   public:
+    ExtractionContainers &external_memory;
     using ClassesMap = std::unordered_map<std::string, ClassData>;
 
     explicit ExtractorCallbacks(ExtractionContainers &extraction_containers,

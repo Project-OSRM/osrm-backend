@@ -1,6 +1,23 @@
 # Unreleased
+  - Changes from 6.0.0
+    - Misc:
+      - FIXED: Minor misspellings found in source code, comments and documents [#7215](https://github.com/Project-OSRM/osrm-backend/pull/7215)
+
+# 6.0.0
+  - Changes from 6.0.0 RC2: None
+
+# 6.0.0 RC2
+  - Changes from 6.0.0 RC1
+    - Build:
+      - CHANGED: Updated Conan to v2.15.0 [#7148](https://github.com/Project-OSRM/osrm-backend/pull/7148)
+      - CHANGED: Back to installing header files and lib [#7140](https://github.com/Project-OSRM/osrm-backend/pull/7140)
+    - Misc:
+      - CHANGED: Updated documentation library [#6677](https://github.com/Project-OSRM/osrm-backend/pull/6677)
+
+# 6.0.0 RC1
   - Changes from 5.27.1
     - Features
+      - ADDED: Add generic support for obstacles [#7130](https://github.com/Project-OSRM/osrm-backend/pull/7130)
       - ADDED: Route pedestrians over highway=platform [#6993](https://github.com/Project-OSRM/osrm-backend/pull/6993)
       - REMOVED: Remove all core-CH left-overs [#6920](https://github.com/Project-OSRM/osrm-backend/pull/6920)
       - ADDED: Add support for a keepalive_timeout flag. [#6674](https://github.com/Project-OSRM/osrm-backend/pull/6674)

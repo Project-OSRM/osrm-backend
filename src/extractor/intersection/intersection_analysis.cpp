@@ -434,7 +434,7 @@ bool isTurnRestricted(RestrictionsRange restrictions, const NodeID to)
 bool isTurnAllowed(const util::NodeBasedDynamicGraph &graph,
                    const EdgeBasedNodeDataContainer &node_data_container,
                    const RestrictionMap &restriction_map,
-                   const std::unordered_set<NodeID> &barrier_nodes,
+                   const ObstacleMap &obstacle_nodes,
                    const IntersectionEdgeGeometries &geometries,
                    const TurnLanesIndexedArray &turn_lanes_data,
                    const IntersectionEdge &from,
@@ -506,14 +506,18 @@ bool isTurnAllowed(const util::NodeBasedDynamicGraph &graph,
         }
     }
 
-    // 3) if the intersection has a barrier
-    const bool is_barrier_node = barrier_nodes.find(intersection_node) != barrier_nodes.end();
+    // 3) if the intersection has an obstacle or is a designated turning place
+
+    bool is_barrier_node =
+        obstacle_nodes.any(SPECIAL_NODEID, intersection_node, Obstacle::Type::Barrier);
+    bool is_turning_node =
+        obstacle_nodes.any(SPECIAL_NODEID, intersection_node, Obstacle::Type::Turning);
 
     // Check a U-turn
     if (from.node == destination_node)
     {
-        // Allow U-turns before barrier nodes
-        if (is_barrier_node)
+        // Allow U-turns before barrier nodes or at designated turning places
+        if (is_barrier_node || is_turning_node)
             return true;
 
         // Allow U-turns at dead-ends
@@ -597,7 +601,7 @@ bool isTurnAllowed(const util::NodeBasedDynamicGraph &graph,
 IntersectionView convertToIntersectionView(const util::NodeBasedDynamicGraph &graph,
                                            const EdgeBasedNodeDataContainer &node_data_container,
                                            const RestrictionMap &restriction_map,
-                                           const std::unordered_set<NodeID> &barrier_nodes,
+                                           const ObstacleMap &obstacle_nodes,
                                            const IntersectionEdgeGeometries &edge_geometries,
                                            const TurnLanesIndexedArray &turn_lanes_data,
                                            const IntersectionEdge &incoming_edge,
@@ -625,7 +629,7 @@ IntersectionView convertToIntersectionView(const util::NodeBasedDynamicGraph &gr
         const auto is_turn_allowed = intersection::isTurnAllowed(graph,
                                                                  node_data_container,
                                                                  restriction_map,
-                                                                 barrier_nodes,
+                                                                 obstacle_nodes,
                                                                  edge_geometries,
                                                                  turn_lanes_data,
                                                                  incoming_edge,
@@ -748,7 +752,7 @@ IntersectionView getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
                                    const std::vector<util::Coordinate> &node_coordinates,
                                    const extractor::CompressedEdgeContainer &compressed_geometries,
                                    const RestrictionMap &node_restriction_map,
-                                   const std::unordered_set<NodeID> &barrier_nodes,
+                                   const ObstacleMap &obstacle_nodes,
                                    const TurnLanesIndexedArray &turn_lanes_data,
                                    const IntersectionEdge &incoming_edge)
 {
@@ -760,7 +764,7 @@ IntersectionView getConnectedRoads(const util::NodeBasedDynamicGraph &graph,
     return getConnectedRoadsForEdgeGeometries(graph,
                                               node_data_container,
                                               node_restriction_map,
-                                              barrier_nodes,
+                                              obstacle_nodes,
                                               turn_lanes_data,
                                               incoming_edge,
                                               edge_geometries,
@@ -771,7 +775,7 @@ IntersectionView
 getConnectedRoadsForEdgeGeometries(const util::NodeBasedDynamicGraph &graph,
                                    const EdgeBasedNodeDataContainer &node_data_container,
                                    const RestrictionMap &node_restriction_map,
-                                   const std::unordered_set<NodeID> &barrier_nodes,
+                                   const ObstacleMap &obstacle_nodes,
                                    const TurnLanesIndexedArray &turn_lanes_data,
                                    const IntersectionEdge &incoming_edge,
                                    const IntersectionEdgeGeometries &edge_geometries,
@@ -802,7 +806,7 @@ getConnectedRoadsForEdgeGeometries(const util::NodeBasedDynamicGraph &graph,
     return convertToIntersectionView(graph,
                                      node_data_container,
                                      node_restriction_map,
-                                     barrier_nodes,
+                                     obstacle_nodes,
                                      processed_edge_geometries,
                                      turn_lanes_data,
                                      incoming_edge,
@@ -816,7 +820,7 @@ getConnectedRoads<false>(const util::NodeBasedDynamicGraph &graph,
                          const std::vector<util::Coordinate> &node_coordinates,
                          const extractor::CompressedEdgeContainer &compressed_geometries,
                          const RestrictionMap &node_restriction_map,
-                         const std::unordered_set<NodeID> &barrier_nodes,
+                         const ObstacleMap &obstacle_nodes,
                          const TurnLanesIndexedArray &turn_lanes_data,
                          const IntersectionEdge &incoming_edge);
 
@@ -826,7 +830,7 @@ getConnectedRoads<true>(const util::NodeBasedDynamicGraph &graph,
                         const std::vector<util::Coordinate> &node_coordinates,
                         const extractor::CompressedEdgeContainer &compressed_geometries,
                         const RestrictionMap &node_restriction_map,
-                        const std::unordered_set<NodeID> &barrier_nodes,
+                        const ObstacleMap &obstacle_nodes,
                         const TurnLanesIndexedArray &turn_lanes_data,
                         const IntersectionEdge &incoming_edge);
 

@@ -32,7 +32,7 @@ class IntersectionHandler
                         const std::vector<util::Coordinate> &node_coordinates,
                         const extractor::CompressedEdgeContainer &compressed_geometries,
                         const extractor::RestrictionMap &node_restriction_map,
-                        const std::unordered_set<NodeID> &barrier_nodes,
+                        const extractor::ObstacleMap &obstacle_nodes,
                         const extractor::TurnLanesIndexedArray &turn_lanes_data,
                         const extractor::NameTable &name_table,
                         const extractor::SuffixTable &street_name_suffix_table);
@@ -53,7 +53,7 @@ class IntersectionHandler
     const std::vector<util::Coordinate> &node_coordinates;
     const extractor::CompressedEdgeContainer &compressed_geometries;
     const extractor::RestrictionMap &node_restriction_map;
-    const std::unordered_set<NodeID> &barrier_nodes;
+    const extractor::ObstacleMap &obstacle_nodes;
     const extractor::TurnLanesIndexedArray &turn_lanes_data;
     const extractor::NameTable &name_table;
     const extractor::SuffixTable &street_name_suffix_table;
@@ -114,8 +114,8 @@ class IntersectionHandler
         NodeID node;                                            // < node at this intersection
     };
 
-    // Skips over artificial intersections i.e. traffic lights, barriers etc.
-    // Returns the next non-artificial intersection and its node in the node based
+    // Skips over a string of edges that could not be compressed because of obstacles.
+    // Returns the next intersection and its node in the node based
     // graph if an intersection could be found or none otherwise.
     //
     //  a ... tl ... b .. c
@@ -514,7 +514,7 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             !via_edge_data.flags.road_classification.IsLowPriorityRoadClass())
             return true;
 
-        // and we cannot yloose it (roads loosing their name will be handled after this check
+        // and we cannot lose it (roads losing their name will be handled after this check
         // here)
         auto const &road_data = node_based_graph.GetEdgeData(road.eid);
         const auto &road_annotation = node_data_container.GetAnnotation(road_data.annotation_data);
