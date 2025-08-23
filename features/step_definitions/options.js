@@ -50,10 +50,12 @@ Then(/^it should exit with an error$/, function () {
 
 Then(/^stdout should( not)? contain "(.*?)"$/, function (not, str) {
   const contains = this.stdout.indexOf(str) > -1;
+  const isNegative = not != null; // Check for both null and undefined
+  
   assert.ok(
-    typeof not === 'undefined' ? contains : !contains,
+    isNegative ? !contains : contains,
     'stdout ' +
-      (typeof not === 'undefined' ? 'does not contain' : 'contains') +
+      (isNegative ? 'contains' : 'does not contain') +
       ' "' +
       str +
       '"'
@@ -62,10 +64,12 @@ Then(/^stdout should( not)? contain "(.*?)"$/, function (not, str) {
 
 Then(/^stderr should( not)? contain "(.*?)"$/, function (not, str) {
   const contains = this.stderr.indexOf(str) > -1;
+  const isNegative = not != null; // Check for both null and undefined
+  
   assert.ok(
-    typeof not === 'undefined' ? contains : !contains,
+    isNegative ? !contains : contains,
     'stderr ' +
-      (typeof not === 'undefined' ? 'does not contain' : 'contains') +
+      (isNegative ? 'contains' : 'does not contain') +
       ' "' +
       str +
       '"'

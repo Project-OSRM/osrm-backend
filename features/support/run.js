@@ -45,17 +45,25 @@ export default class Run {
     let opts = options.split(' ').filter((x) => { return x && x.length > 0; });
     let log = fs.createWriteStream(this.scenarioLogFile, {'flags': 'a'});
     log.write(util.format('*** running %s %s\n', cmd, options));
+    
     // we need to set a large maxbuffer here because we have long running processes like osrm-routed
     // with lots of log output
-    let child = child_process.execFile(cmd, opts, {maxBuffer: 1024 * 1024 * 1000, env: env}, callback);
+    let child = child_process.execFile(cmd, opts, {maxBuffer: 1024 * 1024 * 1000, env: env}, (err, stdout, stderr) => {
+      // Log the captured output
+      log.write(util.format('*** stdout: %s\n', stdout));
+      log.write(util.format('*** stderr: %s\n', stderr));
+      log.end();
+      
+      // Pass the captured output to the callback
+      callback(err, stdout, stderr);
+    });
+    
     child.on('exit', function(code) {
       log.write(util.format('*** %s exited with code %d\n', bin, code));
-      // remove listeners and close log file -> some tail messages can be lost
-      child.stdout.removeListener('data', child.logFunc);
-      child.stderr.removeListener('data', child.logFunc);
-      log.end();
     });
-    this.setupOutputLog(child, log);
+    
+    // Don't setup output logging as it interferes with execFile's output capture
+    // this.setupOutputLog(child, log);
     return child;
   }
 }
