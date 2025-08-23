@@ -4,7 +4,7 @@ var data_path = require('./constants.cjs').data_path;
 var mld_data_path = require('./constants.cjs').mld_data_path;
 var three_test_coordinates = require('./constants.cjs').three_test_coordinates;
 var two_test_coordinates = require('./constants.cjs').two_test_coordinates;
-const flatbuffers = require('../../features/support/flatbuffers').flatbuffers;
+const flatbuffers = require('../../features/support/flatbuffers.cjs').flatbuffers;
 const FBResult = require('../../features/support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
 
 test('table: flatbuffer format', function(assert) {
