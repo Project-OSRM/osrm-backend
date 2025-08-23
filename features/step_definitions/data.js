@@ -54,13 +54,13 @@ Given(
 Given(/^the shortcuts$/, function (table, callback) {
   let q = d3.queue();
 
-  let addShortcut = function (row, cb) {
+  let addShortcut = (row, cb) => {
     this.shortcutsHash[row.key] = row.value;
     cb();
   };
 
   table.hashes().forEach((row) => {
-    q.defer(addShortcut.bind(this), row);
+    q.defer(addShortcut, row);
   });
 
   q.awaitAll(callback);
@@ -86,7 +86,7 @@ Given(/^the node map$/, function (docstring, callback) {
   docstring.split(/\n/).forEach((row, ri) => {
     row.split('').forEach((cell, ci) => {
       if (cell.match(/[a-z0-9]/)) {
-        q.defer(addNode.bind(this), cell, ri, ci * 0.5);
+        q.defer(addNode, cell, ri, ci * 0.5);
       }
     });
   });
@@ -97,7 +97,7 @@ Given(/^the node map$/, function (docstring, callback) {
 Given(/^the node locations$/, function (table, callback) {
   let q = d3.queue();
 
-  let addNodeLocations = function (row, cb) {
+  let addNodeLocations = (row, cb) => {
     let name = row.node;
     if (this.findNodeByName(name))
       throw new Error(util.format('*** duplicate node %s', name));
@@ -112,7 +112,7 @@ Given(/^the node locations$/, function (table, callback) {
     cb();
   };
 
-  table.hashes().forEach((row) => q.defer(addNodeLocations.bind(this), row));
+  table.hashes().forEach((row) => q.defer(addNodeLocations, row));
 
   q.awaitAll(callback);
 });
@@ -120,7 +120,7 @@ Given(/^the node locations$/, function (table, callback) {
 Given(/^the nodes$/, function (table, callback) {
   let q = d3.queue();
 
-  let addNode = function (row, cb) {
+  let addNode = (row, cb) => {
     let name = row.node,
       node = this.findNodeByName(name);
     delete row.node;
@@ -135,7 +135,7 @@ Given(/^the nodes$/, function (table, callback) {
     cb();
   };
 
-  table.hashes().forEach((row) => q.defer(addNode.bind(this), row));
+  table.hashes().forEach((row) => q.defer(addNode, row));
 
   q.awaitAll(callback);
 });
@@ -199,7 +199,7 @@ Given(
       cb();
     };
 
-    table.hashes().forEach((row) => q.defer(addWay.bind(this), row));
+    table.hashes().forEach((row) => q.defer(addWay, row));
 
     q.awaitAll(callback);
   }
@@ -213,7 +213,7 @@ Given(/^the relations$/, function (table, callback) {
 
   let q = d3.queue();
 
-  let addRelation = function (headers, row, cb) {
+  let addRelation = (headers, row, cb) => {
     let relation = new OSM.Relation(
       this.makeOSMId(),
       this.OSM_USER,
@@ -303,7 +303,7 @@ Given(/^the relations$/, function (table, callback) {
   };
 
   var headers = table.raw()[0];
-  table.rows().forEach((row) => q.defer(addRelation.bind(this), headers, row));
+  table.rows().forEach((row) => q.defer(addRelation, headers, row));
 
   q.awaitAll(callback);
 });

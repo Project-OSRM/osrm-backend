@@ -4,6 +4,10 @@ import { BeforeAll, Before, After, AfterAll } from '@cucumber/cucumber';
 // Import the custom World constructor (registers itself via setWorldConstructor)
 import './world.js';
 
+BeforeAll(function (callback) {
+  callback();
+});
+
 Before({ timeout: 30000 }, function (testCase, callback) {
   // Initialize the World instance for this test case
   this.init(testCase, callback);

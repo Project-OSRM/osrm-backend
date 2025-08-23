@@ -30,7 +30,7 @@ export default class Cache {
     this.featureProcessedCacheDirectories = {};
     let queue = d3.queue();
 
-    function initializeFeature(feature, callback) {
+    const initializeFeature = (feature, callback) => {
       let uri = feature.getUri();
 
       // setup cache for feature data
@@ -52,14 +52,14 @@ export default class Cache {
 
         d3.queue(1)
           .defer(createDir, featureProcessedCacheDirectory)
-          .defer(this.cleanupFeatureCache.bind(this), featureCacheDirectory, hash)
-          .defer(this.cleanupProcessedFeatureCache.bind(this), featureProcessedCacheDirectory, this.osrmHash)
+          .defer(this.cleanupFeatureCache, featureCacheDirectory, hash)
+          .defer(this.cleanupProcessedFeatureCache, featureProcessedCacheDirectory, this.osrmHash)
           .awaitAll(callback);
       });
-    }
+    };
 
     for (let i = 0; i < features.length; ++i) {
-      queue.defer(initializeFeature.bind(this), features[i]);
+      queue.defer(initializeFeature, features[i]);
     }
     queue.awaitAll(callback);
   }

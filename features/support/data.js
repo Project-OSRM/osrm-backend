@@ -269,32 +269,32 @@ export default class Data {
       profileFile: this.profileFile, inputCacheFile: this.inputCacheFile,
       processedCacheFile: this.processedCacheFile, environment: this.environment};
     let queue = d3.queue(1);
-    queue.defer(this.extractData.bind(this), p);
-    queue.defer(this.partitionData.bind(this), p);
-    queue.defer(this.contractData.bind(this), p);
-    queue.defer(this.customizeData.bind(this), p);
+    queue.defer(this.extractData, p);
+    queue.defer(this.partitionData, p);
+    queue.defer(this.contractData, p);
+    queue.defer(this.customizeData, p);
     queue.awaitAll(callback);
   }
 
   writeAndLinkOSM(callback) {
     let queue = d3.queue(1);
-    queue.defer(this.writeOSM.bind(this));
-    queue.defer(this.linkOSM.bind(this));
+    queue.defer(this.writeOSM);
+    queue.defer(this.linkOSM);
     queue.awaitAll(callback);
   }
 
   reprocess(callback) {
     let queue = d3.queue(1);
-    queue.defer(this.writeAndLinkOSM.bind(this));
-    queue.defer(this.extractContractPartitionAndCustomize.bind(this));
+    queue.defer(this.writeAndLinkOSM);
+    queue.defer(this.extractContractPartitionAndCustomize);
     queue.awaitAll(callback);
   }
 
   reprocessAndLoadData(callback) {
     let p = {loaderArgs: this.loaderArgs, inputFile: this.processedCacheFile};
     let queue = d3.queue(1);
-    queue.defer(this.writeAndLinkOSM.bind(this));
-    queue.defer(this.extractContractPartitionAndCustomize.bind(this));
+    queue.defer(this.writeAndLinkOSM);
+    queue.defer(this.extractContractPartitionAndCustomize);
     queue.defer(this.osrmLoader.load.bind(this.osrmLoader), p);
     queue.awaitAll(callback);
   }

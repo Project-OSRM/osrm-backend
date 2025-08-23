@@ -54,7 +54,7 @@ export default class Run {
       child.stdout.removeListener('data', child.logFunc);
       child.stderr.removeListener('data', child.logFunc);
       log.end();
-    }.bind(this));
+    });
     this.setupOutputLog(child, log);
     return child;
   }

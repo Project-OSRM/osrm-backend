@@ -137,16 +137,16 @@ class OSRMWorld extends World {
     collectedFeatures.add(testCase.pickle.uri);
 
     let queue = d3.queue(1);
-    queue.defer(this.initializeEnv.bind(this));
-    queue.defer(this.verifyOSRMIsNotRunning.bind(this));
-    queue.defer(this.verifyExistenceOfBinaries.bind(this));
-    queue.defer(this.initializeCache.bind(this));
+    queue.defer(this.initializeEnv);
+    queue.defer(this.verifyOSRMIsNotRunning);
+    queue.defer(this.verifyExistenceOfBinaries);
+    queue.defer(this.initializeCache);
 
     // Create mock features array from collected URIs
     const mockFeatures = Array.from(collectedFeatures).map((uri) => ({
       getUri: () => uri,
     }));
-    queue.defer(this.setupFeatures.bind(this, mockFeatures));
+    queue.defer(this.setupFeatures, mockFeatures);
 
     queue.awaitAll((err) => {
       if (err) return callback(err);
