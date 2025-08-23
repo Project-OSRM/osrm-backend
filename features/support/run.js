@@ -49,12 +49,7 @@ export default class Run {
     // we need to set a large maxbuffer here because we have long running processes like osrm-routed
     // with lots of log output
     let child = child_process.execFile(cmd, opts, {maxBuffer: 1024 * 1024 * 1000, env: env}, (err, stdout, stderr) => {
-      // Log the captured output
-      log.write(util.format('*** stdout: %s\n', stdout));
-      log.write(util.format('*** stderr: %s\n', stderr));
       log.end();
-      
-      // Pass the captured output to the callback
       callback(err, stdout, stderr);
     });
     

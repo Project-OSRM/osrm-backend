@@ -35,7 +35,7 @@ When(
   /^I run "osrm-datastore\s?(.*?)"(?: with input "([^"]*)")?$/,
   function (options, input, callback) {
     let child = this.runAndSafeOutput('osrm-datastore', options, callback);
-    if (input !== undefined) child.stdin.write(input);
+    if (input != null) child.stdin.write(input); // Check for both null and undefined
   }
 );
 
