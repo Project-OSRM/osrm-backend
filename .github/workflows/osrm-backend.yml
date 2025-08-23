@@ -215,7 +215,7 @@ jobs:
 
           - name: clang-18-debug-clang-tidy
             continue-on-error: false
-            node: 18
+            node: 20
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: clang-18
@@ -227,7 +227,7 @@ jobs:
 
           - name: clang-17-release
             continue-on-error: false
-            node: 18
+            node: 20
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-17
@@ -237,7 +237,7 @@ jobs:
 
           - name: clang-16-release
             continue-on-error: false
-            node: 18
+            node: 20
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-16
@@ -247,7 +247,7 @@ jobs:
 
           - name: conan-linux-debug-asan-ubsan
             continue-on-error: false
-            node: 18
+            node: 20
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-18
@@ -258,7 +258,7 @@ jobs:
 
           - name: conan-linux-release
             continue-on-error: false
-            node: 18
+            node: 20
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-18
@@ -542,12 +542,12 @@ jobs:
         popd
         npm test
 
-    - name: Use Node 18
+    - name: Use Node 20
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       uses: actions/setup-node@v4
       with:
         node-version: 20
-    - name: Run Node package tests on Node 18
+    - name: Run Node package tests on Node 20
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       run: |
         node --version
