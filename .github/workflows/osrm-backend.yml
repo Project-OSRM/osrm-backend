@@ -34,7 +34,7 @@ jobs:
     - run: cmake --version
     - uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: 20
     - run: node --version
     - run: npm --version
     - name: Prepare environment
@@ -100,7 +100,7 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: 20
     - name: Enable Node.js cache
       uses: actions/cache@v4
       with:
@@ -546,7 +546,7 @@ jobs:
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: 20
     - name: Run Node package tests on Node 18
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
       run: |
