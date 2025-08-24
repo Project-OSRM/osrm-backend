@@ -9,9 +9,9 @@ When(/^I route I should get$/, function (table, callback) {
 
 // Runs routing test multiple times for performance testing
 When(/^I route (\d+) times I should get$/, function (n, table, callback) {
-  var q = d3.queue(1);
+  const q = d3.queue(1);
 
-  for (var i=0; i<n; i++) {
+  for (let i=0; i<n; i++) {
     q.defer(this.WhenIRouteIShouldGet, table);
   }
 

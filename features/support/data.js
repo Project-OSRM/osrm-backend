@@ -123,7 +123,7 @@ export default class Data {
   // Adds named OSM node to test database
   addOSMNode(name, lon, lat, id) {
     id = id || this.makeOSMId();
-    var node = new OSM.Node(id, this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID, lon, lat, {name: name});
+    const node = new OSM.Node(id, this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID, lon, lat, {name: name});
     this.OSMDB.addNode(node);
     this.nameNodeHash[name] = node;
   }
@@ -138,7 +138,7 @@ export default class Data {
     if (s.length !== 1) throw new Error(util.format('*** invalid node name "%s", must be single characters', s));
     if (!s.match(/[a-z0-9]/)) throw new Error(util.format('*** invalid node name "%s", must be alphanumeric', s));
 
-    var fromNode;
+    let fromNode;
     if (s.match(/[a-z]/)) {
       fromNode = this.nameNodeHash[s.toString()];
     } else {
@@ -150,10 +150,10 @@ export default class Data {
 
   // find a node based on an array containing lon/lat
   findNodeByLocation(node_location) {
-    var searched_coordinate = new classes.Location(node_location[0],node_location[1]);
-    for (var node in this.nameNodeHash)
+    const searched_coordinate = new classes.Location(node_location[0],node_location[1]);
+    for (const node in this.nameNodeHash)
     {
-      var node_coordinate = new classes.Location(this.nameNodeHash[node].lon,this.nameNodeHash[node].lat);
+      const node_coordinate = new classes.Location(this.nameNodeHash[node].lon,this.nameNodeHash[node].lat);
       if (this.FuzzyMatch.matchCoordinate(searched_coordinate, node_coordinate, this.zoom))
       {
         return node;

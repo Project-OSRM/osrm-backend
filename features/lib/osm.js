@@ -32,12 +32,12 @@ class DB {
 
     // Converts database to OSM XML format for OSRM processing
     toXML (callback) {
-        var xml = builder.create('osm', {'encoding':'UTF-8'});
+        const xml = builder.create('osm', {'encoding':'UTF-8'});
         xml.att('generator', 'osrm-test')
             .att('version', '0.6');
 
         this.nodes.forEach((n) => {
-            var node = xml.ele('node', {
+            const node = xml.ele('node', {
                 id: n.id,
                 version: 1,
                 uid: n.OSM_UID,
@@ -47,7 +47,7 @@ class DB {
                 lat: ensureDecimal(n.lat)
             });
 
-            for (var k in n.tags) {
+            for (const k in n.tags) {
                 node.ele('tag')
                     .att('k', k)
                     .att('v', n.tags[k]);
@@ -55,7 +55,7 @@ class DB {
         });
 
         this.ways.forEach((w) => {
-            var way = xml.ele('way', {
+            const way = xml.ele('way', {
                 id: w.id,
                 version: 1,
                 uid: w.OSM_UID,
@@ -73,7 +73,7 @@ class DB {
                 }
             });
 
-            for (var k in w.tags) {
+            for (const k in w.tags) {
                 way.ele('tag')
                     .att('k', k)
                     .att('v', w.tags[k]);
@@ -81,7 +81,7 @@ class DB {
         });
 
         this.relations.forEach((r) => {
-            var relation = xml.ele('relation', {
+            const relation = xml.ele('relation', {
                 id: r.id,
                 user: r.OSM_USER,
                 timestamp: r.OSM_TIMESTAMP,
@@ -89,7 +89,7 @@ class DB {
             });
 
             r.members.forEach((m) => {
-                var d = {
+                const d = {
                     type: m.type,
                     ref: m.id
                 };
@@ -97,7 +97,7 @@ class DB {
                 relation.ele('member', d);
             });
 
-            for (var k in r.tags) {
+            for (const k in r.tags) {
                 relation.ele('tag')
                     .att('k', k)
                     .att('v', r.tags[k]);

@@ -7,7 +7,7 @@ export default class Route {
   }
 
   requestPath(service, params, callback) {
-    var uri;
+    let uri;
     if (service == 'timestamp') {
       uri = [this.HOST, service].join('/');
     } else {
@@ -18,15 +18,15 @@ export default class Route {
   }
 
   requestUrl(path, callback) {
-    var uri = this.query = [this.HOST, path].join('/');
+    const uri = this.query = [this.HOST, path].join('/');
     this.sendRequest(uri, '', callback);
   }
 
   // Overwrites the default values in defaults
   // e.g. [[a, 1], [b, 2]], [[a, 5], [d, 10]] => [[a, 5], [b, 2], [d, 10]]
   overwriteParams(defaults, other) {
-    var otherMap = {};
-    for (var key in other) otherMap[key] = other[key];
+    const otherMap = {};
+    for (const key in other) otherMap[key] = other[key];
     return Object.assign({}, defaults, otherMap);
   }
 
@@ -38,7 +38,7 @@ export default class Route {
     if (bearings.length && bearings.length !== waypoints.length) throw new Error('*** number of bearings does not equal the number of waypoints');
     if (approaches.length && approaches.length !== waypoints.length) throw new Error('*** number of approaches does not equal the number of waypoints');
 
-    var defaults = {
+    const defaults = {
         output: 'json',
         steps: 'true',
         alternatives: 'false'
@@ -50,7 +50,7 @@ export default class Route {
 
     if (bearings.length) {
       params.bearings = bearings.map(b => {
-        var bs = b.split(',');
+        const bs = b.split(',');
         if (bs.length === 2) return b;
         else return b += ',10';
       }).join(';');
@@ -63,7 +63,7 @@ export default class Route {
   }
 
   requestNearest(node, userParams, callback) {
-    var defaults = {
+    const defaults = {
         output: 'json'
       },
       params = this.overwriteParams(defaults, userParams);
@@ -73,13 +73,13 @@ export default class Route {
   }
 
   requestTable(waypoints, userParams, callback) {
-    var defaults = {
+    const defaults = {
         output: 'json'
       },
       params = this.overwriteParams(defaults, userParams);
 
     params.coordinates = waypoints.map(w => [w.coord.lon, w.coord.lat].join(','));
-    var srcs = waypoints.map((w, i) => [w.type, i]).filter(w => w[0] === 'src').map(w => w[1]),
+    const srcs = waypoints.map((w, i) => [w.type, i]).filter(w => w[0] === 'src').map(w => w[1]),
       dsts = waypoints.map((w, i) => [w.type, i]).filter(w => w[0] === 'dst').map(w => w[1]);
     if (srcs.length) params.sources = srcs.join(';');
     if (dsts.length) params.destinations = dsts.join(';');
@@ -88,7 +88,7 @@ export default class Route {
   }
 
   requestTrip(waypoints, userParams, callback) {
-    var defaults = {
+    const defaults = {
         output: 'json',
         steps: 'true'
       },
@@ -100,7 +100,7 @@ export default class Route {
   }
 
   requestMatching(waypoints, timestamps, userParams, callback) {
-    var defaults = {
+    const defaults = {
         output: 'json'
       },
       params = this.overwriteParams(defaults, userParams);
@@ -186,7 +186,7 @@ export default class Route {
     if (!('annotation' in instructions.legs[0]))
       return '';
 
-    var merged = {};
+    const merged = {};
     instructions.legs.map(l => {
       Object.keys(l.annotation).filter(a => !a.match(/metadata/)).forEach(a => {
         if (!merged[a]) merged[a] = [];
@@ -256,7 +256,7 @@ export default class Route {
       .map( v => {
         return v.intersections
           .map( intersection => {
-            var string = intersection.entry[0]+':'+intersection.bearings[0], i;
+            let string = intersection.entry[0]+':'+intersection.bearings[0], i;
             for( i = 1; i < intersection.bearings.length; ++i )
               string = string + ' ' + intersection.entry[i]+':'+intersection.bearings[i];
             return string;

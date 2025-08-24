@@ -153,13 +153,13 @@ export default class Env {
   }
 
   verifyExistenceOfBinaries(callback) {
-    var verify = function (binPath, cb) {
+    const verify = function (binPath, cb) {
       fs.exists(binPath, (exists) => {
         if (!exists)
           return cb(
             new Error(util.format('%s is missing. Build failed?', binPath))
           );
-        var helpPath = util.format('%s --help', binPath);
+        const helpPath = util.format('%s --help', binPath);
         child_process.exec(helpPath, (err) => {
           if (err) {
             return cb(
@@ -173,7 +173,7 @@ export default class Env {
       });
     };
 
-    var q = d3.queue();
+    const q = d3.queue();
     [
       this.OSRM_EXTRACT_PATH,
       this.OSRM_CONTRACT_PATH,

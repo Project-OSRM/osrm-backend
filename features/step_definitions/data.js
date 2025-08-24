@@ -66,10 +66,10 @@ Given(/^the shortcuts$/, function (table, callback) {
 });
 
 Given(/^the node map$/, function (docstring, callback) {
-  var q = d3.queue();
+  const q = d3.queue();
 
-  var addNode = (name, ri, ci, cb) => {
-    var lonLat = this.tableCoordToLonLat(ci, ri);
+  const addNode = (name, ri, ci, cb) => {
+    const lonLat = this.tableCoordToLonLat(ci, ri);
     if (name.match(/[a-z]/)) {
       if (this.nameNodeHash[name])
         throw new Error(util.format('*** duplicate node %s', name));
@@ -223,10 +223,10 @@ Given(/^the relations$/, function (table, callback) {
       this.OSM_UID
     );
 
-    var name = null;
+    let name = null;
     for (let index in row) {
-      var key = headers[index];
-      var value = row[index];
+      const key = headers[index];
+      const value = row[index];
       // Parse relation member column headers:
       // - "node" or "node:role" for node members
       // - "way" or "way:role" for way members
@@ -309,7 +309,7 @@ Given(/^the relations$/, function (table, callback) {
     cb();
   };
 
-  var headers = table.raw()[0];
+  const headers = table.raw()[0];
   table.rows().forEach((row) => q.defer(addRelation, headers, row));
 
   q.awaitAll(callback);

@@ -5,16 +5,16 @@ import polyline from '@mapbox/polyline';
 import { When } from '@cucumber/cucumber';
 
 When(/^I match I should get$/, function (table, callback) {
-  var got;
+  let got;
 
   this.reprocessAndLoadData((e) => {
     if (e) return callback(e);
-    var testRow = function (row, ri, cb) {
-      var afterRequest = function (err, res, body) {
+    const testRow = function (row, ri, cb) {
+      const afterRequest = function (err, res, body) {
         if (err) return cb(err);
-        var json;
+        let json;
 
-        var headers = new Set(table.raw()[0]);
+        const headers = new Set(table.raw()[0]);
 
         got.code = 'unknown';
         if (body.length) {
@@ -35,7 +35,7 @@ When(/^I match I should get$/, function (table, callback) {
           got['#'] = row['#'];
         }
 
-        var subMatchings = [''],
+        let subMatchings = [''],
           turns = '',
           route = '',
           duration = '',
@@ -56,9 +56,9 @@ When(/^I match I should get$/, function (table, callback) {
             )
               start_index++;
 
-            var sub = [];
+            let sub = [];
             let prev_index = null;
-            for (var i = start_index; i < json.tracepoints.length; i++) {
+            for (let i = start_index; i < json.tracepoints.length; i++) {
               if (json.tracepoints[i] === null) continue;
 
               let current_index = json.tracepoints[i].matchings_index;
@@ -99,7 +99,7 @@ When(/^I match I should get$/, function (table, callback) {
           }
 
           // annotation response values are requested by 'a:{type_name}'
-          var found = false;
+          let found = false;
           headers.forEach((h) => {
             if (h.match(/^a:/)) found = true;
           });
@@ -179,14 +179,14 @@ When(/^I match I should get$/, function (table, callback) {
         if (headers.has('alternatives')) {
           got['alternatives'] = alternatives;
         }
-        var ok = true;
-        var encodedResult = '',
+        let ok = true;
+        let encodedResult = '',
           extendedTarget = '',
           resultWaypoints = [];
 
-        var testSubMatching = function (sub, si) {
-          var testSubNode = function (ni) {
-            var node = this.findNodeByName(sub[ni]),
+        const testSubMatching = function (sub, si) {
+          const testSubNode = function (ni) {
+            const node = this.findNodeByName(sub[ni]),
               outNode = subMatchings[si][ni];
 
             if (this.FuzzyMatch.matchLocation(outNode, node)) {
@@ -207,7 +207,7 @@ When(/^I match I should get$/, function (table, callback) {
             }
           }.bind(this);
 
-          for (var i = 0; i < sub.length; i++) {
+          for (let i = 0; i < sub.length; i++) {
             testSubNode(i);
           }
         }.bind(this);
@@ -225,7 +225,7 @@ When(/^I match I should get$/, function (table, callback) {
         }
 
         if (headers.has('waypoints')) {
-          var got_loc = [];
+          let got_loc = [];
           for (let i = 0; i < json.tracepoints.length; i++) {
             if (!json.tracepoints[i]) continue;
             if (json.tracepoints[i].waypoint_index != null)
@@ -239,8 +239,8 @@ When(/^I match I should get$/, function (table, callback) {
               )
             );
 
-          for (i = 0; i < row.waypoints.length; i++) {
-            var want_node = this.findNodeByName(row.waypoints[i]);
+          for (let i = 0; i < row.waypoints.length; i++) {
+            const want_node = this.findNodeByName(row.waypoints[i]);
             if (!this.FuzzyMatch.matchLocation(got_loc[i], want_node)) {
               resultWaypoints.push(
                 util.format('? [%s,%s]', got_loc[i][0], got_loc[i][1])
@@ -278,10 +278,10 @@ When(/^I match I should get$/, function (table, callback) {
         got.request = row.request;
         this.requestUrl(row.request, afterRequest);
       } else {
-        var params = this.queryParams;
+        const params = this.queryParams;
         got = {};
-        for (var k in row) {
-          var match = k.match(/param:(.*)/);
+        for (const k in row) {
+          const match = k.match(/param:(.*)/);
           if (match) {
             if (row[k] === '(nil)') {
               params[match[1]] = null;
@@ -292,12 +292,12 @@ When(/^I match I should get$/, function (table, callback) {
           }
         }
 
-        var trace = [],
-          timestamps = [];
+        const trace = [];
+        let timestamps = [];
 
         if (row.trace) {
-          for (var i = 0; i < row.trace.length; i++) {
-            var n = row.trace[i],
+          for (let i = 0; i < row.trace.length; i++) {
+            const n = row.trace[i],
               node = this.findNodeByName(n);
             if (!node)
               throw new Error(util.format('*** unknown waypoint node "%s"', n));

@@ -29,12 +29,12 @@ export default class SharedSteps {
   WhenIRouteIShouldGet(table, callback) {
     this.reprocessAndLoadData((e) => {
       if (e) return callback(e);
-      var headers = new Set(table.raw()[0]);
+      const headers = new Set(table.raw()[0]);
 
-      var requestRow = (row, ri, cb) => {
-        var got;
+      const requestRow = (row, ri, cb) => {
+        let got;
 
-        var afterRequest = (err, res, body) => {
+        const afterRequest = (err, res, body) => {
           if (err) return cb(err);
           if (body && body.length) {
             let destinations, exits, pronunciations, instructions, refs, bearings, turns, modes, times, classes,
@@ -106,7 +106,7 @@ export default class SharedSteps {
                 got.alternative = this.wayList(json.routes[1]);
             }
 
-            var distance = hasRoute && json.routes[0].distance,
+            const distance = hasRoute && json.routes[0].distance,
               time = hasRoute && json.routes[0].duration,
               weight = hasRoute && json.routes[0].weight;
 
@@ -144,7 +144,7 @@ export default class SharedSteps {
               if (row.speed !== '' && instructions) {
                 if (!row.speed.match(/\d+ km\/h/))
                   cb(new Error('*** Speed must be specied in km/h. (ex: 50 km/h)'));
-                var speed = time > 0 ? Math.round(3.6*distance/time) : null;
+                const speed = time > 0 ? Math.round(3.6*distance/time) : null;
                 got.speed = util.format('%d km/h', speed);
               } else {
                 got.speed = '';
@@ -191,7 +191,7 @@ export default class SharedSteps {
               }
             });
 
-            var putValue = function (key, value) {
+            const putValue = function (key, value) {
               if (headers.has(key)) got[key] = instructions ? value : '';
             };
 
@@ -214,7 +214,7 @@ export default class SharedSteps {
               putValue('driving_side', driving_sides);
             }
 
-            for (var key in row) {
+            for (const key in row) {
               if (this.FuzzyMatch.match(got[key], row[key])) {
                 got[key] = row[key];
               }
@@ -229,11 +229,11 @@ export default class SharedSteps {
           got = { request: row.request };
           this.requestUrl(row.request, afterRequest);
         } else {
-          var defaultParams = this.queryParams;
-          var userParams = [];
+          const defaultParams = this.queryParams;
+          const userParams = [];
           got = {};
-          for (var k in row) {
-            var match = k.match(/param:(.*)/);
+          for (const k in row) {
+            const match = k.match(/param:(.*)/);
             if (match) {
               if (row[k] === '(nil)') {
                 userParams.push([match[1], null]);
@@ -244,9 +244,9 @@ export default class SharedSteps {
             }
           }
 
-          var params = this.overwriteParams(defaultParams, userParams),
-            waypoints = [],
-            bearings = [],
+          const params = this.overwriteParams(defaultParams, userParams),
+            waypoints = [];
+          let bearings = [],
             approaches = [];
 
           if (row.bearings) {
@@ -260,11 +260,11 @@ export default class SharedSteps {
           }
 
           if (row.from && row.to) {
-            var fromNode = this.findNodeByName(row.from);
+            const fromNode = this.findNodeByName(row.from);
             if (!fromNode) return cb(new Error(util.format('*** unknown from-node "%s"', row.from)));
             waypoints.push(fromNode);
 
-            var toNode = this.findNodeByName(row.to);
+            const toNode = this.findNodeByName(row.to);
             if (!toNode) return cb(new Error(util.format('*** unknown to-node "%s"', row.to)));
             waypoints.push(toNode);
 
@@ -273,7 +273,7 @@ export default class SharedSteps {
             this.requestRoute(waypoints, bearings, approaches, params, afterRequest);
           } else if (row.waypoints) {
             row.waypoints.split(',').forEach((n) => {
-              var node = this.findNodeByName(n.trim());
+              const node = this.findNodeByName(n.trim());
               if (!node) return cb(new Error(util.format('*** unknown waypoint node "%s"', n.trim())));
               waypoints.push(node);
             });

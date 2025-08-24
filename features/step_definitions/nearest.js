@@ -9,20 +9,20 @@ import { When } from '@cucumber/cucumber';
 When(/^I request nearest I should get$/, function (table, callback) {
   this.reprocessAndLoadData((e) => {
     if (e) return callback(e);
-    var testRow = function (row, ri, cb) {
+    const testRow = function (row, ri, cb) {
 
-      var inNode = this.findNodeByName(row.in);
+      const inNode = this.findNodeByName(row.in);
       if (!inNode) throw new Error(util.format('*** unknown in-node "%s"', row.in));
 
       this.requestNearest(inNode, this.queryParams, (err, response, body) => {
         if (err) return cb(err);
-        var coord;
-        var headers = new Set(table.raw()[0]);
+        let coord;
+        const headers = new Set(table.raw()[0]);
 
-        var got = { in: row.in };
+        const got = { in: row.in };
 
         if (body.length) {
-          var json = JSON.parse(body);
+          const json = JSON.parse(body);
           got.code = json.code;
 
           if (response.statusCode === 200) {
@@ -36,7 +36,7 @@ When(/^I request nearest I should get$/, function (table, callback) {
 
               got.out = row.out;
 
-              var outNode = this.findNodeByName(row.out);
+              const outNode = this.findNodeByName(row.out);
               if (!outNode) throw new Error(util.format('*** unknown out-node "%s"', row.out));
 
               Object.keys(row).forEach((key) => {
@@ -66,30 +66,30 @@ When(/^I request nearest I should get$/, function (table, callback) {
 When(/^I request nearest with flatbuffers I should get$/, function (table, callback) {
   this.reprocessAndLoadData((e) => {
     if (e) return callback(e);
-    var testRow = function (row, ri, cb) {
-      var inNode = this.findNodeByName(row.in);
+    const testRow = function (row, ri, cb) {
+      const inNode = this.findNodeByName(row.in);
       if (!inNode) throw new Error(util.format('*** unknown in-node "%s"', row.in));
 
-      var outNode = this.findNodeByName(row.out);
+      const outNode = this.findNodeByName(row.out);
       if (!outNode) throw new Error(util.format('*** unknown out-node "%s"', row.out));
 
       this.queryParams.output = 'flatbuffers';
       this.requestNearest(inNode, this.queryParams, (err, response, body) => {
         if (err) return cb(err);
-        var coord;
+        let coord;
 
         if (response.statusCode === 200 && body.length) {
-          var bytes = new Uint8Array(body.length);
-          for (var indx = 0; indx < body.length; ++indx) {
+          const bytes = new Uint8Array(body.length);
+          for (let indx = 0; indx < body.length; ++indx) {
             bytes[indx] = body.charCodeAt(indx);
           }
-          var buf = new flatbuffers.ByteBuffer(bytes);
-          var fb = FBResult.getRootAsFBResult(buf);
-          var location = fb.waypoints(0).location();
+          const buf = new flatbuffers.ByteBuffer(bytes);
+          const fb = FBResult.getRootAsFBResult(buf);
+          const location = fb.waypoints(0).location();
 
           coord = [location.longitude(), location.latitude()];
 
-          var got = { in: row.in, out: row.out };
+          const got = { in: row.in, out: row.out };
 
           Object.keys(row).forEach((key) => {
             if (key === 'out') {

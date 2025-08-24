@@ -8,17 +8,17 @@ function add(a, b) {
 }
 
 When(/^I plan a trip I should get$/, function (table, callback) {
-  var got;
+  let got;
 
   this.reprocessAndLoadData((e) => {
     if (e) return callback(e);
-    var testRow = function (row, ri, cb) {
-      var afterRequest = function (err, res, body) {
+    const testRow = function (row, ri, cb) {
+      const afterRequest = function (err, res, body) {
         if (err) return cb(err);
-        var headers = new Set(table.raw()[0]);
+        const headers = new Set(table.raw()[0]);
 
-        for (var k in row) {
-          var match = k.match(/param:(.*)/);
+        for (const k in row) {
+          const match = k.match(/param:(.*)/);
           if (match) {
             if (row[k] === '(nil)') {
               params[match[1]] = null;
@@ -29,7 +29,7 @@ When(/^I plan a trip I should get$/, function (table, callback) {
           }
         }
 
-        var json;
+        let json;
         got.code = 'unknown';
         if (body.length) {
           json = JSON.parse(body);
@@ -63,42 +63,42 @@ When(/^I plan a trip I should get$/, function (table, callback) {
           got['#'] = row['#'];
         }
 
-        var subTrips;
-        var trip_durations;
-        var trip_distance;
-        var ok = res.statusCode === 200;
+        let subTrips;
+        let trip_durations;
+        let trip_distance;
+        const ok = res.statusCode === 200;
         if (ok) {
           if (headers.has('trips')) {
             subTrips = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map((sl, i) => {
-              var toAdd = [];
+              const toAdd = [];
               if (i === 0) toAdd.push(sl.steps[0].intersections[0].location);
               toAdd.push(sl.steps[sl.steps.length-1].intersections[0].location);
               return toAdd;
             })));
           }
           if(headers.has('durations')) {
-            var all_durations = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map(sl => {
+            const all_durations = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map(sl => {
               return sl.duration;
             })));
             trip_durations = all_durations.map( a => a.reduce(add, 0));
           }
           if(headers.has('distance')) {
-            var all_distance = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map(sl => {
+            const all_distance = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map(sl => {
               return sl.distance;
             })));
             trip_distance = all_distance.map( a => a.reduce(add, 0));
           }
         }
 
-        var encodedResult = '';
+        let encodedResult = '';
 
         if (json.trips && row.trips) row.trips.split(',').forEach((sub, si) => {
           if (si >= subTrips.length) {
             ok = false;
           } else {
             // TODO: Check all rotations of the round trip
-            for (var ni=0; ni<sub.length; ni++) {
-              var node = this.findNodeByName(sub[ni]),
+            for (let ni=0; ni<sub.length; ni++) {
+              const node = this.findNodeByName(sub[ni]),
                 outNode = subTrips[si][ni];
               if (this.FuzzyMatch.matchLocation(outNode, node)) {
                 encodedResult += sub[ni];
@@ -120,7 +120,7 @@ When(/^I plan a trip I should get$/, function (table, callback) {
         got.durations = trip_durations;
         got.distance = trip_distance;
 
-        for (var key in row) {
+        for (const key in row) {
           if (this.FuzzyMatch.match(got[key], row[key])) {
             got[key] = row[key];
           }
@@ -133,14 +133,14 @@ When(/^I plan a trip I should get$/, function (table, callback) {
         got.request = row.request;
         this.requestUrl(row.request, afterRequest);
       } else {
-        var params = this.queryParams,
+        const params = this.queryParams,
           waypoints = [];
         if (row.from && row.to) {
-          var fromNode = this.findNodeByName(row.from);
+          const fromNode = this.findNodeByName(row.from);
           if (!fromNode) throw new Error(util.format('*** unknown from-node "%s"', row.from));
           waypoints.push(fromNode);
 
-          var toNode = this.findNodeByName(row.to);
+          const toNode = this.findNodeByName(row.to);
           if (!toNode) throw new Error(util.format('*** unknown to-node "%s"', row.to));
           waypoints.push(toNode);
 
@@ -148,7 +148,7 @@ When(/^I plan a trip I should get$/, function (table, callback) {
           this.requestTrip(waypoints, params, afterRequest);
         } else if (row.waypoints) {
           row.waypoints.split(',').forEach((n) => {
-            var node = this.findNodeByName(n);
+            const node = this.findNodeByName(n);
             if (!node) throw new Error(util.format('*** unknown waypoint node "%s"', n.trim()));
             waypoints.push(node);
           });

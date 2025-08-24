@@ -61,7 +61,7 @@ class OSRMWorld extends World {
     this.FuzzyMatch = this.#fuzzy.FuzzyMatch;
   }
 
-  // Copy methods from service classes (temporary compatibility layer)
+  // Copy methods from service classes
   #copyMethodsFromServices() {
     [
       this.#env,

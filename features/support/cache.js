@@ -124,11 +124,11 @@ export default class Cache {
       this.LIB_OSRM_PARTITION_PATH
     ];
 
-    var addLuaFiles = function (directory, callback) {
+    const addLuaFiles = function (directory, callback) {
       fs.readdir(path.normalize(directory), (err, files) => {
         if (err) return callback(err);
 
-        var luaFiles = files.filter(f => !!f.match(/\.lua$/)).map(f => path.normalize(directory + '/' + f));
+        const luaFiles = files.filter(f => !!f.match(/\.lua$/)).map(f => path.normalize(directory + '/' + f));
         Array.prototype.push.apply(dependencies, luaFiles);
 
         callback();

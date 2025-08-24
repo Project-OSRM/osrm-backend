@@ -6,7 +6,7 @@ import { Then } from '@cucumber/cucumber';
 
 Then(/^routability should be$/, function (table, callback) {
   this.buildWaysFromTable(table, () => {
-    var directions = ['forw','backw','bothw'],
+    const directions = ['forw','backw','bothw'],
       testedHeaders = ['forw','backw','bothw','forw_rate','backw_rate','bothw_rate'],
       headers = new Set(Object.keys(table.hashes()[0]));
 
@@ -16,10 +16,10 @@ Then(/^routability should be$/, function (table, callback) {
 
     this.reprocessAndLoadData((e) => {
       if (e) return callback(e);
-      var testRow = function (row, i, cb) {
-        var outputRow = Object.assign({}, row);
+      const testRow = function (row, i, cb) {
+        const outputRow = Object.assign({}, row);
         // clear the fields that are tested for in the copied response object
-        for (var field in outputRow) {
+        for (const field in outputRow) {
           if (testedHeaders.indexOf(field) != -1)
             outputRow[field] = '';
         }
@@ -27,8 +27,8 @@ Then(/^routability should be$/, function (table, callback) {
         testRoutabilityRow.call(this, i, (err, result) => {
           if (err) return cb(err);
           directions.filter(d => headers.has(d + '_rate')).forEach((direction) => {
-            var rate = direction + '_rate';
-            var want = row[rate];
+            const rate = direction + '_rate';
+            const want = row[rate];
 
             switch (true) {
             case '' === want:
@@ -48,7 +48,7 @@ Then(/^routability should be$/, function (table, callback) {
           });
 
           directions.filter(d => headers.has(d)).forEach((direction) => {
-            var usingShortcut = false,
+            let usingShortcut = false,
               want = row[direction];
               // shortcuts are when a test has mapped a value like `foot` to
               // a value like `5 km/h`, to represent the speed that one
@@ -112,14 +112,14 @@ Then(/^routability should be$/, function (table, callback) {
 // result is an object containing the calculated values for 'rate', 'status',
 // 'time', 'distance', 'speed' and 'mode', for forwards and backwards routing, as well as
 // a bothw object that diffs forwards/backwards
-var testRoutabilityRow = function (i, cb) {
-  var result = {};
+const testRoutabilityRow = function (i, cb) {
+  let result = {};
 
-  var testDirection = function (dir, callback) {
+  const testDirection = function (dir, callback) {
     const coordA = this.offsetOriginBy(1+this.WAY_SPACING*i, 0);
     const coordB = this.offsetOriginBy(3+this.WAY_SPACING*i, 0);
 
-    var a = new classes.Location(coordA[0], coordA[1]),
+    const a = new classes.Location(coordA[0], coordA[1]),
       b = new classes.Location(coordB[0], coordB[1]),
       r = {};
 
@@ -164,16 +164,16 @@ var testRoutabilityRow = function (i, cb) {
       if (err) return cb(err);
       // check if forw and backw returned the same values
       res.forEach((dirRes) => {
-        var which = dirRes.which;
+        const which = dirRes.which;
         delete dirRes.which;
         result[which] = dirRes;
       });
 
       result.bothw = {};
 
-      var sq = d3.queue();
+      const sq = d3.queue();
 
-      var parseRes = function (key, scb) {
+      const parseRes = function (key, scb) {
         if (result.forw[key] === result.backw[key]) {
           result.bothw[key] = result.forw[key];
         } else {

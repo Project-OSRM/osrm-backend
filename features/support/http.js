@@ -33,11 +33,11 @@ export default class Http {
   }
 
   paramsToString(params) {
-    var paramString = '';
+    let paramString = '';
     if (params.coordinates !== undefined) {
       // FIXME this disables passing the output if its a default
       // Remove after #2173 is fixed.
-      var outputString = (params.output && params.output !== 'json') ? ('.' + params.output) : '';
+      const outputString = (params.output && params.output !== 'json') ? ('.' + params.output) : '';
       paramString = params.coordinates.join(';') + outputString;
       delete params.coordinates;
       delete params.output;
@@ -52,9 +52,9 @@ export default class Http {
   // FIXME this needs to be simplified!
   sendRequest(baseUri, parameters, callback) {
 
-    var limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
-    var runRequest = (cb) => {
-      var params = this.paramsToString(parameters);
+    const limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
+    const runRequest = (cb) => {
+      const params = this.paramsToString(parameters);
       this.query = baseUri + (params.length ? '/' + params : '');
 
       httpRequest(this.query, (err, res, body) => {

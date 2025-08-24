@@ -105,16 +105,16 @@ function tableCodeOnlyParse(table, annotation, format, callback) {
       : 'distance';
   params.output = format;
 
-  var got;
+  let got;
 
   this.reprocessAndLoadData((e) => {
     if (e) return callback(e);
-    var testRow = function (row, ri, cb) {
-      var afterRequest = function (err, res, body) {
+    const testRow = function (row, ri, cb) {
+      const afterRequest = function (err, res, body) {
         if (err) return cb(err);
 
-        for (var k in row) {
-          var match = k.match(/param:(.*)/);
+        for (const k in row) {
+          const match = k.match(/param:(.*)/);
           if (match) {
             if (row[k] === '(nil)') {
               params[match[1]] = null;
@@ -125,7 +125,7 @@ function tableCodeOnlyParse(table, annotation, format, callback) {
           }
         }
 
-        var json;
+        let json;
         got.code = 'unknown';
         if (body.length) {
           json = JSON.parse(body);
@@ -135,11 +135,11 @@ function tableCodeOnlyParse(table, annotation, format, callback) {
         cb(null, got);
       }.bind(this);
 
-      var params = this.queryParams,
+      const params = this.queryParams,
         waypoints = [];
       if (row.waypoints) {
         row.waypoints.split(',').forEach((n) => {
-          var node = this.findNodeByName(n);
+          const node = this.findNodeByName(n);
           if (!node)
             throw new Error(
               util.format('*** unknown waypoint node "%s"', n.trim())
@@ -172,12 +172,12 @@ function tableParse(table, noRoute, annotation, format, callback) {
       : 'distance';
   params.output = format;
 
-  var tableRows = table.raw();
+  const tableRows = table.raw();
 
   if (tableRows[0][0] !== '')
     throw new Error('*** Top-left cell of matrix table must be empty');
 
-  var waypoints = [],
+  const waypoints = [],
     columnHeaders = tableRows[0].slice(1),
     rowHeaders = tableRows.map((h) => h[0]).slice(1),
     symmetric =
@@ -186,20 +186,20 @@ function tableParse(table, noRoute, annotation, format, callback) {
 
   if (symmetric) {
     columnHeaders.forEach((nodeName) => {
-      var node = this.findNodeByName(nodeName);
+      const node = this.findNodeByName(nodeName);
       if (!node)
         throw new Error(util.format('*** unknown node "%s"', nodeName));
       waypoints.push({ coord: node, type: 'loc' });
     });
   } else {
     columnHeaders.forEach((nodeName) => {
-      var node = this.findNodeByName(nodeName);
+      const node = this.findNodeByName(nodeName);
       if (!node)
         throw new Error(util.format('*** unknown node "%s"', nodeName));
       waypoints.push({ coord: node, type: 'dst' });
     });
     rowHeaders.forEach((nodeName) => {
-      var node = this.findNodeByName(nodeName);
+      const node = this.findNodeByName(nodeName);
       if (!node)
         throw new Error(util.format('*** unknown node "%s"', nodeName));
       waypoints.push({ coord: node, type: 'src' });
@@ -214,9 +214,9 @@ function tableParse(table, noRoute, annotation, format, callback) {
       if (err) return callback(err);
       if (!body.length) return callback(new Error('Invalid response body'));
 
-      var result = [];
+      let result = [];
       if (format === 'json') {
-        var json = JSON.parse(body);
+        const json = JSON.parse(body);
 
         if (annotation === 'fallback_speed_cells') {
           result = table.raw().map((row) => row.map(() => ''));
@@ -224,7 +224,7 @@ function tableParse(table, noRoute, annotation, format, callback) {
             result[pair[0] + 1][pair[1] + 1] = 'Y';
           });
           result = result.slice(1).map((row) => {
-            var hashes = {};
+            const hashes = {};
             row.slice(1).forEach((v, i) => {
               hashes[tableRows[0][i + 1]] = v;
             });
@@ -232,7 +232,7 @@ function tableParse(table, noRoute, annotation, format, callback) {
           });
         } else {
           result = json[annotation].map((row) => {
-            var hashes = {};
+            const hashes = {};
             row.forEach((v, i) => {
               hashes[tableRows[0][i + 1]] = parse(v) ? '' : v;
             });
@@ -241,22 +241,22 @@ function tableParse(table, noRoute, annotation, format, callback) {
         }
       } else {
         //flatbuffers
-        var bytes = new Uint8Array(body.length);
-        for (var indx = 0; indx < body.length; ++indx) {
+        const bytes = new Uint8Array(body.length);
+        for (let indx = 0; indx < body.length; ++indx) {
           bytes[indx] = body.charCodeAt(indx);
         }
-        var buf = new flatbuffers.ByteBuffer(bytes);
-        var fb = FBResult.getRootAsFBResult(buf);
+        const buf = new flatbuffers.ByteBuffer(bytes);
+        const fb = FBResult.getRootAsFBResult(buf);
 
-        var matrix;
+        let matrix;
         if (annotation === 'durations') {
           matrix = fb.table().durationsArray();
         }
         if (annotation === 'distances') {
           matrix = fb.table().distancesArray();
         }
-        var cols = fb.table().cols();
-        var rows = fb.table().rows();
+        const cols = fb.table().cols();
+        const rows = fb.table().rows();
         for (let r = 0; r < rows; ++r) {
           result[r] = {};
           for (let c = 0; c < cols; ++c) {
@@ -265,8 +265,8 @@ function tableParse(table, noRoute, annotation, format, callback) {
         }
       }
 
-      var testRow = function (row, ri, cb) {
-        for (var k in result[ri]) {
+      const testRow = function (row, ri, cb) {
+        for (const k in result[ri]) {
           if (this.FuzzyMatch.match(result[ri][k], row[k])) {
             result[ri][k] = row[k];
           } else if (row[k] === '' && result[ri][k] === noRoute) {
