@@ -1,6 +1,7 @@
 # Unreleased
   - Changes from 6.0.0
     - Misc:
+      - CHANGED: Upgrade Cucumber-js to v12 [#7221](https://github.com/Project-OSRM/osrm-backend/pull/7221)
       - FIXED: Minor misspellings found in source code, comments and documents [#7215](https://github.com/Project-OSRM/osrm-backend/pull/7215)
 
 # 6.0.0

@@ -1,11 +1,11 @@
 var OSRM = require('../../');
 var test = require('tape');
-var data_path = require('./constants').data_path;
-var mld_data_path = require('./constants').mld_data_path;
-var three_test_coordinates = require('./constants').three_test_coordinates;
-var two_test_coordinates = require('./constants').two_test_coordinates;
-const flatbuffers = require('../../features/support/flatbuffers').flatbuffers;
-const FBResult = require('../../features/support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
+var data_path = require('./constants.cjs').data_path;
+var mld_data_path = require('./constants.cjs').mld_data_path;
+var three_test_coordinates = require('./constants.cjs').three_test_coordinates;
+var two_test_coordinates = require('./constants.cjs').two_test_coordinates;
+const flatbuffers = require('../../features/support/flatbuffers.cjs').flatbuffers;
+const FBResult = require('../../features/support/fbresult_generated.cjs').osrm.engine.api.fbresult.FBResult;
 
 test('trip: trip in Monaco with flatbuffers format', function(assert) {
     assert.plan(2);

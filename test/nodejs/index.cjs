@@ -1,8 +1,8 @@
 var OSRM = require('../../');
 var test = require('tape');
-var monaco_path = require('./constants').data_path;
-var test_memory_file = require('./constants').test_memory_file;
-var monaco_mld_path = require('./constants').mld_data_path;
+var monaco_path = require('./constants.cjs').data_path;
+var test_memory_file = require('./constants.cjs').test_memory_file;
+var monaco_mld_path = require('./constants.cjs').mld_data_path;
 
 test('constructor: throws if new keyword is not used', function(assert) {
     assert.plan(1);
@@ -186,9 +186,9 @@ test('constructor: ok on multiple overlapping disable_feature_dataset options', 
     assert.ok(osrm);
 });
 
-require('./route.js');
-require('./trip.js');
-require('./match.js');
-require('./tile.js');
-require('./table.js');
-require('./nearest.js');
+require('./route.cjs');
+require('./trip.cjs');
+require('./match.cjs');
+require('./tile.cjs');
+require('./table.cjs');
+require('./nearest.cjs');

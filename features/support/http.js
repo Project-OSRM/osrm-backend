@@ -1,6 +1,7 @@
-const { Timeout } = require('../lib/utils');
-const http = require('http');
-const https = require('https');
+// HTTP client utilities for making API requests to OSRM routing server
+import { Timeout } from '../lib/utils.js';
+import http from 'http';
+import https from 'https';
 
 function httpRequest(url, callback) {
   const client = url.startsWith('https') ? https : http;
@@ -25,13 +26,18 @@ function httpRequest(url, callback) {
 
   req.end();
 }
-module.exports = function () {
-  this.paramsToString = (params) => {
-    var paramString = '';
+
+export default class Http {
+  constructor(world) {
+    this.world = world;
+  }
+
+  paramsToString(params) {
+    let paramString = '';
     if (params.coordinates !== undefined) {
       // FIXME this disables passing the output if its a default
       // Remove after #2173 is fixed.
-      var outputString = (params.output && params.output !== 'json') ? ('.' + params.output) : '';
+      const outputString = (params.output && params.output !== 'json') ? ('.' + params.output) : '';
       paramString = params.coordinates.join(';') + outputString;
       delete params.coordinates;
       delete params.output;
@@ -41,14 +47,14 @@ module.exports = function () {
     }
 
     return paramString;
-  };
+  }
 
   // FIXME this needs to be simplified!
-  this.sendRequest = (baseUri, parameters, callback) => {
+  sendRequest(baseUri, parameters, callback) {
 
-    var limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
-    var runRequest = (cb) => {
-      var params = this.paramsToString(parameters);
+    const limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
+    const runRequest = (cb) => {
+      const params = this.paramsToString(parameters);
       this.query = baseUri + (params.length ? '/' + params : '');
 
       httpRequest(this.query, (err, res, body) => {
@@ -70,5 +76,5 @@ module.exports = function () {
       }
       return callback(err, res, body);
     }));
-  };
-};
+  }
+}

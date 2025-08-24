@@ -1,10 +1,13 @@
-'use strict';
+// Route response validation and geometry processing utilities
+import { ensureDecimal } from '../lib/utils.js';
 
-const ensureDecimal = require('../lib/utils').ensureDecimal;
+export default class Route {
+  constructor(world) {
+    this.world = world;
+  }
 
-module.exports = function () {
-  this.requestPath = (service, params, callback) => {
-    var uri;
+  requestPath(service, params, callback) {
+    let uri;
     if (service == 'timestamp') {
       uri = [this.HOST, service].join('/');
     } else {
@@ -12,42 +15,42 @@ module.exports = function () {
     }
 
     return this.sendRequest(uri, params, callback);
-  };
+  }
 
-  this.requestUrl = (path, callback) => {
-    var uri = this.query = [this.HOST, path].join('/');
+  requestUrl(path, callback) {
+    const uri = this.query = [this.HOST, path].join('/');
     this.sendRequest(uri, '', callback);
-  };
+  }
 
   // Overwrites the default values in defaults
   // e.g. [[a, 1], [b, 2]], [[a, 5], [d, 10]] => [[a, 5], [b, 2], [d, 10]]
-  this.overwriteParams = (defaults, other) => {
-    var otherMap = {};
-    for (var key in other) otherMap[key] = other[key];
+  overwriteParams(defaults, other) {
+    const otherMap = {};
+    for (const key in other) otherMap[key] = other[key];
     return Object.assign({}, defaults, otherMap);
-  };
+  }
 
-  var encodeWaypoints = (waypoints) => {
+  encodeWaypoints(waypoints) {
     return waypoints.map(w => [w.lon, w.lat].map(ensureDecimal).join(','));
-  };
+  }
 
-  this.requestRoute = (waypoints, bearings, approaches, userParams, callback) => {
+  requestRoute(waypoints, bearings, approaches, userParams, callback) {
     if (bearings.length && bearings.length !== waypoints.length) throw new Error('*** number of bearings does not equal the number of waypoints');
     if (approaches.length && approaches.length !== waypoints.length) throw new Error('*** number of approaches does not equal the number of waypoints');
 
-    var defaults = {
+    const defaults = {
         output: 'json',
         steps: 'true',
         alternatives: 'false'
       },
       params = this.overwriteParams(defaults, userParams),
-      encodedWaypoints = encodeWaypoints(waypoints);
+      encodedWaypoints = this.encodeWaypoints(waypoints);
 
     params.coordinates = encodedWaypoints;
 
     if (bearings.length) {
       params.bearings = bearings.map(b => {
-        var bs = b.split(',');
+        const bs = b.split(',');
         if (bs.length === 2) return b;
         else return b += ',10';
       }).join(';');
@@ -57,107 +60,107 @@ module.exports = function () {
       params.approaches = approaches.join(';');
     }
     return this.requestPath('route', params, callback);
-  };
+  }
 
-  this.requestNearest = (node, userParams, callback) => {
-    var defaults = {
+  requestNearest(node, userParams, callback) {
+    const defaults = {
         output: 'json'
       },
       params = this.overwriteParams(defaults, userParams);
     params.coordinates = [[node.lon, node.lat].join(',')];
 
     return this.requestPath('nearest', params, callback);
-  };
+  }
 
-  this.requestTable = (waypoints, userParams, callback) => {
-    var defaults = {
+  requestTable(waypoints, userParams, callback) {
+    const defaults = {
         output: 'json'
       },
       params = this.overwriteParams(defaults, userParams);
 
     params.coordinates = waypoints.map(w => [w.coord.lon, w.coord.lat].join(','));
-    var srcs = waypoints.map((w, i) => [w.type, i]).filter(w => w[0] === 'src').map(w => w[1]),
+    const srcs = waypoints.map((w, i) => [w.type, i]).filter(w => w[0] === 'src').map(w => w[1]),
       dsts = waypoints.map((w, i) => [w.type, i]).filter(w => w[0] === 'dst').map(w => w[1]);
     if (srcs.length) params.sources = srcs.join(';');
     if (dsts.length) params.destinations = dsts.join(';');
 
     return this.requestPath('table', params, callback);
-  };
+  }
 
-  this.requestTrip = (waypoints, userParams, callback) => {
-    var defaults = {
+  requestTrip(waypoints, userParams, callback) {
+    const defaults = {
         output: 'json',
         steps: 'true'
       },
       params = this.overwriteParams(defaults, userParams);
 
-    params.coordinates = encodeWaypoints(waypoints);
+    params.coordinates = this.encodeWaypoints(waypoints);
 
     return this.requestPath('trip', params, callback);
-  };
+  }
 
-  this.requestMatching = (waypoints, timestamps, userParams, callback) => {
-    var defaults = {
+  requestMatching(waypoints, timestamps, userParams, callback) {
+    const defaults = {
         output: 'json'
       },
       params = this.overwriteParams(defaults, userParams);
 
-    params.coordinates = encodeWaypoints(waypoints);
+    params.coordinates = this.encodeWaypoints(waypoints);
 
     if (timestamps.length) {
       params.timestamps = timestamps.join(';');
     }
 
     return this.requestPath('match', params, callback);
-  };
+  }
 
-  this.extractInstructionList = (instructions, keyFinder) => {
+  extractInstructionList(instructions, keyFinder) {
     if (instructions) {
       return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
         .map(keyFinder)
         .join(',');
     }
-  };
+  }
 
-  this.summary = (instructions) => {
+  summary(instructions) {
     if (instructions) {
       return instructions.legs.map(l => l.summary).join(';');
     }
-  };
+  }
 
-  this.wayList = (instructions) => {
+  wayList(instructions) {
     return this.extractInstructionList(instructions, s => s.name);
-  };
+  }
 
-  this.refList = (instructions) => {
+  refList(instructions) {
     return this.extractInstructionList(instructions, s => s.ref || '');
-  };
+  }
 
-  this.pronunciationList = (instructions) => {
+  pronunciationList(instructions) {
     return this.extractInstructionList(instructions, s => s.pronunciation || '');
-  };
+  }
 
-  this.destinationsList = (instructions) => {
+  destinationsList(instructions) {
     return this.extractInstructionList(instructions, s => s.destinations || '');
-  };
+  }
 
-  this.exitsList = (instructions) => {
+  exitsList(instructions) {
     return this.extractInstructionList(instructions, s => s.exits || '');
-  };
+  }
 
-  this.reverseBearing = (bearing) => {
+  reverseBearing(bearing) {
     if (bearing >= 180)
       return bearing - 180.;
     return bearing + 180;
-  };
+  }
 
-  this.bearingList = (instructions) => {
+  bearingList(instructions) {
     return this.extractInstructionList(instructions, s => ('in' in s.intersections[0] ? this.reverseBearing(s.intersections[0].bearings[s.intersections[0].in]) : 0)
                                                               + '->' +
                                                               ('out' in s.intersections[0] ? s.intersections[0].bearings[s.intersections[0].out] : 0));
-  };
+  }
 
-  this.lanesList = (instructions) => {
+  lanesList(instructions) {
     return this.extractInstructionList(instructions, s => {
       return s.intersections.map( i => {
         if(i.lanes)
@@ -173,17 +176,17 @@ module.exports = function () {
         }
       }).join(';');
     });
-  };
+  }
 
-  this.approachList = (instructions) => {
+  approachList(instructions) {
     return this.extractInstructionList(instructions, s => s.approaches || '');
-  };
+  }
 
-  this.annotationList = (instructions) => {
+  annotationList(instructions) {
     if (!('annotation' in instructions.legs[0]))
       return '';
 
-    var merged = {};
+    const merged = {};
     instructions.legs.map(l => {
       Object.keys(l.annotation).filter(a => !a.match(/metadata/)).forEach(a => {
         if (!merged[a]) merged[a] = [];
@@ -206,14 +209,14 @@ module.exports = function () {
       });
     }
     return merged;
-  };
+  }
 
-  this.alternativesList = (instructions) => {
+  alternativesList(instructions) {
     // alternatives_count come from tracepoints list
     return instructions.tracepoints.map(t => t.alternatives_count.toString()).join(',');
-  };
+  }
 
-  this.turnList = (instructions) => {
+  turnList(instructions) {
     return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
       .map(v => {
         switch (v.maneuver.type) {
@@ -238,54 +241,54 @@ module.exports = function () {
         }
       })
       .join(',');
-  };
+  }
 
-  this.locations = (instructions) => {
+  locations(instructions) {
     return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
       .map(v => {
         return this.findNodeByLocation(v.maneuver.location);
       })
       .join(',');
-  };
+  }
 
-  this.intersectionList = (instructions) => {
+  intersectionList(instructions) {
     return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
       .map( v => {
         return v.intersections
           .map( intersection => {
-            var string = intersection.entry[0]+':'+intersection.bearings[0], i;
+            let string = intersection.entry[0]+':'+intersection.bearings[0], i;
             for( i = 1; i < intersection.bearings.length; ++i )
               string = string + ' ' + intersection.entry[i]+':'+intersection.bearings[i];
             return string;
           }).join(',');
       }).join(';');
-  };
+  }
 
-  this.modeList = (instructions) => {
+  modeList(instructions) {
     return this.extractInstructionList(instructions, s => s.mode);
-  };
+  }
 
-  this.drivingSideList = (instructions) => {
+  drivingSideList(instructions) {
     return this.extractInstructionList(instructions, s => s.driving_side);
-  };
+  }
 
-  this.classesList = (instructions) => {
+  classesList(instructions) {
     return this.extractInstructionList(instructions, s => '[' + s.intersections.map(i => '(' + (i.classes ? i.classes.join(',') : '') + ')').join(',') + ']');
-  };
+  }
 
-  this.timeList = (instructions) => {
+  timeList(instructions) {
     return this.extractInstructionList(instructions, s => s.duration + 's');
-  };
+  }
 
-  this.distanceList = (instructions) => {
+  distanceList(instructions) {
     return this.extractInstructionList(instructions, s => s.distance + 'm');
-  };
+  }
 
-  this.weightName = (instructions) => {
+  weightName(instructions) {
     return instructions ? instructions.weight_name : '';
-  };
+  }
 
-  this.weightList = (instructions) => {
+  weightList(instructions) {
     return this.extractInstructionList(instructions, s => s.weight);
-  };
-};
+  }
+}

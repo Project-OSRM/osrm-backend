@@ -1,50 +1,120 @@
-var util = require('util');
+// Step definitions for testing distance/duration matrix API endpoints
+import util from 'util';
 
-var flatbuffers = require('../support/flatbuffers').flatbuffers;
-var FBResult = require('../support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
+import flatbuffers from 'flatbuffers';
+import { osrm } from '../support/fbresult_generated.js';
+const FBResult = osrm.engine.api.fbresult.FBResult;
+import { When } from '@cucumber/cucumber';
 
-module.exports = function () {
-  const durationsRegex = new RegExp(/^I request a travel time matrix I should get$/);
-  const durationsCodeOnlyRegex = new RegExp(/^I request a travel time matrix with these waypoints I should get the response code$/);
-  const distancesRegex = new RegExp(/^I request a travel distance matrix I should get$/);
-  const estimatesRegex = new RegExp(/^I request a travel time matrix I should get estimates for$/);
-  const durationsRegexFb = new RegExp(/^I request a travel time matrix with flatbuffers I should get$/);
-  const distancesRegexFb = new RegExp(/^I request a travel distance matrix with flatbuffers I should get$/);
+// Regular expressions for matching different matrix API test scenarios
+const durationsRegex = new RegExp(
+  /^I request a travel time matrix I should get$/
+);
+const durationsCodeOnlyRegex = new RegExp(
+  /^I request a travel time matrix with these waypoints I should get the response code$/
+);
+const distancesRegex = new RegExp(
+  /^I request a travel distance matrix I should get$/
+);
+const estimatesRegex = new RegExp(
+  /^I request a travel time matrix I should get estimates for$/
+);
+const durationsRegexFb = new RegExp(
+  /^I request a travel time matrix with flatbuffers I should get$/
+);
+const distancesRegexFb = new RegExp(
+  /^I request a travel distance matrix with flatbuffers I should get$/
+);
 
-  const DURATIONS_NO_ROUTE = 2147483647;     // MAX_INT
-  const DISTANCES_NO_ROUTE = 3.40282e+38;    // MAX_FLOAT
+// Sentinel values for unreachable routes in matrix responses
+const DURATIONS_NO_ROUTE = 2147483647; // MAX_INT (seconds)
+const DISTANCES_NO_ROUTE = 3.40282e38; // MAX_FLOAT (meters)
 
-  const FORMAT_JSON = 'json';
-  const FORMAT_FB = 'flatbuffers';
+const FORMAT_JSON = 'json';
+const FORMAT_FB = 'flatbuffers';
 
-  this.When(durationsRegex, function(table, callback) {tableParse.call(this, table, DURATIONS_NO_ROUTE, 'durations', FORMAT_JSON, callback);}.bind(this));
-  this.When(durationsCodeOnlyRegex, function(table, callback) {tableCodeOnlyParse.call(this, table, 'durations', FORMAT_JSON, callback);}.bind(this));
-  this.When(distancesRegex, function(table, callback) {tableParse.call(this, table, DISTANCES_NO_ROUTE, 'distances', FORMAT_JSON, callback);}.bind(this));
-  this.When(estimatesRegex, function(table, callback) {tableParse.call(this, table, DISTANCES_NO_ROUTE, 'fallback_speed_cells', FORMAT_JSON, callback);}.bind(this));
-  this.When(durationsRegexFb, function(table, callback) {tableParse.call(this, table, DURATIONS_NO_ROUTE, 'durations', FORMAT_FB, callback);}.bind(this));
-  this.When(distancesRegexFb, function(table, callback) {tableParse.call(this, table, DISTANCES_NO_ROUTE, 'distances', FORMAT_FB, callback);}.bind(this));
+When(durationsRegex, function (table, callback) {
+  tableParse.call(
+    this,
+    table,
+    DURATIONS_NO_ROUTE,
+    'durations',
+    FORMAT_JSON,
+    callback
+  );
+});
+When(durationsCodeOnlyRegex, function (table, callback) {
+  tableCodeOnlyParse.call(this, table, 'durations', FORMAT_JSON, callback);
+});
+When(distancesRegex, function (table, callback) {
+  tableParse.call(
+    this,
+    table,
+    DISTANCES_NO_ROUTE,
+    'distances',
+    FORMAT_JSON,
+    callback
+  );
+});
+When(estimatesRegex, function (table, callback) {
+  tableParse.call(
+    this,
+    table,
+    DISTANCES_NO_ROUTE,
+    'fallback_speed_cells',
+    FORMAT_JSON,
+    callback
+  );
+});
+When(durationsRegexFb, function (table, callback) {
+  tableParse.call(
+    this,
+    table,
+    DURATIONS_NO_ROUTE,
+    'durations',
+    FORMAT_FB,
+    callback
+  );
+});
+When(distancesRegexFb, function (table, callback) {
+  tableParse.call(
+    this,
+    table,
+    DISTANCES_NO_ROUTE,
+    'distances',
+    FORMAT_FB,
+    callback
+  );
+});
+
+const durationsParse = function (v) {
+  return isNaN(parseInt(v));
+};
+const distancesParse = function (v) {
+  return isNaN(parseFloat(v));
+};
+const estimatesParse = function (v) {
+  return isNaN(parseFloat(v));
 };
 
-const durationsParse = function(v) { return isNaN(parseInt(v)); };
-const distancesParse = function(v) { return isNaN(parseFloat(v)); };
-const estimatesParse = function(v) { return isNaN(parseFloat(v)); };
-
 function tableCodeOnlyParse(table, annotation, format, callback) {
-
   const params = this.queryParams;
-  params.annotations = ['durations','fallback_speed_cells'].indexOf(annotation) !== -1 ? 'duration' : 'distance';
+  params.annotations =
+    ['durations', 'fallback_speed_cells'].indexOf(annotation) !== -1
+      ? 'duration'
+      : 'distance';
   params.output = format;
 
-  var got;
+  let got;
 
   this.reprocessAndLoadData((e) => {
     if (e) return callback(e);
-    var testRow = (row, ri, cb) => {
-      var afterRequest = (err, res, body) => {
+    const testRow = function (row, ri, cb) {
+      const afterRequest = function (err, res, body) {
         if (err) return cb(err);
 
-        for (var k in row) {
-          var match = k.match(/param:(.*)/);
+        for (const k in row) {
+          const match = k.match(/param:(.*)/);
           if (match) {
             if (row[k] === '(nil)') {
               params[match[1]] = null;
@@ -55,7 +125,7 @@ function tableCodeOnlyParse(table, annotation, format, callback) {
           }
         }
 
-        var json;
+        let json;
         got.code = 'unknown';
         if (body.length) {
           json = JSON.parse(body);
@@ -63,16 +133,18 @@ function tableCodeOnlyParse(table, annotation, format, callback) {
         }
 
         cb(null, got);
-      };
+      }.bind(this);
 
-      var params = this.queryParams,
+      const params = this.queryParams,
         waypoints = [];
       if (row.waypoints) {
         row.waypoints.split(',').forEach((n) => {
-          var node = this.findNodeByName(n);
-          if (!node) throw new Error(util.format('*** unknown waypoint node "%s"', n.trim()));
+          const node = this.findNodeByName(n);
+          if (!node)
+            throw new Error(
+              util.format('*** unknown waypoint node "%s"', n.trim())
+            );
           waypoints.push({ coord: node, type: 'loc' });
-
         });
         got = { waypoints: row.waypoints };
 
@@ -80,44 +152,56 @@ function tableCodeOnlyParse(table, annotation, format, callback) {
       } else {
         throw new Error('*** no waypoints');
       }
-    };
+    }.bind(this);
 
     this.processRowsAndDiff(table, testRow, callback);
   });
-
 }
 
 function tableParse(table, noRoute, annotation, format, callback) {
-
-  const parse = annotation == 'distances' ? distancesParse : (annotation == 'durations' ? durationsParse : estimatesParse);
+  const parse =
+    annotation == 'distances'
+      ? distancesParse
+      : annotation == 'durations'
+        ? durationsParse
+        : estimatesParse;
   const params = this.queryParams;
-  params.annotations = ['durations','fallback_speed_cells'].indexOf(annotation) !== -1 ? 'duration' : 'distance';
+  params.annotations =
+    ['durations', 'fallback_speed_cells'].indexOf(annotation) !== -1
+      ? 'duration'
+      : 'distance';
   params.output = format;
 
-  var tableRows = table.raw();
+  const tableRows = table.raw();
 
-  if (tableRows[0][0] !== '') throw new Error('*** Top-left cell of matrix table must be empty');
+  if (tableRows[0][0] !== '')
+    throw new Error('*** Top-left cell of matrix table must be empty');
 
-  var waypoints = [],
+  const waypoints = [],
     columnHeaders = tableRows[0].slice(1),
     rowHeaders = tableRows.map((h) => h[0]).slice(1),
-    symmetric = columnHeaders.length == rowHeaders.length && columnHeaders.every((ele, i) => ele === rowHeaders[i]);
+    symmetric =
+      columnHeaders.length == rowHeaders.length &&
+      columnHeaders.every((ele, i) => ele === rowHeaders[i]);
 
   if (symmetric) {
     columnHeaders.forEach((nodeName) => {
-      var node = this.findNodeByName(nodeName);
-      if (!node) throw new Error(util.format('*** unknown node "%s"', nodeName));
+      const node = this.findNodeByName(nodeName);
+      if (!node)
+        throw new Error(util.format('*** unknown node "%s"', nodeName));
       waypoints.push({ coord: node, type: 'loc' });
     });
   } else {
     columnHeaders.forEach((nodeName) => {
-      var node = this.findNodeByName(nodeName);
-      if (!node) throw new Error(util.format('*** unknown node "%s"', nodeName));
+      const node = this.findNodeByName(nodeName);
+      if (!node)
+        throw new Error(util.format('*** unknown node "%s"', nodeName));
       waypoints.push({ coord: node, type: 'dst' });
     });
     rowHeaders.forEach((nodeName) => {
-      var node = this.findNodeByName(nodeName);
-      if (!node) throw new Error(util.format('*** unknown node "%s"', nodeName));
+      const node = this.findNodeByName(nodeName);
+      if (!node)
+        throw new Error(util.format('*** unknown node "%s"', nodeName));
       waypoints.push({ coord: node, type: 'src' });
     });
   }
@@ -130,56 +214,59 @@ function tableParse(table, noRoute, annotation, format, callback) {
       if (err) return callback(err);
       if (!body.length) return callback(new Error('Invalid response body'));
 
-      var result = [];
+      let result = [];
       if (format === 'json') {
-        var json = JSON.parse(body);
+        const json = JSON.parse(body);
 
         if (annotation === 'fallback_speed_cells') {
-          result = table.raw().map(row => row.map(() => ''));
-          json[annotation].forEach(pair => {
-            result[pair[0]+1][pair[1]+1] = 'Y';
+          result = table.raw().map((row) => row.map(() => ''));
+          json[annotation].forEach((pair) => {
+            result[pair[0] + 1][pair[1] + 1] = 'Y';
           });
-          result = result.slice(1).map(row => {
-            var hashes = {};
-            row.slice(1).forEach((v,i) => {
-              hashes[tableRows[0][i+1]] = v;
+          result = result.slice(1).map((row) => {
+            const hashes = {};
+            row.slice(1).forEach((v, i) => {
+              hashes[tableRows[0][i + 1]] = v;
             });
             return hashes;
           });
         } else {
-          result = json[annotation].map(row => {
-            var hashes = {};
-            row.forEach((v, i) => { hashes[tableRows[0][i+1]] = parse(v) ? '' : v; });
+          result = json[annotation].map((row) => {
+            const hashes = {};
+            row.forEach((v, i) => {
+              hashes[tableRows[0][i + 1]] = parse(v) ? '' : v;
+            });
             return hashes;
           });
         }
-      } else { //flatbuffers
-        var bytes = new Uint8Array(body.length);
-        for (var indx = 0; indx < body.length; ++indx) {
+      } else {
+        //flatbuffers
+        const bytes = new Uint8Array(body.length);
+        for (let indx = 0; indx < body.length; ++indx) {
           bytes[indx] = body.charCodeAt(indx);
         }
-        var buf = new flatbuffers.ByteBuffer(bytes);
-        var fb = FBResult.getRootAsFBResult(buf);
+        const buf = new flatbuffers.ByteBuffer(bytes);
+        const fb = FBResult.getRootAsFBResult(buf);
 
-        var matrix;
+        let matrix;
         if (annotation === 'durations') {
           matrix = fb.table().durationsArray();
         }
         if (annotation === 'distances') {
           matrix = fb.table().distancesArray();
         }
-        var cols = fb.table().cols();
-        var rows = fb.table().rows();
+        const cols = fb.table().cols();
+        const rows = fb.table().rows();
         for (let r = 0; r < rows; ++r) {
-          result[r]={};
-          for(let c=0; c < cols; ++c) {
-            result[r][tableRows[0][c+1]] = matrix[r*cols + c];
+          result[r] = {};
+          for (let c = 0; c < cols; ++c) {
+            result[r][tableRows[0][c + 1]] = matrix[r * cols + c];
           }
         }
       }
 
-      var testRow = (row, ri, cb) => {
-        for (var k in result[ri]) {
+      const testRow = function (row, ri, cb) {
+        for (const k in result[ri]) {
           if (this.FuzzyMatch.match(result[ri][k], row[k])) {
             result[ri][k] = row[k];
           } else if (row[k] === '' && result[ri][k] === noRoute) {
@@ -191,7 +278,7 @@ function tableParse(table, noRoute, annotation, format, callback) {
 
         result[ri][''] = row[''];
         cb(null, result[ri]);
-      };
+      }.bind(this);
 
       this.processRowsAndDiff(table, testRow, callback);
     });
