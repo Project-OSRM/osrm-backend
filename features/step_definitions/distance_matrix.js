@@ -163,8 +163,8 @@ function tableParse(table, noRoute, annotation, format, callback) {
     annotation == 'distances'
       ? distancesParse
       : annotation == 'durations'
-      ? durationsParse
-      : estimatesParse;
+        ? durationsParse
+        : estimatesParse;
   const params = this.queryParams;
   params.annotations =
     ['durations', 'fallback_speed_cells'].indexOf(annotation) !== -1

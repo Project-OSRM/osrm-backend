@@ -191,7 +191,7 @@ Given(
       // - '(nil)' or empty: delete name tag entirely
       // - otherwise: use literal value
       if (row.name === undefined) tags.name = nodes;
-      else if (row.name === '""' || row.name === "''") tags.name = '';
+      else if (row.name === '""' || row.name === '\'\'') tags.name = '';
       else if (row.name === '' || row.name === '(nil)') delete tags.name;
       else tags.name = row.name;
 
