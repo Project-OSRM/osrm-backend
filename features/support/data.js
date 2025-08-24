@@ -40,7 +40,7 @@ export default class Data {
   // Builds OSM ways from test table data with synthetic coordinates
   buildWaysFromTable(table, callback) {
     // add one unconnected way for each row
-    var buildRow = function (row, ri, cb) {
+    const buildRow = (row, ri, cb) => {
       // comments ported directly from ruby suite:
       // NOTE: currently osrm crashes when processing an isolated oneway with just 2 nodes, so we use 4 edges
       // this is related to the fact that a oneway dead-end street doesn't make a lot of sense
@@ -51,25 +51,25 @@ export default class Data {
       // add some nodes
 
       // Creates synthetic OSM node with calculated coordinates
-      var makeFakeNode = function (namePrefix, offset) {
+      const makeFakeNode = (namePrefix, offset) => {
         const coord = this.offsetOriginBy(offset + this.WAY_SPACING * ri, 0);
         return new OSM.Node(this.makeOSMId(), this.OSM_USER, this.OSM_TIMESTAMP,
           this.OSM_UID, coord[0],
           coord[1], {name: util.format('%s%d', namePrefix, ri)});
       };
 
-      var nodes = ['a','b','c','d','e'].map((l, i) => makeFakeNode(l, i));
+      const nodes = ['a','b','c','d','e'].map((l, i) => makeFakeNode(l, i));
 
       nodes.forEach(node => { this.OSMDB.addNode(node); });
 
       // ...with a way between them
-      var way = new OSM.Way(this.makeOSMId(), this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID);
+      const way = new OSM.Way(this.makeOSMId(), this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID);
 
       nodes.forEach(node => { way.addNode(node); });
 
       // remove tags that describe expected test result, reject empty tags
-      var tags = {};
-      for (var rkey in row) {
+      const tags = {};
+      for (let rkey in row) {
         if (!rkey.match(/^forw\b/) &&
                     !rkey.match(/^backw\b/) &&
                     !rkey.match(/^bothw\b/) &&
@@ -77,11 +77,11 @@ export default class Data {
           tags[rkey] = row[rkey];
       }
 
-      var wayTags = { highway: 'primary' },
-        nodeTags = {};
+      const wayTags = { highway: 'primary' };
+      const nodeTags = {};
 
-      for (var key in tags) {
-        var nodeMatch = key.match(/node\/(.*)/);
+      for (let key in tags) {
+        const nodeMatch = key.match(/node\/(.*)/);
         if (nodeMatch) {
           if (tags[key] === '(nil)') {
             delete nodeTags[key];
@@ -101,13 +101,13 @@ export default class Data {
       way.setTags(wayTags);
       this.OSMDB.addWay(way);
 
-      for (var k in nodeTags) {
+      for (let k in nodeTags) {
         nodes[2].addTag(k, nodeTags[k]);
       }
       cb();
     };
 
-    var q = d3.queue();
+    const q = d3.queue();
     table.hashes().forEach((row, ri) => {
       q.defer(buildRow, row, ri);
     });
@@ -291,22 +291,22 @@ export default class Data {
   }
 
   reprocessAndLoadData(callback) {
-    let p = {loaderArgs: this.loaderArgs, inputFile: this.processedCacheFile};
-    let queue = d3.queue(1);
+    const p = {loaderArgs: this.loaderArgs, inputFile: this.processedCacheFile};
+    const queue = d3.queue(1);
     queue.defer(this.writeAndLinkOSM);
     queue.defer(this.extractContractPartitionAndCustomize);
-    queue.defer(this.osrmLoader.load.bind(this.osrmLoader), p);
+    queue.defer((params, cb) => this.osrmLoader.load(params, cb), p);
     queue.awaitAll(callback);
   }
 
   processRowsAndDiff(table, fn, callback) {
-    var q = d3.queue(1);
+    const q = d3.queue(1);
 
     table.hashes().forEach((row, i) => { q.defer(fn, row, i); });
 
     q.awaitAll((err, actual) => {
       if (err) return callback(err);
-      let diff = tableDiff(table, actual);
+      const diff = tableDiff(table, actual);
       if (diff) callback(diff);
       else callback();
     });

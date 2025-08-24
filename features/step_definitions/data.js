@@ -6,7 +6,6 @@ import d3 from 'd3-queue';
 import * as OSM from '../lib/osm.js';
 import { Given } from '@cucumber/cucumber';
 
-
 Given(/^the profile "([^"]*)"$/, function (profile, callback) {
   this.profile = this.OSRM_PROFILE || profile;
   this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
@@ -186,10 +185,13 @@ Given(
 
       if (row.highway === '(nil)') delete tags.highway;
 
+      // Handle various ways to specify way names in test tables:
+      // - undefined: use node sequence as name
+      // - empty quotes: set empty name
+      // - '(nil)' or empty: delete name tag entirely
+      // - otherwise: use literal value
       if (row.name === undefined) tags.name = nodes;
-      else if (row.name === '""' || row.name === '\'\'')
-         
-        tags.name = '';
+      else if (row.name === '""' || row.name === "''") tags.name = '';
       else if (row.name === '' || row.name === '(nil)') delete tags.name;
       else tags.name = row.name;
 
@@ -225,6 +227,11 @@ Given(/^the relations$/, function (table, callback) {
     for (let index in row) {
       var key = headers[index];
       var value = row[index];
+      // Parse relation member column headers:
+      // - "node" or "node:role" for node members
+      // - "way" or "way:role" for way members
+      // - "relation" or "relation:role" for relation members
+      // - "tag:value" for regular OSM tags
       let isNode = key.match(/^node:?(.*)/),
         isWay = key.match(/^way:?(.*)/),
         isRelation = key.match(/^relation:?(.*)/),

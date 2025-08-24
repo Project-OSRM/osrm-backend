@@ -153,10 +153,10 @@ When(/^I match I should get$/, function (table, callback) {
           if (k.match(/^a:/)) {
             let a_type = k.slice(2);
             if (whitelist.indexOf(a_type) == -1)
-              return cb(new Error('Unrecognized annotation field:' + a_type));
+              return cb(new Error('*** Unrecognized annotation field: ' + a_type));
             if (!annotation[a_type])
               return cb(
-                new Error('Annotation not found in response: ' + a_type)
+                new Error('*** Annotation not found in response: ' + a_type)
               );
             got[k] = annotation[a_type];
           }
