@@ -1,8 +1,8 @@
-'use strict';
+// Network connectivity testing utility for checking if OSRM server is ready
+import net from 'net';
 
-const net = require('net');
-
-module.exports = function tryConnect(host, port, callback) {
+// Attempts TCP connection to test if server is accepting connections
+export default function tryConnect(host, port, callback) {
   net.connect({ port: port, host: host })
     .on('connect', () => { callback(); })
     .on('error', () => {

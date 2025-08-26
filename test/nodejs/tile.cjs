@@ -1,7 +1,7 @@
 var OSRM = require('../../');
 var test = require('tape');
-var data_path = require('./constants').data_path;
-var tile = require('./constants').test_tile;
+var data_path = require('./constants.cjs').data_path;
+var tile = require('./constants.cjs').test_tile;
 
 test.test('tile check size coarse', function(assert) {
     assert.plan(2);

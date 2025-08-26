@@ -3222,5 +3222,5 @@ if (typeof module !== 'undefined' && module.exports) {
   globalThis.osrm = osrm;
 }
 
-// ES module export for compatibility
-export { osrm };
+// CommonJS export for compatibility
+module.exports = { osrm };

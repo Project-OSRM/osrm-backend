@@ -1,8 +1,7 @@
-'use strict';
+// Data class definitions for test result validation and comparison
+import util from 'util';
 
-const util = require('util');
-
-module.exports = {
+export default {
   Location: class {
     constructor (lon, lat) {
       this.lon = lon;
@@ -16,7 +15,7 @@ module.exports = {
       if (want === '' && (got === '' || got === undefined))
         return true;
 
-      var matchPercent = want.match(/(.*)\s+~(.+)%$/),
+      const matchPercent = want.match(/(.*)\s+~(.+)%$/),
         matchAbs = want.match(/(.*)\s+\+-(.+)$/),
         matchRe = want.match(/^\/(.*)\/$/),
         // we use this for matching before/after bearing
@@ -25,7 +24,7 @@ module.exports = {
         matchRangeNumbers = want.match(/\d+\+-\d+/);
 
       function inRange(margin, got, want) {
-        var fromR = parseFloat(want) - margin,
+        const fromR = parseFloat(want) - margin,
           toR = parseFloat(want) + margin;
         return parseFloat(got) >= fromR && parseFloat(got) <= toR;
       }
@@ -50,7 +49,7 @@ module.exports = {
         {
           return false;
         }
-        for (var i = 0; i < want_pairs.length; ++i)
+        for (let i = 0; i < want_pairs.length; ++i)
         {
           if (!inRange(margin, got_pairs[i][0], want_pairs[i][0]) ||
                         !inRange(margin, got_pairs[i][1], want_pairs[i][1]))
@@ -93,7 +92,7 @@ module.exports = {
         }
         return true;
       } else if (matchPercent) {         // percentage range: 100 ~ 5%
-        var target = parseFloat(matchPercent[1]),
+        const target = parseFloat(matchPercent[1]),
           percentage = parseFloat(matchPercent[2]);
         if (target === 0) {
           return true;
