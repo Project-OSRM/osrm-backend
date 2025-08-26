@@ -168,8 +168,8 @@ void test_nearest_response_for_location_in_small_component(bool use_json_only_ap
 
         const auto &nodes = std::get<json::Array>(waypoint_object.values.at("nodes")).values;
         BOOST_CHECK(nodes.size() == 2);
-        BOOST_CHECK(std::get<util::json::Number>(nodes[0]).value != 0);
-        BOOST_CHECK(std::get<util::json::Number>(nodes[1]).value != 0);
+        BOOST_CHECK(std::get<util::json::OSMID>(nodes[0]).value != 0);
+        BOOST_CHECK(std::get<util::json::OSMID>(nodes[1]).value != 0);
     }
 }
 BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component_old_api)
