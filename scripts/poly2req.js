@@ -27,10 +27,10 @@ let coords_separators = {
   'table_5.0': ';',
   'table_4.9': '&'
 };
-var axis = 'distance';
+let axis = 'distance';
 
-var sw = [Number.MAX_VALUE, Number.MAX_VALUE];
-var ne = [Number.MIN_VALUE, Number.MIN_VALUE];
+let sw = [Number.MAX_VALUE, Number.MAX_VALUE];
+let ne = [Number.MIN_VALUE, Number.MIN_VALUE];
 
 if (process.argv.length > 2 && process.argv[2] == 'planet')
 {
@@ -55,7 +55,7 @@ else if (process.argv.length > 2)
   let coordinates = poly_data.split('\n')
     .filter((l) => l != '')
     .slice(2, -2).map((coord_line) => coord_line.split(' ')
-    .filter((elem) => elem != ''))
+      .filter((elem) => elem != ''))
     .map((coord) => [parseFloat(coord[0]), parseFloat(coord[1])]);
 
   coordinates.forEach((c) => {
@@ -74,10 +74,10 @@ if (process.argv.length > 3)
 console.error(sw);
 console.error(ne);
 
-var seed = 0x1337;
+let seed = 0x1337;
 function seededRandom(min, max) {
   seed = (seed * 9301 + 49297) % 233280;
-  var rnd = seed / 233280;
+  const rnd = seed / 233280;
   return min + rnd * (max - min);
 }
 
@@ -94,10 +94,10 @@ function makeQuery(coords) {
 
 if (axis == 'distance')
 {
-  for (var i = 0; i < NUM_REQUEST; ++i)
+  for (let i = 0; i < NUM_REQUEST; ++i)
   {
-    var coords = [];
-    for (var j = 0; j < NUM_COORDS; ++j)
+    let coords = [];
+    for (let j = 0; j < NUM_COORDS; ++j)
     {
       coords.push(getRandomCoordinate());
     }
@@ -106,16 +106,16 @@ if (axis == 'distance')
 }
 else if (axis == 'waypoints')
 {
-  for (var power = 0; power <= 1; ++power)
+  for (let power = 0; power <= 1; ++power)
   {
-    for (var factor = 1; factor <= 10; ++factor)
+    for (let factor = 1; factor <= 10; ++factor)
     {
       let num_coords = factor*Math.pow(10, power);
       console.error(num_coords);
-      for (var i = 0; i < SAMPLE_SIZE; ++i)
+      for (let i = 0; i < SAMPLE_SIZE; ++i)
       {
-        var coords = [];
-        for (var j = 0; j < num_coords; ++j)
+        let coords = [];
+        for (let j = 0; j < num_coords; ++j)
         {
           coords.push(getRandomCoordinate());
         }

@@ -13,21 +13,21 @@
 import fs from 'fs';
 import { parseString } from 'xml2js';
 
-var data = fs.readFileSync('filename.osm', 'utf8');
+const data = fs.readFileSync('filename.osm', 'utf8');
 
 const items = parseString(data, (err, result) => {
-  var idmap = {};
+  const idmap = {};
 
   console.log('Given the node locations');
   console.log('    | node | lon       | lat       |');
   result.osm.node.filter(n => !n.$.action || n.$.action !== 'delete').forEach(i => {
-    var code = String.fromCharCode(97 + Object.keys(idmap).length);
+    const code = String.fromCharCode(97 + Object.keys(idmap).length);
     idmap[i.$.id] = code;
     console.log(`    | ${code} | ${i.$.lon} | ${i.$.lat} |`);
   });
 
-  var allkeys = {};
-  var waytags = {};
+  const allkeys = {};
+  const waytags = {};
 
   result.osm.way.filter(n => !n.$.action || n.$.action !== 'delete').forEach(w => {
     if (!waytags[w.$.id]) waytags[w.$.id] = {};
