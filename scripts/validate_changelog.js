@@ -1,17 +1,23 @@
+// CHANGELOG.md validator - ensures changelog entries follow the required format standards
+
 import { createInterface } from 'readline';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Get current directory path in ES modules
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Read CHANGELOG.md line by line
 const linereader = createInterface( {
   input: fs.createReadStream(path.join(__dirname, '..', 'CHANGELOG.md'))
 });
 
+// Track validation state
 let done = false;
 let linenum = 0;
 let has_errors = false;
+// Validate each line of the changelog
 linereader.on('line', function(line) {
   linenum += 1;
   if (line.match(/^# [^U]/)) done = true;

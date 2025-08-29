@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Command execution timer - runs shell commands and logs execution time to file
 
 import { exec } from 'child_process';
 import fs from 'fs';

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// OSRM query runner - executes routing queries against OSRM server and collects performance metrics
 
 import fs from 'fs';
 import http from 'http';
@@ -10,6 +11,7 @@ import turf from 'turf';
 import jp from 'jsonpath';
 import { stringify as csv_stringify } from 'csv-stringify/lib/sync';
 
+// Execute HTTP query against OSRM server and measure response times
 const run_query = (query_options, filters, callback) => {
   let tic = () => 0.;
   http.request(query_options, function (res) {
@@ -32,6 +34,7 @@ const run_query = (query_options, filters, callback) => {
   }).end();
 };
 
+// Generate random coordinate points within a polygon boundary for route testing
 function generate_points(polygon, number, coordinates_number, max_distance) {
   let query_points = [];
   while (query_points.length < number) {
@@ -73,6 +76,7 @@ function generate_points(polygon, number, coordinates_number, max_distance) {
   return query_points;
 }
 
+// Convert coordinate points into OSRM API query URLs
 function generate_queries(options, query_points) {
   let queries = query_points.map(points => {
     return options.path.replace(/{}/g, x =>  points.pop().join(','));
@@ -80,12 +84,14 @@ function generate_queries(options, query_points) {
   return queries;
 }
 
+// Parse server hostname:port from command line arguments
 function ServerDetails(x) {
   if (!(this instanceof ServerDetails)) return new ServerDetails(x);
   const v = x.split(':');
   this.hostname = (v[0].length > 0) ? v[0] : '';
   this.port = (v.length > 1) ? Number(v[1]) : 80;
 }
+// Parse geographic bounding box coordinates from command line
 function BoundingBox(x) {
   if (!(this instanceof BoundingBox)) return new BoundingBox(x);
   const v = x.match(/[+-]?\d+(?:\.\d*)?|\.\d+/g);
@@ -118,6 +124,7 @@ if (options.help) {
   process.exit(0);
 }
 
+// Load queries from file or generate random coordinate-based queries
 let queries = [];
 if (options.hasOwnProperty('queries-files')) {
   queries = fs.readFileSync(options['queries-files'])
@@ -133,6 +140,7 @@ if (options.hasOwnProperty('queries-files')) {
 }
 queries = queries.map(q => { return {hostname: options.server.hostname, port: options.server.port, path: q}; });
 
+// Execute all queries and output results in CSV format
 http.globalAgent.maxSockets = options['max-sockets'];
 queries.map(query => {
   run_query(query, options.filter, (query, code, ttfb, total, results) => {

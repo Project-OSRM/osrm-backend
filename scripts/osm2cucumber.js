@@ -1,3 +1,4 @@
+// OSM to Cucumber converter - transforms OpenStreetMap XML data into Cucumber test scenario format
 /*********************************
  * Takes an XML `.osm` file and converts it into a cucumber scenario definition like
  *    Given the node locations

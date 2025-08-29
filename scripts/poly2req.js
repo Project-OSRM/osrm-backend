@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Polygon-to-requests generator - creates random routing queries within geographic boundaries
 
 import fs from 'fs';
 
@@ -29,6 +30,7 @@ let coords_separators = {
 };
 let axis = 'distance';
 
+// Bounding box coordinates (southwest and northeast corners)
 let sw = [Number.MAX_VALUE, Number.MAX_VALUE];
 let ne = [Number.MIN_VALUE, Number.MIN_VALUE];
 
@@ -74,6 +76,7 @@ if (process.argv.length > 3)
 console.error(sw);
 console.error(ne);
 
+// Custom seeded random number generator for reproducible test coordinates
 let seed = 0x1337;
 function seededRandom(min, max) {
   seed = (seed * 9301 + 49297) % 233280;
@@ -81,17 +84,20 @@ function seededRandom(min, max) {
   return min + rnd * (max - min);
 }
 
+// Generate random coordinate within the defined bounding box
 function getRandomCoordinate() {
   let lon = seededRandom(sw[0], ne[0]);
   let lat = seededRandom(sw[1], ne[1]);
   return [lon, lat];
 }
 
+// Build OSRM API query URL from coordinate array
 function makeQuery(coords) {
   let coords_string = coords.map((c) => coord_templates[VERSION].replace('{lon}', c[0]).replace('{lat}', c[1])).join(coords_separators[VERSION]);
   return url_templates[VERSION].replace('{coords}', coords_string).replace('{port}', PORT);
 }
 
+// Generate queries based on distance or waypoint count
 if (axis == 'distance')
 {
   for (let i = 0; i < NUM_REQUEST; ++i)

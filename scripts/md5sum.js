@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// MD5 checksum generator and validator for data file integrity verification
 
 import crypto from 'crypto';
 import fs from 'fs';
@@ -22,6 +23,7 @@ if (idx > -1) {
 }
 
 
+// Synchronously calculate MD5 hash of a file using streaming to handle large files efficiently
 function md5FileSync (filename) {
   const BUFFER_SIZE = 8192;
   const fd = fs.openSync(filename, 'r');
@@ -42,6 +44,7 @@ function md5FileSync (filename) {
   return hash.digest('hex');
 }
 
+// Generate MD5 checksums for multiple files and output in standard format
 function generate(files) {
   files.forEach(function(filename) {
     const md5_actual = md5FileSync(filename);
@@ -49,6 +52,7 @@ function generate(files) {
   });
 }
 
+// Validate files against checksums stored in a .md5sum file
 function validate(validate_file) {
 
   const sums = {};
