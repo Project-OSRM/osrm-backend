@@ -116,7 +116,7 @@ jobs:
       run: |
         ./scripts/check_taginfo.py taginfo.json profiles/car.lua
         ./scripts/format.sh && ./scripts/error_on_dirty.sh
-        node ./scripts/validate_changelog.cjs
+        node ./scripts/validate_changelog.js
         npm run docs && ./scripts/error_on_dirty.sh
         npm audit --production
 
