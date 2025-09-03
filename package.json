@@ -20,7 +20,7 @@
     "clean": "rm -rf test/cache",
     "docs": "./scripts/build_api_docs.sh",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh",
-    "nodejs-tests": "make -C test/data && ./lib/binding/osrm-datastore test/data/ch/monaco.osrm && node test/nodejs/index.cjs | faucet"
+    "nodejs-tests": "make -C test/data && ./lib/binding/osrm-datastore test/data/ch/monaco.osrm && node test/nodejs/index.js | faucet"
   },
   "repository": {
     "type": "git",
@@ -66,7 +66,7 @@
     "uglify-js": "^3.17.0",
     "xmlbuilder": "15.1.1"
   },
-  "main": "lib/index.cjs",
+  "main": "lib/index.js",
   "binary": {
     "napi_versions": [
       8

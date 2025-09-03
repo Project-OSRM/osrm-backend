@@ -1,11 +1,10 @@
-var OSRM = require('../../');
-var test = require('tape');
-var data_path = require('./constants.cjs').data_path;
-var mld_data_path = require('./constants.cjs').mld_data_path;
-var three_test_coordinates = require('./constants.cjs').three_test_coordinates;
-var two_test_coordinates = require('./constants.cjs').two_test_coordinates;
-const flatbuffers = require('../../features/support/flatbuffers.cjs').flatbuffers;
-const FBResult = require('../../features/support/fbresult_generated.cjs').osrm.engine.api.fbresult.FBResult;
+import OSRM from '../../lib/index.js';
+import test from 'tape';
+import { data_path, mld_data_path, three_test_coordinates, two_test_coordinates } from './constants.js';
+import flatbuffers from 'flatbuffers';
+import { osrm } from '../../features/support/fbresult_generated.js';
+
+const FBResult = osrm.engine.api.fbresult.FBResult;
 
 test('trip: trip in Monaco with flatbuffers format', function(assert) {
     assert.plan(2);

@@ -1,8 +1,6 @@
-var OSRM = require('../../');
-var test = require('tape');
-var monaco_path = require('./constants.cjs').data_path;
-var test_memory_file = require('./constants.cjs').test_memory_file;
-var monaco_mld_path = require('./constants.cjs').mld_data_path;
+import OSRM from '../../lib/index.js';
+import test from 'tape';
+import { data_path as monaco_path, test_memory_path as test_memory_file, mld_data_path as monaco_mld_path } from './constants.js';
 
 test('constructor: throws if new keyword is not used', function(assert) {
     assert.plan(1);

@@ -1,9 +1,10 @@
-const OSRM = require('../../');
-const {performance, createHistogram} = require('node:perf_hooks');
+import OSRM from '../../lib/index.js';
+import { performance, createHistogram } from 'node:perf_hooks';
+import { mld_data_path } from './constants.js';
 
-// usage: node test/nodejs/benchmark.cjs berlin-latest.osrm 13.388860,52.517037;13.385983,52.496891
+// usage: node test/nodejs/benchmark.js berlin-latest.osrm 13.388860,52.517037;13.385983,52.496891
 const args = process.argv.slice(2);
-const path = args[0] || require('./constants.cjs').mld_data_path;
+const path = args[0] || mld_data_path;
 
 function parseWaypoints(waypoints) {
     if (waypoints == undefined) {

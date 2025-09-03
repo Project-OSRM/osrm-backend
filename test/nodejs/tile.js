@@ -1,7 +1,6 @@
-var OSRM = require('../../');
-var test = require('tape');
-var data_path = require('./constants.cjs').data_path;
-var tile = require('./constants.cjs').test_tile;
+import OSRM from '../../lib/index.js';
+import test from 'tape';
+import { data_path, test_tile as tile } from './constants.js';
 
 test.test('tile check size coarse', function(assert) {
     assert.plan(2);
