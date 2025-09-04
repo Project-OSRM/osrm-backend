@@ -22,7 +22,7 @@ test('trip: trip in Monaco', function(assert) {
     var osrm = new OSRM(data_path);
     osrm.trip({coordinates: two_test_coordinates}, function(err, trip) {
         assert.ifError(err);
-        for (t = 0; t < trip.trips.length; t++) {
+        for (let t = 0; t < trip.trips.length; t++) {
             assert.ok(trip.trips[t].geometry);
         }
     });
@@ -35,7 +35,7 @@ test('trip: trip in Monaco as a buffer', function(assert) {
         assert.ifError(err);
         assert.ok(trip instanceof Buffer);
         trip = JSON.parse(trip);
-        for (t = 0; t < trip.trips.length; t++) {
+        for (let t = 0; t < trip.trips.length; t++) {
             assert.ok(trip.trips[t].geometry);
         }
     });
@@ -50,7 +50,7 @@ test('trip: trip with many locations in Monaco', function(assert) {
     var opts = {coordinates: three_test_coordinates.slice(0, many)};
     osrm.trip(opts, function(err, trip) {
         assert.ifError(err);
-        for (t = 0; t < trip.trips.length; t++) {
+        for (let t = 0; t < trip.trips.length; t++) {
             assert.ok(trip.trips[t].geometry);
         }
     });
@@ -127,7 +127,7 @@ test('trip: routes Monaco using shared memory', function(assert) {
     var osrm = new OSRM();
     osrm.trip({coordinates: two_test_coordinates}, function(err, trip) {
         assert.ifError(err);
-            for (t = 0; t < trip.trips.length; t++) {
+            for (let t = 0; t < trip.trips.length; t++) {
                 assert.ok(trip.trips[t].geometry);
             }
     });
@@ -142,7 +142,7 @@ test('trip: routes Monaco with hints', function(assert) {
     };
     osrm.trip(options, function(err, first) {
         assert.ifError(err);
-        for (t = 0; t < first.trips.length; t++) {
+        for (let t = 0; t < first.trips.length; t++) {
             assert.ok(first.trips[t].geometry);
         }
         var hints = first.waypoints.map(function(wp) { return wp.hint; });
@@ -164,7 +164,7 @@ test('trip: trip through Monaco with geometry compression', function(assert) {
     };
     osrm.trip(options, function(err, trip) {
         assert.ifError(err);
-        for (t = 0; t < trip.trips.length; t++) {
+        for (let t = 0; t < trip.trips.length; t++) {
             assert.equal('string', typeof trip.trips[t].geometry);
         }
     });
@@ -179,7 +179,7 @@ test('trip: trip through Monaco without geometry compression', function(assert) 
     };
     osrm.trip(options, function(err, trip) {
         assert.ifError(err);
-        for (t = 0; t < trip.trips.length; t++) {
+        for (let t = 0; t < trip.trips.length; t++) {
             assert.ok(Array.isArray(trip.trips[t].geometry.coordinates));
         }
     });
@@ -197,7 +197,7 @@ test('trip: trip through Monaco with speed annotations options', function(assert
     osrm.trip(options, function(err, trip) {
         assert.ifError(err);
         assert.equal(trip.trips.length, 1);
-        for (t = 0; t < trip.trips.length; t++) {
+        for (let t = 0; t < trip.trips.length; t++) {
             assert.ok(trip.trips[t]);
             assert.ok(trip.trips[t].legs.every(function(l) { return l.steps.length > 0; }), 'every leg has steps')
             assert.ok(trip.trips[t].legs.every(function(l) { return l.annotation; }), 'every leg has annotations')
@@ -224,7 +224,7 @@ test('trip: trip through Monaco with several (duration, distance, nodes) annotat
     osrm.trip(options, function(err, trip) {
         assert.ifError(err);
         assert.equal(trip.trips.length, 1);
-        for (t = 0; t < trip.trips.length; t++) {
+        for (let t = 0; t < trip.trips.length; t++) {
             assert.ok(trip.trips[t]);
             assert.ok(trip.trips[t].legs.every(function(l) { return l.steps.length > 0; }), 'every leg has steps')
             assert.ok(trip.trips[t].legs.every(function(l) { return l.annotation; }), 'every leg has annotations')
@@ -251,7 +251,7 @@ test('trip: trip through Monaco with options', function(assert) {
     osrm.trip(options, function(err, trip) {
         assert.ifError(err);
         assert.equal(trip.trips.length, 1);
-        for (t = 0; t < trip.trips.length; t++) {
+        for (let t = 0; t < trip.trips.length; t++) {
             assert.ok(trip.trips[t]);
             assert.ok(trip.trips[t].legs.every(function(l) { return l.steps.length > 0; }), 'every leg has steps')
             assert.ok(trip.trips[t].legs.every(function(l) { return l.annotation; }), 'every leg has annotations')
