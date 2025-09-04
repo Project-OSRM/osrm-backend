@@ -2,6 +2,13 @@
 import OSRM from '../../lib/index.js';
 import test from 'tape';
 import { data_path as monaco_path, test_memory_path as test_memory_file, mld_data_path as monaco_mld_path } from './constants.js';
+// Import all test modules
+import './route.js';
+import './trip.js';
+import './match.js';
+import './tile.js';
+import './table.js';
+import './nearest.js';
 
 test('constructor: throws if new keyword is not used', function(assert) {
     assert.plan(1);
@@ -184,10 +191,3 @@ test('constructor: ok on multiple overlapping disable_feature_dataset options', 
     });
     assert.ok(osrm);
 });
-
-require('./route.cjs');
-require('./trip.cjs');
-require('./match.cjs');
-require('./tile.cjs');
-require('./table.cjs');
-require('./nearest.cjs');
