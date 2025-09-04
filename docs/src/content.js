@@ -1,4 +1,4 @@
-var fs = require('fs');
+const fs = require('fs');
 
 /**
  * This file exports the content of your website, as a bunch of concatenated

@@ -1,3 +1,4 @@
+// Performance benchmarking tool for OSRM routing services
 import OSRM from '../../lib/index.js';
 import { performance, createHistogram } from 'node:perf_hooks';
 import { mld_data_path } from './constants.js';
@@ -6,6 +7,7 @@ import { mld_data_path } from './constants.js';
 const args = process.argv.slice(2);
 const path = args[0] || mld_data_path;
 
+// Parse semicolon-separated waypoints from command line arguments
 function parseWaypoints(waypoints) {
     if (waypoints == undefined) {
         return undefined;
@@ -18,6 +20,7 @@ function parseWaypoints(waypoints) {
 const waypoints = parseWaypoints(args[1]) || [[7.41337, 43.72956],[7.41546, 43.73077]];
 const osrm = new OSRM({path, algorithm: 'MLD'});
 
+// Promisify the OSRM route callback for async/await usage
 async function route(coordinates) {
     const promise = new Promise((resolve, reject) => {
         osrm.route({coordinates, steps: true, overview: 'full'}, (err, result) => {
