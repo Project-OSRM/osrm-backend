@@ -18,7 +18,7 @@ test('constructor: throws if new keyword is not used', function(assert) {
 
 test('constructor: uses defaults with no parameter', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM();
+    const osrm = new OSRM();
     assert.ok(osrm);
 });
 
@@ -39,13 +39,13 @@ test('constructor: throws if necessary files do not exist', function(assert) {
 
 test('constructor: takes a shared memory argument', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({path: monaco_path, shared_memory: false});
+    const osrm = new OSRM({path: monaco_path, shared_memory: false});
     assert.ok(osrm);
 });
 
 test('constructor: takes a memory file', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({path: monaco_path, memory_file: test_memory_file});
+    const osrm = new OSRM({path: monaco_path, memory_file: test_memory_file});
     assert.ok(osrm);
 });
 
@@ -81,13 +81,13 @@ test('constructor: throws if given an invalid algorithm', function(assert) {
 
 test('constructor: loads MLD if given as algorithm', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({algorithm: 'MLD', path: monaco_mld_path});
+    const osrm = new OSRM({algorithm: 'MLD', path: monaco_mld_path});
     assert.ok(osrm);
 });
 
 test('constructor: loads CH if given as algorithm', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({algorithm: 'CH', path: monaco_path});
+    const osrm = new OSRM({algorithm: 'CH', path: monaco_path});
     assert.ok(osrm);
 });
 
@@ -105,13 +105,13 @@ test('constructor: throws if dataset_name is not a string', function(assert) {
 
 test('constructor: takes a default_radius argument', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 1});
+    const osrm = new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 1});
     assert.ok(osrm);
 });
 
 test('constructor: takes a default_radius unlimited argument', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 'unlimited'});
+    const osrm = new OSRM({algorithm: 'MLD', path: monaco_mld_path, default_radius: 'unlimited'});
     assert.ok(osrm);
 });
 
@@ -124,7 +124,7 @@ test('constructor: throws if default_radius is not a number', function(assert) {
 
 test('constructor: parses custom limits', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({
+    const osrm = new OSRM({
         path: monaco_mld_path,
         algorithm: 'MLD',
         max_locations_trip: 1,
@@ -141,7 +141,7 @@ test('constructor: parses custom limits', function(assert) {
 test('constructor: throws on invalid custom limits', function(assert) {
     assert.plan(1);
     assert.throws(function() {
-        var osrm = new OSRM({
+        const osrm = new OSRM({
             path: monaco_mld_path,
             algorithm: 'MLD',
             max_locations_trip: 'unlimited',
@@ -157,7 +157,7 @@ test('constructor: throws on invalid custom limits', function(assert) {
 test('constructor: throws on invalid disable_feature_dataset option', function(assert) {
     assert.plan(1);
     assert.throws(function() {
-        var osrm = new OSRM({
+        const osrm = new OSRM({
             path: monaco_path,
             disable_feature_dataset: ['NOT_EXIST'],
         })
@@ -167,7 +167,7 @@ test('constructor: throws on invalid disable_feature_dataset option', function(a
 test('constructor: throws on non-array disable_feature_dataset', function(assert) {
     assert.plan(1);
     assert.throws(function() {
-        var osrm = new OSRM({
+        const osrm = new OSRM({
             path: monaco_path,
             disable_feature_dataset: 'ROUTE_GEOMETRY',
         })
@@ -176,7 +176,7 @@ test('constructor: throws on non-array disable_feature_dataset', function(assert
 
 test('constructor: ok on valid disable_feature_dataset option', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({
+    const osrm = new OSRM({
         path: monaco_path,
         disable_feature_dataset: ['ROUTE_GEOMETRY'],
     });
@@ -185,7 +185,7 @@ test('constructor: ok on valid disable_feature_dataset option', function(assert)
 
 test('constructor: ok on multiple overlapping disable_feature_dataset options', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({
+    const osrm = new OSRM({
         path: monaco_path,
         disable_feature_dataset: ['ROUTE_GEOMETRY', 'ROUTE_STEPS'],
     });

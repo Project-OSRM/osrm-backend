@@ -5,7 +5,7 @@ import { data_path, test_tile as tile } from './constants.js';
 
 test.test('tile check size coarse', function(assert) {
     assert.plan(2);
-    var osrm = new OSRM(data_path);
+    const osrm = new OSRM(data_path);
     osrm.tile(tile.at, function(err, result) {
         assert.ifError(err);
         assert.equal(result.length, tile.size);
@@ -14,7 +14,7 @@ test.test('tile check size coarse', function(assert) {
 
 test.test('tile interface pre-conditions', function(assert) {
     assert.plan(6);
-    var osrm = new OSRM(data_path);
+    const osrm = new OSRM(data_path);
 
     assert.throws(function() { osrm.tile(null, function(err, result) {}) }, /must be an array \[x, y, z\]/);
     assert.throws(function() { osrm.tile([], function(err, result) {}) }, /must be an array \[x, y, z\]/);
@@ -26,7 +26,7 @@ test.test('tile interface pre-conditions', function(assert) {
 
 test.test('tile fails to load with geometry disabled', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    const osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
     osrm.tile(tile.at, function(err, result) {
         console.log(err)
         assert.match(err.message, /DisabledDatasetException/);
@@ -34,7 +34,7 @@ test.test('tile fails to load with geometry disabled', function(assert) {
 });
 test.test('tile ok with steps disabled', function(assert) {
     assert.plan(2);
-    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    const osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
     osrm.tile(tile.at, function(err, result) {
         assert.ifError(err);
         assert.equal(result.length, tile.size);

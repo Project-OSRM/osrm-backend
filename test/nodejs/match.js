@@ -10,8 +10,8 @@ const FBResult = osrm.engine.api.fbresult.FBResult;
 
 test('match: match in Monaco with flatbuffers format', function(assert) {
     assert.plan(2);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: three_test_coordinates,
         timestamps: [1424684612, 1424684616, 1424684620],
         format: 'flatbuffers'
@@ -25,8 +25,8 @@ test('match: match in Monaco with flatbuffers format', function(assert) {
 
 test('match: match in Monaco', function(assert) {
     assert.plan(5);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: three_test_coordinates,
         timestamps: [1424684612, 1424684616, 1424684620]
     };
@@ -45,8 +45,8 @@ test('match: match in Monaco', function(assert) {
 
 test('match: match in Monaco returning a buffer', function(assert) {
     assert.plan(6);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: three_test_coordinates,
         timestamps: [1424684612, 1424684616, 1424684620]
     };
@@ -67,8 +67,8 @@ test('match: match in Monaco returning a buffer', function(assert) {
 
 test('match: match in Monaco without timestamps', function(assert) {
     assert.plan(3);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: three_test_coordinates
     };
     osrm.match(options, function(err, response) {
@@ -80,8 +80,8 @@ test('match: match in Monaco without timestamps', function(assert) {
 
 test('match: match in Monaco without geometry compression', function(assert) {
     assert.plan(4);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: three_test_coordinates,
         geometries: 'geojson'
     };
@@ -95,8 +95,8 @@ test('match: match in Monaco without geometry compression', function(assert) {
 
 test('match: match in Monaco with geometry compression', function(assert) {
     assert.plan(3);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: three_test_coordinates,
     };
     osrm.match(options, function(err, response) {
@@ -108,8 +108,8 @@ test('match: match in Monaco with geometry compression', function(assert) {
 
 test('match: match in Monaco with speed annotations options', function(assert) {
     assert.plan(12);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: three_test_coordinates,
         timestamps: [1424684612, 1424684616, 1424684620],
         radiuses: [4.07, 4.07, 4.07],
@@ -137,8 +137,8 @@ test('match: match in Monaco with speed annotations options', function(assert) {
 
 test('match: match in Monaco with several (duration, distance, nodes) annotations options', function(assert) {
     assert.plan(12);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         timestamps: [1424684612, 1424684616, 1424684620],
         coordinates: three_test_coordinates,
         timestamps: [1424684612, 1424684616, 1424684620],
@@ -166,8 +166,8 @@ test('match: match in Monaco with several (duration, distance, nodes) annotation
 
 test('match: match in Monaco with all options', function(assert) {
     assert.plan(8);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: three_test_coordinates,
         timestamps: [1424684612, 1424684616, 1424684620],
         radiuses: [4.07, 4.07, 4.07],
@@ -192,22 +192,22 @@ test('match: match in Monaco with all options', function(assert) {
 
 test('match: throws on missing arguments', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM(data_path);
+    const osrm = new OSRM(data_path);
     assert.throws(function() { osrm.match({}) },
         /Two arguments required/);
 });
 
 test('match: throws on non-object arg', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM(data_path);
+    const osrm = new OSRM(data_path);
     assert.throws(function() { osrm.match(null, function(err, response) {}) },
         /First arg must be an object/);
 });
 
 test('match: throws on invalid coordinates param', function(assert) {
     assert.plan(4);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: ''
     };
     assert.throws(function() { osrm.match(options, function(err, response) {}) },
@@ -225,8 +225,8 @@ test('match: throws on invalid coordinates param', function(assert) {
 
 test('match: throws on invalid timestamps param', function(assert) {
     assert.plan(3);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: three_test_coordinates,
         timestamps: 'timestamps'
     };
@@ -242,8 +242,8 @@ test('match: throws on invalid timestamps param', function(assert) {
 
 test('match: throws on invalid gaps param', function(assert) {
     assert.plan(2);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: three_test_coordinates,
         gaps: ['invalid gaps param']
     };
@@ -256,8 +256,8 @@ test('match: throws on invalid gaps param', function(assert) {
 
 test('match: throws on invalid tidy param', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: three_test_coordinates,
         tidy: 'invalid tidy param'
     };
@@ -267,8 +267,8 @@ test('match: throws on invalid tidy param', function(assert) {
 
 test('match: throws on invalid config param', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
-    var options = {
+    const osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+    const options = {
         coordinates: three_test_coordinates,
     };
     assert.throws(function() { osrm.match(options, { format: 'invalid' }, function(err, response) {}) },
@@ -277,8 +277,8 @@ test('match: throws on invalid config param', function(assert) {
 
 test('match: match in Monaco without motorways', function(assert) {
     assert.plan(3);
-    var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
-    var options = {
+    const osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+    const options = {
         coordinates: three_test_coordinates,
         exclude: ['motorway']
     };
@@ -291,8 +291,8 @@ test('match: match in Monaco without motorways', function(assert) {
 
 test('match: throws on invalid waypoints values needs at least two', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         steps: true,
         coordinates: three_test_coordinates,
         waypoints: [0]
@@ -303,8 +303,8 @@ test('match: throws on invalid waypoints values needs at least two', function(as
 
 test('match: throws on invalid waypoints values, needs first and last coordinate indices', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         steps: true,
         coordinates: three_test_coordinates,
         waypoints: [1, 2]
@@ -315,8 +315,8 @@ test('match: throws on invalid waypoints values, needs first and last coordinate
 
 test('match: throws on invalid waypoints values, order matters', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         steps: true,
         coordinates: three_test_coordinates,
         waypoints: [2, 0]
@@ -327,8 +327,8 @@ test('match: throws on invalid waypoints values, order matters', function(assert
 
 test('match: throws on invalid waypoints values, waypoints must correspond with a coordinate index', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         steps: true,
         coordinates: three_test_coordinates,
         waypoints: [0, 3, 2]
@@ -339,8 +339,8 @@ test('match: throws on invalid waypoints values, waypoints must correspond with 
 
 test('match: throws on invalid waypoints values, waypoints must be an array', function (assert) {
     assert.plan(1);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         steps: true,
         coordinates: three_test_coordinates,
         waypoints: "string"
@@ -351,8 +351,8 @@ test('match: throws on invalid waypoints values, waypoints must be an array', fu
 
 test('match: throws on invalid waypoints values, waypoints must be an array of integers', function (assert) {
     assert.plan(1);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         steps: true,
         coordinates: three_test_coordinates,
         waypoints: [0,1,"string"]
@@ -363,10 +363,10 @@ test('match: throws on invalid waypoints values, waypoints must be an array of i
 
 test('match: error on split trace', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM(data_path);
-    var four_coords = Array.from(three_test_coordinates);
+    const osrm = new OSRM(data_path);
+    const four_coords = Array.from(three_test_coordinates);
     four_coords.push([7.41902,43.73487]);
-    var options = {
+    const options = {
         steps: true,
         coordinates: four_coords,
         timestamps: [1700, 1750, 1424684616, 1424684620],
@@ -379,8 +379,8 @@ test('match: error on split trace', function(assert) {
 
 test('match: match in Monaco with waypoints', function(assert) {
     assert.plan(6);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         steps: true,
         coordinates: three_test_coordinates,
         waypoints: [0,2]
@@ -401,8 +401,8 @@ test('match: match in Monaco with waypoints', function(assert) {
 
 test('match: throws on disabled geometry', function (assert) {
     assert.plan(1);
-    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
-    var options = {
+    const osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    const options = {
         coordinates: three_test_coordinates.concat(three_test_coordinates),
     };
     osrm.match(options, function(err, route) {
@@ -413,8 +413,8 @@ test('match: throws on disabled geometry', function (assert) {
 
 test('match: ok on disabled geometry', function (assert) {
     assert.plan(2);
-    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
-    var options = {
+    const osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    const options = {
         steps: false,
         overview: 'false',
         annotations: false,
@@ -429,8 +429,8 @@ test('match: ok on disabled geometry', function (assert) {
 
 test('match: throws on disabled steps', function (assert) {
     assert.plan(1);
-    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
-    var options = {
+    const osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    const options = {
         steps: true,
         coordinates: three_test_coordinates.concat(three_test_coordinates),
     };
@@ -442,8 +442,8 @@ test('match: throws on disabled steps', function (assert) {
 
 test('match: ok on disabled steps', function (assert) {
     assert.plan(8);
-    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
-    var options = {
+    const osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    const options = {
         steps: false,
         overview: 'simplified',
         annotations: true,
