@@ -26,7 +26,7 @@ test('table: flatbuffer format', function(assert) {
 test('table: test annotations paramater combination', function(assert) {
     assert.plan(12);
     const osrm = new OSRM(data_path);
-    const options = {
+    let options = {
         coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
         annotations: ['distance']
     };
@@ -111,7 +111,7 @@ tables.forEach(function(annotation) {
     test('table: ' + annotation + ' table in Monaco', function(assert) {
         assert.plan(11);
         const osrm = new OSRM(data_path);
-        let options = {
+        const options = {
             coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
             annotations: [annotation.slice(0,-1)]
         };
@@ -142,7 +142,7 @@ tables.forEach(function(annotation) {
     test('table: ' + annotation + ' table in Monaco with sources/destinations', function(assert) {
         assert.plan(7);
         const osrm = new OSRM(data_path);
-        let options = {
+        const options = {
             coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
             sources: [0],
             destinations: [0,1],
@@ -175,7 +175,7 @@ tables.forEach(function(annotation) {
     test('table: ' + annotation + ' throws on invalid arguments', function(assert) {
         assert.plan(18);
         const osrm = new OSRM(data_path);
-        let options = {annotations: [annotation.slice(0,-1)]};
+        const options = {annotations: [annotation.slice(0,-1)]};
         assert.throws(function() { osrm.table(options); },
             /Two arguments required/);
         options.coordinates = null;
@@ -247,7 +247,7 @@ tables.forEach(function(annotation) {
     test('table: ' + annotation + ' table in Monaco with hints', function(assert) {
         assert.plan(5);
         const osrm = new OSRM(data_path);
-        let options = {
+        const options = {
             coordinates: two_test_coordinates,
             generate_hints: true,   // true is default but be explicit here
             annotations: [annotation.slice(0,-1)]
@@ -268,7 +268,7 @@ tables.forEach(function(annotation) {
     test('table: ' + annotation + ' table in Monaco without hints', function(assert) {
         assert.plan(5);
         const osrm = new OSRM(data_path);
-        let options = {
+        const options = {
             coordinates: two_test_coordinates,
             generate_hints: false,  // true is default
             annotations: [annotation.slice(0,-1)]
@@ -289,7 +289,7 @@ tables.forEach(function(annotation) {
     test('table: ' + annotation + ' table in Monaco without waypoints', function(assert) {
         assert.plan(2);
         const osrm = new OSRM(data_path);
-        let options = {
+        const options = {
             coordinates: two_test_coordinates,
             skip_waypoints: true,  // false is default
             annotations: [annotation.slice(0,-1)]
@@ -303,7 +303,7 @@ tables.forEach(function(annotation) {
     test('table: ' + annotation + ' table in Monaco without motorways', function(assert) {
         assert.plan(2);
         const osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
-        let options = {
+        const options = {
             coordinates: two_test_coordinates,
             exclude: ['motorway'],
             annotations: [annotation.slice(0,-1)]
@@ -317,7 +317,7 @@ tables.forEach(function(annotation) {
     test('table: ' + annotation + ' table in Monaco with fallback speeds', function(assert) {
         assert.plan(2);
         const osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
-        let options = {
+        const options = {
             coordinates: two_test_coordinates,
             annotations: [annotation.slice(0,-1)],
             fallback_speed: 1,
@@ -332,7 +332,7 @@ tables.forEach(function(annotation) {
     test('table: ' + annotation + ' table in Monaco with invalid fallback speeds and fallback coordinates', function(assert) {
         assert.plan(4);
         const osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
-        let options = {
+        const options = {
             coordinates: two_test_coordinates,
             annotations: [annotation.slice(0,-1)],
             fallback_speed: -1
@@ -355,7 +355,7 @@ tables.forEach(function(annotation) {
     test('table: ' + annotation + ' table in Monaco with invalid scale factor', function(assert) {
         assert.plan(3);
         const osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
-        let options = {
+        const options = {
             coordinates: two_test_coordinates,
             annotations: [annotation.slice(0,-1)],
             scale_factor: -1
@@ -412,3 +412,4 @@ test('table: ok on disabled steps', function (assert) {
         assert.ok(table.destinations.length, 2)
     });
 });
+
