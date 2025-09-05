@@ -2,6 +2,7 @@
   - Changes from 6.0.0
     - Misc:
       - CHANGED: Convert scripts from CommonJS to modern ESM format [#7230](https://github.com/Project-OSRM/osrm-backend/pull/7230)
+      - CHANGED: Convert remaining scripts from CommonJS to ESM format and use flatbuffers npm package [#7227](https://github.com/Project-OSRM/osrm-backend/pull/7227)
       - CHANGED: Upgrade Cucumber-js to v12 [#7221](https://github.com/Project-OSRM/osrm-backend/pull/7221)
       - FIXED: Minor misspellings found in source code, comments and documents [#7215](https://github.com/Project-OSRM/osrm-backend/pull/7215)
 
