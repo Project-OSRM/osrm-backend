@@ -1,7 +1,8 @@
 // Table comparison utility for displaying colorized differences between expected and actual test results
-import util from 'util';
-import path from 'path';
-import fs from 'fs';
+// Unused imports - commented out
+// import util from 'util';
+// import path from 'path';
+// import fs from 'fs';
 import chalk from 'chalk';
 
 const unescapeStr = (str) => str.replace(/\\\|/g, '|').replace(/\\\\/g, '\\');
@@ -15,18 +16,17 @@ String.prototype.padRight = function (char, length) {
 };
 
 export default function (expected, actual) {
-  let headers = expected.raw()[0];
-  let expectedRows = expected.hashes();
+  const headers = expected.raw()[0];
+  const expectedRows = expected.hashes();
   let tableError = false;
-  let statusRows = [];
-  let columnStatus = {};
+  const statusRows = [];
+  const columnStatus = {};
 
   expectedRows.forEach((expectedRow, i) => {
-    let rowError = false;
     statusRows[i] = {};
-    let statusRow = statusRows[i];
-    for (let key in expectedRow) {
-      let actualRow = actual[i];
+    const statusRow = statusRows[i];
+    for (const key in expectedRow) {
+      const actualRow = actual[i];
       if (unescapeStr(expectedRow[key]) != actualRow[key]) {
         statusRow[key] = false;
         tableError = true;
@@ -38,7 +38,7 @@ export default function (expected, actual) {
   if (!tableError) return null;
 
   // determine column widths
-  let widths = {};
+  const widths = {};
   const wantStr = '(-) ';
   const gotStr = '(+) ';
   const okStr = '    ';
@@ -47,17 +47,17 @@ export default function (expected, actual) {
     widths[key] = key.length;
   });
 
-  expectedRows.forEach((row, i) => {
+  expectedRows.forEach((row, _i) => {
     headers.forEach((key) => {
-      let content = row[key];
-      let length = content.length;
+      const content = row[key];
+      const length = content.length;
       if (widths[key] == null || length > widths[key]) widths[key] = length;
     });
   });
 
   // format
-  let lines = [chalk.red('Tables were not identical:')];
-  let cells;
+  const lines = [chalk.red('Tables were not identical:')];
+  let cells = [];
 
   // header row
   cells = [];
@@ -66,12 +66,12 @@ export default function (expected, actual) {
     if (columnStatus[key] == false) content = okStr + content;
     cells.push(chalk.white(content));
   });
-  lines.push('| ' + cells.join(' | ') + ' |');
+  lines.push(`| ${cells.join(' | ')} |`);
 
   // content rows
   expectedRows.forEach((row, i) => {
     let cells;
-    let rowError = Object.keys(statusRows[i]).length > 0;
+    const rowError = Object.keys(statusRows[i]).length > 0;
 
     // expected row
     cells = [];
@@ -89,13 +89,13 @@ export default function (expected, actual) {
         }
       }
     });
-    lines.push('| ' + cells.join(' | ') + ' |');
+    lines.push(`| ${cells.join(' | ')} |`);
 
     // if error in row, insert extra row showing actual result
     if (rowError) {
       cells = [];
       headers.forEach((key) => {
-        let content = String(actual[i][key]).padRight(' ', widths[key]);
+        const content = String(actual[i][key]).padRight(' ', widths[key]);
         if (statusRows[i][key] == false)
           cells.push(chalk.red(gotStr + content));
         else {
@@ -105,7 +105,7 @@ export default function (expected, actual) {
         }
       });
 
-      lines.push('| ' + cells.join(' | ') + ' |');
+      lines.push(`| ${cells.join(' | ')} |`);
     }
   });
   return lines.join('\n');

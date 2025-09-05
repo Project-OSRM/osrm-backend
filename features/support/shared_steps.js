@@ -37,15 +37,32 @@ export default class SharedSteps {
         const afterRequest = (err, res, body) => {
           if (err) return cb(err);
           if (body && body.length) {
-            let destinations, exits, pronunciations, instructions, refs, bearings, turns, modes, times, classes,
-              distances, summary, intersections, lanes, locations, annotation, weight_name, weights, approaches,
+            let destinations,
+              exits,
+              pronunciations,
+              instructions,
+              refs,
+              bearings,
+              turns,
+              modes,
+              times,
+              classes,
+              distances,
+              summary,
+              intersections,
+              lanes,
+              locations,
+              annotation,
+              weight_name,
+              weights,
+              approaches,
               driving_sides;
 
-            let json = JSON.parse(body);
+            const json = JSON.parse(body);
 
             got.code = json.code;
 
-            let hasRoute = json.code === 'Ok';
+            const hasRoute = json.code === 'Ok';
 
             if (hasRoute) {
               instructions = this.wayList(json.routes[0]);
@@ -101,7 +118,7 @@ export default class SharedSteps {
 
             if (headers.has('alternative')) {
               // TODO examine more than first alternative?
-              got.alternative ='';
+              got.alternative = '';
               if (json.routes && json.routes.length > 1)
                 got.alternative = this.wayList(json.routes[1]);
             }
@@ -113,7 +130,11 @@ export default class SharedSteps {
             if (headers.has('distance')) {
               if (row.distance.length) {
                 if (!row.distance.match(/\d+m/))
-                  return cb(new Error('*** Distance must be specified in meters. (ex: 250m)'));
+                  return cb(
+                    new Error(
+                      '*** Distance must be specified in meters. (ex: 250m)',
+                    ),
+                  );
                 got.distance = instructions ? util.format('%dm', distance) : '';
               } else {
                 got.distance = '';
@@ -123,7 +144,11 @@ export default class SharedSteps {
             if (headers.has('weight')) {
               if (row.weight.length) {
                 if (!row.weight.match(/[\d.]+/))
-                  return cb(new Error('*** Weight must be specified as a numeric value. (ex: 8)'));
+                  return cb(
+                    new Error(
+                      '*** Weight must be specified as a numeric value. (ex: 8)',
+                    ),
+                  );
                 got.weight = instructions ? util.format('%d', weight) : '';
               } else {
                 got.weight = '';
@@ -132,7 +157,9 @@ export default class SharedSteps {
 
             if (headers.has('time')) {
               if (!row.time.match(/\d+s/))
-                return cb(new Error('*** Time must be specied in seconds. (ex: 60s)'));
+                return cb(
+                  new Error('*** Time must be specied in seconds. (ex: 60s)'),
+                );
               got.time = instructions ? util.format('%ds', time) : '';
             }
 
@@ -143,8 +170,13 @@ export default class SharedSteps {
             if (headers.has('speed')) {
               if (row.speed !== '' && instructions) {
                 if (!row.speed.match(/\d+ km\/h/))
-                  cb(new Error('*** Speed must be specied in km/h. (ex: 50 km/h)'));
-                const speed = time > 0 ? Math.round(3.6*distance/time) : null;
+                  cb(
+                    new Error(
+                      '*** Speed must be specied in km/h. (ex: 50 km/h)',
+                    ),
+                  );
+                const speed =
+                  time > 0 ? Math.round((3.6 * distance) / time) : null;
                 got.speed = util.format('%d km/h', speed);
               } else {
                 got.speed = '';
@@ -155,13 +187,13 @@ export default class SharedSteps {
               got.intersections = (intersections || '').trim();
             }
 
-            if (headers.has('locations')){
+            if (headers.has('locations')) {
               got.locations = (locations || '').trim();
             }
             if (headers.has('waypoints_count')) {
               if ('waypoints' in json) {
                 got.waypoints_count = json.waypoints.length;
-              } else{
+              } else {
                 got.waypoints_count = 0;
               }
             }
@@ -172,22 +204,40 @@ export default class SharedSteps {
             // if header matches 'a:*', parse out the values for *
             // and return in that header
             headers.forEach((k) => {
-              let whitelist = ['duration', 'distance', 'datasources', 'nodes', 'weight', 'speed' ];
-              let metadata_whitelist = [ 'datasource_names' ];
+              const whitelist = [
+                'duration',
+                'distance',
+                'datasources',
+                'nodes',
+                'weight',
+                'speed',
+              ];
+              const metadata_whitelist = ['datasource_names'];
               if (k.match(/^a:/)) {
-                let a_type = k.slice(2);
+                const a_type = k.slice(2);
                 if (whitelist.indexOf(a_type) == -1)
                   return cb(new Error('Unrecognized annotation field', a_type));
                 if (annotation && !annotation[a_type])
-                  return cb(new Error('Annotation not found in response', a_type));
-                got[k] = annotation && annotation[a_type] || '';
+                  return cb(
+                    new Error('Annotation not found in response', a_type),
+                  );
+                got[k] = (annotation && annotation[a_type]) || '';
               } else if (k.match(/^am:/)) {
-                let a_type = k.slice(3);
+                const a_type = k.slice(3);
                 if (metadata_whitelist.indexOf(a_type) == -1)
                   return cb(new Error('Unrecognized annotation field', a_type));
-                if (annotation && (!annotation.metadata || !annotation.metadata[a_type]))
-                  return cb(new Error('Annotation not found in response', a_type));
-                got[k] = (annotation && annotation.metadata && annotation.metadata[a_type]) || '';
+                if (
+                  annotation &&
+                  (!annotation.metadata || !annotation.metadata[a_type])
+                )
+                  return cb(
+                    new Error('Annotation not found in response', a_type),
+                  );
+                got[k] =
+                  (annotation &&
+                    annotation.metadata &&
+                    annotation.metadata[a_type]) ||
+                  '';
               }
             });
 
@@ -251,34 +301,57 @@ export default class SharedSteps {
 
           if (row.bearings) {
             got.bearings = row.bearings;
-            bearings = row.bearings.split(' ').filter(b => !!b);
+            bearings = row.bearings.split(' ').filter((b) => !!b);
           }
 
           if (row.approaches) {
             got.approaches = row.approaches;
-            approaches = row.approaches.split(' ').filter(b => !!b);
+            approaches = row.approaches.split(' ').filter((b) => !!b);
           }
 
           if (row.from && row.to) {
             const fromNode = this.findNodeByName(row.from);
-            if (!fromNode) return cb(new Error(util.format('*** unknown from-node "%s"', row.from)));
+            if (!fromNode)
+              return cb(
+                new Error(util.format('*** unknown from-node "%s"', row.from)),
+              );
             waypoints.push(fromNode);
 
             const toNode = this.findNodeByName(row.to);
-            if (!toNode) return cb(new Error(util.format('*** unknown to-node "%s"', row.to)));
+            if (!toNode)
+              return cb(
+                new Error(util.format('*** unknown to-node "%s"', row.to)),
+              );
             waypoints.push(toNode);
 
             got.from = row.from;
             got.to = row.to;
-            this.requestRoute(waypoints, bearings, approaches, params, afterRequest);
+            this.requestRoute(
+              waypoints,
+              bearings,
+              approaches,
+              params,
+              afterRequest,
+            );
           } else if (row.waypoints) {
             row.waypoints.split(',').forEach((n) => {
               const node = this.findNodeByName(n.trim());
-              if (!node) return cb(new Error(util.format('*** unknown waypoint node "%s"', n.trim())));
+              if (!node)
+                return cb(
+                  new Error(
+                    util.format('*** unknown waypoint node "%s"', n.trim()),
+                  ),
+                );
               waypoints.push(node);
             });
             got.waypoints = row.waypoints;
-            this.requestRoute(waypoints, bearings, approaches, params, afterRequest);
+            this.requestRoute(
+              waypoints,
+              bearings,
+              approaches,
+              params,
+              afterRequest,
+            );
           } else {
             return cb(new Error('*** no waypoints'));
           }
@@ -288,4 +361,4 @@ export default class SharedSteps {
       this.processRowsAndDiff(table, requestRow, callback);
     });
   }
-};
+}

@@ -43,7 +43,7 @@ osrm.engine.api.fbresult.ManeuverType = {
   RoundaboutTurn: 12,
   Notification: 13,
   ExitRoundabout: 14,
-  ExitRotary: 15
+  ExitRotary: 15,
 };
 
 /**
@@ -65,7 +65,7 @@ osrm.engine.api.fbresult.ManeuverTypeName = {
   12: 'RoundaboutTurn',
   13: 'Notification',
   14: 'ExitRoundabout',
-  15: 'ExitRotary'
+  15: 'ExitRotary',
 };
 
 /**
@@ -80,7 +80,7 @@ osrm.engine.api.fbresult.Turn = {
   Straight: 5,
   SlightLeft: 6,
   Left: 7,
-  SharpLeft: 8
+  SharpLeft: 8,
 };
 
 /**
@@ -95,13 +95,13 @@ osrm.engine.api.fbresult.TurnName = {
   5: 'Straight',
   6: 'SlightLeft',
   7: 'Left',
-  8: 'SharpLeft'
+  8: 'SharpLeft',
 };
 
 /**
  * @constructor
  */
-osrm.engine.api.fbresult.Position = function() {
+osrm.engine.api.fbresult.Position = function () {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -118,7 +118,7 @@ osrm.engine.api.fbresult.Position = function() {
  * @param {flatbuffers.ByteBuffer} bb
  * @returns {osrm.engine.api.fbresult.Position}
  */
-osrm.engine.api.fbresult.Position.prototype.__init = function(i, bb) {
+osrm.engine.api.fbresult.Position.prototype.__init = function (i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -127,14 +127,14 @@ osrm.engine.api.fbresult.Position.prototype.__init = function(i, bb) {
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Position.prototype.longitude = function() {
+osrm.engine.api.fbresult.Position.prototype.longitude = function () {
   return this.bb.readFloat32(this.bb_pos);
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Position.prototype.latitude = function() {
+osrm.engine.api.fbresult.Position.prototype.latitude = function () {
   return this.bb.readFloat32(this.bb_pos + 4);
 };
 
@@ -144,7 +144,11 @@ osrm.engine.api.fbresult.Position.prototype.latitude = function() {
  * @param {number} latitude
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Position.createPosition = function(builder, longitude, latitude) {
+osrm.engine.api.fbresult.Position.createPosition = function (
+  builder,
+  longitude,
+  latitude,
+) {
   builder.prep(4, 8);
   builder.writeFloat32(latitude);
   builder.writeFloat32(longitude);
@@ -154,7 +158,7 @@ osrm.engine.api.fbresult.Position.createPosition = function(builder, longitude, 
 /**
  * @constructor
  */
-osrm.engine.api.fbresult.Uint64Pair = function() {
+osrm.engine.api.fbresult.Uint64Pair = function () {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -171,7 +175,7 @@ osrm.engine.api.fbresult.Uint64Pair = function() {
  * @param {flatbuffers.ByteBuffer} bb
  * @returns {osrm.engine.api.fbresult.Uint64Pair}
  */
-osrm.engine.api.fbresult.Uint64Pair.prototype.__init = function(i, bb) {
+osrm.engine.api.fbresult.Uint64Pair.prototype.__init = function (i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -180,14 +184,14 @@ osrm.engine.api.fbresult.Uint64Pair.prototype.__init = function(i, bb) {
 /**
  * @returns {flatbuffers.Long}
  */
-osrm.engine.api.fbresult.Uint64Pair.prototype.first = function() {
+osrm.engine.api.fbresult.Uint64Pair.prototype.first = function () {
   return this.bb.readUint64(this.bb_pos);
 };
 
 /**
  * @returns {flatbuffers.Long}
  */
-osrm.engine.api.fbresult.Uint64Pair.prototype.second = function() {
+osrm.engine.api.fbresult.Uint64Pair.prototype.second = function () {
   return this.bb.readUint64(this.bb_pos + 8);
 };
 
@@ -197,7 +201,11 @@ osrm.engine.api.fbresult.Uint64Pair.prototype.second = function() {
  * @param {flatbuffers.Long} second
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Uint64Pair.createUint64Pair = function(builder, first, second) {
+osrm.engine.api.fbresult.Uint64Pair.createUint64Pair = function (
+  builder,
+  first,
+  second,
+) {
   builder.prep(8, 16);
   builder.writeInt64(second);
   builder.writeInt64(first);
@@ -207,7 +215,7 @@ osrm.engine.api.fbresult.Uint64Pair.createUint64Pair = function(builder, first, 
 /**
  * @constructor
  */
-osrm.engine.api.fbresult.Waypoint = function() {
+osrm.engine.api.fbresult.Waypoint = function () {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -224,7 +232,7 @@ osrm.engine.api.fbresult.Waypoint = function() {
  * @param {flatbuffers.ByteBuffer} bb
  * @returns {osrm.engine.api.fbresult.Waypoint}
  */
-osrm.engine.api.fbresult.Waypoint.prototype.__init = function(i, bb) {
+osrm.engine.api.fbresult.Waypoint.prototype.__init = function (i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -235,8 +243,11 @@ osrm.engine.api.fbresult.Waypoint.prototype.__init = function(i, bb) {
  * @param {osrm.engine.api.fbresult.Waypoint=} obj
  * @returns {osrm.engine.api.fbresult.Waypoint}
  */
-osrm.engine.api.fbresult.Waypoint.getRootAsWaypoint = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Waypoint).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Waypoint.getRootAsWaypoint = function (bb, obj) {
+  return (obj || new osrm.engine.api.fbresult.Waypoint()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
@@ -244,24 +255,32 @@ osrm.engine.api.fbresult.Waypoint.getRootAsWaypoint = function(bb, obj) {
  * @param {osrm.engine.api.fbresult.Waypoint=} obj
  * @returns {osrm.engine.api.fbresult.Waypoint}
  */
-osrm.engine.api.fbresult.Waypoint.getSizePrefixedRootAsWaypoint = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Waypoint).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Waypoint.getSizePrefixedRootAsWaypoint = function (
+  bb,
+  obj,
+) {
+  return (obj || new osrm.engine.api.fbresult.Waypoint()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
-osrm.engine.api.fbresult.Waypoint.prototype.hint = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+osrm.engine.api.fbresult.Waypoint.prototype.hint = function (optionalEncoding) {
+  const offset = this.bb.__offset(this.bb_pos, 4);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Waypoint.prototype.distance = function() {
-  var offset = this.bb.__offset(this.bb_pos, 6);
+osrm.engine.api.fbresult.Waypoint.prototype.distance = function () {
+  const offset = this.bb.__offset(this.bb_pos, 6);
   return offset ? this.bb.readFloat32(this.bb_pos + offset) : 0.0;
 };
 
@@ -269,65 +288,77 @@ osrm.engine.api.fbresult.Waypoint.prototype.distance = function() {
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
-osrm.engine.api.fbresult.Waypoint.prototype.name = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 8);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+osrm.engine.api.fbresult.Waypoint.prototype.name = function (optionalEncoding) {
+  const offset = this.bb.__offset(this.bb_pos, 8);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
 };
 
 /**
  * @param {osrm.engine.api.fbresult.Position=} obj
  * @returns {osrm.engine.api.fbresult.Position|null}
  */
-osrm.engine.api.fbresult.Waypoint.prototype.location = function(obj) {
-  var offset = this.bb.__offset(this.bb_pos, 10);
-  return offset ? (obj || new osrm.engine.api.fbresult.Position).__init(this.bb_pos + offset, this.bb) : null;
+osrm.engine.api.fbresult.Waypoint.prototype.location = function (obj) {
+  const offset = this.bb.__offset(this.bb_pos, 10);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.Position()).__init(
+        this.bb_pos + offset,
+        this.bb,
+      )
+    : null;
 };
 
 /**
  * @param {osrm.engine.api.fbresult.Uint64Pair=} obj
  * @returns {osrm.engine.api.fbresult.Uint64Pair|null}
  */
-osrm.engine.api.fbresult.Waypoint.prototype.nodes = function(obj) {
-  var offset = this.bb.__offset(this.bb_pos, 12);
-  return offset ? (obj || new osrm.engine.api.fbresult.Uint64Pair).__init(this.bb_pos + offset, this.bb) : null;
+osrm.engine.api.fbresult.Waypoint.prototype.nodes = function (obj) {
+  const offset = this.bb.__offset(this.bb_pos, 12);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.Uint64Pair()).__init(
+        this.bb_pos + offset,
+        this.bb,
+      )
+    : null;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Waypoint.prototype.matchingsIndex = function() {
-  var offset = this.bb.__offset(this.bb_pos, 14);
+osrm.engine.api.fbresult.Waypoint.prototype.matchingsIndex = function () {
+  const offset = this.bb.__offset(this.bb_pos, 14);
   return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Waypoint.prototype.waypointIndex = function() {
-  var offset = this.bb.__offset(this.bb_pos, 16);
+osrm.engine.api.fbresult.Waypoint.prototype.waypointIndex = function () {
+  const offset = this.bb.__offset(this.bb_pos, 16);
   return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Waypoint.prototype.alternativesCount = function() {
-  var offset = this.bb.__offset(this.bb_pos, 18);
+osrm.engine.api.fbresult.Waypoint.prototype.alternativesCount = function () {
+  const offset = this.bb.__offset(this.bb_pos, 18);
   return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Waypoint.prototype.tripsIndex = function() {
-  var offset = this.bb.__offset(this.bb_pos, 20);
+osrm.engine.api.fbresult.Waypoint.prototype.tripsIndex = function () {
+  const offset = this.bb.__offset(this.bb_pos, 20);
   return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
-osrm.engine.api.fbresult.Waypoint.startWaypoint = function(builder) {
+osrm.engine.api.fbresult.Waypoint.startWaypoint = function (builder) {
   builder.startObject(9);
 };
 
@@ -335,7 +366,7 @@ osrm.engine.api.fbresult.Waypoint.startWaypoint = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} hintOffset
  */
-osrm.engine.api.fbresult.Waypoint.addHint = function(builder, hintOffset) {
+osrm.engine.api.fbresult.Waypoint.addHint = function (builder, hintOffset) {
   builder.addFieldOffset(0, hintOffset, 0);
 };
 
@@ -343,7 +374,7 @@ osrm.engine.api.fbresult.Waypoint.addHint = function(builder, hintOffset) {
  * @param {flatbuffers.Builder} builder
  * @param {number} distance
  */
-osrm.engine.api.fbresult.Waypoint.addDistance = function(builder, distance) {
+osrm.engine.api.fbresult.Waypoint.addDistance = function (builder, distance) {
   builder.addFieldFloat32(1, distance, 0.0);
 };
 
@@ -351,7 +382,7 @@ osrm.engine.api.fbresult.Waypoint.addDistance = function(builder, distance) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} nameOffset
  */
-osrm.engine.api.fbresult.Waypoint.addName = function(builder, nameOffset) {
+osrm.engine.api.fbresult.Waypoint.addName = function (builder, nameOffset) {
   builder.addFieldOffset(2, nameOffset, 0);
 };
 
@@ -359,7 +390,10 @@ osrm.engine.api.fbresult.Waypoint.addName = function(builder, nameOffset) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} locationOffset
  */
-osrm.engine.api.fbresult.Waypoint.addLocation = function(builder, locationOffset) {
+osrm.engine.api.fbresult.Waypoint.addLocation = function (
+  builder,
+  locationOffset,
+) {
   builder.addFieldStruct(3, locationOffset, 0);
 };
 
@@ -367,7 +401,7 @@ osrm.engine.api.fbresult.Waypoint.addLocation = function(builder, locationOffset
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} nodesOffset
  */
-osrm.engine.api.fbresult.Waypoint.addNodes = function(builder, nodesOffset) {
+osrm.engine.api.fbresult.Waypoint.addNodes = function (builder, nodesOffset) {
   builder.addFieldStruct(4, nodesOffset, 0);
 };
 
@@ -375,7 +409,10 @@ osrm.engine.api.fbresult.Waypoint.addNodes = function(builder, nodesOffset) {
  * @param {flatbuffers.Builder} builder
  * @param {number} matchingsIndex
  */
-osrm.engine.api.fbresult.Waypoint.addMatchingsIndex = function(builder, matchingsIndex) {
+osrm.engine.api.fbresult.Waypoint.addMatchingsIndex = function (
+  builder,
+  matchingsIndex,
+) {
   builder.addFieldInt32(5, matchingsIndex, 0);
 };
 
@@ -383,7 +420,10 @@ osrm.engine.api.fbresult.Waypoint.addMatchingsIndex = function(builder, matching
  * @param {flatbuffers.Builder} builder
  * @param {number} waypointIndex
  */
-osrm.engine.api.fbresult.Waypoint.addWaypointIndex = function(builder, waypointIndex) {
+osrm.engine.api.fbresult.Waypoint.addWaypointIndex = function (
+  builder,
+  waypointIndex,
+) {
   builder.addFieldInt32(6, waypointIndex, 0);
 };
 
@@ -391,7 +431,10 @@ osrm.engine.api.fbresult.Waypoint.addWaypointIndex = function(builder, waypointI
  * @param {flatbuffers.Builder} builder
  * @param {number} alternativesCount
  */
-osrm.engine.api.fbresult.Waypoint.addAlternativesCount = function(builder, alternativesCount) {
+osrm.engine.api.fbresult.Waypoint.addAlternativesCount = function (
+  builder,
+  alternativesCount,
+) {
   builder.addFieldInt32(7, alternativesCount, 0);
 };
 
@@ -399,7 +442,10 @@ osrm.engine.api.fbresult.Waypoint.addAlternativesCount = function(builder, alter
  * @param {flatbuffers.Builder} builder
  * @param {number} tripsIndex
  */
-osrm.engine.api.fbresult.Waypoint.addTripsIndex = function(builder, tripsIndex) {
+osrm.engine.api.fbresult.Waypoint.addTripsIndex = function (
+  builder,
+  tripsIndex,
+) {
   builder.addFieldInt32(8, tripsIndex, 0);
 };
 
@@ -407,8 +453,8 @@ osrm.engine.api.fbresult.Waypoint.addTripsIndex = function(builder, tripsIndex) 
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Waypoint.endWaypoint = function(builder) {
-  var offset = builder.endObject();
+osrm.engine.api.fbresult.Waypoint.endWaypoint = function (builder) {
+  const offset = builder.endObject();
   return offset;
 };
 
@@ -425,7 +471,18 @@ osrm.engine.api.fbresult.Waypoint.endWaypoint = function(builder) {
  * @param {number} tripsIndex
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Waypoint.createWaypoint = function(builder, hintOffset, distance, nameOffset, locationOffset, nodesOffset, matchingsIndex, waypointIndex, alternativesCount, tripsIndex) {
+osrm.engine.api.fbresult.Waypoint.createWaypoint = function (
+  builder,
+  hintOffset,
+  distance,
+  nameOffset,
+  locationOffset,
+  nodesOffset,
+  matchingsIndex,
+  waypointIndex,
+  alternativesCount,
+  tripsIndex,
+) {
   osrm.engine.api.fbresult.Waypoint.startWaypoint(builder);
   osrm.engine.api.fbresult.Waypoint.addHint(builder, hintOffset);
   osrm.engine.api.fbresult.Waypoint.addDistance(builder, distance);
@@ -434,7 +491,10 @@ osrm.engine.api.fbresult.Waypoint.createWaypoint = function(builder, hintOffset,
   osrm.engine.api.fbresult.Waypoint.addNodes(builder, nodesOffset);
   osrm.engine.api.fbresult.Waypoint.addMatchingsIndex(builder, matchingsIndex);
   osrm.engine.api.fbresult.Waypoint.addWaypointIndex(builder, waypointIndex);
-  osrm.engine.api.fbresult.Waypoint.addAlternativesCount(builder, alternativesCount);
+  osrm.engine.api.fbresult.Waypoint.addAlternativesCount(
+    builder,
+    alternativesCount,
+  );
   osrm.engine.api.fbresult.Waypoint.addTripsIndex(builder, tripsIndex);
   return osrm.engine.api.fbresult.Waypoint.endWaypoint(builder);
 };
@@ -442,7 +502,7 @@ osrm.engine.api.fbresult.Waypoint.createWaypoint = function(builder, hintOffset,
 /**
  * @constructor
  */
-osrm.engine.api.fbresult.Metadata = function() {
+osrm.engine.api.fbresult.Metadata = function () {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -459,7 +519,7 @@ osrm.engine.api.fbresult.Metadata = function() {
  * @param {flatbuffers.ByteBuffer} bb
  * @returns {osrm.engine.api.fbresult.Metadata}
  */
-osrm.engine.api.fbresult.Metadata.prototype.__init = function(i, bb) {
+osrm.engine.api.fbresult.Metadata.prototype.__init = function (i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -470,8 +530,11 @@ osrm.engine.api.fbresult.Metadata.prototype.__init = function(i, bb) {
  * @param {osrm.engine.api.fbresult.Metadata=} obj
  * @returns {osrm.engine.api.fbresult.Metadata}
  */
-osrm.engine.api.fbresult.Metadata.getRootAsMetadata = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Metadata).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Metadata.getRootAsMetadata = function (bb, obj) {
+  return (obj || new osrm.engine.api.fbresult.Metadata()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
@@ -479,8 +542,14 @@ osrm.engine.api.fbresult.Metadata.getRootAsMetadata = function(bb, obj) {
  * @param {osrm.engine.api.fbresult.Metadata=} obj
  * @returns {osrm.engine.api.fbresult.Metadata}
  */
-osrm.engine.api.fbresult.Metadata.getSizePrefixedRootAsMetadata = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Metadata).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Metadata.getSizePrefixedRootAsMetadata = function (
+  bb,
+  obj,
+) {
+  return (obj || new osrm.engine.api.fbresult.Metadata()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
@@ -488,23 +557,32 @@ osrm.engine.api.fbresult.Metadata.getSizePrefixedRootAsMetadata = function(bb, o
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array}
  */
-osrm.engine.api.fbresult.Metadata.prototype.datasourceNames = function(index, optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? this.bb.__string(this.bb.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
+osrm.engine.api.fbresult.Metadata.prototype.datasourceNames = function (
+  index,
+  optionalEncoding,
+) {
+  const offset = this.bb.__offset(this.bb_pos, 4);
+  return offset
+    ? this.bb.__string(
+        this.bb.__vector(this.bb_pos + offset) + index * 4,
+        optionalEncoding,
+      )
+    : null;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Metadata.prototype.datasourceNamesLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
-};
+osrm.engine.api.fbresult.Metadata.prototype.datasourceNamesLength =
+  function () {
+    const offset = this.bb.__offset(this.bb_pos, 4);
+    return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
+  };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
-osrm.engine.api.fbresult.Metadata.startMetadata = function(builder) {
+osrm.engine.api.fbresult.Metadata.startMetadata = function (builder) {
   builder.startObject(1);
 };
 
@@ -512,7 +590,10 @@ osrm.engine.api.fbresult.Metadata.startMetadata = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} datasourceNamesOffset
  */
-osrm.engine.api.fbresult.Metadata.addDatasourceNames = function(builder, datasourceNamesOffset) {
+osrm.engine.api.fbresult.Metadata.addDatasourceNames = function (
+  builder,
+  datasourceNamesOffset,
+) {
   builder.addFieldOffset(0, datasourceNamesOffset, 0);
 };
 
@@ -521,9 +602,12 @@ osrm.engine.api.fbresult.Metadata.addDatasourceNames = function(builder, datasou
  * @param {Array.<flatbuffers.Offset>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Metadata.createDatasourceNamesVector = function(builder, data) {
+osrm.engine.api.fbresult.Metadata.createDatasourceNamesVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]);
   }
   return builder.endVector();
@@ -533,7 +617,10 @@ osrm.engine.api.fbresult.Metadata.createDatasourceNamesVector = function(builder
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Metadata.startDatasourceNamesVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Metadata.startDatasourceNamesVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -541,8 +628,8 @@ osrm.engine.api.fbresult.Metadata.startDatasourceNamesVector = function(builder,
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Metadata.endMetadata = function(builder) {
-  var offset = builder.endObject();
+osrm.engine.api.fbresult.Metadata.endMetadata = function (builder) {
+  const offset = builder.endObject();
   return offset;
 };
 
@@ -551,16 +638,22 @@ osrm.engine.api.fbresult.Metadata.endMetadata = function(builder) {
  * @param {flatbuffers.Offset} datasourceNamesOffset
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Metadata.createMetadata = function(builder, datasourceNamesOffset) {
+osrm.engine.api.fbresult.Metadata.createMetadata = function (
+  builder,
+  datasourceNamesOffset,
+) {
   osrm.engine.api.fbresult.Metadata.startMetadata(builder);
-  osrm.engine.api.fbresult.Metadata.addDatasourceNames(builder, datasourceNamesOffset);
+  osrm.engine.api.fbresult.Metadata.addDatasourceNames(
+    builder,
+    datasourceNamesOffset,
+  );
   return osrm.engine.api.fbresult.Metadata.endMetadata(builder);
 };
 
 /**
  * @constructor
  */
-osrm.engine.api.fbresult.Annotation = function() {
+osrm.engine.api.fbresult.Annotation = function () {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -577,7 +670,7 @@ osrm.engine.api.fbresult.Annotation = function() {
  * @param {flatbuffers.ByteBuffer} bb
  * @returns {osrm.engine.api.fbresult.Annotation}
  */
-osrm.engine.api.fbresult.Annotation.prototype.__init = function(i, bb) {
+osrm.engine.api.fbresult.Annotation.prototype.__init = function (i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -588,8 +681,11 @@ osrm.engine.api.fbresult.Annotation.prototype.__init = function(i, bb) {
  * @param {osrm.engine.api.fbresult.Annotation=} obj
  * @returns {osrm.engine.api.fbresult.Annotation}
  */
-osrm.engine.api.fbresult.Annotation.getRootAsAnnotation = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Annotation).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Annotation.getRootAsAnnotation = function (bb, obj) {
+  return (obj || new osrm.engine.api.fbresult.Annotation()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
@@ -597,173 +693,232 @@ osrm.engine.api.fbresult.Annotation.getRootAsAnnotation = function(bb, obj) {
  * @param {osrm.engine.api.fbresult.Annotation=} obj
  * @returns {osrm.engine.api.fbresult.Annotation}
  */
-osrm.engine.api.fbresult.Annotation.getSizePrefixedRootAsAnnotation = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Annotation).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Annotation.getSizePrefixedRootAsAnnotation = function (
+  bb,
+  obj,
+) {
+  return (obj || new osrm.engine.api.fbresult.Annotation()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
  * @param {number} index
  * @returns {number}
  */
-osrm.engine.api.fbresult.Annotation.prototype.distance = function(index) {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? this.bb.readUint32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
+osrm.engine.api.fbresult.Annotation.prototype.distance = function (index) {
+  const offset = this.bb.__offset(this.bb_pos, 4);
+  return offset
+    ? this.bb.readUint32(this.bb.__vector(this.bb_pos + offset) + index * 4)
+    : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Annotation.prototype.distanceLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 4);
+osrm.engine.api.fbresult.Annotation.prototype.distanceLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {Uint32Array}
  */
-osrm.engine.api.fbresult.Annotation.prototype.distanceArray = function() {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? new Uint32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+osrm.engine.api.fbresult.Annotation.prototype.distanceArray = function () {
+  const offset = this.bb.__offset(this.bb_pos, 4);
+  return offset
+    ? new Uint32Array(
+        this.bb.bytes().buffer,
+        this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset),
+        this.bb.__vector_len(this.bb_pos + offset),
+      )
+    : null;
 };
 
 /**
  * @param {number} index
  * @returns {number}
  */
-osrm.engine.api.fbresult.Annotation.prototype.duration = function(index) {
-  var offset = this.bb.__offset(this.bb_pos, 6);
-  return offset ? this.bb.readUint32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
+osrm.engine.api.fbresult.Annotation.prototype.duration = function (index) {
+  const offset = this.bb.__offset(this.bb_pos, 6);
+  return offset
+    ? this.bb.readUint32(this.bb.__vector(this.bb_pos + offset) + index * 4)
+    : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Annotation.prototype.durationLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 6);
+osrm.engine.api.fbresult.Annotation.prototype.durationLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 6);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {Uint32Array}
  */
-osrm.engine.api.fbresult.Annotation.prototype.durationArray = function() {
-  var offset = this.bb.__offset(this.bb_pos, 6);
-  return offset ? new Uint32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+osrm.engine.api.fbresult.Annotation.prototype.durationArray = function () {
+  const offset = this.bb.__offset(this.bb_pos, 6);
+  return offset
+    ? new Uint32Array(
+        this.bb.bytes().buffer,
+        this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset),
+        this.bb.__vector_len(this.bb_pos + offset),
+      )
+    : null;
 };
 
 /**
  * @param {number} index
  * @returns {number}
  */
-osrm.engine.api.fbresult.Annotation.prototype.datasources = function(index) {
-  var offset = this.bb.__offset(this.bb_pos, 8);
-  return offset ? this.bb.readUint32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
+osrm.engine.api.fbresult.Annotation.prototype.datasources = function (index) {
+  const offset = this.bb.__offset(this.bb_pos, 8);
+  return offset
+    ? this.bb.readUint32(this.bb.__vector(this.bb_pos + offset) + index * 4)
+    : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Annotation.prototype.datasourcesLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 8);
+osrm.engine.api.fbresult.Annotation.prototype.datasourcesLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 8);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {Uint32Array}
  */
-osrm.engine.api.fbresult.Annotation.prototype.datasourcesArray = function() {
-  var offset = this.bb.__offset(this.bb_pos, 8);
-  return offset ? new Uint32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+osrm.engine.api.fbresult.Annotation.prototype.datasourcesArray = function () {
+  const offset = this.bb.__offset(this.bb_pos, 8);
+  return offset
+    ? new Uint32Array(
+        this.bb.bytes().buffer,
+        this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset),
+        this.bb.__vector_len(this.bb_pos + offset),
+      )
+    : null;
 };
 
 /**
  * @param {number} index
  * @returns {number}
  */
-osrm.engine.api.fbresult.Annotation.prototype.nodes = function(index) {
-  var offset = this.bb.__offset(this.bb_pos, 10);
-  return offset ? this.bb.readUint32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
+osrm.engine.api.fbresult.Annotation.prototype.nodes = function (index) {
+  const offset = this.bb.__offset(this.bb_pos, 10);
+  return offset
+    ? this.bb.readUint32(this.bb.__vector(this.bb_pos + offset) + index * 4)
+    : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Annotation.prototype.nodesLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 10);
+osrm.engine.api.fbresult.Annotation.prototype.nodesLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 10);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {Uint32Array}
  */
-osrm.engine.api.fbresult.Annotation.prototype.nodesArray = function() {
-  var offset = this.bb.__offset(this.bb_pos, 10);
-  return offset ? new Uint32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+osrm.engine.api.fbresult.Annotation.prototype.nodesArray = function () {
+  const offset = this.bb.__offset(this.bb_pos, 10);
+  return offset
+    ? new Uint32Array(
+        this.bb.bytes().buffer,
+        this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset),
+        this.bb.__vector_len(this.bb_pos + offset),
+      )
+    : null;
 };
 
 /**
  * @param {number} index
  * @returns {number}
  */
-osrm.engine.api.fbresult.Annotation.prototype.weight = function(index) {
-  var offset = this.bb.__offset(this.bb_pos, 12);
-  return offset ? this.bb.readUint32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
+osrm.engine.api.fbresult.Annotation.prototype.weight = function (index) {
+  const offset = this.bb.__offset(this.bb_pos, 12);
+  return offset
+    ? this.bb.readUint32(this.bb.__vector(this.bb_pos + offset) + index * 4)
+    : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Annotation.prototype.weightLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 12);
+osrm.engine.api.fbresult.Annotation.prototype.weightLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 12);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {Uint32Array}
  */
-osrm.engine.api.fbresult.Annotation.prototype.weightArray = function() {
-  var offset = this.bb.__offset(this.bb_pos, 12);
-  return offset ? new Uint32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+osrm.engine.api.fbresult.Annotation.prototype.weightArray = function () {
+  const offset = this.bb.__offset(this.bb_pos, 12);
+  return offset
+    ? new Uint32Array(
+        this.bb.bytes().buffer,
+        this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset),
+        this.bb.__vector_len(this.bb_pos + offset),
+      )
+    : null;
 };
 
 /**
  * @param {number} index
  * @returns {number}
  */
-osrm.engine.api.fbresult.Annotation.prototype.speed = function(index) {
-  var offset = this.bb.__offset(this.bb_pos, 14);
-  return offset ? this.bb.readFloat32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
+osrm.engine.api.fbresult.Annotation.prototype.speed = function (index) {
+  const offset = this.bb.__offset(this.bb_pos, 14);
+  return offset
+    ? this.bb.readFloat32(this.bb.__vector(this.bb_pos + offset) + index * 4)
+    : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Annotation.prototype.speedLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 14);
+osrm.engine.api.fbresult.Annotation.prototype.speedLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 14);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {Float32Array}
  */
-osrm.engine.api.fbresult.Annotation.prototype.speedArray = function() {
-  var offset = this.bb.__offset(this.bb_pos, 14);
-  return offset ? new Float32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+osrm.engine.api.fbresult.Annotation.prototype.speedArray = function () {
+  const offset = this.bb.__offset(this.bb_pos, 14);
+  return offset
+    ? new Float32Array(
+        this.bb.bytes().buffer,
+        this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset),
+        this.bb.__vector_len(this.bb_pos + offset),
+      )
+    : null;
 };
 
 /**
  * @param {osrm.engine.api.fbresult.Metadata=} obj
  * @returns {osrm.engine.api.fbresult.Metadata|null}
  */
-osrm.engine.api.fbresult.Annotation.prototype.metadata = function(obj) {
-  var offset = this.bb.__offset(this.bb_pos, 16);
-  return offset ? (obj || new osrm.engine.api.fbresult.Metadata).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
+osrm.engine.api.fbresult.Annotation.prototype.metadata = function (obj) {
+  const offset = this.bb.__offset(this.bb_pos, 16);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.Metadata()).__init(
+        this.bb.__indirect(this.bb_pos + offset),
+        this.bb,
+      )
+    : null;
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
-osrm.engine.api.fbresult.Annotation.startAnnotation = function(builder) {
+osrm.engine.api.fbresult.Annotation.startAnnotation = function (builder) {
   builder.startObject(7);
 };
 
@@ -771,7 +926,10 @@ osrm.engine.api.fbresult.Annotation.startAnnotation = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} distanceOffset
  */
-osrm.engine.api.fbresult.Annotation.addDistance = function(builder, distanceOffset) {
+osrm.engine.api.fbresult.Annotation.addDistance = function (
+  builder,
+  distanceOffset,
+) {
   builder.addFieldOffset(0, distanceOffset, 0);
 };
 
@@ -780,9 +938,12 @@ osrm.engine.api.fbresult.Annotation.addDistance = function(builder, distanceOffs
  * @param {Array.<number>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Annotation.createDistanceVector = function(builder, data) {
+osrm.engine.api.fbresult.Annotation.createDistanceVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addInt32(data[i]);
   }
   return builder.endVector();
@@ -792,7 +953,10 @@ osrm.engine.api.fbresult.Annotation.createDistanceVector = function(builder, dat
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Annotation.startDistanceVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Annotation.startDistanceVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -800,7 +964,10 @@ osrm.engine.api.fbresult.Annotation.startDistanceVector = function(builder, numE
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} durationOffset
  */
-osrm.engine.api.fbresult.Annotation.addDuration = function(builder, durationOffset) {
+osrm.engine.api.fbresult.Annotation.addDuration = function (
+  builder,
+  durationOffset,
+) {
   builder.addFieldOffset(1, durationOffset, 0);
 };
 
@@ -809,9 +976,12 @@ osrm.engine.api.fbresult.Annotation.addDuration = function(builder, durationOffs
  * @param {Array.<number>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Annotation.createDurationVector = function(builder, data) {
+osrm.engine.api.fbresult.Annotation.createDurationVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addInt32(data[i]);
   }
   return builder.endVector();
@@ -821,7 +991,10 @@ osrm.engine.api.fbresult.Annotation.createDurationVector = function(builder, dat
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Annotation.startDurationVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Annotation.startDurationVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -829,7 +1002,10 @@ osrm.engine.api.fbresult.Annotation.startDurationVector = function(builder, numE
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} datasourcesOffset
  */
-osrm.engine.api.fbresult.Annotation.addDatasources = function(builder, datasourcesOffset) {
+osrm.engine.api.fbresult.Annotation.addDatasources = function (
+  builder,
+  datasourcesOffset,
+) {
   builder.addFieldOffset(2, datasourcesOffset, 0);
 };
 
@@ -838,9 +1014,12 @@ osrm.engine.api.fbresult.Annotation.addDatasources = function(builder, datasourc
  * @param {Array.<number>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Annotation.createDatasourcesVector = function(builder, data) {
+osrm.engine.api.fbresult.Annotation.createDatasourcesVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addInt32(data[i]);
   }
   return builder.endVector();
@@ -850,7 +1029,10 @@ osrm.engine.api.fbresult.Annotation.createDatasourcesVector = function(builder, 
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Annotation.startDatasourcesVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Annotation.startDatasourcesVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -858,7 +1040,7 @@ osrm.engine.api.fbresult.Annotation.startDatasourcesVector = function(builder, n
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} nodesOffset
  */
-osrm.engine.api.fbresult.Annotation.addNodes = function(builder, nodesOffset) {
+osrm.engine.api.fbresult.Annotation.addNodes = function (builder, nodesOffset) {
   builder.addFieldOffset(3, nodesOffset, 0);
 };
 
@@ -867,9 +1049,12 @@ osrm.engine.api.fbresult.Annotation.addNodes = function(builder, nodesOffset) {
  * @param {Array.<number>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Annotation.createNodesVector = function(builder, data) {
+osrm.engine.api.fbresult.Annotation.createNodesVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addInt32(data[i]);
   }
   return builder.endVector();
@@ -879,7 +1064,10 @@ osrm.engine.api.fbresult.Annotation.createNodesVector = function(builder, data) 
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Annotation.startNodesVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Annotation.startNodesVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -887,7 +1075,10 @@ osrm.engine.api.fbresult.Annotation.startNodesVector = function(builder, numElem
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} weightOffset
  */
-osrm.engine.api.fbresult.Annotation.addWeight = function(builder, weightOffset) {
+osrm.engine.api.fbresult.Annotation.addWeight = function (
+  builder,
+  weightOffset,
+) {
   builder.addFieldOffset(4, weightOffset, 0);
 };
 
@@ -896,9 +1087,12 @@ osrm.engine.api.fbresult.Annotation.addWeight = function(builder, weightOffset) 
  * @param {Array.<number>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Annotation.createWeightVector = function(builder, data) {
+osrm.engine.api.fbresult.Annotation.createWeightVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addInt32(data[i]);
   }
   return builder.endVector();
@@ -908,7 +1102,10 @@ osrm.engine.api.fbresult.Annotation.createWeightVector = function(builder, data)
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Annotation.startWeightVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Annotation.startWeightVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -916,7 +1113,7 @@ osrm.engine.api.fbresult.Annotation.startWeightVector = function(builder, numEle
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} speedOffset
  */
-osrm.engine.api.fbresult.Annotation.addSpeed = function(builder, speedOffset) {
+osrm.engine.api.fbresult.Annotation.addSpeed = function (builder, speedOffset) {
   builder.addFieldOffset(5, speedOffset, 0);
 };
 
@@ -925,9 +1122,12 @@ osrm.engine.api.fbresult.Annotation.addSpeed = function(builder, speedOffset) {
  * @param {Array.<number>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Annotation.createSpeedVector = function(builder, data) {
+osrm.engine.api.fbresult.Annotation.createSpeedVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addFloat32(data[i]);
   }
   return builder.endVector();
@@ -937,7 +1137,10 @@ osrm.engine.api.fbresult.Annotation.createSpeedVector = function(builder, data) 
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Annotation.startSpeedVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Annotation.startSpeedVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -945,7 +1148,10 @@ osrm.engine.api.fbresult.Annotation.startSpeedVector = function(builder, numElem
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} metadataOffset
  */
-osrm.engine.api.fbresult.Annotation.addMetadata = function(builder, metadataOffset) {
+osrm.engine.api.fbresult.Annotation.addMetadata = function (
+  builder,
+  metadataOffset,
+) {
   builder.addFieldOffset(6, metadataOffset, 0);
 };
 
@@ -953,8 +1159,8 @@ osrm.engine.api.fbresult.Annotation.addMetadata = function(builder, metadataOffs
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Annotation.endAnnotation = function(builder) {
-  var offset = builder.endObject();
+osrm.engine.api.fbresult.Annotation.endAnnotation = function (builder) {
+  const offset = builder.endObject();
   return offset;
 };
 
@@ -969,11 +1175,23 @@ osrm.engine.api.fbresult.Annotation.endAnnotation = function(builder) {
  * @param {flatbuffers.Offset} metadataOffset
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Annotation.createAnnotation = function(builder, distanceOffset, durationOffset, datasourcesOffset, nodesOffset, weightOffset, speedOffset, metadataOffset) {
+osrm.engine.api.fbresult.Annotation.createAnnotation = function (
+  builder,
+  distanceOffset,
+  durationOffset,
+  datasourcesOffset,
+  nodesOffset,
+  weightOffset,
+  speedOffset,
+  metadataOffset,
+) {
   osrm.engine.api.fbresult.Annotation.startAnnotation(builder);
   osrm.engine.api.fbresult.Annotation.addDistance(builder, distanceOffset);
   osrm.engine.api.fbresult.Annotation.addDuration(builder, durationOffset);
-  osrm.engine.api.fbresult.Annotation.addDatasources(builder, datasourcesOffset);
+  osrm.engine.api.fbresult.Annotation.addDatasources(
+    builder,
+    datasourcesOffset,
+  );
   osrm.engine.api.fbresult.Annotation.addNodes(builder, nodesOffset);
   osrm.engine.api.fbresult.Annotation.addWeight(builder, weightOffset);
   osrm.engine.api.fbresult.Annotation.addSpeed(builder, speedOffset);
@@ -984,7 +1202,7 @@ osrm.engine.api.fbresult.Annotation.createAnnotation = function(builder, distanc
 /**
  * @constructor
  */
-osrm.engine.api.fbresult.StepManeuver = function() {
+osrm.engine.api.fbresult.StepManeuver = function () {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -1001,7 +1219,7 @@ osrm.engine.api.fbresult.StepManeuver = function() {
  * @param {flatbuffers.ByteBuffer} bb
  * @returns {osrm.engine.api.fbresult.StepManeuver}
  */
-osrm.engine.api.fbresult.StepManeuver.prototype.__init = function(i, bb) {
+osrm.engine.api.fbresult.StepManeuver.prototype.__init = function (i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -1012,8 +1230,14 @@ osrm.engine.api.fbresult.StepManeuver.prototype.__init = function(i, bb) {
  * @param {osrm.engine.api.fbresult.StepManeuver=} obj
  * @returns {osrm.engine.api.fbresult.StepManeuver}
  */
-osrm.engine.api.fbresult.StepManeuver.getRootAsStepManeuver = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.StepManeuver).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.StepManeuver.getRootAsStepManeuver = function (
+  bb,
+  obj,
+) {
+  return (obj || new osrm.engine.api.fbresult.StepManeuver()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
@@ -1021,63 +1245,80 @@ osrm.engine.api.fbresult.StepManeuver.getRootAsStepManeuver = function(bb, obj) 
  * @param {osrm.engine.api.fbresult.StepManeuver=} obj
  * @returns {osrm.engine.api.fbresult.StepManeuver}
  */
-osrm.engine.api.fbresult.StepManeuver.getSizePrefixedRootAsStepManeuver = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.StepManeuver).__init(bb.readInt32(bb.position()) + bb.position(), bb);
-};
+osrm.engine.api.fbresult.StepManeuver.getSizePrefixedRootAsStepManeuver =
+  function (bb, obj) {
+    return (obj || new osrm.engine.api.fbresult.StepManeuver()).__init(
+      bb.readInt32(bb.position()) + bb.position(),
+      bb,
+    );
+  };
 
 /**
  * @param {osrm.engine.api.fbresult.Position=} obj
  * @returns {osrm.engine.api.fbresult.Position|null}
  */
-osrm.engine.api.fbresult.StepManeuver.prototype.location = function(obj) {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? (obj || new osrm.engine.api.fbresult.Position).__init(this.bb_pos + offset, this.bb) : null;
+osrm.engine.api.fbresult.StepManeuver.prototype.location = function (obj) {
+  const offset = this.bb.__offset(this.bb_pos, 4);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.Position()).__init(
+        this.bb_pos + offset,
+        this.bb,
+      )
+    : null;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.StepManeuver.prototype.bearingBefore = function() {
-  var offset = this.bb.__offset(this.bb_pos, 6);
+osrm.engine.api.fbresult.StepManeuver.prototype.bearingBefore = function () {
+  const offset = this.bb.__offset(this.bb_pos, 6);
   return offset ? this.bb.readUint16(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.StepManeuver.prototype.bearingAfter = function() {
-  var offset = this.bb.__offset(this.bb_pos, 8);
+osrm.engine.api.fbresult.StepManeuver.prototype.bearingAfter = function () {
+  const offset = this.bb.__offset(this.bb_pos, 8);
   return offset ? this.bb.readUint16(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {osrm.engine.api.fbresult.ManeuverType}
  */
-osrm.engine.api.fbresult.StepManeuver.prototype.type = function() {
-  var offset = this.bb.__offset(this.bb_pos, 10);
-  return offset ? /** @type {osrm.engine.api.fbresult.ManeuverType} */ (this.bb.readInt8(this.bb_pos + offset)) : osrm.engine.api.fbresult.ManeuverType.Turn;
+osrm.engine.api.fbresult.StepManeuver.prototype.type = function () {
+  const offset = this.bb.__offset(this.bb_pos, 10);
+  return offset
+    ? /** @type {osrm.engine.api.fbresult.ManeuverType} */ (
+        this.bb.readInt8(this.bb_pos + offset)
+      )
+    : osrm.engine.api.fbresult.ManeuverType.Turn;
 };
 
 /**
  * @returns {osrm.engine.api.fbresult.Turn}
  */
-osrm.engine.api.fbresult.StepManeuver.prototype.modifier = function() {
-  var offset = this.bb.__offset(this.bb_pos, 12);
-  return offset ? /** @type {osrm.engine.api.fbresult.Turn} */ (this.bb.readInt8(this.bb_pos + offset)) : osrm.engine.api.fbresult.Turn.None;
+osrm.engine.api.fbresult.StepManeuver.prototype.modifier = function () {
+  const offset = this.bb.__offset(this.bb_pos, 12);
+  return offset
+    ? /** @type {osrm.engine.api.fbresult.Turn} */ (
+        this.bb.readInt8(this.bb_pos + offset)
+      )
+    : osrm.engine.api.fbresult.Turn.None;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.StepManeuver.prototype.exit = function() {
-  var offset = this.bb.__offset(this.bb_pos, 14);
+osrm.engine.api.fbresult.StepManeuver.prototype.exit = function () {
+  const offset = this.bb.__offset(this.bb_pos, 14);
   return offset ? this.bb.readUint8(this.bb_pos + offset) : 0;
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
-osrm.engine.api.fbresult.StepManeuver.startStepManeuver = function(builder) {
+osrm.engine.api.fbresult.StepManeuver.startStepManeuver = function (builder) {
   builder.startObject(6);
 };
 
@@ -1085,7 +1326,10 @@ osrm.engine.api.fbresult.StepManeuver.startStepManeuver = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} locationOffset
  */
-osrm.engine.api.fbresult.StepManeuver.addLocation = function(builder, locationOffset) {
+osrm.engine.api.fbresult.StepManeuver.addLocation = function (
+  builder,
+  locationOffset,
+) {
   builder.addFieldStruct(0, locationOffset, 0);
 };
 
@@ -1093,7 +1337,10 @@ osrm.engine.api.fbresult.StepManeuver.addLocation = function(builder, locationOf
  * @param {flatbuffers.Builder} builder
  * @param {number} bearingBefore
  */
-osrm.engine.api.fbresult.StepManeuver.addBearingBefore = function(builder, bearingBefore) {
+osrm.engine.api.fbresult.StepManeuver.addBearingBefore = function (
+  builder,
+  bearingBefore,
+) {
   builder.addFieldInt16(1, bearingBefore, 0);
 };
 
@@ -1101,7 +1348,10 @@ osrm.engine.api.fbresult.StepManeuver.addBearingBefore = function(builder, beari
  * @param {flatbuffers.Builder} builder
  * @param {number} bearingAfter
  */
-osrm.engine.api.fbresult.StepManeuver.addBearingAfter = function(builder, bearingAfter) {
+osrm.engine.api.fbresult.StepManeuver.addBearingAfter = function (
+  builder,
+  bearingAfter,
+) {
   builder.addFieldInt16(2, bearingAfter, 0);
 };
 
@@ -1109,7 +1359,7 @@ osrm.engine.api.fbresult.StepManeuver.addBearingAfter = function(builder, bearin
  * @param {flatbuffers.Builder} builder
  * @param {osrm.engine.api.fbresult.ManeuverType} type
  */
-osrm.engine.api.fbresult.StepManeuver.addType = function(builder, type) {
+osrm.engine.api.fbresult.StepManeuver.addType = function (builder, type) {
   builder.addFieldInt8(3, type, osrm.engine.api.fbresult.ManeuverType.Turn);
 };
 
@@ -1117,7 +1367,10 @@ osrm.engine.api.fbresult.StepManeuver.addType = function(builder, type) {
  * @param {flatbuffers.Builder} builder
  * @param {osrm.engine.api.fbresult.Turn} modifier
  */
-osrm.engine.api.fbresult.StepManeuver.addModifier = function(builder, modifier) {
+osrm.engine.api.fbresult.StepManeuver.addModifier = function (
+  builder,
+  modifier,
+) {
   builder.addFieldInt8(4, modifier, osrm.engine.api.fbresult.Turn.None);
 };
 
@@ -1125,7 +1378,7 @@ osrm.engine.api.fbresult.StepManeuver.addModifier = function(builder, modifier) 
  * @param {flatbuffers.Builder} builder
  * @param {number} exit
  */
-osrm.engine.api.fbresult.StepManeuver.addExit = function(builder, exit) {
+osrm.engine.api.fbresult.StepManeuver.addExit = function (builder, exit) {
   builder.addFieldInt8(5, exit, 0);
 };
 
@@ -1133,8 +1386,8 @@ osrm.engine.api.fbresult.StepManeuver.addExit = function(builder, exit) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.StepManeuver.endStepManeuver = function(builder) {
-  var offset = builder.endObject();
+osrm.engine.api.fbresult.StepManeuver.endStepManeuver = function (builder) {
+  const offset = builder.endObject();
   return offset;
 };
 
@@ -1148,10 +1401,21 @@ osrm.engine.api.fbresult.StepManeuver.endStepManeuver = function(builder) {
  * @param {number} exit
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.StepManeuver.createStepManeuver = function(builder, locationOffset, bearingBefore, bearingAfter, type, modifier, exit) {
+osrm.engine.api.fbresult.StepManeuver.createStepManeuver = function (
+  builder,
+  locationOffset,
+  bearingBefore,
+  bearingAfter,
+  type,
+  modifier,
+  exit,
+) {
   osrm.engine.api.fbresult.StepManeuver.startStepManeuver(builder);
   osrm.engine.api.fbresult.StepManeuver.addLocation(builder, locationOffset);
-  osrm.engine.api.fbresult.StepManeuver.addBearingBefore(builder, bearingBefore);
+  osrm.engine.api.fbresult.StepManeuver.addBearingBefore(
+    builder,
+    bearingBefore,
+  );
   osrm.engine.api.fbresult.StepManeuver.addBearingAfter(builder, bearingAfter);
   osrm.engine.api.fbresult.StepManeuver.addType(builder, type);
   osrm.engine.api.fbresult.StepManeuver.addModifier(builder, modifier);
@@ -1162,7 +1426,7 @@ osrm.engine.api.fbresult.StepManeuver.createStepManeuver = function(builder, loc
 /**
  * @constructor
  */
-osrm.engine.api.fbresult.Lane = function() {
+osrm.engine.api.fbresult.Lane = function () {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -1179,7 +1443,7 @@ osrm.engine.api.fbresult.Lane = function() {
  * @param {flatbuffers.ByteBuffer} bb
  * @returns {osrm.engine.api.fbresult.Lane}
  */
-osrm.engine.api.fbresult.Lane.prototype.__init = function(i, bb) {
+osrm.engine.api.fbresult.Lane.prototype.__init = function (i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -1190,8 +1454,11 @@ osrm.engine.api.fbresult.Lane.prototype.__init = function(i, bb) {
  * @param {osrm.engine.api.fbresult.Lane=} obj
  * @returns {osrm.engine.api.fbresult.Lane}
  */
-osrm.engine.api.fbresult.Lane.getRootAsLane = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Lane).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Lane.getRootAsLane = function (bb, obj) {
+  return (obj || new osrm.engine.api.fbresult.Lane()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
@@ -1199,47 +1466,60 @@ osrm.engine.api.fbresult.Lane.getRootAsLane = function(bb, obj) {
  * @param {osrm.engine.api.fbresult.Lane=} obj
  * @returns {osrm.engine.api.fbresult.Lane}
  */
-osrm.engine.api.fbresult.Lane.getSizePrefixedRootAsLane = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Lane).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Lane.getSizePrefixedRootAsLane = function (bb, obj) {
+  return (obj || new osrm.engine.api.fbresult.Lane()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
  * @param {number} index
  * @returns {osrm.engine.api.fbresult.Turn}
  */
-osrm.engine.api.fbresult.Lane.prototype.indications = function(index) {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? /** @type {osrm.engine.api.fbresult.Turn} */ (this.bb.readInt8(this.bb.__vector(this.bb_pos + offset) + index)) : /** @type {osrm.engine.api.fbresult.Turn} */ (0);
+osrm.engine.api.fbresult.Lane.prototype.indications = function (index) {
+  const offset = this.bb.__offset(this.bb_pos, 4);
+  return offset
+    ? /** @type {osrm.engine.api.fbresult.Turn} */ (
+        this.bb.readInt8(this.bb.__vector(this.bb_pos + offset) + index)
+      )
+    : /** @type {osrm.engine.api.fbresult.Turn} */ (0);
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Lane.prototype.indicationsLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 4);
+osrm.engine.api.fbresult.Lane.prototype.indicationsLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {Int8Array}
  */
-osrm.engine.api.fbresult.Lane.prototype.indicationsArray = function() {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? new Int8Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+osrm.engine.api.fbresult.Lane.prototype.indicationsArray = function () {
+  const offset = this.bb.__offset(this.bb_pos, 4);
+  return offset
+    ? new Int8Array(
+        this.bb.bytes().buffer,
+        this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset),
+        this.bb.__vector_len(this.bb_pos + offset),
+      )
+    : null;
 };
 
 /**
  * @returns {boolean}
  */
-osrm.engine.api.fbresult.Lane.prototype.valid = function() {
-  var offset = this.bb.__offset(this.bb_pos, 6);
+osrm.engine.api.fbresult.Lane.prototype.valid = function () {
+  const offset = this.bb.__offset(this.bb_pos, 6);
   return offset ? !!this.bb.readInt8(this.bb_pos + offset) : false;
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
-osrm.engine.api.fbresult.Lane.startLane = function(builder) {
+osrm.engine.api.fbresult.Lane.startLane = function (builder) {
   builder.startObject(2);
 };
 
@@ -1247,7 +1527,10 @@ osrm.engine.api.fbresult.Lane.startLane = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} indicationsOffset
  */
-osrm.engine.api.fbresult.Lane.addIndications = function(builder, indicationsOffset) {
+osrm.engine.api.fbresult.Lane.addIndications = function (
+  builder,
+  indicationsOffset,
+) {
   builder.addFieldOffset(0, indicationsOffset, 0);
 };
 
@@ -1256,9 +1539,12 @@ osrm.engine.api.fbresult.Lane.addIndications = function(builder, indicationsOffs
  * @param {Array.<osrm.engine.api.fbresult.Turn>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Lane.createIndicationsVector = function(builder, data) {
+osrm.engine.api.fbresult.Lane.createIndicationsVector = function (
+  builder,
+  data,
+) {
   builder.startVector(1, data.length, 1);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addInt8(data[i]);
   }
   return builder.endVector();
@@ -1268,7 +1554,10 @@ osrm.engine.api.fbresult.Lane.createIndicationsVector = function(builder, data) 
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Lane.startIndicationsVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Lane.startIndicationsVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(1, numElems, 1);
 };
 
@@ -1276,7 +1565,7 @@ osrm.engine.api.fbresult.Lane.startIndicationsVector = function(builder, numElem
  * @param {flatbuffers.Builder} builder
  * @param {boolean} valid
  */
-osrm.engine.api.fbresult.Lane.addValid = function(builder, valid) {
+osrm.engine.api.fbresult.Lane.addValid = function (builder, valid) {
   builder.addFieldInt8(1, +valid, +false);
 };
 
@@ -1284,8 +1573,8 @@ osrm.engine.api.fbresult.Lane.addValid = function(builder, valid) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Lane.endLane = function(builder) {
-  var offset = builder.endObject();
+osrm.engine.api.fbresult.Lane.endLane = function (builder) {
+  const offset = builder.endObject();
   return offset;
 };
 
@@ -1295,7 +1584,11 @@ osrm.engine.api.fbresult.Lane.endLane = function(builder) {
  * @param {boolean} valid
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Lane.createLane = function(builder, indicationsOffset, valid) {
+osrm.engine.api.fbresult.Lane.createLane = function (
+  builder,
+  indicationsOffset,
+  valid,
+) {
   osrm.engine.api.fbresult.Lane.startLane(builder);
   osrm.engine.api.fbresult.Lane.addIndications(builder, indicationsOffset);
   osrm.engine.api.fbresult.Lane.addValid(builder, valid);
@@ -1305,7 +1598,7 @@ osrm.engine.api.fbresult.Lane.createLane = function(builder, indicationsOffset, 
 /**
  * @constructor
  */
-osrm.engine.api.fbresult.Intersection = function() {
+osrm.engine.api.fbresult.Intersection = function () {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -1322,7 +1615,7 @@ osrm.engine.api.fbresult.Intersection = function() {
  * @param {flatbuffers.ByteBuffer} bb
  * @returns {osrm.engine.api.fbresult.Intersection}
  */
-osrm.engine.api.fbresult.Intersection.prototype.__init = function(i, bb) {
+osrm.engine.api.fbresult.Intersection.prototype.__init = function (i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -1333,8 +1626,14 @@ osrm.engine.api.fbresult.Intersection.prototype.__init = function(i, bb) {
  * @param {osrm.engine.api.fbresult.Intersection=} obj
  * @returns {osrm.engine.api.fbresult.Intersection}
  */
-osrm.engine.api.fbresult.Intersection.getRootAsIntersection = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Intersection).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Intersection.getRootAsIntersection = function (
+  bb,
+  obj,
+) {
+  return (obj || new osrm.engine.api.fbresult.Intersection()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
@@ -1342,42 +1641,59 @@ osrm.engine.api.fbresult.Intersection.getRootAsIntersection = function(bb, obj) 
  * @param {osrm.engine.api.fbresult.Intersection=} obj
  * @returns {osrm.engine.api.fbresult.Intersection}
  */
-osrm.engine.api.fbresult.Intersection.getSizePrefixedRootAsIntersection = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Intersection).__init(bb.readInt32(bb.position()) + bb.position(), bb);
-};
+osrm.engine.api.fbresult.Intersection.getSizePrefixedRootAsIntersection =
+  function (bb, obj) {
+    return (obj || new osrm.engine.api.fbresult.Intersection()).__init(
+      bb.readInt32(bb.position()) + bb.position(),
+      bb,
+    );
+  };
 
 /**
  * @param {osrm.engine.api.fbresult.Position=} obj
  * @returns {osrm.engine.api.fbresult.Position|null}
  */
-osrm.engine.api.fbresult.Intersection.prototype.location = function(obj) {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? (obj || new osrm.engine.api.fbresult.Position).__init(this.bb_pos + offset, this.bb) : null;
+osrm.engine.api.fbresult.Intersection.prototype.location = function (obj) {
+  const offset = this.bb.__offset(this.bb_pos, 4);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.Position()).__init(
+        this.bb_pos + offset,
+        this.bb,
+      )
+    : null;
 };
 
 /**
  * @param {number} index
  * @returns {number}
  */
-osrm.engine.api.fbresult.Intersection.prototype.bearings = function(index) {
-  var offset = this.bb.__offset(this.bb_pos, 6);
-  return offset ? this.bb.readInt16(this.bb.__vector(this.bb_pos + offset) + index * 2) : 0;
+osrm.engine.api.fbresult.Intersection.prototype.bearings = function (index) {
+  const offset = this.bb.__offset(this.bb_pos, 6);
+  return offset
+    ? this.bb.readInt16(this.bb.__vector(this.bb_pos + offset) + index * 2)
+    : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Intersection.prototype.bearingsLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 6);
+osrm.engine.api.fbresult.Intersection.prototype.bearingsLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 6);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {Int16Array}
  */
-osrm.engine.api.fbresult.Intersection.prototype.bearingsArray = function() {
-  var offset = this.bb.__offset(this.bb_pos, 6);
-  return offset ? new Int16Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+osrm.engine.api.fbresult.Intersection.prototype.bearingsArray = function () {
+  const offset = this.bb.__offset(this.bb_pos, 6);
+  return offset
+    ? new Int16Array(
+        this.bb.bytes().buffer,
+        this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset),
+        this.bb.__vector_len(this.bb_pos + offset),
+      )
+    : null;
 };
 
 /**
@@ -1385,16 +1701,24 @@ osrm.engine.api.fbresult.Intersection.prototype.bearingsArray = function() {
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array}
  */
-osrm.engine.api.fbresult.Intersection.prototype.classes = function(index, optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 8);
-  return offset ? this.bb.__string(this.bb.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
+osrm.engine.api.fbresult.Intersection.prototype.classes = function (
+  index,
+  optionalEncoding,
+) {
+  const offset = this.bb.__offset(this.bb_pos, 8);
+  return offset
+    ? this.bb.__string(
+        this.bb.__vector(this.bb_pos + offset) + index * 4,
+        optionalEncoding,
+      )
+    : null;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Intersection.prototype.classesLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 8);
+osrm.engine.api.fbresult.Intersection.prototype.classesLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 8);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
@@ -1402,40 +1726,48 @@ osrm.engine.api.fbresult.Intersection.prototype.classesLength = function() {
  * @param {number} index
  * @returns {boolean}
  */
-osrm.engine.api.fbresult.Intersection.prototype.entry = function(index) {
-  var offset = this.bb.__offset(this.bb_pos, 10);
-  return offset ? !!this.bb.readInt8(this.bb.__vector(this.bb_pos + offset) + index) : false;
+osrm.engine.api.fbresult.Intersection.prototype.entry = function (index) {
+  const offset = this.bb.__offset(this.bb_pos, 10);
+  return offset
+    ? !!this.bb.readInt8(this.bb.__vector(this.bb_pos + offset) + index)
+    : false;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Intersection.prototype.entryLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 10);
+osrm.engine.api.fbresult.Intersection.prototype.entryLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 10);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {Int8Array}
  */
-osrm.engine.api.fbresult.Intersection.prototype.entryArray = function() {
-  var offset = this.bb.__offset(this.bb_pos, 10);
-  return offset ? new Int8Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+osrm.engine.api.fbresult.Intersection.prototype.entryArray = function () {
+  const offset = this.bb.__offset(this.bb_pos, 10);
+  return offset
+    ? new Int8Array(
+        this.bb.bytes().buffer,
+        this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset),
+        this.bb.__vector_len(this.bb_pos + offset),
+      )
+    : null;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Intersection.prototype.inBearing = function() {
-  var offset = this.bb.__offset(this.bb_pos, 12);
+osrm.engine.api.fbresult.Intersection.prototype.inBearing = function () {
+  const offset = this.bb.__offset(this.bb_pos, 12);
   return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Intersection.prototype.outBearing = function() {
-  var offset = this.bb.__offset(this.bb_pos, 14);
+osrm.engine.api.fbresult.Intersection.prototype.outBearing = function () {
+  const offset = this.bb.__offset(this.bb_pos, 14);
   return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
 };
 
@@ -1444,23 +1776,28 @@ osrm.engine.api.fbresult.Intersection.prototype.outBearing = function() {
  * @param {osrm.engine.api.fbresult.Lane=} obj
  * @returns {osrm.engine.api.fbresult.Lane}
  */
-osrm.engine.api.fbresult.Intersection.prototype.lanes = function(index, obj) {
-  var offset = this.bb.__offset(this.bb_pos, 16);
-  return offset ? (obj || new osrm.engine.api.fbresult.Lane).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
+osrm.engine.api.fbresult.Intersection.prototype.lanes = function (index, obj) {
+  const offset = this.bb.__offset(this.bb_pos, 16);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.Lane()).__init(
+        this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4),
+        this.bb,
+      )
+    : null;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Intersection.prototype.lanesLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 16);
+osrm.engine.api.fbresult.Intersection.prototype.lanesLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 16);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
-osrm.engine.api.fbresult.Intersection.startIntersection = function(builder) {
+osrm.engine.api.fbresult.Intersection.startIntersection = function (builder) {
   builder.startObject(7);
 };
 
@@ -1468,7 +1805,10 @@ osrm.engine.api.fbresult.Intersection.startIntersection = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} locationOffset
  */
-osrm.engine.api.fbresult.Intersection.addLocation = function(builder, locationOffset) {
+osrm.engine.api.fbresult.Intersection.addLocation = function (
+  builder,
+  locationOffset,
+) {
   builder.addFieldStruct(0, locationOffset, 0);
 };
 
@@ -1476,7 +1816,10 @@ osrm.engine.api.fbresult.Intersection.addLocation = function(builder, locationOf
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} bearingsOffset
  */
-osrm.engine.api.fbresult.Intersection.addBearings = function(builder, bearingsOffset) {
+osrm.engine.api.fbresult.Intersection.addBearings = function (
+  builder,
+  bearingsOffset,
+) {
   builder.addFieldOffset(1, bearingsOffset, 0);
 };
 
@@ -1485,9 +1828,12 @@ osrm.engine.api.fbresult.Intersection.addBearings = function(builder, bearingsOf
  * @param {Array.<number>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Intersection.createBearingsVector = function(builder, data) {
+osrm.engine.api.fbresult.Intersection.createBearingsVector = function (
+  builder,
+  data,
+) {
   builder.startVector(2, data.length, 2);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addInt16(data[i]);
   }
   return builder.endVector();
@@ -1497,7 +1843,10 @@ osrm.engine.api.fbresult.Intersection.createBearingsVector = function(builder, d
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Intersection.startBearingsVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Intersection.startBearingsVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(2, numElems, 2);
 };
 
@@ -1505,7 +1854,10 @@ osrm.engine.api.fbresult.Intersection.startBearingsVector = function(builder, nu
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} classesOffset
  */
-osrm.engine.api.fbresult.Intersection.addClasses = function(builder, classesOffset) {
+osrm.engine.api.fbresult.Intersection.addClasses = function (
+  builder,
+  classesOffset,
+) {
   builder.addFieldOffset(2, classesOffset, 0);
 };
 
@@ -1514,9 +1866,12 @@ osrm.engine.api.fbresult.Intersection.addClasses = function(builder, classesOffs
  * @param {Array.<flatbuffers.Offset>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Intersection.createClassesVector = function(builder, data) {
+osrm.engine.api.fbresult.Intersection.createClassesVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]);
   }
   return builder.endVector();
@@ -1526,7 +1881,10 @@ osrm.engine.api.fbresult.Intersection.createClassesVector = function(builder, da
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Intersection.startClassesVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Intersection.startClassesVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -1534,7 +1892,10 @@ osrm.engine.api.fbresult.Intersection.startClassesVector = function(builder, num
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} entryOffset
  */
-osrm.engine.api.fbresult.Intersection.addEntry = function(builder, entryOffset) {
+osrm.engine.api.fbresult.Intersection.addEntry = function (
+  builder,
+  entryOffset,
+) {
   builder.addFieldOffset(3, entryOffset, 0);
 };
 
@@ -1543,9 +1904,12 @@ osrm.engine.api.fbresult.Intersection.addEntry = function(builder, entryOffset) 
  * @param {Array.<boolean>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Intersection.createEntryVector = function(builder, data) {
+osrm.engine.api.fbresult.Intersection.createEntryVector = function (
+  builder,
+  data,
+) {
   builder.startVector(1, data.length, 1);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addInt8(+data[i]);
   }
   return builder.endVector();
@@ -1555,7 +1919,10 @@ osrm.engine.api.fbresult.Intersection.createEntryVector = function(builder, data
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Intersection.startEntryVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Intersection.startEntryVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(1, numElems, 1);
 };
 
@@ -1563,7 +1930,10 @@ osrm.engine.api.fbresult.Intersection.startEntryVector = function(builder, numEl
  * @param {flatbuffers.Builder} builder
  * @param {number} inBearing
  */
-osrm.engine.api.fbresult.Intersection.addInBearing = function(builder, inBearing) {
+osrm.engine.api.fbresult.Intersection.addInBearing = function (
+  builder,
+  inBearing,
+) {
   builder.addFieldInt32(4, inBearing, 0);
 };
 
@@ -1571,7 +1941,10 @@ osrm.engine.api.fbresult.Intersection.addInBearing = function(builder, inBearing
  * @param {flatbuffers.Builder} builder
  * @param {number} outBearing
  */
-osrm.engine.api.fbresult.Intersection.addOutBearing = function(builder, outBearing) {
+osrm.engine.api.fbresult.Intersection.addOutBearing = function (
+  builder,
+  outBearing,
+) {
   builder.addFieldInt32(5, outBearing, 0);
 };
 
@@ -1579,7 +1952,10 @@ osrm.engine.api.fbresult.Intersection.addOutBearing = function(builder, outBeari
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} lanesOffset
  */
-osrm.engine.api.fbresult.Intersection.addLanes = function(builder, lanesOffset) {
+osrm.engine.api.fbresult.Intersection.addLanes = function (
+  builder,
+  lanesOffset,
+) {
   builder.addFieldOffset(6, lanesOffset, 0);
 };
 
@@ -1588,9 +1964,12 @@ osrm.engine.api.fbresult.Intersection.addLanes = function(builder, lanesOffset) 
  * @param {Array.<flatbuffers.Offset>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Intersection.createLanesVector = function(builder, data) {
+osrm.engine.api.fbresult.Intersection.createLanesVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]);
   }
   return builder.endVector();
@@ -1600,7 +1979,10 @@ osrm.engine.api.fbresult.Intersection.createLanesVector = function(builder, data
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Intersection.startLanesVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Intersection.startLanesVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -1608,8 +1990,8 @@ osrm.engine.api.fbresult.Intersection.startLanesVector = function(builder, numEl
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Intersection.endIntersection = function(builder) {
-  var offset = builder.endObject();
+osrm.engine.api.fbresult.Intersection.endIntersection = function (builder) {
+  const offset = builder.endObject();
   return offset;
 };
 
@@ -1624,7 +2006,16 @@ osrm.engine.api.fbresult.Intersection.endIntersection = function(builder) {
  * @param {flatbuffers.Offset} lanesOffset
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Intersection.createIntersection = function(builder, locationOffset, bearingsOffset, classesOffset, entryOffset, inBearing, outBearing, lanesOffset) {
+osrm.engine.api.fbresult.Intersection.createIntersection = function (
+  builder,
+  locationOffset,
+  bearingsOffset,
+  classesOffset,
+  entryOffset,
+  inBearing,
+  outBearing,
+  lanesOffset,
+) {
   osrm.engine.api.fbresult.Intersection.startIntersection(builder);
   osrm.engine.api.fbresult.Intersection.addLocation(builder, locationOffset);
   osrm.engine.api.fbresult.Intersection.addBearings(builder, bearingsOffset);
@@ -1639,7 +2030,7 @@ osrm.engine.api.fbresult.Intersection.createIntersection = function(builder, loc
 /**
  * @constructor
  */
-osrm.engine.api.fbresult.Step = function() {
+osrm.engine.api.fbresult.Step = function () {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -1656,7 +2047,7 @@ osrm.engine.api.fbresult.Step = function() {
  * @param {flatbuffers.ByteBuffer} bb
  * @returns {osrm.engine.api.fbresult.Step}
  */
-osrm.engine.api.fbresult.Step.prototype.__init = function(i, bb) {
+osrm.engine.api.fbresult.Step.prototype.__init = function (i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -1667,8 +2058,11 @@ osrm.engine.api.fbresult.Step.prototype.__init = function(i, bb) {
  * @param {osrm.engine.api.fbresult.Step=} obj
  * @returns {osrm.engine.api.fbresult.Step}
  */
-osrm.engine.api.fbresult.Step.getRootAsStep = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Step).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Step.getRootAsStep = function (bb, obj) {
+  return (obj || new osrm.engine.api.fbresult.Step()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
@@ -1676,23 +2070,26 @@ osrm.engine.api.fbresult.Step.getRootAsStep = function(bb, obj) {
  * @param {osrm.engine.api.fbresult.Step=} obj
  * @returns {osrm.engine.api.fbresult.Step}
  */
-osrm.engine.api.fbresult.Step.getSizePrefixedRootAsStep = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Step).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Step.getSizePrefixedRootAsStep = function (bb, obj) {
+  return (obj || new osrm.engine.api.fbresult.Step()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Step.prototype.distance = function() {
-  var offset = this.bb.__offset(this.bb_pos, 4);
+osrm.engine.api.fbresult.Step.prototype.distance = function () {
+  const offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? this.bb.readFloat32(this.bb_pos + offset) : 0.0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Step.prototype.duration = function() {
-  var offset = this.bb.__offset(this.bb_pos, 6);
+osrm.engine.api.fbresult.Step.prototype.duration = function () {
+  const offset = this.bb.__offset(this.bb_pos, 6);
   return offset ? this.bb.readFloat32(this.bb_pos + offset) : 0.0;
 };
 
@@ -1700,9 +2097,11 @@ osrm.engine.api.fbresult.Step.prototype.duration = function() {
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
-osrm.engine.api.fbresult.Step.prototype.polyline = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 8);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+osrm.engine.api.fbresult.Step.prototype.polyline = function (optionalEncoding) {
+  const offset = this.bb.__offset(this.bb_pos, 8);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
 };
 
 /**
@@ -1710,24 +2109,29 @@ osrm.engine.api.fbresult.Step.prototype.polyline = function(optionalEncoding) {
  * @param {osrm.engine.api.fbresult.Position=} obj
  * @returns {osrm.engine.api.fbresult.Position}
  */
-osrm.engine.api.fbresult.Step.prototype.coordinates = function(index, obj) {
-  var offset = this.bb.__offset(this.bb_pos, 10);
-  return offset ? (obj || new osrm.engine.api.fbresult.Position).__init(this.bb.__vector(this.bb_pos + offset) + index * 8, this.bb) : null;
+osrm.engine.api.fbresult.Step.prototype.coordinates = function (index, obj) {
+  const offset = this.bb.__offset(this.bb_pos, 10);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.Position()).__init(
+        this.bb.__vector(this.bb_pos + offset) + index * 8,
+        this.bb,
+      )
+    : null;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Step.prototype.coordinatesLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 10);
+osrm.engine.api.fbresult.Step.prototype.coordinatesLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 10);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Step.prototype.weight = function() {
-  var offset = this.bb.__offset(this.bb_pos, 12);
+osrm.engine.api.fbresult.Step.prototype.weight = function () {
+  const offset = this.bb.__offset(this.bb_pos, 12);
   return offset ? this.bb.readFloat32(this.bb_pos + offset) : 0.0;
 };
 
@@ -1735,63 +2139,84 @@ osrm.engine.api.fbresult.Step.prototype.weight = function() {
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
-osrm.engine.api.fbresult.Step.prototype.name = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 14);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+osrm.engine.api.fbresult.Step.prototype.name = function (optionalEncoding) {
+  const offset = this.bb.__offset(this.bb_pos, 14);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
 };
 
 /**
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
-osrm.engine.api.fbresult.Step.prototype.ref = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 16);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+osrm.engine.api.fbresult.Step.prototype.ref = function (optionalEncoding) {
+  const offset = this.bb.__offset(this.bb_pos, 16);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
 };
 
 /**
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
-osrm.engine.api.fbresult.Step.prototype.pronunciation = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 18);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+osrm.engine.api.fbresult.Step.prototype.pronunciation = function (
+  optionalEncoding,
+) {
+  const offset = this.bb.__offset(this.bb_pos, 18);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
 };
 
 /**
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
-osrm.engine.api.fbresult.Step.prototype.destinations = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 20);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+osrm.engine.api.fbresult.Step.prototype.destinations = function (
+  optionalEncoding,
+) {
+  const offset = this.bb.__offset(this.bb_pos, 20);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
 };
 
 /**
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
-osrm.engine.api.fbresult.Step.prototype.exits = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 22);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+osrm.engine.api.fbresult.Step.prototype.exits = function (optionalEncoding) {
+  const offset = this.bb.__offset(this.bb_pos, 22);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
 };
 
 /**
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
-osrm.engine.api.fbresult.Step.prototype.mode = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 24);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+osrm.engine.api.fbresult.Step.prototype.mode = function (optionalEncoding) {
+  const offset = this.bb.__offset(this.bb_pos, 24);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
 };
 
 /**
  * @param {osrm.engine.api.fbresult.StepManeuver=} obj
  * @returns {osrm.engine.api.fbresult.StepManeuver|null}
  */
-osrm.engine.api.fbresult.Step.prototype.maneuver = function(obj) {
-  var offset = this.bb.__offset(this.bb_pos, 26);
-  return offset ? (obj || new osrm.engine.api.fbresult.StepManeuver).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
+osrm.engine.api.fbresult.Step.prototype.maneuver = function (obj) {
+  const offset = this.bb.__offset(this.bb_pos, 26);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.StepManeuver()).__init(
+        this.bb.__indirect(this.bb_pos + offset),
+        this.bb,
+      )
+    : null;
 };
 
 /**
@@ -1799,16 +2224,21 @@ osrm.engine.api.fbresult.Step.prototype.maneuver = function(obj) {
  * @param {osrm.engine.api.fbresult.Intersection=} obj
  * @returns {osrm.engine.api.fbresult.Intersection}
  */
-osrm.engine.api.fbresult.Step.prototype.intersections = function(index, obj) {
-  var offset = this.bb.__offset(this.bb_pos, 28);
-  return offset ? (obj || new osrm.engine.api.fbresult.Intersection).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
+osrm.engine.api.fbresult.Step.prototype.intersections = function (index, obj) {
+  const offset = this.bb.__offset(this.bb_pos, 28);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.Intersection()).__init(
+        this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4),
+        this.bb,
+      )
+    : null;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Step.prototype.intersectionsLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 28);
+osrm.engine.api.fbresult.Step.prototype.intersectionsLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 28);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
@@ -1816,32 +2246,40 @@ osrm.engine.api.fbresult.Step.prototype.intersectionsLength = function() {
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
-osrm.engine.api.fbresult.Step.prototype.rotaryName = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 30);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+osrm.engine.api.fbresult.Step.prototype.rotaryName = function (
+  optionalEncoding,
+) {
+  const offset = this.bb.__offset(this.bb_pos, 30);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
 };
 
 /**
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
-osrm.engine.api.fbresult.Step.prototype.rotaryPronunciation = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 32);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+osrm.engine.api.fbresult.Step.prototype.rotaryPronunciation = function (
+  optionalEncoding,
+) {
+  const offset = this.bb.__offset(this.bb_pos, 32);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
 };
 
 /**
  * @returns {boolean}
  */
-osrm.engine.api.fbresult.Step.prototype.drivingSide = function() {
-  var offset = this.bb.__offset(this.bb_pos, 34);
+osrm.engine.api.fbresult.Step.prototype.drivingSide = function () {
+  const offset = this.bb.__offset(this.bb_pos, 34);
   return offset ? !!this.bb.readInt8(this.bb_pos + offset) : false;
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
-osrm.engine.api.fbresult.Step.startStep = function(builder) {
+osrm.engine.api.fbresult.Step.startStep = function (builder) {
   builder.startObject(16);
 };
 
@@ -1849,7 +2287,7 @@ osrm.engine.api.fbresult.Step.startStep = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {number} distance
  */
-osrm.engine.api.fbresult.Step.addDistance = function(builder, distance) {
+osrm.engine.api.fbresult.Step.addDistance = function (builder, distance) {
   builder.addFieldFloat32(0, distance, 0.0);
 };
 
@@ -1857,7 +2295,7 @@ osrm.engine.api.fbresult.Step.addDistance = function(builder, distance) {
  * @param {flatbuffers.Builder} builder
  * @param {number} duration
  */
-osrm.engine.api.fbresult.Step.addDuration = function(builder, duration) {
+osrm.engine.api.fbresult.Step.addDuration = function (builder, duration) {
   builder.addFieldFloat32(1, duration, 0.0);
 };
 
@@ -1865,7 +2303,7 @@ osrm.engine.api.fbresult.Step.addDuration = function(builder, duration) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} polylineOffset
  */
-osrm.engine.api.fbresult.Step.addPolyline = function(builder, polylineOffset) {
+osrm.engine.api.fbresult.Step.addPolyline = function (builder, polylineOffset) {
   builder.addFieldOffset(2, polylineOffset, 0);
 };
 
@@ -1873,7 +2311,10 @@ osrm.engine.api.fbresult.Step.addPolyline = function(builder, polylineOffset) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} coordinatesOffset
  */
-osrm.engine.api.fbresult.Step.addCoordinates = function(builder, coordinatesOffset) {
+osrm.engine.api.fbresult.Step.addCoordinates = function (
+  builder,
+  coordinatesOffset,
+) {
   builder.addFieldOffset(3, coordinatesOffset, 0);
 };
 
@@ -1881,7 +2322,10 @@ osrm.engine.api.fbresult.Step.addCoordinates = function(builder, coordinatesOffs
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Step.startCoordinatesVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Step.startCoordinatesVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(8, numElems, 4);
 };
 
@@ -1889,7 +2333,7 @@ osrm.engine.api.fbresult.Step.startCoordinatesVector = function(builder, numElem
  * @param {flatbuffers.Builder} builder
  * @param {number} weight
  */
-osrm.engine.api.fbresult.Step.addWeight = function(builder, weight) {
+osrm.engine.api.fbresult.Step.addWeight = function (builder, weight) {
   builder.addFieldFloat32(4, weight, 0.0);
 };
 
@@ -1897,7 +2341,7 @@ osrm.engine.api.fbresult.Step.addWeight = function(builder, weight) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} nameOffset
  */
-osrm.engine.api.fbresult.Step.addName = function(builder, nameOffset) {
+osrm.engine.api.fbresult.Step.addName = function (builder, nameOffset) {
   builder.addFieldOffset(5, nameOffset, 0);
 };
 
@@ -1905,7 +2349,7 @@ osrm.engine.api.fbresult.Step.addName = function(builder, nameOffset) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} refOffset
  */
-osrm.engine.api.fbresult.Step.addRef = function(builder, refOffset) {
+osrm.engine.api.fbresult.Step.addRef = function (builder, refOffset) {
   builder.addFieldOffset(6, refOffset, 0);
 };
 
@@ -1913,7 +2357,10 @@ osrm.engine.api.fbresult.Step.addRef = function(builder, refOffset) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} pronunciationOffset
  */
-osrm.engine.api.fbresult.Step.addPronunciation = function(builder, pronunciationOffset) {
+osrm.engine.api.fbresult.Step.addPronunciation = function (
+  builder,
+  pronunciationOffset,
+) {
   builder.addFieldOffset(7, pronunciationOffset, 0);
 };
 
@@ -1921,7 +2368,10 @@ osrm.engine.api.fbresult.Step.addPronunciation = function(builder, pronunciation
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} destinationsOffset
  */
-osrm.engine.api.fbresult.Step.addDestinations = function(builder, destinationsOffset) {
+osrm.engine.api.fbresult.Step.addDestinations = function (
+  builder,
+  destinationsOffset,
+) {
   builder.addFieldOffset(8, destinationsOffset, 0);
 };
 
@@ -1929,7 +2379,7 @@ osrm.engine.api.fbresult.Step.addDestinations = function(builder, destinationsOf
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} exitsOffset
  */
-osrm.engine.api.fbresult.Step.addExits = function(builder, exitsOffset) {
+osrm.engine.api.fbresult.Step.addExits = function (builder, exitsOffset) {
   builder.addFieldOffset(9, exitsOffset, 0);
 };
 
@@ -1937,7 +2387,7 @@ osrm.engine.api.fbresult.Step.addExits = function(builder, exitsOffset) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} modeOffset
  */
-osrm.engine.api.fbresult.Step.addMode = function(builder, modeOffset) {
+osrm.engine.api.fbresult.Step.addMode = function (builder, modeOffset) {
   builder.addFieldOffset(10, modeOffset, 0);
 };
 
@@ -1945,7 +2395,7 @@ osrm.engine.api.fbresult.Step.addMode = function(builder, modeOffset) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} maneuverOffset
  */
-osrm.engine.api.fbresult.Step.addManeuver = function(builder, maneuverOffset) {
+osrm.engine.api.fbresult.Step.addManeuver = function (builder, maneuverOffset) {
   builder.addFieldOffset(11, maneuverOffset, 0);
 };
 
@@ -1953,7 +2403,10 @@ osrm.engine.api.fbresult.Step.addManeuver = function(builder, maneuverOffset) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} intersectionsOffset
  */
-osrm.engine.api.fbresult.Step.addIntersections = function(builder, intersectionsOffset) {
+osrm.engine.api.fbresult.Step.addIntersections = function (
+  builder,
+  intersectionsOffset,
+) {
   builder.addFieldOffset(12, intersectionsOffset, 0);
 };
 
@@ -1962,9 +2415,12 @@ osrm.engine.api.fbresult.Step.addIntersections = function(builder, intersections
  * @param {Array.<flatbuffers.Offset>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Step.createIntersectionsVector = function(builder, data) {
+osrm.engine.api.fbresult.Step.createIntersectionsVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]);
   }
   return builder.endVector();
@@ -1974,7 +2430,10 @@ osrm.engine.api.fbresult.Step.createIntersectionsVector = function(builder, data
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Step.startIntersectionsVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Step.startIntersectionsVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -1982,7 +2441,10 @@ osrm.engine.api.fbresult.Step.startIntersectionsVector = function(builder, numEl
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} rotaryNameOffset
  */
-osrm.engine.api.fbresult.Step.addRotaryName = function(builder, rotaryNameOffset) {
+osrm.engine.api.fbresult.Step.addRotaryName = function (
+  builder,
+  rotaryNameOffset,
+) {
   builder.addFieldOffset(13, rotaryNameOffset, 0);
 };
 
@@ -1990,7 +2452,10 @@ osrm.engine.api.fbresult.Step.addRotaryName = function(builder, rotaryNameOffset
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} rotaryPronunciationOffset
  */
-osrm.engine.api.fbresult.Step.addRotaryPronunciation = function(builder, rotaryPronunciationOffset) {
+osrm.engine.api.fbresult.Step.addRotaryPronunciation = function (
+  builder,
+  rotaryPronunciationOffset,
+) {
   builder.addFieldOffset(14, rotaryPronunciationOffset, 0);
 };
 
@@ -1998,7 +2463,7 @@ osrm.engine.api.fbresult.Step.addRotaryPronunciation = function(builder, rotaryP
  * @param {flatbuffers.Builder} builder
  * @param {boolean} drivingSide
  */
-osrm.engine.api.fbresult.Step.addDrivingSide = function(builder, drivingSide) {
+osrm.engine.api.fbresult.Step.addDrivingSide = function (builder, drivingSide) {
   builder.addFieldInt8(15, +drivingSide, +false);
 };
 
@@ -2006,8 +2471,8 @@ osrm.engine.api.fbresult.Step.addDrivingSide = function(builder, drivingSide) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Step.endStep = function(builder) {
-  var offset = builder.endObject();
+osrm.engine.api.fbresult.Step.endStep = function (builder) {
+  const offset = builder.endObject();
   return offset;
 };
 
@@ -2031,7 +2496,25 @@ osrm.engine.api.fbresult.Step.endStep = function(builder) {
  * @param {boolean} drivingSide
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Step.createStep = function(builder, distance, duration, polylineOffset, coordinatesOffset, weight, nameOffset, refOffset, pronunciationOffset, destinationsOffset, exitsOffset, modeOffset, maneuverOffset, intersectionsOffset, rotaryNameOffset, rotaryPronunciationOffset, drivingSide) {
+osrm.engine.api.fbresult.Step.createStep = function (
+  builder,
+  distance,
+  duration,
+  polylineOffset,
+  coordinatesOffset,
+  weight,
+  nameOffset,
+  refOffset,
+  pronunciationOffset,
+  destinationsOffset,
+  exitsOffset,
+  modeOffset,
+  maneuverOffset,
+  intersectionsOffset,
+  rotaryNameOffset,
+  rotaryPronunciationOffset,
+  drivingSide,
+) {
   osrm.engine.api.fbresult.Step.startStep(builder);
   osrm.engine.api.fbresult.Step.addDistance(builder, distance);
   osrm.engine.api.fbresult.Step.addDuration(builder, duration);
@@ -2047,7 +2530,10 @@ osrm.engine.api.fbresult.Step.createStep = function(builder, distance, duration,
   osrm.engine.api.fbresult.Step.addManeuver(builder, maneuverOffset);
   osrm.engine.api.fbresult.Step.addIntersections(builder, intersectionsOffset);
   osrm.engine.api.fbresult.Step.addRotaryName(builder, rotaryNameOffset);
-  osrm.engine.api.fbresult.Step.addRotaryPronunciation(builder, rotaryPronunciationOffset);
+  osrm.engine.api.fbresult.Step.addRotaryPronunciation(
+    builder,
+    rotaryPronunciationOffset,
+  );
   osrm.engine.api.fbresult.Step.addDrivingSide(builder, drivingSide);
   return osrm.engine.api.fbresult.Step.endStep(builder);
 };
@@ -2055,7 +2541,7 @@ osrm.engine.api.fbresult.Step.createStep = function(builder, distance, duration,
 /**
  * @constructor
  */
-osrm.engine.api.fbresult.Leg = function() {
+osrm.engine.api.fbresult.Leg = function () {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -2072,7 +2558,7 @@ osrm.engine.api.fbresult.Leg = function() {
  * @param {flatbuffers.ByteBuffer} bb
  * @returns {osrm.engine.api.fbresult.Leg}
  */
-osrm.engine.api.fbresult.Leg.prototype.__init = function(i, bb) {
+osrm.engine.api.fbresult.Leg.prototype.__init = function (i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -2083,8 +2569,11 @@ osrm.engine.api.fbresult.Leg.prototype.__init = function(i, bb) {
  * @param {osrm.engine.api.fbresult.Leg=} obj
  * @returns {osrm.engine.api.fbresult.Leg}
  */
-osrm.engine.api.fbresult.Leg.getRootAsLeg = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Leg).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Leg.getRootAsLeg = function (bb, obj) {
+  return (obj || new osrm.engine.api.fbresult.Leg()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
@@ -2092,31 +2581,34 @@ osrm.engine.api.fbresult.Leg.getRootAsLeg = function(bb, obj) {
  * @param {osrm.engine.api.fbresult.Leg=} obj
  * @returns {osrm.engine.api.fbresult.Leg}
  */
-osrm.engine.api.fbresult.Leg.getSizePrefixedRootAsLeg = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Leg).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Leg.getSizePrefixedRootAsLeg = function (bb, obj) {
+  return (obj || new osrm.engine.api.fbresult.Leg()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Leg.prototype.distance = function() {
-  var offset = this.bb.__offset(this.bb_pos, 4);
+osrm.engine.api.fbresult.Leg.prototype.distance = function () {
+  const offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? this.bb.readFloat64(this.bb_pos + offset) : 0.0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Leg.prototype.duration = function() {
-  var offset = this.bb.__offset(this.bb_pos, 6);
+osrm.engine.api.fbresult.Leg.prototype.duration = function () {
+  const offset = this.bb.__offset(this.bb_pos, 6);
   return offset ? this.bb.readFloat64(this.bb_pos + offset) : 0.0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Leg.prototype.weight = function() {
-  var offset = this.bb.__offset(this.bb_pos, 8);
+osrm.engine.api.fbresult.Leg.prototype.weight = function () {
+  const offset = this.bb.__offset(this.bb_pos, 8);
   return offset ? this.bb.readFloat64(this.bb_pos + offset) : 0.0;
 };
 
@@ -2124,18 +2616,25 @@ osrm.engine.api.fbresult.Leg.prototype.weight = function() {
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
-osrm.engine.api.fbresult.Leg.prototype.summary = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 10);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+osrm.engine.api.fbresult.Leg.prototype.summary = function (optionalEncoding) {
+  const offset = this.bb.__offset(this.bb_pos, 10);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
 };
 
 /**
  * @param {osrm.engine.api.fbresult.Annotation=} obj
  * @returns {osrm.engine.api.fbresult.Annotation|null}
  */
-osrm.engine.api.fbresult.Leg.prototype.annotations = function(obj) {
-  var offset = this.bb.__offset(this.bb_pos, 12);
-  return offset ? (obj || new osrm.engine.api.fbresult.Annotation).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
+osrm.engine.api.fbresult.Leg.prototype.annotations = function (obj) {
+  const offset = this.bb.__offset(this.bb_pos, 12);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.Annotation()).__init(
+        this.bb.__indirect(this.bb_pos + offset),
+        this.bb,
+      )
+    : null;
 };
 
 /**
@@ -2143,23 +2642,28 @@ osrm.engine.api.fbresult.Leg.prototype.annotations = function(obj) {
  * @param {osrm.engine.api.fbresult.Step=} obj
  * @returns {osrm.engine.api.fbresult.Step}
  */
-osrm.engine.api.fbresult.Leg.prototype.steps = function(index, obj) {
-  var offset = this.bb.__offset(this.bb_pos, 14);
-  return offset ? (obj || new osrm.engine.api.fbresult.Step).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
+osrm.engine.api.fbresult.Leg.prototype.steps = function (index, obj) {
+  const offset = this.bb.__offset(this.bb_pos, 14);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.Step()).__init(
+        this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4),
+        this.bb,
+      )
+    : null;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Leg.prototype.stepsLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 14);
+osrm.engine.api.fbresult.Leg.prototype.stepsLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 14);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
-osrm.engine.api.fbresult.Leg.startLeg = function(builder) {
+osrm.engine.api.fbresult.Leg.startLeg = function (builder) {
   builder.startObject(6);
 };
 
@@ -2167,7 +2671,7 @@ osrm.engine.api.fbresult.Leg.startLeg = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {number} distance
  */
-osrm.engine.api.fbresult.Leg.addDistance = function(builder, distance) {
+osrm.engine.api.fbresult.Leg.addDistance = function (builder, distance) {
   builder.addFieldFloat64(0, distance, 0.0);
 };
 
@@ -2175,7 +2679,7 @@ osrm.engine.api.fbresult.Leg.addDistance = function(builder, distance) {
  * @param {flatbuffers.Builder} builder
  * @param {number} duration
  */
-osrm.engine.api.fbresult.Leg.addDuration = function(builder, duration) {
+osrm.engine.api.fbresult.Leg.addDuration = function (builder, duration) {
   builder.addFieldFloat64(1, duration, 0.0);
 };
 
@@ -2183,7 +2687,7 @@ osrm.engine.api.fbresult.Leg.addDuration = function(builder, duration) {
  * @param {flatbuffers.Builder} builder
  * @param {number} weight
  */
-osrm.engine.api.fbresult.Leg.addWeight = function(builder, weight) {
+osrm.engine.api.fbresult.Leg.addWeight = function (builder, weight) {
   builder.addFieldFloat64(2, weight, 0.0);
 };
 
@@ -2191,7 +2695,7 @@ osrm.engine.api.fbresult.Leg.addWeight = function(builder, weight) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} summaryOffset
  */
-osrm.engine.api.fbresult.Leg.addSummary = function(builder, summaryOffset) {
+osrm.engine.api.fbresult.Leg.addSummary = function (builder, summaryOffset) {
   builder.addFieldOffset(3, summaryOffset, 0);
 };
 
@@ -2199,7 +2703,10 @@ osrm.engine.api.fbresult.Leg.addSummary = function(builder, summaryOffset) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} annotationsOffset
  */
-osrm.engine.api.fbresult.Leg.addAnnotations = function(builder, annotationsOffset) {
+osrm.engine.api.fbresult.Leg.addAnnotations = function (
+  builder,
+  annotationsOffset,
+) {
   builder.addFieldOffset(4, annotationsOffset, 0);
 };
 
@@ -2207,7 +2714,7 @@ osrm.engine.api.fbresult.Leg.addAnnotations = function(builder, annotationsOffse
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} stepsOffset
  */
-osrm.engine.api.fbresult.Leg.addSteps = function(builder, stepsOffset) {
+osrm.engine.api.fbresult.Leg.addSteps = function (builder, stepsOffset) {
   builder.addFieldOffset(5, stepsOffset, 0);
 };
 
@@ -2216,9 +2723,9 @@ osrm.engine.api.fbresult.Leg.addSteps = function(builder, stepsOffset) {
  * @param {Array.<flatbuffers.Offset>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Leg.createStepsVector = function(builder, data) {
+osrm.engine.api.fbresult.Leg.createStepsVector = function (builder, data) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]);
   }
   return builder.endVector();
@@ -2228,7 +2735,7 @@ osrm.engine.api.fbresult.Leg.createStepsVector = function(builder, data) {
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Leg.startStepsVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Leg.startStepsVector = function (builder, numElems) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -2236,8 +2743,8 @@ osrm.engine.api.fbresult.Leg.startStepsVector = function(builder, numElems) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Leg.endLeg = function(builder) {
-  var offset = builder.endObject();
+osrm.engine.api.fbresult.Leg.endLeg = function (builder) {
+  const offset = builder.endObject();
   return offset;
 };
 
@@ -2251,7 +2758,15 @@ osrm.engine.api.fbresult.Leg.endLeg = function(builder) {
  * @param {flatbuffers.Offset} stepsOffset
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Leg.createLeg = function(builder, distance, duration, weight, summaryOffset, annotationsOffset, stepsOffset) {
+osrm.engine.api.fbresult.Leg.createLeg = function (
+  builder,
+  distance,
+  duration,
+  weight,
+  summaryOffset,
+  annotationsOffset,
+  stepsOffset,
+) {
   osrm.engine.api.fbresult.Leg.startLeg(builder);
   osrm.engine.api.fbresult.Leg.addDistance(builder, distance);
   osrm.engine.api.fbresult.Leg.addDuration(builder, duration);
@@ -2265,7 +2780,7 @@ osrm.engine.api.fbresult.Leg.createLeg = function(builder, distance, duration, w
 /**
  * @constructor
  */
-osrm.engine.api.fbresult.RouteObject = function() {
+osrm.engine.api.fbresult.RouteObject = function () {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -2282,7 +2797,7 @@ osrm.engine.api.fbresult.RouteObject = function() {
  * @param {flatbuffers.ByteBuffer} bb
  * @returns {osrm.engine.api.fbresult.RouteObject}
  */
-osrm.engine.api.fbresult.RouteObject.prototype.__init = function(i, bb) {
+osrm.engine.api.fbresult.RouteObject.prototype.__init = function (i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -2293,8 +2808,11 @@ osrm.engine.api.fbresult.RouteObject.prototype.__init = function(i, bb) {
  * @param {osrm.engine.api.fbresult.RouteObject=} obj
  * @returns {osrm.engine.api.fbresult.RouteObject}
  */
-osrm.engine.api.fbresult.RouteObject.getRootAsRouteObject = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.RouteObject).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.RouteObject.getRootAsRouteObject = function (bb, obj) {
+  return (obj || new osrm.engine.api.fbresult.RouteObject()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
@@ -2302,48 +2820,35 @@ osrm.engine.api.fbresult.RouteObject.getRootAsRouteObject = function(bb, obj) {
  * @param {osrm.engine.api.fbresult.RouteObject=} obj
  * @returns {osrm.engine.api.fbresult.RouteObject}
  */
-osrm.engine.api.fbresult.RouteObject.getSizePrefixedRootAsRouteObject = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.RouteObject).__init(bb.readInt32(bb.position()) + bb.position(), bb);
-};
+osrm.engine.api.fbresult.RouteObject.getSizePrefixedRootAsRouteObject =
+  function (bb, obj) {
+    return (obj || new osrm.engine.api.fbresult.RouteObject()).__init(
+      bb.readInt32(bb.position()) + bb.position(),
+      bb,
+    );
+  };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.RouteObject.prototype.distance = function() {
-  var offset = this.bb.__offset(this.bb_pos, 4);
+osrm.engine.api.fbresult.RouteObject.prototype.distance = function () {
+  const offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? this.bb.readFloat32(this.bb_pos + offset) : 0.0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.RouteObject.prototype.duration = function() {
-  var offset = this.bb.__offset(this.bb_pos, 6);
+osrm.engine.api.fbresult.RouteObject.prototype.duration = function () {
+  const offset = this.bb.__offset(this.bb_pos, 6);
   return offset ? this.bb.readFloat32(this.bb_pos + offset) : 0.0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.RouteObject.prototype.weight = function() {
-  var offset = this.bb.__offset(this.bb_pos, 8);
-  return offset ? this.bb.readFloat32(this.bb_pos + offset) : 0.0;
-};
-
-/**
- * @param {flatbuffers.Encoding=} optionalEncoding
- * @returns {string|Uint8Array|null}
- */
-osrm.engine.api.fbresult.RouteObject.prototype.weightName = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 10);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
-};
-
-/**
- * @returns {number}
- */
-osrm.engine.api.fbresult.RouteObject.prototype.confidence = function() {
-  var offset = this.bb.__offset(this.bb_pos, 12);
+osrm.engine.api.fbresult.RouteObject.prototype.weight = function () {
+  const offset = this.bb.__offset(this.bb_pos, 8);
   return offset ? this.bb.readFloat32(this.bb_pos + offset) : 0.0;
 };
 
@@ -2351,9 +2856,34 @@ osrm.engine.api.fbresult.RouteObject.prototype.confidence = function() {
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
-osrm.engine.api.fbresult.RouteObject.prototype.polyline = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 14);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+osrm.engine.api.fbresult.RouteObject.prototype.weightName = function (
+  optionalEncoding,
+) {
+  const offset = this.bb.__offset(this.bb_pos, 10);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
+};
+
+/**
+ * @returns {number}
+ */
+osrm.engine.api.fbresult.RouteObject.prototype.confidence = function () {
+  const offset = this.bb.__offset(this.bb_pos, 12);
+  return offset ? this.bb.readFloat32(this.bb_pos + offset) : 0.0;
+};
+
+/**
+ * @param {flatbuffers.Encoding=} optionalEncoding
+ * @returns {string|Uint8Array|null}
+ */
+osrm.engine.api.fbresult.RouteObject.prototype.polyline = function (
+  optionalEncoding,
+) {
+  const offset = this.bb.__offset(this.bb_pos, 14);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
 };
 
 /**
@@ -2361,16 +2891,24 @@ osrm.engine.api.fbresult.RouteObject.prototype.polyline = function(optionalEncod
  * @param {osrm.engine.api.fbresult.Position=} obj
  * @returns {osrm.engine.api.fbresult.Position}
  */
-osrm.engine.api.fbresult.RouteObject.prototype.coordinates = function(index, obj) {
-  var offset = this.bb.__offset(this.bb_pos, 16);
-  return offset ? (obj || new osrm.engine.api.fbresult.Position).__init(this.bb.__vector(this.bb_pos + offset) + index * 8, this.bb) : null;
+osrm.engine.api.fbresult.RouteObject.prototype.coordinates = function (
+  index,
+  obj,
+) {
+  const offset = this.bb.__offset(this.bb_pos, 16);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.Position()).__init(
+        this.bb.__vector(this.bb_pos + offset) + index * 8,
+        this.bb,
+      )
+    : null;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.RouteObject.prototype.coordinatesLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 16);
+osrm.engine.api.fbresult.RouteObject.prototype.coordinatesLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 16);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
@@ -2379,23 +2917,28 @@ osrm.engine.api.fbresult.RouteObject.prototype.coordinatesLength = function() {
  * @param {osrm.engine.api.fbresult.Leg=} obj
  * @returns {osrm.engine.api.fbresult.Leg}
  */
-osrm.engine.api.fbresult.RouteObject.prototype.legs = function(index, obj) {
-  var offset = this.bb.__offset(this.bb_pos, 18);
-  return offset ? (obj || new osrm.engine.api.fbresult.Leg).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
+osrm.engine.api.fbresult.RouteObject.prototype.legs = function (index, obj) {
+  const offset = this.bb.__offset(this.bb_pos, 18);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.Leg()).__init(
+        this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4),
+        this.bb,
+      )
+    : null;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.RouteObject.prototype.legsLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 18);
+osrm.engine.api.fbresult.RouteObject.prototype.legsLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 18);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
-osrm.engine.api.fbresult.RouteObject.startRouteObject = function(builder) {
+osrm.engine.api.fbresult.RouteObject.startRouteObject = function (builder) {
   builder.startObject(8);
 };
 
@@ -2403,7 +2946,10 @@ osrm.engine.api.fbresult.RouteObject.startRouteObject = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {number} distance
  */
-osrm.engine.api.fbresult.RouteObject.addDistance = function(builder, distance) {
+osrm.engine.api.fbresult.RouteObject.addDistance = function (
+  builder,
+  distance,
+) {
   builder.addFieldFloat32(0, distance, 0.0);
 };
 
@@ -2411,7 +2957,10 @@ osrm.engine.api.fbresult.RouteObject.addDistance = function(builder, distance) {
  * @param {flatbuffers.Builder} builder
  * @param {number} duration
  */
-osrm.engine.api.fbresult.RouteObject.addDuration = function(builder, duration) {
+osrm.engine.api.fbresult.RouteObject.addDuration = function (
+  builder,
+  duration,
+) {
   builder.addFieldFloat32(1, duration, 0.0);
 };
 
@@ -2419,7 +2968,7 @@ osrm.engine.api.fbresult.RouteObject.addDuration = function(builder, duration) {
  * @param {flatbuffers.Builder} builder
  * @param {number} weight
  */
-osrm.engine.api.fbresult.RouteObject.addWeight = function(builder, weight) {
+osrm.engine.api.fbresult.RouteObject.addWeight = function (builder, weight) {
   builder.addFieldFloat32(2, weight, 0.0);
 };
 
@@ -2427,7 +2976,10 @@ osrm.engine.api.fbresult.RouteObject.addWeight = function(builder, weight) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} weightNameOffset
  */
-osrm.engine.api.fbresult.RouteObject.addWeightName = function(builder, weightNameOffset) {
+osrm.engine.api.fbresult.RouteObject.addWeightName = function (
+  builder,
+  weightNameOffset,
+) {
   builder.addFieldOffset(3, weightNameOffset, 0);
 };
 
@@ -2435,7 +2987,10 @@ osrm.engine.api.fbresult.RouteObject.addWeightName = function(builder, weightNam
  * @param {flatbuffers.Builder} builder
  * @param {number} confidence
  */
-osrm.engine.api.fbresult.RouteObject.addConfidence = function(builder, confidence) {
+osrm.engine.api.fbresult.RouteObject.addConfidence = function (
+  builder,
+  confidence,
+) {
   builder.addFieldFloat32(4, confidence, 0.0);
 };
 
@@ -2443,7 +2998,10 @@ osrm.engine.api.fbresult.RouteObject.addConfidence = function(builder, confidenc
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} polylineOffset
  */
-osrm.engine.api.fbresult.RouteObject.addPolyline = function(builder, polylineOffset) {
+osrm.engine.api.fbresult.RouteObject.addPolyline = function (
+  builder,
+  polylineOffset,
+) {
   builder.addFieldOffset(5, polylineOffset, 0);
 };
 
@@ -2451,7 +3009,10 @@ osrm.engine.api.fbresult.RouteObject.addPolyline = function(builder, polylineOff
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} coordinatesOffset
  */
-osrm.engine.api.fbresult.RouteObject.addCoordinates = function(builder, coordinatesOffset) {
+osrm.engine.api.fbresult.RouteObject.addCoordinates = function (
+  builder,
+  coordinatesOffset,
+) {
   builder.addFieldOffset(6, coordinatesOffset, 0);
 };
 
@@ -2459,7 +3020,10 @@ osrm.engine.api.fbresult.RouteObject.addCoordinates = function(builder, coordina
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.RouteObject.startCoordinatesVector = function(builder, numElems) {
+osrm.engine.api.fbresult.RouteObject.startCoordinatesVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(8, numElems, 4);
 };
 
@@ -2467,7 +3031,7 @@ osrm.engine.api.fbresult.RouteObject.startCoordinatesVector = function(builder, 
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} legsOffset
  */
-osrm.engine.api.fbresult.RouteObject.addLegs = function(builder, legsOffset) {
+osrm.engine.api.fbresult.RouteObject.addLegs = function (builder, legsOffset) {
   builder.addFieldOffset(7, legsOffset, 0);
 };
 
@@ -2476,9 +3040,12 @@ osrm.engine.api.fbresult.RouteObject.addLegs = function(builder, legsOffset) {
  * @param {Array.<flatbuffers.Offset>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.RouteObject.createLegsVector = function(builder, data) {
+osrm.engine.api.fbresult.RouteObject.createLegsVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]);
   }
   return builder.endVector();
@@ -2488,7 +3055,10 @@ osrm.engine.api.fbresult.RouteObject.createLegsVector = function(builder, data) 
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.RouteObject.startLegsVector = function(builder, numElems) {
+osrm.engine.api.fbresult.RouteObject.startLegsVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -2496,8 +3066,8 @@ osrm.engine.api.fbresult.RouteObject.startLegsVector = function(builder, numElem
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.RouteObject.endRouteObject = function(builder) {
-  var offset = builder.endObject();
+osrm.engine.api.fbresult.RouteObject.endRouteObject = function (builder) {
+  const offset = builder.endObject();
   return offset;
 };
 
@@ -2513,7 +3083,17 @@ osrm.engine.api.fbresult.RouteObject.endRouteObject = function(builder) {
  * @param {flatbuffers.Offset} legsOffset
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.RouteObject.createRouteObject = function(builder, distance, duration, weight, weightNameOffset, confidence, polylineOffset, coordinatesOffset, legsOffset) {
+osrm.engine.api.fbresult.RouteObject.createRouteObject = function (
+  builder,
+  distance,
+  duration,
+  weight,
+  weightNameOffset,
+  confidence,
+  polylineOffset,
+  coordinatesOffset,
+  legsOffset,
+) {
   osrm.engine.api.fbresult.RouteObject.startRouteObject(builder);
   osrm.engine.api.fbresult.RouteObject.addDistance(builder, distance);
   osrm.engine.api.fbresult.RouteObject.addDuration(builder, duration);
@@ -2521,7 +3101,10 @@ osrm.engine.api.fbresult.RouteObject.createRouteObject = function(builder, dista
   osrm.engine.api.fbresult.RouteObject.addWeightName(builder, weightNameOffset);
   osrm.engine.api.fbresult.RouteObject.addConfidence(builder, confidence);
   osrm.engine.api.fbresult.RouteObject.addPolyline(builder, polylineOffset);
-  osrm.engine.api.fbresult.RouteObject.addCoordinates(builder, coordinatesOffset);
+  osrm.engine.api.fbresult.RouteObject.addCoordinates(
+    builder,
+    coordinatesOffset,
+  );
   osrm.engine.api.fbresult.RouteObject.addLegs(builder, legsOffset);
   return osrm.engine.api.fbresult.RouteObject.endRouteObject(builder);
 };
@@ -2529,7 +3112,7 @@ osrm.engine.api.fbresult.RouteObject.createRouteObject = function(builder, dista
 /**
  * @constructor
  */
-osrm.engine.api.fbresult.Table = function() {
+osrm.engine.api.fbresult.Table = function () {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -2546,7 +3129,7 @@ osrm.engine.api.fbresult.Table = function() {
  * @param {flatbuffers.ByteBuffer} bb
  * @returns {osrm.engine.api.fbresult.Table}
  */
-osrm.engine.api.fbresult.Table.prototype.__init = function(i, bb) {
+osrm.engine.api.fbresult.Table.prototype.__init = function (i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -2557,8 +3140,11 @@ osrm.engine.api.fbresult.Table.prototype.__init = function(i, bb) {
  * @param {osrm.engine.api.fbresult.Table=} obj
  * @returns {osrm.engine.api.fbresult.Table}
  */
-osrm.engine.api.fbresult.Table.getRootAsTable = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Table).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Table.getRootAsTable = function (bb, obj) {
+  return (obj || new osrm.engine.api.fbresult.Table()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
@@ -2566,48 +3152,59 @@ osrm.engine.api.fbresult.Table.getRootAsTable = function(bb, obj) {
  * @param {osrm.engine.api.fbresult.Table=} obj
  * @returns {osrm.engine.api.fbresult.Table}
  */
-osrm.engine.api.fbresult.Table.getSizePrefixedRootAsTable = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Table).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Table.getSizePrefixedRootAsTable = function (bb, obj) {
+  return (obj || new osrm.engine.api.fbresult.Table()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
  * @param {number} index
  * @returns {number}
  */
-osrm.engine.api.fbresult.Table.prototype.durations = function(index) {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? this.bb.readFloat32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
+osrm.engine.api.fbresult.Table.prototype.durations = function (index) {
+  const offset = this.bb.__offset(this.bb_pos, 4);
+  return offset
+    ? this.bb.readFloat32(this.bb.__vector(this.bb_pos + offset) + index * 4)
+    : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Table.prototype.durationsLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 4);
+osrm.engine.api.fbresult.Table.prototype.durationsLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {Float32Array}
  */
-osrm.engine.api.fbresult.Table.prototype.durationsArray = function() {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? new Float32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+osrm.engine.api.fbresult.Table.prototype.durationsArray = function () {
+  const offset = this.bb.__offset(this.bb_pos, 4);
+  return offset
+    ? new Float32Array(
+        this.bb.bytes().buffer,
+        this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset),
+        this.bb.__vector_len(this.bb_pos + offset),
+      )
+    : null;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Table.prototype.rows = function() {
-  var offset = this.bb.__offset(this.bb_pos, 6);
+osrm.engine.api.fbresult.Table.prototype.rows = function () {
+  const offset = this.bb.__offset(this.bb_pos, 6);
   return offset ? this.bb.readUint16(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Table.prototype.cols = function() {
-  var offset = this.bb.__offset(this.bb_pos, 8);
+osrm.engine.api.fbresult.Table.prototype.cols = function () {
+  const offset = this.bb.__offset(this.bb_pos, 8);
   return offset ? this.bb.readUint16(this.bb_pos + offset) : 0;
 };
 
@@ -2615,25 +3212,33 @@ osrm.engine.api.fbresult.Table.prototype.cols = function() {
  * @param {number} index
  * @returns {number}
  */
-osrm.engine.api.fbresult.Table.prototype.distances = function(index) {
-  var offset = this.bb.__offset(this.bb_pos, 10);
-  return offset ? this.bb.readFloat32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
+osrm.engine.api.fbresult.Table.prototype.distances = function (index) {
+  const offset = this.bb.__offset(this.bb_pos, 10);
+  return offset
+    ? this.bb.readFloat32(this.bb.__vector(this.bb_pos + offset) + index * 4)
+    : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Table.prototype.distancesLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 10);
+osrm.engine.api.fbresult.Table.prototype.distancesLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 10);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
  * @returns {Float32Array}
  */
-osrm.engine.api.fbresult.Table.prototype.distancesArray = function() {
-  var offset = this.bb.__offset(this.bb_pos, 10);
-  return offset ? new Float32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+osrm.engine.api.fbresult.Table.prototype.distancesArray = function () {
+  const offset = this.bb.__offset(this.bb_pos, 10);
+  return offset
+    ? new Float32Array(
+        this.bb.bytes().buffer,
+        this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset),
+        this.bb.__vector_len(this.bb_pos + offset),
+      )
+    : null;
 };
 
 /**
@@ -2641,16 +3246,21 @@ osrm.engine.api.fbresult.Table.prototype.distancesArray = function() {
  * @param {osrm.engine.api.fbresult.Waypoint=} obj
  * @returns {osrm.engine.api.fbresult.Waypoint}
  */
-osrm.engine.api.fbresult.Table.prototype.destinations = function(index, obj) {
-  var offset = this.bb.__offset(this.bb_pos, 12);
-  return offset ? (obj || new osrm.engine.api.fbresult.Waypoint).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
+osrm.engine.api.fbresult.Table.prototype.destinations = function (index, obj) {
+  const offset = this.bb.__offset(this.bb_pos, 12);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.Waypoint()).__init(
+        this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4),
+        this.bb,
+      )
+    : null;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Table.prototype.destinationsLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 12);
+osrm.engine.api.fbresult.Table.prototype.destinationsLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 12);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
@@ -2658,31 +3268,40 @@ osrm.engine.api.fbresult.Table.prototype.destinationsLength = function() {
  * @param {number} index
  * @returns {number}
  */
-osrm.engine.api.fbresult.Table.prototype.fallbackSpeedCells = function(index) {
-  var offset = this.bb.__offset(this.bb_pos, 14);
-  return offset ? this.bb.readUint32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
+osrm.engine.api.fbresult.Table.prototype.fallbackSpeedCells = function (index) {
+  const offset = this.bb.__offset(this.bb_pos, 14);
+  return offset
+    ? this.bb.readUint32(this.bb.__vector(this.bb_pos + offset) + index * 4)
+    : 0;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.Table.prototype.fallbackSpeedCellsLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 14);
-  return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
-};
+osrm.engine.api.fbresult.Table.prototype.fallbackSpeedCellsLength =
+  function () {
+    const offset = this.bb.__offset(this.bb_pos, 14);
+    return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
+  };
 
 /**
  * @returns {Uint32Array}
  */
-osrm.engine.api.fbresult.Table.prototype.fallbackSpeedCellsArray = function() {
-  var offset = this.bb.__offset(this.bb_pos, 14);
-  return offset ? new Uint32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+osrm.engine.api.fbresult.Table.prototype.fallbackSpeedCellsArray = function () {
+  const offset = this.bb.__offset(this.bb_pos, 14);
+  return offset
+    ? new Uint32Array(
+        this.bb.bytes().buffer,
+        this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset),
+        this.bb.__vector_len(this.bb_pos + offset),
+      )
+    : null;
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
-osrm.engine.api.fbresult.Table.startTable = function(builder) {
+osrm.engine.api.fbresult.Table.startTable = function (builder) {
   builder.startObject(6);
 };
 
@@ -2690,7 +3309,10 @@ osrm.engine.api.fbresult.Table.startTable = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} durationsOffset
  */
-osrm.engine.api.fbresult.Table.addDurations = function(builder, durationsOffset) {
+osrm.engine.api.fbresult.Table.addDurations = function (
+  builder,
+  durationsOffset,
+) {
   builder.addFieldOffset(0, durationsOffset, 0);
 };
 
@@ -2699,9 +3321,12 @@ osrm.engine.api.fbresult.Table.addDurations = function(builder, durationsOffset)
  * @param {Array.<number>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Table.createDurationsVector = function(builder, data) {
+osrm.engine.api.fbresult.Table.createDurationsVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addFloat32(data[i]);
   }
   return builder.endVector();
@@ -2711,7 +3336,10 @@ osrm.engine.api.fbresult.Table.createDurationsVector = function(builder, data) {
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Table.startDurationsVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Table.startDurationsVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -2719,7 +3347,7 @@ osrm.engine.api.fbresult.Table.startDurationsVector = function(builder, numElems
  * @param {flatbuffers.Builder} builder
  * @param {number} rows
  */
-osrm.engine.api.fbresult.Table.addRows = function(builder, rows) {
+osrm.engine.api.fbresult.Table.addRows = function (builder, rows) {
   builder.addFieldInt16(1, rows, 0);
 };
 
@@ -2727,7 +3355,7 @@ osrm.engine.api.fbresult.Table.addRows = function(builder, rows) {
  * @param {flatbuffers.Builder} builder
  * @param {number} cols
  */
-osrm.engine.api.fbresult.Table.addCols = function(builder, cols) {
+osrm.engine.api.fbresult.Table.addCols = function (builder, cols) {
   builder.addFieldInt16(2, cols, 0);
 };
 
@@ -2735,7 +3363,10 @@ osrm.engine.api.fbresult.Table.addCols = function(builder, cols) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} distancesOffset
  */
-osrm.engine.api.fbresult.Table.addDistances = function(builder, distancesOffset) {
+osrm.engine.api.fbresult.Table.addDistances = function (
+  builder,
+  distancesOffset,
+) {
   builder.addFieldOffset(3, distancesOffset, 0);
 };
 
@@ -2744,9 +3375,12 @@ osrm.engine.api.fbresult.Table.addDistances = function(builder, distancesOffset)
  * @param {Array.<number>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Table.createDistancesVector = function(builder, data) {
+osrm.engine.api.fbresult.Table.createDistancesVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addFloat32(data[i]);
   }
   return builder.endVector();
@@ -2756,7 +3390,10 @@ osrm.engine.api.fbresult.Table.createDistancesVector = function(builder, data) {
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Table.startDistancesVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Table.startDistancesVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -2764,7 +3401,10 @@ osrm.engine.api.fbresult.Table.startDistancesVector = function(builder, numElems
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} destinationsOffset
  */
-osrm.engine.api.fbresult.Table.addDestinations = function(builder, destinationsOffset) {
+osrm.engine.api.fbresult.Table.addDestinations = function (
+  builder,
+  destinationsOffset,
+) {
   builder.addFieldOffset(4, destinationsOffset, 0);
 };
 
@@ -2773,9 +3413,12 @@ osrm.engine.api.fbresult.Table.addDestinations = function(builder, destinationsO
  * @param {Array.<flatbuffers.Offset>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Table.createDestinationsVector = function(builder, data) {
+osrm.engine.api.fbresult.Table.createDestinationsVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]);
   }
   return builder.endVector();
@@ -2785,7 +3428,10 @@ osrm.engine.api.fbresult.Table.createDestinationsVector = function(builder, data
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Table.startDestinationsVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Table.startDestinationsVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -2793,7 +3439,10 @@ osrm.engine.api.fbresult.Table.startDestinationsVector = function(builder, numEl
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} fallbackSpeedCellsOffset
  */
-osrm.engine.api.fbresult.Table.addFallbackSpeedCells = function(builder, fallbackSpeedCellsOffset) {
+osrm.engine.api.fbresult.Table.addFallbackSpeedCells = function (
+  builder,
+  fallbackSpeedCellsOffset,
+) {
   builder.addFieldOffset(5, fallbackSpeedCellsOffset, 0);
 };
 
@@ -2802,9 +3451,12 @@ osrm.engine.api.fbresult.Table.addFallbackSpeedCells = function(builder, fallbac
  * @param {Array.<number>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Table.createFallbackSpeedCellsVector = function(builder, data) {
+osrm.engine.api.fbresult.Table.createFallbackSpeedCellsVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addInt32(data[i]);
   }
   return builder.endVector();
@@ -2814,7 +3466,10 @@ osrm.engine.api.fbresult.Table.createFallbackSpeedCellsVector = function(builder
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.Table.startFallbackSpeedCellsVector = function(builder, numElems) {
+osrm.engine.api.fbresult.Table.startFallbackSpeedCellsVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -2822,8 +3477,8 @@ osrm.engine.api.fbresult.Table.startFallbackSpeedCellsVector = function(builder,
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Table.endTable = function(builder) {
-  var offset = builder.endObject();
+osrm.engine.api.fbresult.Table.endTable = function (builder) {
+  const offset = builder.endObject();
   return offset;
 };
 
@@ -2837,21 +3492,32 @@ osrm.engine.api.fbresult.Table.endTable = function(builder) {
  * @param {flatbuffers.Offset} fallbackSpeedCellsOffset
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Table.createTable = function(builder, durationsOffset, rows, cols, distancesOffset, destinationsOffset, fallbackSpeedCellsOffset) {
+osrm.engine.api.fbresult.Table.createTable = function (
+  builder,
+  durationsOffset,
+  rows,
+  cols,
+  distancesOffset,
+  destinationsOffset,
+  fallbackSpeedCellsOffset,
+) {
   osrm.engine.api.fbresult.Table.startTable(builder);
   osrm.engine.api.fbresult.Table.addDurations(builder, durationsOffset);
   osrm.engine.api.fbresult.Table.addRows(builder, rows);
   osrm.engine.api.fbresult.Table.addCols(builder, cols);
   osrm.engine.api.fbresult.Table.addDistances(builder, distancesOffset);
   osrm.engine.api.fbresult.Table.addDestinations(builder, destinationsOffset);
-  osrm.engine.api.fbresult.Table.addFallbackSpeedCells(builder, fallbackSpeedCellsOffset);
+  osrm.engine.api.fbresult.Table.addFallbackSpeedCells(
+    builder,
+    fallbackSpeedCellsOffset,
+  );
   return osrm.engine.api.fbresult.Table.endTable(builder);
 };
 
 /**
  * @constructor
  */
-osrm.engine.api.fbresult.Error = function() {
+osrm.engine.api.fbresult.Error = function () {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -2868,7 +3534,7 @@ osrm.engine.api.fbresult.Error = function() {
  * @param {flatbuffers.ByteBuffer} bb
  * @returns {osrm.engine.api.fbresult.Error}
  */
-osrm.engine.api.fbresult.Error.prototype.__init = function(i, bb) {
+osrm.engine.api.fbresult.Error.prototype.__init = function (i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -2879,8 +3545,11 @@ osrm.engine.api.fbresult.Error.prototype.__init = function(i, bb) {
  * @param {osrm.engine.api.fbresult.Error=} obj
  * @returns {osrm.engine.api.fbresult.Error}
  */
-osrm.engine.api.fbresult.Error.getRootAsError = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Error).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Error.getRootAsError = function (bb, obj) {
+  return (obj || new osrm.engine.api.fbresult.Error()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
@@ -2888,32 +3557,39 @@ osrm.engine.api.fbresult.Error.getRootAsError = function(bb, obj) {
  * @param {osrm.engine.api.fbresult.Error=} obj
  * @returns {osrm.engine.api.fbresult.Error}
  */
-osrm.engine.api.fbresult.Error.getSizePrefixedRootAsError = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.Error).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.Error.getSizePrefixedRootAsError = function (bb, obj) {
+  return (obj || new osrm.engine.api.fbresult.Error()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
-osrm.engine.api.fbresult.Error.prototype.code = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+osrm.engine.api.fbresult.Error.prototype.code = function (optionalEncoding) {
+  const offset = this.bb.__offset(this.bb_pos, 4);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
 };
 
 /**
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
-osrm.engine.api.fbresult.Error.prototype.message = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 6);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+osrm.engine.api.fbresult.Error.prototype.message = function (optionalEncoding) {
+  const offset = this.bb.__offset(this.bb_pos, 6);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
-osrm.engine.api.fbresult.Error.startError = function(builder) {
+osrm.engine.api.fbresult.Error.startError = function (builder) {
   builder.startObject(2);
 };
 
@@ -2921,7 +3597,7 @@ osrm.engine.api.fbresult.Error.startError = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} codeOffset
  */
-osrm.engine.api.fbresult.Error.addCode = function(builder, codeOffset) {
+osrm.engine.api.fbresult.Error.addCode = function (builder, codeOffset) {
   builder.addFieldOffset(0, codeOffset, 0);
 };
 
@@ -2929,7 +3605,7 @@ osrm.engine.api.fbresult.Error.addCode = function(builder, codeOffset) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} messageOffset
  */
-osrm.engine.api.fbresult.Error.addMessage = function(builder, messageOffset) {
+osrm.engine.api.fbresult.Error.addMessage = function (builder, messageOffset) {
   builder.addFieldOffset(1, messageOffset, 0);
 };
 
@@ -2937,8 +3613,8 @@ osrm.engine.api.fbresult.Error.addMessage = function(builder, messageOffset) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Error.endError = function(builder) {
-  var offset = builder.endObject();
+osrm.engine.api.fbresult.Error.endError = function (builder) {
+  const offset = builder.endObject();
   return offset;
 };
 
@@ -2948,7 +3624,11 @@ osrm.engine.api.fbresult.Error.endError = function(builder) {
  * @param {flatbuffers.Offset} messageOffset
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.Error.createError = function(builder, codeOffset, messageOffset) {
+osrm.engine.api.fbresult.Error.createError = function (
+  builder,
+  codeOffset,
+  messageOffset,
+) {
   osrm.engine.api.fbresult.Error.startError(builder);
   osrm.engine.api.fbresult.Error.addCode(builder, codeOffset);
   osrm.engine.api.fbresult.Error.addMessage(builder, messageOffset);
@@ -2958,7 +3638,7 @@ osrm.engine.api.fbresult.Error.createError = function(builder, codeOffset, messa
 /**
  * @constructor
  */
-osrm.engine.api.fbresult.FBResult = function() {
+osrm.engine.api.fbresult.FBResult = function () {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -2975,7 +3655,7 @@ osrm.engine.api.fbresult.FBResult = function() {
  * @param {flatbuffers.ByteBuffer} bb
  * @returns {osrm.engine.api.fbresult.FBResult}
  */
-osrm.engine.api.fbresult.FBResult.prototype.__init = function(i, bb) {
+osrm.engine.api.fbresult.FBResult.prototype.__init = function (i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -2986,8 +3666,11 @@ osrm.engine.api.fbresult.FBResult.prototype.__init = function(i, bb) {
  * @param {osrm.engine.api.fbresult.FBResult=} obj
  * @returns {osrm.engine.api.fbresult.FBResult}
  */
-osrm.engine.api.fbresult.FBResult.getRootAsFBResult = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.FBResult).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.FBResult.getRootAsFBResult = function (bb, obj) {
+  return (obj || new osrm.engine.api.fbresult.FBResult()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
@@ -2995,15 +3678,21 @@ osrm.engine.api.fbresult.FBResult.getRootAsFBResult = function(bb, obj) {
  * @param {osrm.engine.api.fbresult.FBResult=} obj
  * @returns {osrm.engine.api.fbresult.FBResult}
  */
-osrm.engine.api.fbresult.FBResult.getSizePrefixedRootAsFBResult = function(bb, obj) {
-  return (obj || new osrm.engine.api.fbresult.FBResult).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+osrm.engine.api.fbresult.FBResult.getSizePrefixedRootAsFBResult = function (
+  bb,
+  obj,
+) {
+  return (obj || new osrm.engine.api.fbresult.FBResult()).__init(
+    bb.readInt32(bb.position()) + bb.position(),
+    bb,
+  );
 };
 
 /**
  * @returns {boolean}
  */
-osrm.engine.api.fbresult.FBResult.prototype.error = function() {
-  var offset = this.bb.__offset(this.bb_pos, 4);
+osrm.engine.api.fbresult.FBResult.prototype.error = function () {
+  const offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? !!this.bb.readInt8(this.bb_pos + offset) : false;
 };
 
@@ -3011,18 +3700,27 @@ osrm.engine.api.fbresult.FBResult.prototype.error = function() {
  * @param {osrm.engine.api.fbresult.Error=} obj
  * @returns {osrm.engine.api.fbresult.Error|null}
  */
-osrm.engine.api.fbresult.FBResult.prototype.code = function(obj) {
-  var offset = this.bb.__offset(this.bb_pos, 6);
-  return offset ? (obj || new osrm.engine.api.fbresult.Error).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
+osrm.engine.api.fbresult.FBResult.prototype.code = function (obj) {
+  const offset = this.bb.__offset(this.bb_pos, 6);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.Error()).__init(
+        this.bb.__indirect(this.bb_pos + offset),
+        this.bb,
+      )
+    : null;
 };
 
 /**
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
-osrm.engine.api.fbresult.FBResult.prototype.dataVersion = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 8);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+osrm.engine.api.fbresult.FBResult.prototype.dataVersion = function (
+  optionalEncoding,
+) {
+  const offset = this.bb.__offset(this.bb_pos, 8);
+  return offset
+    ? this.bb.__string(this.bb_pos + offset, optionalEncoding)
+    : null;
 };
 
 /**
@@ -3030,16 +3728,21 @@ osrm.engine.api.fbresult.FBResult.prototype.dataVersion = function(optionalEncod
  * @param {osrm.engine.api.fbresult.Waypoint=} obj
  * @returns {osrm.engine.api.fbresult.Waypoint}
  */
-osrm.engine.api.fbresult.FBResult.prototype.waypoints = function(index, obj) {
-  var offset = this.bb.__offset(this.bb_pos, 10);
-  return offset ? (obj || new osrm.engine.api.fbresult.Waypoint).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
+osrm.engine.api.fbresult.FBResult.prototype.waypoints = function (index, obj) {
+  const offset = this.bb.__offset(this.bb_pos, 10);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.Waypoint()).__init(
+        this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4),
+        this.bb,
+      )
+    : null;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.FBResult.prototype.waypointsLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 10);
+osrm.engine.api.fbresult.FBResult.prototype.waypointsLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 10);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
@@ -3048,16 +3751,21 @@ osrm.engine.api.fbresult.FBResult.prototype.waypointsLength = function() {
  * @param {osrm.engine.api.fbresult.RouteObject=} obj
  * @returns {osrm.engine.api.fbresult.RouteObject}
  */
-osrm.engine.api.fbresult.FBResult.prototype.routes = function(index, obj) {
-  var offset = this.bb.__offset(this.bb_pos, 12);
-  return offset ? (obj || new osrm.engine.api.fbresult.RouteObject).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
+osrm.engine.api.fbresult.FBResult.prototype.routes = function (index, obj) {
+  const offset = this.bb.__offset(this.bb_pos, 12);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.RouteObject()).__init(
+        this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4),
+        this.bb,
+      )
+    : null;
 };
 
 /**
  * @returns {number}
  */
-osrm.engine.api.fbresult.FBResult.prototype.routesLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 12);
+osrm.engine.api.fbresult.FBResult.prototype.routesLength = function () {
+  const offset = this.bb.__offset(this.bb_pos, 12);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
@@ -3065,15 +3773,20 @@ osrm.engine.api.fbresult.FBResult.prototype.routesLength = function() {
  * @param {osrm.engine.api.fbresult.Table=} obj
  * @returns {osrm.engine.api.fbresult.Table|null}
  */
-osrm.engine.api.fbresult.FBResult.prototype.table = function(obj) {
-  var offset = this.bb.__offset(this.bb_pos, 14);
-  return offset ? (obj || new osrm.engine.api.fbresult.Table).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
+osrm.engine.api.fbresult.FBResult.prototype.table = function (obj) {
+  const offset = this.bb.__offset(this.bb_pos, 14);
+  return offset
+    ? (obj || new osrm.engine.api.fbresult.Table()).__init(
+        this.bb.__indirect(this.bb_pos + offset),
+        this.bb,
+      )
+    : null;
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
-osrm.engine.api.fbresult.FBResult.startFBResult = function(builder) {
+osrm.engine.api.fbresult.FBResult.startFBResult = function (builder) {
   builder.startObject(6);
 };
 
@@ -3081,7 +3794,7 @@ osrm.engine.api.fbresult.FBResult.startFBResult = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {boolean} error
  */
-osrm.engine.api.fbresult.FBResult.addError = function(builder, error) {
+osrm.engine.api.fbresult.FBResult.addError = function (builder, error) {
   builder.addFieldInt8(0, +error, +false);
 };
 
@@ -3089,7 +3802,7 @@ osrm.engine.api.fbresult.FBResult.addError = function(builder, error) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} codeOffset
  */
-osrm.engine.api.fbresult.FBResult.addCode = function(builder, codeOffset) {
+osrm.engine.api.fbresult.FBResult.addCode = function (builder, codeOffset) {
   builder.addFieldOffset(1, codeOffset, 0);
 };
 
@@ -3097,7 +3810,10 @@ osrm.engine.api.fbresult.FBResult.addCode = function(builder, codeOffset) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} dataVersionOffset
  */
-osrm.engine.api.fbresult.FBResult.addDataVersion = function(builder, dataVersionOffset) {
+osrm.engine.api.fbresult.FBResult.addDataVersion = function (
+  builder,
+  dataVersionOffset,
+) {
   builder.addFieldOffset(2, dataVersionOffset, 0);
 };
 
@@ -3105,7 +3821,10 @@ osrm.engine.api.fbresult.FBResult.addDataVersion = function(builder, dataVersion
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} waypointsOffset
  */
-osrm.engine.api.fbresult.FBResult.addWaypoints = function(builder, waypointsOffset) {
+osrm.engine.api.fbresult.FBResult.addWaypoints = function (
+  builder,
+  waypointsOffset,
+) {
   builder.addFieldOffset(3, waypointsOffset, 0);
 };
 
@@ -3114,9 +3833,12 @@ osrm.engine.api.fbresult.FBResult.addWaypoints = function(builder, waypointsOffs
  * @param {Array.<flatbuffers.Offset>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.FBResult.createWaypointsVector = function(builder, data) {
+osrm.engine.api.fbresult.FBResult.createWaypointsVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]);
   }
   return builder.endVector();
@@ -3126,7 +3848,10 @@ osrm.engine.api.fbresult.FBResult.createWaypointsVector = function(builder, data
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.FBResult.startWaypointsVector = function(builder, numElems) {
+osrm.engine.api.fbresult.FBResult.startWaypointsVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -3134,7 +3859,7 @@ osrm.engine.api.fbresult.FBResult.startWaypointsVector = function(builder, numEl
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} routesOffset
  */
-osrm.engine.api.fbresult.FBResult.addRoutes = function(builder, routesOffset) {
+osrm.engine.api.fbresult.FBResult.addRoutes = function (builder, routesOffset) {
   builder.addFieldOffset(4, routesOffset, 0);
 };
 
@@ -3143,9 +3868,12 @@ osrm.engine.api.fbresult.FBResult.addRoutes = function(builder, routesOffset) {
  * @param {Array.<flatbuffers.Offset>} data
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.FBResult.createRoutesVector = function(builder, data) {
+osrm.engine.api.fbresult.FBResult.createRoutesVector = function (
+  builder,
+  data,
+) {
   builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (let i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]);
   }
   return builder.endVector();
@@ -3155,7 +3883,10 @@ osrm.engine.api.fbresult.FBResult.createRoutesVector = function(builder, data) {
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-osrm.engine.api.fbresult.FBResult.startRoutesVector = function(builder, numElems) {
+osrm.engine.api.fbresult.FBResult.startRoutesVector = function (
+  builder,
+  numElems,
+) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -3163,7 +3894,7 @@ osrm.engine.api.fbresult.FBResult.startRoutesVector = function(builder, numElems
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} tableOffset
  */
-osrm.engine.api.fbresult.FBResult.addTable = function(builder, tableOffset) {
+osrm.engine.api.fbresult.FBResult.addTable = function (builder, tableOffset) {
   builder.addFieldOffset(5, tableOffset, 0);
 };
 
@@ -3171,8 +3902,8 @@ osrm.engine.api.fbresult.FBResult.addTable = function(builder, tableOffset) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.FBResult.endFBResult = function(builder) {
-  var offset = builder.endObject();
+osrm.engine.api.fbresult.FBResult.endFBResult = function (builder) {
+  const offset = builder.endObject();
   return offset;
 };
 
@@ -3180,7 +3911,10 @@ osrm.engine.api.fbresult.FBResult.endFBResult = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} offset
  */
-osrm.engine.api.fbresult.FBResult.finishFBResultBuffer = function(builder, offset) {
+osrm.engine.api.fbresult.FBResult.finishFBResultBuffer = function (
+  builder,
+  offset,
+) {
   builder.finish(offset);
 };
 
@@ -3188,7 +3922,10 @@ osrm.engine.api.fbresult.FBResult.finishFBResultBuffer = function(builder, offse
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} offset
  */
-osrm.engine.api.fbresult.FBResult.finishSizePrefixedFBResultBuffer = function(builder, offset) {
+osrm.engine.api.fbresult.FBResult.finishSizePrefixedFBResultBuffer = function (
+  builder,
+  offset,
+) {
   builder.finish(offset, undefined, true);
 };
 
@@ -3202,7 +3939,15 @@ osrm.engine.api.fbresult.FBResult.finishSizePrefixedFBResultBuffer = function(bu
  * @param {flatbuffers.Offset} tableOffset
  * @returns {flatbuffers.Offset}
  */
-osrm.engine.api.fbresult.FBResult.createFBResult = function(builder, error, codeOffset, dataVersionOffset, waypointsOffset, routesOffset, tableOffset) {
+osrm.engine.api.fbresult.FBResult.createFBResult = function (
+  builder,
+  error,
+  codeOffset,
+  dataVersionOffset,
+  waypointsOffset,
+  routesOffset,
+  tableOffset,
+) {
   osrm.engine.api.fbresult.FBResult.startFBResult(builder);
   osrm.engine.api.fbresult.FBResult.addError(builder, error);
   osrm.engine.api.fbresult.FBResult.addCode(builder, codeOffset);

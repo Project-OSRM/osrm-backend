@@ -4,7 +4,7 @@ import { BeforeAll, Before, After, AfterAll } from '@cucumber/cucumber';
 // Import the custom World constructor (registers itself via setWorldConstructor)
 import './world.js';
 
-BeforeAll(function (callback) {
+BeforeAll((callback) => {
   callback();
 });
 
@@ -18,6 +18,6 @@ After(function (testCase, callback) {
   this.cleanup(callback);
 });
 
-AfterAll(function (callback) {
+AfterAll((callback) => {
   callback();
 });

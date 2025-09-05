@@ -4,22 +4,19 @@ import assert from 'assert';
 import fs from 'fs';
 import { When, Then, Given } from '@cucumber/cucumber';
 
-When(
-  /^I run "osrm-routed\s?(.*?)"$/,
-  function (options, callback) {
-    this.runAndSafeOutput('osrm-routed', options, callback);
-  }
-);
+When(/^I run "osrm-routed\s?(.*?)"$/, function (options, callback) {
+  this.runAndSafeOutput('osrm-routed', options, callback);
+});
 
 When(
   /^I run "osrm-(extract|contract|partition|customize)\s?(.*?)"$/,
   function (binary, options, callback) {
-    const stamp = this.processedCacheFile + '.stamp_' + binary;
-    this.runAndSafeOutput('osrm-' + binary, options, (err) => {
+    const stamp = `${this.processedCacheFile}.stamp_${binary}`;
+    this.runAndSafeOutput(`osrm-${binary}`, options, (err) => {
       if (err) return callback(err);
       fs.writeFile(stamp, 'ok', callback);
     });
-  }
+  },
 );
 
 When(
@@ -28,15 +25,15 @@ When(
     this.runAndSafeOutput(binary, options, () => {
       callback();
     });
-  }
+  },
 );
 
 When(
   /^I run "osrm-datastore\s?(.*?)"(?: with input "([^"]*)")?$/,
   function (options, input, callback) {
-    let child = this.runAndSafeOutput('osrm-datastore', options, callback);
+    const child = this.runAndSafeOutput('osrm-datastore', options, callback);
     if (input != null) child.stdin.write(input); // Check for both null and undefined
-  }
+  },
 );
 
 Then(/^it should exit successfully$/, function () {
@@ -51,28 +48,20 @@ Then(/^it should exit with an error$/, function () {
 Then(/^stdout should( not)? contain "(.*?)"$/, function (not, str) {
   const contains = this.stdout.indexOf(str) > -1;
   const isNegative = not != null; // Check for both null and undefined
-  
+
   assert.ok(
     isNegative ? !contains : contains,
-    'stdout ' +
-      (isNegative ? 'contains' : 'does not contain') +
-      ' "' +
-      str +
-      '"'
+    `stdout ${isNegative ? 'contains' : 'does not contain'} "${str}"`,
   );
 });
 
 Then(/^stderr should( not)? contain "(.*?)"$/, function (not, str) {
   const contains = this.stderr.indexOf(str) > -1;
   const isNegative = not != null; // Check for both null and undefined
-  
+
   assert.ok(
     isNegative ? !contains : contains,
-    'stderr ' +
-      (isNegative ? 'contains' : 'does not contain') +
-      ' "' +
-      str +
-      '"'
+    `stderr ${isNegative ? 'contains' : 'does not contain'} "${str}"`,
   );
 });
 

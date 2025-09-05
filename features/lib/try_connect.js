@@ -3,10 +3,12 @@ import net from 'net';
 
 // Attempts TCP connection to test if server is accepting connections
 export default function tryConnect(host, port, callback) {
-  net.connect({ port: port, host: host })
-    .on('connect', () => { callback(); })
+  net
+    .connect({ port, host })
+    .on('connect', () => {
+      callback();
+    })
     .on('error', () => {
-        callback(new Error('Could not connect.'));
+      callback(new Error('Could not connect.'));
     });
 }
-

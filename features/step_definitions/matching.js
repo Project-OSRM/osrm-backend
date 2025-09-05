@@ -41,7 +41,6 @@ When(/^I match I should get$/, function (table, callback) {
           duration = '',
           annotation = '',
           geometry = '',
-          OSMIDs = '',
           alternatives = '';
 
         if (res.statusCode === 200) {
@@ -61,7 +60,7 @@ When(/^I match I should get$/, function (table, callback) {
             for (let i = start_index; i < json.tracepoints.length; i++) {
               if (json.tracepoints[i] === null) continue;
 
-              let current_index = json.tracepoints[i].matchings_index;
+              const current_index = json.tracepoints[i].matchings_index;
 
               if (prev_index !== current_index) {
                 if (sub.length > 0) subMatchings.push(sub);
@@ -77,7 +76,7 @@ When(/^I match I should get$/, function (table, callback) {
           if (headers.has('turns')) {
             if (json.matchings.length != 1)
               throw new Error(
-                '*** Checking turns only supported for matchings with one subtrace'
+                '*** Checking turns only supported for matchings with one subtrace',
               );
             turns = this.turnList(json.matchings[0]);
           }
@@ -85,7 +84,7 @@ When(/^I match I should get$/, function (table, callback) {
           if (headers.has('route')) {
             if (json.matchings.length != 1)
               throw new Error(
-                '*** Checking route only supported for matchings with one subtrace'
+                '*** Checking route only supported for matchings with one subtrace',
               );
             route = this.wayList(json.matchings[0]);
           }
@@ -93,7 +92,7 @@ When(/^I match I should get$/, function (table, callback) {
           if (headers.has('duration')) {
             if (json.matchings.length != 1)
               throw new Error(
-                '*** Checking duration only supported for matchings with one subtrace'
+                '*** Checking duration only supported for matchings with one subtrace',
               );
             duration = json.matchings[0].duration;
           }
@@ -106,7 +105,7 @@ When(/^I match I should get$/, function (table, callback) {
           if (found) {
             if (json.matchings.length != 1)
               throw new Error(
-                '*** Checking annotation only supported for matchings with one subtrace'
+                '*** Checking annotation only supported for matchings with one subtrace',
               );
             annotation = this.annotationList(json.matchings[0]);
           }
@@ -114,7 +113,7 @@ When(/^I match I should get$/, function (table, callback) {
           if (headers.has('geometry')) {
             if (json.matchings.length != 1)
               throw new Error(
-                '*** Checking geometry only supported for matchings with one subtrace'
+                '*** Checking geometry only supported for matchings with one subtrace',
               );
             geometry = json.matchings[0].geometry;
           }
@@ -143,7 +142,7 @@ When(/^I match I should get$/, function (table, callback) {
         // if header matches 'a:*', parse out the values for *
         // and return in that header
         headers.forEach((k) => {
-          let whitelist = [
+          const whitelist = [
             'duration',
             'distance',
             'datasources',
@@ -151,12 +150,14 @@ When(/^I match I should get$/, function (table, callback) {
             'weight',
           ];
           if (k.match(/^a:/)) {
-            let a_type = k.slice(2);
+            const a_type = k.slice(2);
             if (whitelist.indexOf(a_type) == -1)
-              return cb(new Error('*** Unrecognized annotation field: ' + a_type));
+              return cb(
+                new Error(`*** Unrecognized annotation field: ${a_type}`),
+              );
             if (!annotation[a_type])
               return cb(
-                new Error('*** Annotation not found in response: ' + a_type)
+                new Error(`*** Annotation not found in response: ${a_type}`),
               );
             got[k] = annotation[a_type];
           }
@@ -181,8 +182,7 @@ When(/^I match I should get$/, function (table, callback) {
         }
         let ok = true;
         let encodedResult = '',
-          extendedTarget = '',
-          resultWaypoints = [];
+          extendedTarget = '';
 
         const testSubMatching = function (sub, si) {
           const testSubNode = function (ni) {
@@ -197,7 +197,7 @@ When(/^I match I should get$/, function (table, callback) {
                 encodedResult += util.format(
                   '? [%s,%s]',
                   outNode[0],
-                  outNode[1]
+                  outNode[1],
                 );
               } else {
                 encodedResult += '?';
@@ -215,7 +215,9 @@ When(/^I match I should get$/, function (table, callback) {
         if (headers.has('matchings')) {
           if (subMatchings.length != row.matchings.split(',').length) {
             return cb(
-              new Error('*** table matchings and api response are not the same')
+              new Error(
+                '*** table matchings and api response are not the same',
+              ),
             );
           }
 
@@ -225,7 +227,7 @@ When(/^I match I should get$/, function (table, callback) {
         }
 
         if (headers.has('waypoints')) {
-          let got_loc = [];
+          const got_loc = [];
           for (let i = 0; i < json.tracepoints.length; i++) {
             if (!json.tracepoints[i]) continue;
             if (json.tracepoints[i].waypoint_index != null)
@@ -235,15 +237,15 @@ When(/^I match I should get$/, function (table, callback) {
           if (row.waypoints.length != got_loc.length)
             return cb(
               new Error(
-                `Expected ${row.waypoints.length} waypoints, got ${got_loc.length}`
-              )
+                `Expected ${row.waypoints.length} waypoints, got ${got_loc.length}`,
+              ),
             );
 
           for (let i = 0; i < row.waypoints.length; i++) {
             const want_node = this.findNodeByName(row.waypoints[i]);
             if (!this.FuzzyMatch.matchLocation(got_loc[i], want_node)) {
               resultWaypoints.push(
-                util.format('? [%s,%s]', got_loc[i][0], got_loc[i][1])
+                util.format('? [%s,%s]', got_loc[i][0], got_loc[i][1]),
               );
               ok = false;
             } else {

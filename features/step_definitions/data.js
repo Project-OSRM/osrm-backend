@@ -8,7 +8,7 @@ import { Given } from '@cucumber/cucumber';
 
 Given(/^the profile "([^"]*)"$/, function (profile, callback) {
   this.profile = this.OSRM_PROFILE || profile;
-  this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
+  this.profileFile = path.join(this.PROFILES_PATH, `${this.profile}.lua`);
   callback();
 });
 
@@ -47,13 +47,13 @@ Given(
   function (lon, lat, callback) {
     this.setOrigin([parseFloat(lon), parseFloat(lat)]);
     callback();
-  }
+  },
 );
 
 Given(/^the shortcuts$/, function (table, callback) {
-  let q = d3.queue();
+  const q = d3.queue();
 
-  let addShortcut = (row, cb) => {
+  const addShortcut = (row, cb) => {
     this.shortcutsHash[row.key] = row.value;
     cb();
   };
@@ -94,15 +94,15 @@ Given(/^the node map$/, function (docstring, callback) {
 });
 
 Given(/^the node locations$/, function (table, callback) {
-  let q = d3.queue();
+  const q = d3.queue();
 
-  let addNodeLocations = (row, cb) => {
-    let name = row.node;
+  const addNodeLocations = (row, cb) => {
+    const name = row.node;
     if (this.findNodeByName(name))
       throw new Error(util.format('*** duplicate node %s', name));
 
     if (name.match(/[a-z]/)) {
-      let id = row.id && parseInt(row.id);
+      const id = row.id && parseInt(row.id);
       this.addOSMNode(name, row.lon, row.lat, id);
     } else {
       this.addLocation(name, row.lon, row.lat);
@@ -117,14 +117,14 @@ Given(/^the node locations$/, function (table, callback) {
 });
 
 Given(/^the nodes$/, function (table, callback) {
-  let q = d3.queue();
+  const q = d3.queue();
 
-  let addNode = (row, cb) => {
-    let name = row.node,
+  const addNode = (row, cb) => {
+    const name = row.node,
       node = this.findNodeByName(name);
     delete row.node;
     if (!node) throw new Error(util.format('*** unknown node %s', name));
-    for (let key in row) {
+    for (const key in row) {
       if (key == 'id') {
         node.setID(row[key]);
       } else {
@@ -144,40 +144,40 @@ Given(
   function (add_locations, table, callback) {
     if (this.osm_str)
       throw new Error(
-        '*** Map data already defined - did you pass an input file in this scenario?'
+        '*** Map data already defined - did you pass an input file in this scenario?',
       );
 
-    let q = d3.queue();
+    const q = d3.queue();
 
-    let addWay = (row, cb) => {
-      let way = new OSM.Way(
+    const addWay = (row, cb) => {
+      const way = new OSM.Way(
         this.makeOSMId(),
         this.OSM_USER,
         this.OSM_TIMESTAMP,
         this.OSM_UID,
-        !!add_locations
+        !!add_locations,
       );
 
-      let nodes = row.nodes;
+      const nodes = row.nodes;
       if (this.nameWayHash.nodes)
         throw new Error(util.format('*** duplicate way %s', nodes));
 
       for (let i = 0; i < nodes.length; i++) {
-        let c = nodes[i];
+        const c = nodes[i];
         if (!c.match(/[a-z]/))
           throw new Error(
-            util.format('*** ways can only use names a-z (%s)', c)
+            util.format('*** ways can only use names a-z (%s)', c),
           );
-        let node = this.findNodeByName(c);
+        const node = this.findNodeByName(c);
         if (!node) throw new Error(util.format('*** unknown node %s', c));
         way.addNode(node);
       }
 
-      let tags = {
+      const tags = {
         highway: 'primary',
       };
 
-      for (let key in row) {
+      for (const key in row) {
         tags[key] = row[key];
       }
 
@@ -191,7 +191,7 @@ Given(
       // - '(nil)' or empty: delete name tag entirely
       // - otherwise: use literal value
       if (row.name === undefined) tags.name = nodes;
-      else if (row.name === '""' || row.name === '\'\'') tags.name = '';
+      else if (row.name === '""' || row.name === "''") tags.name = '';
       else if (row.name === '' || row.name === '(nil)') delete tags.name;
       else tags.name = row.name;
 
@@ -204,27 +204,27 @@ Given(
     table.hashes().forEach((row) => q.defer(addWay, row));
 
     q.awaitAll(callback);
-  }
+  },
 );
 
 Given(/^the relations$/, function (table, callback) {
   if (this.osm_str)
     throw new Error(
-      '*** Map data already defined - did you pass an input file in this scenario?'
+      '*** Map data already defined - did you pass an input file in this scenario?',
     );
 
-  let q = d3.queue();
+  const q = d3.queue();
 
-  let addRelation = (headers, row, cb) => {
-    let relation = new OSM.Relation(
+  const addRelation = (headers, row, cb) => {
+    const relation = new OSM.Relation(
       this.makeOSMId(),
       this.OSM_USER,
       this.OSM_TIMESTAMP,
-      this.OSM_UID
+      this.OSM_UID,
     );
 
     let name = null;
-    for (let index in row) {
+    for (const index in row) {
       const key = headers[index];
       const value = row[index];
       // Parse relation member column headers:
@@ -232,56 +232,56 @@ Given(/^the relations$/, function (table, callback) {
       // - "way" or "way:role" for way members
       // - "relation" or "relation:role" for relation members
       // - "tag:value" for regular OSM tags
-      let isNode = key.match(/^node:?(.*)/),
+      const isNode = key.match(/^node:?(.*)/),
         isWay = key.match(/^way:?(.*)/),
         isRelation = key.match(/^relation:?(.*)/),
         isColonSeparated = key.match(/^(.*):(.*)/);
       if (isNode) {
         value
           .split(',')
-          .map(function (v) {
+          .map((v) => {
             return v.trim();
           })
           .forEach((nodeName) => {
             if (nodeName.length !== 1)
               throw new Error(
-                util.format('*** invalid relation node member "%s"', nodeName)
+                util.format('*** invalid relation node member "%s"', nodeName),
               );
-            let node = this.findNodeByName(nodeName);
+            const node = this.findNodeByName(nodeName);
             if (!node)
               throw new Error(
-                util.format('*** unknown relation node member "%s"', nodeName)
+                util.format('*** unknown relation node member "%s"', nodeName),
               );
             relation.addMember('node', node.id, isNode[1]);
           });
       } else if (isWay) {
         value
           .split(',')
-          .map(function (v) {
+          .map((v) => {
             return v.trim();
           })
           .forEach((wayName) => {
-            let way = this.findWayByName(wayName);
+            const way = this.findWayByName(wayName);
             if (!way)
               throw new Error(
-                util.format('*** unknown relation way member "%s"', wayName)
+                util.format('*** unknown relation way member "%s"', wayName),
               );
             relation.addMember('way', way.id, isWay[1]);
           });
       } else if (isRelation) {
         value
           .split(',')
-          .map(function (v) {
+          .map((v) => {
             return v.trim();
           })
           .forEach((relName) => {
-            let otherrelation = this.findRelationByName(relName);
+            const otherrelation = this.findRelationByName(relName);
             if (!otherrelation)
               throw new Error(
                 util.format(
                   '*** unknown relation relation member "%s"',
-                  relName
-                )
+                  relName,
+                ),
               );
             relation.addMember('relation', otherrelation.id, isRelation[1]);
           });
@@ -290,8 +290,8 @@ Given(/^the relations$/, function (table, callback) {
           util.format(
             '*** unknown relation member type "%s:%s", must be either "node" or "way"',
             isColonSeparated[1],
-            isColonSeparated[2]
-          )
+            isColonSeparated[2],
+          ),
         );
       } else {
         relation.addTag(key, value);
@@ -315,7 +315,7 @@ Given(/^the relations$/, function (table, callback) {
   q.awaitAll(callback);
 });
 
-Given(/^the input file ([^"]*)$/, function (file, callback) {
+Given(/^the input file ([^"]*)$/, (file, callback) => {
   if (path.extname(file) !== '.osm')
     throw new Error('*** Input file must be in .osm format');
   fs.readFile(file, 'utf8', function (err, data) {
@@ -330,7 +330,7 @@ Given(/^the raster source$/, function (data, callback) {
   // we need this to pass it to the profiles
   this.environment = Object.assign(
     { OSRM_RASTER_SOURCE: this.rasterCacheFile },
-    this.environment
+    this.environment,
   );
 });
 
@@ -348,16 +348,15 @@ Given(
   /^the profile file(?: "([^"]*)" initialized with)?$/,
   function (profile, data, callback) {
     const lua_profiles_path = this.PROFILES_PATH.split(path.sep).join('/');
-    let text =
-      'package.path = "' + lua_profiles_path + '/?.lua;" .. package.path\n';
+    let text = `package.path = "${lua_profiles_path}/?.lua;" .. package.path\n`;
     if (profile == null) {
-      text += data + '\n';
+      text += `${data}\n`;
     } else {
-      text += 'local functions = require("' + profile + '")\n';
+      text += `local functions = require("${profile}")\n`;
       text += 'functions.setup_parent = functions.setup\n';
       text += 'functions.setup = function()\n';
       text += 'local profile = functions.setup_parent()\n';
-      text += data + '\n';
+      text += `${data}\n`;
       text += 'return profile\n';
       text += 'end\n';
       text += 'return functions\n';
@@ -365,7 +364,7 @@ Given(
     this.profileFile = this.profileCacheFile;
     // TODO: Don't overwrite if it exists
     fs.writeFile(this.profileCacheFile, text, callback);
-  }
+  },
 );
 
 Given(/^the data has been saved to disk$/, function (callback) {
@@ -376,7 +375,7 @@ Given(
   /^the data has been (extract|contract|partition|customiz)ed$/,
   function (step, callback) {
     this.reprocess(callback);
-  }
+  },
 );
 
 Given(/^osrm-routed is stopped$/, function (callback) {

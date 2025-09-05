@@ -25,7 +25,7 @@ const config = [
       'prefer-template': 'error',
       'prefer-arrow-callback': 'error',
     },
-    ignores: ['node_modules/', 'build/', 'dist/', 'coverage/'],
+    ignores: ['node_modules/', 'build/', 'dist/', 'coverage/', 'features/support/fbresult_generated.js'],
   },
 ];
 
