@@ -1,8 +1,4 @@
 // Table comparison utility for displaying colorized differences between expected and actual test results
-// Unused imports - commented out
-// import util from 'util';
-// import path from 'path';
-// import fs from 'fs';
 import chalk from 'chalk';
 
 const unescapeStr = (str) => str.replace(/\\\|/g, '|').replace(/\\\\/g, '\\');

@@ -1,5 +1,4 @@
 // General utility functions for timeouts, decimal formatting, and file operations
-// import util from 'util'; // Unused import
 import { mkdir } from 'fs/promises';
 
 // Creates timeout wrapper that calls callback with error if operation exceeds time limit
