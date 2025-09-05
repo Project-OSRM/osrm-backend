@@ -15,7 +15,7 @@
     ]
   },
   "scripts": {
-    "lint": "node ./node_modules/eslint/bin/eslint.js -c ./eslint.config.js features/step_definitions/ features/support/",
+    "lint": "node ./node_modules/eslint/bin/eslint.js -c ./eslint.config.js features/",
     "test": "npm run lint && ./scripts/cucumber_test_matrix.sh",
     "clean": "rm -rf test/cache",
     "docs": "./scripts/build_api_docs.sh",
