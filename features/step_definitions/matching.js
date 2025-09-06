@@ -228,6 +228,7 @@ When(/^I match I should get$/, function (table, callback) {
 
         if (headers.has('waypoints')) {
           const got_loc = [];
+          const resultWaypoints = [];
           for (let i = 0; i < json.tracepoints.length; i++) {
             if (!json.tracepoints[i]) continue;
             if (json.tracepoints[i].waypoint_index != null)
