@@ -18,7 +18,7 @@ import Fuzzy from './fuzzy.js';
 import SharedSteps from './shared_steps.js';
 
 // Global flags for initialization
-let collectedFeatures = new Set(); // Collect unique features from testCases
+const collectedFeatures = new Set(); // Collect unique features from testCases
 
 class OSRMWorld extends World {
   // Private instances of support classes for clean composition
@@ -78,7 +78,7 @@ class OSRMWorld extends World {
           if (name !== 'constructor' && typeof service[name] === 'function') {
             this[name] = service[name].bind(this);
           }
-        }
+        },
       );
     });
   }
@@ -136,7 +136,7 @@ class OSRMWorld extends World {
     // Collect features from testCases
     collectedFeatures.add(testCase.pickle.uri);
 
-    let queue = d3.queue(1);
+    const queue = d3.queue(1);
     queue.defer(this.initializeEnv);
     queue.defer(this.verifyOSRMIsNotRunning);
     queue.defer(this.verifyExistenceOfBinaries);
@@ -156,7 +156,7 @@ class OSRMWorld extends World {
 
   setupCurrentScenario(testCase, callback) {
     this.profile = this.OSRM_PROFILE || this.DEFAULT_PROFILE;
-    this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
+    this.profileFile = path.join(this.PROFILES_PATH, `${this.profile}.lua`);
     this.osrmLoader.setLoadMethod(this.DEFAULT_LOAD_METHOD);
     this.setGridSize(this.DEFAULT_GRID_SIZE);
     this.setOrigin(this.DEFAULT_ORIGIN);
@@ -177,12 +177,12 @@ class OSRMWorld extends World {
     this.setupScenarioCache(this.scenarioID);
 
     // Setup output logging
-    let logDir = path.join(this.LOGS_PATH, this.featureID || 'default');
-    this.scenarioLogFile = path.join(logDir, this.scenarioID) + '.log';
+    const logDir = path.join(this.LOGS_PATH, this.featureID || 'default');
+    this.scenarioLogFile = `${path.join(logDir, this.scenarioID)}.log`;
     d3.queue(1)
       .defer(createDir, logDir)
       .defer((callback) =>
-        fs.rm(this.scenarioLogFile, { force: true }, callback)
+        fs.rm(this.scenarioLogFile, { force: true }, callback),
       )
       .awaitAll(callback);
   }

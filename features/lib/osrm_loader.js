@@ -27,7 +27,7 @@ class OSRMBaseLoader {
       limit((e) => {
         if (e) callback(e);
         else callback();
-      })
+      }),
     );
   }
 
@@ -48,7 +48,7 @@ class OSRMBaseLoader {
 
   osrmDown(callback) {
     if (this.osrmIsRunning()) {
-      this.child.on('exit', (code, signal) => {
+      this.child.on('exit', (_code, _signal) => {
         callback();
       });
       this.child.kill('SIGINT');
@@ -70,8 +70,8 @@ class OSRMBaseLoader {
         } else {
           callback(
             new Error(
-              `Could not connect to osrm-routed after ${this.scope.OSRM_CONNECTION_RETRIES} retries.`
-            )
+              `Could not connect to osrm-routed after ${this.scope.OSRM_CONNECTION_RETRIES} retries.`,
+            ),
           );
         }
       } else {
@@ -107,7 +107,7 @@ class OSRMDirectLoader extends OSRMBaseLoader {
       this.scope.OSRM_PORT,
       this.scope.OSRM_IP,
       this.scope.ROUTING_ALGORITHM,
-      this.loaderArgs
+      this.loaderArgs,
     );
     this.child = this.scope.runBin(
       'osrm-routed',
@@ -117,10 +117,10 @@ class OSRMDirectLoader extends OSRMBaseLoader {
         if (err && err.signal !== 'SIGINT') {
           this.child = null;
           throw new Error(
-            util.format('osrm-routed %s: %s', errorReason(err), err.cmd)
+            util.format('osrm-routed %s: %s', errorReason(err), err.cmd),
           );
         }
-      }
+      },
     );
 
     this.child.readyFunc = (data) => {
@@ -157,7 +157,7 @@ class OSRMmmapLoader extends OSRMBaseLoader {
       this.scope.OSRM_PORT,
       this.scope.OSRM_IP,
       this.scope.ROUTING_ALGORITHM,
-      this.loaderArgs
+      this.loaderArgs,
     );
     this.child = this.scope.runBin(
       'osrm-routed',
@@ -167,10 +167,10 @@ class OSRMmmapLoader extends OSRMBaseLoader {
         if (err && err.signal !== 'SIGINT') {
           this.child = null;
           throw new Error(
-            util.format('osrm-routed %s: %s', errorReason(err), err.cmd)
+            util.format('osrm-routed %s: %s', errorReason(err), err.cmd),
           );
         }
-      }
+      },
     );
 
     this.child.readyFunc = (data) => {
@@ -199,7 +199,7 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
       else {
         this.scope.setupOutputLog(
           this.child,
-          fs.createWriteStream(this.scope.scenarioLogFile, { flags: 'a' })
+          fs.createWriteStream(this.scope.scenarioLogFile, { flags: 'a' }),
         );
         callback();
       }
@@ -211,7 +211,7 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
       '--dataset-name=%s %s %s',
       this.scope.DATASET_NAME,
       this.inputFile,
-      this.loaderArgs
+      this.loaderArgs,
     );
     this.scope.runBin(
       'osrm-datastore',
@@ -220,10 +220,10 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
       (err) => {
         if (err)
           return callback(
-            new Error('*** osrm-datastore exited with ' + err.code + ': ' + err)
+            new Error(`*** osrm-datastore exited with ${err.code}: ${err}`),
           );
         callback();
-      }
+      },
     );
   }
 
@@ -235,7 +235,7 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
       this.scope.DATASET_NAME,
       this.scope.OSRM_IP,
       this.scope.OSRM_PORT,
-      this.scope.ROUTING_ALGORITHM
+      this.scope.ROUTING_ALGORITHM,
     );
     this.child = this.scope.runBin(
       'osrm-routed',
@@ -245,10 +245,10 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
         if (err && err.signal !== 'SIGINT') {
           this.child = null;
           throw new Error(
-            util.format('osrm-routed %s: %s', errorReason(err), err.cmd)
+            util.format('osrm-routed %s: %s', errorReason(err), err.cmd),
           );
         }
-      }
+      },
     );
 
     // we call the callback here, becuase we don't want to wait for the child process to finish
@@ -288,7 +288,7 @@ class OSRMLoader {
         this.mmapLoader.load(inputFile, callback);
       });
     } else {
-      callback(new Error('*** Unknown load method ' + method));
+      callback(new Error(`*** Unknown load method ${method}`));
     }
   }
 

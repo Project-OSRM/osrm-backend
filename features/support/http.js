@@ -37,13 +37,16 @@ export default class Http {
     if (params.coordinates !== undefined) {
       // FIXME this disables passing the output if its a default
       // Remove after #2173 is fixed.
-      const outputString = (params.output && params.output !== 'json') ? ('.' + params.output) : '';
+      const outputString =
+        params.output && params.output !== 'json' ? `.${params.output}` : '';
       paramString = params.coordinates.join(';') + outputString;
       delete params.coordinates;
       delete params.output;
     }
     if (Object.keys(params).length) {
-      paramString += '?' + Object.keys(params).map(k => k + '=' + params[k]).join('&');
+      paramString += `?${Object.keys(params)
+        .map((k) => `${k}=${params[k]}`)
+        .join('&')}`;
     }
 
     return paramString;
@@ -51,11 +54,10 @@ export default class Http {
 
   // FIXME this needs to be simplified!
   sendRequest(baseUri, parameters, callback) {
-
     const limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
     const runRequest = (cb) => {
       const params = this.paramsToString(parameters);
-      this.query = baseUri + (params.length ? '/' + params : '');
+      this.query = baseUri + (params.length ? `/${params}` : '');
 
       httpRequest(this.query, (err, res, body) => {
         if (err && err.code === 'ECONNREFUSED') {
@@ -67,14 +69,16 @@ export default class Http {
       });
     };
 
-    runRequest(limit((err, res, body) => {
-      if (err) {
-        if (err.statusCode === 408)
-          return callback(new Error('*** osrm-routed did not respond'));
-        else if (err.code === 'ECONNREFUSED')
-          return callback(new Error('*** osrm-routed is not running'));
-      }
-      return callback(err, res, body);
-    }));
+    runRequest(
+      limit((err, res, body) => {
+        if (err) {
+          if (err.statusCode === 408)
+            return callback(new Error('*** osrm-routed did not respond'));
+          else if (err.code === 'ECONNREFUSED')
+            return callback(new Error('*** osrm-routed is not running'));
+        }
+        return callback(err, res, body);
+      }),
+    );
   }
 }

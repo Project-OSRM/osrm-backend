@@ -10,7 +10,7 @@ import { setDefaultTimeout } from '@cucumber/cucumber';
 // Set global timeout for all steps and hooks
 setDefaultTimeout(
   (process.env.CUCUMBER_TIMEOUT && parseInt(process.env.CUCUMBER_TIMEOUT)) ||
-    5000
+    5000,
 );
 
 // Sets up all constants that are valid for all features
@@ -37,7 +37,7 @@ export default class Env {
     this.DEFAULT_ENVIRONMENT = process.env;
     this.DEFAULT_PROFILE = 'bicycle';
     this.DEFAULT_INPUT_FORMAT = 'osm';
-    let loadMethod = process.env.OSRM_LOAD_METHOD || 'datastore';
+    const loadMethod = process.env.OSRM_LOAD_METHOD || 'datastore';
     this.DEFAULT_LOAD_METHOD = loadMethod.match('mmap')
       ? 'mmap'
       : loadMethod.match('directly')
@@ -51,7 +51,7 @@ export default class Env {
     this.DEFAULT_GRID_SIZE = 100; // meters
     // get algorithm name from the command line profile argument
     this.ROUTING_ALGORITHM = process.argv[process.argv.indexOf('-p') + 1].match(
-      'mld'
+      'mld',
     )
       ? 'MLD'
       : 'CH';
@@ -79,9 +79,9 @@ export default class Env {
     // heuristically detect .so/.a/.dll/.lib suffix
     this.LIB = ['lib%s.a', 'lib%s.so', '%s.dll', '%s.lib'].find((format) => {
       try {
-        const lib = this.BIN_PATH + '/' + util.format(format, 'osrm');
+        const lib = `${this.BIN_PATH}/${util.format(format, 'osrm')}`;
         fs.accessSync(lib, fs.constants.F_OK);
-      } catch (e) {
+      } catch {
         return false;
       }
       return true;
@@ -89,50 +89,50 @@ export default class Env {
 
     if (this.LIB === undefined) {
       throw new Error(
-        '*** Unable to detect dynamic or static libosrm libraries'
+        '*** Unable to detect dynamic or static libosrm libraries',
       );
     }
 
     this.OSRM_EXTRACT_PATH = path.resolve(
-      util.format('%s/%s%s', this.BIN_PATH, 'osrm-extract', this.EXE)
+      util.format('%s/%s%s', this.BIN_PATH, 'osrm-extract', this.EXE),
     );
     this.OSRM_CONTRACT_PATH = path.resolve(
-      util.format('%s/%s%s', this.BIN_PATH, 'osrm-contract', this.EXE)
+      util.format('%s/%s%s', this.BIN_PATH, 'osrm-contract', this.EXE),
     );
     this.OSRM_CUSTOMIZE_PATH = path.resolve(
-      util.format('%s/%s%s', this.BIN_PATH, 'osrm-customize', this.EXE)
+      util.format('%s/%s%s', this.BIN_PATH, 'osrm-customize', this.EXE),
     );
     this.OSRM_PARTITION_PATH = path.resolve(
-      util.format('%s/%s%s', this.BIN_PATH, 'osrm-partition', this.EXE)
+      util.format('%s/%s%s', this.BIN_PATH, 'osrm-partition', this.EXE),
     );
     this.OSRM_ROUTED_PATH = path.resolve(
-      util.format('%s/%s%s', this.BIN_PATH, 'osrm-routed', this.EXE)
+      util.format('%s/%s%s', this.BIN_PATH, 'osrm-routed', this.EXE),
     );
-    (this.LIB_OSRM_EXTRACT_PATH = util.format(
-      '%s/' + this.LIB,
+    ((this.LIB_OSRM_EXTRACT_PATH = util.format(
+      `%s/${this.LIB}`,
       this.BIN_PATH,
-      'osrm_extract'
+      'osrm_extract',
     )),
     (this.LIB_OSRM_CONTRACT_PATH = util.format(
-      '%s/' + this.LIB,
+      `%s/${this.LIB}`,
       this.BIN_PATH,
-      'osrm_contract'
+      'osrm_contract',
     )),
     (this.LIB_OSRM_CUSTOMIZE_PATH = util.format(
-      '%s/' + this.LIB,
+      `%s/${this.LIB}`,
       this.BIN_PATH,
-      'osrm_customize'
+      'osrm_customize',
     )),
     (this.LIB_OSRM_PARTITION_PATH = util.format(
-      '%s/' + this.LIB,
+      `%s/${this.LIB}`,
       this.BIN_PATH,
-      'osrm_partition'
+      'osrm_partition',
     )),
     (this.LIB_OSRM_PATH = util.format(
-      '%s/' + this.LIB,
+      `%s/${this.LIB}`,
       this.BIN_PATH,
-      'osrm'
-    ));
+      'osrm',
+    )));
 
     fs.exists(this.TEST_PATH, (exists) => {
       if (exists) return callback();
@@ -141,7 +141,7 @@ export default class Env {
   }
 
   getProfilePath(profile) {
-    return path.resolve(this.PROFILES_PATH, profile + '.lua');
+    return path.resolve(this.PROFILES_PATH, `${profile}.lua`);
   }
 
   verifyOSRMIsNotRunning(callback) {
@@ -157,15 +157,15 @@ export default class Env {
       fs.exists(binPath, (exists) => {
         if (!exists)
           return cb(
-            new Error(util.format('%s is missing. Build failed?', binPath))
+            new Error(util.format('%s is missing. Build failed?', binPath)),
           );
         const helpPath = util.format('%s --help', binPath);
         child_process.exec(helpPath, (err) => {
           if (err) {
             return cb(
               new Error(
-                util.format('*** %s exited with code %d', helpPath, err.code)
-              )
+                util.format('*** %s exited with code %d', helpPath, err.code),
+              ),
             );
           }
           cb();

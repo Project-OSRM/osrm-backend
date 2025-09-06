@@ -21,7 +21,9 @@ export default class Data {
     // the constant is calculated (with BigDecimal as: 1.0/(DEG_TO_RAD*EARTH_RADIUS_IN_METERS
     // see ApproximateDistance() in ExtractorStructs.h
     // it's only accurate when measuring along the equator, or going exactly north-south
-    this.zoom = this.gridSize * 0.8990679362704610899694577444566908445396483347536032203503E-5;
+    this.zoom =
+      this.gridSize *
+      0.8990679362704610899694577444566908445396483347536032203503e-5;
   }
 
   // Sets base coordinate for test scenario positioning
@@ -34,7 +36,11 @@ export default class Data {
 
   // Calculates coordinate offset by grid cells from origin
   offsetOriginBy(xCells, yCells) {
-    return this.ruler.offset(this.origin, xCells * this.gridSize, yCells * this.gridSize);
+    return this.ruler.offset(
+      this.origin,
+      xCells * this.gridSize,
+      yCells * this.gridSize,
+    );
   }
 
   // Builds OSM ways from test table data with synthetic coordinates
@@ -53,34 +59,51 @@ export default class Data {
       // Creates synthetic OSM node with calculated coordinates
       const makeFakeNode = (namePrefix, offset) => {
         const coord = this.offsetOriginBy(offset + this.WAY_SPACING * ri, 0);
-        return new OSM.Node(this.makeOSMId(), this.OSM_USER, this.OSM_TIMESTAMP,
-          this.OSM_UID, coord[0],
-          coord[1], {name: util.format('%s%d', namePrefix, ri)});
+        return new OSM.Node(
+          this.makeOSMId(),
+          this.OSM_USER,
+          this.OSM_TIMESTAMP,
+          this.OSM_UID,
+          coord[0],
+          coord[1],
+          { name: util.format('%s%d', namePrefix, ri) },
+        );
       };
 
-      const nodes = ['a','b','c','d','e'].map((l, i) => makeFakeNode(l, i));
+      const nodes = ['a', 'b', 'c', 'd', 'e'].map((l, i) => makeFakeNode(l, i));
 
-      nodes.forEach(node => { this.OSMDB.addNode(node); });
+      nodes.forEach((node) => {
+        this.OSMDB.addNode(node);
+      });
 
       // ...with a way between them
-      const way = new OSM.Way(this.makeOSMId(), this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID);
+      const way = new OSM.Way(
+        this.makeOSMId(),
+        this.OSM_USER,
+        this.OSM_TIMESTAMP,
+        this.OSM_UID,
+      );
 
-      nodes.forEach(node => { way.addNode(node); });
+      nodes.forEach((node) => {
+        way.addNode(node);
+      });
 
       // remove tags that describe expected test result, reject empty tags
       const tags = {};
-      for (let rkey in row) {
-        if (!rkey.match(/^forw\b/) &&
-                    !rkey.match(/^backw\b/) &&
-                    !rkey.match(/^bothw\b/) &&
-                    row[rkey].length)
+      for (const rkey in row) {
+        if (
+          !rkey.match(/^forw\b/) &&
+          !rkey.match(/^backw\b/) &&
+          !rkey.match(/^bothw\b/) &&
+          row[rkey].length
+        )
           tags[rkey] = row[rkey];
       }
 
       const wayTags = { highway: 'primary' };
       const nodeTags = {};
 
-      for (let key in tags) {
+      for (const key in tags) {
         const nodeMatch = key.match(/node\/(.*)/);
         if (nodeMatch) {
           if (tags[key] === '(nil)') {
@@ -101,7 +124,7 @@ export default class Data {
       way.setTags(wayTags);
       this.OSMDB.addWay(way);
 
-      for (let k in nodeTags) {
+      for (const k in nodeTags) {
         nodes[2].addTag(k, nodeTags[k]);
       }
       cb();
@@ -123,7 +146,15 @@ export default class Data {
   // Adds named OSM node to test database
   addOSMNode(name, lon, lat, id) {
     id = id || this.makeOSMId();
-    const node = new OSM.Node(id, this.OSM_USER, this.OSM_TIMESTAMP, this.OSM_UID, lon, lat, {name: name});
+    const node = new OSM.Node(
+      id,
+      this.OSM_USER,
+      this.OSM_TIMESTAMP,
+      this.OSM_UID,
+      lon,
+      lat,
+      { name },
+    );
     this.OSMDB.addNode(node);
     this.nameNodeHash[name] = node;
   }
@@ -135,8 +166,14 @@ export default class Data {
 
   // Finds OSM node or location by single character name
   findNodeByName(s) {
-    if (s.length !== 1) throw new Error(util.format('*** invalid node name "%s", must be single characters', s));
-    if (!s.match(/[a-z0-9]/)) throw new Error(util.format('*** invalid node name "%s", must be alphanumeric', s));
+    if (s.length !== 1)
+      throw new Error(
+        util.format('*** invalid node name "%s", must be single characters', s),
+      );
+    if (!s.match(/[a-z0-9]/))
+      throw new Error(
+        util.format('*** invalid node name "%s", must be alphanumeric', s),
+      );
 
     let fromNode;
     if (s.match(/[a-z]/)) {
@@ -150,12 +187,22 @@ export default class Data {
 
   // find a node based on an array containing lon/lat
   findNodeByLocation(node_location) {
-    const searched_coordinate = new classes.Location(node_location[0],node_location[1]);
-    for (const node in this.nameNodeHash)
-    {
-      const node_coordinate = new classes.Location(this.nameNodeHash[node].lon,this.nameNodeHash[node].lat);
-      if (this.FuzzyMatch.matchCoordinate(searched_coordinate, node_coordinate, this.zoom))
-      {
+    const searched_coordinate = new classes.Location(
+      node_location[0],
+      node_location[1],
+    );
+    for (const node in this.nameNodeHash) {
+      const node_coordinate = new classes.Location(
+        this.nameNodeHash[node].lon,
+        this.nameNodeHash[node].lat,
+      );
+      if (
+        this.FuzzyMatch.matchCoordinate(
+          searched_coordinate,
+          node_coordinate,
+          this.zoom,
+        )
+      ) {
         return node;
       }
     }
@@ -163,11 +210,17 @@ export default class Data {
   }
 
   findWayByName(s) {
-    return this.nameWayHash[s.toString()] || this.nameWayHash[s.toString().split('').reverse().join('')];
+    return (
+      this.nameWayHash[s.toString()] ||
+      this.nameWayHash[s.toString().split('').reverse().join('')]
+    );
   }
 
   findRelationByName(s) {
-    return this.nameRelationHash[s.toString()] || this.nameRelationHash[s.toString().split('').reverse().join('')];
+    return (
+      this.nameRelationHash[s.toString()] ||
+      this.nameRelationHash[s.toString().split('').reverse().join('')]
+    );
   }
 
   makeOSMId() {
@@ -206,69 +259,116 @@ export default class Data {
   }
 
   extractData(p, callback) {
-    let stamp = p.processedCacheFile + '.stamp_extract';
+    const stamp = `${p.processedCacheFile}.stamp_extract`;
     fs.exists(stamp, (exists) => {
       if (exists) return callback();
 
-      this.runBin('osrm-extract', util.format('%s --profile %s %s', p.extractArgs, p.profileFile, p.inputCacheFile), p.environment, (err) => {
-        if (err) {
-          return callback(new Error(util.format('osrm-extract %s: %s', errorReason(err), err.cmd)));
-        }
-        fs.writeFile(stamp, 'ok', callback);
-      });
+      this.runBin(
+        'osrm-extract',
+        util.format(
+          '%s --profile %s %s',
+          p.extractArgs,
+          p.profileFile,
+          p.inputCacheFile,
+        ),
+        p.environment,
+        (err) => {
+          if (err) {
+            return callback(
+              new Error(
+                util.format('osrm-extract %s: %s', errorReason(err), err.cmd),
+              ),
+            );
+          }
+          fs.writeFile(stamp, 'ok', callback);
+        },
+      );
     });
   }
 
   contractData(p, callback) {
-    let stamp = p.processedCacheFile + '.stamp_contract';
+    const stamp = `${p.processedCacheFile}.stamp_contract`;
     fs.exists(stamp, (exists) => {
       if (exists) return callback();
 
-      this.runBin('osrm-contract', util.format('%s %s', p.contractArgs, p.processedCacheFile), p.environment, (err) => {
-        if (err) {
-          return callback(new Error(util.format('osrm-contract %s: %s', errorReason(err), err)));
-        }
-        fs.writeFile(stamp, 'ok', callback);
-      });
+      this.runBin(
+        'osrm-contract',
+        util.format('%s %s', p.contractArgs, p.processedCacheFile),
+        p.environment,
+        (err) => {
+          if (err) {
+            return callback(
+              new Error(
+                util.format('osrm-contract %s: %s', errorReason(err), err),
+              ),
+            );
+          }
+          fs.writeFile(stamp, 'ok', callback);
+        },
+      );
     });
   }
 
   partitionData(p, callback) {
-    let stamp = p.processedCacheFile + '.stamp_partition';
+    const stamp = `${p.processedCacheFile}.stamp_partition`;
     fs.exists(stamp, (exists) => {
       if (exists) return callback();
 
-      this.runBin('osrm-partition', util.format('%s %s', p.partitionArgs, p.processedCacheFile), p.environment, (err) => {
-        if (err) {
-          return callback(new Error(util.format('osrm-partition %s: %s', errorReason(err), err.cmd)));
-        }
-        fs.writeFile(stamp, 'ok', callback);
-      });
+      this.runBin(
+        'osrm-partition',
+        util.format('%s %s', p.partitionArgs, p.processedCacheFile),
+        p.environment,
+        (err) => {
+          if (err) {
+            return callback(
+              new Error(
+                util.format('osrm-partition %s: %s', errorReason(err), err.cmd),
+              ),
+            );
+          }
+          fs.writeFile(stamp, 'ok', callback);
+        },
+      );
     });
   }
 
   customizeData(p, callback) {
-    let stamp = p.processedCacheFile + '.stamp_customize';
+    const stamp = `${p.processedCacheFile}.stamp_customize`;
     fs.exists(stamp, (exists) => {
       if (exists) return callback();
 
-      this.runBin('osrm-customize', util.format('%s %s', p.customizeArgs, p.processedCacheFile), p.environment, (err) => {
-        if (err) {
-          return callback(new Error(util.format('osrm-customize %s: %s', errorReason(err), err)));
-        }
-        fs.writeFile(stamp, 'ok', callback);
-      });
+      this.runBin(
+        'osrm-customize',
+        util.format('%s %s', p.customizeArgs, p.processedCacheFile),
+        p.environment,
+        (err) => {
+          if (err) {
+            return callback(
+              new Error(
+                util.format('osrm-customize %s: %s', errorReason(err), err),
+              ),
+            );
+          }
+          fs.writeFile(stamp, 'ok', callback);
+        },
+      );
     });
   }
 
   extractContractPartitionAndCustomize(callback) {
     // a shallow copy of scenario parameters to avoid data inconsistency
     // if a cucumber timeout occurs during deferred jobs
-    let p = {extractArgs: this.extractArgs, contractArgs: this.contractArgs,
-      partitionArgs: this.partitionArgs, customizeArgs: this.customizeArgs,
-      profileFile: this.profileFile, inputCacheFile: this.inputCacheFile,
-      processedCacheFile: this.processedCacheFile, environment: this.environment};
-    let queue = d3.queue(1);
+    const p = {
+      extractArgs: this.extractArgs,
+      contractArgs: this.contractArgs,
+      partitionArgs: this.partitionArgs,
+      customizeArgs: this.customizeArgs,
+      profileFile: this.profileFile,
+      inputCacheFile: this.inputCacheFile,
+      processedCacheFile: this.processedCacheFile,
+      environment: this.environment,
+    };
+    const queue = d3.queue(1);
     queue.defer(this.extractData, p);
     queue.defer(this.partitionData, p);
     queue.defer(this.contractData, p);
@@ -277,21 +377,24 @@ export default class Data {
   }
 
   writeAndLinkOSM(callback) {
-    let queue = d3.queue(1);
+    const queue = d3.queue(1);
     queue.defer(this.writeOSM);
     queue.defer(this.linkOSM);
     queue.awaitAll(callback);
   }
 
   reprocess(callback) {
-    let queue = d3.queue(1);
+    const queue = d3.queue(1);
     queue.defer(this.writeAndLinkOSM);
     queue.defer(this.extractContractPartitionAndCustomize);
     queue.awaitAll(callback);
   }
 
   reprocessAndLoadData(callback) {
-    const p = {loaderArgs: this.loaderArgs, inputFile: this.processedCacheFile};
+    const p = {
+      loaderArgs: this.loaderArgs,
+      inputFile: this.processedCacheFile,
+    };
     const queue = d3.queue(1);
     queue.defer(this.writeAndLinkOSM);
     queue.defer(this.extractContractPartitionAndCustomize);
@@ -302,7 +405,9 @@ export default class Data {
   processRowsAndDiff(table, fn, callback) {
     const q = d3.queue(1);
 
-    table.hashes().forEach((row, i) => { q.defer(fn, row, i); });
+    table.hashes().forEach((row, i) => {
+      q.defer(fn, row, i);
+    });
 
     q.awaitAll((err, actual) => {
       if (err) return callback(err);
