@@ -113,30 +113,30 @@ export default class Env {
       this.BIN_PATH,
       'osrm_extract',
     )),
-      (this.LIB_OSRM_CONTRACT_PATH = util.format(
-        `%s/${this.LIB}`,
-        this.BIN_PATH,
-        'osrm_contract',
-      )),
-      (this.LIB_OSRM_CUSTOMIZE_PATH = util.format(
-        `%s/${this.LIB}`,
-        this.BIN_PATH,
-        'osrm_customize',
-      )),
-      (this.LIB_OSRM_PARTITION_PATH = util.format(
-        `%s/${this.LIB}`,
-        this.BIN_PATH,
-        'osrm_partition',
-      )),
-      (this.LIB_OSRM_PATH = util.format(
-        `%s/${this.LIB}`,
-        this.BIN_PATH,
-        'osrm',
-      )));
+    (this.LIB_OSRM_CONTRACT_PATH = util.format(
+      `%s/${this.LIB}`,
+      this.BIN_PATH,
+      'osrm_contract',
+    )),
+    (this.LIB_OSRM_CUSTOMIZE_PATH = util.format(
+      `%s/${this.LIB}`,
+      this.BIN_PATH,
+      'osrm_customize',
+    )),
+    (this.LIB_OSRM_PARTITION_PATH = util.format(
+      `%s/${this.LIB}`,
+      this.BIN_PATH,
+      'osrm_partition',
+    )),
+    (this.LIB_OSRM_PATH = util.format(
+      `%s/${this.LIB}`,
+      this.BIN_PATH,
+      'osrm',
+    )));
 
     fs.exists(this.TEST_PATH, (exists) => {
       if (exists) return callback();
-      else return callback(new Error("*** Test folder doesn't exist."));
+      else return callback(new Error('*** Test folder doesn\'t exist.'));
     });
   }
 

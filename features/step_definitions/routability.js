@@ -41,29 +41,29 @@ Then(/^routability should be$/, function (table, callback) {
               const want = row[rate];
 
               switch (true) {
-                case '' === want:
-                  outputRow[rate] = result[direction].status
-                    ? result[direction].status.toString()
-                    : '';
-                  break;
-                case /^\d+(\.\d+){0,1}$/.test(want):
-                  if (
-                    result[direction].rate !== undefined &&
+              case '' === want:
+                outputRow[rate] = result[direction].status
+                  ? result[direction].status.toString()
+                  : '';
+                break;
+              case /^\d+(\.\d+){0,1}$/.test(want):
+                if (
+                  result[direction].rate !== undefined &&
                     !isNaN(result[direction].rate)
-                  ) {
-                    outputRow[rate] = result[direction].rate.toString();
-                  } else {
-                    outputRow[rate] = '';
-                  }
-                  break;
-                default:
-                  throw new Error(
-                    util.format(
-                      '*** Unknown expectation format: %s for header %s',
-                      want,
-                      rate,
-                    ),
-                  );
+                ) {
+                  outputRow[rate] = result[direction].rate.toString();
+                } else {
+                  outputRow[rate] = '';
+                }
+                break;
+              default:
+                throw new Error(
+                  util.format(
+                    '*** Unknown expectation format: %s for header %s',
+                    want,
+                    rate,
+                  ),
+                );
               }
             });
 
@@ -84,37 +84,37 @@ Then(/^routability should be$/, function (table, callback) {
               // TODO split out accessible/not accessible value from forw/backw headers
               // rename forw/backw to forw/backw_speed
               switch (true) {
-                case '' === want:
-                  outputRow[direction] = result[direction].status
-                    ? result[direction].mode
-                    : '';
-                  break;
-                case 'x' === want:
-                  outputRow[direction] = result[direction].status ? 'x' : '';
-                  break;
-                case /^[\d.]+ s/.test(want):
-                  // the result here can come back as a non-number value like
-                  // `diff`, but we only want to apply the unit when it comes
-                  // back as a number, for tableDiff's literal comparison
-                  if (result[direction].time) {
-                    outputRow[direction] = !isNaN(result[direction].time)
-                      ? `${result[direction].time.toString()} s`
-                      : result[direction].time.toString() || '';
-                  } else {
-                    outputRow[direction] = '';
-                  }
-                  break;
-                case /^\d+ km\/h/.test(want):
-                  if (result[direction].speed) {
-                    outputRow[direction] = !isNaN(result[direction].speed)
-                      ? `${result[direction].speed.toString()} km/h`
-                      : result[direction].speed.toString() || '';
-                  } else {
-                    outputRow[direction] = '';
-                  }
-                  break;
-                default:
-                  outputRow[direction] = result[direction].mode || '';
+              case '' === want:
+                outputRow[direction] = result[direction].status
+                  ? result[direction].mode
+                  : '';
+                break;
+              case 'x' === want:
+                outputRow[direction] = result[direction].status ? 'x' : '';
+                break;
+              case /^[\d.]+ s/.test(want):
+                // the result here can come back as a non-number value like
+                // `diff`, but we only want to apply the unit when it comes
+                // back as a number, for tableDiff's literal comparison
+                if (result[direction].time) {
+                  outputRow[direction] = !isNaN(result[direction].time)
+                    ? `${result[direction].time.toString()} s`
+                    : result[direction].time.toString() || '';
+                } else {
+                  outputRow[direction] = '';
+                }
+                break;
+              case /^\d+ km\/h/.test(want):
+                if (result[direction].speed) {
+                  outputRow[direction] = !isNaN(result[direction].speed)
+                    ? `${result[direction].speed.toString()} km/h`
+                    : result[direction].speed.toString() || '';
+                } else {
+                  outputRow[direction] = '';
+                }
+                break;
+              default:
+                outputRow[direction] = result[direction].mode || '';
               }
 
               if (this.FuzzyMatch.match(outputRow[direction], want)) {

@@ -15,7 +15,7 @@
     ]
   },
   "scripts": {
-    "lint": "node ./node_modules/eslint/bin/eslint.js -c ./eslint.config.js features/",
+    "lint": "npx eslint features/",
     "test": "npm run lint && ./scripts/cucumber_test_matrix.sh",
     "clean": "rm -rf test/cache",
     "docs": "./scripts/build_api_docs.sh",
@@ -65,7 +65,6 @@
     "lint-staged": "^16.1.6",
     "node-addon-api": "8.3.1",
     "node-cmake": "^2.5.1",
-    "prettier": "^3.6.2",
     "tape": "5.9.0",
     "uglify-js": "^3.17.0",
     "xmlbuilder": "15.1.1"
@@ -84,8 +83,7 @@
   "lint-staged": {
     "features/**/*.js": [
       "node --check",
-      "eslint --fix",
-      "prettier --write"
+      "eslint --fix"
     ]
   },
   "publishConfig": {

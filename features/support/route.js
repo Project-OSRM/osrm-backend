@@ -183,8 +183,8 @@ export default class Route {
         `${
           'in' in s.intersections[0]
             ? this.reverseBearing(
-                s.intersections[0].bearings[s.intersections[0].in],
-              )
+              s.intersections[0].bearings[s.intersections[0].in],
+            )
             : 0
         }->${
           'out' in s.intersections[0]
@@ -261,23 +261,23 @@ export default class Route {
       .reduce((m, v) => m.concat(v.steps), [])
       .map((v) => {
         switch (v.maneuver.type) {
-          case 'depart':
-          case 'arrive':
-            return v.maneuver.type;
-          case 'on ramp':
-          case 'off ramp':
-            return `${v.maneuver.type} ${v.maneuver.modifier}`;
-          case 'roundabout':
-            return `roundabout-exit-${v.maneuver.exit}`;
-          case 'rotary':
-            if ('rotary_name' in v)
-              return `${v.rotary_name}-exit-${v.maneuver.exit}`;
-            else return `rotary-exit-${v.maneuver.exit}`;
-          case 'roundabout turn':
-            return `${v.maneuver.type} ${v.maneuver.modifier} exit-${v.maneuver.exit}`;
+        case 'depart':
+        case 'arrive':
+          return v.maneuver.type;
+        case 'on ramp':
+        case 'off ramp':
+          return `${v.maneuver.type} ${v.maneuver.modifier}`;
+        case 'roundabout':
+          return `roundabout-exit-${v.maneuver.exit}`;
+        case 'rotary':
+          if ('rotary_name' in v)
+            return `${v.rotary_name}-exit-${v.maneuver.exit}`;
+          else return `rotary-exit-${v.maneuver.exit}`;
+        case 'roundabout turn':
+          return `${v.maneuver.type} ${v.maneuver.modifier} exit-${v.maneuver.exit}`;
           // FIXME this is a little bit over-simplistic for merge/fork instructions
-          default:
-            return `${v.maneuver.type} ${v.maneuver.modifier}`;
+        default:
+          return `${v.maneuver.type} ${v.maneuver.modifier}`;
         }
       })
       .join(',');
