@@ -57,6 +57,16 @@ function update_subtree () {
 }
 
 ## Update dependencies
-for dep in osmium sol rapidjson microtar protozero vtzero fmt flatbuffers; do
+# for dep in osmium sol rapidjson microtar protozero vtzero fmt flatbuffers; do
+for dep in flatbuffers; do
     update_subtree $dep
 done
+
+## Update npm package.json to match FLATBUFFERS_TAG
+echo "Updating package.json flatbuffers version to match ${FLATBUFFERS_TAG}..."
+FLATBUFFERS_VERSION=${FLATBUFFERS_TAG#v}  # Remove 'v' prefix
+npm install flatbuffers@${FLATBUFFERS_VERSION}
+
+## Regenerate FlatBuffers JavaScript bindings after update
+echo "Regenerating FlatBuffers JavaScript bindings..."
+flatc --ts --gen-name-strings -o features/support/ include/engine/api/flatbuffers/fbresult.fbs
