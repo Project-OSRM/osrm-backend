@@ -31,8 +31,9 @@ FMT_PATH="fmtlib/fmt"
 FMT_TAG=v10.2.1
 
 FLATBUFFERS_PATH="google/flatbuffers"
-FLATBUFFERS_TAG=v24.3.25
+FLATBUFFERS_TAG=v25.2.10
 
+# Updates a git subtree dependency by pulling/adding the specified tag from GitHub
 function update_subtree () {
     name=$(echo "$1" | tr '[:lower:]' '[:upper:]')
     path=$(tmpvar=${name}_PATH && echo ${!tmpvar})
