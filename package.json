@@ -59,7 +59,7 @@
     "documentation": "^14.0.2",
     "eslint": "9.26.0",
     "faucet": "^0.0.4",
-    "flatbuffers": "25.2.10",
+    "flatbuffers": "^25.2.10",
     "husky": "^9.1.7",
     "jsonpath": "^1.1.1",
     "lint-staged": "^16.1.6",

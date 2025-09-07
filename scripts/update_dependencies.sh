@@ -57,8 +57,7 @@ function update_subtree () {
 }
 
 ## Update dependencies
-# for dep in osmium sol rapidjson microtar protozero vtzero fmt flatbuffers; do
-for dep in flatbuffers; do
+for dep in osmium sol rapidjson microtar protozero vtzero fmt flatbuffers; do
     update_subtree $dep
 done
 
