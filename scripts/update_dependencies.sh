@@ -66,6 +66,11 @@ echo "Updating package.json flatbuffers version to match ${FLATBUFFERS_TAG}..."
 FLATBUFFERS_VERSION=${FLATBUFFERS_TAG#v}  # Remove 'v' prefix
 npm install flatbuffers@${FLATBUFFERS_VERSION}
 
-## Regenerate FlatBuffers JavaScript bindings after update
+## Regenerate FlatBuffers bindings after update
 echo "Regenerating FlatBuffers JavaScript bindings..."
 flatc --ts --gen-name-strings -o features/support/ include/engine/api/flatbuffers/fbresult.fbs
+
+echo "Regenerating FlatBuffers C++ headers..."
+for schema in include/engine/api/flatbuffers/*.fbs; do 
+  flatc --cpp -o generated/include/engine/api/flatbuffers/ "$schema"
+done
