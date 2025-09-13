@@ -1,0 +1,20 @@
+filegroup(
+    name = "distribution",
+    srcs = [
+        "BUILD.bazel",
+        "reflection.fbs",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# flatbuffer_ts_library() only supports .fbs file but not filegroups
+exports_files(
+    srcs = ["reflection.fbs"],
+    visibility = ["//reflection/ts:__pkg__"],
+)
+
+filegroup(
+    name = "reflection_fbs_schema",
+    srcs = ["reflection.fbs"],
+    visibility = ["//visibility:public"],
+)
