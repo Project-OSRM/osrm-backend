@@ -1,6 +1,0 @@
-include "foo.fbs";
-include "baz/baz.fbs";
-
-table BarWithFoo {
-  foo:Foo;
-}

@@ -7,7 +7,7 @@ set -o nounset
 # Note: once the subtree merge from this script has been committed and pushed to
 # a branch do not attempt to rebase the branch back onto master or the subdirectory
 # structure will be lost.
-# http://git.661346.n2.nabble.com/subtree-merges-lose-prefix-after-rebase-td7332850.html
+# https://stackoverflow.com/questions/12858199/how-to-rebase-after-git-subtree-add
 
 OSMIUM_PATH="osmcode/libosmium"
 OSMIUM_TAG=v2.20.0
@@ -67,6 +67,11 @@ echo "Updating package.json flatbuffers version to match ${FLATBUFFERS_TAG}..."
 FLATBUFFERS_VERSION=${FLATBUFFERS_TAG#v}  # Remove 'v' prefix
 npm install flatbuffers@${FLATBUFFERS_VERSION}
 
-## Regenerate FlatBuffers JavaScript bindings after update
-echo "Regenerating FlatBuffers JavaScript bindings..."
+## Regenerate FlatBuffers bindings after update
+echo "Regenerating FlatBuffers TypeScript bindings..."
 flatc --ts --gen-name-strings -o features/support/ include/engine/api/flatbuffers/fbresult.fbs
+
+# Note: fbresult_generated.js is a manual compatibility wrapper that maps
+# the new TypeScript module structure to the old JavaScript namespace structure
+# expected by the test files. This wrapper should be updated manually if
+# new types are added to the .fbs schema files.
