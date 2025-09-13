@@ -1,19 +1,20 @@
 
-#include <test.hpp>
+#include <buffer.hpp>
 
 #include "t/int32/int32_testcase.pb.h"
 
-TEST_CASE("write int32 field and check with libprotobuf") {
+TEMPLATE_TEST_CASE("write int32 field and check with libprotobuf", "",
+    buffer_test_string, buffer_test_vector, buffer_test_array, buffer_test_external) {
 
-    std::string buffer;
-    protozero::pbf_writer pw{buffer};
+    TestType buffer;
+    typename TestType::writer_type pw{buffer.buffer()};
 
     TestInt32::Test msg;
 
     SECTION("zero") {
         pw.add_int32(1, 0L);
 
-        msg.ParseFromString(buffer);
+        msg.ParseFromArray(buffer.data(), buffer.size());
 
         REQUIRE(msg.i() == 0L);
     }
@@ -21,7 +22,7 @@ TEST_CASE("write int32 field and check with libprotobuf") {
     SECTION("positive") {
         pw.add_int32(1, 1L);
 
-        msg.ParseFromString(buffer);
+        msg.ParseFromArray(buffer.data(), buffer.size());
 
         REQUIRE(msg.i() == 1L);
     }
@@ -29,7 +30,7 @@ TEST_CASE("write int32 field and check with libprotobuf") {
     SECTION("negative") {
         pw.add_int32(1, -1L);
 
-        msg.ParseFromString(buffer);
+        msg.ParseFromArray(buffer.data(), buffer.size());
 
         REQUIRE(msg.i() == -1L);
     }
@@ -37,7 +38,7 @@ TEST_CASE("write int32 field and check with libprotobuf") {
     SECTION("max") {
         pw.add_int32(1, std::numeric_limits<int32_t>::max());
 
-        msg.ParseFromString(buffer);
+        msg.ParseFromArray(buffer.data(), buffer.size());
 
         REQUIRE(msg.i() == std::numeric_limits<int32_t>::max());
     }
@@ -45,7 +46,7 @@ TEST_CASE("write int32 field and check with libprotobuf") {
     SECTION("min") {
         pw.add_int32(1, std::numeric_limits<int32_t>::min());
 
-        msg.ParseFromString(buffer);
+        msg.ParseFromArray(buffer.data(), buffer.size());
 
         REQUIRE(msg.i() == std::numeric_limits<int32_t>::min());
     }

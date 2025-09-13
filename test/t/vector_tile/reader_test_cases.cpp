@@ -4,15 +4,20 @@
 #include <string>
 #include <vector>
 
+namespace {
+
 // Input data.vector is encoded according to
 // https://github.com/mapbox/mapnik-vector-tile/blob/master/proto/vector_tile.proto
 
-static std::string get_name(protozero::pbf_reader layer) { // copy!
+std::string get_name(protozero::pbf_reader layer) { // copy!
     while (layer.next(1)) { // required string name
         return layer.get_string();
     }
+    REQUIRE(false); // should never be here
     return "";
 }
+
+} // anonymous namespace
 
 TEST_CASE("reading vector tiles") {
     static const std::vector<std::string> expected_layer_names = {
@@ -42,6 +47,7 @@ TEST_CASE("reading vector tiles") {
                 }
             } else {
                 item.skip();
+                REQUIRE(false); // should never be here
             }
         }
 
@@ -76,7 +82,7 @@ TEST_CASE("reading vector tiles") {
         int n_geomtype = 0;
         while (item.next(3)) { // repeated message Layer
             protozero::pbf_reader layer{item.get_message()};
-            std::string name = get_name(layer);
+            const std::string name = get_name(layer);
             if (name == "road") {
                 while (layer.next(2)) { // repeated Feature
                     ++n;
@@ -116,7 +122,7 @@ TEST_CASE("reading vector tiles") {
         int n_geomtype = 0;
         while (item.next(3)) { // repeated message Layer
             protozero::pbf_reader layer{item.get_message()};
-            std::string name = get_name(layer);
+            const std::string name = get_name(layer);
             if (name == "road") {
                 while (layer.next(2)) { // repeated Feature
                     ++n;

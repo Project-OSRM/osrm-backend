@@ -1,12 +1,13 @@
 
-#include <test.hpp>
+#include <buffer.hpp>
 
 #include "t/nested/nested_testcase.pb.h"
 
-TEST_CASE("write nested message fields and check with libprotobuf") {
+TEMPLATE_TEST_CASE("write nested message fields and check with libprotobuf", "",
+    buffer_test_string, buffer_test_vector, buffer_test_array, buffer_test_external) {
 
-    std::string buffer_test;
-    protozero::pbf_writer pbf_test{buffer_test};
+    TestType buffer;
+    typename TestType::writer_type pw{buffer.buffer()};
 
     SECTION("string") {
         std::string buffer_subsub;
@@ -19,23 +20,23 @@ TEST_CASE("write nested message fields and check with libprotobuf") {
         pbf_sub.add_string(1, buffer_subsub);
         pbf_sub.add_int32(2, 88);
 
-        pbf_test.add_message(1, buffer_sub);
+        pw.add_message(1, buffer_sub);
     }
 
     SECTION("with subwriter") {
-        protozero::pbf_writer pbf_sub{pbf_test, 1};
+        typename TestType::writer_type pbf_sub{pw, 1};
         {
-            protozero::pbf_writer pbf_subsub(pbf_sub, 1);
+            typename TestType::writer_type pbf_subsub(pbf_sub, 1);
             pbf_subsub.add_string(1, "foobar");
             pbf_subsub.add_int32(2, 99);
         }
         pbf_sub.add_int32(2, 88);
     }
 
-    pbf_test.add_int32(2, 77);
+    pw.add_int32(2, 77);
 
     TestNested::Test msg;
-    msg.ParseFromString(buffer_test);
+    msg.ParseFromArray(buffer.data(), buffer.size());
 
     REQUIRE(msg.i() == 77);
     REQUIRE(msg.sub().i() == 88);

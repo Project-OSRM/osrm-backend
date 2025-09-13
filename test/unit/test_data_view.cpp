@@ -53,7 +53,9 @@ TEST_CASE("convert data_view to std::string") {
     const std::string s = std::string(view);
     REQUIRE(s == "foobar");
     REQUIRE(std::string(view) == "foobar");
+#ifndef PROTOZERO_USE_VIEW
     REQUIRE(view.to_string() == "foobar");
+#endif
 }
 
 #ifndef PROTOZERO_USE_VIEW
@@ -61,7 +63,7 @@ TEST_CASE("convert data_view to std::string") {
 // that one contains the protozero_assert() which generates the exception.
 TEST_CASE("converting default constructed data_view to string fails") {
     const protozero::data_view view{};
-    REQUIRE_THROWS_AS(view.to_string(), const assert_error&);
+    REQUIRE_THROWS_AS(view.to_string(), assert_error);
 }
 #endif
 
@@ -69,14 +71,14 @@ TEST_CASE("swapping data_view") {
     protozero::data_view view1{"foo"};
     protozero::data_view view2{"bar"};
 
-    REQUIRE(view1.to_string() == "foo");
-    REQUIRE(view2.to_string() == "bar");
+    REQUIRE(std::string(view1) == "foo");
+    REQUIRE(std::string(view2) == "bar");
 
     using std::swap;
     swap(view1, view2);
 
-    REQUIRE(view2.to_string() == "foo");
-    REQUIRE(view1.to_string() == "bar");
+    REQUIRE(std::string(view2) == "foo");
+    REQUIRE(std::string(view1) == "bar");
 }
 
 TEST_CASE("comparing data_views") {

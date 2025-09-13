@@ -11,14 +11,13 @@ changing frequently or lazy decoding is not critical for your application then
 this approach offers no value: just use the C++ API that can be generated with
 the Google Protobufs `protoc` program.
 
-[![Travis Build Status](https://travis-ci.org/mapbox/protozero.svg?branch=master)](https://travis-ci.org/mapbox/protozero)
+[![Github Build Status](https://github.com/mapbox/protozero/actions/workflows/ci.yml/badge.svg)](https://github.com/mapbox/protozero/actions/workflows/ci.yml)
 [![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/github/mapbox/protozero?svg=true)](https://ci.appveyor.com/project/Mapbox/protozero)
-[![Coverage Status](https://codecov.io/gh/mapbox/protozero/branch/master/graph/badge.svg)](https://codecov.io/gh/mapbox/protozero)
 [![Packaging status](https://repology.org/badge/tiny-repos/protozero.svg)](https://repology.org/metapackage/protozero)
 
 ## Depends
 
-* C++11 compiler
+* C++14 compiler
 * CMake
 * Some tests depend on the Google Protobuf library, but use of Protozero
   doesn't need it
@@ -56,9 +55,9 @@ You have to have a working knowledge of how
 * Read the [upgrading instructions](UPGRADING.md) if you are upgrading from
   an older version of Protozero.
 
-The build process will also build the Doxygen-based reference documentation
-if you have [Doxygen](http://www.stack.nl/~dimitri/doxygen/) installed. Then
-open `doc/html/index.html` in your browser to read it.
+The build process will also build the Doxygen-based reference documentation if
+you have Doxygen installed. Then open `doc/html/index.html` in your browser to
+read it.
 
 
 ## Endianness
@@ -123,7 +122,7 @@ You might have to set `CLANG_TIDY` in CMake config.
 
 ## Cppcheck
 
-For extra checks with [Cppcheck](http://cppcheck.sourceforge.net/) you can,
+For extra checks with [Cppcheck](https://cppcheck.sourceforge.io/) you can,
 after the CMake step, call
 
     make cppcheck

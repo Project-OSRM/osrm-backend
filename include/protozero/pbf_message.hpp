@@ -16,8 +16,8 @@ documentation.
  * @brief Contains the pbf_message template class.
  */
 
-#include <protozero/pbf_reader.hpp>
-#include <protozero/types.hpp>
+#include "pbf_reader.hpp"
+#include "types.hpp"
 
 #include <type_traits>
 
@@ -64,7 +64,7 @@ namespace protozero {
 template <typename T>
 class pbf_message : public pbf_reader {
 
-    static_assert(std::is_same<pbf_tag_type, typename std::underlying_type<T>::type>::value,
+    static_assert(std::is_same<pbf_tag_type, std::underlying_type_t<T>>::value,
                   "T must be enum with underlying type protozero::pbf_tag_type");
 
 public:
@@ -78,7 +78,7 @@ public:
      */
     template <typename... Args>
     pbf_message(Args&&... args) noexcept : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
-        pbf_reader(std::forward<Args>(args)...) {
+        pbf_reader{std::forward<Args>(args)...} {
     }
 
     /**

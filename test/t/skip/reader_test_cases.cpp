@@ -116,7 +116,7 @@ TEST_CASE("exceptional cases") {
 
         protozero::pbf_reader item{buffer};
 
-        REQUIRE_THROWS_AS(item.next(), const protozero::unknown_pbf_wire_type_exception&);
+        REQUIRE_THROWS_AS(item.next(), protozero::unknown_pbf_wire_type_exception);
     }
 
     SECTION("check that skip() throws on short buffer") {
@@ -124,7 +124,7 @@ TEST_CASE("exceptional cases") {
         protozero::pbf_reader item{buffer};
 
         REQUIRE(item.next());
-        REQUIRE_THROWS_AS(item.skip(), const protozero::end_of_buffer_exception&);
+        REQUIRE_THROWS_AS(item.skip(), protozero::end_of_buffer_exception);
     }
 }
 

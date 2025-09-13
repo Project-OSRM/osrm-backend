@@ -16,7 +16,7 @@ documentation.
  * @brief Contains the implementation of the data_view class.
  */
 
-#include <protozero/config.hpp>
+#include "config.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -55,8 +55,8 @@ public:
      * @param length Length of the data.
      */
     constexpr data_view(const char* ptr, std::size_t length) noexcept
-        : m_data(ptr),
-          m_size(length) {
+        : m_data{ptr},
+          m_size{length} {
     }
 
     /**
@@ -65,8 +65,8 @@ public:
      * @param str String with the data.
      */
     data_view(const std::string& str) noexcept // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
-        : m_data(str.data()),
-          m_size(str.size()) {
+        : m_data{str.data()},
+          m_size{str.size()} {
     }
 
     /**
@@ -75,8 +75,8 @@ public:
      * @param ptr Pointer to the data.
      */
     data_view(const char* ptr) noexcept // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
-        : m_data(ptr),
-          m_size(std::strlen(ptr)) {
+        : m_data{ptr},
+          m_size{std::strlen(ptr)} {
     }
 
     /**
@@ -141,8 +141,8 @@ public:
      *
      * @pre Must not be default constructed data_view.
      */
-    int compare(data_view other) const {
-        protozero_assert(m_data && other.m_data);
+    int compare(data_view other) const noexcept {
+        assert(m_data && other.m_data);
         const int cmp = std::memcmp(data(), other.data(),
                                     std::min(size(), other.size()));
         if (cmp == 0) {
@@ -173,7 +173,7 @@ inline void swap(data_view& lhs, data_view& rhs) noexcept {
  * @param lhs First object.
  * @param rhs Second object.
  */
-inline constexpr bool operator==(const data_view lhs, const data_view rhs) noexcept {
+constexpr bool operator==(const data_view lhs, const data_view rhs) noexcept {
     return lhs.size() == rhs.size() &&
            std::equal(lhs.data(), lhs.data() + lhs.size(), rhs.data());
 }
@@ -185,7 +185,7 @@ inline constexpr bool operator==(const data_view lhs, const data_view rhs) noexc
  * @param lhs First object.
  * @param rhs Second object.
  */
-inline constexpr bool operator!=(const data_view lhs, const data_view rhs) noexcept {
+constexpr bool operator!=(const data_view lhs, const data_view rhs) noexcept {
     return !(lhs == rhs);
 }
 

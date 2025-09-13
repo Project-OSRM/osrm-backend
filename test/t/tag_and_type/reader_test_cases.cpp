@@ -1,15 +1,19 @@
 
+#include <algorithm>
 #include <cstdint>
+#include <iterator>
 #include <string>
 #include <vector>
 
 #include <test.hpp>
 
+namespace {
+
 enum class ExampleMsg : protozero::pbf_tag_type {
     repeated_uint32_x = 1
 };
 
-inline std::vector<uint32_t> read_data(const std::string& data) {
+std::vector<uint32_t> read_data(const std::string& data) {
     std::vector<uint32_t> values;
 
     protozero::pbf_message<ExampleMsg> message{data};
@@ -17,9 +21,7 @@ inline std::vector<uint32_t> read_data(const std::string& data) {
         switch (message.tag_and_type()) {
             case tag_and_type(ExampleMsg::repeated_uint32_x, protozero::pbf_wire_type::length_delimited): {
                     const auto xit = message.get_packed_uint32();
-                    for (const auto value : xit) {
-                        values.push_back(value);
-                    }
+                    std::copy(xit.cbegin(), xit.cend(), std::back_inserter(values));
                 }
                 break;
             case tag_and_type(ExampleMsg::repeated_uint32_x, protozero::pbf_wire_type::varint): {
@@ -28,26 +30,26 @@ inline std::vector<uint32_t> read_data(const std::string& data) {
                 }
                 break;
             default:
-                message.skip();
+                REQUIRE(false); // should never be here
         }
     }
 
     return values;
 }
 
-inline std::vector<uint32_t> read_data_packed(const std::string& data) {
+std::vector<uint32_t> read_data_packed(const std::string& data) {
     std::vector<uint32_t> values;
 
     protozero::pbf_message<ExampleMsg> message{data};
     while (message.next(ExampleMsg::repeated_uint32_x, protozero::pbf_wire_type::length_delimited)) {
         const auto xit = message.get_packed_uint32();
-        for (const auto value : xit) {
-            values.push_back(value);
-        }
+        std::copy(xit.cbegin(), xit.cend(), std::back_inserter(values));
     }
 
     return values;
 }
+
+} // anonymous namespace
 
 TEST_CASE("read not packed repeated field with tag_and_type") {
     const auto values = read_data(load_data("tag_and_type/data-not-packed"));

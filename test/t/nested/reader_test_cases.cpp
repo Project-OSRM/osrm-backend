@@ -1,7 +1,9 @@
 
 #include <test.hpp>
 
-inline void check_subsub(protozero::pbf_reader message) {
+namespace {
+
+void check_subsub(protozero::pbf_reader message) {
     while (message.next()) {
         switch (message.tag()) {
             case 1: {
@@ -20,7 +22,7 @@ inline void check_subsub(protozero::pbf_reader message) {
     }
 }
 
-inline void check_sub(protozero::pbf_reader message) {
+void check_sub(protozero::pbf_reader message) {
     while (message.next()) {
         switch (message.tag()) {
             case 1: {
@@ -39,7 +41,7 @@ inline void check_sub(protozero::pbf_reader message) {
     }
 }
 
-inline void check(protozero::pbf_reader message) {
+void check(protozero::pbf_reader message) {
     while (message.next()) {
         switch (message.tag()) {
             case 1: {
@@ -58,7 +60,7 @@ inline void check(protozero::pbf_reader message) {
     }
 }
 
-inline void check_empty(protozero::pbf_reader message) {
+void check_empty(protozero::pbf_reader message) {
     while (message.next()) {
         switch (message.tag()) {
             case 1: {
@@ -77,17 +79,19 @@ inline void check_empty(protozero::pbf_reader message) {
     }
 }
 
+} // anonymous namespace
+
 TEST_CASE("read nested message fields: string") {
     const std::string buffer = load_data("nested/data-message");
 
-    protozero::pbf_reader message{buffer};
+    const protozero::pbf_reader message{buffer};
     check(message);
 }
 
 TEST_CASE("read nested message fields: no submessage") {
     const std::string buffer = load_data("nested/data-no-message");
 
-    protozero::pbf_reader message{buffer};
+    const protozero::pbf_reader message{buffer};
     check_empty(message);
 }
 
@@ -121,7 +125,7 @@ TEST_CASE("write nested message fields") {
 
     pbf_test.add_int32(2, 77);
 
-    protozero::pbf_reader message{buffer_test};
+    const protozero::pbf_reader message{buffer_test};
     check(message);
 }
 
@@ -133,25 +137,25 @@ TEST_CASE("write nested message fields - no message") {
     }
 
     SECTION("empty string") {
-        std::string buffer_sub;
+        const std::string buffer_sub;
 
         pbf_test.add_message(1, buffer_sub);
     }
 
     SECTION("string with pbf_writer") {
         std::string buffer_sub;
-        protozero::pbf_writer pbf_sub{buffer_sub};
+        const protozero::pbf_writer pbf_sub{buffer_sub};
 
         pbf_test.add_message(1, buffer_sub);
     }
 
     SECTION("string with subwriter") {
-        protozero::pbf_writer pbf_sub{pbf_test, 1};
+        const protozero::pbf_writer pbf_sub{pbf_test, 1};
     }
 
     pbf_test.add_int32(2, 77);
 
-    protozero::pbf_reader message{buffer_test};
+    const protozero::pbf_reader message{buffer_test};
     check_empty(message);
 }
 

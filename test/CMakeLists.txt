@@ -98,7 +98,8 @@ if(PROTOBUF_FOUND)
 
     add_executable(writer_tests writer_tests.cpp ${SOURCES} ${PROTO_SRCS} ${PROTO_HDRS})
 
-    target_link_libraries(writer_tests ${PROTOBUF_LITE_LIBRARY})
+    target_compile_features(writer_tests PUBLIC cxx_std_14)
+    target_link_libraries(writer_tests PRIVATE protobuf::libprotobuf-lite)
 
     if(NOT MSVC)
         set_target_properties(writer_tests PROPERTIES COMPILE_FLAGS "-pthread")
