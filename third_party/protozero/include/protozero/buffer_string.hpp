@@ -57,8 +57,8 @@ struct buffer_customization<std::string> {
         protozero_assert(from <= buffer->size());
         protozero_assert(to <= buffer->size());
         protozero_assert(from <= to);
-        buffer->erase(std::next(buffer->begin(), static_cast<std::string::iterator::difference_type>(from)),
-                      std::next(buffer->begin(), static_cast<std::string::iterator::difference_type>(to)));
+        buffer->erase(buffer->begin() + static_cast<std::string::difference_type>(from),
+                      buffer->begin() + static_cast<std::string::difference_type>(to));
     }
 
     static char* at_pos(std::string* buffer, std::size_t pos) {

@@ -1,0 +1,52 @@
+name: clang-tidy
+
+on: [ push, pull_request ]
+
+jobs:
+  clang-tidy:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["debian:bookworm", "debian:testing", "debian:experimental"]
+        include:
+          - image: "debian:bookworm"
+            clang: 15
+          - image: "debian:testing"
+            clang: 19
+          - image: "debian:experimental"
+            clang: 20
+    container:
+      image: ${{ matrix.image }}
+      env:
+        BUILD_TYPE: Debug
+        CC: clang-${{ matrix.clang }}
+        CXX: clang++-${{ matrix.clang }}
+        CXXFLAGS: -Wno-c++20-extensions
+        CPP_VERSION: 14
+        APT_LISTCHANGES_FRONTEND: none
+        DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Prepare container (apt)
+        run: |
+          apt-get update -qq
+          apt-get install -yq \
+            clang-${{ matrix.clang }} \
+            clang-tidy-${{ matrix.clang }} \
+            cmake \
+            libprotobuf-dev \
+            make \
+            protobuf-compiler
+        shell: bash
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/cmake
+      - name: Run clang-tidy
+        run: make clang-tidy | tee protozero-${{ github.sha }}-clang-tidy-${{ matrix.clang }}.log
+        shell: bash
+        working-directory: build
+      - name: Upload clang-tidy log
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: protozero-${{ github.sha }}-clang-tidy-${{ matrix.clang }}-log
+          path: build/protozero-${{ github.sha }}-clang-tidy-${{ matrix.clang }}.log
