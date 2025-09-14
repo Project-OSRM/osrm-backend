@@ -65,7 +65,8 @@ std::size_t BearingClass::findMatchingBearing(const double bearing) const
     auto max_element =
         std::max_element(available_bearings.begin(),
                          available_bearings.end(),
-                         [&](const DiscreteBearing first, const DiscreteBearing second) {
+                         [&](const DiscreteBearing first, const DiscreteBearing second)
+                         {
                              return angularDeviation(first, discrete_bearing) >
                                     angularDeviation(second, discrete_bearing);
                          });

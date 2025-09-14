@@ -18,9 +18,8 @@ namespace osrm::extractor
 struct EdgeBasedNodeSegment
 {
     EdgeBasedNodeSegment()
-        : forward_segment_id{SPECIAL_SEGMENTID, false}, reverse_segment_id{SPECIAL_SEGMENTID,
-                                                                           false},
-          u(SPECIAL_NODEID), v(SPECIAL_NODEID),
+        : forward_segment_id{SPECIAL_SEGMENTID, false},
+          reverse_segment_id{SPECIAL_SEGMENTID, false}, u(SPECIAL_NODEID), v(SPECIAL_NODEID),
           fwd_segment_position(std::numeric_limits<unsigned short>::max() >>
                                1), // >> 1 because we've only got 15 bits
           is_startpoint(false)
