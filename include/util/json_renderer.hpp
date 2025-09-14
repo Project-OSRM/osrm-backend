@@ -15,8 +15,6 @@
 
 #include <boost/assert.hpp>
 
-#include <fmt/compile.h>
-
 namespace osrm::util::json
 {
 
@@ -50,12 +48,16 @@ template <typename Out> struct Renderer
     {
         // we don't want to print NaN or Infinity
         BOOST_ASSERT(std::isfinite(number.value));
-        // `fmt::memory_buffer` stores first 500 bytes in the object itself(i.e. on stack in this
-        // case) and then grows using heap if needed
-        fmt::memory_buffer buffer;
-        fmt::format_to(std::back_inserter(buffer), FMT_COMPILE("{:.10g}"), number.value);
+        // 64 bytes is plenty for "{:.10g}" formatted doubles
+        std::array<char, 64> buffer{};
 
-        write(buffer.data(), buffer.size());
+        // format into the buffer
+        auto it = std::format_to(buffer.begin(), "{:.10g}", number.value);
+
+        // compute number of characters to write
+        const size_t size = static_cast<size_t>(std::distance(buffer.begin(), it));
+
+        write(buffer.data(), size);
     }
 
     void operator()(const Object &object)

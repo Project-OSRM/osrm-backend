@@ -1,8 +1,9 @@
 #include "util/log.hpp"
 #include "util/isatty.hpp"
 #include <boost/algorithm/string/predicate.hpp>
+#include <chrono>
 #include <cstdio>
-#include <fmt/chrono.h>
+#include <format>
 #include <iostream>
 #include <mutex>
 #include <string>
@@ -75,12 +76,13 @@ void Log::Init()
 
         auto format = [is_terminal](const char *level, const char *color)
         {
-            const auto timestamp = std::chrono::system_clock::now();
-            return fmt::format("{}[{:%FT%H:%M:}{:%S}] [{}] ",
-                               is_terminal ? color : "",
-                               timestamp,
-                               timestamp.time_since_epoch(),
-                               level);
+            const auto now = std::chrono::system_clock::now();
+
+            // Format full timestamp with seconds precision
+            // ISO-8601 style: 2025-09-13T15:42:07
+            const auto timestamp = std::format("{:%FT%T}", floor<std::chrono::seconds>(now));
+
+            return std::format("{}[{}] [{}] ", is_terminal ? color : "", timestamp, level);
         };
 
         switch (level)
