@@ -67,10 +67,15 @@ FLATBUFFERS_VERSION=${FLATBUFFERS_TAG#v}  # Remove 'v' prefix
 npm install flatbuffers@${FLATBUFFERS_VERSION}
 
 ## Regenerate FlatBuffers bindings after update
-echo "Regenerating FlatBuffers JavaScript bindings..."
+echo "Regenerating FlatBuffers TypeScript bindings..."
 flatc --ts --gen-name-strings -o features/support/ include/engine/api/flatbuffers/fbresult.fbs
 
 echo "Regenerating FlatBuffers C++ headers..."
 for schema in include/engine/api/flatbuffers/*.fbs; do 
   flatc --cpp -o generated/include/engine/api/flatbuffers/ "$schema"
 done
+
+# Note: fbresult_generated.js is a manual compatibility wrapper that maps
+# the new TypeScript module structure to the old JavaScript namespace structure
+# expected by the test files. This wrapper should be updated manually if
+# new types are added to the .fbs schema files.
