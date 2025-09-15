@@ -284,13 +284,13 @@ jobs:
             CXXCOMPILER: g++-13
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: gcc-12-release
+          - name: gcc-15-release
             continue-on-error: false
             node: 22
-            runs-on: ubuntu-22.04
+            runs-on: ubuntu-25.04
             BUILD_TYPE: Release
-            CCOMPILER: gcc-12
-            CXXCOMPILER: g++-12
+            CCOMPILER: gcc-15
+            CXXCOMPILER: g++-15
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
           - name: conan-linux-release-node
