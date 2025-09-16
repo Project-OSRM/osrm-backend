@@ -7,7 +7,7 @@
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
-#include <fmt/format.h>
+#include <format>
 #include <vector>
 
 namespace osrm::server
@@ -91,9 +91,9 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
         {
             keep_alive = true;
             current_reply.headers.emplace_back("Connection", "keep-alive");
-            current_reply.headers.emplace_back("Keep-Alive",
-                                               "timeout=" + fmt::to_string(keepalive_timeout) +
-                                                   ", max=" + fmt::to_string(processed_requests));
+            current_reply.headers.emplace_back(
+                "Keep-Alive",
+                std::format("timeout={}, max={}", keepalive_timeout, processed_requests));
         }
 
         // compress the result w/ gzip/deflate if requested
