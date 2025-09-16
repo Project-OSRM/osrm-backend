@@ -60,9 +60,8 @@ RecursiveBisection::RecursiveBisection(BisectionGraph &bisection_graph_,
     std::transform(first,
                    last,
                    std::back_inserter(forest),
-                   [this](auto graph) {
-                       return TreeNode{std::move(graph), internal_state.SCCDepth()};
-                   });
+                   [this](auto graph)
+                   { return TreeNode{std::move(graph), internal_state.SCCDepth()}; });
 
     using Feeder = tbb::feeder<TreeNode>;
 

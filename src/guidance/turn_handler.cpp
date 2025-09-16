@@ -223,12 +223,11 @@ bool TurnHandler::isObviousOfTwo(const EdgeID via_edge,
 
 bool TurnHandler::hasObvious(const EdgeID &via_edge, const Fork &fork) const
 {
-    auto obvious_road = std::adjacent_find(fork.begin,
-                                           fork.end,
-                                           [&, this](const auto &a, const auto &b) {
-                                               return this->isObviousOfTwo(via_edge, a, b) ||
-                                                      this->isObviousOfTwo(via_edge, b, a);
-                                           });
+    auto obvious_road = std::adjacent_find(
+        fork.begin,
+        fork.end,
+        [&, this](const auto &a, const auto &b)
+        { return this->isObviousOfTwo(via_edge, a, b) || this->isObviousOfTwo(via_edge, b, a); });
     // return whether an obvious road was found
     return obvious_road != fork.end;
 }
