@@ -7,7 +7,7 @@ set -o nounset
 # Note: once the subtree merge from this script has been committed and pushed to
 # a branch do not attempt to rebase the branch back onto master or the subdirectory
 # structure will be lost.
-# http://git.661346.n2.nabble.com/subtree-merges-lose-prefix-after-rebase-td7332850.html
+# https://stackoverflow.com/questions/12858199/how-to-rebase-after-git-subtree-add
 
 OSMIUM_PATH="osmcode/libosmium"
 OSMIUM_TAG=v2.20.0
@@ -22,7 +22,7 @@ MICROTAR_PATH="rxi/microtar"
 MICROTAR_TAG=v0.1.0
 
 PROTOZERO_PATH="mapbox/protozero"
-PROTOZERO_TAG=v1.7.1
+PROTOZERO_TAG=v1.8.1
 
 VTZERO_PATH="mapbox/vtzero"
 VTZERO_TAG=v1.1.0

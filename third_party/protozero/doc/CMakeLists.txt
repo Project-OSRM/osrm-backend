@@ -11,7 +11,7 @@ message(STATUS "Configuring documentation")
 message(STATUS "Looking for doxygen")
 find_package(Doxygen)
 
-if(DOXYGEN_FOUND)
+if(DOXYGEN_FOUND AND DOXYGEN_DOT_FOUND)
     message(STATUS "Looking for doxygen - found")
     configure_file(Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
 

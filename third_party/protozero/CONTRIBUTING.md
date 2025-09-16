@@ -4,7 +4,7 @@
 
 To release a new protozero version:
 
- - Make sure all tests are passing locally, on travis and on appveyor
+ - Make sure all tests are passing locally, on Github and on Appveyor
  - Make sure "make doc" builds
  - Update version number in
    - include/protozero/version.hpp (two places)

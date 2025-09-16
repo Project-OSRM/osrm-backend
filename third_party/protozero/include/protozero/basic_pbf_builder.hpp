@@ -40,7 +40,7 @@ namespace protozero {
 template <typename TBuffer, typename T>
 class basic_pbf_builder : public basic_pbf_writer<TBuffer> {
 
-    static_assert(std::is_same<pbf_tag_type, typename std::underlying_type<T>::type>::value,
+    static_assert(std::is_same<pbf_tag_type, std::underlying_type_t<T>>::value,
                   "T must be enum with underlying type protozero::pbf_tag_type");
 
 public:
@@ -67,7 +67,7 @@ public:
      * @param tag Tag of the field that will be written
      */
     template <typename P>
-    basic_pbf_builder(basic_pbf_writer<TBuffer>& parent_writer, P tag) noexcept :
+    basic_pbf_builder(basic_pbf_writer<TBuffer>& parent_writer, P tag) :
         basic_pbf_writer<TBuffer>{parent_writer, pbf_tag_type(tag)} {
     }
 

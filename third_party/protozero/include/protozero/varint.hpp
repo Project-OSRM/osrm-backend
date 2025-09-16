@@ -26,7 +26,7 @@ namespace protozero {
 /**
  * The maximum length of a 64 bit varint.
  */
-constexpr const int8_t max_varint_length = sizeof(uint64_t) * 8 / 7 + 1;
+constexpr const int8_t max_varint_length = (sizeof(uint64_t) * 8 / 7) + 1;
 
 namespace detail {
 
@@ -40,28 +40,28 @@ namespace detail {
         if (iend - begin >= max_varint_length) {  // fast path
             do {
                 int64_t b = *p++;
-                          val  = ((uint64_t(b) & 0x7fU)       ); if (b >= 0) { break; }
-                b = *p++; val |= ((uint64_t(b) & 0x7fU) <<  7U); if (b >= 0) { break; }
-                b = *p++; val |= ((uint64_t(b) & 0x7fU) << 14U); if (b >= 0) { break; }
-                b = *p++; val |= ((uint64_t(b) & 0x7fU) << 21U); if (b >= 0) { break; }
-                b = *p++; val |= ((uint64_t(b) & 0x7fU) << 28U); if (b >= 0) { break; }
-                b = *p++; val |= ((uint64_t(b) & 0x7fU) << 35U); if (b >= 0) { break; }
-                b = *p++; val |= ((uint64_t(b) & 0x7fU) << 42U); if (b >= 0) { break; }
-                b = *p++; val |= ((uint64_t(b) & 0x7fU) << 49U); if (b >= 0) { break; }
-                b = *p++; val |= ((uint64_t(b) & 0x7fU) << 56U); if (b >= 0) { break; }
-                b = *p++; val |= ((uint64_t(b) & 0x01U) << 63U); if (b >= 0) { break; }
+                          val  = ((static_cast<uint64_t>(b) & 0x7fU)       ); if (b >= 0) { break; }
+                b = *p++; val |= ((static_cast<uint64_t>(b) & 0x7fU) <<  7U); if (b >= 0) { break; }
+                b = *p++; val |= ((static_cast<uint64_t>(b) & 0x7fU) << 14U); if (b >= 0) { break; }
+                b = *p++; val |= ((static_cast<uint64_t>(b) & 0x7fU) << 21U); if (b >= 0) { break; }
+                b = *p++; val |= ((static_cast<uint64_t>(b) & 0x7fU) << 28U); if (b >= 0) { break; }
+                b = *p++; val |= ((static_cast<uint64_t>(b) & 0x7fU) << 35U); if (b >= 0) { break; }
+                b = *p++; val |= ((static_cast<uint64_t>(b) & 0x7fU) << 42U); if (b >= 0) { break; }
+                b = *p++; val |= ((static_cast<uint64_t>(b) & 0x7fU) << 49U); if (b >= 0) { break; }
+                b = *p++; val |= ((static_cast<uint64_t>(b) & 0x7fU) << 56U); if (b >= 0) { break; }
+                b = *p++; val |= ((static_cast<uint64_t>(b) & 0x01U) << 63U); if (b >= 0) { break; }
                 throw varint_too_long_exception{};
             } while (false);
         } else {
             unsigned int shift = 0;
             while (p != iend && *p < 0) {
-                val |= (uint64_t(*p++) & 0x7fU) << shift;
+                val |= (static_cast<uint64_t>(*p++) & 0x7fU) << shift;
                 shift += 7;
             }
             if (p == iend) {
                 throw end_of_buffer_exception{};
             }
-            val |= uint64_t(*p++) << shift;
+            val |= static_cast<uint64_t>(*p++) << shift;
         }
 
         *data = reinterpret_cast<const char*>(p);
@@ -148,11 +148,11 @@ inline int write_varint(T data, uint64_t value) {
     int n = 1;
 
     while (value >= 0x80U) {
-        *data++ = char((value & 0x7fU) | 0x80U);
+        *data++ = static_cast<char>((value & 0x7fU) | 0x80U);
         value >>= 7U;
         ++n;
     }
-    *data = char(value);
+    *data = static_cast<char>(value);
 
     return n;
 }
@@ -163,16 +163,15 @@ inline int write_varint(T data, uint64_t value) {
  * @tparam TBuffer A buffer type.
  * @param buffer Output buffer the varint will be written to.
  * @param value The integer that will be encoded.
- * @returns the number of bytes written
  * @throws Any exception thrown by calling the buffer_push_back() function.
  */
 template <typename TBuffer>
 inline void add_varint_to_buffer(TBuffer* buffer, uint64_t value) {
     while (value >= 0x80U) {
-        buffer_customization<TBuffer>::push_back(buffer, char((value & 0x7fU) | 0x80U));
+        buffer_customization<TBuffer>::push_back(buffer, static_cast<char>((value & 0x7fU) | 0x80U));
         value >>= 7U;
     }
-    buffer_customization<TBuffer>::push_back(buffer, char(value));
+    buffer_customization<TBuffer>::push_back(buffer, static_cast<char>(value));
 }
 
 /**
@@ -186,11 +185,11 @@ inline int add_varint_to_buffer(char* data, uint64_t value) noexcept {
     int n = 1;
 
     while (value >= 0x80U) {
-        *data++ = char((value & 0x7fU) | 0x80U);
+        *data++ = static_cast<char>((value & 0x7fU) | 0x80U);
         value >>= 7U;
         ++n;
     }
-    *data = char(value);
+    *data = static_cast<char>(value);
 
     return n;
 }
@@ -215,28 +214,28 @@ inline int length_of_varint(uint64_t value) noexcept {
 /**
  * ZigZag encodes a 32 bit integer.
  */
-inline constexpr uint32_t encode_zigzag32(int32_t value) noexcept {
+constexpr uint32_t encode_zigzag32(int32_t value) noexcept {
     return (static_cast<uint32_t>(value) << 1U) ^ static_cast<uint32_t>(-static_cast<int32_t>(static_cast<uint32_t>(value) >> 31U));
 }
 
 /**
  * ZigZag encodes a 64 bit integer.
  */
-inline constexpr uint64_t encode_zigzag64(int64_t value) noexcept {
+constexpr uint64_t encode_zigzag64(int64_t value) noexcept {
     return (static_cast<uint64_t>(value) << 1U) ^ static_cast<uint64_t>(-static_cast<int64_t>(static_cast<uint64_t>(value) >> 63U));
 }
 
 /**
  * Decodes a 32 bit ZigZag-encoded integer.
  */
-inline constexpr int32_t decode_zigzag32(uint32_t value) noexcept {
+constexpr int32_t decode_zigzag32(uint32_t value) noexcept {
     return static_cast<int32_t>((value >> 1U) ^ static_cast<uint32_t>(-static_cast<int32_t>(value & 1U)));
 }
 
 /**
  * Decodes a 64 bit ZigZag-encoded integer.
  */
-inline constexpr int64_t decode_zigzag64(uint64_t value) noexcept {
+constexpr int64_t decode_zigzag64(uint64_t value) noexcept {
     return static_cast<int64_t>((value >> 1U) ^ static_cast<uint64_t>(-static_cast<int64_t>(value & 1U)));
 }
 
