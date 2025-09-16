@@ -7,7 +7,7 @@ set -o nounset
 # Note: once the subtree merge from this script has been committed and pushed to
 # a branch do not attempt to rebase the branch back onto master or the subdirectory
 # structure will be lost.
-# http://git.661346.n2.nabble.com/subtree-merges-lose-prefix-after-rebase-td7332850.html
+# https://stackoverflow.com/questions/12858199/how-to-rebase-after-git-subtree-add
 
 OSMIUM_PATH="osmcode/libosmium"
 OSMIUM_TAG=v2.20.0
@@ -31,8 +31,9 @@ FMT_PATH="fmtlib/fmt"
 FMT_TAG=v10.2.1
 
 FLATBUFFERS_PATH="google/flatbuffers"
-FLATBUFFERS_TAG=v24.3.25
+FLATBUFFERS_TAG=v25.2.10
 
+# Updates a git subtree dependency by pulling/adding the specified tag from GitHub
 function update_subtree () {
     name=$(echo "$1" | tr '[:lower:]' '[:upper:]')
     path=$(tmpvar=${name}_PATH && echo ${!tmpvar})
@@ -59,3 +60,22 @@ function update_subtree () {
 for dep in osmium sol rapidjson microtar protozero vtzero fmt flatbuffers; do
     update_subtree $dep
 done
+
+## Update npm package.json to match FLATBUFFERS_TAG
+echo "Updating package.json flatbuffers version to match ${FLATBUFFERS_TAG}..."
+FLATBUFFERS_VERSION=${FLATBUFFERS_TAG#v}  # Remove 'v' prefix
+npm install flatbuffers@${FLATBUFFERS_VERSION}
+
+## Regenerate FlatBuffers bindings after update
+echo "Regenerating FlatBuffers TypeScript bindings..."
+flatc --ts --gen-name-strings -o features/support/ include/engine/api/flatbuffers/fbresult.fbs
+
+echo "Regenerating FlatBuffers C++ headers..."
+for schema in include/engine/api/flatbuffers/*.fbs; do 
+  flatc --cpp -o generated/include/engine/api/flatbuffers/ "$schema"
+done
+
+# Note: fbresult_generated.js is a manual compatibility wrapper that maps
+# the new TypeScript module structure to the old JavaScript namespace structure
+# expected by the test files. This wrapper should be updated manually if
+# new types are added to the .fbs schema files.

@@ -1,6 +1,7 @@
 # Unreleased
   - Changes from 6.0.0
     - Misc:
+      - CHANGED: Upgrade FlatBuffers from 24.3.25 to 25.2.10 [#7235](https://github.com/Project-OSRM/osrm-backend/pull/7235)
       - ADDED: Add husky pre-commit hook for compiling and linting staged JS files [#7228](https://github.com/Project-OSRM/osrm-backend/issues/7228)
       - CHANGED: Standardize linting configuration with ESM-specific rules [#7229](https://github.com/Project-OSRM/osrm-backend/issues/7229)
       - CHANGED: Convert scripts from CommonJS to modern ESM format [#7230](https://github.com/Project-OSRM/osrm-backend/pull/7230)
