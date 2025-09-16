@@ -28,7 +28,7 @@ VTZERO_PATH="mapbox/vtzero"
 VTZERO_TAG=v1.1.0
 
 FMT_PATH="fmtlib/fmt"
-FMT_TAG=v10.2.1
+FMT_TAG=11.2.0
 
 FLATBUFFERS_PATH="google/flatbuffers"
 FLATBUFFERS_TAG=v24.3.25
