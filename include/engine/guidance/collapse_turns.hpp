@@ -5,13 +5,18 @@
 #include <type_traits>
 #include <vector>
 
+namespace osrm::engine::datafacade
+{
+class BaseDataFacade;
+}
+
 namespace osrm::engine::guidance
 {
 
 // Multiple possible reasons can result in unnecessary/confusing instructions
 // Collapsing such turns into a single turn instruction, we give a clearer
 // set of instructions that is not cluttered by unnecessary turns/name changes.
-[[nodiscard]] std::vector<RouteStep> collapseTurnInstructions(std::vector<RouteStep> steps);
+[[nodiscard]] std::vector<RouteStep> collapseTurnInstructions(const datafacade::BaseDataFacade &facade, std::vector<RouteStep> steps);
 
 // Multiple possible reasons can result in unnecessary/confusing instructions
 // A prime example would be a segregated intersection. Turning around at this

@@ -15,7 +15,11 @@ namespace osrm::engine::guidance
 using RouteSteps = std::vector<RouteStep>;
 using RouteStepIterator = typename RouteSteps::iterator;
 const constexpr std::size_t MIN_END_OF_ROAD_INTERSECTIONS = std::size_t{2};
-const constexpr double MAX_COLLAPSE_DISTANCE = 30.0;
+// Default value for max collapse distance
+const constexpr double DEFAULT_MAX_COLLAPSE_DISTANCE = 30.0;
+
+// Thread-local storage for configurable max collapse distance
+extern thread_local double current_max_collapse_distance;
 // a bit larger than 100 to avoid oscillation in tests
 const constexpr double NAME_SEGMENT_CUTOFF_LENGTH = 105.0;
 const double constexpr STRAIGHT_ANGLE = 180.;
