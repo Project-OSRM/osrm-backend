@@ -499,6 +499,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return m_profile_properties->max_speed_for_map_matching;
     }
 
+    double GetMaxCollapseDistance() const override final
+    {
+        return m_profile_properties->GetMaxCollapseDistance();
+    }
+
     const char *GetWeightName() const override final { return m_profile_properties->weight_name; }
 
     unsigned GetWeightPrecision() const override final
