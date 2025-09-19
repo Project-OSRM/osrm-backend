@@ -979,7 +979,7 @@ class RouteAPI : public BaseAPI
 
                     guidance::trimShortSegments(steps, leg_geometry);
                     leg.steps = guidance::handleRoundabouts(std::move(steps));
-                    leg.steps = guidance::collapseTurnInstructions(std::move(leg.steps));
+                    leg.steps = guidance::collapseTurnInstructions(BaseAPI::facade, std::move(leg.steps));
                     leg.steps = guidance::anticipateLaneChange(std::move(leg.steps));
                     leg.steps = guidance::buildIntersections(std::move(leg.steps));
                     leg.steps = guidance::suppressShortNameSegments(std::move(leg.steps));

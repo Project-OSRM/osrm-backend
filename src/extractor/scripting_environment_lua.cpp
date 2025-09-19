@@ -234,7 +234,10 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "force_split_edges",
         &ProfileProperties::force_split_edges,
         "call_tagless_node_function",
-        &ProfileProperties::call_tagless_node_function);
+        &ProfileProperties::call_tagless_node_function,
+        "max_collapse_distance",
+        sol::property(&ProfileProperties::GetMaxCollapseDistance,
+                      &ProfileProperties::SetMaxCollapseDistance));
 
     context.state.new_usertype<std::vector<std::string>>(
         "vector",
@@ -728,6 +731,10 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             sol::optional<bool> force_split_edges = properties["force_split_edges"];
             if (force_split_edges != sol::nullopt)
                 context.properties.force_split_edges = force_split_edges.value();
+
+            sol::optional<double> max_collapse_distance = properties["max_collapse_distance"];
+            if (max_collapse_distance != sol::nullopt)
+                context.properties.SetMaxCollapseDistance(max_collapse_distance.value());
         }
     };
 

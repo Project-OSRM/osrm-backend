@@ -1,4 +1,5 @@
 #include "engine/guidance/collapse_scenario_detection.hpp"
+#include "engine/guidance/collapsing_utility.hpp"
 #include "guidance/constants.hpp"
 #include "util/bearing.hpp"
 
@@ -27,7 +28,7 @@ bool isLinkRoad(const RouteStep &pre_link_step,
                 const RouteStep &link_step,
                 const RouteStep &post_link_step)
 {
-    const constexpr double MAX_LINK_ROAD_LENGTH = 2 * MAX_COLLAPSE_DISTANCE;
+    const auto MAX_LINK_ROAD_LENGTH = 2 * current_max_collapse_distance;
     const auto is_short = link_step.distance <= MAX_LINK_ROAD_LENGTH;
     const auto unnamed = link_step.name.empty();
     const auto between_named = !pre_link_step.name.empty() && !post_link_step.name.empty();
@@ -38,7 +39,7 @@ bool isLinkRoad(const RouteStep &pre_link_step,
 // Just like a link step, but shorter and no name restrictions.
 bool isShortAndUndisturbed(const RouteStep &step)
 {
-    const auto is_short = step.distance <= MAX_COLLAPSE_DISTANCE;
+    const auto is_short = step.distance <= current_max_collapse_distance;
     return is_short && noIntermediaryIntersections(step);
 }
 
@@ -269,8 +270,8 @@ bool suppressedStraightBetweenTurns(const RouteStepIterator step_entering_inters
         return false;
 
     const auto both_short_enough =
-        step_entering_intersection->distance < 0.8 * MAX_COLLAPSE_DISTANCE &&
-        step_at_center_of_intersection->distance < 0.8 * MAX_COLLAPSE_DISTANCE;
+        step_entering_intersection->distance < 0.8 * current_max_collapse_distance &&
+        step_at_center_of_intersection->distance < 0.8 * current_max_collapse_distance;
 
     const auto similar_length =
         (step_entering_intersection->distance < 5 &&
@@ -317,13 +318,13 @@ bool maneuverSucceededByNameChange(const RouteStepIterator step_entering_interse
     const auto is_strong_name_change =
         hasTurnType(*step_leaving_intersection, TurnType::NewName) &&
         hasModifier(*step_leaving_intersection, DirectionModifier::Straight) &&
-        step_entering_intersection->distance <= 1.5 * MAX_COLLAPSE_DISTANCE;
+        step_entering_intersection->distance <= 1.5 * current_max_collapse_distance;
 
     // also allow a bit more, if the new name is without choice
     const auto is_choiceless_name_change =
         hasTurnType(*step_leaving_intersection, TurnType::NewName) &&
         numberOfAllowedTurns(*step_leaving_intersection) == 1 &&
-        step_entering_intersection->distance <= 1.5 * MAX_COLLAPSE_DISTANCE;
+        step_entering_intersection->distance <= 1.5 * current_max_collapse_distance;
 
     return (short_and_undisturbed || is_strong_name_change || is_choiceless_name_change) &&
            followed_by_name_change && is_maneuver;
@@ -357,7 +358,7 @@ bool nameChangeImmediatelyAfterSuppressed(const RouteStepIterator step_entering_
     if (!basicCollapsePreconditions(step_entering_intersection, step_leaving_intersection))
         return false;
 
-    const auto very_short = step_entering_intersection->distance < 0.25 * MAX_COLLAPSE_DISTANCE;
+    const auto very_short = step_entering_intersection->distance < 0.25 * current_max_collapse_distance;
     const auto correct_types = hasTurnType(*step_entering_intersection, TurnType::Suppressed) &&
                                hasTurnType(*step_leaving_intersection, TurnType::NewName);
 
@@ -393,7 +394,7 @@ bool doubleChoiceless(const RouteStepIterator step_entering_intersection,
                     step_entering_intersection->intersections.back().entry.end(),
                     true) == 1);
 
-    const auto short_enough = step_entering_intersection->distance < 1.5 * MAX_COLLAPSE_DISTANCE;
+    const auto short_enough = step_entering_intersection->distance < 1.5 * current_max_collapse_distance;
 
     return double_choiceless && short_enough;
 }
@@ -404,7 +405,7 @@ bool straightTurnFollowedByChoiceless(const RouteStepIterator step_entering_inte
     if (!basicCollapsePreconditions(step_entering_intersection, step_leaving_intersection))
         return false;
 
-    const auto is_short = step_entering_intersection->distance <= 2 * MAX_COLLAPSE_DISTANCE;
+    const auto is_short = step_entering_intersection->distance <= 2 * current_max_collapse_distance;
     const auto has_correct_type = hasTurnType(*step_entering_intersection, TurnType::Continue) ||
                                   hasTurnType(*step_entering_intersection, TurnType::Turn);
 

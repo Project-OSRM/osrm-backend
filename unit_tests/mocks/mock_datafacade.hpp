@@ -158,6 +158,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
 
     bool GetContinueStraightDefault() const override { return true; }
     double GetMapMatchingMaxSpeed() const override { return 180 / 3.6; }
+    double GetMaxCollapseDistance() const override { return 30.0; }
     const char *GetWeightName() const override final { return "duration"; }
     unsigned GetWeightPrecision() const override final { return 1; }
     double GetWeightMultiplier() const override final { return 10.; }

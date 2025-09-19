@@ -103,6 +103,7 @@ continue_straight_at_waypoint        | Boolean  | Must the route continue straig
 max_speed_for_map_matching           | Float    | Maximum vehicle speed to be assumed in matching (in m/s)
 max_turn_weight                      | Float    | Maximum turn penalty weight
 force_split_edges                    | Boolean  | True value forces a split of forward and backward edges of extracted ways and guarantees that `process_segment` will be called for all segments (default `false`)
+max_collapse_distance                | Float    | Maximum distance in meters for collapsing turn instructions in guidance (default `30.0`)
 
 
 The following additional global properties can be set in the hash you return in the `setup` function:
