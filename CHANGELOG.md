@@ -2,11 +2,13 @@
   - Changes from 6.0.0
     - Misc:
       - CHANGED: Update fmt library to version 11.2.0 [#7238](https://github.com/Project-OSRM/osrm-backend/issues/7238)
+      - CHANGED: Replace std::is_trivial with std::is_trivially_default_constructible && std::is_trivially_copyable [#7245](https://github.com/Project-OSRM/osrm-backend/issues/7245)
       - ADDED: Add husky pre-commit hook for compiling and linting staged JS files [#7228](https://github.com/Project-OSRM/osrm-backend/issues/7228)
       - CHANGED: Standardize linting configuration with ESM-specific rules [#7229](https://github.com/Project-OSRM/osrm-backend/issues/7229)
       - CHANGED: Convert scripts from CommonJS to modern ESM format [#7230](https://github.com/Project-OSRM/osrm-backend/pull/7230)
       - CHANGED: Convert remaining scripts from CommonJS to ESM format and use flatbuffers npm package [#7227](https://github.com/Project-OSRM/osrm-backend/pull/7227)
       - CHANGED: Upgrade Cucumber-js to v12 [#7221](https://github.com/Project-OSRM/osrm-backend/pull/7221)
+      - CHANGED: Add libcap-setcap to alpine dockerfile [#7241](https://github.com/Project-OSRM/osrm-backend/issues/7241)
       - FIXED: Minor misspellings found in source code, comments and documents [#7215](https://github.com/Project-OSRM/osrm-backend/pull/7215)
 
 # 6.0.0
