@@ -47,6 +47,7 @@ Thumbs.db
 /test/data/ch
 /test/data/mld
 /cmake/postinst
+.gradle/
 
 # Eclipse related files #
 #########################

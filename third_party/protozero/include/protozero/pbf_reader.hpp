@@ -76,9 +76,9 @@ class pbf_reader {
     template <typename T>
     T get_fixed() {
         T result;
-        const char* data = m_data;
+        const char* tmp_data = m_data;
         skip_bytes(sizeof(T));
-        std::memcpy(&result, data, sizeof(T));
+        std::memcpy(&result, tmp_data, sizeof(T));
 #if PROTOZERO_BYTE_ORDER != PROTOZERO_LITTLE_ENDIAN
         byteswap_inplace(&result);
 #endif
@@ -263,7 +263,7 @@ public:
      * and how it is encoded for this number to have any meaning.
      */
     std::size_t length() const noexcept {
-        return std::size_t(m_end - m_data);
+        return static_cast<std::size_t>(m_end - m_data);
     }
 
     /**
@@ -287,7 +287,7 @@ public:
         }
 
         const auto value = get_varint<uint32_t>();
-        m_tag = pbf_tag_type(value >> 3U);
+        m_tag = static_cast<pbf_tag_type>(value >> 3U);
 
         // tags 0 and 19000 to 19999 are not allowed as per
         // https://developers.google.com/protocol-buffers/docs/proto#assigning-tags
@@ -494,9 +494,9 @@ public:
     bool get_bool() {
         protozero_assert(tag() != 0 && "call next() before accessing field value");
         protozero_assert(has_wire_type(pbf_wire_type::varint) && "not a varint");
-        const bool result = m_data[0] != 0;
+        const char* value = m_data;
         skip_varint(&m_data, m_end);
-        return result;
+        return *value != 0;
     }
 
     /**

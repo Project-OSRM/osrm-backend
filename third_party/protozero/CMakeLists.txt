@@ -6,18 +6,18 @@
 #
 #-----------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.5.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10.0 FATAL_ERROR)
 
 #-----------------------------------------------------------------------------
 
-project(protozero VERSION 1.7.1 LANGUAGES CXX C)
+project(protozero VERSION 1.8.1 LANGUAGES CXX C)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 #-----------------------------------------------------------------------------
 
 if (NOT "${CMAKE_CXX_STANDARD}")
-    set(CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD 14)
 endif()
 message(STATUS "Building in C++${CMAKE_CXX_STANDARD} mode")
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -40,9 +40,13 @@ endif()
 
 include_directories("${CMAKE_SOURCE_DIR}/include")
 
+# Used for testing
 set(PROTOZERO_DATA_VIEW "" CACHE STRING "Type used for protozero::data_view")
 if(NOT PROTOZERO_DATA_VIEW STREQUAL "")
-    add_definitions(-DPROTOZERO_DATA_VIEW=${PROTOZERO_DATA_VIEW})
+    message(STATUS "Using ${PROTOZERO_DATA_VIEW} as data_view")
+    add_definitions(-DPROTOZERO_USE_VIEW=${PROTOZERO_DATA_VIEW})
+else()
+    message(STATUS "Using built-in data_view")
 endif()
 
 
@@ -52,8 +56,17 @@ endif()
 #
 #-----------------------------------------------------------------------------
 
-find_package(Protobuf)
+if(BUILD_TESTING)
+    # This is needed for the protobuf_generate_cpp() function to work on newer
+    # versions of the Protobuf CMake config.
+    set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
 
+    # This is needed so that we pick up the (more modern) CONFIG mode cmake file
+    # before the (older) MODULE mode cmake config file. Seems to be needed on macOS.
+    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
+
+    find_package(Protobuf)
+endif()
 
 #-----------------------------------------------------------------------------
 #
@@ -61,7 +74,7 @@ find_package(Protobuf)
 #
 #-----------------------------------------------------------------------------
 message(STATUS "Looking for clang-tidy")
-find_program(CLANG_TIDY NAMES clang-tidy clang-tidy-14 clang-tidy-13 clang-tidy-12 clang-tidy-11)
+find_program(CLANG_TIDY NAMES clang-tidy-20 clang-tidy-19 clang-tidy-18 clang-tidy-17 clang-tidy-16 clang-tidy-15)
 
 if(CLANG_TIDY AND PROTOBUF_FOUND)
     message(STATUS "Looking for clang-tidy - found ${CLANG_TIDY}")
@@ -74,7 +87,9 @@ if(CLANG_TIDY AND PROTOBUF_FOUND)
         ${CMAKE_SOURCE_DIR}/test/unit/*.cpp
         ${CMAKE_SOURCE_DIR}/tools/*.cpp
     )
-    add_dependencies(clang-tidy writer_tests)
+    if(BUILD_TESTING)
+        add_dependencies(clang-tidy writer_tests)
+    endif()
 else()
     message(STATUS "Looking for clang-tidy - not found")
     message(STATUS "  Build target 'clang-tidy' will not be available.")
@@ -93,7 +108,7 @@ if(CPPCHECK)
     message(STATUS "Looking for cppcheck - found")
     add_custom_target(cppcheck
         ${CPPCHECK}
-        -Uassert --std=c++11 --enable=all
+        -Uassert --std=c++14 --enable=all
         ${CMAKE_SOURCE_DIR}/include/protozero/*.hpp
         ${CMAKE_SOURCE_DIR}/test/*.cpp
         ${CMAKE_SOURCE_DIR}/test/include/*.hpp
