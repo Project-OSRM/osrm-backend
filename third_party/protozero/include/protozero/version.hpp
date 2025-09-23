@@ -20,7 +20,7 @@ documentation.
 #define PROTOZERO_VERSION_MAJOR 1
 
 /// The minor version number
-#define PROTOZERO_VERSION_MINOR 7
+#define PROTOZERO_VERSION_MINOR 8
 
 /// The patch number
 #define PROTOZERO_VERSION_PATCH 1
@@ -29,6 +29,6 @@ documentation.
 #define PROTOZERO_VERSION_CODE (PROTOZERO_VERSION_MAJOR * 10000 + PROTOZERO_VERSION_MINOR * 100 + PROTOZERO_VERSION_PATCH)
 
 /// Version number as string
-#define PROTOZERO_VERSION_STRING "1.7.1"
+#define PROTOZERO_VERSION_STRING "1.8.1"
 
 #endif // PROTOZERO_VERSION_HPP

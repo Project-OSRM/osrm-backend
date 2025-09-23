@@ -18,5 +18,16 @@ Then do the actual fuzzing:
 
 See the AFL documentation for more information.
 
+For increased speed, you can also use the dedicated pbf-fuzzer tool, which skips reading
+data from files or stdin:
+
+    clang++ -O2 -std=c++17 -g -DNDEBUG -Iinclude -fsanitize=address,fuzzer tools/pbf-fuzzer.cpp -o tools/pbf-fuzzer
+    ./tools/pbf-fuzzer
+
+or using AFL++
+
+    afl-clang-fast++ -O2 -std=c++17 -g -DNDEBUG -Iinclude -fsanitize=address,fuzzer tools/pbf-fuzzer.cpp -o tools/pbf-fuzzer
+    afl-fuzz -i testcase_dir -o findings_dir -- tools/pbf-fuzzer
+
 This only checkes the reading side of Protozero!
 
