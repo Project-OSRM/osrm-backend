@@ -8,15 +8,16 @@
 #include <array>
 #include <cassert>
 #include <climits>
+#include <tuple>
 
-#include "fmt/format.h"
+#include "fmt/format-inl.h"
 
 FMT_BEGIN_NAMESPACE
 namespace detail {
 
 inline auto is_whitespace(char c) -> bool { return c == ' ' || c == '\n'; }
 
-// If c is a hex digit returns its numeric value, othewise -1.
+// If c is a hex digit returns its numeric value, otherwise -1.
 inline auto to_hex_digit(char c) -> int {
   if (c >= '0' && c <= '9') return c - '0';
   if (c >= 'a' && c <= 'f') return c - 'a' + 10;
@@ -42,9 +43,9 @@ class scan_buffer {
       : ptr_(ptr), end_(end), contiguous_(contiguous) {}
   ~scan_buffer() = default;
 
-  void set(string_view buf) {
-    ptr_ = buf.begin();
-    end_ = buf.end();
+  void set(span<const char> buf) {
+    ptr_ = buf.data;
+    end_ = buf.data + buf.size;
   }
 
   auto ptr() const -> const char* { return ptr_; }
@@ -141,7 +142,7 @@ class scan_buffer {
 using scan_iterator = scan_buffer::iterator;
 using scan_sentinel = scan_buffer::sentinel;
 
-class string_scan_buffer : public scan_buffer {
+class string_scan_buffer final : public scan_buffer {
  private:
   void consume() override {}
 
@@ -150,90 +151,15 @@ class string_scan_buffer : public scan_buffer {
       : scan_buffer(s.begin(), s.end(), true) {}
 };
 
-#ifdef _WIN32
-void flockfile(FILE* f) { _lock_file(f); }
-void funlockfile(FILE* f) { _unlock_file(f); }
-int getc_unlocked(FILE* f) { return _fgetc_nolock(f); }
-#endif
-
-// A FILE wrapper. F is FILE defined as a template parameter to make
-// system-specific API detection work.
-template <typename F> class file_base {
- protected:
-  F* file_;
-
- public:
-  file_base(F* file) : file_(file) {}
-  operator F*() const { return file_; }
-
-  // Reads a code unit from the stream.
-  auto get() -> int {
-    int result = getc_unlocked(file_);
-    if (result == EOF && ferror(file_) != 0)
-      FMT_THROW(system_error(errno, FMT_STRING("getc failed")));
-    return result;
-  }
-
-  // Puts the code unit back into the stream buffer.
-  void unget(char c) {
-    if (ungetc(c, file_) == EOF)
-      FMT_THROW(system_error(errno, FMT_STRING("ungetc failed")));
-  }
-};
-
-// A FILE wrapper for glibc.
-template <typename F> class glibc_file : public file_base<F> {
- public:
-  using file_base<F>::file_base;
-
-  // Returns the file's read buffer as a string_view.
-  auto buffer() const -> string_view {
-    return {this->file_->_IO_read_ptr,
-            to_unsigned(this->file_->_IO_read_end - this->file_->_IO_read_ptr)};
-  }
-};
-
-// A FILE wrapper for Apple's libc.
-template <typename F> class apple_file : public file_base<F> {
- public:
-  using file_base<F>::file_base;
-
-  auto buffer() const -> string_view {
-    return {reinterpret_cast<char*>(this->file_->_p),
-            to_unsigned(this->file_->_r)};
-  }
-};
-
-// A fallback FILE wrapper.
-template <typename F> class fallback_file : public file_base<F> {
+class file_scan_buffer final : public scan_buffer {
  private:
-  char next_;  // The next unconsumed character in the buffer.
-  bool has_next_ = false;
-
- public:
-  using file_base<F>::file_base;
-
-  auto buffer() const -> string_view { return {&next_, has_next_ ? 1u : 0u}; }
-
-  auto get() -> int {
-    has_next_ = false;
-    return file_base<F>::get();
-  }
-
-  void unget(char c) {
-    file_base<F>::unget(c);
-    next_ = c;
-    has_next_ = true;
-  }
-};
-
-class file_scan_buffer : public scan_buffer {
- private:
-  template <typename F, FMT_ENABLE_IF(sizeof(F::_IO_read_ptr) != 0)>
+  template <typename F, FMT_ENABLE_IF(sizeof(F::_IO_read_ptr) != 0 &&
+                                      !FMT_USE_FALLBACK_FILE)>
   static auto get_file(F* f, int) -> glibc_file<F> {
     return f;
   }
-  template <typename F, FMT_ENABLE_IF(sizeof(F::_p) != 0)>
+  template <typename F,
+            FMT_ENABLE_IF(sizeof(F::_p) != 0 && !FMT_USE_FALLBACK_FILE)>
   static auto get_file(F* f, int) -> apple_file<F> {
     return f;
   }
@@ -243,19 +169,19 @@ class file_scan_buffer : public scan_buffer {
 
   // Fills the buffer if it is empty.
   void fill() {
-    string_view buf = file_.buffer();
-    if (buf.size() == 0) {
+    span<const char> buf = file_.get_read_buffer();
+    if (buf.size == 0) {
       int c = file_.get();
       // Put the character back since we are only filling the buffer.
       if (c != EOF) file_.unget(static_cast<char>(c));
-      buf = file_.buffer();
+      buf = file_.get_read_buffer();
     }
     set(buf);
   }
 
   void consume() override {
     // Consume the current buffer content.
-    size_t n = to_unsigned(ptr() - file_.buffer().begin());
+    size_t n = to_unsigned(ptr() - file_.get_read_buffer().data);
     for (size_t i = 0; i != n; ++i) file_.get();
     fill();
   }
@@ -266,7 +192,10 @@ class file_scan_buffer : public scan_buffer {
     flockfile(f);
     fill();
   }
-  ~file_scan_buffer() { funlockfile(file_); }
+  ~file_scan_buffer() {
+    FILE* f = file_;
+    funlockfile(f);
+  }
 };
 }  // namespace detail
 
@@ -282,7 +211,7 @@ class scan_parse_context {
  public:
   using iterator = string_view::iterator;
 
-  explicit FMT_CONSTEXPR scan_parse_context(string_view format)
+  FMT_CONSTEXPR explicit scan_parse_context(string_view format)
       : format_(format) {}
 
   FMT_CONSTEXPR auto begin() const -> iterator { return format_.begin(); }
@@ -418,7 +347,7 @@ class scan_context {
   using iterator = detail::scan_iterator;
   using sentinel = detail::scan_sentinel;
 
-  explicit FMT_CONSTEXPR scan_context(detail::scan_buffer& buf, scan_args args)
+  FMT_CONSTEXPR explicit scan_context(detail::scan_buffer& buf, scan_args args)
       : buf_(buf), args_(args) {}
 
   FMT_CONSTEXPR auto arg(int id) const -> scan_arg {
@@ -434,12 +363,12 @@ class scan_context {
 namespace detail {
 
 const char* parse_scan_specs(const char* begin, const char* end,
-                             format_specs<>& specs, scan_type) {
+                             format_specs& specs, scan_type) {
   while (begin != end) {
     switch (to_ascii(*begin)) {
     // TODO: parse more scan format specifiers
     case 'x':
-      specs.type = presentation_type::hex_lower;
+      specs.set_type(presentation_type::hex);
       ++begin;
       break;
     case '}':
@@ -450,11 +379,10 @@ const char* parse_scan_specs(const char* begin, const char* end,
 }
 
 template <typename T, FMT_ENABLE_IF(std::is_unsigned<T>::value)>
-auto read(scan_iterator it, T& value)
-    -> scan_iterator {
+auto read(scan_iterator it, T& value) -> scan_iterator {
   if (it == scan_sentinel()) return it;
   char c = *it;
-  if (c < '0' || c > '9') throw_format_error("invalid input");
+  if (c < '0' || c > '9') report_error("invalid input");
 
   int num_digits = 0;
   T n = 0, prev = 0;
@@ -478,17 +406,16 @@ auto read(scan_iterator it, T& value)
       prev * 10ull + unsigned(prev_digit - '0') <= max) {
     value = n;
   } else {
-    throw_format_error("number is too big");
+    report_error("number is too big");
   }
   return it;
 }
 
 template <typename T, FMT_ENABLE_IF(std::is_unsigned<T>::value)>
-auto read_hex(scan_iterator it, T& value)
-    -> scan_iterator {
+auto read_hex(scan_iterator it, T& value) -> scan_iterator {
   if (it == scan_sentinel()) return it;
   int digit = to_hex_digit(*it);
-  if (digit < 0) throw_format_error("invalid input");
+  if (digit < 0) report_error("invalid input");
 
   int num_digits = 0;
   T n = 0;
@@ -503,45 +430,44 @@ auto read_hex(scan_iterator it, T& value)
   if (num_digits <= (std::numeric_limits<T>::digits >> 2))
     value = n;
   else
-    throw_format_error("number is too big");
+    report_error("number is too big");
   return it;
 }
 
 template <typename T, FMT_ENABLE_IF(std::is_unsigned<T>::value)>
-auto read(scan_iterator it, T& value, const format_specs<>& specs)
+auto read(scan_iterator it, T& value, const format_specs& specs)
     -> scan_iterator {
-  if (specs.type == presentation_type::hex_lower)
-    return read_hex(it, value);
+  if (specs.type() == presentation_type::hex) return read_hex(it, value);
   return read(it, value);
 }
 
 template <typename T, FMT_ENABLE_IF(std::is_signed<T>::value)>
-auto read(scan_iterator it, T& value, const format_specs<>& = {})
+auto read(scan_iterator it, T& value, const format_specs& specs = {})
     -> scan_iterator {
   bool negative = it != scan_sentinel() && *it == '-';
   if (negative) {
     ++it;
-    if (it == scan_sentinel()) throw_format_error("invalid input");
+    if (it == scan_sentinel()) report_error("invalid input");
   }
   using unsigned_type = typename std::make_unsigned<T>::type;
   unsigned_type abs_value = 0;
-  it = read(it, abs_value);
+  it = read(it, abs_value, specs);
   auto n = static_cast<T>(abs_value);
   value = negative ? -n : n;
   return it;
 }
 
-auto read(scan_iterator it, std::string& value, const format_specs<>& = {})
+auto read(scan_iterator it, std::string& value, const format_specs& = {})
     -> scan_iterator {
   while (it != scan_sentinel() && *it != ' ') value.push_back(*it++);
   return it;
 }
 
-auto read(scan_iterator it, string_view& value, const format_specs<>& = {})
+auto read(scan_iterator it, string_view& value, const format_specs& = {})
     -> scan_iterator {
   auto range = to_contiguous(it);
   // This could also be checked at compile time in scan.
-  if (!range) throw_format_error("string_view requires contiguous input");
+  if (!range) report_error("string_view requires contiguous input");
   auto p = range.begin;
   while (p != range.end && *p != ' ') ++p;
   size_t size = to_unsigned(p - range.begin);
@@ -549,7 +475,7 @@ auto read(scan_iterator it, string_view& value, const format_specs<>& = {})
   return advance(it, size);
 }
 
-auto read(scan_iterator it, monostate, const format_specs<>& = {})
+auto read(scan_iterator it, monostate, const format_specs& = {})
     -> scan_iterator {
   return it;
 }
@@ -566,14 +492,14 @@ struct default_arg_scanner {
 // An argument scanner with format specifiers.
 struct arg_scanner {
   scan_iterator it;
-  const format_specs<>& specs;
+  const format_specs& specs;
 
   template <typename T> auto operator()(T&& value) -> scan_iterator {
     return read(it, value, specs);
   }
 };
 
-struct scan_handler : error_handler {
+struct scan_handler {
  private:
   scan_parse_context parse_ctx_;
   scan_context scan_ctx_;
@@ -607,8 +533,9 @@ struct scan_handler : error_handler {
     return 0;
   }
 
-  void on_replacement_field(int arg_id, const char*) {
+  void on_replacement_field(int arg_id, const char* begin) {
     scan_arg arg = scan_ctx_.arg(arg_id);
+    if (arg.scan_custom(begin, parse_ctx_, scan_ctx_)) return;
     auto it = scan_ctx_.begin();
     while (it != sentinel() && is_whitespace(*it)) ++it;
     scan_ctx_.advance_to(arg.visit(default_arg_scanner{it}));
@@ -619,47 +546,123 @@ struct scan_handler : error_handler {
     scan_arg arg = scan_ctx_.arg(arg_id);
     if (arg.scan_custom(begin, parse_ctx_, scan_ctx_))
       return parse_ctx_.begin();
-    auto specs = format_specs<>();
+    auto specs = format_specs();
     begin = parse_scan_specs(begin, end, specs, arg.type());
     if (begin == end || *begin != '}') on_error("missing '}' in format string");
     scan_ctx_.advance_to(arg.visit(arg_scanner{scan_ctx_.begin(), specs}));
     return begin;
   }
 
-  void on_error(const char* message) { error_handler::on_error(message); }
+  FMT_NORETURN void on_error(const char* message) { report_error(message); }
 };
+
+void vscan(detail::scan_buffer& buf, string_view fmt, scan_args args) {
+  auto h = detail::scan_handler(fmt, buf, args);
+  detail::parse_format_string(fmt, h);
+}
+
+template <size_t I, typename... T, FMT_ENABLE_IF(I == sizeof...(T))>
+void make_args(std::array<scan_arg, sizeof...(T)>&, std::tuple<T...>&) {}
+
+template <size_t I, typename... T, FMT_ENABLE_IF(I < sizeof...(T))>
+void make_args(std::array<scan_arg, sizeof...(T)>& args,
+               std::tuple<T...>& values) {
+  using element_type = typename std::tuple_element<I, std::tuple<T...>>::type;
+  static_assert(std::is_same<remove_cvref_t<element_type>, element_type>::value,
+                "");
+  args[I] = std::get<I>(values);
+  make_args<I + 1>(args, values);
+}
 }  // namespace detail
+
+template <typename Range, typename... T> class scan_data {
+ private:
+  std::tuple<T...> values_;
+  Range range_;
+
+ public:
+  scan_data() = default;
+  scan_data(T... values) : values_(std::move(values)...) {}
+
+  auto value() const -> decltype(std::get<0>(values_)) {
+    return std::get<0>(values_);
+  }
+
+  auto values() const -> const std::tuple<T...>& { return values_; }
+
+  auto make_args() -> std::array<scan_arg, sizeof...(T)> {
+    auto args = std::array<scan_arg, sizeof...(T)>();
+    detail::make_args<0>(args, values_);
+    return args;
+  }
+
+  auto range() const -> Range { return range_; }
+
+  auto begin() const -> decltype(range_.begin()) { return range_.begin(); }
+  auto end() const -> decltype(range_.end()) { return range_.end(); }
+};
 
 template <typename... T>
 auto make_scan_args(T&... args) -> std::array<scan_arg, sizeof...(T)> {
   return {{args...}};
 }
 
-void vscan(detail::scan_buffer& buf, string_view fmt, scan_args args) {
-  auto h = detail::scan_handler(fmt, buf, args);
-  detail::parse_format_string<false>(fmt, h);
-}
+class scan_error {};
 
-template <typename... T>
-auto scan(string_view input, string_view fmt, T&... args)
+// A rudimentary version of std::expected for testing the API shape.
+template <typename T, typename E> class expected {
+ private:
+  T value_;
+  bool has_value_ = true;
+
+ public:
+  expected(T value) : value_(std::move(value)) {}
+
+  explicit operator bool() const { return has_value_; }
+
+  auto operator->() const -> const T* { return &value_; }
+
+  auto error() -> E const { return E(); }
+};
+
+template <typename Range, typename... T>
+using scan_result = expected<scan_data<Range, T...>, scan_error>;
+
+auto vscan(string_view input, string_view fmt, scan_args args)
     -> string_view::iterator {
   auto&& buf = detail::string_scan_buffer(input);
-  vscan(buf, fmt, make_scan_args(args...));
+  detail::vscan(buf, fmt, args);
   return input.begin() + (buf.begin().base() - input.data());
 }
 
-template <typename InputRange, typename... T,
-          FMT_ENABLE_IF(!std::is_convertible<InputRange, string_view>::value)>
-auto scan(InputRange&& input, string_view fmt, T&... args)
+// Scans the input and stores the results (in)to args.
+template <typename... T>
+auto scan_to(string_view input, string_view fmt, T&... args)
+    -> string_view::iterator {
+  return vscan(input, fmt, make_scan_args(args...));
+}
+
+template <typename... T>
+auto scan(string_view input, string_view fmt)
+    -> scan_result<string_view, T...> {
+  auto data = scan_data<string_view, T...>();
+  vscan(input, fmt, data.make_args());
+  return data;
+}
+
+template <typename Range, typename... T,
+          FMT_ENABLE_IF(!std::is_convertible<Range, string_view>::value)>
+auto scan_to(Range&& input, string_view fmt, T&... args)
     -> decltype(std::begin(input)) {
   auto it = std::begin(input);
-  vscan(get_buffer(it), fmt, make_scan_args(args...));
+  detail::vscan(get_buffer(it), fmt, make_scan_args(args...));
   return it;
 }
 
-template <typename... T> bool scan(std::FILE* f, string_view fmt, T&... args) {
+template <typename... T>
+auto scan_to(FILE* f, string_view fmt, T&... args) -> bool {
   auto&& buf = detail::file_scan_buffer(f);
-  vscan(buf, fmt, make_scan_args(args...));
+  detail::vscan(buf, fmt, make_scan_args(args...));
   return buf.begin() != buf.end();
 }
 
