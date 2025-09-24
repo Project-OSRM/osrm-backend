@@ -146,7 +146,7 @@ class ContiguousDataLayout final : public BaseDataLayout
     inline void *align(void *&ptr) const noexcept
     {
         const auto intptr = reinterpret_cast<std::uintptr_t>(ptr);
-        const auto aligned = (intptr - 1u + BLOCK_ALIGNMENT) & -BLOCK_ALIGNMENT;
+        const auto aligned = (intptr - 1u + BLOCK_ALIGNMENT) & ~(BLOCK_ALIGNMENT - 1u);
         return ptr = reinterpret_cast<void *>(aligned);
     }
 
