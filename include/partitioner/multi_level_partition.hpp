@@ -15,6 +15,7 @@
 #include <climits>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <numeric>
 #include <vector>
 
@@ -218,7 +219,7 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
                                 // Check offset for shift overflow. Offsets are strictly increasing,
                                 // so we only need the check on the last mask.
                                 PartitionID next_mask = next_offset == NUM_PARTITION_BITS
-                                                            ? -1ULL
+                                                            ? std::numeric_limits<PartitionID>::max()
                                                             : (1ULL << next_offset) - 1ULL;
                                 // 001100
                                 masks[lidx++] = next_mask ^ mask;
