@@ -215,8 +215,9 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                 {
                     intersection.entry.push_back(entry_class.allowsEntry(idx));
                 }
+                // Safe conversion: bearing values [0,360) fit comfortably in int16_t
                 std::int16_t bearing_in_driving_direction =
-                    util::bearing::reverse(std::round(bearings.first));
+                    static_cast<std::int16_t>(util::bearing::reverse(std::round(bearings.first)));
                 maneuver = {intersection.location,
                             bearing_in_driving_direction,
                             bearings.second,
