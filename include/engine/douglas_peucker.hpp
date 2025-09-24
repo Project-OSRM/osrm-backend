@@ -25,7 +25,8 @@ inline std::vector<std::uint64_t> generateThreshold(double min_pixel, unsigned n
         const double b = shift / 2.0;
         const double pixel_to_deg = 180. / b;
         // Safe conversion: geographic coordinate calculation always produces positive integers
-        const std::uint64_t min_deg = static_cast<std::uint64_t>(min_pixel * pixel_to_deg * COORDINATE_PRECISION);
+        const std::uint64_t min_deg =
+            static_cast<std::uint64_t>(min_pixel * pixel_to_deg * COORDINATE_PRECISION);
         thresholds[zoom] = min_deg * min_deg;
     }
 
