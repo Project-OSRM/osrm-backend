@@ -61,11 +61,13 @@ class RequestParser
         header_name,
         header_value,
         expecting_newline_2,
-        expecting_newline_3
+        expecting_newline_3,
+        reading_body
     } state;
 
     http::header current_header;
     http::compression_type selected_compression;
+    std::size_t bytes_read = 0;
 };
 } // namespace osrm::server
 

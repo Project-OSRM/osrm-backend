@@ -36,7 +36,7 @@ void SendResponse(ServiceHandler::ResultT &result, http::reply &current_reply)
 {
 
     current_reply.headers.emplace_back("Access-Control-Allow-Origin", "*");
-    current_reply.headers.emplace_back("Access-Control-Allow-Methods", "GET");
+    current_reply.headers.emplace_back("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     current_reply.headers.emplace_back("Access-Control-Allow-Headers",
                                        "X-Requested-With, Content-Type");
     if (std::holds_alternative<util::json::Object>(result))
@@ -90,7 +90,26 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
     {
         TIMER_START(request_duration);
         std::string request_string;
-        util::URIDecode(current_request.uri, request_string);
+        
+        // For POST requests with body, combine URI and body
+        if (current_request.method == "POST" && !current_request.body.empty())
+        {
+            // URI contains the service path, body contains coordinates and parameters
+            std::string uri_part;
+            util::URIDecode(current_request.uri, uri_part);
+            
+            // Remove trailing slash if present
+            if (!uri_part.empty() && uri_part.back() == '/')
+            {
+                uri_part.pop_back();
+            }
+            
+            request_string = uri_part + "/" + current_request.body;
+        }
+        else
+        {
+            util::URIDecode(current_request.uri, request_string);
+        }
 
         util::Log(logDEBUG) << "[req][" << tid << "] " << request_string;
 

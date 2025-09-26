@@ -5,13 +5,14 @@
 #include "server/http/request.hpp"
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <string>
 
 namespace osrm::server
 {
 
 RequestParser::RequestParser()
     : state(internal_state::method_start), current_header({"", ""}),
-      selected_compression(http::no_compression)
+      selected_compression(http::no_compression), bytes_read(0)
 {
 }
 
@@ -42,6 +43,7 @@ RequestParser::RequestStatus RequestParser::consume(http::request &current_reque
             return RequestStatus::invalid;
         }
         state = internal_state::method;
+        current_request.method.push_back(input);
         return RequestStatus::indeterminate;
     case internal_state::method:
         if (input == ' ')
@@ -53,6 +55,7 @@ RequestParser::RequestStatus RequestParser::consume(http::request &current_reque
         {
             return RequestStatus::invalid;
         }
+        current_request.method.push_back(input);
         return RequestStatus::indeterminate;
     case internal_state::uri_start:
         if (is_CTL(input))
@@ -181,6 +184,11 @@ RequestParser::RequestStatus RequestParser::consume(http::request &current_reque
             current_request.connection = current_header.value;
         }
 
+        if (boost::iequals(current_header.name, "Content-Length"))
+        {
+            current_request.content_length = std::stoul(current_header.value);
+        }
+
         if (input == '\r')
         {
             state = internal_state::expecting_newline_3;
@@ -246,8 +254,31 @@ RequestParser::RequestStatus RequestParser::consume(http::request &current_reque
             return RequestStatus::indeterminate;
         }
         return RequestStatus::invalid;
-    default: // expecting_newline_3
-        return input == '\n' ? RequestStatus::valid : RequestStatus::invalid;
+    case internal_state::expecting_newline_3:
+        if (input == '\n')
+        {
+            // Headers are complete, check if we need to read body
+            if (current_request.content_length > 0)
+            {
+                state = internal_state::reading_body;
+                bytes_read = 0;
+                current_request.body.reserve(current_request.content_length);
+                return RequestStatus::indeterminate;
+            }
+            else
+            {
+                return RequestStatus::valid;
+            }
+        }
+        return RequestStatus::invalid;
+    case internal_state::reading_body:
+        current_request.body.push_back(input);
+        bytes_read++;
+        if (bytes_read >= current_request.content_length)
+        {
+            return RequestStatus::valid;
+        }
+        return RequestStatus::indeterminate;
     }
 }
 
