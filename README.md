@@ -1,3 +1,11 @@
+Forked on 26/09/2025 as we required POST requests for very large table requests up to 35k. We only modified a few files to simply concatenate the POST body with the URL to avoid issues with URL length when using reverse proxies such as nginx.
+
+POST requests were removed in v5.2.7, references: 
+- https://github.com/Project-OSRM/osrm-backend/issues/6829
+- https://github.com/Project-OSRM/osrm-backend/issues/4211
+- https://github.com/Project-OSRM/osrm-backend/issues/2163
+
+
 ## Open Source Routing Machine
 
 [![osrm-backend CI](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml/badge.svg)](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml) [![Discord](https://img.shields.io/discord/1034487840219860992)](https://discord.gg/es9CdcCXcb)
