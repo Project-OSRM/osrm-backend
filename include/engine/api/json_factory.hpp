@@ -106,6 +106,7 @@ util::json::Object makeWaypoint(const util::Coordinate &location,
 util::json::Object makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps);
 
 util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
+                                std::vector<util::json::Value> leg_geometries,
                                 std::vector<util::json::Value> step_geometries,
                                 std::vector<util::json::Object> annotations);
 } // namespace api::json

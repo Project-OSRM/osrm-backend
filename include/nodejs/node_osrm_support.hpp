@@ -992,7 +992,7 @@ inline bool parseCommonParameters(const Napi::Object &obj, ParamType &params)
 
         if (!overview.IsString())
         {
-            ThrowError(obj.Env(), "Overview must be a string: [simplified, full, false]");
+            ThrowError(obj.Env(), "Overview must be a string: [simplified, full, false, by_legs]");
             return false;
         }
 
@@ -1010,9 +1010,13 @@ inline bool parseCommonParameters(const Napi::Object &obj, ParamType &params)
         {
             params->overview = osrm::RouteParameters::OverviewType::False;
         }
+        else if (overview_str == "by_legs")
+        {
+            params->overview = osrm::RouteParameters::OverviewType::ByLegs;
+        }
         else
         {
-            ThrowError(obj.Env(), "'overview' param must be one of [simplified, full, false]");
+            ThrowError(obj.Env(), "'overview' param must be one of [simplified, full, false, by_legs]");
             return false;
         }
     }

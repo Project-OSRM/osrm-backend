@@ -257,7 +257,10 @@ util::json::Object makeWaypoint(const util::Coordinate &location,
     return waypoint;
 }
 
-util::json::Object makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps)
+util::json::Object makeRouteLeg(guidance::RouteLeg leg,
+                                util::json::Array steps,
+                                std::optional<util::json::Value> leg_geometry,
+                                std::optional<util::json::Object> annotation)
 {
     util::json::Object route_leg;
     route_leg.values.reserve(5);
@@ -267,18 +270,19 @@ util::json::Object makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps)
     route_leg.values.emplace("weight", leg.weight);
     route_leg.values.emplace("summary", std::move(leg.summary));
     route_leg.values.emplace("steps", std::move(steps));
-    return route_leg;
-}
-util::json::Object
-makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps, util::json::Object annotation)
-{
-    util::json::Object route_leg = makeRouteLeg(std::move(leg), std::move(steps));
-    route_leg.values.reserve(1);
-    route_leg.values.emplace("annotation", std::move(annotation));
+    if (leg_geometry)
+    {
+        route_leg.values.emplace("geometry", std::move(*leg_geometry));
+    }
+    if (annotation)
+    {
+        route_leg.values.emplace("annotation", std::move(*annotation));
+    }
     return route_leg;
 }
 
 util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
+                                std::vector<util::json::Value> leg_geometries,
                                 std::vector<util::json::Value> step_geometries,
                                 std::vector<util::json::Object> annotations)
 {
@@ -295,15 +299,18 @@ util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
                        [&step_geometry_iter](guidance::RouteStep step) {
                            return makeRouteStep(std::move(step), std::move(*step_geometry_iter++));
                        });
+        std::optional<util::json::Object> annotation;
+        std::optional<util::json::Value> leg_geometry;
+        if (leg_geometries.size() > 0)
+        {
+            leg_geometry = std::move(leg_geometries[idx]);
+        }
         if (annotations.size() > 0)
         {
-            json_legs.values.push_back(
-                makeRouteLeg(std::move(leg), std::move(json_steps), annotations[idx]));
+            annotation = std::move(annotations[idx]);
         }
-        else
-        {
-            json_legs.values.push_back(makeRouteLeg(std::move(leg), std::move(json_steps)));
-        }
+        json_legs.values.push_back(
+            makeRouteLeg(std::move(leg), std::move(json_steps), std::move(leg_geometry), std::move(annotation)));
     }
     return json_legs;
 }
