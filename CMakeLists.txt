@@ -289,10 +289,11 @@ find_package(Threads REQUIRED)
 
 # Check for C++20 <format> header with full chrono formatting support
 # This is necessary because some environments have <format> header but
-# incomplete implementation (e.g., Alpine GCC 14 missing chrono formatters)
+# incomplete implementation (e.g., Alpine GCC 14 missing chrono formatters,
+# or Clang with libstdc++ from older GCC)
 include(CheckCXXSourceCompiles)
 
-set(CMAKE_REQUIRED_FLAGS "-std=c++20")
+set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
 check_cxx_source_compiles("
   #include <chrono>
   #include <format>
