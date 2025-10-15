@@ -1,6 +1,6 @@
 #include "util/log.hpp"
-#include "util/isatty.hpp"
 #include "util/format.hpp"
+#include "util/isatty.hpp"
 #include <boost/algorithm/string/predicate.hpp>
 #include <cstdio>
 #include <iostream>

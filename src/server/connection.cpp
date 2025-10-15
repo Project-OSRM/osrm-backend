@@ -93,7 +93,8 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
             keep_alive = true;
             current_reply.headers.emplace_back("Connection", "keep-alive");
             current_reply.headers.emplace_back(
-                "Keep-Alive", compat::format("timeout={}, max={}", keepalive_timeout, processed_requests));
+                "Keep-Alive",
+                compat::format("timeout={}, max={}", keepalive_timeout, processed_requests));
         }
 
         // compress the result w/ gzip/deflate if requested

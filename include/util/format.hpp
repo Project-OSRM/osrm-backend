@@ -16,8 +16,8 @@ using std::to_string;
 
 #else // Fallback to fmt library
 
-#include <fmt/format.h>
 #include <fmt/chrono.h>
+#include <fmt/format.h>
 
 namespace osrm::util::compat
 {
