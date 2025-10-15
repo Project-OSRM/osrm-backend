@@ -287,35 +287,23 @@ endif()
 
 find_package(Threads REQUIRED)
 
-# Check for C++20 <format> with full chrono support that compiles, links and runs
+# Check for C++20 <format> with full chrono support
 # This is necessary because some environments have the header but incomplete
 # implementation (e.g., Alpine GCC 14 missing chrono formatters, or Clang
 # with libstdc++ from older GCC lacking std::format symbols at link time)
-include(CheckCXXSourceRuns)
+# Clang with libstdc++ often has the header but not the implementation until Clang 19+
+set(OSRM_HAS_STD_FORMAT FALSE)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} /std:c++20")
-else()
-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
-  set(CMAKE_REQUIRED_LIBRARIES "stdc++")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13)
+  # GCC 13+ has full std::format support
+  set(OSRM_HAS_STD_FORMAT TRUE)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19)
+  # Clang 19+ with libc++ has full std::format support
+  set(OSRM_HAS_STD_FORMAT TRUE)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND MSVC_VERSION GREATER_EQUAL 1929)
+  # VS 2019 16.10+ has full std::format support
+  set(OSRM_HAS_STD_FORMAT TRUE)
 endif()
-check_cxx_source_runs("
-  #include <chrono>
-  #include <format>
-  #include <numbers>
-  #include <string>
-  int main() {
-    // Test basic formatting
-    std::string s1 = std::format(\"{:.10g}\", std::numbers::pi);
-    // Test chrono formatting
-    auto now = std::chrono::system_clock::now();
-    auto secs = std::chrono::floor<std::chrono::seconds>(now);
-    std::string s2 = std::format(\"{:%FT%T}\", secs);
-    return (s1.empty() || s2.empty()) ? 1 : 0;
-  }
-" OSRM_HAS_STD_FORMAT)
-unset(CMAKE_REQUIRED_FLAGS)
-unset(CMAKE_REQUIRED_LIBRARIES)
 
 if(OSRM_HAS_STD_FORMAT)
   add_definitions(-DOSRM_HAS_STD_FORMAT)
