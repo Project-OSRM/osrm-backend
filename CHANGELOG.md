@@ -1,5 +1,7 @@
 # Unreleased
   - Changes from 6.0.0
+    - Build:
+      - FIXED: Reduce MSVC compiler warnings by suppressing informational warnings while preserving bug-indicating warnings [#7253](https://github.com/Project-OSRM/osrm-backend/issues/7253)
     - Misc:
       - CHANGED: Update fmt library to version 11.2.0 [#7238](https://github.com/Project-OSRM/osrm-backend/issues/7238)
       - CHANGED: Upgrade protozero from v1.7.1 to v1.8.1 [#7239](https://github.com/Project-OSRM/osrm-backend/pull/7239)
