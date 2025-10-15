@@ -287,11 +287,11 @@ endif()
 
 find_package(Threads REQUIRED)
 
-# Check for C++20 <format> header with full chrono formatting support
-# This is necessary because some environments have <format> header but
-# incomplete implementation (e.g., Alpine GCC 14 missing chrono formatters,
-# or Clang with libstdc++ from older GCC)
-include(CheckCXXSourceCompiles)
+# Check for C++20 <format> with full chrono support that compiles, links and runs
+# This is necessary because some environments have the header but incomplete
+# implementation (e.g., Alpine GCC 14 missing chrono formatters, or Clang
+# with libstdc++ from older GCC lacking std::format symbols at link time)
+include(CheckCXXSourceRuns)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} /std:c++20")
@@ -299,7 +299,7 @@ else()
   set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
   set(CMAKE_REQUIRED_LIBRARIES "stdc++")
 endif()
-check_cxx_source_compiles("
+check_cxx_source_runs("
   #include <chrono>
   #include <format>
   #include <numbers>
