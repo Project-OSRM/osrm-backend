@@ -75,12 +75,19 @@ void Log::Init()
 
         auto format = [is_terminal](const char *level, const char *color)
         {
+#ifdef OSRM_HAS_STD_FORMAT
+            const auto now = std::chrono::system_clock::now();
+            const auto timestamp =
+                compat::format("{:%FT%T}", std::chrono::floor<std::chrono::seconds>(now));
+            return compat::format("{}[{}] [{}] ", is_terminal ? color : "", timestamp, level);
+#else
             const auto timestamp = std::chrono::system_clock::now();
             return compat::format("{}[{:%FT%H:%M:}{:%S}] [{}] ",
                                   is_terminal ? color : "",
                                   timestamp,
                                   timestamp.time_since_epoch(),
                                   level);
+#endif
         };
 
         switch (level)
