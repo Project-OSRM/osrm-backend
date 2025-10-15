@@ -293,8 +293,12 @@ find_package(Threads REQUIRED)
 # or Clang with libstdc++ from older GCC)
 include(CheckCXXSourceCompiles)
 
-set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
-set(CMAKE_REQUIRED_LIBRARIES "stdc++")
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} /std:c++20")
+else()
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
+  set(CMAKE_REQUIRED_LIBRARIES "stdc++")
+endif()
 check_cxx_source_compiles("
   #include <chrono>
   #include <format>
