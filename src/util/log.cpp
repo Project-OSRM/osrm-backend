@@ -2,6 +2,7 @@
 #include "util/format.hpp"
 #include "util/isatty.hpp"
 #include <boost/algorithm/string/predicate.hpp>
+#include <chrono>
 #include <cstdio>
 #include <iostream>
 #include <mutex>
