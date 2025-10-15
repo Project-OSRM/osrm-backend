@@ -287,9 +287,29 @@ endif()
 
 find_package(Threads REQUIRED)
 
-# Check for C++20 <format> header support
-include(CheckIncludeFileCXX)
-check_include_file_cxx("format" OSRM_HAS_STD_FORMAT)
+# Check for C++20 <format> header with full chrono formatting support
+# This is necessary because some environments have <format> header but
+# incomplete implementation (e.g., Alpine GCC 14 missing chrono formatters)
+include(CheckCXXSourceCompiles)
+
+set(CMAKE_REQUIRED_FLAGS "-std=c++20")
+check_cxx_source_compiles("
+  #include <chrono>
+  #include <format>
+  #include <numbers>
+  #include <string>
+  int main() {
+    // Test basic formatting
+    std::string s1 = std::format(\"{:.10g}\", std::numbers::pi);
+    // Test chrono formatting
+    auto now = std::chrono::system_clock::now();
+    auto secs = std::chrono::floor<std::chrono::seconds>(now);
+    std::string s2 = std::format(\"{:%FT%T}\", secs);
+    return (s1.empty() || s2.empty()) ? 1 : 0;
+  }
+" OSRM_HAS_STD_FORMAT)
+unset(CMAKE_REQUIRED_FLAGS)
+
 if(OSRM_HAS_STD_FORMAT)
   add_definitions(-DOSRM_HAS_STD_FORMAT)
   message(STATUS "Using std::format (C++20)")
