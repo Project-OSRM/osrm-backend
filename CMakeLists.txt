@@ -294,6 +294,7 @@ find_package(Threads REQUIRED)
 include(CheckCXXSourceCompiles)
 
 set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
+set(CMAKE_REQUIRED_LIBRARIES "stdc++")
 check_cxx_source_compiles("
   #include <chrono>
   #include <format>
@@ -310,6 +311,7 @@ check_cxx_source_compiles("
   }
 " OSRM_HAS_STD_FORMAT)
 unset(CMAKE_REQUIRED_FLAGS)
+unset(CMAKE_REQUIRED_LIBRARIES)
 
 if(OSRM_HAS_STD_FORMAT)
   add_definitions(-DOSRM_HAS_STD_FORMAT)
