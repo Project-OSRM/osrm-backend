@@ -287,6 +287,16 @@ endif()
 
 find_package(Threads REQUIRED)
 
+# Check for C++20 <format> header support
+include(CheckIncludeFileCXX)
+check_include_file_cxx("format" OSRM_HAS_STD_FORMAT)
+if(OSRM_HAS_STD_FORMAT)
+  add_definitions(-DOSRM_HAS_STD_FORMAT)
+  message(STATUS "Using std::format (C++20)")
+else()
+  message(STATUS "Using fmt::format (fallback)")
+endif()
+
 # Third-party libraries
 set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson/include")
 include_directories(SYSTEM ${RAPIDJSON_INCLUDE_DIR})

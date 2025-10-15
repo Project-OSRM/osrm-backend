@@ -27,6 +27,8 @@ PROTOZERO_TAG=v1.8.1
 VTZERO_PATH="mapbox/vtzero"
 VTZERO_TAG=v1.1.0
 
+# Note: fmt is kept for backward compatibility with compilers lacking std::format support
+# (e.g., Clang with older libstdc++). Will be removed once GCC 13+ becomes minimum requirement.
 FMT_PATH="fmtlib/fmt"
 FMT_TAG=11.2.0
 
