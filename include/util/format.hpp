@@ -12,7 +12,7 @@
 #pragma message("OSRM: Using std::format from C++20 standard library")
 #endif
 
-#include <cmath>   // Ensure std::isfinite and other math functions are available
+#include <cmath>
 #include <format>
 #include <string>
 
