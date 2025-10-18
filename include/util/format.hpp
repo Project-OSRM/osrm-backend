@@ -4,6 +4,14 @@
 // Compatibility layer for std::format and fmt::format
 
 #ifdef OSRM_HAS_STD_FORMAT
+
+// Compile-time diagnostic: using std::format
+#if defined(__GNUC__) || defined(__clang__)
+#pragma message("OSRM: Using std::format from C++20 standard library")
+#elif defined(_MSC_VER)
+#pragma message("OSRM: Using std::format from C++20 standard library")
+#endif
+
 #include <format>
 #include <string>
 
@@ -15,6 +23,13 @@ using std::to_string;
 } // namespace osrm::util::compat
 
 #else // Fallback to fmt library
+
+// Compile-time diagnostic: using fmt::format
+#if defined(__GNUC__) || defined(__clang__)
+#pragma message("OSRM: Using fmt::format as fallback (std::format not available)")
+#elif defined(_MSC_VER)
+#pragma message("OSRM: Using fmt::format as fallback (std::format not available)")
+#endif
 
 #include <fmt/chrono.h>
 #include <fmt/format.h>
