@@ -23,6 +23,14 @@ set_target_properties(node_osrm PROPERTIES CXX_CLANG_TIDY "")
 target_no_warning(node_osrm suggest-destructor-override)
 target_no_warning(node_osrm suggest-override)
 
+# WORKAROUND: Node.js bindings have issues with std::format in some environments
+# (Clang with libstdc++, even when std::format technically exists). Force fallback to fmt::format.
+# See: https://github.com/Project-OSRM/osrm-backend/pull/7261
+if(OSRM_HAS_STD_FORMAT)
+  message(STATUS "Disabling std::format for node_osrm (using fmt::format fallback)")
+  target_compile_options(node_osrm PRIVATE -UOSRM_HAS_STD_FORMAT)
+endif()
+
 # https://github.com/cjntaylor/node-cmake/issues/53#issuecomment-842357457
 execute_process(COMMAND node -p "require('node-addon-api').include" WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE NODE_ADDON_API_DIR)
 string(REPLACE "\n" "" NODE_ADDON_API_DIR ${NODE_ADDON_API_DIR})
