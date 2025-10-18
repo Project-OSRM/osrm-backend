@@ -27,7 +27,6 @@ target_no_warning(node_osrm suggest-override)
 # (Clang with libstdc++, even when std::format technically exists). Force fallback to fmt::format.
 # See: https://github.com/Project-OSRM/osrm-backend/pull/7261
 if(OSRM_HAS_STD_FORMAT)
-  message(STATUS "Disabling std::format for node_osrm (using fmt::format fallback)")
   target_compile_options(node_osrm PRIVATE -UOSRM_HAS_STD_FORMAT)
 endif()
 

@@ -291,27 +291,15 @@ find_package(Threads REQUIRED)
 # This is necessary because some environments have the header but incomplete
 # implementation (e.g., Alpine GCC 14 missing chrono formatters, or Clang
 # with libstdc++ from older GCC lacking std::format symbols at link time)
-
-message(STATUS "=== Checking for std::format support ===")
-message(STATUS "Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
-message(STATUS "Compiler version: ${CMAKE_CXX_COMPILER_VERSION}")
-if(MSVC)
-  message(STATUS "MSVC_VERSION: ${MSVC_VERSION}")
-endif()
-
 include(CheckCXXSourceRuns)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} /std:c++20")
-  message(STATUS "Test flags: ${CMAKE_REQUIRED_FLAGS}")
 else()
   set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
   set(CMAKE_REQUIRED_LIBRARIES "stdc++")
-  message(STATUS "Test flags: ${CMAKE_REQUIRED_FLAGS}")
-  message(STATUS "Test libraries: ${CMAKE_REQUIRED_LIBRARIES}")
 endif()
 
-message(STATUS "Running std::format test program...")
 check_cxx_source_runs("
   #include <chrono>
   #include <format>
@@ -333,13 +321,6 @@ unset(CMAKE_REQUIRED_LIBRARIES)
 
 if(OSRM_HAS_STD_FORMAT)
   add_definitions(-DOSRM_HAS_STD_FORMAT)
-  message(STATUS "=== std::format test: PASSED ===")
-  message(STATUS "Using std::format (C++20)")
-else()
-  message(STATUS "=== std::format test: FAILED ===")
-  message(STATUS "Using fmt::format (fallback)")
-  message(STATUS "Reason: std::format is not available or incomplete")
-  message(STATUS "This is normal for older compilers or incomplete standard library implementations")
 endif()
 
 # Third-party libraries
