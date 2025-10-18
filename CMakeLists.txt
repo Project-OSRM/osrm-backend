@@ -311,12 +311,21 @@ else()
   message(STATUS "Test libraries: ${CMAKE_REQUIRED_LIBRARIES}")
 endif()
 
-message(STATUS "Running std::format test program...")
+# Include Boost headers in test to match real build environment
+set(CMAKE_REQUIRED_INCLUDES ${Boost_INCLUDE_DIRS})
+message(STATUS "Test includes: ${CMAKE_REQUIRED_INCLUDES}")
+
+message(STATUS "Running std::format test program (with Boost headers to match real build)...")
 check_cxx_source_runs("
+  // Include Boost headers first to test for conflicts (matches real build)
+  #include <boost/config.hpp>
+
+  // Now test std::format
   #include <chrono>
   #include <format>
   #include <numbers>
   #include <string>
+
   int main() {
     // Test basic formatting
     std::string s1 = std::format(\"{:.10g}\", std::numbers::pi);
@@ -330,6 +339,7 @@ check_cxx_source_runs("
 
 unset(CMAKE_REQUIRED_FLAGS)
 unset(CMAKE_REQUIRED_LIBRARIES)
+unset(CMAKE_REQUIRED_INCLUDES)
 
 if(OSRM_HAS_STD_FORMAT)
   add_definitions(-DOSRM_HAS_STD_FORMAT)
