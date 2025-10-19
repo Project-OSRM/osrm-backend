@@ -16,7 +16,7 @@ message(STATUS "Configuring node_osrm bindings for NodeJs ${NODEJS_VERSION}")
 
 
 add_nodejs_module(node_osrm node_osrm.cpp)
-set_target_properties(node_osrm PROPERTIES CXX_STANDARD 17)
+set_target_properties(node_osrm PROPERTIES CXX_STANDARD 20)
 # TODO: we disable clang-tidy for this target, because it causes errors in third-party NodeJs related headers
 set_target_properties(node_osrm PROPERTIES CXX_CLANG_TIDY "")
 # TODO: we turn off some warnings for this target, because it causes errors in third-party NodeJs related headers
