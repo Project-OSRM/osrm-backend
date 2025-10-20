@@ -105,35 +105,35 @@ template <typename Out> struct Renderer
     Out &out;
 };
 
-template <> void Renderer<std::vector<char>>::write(std::string_view str)
+template <> inline void Renderer<std::vector<char>>::write(std::string_view str)
 {
     out.insert(out.end(), str.begin(), str.end());
 }
 
-template <> void Renderer<std::vector<char>>::write(const char *str, size_t size)
+template <> inline void Renderer<std::vector<char>>::write(const char *str, size_t size)
 {
     out.insert(out.end(), str, str + size);
 }
 
-template <> void Renderer<std::vector<char>>::write(char ch) { out.push_back(ch); }
+template <> inline void Renderer<std::vector<char>>::write(char ch) { out.push_back(ch); }
 
-template <> void Renderer<std::ostream>::write(std::string_view str) { out << str; }
+template <> inline void Renderer<std::ostream>::write(std::string_view str) { out << str; }
 
-template <> void Renderer<std::ostream>::write(const char *str, size_t size)
+template <> inline void Renderer<std::ostream>::write(const char *str, size_t size)
 {
     out.write(str, size);
 }
 
-template <> void Renderer<std::ostream>::write(char ch) { out << ch; }
+template <> inline void Renderer<std::ostream>::write(char ch) { out << ch; }
 
-template <> void Renderer<std::string>::write(std::string_view str) { out += str; }
+template <> inline void Renderer<std::string>::write(std::string_view str) { out += str; }
 
-template <> void Renderer<std::string>::write(const char *str, size_t size)
+template <> inline void Renderer<std::string>::write(const char *str, size_t size)
 {
     out.append(str, size);
 }
 
-template <> void Renderer<std::string>::write(char ch) { out += ch; }
+template <> inline void Renderer<std::string>::write(char ch) { out += ch; }
 
 inline void render(std::ostream &out, const Object &object)
 {
