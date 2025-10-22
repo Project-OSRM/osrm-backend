@@ -3,6 +3,7 @@
 #include "guidance/turn_instruction.hpp"
 #include "engine/guidance/collapse_scenario_detection.hpp"
 #include "engine/guidance/collapsing_utility.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
 #include "util/bearing.hpp"
 #include "util/guidance/name_announcements.hpp"
 
@@ -15,9 +16,11 @@ namespace osrm::engine::guidance
 using osrm::util::angularDeviation;
 using namespace osrm::guidance;
 
+// Thread-local storage for configurable max collapse distance
+thread_local double current_max_collapse_distance = DEFAULT_MAX_COLLAPSE_DISTANCE;
+
 namespace
 {
-const constexpr double MAX_COLLAPSE_DISTANCE = 30;
 
 // find the combined turn angle for two turns. Not in all scenarios we can easily add both angles
 // (e.g 90 degree left followed by 90 degree right would be no turn at all).
@@ -66,7 +69,7 @@ double findTotalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_ste
             return false;
 
         // entry step is short and the exit and the exit step does not have intersections??
-        if (entry_step.distance < MAX_COLLAPSE_DISTANCE)
+        if (entry_step.distance < current_max_collapse_distance)
             return true;
 
         // both go roughly in the same direction
@@ -433,11 +436,14 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
 }
 
 // OTHER IMPLEMENTATIONS
-[[nodiscard]] RouteSteps collapseTurnInstructions(RouteSteps steps)
+[[nodiscard]] RouteSteps collapseTurnInstructions(const datafacade::BaseDataFacade &facade, RouteSteps steps)
 {
     // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)
     BOOST_ASSERT(!hasTurnType(steps.front()) && !hasTurnType(steps.back()));
     BOOST_ASSERT(hasWaypointType(steps.front()) && hasWaypointType(steps.back()));
+
+    // Set the thread-local max collapse distance from the profile
+    current_max_collapse_distance = facade.GetMaxCollapseDistance();
 
     if (steps.size() <= 2)
         return steps;

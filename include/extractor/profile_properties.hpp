@@ -28,7 +28,7 @@ struct ProfileProperties
           max_speed_for_map_matching(DEFAULT_MAX_SPEED), continue_straight_at_waypoint(true),
           use_turn_restrictions(false), left_hand_driving(false), fallback_to_duration(true),
           weight_name{"duration"}, class_names{{}}, excludable_classes{{}},
-          call_tagless_node_function(true)
+          call_tagless_node_function(true), max_collapse_distance(30.0)
     {
         std::fill(excludable_classes.begin(), excludable_classes.end(), INAVLID_CLASS_DATA);
         BOOST_ASSERT(weight_name[MAX_WEIGHT_NAME_LENGTH] == '\0');
@@ -53,6 +53,13 @@ struct ProfileProperties
     void SetMaxSpeedForMapMatching(const double max_speed_for_map_matching_)
     {
         max_speed_for_map_matching = max_speed_for_map_matching_;
+    }
+
+    double GetMaxCollapseDistance() const { return max_collapse_distance; }
+
+    void SetMaxCollapseDistance(const double max_collapse_distance_)
+    {
+        max_collapse_distance = max_collapse_distance_;
     }
 
     void SetWeightName(const std::string &name)
@@ -135,6 +142,8 @@ struct ProfileProperties
     unsigned weight_precision = 1;
     bool force_split_edges = false;
     bool call_tagless_node_function = true;
+    //! maximum distance for collapsing turns in guidance (in meters)
+    double max_collapse_distance;
 };
 } // namespace osrm::extractor
 

@@ -164,6 +164,8 @@ class BaseDataFacade
 
     virtual double GetMapMatchingMaxSpeed() const = 0;
 
+    virtual double GetMaxCollapseDistance() const = 0;
+
     virtual const char *GetWeightName() const = 0;
 
     virtual unsigned GetWeightPrecision() const = 0;
