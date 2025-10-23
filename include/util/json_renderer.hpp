@@ -54,6 +54,14 @@ template <typename Out> struct Renderer
         write(formatted.data(), formatted.size());
     }
 
+    void operator()(const OSMID &osmid)
+    {
+        fmt::memory_buffer buffer;
+        fmt::format_to(std::back_inserter(buffer), FMT_COMPILE("{}"), osmid.value);
+
+        write(buffer.data(), buffer.size());
+    }
+
     void operator()(const Object &object)
     {
         write('{');
