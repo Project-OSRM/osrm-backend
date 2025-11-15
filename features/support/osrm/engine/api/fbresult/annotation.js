@@ -3,10 +3,8 @@
 import * as flatbuffers from 'flatbuffers';
 import { Metadata } from '../../../../osrm/engine/api/fbresult/metadata.js';
 export class Annotation {
-    constructor() {
-        this.bb = null;
-        this.bb_pos = 0;
-    }
+    bb = null;
+    bb_pos = 0;
     __init(i, bb) {
         this.bb_pos = i;
         this.bb = bb;

@@ -2,10 +2,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 import * as flatbuffers from 'flatbuffers';
 export class Error {
-    constructor() {
-        this.bb = null;
-        this.bb_pos = 0;
-    }
+    bb = null;
+    bb_pos = 0;
     __init(i, bb) {
         this.bb_pos = i;
         this.bb = bb;

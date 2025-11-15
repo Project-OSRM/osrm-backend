@@ -5,10 +5,8 @@ import { ManeuverType } from '../../../../osrm/engine/api/fbresult/maneuver-type
 import { Position } from '../../../../osrm/engine/api/fbresult/position.js';
 import { Turn } from '../../../../osrm/engine/api/fbresult/turn.js';
 export class StepManeuver {
-    constructor() {
-        this.bb = null;
-        this.bb_pos = 0;
-    }
+    bb = null;
+    bb_pos = 0;
     __init(i, bb) {
         this.bb_pos = i;
         this.bb = bb;

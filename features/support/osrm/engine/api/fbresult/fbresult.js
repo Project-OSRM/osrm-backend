@@ -6,10 +6,8 @@ import { RouteObject } from '../../../../osrm/engine/api/fbresult/route-object.j
 import { TableResult } from '../../../../osrm/engine/api/fbresult/table-result.js';
 import { Waypoint } from '../../../../osrm/engine/api/fbresult/waypoint.js';
 export class FBResult {
-    constructor() {
-        this.bb = null;
-        this.bb_pos = 0;
-    }
+    bb = null;
+    bb_pos = 0;
     __init(i, bb) {
         this.bb_pos = i;
         this.bb = bb;

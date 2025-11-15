@@ -5,10 +5,8 @@ import { Intersection } from '../../../../osrm/engine/api/fbresult/intersection.
 import { Position } from '../../../../osrm/engine/api/fbresult/position.js';
 import { StepManeuver } from '../../../../osrm/engine/api/fbresult/step-maneuver.js';
 export class Step {
-    constructor() {
-        this.bb = null;
-        this.bb_pos = 0;
-    }
+    bb = null;
+    bb_pos = 0;
     __init(i, bb) {
         this.bb_pos = i;
         this.bb = bb;

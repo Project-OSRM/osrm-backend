@@ -4,10 +4,8 @@ import * as flatbuffers from 'flatbuffers';
 import { Position } from '../../../../osrm/engine/api/fbresult/position.js';
 import { Uint64Pair } from '../../../../osrm/engine/api/fbresult/uint64-pair.js';
 export class Waypoint {
-    constructor() {
-        this.bb = null;
-        this.bb_pos = 0;
-    }
+    bb = null;
+    bb_pos = 0;
     __init(i, bb) {
         this.bb_pos = i;
         this.bb = bb;
