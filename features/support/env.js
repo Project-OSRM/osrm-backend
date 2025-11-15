@@ -23,7 +23,7 @@ export default class Env {
 
   // Initializes all environment constants and paths for test execution
   initializeEnv(callback) {
-    this.TIMEOUT = parseInt(process.env.CUCUMBER_TIMEOUT) || 5000;
+    this.TIMEOUT = parseInt(process.env.CUCUMBER_TIMEOUT) || DEFAULT_TIMEOUT;
     this.ROOT_PATH = process.cwd();
 
     this.TEST_PATH = path.resolve(this.ROOT_PATH, 'test');
