@@ -8,9 +8,11 @@ import tryConnect from '../lib/try_connect.js';
 import { setDefaultTimeout } from '@cucumber/cucumber';
 
 // Set global timeout for all steps and hooks
+// Use higher timeout on macOS due to slower performance
+const DEFAULT_TIMEOUT = process.platform === 'darwin' ? 10000 : 5000;
 setDefaultTimeout(
   (process.env.CUCUMBER_TIMEOUT && parseInt(process.env.CUCUMBER_TIMEOUT)) ||
-    5000,
+    DEFAULT_TIMEOUT,
 );
 
 // Sets up all constants that are valid for all features
