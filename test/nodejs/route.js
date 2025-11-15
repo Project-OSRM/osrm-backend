@@ -3,9 +3,8 @@ import OSRM from '../../lib/index.js';
 import test from 'tape';
 import { data_path as monaco_path, mld_data_path as monaco_mld_path, three_test_coordinates, two_test_coordinates } from './constants.js';
 import flatbuffers from 'flatbuffers';
-import { osrm } from '../../features/support/fbresult_generated.js';
+import { FBResult } from '../../features/support/osrm/engine/api/fbresult/fbresult.js';
 
-const FBResult = osrm.engine.api.fbresult.FBResult;
 
 test('route: routes Monaco and can return result in flatbuffers', function(assert) {
     assert.plan(5);
