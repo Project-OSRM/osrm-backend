@@ -2,7 +2,7 @@
 import util from 'util';
 
 import flatbuffers from 'flatbuffers';
-import { osrm } from '../support/fbresult_generated.js';
+import * as osrm from '../support/osrm/engine/api/fbresult.js';
 const FBResult = osrm.engine.api.fbresult.FBResult;
 import { When } from '@cucumber/cucumber';
 
