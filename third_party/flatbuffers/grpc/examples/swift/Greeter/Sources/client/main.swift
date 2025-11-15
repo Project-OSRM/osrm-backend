@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Google Inc. All rights reserved.
+ * Copyright 2024 Google Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,8 @@ func greet(name: String, client greeter: models_GreeterServiceClient) {
   builder.finish(offset: root)
 
   // Make the RPC call to the server.
-  let sayHello = greeter
+  let sayHello =
+    greeter
     .SayHello(Message<models_HelloRequest>(builder: &builder))
 
   // wait() on the response to stop the program from exiting before the response is received.
@@ -76,7 +77,7 @@ func main(args: [String]) {
     print("Usage: PORT [NAME]")
     exit(1)
 
-  case let (.some(port), name):
+  case (.some(let port), let name):
     // Setup an `EventLoopGroup` for the connection to run on.
     //
     // See: https://github.com/apple/swift-nio#eventloops-and-eventloopgroups

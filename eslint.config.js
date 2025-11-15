@@ -3,6 +3,9 @@ import { Linter } from 'eslint';
 /** @type {Linter.Config} */
 const config = [
   {
+    ignores: ['node_modules/', 'build/', 'dist/', 'coverage/', 'features/support/osrm/'],
+  },
+  {
     files: ["**/*.js"],
     languageOptions: {
       ecmaVersion: 2024,
@@ -25,7 +28,6 @@ const config = [
       'prefer-template': 'error',
       'prefer-arrow-callback': 'error',
     },
-    ignores: ['node_modules/', 'build/', 'dist/', 'coverage/', 'features/support/fbresult_generated.js'],
   },
 ];
 

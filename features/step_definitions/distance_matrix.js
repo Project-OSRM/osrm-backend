@@ -2,8 +2,7 @@
 import util from 'util';
 
 import flatbuffers from 'flatbuffers';
-import { osrm } from '../support/fbresult_generated.js';
-const FBResult = osrm.engine.api.fbresult.FBResult;
+import { FBResult } from '../support/osrm/engine/api/fbresult/fbresult.js';
 import { When } from '@cucumber/cucumber';
 
 // Regular expressions for matching different matrix API test scenarios

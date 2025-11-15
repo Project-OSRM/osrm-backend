@@ -33,7 +33,7 @@ FMT_PATH="fmtlib/fmt"
 FMT_TAG=11.2.0
 
 FLATBUFFERS_PATH="google/flatbuffers"
-FLATBUFFERS_TAG=v24.3.25
+FLATBUFFERS_TAG=v25.9.23
 
 function update_subtree () {
     name=$(echo "$1" | tr '[:lower:]' '[:upper:]')

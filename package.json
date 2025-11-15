@@ -21,7 +21,11 @@
     "docs": "./scripts/build_api_docs.sh",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh",
     "nodejs-tests": "make -C test/data && ./lib/binding/osrm-datastore test/data/ch/monaco.osrm && node test/nodejs/index.js | faucet",
-    "prepare": "husky"
+    "prepare": "husky",
+    "generate:flatbuffers:ts": "flatc --ts -o features/support include/engine/api/flatbuffers/fbresult.fbs include/engine/api/flatbuffers/position.fbs include/engine/api/flatbuffers/route.fbs include/engine/api/flatbuffers/table.fbs include/engine/api/flatbuffers/waypoint.fbs",
+    "generate:flatbuffers:js": "tsc --project tsconfig.flatbuffers.json",
+    "generate:flatbuffers:cpp": "flatc --cpp -o generated/include/engine/api/flatbuffers include/engine/api/flatbuffers/fbresult.fbs include/engine/api/flatbuffers/position.fbs include/engine/api/flatbuffers/route.fbs include/engine/api/flatbuffers/table.fbs include/engine/api/flatbuffers/waypoint.fbs",
+    "generate:flatbuffers": "npm run generate:flatbuffers:ts && npm run generate:flatbuffers:js && npm run generate:flatbuffers:cpp"
   },
   "repository": {
     "type": "git",
@@ -59,8 +63,9 @@
     "documentation": "^14.0.2",
     "eslint": "9.26.0",
     "faucet": "^0.0.4",
-    "flatbuffers": "24.3.25",
+    "flatbuffers": "25.9.23",
     "husky": "^9.1.7",
+    "typescript": "^5.0.0",
     "jsonpath": "^1.1.1",
     "lint-staged": "^16.1.6",
     "node-addon-api": "8.3.1",
