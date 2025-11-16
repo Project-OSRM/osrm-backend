@@ -5,7 +5,7 @@ message(STATUS "Building node_osrm")
 set(NAPI_VERSION 8)
 add_definitions(-DNAPI_VERSION=${NAPI_VERSION})
 
-set(BINDING_DIR "${PROJECT_SOURCE_DIR}/lib/binding")
+set(BINDING_DIR "${PROJECT_SOURCE_DIR}/lib/binding_napi_v8")
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/node_modules/node-cmake")
 
@@ -35,6 +35,9 @@ target_link_libraries(node_osrm osrm)
 
 # node_osrm artifacts in ${BINDING_DIR} to depend targets on
 set(ARTIFACTS "")
+
+# Create the binding directory if it doesn't exist
+file(MAKE_DIRECTORY ${BINDING_DIR})
 
 set(OSRM_BINARIES osrm-extract osrm-contract osrm-routed osrm-datastore osrm-components osrm-partition osrm-customize)
 foreach(binary ${OSRM_BINARIES})
