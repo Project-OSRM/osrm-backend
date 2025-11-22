@@ -114,9 +114,9 @@ void SetExcludableClasses(const ExtractorCallbacks::ClassesMap &classes_map,
                           const std::vector<std::vector<std::string>> &excludable_classes,
                           ProfileProperties &profile_properties)
 {
-    if (excludable_classes.size() > MAX_EXCLUDABLE_CLASSES)
+    if (excludable_classes.size() > MAX_CLASS_INDEX)
     {
-        throw util::exception("Only " + std::to_string(MAX_EXCLUDABLE_CLASSES) +
+        throw util::exception("Only " + std::to_string(MAX_CLASS_INDEX) +
                               " excludable combinations allowed.");
     }
 
