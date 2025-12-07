@@ -115,9 +115,11 @@ jobs:
     - name: Run checks
       run: |
         ./scripts/check_taginfo.py taginfo.json profiles/car.lua
-        ./scripts/format.sh && ./scripts/error_on_dirty.sh
+        # Check that code formatting is up to date
+        ./scripts/format.sh && ./scripts/error_on_dirty.sh "Run './scripts/format.sh' locally and commit the changes."
         node ./scripts/validate_changelog.js
-        npm run docs && ./scripts/error_on_dirty.sh
+        # Check that API documentation is up to date with JSDoc comments in node_osrm.cpp
+        npm run docs && ./scripts/error_on_dirty.sh "Run 'npm run docs' locally and commit the changes."
         npm audit --production
 
   docker-image-matrix:
