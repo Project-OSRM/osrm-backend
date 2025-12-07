@@ -70,8 +70,7 @@ using UnsafeFloatLatitude = Alias<double, tag::unsafelatitude>;
 using UnsafeFloatLongitude = Alias<double, tag::unsafelongitude>;
 // Note: Conditions are split into separate static_asserts to avoid
 // clang-tidy misc-redundant-expression warning.
-static_assert(std::is_standard_layout<FixedLatitude>(),
-              "FixedLatitude must have standard layout.");
+static_assert(std::is_standard_layout<FixedLatitude>(), "FixedLatitude must have standard layout.");
 static_assert(std::is_trivially_default_constructible<FixedLatitude>(),
               "FixedLatitude must be trivially default constructible.");
 static_assert(std::is_trivially_copyable<FixedLatitude>(),
@@ -84,8 +83,7 @@ static_assert(std::is_trivially_default_constructible<FixedLongitude>(),
 static_assert(std::is_trivially_copyable<FixedLongitude>(),
               "FixedLongitude must be trivially copyable.");
 
-static_assert(std::is_standard_layout<FloatLatitude>(),
-              "FloatLatitude must have standard layout.");
+static_assert(std::is_standard_layout<FloatLatitude>(), "FloatLatitude must have standard layout.");
 static_assert(std::is_trivially_default_constructible<FloatLatitude>(),
               "FloatLatitude must be trivially default constructible.");
 static_assert(std::is_trivially_copyable<FloatLatitude>(),
