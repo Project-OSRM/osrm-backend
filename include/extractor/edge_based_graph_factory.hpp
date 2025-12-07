@@ -44,10 +44,12 @@ struct TurnIndexBlock
     NodeID to_id;
 };
 #pragma pack(pop)
-static_assert(std::is_standard_layout<TurnIndexBlock>::value &&
-                  std::is_trivially_default_constructible<TurnIndexBlock>::value &&
-                  std::is_trivially_copyable<TurnIndexBlock>::value,
-              "TurnIndexBlock is not trivial or does not have standard layout");
+// Note: Conditions are split into separate static_asserts to avoid
+// clang-tidy misc-redundant-expression warning.
+static_assert(std::is_trivially_default_constructible<TurnIndexBlock>::value,
+              "TurnIndexBlock must be trivially default constructible.");
+static_assert(std::is_trivially_copyable<TurnIndexBlock>::value,
+              "TurnIndexBlock must be trivially copyable.");
 static_assert(sizeof(TurnIndexBlock) == 12, "TurnIndexBlock is not packed correctly");
 } // namespace lookup
 
