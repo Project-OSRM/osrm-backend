@@ -32,8 +32,6 @@ struct FingerPrint
 };
 
 static_assert(sizeof(FingerPrint) == 8, "FingerPrint has unexpected size");
-// Note: Conditions are split into separate static_asserts to avoid
-// clang-tidy misc-redundant-expression warning.
 static_assert(std::is_trivially_default_constructible<FingerPrint>::value,
               "FingerPrint needs to be trivially default constructible.");
 static_assert(std::is_trivially_copyable<FingerPrint>::value,

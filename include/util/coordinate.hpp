@@ -68,8 +68,6 @@ using FloatLongitude = Alias<double, tag::longitude>;
 // range checks on these (toFixed/toFloat, etc)
 using UnsafeFloatLatitude = Alias<double, tag::unsafelatitude>;
 using UnsafeFloatLongitude = Alias<double, tag::unsafelongitude>;
-// Note: Conditions are split into separate static_asserts to avoid
-// clang-tidy misc-redundant-expression warning.
 static_assert(std::is_standard_layout<FixedLatitude>(), "FixedLatitude must have standard layout.");
 static_assert(std::is_trivially_default_constructible<FixedLatitude>(),
               "FixedLatitude must be trivially default constructible.");

@@ -44,8 +44,6 @@ struct TurnIndexBlock
     NodeID to_id;
 };
 #pragma pack(pop)
-// Note: Conditions are split into separate static_asserts to avoid
-// clang-tidy misc-redundant-expression warning.
 static_assert(std::is_trivially_default_constructible<TurnIndexBlock>::value,
               "TurnIndexBlock must be trivially default constructible.");
 static_assert(std::is_trivially_copyable<TurnIndexBlock>::value,

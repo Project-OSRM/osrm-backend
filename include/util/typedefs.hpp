@@ -69,16 +69,12 @@ struct turn_penalty
 } // namespace tag
 
 using OSMNodeID = osrm::Alias<std::uint64_t, tag::osm_node_id>;
-// Note: Conditions are split into separate static_asserts to avoid
-// clang-tidy misc-redundant-expression warning.
 static_assert(std::is_standard_layout<OSMNodeID>(), "OSMNodeID must have standard layout.");
 static_assert(std::is_trivially_default_constructible<OSMNodeID>(),
               "OSMNodeID must be trivially default constructible.");
 static_assert(std::is_trivially_copyable<OSMNodeID>(), "OSMNodeID must be trivially copyable.");
 
 using OSMWayID = osrm::Alias<std::uint64_t, tag::osm_way_id>;
-// Note: Conditions are split into separate static_asserts to avoid
-// clang-tidy misc-redundant-expression warning.
 static_assert(std::is_standard_layout<OSMWayID>(), "OSMWayID must have standard layout.");
 static_assert(std::is_trivially_default_constructible<OSMWayID>(),
               "OSMWayID must be trivially default constructible.");
