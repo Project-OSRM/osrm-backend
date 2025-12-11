@@ -15,6 +15,7 @@
       - CHANGED: Upgrade Cucumber-js to v12 [#7221](https://github.com/Project-OSRM/osrm-backend/pull/7221)
       - CHANGED: Add libcap-setcap to alpine dockerfile [#7241](https://github.com/Project-OSRM/osrm-backend/issues/7241)
       - FIXED: Minor misspellings found in source code, comments and documents [#7215](https://github.com/Project-OSRM/osrm-backend/pull/7215)
+      - CHANGED: Add the PSV vehicle subtypes to the access_tag_blacklist of the car profile (taxi, share_taxi, minibus, and bus) [#7295](https://github.com/Project-OSRM/osrm-backend/pull/7295)
 
 # 6.0.0
   - Changes from 6.0.0 RC2: None
