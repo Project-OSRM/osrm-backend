@@ -80,6 +80,10 @@ function setup()
       'forestry',
       'emergency',
       'psv',
+      'taxi', -- sub class of psv
+      'share_taxi', -- sub class of psv
+      'minibus', -- sub class of psv
+      'bus', -- sub class of psv
       'customers',
       'private',
       'delivery',
