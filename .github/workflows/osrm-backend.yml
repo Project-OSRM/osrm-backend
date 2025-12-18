@@ -57,7 +57,7 @@ jobs:
 
         cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
         cmake --build . --config Release
-        
+
     # TODO: MSVC goes out of memory when building our tests
     # - name: Run tests
     #   shell: bash
@@ -319,7 +319,7 @@ jobs:
             build_node_package: true
             continue-on-error: true
             node: 22
-            runs-on: macos-13 # x86_64
+            runs-on: macos-15-intel
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
@@ -331,7 +331,7 @@ jobs:
             build_node_package: true
             continue-on-error: true
             node: 22
-            runs-on: macos-15 # arm64 
+            runs-on: macos-15 # arm64
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
@@ -419,7 +419,7 @@ jobs:
         fi
     # See: https://github.com/actions/toolkit/issues/946#issuecomment-1590016041
     # We need it to be able to access system folders while restoring cached Boost below
-    - name: Give tar root ownership 
+    - name: Give tar root ownership
       if: runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
       run: sudo chown root /bin/tar && sudo chmod u+s /bin/tar
 
@@ -429,7 +429,7 @@ jobs:
       id: install-boost
       with:
         boost_version: 1.85.0
-    
+
     - name: Install dev dependencies
       run: |
         # workaround for issue that GitHub Actions seems to not adding it to PATH after https://github.com/actions/runner-images/pull/6499
