@@ -2,6 +2,7 @@
   "name": "@project-osrm/osrm",
   "version": "6.0.0",
   "private": false,
+  "type": "module",
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++ designed to run on OpenStreetMap data.",
   "dependencies": {
     "@mapbox/node-pre-gyp": "2.0.0",
@@ -14,12 +15,13 @@
     ]
   },
   "scripts": {
-    "lint": "node ./node_modules/eslint/bin/eslint.js -c ./eslint.config.js features/step_definitions/ features/support/",
+    "lint": "npx eslint features/",
     "test": "npm run lint && ./scripts/cucumber_test_matrix.sh",
     "clean": "rm -rf test/cache",
     "docs": "./scripts/build_api_docs.sh",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh",
-    "nodejs-tests": "make -C test/data && ./lib/binding/osrm-datastore test/data/ch/monaco.osrm && node test/nodejs/index.js | faucet"
+    "nodejs-tests": "make -C test/data && ./lib/binding/osrm-datastore test/data/ch/monaco.osrm && node test/nodejs/index.js | faucet",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -32,7 +34,7 @@
   },
   "homepage": "https://github.com/Project-OSRM/osrm-backend",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.18.10",
@@ -40,24 +42,27 @@
     "@babel/plugin-transform-class-properties": "^7.18.10",
     "@babel/preset-env": "^7.18.10",
     "@babel/preset-react": "^7.18.6",
+    "@cucumber/cucumber": "^12.1.0",
     "@mapbox/polyline": "1.2.1",
     "@turf/turf": "7.2.0",
     "acorn": "8.14.1",
     "ansi-escape-sequences": "6.2.4",
     "babelify": "^10.0.0",
     "browserify": "17.0.1",
-    "chalk": "^1.1.3",
-    "cheap-ruler": "^3.0.2",
+    "chalk": "^5.6.0",
+    "cheap-ruler": "^4.0.0",
     "command-line-args": "6.0.1",
     "command-line-usage": "7.0.3",
     "csv-stringify": "6.5.2",
-    "cucumber": "^1.2.1",
     "d3-queue": "3.0.7",
     "docbox": "^1.0.11",
     "documentation": "^14.0.2",
     "eslint": "9.26.0",
     "faucet": "^0.0.4",
+    "flatbuffers": "24.3.25",
+    "husky": "^9.1.7",
     "jsonpath": "^1.1.1",
+    "lint-staged": "^16.1.6",
     "node-addon-api": "8.3.1",
     "node-cmake": "^2.5.1",
     "tape": "5.9.0",
@@ -74,6 +79,12 @@
     "host": "https://github.com",
     "remote_path": "./Project-OSRM/osrm-backend/releases/download/v{version}/",
     "package_name": "{module_name}-v{version}-{napi_build_version}-{platform}-{arch}-{configuration}.tar.gz"
+  },
+  "lint-staged": {
+    "features/**/*.js": [
+      "node --check",
+      "eslint --fix"
+    ]
   },
   "publishConfig": {
     "access": "public"

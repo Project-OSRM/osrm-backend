@@ -96,7 +96,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
                 //       a turn, the duration_until_turn/weight_until_turn values
                 //       include the turn cost.  To counter this, we subtract
                 //       the duration_of_turn/weight_of_turn value, which is 0 for
-                //       non-preceeding-turn segments, but contains the turn value
+                //       non-preceding-turn segments, but contains the turn value
                 //       for segments before a turn.
                 from_alias<double>(path_point.duration_until_turn - path_point.duration_of_turn) /
                     10.,

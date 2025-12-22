@@ -1,16 +1,16 @@
-var OSRM = require('../../');
-var test = require('tape');
-var data_path = require('./constants').data_path;
-var mld_data_path = require('./constants').mld_data_path;
-var three_test_coordinates = require('./constants').three_test_coordinates;
-var two_test_coordinates = require('./constants').two_test_coordinates;
-const flatbuffers = require('../../features/support/flatbuffers').flatbuffers;
-const FBResult = require('../../features/support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
+// Test nearest service functionality for finding closest waypoints on road network
+import OSRM from '../../lib/index.js';
+import test from 'tape';
+import { data_path, mld_data_path, three_test_coordinates, two_test_coordinates } from './constants.js';
+import flatbuffers from 'flatbuffers';
+import { osrm } from '../../features/support/fbresult_generated.js';
+
+const FBResult = osrm.engine.api.fbresult.FBResult;
 
 
 test('nearest with flatbuffers format', function(assert) {
     assert.plan(5);
-    var osrm = new OSRM(data_path);
+    const osrm = new OSRM(data_path);
     osrm.nearest({
         coordinates: [three_test_coordinates[0]],
         format: 'flatbuffers'
@@ -26,7 +26,7 @@ test('nearest with flatbuffers format', function(assert) {
 
 test('nearest', function(assert) {
     assert.plan(4);
-    var osrm = new OSRM(data_path);
+    const osrm = new OSRM(data_path);
     osrm.nearest({
         coordinates: [three_test_coordinates[0]]
     }, function(err, result) {
@@ -39,7 +39,7 @@ test('nearest', function(assert) {
 
 test('nearest', function(assert) {
     assert.plan(5);
-    var osrm = new OSRM(data_path);
+    const osrm = new OSRM(data_path);
     osrm.nearest({
         coordinates: [three_test_coordinates[0]]
     }, { format: 'json_buffer' }, function(err, result) {
@@ -54,7 +54,7 @@ test('nearest', function(assert) {
 
 test('nearest: can ask for multiple nearest pts', function(assert) {
     assert.plan(2);
-    var osrm = new OSRM(data_path);
+    const osrm = new OSRM(data_path);
     osrm.nearest({
         coordinates: [three_test_coordinates[0]],
         number: 3
@@ -66,8 +66,8 @@ test('nearest: can ask for multiple nearest pts', function(assert) {
 
 test('nearest: throws on invalid args', function(assert) {
     assert.plan(7);
-    var osrm = new OSRM(data_path);
-    var options = {};
+    const osrm = new OSRM(data_path);
+    const options = {};
     assert.throws(function() { osrm.nearest(options); },
         /Two arguments required/);
     assert.throws(function() { osrm.nearest(null, function(err, res) {}); },
@@ -93,8 +93,8 @@ test('nearest: throws on invalid args', function(assert) {
 
 test('nearest: nearest in Monaco without motorways', function(assert) {
     assert.plan(2);
-    var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
-    var options = {
+    const osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+    const options = {
         coordinates: [two_test_coordinates[0]],
         exclude: ['motorway']
     };
@@ -106,8 +106,8 @@ test('nearest: nearest in Monaco without motorways', function(assert) {
 
 test('nearest: throws on disabled geometry', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({path: data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
-    var options = {
+    const osrm = new OSRM({path: data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    const options = {
         coordinates: [two_test_coordinates[0]],
     };
     osrm.nearest(options, function(err, response) {
@@ -117,8 +117,8 @@ test('nearest: throws on disabled geometry', function(assert) {
 });
 test('nearest: ok on disabled geometry', function(assert) {
     assert.plan(2);
-    var osrm = new OSRM({path: data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
-    var options = {
+    const osrm = new OSRM({path: data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    const options = {
         coordinates: [two_test_coordinates[0]],
         skip_waypoints: true,
     };
@@ -131,8 +131,8 @@ test('nearest: ok on disabled geometry', function(assert) {
 
 test('nearest: ok on disabled steps', function(assert) {
     assert.plan(2);
-    var osrm = new OSRM({path: data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
-    var options = {
+    const osrm = new OSRM({path: data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    const options = {
         coordinates: [two_test_coordinates[0]],
     };
     osrm.nearest(options, function(err, response) {

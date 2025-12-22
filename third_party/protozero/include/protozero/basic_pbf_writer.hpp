@@ -85,7 +85,7 @@ class basic_pbf_writer {
 
     void add_field(pbf_tag_type tag, pbf_wire_type type) {
         protozero_assert(((tag > 0 && tag < 19000) || (tag > 19999 && tag <= ((1U << 29U) - 1))) && "tag out of range");
-        const uint32_t b = (tag << 3U) | uint32_t(type);
+        const uint32_t b = (tag << 3U) | static_cast<uint32_t>(type);
         add_varint(b);
     }
 
@@ -105,7 +105,7 @@ class basic_pbf_writer {
     }
 
     template <typename T, typename It>
-    void add_packed_fixed(pbf_tag_type tag, It first, It last, std::input_iterator_tag /*unused*/) {
+    void add_packed_fixed(pbf_tag_type tag, It first, It last, std::input_iterator_tag /*unused*/) { // NOLINT(performance-unnecessary-value-param)
         if (first == last) {
             return;
         }
@@ -118,7 +118,7 @@ class basic_pbf_writer {
     }
 
     template <typename T, typename It>
-    void add_packed_fixed(pbf_tag_type tag, It first, It last, std::forward_iterator_tag /*unused*/) {
+    void add_packed_fixed(pbf_tag_type tag, It first, It last, std::forward_iterator_tag /*unused*/) { // NOLINT(performance-unnecessary-value-param)
         if (first == last) {
             return;
         }
@@ -133,7 +133,7 @@ class basic_pbf_writer {
     }
 
     template <typename It>
-    void add_packed_varint(pbf_tag_type tag, It first, It last) {
+    void add_packed_varint(pbf_tag_type tag, It first, It last) { // NOLINT(performance-unnecessary-value-param)
         if (first == last) {
             return;
         }
@@ -146,7 +146,7 @@ class basic_pbf_writer {
     }
 
     template <typename It>
-    void add_packed_svarint(pbf_tag_type tag, It first, It last) {
+    void add_packed_svarint(pbf_tag_type tag, It first, It last) { // NOLINT(performance-unnecessary-value-param)
         if (first == last) {
             return;
         }
@@ -162,7 +162,7 @@ class basic_pbf_writer {
     // a length-delimited field. The length has to fit into pbf_length_type,
     // and a varint needs 8 bit for every 7 bit.
     enum : int {
-        reserve_bytes = sizeof(pbf_length_type) * 8 / 7 + 1
+        reserve_bytes = (sizeof(pbf_length_type) * 8 / 7) + 1
     };
 
     // If m_rollpack_pos is set to this special value, it means that when
@@ -181,7 +181,7 @@ class basic_pbf_writer {
             buffer_customization<TBuffer>::append_zeros(m_data, std::size_t(reserve_bytes));
         } else {
             m_rollback_pos = size_is_known;
-            add_length_varint(tag, pbf_length_type(size));
+            add_length_varint(tag, static_cast<pbf_length_type>(size));
             reserve(size);
         }
         m_pos = buffer_customization<TBuffer>::size(m_data);
@@ -391,7 +391,7 @@ public:
         add_field(tag, pbf_wire_type::varint);
         protozero_assert(m_pos == 0 && "you can't add fields to a parent basic_pbf_writer if there is an existing basic_pbf_writer for a submessage");
         protozero_assert(m_data);
-        m_data->push_back(char(value));
+        m_data->push_back(static_cast<char>(value));
     }
 
     /**
@@ -401,7 +401,7 @@ public:
      * @param value Value to be written
      */
     void add_enum(pbf_tag_type tag, int32_t value) {
-        add_tagged_varint(tag, uint64_t(value));
+        add_tagged_varint(tag, static_cast<uint64_t>(value));
     }
 
     /**
@@ -411,7 +411,7 @@ public:
      * @param value Value to be written
      */
     void add_int32(pbf_tag_type tag, int32_t value) {
-        add_tagged_varint(tag, uint64_t(value));
+        add_tagged_varint(tag, static_cast<uint64_t>(value));
     }
 
     /**
@@ -441,7 +441,7 @@ public:
      * @param value Value to be written
      */
     void add_int64(pbf_tag_type tag, int64_t value) {
-        add_tagged_varint(tag, uint64_t(value));
+        add_tagged_varint(tag, static_cast<uint64_t>(value));
     }
 
     /**
@@ -541,7 +541,7 @@ public:
         protozero_assert(m_pos == 0 && "you can't add fields to a parent basic_pbf_writer if there is an existing basic_pbf_writer for a submessage");
         protozero_assert(m_data);
         protozero_assert(size <= std::numeric_limits<pbf_length_type>::max());
-        add_length_varint(tag, pbf_length_type(size));
+        add_length_varint(tag, static_cast<pbf_length_type>(size));
         buffer_customization<TBuffer>::append(m_data, value, size);
     }
 
@@ -602,7 +602,7 @@ public:
         size_t sum_size = 0;
         (void)std::initializer_list<size_t>{sum_size += values.size()...};
         protozero_assert(sum_size <= std::numeric_limits<pbf_length_type>::max());
-        add_length_varint(tag, pbf_length_type(sum_size));
+        add_length_varint(tag, static_cast<pbf_length_type>(sum_size));
         buffer_customization<TBuffer>::reserve_additional(m_data, sum_size);
         (void)std::initializer_list<int>{(buffer_customization<TBuffer>::append(m_data, values.data(), values.size()), 0)...};
     }
@@ -697,7 +697,7 @@ public:
      * @param last Iterator pointing one past the end of data
      */
     template <typename InputIterator>
-    void add_packed_bool(pbf_tag_type tag, InputIterator first, InputIterator last) {
+    void add_packed_bool(pbf_tag_type tag, InputIterator first, InputIterator last) { // NOLINT(performance-unnecessary-value-param)
         add_packed_varint(tag, first, last);
     }
 
@@ -711,7 +711,7 @@ public:
      * @param last Iterator pointing one past the end of data
      */
     template <typename InputIterator>
-    void add_packed_enum(pbf_tag_type tag, InputIterator first, InputIterator last) {
+    void add_packed_enum(pbf_tag_type tag, InputIterator first, InputIterator last) { // NOLINT(performance-unnecessary-value-param)
         add_packed_varint(tag, first, last);
     }
 
@@ -725,7 +725,7 @@ public:
      * @param last Iterator pointing one past the end of data
      */
     template <typename InputIterator>
-    void add_packed_int32(pbf_tag_type tag, InputIterator first, InputIterator last) {
+    void add_packed_int32(pbf_tag_type tag, InputIterator first, InputIterator last) { // NOLINT(performance-unnecessary-value-param)
         add_packed_varint(tag, first, last);
     }
 
@@ -739,7 +739,7 @@ public:
      * @param last Iterator pointing one past the end of data
      */
     template <typename InputIterator>
-    void add_packed_sint32(pbf_tag_type tag, InputIterator first, InputIterator last) {
+    void add_packed_sint32(pbf_tag_type tag, InputIterator first, InputIterator last) { // NOLINT(performance-unnecessary-value-param)
         add_packed_svarint(tag, first, last);
     }
 
@@ -753,7 +753,7 @@ public:
      * @param last Iterator pointing one past the end of data
      */
     template <typename InputIterator>
-    void add_packed_uint32(pbf_tag_type tag, InputIterator first, InputIterator last) {
+    void add_packed_uint32(pbf_tag_type tag, InputIterator first, InputIterator last) { // NOLINT(performance-unnecessary-value-param)
         add_packed_varint(tag, first, last);
     }
 
@@ -767,7 +767,7 @@ public:
      * @param last Iterator pointing one past the end of data
      */
     template <typename InputIterator>
-    void add_packed_int64(pbf_tag_type tag, InputIterator first, InputIterator last) {
+    void add_packed_int64(pbf_tag_type tag, InputIterator first, InputIterator last) { // NOLINT(performance-unnecessary-value-param)
         add_packed_varint(tag, first, last);
     }
 
@@ -781,7 +781,7 @@ public:
      * @param last Iterator pointing one past the end of data
      */
     template <typename InputIterator>
-    void add_packed_sint64(pbf_tag_type tag, InputIterator first, InputIterator last) {
+    void add_packed_sint64(pbf_tag_type tag, InputIterator first, InputIterator last) { // NOLINT(performance-unnecessary-value-param)
         add_packed_svarint(tag, first, last);
     }
 
@@ -795,7 +795,7 @@ public:
      * @param last Iterator pointing one past the end of data
      */
     template <typename InputIterator>
-    void add_packed_uint64(pbf_tag_type tag, InputIterator first, InputIterator last) {
+    void add_packed_uint64(pbf_tag_type tag, InputIterator first, InputIterator last) { // NOLINT(performance-unnecessary-value-param)
         add_packed_varint(tag, first, last);
     }
 
@@ -817,7 +817,7 @@ public:
      * @param last Iterator pointing one past the end of data
      */
     template <typename ValueType, typename InputIterator>
-    void add_packed_fixed(pbf_tag_type tag, InputIterator first, InputIterator last) {
+    void add_packed_fixed(pbf_tag_type tag, InputIterator first, InputIterator last) { // NOLINT(performance-unnecessary-value-param)
         static_assert(std::is_same<ValueType, uint32_t>::value ||
                       std::is_same<ValueType, int32_t>::value ||
                       std::is_same<ValueType, int64_t>::value ||
@@ -838,7 +838,7 @@ public:
      * @param last Iterator pointing one past the end of data
      */
     template <typename InputIterator>
-    void add_packed_fixed32(pbf_tag_type tag, InputIterator first, InputIterator last) {
+    void add_packed_fixed32(pbf_tag_type tag, InputIterator first, InputIterator last) { // NOLINT(performance-unnecessary-value-param)
         add_packed_fixed<uint32_t, InputIterator>(tag, first, last,
             typename std::iterator_traits<InputIterator>::iterator_category{});
     }
@@ -853,7 +853,7 @@ public:
      * @param last Iterator pointing one past the end of data
      */
     template <typename InputIterator>
-    void add_packed_sfixed32(pbf_tag_type tag, InputIterator first, InputIterator last) {
+    void add_packed_sfixed32(pbf_tag_type tag, InputIterator first, InputIterator last) { // NOLINT(performance-unnecessary-value-param)
         add_packed_fixed<int32_t, InputIterator>(tag, first, last,
             typename std::iterator_traits<InputIterator>::iterator_category{});
     }
@@ -868,7 +868,7 @@ public:
      * @param last Iterator pointing one past the end of data
      */
     template <typename InputIterator>
-    void add_packed_fixed64(pbf_tag_type tag, InputIterator first, InputIterator last) {
+    void add_packed_fixed64(pbf_tag_type tag, InputIterator first, InputIterator last) { // NOLINT(performance-unnecessary-value-param)
         add_packed_fixed<uint64_t, InputIterator>(tag, first, last,
             typename std::iterator_traits<InputIterator>::iterator_category{});
     }
@@ -883,7 +883,7 @@ public:
      * @param last Iterator pointing one past the end of data
      */
     template <typename InputIterator>
-    void add_packed_sfixed64(pbf_tag_type tag, InputIterator first, InputIterator last) {
+    void add_packed_sfixed64(pbf_tag_type tag, InputIterator first, InputIterator last) { // NOLINT(performance-unnecessary-value-param)
         add_packed_fixed<int64_t, InputIterator>(tag, first, last,
             typename std::iterator_traits<InputIterator>::iterator_category{});
     }
@@ -898,7 +898,7 @@ public:
      * @param last Iterator pointing one past the end of data
      */
     template <typename InputIterator>
-    void add_packed_float(pbf_tag_type tag, InputIterator first, InputIterator last) {
+    void add_packed_float(pbf_tag_type tag, InputIterator first, InputIterator last) { // NOLINT(performance-unnecessary-value-param)
         add_packed_fixed<float, InputIterator>(tag, first, last,
             typename std::iterator_traits<InputIterator>::iterator_category{});
     }
@@ -913,7 +913,7 @@ public:
      * @param last Iterator pointing one past the end of data
      */
     template <typename InputIterator>
-    void add_packed_double(pbf_tag_type tag, InputIterator first, InputIterator last) {
+    void add_packed_double(pbf_tag_type tag, InputIterator first, InputIterator last) { // NOLINT(performance-unnecessary-value-param)
         add_packed_fixed<double, InputIterator>(tag, first, last,
             typename std::iterator_traits<InputIterator>::iterator_category{});
     }

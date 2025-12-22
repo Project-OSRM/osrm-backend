@@ -745,9 +745,9 @@ bool SliproadHandler::isValidSliproadArea(const double max_area,
     const auto third = node_coordinates[c];
 
     const auto length = greatCircleDistance(first, second);
-    const auto heigth = greatCircleDistance(second, third);
+    const auto height = greatCircleDistance(second, third);
 
-    const auto area = (length * heigth) / 2.;
+    const auto area = (length * height) / 2.;
 
     // Everything below is data issue - there are some weird situations where
     // nodes are really close to each other and / or tagging ist just plain off.

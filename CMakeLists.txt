@@ -268,6 +268,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   # using Visual Studio C++
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj") # avoid compiler error C1128 from scripting_environment_lua.cpp
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DWIN32_LEAN_AND_MEAN") # avoid compiler error C2011 from dual #include of winsock.h and winsock2.h
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8") # support Unicode in fmt library
   add_dependency_defines(-DBOOST_LIB_DIAGNOSTIC)
   add_dependency_defines(-D_CRT_SECURE_NO_WARNINGS)
   add_dependency_defines(-DNOMINMAX) # avoid min and max macros that can break compilation
@@ -285,6 +286,42 @@ if(UNIX AND NOT APPLE)
 endif()
 
 find_package(Threads REQUIRED)
+
+# Check for C++20 <format> with full chrono support that compiles, links and runs
+# This is necessary because some environments have the header but incomplete
+# implementation (e.g., Alpine GCC 14 missing chrono formatters, or Clang
+# with libstdc++ from older GCC lacking std::format symbols at link time)
+include(CheckCXXSourceRuns)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} /std:c++20")
+else()
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
+  set(CMAKE_REQUIRED_LIBRARIES "stdc++")
+endif()
+
+check_cxx_source_runs("
+  #include <chrono>
+  #include <format>
+  #include <numbers>
+  #include <string>
+  int main() {
+    // Test basic formatting
+    std::string s1 = std::format(\"{:.10g}\", std::numbers::pi);
+    // Test chrono formatting
+    auto now = std::chrono::system_clock::now();
+    auto secs = std::chrono::floor<std::chrono::seconds>(now);
+    std::string s2 = std::format(\"{:%FT%T}\", secs);
+    return (s1.empty() || s2.empty()) ? 1 : 0;
+  }
+" OSRM_HAS_STD_FORMAT)
+
+unset(CMAKE_REQUIRED_FLAGS)
+unset(CMAKE_REQUIRED_LIBRARIES)
+
+if(OSRM_HAS_STD_FORMAT)
+  add_definitions(-DOSRM_HAS_STD_FORMAT)
+endif()
 
 # Third-party libraries
 set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson/include")

@@ -146,7 +146,7 @@ bool MergableRoadDetector::EdgeDataSupportsMerge(
         return false;
 
     /* The travel mode should be the same for both roads. If we were to merge different travel
-     * modes, we would hide information/run the risk of loosing valid choices (e.g. short period
+     * modes, we would hide information/run the risk of losing valid choices (e.g. short period
      * of pushing)
      */
     if (lhs_annotation.travel_mode != rhs_annotation.travel_mode)

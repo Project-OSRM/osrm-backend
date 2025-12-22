@@ -1,0 +1,14 @@
+name: Install apt packages on Ubuntu/Debian
+
+runs:
+  using: composite
+  steps:
+    - name: Install packages
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -yq \
+            doxygen \
+            graphviz \
+            libprotobuf-dev \
+            protobuf-compiler
+      shell: bash
