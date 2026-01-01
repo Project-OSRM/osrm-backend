@@ -63,8 +63,7 @@ template <typename Out> struct Renderer
         // (up to ~10 billion currently) without scientific notation.
         constexpr auto max_exact_int =
             static_cast<double>(1ULL << std::numeric_limits<double>::digits);
-        if (number.value >= 0.0 &&
-            number.value <= max_exact_int &&
+        if (number.value >= 0.0 && number.value <= max_exact_int &&
             std::trunc(number.value) == number.value)
         {
             auto int_value = static_cast<std::uint64_t>(number.value);
