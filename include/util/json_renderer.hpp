@@ -57,12 +57,14 @@ template <typename Out> struct Renderer
             return;
         }
 
-        // Check if value is a non-negative whole number representable as uint64_t.
-        // This handles large OSM IDs (up to ~10 billion currently) without
-        // scientific notation or precision loss.
-        // Note: doubles can exactly represent integers up to 2^53.
+        // Check if value is a non-negative whole number that can be exactly
+        // represented in a double. Doubles have 53 mantissa bits, so integers
+        // up to 2^53 can be exactly represented. This handles large OSM IDs
+        // (up to ~10 billion currently) without scientific notation.
+        constexpr auto max_exact_int =
+            static_cast<double>(1ULL << std::numeric_limits<double>::digits);
         if (number.value >= 0.0 &&
-            number.value < static_cast<double>(std::numeric_limits<std::uint64_t>::max()) &&
+            number.value <= max_exact_int &&
             std::trunc(number.value) == number.value)
         {
             auto int_value = static_cast<std::uint64_t>(number.value);
