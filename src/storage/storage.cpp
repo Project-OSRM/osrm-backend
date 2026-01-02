@@ -188,8 +188,7 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
 
     util::LogPolicy::GetInstance().Unmute();
 
-    std::filesystem::path lock_path =
-        std::filesystem::temp_directory_path() / "osrm-datastore.lock";
+    std::filesystem::path lock_path = getLockDir() / "osrm-datastore.lock";
     if (!std::filesystem::exists(lock_path))
     {
         std::ofstream ofs(lock_path);
