@@ -171,10 +171,10 @@ BOOST_AUTO_TEST_CASE(test_edge_cases)
     std::string output;
     Renderer<std::string> renderer(output);
 
-    // Negative zero should work
+    // Negative zero should be treated as a whole number: it passes the non-negativity
+    // check, std::trunc(-0.0) == -0.0, so it goes through the integer path and is "0"
     output.clear();
     renderer(Number{-0.0});
-    // -0.0 >= 0.0 is true, so this will be "0"
     BOOST_CHECK_EQUAL(output, "0");
 
     // Very large float (larger than max uint64) uses scientific notation
