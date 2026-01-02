@@ -161,7 +161,6 @@ BOOST_AUTO_TEST_CASE(test_floats_unchanged)
     renderer(Number{-42.0});
     BOOST_CHECK_EQUAL(output, "-42");
 
-    // Existing test case
     output.clear();
     renderer(Number{42.9995999594999399299});
     BOOST_CHECK_EQUAL(output, "42.99959996");
