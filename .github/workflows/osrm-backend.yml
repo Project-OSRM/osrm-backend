@@ -319,7 +319,7 @@ jobs:
             build_node_package: true
             continue-on-error: true
             node: 22
-            runs-on: macos-13 # x86_64
+            runs-on: macos-15-intel # x86_64
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
