@@ -87,7 +87,7 @@ function run_benchmarks_for_folder {
         for BENCH in nearest table trip route match; do
             echo "Running node $BENCH $ALGORITHM"
             START=$(date +%s.%N)
-            node $SCRIPTS_FOLDER/scripts/ci/bench.js $FOLDER/lib/binding/node_osrm.node $FOLDER/data.osrm $ALGORITHM $BENCH $GPS_TRACES > "$RESULTS_FOLDER/node_${BENCH}_${ALGORITHM}.bench" 5
+            node $SCRIPTS_FOLDER/scripts/ci/bench.js $FOLDER/lib/binding_napi_v8/node_osrm.node $FOLDER/data.osrm $ALGORITHM $BENCH $GPS_TRACES > "$RESULTS_FOLDER/node_${BENCH}_${ALGORITHM}.bench" 5
             END=$(date +%s.%N)
             DIFF=$(echo "$END - $START" | bc)
             echo "Took: ${DIFF}s"
