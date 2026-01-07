@@ -369,17 +369,17 @@ test('route: invalid route options', function(assert) {
         coordinates: two_test_coordinates,
         overview: false
     }, function(err, route) {}); },
-        /Overview must be a string: \[simplified, full, false\]/);
+        /Overview must be a string: \[simplified, full, false, by_legs\]/);
     assert.throws(function() { osrm.route({
         coordinates: two_test_coordinates,
         overview: false
     }, function(err, route) {}); },
-        /Overview must be a string: \[simplified, full, false\]/);
+        /Overview must be a string: \[simplified, full, false, by_legs\]/);
     assert.throws(function() { osrm.route({
         coordinates: two_test_coordinates,
         overview: 'maybe'
     }, function(err, route) {}); },
-        /'overview' param must be one of \[simplified, full, false\]/);
+        /'overview' param must be one of \[simplified, full, false, by_legs\]/);
     assert.throws(function() { osrm.route({
         coordinates: two_test_coordinates,
         geometries: 'maybe'
