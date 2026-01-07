@@ -30,15 +30,16 @@
 namespace osrm::storage
 {
 
-// Returns directory for OSRM lock files (OSRM_LOCK_DIR env var or system temp)
+// Returns directory for OSRM lock files (SHM_LOCK_DIR env var or system temp)
 inline std::filesystem::path getLockDir()
 {
-    if (const char *lock_dir = std::getenv("OSRM_LOCK_DIR"))
+    if (const char *lock_dir = std::getenv("SHM_LOCK_DIR"))
     {
         std::filesystem::path dir(lock_dir);
         if (!std::filesystem::exists(dir))
         {
-            std::filesystem::create_directories(dir);
+            throw util::exception("SHM_LOCK_DIR directory does not exist: " + dir.string() +
+                                  SOURCE_REF);
         }
         return dir;
     }
