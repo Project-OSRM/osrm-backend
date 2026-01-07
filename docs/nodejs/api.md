@@ -4,11 +4,11 @@
 
 The `OSRM` method is the main constructor for creating an OSRM instance.
 An OSRM instance requires a `.osrm.*` dataset(`.osrm.*` because it contains several files), which is prepared by the OSRM toolchain.
-You can create such a `.osrm.*` dataset by running the OSRM binaries we ship in `node_modules/osrm/lib/binding/` and default
+You can create such a `.osrm.*` dataset by running the OSRM binaries we ship in `node_modules/osrm/lib/binding_napi_v8/` and default
 profiles (e.g. for setting speeds and determining road types to route on) in `node_modules/osrm/profiles/`:
 
-    node_modules/osrm/lib/binding/osrm-extract data.osm.pbf -p node_modules/osrm/profiles/car.lua
-    node_modules/osrm/lib/binding/osrm-contract data.osrm
+    node_modules/osrm/lib/binding_napi_v8/osrm-extract data.osm.pbf -p node_modules/osrm/profiles/car.lua
+    node_modules/osrm/lib/binding_napi_v8/osrm-contract data.osrm
 
 Consult the [osrm-backend](https://github.com/Project-OSRM/osrm-backend) documentation for further details.
 

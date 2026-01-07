@@ -1,9 +1,11 @@
 # Unreleased
   - Changes from 6.0.0
     - Build:
+      - FIXED: Update Node.js binding path from `lib/binding` to `lib/binding_napi_v8` to match node-pre-gyp versioning conventions [#7272](https://github.com/Project-OSRM/osrm-backend/pull/7272)
       - FIXED: Reduce MSVC compiler warnings by suppressing informational warnings while preserving bug-indicating warnings [#7253](https://github.com/Project-OSRM/osrm-backend/issues/7253)
     - Misc:
       - ADDED: `SHM_LOCK_DIR` environment variable for shared memory lock file directory [#7312](https://github.com/Project-OSRM/osrm-backend/pull/7312)
+      - FIXED: Fix JSON rendering of large OSM IDs (avoids scientific notation) and handle NaN/Infinity gracefully [#7016](https://github.com/Project-OSRM/osrm-backend/issues/7016)
       - CHANGED: Add std::format compatibility layer with fallback to fmt::format [#7261](https://github.com/Project-OSRM/osrm-backend/pull/7261)
       - FIXED: Update node_osrm to C++20 to fix ABI mismatch with libosrm (was overlooked in #6877) [#7261](https://github.com/Project-OSRM/osrm-backend/pull/7261)
       - CHANGED: Update fmt library to version 11.2.0 [#7238](https://github.com/Project-OSRM/osrm-backend/issues/7238)

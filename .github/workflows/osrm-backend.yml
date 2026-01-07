@@ -68,13 +68,13 @@ jobs:
     # - name: Run node tests
     #   shell: bash
     #   run: |
-    #     ./lib/binding/osrm-extract.exe -p profiles/car.lua test/data/monaco.osm.pbf
+    #     ./lib/binding_napi_v8/osrm-extract.exe -p profiles/car.lua test/data/monaco.osm.pbf
 
     #     mkdir -p test/data/ch
     #     cp test/data/monaco.osrm* test/data/ch/
-    #     ./lib/binding/osrm-contract.exe test/data/ch/monaco.osrm
+    #     ./lib/binding_napi_v8/osrm-contract.exe test/data/ch/monaco.osrm
 
-    #     ./lib/binding/osrm-datastore.exe test/data/ch/monaco.osrm
+    #     ./lib/binding_napi_v8/osrm-datastore.exe test/data/ch/monaco.osrm
     #     node test/nodejs/index.js
     - name: Build Node package
       shell: bash
@@ -319,7 +319,7 @@ jobs:
             build_node_package: true
             continue-on-error: true
             node: 22
-            runs-on: macos-13 # x86_64
+            runs-on: macos-15-intel # x86_64
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
