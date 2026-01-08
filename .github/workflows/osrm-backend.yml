@@ -567,7 +567,17 @@ jobs:
           npm run nodejs-tests
         fi
         popd
-        npm test
+        npm run lint
+
+    - name: Upload cucumber test artifacts
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && contains(fromJson('["clang-18-release", "gcc-14-release", "conan-linux-release"]'), matrix.name) }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: cucumber-artifacts-${{ matrix.name }}
+        path: |
+          lib/
+          test/data/
+        retention-days: 1
 
     - name: Use Node 20
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
@@ -628,8 +638,39 @@ jobs:
         ccache -p
         ccache -s
 
+  cucumber-tests:
+    needs: build-matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        build-config: [clang-18-release, gcc-14-release, conan-linux-release]
+        algorithm: [ch, mld]
+        load_method: [datastore, mmap, directly]
+    name: cucumber-${{ matrix.build-config }}-${{ matrix.algorithm }}-${{ matrix.load_method }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enable Node.js cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: cucumber-artifacts-${{ matrix.build-config }}
+      - name: Install npm dependencies
+        run: npm ci --ignore-scripts
+      - name: Run cucumber tests
+        run: OSRM_LOAD_METHOD=${{ matrix.load_method }} npx cucumber-js features/ -p ${{ matrix.algorithm }}
+
   ci-complete:
     runs-on: ubuntu-latest
-    needs: [build-matrix, conan-windows-release-node, docker-image-matrix]
+    needs: [build-matrix, cucumber-tests, conan-windows-release-node, docker-image-matrix]
     steps:
     - run: echo "CI complete"
