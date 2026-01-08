@@ -123,7 +123,8 @@ class Env {
   }
 
   globalLog(msg) {
-    fs.writeSync(this.globalLogfile, msg);
+    if (this.globalLogfile)
+      fs.writeSync(this.globalLogfile, msg);
   }
 
   setLoadMethod(method) {
