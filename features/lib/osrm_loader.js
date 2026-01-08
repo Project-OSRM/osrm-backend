@@ -4,7 +4,7 @@ import child_process from 'node:child_process';
 import waitOn from 'wait-on';
 
 import { env } from '../support/env.js';
-import { runBin, runBinSync, mkBinPath } from '../support/run.js';
+import { runBinSync, mkBinPath } from '../support/run.js';
 
 /**
  * A class for running osrm-routed. Subclasses implement alternate ways of data loading.
@@ -140,7 +140,7 @@ export class OSRMDatastoreLoader extends OSRMBaseLoader {
    * For long-running osrm-routed switch the log to the current scenario
    */
   async logSync(msg) {
-    if (this && this.current_scenario)
+    if (this.current_scenario)
       await this.current_scenario.log(msg);
     else
       env.globalLog(msg);
@@ -149,28 +149,6 @@ export class OSRMDatastoreLoader extends OSRMBaseLoader {
   before(scenario) {
     this.current_scenario = scenario;
     this.semaphore = new Promise((resolve) => this.resolve = resolve);
-
-    if (this.osrmIsRunning()) {
-      runBin(
-        'osrm-datastore',
-        [
-          '--dataset-name',
-          env.DATASET_NAME,
-          scenario.osrmCacheFile,
-        ].concat(scenario.loaderArgs),
-        { env : scenario.environment },
-        this.logSync
-      );
-      // We must wait until osrm-routed has switched facades because right now it would
-      // answer the query from the old dataset.  We return a promise that is resolved
-      // when osrm-routed outputs "updated facade to regions ...".
-      return this.semaphore;
-    }
-
-    // workaround for annoying misfeature: if there are no datastores osrm-routed
-    // chickens out, so we cannot just start osrm-routed in beforeAll where it naturally
-    // belonged, but must load a datastore first.
-
     runBinSync(
       'osrm-datastore',
       [
@@ -181,6 +159,16 @@ export class OSRMDatastoreLoader extends OSRMBaseLoader {
       { env : scenario.environment },
       scenario.log
     );
+
+    if (this.osrmIsRunning())
+      // When osrm-datastore exits, then osrm-routed may not yet have switched facades.
+      // It would right now answer the query from the old dataset.  We return a promise
+      // that is resolved when osrm-routed outputs "updated facade to regions ...".
+      return this.semaphore;
+
+    // workaround for annoying misfeature: if there are no datastores osrm-routed
+    // chickens out, so we cannot just start osrm-routed in beforeAll where it naturally
+    // belonged, but must load a datastore first.
 
     const args = [
       '--shared-memory',
