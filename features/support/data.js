@@ -309,11 +309,15 @@ export default class Data {
     callback();
   }
 
+  // This is called on every "When I X I should Y"
+  // On the first call in every scenario it should load the data
+  // into osrm-routed or osrm-datastore
   async reprocessAndLoadData(callback) {
-    if (env.wp.loadMethod === 'datastore' || !env.osrmLoader.osrmIsRunning()) {
+    if (!this.dataLoaded) {
       this.writeOSM();
       this.runExtractionChain();
       await env.osrmLoader.before(this);
+      this.dataLoaded = true;
     }
     callback();
   }

@@ -23,6 +23,7 @@ class OSRMWorld extends World {
     // Get built-in Cucumber helpers: this.attach, this.log, this.parameters
     super(options);
     this.loadMethod = null;
+    this.dataLoaded = false;
 
     // Initialize service instances with access to world
     this.#data = new Data(this);
