@@ -43,6 +43,6 @@ Feature: Bike - Accessability of different way types
 
     Scenario: Bike - Motorroad
         Then routability should be
-            | highway | motorroad  | bothw |
-            | (nil)   | (nil)      | x     |
-            | (nil)   | yes        |       |
+            | highway   | motorroad  | bothw |
+            | primary   | (nil)      | x     |
+            | primary   | yes        |       |

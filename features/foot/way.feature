@@ -46,5 +46,5 @@ Feature: Foot - Accessability of different way types
     Scenario: Foot - Motorroad
         Then routability should be
             | highway | motorroad  | forw |
-            | (nil)   | (nil)      | x    |
-            | (nil)   | yes        |      |
+            | primary | (nil)      | x    |
+            | primary | yes        |      |
