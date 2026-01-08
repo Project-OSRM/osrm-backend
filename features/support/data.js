@@ -3,11 +3,15 @@ import fs from 'fs';
 import util from 'util';
 import d3 from 'd3-queue';
 
-import * as OSM from '../lib/osm.js';
-import classes from './data_classes.js';
-import tableDiff from '../lib/table_diff.js';
-import { ensureDecimal, errorReason } from '../lib/utils.js';
 import CheapRuler from 'cheap-ruler';
+import stripAnsi from 'strip-ansi';
+
+import * as OSM from '../lib/osm.js';
+import tableDiff from '../lib/table_diff.js';
+import { ensureDecimal } from '../lib/utils.js';
+import classes from './data_classes.js';
+import { env } from './env.js';
+import { runBinSync } from './run.js';
 
 export default class Data {
   constructor(world) {
@@ -58,12 +62,12 @@ export default class Data {
 
       // Creates synthetic OSM node with calculated coordinates
       const makeFakeNode = (namePrefix, offset) => {
-        const coord = this.offsetOriginBy(offset + this.WAY_SPACING * ri, 0);
+        const coord = this.offsetOriginBy(offset + env.WAY_SPACING * ri, 0);
         return new OSM.Node(
           this.makeOSMId(),
-          this.OSM_USER,
-          this.OSM_TIMESTAMP,
-          this.OSM_UID,
+          env.OSM_USER,
+          env.OSM_TIMESTAMP,
+          env.OSM_UID,
           coord[0],
           coord[1],
           { name: util.format('%s%d', namePrefix, ri) },
@@ -79,9 +83,9 @@ export default class Data {
       // ...with a way between them
       const way = new OSM.Way(
         this.makeOSMId(),
-        this.OSM_USER,
-        this.OSM_TIMESTAMP,
-        this.OSM_UID,
+        env.OSM_USER,
+        env.OSM_TIMESTAMP,
+        env.OSM_UID,
       );
 
       nodes.forEach((node) => {
@@ -148,9 +152,9 @@ export default class Data {
     id = id || this.makeOSMId();
     const node = new OSM.Node(
       id,
-      this.OSM_USER,
-      this.OSM_TIMESTAMP,
-      this.OSM_UID,
+      env.OSM_USER,
+      env.OSM_TIMESTAMP,
+      env.OSM_UID,
       lon,
       lat,
       { name },
@@ -238,168 +242,80 @@ export default class Data {
     this.osmID = 0;
   }
 
-  writeOSM(callback) {
-    fs.exists(this.scenarioCacheFile, (exists) => {
-      if (exists) callback();
-      else {
-        this.OSMDB.toXML((xml) => {
-          fs.writeFile(this.scenarioCacheFile, xml, callback);
-        });
-      }
+  writeOSM() {
+    if (fs.existsSync(this.osmCacheFile))
+      return;
+    this.OSMDB.toXML((xml) => {
+      fs.writeFileSync(this.osmCacheFile, xml);
     });
   }
 
-  linkOSM(callback) {
-    fs.exists(this.inputCacheFile, (exists) => {
-      if (exists) callback();
-      else {
-        fs.link(this.scenarioCacheFile, this.inputCacheFile, callback);
-      }
-    });
-  }
-
-  extractData(p, callback) {
-    const stamp = `${p.processedCacheFile}.stamp_extract`;
-    fs.exists(stamp, (exists) => {
-      if (exists) return callback();
-
-      this.runBin(
-        'osrm-extract',
-        util.format(
-          '%s --profile %s %s',
-          p.extractArgs,
-          p.profileFile,
-          p.inputCacheFile,
-        ),
-        p.environment,
-        (err) => {
-          if (err) {
-            return callback(
-              new Error(
-                util.format('osrm-extract %s: %s', errorReason(err), err.cmd),
-              ),
-            );
-          }
-          fs.writeFile(stamp, 'ok', callback);
-        },
+  runAndStamp(what, extra_params, params) {
+    const stampFile = `${this.osrmCacheFile}.stamp_${what}`;
+    if (!fs.existsSync(stampFile)) {
+      runBinSync(
+        `osrm-${what}`,
+        extra_params.concat(params),
+        { env : this.environment },
+        this.log
       );
-    });
+      fs.writeFileSync(stampFile, 'ok');
+    }
+    return Promise.resolve();
   }
 
-  contractData(p, callback) {
-    const stamp = `${p.processedCacheFile}.stamp_contract`;
-    fs.exists(stamp, (exists) => {
-      if (exists) return callback();
-
-      this.runBin(
-        'osrm-contract',
-        util.format('%s %s', p.contractArgs, p.processedCacheFile),
-        p.environment,
-        (err) => {
-          if (err) {
-            return callback(
-              new Error(
-                util.format('osrm-contract %s: %s', errorReason(err), err),
-              ),
-            );
-          }
-          fs.writeFile(stamp, 'ok', callback);
-        },
-      );
-    });
+  extract() {
+    return this.runAndStamp('extract', this.extractArgs, [
+      '-p',
+      this.profileFile,
+      this.osmCacheFile,
+    ]);
   }
 
-  partitionData(p, callback) {
-    const stamp = `${p.processedCacheFile}.stamp_partition`;
-    fs.exists(stamp, (exists) => {
-      if (exists) return callback();
-
-      this.runBin(
-        'osrm-partition',
-        util.format('%s %s', p.partitionArgs, p.processedCacheFile),
-        p.environment,
-        (err) => {
-          if (err) {
-            return callback(
-              new Error(
-                util.format('osrm-partition %s: %s', errorReason(err), err.cmd),
-              ),
-            );
-          }
-          fs.writeFile(stamp, 'ok', callback);
-        },
-      );
-    });
+  partition() {
+    return this.runAndStamp('partition', this.partitionArgs, [
+      this.osrmCacheFile
+    ]);
   }
 
-  customizeData(p, callback) {
-    const stamp = `${p.processedCacheFile}.stamp_customize`;
-    fs.exists(stamp, (exists) => {
-      if (exists) return callback();
-
-      this.runBin(
-        'osrm-customize',
-        util.format('%s %s', p.customizeArgs, p.processedCacheFile),
-        p.environment,
-        (err) => {
-          if (err) {
-            return callback(
-              new Error(
-                util.format('osrm-customize %s: %s', errorReason(err), err),
-              ),
-            );
-          }
-          fs.writeFile(stamp, 'ok', callback);
-        },
-      );
-    });
+  customize() {
+    return this.runAndStamp('customize', this.customizeArgs, [
+      this.osrmCacheFile
+    ]);
   }
 
-  extractContractPartitionAndCustomize(callback) {
-    // a shallow copy of scenario parameters to avoid data inconsistency
-    // if a cucumber timeout occurs during deferred jobs
-    const p = {
-      extractArgs: this.extractArgs,
-      contractArgs: this.contractArgs,
-      partitionArgs: this.partitionArgs,
-      customizeArgs: this.customizeArgs,
-      profileFile: this.profileFile,
-      inputCacheFile: this.inputCacheFile,
-      processedCacheFile: this.processedCacheFile,
-      environment: this.environment,
-    };
-    const queue = d3.queue(1);
-    queue.defer(this.extractData, p);
-    queue.defer(this.partitionData, p);
-    queue.defer(this.contractData, p);
-    queue.defer(this.customizeData, p);
-    queue.awaitAll(callback);
+  contract() {
+    return this.runAndStamp('contract', this.contractArgs, [
+      this.osrmCacheFile
+    ]);
   }
 
-  writeAndLinkOSM(callback) {
-    const queue = d3.queue(1);
-    queue.defer(this.writeOSM);
-    queue.defer(this.linkOSM);
-    queue.awaitAll(callback);
+  /**
+   * Runs the complete extraction chain with one .osm file.
+   */
+  runExtractionChain() {
+    this.extract();
+    if (env.wp.algorithm == 'mld') {
+      this.partition();
+      this.customize();
+    } else {
+      this.contract();
+    }
   }
 
   reprocess(callback) {
-    const queue = d3.queue(1);
-    queue.defer(this.writeAndLinkOSM);
-    queue.defer(this.extractContractPartitionAndCustomize);
-    queue.awaitAll(callback);
+    this.writeOSM();
+    this.runExtractionChain();
+    callback();
   }
 
-  reprocessAndLoadData(callback) {
-    const p = {
-      loaderArgs: this.loaderArgs,
-      inputFile: this.processedCacheFile,
-    };
-    const queue = d3.queue(1);
-    queue.defer(this.writeAndLinkOSM);
-    queue.defer(this.extractContractPartitionAndCustomize);
-    queue.defer((params, cb) => this.osrmLoader.load(params, cb), p);
-    queue.awaitAll(callback);
+  async reprocessAndLoadData(callback) {
+    if (env.wp.loadMethod === 'datastore' || !env.osrmLoader.osrmIsRunning()) {
+      this.writeOSM();
+      this.runExtractionChain();
+      await env.osrmLoader.before(this);
+    }
+    callback();
   }
 
   processRowsAndDiff(table, fn, callback) {
@@ -410,10 +326,20 @@ export default class Data {
     });
 
     q.awaitAll((err, actual) => {
-      if (err) return callback(err);
+      if (err)
+        return callback(err);
       const diff = tableDiff(table, actual);
-      if (diff) callback(diff);
-      else callback();
+      if (diff) {
+        if (env.PLATFORM_CI) {
+          // the github report displays ANSI escapes as characters if passed to the
+          // error callback.
+          callback(stripAnsi(diff));
+        } else {
+          callback(diff);
+        }
+      } else {
+        callback();
+      }
     });
   }
 }

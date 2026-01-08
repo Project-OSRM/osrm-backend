@@ -112,10 +112,6 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
                 updatable_region = *updatable_shared_region;
             }
 
-            util::Log() << "updated facade to regions " << (int)static_region.shm_key << " and "
-                        << (int)updatable_region.shm_key << " with timestamps "
-                        << static_region.timestamp << " and " << updatable_region.timestamp;
-
             {
                 boost::unique_lock<boost::shared_mutex> swap_lock(factory_mutex);
                 facade_factory =
@@ -124,6 +120,11 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
                             std::vector<storage::SharedRegionRegister::ShmKey>{
                                 static_region.shm_key, updatable_region.shm_key}));
             }
+
+            // Note: the cucumber test suite depends on the exact wording "updated facade"
+            util::Log() << "updated facade to regions " << (int)static_region.shm_key << " and "
+                        << (int)updatable_region.shm_key << " with timestamps "
+                        << static_region.timestamp << " and " << updatable_region.timestamp;
         }
 
         util::Log() << "DataWatchdog thread stopped";

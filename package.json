@@ -16,7 +16,7 @@
   },
   "scripts": {
     "lint": "npx eslint features/",
-    "test": "npm run lint && ./scripts/cucumber_test_matrix.sh",
+    "test": "./scripts/cucumber_test_matrix.sh",
     "clean": "rm -rf test/cache",
     "docs": "./scripts/build_api_docs.sh",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh",
@@ -42,7 +42,7 @@
     "@babel/plugin-transform-class-properties": "^7.18.10",
     "@babel/preset-env": "^7.18.10",
     "@babel/preset-react": "^7.18.6",
-    "@cucumber/cucumber": "^12.1.0",
+    "@cucumber/cucumber": "^12.5.0",
     "@mapbox/polyline": "1.2.1",
     "@turf/turf": "7.2.0",
     "acorn": "8.14.1",
@@ -67,6 +67,7 @@
     "node-cmake": "^2.5.1",
     "tape": "5.9.0",
     "uglify-js": "^3.17.0",
+    "wait-on": "^9.0.3",
     "xmlbuilder": "15.1.1"
   },
   "main": "lib/index.js",
