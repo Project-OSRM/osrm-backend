@@ -666,6 +666,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: cucumber-artifacts-${{ matrix.build-config }}
+      - name: Install runtime dependencies
+        run: |
+          TBB_VERSION=2021.12.0
+          wget --tries 5 https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz -O onetbb.tgz
+          tar zxvf onetbb.tgz
+          sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
+          sudo ldconfig
       - name: Install npm dependencies
         run: npm ci --ignore-scripts
       - name: Make binaries executable
