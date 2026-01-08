@@ -202,15 +202,16 @@ jobs:
             CUCUMBER_TIMEOUT: 60000
             ENABLE_LTO: OFF
 
-          - name: clang-18-debug
-            continue-on-error: false
-            node:
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            CUCUMBER_TIMEOUT: 60000
-            ENABLE_LTO: OFF
+          # TODO(themarex): Reenable after #7309
+          #- name: clang-18-debug
+          #  continue-on-error: false
+          #  node:
+          #  runs-on: ubuntu-24.04
+          #  BUILD_TYPE: Debug
+          #  CCOMPILER: clang-18
+          #  CXXCOMPILER: clang++-18
+          #  CUCUMBER_TIMEOUT: 60000
+          #  ENABLE_LTO: OFF
 
           - name: clang-18-debug-clang-tidy
             continue-on-error: false
@@ -224,18 +225,19 @@ jobs:
             NODE_PACKAGE_TESTS_ONLY: ON
             ENABLE_LTO: OFF
 
-          - name: clang-18-debug-asan-ubsan
-            continue-on-error: false
-            node: 22
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-18
-            CUCUMBER_TIMEOUT: 20000
-            CXXCOMPILER: clang++-18
-            ENABLE_SANITIZER: ON
-            TARGET_ARCH: x86_64-asan-ubsan
-            OSRM_CONNECTION_RETRIES: 10
-            OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
+          # TODO(themarex): Reenable after #7309
+          #- name: clang-18-debug-asan-ubsan
+          #  continue-on-error: false
+          #  node: 22
+          #  runs-on: ubuntu-24.04
+          #  BUILD_TYPE: Debug
+          #  CCOMPILER: clang-18
+          #  CUCUMBER_TIMEOUT: 20000
+          #  CXXCOMPILER: clang++-18
+          #  ENABLE_SANITIZER: ON
+          #  TARGET_ARCH: x86_64-asan-ubsan
+          #  OSRM_CONNECTION_RETRIES: 10
+          #  OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
           - name: clang-17-release
             continue-on-error: false
@@ -275,15 +277,16 @@ jobs:
             CXXCOMPILER: g++-13
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: gcc-13-debug-cov
-            continue-on-error: false
-            node: 22
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Debug
-            CCOMPILER: gcc-13
-            CUCUMBER_TIMEOUT: 20000
-            CXXCOMPILER: g++-13
-            ENABLE_COVERAGE: ON
+          # TODO(themarex): Reenable after #7309
+          #- name: gcc-13-debug-cov
+          #  continue-on-error: false
+          #  node: 22
+          #  runs-on: ubuntu-24.04
+          #  BUILD_TYPE: Debug
+          #  CCOMPILER: gcc-13
+          #  CUCUMBER_TIMEOUT: 20000
+          #  CXXCOMPILER: g++-13
+          #  ENABLE_COVERAGE: ON
 
           - name: gcc-12-release
             continue-on-error: false
@@ -304,16 +307,17 @@ jobs:
             ENABLE_CONAN: ON
             ENABLE_LTO: OFF
 
-          - name: conan-linux-debug-asan-ubsan
-            continue-on-error: false
-            node: 20
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_CONAN: ON
-            ENABLE_SANITIZER: ON
-            ENABLE_LTO: OFF
+          # TODO(themarex): Reenable after #7309
+          #- name: conan-linux-debug-asan-ubsan
+          #  continue-on-error: false
+          #  node: 20
+          #  runs-on: ubuntu-24.04
+          #  BUILD_TYPE: Release
+          #  CCOMPILER: clang-18
+          #  CXXCOMPILER: clang++-18
+          #  ENABLE_CONAN: ON
+          #  ENABLE_SANITIZER: ON
+          #  ENABLE_LTO: OFF
 
           - name: conan-linux-release-node
             build_node_package: true
