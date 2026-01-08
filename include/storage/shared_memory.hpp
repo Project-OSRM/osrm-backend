@@ -18,6 +18,7 @@
 #endif
 
 #include <cstdint>
+#include <cstdlib>
 
 #include <algorithm>
 #include <filesystem>
@@ -29,13 +30,27 @@
 namespace osrm::storage
 {
 
+// Returns directory for OSRM lock files (SHM_LOCK_DIR env var or system temp)
+inline std::filesystem::path getLockDir()
+{
+    if (const char *lock_dir = std::getenv("SHM_LOCK_DIR"))
+    {
+        std::filesystem::path dir(lock_dir);
+        if (!std::filesystem::exists(dir))
+        {
+            throw util::exception("SHM_LOCK_DIR directory does not exist: " + dir.string() +
+                                  SOURCE_REF);
+        }
+        return dir;
+    }
+    return std::filesystem::temp_directory_path();
+}
+
 struct OSRMLockFile
 {
     template <typename IdentifierT> std::filesystem::path operator()(const IdentifierT &id)
     {
-        std::filesystem::path temp_dir = std::filesystem::temp_directory_path();
-        std::filesystem::path lock_file = temp_dir / ("osrm-" + std::to_string(id) + ".lock");
-        return lock_file;
+        return getLockDir() / ("osrm-" + std::to_string(id) + ".lock");
     }
 };
 
