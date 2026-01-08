@@ -2,17 +2,31 @@
 
 set -o errexit
 set -o pipefail
-set -o nounset
+# set -o nounset
 
-loadmethods=(datastore mmap directly)
-profiles=(ch mld)
+loadmethods=(mmap directly datastore)
+algorithms=(ch mld)
+base=home
 
-for profile in "${profiles[@]}"
+if [ -n "$GITHUB_STEP_SUMMARY" ]; then
+  base=github
+  echo "### Cucumber Test Summary"                                 >> $GITHUB_STEP_SUMMARY
+  echo ""                                                          >> $GITHUB_STEP_SUMMARY
+  echo "|Algorithm|Load Method|Passed|Skipped|Failed|Elapsed (s)|" >> $GITHUB_STEP_SUMMARY
+  echo "|:------- |:--------- | ----:| -----:| ----:| ---------:|" >> $GITHUB_STEP_SUMMARY
+fi
+
+for algorithm in "${algorithms[@]}"
 do
+  export algorithm
   for loadmethod in "${loadmethods[@]}"
   do
+    export loadmethod
+    if [ -n "$GITHUB_STEP_SUMMARY" ]; then
+      echo -n "| $algorithm | $loadmethod " >> $GITHUB_STEP_SUMMARY
+    fi
     set -x
-    OSRM_LOAD_METHOD=$loadmethod npx cucumber-js features/ -p $profile
+    npx cucumber-js -p $base -p $algorithm -p $loadmethod $@
     { set +x; } 2>/dev/null
   done
 done

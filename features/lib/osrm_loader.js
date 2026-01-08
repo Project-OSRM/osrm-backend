@@ -1,310 +1,246 @@
-// OSRM binary process management and data loading strategies (datastore, mmap, direct)
-import fs from 'fs';
-import util from 'util';
-import { Timeout, errorReason } from './utils.js';
-import tryConnect from './try_connect.js';
+// osrm-routed process management and data loading strategies (datastore, mmap, direct)
+import child_process from 'node:child_process';
 
-// Base class for managing OSRM routing server process lifecycle
+import waitOn from 'wait-on';
+
+import { env } from '../support/env.js';
+import { runBinSync, mkBinPath } from '../support/run.js';
+
+/**
+ * A class for running osrm-routed. Subclasses implement alternate ways of data loading.
+ */
 class OSRMBaseLoader {
-  constructor(scope) {
-    this.scope = scope;
+  constructor() {
     this.child = null;
   }
 
-  // Starts OSRM server and waits for it to accept connections
-  launch(callback) {
-    const limit = Timeout(this.scope.TIMEOUT, {
-      err: new Error('*** Launching osrm-routed timed out.'),
+  /**
+   * Starts OSRM server and waits for it to accept connections
+   *
+   * @param log A log function. Inside a scenario we can log to the world.log()
+   * function, but world.log() cannot be used between scenarios. We must log
+   * long-running processes to the global log.
+   */
+  spawn(scenario, args, log) {
+    if (this.osrmIsRunning())
+      throw new Error('osrm-routed already running!');
+
+    const cmd = mkBinPath('osrm-routed');
+    const argsAsString = args.join(' ');
+    log(`running ${cmd} ${argsAsString}`);
+
+    this.child = child_process.spawn(
+      cmd,
+      args,
+      { env : scenario.environment },
+    );
+
+    this.child.on('exit', (code) => {
+      log(`osrm-routed completed with exit code ${code}`);
+      this.child = null;
     });
 
-    const runLaunch = (cb) => {
-      this.osrmUp(() => {
-        this.waitForConnection(cb);
-      });
-    };
-
-    runLaunch(
-      limit((e) => {
-        if (e) callback(e);
-        else callback();
-      }),
-    );
+    return this.waitForConnection();
   }
 
   // Terminates OSRM server process gracefully
-  shutdown(callback) {
-    if (!this.osrmIsRunning()) return callback();
+  kill() {
+    if (this.osrmIsRunning()) {
+      const child = this.child;
+      const p = new Promise((resolve) => {
+        child.on('exit', resolve);
+      });
+      child.kill();
+      return p;
+    }
+    return Promise.resolve();
+  }
 
-    const limit = Timeout(this.scope.TIMEOUT, {
-      err: new Error('*** Shutting down osrm-routed timed out.'),
-    });
-
-    this.osrmDown(limit(callback));
+  /** Returns a promise resolved when the server is up. */
+  waitForConnection() {
+    const waitOptions = {
+      resources: [`tcp:${env.wp.ip}:${env.wp.port}`],
+      delay:    10, // initial delay in ms
+      interval: 10, // poll interval in ms
+      timeout:  env.wp.timeout, // timeout in ms
+    };
+    const p = waitOn(waitOptions);
+    p.catch(() => { throw new Error(
+      `Could not connect to osrm-routed after ${waitOptions.timeout} ms.`
+    ); });
+    return p;
   }
 
   osrmIsRunning() {
-    return this.child && !this.child.killed;
+    return this.child; //  && !this.child.killed;
   }
 
-  osrmDown(callback) {
-    if (this.osrmIsRunning()) {
-      this.child.on('exit', (_code, _signal) => {
-        callback();
-      });
-      this.child.kill('SIGINT');
-    } else callback();
+  // public interface
+
+  /** Called at the init of the cucumber run */
+  beforeAll() { return Promise.resolve(); }
+  /** Called at the start of each scenario */
+  before(_scenario) {
+    return Promise.resolve();
   }
+  /** Called at the end of each scenario */
+  after(_scenario) {
+    return this.kill();
+  }
+  /** Called at the end of the cucumber run */
+  afterAll() { return Promise.resolve(); }
+}
 
-  waitForConnection(callback) {
-    let retryCount = 0;
-    const retry = (err) => {
-      if (err) {
-        if (retryCount < this.scope.OSRM_CONNECTION_RETRIES) {
-          const timeoutMs =
-            10 *
-            Math.pow(this.scope.OSRM_CONNECTION_EXP_BACKOFF_COEF, retryCount);
-          retryCount++;
-          setTimeout(() => {
-            tryConnect(this.scope.OSRM_IP, this.scope.OSRM_PORT, retry);
-          }, timeoutMs);
-        } else {
-          callback(
-            new Error(
-              `Could not connect to osrm-routed after ${this.scope.OSRM_CONNECTION_RETRIES} retries.`,
-            ),
-          );
-        }
-      } else {
-        callback();
-      }
-    };
-
-    tryConnect(this.scope.OSRM_IP, this.scope.OSRM_PORT, retry);
+/** This loader tells osrm-routed to load data directly from .osrm files into memory */
+export class OSRMDirectLoader extends OSRMBaseLoader {
+  before(scenario) {
+    return this.spawn(scenario, [
+      scenario.osrmCacheFile,
+      '-p',
+      env.wp.port,
+      '-i',
+      env.wp.ip,
+      '-a',
+      env.wp.algorithm.toUpperCase(),
+    ].concat(scenario.loaderArgs),
+    scenario.log);
   }
 }
 
-// Loads data directly from .osrm files into memory
-class OSRMDirectLoader extends OSRMBaseLoader {
-  constructor(scope) {
-    super(scope);
-  }
-
-  load(ctx, callback) {
-    this.inputFile = ctx.inputFile;
-    this.loaderArgs = ctx.loaderArgs;
-    this.shutdown(() => {
-      this.launch(callback);
-    });
-  }
-
-  osrmUp(callback) {
-    if (this.osrmIsRunning())
-      return callback(new Error('osrm-routed already running!'));
-
-    const command_arguments = util.format(
-      '%s -p %d -i %s -a %s %s',
-      this.inputFile,
-      this.scope.OSRM_PORT,
-      this.scope.OSRM_IP,
-      this.scope.ROUTING_ALGORITHM,
-      this.loaderArgs,
-    );
-    this.child = this.scope.runBin(
-      'osrm-routed',
-      command_arguments,
-      this.scope.environment,
-      (err) => {
-        if (err && err.signal !== 'SIGINT') {
-          this.child = null;
-          throw new Error(
-            util.format('osrm-routed %s: %s', errorReason(err), err.cmd),
-          );
-        }
-      },
-    );
-
-    this.child.readyFunc = (data) => {
-      if (/running and waiting for requests/.test(data)) {
-        this.child.stdout.removeListener('data', this.child.readyFunc);
-        callback();
-      }
-    };
-    this.child.stdout.on('data', this.child.readyFunc);
+/** This loader tells osrm-routed to use memory-mapped files. */
+export class OSRMmmapLoader extends OSRMBaseLoader {
+  before(scenario) {
+    return this.spawn(scenario, [
+      scenario.osrmCacheFile,
+      '-p',
+      env.wp.port,
+      '-i',
+      env.wp.ip,
+      '-a',
+      env.wp.algorithm.toUpperCase(),
+      '--mmap',
+    ].concat(scenario.loaderArgs),
+    scenario.log);
   }
 }
 
-// Uses memory-mapped files for efficient data access
-class OSRMmmapLoader extends OSRMBaseLoader {
-  constructor(scope) {
-    super(scope);
+/**
+ * This loader keeps one and the same osrm-routed running for the whole cucumber run. It
+ * uses osrm-datastore to load new data into osrm-routed.
+ */
+export class OSRMDatastoreLoader extends OSRMBaseLoader {
+  constructor() {
+    super();
+    this.current_scenario = null;
   }
 
-  load(ctx, callback) {
-    this.inputFile = ctx.inputFile;
-    this.loaderArgs = ctx.loaderArgs;
-    this.shutdown(() => {
-      this.launch(callback);
-    });
+  /**
+   * Custom log function
+   *
+   * For long-running osrm-routed switch the log to the current scenario
+   */
+  async logSync(msg) {
+    if (this.current_scenario)
+      await this.current_scenario.log(msg);
+    else
+      env.globalLog(msg);
   }
 
-  osrmUp(callback) {
-    if (this.osrmIsRunning())
-      return callback(new Error('osrm-routed already running!'));
-
-    const command_arguments = util.format(
-      '%s -p %d -i %s -a %s --mmap %s',
-      this.inputFile,
-      this.scope.OSRM_PORT,
-      this.scope.OSRM_IP,
-      this.scope.ROUTING_ALGORITHM,
-      this.loaderArgs,
-    );
-    this.child = this.scope.runBin(
-      'osrm-routed',
-      command_arguments,
-      this.scope.environment,
-      (err) => {
-        if (err && err.signal !== 'SIGINT') {
-          this.child = null;
-          throw new Error(
-            util.format('osrm-routed %s: %s', errorReason(err), err.cmd),
-          );
-        }
-      },
-    );
-
-    this.child.readyFunc = (data) => {
-      if (/running and waiting for requests/.test(data)) {
-        this.child.stdout.removeListener('data', this.child.readyFunc);
-        callback();
-      }
-    };
-    this.child.stdout.on('data', this.child.readyFunc);
-  }
-}
-
-// Loads data into shared memory for multiple processes to access
-class OSRMDatastoreLoader extends OSRMBaseLoader {
-  constructor(scope) {
-    super(scope);
-  }
-
-  load(ctx, callback) {
-    this.inputFile = ctx.inputFile;
-    this.loaderArgs = ctx.loaderArgs;
-
-    this.loadData((err) => {
-      if (err) return callback(err);
-      if (!this.osrmIsRunning()) this.launch(callback);
-      else {
-        this.scope.setupOutputLog(
-          this.child,
-          fs.createWriteStream(this.scope.scenarioLogFile, { flags: 'a' }),
-        );
-        callback();
-      }
-    });
-  }
-
-  loadData(callback) {
-    const command_arguments = util.format(
-      '--dataset-name=%s %s %s',
-      this.scope.DATASET_NAME,
-      this.inputFile,
-      this.loaderArgs,
-    );
-    this.scope.runBin(
+  before(scenario) {
+    this.current_scenario = scenario;
+    this.semaphore = new Promise((resolve) => this.resolve = resolve);
+    runBinSync(
       'osrm-datastore',
-      command_arguments,
-      this.scope.environment,
-      (err) => {
-        if (err)
-          return callback(
-            new Error(`*** osrm-datastore exited with ${err.code}: ${err}`),
-          );
-        callback();
-      },
+      [
+        '--dataset-name',
+        env.DATASET_NAME,
+        scenario.osrmCacheFile,
+      ].concat(scenario.loaderArgs),
+      { env : scenario.environment },
+      scenario.log
     );
+
+    if (this.osrmIsRunning())
+      // When osrm-datastore exits, then osrm-routed may not yet have switched facades.
+      // It would right now answer the query from the old dataset.  We return a promise
+      // that is resolved when osrm-routed outputs "updated facade to regions ...".
+      return this.semaphore;
+
+    // workaround for annoying misfeature: if there are no datastores osrm-routed
+    // chickens out, so we cannot just start osrm-routed in beforeAll where it naturally
+    // belonged, but must load a datastore first.
+
+    const args = [
+      '--shared-memory',
+      '--dataset-name',
+      env.DATASET_NAME,
+      '-p',
+      env.wp.port,
+      '-i',
+      env.wp.ip,
+      '-a',
+      env.wp.algorithm.toUpperCase(),
+    ]; // .concat(scenario.loaderArgs));
+
+    const cmd = mkBinPath('osrm-routed');
+    const argsAsString = args.join(' ');
+    this.logSync(`running ${cmd} ${argsAsString}`);
+
+    this.child = child_process.spawn(
+      cmd,
+      args,
+      { env : scenario.environment },
+    );
+
+    this.child.stdout.on('data', (data) => {
+      if (data.includes('updated facade')) {
+        this.logSync('Facade updated and promise resolved');
+        this.resolve();
+      }
+    });
+
+    // we MUST consume these or the osrm-routed process will block eventually
+    this.child.stderr.on('data', (data) => this.logSync(`osrm-routed stderr:\n${data}`));
+    this.child.stdout.on('data', (data) => this.logSync(`osrm-routed stdout:\n${data}`));
+
+    this.child.on('exit', (code, signal) => {
+      this.child = null;
+      if (signal != null) {
+        const msg = `osrm-routed aborted with signal ${signal}`;
+        this.logSync(msg);
+        // throw new Error(msg);
+      }
+      if (code != null) {
+        const msg = `osrm-routed completed with exit code ${code}`;
+        this.logSync(msg);
+        if (code != 0)
+          throw new Error(msg);
+      }
+    });
+    return this.waitForConnection();
   }
-
-  osrmUp(callback) {
-    if (this.osrmIsRunning()) return callback();
-
-    const command_arguments = util.format(
-      '--dataset-name=%s -s -i %s -p %d -a %s',
-      this.scope.DATASET_NAME,
-      this.scope.OSRM_IP,
-      this.scope.OSRM_PORT,
-      this.scope.ROUTING_ALGORITHM,
-    );
-    this.child = this.scope.runBin(
-      'osrm-routed',
-      command_arguments,
-      this.scope.environment,
-      (err) => {
-        if (err && err.signal !== 'SIGINT') {
-          this.child = null;
-          throw new Error(
-            util.format('osrm-routed %s: %s', errorReason(err), err.cmd),
-          );
-        }
-      },
-    );
-
-    // we call the callback here, becuase we don't want to wait for the child process to finish
-    callback();
+  after () {
+    this.current_scenario = null;
+    return Promise.resolve();
+  }
+  afterAll () {
+    this.current_scenario = null;
+    return this.kill();
   }
 }
 
-class OSRMLoader {
-  constructor(scope) {
-    this.scope = scope;
-    this.sharedLoader = new OSRMDatastoreLoader(this.scope);
-    this.directLoader = new OSRMDirectLoader(this.scope);
-    this.mmapLoader = new OSRMmmapLoader(this.scope);
-    this.method = scope.DEFAULT_LOAD_METHOD;
-  }
-
-  load(inputFile, callback) {
-    if (!this.loader) {
-      this.loader = { shutdown: (cb) => cb() };
-    }
-    if (this.method === 'datastore') {
-      this.loader.shutdown((err) => {
-        if (err) return callback(err);
-        this.loader = this.sharedLoader;
-        this.sharedLoader.load(inputFile, callback);
-      });
-    } else if (this.method === 'directly') {
-      this.loader.shutdown((err) => {
-        if (err) return callback(err);
-        this.loader = this.directLoader;
-        this.directLoader.load(inputFile, callback);
-      });
-    } else if (this.method === 'mmap') {
-      this.loader.shutdown((err) => {
-        if (err) return callback(err);
-        this.loader = this.mmapLoader;
-        this.mmapLoader.load(inputFile, callback);
-      });
-    } else {
-      callback(new Error(`*** Unknown load method ${method}`));
-    }
-  }
-
-  setLoadMethod(method) {
-    this.method = method;
-  }
-
-  shutdown(callback) {
-    if (!this.loader) return callback();
-
-    this.loader.shutdown(callback);
-  }
-
-  up() {
-    return this.loader ? this.loader.osrmIsRunning() : false;
-  }
+/** throws error if osrm-routed is up */
+// FIXME: don't bother if osrm-routed is already running, just use the next port
+export function testOsrmDown() {
+  const host = `${env.wp.ip}:${env.wp.port}`;
+  const waitOptions = {
+    resources: [`tcp:${host}`],
+    delay:       0, // initial delay in ms
+    interval:  100, // poll interval in ms
+    timeout:  1000, // timeout in ms
+    reverse: true,
+  };
+  return waitOn(waitOptions).catch(() => { throw new Error(
+    `osrm-routed is already running on ${host}.`
+  );});
 }
-
-export default OSRMLoader;

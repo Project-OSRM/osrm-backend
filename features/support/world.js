@@ -1,60 +1,39 @@
 // Custom World class for OSRM test environment using modern Cucumber.js v13 patterns
-import d3 from 'd3-queue';
-import path from 'path';
-import fs from 'fs';
-import * as OSM from '../lib/osm.js';
-import OSRMLoader from '../lib/osrm_loader.js';
-import { createDir } from '../lib/utils.js';
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { World, setWorldConstructor } from '@cucumber/cucumber';
 
-import Env from './env.js';
+import * as OSM from '../lib/osm.js';
+import { env } from '../support/env.js';
 import Cache from './cache.js';
 import Data from './data.js';
-import Http from './http.js';
 import Route from './route.js';
-import Run from './run.js';
-import Options from './options.js';
 import Fuzzy from './fuzzy.js';
 import SharedSteps from './shared_steps.js';
 
-// Global flags for initialization
-const collectedFeatures = new Set(); // Collect unique features from testCases
-
 class OSRMWorld extends World {
   // Private instances of support classes for clean composition
-  #env;
-  #cache;
   #data;
-  #http;
   #route;
-  #run;
   #sharedSteps;
   #fuzzy;
-  #options;
 
   constructor(options) {
     // Get built-in Cucumber helpers: this.attach, this.log, this.parameters
     super(options);
-
-    // Initialize Env constants directly in constructor first
-    this.#initializeEnvConstants();
+    this.loadMethod = null;
 
     // Initialize service instances with access to world
-    this.#env = new Env(this);
-    this.#cache = new Cache(this);
     this.#data = new Data(this);
-    this.#http = new Http(this);
     this.#route = new Route(this);
-    this.#run = new Run(this);
     this.#sharedSteps = new SharedSteps(this);
     this.#fuzzy = new Fuzzy(this);
-    this.#options = new Options(this);
 
     // Copy methods from services to world for compatibility
     this.#copyMethodsFromServices();
 
     // Initialize core objects
-    this.osrmLoader = new OSRMLoader(this);
     this.OSMDB = new OSM.DB();
 
     // Copy properties that need direct access
@@ -64,14 +43,9 @@ class OSRMWorld extends World {
   // Copy methods from service classes
   #copyMethodsFromServices() {
     [
-      this.#env,
-      this.#cache,
       this.#data,
-      this.#http,
       this.#route,
-      this.#run,
       this.#sharedSteps,
-      this.#options,
     ].forEach((service) => {
       Object.getOwnPropertyNames(Object.getPrototypeOf(service)).forEach(
         (name) => {
@@ -83,42 +57,12 @@ class OSRMWorld extends World {
     });
   }
 
-  // Initialize environment constants (extracted from Env class)
-  #initializeEnvConstants() {
-    this.TIMEOUT =
-      (process.env.CUCUMBER_TIMEOUT &&
-        parseInt(process.env.CUCUMBER_TIMEOUT)) ||
-      5000;
-    this.ROOT_PATH = process.cwd();
-    this.TEST_PATH = path.resolve(this.ROOT_PATH, 'test');
-    this.CACHE_PATH = path.resolve(this.TEST_PATH, 'cache');
-    this.LOGS_PATH = path.resolve(this.TEST_PATH, 'logs');
-    this.PROFILES_PATH = path.resolve(this.ROOT_PATH, 'profiles');
-    this.FIXTURES_PATH = path.resolve(this.ROOT_PATH, 'unit_tests/fixtures');
-    this.BIN_PATH =
-      (process.env.OSRM_BUILD_DIR && process.env.OSRM_BUILD_DIR) ||
-      path.resolve(this.ROOT_PATH, 'build');
-    this.DATASET_NAME = 'cucumber';
-  }
-
   // Clean getter access to services
-  get env() {
-    return this.#env;
-  }
-  get cache() {
-    return this.#cache;
-  }
   get data() {
     return this.#data;
   }
-  get http() {
-    return this.#http;
-  }
   get route() {
     return this.#route;
-  }
-  get run() {
-    return this.#run;
   }
   get sharedSteps() {
     return this.#sharedSteps;
@@ -126,77 +70,95 @@ class OSRMWorld extends World {
   get fuzzy() {
     return this.#fuzzy;
   }
-  get options() {
-    return this.#options;
+
+  before(scenario) {
+    this.cache = new Cache(env, scenario);
+    this.setupCurrentScenario(this.cache, scenario);
+    this.resetChildOutput();
+    return Promise.resolve();
   }
 
-  // Initialize the world for a specific test case
-  // This method is called from Before hook since constructors can't be async
-  init(testCase, callback) {
-    // Collect features from testCases
-    collectedFeatures.add(testCase.pickle.uri);
-
-    const queue = d3.queue(1);
-    queue.defer(this.initializeEnv);
-    queue.defer(this.verifyOSRMIsNotRunning);
-    queue.defer(this.verifyExistenceOfBinaries);
-    queue.defer(this.initializeCache);
-
-    // Create mock features array from collected URIs
-    const mockFeatures = Array.from(collectedFeatures).map((uri) => ({
-      getUri: () => uri,
-    }));
-    queue.defer(this.setupFeatures, mockFeatures);
-
-    queue.awaitAll((err) => {
-      if (err) return callback(err);
-      this.setupCurrentScenario(testCase, callback);
-    });
+  async after(scenario) {
+    if (this.osmCacheFile && fs.existsSync(this.osmCacheFile))
+      await this.attach(fs.createReadStream(this.osmCacheFile),
+        { mediaType: 'application/osm+xml', fileName: path.basename(this.osmCacheFile) });
+    return env.osrmLoader.after(scenario);
   }
 
-  setupCurrentScenario(testCase, callback) {
-    this.profile = this.OSRM_PROFILE || this.DEFAULT_PROFILE;
-    this.profileFile = path.join(this.PROFILES_PATH, `${this.profile}.lua`);
-    this.osrmLoader.setLoadMethod(this.DEFAULT_LOAD_METHOD);
-    this.setGridSize(this.DEFAULT_GRID_SIZE);
-    this.setOrigin(this.DEFAULT_ORIGIN);
+  setProfile(profile) {
+    this.profile = env.OSRM_PROFILE || profile || env.DEFAULT_PROFILE;
+    // Sometimes a profile file needs to be patched. In that case it will be copied into
+    // the cache directory and this reference adjusted.
+    this.profileFile = path.join(env.wp.profilesPath, `${this.profile}.lua`);
+  }
+
+  setupCurrentScenario(cache, scenario) {
+    this.setProfile(null);
+    this.setGridSize(env.DEFAULT_GRID_SIZE);
+    this.setOrigin(env.DEFAULT_ORIGIN);
     this.queryParams = {};
-    this.extractArgs = '';
-    this.contractArgs = '';
-    this.partitionArgs = '';
-    this.customizeArgs = '';
-    this.loaderArgs = '';
-    this.environment = Object.assign({}, this.DEFAULT_ENVIRONMENT);
+    this.extractArgs   = [];
+    this.contractArgs  = [];
+    this.partitionArgs = [];
+    this.customizeArgs = [];
+    this.loaderArgs    = [];
+    // environemnt will be patched eg. for OSRM_RASTER_SOURCE
+    this.environment   = Object.assign({}, process.env);
+    // this.environment.CUCUMBER_TEST = 'ON';
+    // process.report.reportOnSignal = false;
     this.resetOSM();
 
-    // Set up feature cache
-    const mockFeature = { getUri: () => testCase.pickle.uri };
-    this.setupFeatureCache(mockFeature);
+    const basename = cache.getCacheBaseName(scenario);
 
-    this.scenarioID = this.getScenarioID(testCase);
-    this.setupScenarioCache(this.scenarioID);
-
-    // Setup output logging
-    const logDir = path.join(this.LOGS_PATH, this.featureID || 'default');
-    this.scenarioLogFile = `${path.join(logDir, this.scenarioID)}.log`;
-    d3.queue(1)
-      .defer(createDir, logDir)
-      .defer((callback) =>
-        fs.rm(this.scenarioLogFile, { force: true }, callback),
-      )
-      .awaitAll(callback);
+    this.osmCacheFile       = `${basename}.osm`;
+    this.osrmCacheFile      = `${basename}.osrm`;
+    this.rasterCacheFile    = `${basename}_raster.asc`;
+    this.speedsCacheFile    = `${basename}_speeds.csv`;
+    this.penaltiesCacheFile = `${basename}_penalties.csv`;
+    this.profileCacheFile   = `${basename}_profile.lua`;
   }
 
-  // Cleanup method called from After hook
-  cleanup(callback) {
-    this.resetOptionsOutput();
-    if (this.osrmLoader) {
-      this.osrmLoader.shutdown(() => {
-        callback();
-      });
-    } else {
-      callback();
+  /**
+   * Saves the output from a completed child process for testing against.
+   *
+   * @param {child_process} child The child process
+   */
+  saveChildOutput(child) {
+    this.stderr = child.stderr.toString();
+    this.stdout = child.stdout.toString();
+    this.exitCode = child.status;
+    this.termSignal = child.signal;
+  }
+
+  resetChildOutput() {
+    this.stdout = '';
+    this.stderr = '';
+    this.exitCode = null;
+    this.termSignal = null;
+  }
+
+  /**
+   * Replaces placeholders in gherkin commands
+   *
+   * eg. it replaces {osm_file} with the input file path.
+   */
+  expandOptions(options) {
+    const table = {
+      'osm_file'          : this.osmCacheFile,
+      'processed_file'    : this.osrmCacheFile,
+      'profile_file'      : this.profileFile,
+      'rastersource_file' : this.rasterCacheFile,
+      'speeds_file'       : this.speedsCacheFile,
+      'penalties_file'    : this.penaltiesCacheFile,
+      'timezone_names'    : process.platform === 'win32' ? 'win' : 'iana'
+    };
+
+    function replacer(_match, p1) {
+      return table[p1] || p1;
     }
+
+    options = options.replaceAll(/\{(\w+)\}/g, replacer);
+    return options.split(/\s+/);
   }
 }
 

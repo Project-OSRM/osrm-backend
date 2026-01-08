@@ -1,75 +1,85 @@
 // Process execution utilities for running OSRM binaries and managing subprocesses
-import path from 'path';
-import fs from 'fs';
-import util from 'util';
-import child_process from 'child_process';
+import child_process from 'node:child_process';
+import path from 'node:path';
 
-export default class Run {
-  constructor(world) {
-    this.world = world;
-  }
+import { env } from '../support/env.js';
 
-  // replaces placeholders for in user supplied commands
-  expandOptions(options) {
-    let opts = options.slice();
-    const table = {
-      '{osm_file}': this.inputCacheFile,
-      '{processed_file}': this.processedCacheFile,
-      '{profile_file}': this.profileFile,
-      '{rastersource_file}': this.rasterCacheFile,
-      '{speeds_file}': this.speedsCacheFile,
-      '{penalties_file}': this.penaltiesCacheFile,
-      '{timezone_names}': this.TIMEZONE_NAMES,
-    };
+/** Returns the full path to the binary. */
+export function mkBinPath(bin) {
+  return path.join(env.wp.buildPath, `${bin}${env.EXE}`);
+}
 
-    for (const k in table) {
-      opts = opts.replace(k, table[k]);
+/**
+ * Runs an osrm binary in asynchronous mode.
+ *
+ * Use case: osrm-routed.
+ *
+ * @param {string}   bin     The name of the binary, eg. osrm-routed
+ * @param {string[]} args    The arguments to the binary
+ * @param {object}   options Options passed to the spawn function
+ * @param {function} log     Function that consumes logs, eg world.log
+ */
+export function runBin(bin, args, options, log) {
+  const cmd = mkBinPath(bin);
+  const argsAsString = args.join(' ');
+  log(`running ${bin} as:\n${cmd} ${argsAsString}`);
+
+  const child = child_process.spawn(
+    cmd,
+    args,
+    options,
+  );
+
+  // we MUST consume these or the osrm-routed process will block
+  // we cannot send these to world.log() because output might happen between steps
+  child.stderr.on('data', (data) => log(data));
+  child.stdout.on('data', (data) => log(data));
+
+  child.on('exit', (code, signal) => {
+    if (signal != null) {
+      const msg = `${bin} aborted with signal ${child.signal}`;
+      log(msg);
+      throw new Error(msg);
+    } else {
+      log(`${bin} completed with exit code ${code}`);
     }
+  });
+  return child;
+}
 
-    return opts;
+/**
+ * Runs an osrm binary in synchronous mode.
+ *
+ * Use case: osrm-extract and friends.
+ *
+ * @param {string}   bin     The name of the binary, eg. osrm-extract
+ * @param {string[]} args    The arguments to the binary
+ * @param {object}   options Options passed to the spawnSync function
+ * @param {function} log     Function that consumes logs, eg world.log
+ */
+export function runBinSync(bin, args, options, log) {
+  const cmd = mkBinPath(bin);
+  const argsAsString = args.join(' ');
+  log(`running ${bin} as:\n${cmd} ${argsAsString}`);
+
+  options.timeout = options.timeout || env.wp.timeout - 100;
+
+  const child = child_process.spawnSync(
+    cmd,
+    args,
+    options
+  );
+  if (child.stdout)
+    log(`${bin} stdout:\n${child.stdout}`);
+  if (child.stderr)
+    log(`${bin} stderr:\n${child.stderr}`);
+  if (child.status != null)
+    log(`${bin} completed with exit code ${child.status}`);
+  if (child.signal != null) {
+    const msg = `${bin} aborted with signal ${child.signal}`;
+    log(msg);
+    if (child.signal != 'SIGABRT') // some tests deliberately fail
+      throw new Error(msg);
   }
-
-  setupOutputLog(process, log) {
-    if (process.logFunc) {
-      process.stdout.removeListener('data', process.logFunc);
-      process.stderr.removeListener('data', process.logFunc);
-    }
-
-    process.logFunc = (message) => {
-      log.write(message);
-    };
-    process.stdout.on('data', process.logFunc);
-    process.stderr.on('data', process.logFunc);
-  }
-
-  runBin(bin, options, env, callback) {
-    const cmd = path.resolve(
-      util.format('%s/%s%s', this.BIN_PATH, bin, this.EXE),
-    );
-    const opts = options.split(' ').filter((x) => {
-      return x && x.length > 0;
-    });
-    const log = fs.createWriteStream(this.scenarioLogFile, { flags: 'a' });
-    log.write(util.format('*** running %s %s\n', cmd, options));
-
-    // we need to set a large maxbuffer here because we have long running processes like osrm-routed
-    // with lots of log output
-    const child = child_process.execFile(
-      cmd,
-      opts,
-      { maxBuffer: 1024 * 1024 * 1000, env },
-      (err, stdout, stderr) => {
-        log.end();
-        callback(err, stdout, stderr);
-      },
-    );
-
-    child.on('exit', (code) => {
-      log.write(util.format('*** %s exited with code %d\n', bin, code));
-    });
-
-    // Don't setup output logging as it interferes with execFile's output capture
-    // this.setupOutputLog(child, log);
-    return child;
-  }
+  return child;
 }
