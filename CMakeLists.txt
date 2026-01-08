@@ -161,7 +161,7 @@ file(GLOB EngineGlob src/engine/*.cpp src/engine/**/*.cpp)
 
 add_library(UTIL OBJECT ${UtilGlob})
 # For historical reason the guidance and extract code are separate.
-# They are so entangled (circular dependencies) that having serparate libraries is not feasible.
+# They are so entangled though (circular dependencies) that separate libraries are not feasible.
 add_library(EXTRACTOR OBJECT ${ExtractorGlob} ${GuidanceGlob})
 add_library(PARTITIONER OBJECT ${PartitionerGlob})
 add_library(CUSTOMIZER OBJECT ${CustomizerGlob})
