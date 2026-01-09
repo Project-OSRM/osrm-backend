@@ -3,6 +3,8 @@
     - Build:
       - FIXED: Update Node.js binding path from `lib/binding` to `lib/binding_napi_v8` to match node-pre-gyp versioning conventions [#7272](https://github.com/Project-OSRM/osrm-backend/pull/7272)
       - FIXED: Reduce MSVC compiler warnings by suppressing informational warnings while preserving bug-indicating warnings [#7253](https://github.com/Project-OSRM/osrm-backend/issues/7253)
+      - FIXED: Merge `osrm_extract` and `osrm_guidance` to avoid circular dependencies. [#7315](https://github.com/Project-OSRM/osrm-backend/pull/7315)
+      - FIXED: Work around compilation error due to a false-positive of array-bounds check in sol2 [#7317](https://github.com/Project-OSRM/osrm-backend/pull/7317)
     - Misc:
       - ADDED: `SHM_LOCK_DIR` environment variable for shared memory lock file directory [#7312](https://github.com/Project-OSRM/osrm-backend/pull/7312)
       - FIXED: Fix JSON rendering of large OSM IDs (avoids scientific notation) and handle NaN/Infinity gracefully [#7016](https://github.com/Project-OSRM/osrm-backend/issues/7016)
@@ -21,6 +23,7 @@
       - FIXED: Minor misspellings found in source code, comments and documents [#7215](https://github.com/Project-OSRM/osrm-backend/pull/7215)
     - Profiles:
       - FIXED: Bicycle and foot profiles now don't route on motor roads [#6697](https://github.com/Project-OSRM/osrm-backend/pull/6697)
+      - FIXED: Use `cycleway:both` if available. [#6179](https://github.com/Project-OSRM/osrm-backend/issues/6179)
 
 # 6.0.0
   - Changes from 6.0.0 RC2: None

@@ -97,3 +97,13 @@ Feature: Bike - Cycle tracks/lanes
             | residential | track    | yes    | 15 km/h | 4 km/h +-1 |
             | cycleway    | track    | yes    | 15 km/h | 4 km/h +-1 |
             | footway     | track    | yes    | 15 km/h | 4 km/h +-1 |
+
+    Scenario: Bike - Cycleway should fall back to cycleway:both
+        Then routability should be
+            | highway  | cycleway:both | forw | backw |
+            | motorway | track         | x    |       |
+            | motorway | lane          | x    |       |
+            | motorway | shared        | x    |       |
+            | primary  | track         | x    | x     |
+            | primary  | lane          | x    | x     |
+            | primary  | shared        | x    | x     |
