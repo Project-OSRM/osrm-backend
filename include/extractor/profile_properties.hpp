@@ -30,7 +30,7 @@ struct ProfileProperties
           weight_name{"duration"}, class_names{{}}, excludable_classes{{}},
           call_tagless_node_function(true)
     {
-        std::fill(excludable_classes.begin(), excludable_classes.end(), INAVLID_CLASS_DATA);
+        std::fill(excludable_classes.begin(), excludable_classes.end(), INVALID_CLASS_DATA);
         BOOST_ASSERT(weight_name[MAX_WEIGHT_NAME_LENGTH] == '\0');
     }
 
