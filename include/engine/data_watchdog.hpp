@@ -58,8 +58,8 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
                 facade_factory =
                     DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
                         std::make_shared<datafacade::SharedMemoryAllocator>(
-                            std::vector<storage::ShmKey>{static_region.shm_key,
-                                                         updatable_region.shm_key}));
+                            std::vector<storage::ProjID>{static_region.proj_id,
+                                                         updatable_region.proj_id}));
             }
         }
 
@@ -111,8 +111,8 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
                 updatable_region = *updatable_shared_region;
             }
 
-            util::Log() << "updated facade to regions " << (int)static_region.shm_key << " and "
-                        << (int)updatable_region.shm_key << " with timestamps "
+            util::Log() << "updated facade to regions " << (int)static_region.proj_id << " and "
+                        << (int)updatable_region.proj_id << " with timestamps "
                         << static_region.timestamp << " and " << updatable_region.timestamp;
 
             {
@@ -120,8 +120,8 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
                 facade_factory =
                     DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
                         std::make_shared<datafacade::SharedMemoryAllocator>(
-                            std::vector<storage::ShmKey>{static_region.shm_key,
-                                                         updatable_region.shm_key}));
+                            std::vector<storage::ProjID>{static_region.proj_id,
+                                                         updatable_region.proj_id}));
             }
         }
 

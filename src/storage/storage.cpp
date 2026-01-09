@@ -39,24 +39,24 @@ struct RegionHandle
 {
     std::unique_ptr<SharedMemory> memory;
     char *data_ptr;
-    ShmKey shm_key;
+    ProjID proj_id;
 };
 
 RegionHandle setupRegion(SharedRegionRegister &shared_register,
                          const storage::BaseDataLayout &layout)
 {
     // This is safe because we have an exclusive lock for all osrm-datastore processes.
-    ShmKey shm_key = shared_register.ReserveKey();
+    ProjID proj_id = shared_register.ReserveKey();
 
     // ensure that the shared memory region we want to write to is really removed
     // this is only needed for failure recovery because we actually wait for all clients
     // to detach at the end of the function
-    if (storage::SharedMemory::RegionExists(shm_key))
+    if (storage::RegionExists(proj_id))
     {
-        util::Log(logWARNING) << "Old shared memory region " << (int)shm_key << " still exists.";
-        util::UnbufferedLog() << "Retrying removal of shared memory region " << (int)shm_key;
-        storage::SharedMemory::Remove(shm_key);
-        storage::SharedMemory::WaitForDetach(shm_key, 5000);
+        util::Log(logWARNING) << "Old shared memory region " << (int)proj_id << " still exists.";
+        util::UnbufferedLog() << "Retrying removal of shared memory region " << (int)proj_id;
+        storage::Remove(proj_id);
+        storage::WaitForDetach(proj_id, 5000);
         util::UnbufferedLog() << "ok.";
     }
 
@@ -68,14 +68,14 @@ RegionHandle setupRegion(SharedRegionRegister &shared_register,
     auto regions_size = encoded_static_layout.size() + layout.GetSizeOfLayout();
     util::Log() << "Data layout has a size of " << encoded_static_layout.size() << " bytes";
     util::Log() << "Allocating shared memory of " << regions_size << " bytes";
-    auto memory = makeSharedMemory(shm_key, regions_size);
+    auto memory = makeSharedMemory(proj_id, regions_size);
 
     // Copy memory static_layout to shared memory and populate data
     char *shared_memory_ptr = static_cast<char *>(memory->Ptr());
     auto data_ptr =
         std::copy_n(encoded_static_layout.data(), encoded_static_layout.size(), shared_memory_ptr);
 
-    return RegionHandle{std::move(memory), data_ptr, shm_key};
+    return RegionHandle{std::move(memory), data_ptr, proj_id};
 }
 
 bool swapData(Monitor &monitor,
@@ -99,7 +99,7 @@ bool swapData(Monitor &monitor,
 
                 for (auto &pair : handles)
                 {
-                    SharedMemory::Remove(pair.second.shm_key);
+                    Remove(pair.second.proj_id);
                 }
                 return false;
             }
@@ -114,16 +114,16 @@ bool swapData(Monitor &monitor,
             auto region_id = shared_register.Find(pair.first);
             if (region_id == SharedRegionRegister::INVALID_REGION_ID)
             {
-                region_id = shared_register.Register(pair.first, pair.second.shm_key);
+                region_id = shared_register.Register(pair.first, pair.second.proj_id);
             }
             else
             {
                 auto &shared_region = shared_register.GetRegion(region_id);
 
                 old_handles.push_back(RegionHandle{
-                    makeSharedMemory(shared_region.shm_key), nullptr, shared_region.shm_key});
+                    makeSharedMemory(shared_region.proj_id), nullptr, shared_region.proj_id});
 
-                shared_region.shm_key = pair.second.shm_key;
+                shared_region.proj_id = pair.second.proj_id;
                 shared_region.timestamp++;
             }
         }
@@ -132,28 +132,28 @@ bool swapData(Monitor &monitor,
     util::Log() << "All data loaded. Notify all clients about new data in:";
     for (const auto &pair : handles)
     {
-        util::Log() << pair.first << "\t" << static_cast<int>(pair.second.shm_key);
+        util::Log() << pair.first << "\t" << static_cast<int>(pair.second.proj_id);
     }
     monitor.notify_all();
 
     for (auto &old_handle : old_handles)
     {
         util::UnbufferedLog() << "Marking old shared memory region "
-                              << static_cast<int>(old_handle.shm_key) << " for removal... ";
+                              << static_cast<int>(old_handle.proj_id) << " for removal... ";
 
         // SHMCTL(2): Mark the segment to be destroyed. The segment will actually be destroyed
         // only after the last process detaches it.
-        if (storage::SharedMemory::Remove(old_handle.shm_key))
+        if (storage::Remove(old_handle.proj_id))
         {
             util::UnbufferedLog() << "waiting for clients to detach...";
-            storage::SharedMemory::WaitForDetach(old_handle.shm_key, 5000);
+            storage::WaitForDetach(old_handle.proj_id, 5000);
             util::UnbufferedLog() << "ok.";
         }
         else
         {
             util::UnbufferedLog() << "failed.";
         }
-        shared_register.ReleaseKey(old_handle.shm_key);
+        shared_register.ReleaseKey(old_handle.proj_id);
     }
 
     util::Log() << "All clients switched.";
@@ -188,7 +188,7 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
 
     util::LogPolicy::GetInstance().Unmute();
 
-    std::filesystem::path lock_path = getLockDir() / "osrm-datastore.lock";
+    std::filesystem::path lock_path = storage::getLockDir() / "osrm-datastore.lock";
     if (!std::filesystem::exists(lock_path))
     {
         std::ofstream ofs(lock_path);
@@ -236,7 +236,7 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
             throw util::exception("Cannot update the metric to a dataset that does not exist yet.");
         }
         auto static_region = shared_register.GetRegion(region_id);
-        auto static_memory = makeSharedMemory(static_region.shm_key);
+        auto static_memory = makeSharedMemory(static_region.proj_id);
 
         std::unique_ptr<storage::BaseDataLayout> static_layout =
             std::make_unique<storage::ContiguousDataLayout>();
@@ -247,7 +247,7 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
         auto *data_ptr = reinterpret_cast<char *>(static_memory->Ptr()) + layout_size;
 
         regions.push_back({data_ptr, std::move(static_layout)});
-        readonly_handles.push_back({std::move(static_memory), data_ptr, static_region.shm_key});
+        readonly_handles.push_back({std::move(static_memory), data_ptr, static_region.proj_id});
     }
     else
     {

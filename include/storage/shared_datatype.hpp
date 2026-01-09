@@ -186,19 +186,19 @@ class TarDataLayout final : public BaseDataLayout
     }
 };
 
-#if defined __key_t_defined
-using ShmKey = key_t;
-#else
-using ShmKey = int;
-#endif
+// The second parameter passed to ftok(). See: man 3 ftok
+// It should actually be an int, but for compatibility with earlier versions of OSRM it
+// is an uint16. It should't matter since, according to the man page, only the lowest 8
+// bits are used.
+using ProjID = uint16_t;
 
 struct SharedRegion
 {
     static constexpr const int MAX_NAME_LENGTH = 254;
 
     SharedRegion() : name{0}, timestamp{0} {}
-    SharedRegion(const std::string &name_, std::uint64_t timestamp, ShmKey shm_key)
-        : name{0}, timestamp{timestamp}, shm_key{shm_key}
+    SharedRegion(const std::string &name_, std::uint64_t timestamp, ProjID proj_id)
+        : name{0}, timestamp{timestamp}, proj_id{proj_id}
     {
         std::copy_n(name_.begin(), std::min<std::size_t>(MAX_NAME_LENGTH, name_.size()), name);
     }
@@ -207,7 +207,7 @@ struct SharedRegion
 
     char name[MAX_NAME_LENGTH + 1];
     std::uint64_t timestamp;
-    ShmKey shm_key = 0;
+    ProjID proj_id = 0;
 };
 
 // Keeps a list of all shared regions in a fixed-sized struct
@@ -237,7 +237,7 @@ struct SharedRegionRegister
         }
     }
 
-    RegionID Register(const std::string &name, ShmKey shm_key)
+    RegionID Register(const std::string &name, ProjID proj_id)
     {
         auto iter = std::find_if(
             regions.begin(), regions.end(), [&](const auto &region) { return region.IsEmpty(); });
@@ -249,7 +249,7 @@ struct SharedRegionRegister
         else
         {
             constexpr std::uint32_t INITIAL_TIMESTAMP = 1;
-            *iter = SharedRegion{name, INITIAL_TIMESTAMP, shm_key};
+            *iter = SharedRegion{name, INITIAL_TIMESTAMP, proj_id};
             RegionID key = std::distance(regions.begin(), iter);
             return key;
         }
@@ -270,7 +270,7 @@ struct SharedRegionRegister
 
     auto &GetRegion(const RegionID key) { return regions[key]; }
 
-    ShmKey ReserveKey()
+    ProjID ReserveKey()
     {
         auto free_key_iter = std::find(shm_key_in_use.begin(), shm_key_in_use.end(), false);
         if (free_key_iter == shm_key_in_use.end())
@@ -282,7 +282,7 @@ struct SharedRegionRegister
         return std::distance(shm_key_in_use.begin(), free_key_iter);
     }
 
-    void ReleaseKey(ShmKey shm_key) { shm_key_in_use[shm_key] = false; }
+    void ReleaseKey(ProjID proj_id) { shm_key_in_use[proj_id] = false; }
 
     static constexpr const std::size_t MAX_SHARED_REGIONS = 512;
     static_assert(MAX_SHARED_REGIONS < std::numeric_limits<RegionID>::max(),
