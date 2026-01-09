@@ -4,14 +4,18 @@
 #include "server/http/compression_type.hpp"
 #include "server/http/reply.hpp"
 #include "server/http/request.hpp"
-#include "server/request_parser.hpp"
 
-#include <boost/array.hpp>
 #include <boost/asio.hpp>
-#include <boost/asio/deadline_timer.hpp>
+#include <boost/asio/dispatch.hpp>
+#include <boost/asio/strand.hpp>
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast/version.hpp>
 #include <boost/config.hpp>
-#include <boost/version.hpp>
 
+#include <memory>
+#include <optional>
+#include <string>
 #include <vector>
 
 namespace osrm::server
@@ -19,51 +23,53 @@ namespace osrm::server
 
 class RequestHandler;
 
-/// Represents a single connection from a client.
+/// Represents a single HTTP connection using Boost.Beast
 class Connection : public std::enable_shared_from_this<Connection>
 {
   public:
-    explicit Connection(boost::asio::io_context &io_context,
-                        RequestHandler &handler,
-                        short keepalive_timeout);
+    explicit Connection(boost::asio::ip::tcp::socket socket, RequestHandler &handler, short keepalive_timeout);
+
     Connection(const Connection &) = delete;
     Connection &operator=(const Connection &) = delete;
-
-    boost::asio::ip::tcp::socket &socket();
 
     /// Start the first asynchronous operation for the connection.
     void start();
 
   private:
-    void handle_read(const boost::system::error_code &e, std::size_t bytes_transferred);
+    void handle_read();
+    void process_request();
+    void handle_write();
+    void handle_close();
 
-    /// Handle completion of a write operation.
-    void handle_write(const boost::system::error_code &e);
-
-    /// Handle read timeout
-    void handle_timeout(boost::system::error_code);
-
-    void handle_shutdown();
-
+    // Utility functions
+    void adapt_request(http::request &osrm_request);
+    void adapt_response(const http::reply &osrm_reply);
+    http::compression_type determine_compression();
     std::vector<char> compress_buffers(const std::vector<char> &uncompressed_data,
                                        const http::compression_type compression_type);
+    bool should_keep_alive() const;
 
-    boost::asio::strand<boost::asio::io_context::executor_type> strand;
-    boost::asio::ip::tcp::socket TCP_socket;
-    boost::asio::deadline_timer timer;
-    RequestHandler &request_handler;
-    RequestParser request_parser;
-    boost::array<char, 8192> incoming_data_buffer;
-    http::request current_request;
-    http::reply current_reply;
-    std::vector<char> compressed_output;
-    // Header compression_header;
-    std::vector<boost::asio::const_buffer> output_buffer;
-    // Keep alive support
-    bool keep_alive = false;
-    short processed_requests = 512;
-    short keepalive_timeout = 5; // In seconds
+    // Beast TCP stream with built-in timeout support
+    boost::beast::tcp_stream stream_;
+
+    // Buffer for reading HTTP messages
+    boost::beast::flat_buffer buffer_;
+
+    // The request message
+    boost::beast::http::request<boost::beast::http::string_body> beast_request_;
+
+    // The response message - using vector_body for binary data support
+    boost::beast::http::response<boost::beast::http::vector_body<char>> beast_response_;
+
+    // Reference to the existing request handler
+    RequestHandler &request_handler_;
+
+    // Keep-alive configuration
+    short keepalive_timeout_;
+    short keepalive_max_requests_ = 512;
+    short processed_requests_ = 0;
 };
+
 } // namespace osrm::server
 
 #endif // CONNECTION_HPP
