@@ -1,6 +1,8 @@
 #include "storage/shared_memory.hpp"
 #include "storage/shared_datatype.hpp"
 #include <boost/interprocess/shared_memory_object.hpp>
+#include <cstring>
+#include <string>
 #include <thread>
 
 namespace osrm::storage
@@ -94,7 +96,12 @@ void WaitForDetach(const ProjID proj_id, int timeout)
         {
             ::shmid_ds xsi_ds;
             if (::shmctl(xsi.get_shmid(), IPC_STAT, &xsi_ds) < 0)
+            {
+                if (errno != EIDRM)
+                    throw util::exception("Error while waiting for clients to detach: " +
+                                          std::string(strerror(errno)) + " at " + SOURCE_REF);
                 break;
+            }
             if (xsi_ds.shm_nattch == 0)
                 break;
             if (--timeout < 0)
