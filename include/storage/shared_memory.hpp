@@ -29,9 +29,7 @@ class SharedMemory
     SharedMemory &operator=(const SharedMemory &) = delete;
 
   public:
-    SharedMemory(const std::filesystem::path &lock_file,
-                 const ProjID proj_id,
-                 const uint64_t size = 0);
+    SharedMemory(const ProjID proj_id, const uint64_t size = 0);
 
     void *Ptr() const { return region.get_address(); }
     std::size_t Size() const { return region.get_size(); }

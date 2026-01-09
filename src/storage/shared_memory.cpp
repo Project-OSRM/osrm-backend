@@ -27,17 +27,16 @@ struct OSRMLockFile
 
 #ifndef _WIN32
 
-SharedMemory::SharedMemory(const std::filesystem::path &lock_file,
-                           const ProjID id,
-                           const uint64_t size)
+SharedMemory::SharedMemory(const ProjID proj_id, const uint64_t size)
 {
-    xsi_key xsi_key(lock_file.c_str(), id);
+    OSRMLockFile lock_file(proj_id);
+    xsi_key xsi_key(lock_file, proj_id);
     // open only
     if (size == 0)
     {
         xsi_shared_memory xsi_shm(open_only, xsi_key);
 
-        util::Log(logDEBUG) << "opening " << xsi_shm.get_shmid() << " from id " << (int)id;
+        util::Log(logDEBUG) << "opening " << xsi_shm.get_shmid() << " from id " << (int)proj_id;
 
         region = mapped_region(xsi_shm, read_only);
     }
@@ -45,7 +44,7 @@ SharedMemory::SharedMemory(const std::filesystem::path &lock_file,
     else
     {
         xsi_shared_memory xsi_shm(open_or_create, xsi_key, size);
-        util::Log(logDEBUG) << "opening/creating " << xsi_shm.get_shmid() << " from id " << id
+        util::Log(logDEBUG) << "opening/creating " << xsi_shm.get_shmid() << " from id " << proj_id
                             << " with size " << size;
 #ifdef __linux__
         if (-1 == shmctl(xsi_shm.get_shmid(), SHM_LOCK, nullptr))
@@ -121,7 +120,7 @@ class OSRMShmName
     std::string name;
 };
 
-SharedMemory::SharedMemory(const std::filesystem::path &, const ProjID proj_id, const uint64_t size)
+SharedMemory::SharedMemory(const ProjID proj_id, const uint64_t size)
 {
     OSRMShmName name(proj_id);
     if (size == 0)
@@ -197,9 +196,9 @@ std::unique_ptr<SharedMemory> makeSharedMemory(const ProjID proj_id, const uint6
                 std::ofstream ofs(lock_file.to_path());
             }
         }
-        return std::make_unique<SharedMemory>(lock_file.to_path(), proj_id, size);
+        return std::make_unique<SharedMemory>(proj_id, size);
     }
-    catch (const boost::interprocess::interprocess_exception &e)
+    catch (const interprocess_exception &e)
     {
         util::Log(logERROR) << "Error while attempting to allocate shared memory: " << e.what()
                             << ", code: " << e.get_error_code()
