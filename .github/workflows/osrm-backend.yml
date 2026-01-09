@@ -666,8 +666,19 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: cucumber-artifacts-${{ matrix.build-config }}
+      - name: Give tar root ownership
+        if: ${{ matrix.build-config != 'conan-linux-release' }}
+        run: sudo chown root /bin/tar && sudo chmod u+s /bin/tar
+      - name: Install Boost
+        if: ${{ matrix.build-config != 'conan-linux-release' }}
+        uses: MarkusJx/install-boost@v2
+        id: install-boost
+        with:
+          boost_version: 1.85.0
       - name: Install runtime dependencies
         run: |
+          sudo apt-get update -y
+          sudo apt-get install -y liblua5.2-0
           TBB_VERSION=2021.12.0
           wget --tries 5 https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz -O onetbb.tgz
           tar zxvf onetbb.tgz
@@ -679,6 +690,8 @@ jobs:
         run: chmod +x build-osrm/osrm-*
       - name: Run cucumber tests
         run: OSRM_BUILD_DIR=${{ github.workspace }}/build-osrm OSRM_LOAD_METHOD=${{ matrix.load_method }} npx cucumber-js features/ -p ${{ matrix.algorithm }}
+        env:
+          LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib:$LD_LIBRARY_PATH
 
   ci-complete:
     runs-on: ubuntu-latest
