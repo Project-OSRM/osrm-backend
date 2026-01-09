@@ -2,15 +2,12 @@
 #define SHARED_DATA_TYPE_HPP
 
 #include "storage/block.hpp"
-#include "storage/io_fwd.hpp"
 
 #include "util/exception.hpp"
-#include "util/exception_utils.hpp"
 
 #include <array>
 #include <cstdint>
 #include <map>
-#include <numeric>
 #include <unordered_set>
 
 namespace osrm::storage
@@ -67,10 +64,7 @@ class BaseDataLayout
         return GetBlock(name).byte_size;
     }
 
-    inline bool HasBlock(const std::string &name) const
-    {
-        return blocks.find(name) != blocks.end();
-    }
+    inline bool HasBlock(const std::string &name) const { return blocks.contains(name); }
 
     // Depending on the name prefix this function either lists all blocks with the same prefix
     // or all entries in the sub-directory.
@@ -192,12 +186,18 @@ class TarDataLayout final : public BaseDataLayout
     }
 };
 
+#if defined __key_t_defined
+using ShmKey = key_t;
+#else
+using ShmKey = int;
+#endif
+
 struct SharedRegion
 {
     static constexpr const int MAX_NAME_LENGTH = 254;
 
     SharedRegion() : name{0}, timestamp{0} {}
-    SharedRegion(const std::string &name_, std::uint64_t timestamp, std::uint16_t shm_key)
+    SharedRegion(const std::string &name_, std::uint64_t timestamp, ShmKey shm_key)
         : name{0}, timestamp{timestamp}, shm_key{shm_key}
     {
         std::copy_n(name_.begin(), std::min<std::size_t>(MAX_NAME_LENGTH, name_.size()), name);
@@ -207,7 +207,7 @@ struct SharedRegion
 
     char name[MAX_NAME_LENGTH + 1];
     std::uint64_t timestamp;
-    std::uint16_t shm_key = 0;
+    ShmKey shm_key = 0;
 };
 
 // Keeps a list of all shared regions in a fixed-sized struct
@@ -216,7 +216,6 @@ struct SharedRegionRegister
 {
     using RegionID = std::uint16_t;
     static constexpr const RegionID INVALID_REGION_ID = std::numeric_limits<RegionID>::max();
-    using ShmKey = decltype(SharedRegion::shm_key);
 
     // Returns the key of the region with the given name
     RegionID Find(const std::string &name) const
@@ -238,7 +237,7 @@ struct SharedRegionRegister
         }
     }
 
-    RegionID Register(const std::string &name, ShmKey key)
+    RegionID Register(const std::string &name, ShmKey shm_key)
     {
         auto iter = std::find_if(
             regions.begin(), regions.end(), [&](const auto &region) { return region.IsEmpty(); });
@@ -250,7 +249,7 @@ struct SharedRegionRegister
         else
         {
             constexpr std::uint32_t INITIAL_TIMESTAMP = 1;
-            *iter = SharedRegion{name, INITIAL_TIMESTAMP, key};
+            *iter = SharedRegion{name, INITIAL_TIMESTAMP, shm_key};
             RegionID key = std::distance(regions.begin(), iter);
             return key;
         }
@@ -283,7 +282,7 @@ struct SharedRegionRegister
         return std::distance(shm_key_in_use.begin(), free_key_iter);
     }
 
-    void ReleaseKey(ShmKey key) { shm_key_in_use[key] = false; }
+    void ReleaseKey(ShmKey shm_key) { shm_key_in_use[shm_key] = false; }
 
     static constexpr const std::size_t MAX_SHARED_REGIONS = 512;
     static_assert(MAX_SHARED_REGIONS < std::numeric_limits<RegionID>::max(),

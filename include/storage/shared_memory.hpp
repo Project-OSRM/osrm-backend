@@ -1,11 +1,12 @@
 #ifndef SHARED_MEMORY_HPP
 #define SHARED_MEMORY_HPP
 
-#include "util/exception.hpp"
-#include "util/exception_utils.hpp"
+#include "storage/shared_datatype.hpp"
 #include "util/log.hpp"
 
+#include <boost/interprocess/exceptions.hpp>
 #include <boost/interprocess/mapped_region.hpp>
+#include <chrono>
 #ifndef _WIN32
 #include <boost/interprocess/xsi_shared_memory.hpp>
 #else
@@ -18,14 +19,9 @@
 #endif
 
 #include <cstdint>
-#include <cstdlib>
 
-#include <algorithm>
 #include <filesystem>
-#include <fstream>
 #include <thread>
-
-#include "storage/shared_memory_ownership.hpp"
 
 namespace osrm::storage
 {
@@ -48,11 +44,33 @@ inline std::filesystem::path getLockDir()
 
 struct OSRMLockFile
 {
-    template <typename IdentifierT> std::filesystem::path operator()(const IdentifierT &id)
+    OSRMLockFile(const ShmKey shm_key)
     {
-        return getLockDir() / ("osrm-" + std::to_string(id) + ".lock");
+        std::filesystem::path filename =
+            std::filesystem::path("osrm-" + std::to_string(shm_key) + ".lock");
+        lock_file = getLockDir() / filename;
     }
+    const std::filesystem::path to_path() { return lock_file; }
+    operator const std::filesystem::path::value_type *() const noexcept
+    {
+        return lock_file.c_str();
+    }
+
+  private:
+    std::filesystem::path lock_file;
 };
+
+class OSRMShmName
+{
+  public:
+    OSRMShmName(const ShmKey shm_key) { name = "osrm-" + std::to_string(shm_key); }
+    operator const char *() const noexcept { return name.c_str(); }
+
+  private:
+    std::string name;
+};
+
+using namespace boost::interprocess;
 
 #ifndef _WIN32
 class SharedMemory
@@ -64,27 +82,23 @@ class SharedMemory
     SharedMemory(const SharedMemory &) = delete;
     SharedMemory &operator=(const SharedMemory &) = delete;
 
-    template <typename IdentifierT>
-    SharedMemory(const std::filesystem::path &lock_file,
-                 const IdentifierT id,
-                 const uint64_t size = 0)
-        : key(lock_file.string().c_str(), id)
+    SharedMemory(const OSRMLockFile &lock_file, const ShmKey shm_key, const uint64_t size = 0)
     {
+        xsi_key xsi_key(lock_file, shm_key);
         // open only
         if (0 == size)
         {
-            shm = boost::interprocess::xsi_shared_memory(boost::interprocess::open_only, key);
+            shm = xsi_shared_memory(open_only, xsi_key);
 
-            util::Log(logDEBUG) << "opening " << shm.get_shmid() << " from id " << (int)id;
+            util::Log(logDEBUG) << "opening " << shm.get_shmid() << " from id " << (int)shm_key;
 
-            region = boost::interprocess::mapped_region(shm, boost::interprocess::read_only);
+            region = mapped_region(shm, read_only);
         }
         // open or create
         else
         {
-            shm = boost::interprocess::xsi_shared_memory(
-                boost::interprocess::open_or_create, key, size);
-            util::Log(logDEBUG) << "opening/creating " << shm.get_shmid() << " from id " << id
+            shm = xsi_shared_memory(open_or_create, xsi_key, size);
+            util::Log(logDEBUG) << "opening/creating " << shm.get_shmid() << " from id " << shm_key
                                 << " with size " << size;
 #ifdef __linux__
             if (-1 == shmctl(shm.get_shmid(), SHM_LOCK, nullptr))
@@ -95,118 +109,85 @@ class SharedMemory
                 }
             }
 #endif
-            region = boost::interprocess::mapped_region(shm, boost::interprocess::read_write);
+            region = mapped_region(shm, read_write);
         }
     }
 
-    template <typename IdentifierT> static bool RegionExists(const IdentifierT id)
+    /**
+     * @brief Test if a shared memory region exists
+     *
+     * @param key A ShmKey
+     * @return bool Returns true if the region exists
+     */
+    static bool RegionExists(const ShmKey shm_key)
     {
-        bool result = true;
         try
         {
-            OSRMLockFile lock_file;
-            boost::interprocess::xsi_key key(lock_file(id).string().c_str(), id);
-            result = RegionExists(key);
+            OSRMLockFile lock_file(shm_key);
+            xsi_key xsi_key(lock_file, shm_key);
+            xsi_shared_memory xsi(open_only, xsi_key);
+            return true;
         }
         catch (...)
         {
-            result = false;
         }
-        return result;
+        return false;
     }
 
-    template <typename IdentifierT> static bool Remove(const IdentifierT id)
+    /**
+     * @brief Destroys the shared memory region
+     *
+     * @param key A valid ShmKey
+     * @return bool returns false on error.
+     */
+    static bool Remove(const ShmKey shm_key)
     {
-        OSRMLockFile lock_file;
-        boost::interprocess::xsi_key key(lock_file(id).string().c_str(), id);
-        return Remove(key);
+        OSRMLockFile lock_file(shm_key);
+        xsi_key xsi_key(lock_file, shm_key);
+        xsi_shared_memory xsi(open_only, xsi_key);
+        util::Log(logDEBUG) << "deallocating prev memory " << xsi.get_shmid();
+        return xsi_shared_memory::remove(xsi.get_shmid());
     }
 
-#ifdef __linux__
-    void WaitForDetach()
+    /**
+     * @brief Waits for all processes to detach from the shared memory region
+     *
+     * @param key A ShmKey
+     * @param timeout Timeout in ms
+     */
+    static void WaitForDetach(const ShmKey shm_key, int timeout)
     {
-        auto shmid = shm.get_shmid();
-        ::shmid_ds xsi_ds;
-        const auto errorToMessage = [](int error) -> std::string
-        {
-            switch (error)
-            {
-            case EPERM:
-                return "EPERM";
-                break;
-            case EACCES:
-                return "ACCESS";
-                break;
-            case EINVAL:
-                return "EINVAL";
-                break;
-            case EFAULT:
-                return "EFAULT";
-                break;
-            default:
-                return "Unknown Error " + std::to_string(error);
-                break;
-            }
-        };
-
-        do
-        {
-            // On OSX this returns EINVAL for whatever reason, hence we need to disable it
-            int ret = ::shmctl(shmid, IPC_STAT, &xsi_ds);
-            if (ret < 0)
-            {
-                auto error_code = errno;
-                throw util::exception("shmctl encountered an error: " + errorToMessage(error_code) +
-                                      SOURCE_REF);
-            }
-            BOOST_ASSERT(ret >= 0);
-
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
-        } while (xsi_ds.shm_nattch > 1);
-    }
-#else
-    void WaitForDetach()
-    {
-        util::Log(logDEBUG)
-            << "Shared memory support for non-Linux systems does not wait for clients to "
-               "dettach. Going to sleep for 50ms.";
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    }
-#endif
-
-  private:
-    static bool RegionExists(const boost::interprocess::xsi_key &key)
-    {
-        bool result = true;
         try
         {
-            boost::interprocess::xsi_shared_memory shm(boost::interprocess::open_only, key);
-        }
-        catch (const boost::interprocess::interprocess_exception &e)
-        {
-            if (e.get_error_code() != boost::interprocess::not_found_error)
+            OSRMLockFile lock_file(shm_key);
+            xsi_key xsi_key(lock_file, shm_key);
+            xsi_shared_memory xsi(open_only, xsi_key);
+            while (true)
             {
-                throw;
+                ::shmid_ds xsi_ds;
+                if (::shmctl(xsi.get_shmid(), IPC_STAT, &xsi_ds) < 0)
+                    break;
+                if (xsi_ds.shm_nattch == 0)
+                    break;
+                if (--timeout < 0)
+                    break;
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
-            result = false;
         }
-
-        return result;
+        catch (interprocess_exception &)
+        {
+            // already detached
+        }
     }
 
-    static bool Remove(const boost::interprocess::xsi_key &key)
-    {
-        boost::interprocess::xsi_shared_memory xsi(boost::interprocess::open_only, key);
-        util::Log(logDEBUG) << "deallocating prev memory " << xsi.get_shmid();
-        return boost::interprocess::xsi_shared_memory::remove(xsi.get_shmid());
-    }
-
-    boost::interprocess::xsi_key key;
-    boost::interprocess::xsi_shared_memory shm;
-    boost::interprocess::mapped_region region;
+  private:
+    xsi_shared_memory shm;
+    mapped_region region;
 };
 #else
-// Windows - specific code
+
+// POSIX shared mem
+// Currently used for Windows, but could be used for all
 class SharedMemory
 {
     SharedMemory(const SharedMemory &) = delete;
@@ -216,114 +197,78 @@ class SharedMemory
     void *Ptr() const { return region.get_address(); }
     std::size_t Size() const { return region.get_size(); }
 
-    SharedMemory(const std::filesystem::path &lock_file, const int id, const uint64_t size = 0)
+    SharedMemory(const OSRMLockFile &, const ShmKey shm_key, const uint64_t size = 0)
     {
-        sprintf(key, "%s.%d", "osrm.lock", id);
+        OSRMShmName name(shm_key);
         if (0 == size)
         { // read_only
-            shm = boost::interprocess::shared_memory_object(
-                boost::interprocess::open_only, key, boost::interprocess::read_only);
-            region = boost::interprocess::mapped_region(shm, boost::interprocess::read_only);
+            shm_o = shared_memory_object(open_only, name, read_only);
+            region = mapped_region(shm_o, read_only);
         }
         else
         { // writeable pointer
-            shm = boost::interprocess::shared_memory_object(
-                boost::interprocess::open_or_create, key, boost::interprocess::read_write);
-            shm.truncate(size);
-            region = boost::interprocess::mapped_region(shm, boost::interprocess::read_write);
+            shm_o = shared_memory_object(open_or_create, name, read_write);
+            shm_o.truncate(size);
+            region = mapped_region(shm_o, read_write);
 
             util::Log(logDEBUG) << "writeable memory allocated " << size << " bytes";
         }
     }
 
-    static bool RegionExists(const int id)
+    static bool RegionExists(const ShmKey shm_key)
     {
-        bool result = true;
+        OSRMShmName name(shm_key);
         try
         {
-            char k[500];
-            build_key(id, k);
-            result = RegionExists(k);
+            shared_memory_object shm(open_only, name, read_write);
+            return true;
         }
         catch (...)
         {
-            result = false;
         }
-        return result;
+        return false;
     }
 
-    static bool Remove(const int id)
+    static bool Remove(const ShmKey shm_key)
     {
-        char k[500];
-        build_key(id, k);
-        return Remove(k);
+        OSRMShmName name(shm_key);
+        util::Log(logDEBUG) << "deallocating prev memory for name " << name;
+        return shared_memory_object::remove(name);
     }
 
-    void WaitForDetach()
+    /**
+     * @brief Waits for all processes to detach from the shared memory region
+     *
+     * @param key A ShmKey
+     * @param timeout Timeout in ms
+     */
+    static void WaitForDetach(const ShmKey shm_key, int timeout)
     {
-        // FIXME this needs an implementation for Windows
-        util::Log(logDEBUG) << "Shared memory support for Windows does not wait for clients to "
-                               "dettach. Going to sleep for 50ms.";
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        OSRMShmName name(shm_key);
+        try
+        {
+            while (true)
+            {
+                shared_memory_object shm_o(open_only, name, read_write);
+                if (--timeout < 0)
+                    break;
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+        }
+        catch (interprocess_exception &)
+        {
+            // already detached
+        }
     }
 
   private:
-    static void build_key(int id, char *key) { sprintf(key, "%s.%d", "osrm.lock", id); }
-
-    static bool RegionExists(const char *key)
-    {
-        bool result = true;
-        try
-        {
-            boost::interprocess::shared_memory_object shm(
-                boost::interprocess::open_only, key, boost::interprocess::read_write);
-        }
-        catch (...)
-        {
-            result = false;
-        }
-        return result;
-    }
-
-    static bool Remove(char *key)
-    {
-        util::Log(logDEBUG) << "deallocating prev memory for key " << key;
-        return boost::interprocess::shared_memory_object::remove(key);
-    }
-
-    char key[500];
-    boost::interprocess::shared_memory_object shm;
-    boost::interprocess::mapped_region region;
+    shared_memory_object shm_o;
+    mapped_region region;
 };
 #endif
 
-template <typename IdentifierT, typename LockFileT = OSRMLockFile>
-std::unique_ptr<SharedMemory> makeSharedMemory(const IdentifierT &id, const uint64_t size = 0)
-{
-    static_assert(sizeof(id) == sizeof(std::uint16_t), "Key type is not 16 bits");
-    try
-    {
-        LockFileT lock_file;
-        if (!std::filesystem::exists(lock_file(id)))
-        {
-            if (0 == size)
-            {
-                throw util::exception("lock file does not exist, exiting" + SOURCE_REF);
-            }
-            else
-            {
-                std::ofstream ofs(lock_file(id));
-            }
-        }
-        return std::make_unique<SharedMemory>(lock_file(id), id, size);
-    }
-    catch (const boost::interprocess::interprocess_exception &e)
-    {
-        util::Log(logERROR) << "Error while attempting to allocate shared memory: " << e.what()
-                            << ", code " << e.get_error_code();
-        throw util::exception(e.what() + SOURCE_REF);
-    }
-}
+std::unique_ptr<SharedMemory> makeSharedMemory(const ShmKey shm_key, const uint64_t size = 0);
+
 } // namespace osrm::storage
 
 #endif // SHARED_MEMORY_HPP

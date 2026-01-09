@@ -6,7 +6,6 @@
 #include "engine/datafacade_factory.hpp"
 
 #include "storage/shared_datatype.hpp"
-#include "storage/shared_memory.hpp"
 #include "storage/shared_monitor.hpp"
 
 #include <boost/interprocess/sync/named_upgradable_mutex.hpp>
@@ -59,8 +58,8 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
                 facade_factory =
                     DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
                         std::make_shared<datafacade::SharedMemoryAllocator>(
-                            std::vector<storage::SharedRegionRegister::ShmKey>{
-                                static_region.shm_key, updatable_region.shm_key}));
+                            std::vector<storage::ShmKey>{static_region.shm_key,
+                                                         updatable_region.shm_key}));
             }
         }
 
@@ -121,8 +120,8 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
                 facade_factory =
                     DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
                         std::make_shared<datafacade::SharedMemoryAllocator>(
-                            std::vector<storage::SharedRegionRegister::ShmKey>{
-                                static_region.shm_key, updatable_region.shm_key}));
+                            std::vector<storage::ShmKey>{static_region.shm_key,
+                                                         updatable_region.shm_key}));
             }
         }
 

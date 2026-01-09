@@ -9,8 +9,7 @@
 namespace osrm::engine::datafacade
 {
 
-SharedMemoryAllocator::SharedMemoryAllocator(
-    const std::vector<storage::SharedRegionRegister::ShmKey> &shm_keys)
+SharedMemoryAllocator::SharedMemoryAllocator(const std::vector<storage::ShmKey> &shm_keys)
 {
     std::vector<storage::SharedDataIndex::AllocatedRegion> regions;
 

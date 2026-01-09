@@ -3,7 +3,6 @@
 #include "storage/io.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
-#include "storage/shared_memory_ownership.hpp"
 #include "storage/shared_monitor.hpp"
 #include "storage/view_factory.hpp"
 
@@ -14,8 +13,6 @@
 #include "partitioner/files.hpp"
 
 #include "util/exception.hpp"
-#include "util/exception_utils.hpp"
-#include "util/fingerprint.hpp"
 #include "util/log.hpp"
 
 #ifdef __linux__
@@ -30,7 +27,6 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
-#include <new>
 #include <string>
 
 namespace osrm::storage
@@ -43,23 +39,24 @@ struct RegionHandle
 {
     std::unique_ptr<SharedMemory> memory;
     char *data_ptr;
-    std::uint16_t shm_key;
+    ShmKey shm_key;
 };
 
 RegionHandle setupRegion(SharedRegionRegister &shared_register,
                          const storage::BaseDataLayout &layout)
 {
     // This is safe because we have an exclusive lock for all osrm-datastore processes.
-    auto shm_key = shared_register.ReserveKey();
+    ShmKey shm_key = shared_register.ReserveKey();
 
     // ensure that the shared memory region we want to write to is really removed
-    // this is only needef for failure recovery because we actually wait for all clients
+    // this is only needed for failure recovery because we actually wait for all clients
     // to detach at the end of the function
     if (storage::SharedMemory::RegionExists(shm_key))
     {
         util::Log(logWARNING) << "Old shared memory region " << (int)shm_key << " still exists.";
-        util::UnbufferedLog() << "Retrying removal... ";
+        util::UnbufferedLog() << "Retrying removal of shared memory region " << (int)shm_key;
         storage::SharedMemory::Remove(shm_key);
+        storage::SharedMemory::WaitForDetach(shm_key, 5000);
         util::UnbufferedLog() << "ok.";
     }
 
@@ -132,7 +129,7 @@ bool swapData(Monitor &monitor,
         }
     }
 
-    util::Log() << "All data loaded. Notify all client about new data in:";
+    util::Log() << "All data loaded. Notify all clients about new data in:";
     for (const auto &pair : handles)
     {
         util::Log() << pair.first << "\t" << static_cast<int>(pair.second.shm_key);
@@ -146,13 +143,16 @@ bool swapData(Monitor &monitor,
 
         // SHMCTL(2): Mark the segment to be destroyed. The segment will actually be destroyed
         // only after the last process detaches it.
-        storage::SharedMemory::Remove(old_handle.shm_key);
-        util::UnbufferedLog() << "ok.";
-
-        util::UnbufferedLog() << "Waiting for clients to detach... ";
-        old_handle.memory->WaitForDetach();
-        util::UnbufferedLog() << " ok.";
-
+        if (storage::SharedMemory::Remove(old_handle.shm_key))
+        {
+            util::UnbufferedLog() << "waiting for clients to detach...";
+            storage::SharedMemory::WaitForDetach(old_handle.shm_key, 5000);
+            util::UnbufferedLog() << "ok.";
+        }
+        else
+        {
+            util::UnbufferedLog() << "failed.";
+        }
         shared_register.ReleaseKey(old_handle.shm_key);
     }
 

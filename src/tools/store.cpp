@@ -21,7 +21,7 @@ using namespace osrm;
 
 void removeLocks() { storage::SharedMonitor<storage::SharedRegionRegister>::remove(); }
 
-void deleteRegion(const storage::SharedRegionRegister::ShmKey key)
+void deleteRegion(const storage::ShmKey key)
 {
     if (storage::SharedMemory::RegionExists(key) && !storage::SharedMemory::Remove(key))
     {
