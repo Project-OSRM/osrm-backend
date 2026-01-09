@@ -32,9 +32,12 @@ struct FingerPrint
 };
 
 static_assert(sizeof(FingerPrint) == 8, "FingerPrint has unexpected size");
-static_assert(std::is_trivial<FingerPrint>::value, "FingerPrint needs to be trivial.");
+static_assert(std::is_trivially_default_constructible<FingerPrint>::value,
+              "FingerPrint needs to be trivially default constructible.");
+static_assert(std::is_trivially_copyable<FingerPrint>::value,
+              "FingerPrint needs to be trivially copyable.");
 static_assert(std::is_standard_layout<FingerPrint>::value,
-              "FingerPrint needs have a standard layout.");
+              "FingerPrint needs to have a standard layout.");
 } // namespace osrm::util
 
 #endif /* FingerPrint_H */

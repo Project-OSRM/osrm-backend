@@ -68,30 +68,45 @@ using FloatLongitude = Alias<double, tag::longitude>;
 // range checks on these (toFixed/toFloat, etc)
 using UnsafeFloatLatitude = Alias<double, tag::unsafelatitude>;
 using UnsafeFloatLongitude = Alias<double, tag::unsafelongitude>;
-static_assert(std::is_standard_layout<FixedLatitude>() &&
-                  std::is_trivially_default_constructible<FixedLatitude>() &&
-                  std::is_trivially_copyable<FixedLatitude>(),
-              "FixedLatitude is not a valid alias");
-static_assert(std::is_standard_layout<FixedLongitude>() &&
-                  std::is_trivially_default_constructible<FixedLongitude>() &&
-                  std::is_trivially_copyable<FixedLongitude>(),
-              "FixedLongitude is not a valid alias");
-static_assert(std::is_standard_layout<FloatLatitude>() &&
-                  std::is_trivially_default_constructible<FloatLatitude>() &&
-                  std::is_trivially_copyable<FloatLatitude>(),
-              "FloatLatitude is not a valid alias");
-static_assert(std::is_standard_layout<FloatLongitude>() &&
-                  std::is_trivially_default_constructible<FloatLongitude>() &&
-                  std::is_trivially_copyable<FloatLongitude>(),
-              "FloatLongitude is not a valid alias");
-static_assert(std::is_standard_layout<UnsafeFloatLatitude>() &&
-                  std::is_trivially_default_constructible<UnsafeFloatLatitude>() &&
-                  std::is_trivially_copyable<UnsafeFloatLatitude>(),
-              "UnsafeFloatLatitude is not a valid alias");
-static_assert(std::is_standard_layout<UnsafeFloatLongitude>() &&
-                  std::is_trivially_default_constructible<UnsafeFloatLongitude>() &&
-                  std::is_trivially_copyable<UnsafeFloatLongitude>(),
-              "UnsafeFloatLongitude is not a valid alias");
+static_assert(std::is_standard_layout<FixedLatitude>(), "FixedLatitude must have standard layout.");
+static_assert(std::is_trivially_default_constructible<FixedLatitude>(),
+              "FixedLatitude must be trivially default constructible.");
+static_assert(std::is_trivially_copyable<FixedLatitude>(),
+              "FixedLatitude must be trivially copyable.");
+
+static_assert(std::is_standard_layout<FixedLongitude>(),
+              "FixedLongitude must have standard layout.");
+static_assert(std::is_trivially_default_constructible<FixedLongitude>(),
+              "FixedLongitude must be trivially default constructible.");
+static_assert(std::is_trivially_copyable<FixedLongitude>(),
+              "FixedLongitude must be trivially copyable.");
+
+static_assert(std::is_standard_layout<FloatLatitude>(), "FloatLatitude must have standard layout.");
+static_assert(std::is_trivially_default_constructible<FloatLatitude>(),
+              "FloatLatitude must be trivially default constructible.");
+static_assert(std::is_trivially_copyable<FloatLatitude>(),
+              "FloatLatitude must be trivially copyable.");
+
+static_assert(std::is_standard_layout<FloatLongitude>(),
+              "FloatLongitude must have standard layout.");
+static_assert(std::is_trivially_default_constructible<FloatLongitude>(),
+              "FloatLongitude must be trivially default constructible.");
+static_assert(std::is_trivially_copyable<FloatLongitude>(),
+              "FloatLongitude must be trivially copyable.");
+
+static_assert(std::is_standard_layout<UnsafeFloatLatitude>(),
+              "UnsafeFloatLatitude must have standard layout.");
+static_assert(std::is_trivially_default_constructible<UnsafeFloatLatitude>(),
+              "UnsafeFloatLatitude must be trivially default constructible.");
+static_assert(std::is_trivially_copyable<UnsafeFloatLatitude>(),
+              "UnsafeFloatLatitude must be trivially copyable.");
+
+static_assert(std::is_standard_layout<UnsafeFloatLongitude>(),
+              "UnsafeFloatLongitude must have standard layout.");
+static_assert(std::is_trivially_default_constructible<UnsafeFloatLongitude>(),
+              "UnsafeFloatLongitude must be trivially default constructible.");
+static_assert(std::is_trivially_copyable<UnsafeFloatLongitude>(),
+              "UnsafeFloatLongitude must be trivially copyable.");
 
 /**
  * Converts a typed latitude from floating to fixed representation.
