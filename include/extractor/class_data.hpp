@@ -13,9 +13,11 @@ namespace osrm::extractor
 {
 
 using ClassData = std::uint8_t;
-constexpr ClassData INAVLID_CLASS_DATA = std::numeric_limits<ClassData>::max();
-static const std::uint8_t MAX_CLASS_INDEX = 8 - 1;
-static const std::uint8_t MAX_EXCLUDABLE_CLASSES = 8;
+constexpr ClassData INVALID_CLASS_DATA = std::numeric_limits<ClassData>::max();
+static const std::uint8_t MAX_CLASS_INDEX = 7 - 1;
+// We can allow for 7 classes, so 0b0111_1111 when all would be set on an edge.
+// Setting the MSB would mark is invalid.
+static const std::uint8_t MAX_EXCLUDABLE_CLASSES = 7;
 
 inline bool isSubset(const ClassData lhs, const ClassData rhs) { return (lhs & rhs) == lhs; }
 
