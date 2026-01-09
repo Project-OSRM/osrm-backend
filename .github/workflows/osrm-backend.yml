@@ -569,12 +569,12 @@ jobs:
         popd
         npm run lint
 
-    - name: Save Conan cache
+    - name: Deploy Conan runtime libraries
       if: ${{ matrix.ENABLE_CONAN == 'ON' && matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
       run: |
         cd ${OSRM_BUILD_DIR}
         source .venv/bin/activate
-        conan cache save "*/*:*" --file=conan_cache.tgz
+        conan install .. --deployer=full_deploy -of=conan_deploy -g CMakeDeps
 
     - name: Upload cucumber test artifacts
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && contains(fromJson('["clang-18-release", "gcc-14-release", "conan-linux-release"]'), matrix.name) }}
@@ -586,7 +586,7 @@ jobs:
           test/data/
           build-osrm/libosrm*
           build-osrm/osrm-*
-          build-osrm/conan_cache.tgz
+          build-osrm/conan_deploy/
         retention-days: 1
 
     - name: Use Node 20
@@ -683,12 +683,14 @@ jobs:
         id: install-boost
         with:
           boost_version: 1.85.0
-      - name: Restore Conan cache
+      - name: Set Conan library path
         if: ${{ matrix.build-config == 'conan-linux-release' }}
         run: |
-          python3 -m pip install conan==2.15.1
-          conan cache restore build-osrm/conan_cache.tgz
+          # Find all lib directories in the deployed Conan packages
+          CONAN_LIB_PATHS=$(find build-osrm/conan_deploy -name "lib" -type d | tr '\n' ':')
+          echo "CONAN_LD_LIBRARY_PATH=${CONAN_LIB_PATHS}" >> $GITHUB_ENV
       - name: Install runtime dependencies
+        if: ${{ matrix.build-config != 'conan-linux-release' }}
         run: |
           sudo apt-get update -y
           sudo apt-get install -y liblua5.2-0
@@ -704,7 +706,7 @@ jobs:
       - name: Run cucumber tests
         run: OSRM_BUILD_DIR=${{ github.workspace }}/build-osrm OSRM_LOAD_METHOD=${{ matrix.load_method }} npx cucumber-js features/ -p ${{ matrix.algorithm }}
         env:
-          LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib:$LD_LIBRARY_PATH
+          LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib:${{ env.CONAN_LD_LIBRARY_PATH }}$LD_LIBRARY_PATH
 
   ci-complete:
     runs-on: ubuntu-latest
