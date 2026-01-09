@@ -147,11 +147,12 @@ struct ExtractionTurn
                    const ExtractionTurnLeg::EdgeData &source_edge,
                    const ExtractionTurnLeg::EdgeData &target_edge,
                    const std::vector<ExtractionTurnLeg> &roads_on_the_right,
-                   const std::vector<ExtractionTurnLeg> &roads_on_the_left)
+                   const std::vector<ExtractionTurnLeg> &roads_on_the_left,
+                   const bool has_traffic_light)
         : ExtractionTurn{0,
                          2,
                          false,
-                         true,
+                         has_traffic_light,
                          false,
                          // source
                          false,

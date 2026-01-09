@@ -24,6 +24,7 @@
     - Profiles:
       - FIXED: Bicycle and foot profiles now don't route on motor roads [#6697](https://github.com/Project-OSRM/osrm-backend/pull/6697)
       - FIXED: Use `cycleway:both` if available. [#6179](https://github.com/Project-OSRM/osrm-backend/issues/6179)
+      - FIXED: Correctly limit exclude classes to 7. [#7322](https://github.com/Project-OSRM/osrm-backend/pull/7322)
 
 # 6.0.0
   - Changes from 6.0.0 RC2: None
