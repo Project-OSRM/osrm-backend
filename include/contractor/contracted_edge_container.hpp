@@ -128,8 +128,7 @@ struct ContractedEdgeContainer
         edges.insert(edges.end(), new_edges.begin(), new_end);
         auto edges_size = edges.size();
         auto new_edges_size = std::distance(new_edges.begin(), new_end);
-        BOOST_ASSERT(edges_size >= static_cast<unsigned int>(new_edges_size));
-        BOOST_ASSERT(edges_size < std::numeric_limits<std::uint32_t>::max());
+        BOOST_ASSERT(static_cast<int64_t>(edges_size) >= new_edges_size)
         flags.resize(edges_size);
         std::fill(flags.begin() + edges_size - new_edges_size, flags.end(), flag);
 
