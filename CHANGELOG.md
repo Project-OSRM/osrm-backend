@@ -23,7 +23,7 @@
       - FIXED: Minor misspellings found in source code, comments and documents [#7215](https://github.com/Project-OSRM/osrm-backend/pull/7215)
     - Profile:
       - FIXED: Use `cycleway:both` if available. [#6179](https://github.com/Project-OSRM/osrm-backend/issues/6179)
-      - FIXED: Correcly limit exclude classes to 7. [#7322](https://github.com/Project-OSRM/osrm-backend/pull/7322)
+      - FIXED: Correctly limit exclude classes to 7. [#7322](https://github.com/Project-OSRM/osrm-backend/pull/7322)
 
 # 6.0.0
   - Changes from 6.0.0 RC2: None
