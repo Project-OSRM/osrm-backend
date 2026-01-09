@@ -568,13 +568,16 @@ jobs:
         fi
         popd
         npm run lint
-        # Run cucumber tests in build-matrix for conan builds (other builds use parallel cucumber-tests job)
-        if [[ "${{ matrix.name }}" == "conan-linux-release" ]]; then
-          npm test
-        fi
+
+    - name: Save Conan cache
+      if: ${{ matrix.ENABLE_CONAN == 'ON' && matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
+      run: |
+        cd ${OSRM_BUILD_DIR}
+        source .venv/bin/activate
+        conan cache save "*/*:*" --file=conan_cache.tgz
 
     - name: Upload cucumber test artifacts
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && contains(fromJson('["clang-18-release", "gcc-14-release"]'), matrix.name) }}
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && contains(fromJson('["clang-18-release", "gcc-14-release", "conan-linux-release"]'), matrix.name) }}
       uses: actions/upload-artifact@v4
       with:
         name: cucumber-artifacts-${{ matrix.name }}
@@ -583,6 +586,7 @@ jobs:
           test/data/
           build-osrm/libosrm*
           build-osrm/osrm-*
+          build-osrm/conan_cache.tgz
         retention-days: 1
 
     - name: Use Node 20
@@ -649,7 +653,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build-config: [clang-18-release, gcc-14-release]
+        build-config: [clang-18-release, gcc-14-release, conan-linux-release]
         algorithm: [ch, mld]
         load_method: [datastore, mmap, directly]
     name: cucumber-${{ matrix.build-config }}-${{ matrix.algorithm }}-${{ matrix.load_method }}
@@ -671,12 +675,19 @@ jobs:
         with:
           name: cucumber-artifacts-${{ matrix.build-config }}
       - name: Give tar root ownership
+        if: ${{ matrix.build-config != 'conan-linux-release' }}
         run: sudo chown root /bin/tar && sudo chmod u+s /bin/tar
       - name: Install Boost
+        if: ${{ matrix.build-config != 'conan-linux-release' }}
         uses: MarkusJx/install-boost@v2
         id: install-boost
         with:
           boost_version: 1.85.0
+      - name: Restore Conan cache
+        if: ${{ matrix.build-config == 'conan-linux-release' }}
+        run: |
+          python3 -m pip install conan==2.15.1
+          conan cache restore build-osrm/conan_cache.tgz
       - name: Install runtime dependencies
         run: |
           sudo apt-get update -y
