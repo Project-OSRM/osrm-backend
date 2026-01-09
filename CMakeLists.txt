@@ -367,6 +367,14 @@ endif()
 if (ENABLE_CONAN)
   set(Boost_USE_STATIC_LIBS ON)
   find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+  
+  # Boost.Beast requires at least Boost 1.66, but works best with 1.70+
+  if(Boost_VERSION_STRING VERSION_LESS "1.66")
+    message(FATAL_ERROR "Boost.Beast requires Boost version 1.66 or higher. Found: ${Boost_VERSION_STRING}")
+  elseif(Boost_VERSION_STRING VERSION_LESS "1.70")
+    message(WARNING "Boost.Beast works best with Boost 1.70+. Current version: ${Boost_VERSION_STRING}")
+  endif()
+  
   find_package(TBB REQUIRED)
   find_package(EXPAT REQUIRED)
   find_package(BZip2 REQUIRED)
@@ -398,6 +406,14 @@ if (ENABLE_CONAN)
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
 else()
   find_package(Boost REQUIRED CONFIG COMPONENTS ${BOOST_COMPONENTS})
+  
+  # Boost.Beast requires at least Boost 1.66, but works best with 1.70+
+  if(Boost_VERSION_STRING VERSION_LESS "1.66")
+    message(FATAL_ERROR "Boost.Beast requires Boost version 1.66 or higher. Found: ${Boost_VERSION_STRING}")
+  elseif(Boost_VERSION_STRING VERSION_LESS "1.70")
+    message(WARNING "Boost.Beast works best with Boost 1.70+. Current version: ${Boost_VERSION_STRING}")
+  endif()
+  
   find_package(TBB REQUIRED)
   find_package(EXPAT REQUIRED)
   find_package(BZip2 REQUIRED)
