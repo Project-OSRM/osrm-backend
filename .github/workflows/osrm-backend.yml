@@ -657,7 +657,7 @@ jobs:
         algorithm: [ch, mld]
         load_method: [datastore, mmap, directly]
     name: cucumber-${{ matrix.build-config }}-${{ matrix.algorithm }}-${{ matrix.load_method }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
