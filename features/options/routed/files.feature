@@ -1,9 +1,9 @@
-@routed @options @files @todo
+@routed @options @files @todo @no_datastore
 Feature: osrm-routed command line options: files
 # Normally when launching osrm-routed, it will keep running as a server until it's shut down.
 # For testing program options, the --trial option is used, which causes osrm-routed to quit
 # immediately after initialization. This makes testing easier and faster.
-# 
+#
 # The {contracted_base} part of the options to osrm-routed will be expanded to the actual base path of
 # the contracted input file.
 

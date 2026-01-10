@@ -567,7 +567,7 @@ jobs:
           npm run nodejs-tests
         fi
         popd
-        npm test
+        npm test -- --parallel $JOBS
 
     - name: Use Node 20
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}

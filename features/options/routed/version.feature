@@ -1,4 +1,4 @@
-@routed @options @version
+@routed @options @version @no_datastore
 Feature: osrm-routed command line options: version
 # the regex will match these two formats:
 # v0.3.7.0          # this is the normal format when you build from a git clone
@@ -6,7 +6,7 @@ Feature: osrm-routed command line options: version
 
     Background:
         Given the profile "testbot"
-    
+
     Scenario: osrm-routed - Version, short
         When I run "osrm-routed -v"
         Then stderr should be empty
