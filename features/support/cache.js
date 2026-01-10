@@ -22,7 +22,6 @@ export default class Cache {
     const content = fs.readFileSync(uri);
     const hash = env.osrmHash.copy();
     hash.update(content);
-    hash.update(env.wp.algorithm || '');
     const hexHash = hash.digest('hex');
 
     // shorten uri to be relative to 'features/'

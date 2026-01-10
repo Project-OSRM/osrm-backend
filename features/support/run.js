@@ -35,6 +35,10 @@ export function runBin(bin, args, options, log) {
   child.stderr.on('data', (data) => log(data));
   child.stdout.on('data', (data) => log(data));
 
+  child.on('error', (err) => {
+    log(`${bin} aborted with error ${err}`);
+    throw(err);
+  });
   child.on('exit', (code, signal) => {
     if (signal != null) {
       const msg = `${bin} aborted with signal ${child.signal}`;

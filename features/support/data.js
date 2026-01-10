@@ -295,12 +295,9 @@ export default class Data {
    */
   runExtractionChain() {
     this.extract();
-    if (env.wp.algorithm == 'mld') {
-      this.partition();
-      this.customize();
-    } else {
-      this.contract();
-    }
+    this.partition(); // mld
+    this.customize(); // mld
+    this.contract();  // ch
   }
 
   reprocess(callback) {
