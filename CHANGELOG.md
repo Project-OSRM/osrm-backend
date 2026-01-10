@@ -1,6 +1,7 @@
 # Unreleased
   - Changes from 6.0.0
     - Build:
+      - CHANGED: Parallelize cucumber tests using GitHub Actions matrix strategy [#7319](https://github.com/Project-OSRM/osrm-backend/pull/7319)
       - FIXED: Update Node.js binding path from `lib/binding` to `lib/binding_napi_v8` to match node-pre-gyp versioning conventions [#7272](https://github.com/Project-OSRM/osrm-backend/pull/7272)
       - FIXED: Reduce MSVC compiler warnings by suppressing informational warnings while preserving bug-indicating warnings [#7253](https://github.com/Project-OSRM/osrm-backend/issues/7253)
       - FIXED: Merge `osrm_extract` and `osrm_guidance` to avoid circular dependencies. [#7315](https://github.com/Project-OSRM/osrm-backend/pull/7315)

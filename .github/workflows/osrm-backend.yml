@@ -17,6 +17,7 @@ env:
   CASHER_TIME_OUT: 599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
   CMAKE_VERSION: 3.21.2
   ENABLE_NODE_BINDINGS: "ON"
+  TBB_VERSION: 2021.12.0
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -485,7 +486,6 @@ jobs:
         fi
 
         # TBB
-        TBB_VERSION=2021.12.0
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
           TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz"
         elif [[ "${RUNNER_OS}" == "macOS" ]]; then
@@ -567,7 +567,27 @@ jobs:
           npm run nodejs-tests
         fi
         popd
-        npm test
+        npm run lint
+
+    - name: Deploy Conan runtime libraries
+      if: ${{ matrix.ENABLE_CONAN == 'ON' && matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
+      run: |
+        cd ${OSRM_BUILD_DIR}
+        source .venv/bin/activate
+        conan install .. --deployer=full_deploy -of=conan_deploy -g CMakeDeps
+
+    - name: Upload cucumber test artifacts
+      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' && contains(fromJson('["clang-18-release", "gcc-14-release", "conan-linux-release"]'), matrix.name) }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: cucumber-artifacts-${{ matrix.name }}
+        path: |
+          lib/
+          test/data/
+          build-osrm/libosrm*
+          build-osrm/osrm-*
+          build-osrm/conan_deploy/
+        retention-days: 1
 
     - name: Use Node 20
       if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
@@ -628,8 +648,67 @@ jobs:
         ccache -p
         ccache -s
 
+  cucumber-tests:
+    needs: build-matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        build-config: [clang-18-release, gcc-14-release, conan-linux-release]
+        algorithm: [ch, mld]
+        load_method: [datastore, mmap, directly]
+    name: cucumber-${{ matrix.build-config }}-${{ matrix.algorithm }}-${{ matrix.load_method }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enable Node.js cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: cucumber-artifacts-${{ matrix.build-config }}
+      - name: Give tar root ownership
+        if: ${{ matrix.build-config != 'conan-linux-release' }}
+        run: sudo chown root /bin/tar && sudo chmod u+s /bin/tar
+      - name: Install Boost
+        if: ${{ matrix.build-config != 'conan-linux-release' }}
+        uses: MarkusJx/install-boost@v2
+        id: install-boost
+        with:
+          boost_version: 1.85.0
+      - name: Set Boost library path
+        if: ${{ matrix.build-config != 'conan-linux-release' }}
+        run: echo "LD_LIBRARY_PATH=${{ steps.install-boost.outputs.BOOST_ROOT }}/lib:/usr/local/lib" >> $GITHUB_ENV
+      - name: Set Conan library path
+        if: ${{ matrix.build-config == 'conan-linux-release' }}
+        run: |
+          CONAN_LIB_PATHS=$(find build-osrm/conan_deploy -name "lib" -type d | tr '\n' ':')
+          echo "LD_LIBRARY_PATH=${CONAN_LIB_PATHS%:}" >> $GITHUB_ENV
+      - name: Install runtime dependencies
+        if: ${{ matrix.build-config != 'conan-linux-release' }}
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y liblua5.2-0
+          wget --tries 5 https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz -O onetbb.tgz
+          tar zxvf onetbb.tgz
+          sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
+          sudo ldconfig
+      - name: Install npm dependencies
+        run: npm ci --ignore-scripts
+      - name: Make binaries executable
+        run: chmod +x build-osrm/osrm-*
+      - name: Run cucumber tests
+        run: OSRM_BUILD_DIR=${{ github.workspace }}/build-osrm OSRM_LOAD_METHOD=${{ matrix.load_method }} npx cucumber-js features/ -p ${{ matrix.algorithm }}
+
   ci-complete:
     runs-on: ubuntu-latest
-    needs: [build-matrix, conan-windows-release-node, docker-image-matrix]
+    needs: [build-matrix, cucumber-tests, conan-windows-release-node, docker-image-matrix]
     steps:
     - run: echo "CI complete"
