@@ -19,8 +19,7 @@ namespace osrm::engine::datafacade
 class SharedMemoryAllocator final : public ContiguousBlockAllocator
 {
   public:
-    explicit SharedMemoryAllocator(
-        const std::vector<storage::SharedRegionRegister::ShmKey> &shm_keys);
+    explicit SharedMemoryAllocator(const std::vector<storage::ProjID> &proj_ids);
     ~SharedMemoryAllocator() override final;
 
     // interface to give access to the datafacades

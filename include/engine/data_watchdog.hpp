@@ -6,7 +6,6 @@
 #include "engine/datafacade_factory.hpp"
 
 #include "storage/shared_datatype.hpp"
-#include "storage/shared_memory.hpp"
 #include "storage/shared_monitor.hpp"
 
 #include <boost/interprocess/sync/named_upgradable_mutex.hpp>
@@ -59,8 +58,8 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
                 facade_factory =
                     DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
                         std::make_shared<datafacade::SharedMemoryAllocator>(
-                            std::vector<storage::SharedRegionRegister::ShmKey>{
-                                static_region.shm_key, updatable_region.shm_key}));
+                            std::vector<storage::ProjID>{static_region.proj_id,
+                                                         updatable_region.proj_id}));
             }
         }
 
@@ -112,18 +111,18 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
                 updatable_region = *updatable_shared_region;
             }
 
-            util::Log() << "updated facade to regions " << (int)static_region.shm_key << " and "
-                        << (int)updatable_region.shm_key << " with timestamps "
-                        << static_region.timestamp << " and " << updatable_region.timestamp;
-
             {
                 boost::unique_lock<boost::shared_mutex> swap_lock(factory_mutex);
                 facade_factory =
                     DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
                         std::make_shared<datafacade::SharedMemoryAllocator>(
-                            std::vector<storage::SharedRegionRegister::ShmKey>{
-                                static_region.shm_key, updatable_region.shm_key}));
+                            std::vector<storage::ProjID>{static_region.proj_id,
+                                                         updatable_region.proj_id}));
             }
+
+            util::Log() << "updated facade to regions " << (int)static_region.proj_id << " and "
+                        << (int)updatable_region.proj_id << " with timestamps "
+                        << static_region.timestamp << " and " << updatable_region.timestamp;
         }
 
         util::Log() << "DataWatchdog thread stopped";
