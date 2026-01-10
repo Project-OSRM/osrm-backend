@@ -683,12 +683,14 @@ jobs:
         id: install-boost
         with:
           boost_version: 1.85.0
+      - name: Set Boost library path
+        if: ${{ matrix.build-config != 'conan-linux-release' }}
+        run: echo "LD_LIBRARY_PATH=${{ steps.install-boost.outputs.BOOST_ROOT }}/lib:/usr/local/lib" >> $GITHUB_ENV
       - name: Set Conan library path
         if: ${{ matrix.build-config == 'conan-linux-release' }}
         run: |
-          # Find all lib directories in the deployed Conan packages
           CONAN_LIB_PATHS=$(find build-osrm/conan_deploy -name "lib" -type d | tr '\n' ':')
-          echo "CONAN_LD_LIBRARY_PATH=${CONAN_LIB_PATHS}" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=${CONAN_LIB_PATHS%:}" >> $GITHUB_ENV
       - name: Install runtime dependencies
         if: ${{ matrix.build-config != 'conan-linux-release' }}
         run: |
@@ -705,8 +707,6 @@ jobs:
         run: chmod +x build-osrm/osrm-*
       - name: Run cucumber tests
         run: OSRM_BUILD_DIR=${{ github.workspace }}/build-osrm OSRM_LOAD_METHOD=${{ matrix.load_method }} npx cucumber-js features/ -p ${{ matrix.algorithm }}
-        env:
-          LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib:${{ env.CONAN_LD_LIBRARY_PATH }}$LD_LIBRARY_PATH
 
   ci-complete:
     runs-on: ubuntu-latest
