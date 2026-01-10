@@ -111,10 +111,6 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
                 updatable_region = *updatable_shared_region;
             }
 
-            util::Log() << "updated facade to regions " << (int)static_region.proj_id << " and "
-                        << (int)updatable_region.proj_id << " with timestamps "
-                        << static_region.timestamp << " and " << updatable_region.timestamp;
-
             {
                 boost::unique_lock<boost::shared_mutex> swap_lock(factory_mutex);
                 facade_factory =
@@ -123,6 +119,10 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
                             std::vector<storage::ProjID>{static_region.proj_id,
                                                          updatable_region.proj_id}));
             }
+
+            util::Log() << "updated facade to regions " << (int)static_region.proj_id << " and "
+                        << (int)updatable_region.proj_id << " with timestamps "
+                        << static_region.timestamp << " and " << updatable_region.timestamp;
         }
 
         util::Log() << "DataWatchdog thread stopped";
