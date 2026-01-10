@@ -51,7 +51,10 @@ export default function() {
     // base configs
     home: {
       ... baseConfig,
-      format: [ 'progress-bar' ],
+      format: [
+        'progress-bar',
+        ['html', htmlReportFilename]
+      ],
     },
     github: {
       ... baseConfig,
