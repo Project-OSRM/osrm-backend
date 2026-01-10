@@ -17,6 +17,7 @@ env:
   CASHER_TIME_OUT: 599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
   CMAKE_VERSION: 3.21.2
   ENABLE_NODE_BINDINGS: "ON"
+  TBB_VERSION: 2021.12.0
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -485,7 +486,6 @@ jobs:
         fi
 
         # TBB
-        TBB_VERSION=2021.12.0
         if [[ "${RUNNER_OS}" == "Linux" ]]; then
           TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz"
         elif [[ "${RUNNER_OS}" == "macOS" ]]; then
@@ -696,7 +696,6 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y liblua5.2-0
-          TBB_VERSION=2021.12.0
           wget --tries 5 https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz -O onetbb.tgz
           tar zxvf onetbb.tgz
           sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
