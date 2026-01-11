@@ -34,8 +34,7 @@ Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 ## Contact
 
 - Discord: [join](https://discord.gg/es9CdcCXcb)
-- IRC: `irc.oftc.net`, channel: `#osrm` ([Webchat](https://webchat.oftc.net))
-- Mailinglist: `https://lists.openstreetmap.org/listinfo/osrm-talk`
+- BlueSky: [profile](https://bsky.app/profile/osrm.bsky.social)
 
 ## Quick Start
 
