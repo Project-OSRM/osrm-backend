@@ -17,6 +17,7 @@
 #include <ctime>
 
 #include <algorithm>
+#include <iomanip>
 #include <string>
 #include <thread>
 #include <variant>
@@ -164,31 +165,12 @@ void RequestHandler::HandleRequest(const Request &current_request,
 
         if (!std::getenv("DISABLE_ACCESS_LOGGING"))
         {
-            // deactivated as GCC apparently does not implement that, not even in 4.9
-            // std::time_t t = std::time(nullptr);
-            // util::Log() << std::put_time(std::localtime(&t), "%m-%d-%Y
-            // %H:%M:%S") <<
-            //     " " << current_request.endpoint.to_string() << " " <<
-            //     current_request.referrer << ( 0 == current_request.referrer.length() ? "- " :" ")
-            //     <<
-            //     current_request.agent << ( 0 == current_request.agent.length() ? "- " :" ") <<
-            //     request;
-
-            time_t ltime;
-            struct tm *time_stamp;
             TIMER_STOP(request_duration);
 
-            ltime = time(nullptr);
-            time_stamp = localtime(&ltime);
-            // log timestamp
+            std::time_t t = std::time(nullptr);
             const auto referrer = HeaderOrEmpty(current_request, bhttp::field::referer);
             const auto agent = HeaderOrEmpty(current_request, bhttp::field::user_agent);
-            util::Log() << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday << "-"
-                        << (time_stamp->tm_mon + 1 < 10 ? "0" : "") << (time_stamp->tm_mon + 1)
-                        << "-" << 1900 + time_stamp->tm_year << " "
-                        << (time_stamp->tm_hour < 10 ? "0" : "") << time_stamp->tm_hour << ":"
-                        << (time_stamp->tm_min < 10 ? "0" : "") << time_stamp->tm_min << ":"
-                        << (time_stamp->tm_sec < 10 ? "0" : "") << time_stamp->tm_sec << " "
+            util::Log() << std::put_time(std::localtime(&t), "%d-%m-%Y %H:%M:%S") << " "
                         << TIMER_MSEC(request_duration) << "ms " << remote_address.to_string()
                         << " " << (referrer.empty() ? "-" : referrer) << " "
                         << (agent.empty() ? "-" : agent) << " " << current_reply.result_int()
