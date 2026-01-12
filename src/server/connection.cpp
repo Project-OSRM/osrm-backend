@@ -52,12 +52,12 @@ void Connection::handle_read()
                                {
                                    self->process_request();
                                }
-                                else if (ec == http_proto::error::end_of_stream)
-                                {
-                                    // Remote closed the connection.
-                                    self->handle_close();
-                                }
-                               else if (ec != http_proto::error::end_of_stream)
+                               else if (ec == http_proto::error::end_of_stream)
+                               {
+                                   // Remote closed the connection.
+                                   self->handle_close();
+                               }
+                               else
                                {
                                    util::Log(logDEBUG) << "Connection read error: " << ec.message();
                                }
