@@ -9,11 +9,8 @@
 namespace osrm::server
 {
 
-namespace beast = boost::beast;
-namespace http_proto = beast::http;
-
-using BeastRequest = http_proto::request<http_proto::string_body>;
-using BeastResponse = http_proto::response<http_proto::vector_body<char>>;
+using Request = boost::beast::http::request<boost::beast::http::string_body>;
+using Response = boost::beast::http::response<boost::beast::http::vector_body<char>>;
 
 class RequestHandler
 {
@@ -25,8 +22,8 @@ class RequestHandler
 
     void RegisterServiceHandler(std::unique_ptr<ServiceHandlerInterface> service_handler);
 
-    void HandleRequest(const BeastRequest &current_request,
-                       BeastResponse &current_reply,
+    void HandleRequest(const Request &current_request,
+                       Response &current_reply,
                        const boost::asio::ip::address &remote_address);
 
   private:

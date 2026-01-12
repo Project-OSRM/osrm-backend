@@ -24,12 +24,11 @@
 namespace osrm::server
 {
 
-namespace beast = boost::beast;
-namespace http_proto = beast::http;
+namespace bhttp = boost::beast::http;
 
 namespace
 {
-inline std::string HeaderOrEmpty(const BeastRequest &req, http_proto::field f)
+inline std::string HeaderOrEmpty(const Request &req, bhttp::field f)
 {
     const auto it = req.find(f);
     if (it == req.end())
@@ -37,15 +36,15 @@ inline std::string HeaderOrEmpty(const BeastRequest &req, http_proto::field f)
     return std::string(it->value());
 }
 
-inline void SetInternalServerError(BeastResponse &res)
+inline void SetInternalServerError(Response &res)
 {
     static constexpr char body[] =
         "{\"code\": \"InternalError\",\"message\":\"Internal Server Error\"}";
-    res.result(http_proto::status::internal_server_error);
+    res.result(bhttp::status::internal_server_error);
     res.set("Access-Control-Allow-Origin", "*");
     res.set("Access-Control-Allow-Methods", "GET");
     res.set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
-    res.set(http_proto::field::content_type, "application/json; charset=UTF-8");
+    res.set(bhttp::field::content_type, "application/json; charset=UTF-8");
     res.body().assign(body, body + (sizeof(body) - 1)); // drop trailing '\0'
 }
 } // namespace
@@ -56,8 +55,8 @@ void RequestHandler::RegisterServiceHandler(std::unique_ptr<ServiceHandlerInterf
 }
 
 void SendResponse(ServiceHandler::ResultT &result,
-                  BeastResponse &current_reply,
-                  const http_proto::status status)
+                  Response &current_reply,
+                  const bhttp::status status)
 {
 
     current_reply.result(status);
@@ -66,8 +65,8 @@ void SendResponse(ServiceHandler::ResultT &result,
     current_reply.set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
     if (std::holds_alternative<util::json::Object>(result))
     {
-        current_reply.set(http_proto::field::content_type, "application/json; charset=UTF-8");
-        current_reply.set(http_proto::field::content_disposition,
+        current_reply.set(bhttp::field::content_type, "application/json; charset=UTF-8");
+        current_reply.set(bhttp::field::content_disposition,
                           "inline; filename=\"response.json\"");
 
         util::json::render(current_reply.body(), std::get<util::json::Object>(result));
@@ -80,7 +79,7 @@ void SendResponse(ServiceHandler::ResultT &result,
                   buffer.GetBufferPointer() + buffer.GetSize(),
                   current_reply.body().begin());
 
-        current_reply.set(http_proto::field::content_type,
+        current_reply.set(bhttp::field::content_type,
                           "application/x-flatbuffers;schema=osrm.engine.api.fbresult");
     }
     else
@@ -91,12 +90,12 @@ void SendResponse(ServiceHandler::ResultT &result,
                   std::get<std::string>(result).cend(),
                   current_reply.body().begin());
 
-        current_reply.set(http_proto::field::content_type, "application/x-protobuf");
+        current_reply.set(bhttp::field::content_type, "application/x-protobuf");
     }
 }
 
-void RequestHandler::HandleRequest(const BeastRequest &current_request,
-                                   BeastResponse &current_reply,
+void RequestHandler::HandleRequest(const Request &current_request,
+                                   Response &current_reply,
                                    const boost::asio::ip::address &remote_address)
 {
     // Defensive reset: Connection also resets before calling us.
@@ -123,7 +122,7 @@ void RequestHandler::HandleRequest(const BeastRequest &current_request,
         auto api_iterator = request_string.begin();
         auto maybe_parsed_url = api::parseURL(api_iterator, request_string.end());
         ServiceHandler::ResultT result;
-        http_proto::status response_status = http_proto::status::ok;
+        bhttp::status response_status = bhttp::status::ok;
 
         // check if the was an error with the request
         if (maybe_parsed_url && api_iterator == request_string.end())
@@ -134,7 +133,7 @@ void RequestHandler::HandleRequest(const BeastRequest &current_request,
             if (status != engine::Status::Ok)
             {
                 // 4xx bad request return code
-                response_status = http_proto::status::bad_request;
+                response_status = bhttp::status::bad_request;
             }
             else
             {
@@ -153,7 +152,7 @@ void RequestHandler::HandleRequest(const BeastRequest &current_request,
             BOOST_ASSERT(context_end <= request_string.end());
             std::string context(context_begin, context_end);
 
-            response_status = http_proto::status::bad_request;
+            response_status = bhttp::status::bad_request;
             result = util::json::Object();
             auto &json_result = std::get<util::json::Object>(result);
             json_result.values["code"] = "InvalidUrl";
@@ -182,8 +181,8 @@ void RequestHandler::HandleRequest(const BeastRequest &current_request,
             ltime = time(nullptr);
             time_stamp = localtime(&ltime);
             // log timestamp
-            const auto referrer = HeaderOrEmpty(current_request, http_proto::field::referer);
-            const auto agent = HeaderOrEmpty(current_request, http_proto::field::user_agent);
+            const auto referrer = HeaderOrEmpty(current_request, bhttp::field::referer);
+            const auto agent = HeaderOrEmpty(current_request, bhttp::field::user_agent);
             util::Log() << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday << "-"
                         << (time_stamp->tm_mon + 1 < 10 ? "0" : "") << (time_stamp->tm_mon + 1)
                         << "-" << 1900 + time_stamp->tm_year << " "
@@ -204,7 +203,7 @@ void RequestHandler::HandleRequest(const BeastRequest &current_request,
         auto &json_result = std::get<util::json::Object>(result);
         json_result.values["code"] = "DisabledDataset";
         json_result.values["message"] = e.what();
-        SendResponse(result, current_reply, http_proto::status::bad_request);
+        SendResponse(result, current_reply, bhttp::status::bad_request);
 
         util::Log(logWARNING) << "[disabled dataset error][" << tid << "] code: DisabledDataset_"
                               << e.Dataset() << ", uri: " << current_request.target();

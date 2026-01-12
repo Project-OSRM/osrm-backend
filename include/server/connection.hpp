@@ -39,7 +39,6 @@ class Connection : public std::enable_shared_from_this<Connection>
     void handle_write();
     void handle_close();
 
-    // Utility functions
     http::compression_type determine_compression();
     std::vector<char> compress_buffers(const std::vector<char> &uncompressed_data,
                                        const http::compression_type compression_type);
@@ -48,14 +47,13 @@ class Connection : public std::enable_shared_from_this<Connection>
     // Beast TCP stream with built-in timeout support
     boost::beast::tcp_stream stream_;
 
-    // Buffer for reading HTTP messages
-    boost::beast::flat_buffer buffer_;
+    boost::beast::flat_buffer message_buffer_;
 
     // The request message
-    boost::beast::http::request<boost::beast::http::string_body> beast_request_;
+    boost::beast::http::request<boost::beast::http::string_body> request_;
 
     // The response message - using vector_body for binary data support
-    boost::beast::http::response<boost::beast::http::vector_body<char>> beast_response_;
+    boost::beast::http::response<boost::beast::http::vector_body<char>> response_;
 
     // Reference to the existing request handler
     RequestHandler &request_handler_;
