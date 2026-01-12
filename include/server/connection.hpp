@@ -2,8 +2,6 @@
 #define CONNECTION_HPP
 
 #include "server/http/compression_type.hpp"
-#include "server/http/reply.hpp"
-#include "server/http/request.hpp"
 
 #include <boost/asio.hpp>
 #include <boost/asio/dispatch.hpp>
@@ -42,8 +40,6 @@ class Connection : public std::enable_shared_from_this<Connection>
     void handle_close();
 
     // Utility functions
-    void adapt_request(http::request &osrm_request);
-    void adapt_response(const http::reply &osrm_reply);
     http::compression_type determine_compression();
     std::vector<char> compress_buffers(const std::vector<char> &uncompressed_data,
                                        const http::compression_type compression_type);
