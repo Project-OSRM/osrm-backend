@@ -3,7 +3,6 @@
 #include "util/format.hpp"
 #include "util/log.hpp"
 
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/beast/http/field.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
@@ -68,26 +67,79 @@ void Connection::handle_read()
 
 void Connection::process_request()
 {
-    // Create OSRM request and reply objects
-    http::request osrm_request;
-    http::reply osrm_reply;
+    // Clear previous response
+    beast_response_ = {};
+    beast_response_.version(beast_request_.version());
 
-    // Adapt Beast request to OSRM format
-    adapt_request(osrm_request);
+    // Remote endpoint (used for access logging)
+    boost::asio::ip::address remote_address;
+    beast::error_code endpoint_ec;
+    const auto endpoint = stream_.socket().remote_endpoint(endpoint_ec);
+    if (!endpoint_ec)
+    {
+        remote_address = endpoint.address();
+    }
 
-    // Process using existing handler
+    // Process request using the handler (now Beast-native)
     try
     {
-        request_handler_.HandleRequest(osrm_request, osrm_reply);
+        request_handler_.HandleRequest(beast_request_, beast_response_, remote_address);
     }
     catch (const std::exception &e)
     {
         util::Log(logERROR) << "Request processing error: " << e.what();
-        osrm_reply = http::reply::stock_reply(http::reply::internal_server_error);
+        static constexpr char body[] =
+            "{\"code\": \"InternalError\",\"message\":\"Internal Server Error\"}";
+        beast_response_.result(http_proto::status::internal_server_error);
+        beast_response_.set("Access-Control-Allow-Origin", "*");
+        beast_response_.set("Access-Control-Allow-Methods", "GET");
+        beast_response_.set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
+        beast_response_.set(http_proto::field::content_type, "application/json; charset=UTF-8");
+        beast_response_.body().assign(body, body + (sizeof(body) - 1));
     }
 
-    // Adapt OSRM reply to Beast response
-    adapt_response(osrm_reply);
+    // Handle keep-alive
+    const bool keep_alive = should_keep_alive();
+    beast_response_.keep_alive(keep_alive);
+
+    if (keep_alive)
+    {
+        beast_response_.set(http_proto::field::connection, "keep-alive");
+        beast_response_.set("Keep-Alive",
+                            util::compat::format("timeout={}, max={}",
+                                                 keepalive_timeout_,
+                                                 keepalive_max_requests_ - processed_requests_));
+    }
+    else
+    {
+        beast_response_.set(http_proto::field::connection, "close");
+    }
+
+    // Apply compression if requested
+    const auto compression = determine_compression();
+    if (compression != http::no_compression && !beast_response_.body().empty())
+    {
+        auto compressed = compress_buffers(beast_response_.body(), compression);
+        beast_response_.body() = std::move(compressed);
+
+        if (compression == http::gzip_rfc1952)
+        {
+            beast_response_.set(http_proto::field::content_encoding, "gzip");
+        }
+        else if (compression == http::deflate_rfc1951)
+        {
+            beast_response_.set(http_proto::field::content_encoding, "deflate");
+        }
+
+        // Help caches do the right thing
+        beast_response_.set(http_proto::field::vary, "Accept-Encoding");
+    }
+
+    // Beast sets Content-Length based on body
+    beast_response_.prepare_payload();
+
+    // Increment processed request counter
+    ++processed_requests_;
 
     // Write the response
     handle_write();
@@ -137,108 +189,6 @@ void Connection::handle_close()
     {
         util::Log(logDEBUG) << "Connection shutdown error: " << ec.message();
     }
-}
-
-void Connection::adapt_request(http::request &osrm_request)
-{
-    // Extract URI from Beast request
-    osrm_request.uri = std::string(beast_request_.target());
-
-    // Extract headers we care about
-    auto referrer_it = beast_request_.find(http_proto::field::referer);
-    if (referrer_it != beast_request_.end())
-    {
-        osrm_request.referrer = std::string(referrer_it->value());
-    }
-
-    auto agent_it = beast_request_.find(http_proto::field::user_agent);
-    if (agent_it != beast_request_.end())
-    {
-        osrm_request.agent = std::string(agent_it->value());
-    }
-
-    auto connection_it = beast_request_.find(http_proto::field::connection);
-    if (connection_it != beast_request_.end())
-    {
-        osrm_request.connection = std::string(connection_it->value());
-    }
-
-    // Get remote endpoint
-    beast::error_code ec;
-    auto endpoint = stream_.socket().remote_endpoint(ec);
-    if (!ec)
-    {
-        osrm_request.endpoint = endpoint.address();
-    }
-}
-
-void Connection::adapt_response(const http::reply &osrm_reply)
-{
-    // Clear previous response
-    beast_response_ = {};
-
-    // Set status code
-    beast_response_.result(static_cast<http_proto::status>(osrm_reply.status));
-
-    // Set version
-    beast_response_.version(beast_request_.version());
-
-    // Check for compression
-    auto compression = determine_compression();
-
-    // Copy or compress the body
-    if (compression != http::no_compression)
-    {
-        auto compressed = compress_buffers(osrm_reply.content, compression);
-        beast_response_.body() = std::move(compressed);
-
-        // Set compression header
-        if (compression == http::gzip_rfc1952)
-        {
-            beast_response_.set(http_proto::field::content_encoding, "gzip");
-        }
-        else if (compression == http::deflate_rfc1951)
-        {
-            beast_response_.set(http_proto::field::content_encoding, "deflate");
-        }
-    }
-    else
-    {
-        beast_response_.body() = osrm_reply.content;
-    }
-
-    // Copy headers from OSRM reply
-    for (const auto &header : osrm_reply.headers)
-    {
-        // Skip Content-Length as Beast will set it
-        if (!boost::iequals(header.name, "Content-Length"))
-        {
-            beast_response_.set(header.name, header.value);
-        }
-    }
-
-    // Handle keep-alive
-    bool keep_alive = should_keep_alive();
-    beast_response_.keep_alive(keep_alive);
-
-    if (keep_alive)
-    {
-        beast_response_.set(http_proto::field::connection, "keep-alive");
-        beast_response_.set("Keep-Alive",
-                            util::compat::format("timeout={}, max={}",
-                                                 keepalive_timeout_,
-                                                 keepalive_max_requests_ - processed_requests_));
-    }
-    else
-    {
-        beast_response_.set(http_proto::field::connection, "close");
-    }
-
-    // Beast automatically sets Content-Length
-    beast_response_.prepare_payload();
-
-    // Increment processed request counter
-    ++processed_requests_;
 }
 
 http::compression_type Connection::determine_compression()

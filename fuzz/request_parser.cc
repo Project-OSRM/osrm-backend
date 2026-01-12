@@ -1,28 +1,34 @@
-#include "server/request_parser.hpp"
-#include "server/http/request.hpp"
-
 #include "util.hpp"
+
+#include <boost/asio/buffer.hpp>
+#include <boost/beast/http.hpp>
 
 #include <iterator>
 #include <string>
 
-using osrm::server::RequestParser;
-using osrm::server::http::request;
+namespace beast = boost::beast;
+namespace http_proto = beast::http;
 
 extern "C" int LLVMFuzzerTestOneInput(const unsigned char *data, unsigned long size)
 {
     std::string in(reinterpret_cast<const char *>(data), size);
 
-    auto first = begin(in);
-    auto last = end(in);
+    http_proto::request_parser<http_proto::empty_body> parser;
+    parser.eager(true);
 
-    RequestParser parser;
-    request req;
+    beast::error_code ec;
+    parser.put(boost::asio::buffer(in.data(), in.size()), ec);
+    if (!ec)
+    {
+        parser.put_eof(ec);
+    }
 
-    // &(*it) is needed to go from iterator to underlying item to pointer to underlying item
-    parser.parse(req, &(*first), &(*last));
-
-    escape(&req);
+    // Make the parsed state observable to the optimizer
+    if (!ec && parser.is_done())
+    {
+        auto &req = parser.get();
+        escape(&req);
+    }
 
     return 0;
 }
