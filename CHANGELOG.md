@@ -5,6 +5,7 @@
       - FIXED: Reduce MSVC compiler warnings by suppressing informational warnings while preserving bug-indicating warnings [#7253](https://github.com/Project-OSRM/osrm-backend/issues/7253)
       - FIXED: Merge `osrm_extract` and `osrm_guidance` to avoid circular dependencies. [#7315](https://github.com/Project-OSRM/osrm-backend/pull/7315)
       - FIXED: Work around compilation error due to a false-positive of array-bounds check in sol2 [#7317](https://github.com/Project-OSRM/osrm-backend/pull/7317)
+      - FIXED: Fix compilation with gcc >14 in release with LTO. [#7268](https://github.com/Project-OSRM/osrm-backend/issues/7268)
     - Misc:
       - ADDED: `SHM_LOCK_DIR` environment variable for shared memory lock file directory [#7312](https://github.com/Project-OSRM/osrm-backend/pull/7312)
       - FIXED: Fix JSON rendering of large OSM IDs (avoids scientific notation) and handle NaN/Infinity gracefully [#7016](https://github.com/Project-OSRM/osrm-backend/issues/7016)
