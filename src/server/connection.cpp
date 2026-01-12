@@ -37,23 +37,23 @@ void Connection::handle_read()
 
     auto self = shared_from_this();
     bhttp::async_read(stream_,
-                           message_buffer_,
-                           request_,
-                           [self](boost::beast::error_code ec, std::size_t)
-                           {
-                               if (!ec)
-                               {
-                                   self->process_request();
-                               }
-                               else if (ec == bhttp::error::end_of_stream)
-                               {
-                                   self->handle_close();
-                               }
-                               else
-                               {
-                                   util::Log(logDEBUG) << "Connection read error: " << ec.message();
-                               }
-                           });
+                      message_buffer_,
+                      request_,
+                      [self](boost::beast::error_code ec, std::size_t)
+                      {
+                          if (!ec)
+                          {
+                              self->process_request();
+                          }
+                          else if (ec == bhttp::error::end_of_stream)
+                          {
+                              self->handle_close();
+                          }
+                          else
+                          {
+                              util::Log(logDEBUG) << "Connection read error: " << ec.message();
+                          }
+                      });
 }
 
 void Connection::process_request()
@@ -93,9 +93,9 @@ void Connection::process_request()
     {
         response_.set(bhttp::field::connection, "keep-alive");
         response_.set("Keep-Alive",
-                            util::compat::format("timeout={}, max={}",
-                                                 keepalive_timeout_,
-                                                 keepalive_max_requests_ - processed_requests_));
+                      util::compat::format("timeout={}, max={}",
+                                           keepalive_timeout_,
+                                           keepalive_max_requests_ - processed_requests_));
     }
     else
     {
@@ -134,28 +134,27 @@ void Connection::handle_write()
     stream_.expires_after(std::chrono::seconds(keepalive_timeout_));
 
     bhttp::async_write(stream_,
-                            response_,
-                            [self](boost::beast::error_code ec, std::size_t)
-                            {
-                                if (!ec)
-                                {
-                                    if (self->should_keep_alive())
-                                    {
-                                        // Read another request
-                                        self->handle_read();
-                                    }
-                                    else
-                                    {
-                                        // Gracefully close the connection
-                                        self->handle_close();
-                                    }
-                                }
-                                else
-                                {
-                                    util::Log(logDEBUG)
-                                        << "Connection write error: " << ec.message();
-                                }
-                            });
+                       response_,
+                       [self](boost::beast::error_code ec, std::size_t)
+                       {
+                           if (!ec)
+                           {
+                               if (self->should_keep_alive())
+                               {
+                                   // Read another request
+                                   self->handle_read();
+                               }
+                               else
+                               {
+                                   // Gracefully close the connection
+                                   self->handle_close();
+                               }
+                           }
+                           else
+                           {
+                               util::Log(logDEBUG) << "Connection write error: " << ec.message();
+                           }
+                       });
 }
 
 void Connection::handle_close()

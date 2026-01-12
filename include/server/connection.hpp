@@ -25,7 +25,9 @@ class RequestHandler;
 class Connection : public std::enable_shared_from_this<Connection>
 {
   public:
-    explicit Connection(boost::asio::ip::tcp::socket socket, RequestHandler &handler, short keepalive_timeout);
+    explicit Connection(boost::asio::ip::tcp::socket socket,
+                        RequestHandler &handler,
+                        short keepalive_timeout);
 
     Connection(const Connection &) = delete;
     Connection &operator=(const Connection &) = delete;

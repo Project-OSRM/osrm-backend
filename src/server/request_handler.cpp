@@ -49,7 +49,8 @@ inline void SetInternalServerError(Response &res)
 }
 } // namespace
 
-void RequestHandler::RegisterServiceHandler(std::unique_ptr<ServiceHandlerInterface> service_handler_)
+void RequestHandler::RegisterServiceHandler(
+    std::unique_ptr<ServiceHandlerInterface> service_handler_)
 {
     service_handler = std::move(service_handler_);
 }
@@ -66,8 +67,7 @@ void SendResponse(ServiceHandler::ResultT &result,
     if (std::holds_alternative<util::json::Object>(result))
     {
         current_reply.set(bhttp::field::content_type, "application/json; charset=UTF-8");
-        current_reply.set(bhttp::field::content_disposition,
-                          "inline; filename=\"response.json\"");
+        current_reply.set(bhttp::field::content_disposition, "inline; filename=\"response.json\"");
 
         util::json::render(current_reply.body(), std::get<util::json::Object>(result));
     }
@@ -189,11 +189,10 @@ void RequestHandler::HandleRequest(const Request &current_request,
                         << (time_stamp->tm_hour < 10 ? "0" : "") << time_stamp->tm_hour << ":"
                         << (time_stamp->tm_min < 10 ? "0" : "") << time_stamp->tm_min << ":"
                         << (time_stamp->tm_sec < 10 ? "0" : "") << time_stamp->tm_sec << " "
-                        << TIMER_MSEC(request_duration) << "ms "
-                        << remote_address.to_string() << " "
-                        << (referrer.empty() ? "-" : referrer) << " "
-                        << (agent.empty() ? "-" : agent) << " "
-                        << current_reply.result_int() << " " //
+                        << TIMER_MSEC(request_duration) << "ms " << remote_address.to_string()
+                        << " " << (referrer.empty() ? "-" : referrer) << " "
+                        << (agent.empty() ? "-" : agent) << " " << current_reply.result_int()
+                        << " " //
                         << request_string;
         }
     }

@@ -148,10 +148,10 @@ class Server : public std::enable_shared_from_this<Server>
     void DoAccept()
     {
         // The new connection gets its own strand
-        acceptor.async_accept(
-            boost::asio::make_strand(io_context),
-            [self = shared_from_this()](boost::beast::error_code ec, boost::asio::ip::tcp::socket socket)
-            { self->OnAccept(ec, std::move(socket)); });
+        acceptor.async_accept(boost::asio::make_strand(io_context),
+                              [self = shared_from_this()](boost::beast::error_code ec,
+                                                          boost::asio::ip::tcp::socket socket)
+                              { self->OnAccept(ec, std::move(socket)); });
     }
 
     void OnAccept(boost::beast::error_code ec, boost::asio::ip::tcp::socket socket)
