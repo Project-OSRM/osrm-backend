@@ -164,7 +164,7 @@ class Server : public std::enable_shared_from_this<Server>
 
             connection->start();
         }
-        else
+        else if (ec != boost::asio::error::operation_aborted)
         {
             util::Log(logERROR) << "Accept error: " << ec.message();
         }
