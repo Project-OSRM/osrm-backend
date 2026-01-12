@@ -178,6 +178,12 @@ catch (const osrm::RuntimeError &e)
     util::Log(logERROR) << e.what();
     return e.GetCode();
 }
+catch (const util::exception &e)
+{
+    util::DumpMemoryStats();
+    util::Log(logERROR) << e.what();
+    return EXIT_FAILURE;
+}
 catch (const std::bad_alloc &e)
 {
     util::DumpMemoryStats();
