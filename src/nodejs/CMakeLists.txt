@@ -70,4 +70,4 @@ list(APPEND ARTIFACTS "${BINDING_DIR}/node_osrm.node")
 
 
 message(STATUS "node_osrm artifacts will be copied to: ${BINDING_DIR}")
-add_custom_target(copy_artifacts ALL DEPENDS ${ARTIFACTS})
+add_custom_target(osrm_copy_artifacts ALL DEPENDS ${ARTIFACTS})

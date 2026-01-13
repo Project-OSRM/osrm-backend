@@ -93,7 +93,7 @@ target_link_libraries(packedvector-bench
     ${MAYBE_SHAPEFILE})
 
 
-add_custom_target(benchmarks
+add_custom_target(osrm_benchmarks
 	DEPENDS
 	rtree-bench
 	packedvector-bench
