@@ -194,7 +194,6 @@ add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:MICROTAR> $<TA
 add_library(osrm::osrm ALIAS osrm)
 add_library(osrm::contract ALIAS osrm_contract)
 add_library(osrm::extract ALIAS osrm_extract)
-add_library(osrm::guidance ALIAS osrm_guidance)
 add_library(osrm::partition ALIAS osrm_partition)
 add_library(osrm::customize ALIAS osrm_customize)
 add_library(osrm::update ALIAS osrm_update)
