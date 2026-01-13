@@ -280,8 +280,6 @@ function setup()
       ["ch:rural"] = 80,
       ["ch:trunk"] = 100,
       ["ch:motorway"] = 120,
-      ["cz:trunk"] = 0,
-      ["cz:motorway"] = 0,
       ["de:living_street"] = 7,
       ["de:rural"] = 100,
       ["de:motorway"] = 0,
