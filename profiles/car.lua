@@ -353,10 +353,15 @@ function process_node(profile, node, result, relations)
       local flat_kerb = kerb and ("lowered" == kerb or "flush" == kerb)
       local highway_crossing_kerb = barrier == "kerb" and highway and highway == "crossing"
 
+      -- make an exception for fence with sensory=audible/audio (virtual livestock fences)
+      local sensory = node:get_value_by_key("sensory")
+      local audible_fence = barrier == "fence" and sensory and (sensory == "audible" or sensory == "audio")
+
       if not profile.barrier_whitelist[barrier]
                 and not rising_bollard
                 and not flat_kerb
                 and not highway_crossing_kerb
+                and not audible_fence
                 or restricted_by_height then
         obstacle_map:add(node, Obstacle.new(obstacle_type.barrier))
       end
