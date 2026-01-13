@@ -37,7 +37,7 @@ To build the unit tests:
 ```
 cd build
 cmake ..
-make osrm_tests
+make tests
 ```
 
 You should see the compiled binaries in `build/unit_tests`, you can then run each suite individually:

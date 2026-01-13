@@ -540,8 +540,8 @@ jobs:
         make --jobs=${JOBS}
 
         if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
-          make osrm_tests --jobs=${JOBS}
-          make osrm_benchmarks --jobs=${JOBS}
+          make tests --jobs=${JOBS}
+          make benchmarks --jobs=${JOBS}
 
           sudo make install
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
