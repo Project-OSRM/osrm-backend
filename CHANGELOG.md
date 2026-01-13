@@ -16,7 +16,7 @@
       - FIXED: Merge `osrm_extract` and `osrm_guidance` to avoid circular dependencies. [#7315](https://github.com/Project-OSRM/osrm-backend/pull/7315)
       - FIXED: Work around compilation error due to a false-positive of array-bounds check in sol2 [#7317](https://github.com/Project-OSRM/osrm-backend/pull/7317)
       - FIXED: Fix compilation with gcc >14 in release with LTO. [#7268](https://github.com/Project-OSRM/osrm-backend/issues/7268)
-      - ADDED: Prefix custom CMake targets with `osrm_` and add ALIAS targets for FetchContent compatibility [#7329](https://github.com/Project-OSRM/osrm-backend/pull/7329)
+      - ADDED: Conditionally prefix custom CMake targets with `osrm_` when built as subproject, and add ALIAS targets for FetchContent compatibility [#7329](https://github.com/Project-OSRM/osrm-backend/pull/7329)
     - Misc:
       - ADDED: `--max-header-size` to override the (automatically) configured maximum header size for osrm-routed [#7336](https://github.com/Project-OSRM/osrm-backend/pull/7336)
       - CHANGED: Use boost::beast instead of own HTTP code for osrm-routed [#7328](https://github.com/Project-OSRM/osrm-backend/pull/7328)
