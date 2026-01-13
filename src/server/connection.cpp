@@ -8,9 +8,14 @@
 #include <boost/iostreams/filtering_stream.hpp>
 
 #include <chrono>
+#include <cstdint>
 
 namespace osrm::server
 {
+
+// Max bytes for request line + headers
+static constexpr std::uint32_t REQUEST_HEADER_LIMIT = 64 * 1024;
+static constexpr short KEEPALIVE_MAX_REQUESTS = 512;
 
 namespace bhttp = boost::beast::http;
 using tcp = boost::asio::ip::tcp;
@@ -25,24 +30,28 @@ void Connection::start() { handle_read(); }
 
 void Connection::handle_read()
 {
-    if (processed_requests_ >= keepalive_max_requests_)
+    if (processed_requests_ >= KEEPALIVE_MAX_REQUESTS)
     {
         handle_close();
         return;
     }
 
     request_ = {};
+    parser_.emplace();
+    parser_->header_limit(REQUEST_HEADER_LIMIT);
 
     stream_.expires_after(std::chrono::seconds(keepalive_timeout_));
 
     auto self = shared_from_this();
     bhttp::async_read(stream_,
                       message_buffer_,
-                      request_,
+                      *parser_,
                       [self](boost::beast::error_code ec, std::size_t)
                       {
                           if (!ec)
                           {
+                              self->request_ = self->parser_->release();
+                              self->parser_.reset();
                               self->process_request();
                           }
                           else if (ec == bhttp::error::end_of_stream)
@@ -52,6 +61,7 @@ void Connection::handle_read()
                           else
                           {
                               util::Log(logDEBUG) << "Connection read error: " << ec.message();
+                              self->handle_close();
                           }
                       });
 }
@@ -95,7 +105,7 @@ void Connection::process_request()
         response_.set("Keep-Alive",
                       util::compat::format("timeout={}, max={}",
                                            keepalive_timeout_,
-                                           keepalive_max_requests_ - processed_requests_));
+                                           KEEPALIVE_MAX_REQUESTS - processed_requests_));
     }
     else
     {
@@ -141,12 +151,10 @@ void Connection::handle_write()
                            {
                                if (self->should_keep_alive())
                                {
-                                   // Read another request
                                    self->handle_read();
                                }
                                else
                                {
-                                   // Gracefully close the connection
                                    self->handle_close();
                                }
                            }
@@ -200,7 +208,7 @@ bool Connection::should_keep_alive() const
         return false;
     }
 
-    if (processed_requests_ >= keepalive_max_requests_)
+    if (processed_requests_ >= KEEPALIVE_MAX_REQUESTS)
     {
         return false;
     }

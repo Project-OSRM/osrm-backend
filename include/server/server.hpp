@@ -5,7 +5,6 @@
 #include "server/request_handler.hpp"
 #include "server/service_handler.hpp"
 
-#include "util/integer_range.hpp"
 #include "util/log.hpp"
 
 #include <boost/asio.hpp>
