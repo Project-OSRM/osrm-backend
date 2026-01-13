@@ -93,7 +93,8 @@ target_link_libraries(packedvector-bench
     ${MAYBE_SHAPEFILE})
 
 
-add_custom_target(osrm_benchmarks
+if(BUILD_AS_SUBPROJECT)
+  add_custom_target(osrm_benchmarks
 	DEPENDS
 	rtree-bench
 	packedvector-bench
@@ -102,3 +103,14 @@ add_custom_target(osrm_benchmarks
   bench
 	json-render-bench
   alias-bench)
+else()
+  add_custom_target(benchmarks
+	DEPENDS
+	rtree-bench
+	packedvector-bench
+	match-bench
+  route-bench
+  bench
+	json-render-bench
+  alias-bench)
+endif()
