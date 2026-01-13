@@ -13,7 +13,6 @@
 
 #include <memory>
 #include <optional>
-#include <string>
 #include <vector>
 
 namespace osrm::server
@@ -46,23 +45,20 @@ class Connection : public std::enable_shared_from_this<Connection>
                                        const http::compression_type compression_type);
     bool should_keep_alive() const;
 
-    // Beast TCP stream with built-in timeout support
     boost::beast::tcp_stream stream_;
 
     boost::beast::flat_buffer message_buffer_;
 
-    // The request message
     boost::beast::http::request<boost::beast::http::string_body> request_;
 
-    // The response message - using vector_body for binary data support
+    // The parser is based per request, we need to reset it multiple times on each connection
+    std::optional<boost::beast::http::request_parser<boost::beast::http::string_body>> parser_;
+
     boost::beast::http::response<boost::beast::http::vector_body<char>> response_;
 
-    // Reference to the existing request handler
     RequestHandler &request_handler_;
 
-    // Keep-alive configuration
     short keepalive_timeout_;
-    short keepalive_max_requests_ = 512;
     short processed_requests_ = 0;
 };
 
