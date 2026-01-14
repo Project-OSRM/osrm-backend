@@ -33,7 +33,7 @@ export default class Cache {
 
     // ensure there is a make a cache directory
     fs.mkdirSync(this.featureCacheDirectory, { recursive: true });
-  };
+  }
 
   // converts the scenario titles in file prefixes
   // Cucumber v12 API: testCase parameter contains { gherkinDocument, pickle }

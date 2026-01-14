@@ -103,7 +103,7 @@ class OSRMWorld extends World {
     this.partitionArgs = [];
     this.customizeArgs = [];
     this.loaderArgs    = [];
-    // environemnt will be patched eg. for OSRM_RASTER_SOURCE
+    // environment will be patched eg. for OSRM_RASTER_SOURCE
     this.environment   = Object.assign({}, process.env);
     // this.environment.CUCUMBER_TEST = 'ON';
     // process.report.reportOnSignal = false;

@@ -1,4 +1,4 @@
-// General utility functions for timeouts, decimal formatting, and file operations
+// General utility functions for decimal formatting, and file operations
 import fs from 'fs';
 import child_process from 'child_process';
 

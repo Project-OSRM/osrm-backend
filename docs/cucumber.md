@@ -92,7 +92,7 @@ $ rm -rf test/cache
 ## Configuration
 
 The whole configuration is done in `cucumber.mjs`. You can either edit `worldParameters`
-in `cucumber.mjs` or use environemnt variables to override single defaults.
+in `cucumber.mjs` or use environment variables to override single defaults.
 
 | worldParameters | Environment Variable     | Defaults to  |                         |
 | --------------- | ------------------------ | ------------ | ----------------------- |

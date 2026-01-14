@@ -31,7 +31,7 @@ BeforeAll(function () {
   ]);
 });
 
-Before(function (scenario) {
+Before({timeout: env.wp.timeout}, function (scenario) {
   for (const t of scenario.pickle.tags) {
     if (t.name.startsWith('@no_')) {
       const tag = t.name.substring(4);
@@ -49,7 +49,7 @@ Before(function (scenario) {
   return this.before(scenario);
 });
 
-After(function (scenario) {
+After({timeout: env.wp.timeout}, function (scenario) {
   return this.after(scenario);
 });
 
