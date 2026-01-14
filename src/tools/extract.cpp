@@ -1,6 +1,7 @@
 #include "osrm/exception.hpp"
 #include "osrm/extractor.hpp"
 #include "osrm/extractor_config.hpp"
+#include "util/exception.hpp"
 #include "util/log.hpp"
 #include "util/meminfo.hpp"
 #include "util/version.hpp"
@@ -198,6 +199,12 @@ catch (const osrm::RuntimeError &e)
     util::DumpMemoryStats();
     util::Log(logERROR) << e.what();
     return e.GetCode();
+}
+catch (const util::exception &e)
+{
+    util::DumpMemoryStats();
+    util::Log(logERROR) << e.what();
+    return EXIT_FAILURE;
 }
 catch (const std::system_error &e)
 {

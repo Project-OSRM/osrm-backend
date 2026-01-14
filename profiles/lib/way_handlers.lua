@@ -39,6 +39,23 @@ function WayHandlers.names(profile,way,result,data)
   -- Set the name that will be used for instructions
   if name then
     result.name = name
+  else
+    -- Fallback for unnamed sidewalks and sidepaths
+    -- Use is_sidepath:of:name or street:name when way is marked as a sidepath
+    local sidepath_name = way:get_value_by_key("is_sidepath:of:name") or
+                          way:get_value_by_key("street:name")
+    if sidepath_name then
+      local highway = way:get_value_by_key("highway")
+      local footway = way:get_value_by_key("footway")
+      local cycleway = way:get_value_by_key("cycleway")
+      local is_sidepath = way:get_value_by_key("is_sidepath")
+      -- Only apply to footway/cycleway/path highway types
+      if highway == "footway" or highway == "cycleway" or highway == "path" then
+        if footway == "sidewalk" or cycleway == "sidepath" or is_sidepath == "yes" then
+          result.name = sidepath_name
+        end
+      end
+    end
   end
 
   if ref then
@@ -631,6 +648,11 @@ function WayHandlers.blocked_ways(profile,way,result,data)
   -- construction
   -- TODO if highway is valid then we shouldn't check railway, and vica versa
   if profile.avoid.construction and (data.highway == 'construction' or way:get_value_by_key('railway') == 'construction') then
+    return false
+  end
+
+  -- motorroad
+  if profile.avoid.motorroad and way:get_value_by_key("motorroad") == "yes" then
     return false
   end
 

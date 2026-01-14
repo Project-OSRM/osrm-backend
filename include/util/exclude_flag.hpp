@@ -15,7 +15,7 @@ excludeFlagsToNodeFilter(const NodeID number_of_nodes,
     std::vector<std::vector<bool>> filters;
     for (auto mask : properties.excludable_classes)
     {
-        if (mask != extractor::INAVLID_CLASS_DATA)
+        if (mask != extractor::INVALID_CLASS_DATA)
         {
             std::vector<bool> allowed_nodes(number_of_nodes);
             for (const auto node : util::irange<NodeID>(0, number_of_nodes))
