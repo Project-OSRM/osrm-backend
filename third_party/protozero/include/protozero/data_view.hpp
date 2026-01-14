@@ -173,7 +173,7 @@ inline void swap(data_view& lhs, data_view& rhs) noexcept {
  * @param lhs First object.
  * @param rhs Second object.
  */
-inline constexpr bool operator==(const data_view lhs, const data_view rhs) noexcept {
+constexpr bool operator==(const data_view lhs, const data_view rhs) noexcept {
     return lhs.size() == rhs.size() &&
            std::equal(lhs.data(), lhs.data() + lhs.size(), rhs.data());
 }
@@ -185,7 +185,7 @@ inline constexpr bool operator==(const data_view lhs, const data_view rhs) noexc
  * @param lhs First object.
  * @param rhs Second object.
  */
-inline constexpr bool operator!=(const data_view lhs, const data_view rhs) noexcept {
+constexpr bool operator!=(const data_view lhs, const data_view rhs) noexcept {
     return !(lhs == rhs);
 }
 

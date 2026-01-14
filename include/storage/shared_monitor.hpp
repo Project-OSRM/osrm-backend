@@ -1,8 +1,8 @@
 #ifndef SHARED_MONITOR_HPP
 #define SHARED_MONITOR_HPP
 
-#include "storage/shared_datatype.hpp"
-
+#include "util/exception.hpp"
+#include "util/exception_utils.hpp"
 #include <boost/format.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
@@ -197,7 +197,7 @@ template <typename Data> struct SharedMonitor
         auto get_semaphore(std::size_t index)
         {
             return reinterpret_cast<bi::interprocess_semaphore *>(
-                buffer + index * sizeof(bi::interprocess_semaphore));
+                buffer + (index * sizeof(bi::interprocess_semaphore)));
         }
 
         void invalidate_semaphore(void *semaphore) const

@@ -14,10 +14,14 @@ babel -V >/dev/null 2>&1 || { echo >&2 "Can't find babel.  Add node_modules/.bin
 browserify --help >/dev/null 2>&1 || { echo >&2 "Can't find browserify.  Add node_modules/.bin to your path, or run via \"npm run\""; exit 1; }
 uglifyjs -V >/dev/null 2>&1 || { echo >&2 "Can't find uglifyjs.  Add node_modules/.bin to your path, or run via \"npm run\""; exit 1; }
 
-documentation build src/nodejs/node_osrm.cpp --polyglot --markdown-toc=false -f md -o docs/nodejs/api.md
-
 # Clean up previous version
 rm -rf build/docs
+
+# Extract JSDoc comments from C++ and generate API docs
+# (replaces --polyglot flag removed in documentation.js v14)
+mkdir -p build/docs
+node scripts/extract_cpp_jsdoc.js src/nodejs/node_osrm.cpp > build/docs/jsdoc-extract.js
+documentation build build/docs/jsdoc-extract.js --markdown-toc=false -f md -o docs/nodejs/api.md
 
 # Make temp dir to hold docbox template
 mkdir -p build/docs/tmp/src 

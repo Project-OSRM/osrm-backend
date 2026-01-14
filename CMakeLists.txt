@@ -160,8 +160,9 @@ file(GLOB ServerGlob src/server/*.cpp src/server/**/*.cpp)
 file(GLOB EngineGlob src/engine/*.cpp src/engine/**/*.cpp)
 
 add_library(UTIL OBJECT ${UtilGlob})
-add_library(EXTRACTOR OBJECT ${ExtractorGlob})
-add_library(GUIDANCE OBJECT ${GuidanceGlob})
+# For historical reason the guidance and extract code are separate.
+# They are so entangled though (circular dependencies) that separate libraries are not feasible.
+add_library(EXTRACTOR OBJECT ${ExtractorGlob} ${GuidanceGlob})
 add_library(PARTITIONER OBJECT ${PartitionerGlob})
 add_library(CUSTOMIZER OBJECT ${CustomizerGlob})
 add_library(CONTRACTOR OBJECT ${ContractorGlob})
@@ -172,6 +173,9 @@ add_library(SERVER OBJECT ${ServerGlob})
 
 set_target_properties(UTIL PROPERTIES LINKER_LANGUAGE CXX)
 
+# We will otherwise get false-positive errors in the linker stage (boost/qi) that can't be disabled with pragmas
+set_property(TARGET SERVER PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
+
 add_executable(osrm-routed src/tools/routed.cpp $<TARGET_OBJECTS:SERVER> $<TARGET_OBJECTS:UTIL>)
 add_executable(osrm-extract src/tools/extract.cpp)
 add_executable(osrm-partition src/tools/partition.cpp)
@@ -181,7 +185,6 @@ add_executable(osrm-datastore src/tools/store.cpp $<TARGET_OBJECTS:MICROTAR> $<T
 add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_contract src/osrm/contractor.cpp $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_extract src/osrm/extractor.cpp $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
-add_library(osrm_guidance $<TARGET_OBJECTS:GUIDANCE> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_partition src/osrm/partitioner.cpp $<TARGET_OBJECTS:PARTITIONER> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_customize src/osrm/customizer.cpp $<TARGET_OBJECTS:CUSTOMIZER> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_update $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
@@ -268,6 +271,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   # using Visual Studio C++
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj") # avoid compiler error C1128 from scripting_environment_lua.cpp
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DWIN32_LEAN_AND_MEAN") # avoid compiler error C2011 from dual #include of winsock.h and winsock2.h
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8") # support Unicode in fmt library
   add_dependency_defines(-DBOOST_LIB_DIAGNOSTIC)
   add_dependency_defines(-D_CRT_SECURE_NO_WARNINGS)
   add_dependency_defines(-DNOMINMAX) # avoid min and max macros that can break compilation
@@ -285,6 +289,42 @@ if(UNIX AND NOT APPLE)
 endif()
 
 find_package(Threads REQUIRED)
+
+# Check for C++20 <format> with full chrono support that compiles, links and runs
+# This is necessary because some environments have the header but incomplete
+# implementation (e.g., Alpine GCC 14 missing chrono formatters, or Clang
+# with libstdc++ from older GCC lacking std::format symbols at link time)
+include(CheckCXXSourceRuns)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} /std:c++20")
+else()
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
+  set(CMAKE_REQUIRED_LIBRARIES "stdc++")
+endif()
+
+check_cxx_source_runs("
+  #include <chrono>
+  #include <format>
+  #include <numbers>
+  #include <string>
+  int main() {
+    // Test basic formatting
+    std::string s1 = std::format(\"{:.10g}\", std::numbers::pi);
+    // Test chrono formatting
+    auto now = std::chrono::system_clock::now();
+    auto secs = std::chrono::floor<std::chrono::seconds>(now);
+    std::string s2 = std::format(\"{:%FT%T}\", secs);
+    return (s1.empty() || s2.empty()) ? 1 : 0;
+  }
+" OSRM_HAS_STD_FORMAT)
+
+unset(CMAKE_REQUIRED_FLAGS)
+unset(CMAKE_REQUIRED_LIBRARIES)
+
+if(OSRM_HAS_STD_FORMAT)
+  add_definitions(-DOSRM_HAS_STD_FORMAT)
+endif()
 
 # Third-party libraries
 set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson/include")
@@ -446,12 +486,6 @@ set(EXTRACTOR_LIBRARIES
     ${TBB_LIBRARIES}
     ${ZLIB_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
-set(GUIDANCE_LIBRARIES
-    ${BOOST_BASE_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${LUA_LIBRARIES}
-    ${TBB_LIBRARIES}
-    ${MAYBE_COVERAGE_LIBRARIES})
 set(PARTITIONER_LIBRARIES
     ${BOOST_ENGINE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
@@ -503,7 +537,7 @@ set(UTIL_LIBRARIES
 target_link_libraries(osrm ${ENGINE_LIBRARIES})
 target_link_libraries(osrm_update ${UPDATER_LIBRARIES})
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES} osrm_update osrm_store)
-target_link_libraries(osrm_extract osrm_guidance ${EXTRACTOR_LIBRARIES})
+target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_partition ${PARTITIONER_LIBRARIES})
 target_link_libraries(osrm_customize ${CUSTOMIZER_LIBRARIES} osrm_update osrm_store)
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
@@ -570,7 +604,6 @@ install(TARGETS osrm_customize DESTINATION lib)
 install(TARGETS osrm_update DESTINATION lib)
 install(TARGETS osrm_contract DESTINATION lib)
 install(TARGETS osrm_store DESTINATION lib)
-install(TARGETS osrm_guidance DESTINATION lib)
 
 # Install profiles and support library to /usr/local/share/osrm/profiles by default
 set(DefaultProfilesDir profiles)
