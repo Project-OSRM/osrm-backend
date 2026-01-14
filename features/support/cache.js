@@ -31,7 +31,7 @@ export default class Cache {
     /** eg. test/cache/car/access.feature/{hash}/ */
     this.featureCacheDirectory = path.join(this.env.wp.cachePath, this.featureID);
 
-    // ensure there is a make a cache directory
+    // ensure there is a cache directory
     fs.mkdirSync(this.featureCacheDirectory, { recursive: true });
   }
 

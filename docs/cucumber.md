@@ -96,7 +96,7 @@ in `cucumber.mjs` or use environment variables to override single defaults.
 
 | worldParameters | Environment Variable     | Defaults to  |                         |
 | --------------- | ------------------------ | ------------ | ----------------------- |
-| `timeout`       | `CUCUMBER_TIMEOUT`       | 5000         | Scenario timeout in ms. |
+|                 | `CUCUMBER_TIMEOUT`       | 5000         | Scenario timeout in ms. |
 | `httpTimeout`   | `CUCUMBER_HTTP_TIMEOUT`  | 2000         | HTTP timeout in ms.     |
 | `testPath`      | `CUCUMBER_TEST_PATH`     | `test`       | The test directory      |
 | `profilesPath`  | `CUCUMBER_PROFILES_PATH` | `profiles`   | The profiles directory  |
@@ -107,6 +107,12 @@ in `cucumber.mjs` or use environment variables to override single defaults.
 | `algorithm`     | `OSRM_ALGORITHM`         | ch           | Routing algorithm       |
 | `ip`            | `OSRM_IP`                | 127.0.0.1    | IP Address              |
 | `port`          | `OSRM_PORT`              | 5000         | IP Port                 |
+
+The default Cucumber timeout can be changed by setting the environment variable
+`CUCUMBER_TIMEOUT`. This is discouraged, because the default timeout of 5 seconds is
+plenty for the problem sizes we are dealing with. The probable reasons for a test timing
+out are that `osrm-routed` died or that sync between `osrm-datastore` and `osrm-routed`
+was lost.
 
 ### Other environment variables
 

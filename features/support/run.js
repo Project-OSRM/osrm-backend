@@ -66,8 +66,6 @@ export function runBinSync(bin, args, options, log) {
   const argsAsString = args.join(' ');
   log(`running ${bin} as:\n${cmd} ${argsAsString}`);
 
-  options.timeout = options.timeout || env.wp.timeout - 100;
-
   const child = child_process.spawnSync(
     cmd,
     args,

@@ -58,15 +58,16 @@ class OSRMBaseLoader {
 
   /** Returns a promise resolved when the server is up. */
   waitForConnection() {
+    const seconds = 10;
     const waitOptions = {
       resources: [`tcp:${env.wp.ip}:${env.wp.port}`],
       delay:    10, // initial delay in ms
       interval: 10, // poll interval in ms
-      timeout:  env.wp.timeout, // timeout in ms
+      timeout:  seconds * 1000, // timeout in ms
     };
     const p = waitOn(waitOptions);
     p.catch(() => { throw new Error(
-      `Could not connect to osrm-routed after ${waitOptions.timeout} ms.`
+      `Could not connect to osrm-routed after ${seconds} s.`
     ); });
     return p;
   }

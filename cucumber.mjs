@@ -12,8 +12,7 @@ export default function() {
   }
 
   const commonWorldParameters = {
-    timeout:      int(penv.CUCUMBER_TIMEOUT,       5000),
-    httpTimeout:  int(penv.CUCUMBER_HTTP_TIMEOUT,  2000),
+    httpTimeout:  int(penv.CUCUMBER_HTTP_TIMEOUT,  2000), // must be less than default timeout
     testPath:     str(penv.CUCUMBER_TEST_PATH,     'test'),
     profilesPath: str(penv.CUCUMBER_PROFILES_PATH, 'profiles'),
     logsPath:     str(penv.CUCUMBER_LOGS_PATH,     'test/logs'),

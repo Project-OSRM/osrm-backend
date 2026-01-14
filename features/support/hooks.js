@@ -8,6 +8,9 @@ import { env } from './env.js';
 import { verifyExistenceOfBinaries } from '../lib/utils.js';
 import { testOsrmDown } from '../lib/osrm_loader.js';
 
+import {setDefaultTimeout} from '@cucumber/cucumber';
+setDefaultTimeout(parseInt(process.env.CUCUMBER_TIMEOUT || '5000'));
+
 /**
  * A function that assures that an \@isolated scenario will not run while any other
  * scenario is running in parallel.
