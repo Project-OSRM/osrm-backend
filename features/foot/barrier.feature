@@ -22,6 +22,14 @@ Feature: Barriers
             | some_tag       | x     |
             | block          | x     |
 
+    Scenario: Foot - Audible fence exception for barriers
+        # Audible fences use sound to deter livestock but do not block pedestrians
+        Then routability should be
+            | node/barrier | node/sensory | bothw |
+            | fence        |              |       |
+            | fence        | audible      | x     |
+            | fence        | audio        | x     |
+
     Scenario: Foot - Access tag trumphs barriers
         Then routability should be
             | node/barrier | node/access  | bothw |
