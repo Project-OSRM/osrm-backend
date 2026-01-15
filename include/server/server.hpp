@@ -126,16 +126,20 @@ class Server : public std::enable_shared_from_this<Server>
 
     void Stop()
     {
-        // Stop accepting new connections
-        boost::beast::error_code ec;
-        acceptor.close(ec);
-        if (ec)
-        {
-            util::Log(logDEBUG) << "Error closing acceptor: " << ec.message();
-        }
-
-        // Stop the io_context
-        io_context.stop();
+        // Posting the close to the acceptors strand ensures
+        // we do not have a race condition with async_accept.
+        boost::asio::post(acceptor.get_executor(),
+                          [self = shared_from_this()]()
+                          {
+                              boost::beast::error_code ec;
+                              self->acceptor.close(ec);
+                              if (ec)
+                              {
+                                  util::Log(logDEBUG) << "Error closing acceptor: " << ec.message();
+                              }
+                              // Stop the io_context
+                              self->io_context.stop();
+                          });
     }
 
     void RegisterServiceHandler(std::unique_ptr<ServiceHandlerInterface> service_handler_)
