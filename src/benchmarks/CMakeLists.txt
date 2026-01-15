@@ -99,18 +99,18 @@ if(BUILD_AS_SUBPROJECT)
 	rtree-bench
 	packedvector-bench
 	match-bench
-  route-bench
-  bench
+	route-bench
+	bench
 	json-render-bench
-  alias-bench)
+	alias-bench)
 else()
   add_custom_target(benchmarks
 	DEPENDS
 	rtree-bench
 	packedvector-bench
 	match-bench
-  route-bench
-  bench
+	route-bench
+	bench
 	json-render-bench
-  alias-bench)
+	alias-bench)
 endif()
