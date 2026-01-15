@@ -86,14 +86,7 @@ void Connection::process_request()
     catch (const std::exception &e)
     {
         util::Log(logERROR) << "Request processing error: " << e.what();
-        static constexpr char body[] =
-            "{\"code\": \"InternalError\",\"message\":\"Internal Server Error\"}";
-        response_.result(bhttp::status::internal_server_error);
-        response_.set("Access-Control-Allow-Origin", "*");
-        response_.set("Access-Control-Allow-Methods", "GET");
-        response_.set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
-        response_.set(bhttp::field::content_type, "application/json; charset=UTF-8");
-        response_.body().assign(body, body + (sizeof(body) - 1));
+        SetInternalServerError(response_);
     }
 
     const bool keep_alive = should_keep_alive();
