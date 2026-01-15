@@ -21,11 +21,12 @@ using namespace osrm;
 
 void removeLocks() { storage::SharedMonitor<storage::SharedRegionRegister>::remove(); }
 
-void deleteRegion(const storage::SharedRegionRegister::ShmKey key)
+void deleteRegion(const storage::ProjID proj_id)
 {
-    if (storage::SharedMemory::RegionExists(key) && !storage::SharedMemory::Remove(key))
+    if (storage::RegionExists(proj_id) && !storage::Remove(proj_id))
     {
-        util::Log(logWARNING) << "could not delete shared memory region " << static_cast<int>(key);
+        util::Log(logWARNING) << "could not delete shared memory region "
+                              << static_cast<int>(proj_id);
     }
 }
 
@@ -44,14 +45,14 @@ void listRegions(bool show_blocks)
     {
         auto id = shared_register.Find(name);
         auto region = shared_register.GetRegion(id);
-        auto shm = osrm::storage::makeSharedMemory(region.shm_key);
-        osrm::util::Log() << name << "\t" << static_cast<int>(region.shm_key) << "\t"
+        auto shm = osrm::storage::makeSharedMemory(region.proj_id);
+        osrm::util::Log() << name << "\t" << static_cast<int>(region.proj_id) << "\t"
                           << region.timestamp << "\t" << shm->Size();
 
         if (show_blocks)
         {
             using namespace storage;
-            auto memory = makeSharedMemory(region.shm_key);
+            auto memory = makeSharedMemory(region.proj_id);
             io::BufferReader reader(reinterpret_cast<char *>(memory->Ptr()), memory->Size());
 
             std::unique_ptr<BaseDataLayout> layout = std::make_unique<ContiguousDataLayout>();
@@ -285,6 +286,11 @@ catch (const osrm::RuntimeError &e)
 {
     util::Log(logERROR) << e.what();
     return e.GetCode();
+}
+catch (const util::exception &e)
+{
+    util::Log(logERROR) << e.what();
+    return EXIT_FAILURE;
 }
 catch (const std::bad_alloc &e)
 {

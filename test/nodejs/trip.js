@@ -1,15 +1,15 @@
-var OSRM = require('../../');
-var test = require('tape');
-var data_path = require('./constants').data_path;
-var mld_data_path = require('./constants').mld_data_path;
-var three_test_coordinates = require('./constants').three_test_coordinates;
-var two_test_coordinates = require('./constants').two_test_coordinates;
-const flatbuffers = require('../../features/support/flatbuffers').flatbuffers;
-const FBResult = require('../../features/support/fbresult_generated').osrm.engine.api.fbresult.FBResult;
+// Test trip service functionality for solving traveling salesman problem
+import OSRM from '../../lib/index.js';
+import test from 'tape';
+import { data_path, mld_data_path, three_test_coordinates, two_test_coordinates } from './constants.js';
+import flatbuffers from 'flatbuffers';
+import { osrm } from '../../features/support/fbresult_generated.js';
+
+const FBResult = osrm.engine.api.fbresult.FBResult;
 
 test('trip: trip in Monaco with flatbuffers format', function(assert) {
     assert.plan(2);
-    var osrm = new OSRM(data_path);
+    const osrm = new OSRM(data_path);
     osrm.trip({coordinates: two_test_coordinates, format: 'flatbuffers'}, function(err, trip) {
         assert.ifError(err);
         const fb = FBResult.getRootAsFBResult(new flatbuffers.ByteBuffer(trip));
@@ -19,10 +19,10 @@ test('trip: trip in Monaco with flatbuffers format', function(assert) {
 
 test('trip: trip in Monaco', function(assert) {
     assert.plan(2);
-    var osrm = new OSRM(data_path);
+    const osrm = new OSRM(data_path);
     osrm.trip({coordinates: two_test_coordinates}, function(err, trip) {
         assert.ifError(err);
-        for (t = 0; t < trip.trips.length; t++) {
+        for (let t = 0; t < trip.trips.length; t++) {
             assert.ok(trip.trips[t].geometry);
         }
     });
@@ -30,12 +30,12 @@ test('trip: trip in Monaco', function(assert) {
 
 test('trip: trip in Monaco as a buffer', function(assert) {
     assert.plan(3);
-    var osrm = new OSRM(data_path);
+    const osrm = new OSRM(data_path);
     osrm.trip({coordinates: two_test_coordinates}, { format: 'json_buffer' }, function(err, trip) {
         assert.ifError(err);
         assert.ok(trip instanceof Buffer);
         trip = JSON.parse(trip);
-        for (t = 0; t < trip.trips.length; t++) {
+        for (let t = 0; t < trip.trips.length; t++) {
             assert.ok(trip.trips[t].geometry);
         }
     });
@@ -44,13 +44,13 @@ test('trip: trip in Monaco as a buffer', function(assert) {
 test('trip: trip with many locations in Monaco', function(assert) {
     assert.plan(2);
 
-    var many = 5;
+    const many = 5;
 
-    var osrm = new OSRM(data_path);
-    var opts = {coordinates: three_test_coordinates.slice(0, many)};
+    const osrm = new OSRM(data_path);
+    const opts = {coordinates: three_test_coordinates.slice(0, many)};
     osrm.trip(opts, function(err, trip) {
         assert.ifError(err);
-        for (t = 0; t < trip.trips.length; t++) {
+        for (let t = 0; t < trip.trips.length; t++) {
             assert.ok(trip.trips[t].geometry);
         }
     });
@@ -58,7 +58,7 @@ test('trip: trip with many locations in Monaco', function(assert) {
 
 test('trip: throws with too few or invalid args', function(assert) {
     assert.plan(3);
-    var osrm = new OSRM(data_path);
+    const osrm = new OSRM(data_path);
     assert.throws(function() { osrm.trip({coordinates: two_test_coordinates}) },
         /Two arguments required/);
     assert.throws(function() { osrm.trip(null, function(err, trip) {}) },
@@ -69,7 +69,7 @@ test('trip: throws with too few or invalid args', function(assert) {
 
 test('trip: throws with bad params', function(assert) {
     assert.plan(14);
-    var osrm = new OSRM(data_path);
+    const osrm = new OSRM(data_path);
     assert.throws(function () { osrm.trip({coordinates: []}, function(err) {}) });
     assert.throws(function() { osrm.trip({}, function(err, trip) {}) },
         /Must provide a coordinates property/);
@@ -90,7 +90,7 @@ test('trip: throws with bad params', function(assert) {
         hints: null
     }, function(err, trip) {}) },
         /Hints must be an array of strings\/null/);
-    var options = {
+    const options = {
         coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
         hints: three_test_coordinates[0]
     };
@@ -124,10 +124,10 @@ test('trip: throws with bad params', function(assert) {
 
 test('trip: routes Monaco using shared memory', function(assert) {
     assert.plan(2);
-    var osrm = new OSRM();
+    const osrm = new OSRM();
     osrm.trip({coordinates: two_test_coordinates}, function(err, trip) {
         assert.ifError(err);
-            for (t = 0; t < trip.trips.length; t++) {
+            for (let t = 0; t < trip.trips.length; t++) {
                 assert.ok(trip.trips[t].geometry);
             }
     });
@@ -135,17 +135,17 @@ test('trip: routes Monaco using shared memory', function(assert) {
 
 test('trip: routes Monaco with hints', function(assert) {
     assert.plan(5);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: two_test_coordinates,
         steps: false
     };
     osrm.trip(options, function(err, first) {
         assert.ifError(err);
-        for (t = 0; t < first.trips.length; t++) {
+        for (let t = 0; t < first.trips.length; t++) {
             assert.ok(first.trips[t].geometry);
         }
-        var hints = first.waypoints.map(function(wp) { return wp.hint; });
+        const hints = first.waypoints.map(function(wp) { return wp.hint; });
         assert.ok(hints.every(function(h) { return typeof h === 'string'; }));
         options.hints = hints;
 
@@ -158,13 +158,13 @@ test('trip: routes Monaco with hints', function(assert) {
 
 test('trip: trip through Monaco with geometry compression', function(assert) {
     assert.plan(2);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: [three_test_coordinates[0], three_test_coordinates[1]]
     };
     osrm.trip(options, function(err, trip) {
         assert.ifError(err);
-        for (t = 0; t < trip.trips.length; t++) {
+        for (let t = 0; t < trip.trips.length; t++) {
             assert.equal('string', typeof trip.trips[t].geometry);
         }
     });
@@ -172,14 +172,14 @@ test('trip: trip through Monaco with geometry compression', function(assert) {
 
 test('trip: trip through Monaco without geometry compression', function(assert) {
     assert.plan(2);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: two_test_coordinates,
         geometries: 'geojson'
     };
     osrm.trip(options, function(err, trip) {
         assert.ifError(err);
-        for (t = 0; t < trip.trips.length; t++) {
+        for (let t = 0; t < trip.trips.length; t++) {
             assert.ok(Array.isArray(trip.trips[t].geometry.coordinates));
         }
     });
@@ -187,8 +187,8 @@ test('trip: trip through Monaco without geometry compression', function(assert) 
 
 test('trip: trip through Monaco with speed annotations options', function(assert) {
     assert.plan(12);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: two_test_coordinates,
         steps: true,
         annotations: ['speed'],
@@ -197,7 +197,7 @@ test('trip: trip through Monaco with speed annotations options', function(assert
     osrm.trip(options, function(err, trip) {
         assert.ifError(err);
         assert.equal(trip.trips.length, 1);
-        for (t = 0; t < trip.trips.length; t++) {
+        for (let t = 0; t < trip.trips.length; t++) {
             assert.ok(trip.trips[t]);
             assert.ok(trip.trips[t].legs.every(function(l) { return l.steps.length > 0; }), 'every leg has steps')
             assert.ok(trip.trips[t].legs.every(function(l) { return l.annotation; }), 'every leg has annotations')
@@ -214,8 +214,8 @@ test('trip: trip through Monaco with speed annotations options', function(assert
 
 test('trip: trip through Monaco with several (duration, distance, nodes) annotations options', function(assert) {
     assert.plan(12);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: two_test_coordinates,
         steps: true,
         annotations: ['duration', 'distance', 'nodes'],
@@ -224,7 +224,7 @@ test('trip: trip through Monaco with several (duration, distance, nodes) annotat
     osrm.trip(options, function(err, trip) {
         assert.ifError(err);
         assert.equal(trip.trips.length, 1);
-        for (t = 0; t < trip.trips.length; t++) {
+        for (let t = 0; t < trip.trips.length; t++) {
             assert.ok(trip.trips[t]);
             assert.ok(trip.trips[t].legs.every(function(l) { return l.steps.length > 0; }), 'every leg has steps')
             assert.ok(trip.trips[t].legs.every(function(l) { return l.annotation; }), 'every leg has annotations')
@@ -241,8 +241,8 @@ test('trip: trip through Monaco with several (duration, distance, nodes) annotat
 
 test('trip: trip through Monaco with options', function(assert) {
     assert.plan(6);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: two_test_coordinates,
         steps: true,
         annotations: true,
@@ -251,7 +251,7 @@ test('trip: trip through Monaco with options', function(assert) {
     osrm.trip(options, function(err, trip) {
         assert.ifError(err);
         assert.equal(trip.trips.length, 1);
-        for (t = 0; t < trip.trips.length; t++) {
+        for (let t = 0; t < trip.trips.length; t++) {
             assert.ok(trip.trips[t]);
             assert.ok(trip.trips[t].legs.every(function(l) { return l.steps.length > 0; }), 'every leg has steps')
             assert.ok(trip.trips[t].legs.every(function(l) { return l.annotation; }), 'every leg has annotations')
@@ -262,8 +262,8 @@ test('trip: trip through Monaco with options', function(assert) {
 
 test('trip: routes Monaco with null hints', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM(data_path);
-    var options = {
+    const osrm = new OSRM(data_path);
+    const options = {
         coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
         hints: [null, null]
     };
@@ -274,10 +274,10 @@ test('trip: routes Monaco with null hints', function(assert) {
 
 test('trip: service combinations that are not implemented', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM(data_path);
+    const osrm = new OSRM(data_path);
 
     // no fixed start, no fixed end, non-roundtrip
-    var options = {
+    const options = {
         coordinates: two_test_coordinates,
         source: 'any',
         destination: 'any',
@@ -290,9 +290,9 @@ test('trip: service combinations that are not implemented', function(assert) {
 
 test('trip: fixed start and end combinations', function(assert) {
     assert.plan(21);
-    var osrm = new OSRM(data_path);
+    const osrm = new OSRM(data_path);
 
-    var options = {
+    const options = {
         coordinates: two_test_coordinates,
         source: 'first',
         destination: 'last',
@@ -301,21 +301,21 @@ test('trip: fixed start and end combinations', function(assert) {
     };
 
     // variations of non roundtrip
-    var nonRoundtripChecks = function(options) {
+    const nonRoundtripChecks = function(options) {
         osrm.trip(options, function(err, fseTrip) {
             assert.ifError(err);
             assert.equal(1, fseTrip.trips.length);
-            var coordinates = fseTrip.trips[0].geometry.coordinates;
+            const coordinates = fseTrip.trips[0].geometry.coordinates;
             assert.notEqual(JSON.stringify(coordinates[0]), JSON.stringify(coordinates[coordinates.length - 1]));
         });
     };
 
     // variations of roundtrip
-    var roundtripChecks = function(options) {
+    const roundtripChecks = function(options) {
         osrm.trip(options, function(err, trip) {
             assert.ifError(err);
             assert.equal(1, trip.trips.length);
-            var coordinates = trip.trips[0].geometry.coordinates;
+            const coordinates = trip.trips[0].geometry.coordinates;
             assert.equal(JSON.stringify(coordinates[0]), JSON.stringify(coordinates[coordinates.length - 1]));
         });
     };
@@ -355,8 +355,8 @@ test('trip: fixed start and end combinations', function(assert) {
 
 test('trip: trip in Monaco without motorways', function(assert) {
     assert.plan(3);
-    var osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
-    var options = {
+    const osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
+    const options = {
         coordinates: two_test_coordinates,
         exclude: ['motorway']
     };
@@ -370,8 +370,8 @@ test('trip: trip in Monaco without motorways', function(assert) {
 
 test('trip: throws on disabled geometry', function (assert) {
     assert.plan(1);
-    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
-    var options = {
+    const osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    const options = {
         coordinates: three_test_coordinates.concat(three_test_coordinates),
     };
     osrm.trip(options, function(err, route) {
@@ -382,8 +382,8 @@ test('trip: throws on disabled geometry', function (assert) {
 
 test('trip: ok on disabled geometry', function (assert) {
     assert.plan(2);
-    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
-    var options = {
+    const osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_GEOMETRY']});
+    const options = {
         steps: false,
         overview: 'false',
         annotations: false,
@@ -398,8 +398,8 @@ test('trip: ok on disabled geometry', function (assert) {
 
 test('trip: throws on disabled steps', function (assert) {
     assert.plan(1);
-    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
-    var options = {
+    const osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    const options = {
         steps: true,
         coordinates: three_test_coordinates.concat(three_test_coordinates),
     };
@@ -411,8 +411,8 @@ test('trip: throws on disabled steps', function (assert) {
 
 test('trip: ok on disabled steps', function (assert) {
     assert.plan(8);
-    var osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
-    var options = {
+    const osrm = new OSRM({'path': data_path, 'disable_feature_dataset': ['ROUTE_STEPS']});
+    const options = {
         steps: false,
         overview: 'simplified',
         annotations: true,

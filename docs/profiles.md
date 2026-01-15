@@ -1,5 +1,5 @@
 # OSRM profiles
-OSRM supports "profiles". Profiles representing routing behavior for different transport modes like car, bike and foot. You can also create profiles for variations like a fastest/shortest car profile or fastest/safest/greenest bicycles profile.
+OSRM supports "profiles". Profiles represent routing behavior for different transport modes like car, bike and foot. You can also create profiles for variations like a fastest/shortest car profile or fastest/safest/greenest bicycles profile.
 
 A profile describes whether or not it's possible to route along a particular type of way, whether we can pass a particular node, and how quickly we'll be traveling when we do. This feeds into the way the routing graph is created and thus influences the output routes.
 
@@ -71,7 +71,7 @@ If you want to prioritize certain streets, increase the rate on these.
 A profile should set `api_version` at the top of your profile. This is done to ensure that older profiles are still supported when the api changes. If `api_version` is not defined, 0 will be assumed. The current api version is 4.
 
 ### Library files
-The folder [profiles/lib/](../profiles/lib/) contains LUA library files for handling many common processing tasks.
+The folder [profiles/lib/](../profiles/lib/) contains Lua library files for handling many common processing tasks.
 
 File              | Notes
 ------------------|------------------------------
@@ -89,7 +89,7 @@ They all return a table of functions when you use `require` to load them. You ca
 ### setup()
 The `setup` function is called once when the profile is loaded and must return a table of configurations. It's also where you can do other global setup, like loading data sources that are used during processing.
 
-Note that processing of data is parallelized and several unconnected LUA interpreters will be running at the same time. The `setup` function will be called once for each. Each LUA interpreter will have its own set of globals.
+Note that processing of data is parallelized and several unconnected Lua interpreters will be running at the same time. The `setup` function will be called once for each. Each Lua interpreter will have its own set of globals.
 
 The following global properties can be set under `properties` in the hash you return in the `setup` function:
 
@@ -347,10 +347,34 @@ road_classification.road_priority_class | Enum     | Guidance: order in priority
 road_classification.may_be_ignored      | Boolean  | Guidance: way is non-highway
 road_classification.num_lanes           | Unsigned | Guidance: total number of lanes in way
 
+### Way names
+The `WayHandlers.names` function in [way_handlers.lua](../profiles/lib/way_handlers.lua) handles extraction of way names for routing instructions. It processes the following OSM tags:
+
+Tag                   | Notes
+----------------------|------------------------------
+`name`                | Primary name of the way
+`name:pronunciation`  | Pronunciation hint for text-to-speech
+`ref`                 | Road reference number (e.g., "A1", "I-95")
+`junction:ref`        | Exit or junction reference number
+
+For unnamed sidewalks and sidepaths (where `highway=footway`, `highway=cycleway`, or `highway=path`), the function also supports fallback name tags when the way is marked as a sidepath:
+
+Tag                   | Notes
+----------------------|------------------------------
+`is_sidepath:of:name` | Name of the street the sidepath follows (checked first)
+`street:name`         | Alternative tag for the associated street name
+
+The fallback is only applied when the way has one of these sidepath markers:
+- `footway=sidewalk`
+- `cycleway=sidepath`
+- `is_sidepath=yes`
+
+This allows routing instructions to show street names for separately mapped sidewalks, e.g., "Turn right onto Main Street" instead of just "Turn right".
+
 ### process_segment(profile, segment)
 The `process_segment` function is called for every segment of OSM ways. A segment is a straight line between two OSM nodes.
 
-On OpenStreetMap way cannot have different tags on different parts of a way. Instead you would split the way into several smaller ways. However many ways are long. For example, many ways pass hills without any change in tags.
+An OpenStreetMap way cannot have different tags on different parts of a way. Instead you would split the way into several smaller ways. However, many ways are long. For example, many ways pass over hills without any change in tags.
 
 Processing each segment of an OSM way makes it possible to have different speeds on different parts of a way based on external data like data about elevation, pollution, noise or scenic value and adjust weight and duration of the segment accordingly.
 
@@ -453,10 +477,10 @@ When turning from `a` to `b` via `x`,
 * `roads_on_the_left[1]` is the road `xe`
 * `roads_on_the_left[2]` is the road `xc`
 
-Note that indices of arrays in lua are 1-based.
+Note that indices of arrays in Lua are 1-based.
 
 #### `highway_turn_classification` and `access_turn_classification`
-When setting appropriate turn weights and duration, information about the highway and access tags of roads that are involved in the turn are necessary. The lua turn function `process_turn` does not have access to the original osrm tags anymore. However, `highway_turn_classification` and `access_turn_classification` can be set during setup. The classification set during setup can be later used in `process_turn`.
+When setting appropriate turn weights and duration, information about the highway and access tags of roads that are involved in the turn are necessary. The Lua turn function `process_turn` does not have access to the original OSM tags anymore. However, `highway_turn_classification` and `access_turn_classification` can be set during setup. The classification set during setup can be later used in `process_turn`.
 
 **Example**
 
@@ -513,7 +537,7 @@ function setup()
 end
 ```
 
-The input data must an ASCII file with rows of integers. e.g.:
+The input data must be an ASCII file with rows of integers, e.g.:
 
 ```
 0  0  0   0

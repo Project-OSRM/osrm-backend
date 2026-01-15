@@ -8,14 +8,15 @@
 
 #include "osrm/json_container.hpp"
 
+#include <cmath>
+#include <cstdint>
 #include <iterator>
+#include <limits>
 #include <ostream>
 #include <string>
 #include <vector>
 
-#include <boost/assert.hpp>
-
-#include <fmt/compile.h>
+#include "util/format.hpp"
 
 namespace osrm::util::json
 {
@@ -48,14 +49,32 @@ template <typename Out> struct Renderer
 
     void operator()(const Number &number)
     {
-        // we don't want to print NaN or Infinity
-        BOOST_ASSERT(std::isfinite(number.value));
-        // `fmt::memory_buffer` stores first 500 bytes in the object itself(i.e. on stack in this
-        // case) and then grows using heap if needed
-        fmt::memory_buffer buffer;
-        fmt::format_to(std::back_inserter(buffer), FMT_COMPILE("{:.10g}"), number.value);
+        // Handle NaN and Infinity gracefully - output null for invalid numbers.
+        // This produces valid JSON instead of "nan" or "inf".
+        if (!std::isfinite(number.value))
+        {
+            write<>("null");
+            return;
+        }
 
-        write(buffer.data(), buffer.size());
+        // Check if value is a non-negative whole number that can be exactly
+        // represented in a double. Doubles have 53 mantissa bits, so integers
+        // up to 2^53 can be exactly represented. This handles large OSM IDs
+        // (up to ~10 billion currently) without scientific notation.
+        constexpr auto max_exact_int =
+            static_cast<double>(1ULL << std::numeric_limits<double>::digits);
+        if (number.value >= 0.0 && number.value <= max_exact_int &&
+            std::trunc(number.value) == number.value)
+        {
+            auto int_value = static_cast<std::uint64_t>(number.value);
+            std::string formatted = compat::format("{}", int_value);
+            write(formatted.data(), formatted.size());
+        }
+        else
+        {
+            std::string formatted = compat::format("{:.10g}", number.value);
+            write(formatted.data(), formatted.size());
+        }
     }
 
     void operator()(const Object &object)
@@ -109,35 +128,35 @@ template <typename Out> struct Renderer
     Out &out;
 };
 
-template <> void Renderer<std::vector<char>>::write(std::string_view str)
+template <> inline void Renderer<std::vector<char>>::write(std::string_view str)
 {
     out.insert(out.end(), str.begin(), str.end());
 }
 
-template <> void Renderer<std::vector<char>>::write(const char *str, size_t size)
+template <> inline void Renderer<std::vector<char>>::write(const char *str, size_t size)
 {
     out.insert(out.end(), str, str + size);
 }
 
-template <> void Renderer<std::vector<char>>::write(char ch) { out.push_back(ch); }
+template <> inline void Renderer<std::vector<char>>::write(char ch) { out.push_back(ch); }
 
-template <> void Renderer<std::ostream>::write(std::string_view str) { out << str; }
+template <> inline void Renderer<std::ostream>::write(std::string_view str) { out << str; }
 
-template <> void Renderer<std::ostream>::write(const char *str, size_t size)
+template <> inline void Renderer<std::ostream>::write(const char *str, size_t size)
 {
     out.write(str, size);
 }
 
-template <> void Renderer<std::ostream>::write(char ch) { out << ch; }
+template <> inline void Renderer<std::ostream>::write(char ch) { out << ch; }
 
-template <> void Renderer<std::string>::write(std::string_view str) { out += str; }
+template <> inline void Renderer<std::string>::write(std::string_view str) { out += str; }
 
-template <> void Renderer<std::string>::write(const char *str, size_t size)
+template <> inline void Renderer<std::string>::write(const char *str, size_t size)
 {
     out.append(str, size);
 }
 
-template <> void Renderer<std::string>::write(char ch) { out += ch; }
+template <> inline void Renderer<std::string>::write(char ch) { out += ch; }
 
 inline void render(std::ostream &out, const Object &object)
 {

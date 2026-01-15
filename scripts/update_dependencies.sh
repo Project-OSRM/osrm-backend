@@ -7,7 +7,7 @@ set -o nounset
 # Note: once the subtree merge from this script has been committed and pushed to
 # a branch do not attempt to rebase the branch back onto master or the subdirectory
 # structure will be lost.
-# http://git.661346.n2.nabble.com/subtree-merges-lose-prefix-after-rebase-td7332850.html
+# https://stackoverflow.com/questions/12858199/how-to-rebase-after-git-subtree-add
 
 OSMIUM_PATH="osmcode/libosmium"
 OSMIUM_TAG=v2.20.0
@@ -22,13 +22,15 @@ MICROTAR_PATH="rxi/microtar"
 MICROTAR_TAG=v0.1.0
 
 PROTOZERO_PATH="mapbox/protozero"
-PROTOZERO_TAG=v1.7.1
+PROTOZERO_TAG=v1.8.1
 
 VTZERO_PATH="mapbox/vtzero"
 VTZERO_TAG=v1.1.0
 
+# Note: fmt is kept for backward compatibility with compilers lacking std::format support
+# (e.g., Clang with older libstdc++). Will be removed once GCC 13+ becomes minimum requirement.
 FMT_PATH="fmtlib/fmt"
-FMT_TAG=v10.2.1
+FMT_TAG=11.2.0
 
 FLATBUFFERS_PATH="google/flatbuffers"
 FLATBUFFERS_TAG=v24.3.25

@@ -12,7 +12,7 @@ do
   for loadmethod in "${loadmethods[@]}"
   do
     set -x
-    node ./node_modules/cucumber/bin/cucumber.js features/ -p $profile -m $loadmethod
+    OSRM_LOAD_METHOD=$loadmethod npx cucumber-js features/ -p $profile
     { set +x; } 2>/dev/null
   done
 done

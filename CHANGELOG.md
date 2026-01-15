@@ -1,5 +1,35 @@
 # Unreleased
   - Changes from 6.0.0
+    - Profiles:
+      - ADDED: Add exception for audible fences (`barrier=fence` with `sensory=audible` or `sensory=audio`) that deter livestock but do not block vehicles [#6964](https://github.com/Project-OSRM/osrm-backend/issues/6964)
+      - ADDED: Use `is_sidepath:of:name` and `street:name` as fallback names for unnamed sidewalks and sidepaths in foot and bicycle profiles [#7259](https://github.com/Project-OSRM/osrm-backend/issues/7259)
+    - Build:
+      - FIXED: Update Node.js binding path from `lib/binding` to `lib/binding_napi_v8` to match node-pre-gyp versioning conventions [#7272](https://github.com/Project-OSRM/osrm-backend/pull/7272)
+      - FIXED: Reduce MSVC compiler warnings by suppressing informational warnings while preserving bug-indicating warnings [#7253](https://github.com/Project-OSRM/osrm-backend/issues/7253)
+      - FIXED: Merge `osrm_extract` and `osrm_guidance` to avoid circular dependencies. [#7315](https://github.com/Project-OSRM/osrm-backend/pull/7315)
+      - FIXED: Work around compilation error due to a false-positive of array-bounds check in sol2 [#7317](https://github.com/Project-OSRM/osrm-backend/pull/7317)
+      - FIXED: Fix compilation with gcc >14 in release with LTO. [#7268](https://github.com/Project-OSRM/osrm-backend/issues/7268)
+    - Misc:
+      - ADDED: `SHM_LOCK_DIR` environment variable for shared memory lock file directory [#7312](https://github.com/Project-OSRM/osrm-backend/pull/7312)
+      - FIXED: Fix JSON rendering of large OSM IDs (avoids scientific notation) and handle NaN/Infinity gracefully [#7016](https://github.com/Project-OSRM/osrm-backend/issues/7016)
+      - FIXED: Replace removed --polyglot flag with JSDoc extraction script for documentation.js v14 [#7274](https://github.com/Project-OSRM/osrm-backend/issues/7274)
+      - CHANGED: Add std::format compatibility layer with fallback to fmt::format [#7261](https://github.com/Project-OSRM/osrm-backend/pull/7261)
+      - FIXED: Update node_osrm to C++20 to fix ABI mismatch with libosrm (was overlooked in #6877) [#7261](https://github.com/Project-OSRM/osrm-backend/pull/7261)
+      - CHANGED: Update fmt library to version 11.2.0 [#7238](https://github.com/Project-OSRM/osrm-backend/issues/7238)
+      - CHANGED: Upgrade protozero from v1.7.1 to v1.8.1 [#7239](https://github.com/Project-OSRM/osrm-backend/pull/7239)
+      - CHANGED: Replace `std::is_trivial` with `std::is_trivially_default_constructible && std::is_trivially_copyable` [#7245](https://github.com/Project-OSRM/osrm-backend/issues/7245)
+      - ADDED: Add husky pre-commit hook for compiling and linting staged JS files [#7228](https://github.com/Project-OSRM/osrm-backend/issues/7228)
+      - CHANGED: Standardize linting configuration with ESM-specific rules [#7229](https://github.com/Project-OSRM/osrm-backend/issues/7229)
+      - CHANGED: Convert scripts from CommonJS to modern ESM format [#7230](https://github.com/Project-OSRM/osrm-backend/pull/7230)
+      - CHANGED: Convert remaining scripts from CommonJS to ESM format and use flatbuffers npm package [#7227](https://github.com/Project-OSRM/osrm-backend/pull/7227)
+      - CHANGED: Upgrade Cucumber-js to v12 [#7221](https://github.com/Project-OSRM/osrm-backend/pull/7221)
+      - CHANGED: Add libcap-setcap to alpine dockerfile [#7241](https://github.com/Project-OSRM/osrm-backend/issues/7241)
+      - FIXED: Minor misspellings found in source code, comments and documents [#7215](https://github.com/Project-OSRM/osrm-backend/pull/7215)
+    - Profiles:
+      - FIXED: Bicycle and foot profiles now don't route on motor roads [#6697](https://github.com/Project-OSRM/osrm-backend/pull/6697)
+      - FIXED: Use `cycleway:both` if available. [#6179](https://github.com/Project-OSRM/osrm-backend/issues/6179)
+      - FIXED: Correctly limit exclude classes to 7. [#7322](https://github.com/Project-OSRM/osrm-backend/pull/7322)
+      - FIXED: Speed limits in Czech Republic [#7279](https://github.com/Project-OSRM/osrm-backend/pull/7279)
 
 # 6.0.0
   - Changes from 6.0.0 RC2: None

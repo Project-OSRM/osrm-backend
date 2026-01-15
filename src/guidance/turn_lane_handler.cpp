@@ -69,7 +69,7 @@ TurnLaneHandler::~TurnLaneHandler()
     C -v
     ----------
 
-    witch is the result of a string like looking |left|through;right|right| and performs an
+    which is the result of a string like looking |left|through;right|right| and performs an
     assignment onto the turns.
     For example: (130, turn slight right), (180, ramp straight), (320, turn sharp left).
  */
@@ -225,7 +225,7 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
         for (std::size_t road_index = 0; road_index < previous_intersection.size(); ++road_index)
         {
             const auto &road = previous_intersection[road_index];
-            // in case of a sliproad that is connected to road of simlar angle, we handle the
+            // in case of a sliproad that is connected to road of similar angle, we handle the
             // turn as a combined turn
             if (road.instruction.type == TurnType::Sliproad)
             {

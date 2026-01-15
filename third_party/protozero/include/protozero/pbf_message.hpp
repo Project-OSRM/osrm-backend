@@ -64,7 +64,7 @@ namespace protozero {
 template <typename T>
 class pbf_message : public pbf_reader {
 
-    static_assert(std::is_same<pbf_tag_type, typename std::underlying_type<T>::type>::value,
+    static_assert(std::is_same<pbf_tag_type, std::underlying_type_t<T>>::value,
                   "T must be enum with underlying type protozero::pbf_tag_type");
 
 public:
