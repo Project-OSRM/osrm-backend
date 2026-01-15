@@ -161,7 +161,7 @@ void Connection::handle_write()
 void Connection::handle_close()
 {
     boost::beast::error_code ec;
-    stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
+    (void)stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
 
     // Don't worry about shutdown errors
     if (ec && ec != boost::beast::errc::not_connected)
