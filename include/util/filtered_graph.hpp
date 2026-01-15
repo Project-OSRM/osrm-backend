@@ -92,7 +92,7 @@ class FilteredGraphImpl<util::StaticGraph<EdgeDataT, Ownership>, Ownership>
             const NodeID target = GetTarget(edge);
             const auto &data = GetEdgeData(edge);
             if (target == to && data.weight < smallest_weight &&
-                std::forward<FilterFunction>(filter)(data))
+                filter(data))
             {
                 smallest_edge = edge;
                 smallest_weight = data.weight;
