@@ -45,6 +45,7 @@ Checks: >
     -llvm-else-after-return,
     -llvm-header-guard,
     -llvm-twine-local,
+    -llvm-prefer-static-over-anonymous-namespace,
     misc-*,
     -misc-argument-comment,
     -misc-const-correctness,
@@ -55,6 +56,7 @@ Checks: >
     -misc-definitions-in-headers,
     -misc-unused-parameters,
     -misc-include-cleaner,
+    -misc-use-internal-linkage,
     modernize-concat-nested-namespaces,
     modernize-use-using,
     performance-*,
@@ -93,7 +95,13 @@ Checks: >
     -readability-avoid-nested-conditional-operator,
     -readability-avoid-return-with-void-value,
     -readability-redundant-casting,
-    -readability-static-accessed-through-instance
+    -readability-static-accessed-through-instance,
+    -readability-math-missing-parentheses,
+    -readability-use-concise-preprocessor-directives
+
+CheckOptions:
+  - key: bugprone-unused-return-value.AllowCastToVoid
+    value: true
     
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
