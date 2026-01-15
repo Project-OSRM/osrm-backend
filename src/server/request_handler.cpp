@@ -9,7 +9,6 @@
 #include "util/timing_util.hpp"
 
 #include "engine/status.hpp"
-#include "osrm/osrm.hpp"
 #include "util/json_container.hpp"
 
 #include <boost/iostreams/copy.hpp>
@@ -35,25 +34,6 @@ inline std::string HeaderOrEmpty(const Request &req, bhttp::field f)
     if (it == req.end())
         return {};
     return std::string(it->value());
-}
-
-inline void SetInternalServerError(Response &res)
-{
-    static constexpr char body[] =
-        "{\"code\": \"InternalError\",\"message\":\"Internal Server Error\"}";
-    res.result(bhttp::status::internal_server_error);
-    res.set("Access-Control-Allow-Origin", "*");
-    res.set("Access-Control-Allow-Methods", "GET");
-    res.set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
-    res.set(bhttp::field::content_type, "application/json; charset=UTF-8");
-    res.body().assign(body, body + (sizeof(body) - 1)); // drop trailing '\0'
-}
-} // namespace
-
-void RequestHandler::RegisterServiceHandler(
-    std::unique_ptr<ServiceHandlerInterface> service_handler_)
-{
-    service_handler = std::move(service_handler_);
 }
 
 void SendResponse(ServiceHandler::ResultT &result,
@@ -93,6 +73,13 @@ void SendResponse(ServiceHandler::ResultT &result,
 
         current_reply.set(bhttp::field::content_type, "application/x-protobuf");
     }
+}
+} // namespace
+
+void RequestHandler::RegisterServiceHandler(
+    std::unique_ptr<ServiceHandlerInterface> service_handler_)
+{
+    service_handler = std::move(service_handler_);
 }
 
 void RequestHandler::HandleRequest(const Request &current_request,
