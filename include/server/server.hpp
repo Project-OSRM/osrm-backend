@@ -61,14 +61,14 @@ class Server : public std::enable_shared_from_this<Server>
         boost::asio::ip::tcp::endpoint endpoint = *results.begin();
 
         // Open the acceptor
-        acceptor.open(endpoint.protocol(), ec);
+        (void)acceptor.open(endpoint.protocol(), ec);
         if (ec)
         {
             throw std::runtime_error("Failed to open acceptor: " + ec.message());
         }
 
         // Allow address reuse
-        acceptor.set_option(boost::asio::socket_base::reuse_address(true), ec);
+        (void)acceptor.set_option(boost::asio::socket_base::reuse_address(true), ec);
         if (ec)
         {
             util::Log(logWARNING) << "Failed to set reuse_address: " << ec.message();
@@ -85,14 +85,14 @@ class Server : public std::enable_shared_from_this<Server>
 #endif
 
         // Bind to the address
-        acceptor.bind(endpoint, ec);
+        (void)acceptor.bind(endpoint, ec);
         if (ec)
         {
             throw std::runtime_error("Failed to bind to address: " + ec.message());
         }
 
         // Start listening
-        acceptor.listen(boost::asio::socket_base::max_listen_connections, ec);
+        (void)acceptor.listen(boost::asio::socket_base::max_listen_connections, ec);
         if (ec)
         {
             throw std::runtime_error("Failed to listen: " + ec.message());
@@ -132,7 +132,7 @@ class Server : public std::enable_shared_from_this<Server>
                           [self = shared_from_this()]()
                           {
                               boost::beast::error_code ec;
-                              self->acceptor.close(ec);
+                              (void)self->acceptor.close(ec);
                               if (ec)
                               {
                                   util::Log(logDEBUG) << "Error closing acceptor: " << ec.message();
