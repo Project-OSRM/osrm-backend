@@ -16,7 +16,7 @@ env:
   CCACHE_COMPRESS: 1
   CASHER_TIME_OUT: 599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
   CMAKE_VERSION: 3.21.2
-  ENABLE_NODE_BINDINGS: "ON"
+  ENABLE_NODE_BINDINGS: 'ON'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -30,102 +30,102 @@ jobs:
     env:
       BUILD_TYPE: Release
     steps:
-    - uses: actions/checkout@v4
-    - run: cmake --version
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-    - run: node --version
-    - run: npm --version
-    - name: Prepare environment
-      shell: bash
-      run: |
-        PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
-        echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
-    - run: npm install --ignore-scripts
-    - run: npm link --ignore-scripts
-    - name: Build
-      shell: bash
-      run: |
-        mkdir build
-        cd build
+      - uses: actions/checkout@v4
+      - run: cmake --version
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node --version
+      - run: npm --version
+      - name: Prepare environment
+        shell: bash
+        run: |
+          PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+          echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
+      - run: npm install --ignore-scripts
+      - run: npm link --ignore-scripts
+      - name: Build
+        shell: bash
+        run: |
+          mkdir build
+          cd build
 
-        python3 -m venv .venv
-        source .venv/Scripts/Activate
-        python3 -m pip install conan==2.15.1
-        conan profile detect --force
+          python3 -m venv .venv
+          source .venv/Scripts/Activate
+          python3 -m pip install conan==2.15.1
+          conan profile detect --force
 
-        cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
-        cmake --build . --config Release
+          cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
+          cmake --build . --config Release
 
-    # TODO: MSVC goes out of memory when building our tests
-    # - name: Run tests
-    #   shell: bash
-    #   run: |
-    #     cd build
-    #     cmake --build . --config Release --target tests
-    #     # TODO: run tests
-    # - name: Run node tests
-    #   shell: bash
-    #   run: |
-    #     ./lib/binding_napi_v8/osrm-extract.exe -p profiles/car.lua test/data/monaco.osm.pbf
+      # TODO: MSVC goes out of memory when building our tests
+      # - name: Run tests
+      #   shell: bash
+      #   run: |
+      #     cd build
+      #     cmake --build . --config Release --target tests
+      #     # TODO: run tests
+      # - name: Run node tests
+      #   shell: bash
+      #   run: |
+      #     ./lib/binding_napi_v8/osrm-extract.exe -p profiles/car.lua test/data/monaco.osm.pbf
 
-    #     mkdir -p test/data/ch
-    #     cp test/data/monaco.osrm* test/data/ch/
-    #     ./lib/binding_napi_v8/osrm-contract.exe test/data/ch/monaco.osrm
+      #     mkdir -p test/data/ch
+      #     cp test/data/monaco.osrm* test/data/ch/
+      #     ./lib/binding_napi_v8/osrm-contract.exe test/data/ch/monaco.osrm
 
-    #     ./lib/binding_napi_v8/osrm-datastore.exe test/data/ch/monaco.osrm
-    #     node test/nodejs/index.js
-    - name: Build Node package
-      shell: bash
-      run: ./scripts/ci/node_package.sh
-    - name: Publish Node package
-      if: ${{ env.PUBLISH == 'On' }}
-      uses: ncipollo/release-action@v1
-      with:
-        allowUpdates: true
-        artifactErrorsFailBuild: true
-        artifacts: build/stage/**/*.tar.gz
-        omitBody: true
-        omitBodyDuringUpdate: true
-        omitName: true
-        omitNameDuringUpdate: true
-        replacesArtifacts: true
-        token: ${{ secrets.GITHUB_TOKEN }}
+      #     ./lib/binding_napi_v8/osrm-datastore.exe test/data/ch/monaco.osrm
+      #     node test/nodejs/index.js
+      - name: Build Node package
+        shell: bash
+        run: ./scripts/ci/node_package.sh
+      - name: Publish Node package
+        if: ${{ env.PUBLISH == 'On' }}
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          artifacts: build/stage/**/*.tar.gz
+          omitBody: true
+          omitBodyDuringUpdate: true
+          omitName: true
+          omitNameDuringUpdate: true
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   format-taginfo-docs:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-    - name: Enable Node.js cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-    - name: Prepare environment
-      run: |
-        npm ci --ignore-scripts
-        clang-format-15 --version
-    - name: Run checks
-      run: |
-        ./scripts/check_taginfo.py taginfo.json profiles/car.lua
-        # Check that code formatting is up to date
-        ./scripts/format.sh && ./scripts/error_on_dirty.sh "Run './scripts/format.sh' locally and commit the changes."
-        node ./scripts/validate_changelog.js
-        # Check that API documentation is up to date with JSDoc comments in node_osrm.cpp
-        npm run docs && ./scripts/error_on_dirty.sh "Run 'npm run docs' locally and commit the changes."
-        npm audit --production
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Enable Node.js cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Prepare environment
+        run: |
+          npm ci --ignore-scripts
+          clang-format-15 --version
+      - name: Run checks
+        run: |
+          ./scripts/check_taginfo.py taginfo.json profiles/car.lua
+          # Check that code formatting is up to date
+          ./scripts/format.sh && ./scripts/error_on_dirty.sh "Run './scripts/format.sh' locally and commit the changes."
+          node ./scripts/validate_changelog.js
+          # Check that API documentation is up to date with JSDoc comments in node_osrm.cpp
+          npm run docs && ./scripts/error_on_dirty.sh "Run 'npm run docs' locally and commit the changes."
+          npm audit --production
 
   docker-image-matrix:
     strategy:
       matrix:
-        docker-base-image: ["debian", "alpine"]
+        docker-base-image: ['debian', 'alpine']
     needs: format-taginfo-docs
     runs-on: ubuntu-22.04
     continue-on-error: false
@@ -179,7 +179,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang-20
             CXXCOMPILER: clang++-20
-            CUCUMBER_TIMEOUT: 60000
             ENABLE_LTO: OFF
 
           - name: clang-19-release
@@ -189,7 +188,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang-19
             CXXCOMPILER: clang++-19
-            CUCUMBER_TIMEOUT: 60000
             ENABLE_LTO: OFF
 
           - name: clang-18-release
@@ -199,7 +197,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
-            CUCUMBER_TIMEOUT: 60000
             ENABLE_LTO: OFF
 
           # TODO(themarex): Reenable after #7309
@@ -210,7 +207,6 @@ jobs:
           #  BUILD_TYPE: Debug
           #  CCOMPILER: clang-18
           #  CXXCOMPILER: clang++-18
-          #  CUCUMBER_TIMEOUT: 60000
           #  ENABLE_LTO: OFF
 
           - name: clang-18-debug-clang-tidy
@@ -220,7 +216,6 @@ jobs:
             BUILD_TYPE: Debug
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
-            CUCUMBER_TIMEOUT: 60000
             ENABLE_CLANG_TIDY: ON
             NODE_PACKAGE_TESTS_ONLY: ON
             ENABLE_LTO: OFF
@@ -232,7 +227,6 @@ jobs:
           #  runs-on: ubuntu-24.04
           #  BUILD_TYPE: Debug
           #  CCOMPILER: clang-18
-          #  CUCUMBER_TIMEOUT: 20000
           #  CXXCOMPILER: clang++-18
           #  ENABLE_SANITIZER: ON
           #  TARGET_ARCH: x86_64-asan-ubsan
@@ -246,7 +240,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang-17
             CXXCOMPILER: clang++-17
-            CUCUMBER_TIMEOUT: 60000
             ENABLE_LTO: OFF
 
           - name: clang-16-release
@@ -256,7 +249,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang-16
             CXXCOMPILER: clang++-16
-            CUCUMBER_TIMEOUT: 60000
             ENABLE_LTO: OFF
 
           - name: gcc-14-release
@@ -284,7 +276,6 @@ jobs:
           #  runs-on: ubuntu-24.04
           #  BUILD_TYPE: Debug
           #  CCOMPILER: gcc-13
-          #  CUCUMBER_TIMEOUT: 20000
           #  CXXCOMPILER: g++-13
           #  ENABLE_COVERAGE: ON
 
@@ -349,7 +340,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
-            CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
 
@@ -361,7 +351,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
-            CUCUMBER_TIMEOUT: 60000
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
 
@@ -373,7 +362,6 @@ jobs:
       BUILD_SHARED_LIBS: ${{ matrix.BUILD_SHARED_LIBS }}
       CCOMPILER: ${{ matrix.CCOMPILER }}
       CFLAGS: ${{ matrix.CFLAGS }}
-      CUCUMBER_TIMEOUT: ${{ matrix.CUCUMBER_TIMEOUT }}
       CXXCOMPILER: ${{ matrix.CXXCOMPILER }}
       CXXFLAGS: ${{ matrix.CXXFLAGS }}
       ENABLE_ASSERTIONS: ${{ matrix.ENABLE_ASSERTIONS }}
@@ -387,249 +375,249 @@ jobs:
       OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
       ENABLE_LTO: ${{ matrix.ENABLE_LTO }}
     steps:
-    - uses: actions/checkout@v4
-    - name: Build machine architecture
-      run: uname -m
-    - name: Use Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node }}
-    - name: Enable Node.js cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-    - name: Enable compiler cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.ccache
-        key: ccache-${{ matrix.name }}-${{ github.sha }}
-        restore-keys: |
-          ccache-${{ matrix.name }}-
-    - name: Enable Conan cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.conan2
-        key: v10-conan-${{ matrix.name }}-${{ github.sha }}
-        restore-keys: |
-          v10-conan-${{ matrix.name }}-
-    - name: Enable test cache
-      uses: actions/cache@v4
-      with:
-        path: ${{github.workspace}}/test/cache
-        key: v4-test-${{ matrix.name }}-${{ github.sha }}
-        restore-keys: |
-          v4-test-${{ matrix.name }}-
-    - name: Prepare environment
-      run: |
-        echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
-        mkdir -p $HOME/.ccache
+      - uses: actions/checkout@v4
+      - name: Build machine architecture
+        run: uname -m
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Enable Node.js cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Enable compiler cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ccache-${{ matrix.name }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ matrix.name }}-
+      - name: Enable Conan cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: v10-conan-${{ matrix.name }}-${{ github.sha }}
+          restore-keys: |
+            v10-conan-${{ matrix.name }}-
+      - name: Enable test cache
+        uses: actions/cache@v4
+        with:
+          path: ${{github.workspace}}/test/cache
+          key: v4-test-${{ matrix.name }}-${{ github.sha }}
+          restore-keys: |
+            v4-test-${{ matrix.name }}-
+      - name: Prepare environment
+        run: |
+          echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
+          mkdir -p $HOME/.ccache
 
-        PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
-        echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
-        echo "OSRM_INSTALL_DIR=${GITHUB_WORKSPACE}/install-osrm" >> $GITHUB_ENV
-        echo "OSRM_BUILD_DIR=${GITHUB_WORKSPACE}/build-osrm" >> $GITHUB_ENV
-        if [[ "$ENABLE_SANITIZER" == 'ON' ]]; then
-          # We can only set this after checkout once we know the workspace directory
-          echo "LSAN_OPTIONS=print_suppressions=0:suppressions=${GITHUB_WORKSPACE}/scripts/ci/leaksanitizer.conf" >> $GITHUB_ENV
-          echo "UBSAN_OPTIONS=symbolize=1:halt_on_error=1:print_stacktrace=1:suppressions=${GITHUB_WORKSPACE}/scripts/ci/undefinedsanitizer.conf" >> $GITHUB_ENV
-          echo "ASAN_OPTIONS=print_suppressions=0:suppressions=${GITHUB_WORKSPACE}/scripts/ci/addresssanitizer.conf" >> $GITHUB_ENV
-        fi
-
-        if [[ "${RUNNER_OS}" == "Linux" ]]; then
-          echo "JOBS=$((`nproc` + 1))" >>  $GITHUB_ENV
-        elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-          echo "JOBS=$((`sysctl -n hw.ncpu` + 1))" >>  $GITHUB_ENV
-        fi
-    # See: https://github.com/actions/toolkit/issues/946#issuecomment-1590016041
-    # We need it to be able to access system folders while restoring cached Boost below
-    - name: Give tar root ownership
-      if: runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
-      run: sudo chown root /bin/tar && sudo chmod u+s /bin/tar
-
-    - name: Install boost
-      if: ${{ matrix.ENABLE_CONAN != 'ON' }}
-      uses: MarkusJx/install-boost@v2
-      id: install-boost
-      with:
-        boost_version: 1.85.0
-
-    - name: Install dev dependencies
-      run: |
-        # workaround for issue that GitHub Actions seems to not adding it to PATH after https://github.com/actions/runner-images/pull/6499
-        # and that's why CI cannot find conan executable installed above
-        if [[ "${RUNNER_OS}" == "macOS" ]]; then
-          echo "/Library/Frameworks/Python.framework/Versions/Current/bin" >> $GITHUB_PATH
-        fi
-
-        # Update package list
-        if [[ "${RUNNER_OS}" == "Linux" || "${ENABLE_CONAN}" != "ON" ]]; then
-          sudo apt-get update -y
-        fi
-
-        # Install compiler and ccache
-        if [[ "${RUNNER_OS}" == "Linux" ]]; then
-          sudo apt-get install -y ${CCOMPILER} ${CXXCOMPILER} ccache
-        elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-          brew install ccache
-        fi
-
-        # Linux dev packages
-        if [[ "${ENABLE_CONAN}" != "ON" ]]; then
-          sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev
-          if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
-            sudo apt-get install -y lcov
+          PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+          echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
+          echo "OSRM_INSTALL_DIR=${GITHUB_WORKSPACE}/install-osrm" >> $GITHUB_ENV
+          echo "OSRM_BUILD_DIR=${GITHUB_WORKSPACE}/build-osrm" >> $GITHUB_ENV
+          if [[ "$ENABLE_SANITIZER" == 'ON' ]]; then
+            # We can only set this after checkout once we know the workspace directory
+            echo "LSAN_OPTIONS=print_suppressions=0:suppressions=${GITHUB_WORKSPACE}/scripts/ci/leaksanitizer.conf" >> $GITHUB_ENV
+            echo "UBSAN_OPTIONS=symbolize=1:halt_on_error=1:print_stacktrace=1:suppressions=${GITHUB_WORKSPACE}/scripts/ci/undefinedsanitizer.conf" >> $GITHUB_ENV
+            echo "ASAN_OPTIONS=print_suppressions=0:suppressions=${GITHUB_WORKSPACE}/scripts/ci/addresssanitizer.conf" >> $GITHUB_ENV
           fi
-        fi
 
-        # TBB
-        TBB_VERSION=2021.12.0
-        if [[ "${RUNNER_OS}" == "Linux" ]]; then
-          TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz"
-        elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-          TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-mac.tgz"
-        fi
-        wget --tries 5 ${TBB_URL} -O onetbb.tgz
-        tar zxvf onetbb.tgz
-        sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
-        sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
-    - name: Prepare build
-      run: |
-        mkdir ${OSRM_BUILD_DIR}
-        ccache --max-size=256M
-        npm ci --ignore-scripts
-        if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
-          lcov --directory . --zerocounters # clean cached files
-        fi
-        echo "CC=${CCOMPILER}" >> $GITHUB_ENV
-        echo "CXX=${CXXCOMPILER}" >> $GITHUB_ENV
-        if [[ "${RUNNER_OS}" == "macOS" ]]; then
-          # missing from GCC path, needed for conan builds of libiconv, for example.
-          sudo xcode-select --switch /Library/Developer/CommandLineTools
-          echo "LIBRARY_PATH=${LIBRARY_PATH}:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib" >> $GITHUB_ENV
-          echo "CPATH=${CPATH}:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include" >> $GITHUB_ENV
-        fi
-
-    - name: Build and install OSRM
-      run: |
-        echo "Using ${JOBS} jobs"
-        pushd ${OSRM_BUILD_DIR}
-
-        if [[ "${ENABLE_CONAN}" == "ON" ]]; then
-          python3 -m venv .venv
-          source .venv/bin/activate
-          python3 -m pip install conan==2.15.1
-          conan profile detect --force
-        fi
-
-        ccache --zero-stats
-        cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-                 -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
-                 -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
-                 -DENABLE_CLANG_TIDY=${ENABLE_CLANG_TIDY:-OFF} \
-                 -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} \
-                 -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} \
-                 -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
-                 -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
-                 -DENABLE_CCACHE=ON \
-                 -DENABLE_LTO=${ENABLE_LTO:-ON} \
-                 -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
-
-        make --jobs=${JOBS}
-
-        if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
-          make tests --jobs=${JOBS}
-          make benchmarks --jobs=${JOBS}
-
-          sudo make install
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
-            echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib" >> $GITHUB_ENV
+            echo "JOBS=$((`nproc` + 1))" >>  $GITHUB_ENV
+          elif [[ "${RUNNER_OS}" == "macOS" ]]; then
+            echo "JOBS=$((`sysctl -n hw.ncpu` + 1))" >>  $GITHUB_ENV
           fi
-          echo "PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig" >> $GITHUB_ENV
-        fi
-        popd
-      env:
-        Boost_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
-    - name: Run all tests
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
-      run: |
-        make -C test/data benchmark
+      # See: https://github.com/actions/toolkit/issues/946#issuecomment-1590016041
+      # We need it to be able to access system folders while restoring cached Boost below
+      - name: Give tar root ownership
+        if: runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
+        run: sudo chown root /bin/tar && sudo chmod u+s /bin/tar
 
-        # macOS SIP strips the linker path. Reset this inside the running shell
-        export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
+      - name: Install boost
+        if: ${{ matrix.ENABLE_CONAN != 'ON' }}
+        uses: MarkusJx/install-boost@v2
+        id: install-boost
+        with:
+          boost_version: 1.85.0
 
-        # All tests assume to be run from the build directory
-        pushd ${OSRM_BUILD_DIR}
-        for i in ./unit_tests/*-tests ; do echo Running $i ; $i ; done
-        if [ -z "${ENABLE_SANITIZER}" ]; then
+      - name: Install dev dependencies
+        run: |
+          # workaround for issue that GitHub Actions seems to not adding it to PATH after https://github.com/actions/runner-images/pull/6499
+          # and that's why CI cannot find conan executable installed above
+          if [[ "${RUNNER_OS}" == "macOS" ]]; then
+            echo "/Library/Frameworks/Python.framework/Versions/Current/bin" >> $GITHUB_PATH
+          fi
+
+          # Update package list
+          if [[ "${RUNNER_OS}" == "Linux" || "${ENABLE_CONAN}" != "ON" ]]; then
+            sudo apt-get update -y
+          fi
+
+          # Install compiler and ccache
+          if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            sudo apt-get install -y ${CCOMPILER} ${CXXCOMPILER} ccache
+          elif [[ "${RUNNER_OS}" == "macOS" ]]; then
+            brew install ccache
+          fi
+
+          # Linux dev packages
+          if [[ "${ENABLE_CONAN}" != "ON" ]]; then
+            sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev
+            if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
+              sudo apt-get install -y lcov
+            fi
+          fi
+
+          # TBB
+          TBB_VERSION=2021.12.0
+          if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz"
+          elif [[ "${RUNNER_OS}" == "macOS" ]]; then
+            TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-mac.tgz"
+          fi
+          wget --tries 5 ${TBB_URL} -O onetbb.tgz
+          tar zxvf onetbb.tgz
+          sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
+          sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
+      - name: Prepare build
+        run: |
+          mkdir ${OSRM_BUILD_DIR}
+          ccache --max-size=256M
+          npm ci --ignore-scripts
+          if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
+            lcov --directory . --zerocounters # clean cached files
+          fi
+          echo "CC=${CCOMPILER}" >> $GITHUB_ENV
+          echo "CXX=${CXXCOMPILER}" >> $GITHUB_ENV
+          if [[ "${RUNNER_OS}" == "macOS" ]]; then
+            # missing from GCC path, needed for conan builds of libiconv, for example.
+            sudo xcode-select --switch /Library/Developer/CommandLineTools
+            echo "LIBRARY_PATH=${LIBRARY_PATH}:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib" >> $GITHUB_ENV
+            echo "CPATH=${CPATH}:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include" >> $GITHUB_ENV
+          fi
+
+      - name: Build and install OSRM
+        run: |
+          echo "Using ${JOBS} jobs"
+          pushd ${OSRM_BUILD_DIR}
+
+          if [[ "${ENABLE_CONAN}" == "ON" ]]; then
+            python3 -m venv .venv
+            source .venv/bin/activate
+            python3 -m pip install conan==2.15.1
+            conan profile detect --force
+          fi
+
+          ccache --zero-stats
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+                   -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
+                   -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
+                   -DENABLE_CLANG_TIDY=${ENABLE_CLANG_TIDY:-OFF} \
+                   -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} \
+                   -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} \
+                   -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
+                   -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
+                   -DENABLE_CCACHE=ON \
+                   -DENABLE_LTO=${ENABLE_LTO:-ON} \
+                   -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
+
+          make --jobs=${JOBS}
+
+          if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
+            make tests --jobs=${JOBS}
+            make benchmarks --jobs=${JOBS}
+
+            sudo make install
+            if [[ "${RUNNER_OS}" == "Linux" ]]; then
+              echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib" >> $GITHUB_ENV
+            fi
+            echo "PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig" >> $GITHUB_ENV
+          fi
+          popd
+        env:
+          Boost_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
+      - name: Run all tests
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
+        run: |
+          make -C test/data benchmark
+
+          # macOS SIP strips the linker path. Reset this inside the running shell
+          export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
+
+          # All tests assume to be run from the build directory
+          pushd ${OSRM_BUILD_DIR}
+          for i in ./unit_tests/*-tests ; do echo Running $i ; $i ; done
+          if [ -z "${ENABLE_SANITIZER}" ]; then
+            npm run nodejs-tests
+          fi
+          popd
+          npm test -- --parallel $JOBS
+
+      - name: Use Node 20
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run Node package tests on Node 20
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        run: |
+          node --version
           npm run nodejs-tests
-        fi
-        popd
-        npm test
+      - name: Use Node 22
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run Node package tests on Node 22
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        run: |
+          node --version
+          npm run nodejs-tests
+      - name: Use Node latest
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - name: Run Node package tests on Node-latest
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        run: |
+          node --version
+          npm run nodejs-tests
 
-    - name: Use Node 20
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-    - name: Run Node package tests on Node 20
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-      run: |
-        node --version
-        npm run nodejs-tests
-    - name: Use Node 22
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22
-    - name: Run Node package tests on Node 22
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-      run: |
-        node --version
-        npm run nodejs-tests
-    - name: Use Node latest
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: latest
-    - name: Run Node package tests on Node-latest
-      if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-      run: |
-        node --version
-        npm run nodejs-tests
+      - name: Upload test logs
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: logs
+          path: test/logs/
 
-    - name: Upload test logs
-      uses: actions/upload-artifact@v4
-      if: failure()
-      with:
-        name: logs
-        path: test/logs/
-
-    - name: Build Node package
-      if: ${{ matrix.build_node_package }}
-      run: ./scripts/ci/node_package.sh
-    - name: Publish Node package
-      if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
-      uses: ncipollo/release-action@v1
-      with:
-        allowUpdates: true
-        artifactErrorsFailBuild: true
-        artifacts: build/stage/**/*.tar.gz
-        omitBody: true
-        omitBodyDuringUpdate: true
-        omitName: true
-        omitNameDuringUpdate: true
-        replacesArtifacts: true
-        token: ${{ secrets.GITHUB_TOKEN }}
-    - name: Show CCache statistics
-      run: |
-        ccache -p
-        ccache -s
+      - name: Build Node package
+        if: ${{ matrix.build_node_package }}
+        run: ./scripts/ci/node_package.sh
+      - name: Publish Node package
+        if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          artifacts: build/stage/**/*.tar.gz
+          omitBody: true
+          omitBodyDuringUpdate: true
+          omitName: true
+          omitNameDuringUpdate: true
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Show CCache statistics
+        run: |
+          ccache -p
+          ccache -s
 
   ci-complete:
     runs-on: ubuntu-latest
     needs: [build-matrix, conan-windows-release-node, docker-image-matrix]
     steps:
-    - run: echo "CI complete"
+      - run: echo "CI complete"
