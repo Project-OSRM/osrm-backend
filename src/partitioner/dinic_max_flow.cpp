@@ -69,11 +69,11 @@ DinicMaxFlow::MinCut DinicMaxFlow::operator()(const BisectionGraphView &view,
         auto levels = ComputeLevelGraph(view, border_source_nodes, source_nodes, sink_nodes, flow);
 
         // check if the sink can be reached from the source, it's enough to check the border
-        const auto separated = std::find_if(border_sink_nodes.begin(),
-                                            border_sink_nodes.end(),
-                                            [&levels](const auto node) {
-                                                return levels[node] != INVALID_LEVEL;
-                                            }) == border_sink_nodes.end();
+        const auto separated =
+            std::find_if(border_sink_nodes.begin(),
+                         border_sink_nodes.end(),
+                         [&levels](const auto node)
+                         { return levels[node] != INVALID_LEVEL; }) == border_sink_nodes.end();
 
         if (!separated)
         {
@@ -297,11 +297,11 @@ bool DinicMaxFlow::Validate(const BisectionGraphView &view,
                             const SourceSinkNodes &sink_nodes) const
 {
     // sink and source cannot share a common node
-    const auto separated = std::find_if(source_nodes.begin(),
-                                        source_nodes.end(),
-                                        [&sink_nodes](const auto node) {
-                                            return sink_nodes.contains(node);
-                                        }) == source_nodes.end();
+    const auto separated =
+        std::find_if(source_nodes.begin(),
+                     source_nodes.end(),
+                     [&sink_nodes](const auto node)
+                     { return sink_nodes.contains(node); }) == source_nodes.end();
 
     const auto invalid_id = [&view](const NodeID nid) { return nid >= view.NumberOfNodes(); };
     const auto in_range_source =

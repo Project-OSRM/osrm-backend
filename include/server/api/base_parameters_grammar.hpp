@@ -106,13 +106,15 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
         };
 
         const auto add_approach = [](engine::api::BaseParameters &base_parameters,
-                                     boost::optional<osrm::engine::Approach> approach) {
+                                     boost::optional<osrm::engine::Approach> approach)
+        {
             base_parameters.approaches.push_back(approach ? std::make_optional(*approach)
                                                           : std::nullopt);
         };
 
-        const auto add_radius = [](engine::api::BaseParameters &base_parameters,
-                                   boost::optional<double> radius) {
+        const auto add_radius =
+            [](engine::api::BaseParameters &base_parameters, boost::optional<double> radius)
+        {
             base_parameters.radiuses.push_back(radius ? std::make_optional(*radius) : std::nullopt);
         };
 
@@ -121,12 +123,11 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
         unlimited_rule = qi::lit("unlimited")[qi::_val = std::numeric_limits<double>::infinity()];
 
         bearing_rule =
-            (qi::short_ > ',' > qi::short_)[qi::_val = ph::bind(
-                                                [](short bearing, short range) {
-                                                    return osrm::engine::Bearing{bearing, range};
-                                                },
-                                                qi::_1,
-                                                qi::_2)];
+            (qi::short_ > ',' >
+             qi::short_)[qi::_val = ph::bind([](short bearing, short range)
+                                             { return osrm::engine::Bearing{bearing, range}; },
+                                             qi::_1,
+                                             qi::_2)];
 
         location_rule = (double_ > qi::lit(',') >
                          double_)[qi::_val = ph::bind(

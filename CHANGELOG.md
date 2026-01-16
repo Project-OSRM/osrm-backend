@@ -10,6 +10,7 @@
       - FIXED: Work around compilation error due to a false-positive of array-bounds check in sol2 [#7317](https://github.com/Project-OSRM/osrm-backend/pull/7317)
       - FIXED: Fix compilation with gcc >14 in release with LTO. [#7268](https://github.com/Project-OSRM/osrm-backend/issues/7268)
     - Misc:
+      - CHANGED: Upgrade from clang-format-15 to clang-format-19 [#7249](https://github.com/Project-OSRM/osrm-backend/issues/7249)
       - ADDED: `SHM_LOCK_DIR` environment variable for shared memory lock file directory [#7312](https://github.com/Project-OSRM/osrm-backend/pull/7312)
       - FIXED: Fix JSON rendering of large OSM IDs (avoids scientific notation) and handle NaN/Infinity gracefully [#7016](https://github.com/Project-OSRM/osrm-backend/issues/7016)
       - FIXED: Replace removed --polyglot flag with JSDoc extraction script for documentation.js v14 [#7274](https://github.com/Project-OSRM/osrm-backend/issues/7274)

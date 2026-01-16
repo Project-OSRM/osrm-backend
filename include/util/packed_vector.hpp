@@ -370,7 +370,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
             push_back(value);
     }
 
-    PackedVector(){};
+    PackedVector() {};
     PackedVector(const PackedVector &) = default;
     PackedVector(PackedVector &&) = default;
     PackedVector &operator=(const PackedVector &) = default;

@@ -87,7 +87,8 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                 std::accumulate(endpoint_candidates.target_phantoms.begin(),
                                 endpoint_candidates.target_phantoms.end(),
                                 level_1,
-                                [&](LevelID level_2, const PhantomNode &target) {
+                                [&](LevelID level_2, const PhantomNode &target)
+                                {
                                     return std::min(
                                         level_2,
                                         getNodeQueryLevel(partition, node, source, target));
@@ -313,7 +314,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const auto &cell =
                 cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
             auto destination = cell.GetDestinationNodes().begin();
-            auto distance = [&cell, node = heapNode.node ]() -> auto
+            auto distance = [&cell, node = heapNode.node]() -> auto
             {
                 if constexpr (IS_MAP_MATCHING)
                 {
@@ -325,8 +326,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                     boost::ignore_unused(cell, node);
                     return 0;
                 }
-            }
-            ();
+            }();
             for (auto shortcut_weight : cell.GetOutWeight(heapNode.node))
             {
                 BOOST_ASSERT(destination != cell.GetDestinationNodes().end());
@@ -361,7 +361,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
             const auto &cell =
                 cells.GetCell(metric, level, partition.GetCell(level, heapNode.node));
             auto source = cell.GetSourceNodes().begin();
-            auto distance = [&cell, node = heapNode.node ]() -> auto
+            auto distance = [&cell, node = heapNode.node]() -> auto
             {
                 if constexpr (IS_MAP_MATCHING)
                 {
@@ -373,8 +373,7 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                     boost::ignore_unused(cell, node);
                     return 0;
                 }
-            }
-            ();
+            }();
             for (auto shortcut_weight : cell.GetInWeight(heapNode.node))
             {
                 BOOST_ASSERT(source != cell.GetSourceNodes().end());
