@@ -9,8 +9,8 @@ Feature: Car - Barriers
             | node/barrier   | bothw |
             |                | x     |
             | bollard        |       |
-            | gate           | x     |
-            | lift_gate      | x     |
+            | gate           |       |
+            | lift_gate      |       |
             | cattle_grid    | x     |
             | border_control | x     |
             | toll_booth     | x     |
@@ -24,13 +24,20 @@ Feature: Car - Barriers
     Scenario: Car - Access tag trumphs barriers
         Then routability should be
             | node/barrier | node/access   | bothw |
-            | gate         |               | x     |
+            | gate         |               |       |
             | gate         | yes           | x     |
             | gate         | permissive    | x     |
             | gate         | designated    | x     |
             | gate         | no            |       |
             | gate         | private       | x     |
             | gate         | agricultural  |       |
+            | lift_gate    |               |       |
+            | lift_gate    | yes           | x     |
+            | lift_gate    | permissive    | x     |
+            | lift_gate    | designated    | x     |
+            | lift_gate    | no            |       |
+            | lift_gate    | private       | x     |
+            | lift_gate    | agricultural  |       |
             | wall         |               |       |
             | wall         | yes           | x     |
             | wall         | permissive    | x     |
