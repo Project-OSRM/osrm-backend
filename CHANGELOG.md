@@ -3,6 +3,7 @@
     - Profiles:
       - ADDED: Add exception for audible fences (`barrier=fence` with `sensory=audible` or `sensory=audio`) that deter livestock but do not block vehicles [#6964](https://github.com/Project-OSRM/osrm-backend/issues/6964)
       - ADDED: Use `is_sidepath:of:name` and `street:name` as fallback names for unnamed sidewalks and sidepaths in foot and bicycle profiles [#7259](https://github.com/Project-OSRM/osrm-backend/issues/7259)
+      - CHANGED: Car profile now blocks `barrier=gate` and `barrier=lift_gate` by default; use `access=yes/permissive/designated` to allow passage [#6757](https://github.com/Project-OSRM/osrm-backend/issues/6757)
     - Build:
       - FIXED: Update Node.js binding path from `lib/binding` to `lib/binding_napi_v8` to match node-pre-gyp versioning conventions [#7272](https://github.com/Project-OSRM/osrm-backend/pull/7272)
       - FIXED: Reduce MSVC compiler warnings by suppressing informational warnings while preserving bug-indicating warnings [#7253](https://github.com/Project-OSRM/osrm-backend/issues/7253)
