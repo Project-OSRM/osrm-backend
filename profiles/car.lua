@@ -56,8 +56,6 @@ function setup()
       'border_control',
       'toll_booth',
       'sally_port',
-      'gate',
-      'lift_gate',
       'no',
       'entrance',
       'height_restrictor',
