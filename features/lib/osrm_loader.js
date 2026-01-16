@@ -29,47 +29,39 @@ class OSRMBaseLoader {
     const argsAsString = args.join(' ');
     log(`running ${cmd} ${argsAsString}`);
 
-    this.child = child_process.spawn(
-      cmd,
-      args,
-      { env : scenario.environment },
-    );
+    return new Promise((resolve) => {
+      this.child = child_process.spawn(
+        cmd,
+        args,
+        { env : scenario.environment },
+      );
 
-    this.child.on('exit', (code) => {
-      log(`osrm-routed completed with exit code ${code}`);
-      this.child = null;
-    });
-
-    return this.waitForConnection();
-  }
-
-  // Terminates OSRM server process gracefully
-  kill() {
-    if (this.osrmIsRunning()) {
-      const child = this.child;
-      const p = new Promise((resolve) => {
-        child.on('exit', resolve);
+      this.child.stdout.on('data', (data) => {
+        if (data.includes('running and waiting for requests')) {
+          log('Routed running and waiting for requests');
+          resolve();
+        }
       });
-      child.kill();
-      return p;
-    }
-    return Promise.resolve();
+
+      this.child.on('exit', (code) => {
+        log(`osrm-routed completed with exit code ${code}`);
+        this.child = null;
+      });
+    });
   }
 
-  /** Returns a promise resolved when the server is up. */
-  waitForConnection() {
-    const seconds = 10;
-    const waitOptions = {
-      resources: [`tcp:${env.wp.ip}:${env.wp.port}`],
-      delay:    10, // initial delay in ms
-      interval: 10, // poll interval in ms
-      timeout:  seconds * 1000, // timeout in ms
-    };
-    const p = waitOn(waitOptions);
-    p.catch(() => { throw new Error(
-      `Could not connect to osrm-routed after ${seconds} s.`
-    ); });
-    return p;
+  /**
+   * Terminates the OSRM server process gracefully
+   *
+   * @returns A promise resolved when routed has terminated.
+   */
+  kill() {
+    if (!this.osrmIsRunning())
+      return Promise.resolve();
+    return new Promise((resolve) => {
+      this.child.on('close', resolve);
+      this.child.kill();
+    });
   }
 
   osrmIsRunning() {
@@ -80,11 +72,19 @@ class OSRMBaseLoader {
 
   /** Called at the init of the cucumber run */
   beforeAll() { return Promise.resolve(); }
-  /** Called at the start of each scenario */
+  /**
+   * Called at the start of each scenario
+   *
+   * @returns A promise resolved when routed is ready for connections.
+   */
   before(_scenario) {
     return Promise.resolve();
   }
-  /** Called at the end of each scenario */
+  /**
+   * Called at the end of each scenario
+   *
+   * @returns A promise resolved when routed has terminated.
+   */
   after(_scenario) {
     return this.kill();
   }
@@ -187,38 +187,43 @@ export class OSRMDatastoreLoader extends OSRMBaseLoader {
     const argsAsString = args.join(' ');
     this.logSync(`running ${cmd} ${argsAsString}`);
 
-    this.child = child_process.spawn(
-      cmd,
-      args,
-      { env : scenario.environment },
-    );
+    return new Promise((resolve) => {
+      this.child = child_process.spawn(
+        cmd,
+        args,
+        { env : scenario.environment },
+      );
 
-    this.child.stdout.on('data', (data) => {
-      if (data.includes('updated facade')) {
-        this.logSync('Facade updated and promise resolved');
-        this.resolve();
-      }
+      this.child.stdout.on('data', (data) => {
+        this.logSync(`osrm-routed stdout:\n${data}`);
+        if (data.includes('updated facade')) {
+          this.logSync('Facade updated and promise resolved');
+          this.resolve();
+        }
+        else if (data.includes('running and waiting for requests')) {
+          this.logSync('Routed running and waiting for requests');
+          resolve();
+        }
+      });
+
+      // we MUST consume stdout and stderr or the osrm-routed process will block eventually
+      this.child.stderr.on('data', (data) => this.logSync(`osrm-routed stderr:\n${data}`));
+
+      this.child.on('exit', (code, signal) => {
+        this.child = null;
+        if (signal != null) {
+          const msg = `osrm-routed aborted with signal ${signal}`;
+          this.logSync(msg);
+          // throw new Error(msg);
+        }
+        if (code != null) {
+          const msg = `osrm-routed completed with exit code ${code}`;
+          this.logSync(msg);
+          if (code != 0)
+            throw new Error(msg);
+        }
+      });
     });
-
-    // we MUST consume these or the osrm-routed process will block eventually
-    this.child.stderr.on('data', (data) => this.logSync(`osrm-routed stderr:\n${data}`));
-    this.child.stdout.on('data', (data) => this.logSync(`osrm-routed stdout:\n${data}`));
-
-    this.child.on('exit', (code, signal) => {
-      this.child = null;
-      if (signal != null) {
-        const msg = `osrm-routed aborted with signal ${signal}`;
-        this.logSync(msg);
-        // throw new Error(msg);
-      }
-      if (code != null) {
-        const msg = `osrm-routed completed with exit code ${code}`;
-        this.logSync(msg);
-        if (code != 0)
-          throw new Error(msg);
-      }
-    });
-    return this.waitForConnection();
   }
   after () {
     this.current_scenario = null;

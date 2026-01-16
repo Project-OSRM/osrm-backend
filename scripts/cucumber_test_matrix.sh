@@ -2,7 +2,6 @@
 
 set -o errexit
 set -o pipefail
-# set -o nounset
 
 loadmethods=(mmap directly datastore)
 algorithms=(ch mld)
