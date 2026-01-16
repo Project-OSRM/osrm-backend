@@ -151,7 +151,11 @@ function process_node(profile, node, result)
       local bollard = node:get_value_by_key("bollard")
       local rising_bollard = bollard and "rising" == bollard
 
-      if profile.barrier_blacklist[barrier] and not rising_bollard then
+      -- make an exception for fence with sensory=audible/audio (virtual livestock fences)
+      local sensory = node:get_value_by_key("sensory")
+      local audible_fence = barrier == "fence" and sensory and (sensory == "audible" or sensory == "audio")
+
+      if profile.barrier_blacklist[barrier] and not rising_bollard and not audible_fence then
         result.barrier = true
       end
     end
