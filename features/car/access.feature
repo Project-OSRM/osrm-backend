@@ -123,6 +123,10 @@ Feature: Car - Restricted access
             | agricultural |       |
             | forestry     |       |
             | psv          |       |
+            | taxi         |       |
+            | share_taxi   |       |
+            | minibus      |       |
+            | bus          |       |
             | delivery     | x     |
             | some_tag     | x     |
             | destination  | x     |
@@ -139,6 +143,10 @@ Feature: Car - Restricted access
             | agricultural |       |
             | forestry     |       |
             | psv          |       |
+            | taxi         |       |
+            | share_taxi   |       |
+            | minibus      |       |
+            | bus          |       |
             | delivery     | x     |
             | some_tag     | x     |
 

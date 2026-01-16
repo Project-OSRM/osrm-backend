@@ -144,6 +144,13 @@ end
 -- returns forward,backward psv lane count
 local function get_psv_counts(way,data)
   local psv_forward, psv_backward = Tags.get_forward_backward_by_key(way,data,'lanes:psv')
+  local taxi_forward, taxi_backward = Tags.get_forward_backward_by_key(way,data,'lanes:taxi')
+  local share_taxi_forward, share_taxi_backward = Tags.get_forward_backward_by_key(way,data,'lanes:share_taxi')
+  local minibus_forward, minibus_backward = Tags.get_forward_backward_by_key(way,data,'lanes:minibus')
+  local bus_forward, bus_backward = Tags.get_forward_backward_by_key(way,data,'lanes:bus')
+  psv_forward = psv_forward or taxi_forward or share_taxi_forward or minibus_forward or bus_forward
+  psv_backward = psv_backward or taxi_backward or share_taxi_backward or minibus_backward or bus_backward
+
   if psv_forward then
     psv_forward = to_number_uint(psv_forward)
   end
