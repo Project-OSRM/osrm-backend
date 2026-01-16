@@ -253,16 +253,16 @@ Feature: Car - Restricted access
             | primary | no     | yes            | yes             | x    | x     |
 
 
-     Scenario: Car - barrier=gate should be routed over unless explicitely forbidden
+     Scenario: Car - barrier=gate is blocked unless access tag explicitly allows
         Then routability should be
-            | node/barrier | access     | bothw |
-            | gate         |            | x     |
-            | gate         | no         |       |
-            | gate         | yes        | x     |
-            | gate         | permissive | x     |
-            | gate         | designated | x     |
-            | gate         | private    | x     |
-            | gate         | garbagetag | x     |
+            | node/barrier | node/access | bothw |
+            | gate         |             |       |
+            | gate         | no          |       |
+            | gate         | yes         | x     |
+            | gate         | permissive  | x     |
+            | gate         | designated  | x     |
+            | gate         | private     | x     |
+            | gate         | garbagetag  | x     |
 
     Scenario: Car - a way with conditional access
         Then routability should be
