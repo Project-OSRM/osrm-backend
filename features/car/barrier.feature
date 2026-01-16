@@ -58,6 +58,14 @@ Feature: Car - Barriers
             | kerb         |               | raised     |       |
             | kerb         |               | yes        |       |
 
+    Scenario: Car - Audible fence exception for barriers
+        # Audible fences use sound to deter livestock but do not block vehicles
+        Then routability should be
+            | node/barrier | node/sensory | bothw |
+            | fence        |              |       |
+            | fence        | audible      | x     |
+            | fence        | audio        | x     |
+
     Scenario: Car - Height restrictions
         Then routability should be
             | node/barrier      | node/maxheight | bothw |
