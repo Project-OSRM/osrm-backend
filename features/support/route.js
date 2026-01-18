@@ -1,25 +1,43 @@
 // Route response validation and geometry processing utilities
 import { ensureDecimal } from '../lib/utils.js';
+import { env } from './env.js';
+import { sendRequest } from './http.js';
 
 export default class Route {
   constructor(world) {
     this.world = world;
   }
 
-  requestPath(service, params, callback) {
-    let uri;
-    if (service == 'timestamp') {
-      uri = [this.HOST, service].join('/');
-    } else {
-      uri = [this.HOST, service, 'v1', this.profile].join('/');
+  paramsToQuery(params) {
+    let query = '';
+    if (params.coordinates !== undefined) {
+      // FIXME this disables passing the output if its a default
+      // Remove after #2173 is fixed.
+      const outputString =
+        params.output && params.output !== 'json' ? `.${params.output}` : '';
+      query = params.coordinates.join(';') + outputString;
+      delete params.coordinates;
+      delete params.output;
+    }
+    if (Object.keys(params).length) {
+      query += `?${Object.keys(params)
+        .map((k) => `${k}=${params[k]}`)
+        .join('&')}`;
     }
 
-    return this.sendRequest(uri, params, callback);
+    return query;
+  }
+
+  requestPath(service, parameters, callback) {
+    const baseUrl = new URL(`${service}/v1/${this.profile}/`, env.wp.host);
+    const query = this.paramsToQuery(parameters);
+    const url = new URL(query, baseUrl);
+    sendRequest(url, this.log, callback);
   }
 
   requestUrl(path, callback) {
-    const uri = (this.query = [this.HOST, path].join('/'));
-    this.sendRequest(uri, '', callback);
+    const url = new URL(path, env.wp.host);
+    sendRequest(url, this.log, callback);
   }
 
   // Overwrites the default values in defaults

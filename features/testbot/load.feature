@@ -1,5 +1,11 @@
-@routing @load @testbot
+@routing @load @testbot @todo @isolated @no_datastore
 Feature: Ways of loading data
+
+# TEST BROKEN: we don't support changing the load method in mid-run.
+# With the datastore load method an osrm-routed will be constantly
+# running in the background. No second osrm-routed can open the same
+# port again.
+
 # Several scenarios that change between direct/datastore makes
 # it easier to check that the test framework behaves as expected.
 

@@ -1,4 +1,4 @@
-@routed @options @invalid
+@routed @options @invalid @no_datastore
 Feature: osrm-routed command line options: invalid options
 
     Background:
