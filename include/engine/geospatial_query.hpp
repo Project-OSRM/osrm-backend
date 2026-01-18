@@ -441,7 +441,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         }
 
         // check phantom node segments validity
-        auto areSegmentsValid = [](auto first, auto last) -> bool
+        auto areSegmentsValid = [](const auto &first, const auto &last) -> bool
         { return std::find(first, last, INVALID_SEGMENT_WEIGHT) == last; };
         bool is_forward_valid_source =
             areSegmentsValid(forward_weights.begin(), forward_weights.end());
