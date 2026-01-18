@@ -10,7 +10,7 @@ namespace osrm::util
 // TODO: check why this is not an option here:
 // std::adjacent_find(begin, end, [=](const auto& l, const auto& r){ return function(), false; });
 template <typename ForwardIterator, typename Function>
-void for_each_pair(ForwardIterator begin, const ForwardIterator& end, Function &&function)
+void for_each_pair(ForwardIterator begin, const ForwardIterator &end, Function &&function)
 {
     if (begin == end)
     {
