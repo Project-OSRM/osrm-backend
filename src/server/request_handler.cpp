@@ -112,7 +112,7 @@ void RequestHandler::HandleRequest(const Request &current_request,
         ServiceHandler::ResultT result;
         bhttp::status response_status = bhttp::status::ok;
 
-        // check if the was an error with the request
+        // check if there was an error with the request
         if (maybe_parsed_url && api_iterator == request_string.end())
         {
 

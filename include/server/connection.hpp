@@ -51,7 +51,7 @@ class Connection : public std::enable_shared_from_this<Connection>
 
     boost::beast::http::request<boost::beast::http::string_body> request_;
 
-    // The parser is based per request, we need to reset it multiple times on each connection
+    // The parser is created per request; we need to reset it multiple times on each connection
     std::optional<boost::beast::http::request_parser<boost::beast::http::string_body>> parser_;
 
     boost::beast::http::response<boost::beast::http::vector_body<char>> response_;
