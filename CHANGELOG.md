@@ -11,6 +11,7 @@
       - FIXED: Work around compilation error due to a false-positive of array-bounds check in sol2 [#7317](https://github.com/Project-OSRM/osrm-backend/pull/7317)
       - FIXED: Fix compilation with gcc >14 in release with LTO. [#7268](https://github.com/Project-OSRM/osrm-backend/issues/7268)
     - Misc:
+      - ADDED: `--max-header-size` to override the (automatically) configured maximum header size for osrm-routed [#7336](https://github.com/Project-OSRM/osrm-backend/pull/7336)
       - CHANGED: Use boost::beast instead of own HTTP code for osrm-routed [#7328](https://github.com/Project-OSRM/osrm-backend/pull/7328)
       - ADDED: `SHM_LOCK_DIR` environment variable for shared memory lock file directory [#7312](https://github.com/Project-OSRM/osrm-backend/pull/7312)
       - FIXED: Fix JSON rendering of large OSM IDs (avoids scientific notation) and handle NaN/Infinity gracefully [#7016](https://github.com/Project-OSRM/osrm-backend/issues/7016)
