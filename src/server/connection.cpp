@@ -40,7 +40,7 @@ void Connection::handle_read()
 
     request_ = {};
     parser_.emplace();
-    // Note: The name is a bit of a misnormer, this includes the size of the GET request line.
+    // Note: The name is a bit of a misnomer, this includes the size of the GET request line.
     // Some people parse huge GET requests for table requests, we need to make this configurable.
     parser_->header_limit(max_header_size_);
 
