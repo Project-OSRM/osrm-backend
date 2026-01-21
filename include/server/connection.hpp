@@ -59,7 +59,7 @@ class Connection : public std::enable_shared_from_this<Connection>
 
     RequestHandler &request_handler_;
 
-    std::uint32_t max_header_size_;
+    unsigned max_header_size_;
     short keepalive_timeout_;
     short processed_requests_ = 0;
 };
