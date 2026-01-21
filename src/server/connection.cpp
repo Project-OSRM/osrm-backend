@@ -13,15 +13,17 @@
 namespace osrm::server
 {
 
-// Max bytes for request line + headers
-static constexpr std::uint32_t REQUEST_HEADER_LIMIT = 64 * 1024;
 static constexpr short KEEPALIVE_MAX_REQUESTS = 512;
 
 namespace bhttp = boost::beast::http;
 using tcp = boost::asio::ip::tcp;
 
-Connection::Connection(tcp::socket socket, RequestHandler &handler, short keepalive_timeout)
-    : stream_(std::move(socket)), request_handler_(handler), keepalive_timeout_(keepalive_timeout)
+Connection::Connection(tcp::socket socket,
+                       RequestHandler &handler,
+                       unsigned max_header_size,
+                       short keepalive_timeout)
+    : stream_(std::move(socket)), request_handler_(handler), max_header_size_(max_header_size),
+      keepalive_timeout_(keepalive_timeout)
 {
     stream_.expires_after(std::chrono::seconds(keepalive_timeout_));
 }
@@ -38,7 +40,9 @@ void Connection::handle_read()
 
     request_ = {};
     parser_.emplace();
-    parser_->header_limit(REQUEST_HEADER_LIMIT);
+    // Note: The name is a bit of a misnormer, this includes the size of the GET request line.
+    // Some people parse huge GET requests for table requests, we need to make this configurable.
+    parser_->header_limit(max_header_size_);
 
     stream_.expires_after(std::chrono::seconds(keepalive_timeout_));
 
