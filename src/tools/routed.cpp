@@ -209,7 +209,7 @@ inline unsigned generateServerProgramOptions(const int argc,
             "Maximum size of the HTTP headers (including GET request line). Default: auto (based "
             "on maximum coordinates).");
 
-    // hidden options, will be allowed on command line, but willot be shown to the user
+    // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
         "base,b", value<std::filesystem::path>(&base_path), "base path to .osrm file");
