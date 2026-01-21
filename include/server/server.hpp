@@ -140,6 +140,13 @@ class Server : public std::enable_shared_from_this<Server>
                               // Stop the io_context
                               self->io_context.stop();
                           });
+
+        using namespace std::chrono_literals;
+        // The above function is async, this simply waits until it succeeded
+        while (!io_context.stopped())
+        {
+            std::this_thread::sleep_for(1ms);
+        }
     }
 
     void RegisterServiceHandler(std::unique_ptr<ServiceHandlerInterface> service_handler_)
@@ -152,9 +159,14 @@ class Server : public std::enable_shared_from_this<Server>
     {
         // The new connection gets its own strand
         acceptor.async_accept(boost::asio::make_strand(io_context),
-                              [self = shared_from_this()](boost::beast::error_code ec,
-                                                          boost::asio::ip::tcp::socket socket)
-                              { self->OnAccept(ec, std::move(socket)); });
+                              [weak_self = std::weak_ptr<Server>(shared_from_this())](
+                                  boost::beast::error_code ec, boost::asio::ip::tcp::socket socket)
+                              {
+                                  if (auto self = weak_self.lock())
+                                  {
+                                      self->OnAccept(ec, std::move(socket));
+                                  }
+                              });
     }
 
     void OnAccept(boost::beast::error_code ec, boost::asio::ip::tcp::socket socket)
