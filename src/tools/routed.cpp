@@ -109,9 +109,13 @@ inline unsigned deriveMaxHeaderSize(const EngineConfig &config)
     max_coordinates = std::max(max_coordinates, config.max_locations_distance_table);
     max_coordinates = std::max(max_coordinates, config.max_locations_map_matching);
 
-    // for each coordinate we will need up to (3 (major) + 1 (dot) + 6 (decimals)) * 2 plus 1
-    // semi-colon = 21 chars we add a generous 1024 chars for the request line
-    return std::max(MIN_HEADER_SIZE, 21u * static_cast<unsigned>(max_coordinates) + 1024u);
+    // We estimate the maximum GET line length in bytes:
+    // coordinates          | (3 (major) + 1 (dot) + 6 (decimals)) * 2 + 1 semi-colon = 21 chars
+    // sources/destinations | 4 (digits) + 1 semi-colon = 5 chars
+    // approaches           | 12 (chars) + 1 semi-colon = 13 chars
+    // radius               | 3 (digits) + 1 semi-colon = 4 chars
+    // Total of 48 chars and we add a generous 1024 chars for the request line
+    return std::max(MIN_HEADER_SIZE, 48 * static_cast<unsigned>(max_coordinates) + 1024u);
 }
 
 // generate boost::program_options object for the routing part
