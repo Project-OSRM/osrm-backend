@@ -96,6 +96,8 @@ table Leg {
     summary: string;
     annotations: Annotation;
     steps: [Step];
+    polyline: string;
+    coordinates: [Position];
 }
 
 table RouteObject {

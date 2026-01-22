@@ -899,7 +899,9 @@ struct Leg FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_WEIGHT = 8,
     VT_SUMMARY = 10,
     VT_ANNOTATIONS = 12,
-    VT_STEPS = 14
+    VT_STEPS = 14,
+    VT_POLYLINE = 16,
+    VT_COORDINATES = 18
   };
   double distance() const {
     return GetField<double>(VT_DISTANCE, 0.0);
@@ -919,6 +921,12 @@ struct Leg FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const ::flatbuffers::Vector<::flatbuffers::Offset<osrm::engine::api::fbresult::Step>> *steps() const {
     return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<osrm::engine::api::fbresult::Step>> *>(VT_STEPS);
   }
+  const ::flatbuffers::String *polyline() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_POLYLINE);
+  }
+  const ::flatbuffers::Vector<const osrm::engine::api::fbresult::Position *> *coordinates() const {
+    return GetPointer<const ::flatbuffers::Vector<const osrm::engine::api::fbresult::Position *> *>(VT_COORDINATES);
+  }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<double>(verifier, VT_DISTANCE, 8) &&
@@ -931,6 +939,10 @@ struct Leg FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            VerifyOffset(verifier, VT_STEPS) &&
            verifier.VerifyVector(steps()) &&
            verifier.VerifyVectorOfTables(steps()) &&
+           VerifyOffset(verifier, VT_POLYLINE) &&
+           verifier.VerifyString(polyline()) &&
+           VerifyOffset(verifier, VT_COORDINATES) &&
+           verifier.VerifyVector(coordinates()) &&
            verifier.EndTable();
   }
 };
@@ -957,6 +969,12 @@ struct LegBuilder {
   void add_steps(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<osrm::engine::api::fbresult::Step>>> steps) {
     fbb_.AddOffset(Leg::VT_STEPS, steps);
   }
+  void add_polyline(::flatbuffers::Offset<::flatbuffers::String> polyline) {
+    fbb_.AddOffset(Leg::VT_POLYLINE, polyline);
+  }
+  void add_coordinates(::flatbuffers::Offset<::flatbuffers::Vector<const osrm::engine::api::fbresult::Position *>> coordinates) {
+    fbb_.AddOffset(Leg::VT_COORDINATES, coordinates);
+  }
   explicit LegBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -975,7 +993,9 @@ inline ::flatbuffers::Offset<Leg> CreateLeg(
     double weight = 0.0,
     ::flatbuffers::Offset<::flatbuffers::String> summary = 0,
     ::flatbuffers::Offset<osrm::engine::api::fbresult::Annotation> annotations = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<osrm::engine::api::fbresult::Step>>> steps = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<osrm::engine::api::fbresult::Step>>> steps = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> polyline = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<const osrm::engine::api::fbresult::Position *>> coordinates = 0) {
   LegBuilder builder_(_fbb);
   builder_.add_weight(weight);
   builder_.add_duration(duration);
@@ -983,6 +1003,8 @@ inline ::flatbuffers::Offset<Leg> CreateLeg(
   builder_.add_steps(steps);
   builder_.add_annotations(annotations);
   builder_.add_summary(summary);
+  builder_.add_coordinates(coordinates);
+  builder_.add_polyline(polyline);
   return builder_.Finish();
 }
 
@@ -993,9 +1015,13 @@ inline ::flatbuffers::Offset<Leg> CreateLegDirect(
     double weight = 0.0,
     const char *summary = nullptr,
     ::flatbuffers::Offset<osrm::engine::api::fbresult::Annotation> annotations = 0,
-    const std::vector<::flatbuffers::Offset<osrm::engine::api::fbresult::Step>> *steps = nullptr) {
+    const std::vector<::flatbuffers::Offset<osrm::engine::api::fbresult::Step>> *steps = nullptr,
+    const char *polyline = nullptr,
+    const std::vector<osrm::engine::api::fbresult::Position> *coordinates = nullptr) {
   auto summary__ = summary ? _fbb.CreateString(summary) : 0;
   auto steps__ = steps ? _fbb.CreateVector<::flatbuffers::Offset<osrm::engine::api::fbresult::Step>>(*steps) : 0;
+  auto polyline__ = polyline ? _fbb.CreateString(polyline) : 0;
+  auto coordinates__ = coordinates ? _fbb.CreateVectorOfStructs<osrm::engine::api::fbresult::Position>(*coordinates) : 0;
   return osrm::engine::api::fbresult::CreateLeg(
       _fbb,
       distance,
@@ -1003,7 +1029,9 @@ inline ::flatbuffers::Offset<Leg> CreateLegDirect(
       weight,
       summary__,
       annotations,
-      steps__);
+      steps__,
+      polyline__,
+      coordinates__);
 }
 
 struct RouteObject FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
