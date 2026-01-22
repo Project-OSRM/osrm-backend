@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #endif
 
+#include <future>
 #include <memory>
 #include <string>
 #include <thread>
@@ -126,10 +127,13 @@ class Server : public std::enable_shared_from_this<Server>
 
     void Stop()
     {
+        auto stop_promise = std::make_shared<std::promise<void>>();
+        auto stop_future = stop_promise->get_future();
+
         // Posting the close to the acceptors strand ensures
         // we do not have a race condition with async_accept.
         boost::asio::post(acceptor.get_executor(),
-                          [self = shared_from_this()]()
+                          [self = shared_from_this(), stop_promise]()
                           {
                               boost::beast::error_code ec;
                               (void)self->acceptor.close(ec);
@@ -139,14 +143,11 @@ class Server : public std::enable_shared_from_this<Server>
                               }
                               // Stop the io_context
                               self->io_context.stop();
+                              stop_promise->set_value();
                           });
 
-        using namespace std::chrono_literals;
         // The above function is async, this simply waits until it succeeded
-        while (!io_context.stopped())
-        {
-            std::this_thread::sleep_for(1ms);
-        }
+        stop_future.wait();
     }
 
     void RegisterServiceHandler(std::unique_ptr<ServiceHandlerInterface> service_handler_)
