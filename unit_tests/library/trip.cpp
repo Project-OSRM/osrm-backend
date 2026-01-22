@@ -609,4 +609,49 @@ BOOST_AUTO_TEST_CASE(test_trip_fb_overview_by_legs)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_trip_json_overview_by_legs)
+{
+    using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+    const auto locations = get_locations_in_small_component();
+
+    TripParameters params;
+    params.overview = RouteParameters::OverviewType::ByLegs;
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+
+    json::Object json_result;
+    const auto rc = run_trip_json(osrm, params, json_result, true);
+    BOOST_CHECK(rc == Status::Ok);
+
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    const auto &trips = std::get<json::Array>(json_result.values.at("trips")).values;
+    BOOST_REQUIRE_GT(trips.size(), 0);
+
+    for (const auto &trip : trips)
+    {
+        const auto &trip_object = std::get<json::Object>(trip);
+
+        // Route-level geometry should NOT be present
+        BOOST_CHECK_EQUAL(trip_object.values.count("geometry"), 0);
+
+        const auto &legs = std::get<json::Array>(trip_object.values.at("legs")).values;
+        BOOST_CHECK_GT(legs.size(), 0);
+
+        for (const auto &leg : legs)
+        {
+            const auto &leg_object = std::get<json::Object>(leg);
+
+            // Each leg should have geometry field
+            BOOST_CHECK_GT(leg_object.values.count("geometry"), 0);
+            const auto geometry = std::get<json::String>(leg_object.values.at("geometry")).value;
+            BOOST_CHECK(!geometry.empty());
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

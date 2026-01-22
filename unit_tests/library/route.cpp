@@ -823,4 +823,100 @@ BOOST_AUTO_TEST_CASE(test_route_fb_overview_full_no_leg_geometry)
     }
 }
 
+void test_route_json_overview_by_legs(bool use_json_only_api)
+{
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    using namespace osrm;
+
+    RouteParameters params;
+    params.overview = RouteParameters::OverviewType::ByLegs;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+
+    json::Object json_result;
+    const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
+    BOOST_CHECK(rc == Status::Ok);
+
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    const auto &routes = std::get<json::Array>(json_result.values.at("routes")).values;
+    BOOST_REQUIRE_GT(routes.size(), 0);
+
+    for (const auto &route : routes)
+    {
+        const auto &route_object = std::get<json::Object>(route);
+
+        // Route-level geometry should NOT be present
+        BOOST_CHECK_EQUAL(route_object.values.count("geometry"), 0);
+
+        const auto &legs = std::get<json::Array>(route_object.values.at("legs")).values;
+        BOOST_CHECK_GT(legs.size(), 0);
+
+        for (const auto &leg : legs)
+        {
+            const auto &leg_object = std::get<json::Object>(leg);
+
+            // Each leg should have geometry field
+            BOOST_CHECK_GT(leg_object.values.count("geometry"), 0);
+            const auto geometry = std::get<json::String>(leg_object.values.at("geometry")).value;
+            BOOST_CHECK(!geometry.empty());
+        }
+    }
+}
+BOOST_AUTO_TEST_CASE(test_route_json_overview_by_legs_old_api)
+{
+    test_route_json_overview_by_legs(true);
+}
+BOOST_AUTO_TEST_CASE(test_route_json_overview_by_legs_new_api)
+{
+    test_route_json_overview_by_legs(false);
+}
+
+BOOST_AUTO_TEST_CASE(test_route_json_overview_full_no_leg_geometry)
+{
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    using namespace osrm;
+
+    RouteParameters params;
+    params.overview = RouteParameters::OverviewType::Full;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+
+    json::Object json_result;
+    const auto rc = run_route_json(osrm, params, json_result, false);
+    BOOST_CHECK(rc == Status::Ok);
+
+    const auto code = std::get<json::String>(json_result.values.at("code")).value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    const auto &routes = std::get<json::Array>(json_result.values.at("routes")).values;
+    BOOST_REQUIRE_GT(routes.size(), 0);
+
+    for (const auto &route : routes)
+    {
+        const auto &route_object = std::get<json::Object>(route);
+
+        // Route-level geometry should be present
+        BOOST_CHECK_GT(route_object.values.count("geometry"), 0);
+        const auto geometry = std::get<json::String>(route_object.values.at("geometry")).value;
+        BOOST_CHECK(!geometry.empty());
+
+        const auto &legs = std::get<json::Array>(route_object.values.at("legs")).values;
+        BOOST_CHECK_GT(legs.size(), 0);
+
+        for (const auto &leg : legs)
+        {
+            const auto &leg_object = std::get<json::Object>(leg);
+
+            // Leg-level geometry should NOT be present
+            BOOST_CHECK_EQUAL(leg_object.values.count("geometry"), 0);
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
