@@ -807,8 +807,9 @@ BOOST_AUTO_TEST_CASE(test_route_fb_overview_full_no_leg_geometry)
     for (const auto route : *routes)
     {
         // Route-level geometry should be present
-        bool has_route_geometry = (route->polyline() != nullptr && !route->polyline()->str().empty()) ||
-                                  (route->coordinates() != nullptr && route->coordinates()->size() > 0);
+        bool has_route_geometry =
+            (route->polyline() != nullptr && !route->polyline()->str().empty()) ||
+            (route->coordinates() != nullptr && route->coordinates()->size() > 0);
         BOOST_CHECK(has_route_geometry);
 
         const auto &legs = route->legs();

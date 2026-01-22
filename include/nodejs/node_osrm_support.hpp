@@ -1016,7 +1016,8 @@ inline bool parseCommonParameters(const Napi::Object &obj, ParamType &params)
         }
         else
         {
-            ThrowError(obj.Env(), "'overview' param must be one of [simplified, full, false, by_legs]");
+            ThrowError(obj.Env(),
+                       "'overview' param must be one of [simplified, full, false, by_legs]");
             return false;
         }
     }

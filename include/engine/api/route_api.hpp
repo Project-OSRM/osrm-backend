@@ -196,8 +196,7 @@ class RouteAPI : public BaseAPI
         return json_geometry;
     }
 
-    util::json::Value
-    MakeGeometry(const std::vector<Coordinate> &geometry) const
+    util::json::Value MakeGeometry(const std::vector<Coordinate> &geometry) const
     {
         util::json::Value json_geometry;
         auto begin = geometry.begin();
@@ -405,9 +404,8 @@ class RouteAPI : public BaseAPI
 
             if (parameters.overview == RouteParameters::OverviewType::ByLegs)
             {
-                leg_geometry_variant = MakeGeometry(fb_result,
-                                                     leg_geometry.locations.begin(),
-                                                     leg_geometry.locations.end());
+                leg_geometry_variant = MakeGeometry(
+                    fb_result, leg_geometry.locations.begin(), leg_geometry.locations.end());
                 has_leg_geometry = true;
             }
 
