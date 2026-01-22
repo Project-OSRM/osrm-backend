@@ -2,6 +2,8 @@
   - Changes from 6.0.0
     - Routing:
       - FIXED: Crash when route starts or ends at `type=manoeuvre` relation via node [#7287](https://github.com/Project-OSRM/osrm-backend/issues/7287)
+    - API:
+      - ADDED: The parameter `overview` now accepts `by_legs` to include the geometry on the `RouteLeg` instead of the `Route` object. [#7256](https://github.com/Project-OSRM/osrm-backend/pull/7256)
     - Profiles:
       - ADDED: Make `max_collapse_distance` configurable via Lua profiles to preserve short road crossings in pedestrian routing [#6171](https://github.com/Project-OSRM/osrm-backend/issues/6171)
       - ADDED: Add exception for audible fences (`barrier=fence` with `sensory=audible` or `sensory=audio`) that deter livestock but do not block vehicles [#6964](https://github.com/Project-OSRM/osrm-backend/issues/6964)
