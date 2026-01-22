@@ -397,6 +397,20 @@ class RouteAPI : public BaseAPI
                 summary_string = fb_result.CreateString(leg.summary);
             }
 
+            // Fill leg geometry if overview=by_legs
+            std::variant<flatbuffers::Offset<flatbuffers::String>,
+                         flatbuffers::Offset<flatbuffers::Vector<const fbresult::Position *>>>
+                leg_geometry_variant;
+            bool has_leg_geometry = false;
+
+            if (parameters.overview == RouteParameters::OverviewType::ByLegs)
+            {
+                leg_geometry_variant = MakeGeometry(fb_result,
+                                                     leg_geometry.locations.begin(),
+                                                     leg_geometry.locations.end());
+                has_leg_geometry = true;
+            }
+
             fbresult::LegBuilder legBuilder(fb_result);
             legBuilder.add_distance(leg.distance);
             legBuilder.add_duration(leg.duration);
@@ -411,6 +425,12 @@ class RouteAPI : public BaseAPI
             {
                 legBuilder.add_annotations(annotation_buffer);
             }
+
+            if (has_leg_geometry)
+            {
+                std::visit(GeometryVisitor<fbresult::LegBuilder>(legBuilder), leg_geometry_variant);
+            }
+
             routeLegs.emplace_back(legBuilder.Finish());
         }
         auto legs_vector = fb_result.CreateVector(routeLegs);
