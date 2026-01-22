@@ -309,8 +309,8 @@ util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
         {
             annotation = std::move(annotations[idx]);
         }
-        json_legs.values.push_back(
-            makeRouteLeg(std::move(leg), std::move(json_steps), std::move(leg_geometry), std::move(annotation)));
+        json_legs.values.push_back(makeRouteLeg(
+            std::move(leg), std::move(json_steps), std::move(leg_geometry), std::move(annotation)));
     }
     return json_legs;
 }
