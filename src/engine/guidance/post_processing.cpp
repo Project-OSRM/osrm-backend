@@ -683,8 +683,8 @@ void applyOverrides(const datafacade::BaseDataFacade &facade,
                     // Depart/arrive steps mark route endpoints and should keep NoTurn type.
                     if (hasWaypointType(*step_to_update))
                     {
-                        util::Log(logDEBUG) << "Skipping maneuver override on waypoint step"
-                                            << std::endl;
+                        util::Log(logDEBUG)
+                            << "Skipping maneuver override on waypoint step" << std::endl;
                         continue;
                     }
                     util::Log(logDEBUG) << "Updating step "
