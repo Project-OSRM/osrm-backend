@@ -1,3 +1,4 @@
+#include "server/header_size.hpp"
 #include "server/server.hpp"
 #include "util/exception_utils.hpp"
 #include "util/log.hpp"
@@ -98,25 +99,6 @@ void validate(boost::any &v, const std::vector<std::string> &values, double *, d
     }
 }
 } // namespace boost
-
-inline unsigned deriveMaxHeaderSize(const EngineConfig &config)
-{
-    constexpr unsigned MIN_HEADER_SIZE = 8 * 1024;
-
-    int max_coordinates = 0;
-    max_coordinates = std::max(max_coordinates, config.max_locations_trip);
-    max_coordinates = std::max(max_coordinates, config.max_locations_viaroute);
-    max_coordinates = std::max(max_coordinates, config.max_locations_distance_table);
-    max_coordinates = std::max(max_coordinates, config.max_locations_map_matching);
-
-    // We estimate the maximum GET line length in bytes:
-    // coordinates          | (3 (major) + 1 (dot) + 6 (decimals)) * 2 + 1 semi-colon = 21 chars
-    // sources/destinations | 4 (digits) + 1 semi-colon = 5 chars
-    // approaches           | 12 (chars) + 1 semi-colon = 13 chars
-    // radius               | 3 (digits) + 1 semi-colon = 4 chars
-    // Total of 48 chars and we add a generous 1024 chars for the request line
-    return std::max(MIN_HEADER_SIZE, 48 * static_cast<unsigned>(max_coordinates) + 1024u);
-}
 
 // generate boost::program_options object for the routing part
 inline unsigned generateServerProgramOptions(const int argc,
@@ -263,7 +245,7 @@ inline unsigned generateServerProgramOptions(const int argc,
 
     if (max_header_size == 0)
     {
-        max_header_size = deriveMaxHeaderSize(config);
+        max_header_size = server::deriveMaxHeaderSize(config);
     }
 
     if (!config.use_shared_memory && option_variables.count("base"))
