@@ -189,3 +189,64 @@ Feature: Check zero speed updates
             | waypoints | trips | code    |
             | a,b,c,d   |       | NoTrips |
             | d,b,c,a   |       | NoTrips |
+
+
+    Scenario: Closing segment at intersection should not affect unrelated routes
+        Given the node map
+            """
+                    x
+                    |
+            a - 1 - b - 2 - c
+                    |
+                    y
+            """
+
+        And the ways
+            | nodes |
+            | abc   |
+            | xby   |
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+        # Node IDs (top-to-bottom, left-to-right): x=1, a=2, b=3, c=4, y=5
+        # Close segment b-c (3,4)
+        And the speed file
+            """
+            3,4,0
+            4,3,0
+            """
+
+        # Route on way 'xby' should work (not affected by closure on abc)
+        When I route I should get
+          | from | to | code    |
+          | x    | y  | Ok      |
+
+
+    Scenario: Closing segment should not cascade to parallel routes
+        Given the node map
+            """
+            a - 1 - b - 2 - c
+            |               |
+            d - 3 - e - 4 - f
+            """
+
+        And the ways
+            | nodes |
+            | abc   |
+            | def   |
+            | ad    |
+            | cf    |
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+        # Node IDs (top-to-bottom, left-to-right): a=1, b=2, c=3, d=4, e=5, f=6
+        # Close segment b-c (2,3)
+        And the speed file
+            """
+            2,3,0
+            3,2,0
+            """
+
+        # Route on def should work, route a->f uses alternative via def
+        When I route I should get
+          | from | to | code |
+          | 3    | 4  | Ok   |
+          | a    | f  | Ok   |
