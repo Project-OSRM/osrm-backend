@@ -38,6 +38,7 @@
 #include <cstdint>
 #include <iterator>
 #include <memory>
+#include <mutex>
 #include <tuple>
 #include <vector>
 
@@ -730,6 +731,9 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                           }
                       });
 
+    // Mutex to protect concurrent updates to turn_weight_penalties from parallel_for
+    std::mutex turn_penalties_mutex;
+
     const auto update_edge = [&](extractor::EdgeBasedEdge &edge)
     {
         const auto node_id = edge.source;
@@ -782,7 +786,10 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                         << "turn penalty " << turn_weight_penalty
                         << " is too negative: clamping turn weight to " << weight_min_value;
                     turn_weight_penalty = alias_cast<TurnPenalty>(weight_min_value - new_weight);
-                    turn_weight_penalties[edge.data.turn_id] = turn_weight_penalty;
+                    {
+                        std::lock_guard<std::mutex> lock(turn_penalties_mutex);
+                        turn_weight_penalties[edge.data.turn_id] = turn_weight_penalty;
+                    }
                 }
                 else
                 {
