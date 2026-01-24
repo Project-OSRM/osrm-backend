@@ -191,34 +191,44 @@ Feature: Check zero speed updates
             | d,b,c,a   |       | NoTrips |
 
 
-    Scenario: Closing segment at intersection should not affect unrelated routes
+    Scenario: Closing intersection should not block turns at earlier intersections
         Given the node map
             """
-                    x
-                    |
-            a - 1 - b - 2 - c
-                    |
-                    y
+                x
+                |
+        a - 1 - b - 2 - c - 3 - d
+                        |
+                        y
             """
 
         And the ways
             | nodes |
-            | abc   |
-            | xby   |
+            | abcd  |
+            | xb    |
+            | cy    |
         And the contract extra arguments "--segment-speed-file {speeds_file}"
         And the customize extra arguments "--segment-speed-file {speeds_file}"
-        # Node IDs (top-to-bottom, left-to-right): x=1, a=2, b=3, c=4, y=5
-        # Close segment b-c (3,4)
+        # Node IDs (top-to-bottom, left-to-right): x=1, a=2, b=3, c=4, d=5, y=6
+        # Close ALL segments connecting to node c (4):
+        # - b-c (3,4) and c-b (4,3)
+        # - c-d (4,5) and d-c (5,4)
+        # - c-y (4,6) and y-c (6,4)
         And the speed file
             """
             3,4,0
             4,3,0
+            4,5,0
+            5,4,0
+            4,6,0
+            6,4,0
             """
 
-        # Route on way 'xby' should work (not affected by closure on abc)
+        # Route from position 1 (on open segment a-b) to x should work
+        # because turn at b is not affected by closure at c
         When I route I should get
-          | from | to | code    |
-          | x    | y  | Ok      |
+          | from | to | code |
+          | 1    | x  | Ok   |
+          | a    | x  | Ok   |
 
 
     Scenario: Closing segment should not cascade to parallel routes
