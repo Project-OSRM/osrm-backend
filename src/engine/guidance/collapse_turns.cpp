@@ -433,7 +433,8 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
 }
 
 // OTHER IMPLEMENTATIONS
-[[nodiscard]] RouteSteps collapseTurnInstructions(RouteSteps steps, const double max_collapse_distance)
+[[nodiscard]] RouteSteps collapseTurnInstructions(RouteSteps steps,
+                                                  const double max_collapse_distance)
 {
     // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)
     BOOST_ASSERT(!hasTurnType(steps.front()) && !hasTurnType(steps.back()));
@@ -510,8 +511,10 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
             // and then the first (to ensure both iterators to be valid)
             suppressStep(*previous_step, *current_step);
         }
-        else if (maneuverPreceededByNameChange(previous_step, current_step, next_step, max_collapse_distance) ||
-                 maneuverPreceededBySuppressedDirection(current_step, next_step, max_collapse_distance))
+        else if (maneuverPreceededByNameChange(
+                     previous_step, current_step, next_step, max_collapse_distance) ||
+                 maneuverPreceededBySuppressedDirection(
+                     current_step, next_step, max_collapse_distance))
         {
             const auto strategy = AdjustToCombinedTurnStrategy(*previous_step);
             strategy(*next_step, *current_step);
@@ -519,8 +522,10 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
             suppressStep(*previous_step, *current_step);
         }
         else if (maneuverSucceededByNameChange(current_step, next_step, max_collapse_distance) ||
-                 nameChangeImmediatelyAfterSuppressed(current_step, next_step, max_collapse_distance) ||
-                 maneuverSucceededBySuppressedDirection(current_step, next_step, max_collapse_distance) ||
+                 nameChangeImmediatelyAfterSuppressed(
+                     current_step, next_step, max_collapse_distance) ||
+                 maneuverSucceededBySuppressedDirection(
+                     current_step, next_step, max_collapse_distance) ||
                  closeChoicelessTurnAfterTurn(current_step, next_step, max_collapse_distance))
         {
             combineRouteSteps(*current_step,
@@ -537,7 +542,8 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
                               TransferSignageStrategy(),
                               NoModificationStrategy());
         }
-        else if (suppressedStraightBetweenTurns(previous_step, current_step, next_step, max_collapse_distance))
+        else if (suppressedStraightBetweenTurns(
+                     previous_step, current_step, next_step, max_collapse_distance))
         {
             const auto far_back_step = findPreviousTurn(previous_step);
             previous_step->ElongateBy(*current_step);
@@ -588,8 +594,9 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
 }
 
 // OTHER IMPLEMENTATIONS
-[[nodiscard]] RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps,
-                                                            [[maybe_unused]] const double max_collapse_distance)
+[[nodiscard]] RouteSteps
+collapseSegregatedTurnInstructions(RouteSteps steps,
+                                   [[maybe_unused]] const double max_collapse_distance)
 {
     // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)
     // Return early if preconditions aren't met (can happen with certain manoeuvre relations)
