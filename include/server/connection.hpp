@@ -26,6 +26,7 @@ class Connection : public std::enable_shared_from_this<Connection>
   public:
     explicit Connection(boost::asio::ip::tcp::socket socket,
                         RequestHandler &handler,
+                        unsigned max_header_size,
                         short keepalive_timeout);
 
     Connection(const Connection &) = delete;
@@ -58,6 +59,7 @@ class Connection : public std::enable_shared_from_this<Connection>
 
     RequestHandler &request_handler_;
 
+    unsigned max_header_size_;
     short keepalive_timeout_;
     short processed_requests_ = 0;
 };
