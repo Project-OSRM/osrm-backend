@@ -12,7 +12,7 @@ namespace osrm::engine::guidance
 // Collapsing such turns into a single turn instruction, we give a clearer
 // set of instructions that is not cluttered by unnecessary turns/name changes.
 [[nodiscard]] std::vector<RouteStep> collapseTurnInstructions(std::vector<RouteStep> steps,
-                                                              double max_collapse_distance = 30.0);
+                                                              double max_collapse_distance);
 
 // Multiple possible reasons can result in unnecessary/confusing instructions
 // A prime example would be a segregated intersection. Turning around at this
@@ -20,8 +20,7 @@ namespace osrm::engine::guidance
 // Collapsing such turns into a single turn instruction, we give a clearer
 // set of instructions that is not cluttered by unnecessary turns/name changes.
 [[nodiscard]] std::vector<RouteStep>
-collapseSegregatedTurnInstructions(std::vector<RouteStep> steps,
-                                   double max_collapse_distance = 30.0);
+collapseSegregatedTurnInstructions(std::vector<RouteStep> steps, double max_collapse_distance);
 
 // A combined turn is a set of two instructions that actually form a single turn, as far as we
 // perceive it. A u-turn consisting of two left turns is one such example. But there are also lots
@@ -64,16 +63,21 @@ struct TransferTurnTypeStrategy : CombineStrategy
 // Combine both turn and turn angle to a common item
 struct AdjustToCombinedTurnAngleStrategy : CombineStrategy
 {
+    AdjustToCombinedTurnAngleStrategy(double max_collapse_distance);
     void operator()(RouteStep &step_at_turn_location, const RouteStep &transfer_from_step) const;
+
+    double max_collapse_distance;
 };
 
 // Combine only the turn types
 struct AdjustToCombinedTurnStrategy : CombineStrategy
 {
-    AdjustToCombinedTurnStrategy(const RouteStep &step_prior_to_intersection);
+    AdjustToCombinedTurnStrategy(const RouteStep &step_prior_to_intersection,
+                                 double max_collapse_distance);
     void operator()(RouteStep &step_at_turn_location, const RouteStep &transfer_from_step) const;
 
     const RouteStep &step_prior_to_intersection;
+    double max_collapse_distance;
 };
 
 // Set a fixed instruction type

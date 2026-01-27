@@ -20,10 +20,12 @@ namespace
 
 // find the combined turn angle for two turns. Not in all scenarios we can easily add both angles
 // (e.g 90 degree left followed by 90 degree right would be no turn at all).
-double findTotalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_step)
+double findTotalTurnAngle(const RouteStep &entry_step,
+                          const RouteStep &exit_step,
+                          const double max_collapse_distance)
 {
     if (entry_step.geometry_begin > exit_step.geometry_begin)
-        return findTotalTurnAngle(exit_step, entry_step);
+        return findTotalTurnAngle(exit_step, entry_step, max_collapse_distance);
 
     const auto exit_intersection = exit_step.intersections.front();
     const auto exit_step_exit_bearing = exit_intersection.bearings[exit_intersection.out];
@@ -65,8 +67,7 @@ double findTotalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_ste
             return false;
 
         // entry step is short and the exit and the exit step does not have intersections??
-        // Uses the default MAX_COLLAPSE_DISTANCE from collapsing_utility.hpp for angle calculation
-        if (entry_step.distance < MAX_COLLAPSE_DISTANCE)
+        if (entry_step.distance < max_collapse_distance)
             return true;
 
         // both go roughly in the same direction
@@ -96,7 +97,7 @@ double findTotalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_ste
     }
 }
 
-inline void handleSliproad(RouteStepIterator sliproad_step)
+inline void handleSliproad(RouteStepIterator sliproad_step, const double max_collapse_distance)
 {
     // find the next step after the sliproad step itself (this is not necessarily the next step,
     // since we might have to skip over traffic lights/node penalties)
@@ -128,7 +129,7 @@ inline void handleSliproad(RouteStepIterator sliproad_step)
         setInstructionType(*sliproad_step, sliproad_turn_type);
         combineRouteSteps(*sliproad_step,
                           *next_step,
-                          AdjustToCombinedTurnAngleStrategy(),
+                          AdjustToCombinedTurnAngleStrategy(max_collapse_distance),
                           TransferSignageStrategy(),
                           TransferLanesStrategy());
     }
@@ -151,6 +152,12 @@ void TransferTurnTypeStrategy::operator()(RouteStep &step_at_turn_location,
     step_at_turn_location.maneuver = transfer_from_step.maneuver;
 }
 
+AdjustToCombinedTurnAngleStrategy::AdjustToCombinedTurnAngleStrategy(
+    const double max_collapse_distance_)
+    : max_collapse_distance(max_collapse_distance_)
+{
+}
+
 void AdjustToCombinedTurnAngleStrategy::operator()(RouteStep &step_at_turn_location,
                                                    const RouteStep &transfer_from_step) const
 {
@@ -167,20 +174,23 @@ void AdjustToCombinedTurnAngleStrategy::operator()(RouteStep &step_at_turn_locat
         return;
 
     // TODO assert transfer_from_step == step_at_turn_location + 1
-    const auto angle = findTotalTurnAngle(step_at_turn_location, transfer_from_step);
+    const auto angle =
+        findTotalTurnAngle(step_at_turn_location, transfer_from_step, max_collapse_distance);
     step_at_turn_location.maneuver.instruction.direction_modifier = getTurnDirection(angle);
 }
 
 AdjustToCombinedTurnStrategy::AdjustToCombinedTurnStrategy(
-    const RouteStep &step_prior_to_intersection)
-    : step_prior_to_intersection(step_prior_to_intersection)
+    const RouteStep &step_prior_to_intersection, const double max_collapse_distance_)
+    : step_prior_to_intersection(step_prior_to_intersection),
+      max_collapse_distance(max_collapse_distance_)
 {
 }
 
 void AdjustToCombinedTurnStrategy::operator()(RouteStep &step_at_turn_location,
                                               const RouteStep &transfer_from_step) const
 {
-    const auto angle = findTotalTurnAngle(step_at_turn_location, transfer_from_step);
+    const auto angle =
+        findTotalTurnAngle(step_at_turn_location, transfer_from_step, max_collapse_distance);
 
     // Forks and merges point to left/right. By doing a combined angle, we would risk ending up with
     // unreasonable fork instrucitons. The direction of a fork or a merge only depends on the
@@ -469,7 +479,7 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
         // handle all situations involving the sliproad turn type
         if (hasTurnType(*current_step, TurnType::Sliproad))
         {
-            handleSliproad(current_step);
+            handleSliproad(current_step, max_collapse_distance);
             continue;
         }
 
@@ -516,7 +526,8 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
                  maneuverPreceededBySuppressedDirection(
                      current_step, next_step, max_collapse_distance))
         {
-            const auto strategy = AdjustToCombinedTurnStrategy(*previous_step);
+            const auto strategy =
+                AdjustToCombinedTurnStrategy(*previous_step, max_collapse_distance);
             strategy(*next_step, *current_step);
             // suppress previous step
             suppressStep(*previous_step, *current_step);
@@ -530,7 +541,7 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
         {
             combineRouteSteps(*current_step,
                               *next_step,
-                              AdjustToCombinedTurnStrategy(*previous_step),
+                              AdjustToCombinedTurnStrategy(*previous_step, max_collapse_distance),
                               TransferSignageStrategy(),
                               NoModificationStrategy());
         }
@@ -538,7 +549,7 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
         {
             combineRouteSteps(*current_step,
                               *next_step,
-                              AdjustToCombinedTurnStrategy(*previous_step),
+                              AdjustToCombinedTurnStrategy(*previous_step, max_collapse_distance),
                               TransferSignageStrategy(),
                               NoModificationStrategy());
         }
@@ -550,7 +561,7 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
             current_step->Invalidate();
             combineRouteSteps(*previous_step,
                               *next_step,
-                              AdjustToCombinedTurnStrategy(*far_back_step),
+                              AdjustToCombinedTurnStrategy(*far_back_step, max_collapse_distance),
                               TransferSignageStrategy(),
                               NoModificationStrategy());
         }
@@ -570,7 +581,7 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
         {
             combineRouteSteps(*current_step,
                               *new_next_step,
-                              AdjustToCombinedTurnStrategy(*previous_step),
+                              AdjustToCombinedTurnStrategy(*previous_step, max_collapse_distance),
                               TransferSignageStrategy(),
                               NoModificationStrategy());
         }
