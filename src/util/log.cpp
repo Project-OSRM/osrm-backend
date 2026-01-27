@@ -69,9 +69,10 @@ Log::Log(LogLevel level_) : level(level_), buffer{}, stream{buffer} { Init(); }
 
 void Log::Init()
 {
-    std::lock_guard<std::mutex> lock(get_mutex());
-    if (!LogPolicy::GetInstance().IsMute() && level <= LogPolicy::GetInstance().GetLevel())
+    const auto &policy = LogPolicy::GetInstance();
+    if (!policy.IsMute() && level <= policy.GetLevel())
     {
+        std::lock_guard<std::mutex> lock(get_mutex());
         const bool is_terminal = IsStdoutATTY();
 
         auto format = [is_terminal](const char *level, const char *color)
@@ -128,9 +129,10 @@ std::mutex &Log::get_mutex()
  */
 Log::~Log()
 {
-    std::lock_guard<std::mutex> lock(get_mutex());
-    if (!LogPolicy::GetInstance().IsMute() && level <= LogPolicy::GetInstance().GetLevel())
+    const auto &policy = LogPolicy::GetInstance();
+    if (!policy.IsMute() && level <= policy.GetLevel())
     {
+        std::lock_guard<std::mutex> lock(get_mutex());
         const bool usestd = (&stream == &buffer);
         const bool is_terminal = IsStdoutATTY();
         if (usestd)

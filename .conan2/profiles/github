@@ -1,0 +1,3 @@
+# Generic profile for github runners
+include(default)
+include(cppstd)

@@ -1,0 +1,132 @@
+---
+name: "Conan install"
+description: |
+  Runs conan install and caches dependencies.
+
+  This action installs conan and then runs `conan install`. All dependencies are cached.
+
+  Input environment variables
+
+  BUILD_TYPE The cmake build type: Release or Debug.
+  CONAN_HOME The Conan home directory to use.
+
+  Output environment variables
+
+  CONAN_CMAKE_PRESET: Pass --preset $CONAN_CMAKE_PRESET to cmake.
+  PATH will contain the Python venv.
+  VIRTUAL_ENV the Python venv.
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Restore Pip cache
+      uses: actions/cache/restore@v4
+      id: pip-cache-restore
+      with:
+        path: .venv
+        key: pip-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('requirements*.txt') }}
+        restore-keys: pip-${{ runner.os }}-${{ runner.arch }}-
+
+    - name: Install Conan
+      if: steps.pip-cache-restore.outputs.cache-hit != 'true'
+      id: install-conan
+      shell: bash
+      run: |
+        python -m venv .venv
+        if [[ ${{ runner.os }} == 'Windows' ]]; then
+          source .venv/Scripts/activate
+          python.exe -m pip install --upgrade pip
+        else
+          source .venv/bin/activate
+          python -m pip install --upgrade pip
+        fi
+        pip install -r requirements*.txt
+
+    - name: Activate Python Venv
+      id: activate-venv
+      shell: bash
+      run: |
+        if [[ ${{ runner.os }} == 'Windows' ]]; then
+          source .venv/Scripts/activate
+          echo "$VIRTUAL_ENV/Scripts" >> $GITHUB_PATH
+        else
+          source .venv/bin/activate
+          echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
+        fi
+        echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
+        echo "venv=$VIRTUAL_ENV"        >> $GITHUB_OUTPUT
+
+    - name: Save Pip cache
+      if: steps.pip-cache-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: .venv
+        key: ${{ steps.pip-cache-restore.outputs.cache-primary-key }}
+
+    - name: Restore Conan download cache
+      uses: actions/cache/restore@v4
+      id: conan-download-cache-restore
+      with:
+        path: ${{ env.CONAN_DOWNLOAD_CACHE }}
+        key: conan-download-${{ runner.os }}-${{ runner.arch }}-${{ env.BUILD_TYPE }}-${{ hashFiles('conanfile.py') }}
+        restore-keys: conan-download-${{ runner.os }}-${{ runner.arch }}-${{ env.BUILD_TYPE }}-
+
+    - name: Restore Conan cache
+      uses: actions/cache/restore@v4
+      id: conan-cache-restore
+      with:
+        path: ${{ env.CONAN_CACHE }}
+        key: conan-${{ runner.os }}-${{ runner.arch }}-${{ env.BUILD_TYPE }}-${{ env.BUILD_SHARED_LIBS}}-${{ hashFiles('conanfile.py', '.conan2/profiles/*', '.conan2/*.conf') }}
+        restore-keys: conan-${{ runner.os }}-${{ runner.arch }}-${{ env.BUILD_TYPE }}-${{ env.BUILD_SHARED_LIBS}}-
+
+    - name: Setup Conan environment
+      shell: bash
+      run: |
+        CONAN_OS_PROFILE=github-${RUNNER_OS,,} # lowercases the os
+        echo "CONAN_OS_PROFILE=${CONAN_OS_PROFILE}" >> $GITHUB_ENV
+
+        echo "::group::conan install"
+        conan profile detect --force
+        conan install -pr ${CONAN_OS_PROFILE} --build=missing -s build_type=${BUILD_TYPE}
+        conan remove "*" --lru=4w -c
+        echo "::endgroup::"
+
+        echo "::group::Conan cache contents"
+        conan list
+        echo "::endgroup::"
+
+        # outputs
+        echo "conan-cache-hit=${{ steps.conan-cache-restore.outputs.cache-hit }}" >> "$GITHUB_OUTPUT"
+        echo "conan-cache-primary-key=${{ steps.conan-cache-restore.outputs.cache-primary-key }}" >> "$GITHUB_OUTPUT"
+        # probably not very useful
+        echo "pip-cache-hit=${{ steps.pip-cache-restore.outputs.cache-hit }}" >> "$GITHUB_OUTPUT"
+        echo "pip-cache-primary-key=${{ steps.pip-cache-restore.outputs.cache-primary-key }}" >> "$GITHUB_OUTPUT"
+
+    - name: Debug Conan environment
+      shell: bash
+      run: |
+        echo "::group::ls"
+        ls "${CONAN_GENERATORS_DIR}"
+        echo "::endgroup::"
+
+        echo "::group::cat conan_toolchain.cmake"
+        cat "${CONAN_GENERATORS_DIR}/conan_toolchain.cmake"
+        echo "::endgroup::"
+
+        echo "::group::cat CMakePresets.json"
+        cat "${CONAN_GENERATORS_DIR}/CMakePresets.json"
+        echo "::endgroup::"
+
+    - name: Save Conan download cache
+      uses: actions/cache/save@v4
+      if: always() && steps.conan-download-cache-restore.outputs.cache-hit != 'true'
+      with:
+        path: ${{ env.CONAN_DOWNLOAD_CACHE }}
+        key: ${{ steps.conan-download-cache-restore.outputs.cache-primary-key }}
+
+    - name: Save Conan cache
+      uses: actions/cache/save@v4
+      if: always() && steps.conan-cache-restore.outputs.cache-hit != 'true'
+      with:
+        path: ${{ env.CONAN_CACHE }}
+        key: ${{ steps.conan-cache-restore.outputs.cache-primary-key }}

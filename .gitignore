@@ -48,6 +48,11 @@ Thumbs.db
 /test/data/mld
 /cmake/postinst
 .gradle/
+.conan2/*
+!.conan2/profiles
+.conan2/profiles/default
+!.conan2/global.conf
+CMakeUserPresets.json
 
 # Eclipse related files #
 #########################
@@ -104,4 +109,3 @@ debug.lua
 
 # node-osrm artifacts
 lib/binding_napi_v8
-

@@ -8,7 +8,6 @@
 #include "osrm/engine_config.hpp"
 #include "osrm/exception.hpp"
 #include "osrm/osrm.hpp"
-#include "osrm/storage_config.hpp"
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/any.hpp>
@@ -223,13 +222,13 @@ inline unsigned generateServerProgramOptions(const int argc,
         return INIT_FAILED;
     }
 
-    if (option_variables.count("version"))
+    if (option_variables.contains("version"))
     {
         std::cout << OSRM_VERSION << std::endl;
         return INIT_OK_DO_NOT_START_ENGINE;
     }
 
-    if (option_variables.count("help"))
+    if (option_variables.contains("help"))
     {
         std::cout << visible_options;
         return INIT_OK_DO_NOT_START_ENGINE;
@@ -237,15 +236,15 @@ inline unsigned generateServerProgramOptions(const int argc,
 
     boost::program_options::notify(option_variables);
 
-    if (!config.use_shared_memory && option_variables.count("base"))
+    if (!config.use_shared_memory && option_variables.contains("base"))
     {
         return INIT_OK_START_ENGINE;
     }
-    else if (config.use_shared_memory && !option_variables.count("base"))
+    else if (config.use_shared_memory && !option_variables.contains("base"))
     {
         return INIT_OK_START_ENGINE;
     }
-    else if (config.use_shared_memory && option_variables.count("base"))
+    else if (config.use_shared_memory && option_variables.contains("base"))
     {
         util::Log(logWARNING) << "Shared memory settings conflict with path settings.";
     }
@@ -353,7 +352,6 @@ try
         std::thread server_thread(std::move(server_task));
 
 #ifndef _WIN32
-        util::Log() << "running and waiting for requests";
         if (std::getenv("SIGNAL_PARENT_WHEN_READY"))
         {
             kill(getppid(), SIGUSR1);
@@ -364,7 +362,6 @@ try
         // Set console control handler to allow server to be stopped.
         console_ctrl_function = std::bind(&server::Server::Stop, routing_server);
         SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
-        util::Log() << "running and waiting for requests";
         routing_server->Run();
 #endif
         util::Log() << "initiating shutdown";
@@ -388,27 +385,15 @@ try
     routing_server.reset();
     util::Log() << "shutdown completed";
 }
-catch (const osrm::RuntimeError &e)
-{
-    util::Log(logERROR) << e.what();
-    return e.GetCode();
-}
-catch (const util::exception &e)
-{
-    util::Log(logERROR) << e.what();
-    return EXIT_FAILURE;
-}
 catch (const std::bad_alloc &e)
 {
     util::DumpMemoryStats();
-    util::Log(logWARNING) << "[exception] " << e.what();
-    util::Log(logWARNING) << "Please provide more memory or consider using a larger swapfile";
+    util::Log(logERROR) << e.what();
+    util::Log(logERROR) << "Please provide more memory or consider using a larger swapfile";
     return EXIT_FAILURE;
 }
-#ifdef _WIN32
 catch (const std::exception &e)
 {
-    util::Log(logERROR) << "[exception] " << e.what();
+    util::Log(logERROR) << e.what();
     return EXIT_FAILURE;
 }
-#endif

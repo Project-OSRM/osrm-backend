@@ -1,0 +1,2 @@
+# Profile for macOS-runners on github CI
+include(github)

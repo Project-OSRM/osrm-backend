@@ -1,0 +1,2 @@
+# Profile for linux-runners on github CI
+include(github)

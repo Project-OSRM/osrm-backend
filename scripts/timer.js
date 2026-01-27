@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 // Command execution timer - runs shell commands and logs execution time to file
 
-import { exec } from 'child_process';
-import fs from 'fs';
+import { exec } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 const name = process.argv[2];
 const cmd = process.argv.slice(3).join(' ');
@@ -15,5 +17,5 @@ exec(cmd, (err, stdout, stderr) => {
   }
   const stop = +new Date();
   const time = (stop - start) / 1000.;
-  fs.appendFileSync('/tmp/osrm.timings', `${name}\t${time}`, 'utf-8');
+  fs.appendFileSync(path.join(os.tmpdir(), 'osrm.timings'), `${name}\t${time}`, 'utf-8');
 });

@@ -2,15 +2,16 @@ DATA_NAME:=monaco
 OSRM_BUILD_DIR?=../../build
 PROFILE_ROOT:=../../profiles
 SCRIPT_ROOT:=../../scripts
-OSRM_EXTRACT:=$(OSRM_BUILD_DIR)/osrm-extract
-OSRM_CONTRACT:=$(OSRM_BUILD_DIR)/osrm-contract
-OSRM_PARTITION:=$(OSRM_BUILD_DIR)/osrm-partition
-OSRM_CUSTOMIZE:=$(OSRM_BUILD_DIR)/osrm-customize
-OSRM_ROUTED:=$(OSRM_BUILD_DIR)/osrm-routed
+OSRM_EXTRACT:=$(OSRM_BUILD_DIR)/osrm-extract$(EXECUTABLE_SUFFIX)
+OSRM_CONTRACT:=$(OSRM_BUILD_DIR)/osrm-contract$(EXECUTABLE_SUFFIX)
+OSRM_PARTITION:=$(OSRM_BUILD_DIR)/osrm-partition$(EXECUTABLE_SUFFIX)
+OSRM_CUSTOMIZE:=$(OSRM_BUILD_DIR)/osrm-customize$(EXECUTABLE_SUFFIX)
+OSRM_ROUTED:=$(OSRM_BUILD_DIR)/osrm-routed$(EXECUTABLE_SUFFIX)
 POLY2REQ:=$(SCRIPT_ROOT)/poly2req.js
 MD5SUM:=$(SCRIPT_ROOT)/md5sum.js
 TIMER:=$(SCRIPT_ROOT)/timer.js
 PROFILE:=$(PROFILE_ROOT)/car.lua
+TMP:=`node $(SCRIPT_ROOT)/get-tmp-dir.js`
 
 all: data
 
@@ -59,10 +60,10 @@ benchmark: data $(DATA_NAME).requests
 	@cat osrm-routed.pid | xargs kill
 	@rm osrm-routed.pid
 	@echo "**** timings ***"
-	@cat /tmp/osrm.timings
+	@cat $(TMP)/osrm.timings
 	@echo "****************"
 
 checksum:
-	$(MD5SUM) $(DATA_NAME).osm.pbf $(DATA_NAME).poly > data.md5sum
+	$(MD5SUM) $(DATA_NAME).osm.pbf > data.md5sum
 
 .PHONY: clean checksum benchmark data

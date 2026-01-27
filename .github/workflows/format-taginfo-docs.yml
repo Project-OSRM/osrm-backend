@@ -1,0 +1,29 @@
+name: format-taginfo-docs
+
+on:
+  workflow_call:
+
+jobs:
+  format-taginfo-docs:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Prepare environment
+        run: |
+          npm ci --ignore-scripts
+          clang-format-15 --version
+
+      - name: Run checks
+        run: |
+          ./scripts/check_taginfo.py taginfo.json profiles/car.lua
+          ./scripts/format.sh && ./scripts/error_on_dirty.sh
+          node ./scripts/validate_changelog.js
+          npm run docs && ./scripts/error_on_dirty.sh
+          npm audit --production

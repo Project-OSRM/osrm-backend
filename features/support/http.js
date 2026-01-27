@@ -27,6 +27,7 @@ export function sendRequest (url, log, callback) {
   // Handle errors
   req.on('error', (err) => {
     log(`request errored out: ${url} ${err.message}`);
+    req.destroy();
     callback(err);
   });
 

@@ -1,0 +1,63 @@
+name: Node package tests
+description: Run node package tests
+
+runs:
+  using: "composite"
+  steps:
+    - name: Prepare test data
+      if: ${{ env.NODEJS_TESTS == 'ON' }}
+      shell: bash
+      run: |
+        make -C ${TEST_DIR}/data
+
+    - name: Use Node 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: npm
+    - name: Run Node package tests on Node 20
+      shell: bash
+      run: |
+        echo "::group::Running on node 20"
+        ${NAPI_DIR}/osrm-datastore${EXECUTABLE_SUFFIX} ${TEST_DIR}/data/ch/monaco.osrm
+        node ${TEST_DIR}/nodejs/index.js | npx faucet
+        echo "::endgroup::"
+
+    - name: Use Node 22
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: npm
+    - name: Run Node package tests on Node 22
+      shell: bash
+      run: |
+        echo "::group::Running on node 22"
+        ${NAPI_DIR}/osrm-datastore${EXECUTABLE_SUFFIX} ${TEST_DIR}/data/ch/monaco.osrm
+        node ${TEST_DIR}/nodejs/index.js | npx faucet
+        echo "::endgroup::"
+
+    - name: Use Node 24
+      uses: actions/setup-node@v4
+      with:
+        node-version: 24
+        cache: npm
+    - name: Run Node package tests on Node 24
+      shell: bash
+      run: |
+        echo "::group::Running on node 24"
+        ${NAPI_DIR}/osrm-datastore${EXECUTABLE_SUFFIX} ${TEST_DIR}/data/ch/monaco.osrm
+        node ${TEST_DIR}/nodejs/index.js | npx faucet
+        echo "::endgroup::"
+
+    - name: Use Node latest
+      uses: actions/setup-node@v4
+      with:
+        node-version: latest
+        cache: npm
+    - name: Run Node package tests on Node latest
+      shell: bash
+      run: |
+        echo "::group::Running on node latest"
+        ${NAPI_DIR}/osrm-datastore${EXECUTABLE_SUFFIX} ${TEST_DIR}/data/ch/monaco.osrm
+        node ${TEST_DIR}/nodejs/index.js | npx faucet
+        echo "::endgroup::"

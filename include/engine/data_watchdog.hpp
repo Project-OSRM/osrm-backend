@@ -120,6 +120,7 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
                                                          updatable_region.proj_id}));
             }
 
+            // Note: the cucumber test suite depends on the exact wording "updated facade"
             util::Log() << "updated facade to regions " << (int)static_region.proj_id << " and "
                         << (int)updatable_region.proj_id << " with timestamps "
                         << static_region.timestamp << " and " << updatable_region.timestamp;

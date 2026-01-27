@@ -70,7 +70,7 @@ class Env {
       'a');
 
     // heuristically detect .so/.a/.dll/.lib suffix
-    this.LIB = ['lib%s.a', 'lib%s.so', '%s.dll', '%s.lib'].find((format) => {
+    this.LIB = ['lib%s.a', 'lib%s.so', 'lib%s.dylib', '%s.dll', '%s.lib'].find((format) => {
       try {
         const lib = path.join(wp.buildPath, util.format(format, 'osrm'));
         fs.accessSync(lib, fs.constants.F_OK);

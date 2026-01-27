@@ -15,6 +15,7 @@
 
 #include <csignal>
 #include <cstdlib>
+#include <exception>
 #include <filesystem>
 
 using namespace osrm;
@@ -190,7 +191,7 @@ bool generateDataStoreOptions(const int argc,
                                           .run(),
                                       option_variables);
     }
-    catch (const boost::program_options::error &e)
+    catch (const std::exception &e)
     {
         util::Log(logERROR) << e.what();
         return false;
@@ -282,21 +283,16 @@ try
 
     return storage.Run(max_wait, dataset_name, only_metric);
 }
-catch (const osrm::RuntimeError &e)
-{
-    util::Log(logERROR) << e.what();
-    return e.GetCode();
-}
-catch (const util::exception &e)
-{
-    util::Log(logERROR) << e.what();
-    return EXIT_FAILURE;
-}
 catch (const std::bad_alloc &e)
 {
     util::DumpMemoryStats();
     util::Log(logERROR) << "[exception] " << e.what();
     util::Log(logERROR) << "Please provide more memory or disable locking the virtual "
                            "address space (note: this makes OSRM swap, i.e. slow)";
+    return EXIT_FAILURE;
+}
+catch (const std::exception &e)
+{
+    util::Log(logERROR) << e.what();
     return EXIT_FAILURE;
 }

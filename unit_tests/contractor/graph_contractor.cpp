@@ -35,12 +35,10 @@ BOOST_AUTO_TEST_CASE(contract_exclude_graph)
                          TestEdge{2, 3, 2}};
     auto reference_graph = makeGraph(edges);
 
-    auto contracted_graph = reference_graph;
-
     QueryGraph query_graph;
     std::vector<std::vector<bool>> edge_filters;
     std::tie(query_graph, edge_filters) =
-        contractExcludableGraph(contracted_graph,
+        contractExcludableGraph(reference_graph,
                                 {{1}, {1}, {1}, {1}},
                                 {{true, true, true, true}, {false, true, true, true}});
     REQUIRE_SIZE_RANGE(query_graph.GetAdjacentEdgeRange(0), 0);
@@ -58,8 +56,6 @@ BOOST_AUTO_TEST_CASE(contract_exclude_graph)
 
     auto reference_graph2 = makeGraph(edges);
 
-    auto contracted_graph2 = reference_graph2;
-
     /* All edges are normal edges,
      * edge 2 will be contracted
      *
@@ -75,7 +71,7 @@ BOOST_AUTO_TEST_CASE(contract_exclude_graph)
     QueryGraph query_graph2;
     std::vector<std::vector<bool>> edge_filters2;
     std::tie(query_graph2, edge_filters2) =
-        contractExcludableGraph(contracted_graph2,
+        contractExcludableGraph(reference_graph2,
                                 {{1}, {1}, {1}, {1}},
                                 {{true, true, true, true}, {true, true, true, true}});
 

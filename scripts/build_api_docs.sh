@@ -24,24 +24,24 @@ node scripts/extract_cpp_jsdoc.js src/nodejs/node_osrm.cpp > build/docs/jsdoc-ex
 documentation build build/docs/jsdoc-extract.js --markdown-toc=false -f md -o docs/nodejs/api.md
 
 # Make temp dir to hold docbox template
-mkdir -p build/docs/tmp/src 
+mkdir -p build/docs/tmp/src
 
 # Copy docbox template scripts into temp dir
-cp -r node_modules/docbox/src/* build/docs/tmp/src 
-cp -r node_modules/docbox/css build/docs/ 
+cp -r node_modules/docbox/src/* build/docs/tmp/src
+cp -r node_modules/docbox/css build/docs/
 
 # Copy our images/templates into the temp docs dir
-cp -r docs/images build/docs 
-cp docs/src/index.html build/docs/tmp 
-cp docs/src/* build/docs/tmp/src/custom 
-mkdir -p build/docs/tmp/content 
-cp docs/*.md build/docs/tmp/content 
+cp -r docs/images build/docs
+cp docs/src/index.html build/docs/tmp
+cp docs/src/* build/docs/tmp/src/custom
+mkdir -p build/docs/tmp/content
+cp docs/*.md build/docs/tmp/content
 
 # Now, run the scripts to generate the actual final product
-pushd build/docs/tmp 
-NODE_ENV=production browserify src/index.js | uglifyjs -c -m > ../bundle.js 
-babel src --out-dir lib 
-node lib/render.js ../index.html 
+pushd build/docs/tmp
+# NODE_ENV=production browserify src/index.js | uglifyjs -c -m > ../bundle.js
+# babel src --out-dir lib
+# node lib/render.js ../index.html
 popd
 
 # Cleanup

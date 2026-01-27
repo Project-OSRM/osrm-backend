@@ -172,29 +172,15 @@ try
 
     return exitcode;
 }
-catch (const osrm::RuntimeError &e)
-{
-    util::DumpMemoryStats();
-    util::Log(logERROR) << e.what();
-    return e.GetCode();
-}
-catch (const util::exception &e)
-{
-    util::DumpMemoryStats();
-    util::Log(logERROR) << e.what();
-    return EXIT_FAILURE;
-}
 catch (const std::bad_alloc &e)
 {
     util::DumpMemoryStats();
-    util::Log(logERROR) << "[exception] " << e.what();
+    util::Log(logERROR) << e.what();
     util::Log(logERROR) << "Please provide more memory or consider using a larger swapfile";
     return EXIT_FAILURE;
 }
-#ifdef _WIN32
 catch (const std::exception &e)
 {
-    util::Log(logERROR) << "[exception] " << e.what() << std::endl;
+    util::Log(logERROR) << e.what();
     return EXIT_FAILURE;
 }
-#endif

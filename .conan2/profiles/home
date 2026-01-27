@@ -1,0 +1,3 @@
+# Generic profile for developer at home
+include(default)
+include(cppstd)

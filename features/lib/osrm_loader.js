@@ -37,13 +37,18 @@ class OSRMBaseLoader {
       );
 
       this.child.stdout.on('data', (data) => {
+        log(`osrm-routed stdout:\n${data}`);
         if (data.includes('running and waiting for requests')) {
           log('Routed running and waiting for requests');
           resolve();
         }
       });
 
-      this.child.on('exit', (code) => {
+      this.child.stderr.on('data', (data) => {
+        log(`osrm-routed stderr:\n${data}`);
+      });
+
+      this.child.on('close', (code) => {
         log(`osrm-routed completed with exit code ${code}`);
         this.child = null;
       });

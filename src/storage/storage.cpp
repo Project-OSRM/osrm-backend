@@ -198,11 +198,19 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
     boost::interprocess::scoped_lock<boost::interprocess::file_lock> datastore_lock(
         file_lock, boost::interprocess::defer_lock);
 
-    if (!datastore_lock.try_lock())
+    try
     {
-        util::UnbufferedLog(logWARNING) << "Data update in progress, waiting until it finishes... ";
-        datastore_lock.lock();
-        util::UnbufferedLog(logWARNING) << "ok.";
+        if (!datastore_lock.try_lock())
+        {
+            util::UnbufferedLog(logWARNING)
+                << "Data update in progress, waiting until it finishes... ";
+            datastore_lock.lock();
+            util::UnbufferedLog(logWARNING) << "ok.";
+        }
+    }
+    catch (boost::interprocess::interprocess_exception &e)
+    {
+        throw util::exception(e.what() + SOURCE_REF);
     }
 
 #ifdef __linux__
