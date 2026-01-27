@@ -1,4 +1,4 @@
-@routing @testbot @mld
+@routing @testbot @with_mld
 Feature: Multi level routing
 
     Background:

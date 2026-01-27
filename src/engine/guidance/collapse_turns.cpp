@@ -591,6 +591,13 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
 [[nodiscard]] RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
 {
     // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)
+    // Return early if preconditions aren't met (can happen with certain manoeuvre relations)
+    if (hasTurnType(steps.front()) || hasTurnType(steps.back()))
+        return steps;
+
+    if (!hasWaypointType(steps.front()) || !hasWaypointType(steps.back()))
+        return steps;
+
     BOOST_ASSERT(!hasTurnType(steps.front()) && !hasTurnType(steps.back()));
     BOOST_ASSERT(hasWaypointType(steps.front()) && hasWaypointType(steps.back()));
 

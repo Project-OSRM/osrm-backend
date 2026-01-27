@@ -66,7 +66,7 @@ When(/^I plan a trip I should get$/, function (table, callback) {
         let subTrips;
         let trip_durations;
         let trip_distance;
-        const ok = res.statusCode === 200;
+        let ok = res.statusCode === 200;
         if (ok) {
           if (headers.has('trips')) {
             subTrips = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map((sl, i) => {

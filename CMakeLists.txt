@@ -366,7 +366,8 @@ endif()
 
 if (ENABLE_CONAN)
   set(Boost_USE_STATIC_LIBS ON)
-  find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+  find_package(Boost 1.70 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+
   find_package(TBB REQUIRED)
   find_package(EXPAT REQUIRED)
   find_package(BZip2 REQUIRED)
@@ -397,7 +398,8 @@ if (ENABLE_CONAN)
   # expat and bzip2 are used from conan rather than the system
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
 else()
-  find_package(Boost REQUIRED CONFIG COMPONENTS ${BOOST_COMPONENTS})
+  find_package(Boost 1.70 REQUIRED CONFIG COMPONENTS ${BOOST_COMPONENTS})
+
   find_package(TBB REQUIRED)
   find_package(EXPAT REQUIRED)
   find_package(BZip2 REQUIRED)
@@ -439,8 +441,6 @@ else()
   find_package(Osmium REQUIRED COMPONENTS io)
   include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
 endif()
-
-
 
 # prefix compilation with ccache by default if available and on clang or gcc
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))

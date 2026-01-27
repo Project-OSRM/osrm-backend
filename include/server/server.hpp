@@ -5,11 +5,10 @@
 #include "server/request_handler.hpp"
 #include "server/service_handler.hpp"
 
-#include "util/integer_range.hpp"
 #include "util/log.hpp"
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/beast/core.hpp>
 
 #include <zlib.h>
 
@@ -18,6 +17,7 @@
 #include <sys/types.h>
 #endif
 
+#include <future>
 #include <memory>
 #include <string>
 #include <thread>
@@ -26,7 +26,7 @@
 namespace osrm::server
 {
 
-class Server
+class Server : public std::enable_shared_from_this<Server>
 {
   public:
     // Note: returns a shared instead of a unique ptr as it is captured in a lambda somewhere else
@@ -35,7 +35,7 @@ class Server
                                                 unsigned requested_num_threads,
                                                 short keepalive_timeout)
     {
-        util::Log() << "http 1.1 compression handled by zlib version " << zlibVersion();
+        util::Log() << "HTTP/1.1 server using Boost.Beast, compression by zlib " << zlibVersion();
         const unsigned hardware_threads = std::max(1u, std::thread::hardware_concurrency());
         const unsigned real_num_threads = std::min(hardware_threads, requested_num_threads);
         return std::make_shared<Server>(ip_address, ip_port, real_num_threads, keepalive_timeout);
@@ -46,46 +46,109 @@ class Server
                     const unsigned thread_pool_size,
                     const short keepalive_timeout)
         : thread_pool_size(thread_pool_size), keepalive_timeout(keepalive_timeout),
-          acceptor(io_context), new_connection(std::make_shared<Connection>(
-                                    io_context, request_handler, keepalive_timeout))
+          io_context(thread_pool_size), acceptor(boost::asio::make_strand(io_context))
     {
-        const auto port_string = std::to_string(port);
+        boost::beast::error_code ec;
 
+        // Create endpoint
         boost::asio::ip::tcp::resolver resolver(io_context);
-        boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(address, port_string).begin();
+        auto const results = resolver.resolve(address, std::to_string(port));
+        if (results.empty())
+        {
+            throw std::runtime_error("Failed to resolve address: " + address + ":" +
+                                     std::to_string(port));
+        }
 
-        acceptor.open(endpoint.protocol());
+        boost::asio::ip::tcp::endpoint endpoint = *results.begin();
+
+        // Open the acceptor
+        (void)acceptor.open(endpoint.protocol(), ec);
+        if (ec)
+        {
+            throw std::runtime_error("Failed to open acceptor: " + ec.message());
+        }
+
+        // Allow address reuse
+        (void)acceptor.set_option(boost::asio::socket_base::reuse_address(true), ec);
+        if (ec)
+        {
+            util::Log(logWARNING) << "Failed to set reuse_address: " << ec.message();
+        }
+
 #ifdef SO_REUSEPORT
+        // Set SO_REUSEPORT if available (Linux)
         const int option = 1;
-        setsockopt(acceptor.native_handle(), SOL_SOCKET, SO_REUSEPORT, &option, sizeof(option));
+        if (::setsockopt(
+                acceptor.native_handle(), SOL_SOCKET, SO_REUSEPORT, &option, sizeof(option)) < 0)
+        {
+            util::Log(logWARNING) << "Failed to set SO_REUSEPORT";
+        }
 #endif
-        acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
-        acceptor.bind(endpoint);
-        acceptor.listen();
+
+        // Bind to the address
+        (void)acceptor.bind(endpoint, ec);
+        if (ec)
+        {
+            throw std::runtime_error("Failed to bind to address: " + ec.message());
+        }
+
+        // Start listening
+        (void)acceptor.listen(boost::asio::socket_base::max_listen_connections, ec);
+        if (ec)
+        {
+            throw std::runtime_error("Failed to listen: " + ec.message());
+        }
 
         util::Log() << "Listening on: " << acceptor.local_endpoint();
-
-        acceptor.async_accept(
-            new_connection->socket(),
-            boost::bind(&Server::HandleAccept, this, boost::asio::placeholders::error));
     }
 
     void Run()
     {
-        std::vector<std::shared_ptr<std::thread>> threads;
+        // Start accepting connections
+        DoAccept();
+
+        // Create and run threads for the io_context
+        std::vector<std::thread> threads;
+        threads.reserve(thread_pool_size);
         for (unsigned i = 0; i < thread_pool_size; ++i)
         {
-            std::shared_ptr<std::thread> thread = std::make_shared<std::thread>(
-                boost::bind(&boost::asio::io_context::run, &io_context));
-            threads.push_back(thread);
+            threads.emplace_back([this]() { io_context.run(); });
         }
-        for (const auto &thread : threads)
+
+        // Wait for all threads to complete
+        for (auto &thread : threads)
         {
-            thread->join();
+            if (thread.joinable())
+            {
+                thread.join();
+            }
         }
     }
 
-    void Stop() { io_context.stop(); }
+    void Stop()
+    {
+        auto stop_promise = std::make_shared<std::promise<void>>();
+        auto stop_future = stop_promise->get_future();
+
+        // Posting the close to the acceptors strand ensures
+        // we do not have a race condition with async_accept.
+        boost::asio::post(acceptor.get_executor(),
+                          [self = shared_from_this(), stop_promise]()
+                          {
+                              boost::beast::error_code ec;
+                              (void)self->acceptor.close(ec);
+                              if (ec)
+                              {
+                                  util::Log(logDEBUG) << "Error closing acceptor: " << ec.message();
+                              }
+                              // Stop the io_context
+                              self->io_context.stop();
+                              stop_promise->set_value();
+                          });
+
+        // The above function is async, this simply waits until it succeeded
+        stop_future.wait();
+    }
 
     void RegisterServiceHandler(std::unique_ptr<ServiceHandlerInterface> service_handler_)
     {
@@ -93,20 +156,39 @@ class Server
     }
 
   private:
-    void HandleAccept(const boost::system::error_code &e)
+    void DoAccept()
     {
-        if (!e)
+        // The new connection gets its own strand
+        acceptor.async_accept(boost::asio::make_strand(io_context),
+                              [weak_self = std::weak_ptr<Server>(shared_from_this())](
+                                  boost::beast::error_code ec, boost::asio::ip::tcp::socket socket)
+                              {
+                                  if (auto self = weak_self.lock())
+                                  {
+                                      self->OnAccept(ec, std::move(socket));
+                                  }
+                              });
+    }
+
+    void OnAccept(boost::beast::error_code ec, boost::asio::ip::tcp::socket socket)
+    {
+        if (!ec)
         {
-            new_connection->start();
-            new_connection =
-                std::make_shared<Connection>(io_context, request_handler, keepalive_timeout);
-            acceptor.async_accept(
-                new_connection->socket(),
-                boost::bind(&Server::HandleAccept, this, boost::asio::placeholders::error));
+            // Create the connection and start it
+            auto connection =
+                std::make_shared<Connection>(std::move(socket), request_handler, keepalive_timeout);
+
+            connection->start();
         }
-        else
+        else if (ec != boost::asio::error::operation_aborted)
         {
-            util::Log(logERROR) << "HandleAccept error: " << e.message();
+            util::Log(logERROR) << "Accept error: " << ec.message();
+        }
+
+        // Accept another connection
+        if (acceptor.is_open())
+        {
+            DoAccept();
         }
     }
 
@@ -115,8 +197,8 @@ class Server
     short keepalive_timeout;
     boost::asio::io_context io_context;
     boost::asio::ip::tcp::acceptor acceptor;
-    std::shared_ptr<Connection> new_connection;
 };
+
 } // namespace osrm::server
 
 #endif // SERVER_HPP

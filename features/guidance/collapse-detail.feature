@@ -176,3 +176,63 @@ Feature: Collapse
         When I route I should get
             | waypoints | route   | turns                               |
             | c,e       | road,,, | depart,turn right,turn right,arrive |
+
+    # Route starting at via node of manoeuvre=fork relation
+    @manoeuvre-fork
+    Scenario: Route starting at fork node with manoeuvre relation
+        Given the node map
+            """
+                    c
+                   /
+            a-----b
+                   \
+                    d-----e
+            """
+
+        And the ways
+            | nodes | highway  | name   | oneway |
+            | ab    | motorway | main   | yes    |
+            | bc    | motorway | left   | yes    |
+            | bd    | motorway | right  | yes    |
+            | de    | motorway | right  | yes    |
+
+        And the relations
+            | type      | way:from | node:via | way:to | manoeuvre | direction    |
+            | manoeuvre | ab       | b        | bc     | fork      | slight_left  |
+            | manoeuvre | ab       | b        | bd     | fork      | slight_right |
+
+        When I route I should get
+            | waypoints | route             | turns                            |
+            | a,c       | main,left,left    | depart,fork slight left,arrive   |
+            | a,e       | main,right,right  | depart,fork slight right,arrive  |
+            # Depart from fork via node - no fork instruction needed
+            | b,c       | left,left         | depart,arrive                    |
+            | b,e       | right,right       | depart,arrive                    |
+
+    # Route ending at via node of manoeuvre=fork relation
+    @manoeuvre-fork
+    Scenario: Route ending at fork node with manoeuvre relation
+        Given the node map
+            """
+                    c
+                   /
+            a-----b
+                   \
+                    d-----e
+            """
+
+        And the ways
+            | nodes | highway  | name   | oneway |
+            | ab    | motorway | main   | yes    |
+            | bc    | motorway | left   | yes    |
+            | bd    | motorway | right  | yes    |
+            | de    | motorway | right  | yes    |
+
+        And the relations
+            | type      | way:from | node:via | way:to | manoeuvre | direction    |
+            | manoeuvre | ab       | b        | bc     | fork      | slight_left  |
+            | manoeuvre | ab       | b        | bd     | fork      | slight_right |
+
+        When I route I should get
+            | waypoints | route       | turns         |
+            | a,b       | main,main   | depart,arrive |
