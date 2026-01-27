@@ -7,12 +7,12 @@ If your PR is still work in progress please attach the relevant label.
 
 ## Tasklist
 
- - [ ] CHANGELOG.md entry ([How to write a changelog entry](http://keepachangelog.com/en/1.0.0/#how))
- - [ ] update relevant [Wiki pages](https://github.com/Project-OSRM/osrm-backend/wiki)
- - [ ] add tests (see [testing documentation](https://github.com/Project-OSRM/osrm-backend/blob/master/docs/testing.md))
+ - [ ] self-review code for correctness and following the [coding guidelines](https://github.com/Project-OSRM/osrm-backend/wiki/Coding-Standards)
+ - [ ] add tests (see [testing](https://github.com/Project-OSRM/osrm-backend/blob/master/docs/testing.md))
+ - [ ] update relevant [wiki pages](https://github.com/Project-OSRM/osrm-backend/wiki)
+ - [ ] CHANGELOG.md entry (see [how to](http://keepachangelog.com/en/1.0.0/#how))
  - [ ] review
  - [ ] adjust for comments
-
 
 ## Requirements / Relations
 
