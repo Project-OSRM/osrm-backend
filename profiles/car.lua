@@ -167,6 +167,11 @@ function setup()
       ["drive-thru"] = 0.5
     },
 
+    barrier_penalties = {
+      gate      = 60,
+      lift_gate = 60,
+    },
+
     restricted_highway_whitelist = Set {
       'motorway',
       'motorway_link',
@@ -366,6 +371,13 @@ function process_node(profile, node, result, relations)
                 and not audible_fence
                 or restricted_by_height then
         obstacle_map:add(node, Obstacle.new(obstacle_type.barrier))
+      end
+
+      -- apply configurable penalty to gates/lift_gates
+      local barrier_penalty = profile.barrier_penalties[barrier]
+      if barrier_penalty then
+        obstacle_map:add(node, Obstacle.new(obstacle_type.gate,
+                                            obstacle_direction.both, barrier_penalty, 0))
       end
     end
   end

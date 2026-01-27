@@ -80,3 +80,50 @@ Feature: Car - Barriers
             | height_restrictor |              1 |       |
             | height_restrictor |              3 | x     |
             | height_restrictor |        default | x     |
+
+    Scenario: Car - Gate penalties
+        Given the node map
+            """
+            a-b-c   d-e-f   g-h-i
+            """
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | def   | primary |
+            | ghi   | primary |
+
+        And the nodes
+            | node | barrier   |
+            | e    | gate      |
+            | h    | lift_gate |
+
+        When I route I should get
+            | from | to | time    | #                 |
+            | a    | c  | 11s     | no barrier        |
+            | d    | f  | 71s +-1 | gate penalty      |
+            | g    | i  | 71s +-1 | lift_gate penalty |
+
+
+    Scenario: Car - Gate penalty skipped with explicit access tag
+        Given the node map
+            """
+            a-b-c   d-e-f
+            """
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | def   | primary |
+
+        And the nodes
+            | node | barrier | access |
+            | b    | gate    |        |
+            | e    | gate    | yes    |
+
+        When I route I should get
+            | from | to | time    | #                                    |
+            | a    | c  | 71s +-1 | gate without access gets penalty     |
+            | d    | f  | 11s     | gate with access=yes skips penalty   |
+
+

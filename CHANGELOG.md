@@ -4,6 +4,7 @@
       - FIXED: Crash when route starts or ends at `type=manoeuvre` relation via node [#7287](https://github.com/Project-OSRM/osrm-backend/issues/7287)
     - Profiles:
       - ADDED: Make `max_collapse_distance` configurable via Lua profiles to preserve short road crossings in pedestrian routing [#6171](https://github.com/Project-OSRM/osrm-backend/issues/6171)
+      - CHANGED: Apply configurable penalty (default 60s) to gates in car profile [#6757](https://github.com/Project-OSRM/osrm-backend/issues/6757)
       - ADDED: Add exception for audible fences (`barrier=fence` with `sensory=audible` or `sensory=audio`) that deter livestock but do not block vehicles [#6964](https://github.com/Project-OSRM/osrm-backend/issues/6964)
       - ADDED: Use `is_sidepath:of:name` and `street:name` as fallback names for unnamed sidewalks and sidepaths in foot and bicycle profiles [#7259](https://github.com/Project-OSRM/osrm-backend/issues/7259)
       - CHANGED: Car profile now blocks `barrier=gate` and `barrier=lift_gate` by default; use `access=yes/permissive/designated` to allow passage [#6757](https://github.com/Project-OSRM/osrm-backend/issues/6757)
