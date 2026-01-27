@@ -679,7 +679,14 @@ void applyOverrides(const datafacade::BaseDataFacade &facade,
                 // in its geometry
                 if (step_to_update != route_iter)
                 {
-                    // Don't update the last step (it's an arrive instruction)
+                    // Manoeuvre overrides apply to driving maneuvers, not waypoint steps.
+                    // Depart/arrive steps mark route endpoints and should keep NoTurn type.
+                    if (hasWaypointType(*step_to_update))
+                    {
+                        util::Log(logDEBUG)
+                            << "Skipping maneuver override on waypoint step" << std::endl;
+                        continue;
+                    }
                     util::Log(logDEBUG) << "Updating step "
                                         << std::distance(steps.begin(), steps.end()) -
                                                std::distance(step_to_update, steps.end())
