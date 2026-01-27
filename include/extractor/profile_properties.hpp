@@ -55,6 +55,13 @@ struct ProfileProperties
         max_speed_for_map_matching = max_speed_for_map_matching_;
     }
 
+    double GetMaxCollapseDistance() const { return max_collapse_distance; }
+
+    void SetMaxCollapseDistance(const double max_collapse_distance_)
+    {
+        max_collapse_distance = max_collapse_distance_;
+    }
+
     void SetWeightName(const std::string &name)
     {
         auto count = std::min<std::size_t>(name.length(), MAX_WEIGHT_NAME_LENGTH) + 1;
@@ -120,6 +127,8 @@ struct ProfileProperties
     //! penalty to do a uturn in deci-seconds
     std::int32_t u_turn_penalty;
     double max_speed_for_map_matching;
+    //! maximum distance in meters to collapse route steps (default 30m, intended for cars)
+    double max_collapse_distance = 30.0;
     //! depending on the profile, force the routing to always continue in the same direction
     bool continue_straight_at_waypoint;
     //! flag used for restriction parser (e.g. used for the walk profile)

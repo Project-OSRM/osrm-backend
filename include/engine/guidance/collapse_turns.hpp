@@ -11,7 +11,8 @@ namespace osrm::engine::guidance
 // Multiple possible reasons can result in unnecessary/confusing instructions
 // Collapsing such turns into a single turn instruction, we give a clearer
 // set of instructions that is not cluttered by unnecessary turns/name changes.
-[[nodiscard]] std::vector<RouteStep> collapseTurnInstructions(std::vector<RouteStep> steps);
+[[nodiscard]] std::vector<RouteStep>
+collapseTurnInstructions(std::vector<RouteStep> steps, double max_collapse_distance = 30.0);
 
 // Multiple possible reasons can result in unnecessary/confusing instructions
 // A prime example would be a segregated intersection. Turning around at this
@@ -19,7 +20,7 @@ namespace osrm::engine::guidance
 // Collapsing such turns into a single turn instruction, we give a clearer
 // set of instructions that is not cluttered by unnecessary turns/name changes.
 [[nodiscard]] std::vector<RouteStep>
-collapseSegregatedTurnInstructions(std::vector<RouteStep> steps);
+collapseSegregatedTurnInstructions(std::vector<RouteStep> steps, double max_collapse_distance = 30.0);
 
 // A combined turn is a set of two instructions that actually form a single turn, as far as we
 // perceive it. A u-turn consisting of two left turns is one such example. But there are also lots

@@ -32,7 +32,8 @@ bool isStaggeredIntersection(const RouteStepIterator step_prior_to_intersection,
 // a - > x
 bool isUTurn(const RouteStepIterator step_prior_to_intersection,
              const RouteStepIterator step_entering_intersection,
-             const RouteStepIterator step_leaving_intersection);
+             const RouteStepIterator step_leaving_intersection,
+             double max_collapse_distance = 30.0);
 
 // detect oscillating names where a name switch A->B->A occurs. This is often the case due to
 // bridges or tunnels. Any such oszillation is not supposed to show up
@@ -51,25 +52,33 @@ bool isNameOszillation(const RouteStepIterator step_prior_to_intersection,
 // the road turns right after. The offset would only be there due to the broad road at `e`
 bool maneuverPreceededByNameChange(const RouteStepIterator step_prior_to_intersection,
                                    const RouteStepIterator step_entering_intersection,
-                                   const RouteStepIterator step_leaving_intersection);
+                                   const RouteStepIterator step_leaving_intersection,
+                                   double max_collapse_distance = 30.0);
 bool maneuverPreceededBySuppressedDirection(const RouteStepIterator step_entering_intersection,
-                                            const RouteStepIterator step_leaving_intersection);
+                                            const RouteStepIterator step_leaving_intersection,
+                                            double max_collapse_distance = 30.0);
 bool suppressedStraightBetweenTurns(const RouteStepIterator step_entering_intersection,
                                     const RouteStepIterator step_at_center_of_intersection,
-                                    const RouteStepIterator step_leaving_intersection);
+                                    const RouteStepIterator step_leaving_intersection,
+                                    double max_collapse_distance = 30.0);
 
 bool maneuverSucceededByNameChange(const RouteStepIterator step_entering_intersection,
-                                   const RouteStepIterator step_leaving_intersection);
+                                   const RouteStepIterator step_leaving_intersection,
+                                   double max_collapse_distance = 30.0);
 bool maneuverSucceededBySuppressedDirection(const RouteStepIterator step_entering_intersection,
-                                            const RouteStepIterator step_leaving_intersection);
+                                            const RouteStepIterator step_leaving_intersection,
+                                            double max_collapse_distance = 30.0);
 bool nameChangeImmediatelyAfterSuppressed(const RouteStepIterator step_entering_intersection,
-                                          const RouteStepIterator step_leaving_intersection);
+                                          const RouteStepIterator step_leaving_intersection,
+                                          double max_collapse_distance = 30.0);
 bool closeChoicelessTurnAfterTurn(const RouteStepIterator step_entering_intersection,
-                                  const RouteStepIterator step_leaving_intersection);
+                                  const RouteStepIterator step_leaving_intersection,
+                                  double max_collapse_distance = 30.0);
 // if modelled turn roads meet in the center of a segregated intersection, we can end up with double
 // choiceless turns
 bool doubleChoiceless(const RouteStepIterator step_entering_intersection,
-                      const RouteStepIterator step_leaving_intersection);
+                      const RouteStepIterator step_leaving_intersection,
+                      double max_collapse_distance = 30.0);
 
 // Due to obvious detection, sometimes we can have straight turns followed by a different turn right
 // next to each other. We combine both turns into one, if the second turn is without choice
@@ -81,7 +90,8 @@ bool doubleChoiceless(const RouteStepIterator step_entering_intersection,
 // with a main road `abd`, the turn `continue straight` at `b` and `turn left at `c` will become a
 // `turn left` at `b`
 bool straightTurnFollowedByChoiceless(const RouteStepIterator step_entering_intersection,
-                                      const RouteStepIterator step_leaving_intersection);
+                                      const RouteStepIterator step_leaving_intersection,
+                                      double max_collapse_distance = 30.0);
 
 } // namespace osrm::engine::guidance
 

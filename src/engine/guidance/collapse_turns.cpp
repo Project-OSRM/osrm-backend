@@ -17,7 +17,6 @@ using namespace osrm::guidance;
 
 namespace
 {
-const constexpr double MAX_COLLAPSE_DISTANCE = 30;
 
 // find the combined turn angle for two turns. Not in all scenarios we can easily add both angles
 // (e.g 90 degree left followed by 90 degree right would be no turn at all).
@@ -66,6 +65,7 @@ double findTotalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_ste
             return false;
 
         // entry step is short and the exit and the exit step does not have intersections??
+        // Uses the default MAX_COLLAPSE_DISTANCE from collapsing_utility.hpp for angle calculation
         if (entry_step.distance < MAX_COLLAPSE_DISTANCE)
             return true;
 
@@ -433,7 +433,7 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
 }
 
 // OTHER IMPLEMENTATIONS
-[[nodiscard]] RouteSteps collapseTurnInstructions(RouteSteps steps)
+[[nodiscard]] RouteSteps collapseTurnInstructions(RouteSteps steps, const double max_collapse_distance)
 {
     // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)
     BOOST_ASSERT(!hasTurnType(steps.front()) && !hasTurnType(steps.back()));
@@ -494,7 +494,7 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
                               TransferSignageStrategy(),
                               NoModificationStrategy());
         }
-        else if (isUTurn(previous_step, current_step, next_step))
+        else if (isUTurn(previous_step, current_step, next_step, max_collapse_distance))
         {
             combineRouteSteps(
                 *current_step,
@@ -510,18 +510,18 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
             // and then the first (to ensure both iterators to be valid)
             suppressStep(*previous_step, *current_step);
         }
-        else if (maneuverPreceededByNameChange(previous_step, current_step, next_step) ||
-                 maneuverPreceededBySuppressedDirection(current_step, next_step))
+        else if (maneuverPreceededByNameChange(previous_step, current_step, next_step, max_collapse_distance) ||
+                 maneuverPreceededBySuppressedDirection(current_step, next_step, max_collapse_distance))
         {
             const auto strategy = AdjustToCombinedTurnStrategy(*previous_step);
             strategy(*next_step, *current_step);
             // suppress previous step
             suppressStep(*previous_step, *current_step);
         }
-        else if (maneuverSucceededByNameChange(current_step, next_step) ||
-                 nameChangeImmediatelyAfterSuppressed(current_step, next_step) ||
-                 maneuverSucceededBySuppressedDirection(current_step, next_step) ||
-                 closeChoicelessTurnAfterTurn(current_step, next_step))
+        else if (maneuverSucceededByNameChange(current_step, next_step, max_collapse_distance) ||
+                 nameChangeImmediatelyAfterSuppressed(current_step, next_step, max_collapse_distance) ||
+                 maneuverSucceededBySuppressedDirection(current_step, next_step, max_collapse_distance) ||
+                 closeChoicelessTurnAfterTurn(current_step, next_step, max_collapse_distance))
         {
             combineRouteSteps(*current_step,
                               *next_step,
@@ -529,7 +529,7 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
                               TransferSignageStrategy(),
                               NoModificationStrategy());
         }
-        else if (straightTurnFollowedByChoiceless(current_step, next_step))
+        else if (straightTurnFollowedByChoiceless(current_step, next_step, max_collapse_distance))
         {
             combineRouteSteps(*current_step,
                               *next_step,
@@ -537,7 +537,7 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
                               TransferSignageStrategy(),
                               NoModificationStrategy());
         }
-        else if (suppressedStraightBetweenTurns(previous_step, current_step, next_step))
+        else if (suppressedStraightBetweenTurns(previous_step, current_step, next_step, max_collapse_distance))
         {
             const auto far_back_step = findPreviousTurn(previous_step);
             previous_step->ElongateBy(*current_step);
@@ -560,7 +560,7 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
         // there are no fix conventions how to label them in segregated intersections). These steps
         // might only become apparent after some initial collapsing
         const auto new_next_step = findNextTurn(current_step);
-        if (doubleChoiceless(current_step, new_next_step))
+        if (doubleChoiceless(current_step, new_next_step, max_collapse_distance))
         {
             combineRouteSteps(*current_step,
                               *new_next_step,
@@ -573,7 +573,7 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
             const auto far_back_step = findPreviousTurn(previous_step);
             // due to name changes, we can find u-turns a bit late. Thats why we check far back as
             // well
-            if (isUTurn(far_back_step, previous_step, current_step))
+            if (isUTurn(far_back_step, previous_step, current_step, max_collapse_distance))
             {
                 combineRouteSteps(
                     *previous_step,
@@ -588,7 +588,8 @@ void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_l
 }
 
 // OTHER IMPLEMENTATIONS
-[[nodiscard]] RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps)
+[[nodiscard]] RouteSteps collapseSegregatedTurnInstructions(RouteSteps steps,
+                                                            [[maybe_unused]] const double max_collapse_distance)
 {
     // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)
     // Return early if preconditions aren't met (can happen with certain manoeuvre relations)
