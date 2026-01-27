@@ -44,17 +44,17 @@ Use `cmake --build ${BUILD_DIR} --target ${TARGET} -j $(nproc --ignore=2)` to bu
 
 ## Running
 
-OSRM supports two data preparations: Contraction Hierachies (CH) and Mulit-Level-Dijkstra (MLD).
+OSRM supports two data preparations: Contraction Hierarchies (CH) and Multi-Level Dijkstra (MLD).
 
 For CH:
 1. `./${BUILD_DIR}/osrm-extract -p profiles/car.lua data.osm.pbf`
-2. `./${BUILD_DIR}/osrm-partition data.osrm` (optional, improves CH performance due to cache locallity of node reordering)
+2. `./${BUILD_DIR}/osrm-partition data.osrm` (optional, improves CH performance due to cache locality of node reordering)
 3. `./${BUILD_DIR}/osrm-contract data.osrm`
 4. `./${BUILD_DIR}/osrm-routed -a CH data.osrm`
 
 For MLD:
 1. `./${BUILD_DIR}/osrm-extract -p profiles/car.lua data.osm.pbf`
-2. `./${BUILD_DIR}/osrm-partition data.osrm` (optional, improves CH performance due to cache locallity of node reordering)
+2. `./${BUILD_DIR}/osrm-partition data.osrm`
 3. `./${BUILD_DIR}/osrm-customize data.osrm`
 4. `./${BUILD_DIR}/osrm-routed -a MLD data.osrm`
 
@@ -97,6 +97,6 @@ npx cucumber-js -p home -p mld -p mmap
 
 <IMPORTANT>
 Use the [PR template](.github/PULL_REQUEST_TEMPLATE.md) to build the PR description.
-Ensure the description incudes which AI tool and model was used, add a robot emoji to the description.
+Ensure the description includes which AI tool and model was used, add a robot emoji to the description.
 </IMPORTANT>
 
