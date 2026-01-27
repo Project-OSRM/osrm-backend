@@ -11,6 +11,24 @@ We target C++20 but need to deal with older compilers that only have partial sup
 
 Use `./scripts/format.sh` to format the code. Ensure clang-format-15 is available on the system.
 
+## Coding Standards
+
+Specific practices to follow (see [wiki](https://github.com/Project-OSRM/osrm-backend/wiki/Coding-Standards)):
+
+- **No `using namespace`**: Always use explicit `std::` prefixes, never `using namespace std;` (especially in headers)
+- **Naming conventions**:
+  - Type names (classes, structs, enums): `UpperCamelCase` (e.g. `TextFileReader`)
+  - Variables: `lower_case_with_underscores`, private members start with `m_` (e.g. `m_node_count`)
+  - Functions: `lowerCamelCase` verb phrases (e.g. `openFile()`, `isValid()`)
+  - Enumerators and public members: `UpperCamelCase` (e.g. `VK_Argument`)
+- **Include order**: (1) Module header, (2) Local headers, (3) Parent directory headers, (4) System includes - sorted lexicographically within each group
+- **Comments**: Minimal use of comments on internal interfaces. Use C++ style `//` comments, not C style `/* */`. Use `#if 0` / `#endif` to comment out blocks
+- **Integer types**: Use only `int`/`unsigned` for 32-bit, or precise-width types like `int16_t`, `int64_t`
+- **No RTTI/exceptions**: Avoid `dynamic_cast<>` and exceptions (except for IO operations)
+- **Compiler warnings**: Treat all warnings as errors - fix them, don't ignore them
+- **Assert liberally**: Use `BOOST_ASSERT` to check preconditions and assumptions
+- **Indentation**: 4 spaces (enforced by clang-format)
+
 ## Building
 
 This project uses CMake. The build directory should be `build` or `build-{something}` or `build/{something}/`. For example:
