@@ -137,7 +137,7 @@ if (NOT WIN32)
     COMMENT "Building test data in ${TEST_DATA_DIR}"
     VERBATIM)
   add_dependencies(test-data osrm-extract osrm-contract osrm-partition osrm-customize)
-  # Make library-tests automatically build test data after compilation
+  # Ensure test data is built before building library-tests
   add_dependencies(library-tests test-data)
 endif()
 
