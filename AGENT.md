@@ -97,6 +97,7 @@ npx cucumber-js -p home -p mld -p mmap
 
 <IMPORTANT>
 Use the [PR template](.github/PULL_REQUEST_TEMPLATE.md) to build the PR description.
+Remove irrelevant tasks, but NEVER remove `review` or submit it checked.
 Ensure the description includes which AI tool and model was used, add a robot emoji to the description.
 </IMPORTANT>
 
