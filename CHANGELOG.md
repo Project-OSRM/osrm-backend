@@ -33,6 +33,8 @@
       - CHANGED: Upgrade Cucumber-js to v12 [#7221](https://github.com/Project-OSRM/osrm-backend/pull/7221)
       - CHANGED: Add libcap-setcap to alpine dockerfile [#7241](https://github.com/Project-OSRM/osrm-backend/issues/7241)
       - FIXED: Minor misspellings found in source code, comments and documents [#7215](https://github.com/Project-OSRM/osrm-backend/pull/7215)
+    - Customizer:
+      - FIXED: Data race in turn penalty updates during MLD customization [#7332](https://github.com/Project-OSRM/osrm-backend/issues/7332)
     - Profiles:
       - FIXED: Bicycle and foot profiles now don't route on motor roads [#6697](https://github.com/Project-OSRM/osrm-backend/pull/6697)
       - FIXED: Use `cycleway:both` if available. [#6179](https://github.com/Project-OSRM/osrm-backend/issues/6179)
