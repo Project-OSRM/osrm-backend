@@ -68,7 +68,8 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
 
         overview_type.add("simplified", engine::api::RouteParameters::OverviewType::Simplified)(
             "full", engine::api::RouteParameters::OverviewType::Full)(
-            "false", engine::api::RouteParameters::OverviewType::False);
+            "false", engine::api::RouteParameters::OverviewType::False)(
+            "by_legs", engine::api::RouteParameters::OverviewType::ByLegs);
 
         annotations_type.add("duration", AnnotationsType::Duration)("nodes",
                                                                     AnnotationsType::Nodes)(
