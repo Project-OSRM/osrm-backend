@@ -179,6 +179,7 @@ traffic_calming |
 mini_roundabout |
 turning_loop    |
 turning_circle  |
+gate            |
 
 #### obstacle_direction
 An enum with the following keys:

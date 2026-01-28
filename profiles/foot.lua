@@ -18,6 +18,8 @@ function setup()
       u_turn_penalty                = 2,
       continue_straight_at_waypoint = false,
       use_turn_restrictions         = false,
+      -- preserve short road crossings for pedestrian safety analysis
+      max_collapse_distance         = 10,
     },
 
     default_mode            = mode.walking,

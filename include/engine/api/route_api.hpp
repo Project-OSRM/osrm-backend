@@ -945,7 +945,9 @@ class RouteAPI : public BaseAPI
                     guidance::applyOverrides(BaseAPI::facade, steps, leg_geometry);
 
                     // Collapse segregated steps before others
-                    steps = guidance::collapseSegregatedTurnInstructions(std::move(steps));
+                    const auto max_collapse_distance = BaseAPI::facade.GetMaxCollapseDistance();
+                    steps = guidance::collapseSegregatedTurnInstructions(std::move(steps),
+                                                                         max_collapse_distance);
 
                     /* Perform step-based post-processing.
                      *
@@ -979,7 +981,8 @@ class RouteAPI : public BaseAPI
 
                     guidance::trimShortSegments(steps, leg_geometry);
                     leg.steps = guidance::handleRoundabouts(std::move(steps));
-                    leg.steps = guidance::collapseTurnInstructions(std::move(leg.steps));
+                    leg.steps = guidance::collapseTurnInstructions(std::move(leg.steps),
+                                                                   max_collapse_distance);
                     leg.steps = guidance::anticipateLaneChange(std::move(leg.steps));
                     leg.steps = guidance::buildIntersections(std::move(leg.steps));
                     leg.steps = guidance::suppressShortNameSegments(std::move(leg.steps));
