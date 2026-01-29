@@ -783,8 +783,9 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                 if (turn_weight_penalty < TurnPenalty{0})
                 {
                     util::Log(logWARNING)
-                        << "turn penalty " << turn_weight_penalty
-                        << " is too negative: clamping turn weight to " << weight_min_value;
+                        << "turn penalty " << turn_weight_penalty << " for turn_id "
+                        << edge.data.turn_id << " (edge " << edge.source << " -> " << edge.target
+                        << ") is too negative: clamping turn weight to " << weight_min_value;
                     turn_weight_penalty = alias_cast<TurnPenalty>(weight_min_value - new_weight);
                     {
                         std::lock_guard<std::mutex> lock(turn_penalties_mutex);
