@@ -122,6 +122,7 @@ inline unsigned generateServerProgramOptions(const int argc,
     generic_options.add_options()            //
         ("version,v", "Show version")        //
         ("help,h", "Show this help message") //
+        ("list-inputs", "List required and optional input file extensions") //
         ("verbosity,l",
 #ifdef NDEBUG
          boost::program_options::value<std::string>(&config.verbosity)->default_value("INFO"),
@@ -238,6 +239,13 @@ inline unsigned generateServerProgramOptions(const int argc,
     if (option_variables.count("help"))
     {
         std::cout << visible_options;
+        return INIT_OK_DO_NOT_START_ENGINE;
+    }
+
+    if (option_variables.count("list-inputs"))
+    {
+        storage::StorageConfig storage_config;
+        storage_config.ListInputFiles(std::cout);
         return INIT_OK_DO_NOT_START_ENGINE;
     }
 

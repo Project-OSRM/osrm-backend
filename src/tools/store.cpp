@@ -111,6 +111,7 @@ bool generateDataStoreOptions(const int argc,
     generic_options.add_options()            //
         ("version,v", "Show version")        //
         ("help,h", "Show this help message") //
+        ("list-inputs", "List required and optional input file extensions") //
         ("verbosity,l",
          boost::program_options::value<std::string>(&verbosity)->default_value("INFO"),
          std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str()) //
@@ -205,6 +206,13 @@ bool generateDataStoreOptions(const int argc,
     if (option_variables.count("help"))
     {
         util::Log() << visible_options;
+        return false;
+    }
+
+    if (option_variables.count("list-inputs"))
+    {
+        storage::StorageConfig config;
+        config.ListInputFiles(std::cout);
         return false;
     }
 
