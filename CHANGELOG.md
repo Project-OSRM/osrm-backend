@@ -20,6 +20,7 @@
       - FIXED: Fix compilation with gcc >14 in release with LTO. [#7268](https://github.com/Project-OSRM/osrm-backend/issues/7268)
       - ADDED: Conditionally prefix custom CMake targets with `osrm_` when built as subproject, and add ALIAS targets for FetchContent compatibility [#7267](https://github.com/Project-OSRM/osrm-backend/issues/7267)
     - Misc:
+      - ADDED: `--output` / `-o` option to osrm-extract for specifying custom output base path [#4930](https://github.com/Project-OSRM/osrm-backend/issues/4930)
       - ADDED: `--max-header-size` to override the (automatically) configured maximum header size for osrm-routed [#7336](https://github.com/Project-OSRM/osrm-backend/pull/7336)
       - CHANGED: Use boost::beast instead of own HTTP code for osrm-routed [#7328](https://github.com/Project-OSRM/osrm-backend/pull/7328)
       - ADDED: `SHM_LOCK_DIR` environment variable for shared memory lock file directory [#7312](https://github.com/Project-OSRM/osrm-backend/pull/7312)
