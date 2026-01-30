@@ -12,6 +12,18 @@ When running OSRM preprocessing commands you specify the profile with the --prof
 
 `osrm-extract --profile ../profiles/car.lua planet-latest.osm.pbf`
 
+### Using Multiple Profiles with the Same Input
+
+You can extract the same OSM file with different profiles by specifying an output path:
+
+```bash
+osrm-extract --profile profiles/car.lua planet.osm.pbf --output /data/car
+osrm-extract --profile profiles/bicycle.lua planet.osm.pbf --output /data/bicycle
+osrm-extract --profile profiles/foot.lua planet.osm.pbf --output /data/foot
+```
+
+This avoids the need to create symbolic links to the input file.
+
 ## Processing flow
 It's important to understand that profiles are used when preprocessing the OSM data, NOT at query time when routes are computed.
 

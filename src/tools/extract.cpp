@@ -78,7 +78,10 @@ return_code parseArguments(int argc,
         boost::program_options::bool_switch(&extractor_config.dump_nbg_graph)
             ->implicit_value(true)
             ->default_value(false),
-        "Dump raw node-based graph to *.osrm file for debug purposes.");
+        "Dump raw node-based graph to *.osrm file for debug purposes.")(
+        "output,o",
+        boost::program_options::value<std::filesystem::path>(&extractor_config.output_path),
+        "Output base path for generated files (default: derived from input file name)");
 
     bool dummy;
     // hidden options, will be allowed on command line, but will not be
@@ -166,7 +169,14 @@ try
 
     util::LogPolicy::GetInstance().SetLevel(verbosity);
 
-    extractor_config.UseDefaultOutputNames(extractor_config.input_path);
+    if (!extractor_config.output_path.empty())
+    {
+        extractor_config.UseDefaultOutputNames(extractor_config.output_path);
+    }
+    else
+    {
+        extractor_config.UseDefaultOutputNames(extractor_config.input_path);
+    }
 
     if (1 > extractor_config.requested_num_threads)
     {
