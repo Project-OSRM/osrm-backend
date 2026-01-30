@@ -1,3 +1,21 @@
+## Command Line Options
+
+### --list-inputs
+
+Lists all required and optional input file extensions that the tool expects.
+Useful for deployment scripts that need to know which files to copy.
+
+Example:
+```
+$ osrm-routed --list-inputs
+required .osrm.datasource_names
+required .osrm.ebg_nodes
+required .osrm.edges
+...
+optional .osrm.hsgr
+optional .osrm.cells
+```
+
 ## Environment Variables
 
 ### SHM_LOCK_DIR

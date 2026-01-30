@@ -42,6 +42,23 @@ struct IOConfig
 
     std::filesystem::path base_path;
 
+    // Print all required and optional input files to the output stream
+    void ListInputFiles(std::ostream &out) const
+    {
+        for (const auto &file : required_input_files)
+        {
+            // Skip empty string (represents OSM input for extractor)
+            if (!file.empty())
+            {
+                out << "required " << file.string() << "\n";
+            }
+        }
+        for (const auto &file : optional_input_files)
+        {
+            out << "optional " << file.string() << "\n";
+        }
+    }
+
   protected:
     // Infer the base path from the path of the .osrm file
     void UseDefaultOutputNames(const std::filesystem::path &base)
