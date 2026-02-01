@@ -40,8 +40,9 @@ cp docs/*.md build/docs/tmp/content
 # Now, run the scripts to generate the actual final product
 pushd build/docs/tmp 
 NODE_ENV=production browserify src/index.js | uglifyjs -c -m > ../bundle.js 
-babel src --out-dir lib 
-node lib/render.js ../index.html 
+# Output as .cjs since package.json has "type": "module"
+babel src --out-dir lib --out-file-extension .cjs
+node lib/render.cjs ../index.html 
 popd
 
 # Cleanup
