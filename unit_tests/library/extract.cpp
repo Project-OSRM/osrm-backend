@@ -5,6 +5,7 @@
 #include "osrm/extractor_config.hpp"
 
 #include <boost/algorithm/string.hpp>
+#include <filesystem>
 #include <thread>
 
 // utility class to redirect stderr so we can test it
@@ -46,6 +47,21 @@ BOOST_AUTO_TEST_CASE(test_extract_with_valid_config)
     config.small_component_size = 1000;
     config.requested_num_threads = std::thread::hardware_concurrency();
     BOOST_CHECK_NO_THROW(osrm::extract(config));
+}
+
+BOOST_AUTO_TEST_CASE(test_extract_with_custom_output_path)
+{
+    osrm::ExtractorConfig config;
+    config.input_path = OSRM_TEST_DATA_DIR "/monaco.osm.pbf";
+    // Use custom output path instead of deriving from input
+    config.UseDefaultOutputNames(OSRM_TEST_DATA_DIR "/monaco-custom-output");
+    config.profile_path = OSRM_TEST_DATA_DIR "/../../profiles/car.lua";
+    config.small_component_size = 1000;
+    config.requested_num_threads = std::thread::hardware_concurrency();
+    BOOST_CHECK_NO_THROW(osrm::extract(config));
+
+    // Verify output files exist at custom path
+    BOOST_CHECK(std::filesystem::exists(OSRM_TEST_DATA_DIR "/monaco-custom-output.osrm.names"));
 }
 
 BOOST_AUTO_TEST_CASE(test_setup_runtime_error)
