@@ -75,10 +75,8 @@ return_code parseArguments(int argc,
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()
-        ("version,v", "Show version")
-        ("help,h", "Show this help message")
-        ("list-inputs", "List required and optional input file extensions")(
+    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
+        "list-inputs", "List required and optional input file extensions")(
         "verbosity,l",
         boost::program_options::value<std::string>(&verbosity)->default_value("INFO"),
         std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str());
