@@ -14,5 +14,6 @@ Feature: osrm-extract - Missing node references
             | abc   |
         And node "b" is removed from OSM data
         And the data has been saved to disk
+        # Use "I try to run" because extraction fails (no valid edges remain)
         When I try to run "osrm-extract {osm_file} --profile {profile_file}"
         Then stderr should contain "referenced by ways were not found"
