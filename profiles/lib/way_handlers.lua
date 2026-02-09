@@ -527,7 +527,7 @@ end
 
 -- handle maxweight tags
 function WayHandlers.handle_weight(profile,way,result,data)
-  local keys = Sequence { 'maxweight' }
+  local keys = Sequence { 'maxweightrating', 'maxweight' }
   local forward, backward = Tags.get_forward_backward_by_set(way,data,keys)
   forward = Measure.get_max_weight(forward)
   backward = Measure.get_max_weight(backward)
