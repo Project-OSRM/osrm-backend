@@ -100,8 +100,14 @@ node_modules
 *.swp
 
 # local lua debugging file
+##########################
 debug.lua
 
 # node-osrm artifacts
+##########################
 lib/binding_napi_v8
 
+# documentation related files
+##########################
+.vitepress/cache
+docs/.vitepress/cache

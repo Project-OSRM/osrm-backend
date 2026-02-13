@@ -19,6 +19,7 @@
     "test": "./scripts/cucumber_test_matrix.sh",
     "clean": "rm -rf test/cache",
     "docs": "./scripts/build_api_docs.sh",
+    "docs:dev": "vitepress dev docs",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh",
     "nodejs-tests": "make -C test/data && ./lib/binding_napi_v8/osrm-datastore test/data/ch/monaco.osrm && node test/nodejs/index.js | faucet",
     "prepare": "husky"
@@ -55,7 +56,6 @@
     "command-line-usage": "7.0.3",
     "csv-stringify": "^6.6.0",
     "d3-queue": "3.0.7",
-    "docbox": "^1.0.11",
     "documentation": "^14.0.2",
     "eslint": "^9.39.2",
     "faucet": "^0.0.4",
@@ -67,6 +67,7 @@
     "node-cmake": "^2.5.1",
     "tape": "5.9.0",
     "uglify-js": "^3.17.0",
+    "vitepress": "^1.6.4",
     "wait-on": "^9.0.3",
     "xmlbuilder": "15.1.1"
   },
