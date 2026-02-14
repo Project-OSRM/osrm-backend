@@ -43,11 +43,13 @@ Thumbs.db
 #######################
 /_build*
 /build/
+/example/build/
 /test/data/monaco.osrm*
 /test/data/ch
 /test/data/mld
 /cmake/postinst
 .gradle/
+CMakeUserPresets.json 
 
 # Eclipse related files #
 #########################
@@ -91,6 +93,7 @@ Thumbs.db
 /test/cache
 /test/speeds.csv
 /test/penalties.csv
+/test/data/corech/
 node_modules
 
 # Deprecated config file #

@@ -52,6 +52,8 @@
     "husky": "^9.1.7",
     "jsonpath": "^1.2.1",
     "lint-staged": "^16.2.7",
+    "node-addon-api": "^8.5.0",
+    "node-cmake": "^2.5.1",
     "strip-ansi": "^7.1.0",
     "tape": "5.9.0",
     "vitepress": "^1.6.4",
