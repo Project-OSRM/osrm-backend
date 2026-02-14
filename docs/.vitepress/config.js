@@ -1,10 +1,12 @@
 import { defineConfig } from 'vitepress'
 import { endpointPlugin } from './plugins/endpoint.js'
 
+const docsBase = process.env.DOCS_BASE || '/'
+
 export default defineConfig({
   title: 'OSRM API Documentation',
   description: 'The Open Source Routing Machine API documentation',
-  base: '/osrm-backend/',
+  base: docsBase,
   ignoreDeadLinks: true,
 
   themeConfig: {

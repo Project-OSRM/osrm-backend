@@ -19,5 +19,5 @@ npx documentation build build/docs/jsdoc-extract.js --markdown-toc=false -f md -
 # Build static site with VitePress
 npx vitepress build docs
 
-# Move the built site to build/docs
-mv docs/.vitepress/dist build/docs
+# Copy the built site contents to build/docs (site root directly under build/docs)
+cp -a docs/.vitepress/dist/. build/docs/
