@@ -2,6 +2,8 @@
   - Changes from 6.0.0
     - Routing:
       - FIXED: Crash when route starts or ends at `type=manoeuvre` relation via node [#7287](https://github.com/Project-OSRM/osrm-backend/issues/7287)
+    - Extraction:
+      - ADDED: Emit warning when ways reference nodes not present in input data [#1596](https://github.com/Project-OSRM/osrm-backend/issues/1596)
     - Profiles:
       - ADDED: Make `max_collapse_distance` configurable via Lua profiles to preserve short road crossings in pedestrian routing [#6171](https://github.com/Project-OSRM/osrm-backend/issues/6171)
       - CHANGED: Apply configurable penalty (default 60s) to gates in car profile [#6757](https://github.com/Project-OSRM/osrm-backend/issues/6757)

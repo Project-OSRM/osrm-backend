@@ -354,6 +354,13 @@ Given(
   },
 );
 
+Given(/^node "([a-z])" is removed from OSM data$/, function (name, callback) {
+  const node = this.findNodeByName(name);
+  if (!node) throw new Error(`*** unknown node ${name}`);
+  this.OSMDB.nodes = this.OSMDB.nodes.filter((n) => n.id !== node.id);
+  callback();
+});
+
 Given(/^the data has been saved to disk$/, function (callback) {
   this.writeOSM();
   callback();
