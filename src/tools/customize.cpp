@@ -9,6 +9,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <set>
 #include <thread>
 
 using namespace osrm;
@@ -124,8 +125,9 @@ return_code parseArguments(int argc,
     if (option_variables.count("list-inputs"))
     {
         customizer::CustomizationConfig config;
-        config.ListInputFiles(std::cout);
-        config.updater_config.ListInputFiles(std::cout);
+        std::set<std::string> seen;
+        config.ListInputFiles(std::cout, seen);
+        config.updater_config.ListInputFiles(std::cout, seen);
         return return_code::exit;
     }
 

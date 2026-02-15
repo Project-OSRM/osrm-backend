@@ -2,6 +2,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <set>
 #include <sstream>
 
 BOOST_AUTO_TEST_SUITE(io_config)
@@ -99,6 +100,37 @@ BOOST_AUTO_TEST_CASE(list_input_files_optional_only)
     BOOST_CHECK(result.find("required") == std::string::npos);
     BOOST_CHECK(result.find("optional .osrm.hsgr") != std::string::npos);
     BOOST_CHECK(result.find("optional .osrm.cells") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(list_input_files_deduplication)
+{
+    TestConfig config1({".osrm.ebg", ".osrm.ebg_nodes", ".osrm.properties"}, {});
+    TestConfig config2({".osrm.ebg", ".osrm.turn_weight_penalties", ".osrm.ebg_nodes"}, {});
+
+    std::ostringstream output;
+    std::set<std::string> seen;
+    config1.ListInputFiles(output, seen);
+    config2.ListInputFiles(output, seen);
+
+    std::string result = output.str();
+
+    // Each file should appear exactly once
+    auto count = [&](const std::string &needle)
+    {
+        size_t n = 0;
+        size_t pos = 0;
+        while ((pos = result.find(needle, pos)) != std::string::npos)
+        {
+            ++n;
+            pos += needle.size();
+        }
+        return n;
+    };
+
+    BOOST_CHECK_EQUAL(count("required .osrm.ebg\n"), 1u);
+    BOOST_CHECK_EQUAL(count("required .osrm.ebg_nodes\n"), 1u);
+    BOOST_CHECK_EQUAL(count("required .osrm.properties\n"), 1u);
+    BOOST_CHECK_EQUAL(count("required .osrm.turn_weight_penalties\n"), 1u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
