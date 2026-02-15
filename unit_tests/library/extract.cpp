@@ -62,6 +62,9 @@ BOOST_AUTO_TEST_CASE(test_extract_with_custom_output_path)
 
     // Verify output files exist at custom path
     BOOST_CHECK(std::filesystem::exists(OSRM_TEST_DATA_DIR "/monaco-custom-output.osrm.names"));
+    BOOST_CHECK(std::filesystem::exists(OSRM_TEST_DATA_DIR "/monaco-custom-output.osrm.ebg"));
+    BOOST_CHECK(
+        std::filesystem::exists(OSRM_TEST_DATA_DIR "/monaco-custom-output.osrm.properties"));
 }
 
 BOOST_AUTO_TEST_CASE(test_setup_runtime_error)
