@@ -428,8 +428,8 @@ via                                | Read          | NodeID                    |
 to                                 | Read          | NodeID                    | The trailing node
 source_road                        | Read          | ExtractionTurnLeg         | The incoming road
 target_road                        | Read          | ExtractionTurnLeg         | The outgoing road
-roads_on_the_right                 | Read          | Vector<ExtractionTurnLeg> | Vector with information about other roads on the right of the turn that are also connected at the intersection
-roads_on_the_left                  | Read          | Vector<ExtractionTurnLeg> | Vector with information about other roads on the left of the turn that are also connected at the intersection. If turn is a u turn, this is empty.
+roads_on_the_right                 | Read          | Vector&lt;ExtractionTurnLeg&gt; | Vector with information about other roads on the right of the turn that are also connected at the intersection
+roads_on_the_left                  | Read          | Vector&lt;ExtractionTurnLeg&gt; | Vector with information about other roads on the left of the turn that are also connected at the intersection. If turn is a u turn, this is empty.
 weight                             | Read/write    | Float                     | Penalty to be applied for this turn (routing weight)
 duration                           | Read/write    | Float                     | Penalty to be applied for this turn (duration in deciseconds)
 
