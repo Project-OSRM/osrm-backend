@@ -64,7 +64,7 @@ Example: 2nd location uses the default value for `option`:
 
 #### Example Requests
 
-```curl
+```bash
 # Query on Berlin with three coordinates:
 curl 'http://router.project-osrm.org/route/v1/driving/13.388860,52.517037;13.397634,52.529407;13.428555,52.523219?overview=false'
 
@@ -141,7 +141,7 @@ possible. In that case, only the `code` field will be returned.
 
 #### Example Requests
 
-```curl
+```bash
 # Querying nearest three snapped locations of `13.388860,52.517037` with a bearing between `20° - 340°`.
 curl 'http://router.project-osrm.org/nearest/v1/driving/13.388860,52.517037?number=3&bearings=0,20'
 ```
@@ -233,7 +233,7 @@ All other properties might be undefined.
 
 #### Example Request
 
-```curl
+```bash
 # Query on Berlin with three coordinates and no overview geometry returned:
 curl 'http://router.project-osrm.org/route/v1/driving/13.388860,52.517037;13.397634,52.529407;13.428555,52.523219?overview=false'
 ```
@@ -276,7 +276,7 @@ sources=0;5;7&destinations=5;1;4;2;3;6
 
 #### Example Request
 
-```curl
+```bash
 # Returns a 3x3 duration matrix:
 curl 'http://router.project-osrm.org/table/v1/driving/13.388860,52.517037;13.397634,52.529407;13.428555,52.523219'
 
@@ -514,12 +514,12 @@ Right now, the following combinations are possible:
 
 #### Example Requests
 
-```curl
+```bash
 # Round trip in Berlin with three stops:
 curl 'http://router.project-osrm.org/trip/v1/driving/13.388860,52.517037;13.397634,52.529407;13.428555,52.523219'
 ```
 
-```curl
+```bash
 # Round trip in Berlin with four stops, starting at the first stop, ending at the last:
 curl 'http://router.project-osrm.org/trip/v1/driving/13.388860,52.517037;13.397634,52.529407;13.428555,52.523219;13.418555,52.523215?source=first&destination=last'
 ```
@@ -553,7 +553,7 @@ The `x`, `y`, and `zoom` values are the same as described at https://wiki.openst
 
 #### Example request
 
-```curl
+```bash
 # This fetches a Z=13 tile for downtown San Francisco:
 curl 'http://router.project-osrm.org/tile/v1/car/tile(1310,3166,13).mvt'
 ```

@@ -472,6 +472,7 @@ void ExtractionContainers::PrepareNodes()
         util::UnbufferedLog log;
         log << "Building node id map      ... " << std::flush;
         TIMER_START(id_map);
+        const auto original_used_count = used_node_id_list.size();
         auto node_iter = all_nodes_list.begin();
         auto ref_iter = used_node_id_list.begin();
         auto used_nodes_iter = used_node_id_list.begin();
@@ -500,6 +501,13 @@ void ExtractionContainers::PrepareNodes()
 
         // Remove unused nodes and check maximal internal node id
         used_node_id_list.resize(std::distance(used_node_id_list.begin(), used_nodes_iter));
+        const auto dropped_count = original_used_count - used_node_id_list.size();
+        if (dropped_count > 0)
+        {
+            util::Log(logWARNING) << dropped_count
+                                  << " node(s) referenced by ways were not found in the input data"
+                                     " and will be ignored";
+        }
         if (used_node_id_list.size() > std::numeric_limits<NodeID>::max())
         {
             throw util::exception("There are too many nodes remaining after filtering, OSRM only "

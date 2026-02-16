@@ -4,11 +4,15 @@
       - FIXED: Crash when route starts or ends at `type=manoeuvre` relation via node [#7287](https://github.com/Project-OSRM/osrm-backend/issues/7287)
     - API:
       - ADDED: The parameter `overview` now accepts `by_legs` to include the geometry on the `RouteLeg` instead of the `Route` object. [#7256](https://github.com/Project-OSRM/osrm-backend/pull/7256)
+    - Extraction:
+      - ADDED: Emit warning when ways reference nodes not present in input data [#1596](https://github.com/Project-OSRM/osrm-backend/issues/1596)
     - Profiles:
       - ADDED: Make `max_collapse_distance` configurable via Lua profiles to preserve short road crossings in pedestrian routing [#6171](https://github.com/Project-OSRM/osrm-backend/issues/6171)
+      - CHANGED: Apply configurable penalty (default 60s) to gates in car profile [#6757](https://github.com/Project-OSRM/osrm-backend/issues/6757)
       - ADDED: Add exception for audible fences (`barrier=fence` with `sensory=audible` or `sensory=audio`) that deter livestock but do not block vehicles [#6964](https://github.com/Project-OSRM/osrm-backend/issues/6964)
       - ADDED: Use `is_sidepath:of:name` and `street:name` as fallback names for unnamed sidewalks and sidepaths in foot and bicycle profiles [#7259](https://github.com/Project-OSRM/osrm-backend/issues/7259)
     - Build:
+      - FIXED: Documentation build fails with ESM/CommonJS conflict after adding "type": "module" [#7347](https://github.com/Project-OSRM/osrm-backend/issues/7347)
       - FIXED: Set `hwloc:shared=True` in Conan config as required by onetbb [#7342](https://github.com/Project-OSRM/osrm-backend/issues/7342)
       - CHANGED: Cucumber tests now can run in parallel and other improvements [#7309](https://github.com/Project-OSRM/osrm-backend/issues/7309)
       - FIXED: Update Node.js binding path from `lib/binding` to `lib/binding_napi_v8` to match node-pre-gyp versioning conventions [#7272](https://github.com/Project-OSRM/osrm-backend/pull/7272)
@@ -16,6 +20,7 @@
       - FIXED: Merge `osrm_extract` and `osrm_guidance` to avoid circular dependencies. [#7315](https://github.com/Project-OSRM/osrm-backend/pull/7315)
       - FIXED: Work around compilation error due to a false-positive of array-bounds check in sol2 [#7317](https://github.com/Project-OSRM/osrm-backend/pull/7317)
       - FIXED: Fix compilation with gcc >14 in release with LTO. [#7268](https://github.com/Project-OSRM/osrm-backend/issues/7268)
+      - ADDED: Conditionally prefix custom CMake targets with `osrm_` when built as subproject, and add ALIAS targets for FetchContent compatibility [#7267](https://github.com/Project-OSRM/osrm-backend/issues/7267)
     - Misc:
       - ADDED: `--max-header-size` to override the (automatically) configured maximum header size for osrm-routed [#7336](https://github.com/Project-OSRM/osrm-backend/pull/7336)
       - CHANGED: Use boost::beast instead of own HTTP code for osrm-routed [#7328](https://github.com/Project-OSRM/osrm-backend/pull/7328)

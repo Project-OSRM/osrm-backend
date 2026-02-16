@@ -70,6 +70,7 @@ struct Obstacle
         TurningLoop = 0x0080,
         TurningCircle = 0x0100,
         StopMinor = 0x0200,
+        Gate = 0x0400,
 
         Turning = MiniRoundabout | TurningLoop | TurningCircle,
         Incompressible = Barrier | Turning,

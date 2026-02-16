@@ -56,8 +56,6 @@ function setup()
       'border_control',
       'toll_booth',
       'sally_port',
-      'gate',
-      'lift_gate',
       'no',
       'entrance',
       'height_restrictor',
@@ -167,6 +165,11 @@ function setup()
       driveway          = 0.5,
       ["drive-through"] = 0.5,
       ["drive-thru"] = 0.5
+    },
+
+    barrier_penalties = {
+      gate      = 60,
+      lift_gate = 60,
     },
 
     restricted_highway_whitelist = Set {
@@ -361,13 +364,23 @@ function process_node(profile, node, result, relations)
       local sensory = node:get_value_by_key("sensory")
       local audible_fence = barrier == "fence" and sensory and (sensory == "audible" or sensory == "audio")
 
+      -- check if barrier has a configurable penalty (e.g., gates)
+      local barrier_penalty = profile.barrier_penalties[barrier]
+
       if not profile.barrier_whitelist[barrier]
                 and not rising_bollard
                 and not flat_kerb
                 and not highway_crossing_kerb
                 and not audible_fence
+                and not barrier_penalty
                 or restricted_by_height then
         obstacle_map:add(node, Obstacle.new(obstacle_type.barrier))
+      end
+
+      -- apply configurable penalty to gates/lift_gates
+      if barrier_penalty then
+        obstacle_map:add(node, Obstacle.new(obstacle_type.gate,
+                                            obstacle_direction.both, barrier_penalty, 0))
       end
     end
   end
