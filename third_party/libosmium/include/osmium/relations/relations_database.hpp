@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -142,7 +142,7 @@ namespace osmium {
              * Complexity: Constant.
              */
             std::size_t used_memory() const noexcept {
-                return sizeof(element) * m_elements.capacity() +
+                return (sizeof(element) * m_elements.capacity()) +
                        sizeof(RelationsDatabase);
             }
 
@@ -323,7 +323,7 @@ namespace osmium {
         void RelationsDatabase::for_each_relation(TFunc&& func) {
             for (std::size_t pos = 0; pos < m_elements.size(); ++pos) {
                 if (m_elements[pos].handle.valid()) {
-                    func(RelationHandle{this, pos});
+                    std::forward<TFunc>(func)(RelationHandle{this, pos});
                 }
             }
         }

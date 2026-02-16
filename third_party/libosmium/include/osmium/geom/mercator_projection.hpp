@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -49,12 +49,12 @@ namespace osmium {
             constexpr double earth_radius_for_epsg3857 = 6378137.0;
             constexpr double max_coordinate_epsg3857 = 20037508.34;
 
-            constexpr inline double lon_to_x(double lon) noexcept {
+            constexpr double lon_to_x(double lon) noexcept {
                 return earth_radius_for_epsg3857 * deg_to_rad(lon);
             }
 
             inline double lat_to_y_with_tan(double lat) { // not constexpr because math functions aren't
-                return earth_radius_for_epsg3857 * std::log(std::tan(osmium::geom::PI / 4 + deg_to_rad(lat) / 2));
+                return earth_radius_for_epsg3857 * std::log(std::tan((osmium::geom::PI / 4) + (deg_to_rad(lat) / 2)));
             }
 
 #ifdef OSMIUM_USE_SLOW_MERCATOR_PROJECTION
@@ -96,12 +96,12 @@ namespace osmium {
             }
 #endif
 
-            constexpr inline double x_to_lon(double x) {
+            constexpr double x_to_lon(double x) {
                 return rad_to_deg(x) / earth_radius_for_epsg3857;
             }
 
             inline double y_to_lat(double y) { // not constexpr because math functions aren't
-                return rad_to_deg(2 * std::atan(std::exp(y / earth_radius_for_epsg3857)) - osmium::geom::PI / 2);
+                return rad_to_deg((2 * std::atan(std::exp(y / earth_radius_for_epsg3857))) - (osmium::geom::PI / 2));
             }
 
         } // namespace detail

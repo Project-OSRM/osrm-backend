@@ -19,6 +19,8 @@
 
 static_assert(osmium::index::empty_value<osmium::Location>() == osmium::Location{}, "Empty value for location is wrong");
 
+namespace {
+
 template <typename TIndex>
 void test_func_all(TIndex& index) {
     const osmium::unsigned_object_id_type id1 = 12;
@@ -91,6 +93,8 @@ void test_func_real(TIndex& index) {
     REQUIRE(index.get_noexcept(5) == osmium::Location{});
     REQUIRE(index.get_noexcept(100) == osmium::Location{});
 }
+
+} // anonymous namespace
 
 TEST_CASE("Map Id to location: Dummy") {
     using index_type = osmium::index::map::Dummy<osmium::unsigned_object_id_type, osmium::Location>;

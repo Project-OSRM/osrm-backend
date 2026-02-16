@@ -2,10 +2,13 @@
 
 #include "utils.hpp"
 
+#include <osmium/io/file.hpp>
 #include <osmium/io/xml_input.hpp>
 #include <osmium/osm/relation.hpp>
 #include <osmium/relations/relations_manager.hpp>
+#include <osmium/visitor.hpp>
 
+#include <cstdlib>
 #include <iterator>
 
 struct EmptyRM : public osmium::relations::RelationsManager<EmptyRM, true, true, true> {

@@ -3,6 +3,7 @@
 #include <osmium/osm/timestamp.hpp>
 #include <osmium/util/minmax.hpp>
 
+#include <cstdint>
 #include <limits>
 
 TEST_CASE("min_op numeric") {

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -102,7 +102,7 @@ namespace osmium {
              * be printed as a unique (for an ItemStash object) number.
              */
             template <typename TChar, typename TTraits>
-            friend inline std::basic_ostream<TChar, TTraits>& operator<<(std::basic_ostream<TChar, TTraits>& out, const ItemStash::handle_type& handle) {
+            friend inline std::basic_ostream<TChar, TTraits>& operator<<(std::basic_ostream<TChar, TTraits>& out, const ItemStash::handle_type& handle) { // NOLINT(readability-redundant-inline-specifier)
                 if (handle.valid()) {
                     out << handle.value;
                 } else {
@@ -208,7 +208,7 @@ namespace osmium {
         std::size_t used_memory() const noexcept {
             return sizeof(ItemStash) +
                    m_buffer.capacity() +
-                   m_index.capacity() * sizeof(std::size_t);
+                   (m_index.capacity() * sizeof(std::size_t));
         }
 
         /**

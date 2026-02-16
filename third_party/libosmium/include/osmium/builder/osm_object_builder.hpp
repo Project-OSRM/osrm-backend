@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -324,7 +324,7 @@ namespace osmium {
 
         class ChangesetDiscussionBuilder : public Builder {
 
-            osmium::ChangesetComment* m_comment = nullptr;
+            std::size_t m_comment_offset = std::numeric_limits<std::size_t>::max();
 
             void add_user(osmium::ChangesetComment& comment, const char* user, const std::size_t length) {
                 if (length > osmium::max_osm_string_length) {
@@ -341,6 +341,19 @@ namespace osmium {
                 comment.set_text_size(static_cast<osmium::changeset_comment_size_type>(length) + 1);
                 add_size(append_with_zero(text, static_cast<osmium::memory::item_size_type>(length)));
                 add_padding(true);
+            }
+
+            bool has_open_comment() const noexcept {
+                return m_comment_offset != std::numeric_limits<std::size_t>::max();
+            }
+
+            // Get current comment pointer (recalculated each time to handle buffer reallocation)
+            osmium::ChangesetComment* get_comment_ptr() {
+                if (has_open_comment()) {
+                    return &buffer().get<osmium::ChangesetComment>(
+                        buffer().committed() + m_comment_offset);
+                }
+                return nullptr;
             }
 
         public:
@@ -362,32 +375,46 @@ namespace osmium {
             ChangesetDiscussionBuilder& operator=(ChangesetDiscussionBuilder&&) = delete;
 
             ~ChangesetDiscussionBuilder() {
-                assert(!m_comment && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
+                assert(!has_open_comment() && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
                 add_padding();
             }
 
             void add_comment(osmium::Timestamp date, osmium::user_id_type uid, const char* user) {
-                assert(!m_comment && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
-                m_comment = reserve_space_for<osmium::ChangesetComment>();
-                new (m_comment) osmium::ChangesetComment{date, uid};
+                assert(!has_open_comment() && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
+
+                // Store offset instead of pointer to handle buffer reallocation
+                m_comment_offset = buffer().written() - buffer().committed();
+
+                auto* comment = reserve_space_for<osmium::ChangesetComment>();
+                new (comment) osmium::ChangesetComment{date, uid};
                 add_size(sizeof(ChangesetComment));
-                add_user(*m_comment, user, std::strlen(user));
+
+                add_user(*comment, user, std::strlen(user));
             }
 
             void add_comment_text(const char* text) {
-                assert(m_comment && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
-                osmium::ChangesetComment& comment = *m_comment;
-                m_comment = nullptr;
-                add_text(comment, text, std::strlen(text));
+                assert(has_open_comment() && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
+
+                // Get fresh pointer each time to handle buffer reallocation
+                auto* comment = get_comment_ptr();
+
+                // Invalidate offset to ensure right adding order
+                m_comment_offset = std::numeric_limits<std::size_t>::max();
+
+                add_text(*comment, text, std::strlen(text));
             }
 
             void add_comment_text(const std::string& text) {
-                assert(m_comment && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
-                osmium::ChangesetComment& comment = *m_comment;
-                m_comment = nullptr;
-                add_text(comment, text.c_str(), text.size());
-            }
+                assert(has_open_comment() && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
 
+                // Get fresh pointer each time to handle buffer reallocation
+                auto* comment = get_comment_ptr();
+
+                // Invalidate offset to ensure right adding order
+                m_comment_offset = std::numeric_limits<std::size_t>::max();
+
+                add_text(*comment, text.c_str(), text.size());
+            }
         }; // class ChangesetDiscussionBuilder
 
 #define OSMIUM_FORWARD(setter) \

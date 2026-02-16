@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -104,7 +104,7 @@ namespace osmium {
         private:
 
             std::unique_ptr<Buffer> m_next_buffer;
-            std::unique_ptr<unsigned char[]> m_memory{};
+            std::unique_ptr<unsigned char[]> m_memory;
             unsigned char* m_data = nullptr;
             std::size_t m_capacity = 0;
             std::size_t m_written = 0;
@@ -343,8 +343,8 @@ namespace osmium {
             }
 
             /**
-             * Returns the number of bytes currently filled in this buffer that
-             * are not yet committed.
+             * Returns the number of bytes currently filled in this buffer.
+             * This includes committed and not yet committed bytes.
              * Always returns 0 on invalid buffers.
              */
             std::size_t written() const noexcept {

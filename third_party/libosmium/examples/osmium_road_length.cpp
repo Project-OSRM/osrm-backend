@@ -20,6 +20,7 @@
 
 */
 
+#include <exception>
 #include <iostream> // for std::cout, std::cerr
 
 // Allow any format of input files (XML, PBF, ...)

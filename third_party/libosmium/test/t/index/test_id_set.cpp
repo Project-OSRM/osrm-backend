@@ -3,6 +3,8 @@
 #include <osmium/index/id_set.hpp>
 #include <osmium/osm/types.hpp>
 
+#include <algorithm>
+
 TEST_CASE("Basic functionality of IdSetDense") {
     osmium::index::IdSetDense<osmium::unsigned_object_id_type> s;
 

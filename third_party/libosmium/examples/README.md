@@ -11,33 +11,33 @@ them.
 
 ## Very simple examples
 
-* `osmium_read`
-* `osmium_count`
-* `osmium_debug`
-* `osmium_tiles`
+* [`osmium_read`](./osmium_read.cpp)
+* [`osmium_count`](./osmium_count.cpp)
+* [`osmium_debug`](./osmium_debug.cpp)
+* [`osmium_tiles`](./osmium_tiles.cpp)
 
 ## Still reasonably simple examples
 
-* `osmium_amenity_list`
-* `osmium_read_with_progress`
-* `osmium_filter_discussions`
-* `osmium_convert`
-* `osmium_pub_names`
-* `osmium_road_length`
+* [`osmium_amenity_list`](./osmium_amenity_list.cpp)
+* [`osmium_read_with_progress`](./osmium_read_with_progress.cpp)
+* [`osmium_filter_discussions`](./osmium_filter_discussions.cpp)
+* [`osmium_convert`](./osmium_convert.cpp)
+* [`osmium_pub_names`](./osmium_pub_names.cpp)
+* [`osmium_road_length`](./osmium_road_length.cpp)
 
 ## More advanced examples
 
-* `osmium_area_test`
-* `osmium_create_pois`
-* `osmium_tags_filter`
+* [`osmium_area_test`](./osmium_area_test.cpp)
+* [`osmium_create_pois`](./osmium_create_pois.cpp)
+* [`osmium_tags_filter`](./osmium_tags_filter.cpp)
 
 ## Even more advanced examples
 
-* `osmium_change_tags`
-* `osmium_location_cache_create`
-* `osmium_location_cache_use`
-* `osmium_dump_internal`
-* `osmium_index_lookup`
+* [`osmium_change_tags`](./osmium_change_tags.cpp)
+* [`osmium_location_cache_create`](./osmium_location_cache_create.cpp)
+* [`osmium_location_cache_use`](./osmium_location_cache_use.cpp)
+* [`osmium_dump_internal`](./osmium_dump_internal.cpp)
+* [`osmium_index_lookup`](./osmium_index_lookup.cpp)
 
 ## License
 

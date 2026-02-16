@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -61,12 +61,12 @@ namespace osmium {
         constexpr double PI = 3.14159265358979323846;
 
         /// Convert angle from degrees to radians.
-        inline constexpr double deg_to_rad(double degree) noexcept {
+        constexpr double deg_to_rad(double degree) noexcept {
             return degree * (PI / 180.0);
         }
 
         /// Convert angle from radians to degrees.
-        inline constexpr double rad_to_deg(double radians) noexcept {
+        constexpr double rad_to_deg(double radians) noexcept {
             return radians * (180.0 / PI);
         }
 

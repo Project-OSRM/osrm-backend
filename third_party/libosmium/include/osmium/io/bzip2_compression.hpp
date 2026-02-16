@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -109,6 +109,9 @@ namespace osmium {
                 file_wrapper() noexcept = default;
 
                 file_wrapper(const int fd, const char* mode) {
+                    if (fd < 0) {
+                        throw std::system_error{errno, std::system_category(), "file descriptor must be >= 0"};
+                    }
 #ifdef _MSC_VER
                     osmium::detail::disable_invalid_parameter_handler diph;
 #endif
@@ -152,7 +155,7 @@ namespace osmium {
 
                         // Do not close stdout
                         if (fileno(wrapped_file) == 1) {
-                            return;
+                            return; // NOLINT(clang-analyzer-unix.Stream)
                         }
 
                         if (fclose(wrapped_file) != 0) {
@@ -195,7 +198,7 @@ namespace osmium {
             ~Bzip2Compressor() noexcept override {
                 try {
                     close();
-                } catch (...) {
+                } catch (...) { // NOLINT(bugprone-empty-catch)
                     // Ignore any exceptions because destructor must not throw.
                 }
             }
@@ -269,7 +272,7 @@ namespace osmium {
             ~Bzip2Decompressor() noexcept override {
                 try {
                     close();
-                } catch (...) {
+                } catch (...) { // NOLINT(bugprone-empty-catch)
                     // Ignore any exceptions because destructor must not throw.
                 }
             }
@@ -294,22 +297,37 @@ namespace osmium {
                         detail::throw_bzip2_error(m_bzfile, "read failed", bzerror);
                     }
                     if (bzerror == BZ_STREAM_END) {
-                        void* unused = nullptr;
-                        int nunused = 0;
                         if (!feof(m_file.file())) {
-                            ::BZ2_bzReadGetUnused(&bzerror, m_bzfile, &unused, &nunused);
+                            void* unused = nullptr;
+                            int num_unused = 0;
+                            ::BZ2_bzReadGetUnused(&bzerror, m_bzfile, &unused, &num_unused);
                             if (bzerror != BZ_OK) {
                                 detail::throw_bzip2_error(m_bzfile, "get unused failed", bzerror);
                             }
-                            std::string unused_data{static_cast<const char*>(unused), static_cast<std::string::size_type>(nunused)};
-                            ::BZ2_bzReadClose(&bzerror, m_bzfile);
-                            if (bzerror != BZ_OK) {
-                                throw bzip2_error{"bzip2 error: read close failed", bzerror};
-                            }
-                            assert(unused_data.size() < std::numeric_limits<int>::max());
-                            m_bzfile = ::BZ2_bzReadOpen(&bzerror, m_file.file(), 0, 0, &*unused_data.begin(), static_cast<int>(unused_data.size()));
-                            if (!m_bzfile) {
-                                throw bzip2_error{"bzip2 error: read open failed", bzerror};
+                            if (num_unused != 0) {
+                                std::string unused_data{static_cast<const char*>(unused), static_cast<std::string::size_type>(num_unused)};
+                                ::BZ2_bzReadClose(&bzerror, m_bzfile);
+                                if (bzerror != BZ_OK) {
+                                    throw bzip2_error{"bzip2 error: read close failed", bzerror};
+                                }
+                                assert(unused_data.size() < std::numeric_limits<int>::max());
+                                m_bzfile = ::BZ2_bzReadOpen(&bzerror, m_file.file(), 0, 0, &*unused_data.begin(), static_cast<int>(unused_data.size()));
+                                if (!m_bzfile) {
+                                    throw bzip2_error{"bzip2 error: read open failed", bzerror};
+                                }
+                            } else {
+                                // Close current stream and try to open a new one for multi-stream files
+                                ::BZ2_bzReadClose(&bzerror, m_bzfile);
+                                if (bzerror != BZ_OK) {
+                                    throw bzip2_error{"bzip2 error: read close failed", bzerror};
+                                }
+                                // Try to open a new stream - there might be more bzip2 streams concatenated
+                                m_bzfile = ::BZ2_bzReadOpen(&bzerror, m_file.file(), 0, 0, nullptr, 0);
+                                if (!m_bzfile || bzerror != BZ_OK) {
+                                    // If we can't open a new stream, we've truly reached the end
+                                    m_stream_end = true;
+                                    m_bzfile = nullptr;
+                                }
                             }
                         } else {
                             m_stream_end = true;
@@ -373,7 +391,7 @@ namespace osmium {
             ~Bzip2BufferDecompressor() noexcept override {
                 try {
                     close();
-                } catch (...) {
+                } catch (...) { // NOLINT(bugprone-empty-catch)
                     // Ignore any exceptions because destructor must not throw.
                 }
             }

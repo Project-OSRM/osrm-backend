@@ -3,11 +3,9 @@ name: Install homebrew packages on macOS
 runs:
   using: composite
   steps:
-    - name: Install packages
+    - name: Install homebrew packages
       run: |
         brew install \
-        boost \
-        gdal \
-        google-sparsehash
+          boost \
+          gdal
       shell: bash
-
