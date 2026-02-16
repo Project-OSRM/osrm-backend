@@ -68,9 +68,6 @@ int main(int argc, char *argv[])
     osrm::util::Log() << "Not supported on FreeBSD";
     return 0;
 #endif
-#ifdef _WIN32
-    // Windows: enable Windows-specific code paths below
-#else
 
     osrm::util::LogPolicy::GetInstance().Unmute();
     if (1 == argc)
@@ -420,5 +417,4 @@ int main(int argc, char *argv[])
         }
     }
     return EXIT_SUCCESS;
-#endif
 }
