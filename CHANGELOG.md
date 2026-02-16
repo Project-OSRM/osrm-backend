@@ -21,6 +21,7 @@
       - FIXED: Fix compilation with gcc >14 in release with LTO. [#7268](https://github.com/Project-OSRM/osrm-backend/issues/7268)
       - ADDED: Conditionally prefix custom CMake targets with `osrm_` when built as subproject, and add ALIAS targets for FetchContent compatibility [#7267](https://github.com/Project-OSRM/osrm-backend/issues/7267)
     - Misc:
+      - CHANGED: Upgrade from clang-format-15 to clang-format-18 [#7249](https://github.com/Project-OSRM/osrm-backend/issues/7249)
       - ADDED: `--output` / `-o` option to osrm-extract for specifying custom output base path [#4930](https://github.com/Project-OSRM/osrm-backend/issues/4930)
       - ADDED: `--list-inputs` option to all OSRM tools to list required/optional input file extensions for deployment scripts [#2865](https://github.com/Project-OSRM/osrm-backend/issues/2865)
       - ADDED: `--max-header-size` to override the (automatically) configured maximum header size for osrm-routed [#7336](https://github.com/Project-OSRM/osrm-backend/pull/7336)

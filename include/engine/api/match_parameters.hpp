@@ -78,9 +78,8 @@ struct MatchParameters : public RouteParameters
                     bool tidy_,
                     const std::vector<std::size_t> &waypoints_,
                     Args &&...args_)
-        : RouteParameters{std::forward<Args>(args_)..., waypoints_}, timestamps{std::move(
-                                                                         timestamps_)},
-          gaps(gaps_), tidy(tidy_)
+        : RouteParameters{std::forward<Args>(args_)..., waypoints_},
+          timestamps{std::move(timestamps_)}, gaps(gaps_), tidy(tidy_)
     {
     }
 

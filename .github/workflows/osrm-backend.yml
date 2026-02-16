@@ -94,33 +94,33 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   format-taginfo-docs:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Enable Node.js cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-      - name: Prepare environment
-        run: |
-          npm ci --ignore-scripts
-          clang-format-15 --version
-      - name: Run checks
-        run: |
-          ./scripts/check_taginfo.py taginfo.json profiles/car.lua
-          # Check that code formatting is up to date
-          ./scripts/format.sh && ./scripts/error_on_dirty.sh "Run './scripts/format.sh' locally and commit the changes."
-          node ./scripts/validate_changelog.js
-          # Check that API documentation is up to date with JSDoc comments in node_osrm.cpp
-          npm run docs && ./scripts/error_on_dirty.sh "Run 'npm run docs' locally and commit the changes."
-          npm audit --production
+    - uses: actions/checkout@v4
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+    - name: Enable Node.js cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+    - name: Prepare environment
+      run: |
+        npm ci --ignore-scripts
+        clang-format-18 --version
+    - name: Run checks
+      run: |
+        ./scripts/check_taginfo.py taginfo.json profiles/car.lua
+        # Check that code formatting is up to date
+        ./scripts/format.sh && ./scripts/error_on_dirty.sh "Run './scripts/format.sh' locally and commit the changes."
+        node ./scripts/validate_changelog.js
+        # Check that API documentation is up to date with JSDoc comments in node_osrm.cpp
+        npm run docs && ./scripts/error_on_dirty.sh "Run 'npm run docs' locally and commit the changes."
+        npm audit --production
 
   docker-image-matrix:
     strategy:
