@@ -205,8 +205,7 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
             {
                 iter = std::find_if(iter,
                                     edge_and_level_end,
-                                    [node, level](const auto &edge_and_level)
-                                    {
+                                    [node, level](const auto &edge_and_level) {
                                         return boost::get<0>(edge_and_level).source != node ||
                                                boost::get<1>(edge_and_level) != level;
                                     });

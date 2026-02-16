@@ -237,10 +237,8 @@ int main(int argc, char *argv[])
         osrm::tools::runStatistics(timing_results_raw_random, stats);
 
         osrm::util::Log() << "raw random I/O: " << std::setprecision(5) << std::fixed
-                          << "min: " << stats.min << "ms, "
-                          << "mean: " << stats.mean << "ms, "
-                          << "med: " << stats.med << "ms, "
-                          << "max: " << stats.max << "ms, "
+                          << "min: " << stats.min << "ms, " << "mean: " << stats.mean << "ms, "
+                          << "med: " << stats.med << "ms, " << "max: " << stats.max << "ms, "
                           << "dev: " << stats.dev << "ms";
 
         std::vector<double> timing_results_raw_seq;
@@ -305,10 +303,8 @@ int main(int argc, char *argv[])
         }
         osrm::tools::runStatistics(timing_results_raw_seq, stats);
         osrm::util::Log() << "raw sequential I/O: " << std::setprecision(5) << std::fixed
-                          << "min: " << stats.min << "ms, "
-                          << "mean: " << stats.mean << "ms, "
-                          << "med: " << stats.med << "ms, "
-                          << "max: " << stats.max << "ms, "
+                          << "min: " << stats.min << "ms, " << "mean: " << stats.mean << "ms, "
+                          << "med: " << stats.med << "ms, " << "max: " << stats.max << "ms, "
                           << "dev: " << stats.dev << "ms";
 
         if (std::filesystem::exists(test_path))

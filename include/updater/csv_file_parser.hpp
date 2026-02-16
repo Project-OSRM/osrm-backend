@@ -64,8 +64,7 @@ template <typename Key, typename Value> struct CSVFilesParser
             // The operands order is swapped to make descending ordering on (key, source)
             tbb::parallel_sort(begin(lookup),
                                end(lookup),
-                               [](const auto &lhs, const auto &rhs)
-                               {
+                               [](const auto &lhs, const auto &rhs) {
                                    return std::tie(rhs.first, rhs.second.source) <
                                           std::tie(lhs.first, lhs.second.source);
                                });

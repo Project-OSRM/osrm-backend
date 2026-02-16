@@ -87,8 +87,7 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                 std::accumulate(endpoint_candidates.target_phantoms.begin(),
                                 endpoint_candidates.target_phantoms.end(),
                                 level_1,
-                                [&](LevelID level_2, const PhantomNode &target)
-                                {
+                                [&](LevelID level_2, const PhantomNode &target) {
                                     return std::min(
                                         level_2,
                                         getNodeQueryLevel(partition, node, source, target));

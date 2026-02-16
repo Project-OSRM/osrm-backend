@@ -106,15 +106,13 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
         };
 
         const auto add_approach = [](engine::api::BaseParameters &base_parameters,
-                                     boost::optional<osrm::engine::Approach> approach)
-        {
+                                     boost::optional<osrm::engine::Approach> approach) {
             base_parameters.approaches.push_back(approach ? std::make_optional(*approach)
                                                           : std::nullopt);
         };
 
-        const auto add_radius =
-            [](engine::api::BaseParameters &base_parameters, boost::optional<double> radius)
-        {
+        const auto add_radius = [](engine::api::BaseParameters &base_parameters,
+                                   boost::optional<double> radius) {
             base_parameters.radiuses.push_back(radius ? std::make_optional(*radius) : std::nullopt);
         };
 

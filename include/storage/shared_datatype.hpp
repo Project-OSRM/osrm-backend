@@ -223,8 +223,7 @@ struct SharedRegionRegister
         auto iter = std::find_if(
             regions.begin(),
             regions.end(),
-            [&](const auto &region)
-            {
+            [&](const auto &region) {
                 return std::strncmp(region.name, name.c_str(), SharedRegion::MAX_NAME_LENGTH) == 0;
             });
 
