@@ -5,8 +5,9 @@
 
 #include "util/typedefs.hpp"
 
+#include <atomic>
+#include <memory>
 #include <unordered_map>
-
 #include <vector>
 
 namespace osrm::extractor

@@ -16,10 +16,10 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
+#include <memory>
 #include <numeric>
-#include <vector>
-
 #include <ranges>
+#include <vector>
 
 namespace osrm::partitioner
 {
