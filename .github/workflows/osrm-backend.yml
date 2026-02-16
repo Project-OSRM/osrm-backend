@@ -298,17 +298,16 @@ jobs:
             ENABLE_CONAN: ON
             ENABLE_LTO: OFF
 
-          # TODO(themarex): Reenable after #7309
-          #- name: conan-linux-debug-asan-ubsan
-          #  continue-on-error: false
-          #  node: 20
-          #  runs-on: ubuntu-24.04
-          #  BUILD_TYPE: Release
-          #  CCOMPILER: clang-18
-          #  CXXCOMPILER: clang++-18
-          #  ENABLE_CONAN: ON
-          #  ENABLE_SANITIZER: ON
-          #  ENABLE_LTO: OFF
+          - name: conan-linux-debug-asan-ubsan
+           continue-on-error: false
+           node: 20
+           runs-on: ubuntu-24.04
+           BUILD_TYPE: Release
+           CCOMPILER: clang-18
+           CXXCOMPILER: clang++-18
+           ENABLE_CONAN: ON
+           ENABLE_SANITIZER: ON
+           ENABLE_LTO: OFF
 
           - name: conan-linux-release-node
             build_node_package: true
