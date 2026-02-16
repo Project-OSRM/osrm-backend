@@ -19,6 +19,7 @@
 #include <fstream>
 #include <iostream>
 #include <type_traits>
+#include <vector>
 
 namespace osrm::storage::io
 {
