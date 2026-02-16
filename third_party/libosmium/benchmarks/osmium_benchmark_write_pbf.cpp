@@ -4,12 +4,14 @@
 
 */
 
-#include <cstdlib>
-#include <iostream>
-#include <string>
-
 #include <osmium/io/any_input.hpp>
 #include <osmium/io/any_output.hpp>
+
+#include <cstdlib>
+#include <exception>
+#include <iostream>
+#include <string>
+#include <utility>
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {

@@ -4,6 +4,7 @@
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm.hpp>
 
+#include <cstddef>
 #include <string>
 
 constexpr const std::size_t test_buffer_size = 1024UL * 10UL;

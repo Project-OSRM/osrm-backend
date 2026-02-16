@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -50,6 +50,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iterator>
 #include <numeric>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace osmium {
@@ -64,13 +65,13 @@ namespace osmium {
              * way as parameter. This takes into account that there might be
              * non-way members in the relation.
              */
-            template <typename F>
-            inline void for_each_member(const osmium::Relation& relation, const std::vector<const osmium::Way*>& ways, F&& func) {
+            template <typename TFunc>
+            inline void for_each_member(const osmium::Relation& relation, const std::vector<const osmium::Way*>& ways, TFunc&& func) {
                 auto way_it = ways.cbegin();
                 for (const osmium::RelationMember& member : relation.members()) {
                     if (member.type() == osmium::item_type::way) {
                         assert(way_it != ways.cend());
-                        func(member, **way_it);
+                        std::forward<TFunc>(func)(member, **way_it);
                         ++way_it;
                     }
                 }
@@ -84,7 +85,7 @@ namespace osmium {
 
                 using slist_type = std::vector<NodeRefSegment>;
 
-                slist_type m_segments{};
+                slist_type m_segments;
 
                 bool m_debug;
 

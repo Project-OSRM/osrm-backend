@@ -10,7 +10,7 @@ set -o nounset
 # https://stackoverflow.com/questions/12858199/how-to-rebase-after-git-subtree-add
 
 OSMIUM_PATH="osmcode/libosmium"
-OSMIUM_TAG=v2.20.0
+OSMIUM_TAG=v2.23.0
 
 SOL_PATH="ThePhD/sol2"
 SOL_TAG=v3.3.0

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -115,7 +115,7 @@ namespace osmium {
                     using it_type = std::list<std::string>::const_iterator;
 
                     it_type m_it;
-                    const it_type m_last;
+                    it_type m_last;
                     const char* m_pos;
 
                 public:

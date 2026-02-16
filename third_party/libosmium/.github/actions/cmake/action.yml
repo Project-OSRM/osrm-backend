@@ -11,9 +11,7 @@ runs:
         cmake -LA .. \
               -DBUILD_DATA_TESTS=ON \
               -DUSE_CPP_VERSION=${CPP_VERSION} \
-              -DWITH_PROJ=${WITH_PROJ} \
-              -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-              -DPROTOZERO_INCLUDE_DIR=${GITHUB_WORKSPACE}/../protozero/include
+              -DPROTOZERO_INCLUDE_DIR=${GITHUB_WORKSPACE}/../protozero/include \
+              -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
       shell: bash
       working-directory: build
-

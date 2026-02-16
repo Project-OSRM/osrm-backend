@@ -47,7 +47,7 @@
 // and will write a (changed) copy of those objects to the given buffer.
 class RewriteHandler : public osmium::handler::Handler {
 
-    osmium::memory::Buffer& m_buffer;
+    osmium::memory::Buffer* m_buffer;
 
     // Copy attributes common to all OSM objects (nodes, ways, and relations).
     template <typename T>
@@ -90,7 +90,7 @@ class RewriteHandler : public osmium::handler::Handler {
 public:
 
     // Constructor. New data will be added to the given buffer.
-    explicit RewriteHandler(osmium::memory::Buffer& buffer) :
+    explicit RewriteHandler(osmium::memory::Buffer* buffer) :
         m_buffer(buffer) {
     }
 
@@ -101,7 +101,7 @@ public:
         {
             // To create a node, we need a NodeBuilder object. It will create
             // the node in the given buffer.
-            osmium::builder::NodeBuilder builder{m_buffer};
+            osmium::builder::NodeBuilder builder{*m_buffer};
 
             // Copy common object attributes over to the new node.
             copy_attributes(builder, node);
@@ -115,33 +115,33 @@ public:
 
         // Once the object is written to the buffer completely, we have to call
         // commit().
-        m_buffer.commit();
+        m_buffer->commit();
     }
 
     // The way handler is called for each way in the input data.
     void way(const osmium::Way& way) {
         {
-            osmium::builder::WayBuilder builder{m_buffer};
+            osmium::builder::WayBuilder builder{*m_buffer};
             copy_attributes(builder, way);
             copy_tags(builder, way.tags());
 
             // Copy the node list over to the new way.
             builder.add_item(way.nodes());
         }
-        m_buffer.commit();
+        m_buffer->commit();
     }
 
     // The relation handler is called for each relation in the input data.
     void relation(const osmium::Relation& relation) {
         {
-            osmium::builder::RelationBuilder builder{m_buffer};
+            osmium::builder::RelationBuilder builder{*m_buffer};
             copy_attributes(builder, relation);
             copy_tags(builder, relation.tags());
 
             // Copy the relation member list over to the new way.
             builder.add_item(relation.members());
         }
-        m_buffer.commit();
+        m_buffer->commit();
     }
 
 }; // class RewriteHandler
@@ -180,7 +180,7 @@ int main(int argc, char* argv[]) {
 
             // Construct a handler as defined above and feed the input buffer
             // to it.
-            RewriteHandler handler{output_buffer};
+            RewriteHandler handler{&output_buffer};
             osmium::apply(input_buffer, handler);
 
             // Write out the contents of the output buffer.

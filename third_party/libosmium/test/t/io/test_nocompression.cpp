@@ -5,6 +5,7 @@
 #include <osmium/io/compression.hpp>
 
 #include <string>
+#include <system_error>
 
 TEST_CASE("Invalid file descriptor of uncompressed file") {
     osmium::io::NoDecompressor decomp{-1};

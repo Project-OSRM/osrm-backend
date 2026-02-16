@@ -2,7 +2,9 @@
 
 #include <osmium/builder/attr.hpp>
 #include <osmium/memory/buffer.hpp>
+#include <osmium/osm/tag.hpp>
 #include <osmium/tags/matcher.hpp>
+#include <osmium/util/string_matcher.hpp>
 
 #include <iterator>
 #include <string>
