@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <utility>
 
 #include "osrm/error_codes.hpp"
-#include <boost/format.hpp>
+// Removed dependency on boost::format; prefer fmt for formatting
 
 namespace osrm::util
 {
@@ -43,7 +43,7 @@ class exception : public std::exception
   public:
     explicit exception(const char *message) : message(message) {}
     explicit exception(std::string message) : message(std::move(message)) {}
-    explicit exception(const boost::format &message) : message(message.str()) {}
+    // removed boost::format ctor: callers should pass formatted strings
     const char *what() const noexcept override { return message.c_str(); }
 
   private:

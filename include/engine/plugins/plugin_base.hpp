@@ -20,6 +20,7 @@
 #include <vector>
 
 #include <util/log.hpp>
+#include <fmt/format.h>
 
 namespace osrm::engine::plugins
 {
@@ -87,7 +88,7 @@ class BasePlugin
         };
         void operator()(std::string &str_result)
         {
-            str_result = str(boost::format("code=%1% message=%2%") % code % message);
+            str_result = fmt::format("code={} message={}", code, message);
         };
     };
 
