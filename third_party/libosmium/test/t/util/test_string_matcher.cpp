@@ -2,14 +2,12 @@
 
 #include <osmium/util/string_matcher.hpp>
 
+#include <regex>
 #include <sstream>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
-
-#ifdef OSMIUM_WITH_REGEX
-#include <regex>
-#endif
 
 static_assert(std::is_default_constructible<osmium::StringMatcher>::value, "StringMatcher should be default constructible");
 static_assert(std::is_copy_constructible<osmium::StringMatcher>::value, "StringMatcher should be copy constructible");
@@ -17,12 +15,16 @@ static_assert(std::is_move_constructible<osmium::StringMatcher>::value, "StringM
 static_assert(std::is_copy_assignable<osmium::StringMatcher>::value, "StringMatcher should be copyable");
 static_assert(std::is_move_assignable<osmium::StringMatcher>::value, "StringMatcher should be moveable");
 
+namespace {
+
 template <typename T>
 std::string print(const T& matcher) {
     std::stringstream ss;
     ss << matcher;
     return ss.str();
 }
+
+} // anonymous namespace
 
 TEST_CASE("String matcher: always false") {
     const osmium::StringMatcher::always_false m;
@@ -85,7 +87,6 @@ TEST_CASE("String matcher: empty prefix") {
     REQUIRE(m.match(""));
 }
 
-#ifdef OSMIUM_WITH_REGEX
 TEST_CASE("String matcher: regex prefix") {
     const osmium::StringMatcher::regex m{std::regex{"^foo", std::regex::optimize}};
     REQUIRE(m.match("foo"));
@@ -102,7 +103,6 @@ TEST_CASE("String matcher: regex substr") {
     REQUIRE(m.match("xfoox"));
     REQUIRE_FALSE(m.match(""));
 }
-#endif
 
 TEST_CASE("String matcher: list") {
     const osmium::StringMatcher::list m{{"foo", "bar"}};
@@ -152,14 +152,12 @@ TEST_CASE("Construct StringMatcher from string") {
     REQUIRE(print(m) == "equal[foo]");
 }
 
-#ifdef OSMIUM_WITH_REGEX
 TEST_CASE("Construct StringMatcher from regex") {
     const osmium::StringMatcher m{std::regex{"^foo"}};
     REQUIRE(m("foo"));
     REQUIRE_FALSE(m("bar"));
     REQUIRE(print(m) == "regex");
 }
-#endif
 
 TEST_CASE("Construct StringMatcher from list") {
     const std::vector<std::string> v{"foo", "xxx"};

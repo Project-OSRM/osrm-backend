@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -46,6 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <limits>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace osmium {
@@ -135,7 +136,7 @@ namespace osmium {
                 }
             };
 
-            std::vector<element> m_elements{};
+            std::vector<element> m_elements;
 
         protected:
 
@@ -185,7 +186,7 @@ namespace osmium {
              * in the stash. Used for debugging.
              */
             std::size_t used_memory() const noexcept {
-                return sizeof(element) * m_elements.capacity() +
+                return (sizeof(element) * m_elements.capacity()) +
                        sizeof(MembersDatabaseCommon);
             }
 
@@ -384,7 +385,7 @@ namespace osmium {
                     rel_handle.decrement_members();
 
                     if (rel_handle.has_all_members()) {
-                        func(rel_handle);
+                        std::forward<TFunc>(func)(rel_handle);
                     }
                 }
 

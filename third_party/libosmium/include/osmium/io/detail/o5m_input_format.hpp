@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -153,9 +153,9 @@ namespace osmium {
 
             class O5mParser final : public ParserWithBuffer {
 
-                osmium::io::Header m_header{};
+                osmium::io::Header m_header;
 
-                std::string m_input{};
+                std::string m_input;
 
                 const char* m_data;
                 const char* m_end;

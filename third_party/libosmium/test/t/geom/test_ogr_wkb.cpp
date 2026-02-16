@@ -5,13 +5,14 @@
 #include <osmium/util/endian.hpp>
 
 #include <memory>
-#include <sstream>
 #include <string>
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 
 #include "area_helper.hpp"
 #include "wnl_helper.hpp"
+
+namespace {
 
 std::string to_wkb(const OGRGeometry* geometry) {
     std::string buffer;
@@ -21,6 +22,8 @@ std::string to_wkb(const OGRGeometry* geometry) {
 
     return buffer;
 }
+
+} // anonymous namespace
 
 TEST_CASE("compare WKB point against GDAL/OGR") {
     const osmium::geom::WKBFactory<> wkb_factory{osmium::geom::wkb_type::wkb};

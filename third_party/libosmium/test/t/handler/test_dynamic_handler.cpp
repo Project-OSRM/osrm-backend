@@ -6,7 +6,7 @@
 
 struct Handler1 : public osmium::handler::Handler {
 
-    int& count;
+    int& count; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
     explicit Handler1(int& c) :
         count(c) {
@@ -40,7 +40,7 @@ struct Handler1 : public osmium::handler::Handler {
 
 struct Handler2 : public osmium::handler::Handler {
 
-    int& count;
+    int& count; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
     explicit Handler2(int& c) :
         count(c) {
@@ -68,6 +68,8 @@ struct Handler2 : public osmium::handler::Handler {
 
 };
 
+namespace {
+
 osmium::memory::Buffer fill_buffer() {
     using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
     osmium::memory::Buffer buffer{1024UL * 1024UL, osmium::memory::Buffer::auto_grow::yes};
@@ -80,6 +82,8 @@ osmium::memory::Buffer fill_buffer() {
 
     return buffer;
 }
+
+} // anonymous namespace
 
 TEST_CASE("Base test: static handler") {
     const auto buffer = fill_buffer();

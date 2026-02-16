@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -182,7 +182,7 @@ namespace osmium {
 
 #define OSMIUM_ATTRIBUTE_WITH_CONSTRUCTOR(_handler, _name, _type) \
     OSMIUM_ATTRIBUTE(_handler, _name, _type) \
-        constexpr explicit _name(std::add_const<_type>::type& value) : \
+        constexpr explicit _name(std::add_const_t<_type>& value) : \
             type_wrapper(value) {} \
     }
 
@@ -381,7 +381,7 @@ namespace osmium {
             };
 
             template <typename TTagIterator>
-            inline constexpr detail::tags_from_iterator_pair<TTagIterator> _tags(TTagIterator first, TTagIterator last) {
+            constexpr detail::tags_from_iterator_pair<TTagIterator> _tags(TTagIterator first, TTagIterator last) {
                 return {first, last};
             }
 
@@ -409,7 +409,7 @@ namespace osmium {
             };
 
             template <typename TIdIterator>
-            inline constexpr detail::nodes_from_iterator_pair<TIdIterator> _nodes(TIdIterator first, TIdIterator last) {
+            constexpr detail::nodes_from_iterator_pair<TIdIterator> _nodes(TIdIterator first, TIdIterator last) {
                 return {first, last};
             }
 
@@ -449,7 +449,7 @@ namespace osmium {
             };
 
             template <typename TMemberIterator>
-            inline constexpr detail::members_from_iterator_pair<TMemberIterator> _members(TMemberIterator first, TMemberIterator last) {
+            constexpr detail::members_from_iterator_pair<TMemberIterator> _members(TMemberIterator first, TMemberIterator last) {
                 return {first, last};
             }
 
@@ -481,7 +481,7 @@ namespace osmium {
             };
 
             template <typename TCommentIterator>
-            inline constexpr detail::comments_from_iterator_pair<TCommentIterator> _comments(TCommentIterator first, TCommentIterator last) {
+            constexpr detail::comments_from_iterator_pair<TCommentIterator> _comments(TCommentIterator first, TCommentIterator last) {
                 return {first, last};
             }
 
@@ -501,7 +501,7 @@ namespace osmium {
 
 
             template <typename TIdIterator>
-            inline constexpr detail::outer_ring_from_iterator_pair<TIdIterator> _outer_ring(TIdIterator first, TIdIterator last) {
+            constexpr detail::outer_ring_from_iterator_pair<TIdIterator> _outer_ring(TIdIterator first, TIdIterator last) {
                 return {first, last};
             }
 
@@ -527,7 +527,7 @@ namespace osmium {
             }
 
             template <typename TIdIterator>
-            inline constexpr detail::inner_ring_from_iterator_pair<TIdIterator> _inner_ring(TIdIterator first, TIdIterator last) {
+            constexpr detail::inner_ring_from_iterator_pair<TIdIterator> _inner_ring(TIdIterator first, TIdIterator last) {
                 return {first, last};
             }
 
@@ -649,16 +649,16 @@ namespace osmium {
             // ==============================================================
 
             template <typename... TArgs>
-            inline constexpr const char* get_user(const attr::_user& user, const TArgs&... /*args*/) noexcept {
+            constexpr const char* get_user(const attr::_user& user, const TArgs&... /*args*/) noexcept {
                 return user.value;
             }
 
-            inline constexpr const char* get_user() noexcept {
+            constexpr const char* get_user() noexcept {
                 return "";
             }
 
             template <typename TFirst, typename... TRest>
-            inline constexpr typename std::enable_if<!std::is_same<attr::_user, TFirst>::value, const char*>::type
+            constexpr std::enable_if_t<!std::is_same<attr::_user, TFirst>::value, const char*>
             get_user(const TFirst& /*first*/, const TRest&... args) noexcept {
                 return get_user(args...);
             }
@@ -802,12 +802,12 @@ namespace osmium {
             // ==============================================================
 
             template <typename TBuilder, typename THandler, typename... TArgs>
-            inline typename std::enable_if<!is_handled_by<THandler, TArgs...>::value>::type
+            inline std::enable_if_t<!is_handled_by<THandler, TArgs...>::value>
             add_list(osmium::builder::Builder& /*parent*/, const TArgs&... /*args*/) noexcept {
             }
 
             template <typename TBuilder, typename THandler, typename... TArgs>
-            inline typename std::enable_if<is_handled_by<THandler, TArgs...>::value>::type
+            inline std::enable_if_t<is_handled_by<THandler, TArgs...>::value>
             add_list(osmium::builder::Builder& parent, const TArgs&... args) {
                 TBuilder builder{parent.buffer(), &parent};
                 (void)std::initializer_list<int>{

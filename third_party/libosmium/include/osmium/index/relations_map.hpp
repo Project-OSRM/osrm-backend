@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -41,6 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -95,7 +96,7 @@ namespace osmium {
                     m_map.emplace_back(key, value);
                 }
 
-                typename std::enable_if<std::is_same<TKey, TValue>::value>::type flip_in_place() {
+                std::enable_if_t<std::is_same<TKey, TValue>::value> flip_in_place() {
                     for (auto& p : m_map) {
                         using std::swap;
                         swap(p.key, p.value);
@@ -137,7 +138,24 @@ namespace osmium {
                     m_map.reserve(size);
                 }
 
+                void clear() {
+                    m_map.clear();
+                    m_map.shrink_to_fit();
+                }
+
+                typename std::vector<kv_pair>::const_iterator begin() const noexcept {
+                    return m_map.cbegin();
+                }
+
+                typename std::vector<kv_pair>::const_iterator end() const noexcept {
+                    return m_map.cend();
+                }
+
             }; // class flat_map
+
+            template <typename VType>
+            using rel_index_map_type = detail::flat_map<osmium::unsigned_object_id_type, VType,
+                                                        osmium::unsigned_object_id_type, VType>;
 
         } // namespace detail
 
@@ -171,13 +189,17 @@ namespace osmium {
             friend class RelationsMapStash;
             friend class RelationsMapIndexes;
 
-            using map_type = detail::flat_map<osmium::unsigned_object_id_type, uint32_t,
-                                              osmium::unsigned_object_id_type, uint32_t>;
+            detail::rel_index_map_type<uint32_t> m_map32;
+            detail::rel_index_map_type<uint64_t> m_map64;
 
-            map_type m_map;
+            bool m_small;
 
-            explicit RelationsMapIndex(map_type&& map) :
-                m_map(std::move(map)) {
+            explicit RelationsMapIndex(detail::rel_index_map_type<uint32_t>&& map) :
+                m_map32(std::move(map)), m_small(true) {
+            }
+
+            explicit RelationsMapIndex(detail::rel_index_map_type<uint64_t>&& map) :
+                m_map64(std::move(map)), m_small(false) {
             }
 
         public:
@@ -187,34 +209,10 @@ namespace osmium {
             RelationsMapIndex(const RelationsMapIndex&) = delete;
             RelationsMapIndex& operator=(const RelationsMapIndex&) = delete;
 
-            RelationsMapIndex(RelationsMapIndex&& /*other*/) noexcept(std::is_nothrow_move_constructible<map_type>::value);
-            RelationsMapIndex& operator=(RelationsMapIndex&& /*other*/) noexcept(std::is_nothrow_move_assignable<map_type>::value);
+            RelationsMapIndex(RelationsMapIndex&& /*other*/) noexcept;
+            RelationsMapIndex& operator=(RelationsMapIndex&& /*other*/) noexcept;
 
             ~RelationsMapIndex() noexcept = default;
-
-            /**
-             * Find the given relation id in the index and call the given
-             * function with all parent relation ids.
-             *
-             * @code
-             * osmium::unsigned_object_id_type member_id = 17;
-             * index.for_each_parent(member_id, [](osmium::unsigned_object_id_type id) {
-             *   ...
-             * });
-             * @endcode
-             *
-             * @deprecated Use for_each() instead.
-             *
-             * Complexity: Logarithmic in the number of elements in the index.
-             *             (Lookup uses binary search.)
-             */
-            template <typename TFunc>
-            void for_each_parent(const osmium::unsigned_object_id_type member_id, TFunc&& func) const {
-                const auto parents = m_map.get(member_id);
-                for (auto it = parents.first; it != parents.second; ++it) {
-                    func(it->value);
-                }
-            }
 
             /**
              * Find the given relation id in the index and call the given
@@ -232,9 +230,16 @@ namespace osmium {
              */
             template <typename TFunc>
             void for_each(const osmium::unsigned_object_id_type id, TFunc&& func) const {
-                const auto parents = m_map.get(id);
-                for (auto it = parents.first; it != parents.second; ++it) {
-                    func(it->value);
+                if (m_small) {
+                    const auto parents = m_map32.get(id);
+                    for (auto it = parents.first; it != parents.second; ++it) {
+                        std::forward<TFunc>(func)(it->value);
+                    }
+                } else {
+                    const auto parents = m_map64.get(id);
+                    for (auto it = parents.first; it != parents.second; ++it) {
+                        std::forward<TFunc>(func)(it->value);
+                    }
                 }
             }
 
@@ -244,7 +249,7 @@ namespace osmium {
              * Complexity: Constant.
              */
             bool empty() const noexcept {
-                return m_map.empty();
+                return m_small ? m_map32.empty() : m_map64.empty();
             }
 
             /**
@@ -253,15 +258,15 @@ namespace osmium {
              * Complexity: Constant.
              */
             std::size_t size() const noexcept {
-                return m_map.size();
+                return m_small ? m_map32.size() : m_map64.size();
             }
 
         }; // class RelationsMapIndex
 
         // defined outside the class on purpose
         // see https://akrzemi1.wordpress.com/2015/09/11/declaring-the-move-constructor/
-        inline RelationsMapIndex::RelationsMapIndex(RelationsMapIndex&&) noexcept(std::is_nothrow_move_constructible<map_type>::value) = default;
-        inline RelationsMapIndex& RelationsMapIndex::operator=(RelationsMapIndex&&) noexcept(std::is_nothrow_move_assignable<map_type>::value) = default;
+        inline RelationsMapIndex::RelationsMapIndex(RelationsMapIndex&&) noexcept = default; // NOLINT(readability-redundant-inline-specifier)
+        inline RelationsMapIndex& RelationsMapIndex::operator=(RelationsMapIndex&&) noexcept = default; // NOLINT(readability-redundant-inline-specifier)
 
         class RelationsMapIndexes {
 
@@ -270,7 +275,12 @@ namespace osmium {
             RelationsMapIndex m_member_to_parent;
             RelationsMapIndex m_parent_to_member;
 
-            RelationsMapIndexes(RelationsMapIndex::map_type&& map1, RelationsMapIndex::map_type&& map2) :
+            RelationsMapIndexes(detail::rel_index_map_type<uint32_t>&& map1, detail::rel_index_map_type<uint32_t>&& map2) :
+                m_member_to_parent(std::move(map1)),
+                m_parent_to_member(std::move(map2)) {
+            }
+
+            RelationsMapIndexes(detail::rel_index_map_type<uint64_t>&& map1, detail::rel_index_map_type<uint64_t>&& map2) :
                 m_member_to_parent(std::move(map1)),
                 m_parent_to_member(std::move(map2)) {
             }
@@ -312,14 +322,22 @@ namespace osmium {
          */
         class RelationsMapStash {
 
-            using map_type = detail::flat_map<osmium::unsigned_object_id_type, uint32_t,
-                                              osmium::unsigned_object_id_type, uint32_t>;
-
-            map_type m_map;
+            detail::rel_index_map_type<uint32_t> m_map32;
+            detail::rel_index_map_type<uint64_t> m_map64;
 
 #ifndef NDEBUG
             bool m_valid = true;
 #endif
+
+            static void append32to64(detail::rel_index_map_type<uint32_t>& map32, detail::rel_index_map_type<uint64_t>& map64) {
+                map64.sort_unique();
+                map64.reserve(map64.size() + map32.size());
+                for (const auto& item : map32) {
+                    map64.set(item.key, item.value);
+                }
+                map64.sort_unique();
+                map32.clear();
+            }
 
         public:
 
@@ -328,8 +346,8 @@ namespace osmium {
             RelationsMapStash(const RelationsMapStash&) = delete;
             RelationsMapStash& operator=(const RelationsMapStash&) = delete;
 
-            RelationsMapStash(RelationsMapStash&& /*other*/) noexcept(std::is_nothrow_move_constructible<map_type>::value);
-            RelationsMapStash& operator=(RelationsMapStash&& /*other*/) noexcept(std::is_nothrow_move_assignable<map_type>::value);
+            RelationsMapStash(RelationsMapStash&& /*other*/) noexcept;
+            RelationsMapStash& operator=(RelationsMapStash&& /*other*/) noexcept;
 
             ~RelationsMapStash() noexcept = default;
 
@@ -338,7 +356,12 @@ namespace osmium {
              */
             void add(const osmium::unsigned_object_id_type member_id, const osmium::unsigned_object_id_type relation_id) {
                 assert(m_valid && "You can't use the RelationsMap any more after calling build_index()");
-                m_map.set(member_id, relation_id);
+                constexpr const osmium::unsigned_object_id_type max32 = std::numeric_limits<uint32_t>::max();
+                if (member_id <= max32 && relation_id <= max32) {
+                    m_map32.set(member_id, relation_id);
+                } else {
+                    m_map64.set(member_id, relation_id);
+                }
             }
 
             /**
@@ -348,7 +371,7 @@ namespace osmium {
                 assert(m_valid && "You can't use the RelationsMap any more after calling build_index()");
                 for (const auto& member : relation.members()) {
                     if (member.type() == osmium::item_type::relation) {
-                        m_map.set(member.positive_ref(), relation.positive_id());
+                        add(member.positive_ref(), relation.positive_id());
                     }
                 }
             }
@@ -360,7 +383,7 @@ namespace osmium {
              */
             bool empty() const noexcept {
                 assert(m_valid && "You can't use the RelationsMap any more after calling build_index()");
-                return m_map.empty();
+                return m_map32.empty() && m_map64.empty();
             }
 
             /**
@@ -370,24 +393,17 @@ namespace osmium {
              */
             std::size_t size() const noexcept {
                 assert(m_valid && "You can't use the RelationsMap any more after calling build_index()");
-                return m_map.size();
+                return m_map32.size() + m_map64.size();
             }
 
             /**
-             * Build an index for member to parent lookups from the contents
-             * of this stash and return it.
+             * How many "small" and "large" entries are in this stash?
+             * For tests and debugging only!
              *
-             * After you get the index you can not use the stash any more!
-             *
-             * @deprecated Use build_member_to_parent_index() instead.
+             * Complexity: Constant.
              */
-            RelationsMapIndex build_index() {
-                assert(m_valid && "You can't use the RelationsMap any more after calling build_index()");
-                m_map.sort_unique();
-#ifndef NDEBUG
-                m_valid = false;
-#endif
-                return RelationsMapIndex{std::move(m_map)};
+            std::pair<std::size_t, std::size_t> sizes() const noexcept {
+                return std::make_pair(m_map32.size(), m_map64.size());
             }
 
             /**
@@ -398,11 +414,17 @@ namespace osmium {
              */
             RelationsMapIndex build_member_to_parent_index() {
                 assert(m_valid && "You can't use the RelationsMap any more after calling build_member_to_parent_index()");
-                m_map.sort_unique();
 #ifndef NDEBUG
                 m_valid = false;
 #endif
-                return RelationsMapIndex{std::move(m_map)};
+                m_map32.sort_unique();
+                if (m_map64.empty()) {
+                    return RelationsMapIndex{std::move(m_map32)};
+                }
+
+                append32to64(m_map32, m_map64);
+
+                return RelationsMapIndex{std::move(m_map64)};
             }
 
             /**
@@ -413,12 +435,19 @@ namespace osmium {
              */
             RelationsMapIndex build_parent_to_member_index() {
                 assert(m_valid && "You can't use the RelationsMap any more after calling build_parent_to_member_index()");
-                m_map.flip_in_place();
-                m_map.sort_unique();
 #ifndef NDEBUG
                 m_valid = false;
 #endif
-                return RelationsMapIndex{std::move(m_map)};
+                m_map32.flip_in_place();
+                m_map32.sort_unique();
+                if (m_map64.empty()) {
+                    return RelationsMapIndex{std::move(m_map32)};
+                }
+
+                m_map64.flip_in_place();
+                append32to64(m_map32, m_map64);
+
+                return RelationsMapIndex{std::move(m_map64)};
             }
 
             /**
@@ -429,21 +458,29 @@ namespace osmium {
              */
             RelationsMapIndexes build_indexes() {
                 assert(m_valid && "You can't use the RelationsMap any more after calling build_indexes()");
-                auto reverse_map = m_map.flip_copy();
-                reverse_map.sort_unique();
-                m_map.sort_unique();
 #ifndef NDEBUG
                 m_valid = false;
 #endif
-                return RelationsMapIndexes{std::move(m_map), std::move(reverse_map)};
+                auto reverse_map32 = m_map32.flip_copy();
+                reverse_map32.sort_unique();
+                m_map32.sort_unique();
+                if (m_map64.empty()) {
+                    return RelationsMapIndexes{std::move(m_map32), std::move(reverse_map32)};
+                }
+
+                auto reverse_map64 = m_map64.flip_copy();
+                append32to64(reverse_map32, reverse_map64);
+                append32to64(m_map32, m_map64);
+
+                return RelationsMapIndexes{std::move(m_map64), std::move(reverse_map64)};
             }
 
         }; // class RelationsMapStash
 
         // defined outside the class on purpose
         // see https://akrzemi1.wordpress.com/2015/09/11/declaring-the-move-constructor/
-        inline RelationsMapStash::RelationsMapStash(RelationsMapStash&&) noexcept(std::is_nothrow_move_constructible<map_type>::value) = default;
-        inline RelationsMapStash& RelationsMapStash::operator=(RelationsMapStash&&) noexcept(std::is_nothrow_move_assignable<map_type>::value) = default;
+        inline RelationsMapStash::RelationsMapStash(RelationsMapStash&&) noexcept = default; // NOLINT(readability-redundant-inline-specifier)
+        inline RelationsMapStash& RelationsMapStash::operator=(RelationsMapStash&&) noexcept = default; // NOLINT(readability-redundant-inline-specifier)
 
     } // namespace index
 

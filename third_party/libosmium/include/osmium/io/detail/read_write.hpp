@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/io/writer_options.hpp>
 #include <osmium/util/file.hpp>
 
+#include <cassert>
 #include <cerrno>
 #include <cstddef>
 #include <fcntl.h>
@@ -103,6 +104,9 @@ namespace osmium {
 #endif
 
                 if (filename.empty() || filename == "-") {
+#ifdef _WIN32
+                    _setmode(0, _O_BINARY);
+#endif
                     return 0; // stdin
                 }
 
@@ -199,6 +203,29 @@ namespace osmium {
                 } while (nread < 0);
 
                 return nread;
+            }
+
+            /**
+             * Read exactly size bytes from fd into buffer. In contrast to reliable_read,
+             * this function will continue reading until either EOF or an error is encountered.
+             *
+             * @pre buffer Buffer for data to be read. Must be at least size bytes long.
+             * @returns true if size bytes could be read
+             *          false if EOF was encountered
+             */
+            inline bool read_exactly(int fd, char* buffer, unsigned int size) {
+                unsigned int to_read = size;
+
+                while (to_read > 0) {
+                    auto const read_size = reliable_read(fd, buffer + (size - to_read), to_read);
+                    if (read_size == 0) { // EOF
+                        return false;
+                    }
+                    assert(read_size <= to_read);
+                    to_read -= static_cast<unsigned int>(read_size);
+                }
+
+                return true;
             }
 
             inline void reliable_fsync(const int fd) {

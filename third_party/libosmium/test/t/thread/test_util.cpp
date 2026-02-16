@@ -2,6 +2,7 @@
 
 #include <osmium/thread/util.hpp>
 
+#include <exception>
 #include <future>
 #include <stdexcept>
 #include <type_traits>
@@ -43,11 +44,15 @@ TEST_CASE("empty thread_handler") {
     const osmium::thread::thread_handler th;
 }
 
+namespace {
+
 int foo; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 void test_func(int value) {
     foo = value;
 }
+
+} // anonymous namespace
 
 TEST_CASE("valid thread_handler") {
     foo = 22;
