@@ -3,13 +3,13 @@
 
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
-#include <fmt/format.h>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/sync/interprocess_condition.hpp>
 #include <boost/interprocess/sync/interprocess_mutex.hpp>
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
+#include <fmt/format.h>
 
 #if defined(__linux__)
 // See issue #3911, boost interprocess is broken with a glibc > 2.25
@@ -65,11 +65,11 @@ template <typename Data> struct SharedMonitor
             bi::offset_t size = 0;
             if (!shmem.get_size(size) || size != rounded_internal_size + sizeof(Data))
             {
-                auto message = fmt::format(
-                    "Wrong shared memory block '{}' size {}, expected {} bytes",
-                    (const char *)Data::name,
-                    size,
-                    (rounded_internal_size + sizeof(Data)));
+                auto message =
+                    fmt::format("Wrong shared memory block '{}' size {}, expected {} bytes",
+                                (const char *)Data::name,
+                                size,
+                                (rounded_internal_size + sizeof(Data)));
                 throw util::exception(message + SOURCE_REF);
             }
 

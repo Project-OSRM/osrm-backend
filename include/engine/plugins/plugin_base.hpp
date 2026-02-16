@@ -19,8 +19,8 @@
 #include <string>
 #include <vector>
 
-#include <util/log.hpp>
 #include <fmt/format.h>
+#include <util/log.hpp>
 
 namespace osrm::engine::plugins
 {

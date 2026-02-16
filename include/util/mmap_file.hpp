@@ -29,8 +29,8 @@ util::vector_view<T> mmapFile(const std::filesystem::path &file, MmapContainerT 
     }
     catch (const std::exception &exc)
     {
-        throw exception(
-            fmt::format("File {} mapping failed: {}", file.string(), exc.what()) + SOURCE_REF);
+        throw exception(fmt::format("File {} mapping failed: {}", file.string(), exc.what()) +
+                        SOURCE_REF);
     }
 }
 
@@ -54,8 +54,8 @@ mmapFile(const std::filesystem::path &file, MmapContainerT &mmap_container, cons
     }
     catch (const std::exception &exc)
     {
-        throw exception(
-            fmt::format("File {} mapping failed: {}", file.string(), exc.what()) + SOURCE_REF);
+        throw exception(fmt::format("File {} mapping failed: {}", file.string(), exc.what()) +
+                        SOURCE_REF);
     }
 }
 } // namespace detail
