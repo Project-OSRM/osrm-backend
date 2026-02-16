@@ -25,7 +25,7 @@ bool constrainParamSize(const char *msg_template,
 {
     if (param.size() > 0 && param.size() != target_size)
     {
-        help = fmt::format(msg_template, name, param.size(), target_size);
+        help = fmt::format(fmt::runtime(msg_template), name, param.size(), target_size);
         return true;
     }
     return false;
