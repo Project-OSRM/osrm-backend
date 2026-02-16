@@ -10,8 +10,16 @@
 #include <cmath>
 #include <cstdio>
 #include <fcntl.h>
+#ifdef _WIN32
+#include <windows.h>
+#include <malloc.h>
+#endif
+
+#ifdef __APPLE__
 #include <unistd.h>
+#endif
 #ifdef __linux__
+#include <unistd.h>
 #include <malloc.h>
 #endif
 #ifdef __FreeBSD__
@@ -61,8 +69,7 @@ int main(int argc, char *argv[])
     return 0;
 #endif
 #ifdef _WIN32
-    osrm::util::Log() << "Not supported on Windows";
-    return 0;
+    // Windows: enable Windows-specific code paths below
 #else
 
     osrm::util::LogPolicy::GetInstance().Unmute();
@@ -104,6 +111,29 @@ int main(int argc, char *argv[])
         write(fd, (char *)random_array, osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
         TIMER_STOP(write_1gb);
         close(fd);
+#endif
+#ifdef _WIN32
+        {
+            std::string path = test_path.string();
+            HANDLE hFile = CreateFileA(path.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+                                       FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
+            if (hFile == INVALID_HANDLE_VALUE)
+            {
+                throw osrm::util::exception("Could not open random data file " + path + SOURCE_REF);
+            }
+            DWORD written = 0;
+            TIMER_START(write_1gb);
+            BOOL ok = WriteFile(hFile, random_array,
+                                static_cast<DWORD>(osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned)),
+                                &written, NULL);
+            TIMER_STOP(write_1gb);
+            if (!ok || written == 0)
+            {
+                CloseHandle(hFile);
+                throw osrm::util::exception("could not write random data file " + path + SOURCE_REF);
+            }
+            CloseHandle(hFile);
+        }
 #endif
 #ifdef __linux__
         int file_desc =
@@ -160,6 +190,19 @@ int main(int argc, char *argv[])
         }
         char *raw_array = (char *)memalign(512, osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
 #endif
+#ifdef _WIN32
+        char *single_block = (char *)_aligned_malloc(1024 * sizeof(unsigned), 512);
+        if (!single_block)
+            return -1;
+        HANDLE hFile = CreateFileA(test_path.string().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
+                                   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+        if (hFile == INVALID_HANDLE_VALUE)
+        {
+            osrm::util::Log(logDEBUG) << "opened, error: " << GetLastError();
+            return -1;
+        }
+        char *raw_array = (char *)_aligned_malloc(osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned), 512);
+#endif
         TIMER_START(read_1gb);
 #ifdef __APPLE__
         read(fileno(fd), raw_array, osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
@@ -172,6 +215,19 @@ int main(int argc, char *argv[])
         close(file_desc);
         file_desc = open(test_path.string().c_str(), O_RDONLY | O_DIRECT | O_SYNC);
         osrm::util::Log(logDEBUG) << "opened, error: " << strerror(errno);
+#endif
+#ifdef _WIN32
+    {
+        DWORD readBytes = 0;
+        BOOL ok = ReadFile(hFile, raw_array,
+                   static_cast<DWORD>(osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned)),
+                   &readBytes, NULL);
+        osrm::util::Log(logDEBUG) << "read " << readBytes << " bytes, error: " << GetLastError();
+        CloseHandle(hFile);
+        hFile = CreateFileA(test_path.string().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
+                   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+        osrm::util::Log(logDEBUG) << "opened, error: " << GetLastError();
+    }
 #endif
         TIMER_STOP(read_1gb);
 
@@ -211,6 +267,14 @@ int main(int argc, char *argv[])
 #ifdef __linux__
             int ret1 = lseek(file_desc, current_offset, SEEK_SET);
             int ret2 = read(file_desc, (char *)single_block, 4096);
+#endif
+#ifdef _WIN32
+            LARGE_INTEGER li;
+            li.QuadPart = current_offset;
+            BOOL sp = SetFilePointerEx(hFile, li, NULL, FILE_BEGIN);
+            DWORD ret2 = 0;
+            BOOL rf = ReadFile(hFile, (char *)single_block, 4096, &ret2, NULL);
+            int ret1 = sp ? 0 : -1;
 #endif
             TIMER_STOP(random_access);
             if (((off_t)-1) == ret1)
@@ -272,6 +336,14 @@ int main(int argc, char *argv[])
 
             int ret2 = read(file_desc, (char *)single_block, 4096);
 #endif
+#ifdef _WIN32
+            LARGE_INTEGER li2;
+            li2.QuadPart = current_offset;
+            BOOL sp2 = SetFilePointerEx(hFile, li2, NULL, FILE_BEGIN);
+            DWORD ret2 = 0;
+            BOOL rf2 = ReadFile(hFile, (char *)single_block, 4096, &ret2, NULL);
+            int ret1 = sp2 ? 0 : -1;
+#endif
             TIMER_STOP(read_every_100);
             if (((off_t)-1) == ret1)
             {
@@ -295,6 +367,11 @@ int main(int argc, char *argv[])
 #endif
 #ifdef __linux__
         close(file_desc);
+#endif
+#ifdef _WIN32
+    CloseHandle(hFile);
+    _aligned_free(single_block);
+    _aligned_free(raw_array);
 #endif
         // Do statistics
         osrm::util::Log(logDEBUG) << "running sequential I/O statistics";
