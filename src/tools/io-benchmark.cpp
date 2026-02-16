@@ -110,36 +110,34 @@ int main(int argc, char *argv[])
         close(fd);
 #endif
 #ifdef _WIN32
+        std::string path = test_path.string();
+        HANDLE hFile = CreateFileA(path.c_str(),
+                                   GENERIC_WRITE,
+                                   0,
+                                   NULL,
+                                   CREATE_ALWAYS,
+                                   FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH,
+                                   NULL);
+        if (hFile == INVALID_HANDLE_VALUE)
         {
-            std::string path = test_path.string();
-            HANDLE hFile = CreateFileA(path.c_str(),
-                                       GENERIC_WRITE,
-                                       0,
-                                       NULL,
-                                       CREATE_ALWAYS,
-                                       FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH,
-                                       NULL);
-            if (hFile == INVALID_HANDLE_VALUE)
-            {
-                throw osrm::util::exception("Could not open random data file " + path + SOURCE_REF);
-            }
-            DWORD written = 0;
-            TIMER_START(write_1gb);
-            BOOL ok =
-                WriteFile(hFile,
-                          random_array,
-                          static_cast<DWORD>(osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned)),
-                          &written,
-                          NULL);
-            TIMER_STOP(write_1gb);
-            if (!ok || written == 0)
-            {
-                CloseHandle(hFile);
-                throw osrm::util::exception("could not write random data file " + path +
-                                            SOURCE_REF);
-            }
-            CloseHandle(hFile);
+            throw osrm::util::exception("Could not open random data file " + path + SOURCE_REF);
         }
+        DWORD written = 0;
+        TIMER_START(write_1gb);
+        BOOL ok =
+            WriteFile(hFile,
+                      random_array,
+                      static_cast<DWORD>(osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned)),
+                      &written,
+                      NULL);
+        TIMER_STOP(write_1gb);
+        if (!ok || written == 0)
+        {
+            CloseHandle(hFile);
+            throw osrm::util::exception("could not write random data file " + path +
+                                        SOURCE_REF);
+        }
+        CloseHandle(hFile);
 #endif
 #ifdef __linux__
         int file_desc =
@@ -229,26 +227,24 @@ int main(int argc, char *argv[])
         osrm::util::Log(logDEBUG) << "opened, error: " << strerror(errno);
 #endif
 #ifdef _WIN32
-        {
-            DWORD readBytes = 0;
-            BOOL ok =
-                ReadFile(hFile,
-                         raw_array,
-                         static_cast<DWORD>(osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned)),
-                         &readBytes,
-                         NULL);
-            osrm::util::Log(logDEBUG)
-                << "read " << readBytes << " bytes, error: " << GetLastError();
-            CloseHandle(hFile);
-            hFile = CreateFileA(test_path.string().c_str(),
-                                GENERIC_READ,
-                                FILE_SHARE_READ,
-                                NULL,
-                                OPEN_EXISTING,
-                                FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
-                                NULL);
-            osrm::util::Log(logDEBUG) << "opened, error: " << GetLastError();
-        }
+        DWORD readBytes = 0;
+        BOOL ok =
+            ReadFile(hFile,
+                     raw_array,
+                     static_cast<DWORD>(osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned)),
+                     &readBytes,
+                     NULL);
+        osrm::util::Log(logDEBUG)
+            << "read " << readBytes << " bytes, error: " << GetLastError();
+        CloseHandle(hFile);
+        hFile = CreateFileA(test_path.string().c_str(),
+                            GENERIC_READ,
+                            FILE_SHARE_READ,
+                            NULL,
+                            OPEN_EXISTING,
+                            FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
+                            NULL);
+        osrm::util::Log(logDEBUG) << "opened, error: " << GetLastError();
 #endif
         TIMER_STOP(read_1gb);
 
