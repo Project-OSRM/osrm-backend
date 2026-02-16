@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -220,6 +220,22 @@ namespace osmium {
                 return 0;
             }
             return static_cast<std::size_t>(offset);
+        }
+
+        /**
+         * Set current offset into file.
+         *
+         * @param fd Open file descriptor.
+         * @param offset Desired absolute offset into the file
+         */
+        inline void file_seek(int fd, std::size_t offset) noexcept {
+#ifdef _MSC_VER
+            osmium::detail::disable_invalid_parameter_handler diph;
+            // https://msdn.microsoft.com/en-us/library/1yee101t.aspx
+            _lseeki64(fd, static_cast<__int64>(offset), SEEK_SET);
+#else
+            ::lseek(fd, static_cast<off_t>(offset), SEEK_SET);
+#endif
         }
 
         /**

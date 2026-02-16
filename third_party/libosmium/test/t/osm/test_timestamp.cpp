@@ -2,6 +2,8 @@
 
 #include <osmium/osm/timestamp.hpp>
 
+#include <cstdint>
+#include <ctime>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -77,6 +79,8 @@ TEST_CASE("Timestamp can be written to stream") {
     REQUIRE("1970-01-01T00:00:01Z" == ss.str());
 }
 
+namespace {
+
 void test_int2_to_string(int value, const char* ref) {
     std::string s;
     osmium::detail::add_2digit_int_to_string(value, s);
@@ -88,6 +92,8 @@ void test_int4_to_string(int value, const char* ref) {
     osmium::detail::add_4digit_int_to_string(value, s);
     REQUIRE(s == ref);
 }
+
+} // anonymous namespace
 
 TEST_CASE("Write two digit numbers") {
     test_int2_to_string( 0, "00");

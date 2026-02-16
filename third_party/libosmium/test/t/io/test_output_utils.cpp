@@ -2,21 +2,27 @@
 
 #include <osmium/io/detail/string_util.hpp>
 
+#include <cctype>
+#include <cstring>
 #include <iterator>
 #include <locale>
 #include <stdexcept>
 #include <string>
 
+namespace {
+
 // From C++20 we need to handle unicode literals differently
 #ifdef __cpp_char8_t
-static const char* u8cast(const char8_t *s) noexcept {
+const char* u8cast(const char8_t *s) noexcept {
     return reinterpret_cast<const char*>(s);
 }
 #else
-static const char* u8cast(const char *s) noexcept {
+const char* u8cast(const char *s) noexcept {
     return s;
 }
 #endif
+
+} // anonymous namespace
 
 TEST_CASE("output formatted with small results") {
     std::string out;

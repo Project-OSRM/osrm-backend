@@ -44,10 +44,13 @@ Thumbs.db
 /_build*
 /build/
 /test/data/monaco*.osrm*
+/example/build/
+/test/data/monaco.osrm*
 /test/data/ch
 /test/data/mld
 /cmake/postinst
 .gradle/
+CMakeUserPresets.json 
 
 # Eclipse related files #
 #########################
@@ -91,6 +94,7 @@ Thumbs.db
 /test/cache
 /test/speeds.csv
 /test/penalties.csv
+/test/data/corech/
 node_modules
 
 # Deprecated config file #
@@ -100,8 +104,14 @@ node_modules
 *.swp
 
 # local lua debugging file
+##########################
 debug.lua
 
 # node-osrm artifacts
+##########################
 lib/binding_napi_v8
 
+# documentation related files
+##########################
+.vitepress/cache
+docs/.vitepress/cache

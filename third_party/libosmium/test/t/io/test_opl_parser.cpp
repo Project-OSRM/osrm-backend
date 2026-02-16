@@ -10,20 +10,25 @@
 #include <cstring>
 #include <initializer_list>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace oid = osmium::io::detail;
 
+namespace {
+
 // From C++20 we need to handle unicode literals differently
 #ifdef __cpp_char8_t
-static const char* u8cast(const char8_t *s) noexcept {
+const char* u8cast(const char8_t *s) noexcept {
     return reinterpret_cast<const char*>(s);
 }
 #else
-static const char* u8cast(const char *s) noexcept {
+const char* u8cast(const char *s) noexcept {
     return s;
 }
 #endif
+
+} // anonymous namespace
 
 TEST_CASE("Parse OPL: base exception") {
     const osmium::opl_error e{"foo"};
@@ -256,12 +261,16 @@ TEST_CASE("Parse OPL: parse string") {
 
 }
 
+namespace {
+
 template <typename T = int64_t>
 T test_parse_int(const char* s) {
     const auto r = oid::opl_parse_int<T>(&s);
     REQUIRE(*s == 'x');
     return r;
 }
+
+} // anonymous namespace
 
 TEST_CASE("Parse OPL: integer") {
     REQUIRE(test_parse_int("0x") == 0);
@@ -1188,12 +1197,16 @@ public:
 
 }; // class lbl_tester
 
+namespace {
+
 void check_lbl(const std::initializer_list<std::string>& in,
                const std::initializer_list<std::string>& out) {
     lbl_tester tester{in, out};
     osmium::io::detail::line_by_line(tester);
     tester.check();
 }
+
+} // anonymous namespace
 
 TEST_CASE("line_by_line for OPL parser 1") {
     check_lbl({""}, {});

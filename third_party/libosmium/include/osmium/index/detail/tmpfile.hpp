@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/io/detail/read_write.hpp>
+
 #include <cerrno>
 #include <cstdio>
 #include <system_error>
@@ -43,16 +45,19 @@ namespace osmium {
 
         /**
          * Create and open a temporary file. It is removed after opening.
+         * After use close the file by calling close().
          *
          * @returns File descriptor of temporary file.
          * @throws std::system_error if something went wrong.
          */
         inline int create_tmp_file() {
-            FILE* file = ::tmpfile();
+            FILE* file = std::tmpfile();
             if (!file) {
                 throw std::system_error{errno, std::system_category(), "tempfile failed"};
             }
-            return fileno(file);
+            const int fd = osmium::io::detail::reliable_dup(fileno(file));
+            std::fclose(file);
+            return fd;
         }
 
     } // namespace detail

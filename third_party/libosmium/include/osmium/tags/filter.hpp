@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -92,7 +92,7 @@ namespace osmium {
         class Filter {
 
             using key_type   = TKey;
-            using value_type = typename std::conditional<std::is_void<TValue>::value, bool, TValue>::type;
+            using value_type = std::conditional_t<std::is_void<TValue>::value, bool, TValue>;
 
             struct Rule {
                 key_type key;
@@ -130,7 +130,7 @@ namespace osmium {
                 m_default_result(default_result) {
             }
 
-            template <typename V = TValue, typename std::enable_if<!std::is_void<V>::value, int>::type = 0>
+            template <typename V = TValue, typename std::enable_if_t<!std::is_void<V>::value, int> = 0>
             Filter& add(bool result, const key_type& key, const value_type& value) {
                 m_rules.emplace_back(result, false, key, value);
                 return *this;

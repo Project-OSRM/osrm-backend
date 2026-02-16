@@ -22,6 +22,7 @@
 */
 
 #include <algorithm> // for std::copy_if
+#include <exception>
 #include <iostream>  // for std::cout, std::cerr
 
 // We want to read OSM files in XML format

@@ -7,45 +7,46 @@ import process from 'process';
 import cla from 'command-line-args';
 import clu from 'command-line-usage';
 import ansi from 'ansi-escape-sequences';
-import turf from 'turf';
+import * as turf from '@turf/turf';
 import jp from 'jsonpath';
-import { stringify as csv_stringify } from 'csv-stringify/lib/sync';
+import { stringify as csv_stringify } from 'csv-stringify/sync';
 
 // Execute HTTP query against OSRM server and measure response times
 const run_query = (query_options, filters, callback) => {
   let tic = () => 0.;
-  http.request(query_options, function (res) {
-    let body = '', ttfb = tic();
+  http.request(query_options, (res) => {
+    let body = '';
+    const ttfb = tic();
 
     res.setEncoding('utf8');
-    res.on('data', function (chunk) {
+    res.on('data', (chunk) => {
       body += chunk;
     });
-    res.on('end', function () {
+    res.on('end', () => {
       const elapsed = tic();
       const json = JSON.parse(body);
       Promise.all(filters.map(filter => jp.query(json, filter)))
         .then(values => callback(query_options.path, res.statusCode, ttfb, elapsed, values));
     });
-  }).on('socket', function (/*res*/) {
+  }).on('socket', (/*res*/) => {
     tic = ((toc) => { return () => { const t = process.hrtime(toc); return t[0] * 1000 + t[1] / 1000000; }; })(process.hrtime());
-  }).on('error', function (res) {
+  }).on('error', (res) => {
     callback(query_options.path, res.code);
   }).end();
 };
 
 // Generate random coordinate points within a polygon boundary for route testing
 function generate_points(polygon, number, coordinates_number, max_distance) {
-  let query_points = [];
+  const query_points = [];
   while (query_points.length < number) {
     let points = [];
 
     while(points.length < coordinates_number) {
-      let chunk = turf
-        .random('points', coordinates_number, { bbox: turf.bbox(polygon)})
+      const chunk = turf
+        .randomPoint(coordinates_number, { bbox: turf.bbox(polygon)})
         .features
         .map(x => x.geometry.coordinates)
-        .filter(pt => turf.inside(pt, polygon));
+        .filter(pt => turf.booleanPointInPolygon(turf.point(pt), polygon));
 
       if (max_distance > 0)
       {
@@ -56,7 +57,7 @@ function generate_points(polygon, number, coordinates_number, max_distance) {
           }
           else
           {
-            let distance = turf.distance(pt, points[points.length-1], 'meters');
+            const distance = turf.distance(pt, points[points.length-1], 'meters');
             if (distance < max_distance)
             {
               points.push(pt);
@@ -78,8 +79,8 @@ function generate_points(polygon, number, coordinates_number, max_distance) {
 
 // Convert coordinate points into OSRM API query URLs
 function generate_queries(options, query_points) {
-  let queries = query_points.map(points => {
-    return options.path.replace(/{}/g, x =>  points.pop().join(','));
+  const queries = query_points.map(points => {
+    return options.path.replace(/{}/g, () =>  points.pop().join(','));
   });
   return queries;
 }
@@ -120,7 +121,7 @@ if (options.help) {
     { header: 'Run OSRM queries and collect results'/*, content: 'Generates something [italic]{very} important.'*/ },
     { header: 'Options', optionList: optionsList }
   ]);
-  console.log(usage);
+  process.stdout.write(`${usage}\n`);
   process.exit(0);
 }
 
@@ -144,8 +145,8 @@ queries = queries.map(q => { return {hostname: options.server.hostname, port: op
 http.globalAgent.maxSockets = options['max-sockets'];
 queries.map(query => {
   run_query(query, options.filter, (query, code, ttfb, total, results) => {
-    let data = results ? JSON.stringify(results[0]) : '';
-    let record = [[query, code, ttfb, total, data]];
+    const data = results ? JSON.stringify(results[0]) : '';
+    const record = [[query, code, ttfb, total, data]];
     process.stdout.write(csv_stringify(record));
   });
 });

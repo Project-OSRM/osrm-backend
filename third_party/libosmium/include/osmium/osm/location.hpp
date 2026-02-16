@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -267,6 +268,13 @@ namespace osmium {
      *
      * Coordinates are never checked on whether they are inside bounds.
      * Call valid() to check this.
+     *
+     * If the macro OSMIUM_LOCATION_WITH_EXTRA_BIT is defined, Location values
+     * can store one extra bit of information, because one bit is not needed
+     * for the y coordinate. Use the functions set/clear/toggle/get_extra_bit()
+     * to access it. The extra bit will always be cleared for new locations or
+     * by setting the y coordinate of a location. You can not store an extra
+     * bit on an invalid location.
      */
     class Location {
 
@@ -276,6 +284,31 @@ namespace osmium {
         constexpr static double precision() noexcept {
             return static_cast<double>(detail::coordinate_precision);
         }
+
+#ifdef OSMIUM_LOCATION_WITH_EXTRA_BIT
+
+        /**
+         * For normal y coordinates, bit 30 is always equal to bit 31. So
+         * we can use that to store one extra piece of information.
+         */
+        enum {
+            mask_b30 = 1UL << 30UL
+        };
+
+        static constexpr int32_t remove_extra_bit(int32_t v) noexcept {
+            if (v == undefined_coordinate) {
+                return v;
+            }
+            auto const value = static_cast<uint32_t>(v);
+            auto const n30 = value & ~mask_b30;
+            auto const b30 = (value >> 1UL) & mask_b30;
+            return static_cast<int32_t>(n30 | b30);
+        }
+#else
+        static constexpr int32_t remove_extra_bit(int32_t v) noexcept {
+            return v;
+        }
+#endif
 
     public:
 
@@ -310,7 +343,7 @@ namespace osmium {
          */
         constexpr Location(const int32_t x, const int32_t y) noexcept :
             m_x(x),
-            m_y(y) {
+            m_y(remove_extra_bit(y)) {
         }
 
         /**
@@ -320,7 +353,7 @@ namespace osmium {
          */
         constexpr Location(const int64_t x, const int64_t y) noexcept :
             m_x(static_cast<int32_t>(x)),
-            m_y(static_cast<int32_t>(y)) {
+            m_y(remove_extra_bit(static_cast<int32_t>(y))) {
         }
 
         /**
@@ -329,14 +362,14 @@ namespace osmium {
          */
         Location(const double lon, const double lat) :
             m_x(double_to_fix(lon)),
-            m_y(double_to_fix(lat)) {
+            m_y(remove_extra_bit(double_to_fix(lat))) {
         }
 
         /**
          * Check whether the coordinates of this location
          * are defined.
          *
-         * @deprecated Use is_defined() or is_undefined() or is_valid() which
+         * @deprecated Use is_defined() or is_undefined() or valid() which
          *             have all slightly different meanings.
          */
         explicit constexpr operator bool() const noexcept {
@@ -350,16 +383,16 @@ namespace osmium {
          * See also is_defined() and is_undefined().
          */
         constexpr bool valid() const noexcept {
-            return m_x >= -180 * precision()
-                && m_x <=  180 * precision()
-                && m_y >=  -90 * precision()
-                && m_y <=   90 * precision();
+            return x() >= -180 * precision()
+                && x() <=  180 * precision()
+                && y() >=  -90 * precision()
+                && y() <=   90 * precision();
         }
 
         /**
          * Returns true if at least one of the coordinates is defined.
          *
-         * See also is_undefined() and is_valid().
+         * See also is_undefined() and valid().
          */
         constexpr bool is_defined() const noexcept {
             return m_x != undefined_coordinate || m_y != undefined_coordinate;
@@ -368,7 +401,7 @@ namespace osmium {
         /**
          * Returns true if both coordinates are undefined.
          *
-         * See also is_defined() and is_valid().
+         * See also is_defined() and valid().
          */
         constexpr bool is_undefined() const noexcept {
             return m_x == undefined_coordinate && m_y == undefined_coordinate;
@@ -379,7 +412,7 @@ namespace osmium {
         }
 
         constexpr int32_t y() const noexcept {
-            return m_y;
+            return remove_extra_bit(m_y);
         }
 
         Location& set_x(const int32_t x) noexcept {
@@ -387,8 +420,13 @@ namespace osmium {
             return *this;
         }
 
+        /**
+         * Set the y coordinate of the location.
+         *
+         * This will always clear the extra bit.
+         */
         Location& set_y(const int32_t y) noexcept {
-            m_y = y;
+            m_y = remove_extra_bit(y);
             return *this;
         }
 
@@ -401,14 +439,14 @@ namespace osmium {
             if (!valid()) {
                 throw osmium::invalid_location{"invalid location"};
             }
-            return fix_to_double(m_x);
+            return fix_to_double(x());
         }
 
         /**
          * Get longitude without checking the validity.
          */
         double lon_without_check() const noexcept {
-            return fix_to_double(m_x);
+            return fix_to_double(x());
         }
 
         /**
@@ -420,24 +458,22 @@ namespace osmium {
             if (!valid()) {
                 throw osmium::invalid_location{"invalid location"};
             }
-            return fix_to_double(m_y);
+            return fix_to_double(y());
         }
 
         /**
          * Get latitude without checking the validity.
          */
         double lat_without_check() const noexcept {
-            return fix_to_double(m_y);
+            return fix_to_double(y());
         }
 
         Location& set_lon(double lon) noexcept {
-            m_x = double_to_fix(lon);
-            return *this;
+            return set_x(double_to_fix(lon));
         }
 
         Location& set_lat(double lat) noexcept {
-            m_y = double_to_fix(lat);
-            return *this;
+            return set_y(double_to_fix(lat));
         }
 
         Location& set_lon(const char* str) {
@@ -446,8 +482,7 @@ namespace osmium {
             if (**data != '\0') {
                 throw invalid_location{std::string{"characters after coordinate: '"} + *data + "'"};
             }
-            m_x = value;
-            return *this;
+            return set_x(value);
         }
 
         Location& set_lat(const char* str) {
@@ -456,18 +491,15 @@ namespace osmium {
             if (**data != '\0') {
                 throw invalid_location{std::string{"characters after coordinate: '"} + *data + "'"};
             }
-            m_y = value;
-            return *this;
+            return set_y(value);
         }
 
         Location& set_lon_partial(const char** str) {
-            m_x = detail::string_to_location_coordinate(str);
-            return *this;
+            return set_x(detail::string_to_location_coordinate(str));
         }
 
         Location& set_lat_partial(const char** str) {
-            m_y = detail::string_to_location_coordinate(str);
-            return *this;
+            return set_y(detail::string_to_location_coordinate(str));
         }
 
         template <typename T>
@@ -485,16 +517,83 @@ namespace osmium {
             return as_string_without_check(iterator, separator);
         }
 
+#ifdef OSMIUM_LOCATION_WITH_EXTRA_BIT
+        /**
+         * Get extra bit from location.
+         */
+        constexpr bool get_extra_bit() const noexcept {
+            assert(m_y != undefined_coordinate);
+
+            auto const b = static_cast<uint32_t>(m_y);
+            auto const b31 = b >> 31UL;
+            auto const b30 = (b >> 30UL) & 1UL;
+            return b30 ^ b31;
+        }
+
+        /**
+         * Set extra bit on location.
+         *
+         * @pre valid()
+         */
+        constexpr void set_extra_bit() noexcept {
+            assert(m_y != undefined_coordinate);
+
+            auto const b = static_cast<uint32_t>(m_y);
+            auto const n30 = b & ~mask_b30;
+            auto const b30 = (~b >> 1UL) & mask_b30;
+            m_y = static_cast<int32_t>(n30 | b30);
+        }
+
+        /**
+         * Set or clear extra bit on location.
+         *
+         * @pre valid()
+         */
+        constexpr void set_extra_bit(bool value) noexcept {
+            assert(m_y != undefined_coordinate);
+
+            auto const b = static_cast<uint32_t>(m_y);
+            auto const n30 = b & ~mask_b30;
+            auto const b30 = ((b >> 31UL) ^ value) << 30UL;
+            m_y = static_cast<int32_t>(n30 | b30);
+        }
+
+        /**
+         * Clear extra bit on location.
+         *
+         * @pre valid()
+         */
+        constexpr void clear_extra_bit() noexcept {
+            assert(m_y != undefined_coordinate);
+
+            m_y = y();
+        }
+
+        /**
+         * Toggle extra bit on location.
+         *
+         * @pre valid()
+         */
+        constexpr void toggle_extra_bit() noexcept {
+            assert(m_y != undefined_coordinate);
+
+            auto const b = static_cast<uint32_t>(m_y);
+            auto const n30 = b & ~mask_b30;
+            auto const b30 = ~b & mask_b30;
+            m_y = static_cast<int32_t>(n30 | b30);
+        }
+#endif
+
     }; // class Location
 
     /**
      * Locations are equal if both coordinates are equal.
      */
-    inline constexpr bool operator==(const Location& lhs, const Location& rhs) noexcept {
+    constexpr bool operator==(const Location& lhs, const Location& rhs) noexcept {
         return lhs.x() == rhs.x() && lhs.y() == rhs.y();
     }
 
-    inline constexpr bool operator!=(const Location& lhs, const Location& rhs) noexcept {
+    constexpr bool operator!=(const Location& lhs, const Location& rhs) noexcept {
         return !(lhs == rhs);
     }
 
@@ -503,19 +602,19 @@ namespace osmium {
      * the y coordinate. If either of the locations is
      * undefined the result is undefined.
      */
-    inline constexpr bool operator<(const Location& lhs, const Location& rhs) noexcept {
+    constexpr bool operator<(const Location& lhs, const Location& rhs) noexcept {
         return (lhs.x() == rhs.x() && lhs.y() < rhs.y()) || lhs.x() < rhs.x();
     }
 
-    inline constexpr bool operator>(const Location& lhs, const Location& rhs) noexcept {
+    constexpr bool operator>(const Location& lhs, const Location& rhs) noexcept {
         return rhs < lhs;
     }
 
-    inline constexpr bool operator<=(const Location& lhs, const Location& rhs) noexcept {
+    constexpr bool operator<=(const Location& lhs, const Location& rhs) noexcept {
         return !(rhs < lhs);
     }
 
-    inline constexpr bool operator>=(const Location& lhs, const Location& rhs) noexcept {
+    constexpr bool operator>=(const Location& lhs, const Location& rhs) noexcept {
         return !(lhs < rhs);
     }
 

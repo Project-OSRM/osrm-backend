@@ -14,7 +14,7 @@ All Osmium code MUST be in the `osmium` namespace or one of its sub-namespaces.
 Osmium is a include-only library. You can't compile the library itself. There
 is no `libosmium.so` or `libosmium.dll`.
 
-One drawback ist that you can't have static data in classes, because there
+One drawback is that you can't have static data in classes, because there
 is no place to put this data.
 
 All free functions must be declared `inline`.

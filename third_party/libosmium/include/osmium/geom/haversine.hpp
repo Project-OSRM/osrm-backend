@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -69,7 +69,7 @@ namespace osmium {
                 double lath = std::sin(deg_to_rad(c1.y - c2.y) * 0.5);
                 lath *= lath;
                 const double tmp = std::cos(deg_to_rad(c1.y)) * std::cos(deg_to_rad(c2.y));
-                return 2.0 * EARTH_RADIUS_IN_METERS * std::asin(std::sqrt(lath + tmp * lonh));
+                return 2.0 * EARTH_RADIUS_IN_METERS * std::asin(std::sqrt(lath + (tmp * lonh)));
             }
 
             /**
