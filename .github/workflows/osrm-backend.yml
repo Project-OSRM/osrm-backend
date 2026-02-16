@@ -111,7 +111,7 @@ jobs:
     - name: Prepare environment
       run: |
         npm ci --ignore-scripts
-        clang-format-19 --version
+        clang-format-18 --version
     - name: Run checks
       run: |
         ./scripts/check_taginfo.py taginfo.json profiles/car.lua
