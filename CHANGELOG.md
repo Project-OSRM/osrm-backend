@@ -6,6 +6,7 @@
       - ADDED: Emit warning when ways reference nodes not present in input data [#1596](https://github.com/Project-OSRM/osrm-backend/issues/1596)
     - Profiles:
       - ADDED: Make `max_collapse_distance` configurable via Lua profiles to preserve short road crossings in pedestrian routing [#6171](https://github.com/Project-OSRM/osrm-backend/issues/6171)
+      - ADDED: Support `maxweightrating` tag as an alternative to `maxweight` for weight restrictions in car profile [#7325](https://github.com/Project-OSRM/osrm-backend/issues/7325)
       - CHANGED: Apply configurable penalty (default 60s) to gates in car profile [#6757](https://github.com/Project-OSRM/osrm-backend/issues/6757)
       - ADDED: Add exception for audible fences (`barrier=fence` with `sensory=audible` or `sensory=audio`) that deter livestock but do not block vehicles [#6964](https://github.com/Project-OSRM/osrm-backend/issues/6964)
       - ADDED: Use `is_sidepath:of:name` and `street:name` as fallback names for unnamed sidewalks and sidepaths in foot and bicycle profiles [#7259](https://github.com/Project-OSRM/osrm-backend/issues/7259)
@@ -20,7 +21,8 @@
       - FIXED: Fix compilation with gcc >14 in release with LTO. [#7268](https://github.com/Project-OSRM/osrm-backend/issues/7268)
       - ADDED: Conditionally prefix custom CMake targets with `osrm_` when built as subproject, and add ALIAS targets for FetchContent compatibility [#7267](https://github.com/Project-OSRM/osrm-backend/issues/7267)
     - Misc:
-      - CHANGED: Upgrade from clang-format-15 to clang-format-19 [#7249](https://github.com/Project-OSRM/osrm-backend/issues/7249)
+      - CHANGED: Upgrade from clang-format-15 to clang-format-18 [#7249](https://github.com/Project-OSRM/osrm-backend/issues/7249)
+      - ADDED: `--output` / `-o` option to osrm-extract for specifying custom output base path [#4930](https://github.com/Project-OSRM/osrm-backend/issues/4930)
       - ADDED: `--list-inputs` option to all OSRM tools to list required/optional input file extensions for deployment scripts [#2865](https://github.com/Project-OSRM/osrm-backend/issues/2865)
       - ADDED: `--max-header-size` to override the (automatically) configured maximum header size for osrm-routed [#7336](https://github.com/Project-OSRM/osrm-backend/pull/7336)
       - CHANGED: Use boost::beast instead of own HTTP code for osrm-routed [#7328](https://github.com/Project-OSRM/osrm-backend/pull/7328)

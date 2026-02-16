@@ -96,7 +96,7 @@ function Measure.get_max_length(raw_value)
   end
 end
 
---- Get maxweight of specified way in kilogramms.
+--- Get maxweight/maxweightrating of specified way in kilogramms.
 function Measure.get_max_weight(raw_value)
   if raw_value then
     return Measure.parse_value_kilograms(raw_value)
