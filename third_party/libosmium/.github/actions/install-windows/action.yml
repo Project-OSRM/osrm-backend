@@ -11,7 +11,5 @@ runs:
           bzip2:x64-windows \
           expat:x64-windows \
           lz4:x64-windows \
-          sparsehash:x64-windows \
           zlib:x64-windows
       shell: bash
-

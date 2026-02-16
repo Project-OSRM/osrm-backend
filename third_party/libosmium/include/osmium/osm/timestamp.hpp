@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -220,7 +220,7 @@ namespace osmium {
          * The constructor is not declared "explicit" so that conversions
          * like @code node.set_timestamp(123); @endcode work.
          */
-        template <typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+        template <typename T, typename std::enable_if_t<std::is_integral<T>::value, int> = 0>
         constexpr Timestamp(T timestamp) noexcept : // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
             m_timestamp(static_cast<uint32_t>(timestamp)) {
         }
@@ -317,7 +317,7 @@ namespace osmium {
      * A special Timestamp guaranteed to be ordered before any other valid
      * Timestamp.
      */
-    inline constexpr Timestamp start_of_time() noexcept {
+    constexpr Timestamp start_of_time() noexcept {
         return {1};
     }
 
@@ -325,7 +325,7 @@ namespace osmium {
      * A special Timestamp guaranteed to be ordered after any other valid
      * Timestamp.
      */
-    inline constexpr Timestamp end_of_time() noexcept {
+    constexpr Timestamp end_of_time() noexcept {
         return {std::numeric_limits<uint32_t>::max()};
     }
 

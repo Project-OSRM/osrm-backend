@@ -16,4 +16,3 @@ runs:
               -DPROTOZERO_INCLUDE_DIR=${GITHUB_WORKSPACE}/../protozero/include
       shell: bash
       working-directory: build
-

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -275,7 +275,7 @@ namespace osmium {
                 protozero::pbf_builder<OSMFormat::PrimitiveGroup> m_pbf_primitive_group;
                 StringTable m_stringtable;
                 pbf_output_options m_options;
-                std::unique_ptr<DenseNodes> m_dense_nodes{};
+                std::unique_ptr<DenseNodes> m_dense_nodes;
                 OSMFormat::PrimitiveGroup m_type;
                 int m_count = 0;
 
@@ -312,7 +312,7 @@ namespace osmium {
 
                 void add_dense_node(const osmium::Node& node) {
                     if (!m_dense_nodes) {
-                        m_dense_nodes.reset(new DenseNodes{&m_stringtable, &m_options});
+                        m_dense_nodes = std::make_unique<DenseNodes>(&m_stringtable, &m_options);
                     }
                     m_dense_nodes->add_node(node);
                     ++m_count;
@@ -366,7 +366,7 @@ namespace osmium {
 
             class SerializeBlob {
 
-                std::shared_ptr<PrimitiveBlock> m_block{};
+                std::shared_ptr<PrimitiveBlock> m_block;
 
                 std::string m_msg;
 
@@ -482,7 +482,7 @@ namespace osmium {
 
                 pbf_output_options m_options;
 
-                std::shared_ptr<PrimitiveBlock> m_primitive_block{};
+                std::shared_ptr<PrimitiveBlock> m_primitive_block;
 
                 std::size_t m_bucket_count = StringTable::min_bucket_count;
 
@@ -553,7 +553,7 @@ namespace osmium {
                 void switch_primitive_block_type(OSMFormat::PrimitiveGroup type) {
                     if (!m_primitive_block || !m_primitive_block->can_add(type)) {
                         store_primitive_block();
-                        m_primitive_block.reset(new PrimitiveBlock{m_options, type, m_bucket_count});
+                        m_primitive_block = std::make_shared<PrimitiveBlock>(m_options, type, m_bucket_count);
                     }
                 }
 

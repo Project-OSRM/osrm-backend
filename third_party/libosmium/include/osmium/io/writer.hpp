@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -109,15 +109,15 @@ namespace osmium {
 
             std::unique_ptr<osmium::io::detail::OutputFormat> m_output{nullptr};
 
-            osmium::memory::Buffer m_buffer{};
+            osmium::memory::Buffer m_buffer;
 
             osmium::io::Header m_header;
 
             size_t m_buffer_size = default_buffer_size;
 
-            std::future<std::size_t> m_write_future{};
+            std::future<std::size_t> m_write_future;
 
-            osmium::thread::thread_handler m_thread{};
+            osmium::thread::thread_handler m_thread;
 
             // Checking the m_write_future is much more expensive then checking
             // one atomic bool, so we set this bool in the write_thread when
@@ -269,7 +269,7 @@ namespace osmium {
                 assert(!m_file.buffer()); // XXX can't handle pseudo-files
 
                 options_type options;
-                (void)std::initializer_list<int>{(set_option(options, args), 0)...};
+                (void)std::initializer_list<int>{(set_option(options, std::forward<TArgs>(args)), 0)...};
 
                 if (!options.pool) {
                     options.pool = &thread::Pool::default_instance();
@@ -308,7 +308,7 @@ namespace osmium {
             ~Writer() noexcept {
                 try {
                     do_close();
-                } catch (...) {
+                } catch (...) { // NOLINT(bugprone-empty-catch)
                     // Ignore any exceptions because destructor must not throw.
                 }
             }

@@ -8,6 +8,7 @@
 #include <osmium/memory/buffer.hpp>
 #include <osmium/visitor.hpp>
 
+#include <array>
 #include <iterator>
 #include <stdexcept>
 #include <vector>
@@ -28,9 +29,11 @@ struct ZeroPositionNodeCountHandler : public osmium::handler::Handler {
     // location.
     int count = 0;
     int total_count = 0; // total number of nodes seen
-    const osmium::Location zero = osmium::Location{static_cast<int32_t>(0), static_cast<int32_t>(0)};
 
     void node(const osmium::Node& node) {
+        static constexpr const osmium::Location zero =
+            osmium::Location{static_cast<int32_t>(0), static_cast<int32_t>(0)};
+
         // no nodes in the history file have a zero location, and
         // no visible nodes should have an undefined location.
         if ((node.location() == zero) ||
@@ -263,7 +266,7 @@ TEST_CASE("Reader should work when there is an exception in main thread before g
         const osmium::io::Reader reader{with_data_dir("t/io/data.osm")};
         REQUIRE_FALSE(reader.eof());
         throw std::runtime_error{"foo"};
-    } catch (...) {
+    } catch (...) { // NOLINT(bugprone-empty-catch)
     }
 
     REQUIRE(count == count_fds());
@@ -277,7 +280,7 @@ TEST_CASE("Reader should work when there is an exception in main thread while re
         REQUIRE_FALSE(reader.eof());
         auto header = reader.header();
         throw std::runtime_error{"foo"};
-    } catch (...) {
+    } catch (...) { // NOLINT(bugprone-empty-catch)
     }
 
     REQUIRE(count == count_fds());
@@ -345,6 +348,8 @@ TEST_CASE("Can not read after close") {
 
 using object_counts = std::array<std::size_t, 3>;
 
+namespace {
+
 std::vector<object_counts> count_objects_per_buffer(const char* filename, osmium::io::buffers_type btype) {
     const osmium::io::File file{with_data_dir(filename)};
     osmium::io::Reader reader{file, btype};
@@ -369,6 +374,8 @@ void check_buffer_counts(const std::string& filename, const std::vector<object_c
         REQUIRE(counts == oc);
     }
 }
+
+} // anonymous namespace
 
 TEST_CASE("Reader with single object type per buffer") {
     check_buffer_counts("t/io/data-n5w1r3", {{5, 1, 3}}, osmium::io::buffers_type::any);

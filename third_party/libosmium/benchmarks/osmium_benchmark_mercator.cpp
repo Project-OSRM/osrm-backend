@@ -10,8 +10,8 @@
 #include <osmium/io/any_input.hpp>
 #include <osmium/visitor.hpp>
 
-#include <cstdint>
 #include <cstdlib>
+#include <exception>
 #include <iostream>
 #include <string>
 

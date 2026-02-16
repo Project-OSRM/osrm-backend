@@ -7,6 +7,8 @@
 #include <iterator>
 #include <string>
 
+namespace {
+
 void check_node_1(const osmium::Node& node) {
     REQUIRE(1 == node.id());
     REQUIRE(3 == node.version());
@@ -61,6 +63,8 @@ void check_node_2(const osmium::Node& node) {
     }
     REQUIRE(2 == n);
 }
+
+} // anonymous namespace
 
 TEST_CASE("Node in Buffer") {
 

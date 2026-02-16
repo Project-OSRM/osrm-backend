@@ -25,6 +25,7 @@
 */
 
 #include <cstdio>   // for std::printf
+#include <exception>
 #include <iostream> // for std::cerr
 #include <string>   // for std::string
 

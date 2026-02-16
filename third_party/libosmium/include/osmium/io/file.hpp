@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -73,7 +73,7 @@ namespace osmium {
 
         private:
 
-            std::string m_filename{};
+            std::string m_filename;
 
             const char* m_buffer = nullptr;
             size_t m_buffer_size = 0;

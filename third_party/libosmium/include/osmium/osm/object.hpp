@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -69,7 +69,7 @@ namespace osmium {
         object_id_type      m_id = 0;
         bool                m_deleted : 1;
         object_version_type m_version : 31;
-        osmium::Timestamp   m_timestamp{};
+        osmium::Timestamp   m_timestamp;
         user_id_type        m_uid = 0;
         changeset_id_type   m_changeset = 0;
 
