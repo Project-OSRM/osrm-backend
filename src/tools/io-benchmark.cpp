@@ -11,16 +11,16 @@
 #include <cstdio>
 #include <fcntl.h>
 #ifdef _WIN32
-#include <windows.h>
 #include <malloc.h>
+#include <windows.h>
 #endif
 
 #ifdef __APPLE__
 #include <unistd.h>
 #endif
 #ifdef __linux__
-#include <unistd.h>
 #include <malloc.h>
+#include <unistd.h>
 #endif
 #ifdef __FreeBSD__
 #include <unistd.h>
@@ -115,22 +115,31 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
         {
             std::string path = test_path.string();
-            HANDLE hFile = CreateFileA(path.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-                                       FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
+            HANDLE hFile = CreateFileA(path.c_str(),
+                                       GENERIC_WRITE,
+                                       0,
+                                       NULL,
+                                       CREATE_ALWAYS,
+                                       FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH,
+                                       NULL);
             if (hFile == INVALID_HANDLE_VALUE)
             {
                 throw osrm::util::exception("Could not open random data file " + path + SOURCE_REF);
             }
             DWORD written = 0;
             TIMER_START(write_1gb);
-            BOOL ok = WriteFile(hFile, random_array,
-                                static_cast<DWORD>(osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned)),
-                                &written, NULL);
+            BOOL ok =
+                WriteFile(hFile,
+                          random_array,
+                          static_cast<DWORD>(osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned)),
+                          &written,
+                          NULL);
             TIMER_STOP(write_1gb);
             if (!ok || written == 0)
             {
                 CloseHandle(hFile);
-                throw osrm::util::exception("could not write random data file " + path + SOURCE_REF);
+                throw osrm::util::exception("could not write random data file " + path +
+                                            SOURCE_REF);
             }
             CloseHandle(hFile);
         }
@@ -194,14 +203,20 @@ int main(int argc, char *argv[])
         char *single_block = (char *)_aligned_malloc(1024 * sizeof(unsigned), 512);
         if (!single_block)
             return -1;
-        HANDLE hFile = CreateFileA(test_path.string().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
-                                   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+        HANDLE hFile = CreateFileA(test_path.string().c_str(),
+                                   GENERIC_READ,
+                                   FILE_SHARE_READ,
+                                   NULL,
+                                   OPEN_EXISTING,
+                                   FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
+                                   NULL);
         if (hFile == INVALID_HANDLE_VALUE)
         {
             osrm::util::Log(logDEBUG) << "opened, error: " << GetLastError();
             return -1;
         }
-        char *raw_array = (char *)_aligned_malloc(osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned), 512);
+        char *raw_array =
+            (char *)_aligned_malloc(osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned), 512);
 #endif
         TIMER_START(read_1gb);
 #ifdef __APPLE__
@@ -217,17 +232,26 @@ int main(int argc, char *argv[])
         osrm::util::Log(logDEBUG) << "opened, error: " << strerror(errno);
 #endif
 #ifdef _WIN32
-    {
-        DWORD readBytes = 0;
-        BOOL ok = ReadFile(hFile, raw_array,
-                   static_cast<DWORD>(osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned)),
-                   &readBytes, NULL);
-        osrm::util::Log(logDEBUG) << "read " << readBytes << " bytes, error: " << GetLastError();
-        CloseHandle(hFile);
-        hFile = CreateFileA(test_path.string().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
-                   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-        osrm::util::Log(logDEBUG) << "opened, error: " << GetLastError();
-    }
+        {
+            DWORD readBytes = 0;
+            BOOL ok =
+                ReadFile(hFile,
+                         raw_array,
+                         static_cast<DWORD>(osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned)),
+                         &readBytes,
+                         NULL);
+            osrm::util::Log(logDEBUG)
+                << "read " << readBytes << " bytes, error: " << GetLastError();
+            CloseHandle(hFile);
+            hFile = CreateFileA(test_path.string().c_str(),
+                                GENERIC_READ,
+                                FILE_SHARE_READ,
+                                NULL,
+                                OPEN_EXISTING,
+                                FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
+                                NULL);
+            osrm::util::Log(logDEBUG) << "opened, error: " << GetLastError();
+        }
 #endif
         TIMER_STOP(read_1gb);
 
@@ -369,9 +393,9 @@ int main(int argc, char *argv[])
         close(file_desc);
 #endif
 #ifdef _WIN32
-    CloseHandle(hFile);
-    _aligned_free(single_block);
-    _aligned_free(raw_array);
+        CloseHandle(hFile);
+        _aligned_free(single_block);
+        _aligned_free(raw_array);
 #endif
         // Do statistics
         osrm::util::Log(logDEBUG) << "running sequential I/O statistics";
