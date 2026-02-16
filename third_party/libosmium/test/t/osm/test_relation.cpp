@@ -6,6 +6,8 @@
 #include <osmium/osm/crc.hpp>
 #include <osmium/osm/relation.hpp>
 
+#include <cstdint>
+#include <ctime>
 #include <string>
 
 using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -75,10 +75,10 @@ namespace osmium {
             class NodeRefSegment {
 
                 // First node in order described above.
-                osmium::NodeRef m_first{};
+                osmium::NodeRef m_first;
 
                 // Second node in order described above.
-                osmium::NodeRef m_second{};
+                osmium::NodeRef m_second;
 
                 // Way this segment was from.
                 const osmium::Way* m_way = nullptr;
@@ -319,11 +319,11 @@ namespace osmium {
 
                     // intersection in a point
 
-                    const int64_t na = (q1.x - q0.x) * (p0.y - q0.y) -
-                                       (q1.y - q0.y) * (p0.x - q0.x);
+                    const int64_t na = ((q1.x - q0.x) * (p0.y - q0.y)) -
+                                       ((q1.y - q0.y) * (p0.x - q0.x));
 
-                    const int64_t nb = (p1.x - p0.x) * (p0.y - q0.y) -
-                                       (p1.y - p0.y) * (p0.x - q0.x);
+                    const int64_t nb = ((p1.x - p0.x) * (p0.y - q0.y)) -
+                                       ((p1.y - p0.y) * (p0.x - q0.x));
 
                     if ((d > 0 && na >= 0 && na <= d && nb >= 0 && nb <= d) ||
                         (d < 0 && na <= 0 && na >= d && nb <= 0 && nb >= d)) {

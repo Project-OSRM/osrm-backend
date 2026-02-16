@@ -7,6 +7,7 @@
 #include <osmium/osm/crc.hpp>
 #include <osmium/osm/way.hpp>
 
+#include <ctime>
 #include <string>
 
 using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)

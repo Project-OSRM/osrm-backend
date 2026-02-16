@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -83,13 +83,13 @@ namespace osmium {
                 /* Point */
 
                 static point_type make_point(const osmium::geom::Coordinates& xy) {
-                    return point_type{new OGRPoint{xy.x, xy.y}};
+                    return std::make_unique<OGRPoint>(xy.x, xy.y);
                 }
 
                 /* LineString */
 
                 void linestring_start() {
-                    m_linestring.reset(new OGRLineString{});
+                    m_linestring = std::make_unique<OGRLineString>();
                 }
 
                 void linestring_add_location(const osmium::geom::Coordinates& xy) {
@@ -105,7 +105,7 @@ namespace osmium {
                 /* Polygon */
 
                 void polygon_start() {
-                    m_ring.reset(new OGRLinearRing{});
+                    m_ring = std::make_unique<OGRLinearRing>();
                 }
 
                 void polygon_add_location(const osmium::geom::Coordinates& xy) {
@@ -114,7 +114,7 @@ namespace osmium {
                 }
 
                 polygon_type polygon_finish(size_t /* num_points */) {
-                    auto polygon = std::unique_ptr<OGRPolygon>{new OGRPolygon{}};
+                    auto polygon = std::make_unique<OGRPolygon>();
                     polygon->addRingDirectly(m_ring.release());
                     return polygon;
                 }
@@ -122,11 +122,11 @@ namespace osmium {
                 /* MultiPolygon */
 
                 void multipolygon_start() {
-                    m_multipolygon.reset(new OGRMultiPolygon{});
+                    m_multipolygon = std::make_unique<OGRMultiPolygon>();
                 }
 
                 void multipolygon_polygon_start() {
-                    m_polygon.reset(new OGRPolygon{});
+                    m_polygon = std::make_unique<OGRPolygon>();
                 }
 
                 void multipolygon_polygon_finish() {
@@ -136,7 +136,7 @@ namespace osmium {
                 }
 
                 void multipolygon_outer_ring_start() {
-                    m_ring.reset(new OGRLinearRing{});
+                    m_ring = std::make_unique<OGRLinearRing>();
                 }
 
                 void multipolygon_outer_ring_finish() {
@@ -146,7 +146,7 @@ namespace osmium {
                 }
 
                 void multipolygon_inner_ring_start() {
-                    m_ring.reset(new OGRLinearRing{});
+                    m_ring = std::make_unique<OGRLinearRing>();
                 }
 
                 void multipolygon_inner_ring_finish() {

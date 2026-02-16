@@ -1,10 +1,9 @@
-name: ctest
+name: Test
 
 runs:
   using: composite
   steps:
     - name: Test
-      run: ctest --output-on-failure
+      run: ctest --output-on-failure -C Release
       shell: bash
       working-directory: build
-

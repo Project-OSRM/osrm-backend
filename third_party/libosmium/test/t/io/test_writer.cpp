@@ -14,7 +14,9 @@
 #include <string>
 #include <utility>
 
-static osmium::memory::Buffer get_buffer() {
+namespace {
+
+osmium::memory::Buffer get_buffer() {
     osmium::io::Reader reader{with_data_dir("t/io/data.osm")};
     osmium::memory::Buffer buffer = reader.read();
     REQUIRE(buffer);
@@ -23,7 +25,7 @@ static osmium::memory::Buffer get_buffer() {
     return buffer;
 }
 
-static osmium::memory::Buffer get_and_check_buffer() {
+osmium::memory::Buffer get_and_check_buffer() {
     auto buffer = get_buffer();
 
     const auto num = std::distance(buffer.select<osmium::OSMObject>().cbegin(), buffer.select<osmium::OSMObject>().cend());
@@ -32,6 +34,8 @@ static osmium::memory::Buffer get_and_check_buffer() {
 
     return buffer;
 }
+
+} // anonymous namespace
 
 TEST_CASE("Writer: Empty writes") {
     const int count = count_fds();

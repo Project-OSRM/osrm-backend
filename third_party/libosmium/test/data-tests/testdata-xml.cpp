@@ -7,28 +7,31 @@
 #include <osmium/io/gzip_compression.hpp>
 #include <osmium/io/xml_input.hpp>
 #include <osmium/util/misc.hpp>
-#include <osmium/visitor.hpp>
 
+#include <atomic>
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <future>
-#include <iostream>
 #include <iterator>
+#include <stdexcept>
 #include <string>
+#include <utility>
 
-static std::string S_(const char* s) {
+namespace {
+
+std::string S_(const char* s) {
     return std::string{s};
 }
 
 // From C++20 we need to handle unicode literals differently
 #ifdef __cpp_char8_t
-static std::string S_(const char8_t* s) {
+std::string S_(const char8_t* s) {
     return std::string{reinterpret_cast<const char*>(s)};
 }
 #endif
 
-static std::string filename(const char* test_id, const char* suffix = "osm") {
+std::string filename(const char* test_id, const char* suffix = "osm") {
     const char* testdir = getenv("TESTDIR");
     if (!testdir) {
         throw std::runtime_error{"You have to set TESTDIR environment variable before running testdata-xml"};
@@ -56,7 +59,7 @@ struct header_buffer_type {
 // operations, because they make certain assumptions, for instance that
 // file contents fit into small buffers.
 
-static std::string read_file(const char* test_id) {
+std::string read_file(const char* test_id) {
     const int fd = osmium::io::detail::open_for_reading(filename(test_id));
     assert(fd >= 0);
 
@@ -70,7 +73,7 @@ static std::string read_file(const char* test_id) {
     return input;
 }
 
-static std::string read_gz_file(const char* test_id, const char* suffix) {
+std::string read_gz_file(const char* test_id, const char* suffix) {
     const int fd = osmium::io::detail::open_for_reading(filename(test_id, suffix));
     assert(fd >= 0);
 
@@ -81,7 +84,7 @@ static std::string read_gz_file(const char* test_id, const char* suffix) {
     return input;
 }
 
-static header_buffer_type parse_xml(std::string input) {
+header_buffer_type parse_xml(std::string input) {
     osmium::thread::Pool pool;
     osmium::io::detail::future_string_queue_type input_queue;
     osmium::io::detail::future_buffer_queue_type output_queue;
@@ -123,7 +126,7 @@ static header_buffer_type parse_xml(std::string input) {
     return result;
 }
 
-static header_buffer_type read_xml(const char* test_id) {
+header_buffer_type read_xml(const char* test_id) {
     const std::string input = read_file(test_id);
     return parse_xml(input);
 }
@@ -140,6 +143,8 @@ void test_fail(const char* xml_file_name, const char* errmsg) {
         reader.close();
     }(), TException);
 }
+
+} // anonymous namespace
 
 // =============================================
 

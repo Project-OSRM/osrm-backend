@@ -2,7 +2,6 @@
 
 #include "utils.hpp"
 
-#include <osmium/io/compression.hpp>
 #include <osmium/io/xml_input.hpp>
 #include <osmium/io/xml_output.hpp>
 
@@ -46,9 +45,17 @@ public:
 
 }; // class MockCompressor
 
-std::string fail_in;
-
 TEST_CASE("Write with mock compressor") {
+
+    std::string fail_in;
+
+    osmium::io::CompressionFactory::instance().clear_register();
+
+    osmium::io::CompressionFactory::instance().register_compression(osmium::io::file_compression::none,
+        [](const int /*fd*/, const osmium::io::fsync /*sync*/) { return nullptr; },
+        [](const int fd) { return new osmium::io::NoDecompressor{fd}; },
+        [](const char* buffer, std::size_t size) { return new osmium::io::NoDecompressor{buffer, size}; }
+    );
 
     osmium::io::CompressionFactory::instance().register_compression(osmium::io::file_compression::gzip,
         [&](int /*unused*/, osmium::io::fsync /*unused*/) { return new MockCompressor(fail_in); },

@@ -2,7 +2,9 @@
 
 #include <osmium/builder/attr.hpp>
 #include <osmium/memory/buffer.hpp>
+#include <osmium/osm/tag.hpp>
 #include <osmium/tags/tags_filter.hpp>
+#include <osmium/util/string_matcher.hpp>
 
 #include <functional>
 #include <iterator>
@@ -79,27 +81,31 @@ TEST_CASE("Tags filter") {
 
 }
 
-struct result_type {
+namespace {
 
-    int v = 0;
-    bool b = false;
+    struct result_type {
 
-    result_type() noexcept = default;
+        int v = 0;
+        bool b = false;
 
-    result_type(int v_, bool b_) noexcept :
-        v(v_),
-        b(b_) {
+        result_type() noexcept = default;
+
+        result_type(int v_, bool b_) noexcept :
+            v(v_),
+            b(b_) {
+        }
+
+        explicit operator bool() const noexcept {
+            return b;
+        }
+
+    }; // struct result_type
+
+    bool operator==(const result_type& lhs, const result_type& rhs) noexcept {
+        return lhs.v == rhs.v && lhs.b == rhs.b;
     }
 
-    explicit operator bool() const noexcept {
-        return b;
-    }
-
-}; // struct result_type
-
-bool operator==(const result_type& lhs, const result_type& rhs) noexcept {
-    return lhs.v == rhs.v && lhs.b == rhs.b;
-}
+} // anonymous namespace
 
 TEST_CASE("TagsFilterBase") {
     osmium::memory::Buffer buffer{10240};
@@ -170,5 +176,107 @@ TEST_CASE("TagsFilterBase") {
         REQUIRE(++it == end);
     }
 
+}
+
+TEST_CASE("compare_tags") {
+    osmium::memory::Buffer buffer{10240};
+
+    const auto pos1 = osmium::builder::add_tag_list(buffer,
+        osmium::builder::attr::_tags({
+            { "highway", "primary" },
+            { "name", "Main Street" },
+            { "source", "GPS" }
+    }));
+    const auto pos2 = osmium::builder::add_tag_list(buffer,
+        osmium::builder::attr::_tags({
+            { "highway", "primary" },
+            { "name", "Main Street" },
+    }));
+    const auto pos3 = osmium::builder::add_tag_list(buffer,
+        osmium::builder::attr::_tags({
+            { "attribution", "something" },
+            { "highway", "primary" },
+            { "name", "Main Street" },
+    }));
+    const auto pos4 = osmium::builder::add_tag_list(buffer,
+        osmium::builder::attr::_tags({
+            { "highway", "primary" },
+            { "junk", "foo" },
+            { "name", "Main Street" },
+    }));
+    const auto pos5 = osmium::builder::add_tag_list(buffer,
+        osmium::builder::attr::_tags({
+            { "amenity", "restaurant" },
+            { "name", "The Golden Goose" }
+    }));
+
+    const osmium::TagList& tag_list1 = buffer.get<osmium::TagList>(pos1);
+    const osmium::TagList& tag_list2 = buffer.get<osmium::TagList>(pos2);
+    const osmium::TagList& tag_list3 = buffer.get<osmium::TagList>(pos3);
+    const osmium::TagList& tag_list4 = buffer.get<osmium::TagList>(pos4);
+    const osmium::TagList& tag_list5 = buffer.get<osmium::TagList>(pos5);
+
+    const osmium::TagsFilter filter_empty{true};
+
+    REQUIRE(compare_tags(tag_list1, tag_list1, filter_empty));
+    REQUIRE(compare_tags(tag_list2, tag_list2, filter_empty));
+    REQUIRE(compare_tags(tag_list3, tag_list3, filter_empty));
+    REQUIRE(compare_tags(tag_list4, tag_list4, filter_empty));
+    REQUIRE(compare_tags(tag_list5, tag_list5, filter_empty));
+
+    REQUIRE_FALSE(compare_tags(tag_list1, tag_list2, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list1, tag_list3, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list1, tag_list4, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list1, tag_list5, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list2, tag_list3, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list2, tag_list4, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list2, tag_list5, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list3, tag_list4, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list3, tag_list5, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list4, tag_list5, filter_empty));
+
+    REQUIRE_FALSE(compare_tags(tag_list2, tag_list1, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list3, tag_list1, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list4, tag_list1, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list5, tag_list1, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list3, tag_list2, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list4, tag_list2, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list5, tag_list2, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list4, tag_list3, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list5, tag_list3, filter_empty));
+    REQUIRE_FALSE(compare_tags(tag_list5, tag_list4, filter_empty));
+
+    osmium::TagsFilter filter{true};
+    filter.add_rule(false, "attribution");
+    filter.add_rule(false, "source");
+    filter.add_rule(false, "junk");
+
+    REQUIRE(compare_tags(tag_list1, tag_list1, filter));
+    REQUIRE(compare_tags(tag_list2, tag_list2, filter));
+    REQUIRE(compare_tags(tag_list3, tag_list3, filter));
+    REQUIRE(compare_tags(tag_list4, tag_list4, filter));
+    REQUIRE(compare_tags(tag_list5, tag_list5, filter));
+
+    REQUIRE(compare_tags(tag_list1, tag_list2, filter));
+    REQUIRE(compare_tags(tag_list1, tag_list3, filter));
+    REQUIRE(compare_tags(tag_list1, tag_list4, filter));
+    REQUIRE_FALSE(compare_tags(tag_list1, tag_list5, filter));
+    REQUIRE(compare_tags(tag_list2, tag_list3, filter));
+    REQUIRE(compare_tags(tag_list2, tag_list4, filter));
+    REQUIRE_FALSE(compare_tags(tag_list2, tag_list5, filter));
+    REQUIRE(compare_tags(tag_list3, tag_list4, filter));
+    REQUIRE_FALSE(compare_tags(tag_list3, tag_list5, filter));
+    REQUIRE_FALSE(compare_tags(tag_list4, tag_list5, filter));
+
+    REQUIRE(compare_tags(tag_list2, tag_list1, filter));
+    REQUIRE(compare_tags(tag_list3, tag_list1, filter));
+    REQUIRE(compare_tags(tag_list4, tag_list1, filter));
+    REQUIRE_FALSE(compare_tags(tag_list5, tag_list1, filter));
+    REQUIRE(compare_tags(tag_list3, tag_list2, filter));
+    REQUIRE(compare_tags(tag_list4, tag_list2, filter));
+    REQUIRE_FALSE(compare_tags(tag_list5, tag_list2, filter));
+    REQUIRE(compare_tags(tag_list4, tag_list3, filter));
+    REQUIRE_FALSE(compare_tags(tag_list5, tag_list3, filter));
+    REQUIRE_FALSE(compare_tags(tag_list5, tag_list4, filter));
 }
 

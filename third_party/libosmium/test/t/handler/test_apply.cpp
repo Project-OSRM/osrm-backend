@@ -13,11 +13,11 @@ TEST_CASE("apply with lambdas on reader") {
     const osmium::io::File file{with_data_dir("t/relations/data.osm")};
     osmium::io::Reader reader{file};
 
-    int count_n = 0;
-    int count_w = 0;
-    int count_r = 0;
-    int count_o = 0;
-    int count_a = 0;
+    uint64_t count_n = 0;
+    uint64_t count_w = 0;
+    uint64_t count_r = 0;
+    uint64_t count_o = 0;
+    uint64_t count_a = 0;
 
     osmium::apply(reader,
         [&](const osmium::Node& node) {

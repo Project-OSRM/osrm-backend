@@ -6,6 +6,7 @@
 #include <osmium/osm/changeset.hpp>
 #include <osmium/osm/crc.hpp>
 
+#include <ctime>
 #include <string>
 
 using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)

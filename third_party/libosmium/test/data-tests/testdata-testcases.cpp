@@ -3,6 +3,7 @@
 
 #include "testdata-testcases.hpp"
 
+#include <exception>
 #include <iostream>
 #include <string>
 

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -49,7 +49,7 @@ namespace osmium {
         namespace detail {
 
             template <typename T>
-            constexpr inline bool type_is_compatible(const osmium::item_type t) noexcept {
+            constexpr bool type_is_compatible(const osmium::item_type t) noexcept {
                 return T::is_compatible_to(t);
             }
 
@@ -63,7 +63,7 @@ namespace osmium {
             // This data_type is either 'unsigned char*' or 'const unsigned char*' depending
             // on whether TMember is const. This allows this class to be used as an iterator and
             // as a const_iterator.
-            using data_type = typename std::conditional<std::is_const<TMember>::value, const unsigned char*, unsigned char*>::type;
+            using data_type = std::conditional_t<std::is_const<TMember>::value, const unsigned char*, unsigned char*>;
 
             data_type m_data;
             data_type m_end;
@@ -179,7 +179,7 @@ namespace osmium {
 
             // This data_type is either 'unsigned char*' or
             // 'const unsigned char*' depending on whether T is const.
-            using data_type = typename std::conditional<std::is_const<T>::value, const unsigned char*, unsigned char*>::type;
+            using data_type = std::conditional_t<std::is_const<T>::value, const unsigned char*, unsigned char*>;
 
             data_type m_begin;
             data_type m_end;

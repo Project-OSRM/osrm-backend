@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -120,7 +120,7 @@ namespace osmium {
             }; // class thread_joiner
 
             osmium::thread::Queue<function_wrapper> m_work_queue;
-            std::vector<std::thread> m_threads{};
+            std::vector<std::thread> m_threads;
             thread_joiner m_joiner;
             int m_num_threads;
 
@@ -225,7 +225,7 @@ namespace osmium {
 #else
             // For C++11 and C++14
             template <typename TFunction>
-            using submit_func_result_type = typename std::result_of<TFunction()>::type;
+            using submit_func_result_type = std::result_of_t<TFunction()>;
 #endif
 
             template <typename TFunction>

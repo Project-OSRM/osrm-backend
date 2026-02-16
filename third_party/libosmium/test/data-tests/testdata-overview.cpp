@@ -9,6 +9,7 @@
 
 #include <gdalcpp.hpp>
 
+#include <exception>
 #include <iostream>
 #include <string>
 

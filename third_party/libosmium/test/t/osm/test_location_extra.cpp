@@ -1,8 +1,8 @@
 #include "catch.hpp"
 
-// This file contains the same tests as test_location_extra.cpp, except those
-// tests specific to the location extra bit. OSMIUM_LOCATION_WITH_EXTRA_BIT is
-// not set.
+// This file contains the same tests as test_location_extra.cpp, but with
+// the OSMIUM_LOCATION_WITH_EXTRA_BIT macro set.
+#define OSMIUM_LOCATION_WITH_EXTRA_BIT
 
 #include <osmium/osm/location.hpp>
 
@@ -442,3 +442,48 @@ TEST_CASE("set lon/lat from string with trailing characters using partial") {
     REQUIRE(*y == ' ');
 }
 
+TEST_CASE("handling extra bit") {
+    for (const double y : {0.0, 3.4, -3.4, 90.0, -90.0}) {
+        osmium::Location loc{0.0, y};
+        const auto v = static_cast<int32_t>(y * 10000000);
+
+        REQUIRE_FALSE(loc.get_extra_bit());
+        REQUIRE(v == loc.y());
+
+        loc.set_extra_bit();
+        REQUIRE(loc.get_extra_bit());
+        REQUIRE(v == loc.y());
+
+        REQUIRE(loc.get_extra_bit());
+        REQUIRE(v == loc.y());
+
+        loc.clear_extra_bit();
+        REQUIRE_FALSE(loc.get_extra_bit());
+        REQUIRE(v == loc.y());
+
+        loc.toggle_extra_bit();
+        REQUIRE(loc.get_extra_bit());
+        REQUIRE(v == loc.y());
+
+        loc.set_extra_bit(false);
+        REQUIRE_FALSE(loc.get_extra_bit());
+        REQUIRE(v == loc.y());
+
+        loc.set_extra_bit(true);
+        REQUIRE(loc.get_extra_bit());
+        REQUIRE(v == loc.y());
+    }
+
+    const osmium::Location undef;
+    REQUIRE(undef.y() == osmium::Location::undefined_coordinate);
+}
+
+TEST_CASE("extra bit is always cleared on setting y coordinate") {
+    for (const double y : {0.0, 3.4, -3.4, 90.0, -90.0, 180.0, -180.0, 200.0, -200.0}) {
+        osmium::Location loc{0.0, y};
+        REQUIRE_FALSE(loc.get_extra_bit());
+        loc.set_extra_bit();
+        loc.set_lat(y);
+        REQUIRE_FALSE(loc.get_extra_bit());
+    }
+}

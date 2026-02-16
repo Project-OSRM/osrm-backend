@@ -13,6 +13,7 @@
 
 */
 
+#include <exception>
 #include <iostream> // for std::cerr
 
 // Allow any format of input files (XML, PBF, ...)
