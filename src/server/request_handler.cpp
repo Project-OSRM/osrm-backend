@@ -2,8 +2,6 @@
 #include "server/service_handler.hpp"
 
 #include "server/api/url_parser.hpp"
-#include "server/http/reply.hpp"
-#include "server/http/request.hpp"
 
 #include "util/json_renderer.hpp"
 #include "util/log.hpp"
@@ -11,7 +9,6 @@
 #include "util/timing_util.hpp"
 
 #include "engine/status.hpp"
-#include "osrm/osrm.hpp"
 #include "util/json_container.hpp"
 
 #include <boost/iostreams/copy.hpp>
@@ -19,6 +16,7 @@
 #include <ctime>
 
 #include <algorithm>
+#include <iomanip>
 #include <string>
 #include <thread>
 #include <variant>
@@ -26,59 +24,74 @@
 namespace osrm::server
 {
 
+namespace bhttp = boost::beast::http;
+
+namespace
+{
+inline std::string HeaderOrEmpty(const Request &req, bhttp::field f)
+{
+    const auto it = req.find(f);
+    if (it == req.end())
+        return {};
+    return std::string(it->value());
+}
+
+void SendResponse(ServiceHandler::ResultT &result,
+                  Response &current_reply,
+                  const bhttp::status status)
+{
+
+    current_reply.result(status);
+    current_reply.set("Access-Control-Allow-Origin", "*");
+    current_reply.set("Access-Control-Allow-Methods", "GET");
+    current_reply.set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
+    if (std::holds_alternative<util::json::Object>(result))
+    {
+        current_reply.set(bhttp::field::content_type, "application/json; charset=UTF-8");
+        current_reply.set(bhttp::field::content_disposition, "inline; filename=\"response.json\"");
+
+        util::json::render(current_reply.body(), std::get<util::json::Object>(result));
+    }
+    else if (std::holds_alternative<flatbuffers::FlatBufferBuilder>(result))
+    {
+        auto &buffer = std::get<flatbuffers::FlatBufferBuilder>(result);
+        current_reply.body().resize(buffer.GetSize());
+        std::copy(buffer.GetBufferPointer(),
+                  buffer.GetBufferPointer() + buffer.GetSize(),
+                  current_reply.body().begin());
+
+        current_reply.set(bhttp::field::content_type,
+                          "application/x-flatbuffers;schema=osrm.engine.api.fbresult");
+    }
+    else
+    {
+        BOOST_ASSERT(std::holds_alternative<std::string>(result));
+        current_reply.body().resize(std::get<std::string>(result).size());
+        std::copy(std::get<std::string>(result).cbegin(),
+                  std::get<std::string>(result).cend(),
+                  current_reply.body().begin());
+
+        current_reply.set(bhttp::field::content_type, "application/x-protobuf");
+    }
+}
+} // namespace
+
 void RequestHandler::RegisterServiceHandler(
     std::unique_ptr<ServiceHandlerInterface> service_handler_)
 {
     service_handler = std::move(service_handler_);
 }
 
-void SendResponse(ServiceHandler::ResultT &result, http::reply &current_reply)
+void RequestHandler::HandleRequest(const Request &current_request,
+                                   Response &current_reply,
+                                   const boost::asio::ip::address &remote_address)
 {
+    // Defensive reset: Connection also resets before calling us.
+    current_reply = {};
 
-    current_reply.headers.emplace_back("Access-Control-Allow-Origin", "*");
-    current_reply.headers.emplace_back("Access-Control-Allow-Methods", "GET");
-    current_reply.headers.emplace_back("Access-Control-Allow-Headers",
-                                       "X-Requested-With, Content-Type");
-    if (std::holds_alternative<util::json::Object>(result))
-    {
-        current_reply.headers.emplace_back("Content-Type", "application/json; charset=UTF-8");
-        current_reply.headers.emplace_back("Content-Disposition",
-                                           "inline; filename=\"response.json\"");
-
-        util::json::render(current_reply.content, std::get<util::json::Object>(result));
-    }
-    else if (std::holds_alternative<flatbuffers::FlatBufferBuilder>(result))
-    {
-        auto &buffer = std::get<flatbuffers::FlatBufferBuilder>(result);
-        current_reply.content.resize(buffer.GetSize());
-        std::copy(buffer.GetBufferPointer(),
-                  buffer.GetBufferPointer() + buffer.GetSize(),
-                  current_reply.content.begin());
-
-        current_reply.headers.emplace_back(
-            "Content-Type", "application/x-flatbuffers;schema=osrm.engine.api.fbresult");
-    }
-    else
-    {
-        BOOST_ASSERT(std::holds_alternative<std::string>(result));
-        current_reply.content.resize(std::get<std::string>(result).size());
-        std::copy(std::get<std::string>(result).cbegin(),
-                  std::get<std::string>(result).cend(),
-                  current_reply.content.begin());
-
-        current_reply.headers.emplace_back("Content-Type", "application/x-protobuf");
-    }
-
-    // set headers
-    current_reply.headers.emplace_back("Content-Length",
-                                       std::to_string(current_reply.content.size()));
-}
-
-void RequestHandler::HandleRequest(const http::request &current_request, http::reply &current_reply)
-{
     if (!service_handler)
     {
-        current_reply = http::reply::stock_reply(http::reply::internal_server_error);
+        SetInternalServerError(current_reply);
         util::Log(logWARNING) << "No service handler registered." << std::endl;
         return;
     }
@@ -90,15 +103,16 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
     {
         TIMER_START(request_duration);
         std::string request_string;
-        util::URIDecode(current_request.uri, request_string);
+        util::URIDecode(std::string(current_request.target()), request_string);
 
         util::Log(logDEBUG) << "[req][" << tid << "] " << request_string;
 
         auto api_iterator = request_string.begin();
         auto maybe_parsed_url = api::parseURL(api_iterator, request_string.end());
         ServiceHandler::ResultT result;
+        bhttp::status response_status = bhttp::status::ok;
 
-        // check if the was an error with the request
+        // check if there was an error with the request
         if (maybe_parsed_url && api_iterator == request_string.end())
         {
 
@@ -107,7 +121,7 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
             if (status != engine::Status::Ok)
             {
                 // 4xx bad request return code
-                current_reply.status = http::reply::bad_request;
+                response_status = bhttp::status::bad_request;
             }
             else
             {
@@ -126,7 +140,7 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
             BOOST_ASSERT(context_end <= request_string.end());
             std::string context(context_begin, context_end);
 
-            current_reply.status = http::reply::bad_request;
+            response_status = bhttp::status::bad_request;
             result = util::json::Object();
             auto &json_result = std::get<util::json::Object>(result);
             json_result.values["code"] = "InvalidUrl";
@@ -134,60 +148,39 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
                                             std::to_string(position) + ": \"" + context + "\"";
         }
 
-        SendResponse(result, current_reply);
+        SendResponse(result, current_reply, response_status);
 
         if (!std::getenv("DISABLE_ACCESS_LOGGING"))
         {
-            // deactivated as GCC apparently does not implement that, not even in 4.9
-            // std::time_t t = std::time(nullptr);
-            // util::Log() << std::put_time(std::localtime(&t), "%m-%d-%Y
-            // %H:%M:%S") <<
-            //     " " << current_request.endpoint.to_string() << " " <<
-            //     current_request.referrer << ( 0 == current_request.referrer.length() ? "- " :" ")
-            //     <<
-            //     current_request.agent << ( 0 == current_request.agent.length() ? "- " :" ") <<
-            //     request;
-
-            time_t ltime;
-            struct tm *time_stamp;
             TIMER_STOP(request_duration);
 
-            ltime = time(nullptr);
-            time_stamp = localtime(&ltime);
-            // log timestamp
-            util::Log() << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday << "-"
-                        << (time_stamp->tm_mon + 1 < 10 ? "0" : "") << (time_stamp->tm_mon + 1)
-                        << "-" << 1900 + time_stamp->tm_year << " "
-                        << (time_stamp->tm_hour < 10 ? "0" : "") << time_stamp->tm_hour << ":"
-                        << (time_stamp->tm_min < 10 ? "0" : "") << time_stamp->tm_min << ":"
-                        << (time_stamp->tm_sec < 10 ? "0" : "") << time_stamp->tm_sec << " "
-                        << TIMER_MSEC(request_duration) << "ms "
-                        << current_request.endpoint.to_string() << " " << current_request.referrer
-                        << (0 == current_request.referrer.length() ? "- " : " ")
-                        << current_request.agent
-                        << (0 == current_request.agent.length() ? "- " : " ")
-                        << current_reply.status << " " //
+            std::time_t t = std::time(nullptr);
+            const auto referrer = HeaderOrEmpty(current_request, bhttp::field::referer);
+            const auto agent = HeaderOrEmpty(current_request, bhttp::field::user_agent);
+            util::Log() << std::put_time(std::localtime(&t), "%d-%m-%Y %H:%M:%S") << " "
+                        << TIMER_MSEC(request_duration) << "ms " << remote_address.to_string()
+                        << " " << (referrer.empty() ? "-" : referrer) << " "
+                        << (agent.empty() ? "-" : agent) << " " << current_reply.result_int()
+                        << " " //
                         << request_string;
         }
     }
     catch (const util::DisabledDatasetException &e)
     {
-        current_reply.status = http::reply::bad_request;
-
         ServiceHandler::ResultT result = util::json::Object();
         auto &json_result = std::get<util::json::Object>(result);
         json_result.values["code"] = "DisabledDataset";
         json_result.values["message"] = e.what();
-        SendResponse(result, current_reply);
+        SendResponse(result, current_reply, bhttp::status::bad_request);
 
         util::Log(logWARNING) << "[disabled dataset error][" << tid << "] code: DisabledDataset_"
-                              << e.Dataset() << ", uri: " << current_request.uri;
+                              << e.Dataset() << ", uri: " << current_request.target();
     }
     catch (const std::exception &e)
     {
-        current_reply = http::reply::stock_reply(http::reply::internal_server_error);
+        SetInternalServerError(current_reply);
         util::Log(logWARNING) << "[server error][" << tid << "] code: " << e.what()
-                              << ", uri: " << current_request.uri;
+                              << ", uri: " << current_request.target();
     }
 }
 } // namespace osrm::server

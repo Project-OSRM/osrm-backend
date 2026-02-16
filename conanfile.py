@@ -20,6 +20,7 @@ class OsrmConan(ConanFile):
         self.options["boost"].without_stacktrace = True
         self.options["boost"].without_cobalt = True
         self.options["bzip2"].shared = True
+        self.options["hwloc"].shared = True
         self.options["xz-utils"].shared = True
         
     def generate(self):
