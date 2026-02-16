@@ -10,6 +10,7 @@
 #include <cmath>
 #include <cstdio>
 #include <fcntl.h>
+#include <unistd.h>
 #ifdef __linux__
 #include <malloc.h>
 #endif
