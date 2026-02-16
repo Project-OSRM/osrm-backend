@@ -276,6 +276,8 @@ function setup()
     maxspeed_table = {
       ["at:rural"] = 100,
       ["at:trunk"] = 100,
+      ["ar:urban"] = 40,
+      ["ar:rural"] = 110,      
       ["be:motorway"] = 120,
       ["be-bru:rural"] = 70,
       ["be-bru:urban"] = 30,
