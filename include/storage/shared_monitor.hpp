@@ -4,7 +4,6 @@
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/format.hpp"
-#include "util/log.hpp"
 
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
