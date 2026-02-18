@@ -3,8 +3,8 @@
 #include "server/api/parameters_parser.hpp"
 #include "engine/api/table_parameters.hpp"
 
-#include "util/json_container.hpp"
 #include "util/format.hpp"
+#include "util/json_container.hpp"
 
 namespace osrm::server::service
 {

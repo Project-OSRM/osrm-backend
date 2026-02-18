@@ -131,9 +131,8 @@ template <typename Key, typename Value> struct CSVFilesParser
         }
         catch (const boost::exception &e)
         {
-            const auto message = osrm::util::compat::format("exception in loading {}:\n {}",
-                                                            filename,
-                                                            boost::diagnostic_information(e));
+            const auto message = osrm::util::compat::format(
+                "exception in loading {}:\n {}", filename, boost::diagnostic_information(e));
             throw util::exception(message + SOURCE_REF);
         }
     }
