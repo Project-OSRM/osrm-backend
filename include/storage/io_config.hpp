@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <set>
 #include <string>
+#include <vector>
 
 namespace osrm::storage
 {
