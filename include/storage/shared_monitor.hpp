@@ -3,7 +3,9 @@
 
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
-#include <boost/format.hpp>
+#include "util/format.hpp"
+#include "util/log.hpp"
+
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/sync/interprocess_condition.hpp>
@@ -65,20 +67,22 @@ template <typename Data> struct SharedMonitor
             bi::offset_t size = 0;
             if (!shmem.get_size(size) || size != rounded_internal_size + sizeof(Data))
             {
-                auto message =
-                    boost::format("Wrong shared memory block '%1%' size %2%, expected %3% bytes") %
-                    (const char *)Data::name % size % (rounded_internal_size + sizeof(Data));
-                throw util::exception(message.str() + SOURCE_REF);
+                auto message = osrm::util::compat::format(
+                    "Wrong shared memory block '{}' size {}, expected {} bytes",
+                    (const char *)Data::name,
+                    size,
+                    rounded_internal_size + sizeof(Data));
+                throw util::exception(message + SOURCE_REF);
             }
 
             region = bi::mapped_region(shmem, bi::read_write);
         }
         catch (const bi::interprocess_exception &)
         {
-            auto message = boost::format("No shared memory block '%1%' found, have you forgotten "
-                                         "to run osrm-datastore?") %
-                           (const char *)Data::name;
-            throw util::exception(message.str() + SOURCE_REF);
+            auto message = osrm::util::compat::format(
+                "No shared memory block '{}' found, have you forgotten to run osrm-datastore?",
+                (const char *)Data::name);
+            throw util::exception(message + SOURCE_REF);
         }
     }
 

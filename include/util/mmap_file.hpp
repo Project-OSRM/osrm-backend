@@ -3,6 +3,7 @@
 
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
+#include "util/format.hpp"
 #include "util/vector_view.hpp"
 
 #include <boost/iostreams/device/mapped_file.hpp>
@@ -28,9 +29,9 @@ util::vector_view<T> mmapFile(const std::filesystem::path &file, MmapContainerT 
     }
     catch (const std::exception &exc)
     {
-        throw exception(
-            boost::str(boost::format("File %1% mapping failed: %2%") % file % exc.what()) +
-            SOURCE_REF);
+        throw exception(osrm::util::compat::format("File {} mapping failed: {}", file.string(),
+                                                    exc.what()) +
+                        SOURCE_REF);
     }
 }
 
@@ -54,9 +55,9 @@ mmapFile(const std::filesystem::path &file, MmapContainerT &mmap_container, cons
     }
     catch (const std::exception &exc)
     {
-        throw exception(
-            boost::str(boost::format("File %1% mapping failed: %2%") % file % exc.what()) +
-            SOURCE_REF);
+        throw exception(osrm::util::compat::format("File {} mapping failed: {}", file.string(),
+                                                    exc.what()) +
+                        SOURCE_REF);
     }
 }
 } // namespace detail
