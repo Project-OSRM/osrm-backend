@@ -23,7 +23,6 @@
 #include "util/typedefs.hpp"
 
 #include "storage/io.hpp"
-#include "traffic_signals.hpp"
 
 #include <cstdint>
 #include <string>
@@ -45,7 +44,10 @@ struct TurnIndexBlock
     NodeID to_id;
 };
 #pragma pack(pop)
-static_assert(std::is_trivial<TurnIndexBlock>::value, "TurnIndexBlock is not trivial");
+static_assert(std::is_trivially_default_constructible<TurnIndexBlock>::value,
+              "TurnIndexBlock must be trivially default constructible.");
+static_assert(std::is_trivially_copyable<TurnIndexBlock>::value,
+              "TurnIndexBlock must be trivially copyable.");
 static_assert(sizeof(TurnIndexBlock) == 12, "TurnIndexBlock is not packed correctly");
 } // namespace lookup
 
@@ -60,8 +62,6 @@ class EdgeBasedGraphFactory
     explicit EdgeBasedGraphFactory(const util::NodeBasedDynamicGraph &node_based_graph,
                                    EdgeBasedNodeDataContainer &node_data_container,
                                    const CompressedEdgeContainer &compressed_edge_container,
-                                   const std::unordered_set<NodeID> &barrier_nodes,
-                                   const TrafficSignals &traffic_signals,
                                    const std::vector<util::Coordinate> &coordinates,
                                    const NameTable &name_table,
                                    const std::unordered_set<EdgeID> &segregated_edges,
@@ -126,8 +126,6 @@ class EdgeBasedGraphFactory
     const std::vector<util::Coordinate> &m_coordinates;
     const util::NodeBasedDynamicGraph &m_node_based_graph;
 
-    const std::unordered_set<NodeID> &m_barrier_nodes;
-    const TrafficSignals &m_traffic_signals;
     const CompressedEdgeContainer &m_compressed_edge_container;
 
     const NameTable &name_table;

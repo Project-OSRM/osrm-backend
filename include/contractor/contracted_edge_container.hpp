@@ -61,7 +61,7 @@ struct ContractedEdgeContainer
     void Filter(const std::vector<bool> &filter, std::size_t index)
     {
         BOOST_ASSERT(index < sizeof(MergedFlags) * CHAR_BIT);
-        const MergedFlags flag = 1 << index;
+        const MergedFlags flag = MergedFlags{1} << index;
 
         for (auto edge_index : util::irange<std::size_t>(0, edges.size()))
         {
@@ -81,7 +81,7 @@ struct ContractedEdgeContainer
     {
         BOOST_ASSERT(index < sizeof(MergedFlags) * CHAR_BIT);
 
-        const MergedFlags flag = 1 << index++;
+        const MergedFlags flag = MergedFlags{1} << index++;
 
         auto edge_iter = edges.cbegin();
         auto edge_end = edges.cend();
@@ -128,7 +128,7 @@ struct ContractedEdgeContainer
         edges.insert(edges.end(), new_edges.begin(), new_end);
         auto edges_size = edges.size();
         auto new_edges_size = std::distance(new_edges.begin(), new_end);
-        BOOST_ASSERT(static_cast<int>(edges_size) >= new_edges_size);
+        BOOST_ASSERT(static_cast<int64_t>(edges_size) >= new_edges_size);
         flags.resize(edges_size);
         std::fill(flags.begin() + edges_size - new_edges_size, flags.end(), flag);
 
@@ -151,7 +151,7 @@ struct ContractedEdgeContainer
         std::vector<std::vector<bool>> filters(index);
         for (const auto flag_index : util::irange<std::size_t>(0, index))
         {
-            MergedFlags mask = 1 << flag_index;
+            MergedFlags mask = MergedFlags{1} << flag_index;
             for (const auto flag : flags)
             {
                 filters[flag_index].push_back(flag & mask);

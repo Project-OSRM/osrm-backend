@@ -6,7 +6,7 @@ Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 Relations = require("lib/relations")
-TrafficSignal = require("lib/traffic_signal")
+Obstacles = require("lib/obstacles")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
 Utils = require("lib/utils")
@@ -27,7 +27,6 @@ function setup()
       continue_straight_at_waypoint  = true,
       use_turn_restrictions          = true,
       left_hand_driving              = false,
-      traffic_light_penalty          = 2,
     },
 
     default_mode              = mode.driving,
@@ -57,8 +56,6 @@ function setup()
       'border_control',
       'toll_booth',
       'sally_port',
-      'gate',
-      'lift_gate',
       'no',
       'entrance',
       'height_restrictor',
@@ -81,6 +78,10 @@ function setup()
       'forestry',
       'emergency',
       'psv',
+      'taxi', -- sub class of psv
+      'share_taxi', -- sub class of psv
+      'minibus', -- sub class of psv
+      'bus', -- sub class of psv
       'customers',
       'private',
       'delivery',
@@ -164,6 +165,11 @@ function setup()
       driveway          = 0.5,
       ["drive-through"] = 0.5,
       ["drive-thru"] = 0.5
+    },
+
+    barrier_penalties = {
+      gate      = 60,
+      lift_gate = 60,
     },
 
     restricted_highway_whitelist = Set {
@@ -270,6 +276,8 @@ function setup()
     maxspeed_table = {
       ["at:rural"] = 100,
       ["at:trunk"] = 100,
+      ["ar:urban"] = 40,
+      ["ar:rural"] = 110,      
       ["be:motorway"] = 120,
       ["be-bru:rural"] = 70,
       ["be-bru:urban"] = 30,
@@ -281,8 +289,6 @@ function setup()
       ["ch:rural"] = 80,
       ["ch:trunk"] = 100,
       ["ch:motorway"] = 120,
-      ["cz:trunk"] = 0,
-      ["cz:motorway"] = 0,
       ["de:living_street"] = 7,
       ["de:rural"] = 100,
       ["de:motorway"] = 0,
@@ -333,7 +339,7 @@ function process_node(profile, node, result, relations)
   local access = find_access_tag(node, profile.access_tags_hierarchy)
   if access then
     if profile.access_tag_blacklist[access] and not profile.restricted_access_tag_list[access] then
-      result.barrier = true
+      obstacle_map:add(node, Obstacle.new(obstacle_type.barrier))
     end
   else
     local barrier = node:get_value_by_key("barrier")
@@ -356,18 +362,32 @@ function process_node(profile, node, result, relations)
       local flat_kerb = kerb and ("lowered" == kerb or "flush" == kerb)
       local highway_crossing_kerb = barrier == "kerb" and highway and highway == "crossing"
 
+      -- make an exception for fence with sensory=audible/audio (virtual livestock fences)
+      local sensory = node:get_value_by_key("sensory")
+      local audible_fence = barrier == "fence" and sensory and (sensory == "audible" or sensory == "audio")
+
+      -- check if barrier has a configurable penalty (e.g., gates)
+      local barrier_penalty = profile.barrier_penalties[barrier]
+
       if not profile.barrier_whitelist[barrier]
                 and not rising_bollard
                 and not flat_kerb
                 and not highway_crossing_kerb
+                and not audible_fence
+                and not barrier_penalty
                 or restricted_by_height then
-        result.barrier = true
+        obstacle_map:add(node, Obstacle.new(obstacle_type.barrier))
+      end
+
+      -- apply configurable penalty to gates/lift_gates
+      if barrier_penalty then
+        obstacle_map:add(node, Obstacle.new(obstacle_type.gate,
+                                            obstacle_direction.both, barrier_penalty, 0))
       end
     end
   end
 
-  -- check if node is a traffic light
-  result.traffic_lights = TrafficSignal.get_value(node)
+  Obstacles.process_node(profile, node)
 end
 
 function process_way(profile, way, result, relations)
@@ -476,8 +496,24 @@ function process_turn(profile, turn)
   local turn_penalty = profile.turn_penalty
   local turn_bias = turn.is_left_hand_driving and 1. / profile.turn_bias or profile.turn_bias
 
-  if turn.has_traffic_light then
-      turn.duration = profile.properties.traffic_light_penalty
+  for _, obs in pairs(obstacle_map:get(turn.from, turn.via)) do
+    -- disregard a minor stop if entering by the major road
+    -- rationale: if a stop sign is tagged at the center of the intersection with stop=minor
+    -- it should only penalize the minor roads entering the intersection
+    if obs.type == obstacle_type.stop_minor and not Obstacles.entering_by_minor_road(turn) then
+        goto skip
+    end
+    -- heuristic to infer the direction of a stop without an explicit direction tag
+    -- rationale: a stop sign should not be placed farther than 20m from the intersection
+    if turn.number_of_roads == 2
+        and obs.type == obstacle_type.stop
+        and obs.direction == obstacle_direction.none
+        and turn.source_road.distance < 20
+        and turn.target_road.distance > 20 then
+            goto skip
+    end
+    turn.duration = turn.duration + obs.duration
+    ::skip::
   end
 
   if turn.number_of_roads > 2 or turn.source_mode ~= turn.target_mode or turn.is_u_turn then

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -92,7 +92,7 @@ namespace osmium {
             // The Reader::read() function reads from a queue of buffers which
             // can contain nested buffers. These nested buffers will be in
             // here, because read() can only return a single unnested buffer.
-            osmium::memory::Buffer m_back_buffers{};
+            osmium::memory::Buffer m_back_buffers;
 
             osmium::io::File m_file;
 
@@ -124,10 +124,10 @@ namespace osmium {
             detail::future_buffer_queue_type m_osmdata_queue;
             detail::queue_wrapper<osmium::memory::Buffer> m_osmdata_queue_wrapper;
 
-            std::future<osmium::io::Header> m_header_future{};
-            osmium::io::Header m_header{};
+            std::future<osmium::io::Header> m_header_future;
+            osmium::io::Header m_header;
 
-            osmium::thread::thread_handler m_thread{};
+            osmium::thread::thread_handler m_thread;
 
             osmium::osm_entity_bits::type m_read_which_entities = osmium::osm_entity_bits::all;
             osmium::io::read_meta m_read_metadata = osmium::io::read_meta::yes;
@@ -327,7 +327,7 @@ namespace osmium {
                 m_osmdata_queue(detail::get_osmdata_queue_size(), "parser_results"),
                 m_osmdata_queue_wrapper(m_osmdata_queue) {
 
-                (void)std::initializer_list<int>{(set_option(args), 0)...};
+                (void)std::initializer_list<int>{(set_option(std::forward<TArgs>(args)), 0)...};
 
                 if (!m_pool) {
                     m_pool = &thread::Pool::default_instance();
@@ -368,7 +368,7 @@ namespace osmium {
             ~Reader() noexcept {
                 try {
                     close();
-                } catch (...) {
+                } catch (...) { // NOLINT(bugprone-empty-catch)
                     // Ignore any exceptions because destructor must not throw.
                 }
             }
@@ -390,7 +390,7 @@ namespace osmium {
 
                 try {
                     m_read_thread_manager.close();
-                } catch (...) {
+                } catch (...) { // NOLINT(bugprone-empty-catch)
                     // Ignore any exceptions.
                 }
 

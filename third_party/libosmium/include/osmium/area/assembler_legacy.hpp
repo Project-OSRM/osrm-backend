@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -72,7 +72,7 @@ namespace osmium {
          */
         class AssemblerLegacy : public detail::BasicAssemblerWithTags {
 
-            void add_common_tags(osmium::builder::TagListBuilder& tl_builder, std::set<const osmium::Way*>& ways) const {
+            void add_common_tags(osmium::builder::TagListBuilder& tl_builder, const std::set<const osmium::Way*>& ways) const {
                 std::map<std::string, std::size_t> counter;
                 for (const osmium::Way* way : ways) {
                     for (const auto& tag : way->tags()) {

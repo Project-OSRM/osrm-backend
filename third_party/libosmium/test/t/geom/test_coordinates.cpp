@@ -1,6 +1,7 @@
 #include "catch.hpp"
 
 #include <osmium/geom/coordinates.hpp>
+#include <osmium/osm/location.hpp>
 
 #include <string>
 

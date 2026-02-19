@@ -62,6 +62,7 @@ COPY --from=builder /opt /opt
 RUN apk add --no-cache \
     boost-date_time \
     expat \
+    libcap-setcap \
     lua5.4 \
     onetbb && \
     ldconfig /usr/local/lib

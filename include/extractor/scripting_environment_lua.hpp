@@ -12,7 +12,11 @@
 #include <mutex>
 #include <string>
 
+// TODO(themarex): array-bounds check is disabled because of a false-positive in sol2
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
 #include <sol/sol.hpp>
+#pragma GCC diagnostic pop
 
 namespace osrm::extractor
 {

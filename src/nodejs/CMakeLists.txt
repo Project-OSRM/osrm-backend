@@ -5,7 +5,7 @@ message(STATUS "Building node_osrm")
 set(NAPI_VERSION 8)
 add_definitions(-DNAPI_VERSION=${NAPI_VERSION})
 
-set(BINDING_DIR "${PROJECT_SOURCE_DIR}/lib/binding")
+set(BINDING_DIR "${PROJECT_SOURCE_DIR}/lib/binding_napi_v8")
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/node_modules/node-cmake")
 
@@ -16,7 +16,7 @@ message(STATUS "Configuring node_osrm bindings for NodeJs ${NODEJS_VERSION}")
 
 
 add_nodejs_module(node_osrm node_osrm.cpp)
-set_target_properties(node_osrm PROPERTIES CXX_STANDARD 17)
+set_target_properties(node_osrm PROPERTIES CXX_STANDARD 20)
 # TODO: we disable clang-tidy for this target, because it causes errors in third-party NodeJs related headers
 set_target_properties(node_osrm PROPERTIES CXX_CLANG_TIDY "")
 # TODO: we turn off some warnings for this target, because it causes errors in third-party NodeJs related headers
@@ -35,6 +35,9 @@ target_link_libraries(node_osrm osrm)
 
 # node_osrm artifacts in ${BINDING_DIR} to depend targets on
 set(ARTIFACTS "")
+
+# Create the binding directory if it doesn't exist
+file(MAKE_DIRECTORY ${BINDING_DIR})
 
 set(OSRM_BINARIES osrm-extract osrm-contract osrm-routed osrm-datastore osrm-components osrm-partition osrm-customize)
 foreach(binary ${OSRM_BINARIES})
@@ -67,4 +70,8 @@ list(APPEND ARTIFACTS "${BINDING_DIR}/node_osrm.node")
 
 
 message(STATUS "node_osrm artifacts will be copied to: ${BINDING_DIR}")
-add_custom_target(copy_artifacts ALL DEPENDS ${ARTIFACTS})
+if(BUILD_AS_SUBPROJECT)
+  add_custom_target(osrm_copy_artifacts ALL DEPENDS ${ARTIFACTS})
+else()
+  add_custom_target(copy_artifacts ALL DEPENDS ${ARTIFACTS})
+endif()

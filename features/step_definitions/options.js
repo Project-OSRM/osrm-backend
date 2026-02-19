@@ -1,100 +1,129 @@
-'use strict';
+// Step definitions for testing OSRM binary options and command-line functionality
 
-const assert = require('assert');
-const fs = require('fs');
+import assert from 'assert';
+import fs from 'fs';
+import { When, Then, Given } from '@cucumber/cucumber';
 
-module.exports = function () {
-    this.resetOptionsOutput = () => {
-        this.stdout = null;
-        this.stderr = null;
-        this.exitCode = null;
-        this.termSignal = null;
-    };
+import { runBinSync } from '../support/run.js';
 
-    this.runAndSafeOutput = (binary, options, callback) => {
-        return this.runBin(binary, this.expandOptions(options), this.environment, (err, stdout, stderr) => {
-            this.stdout = stdout;
-            this.stderr = stderr;
-            this.exitCode = err && err.code || 0;
-            this.termSignal = err && err.signal || '';
-            callback(err);
-        });
-    };
+When(/^I run "osrm-routed\s?(.*?)"$/, function (options, callback) {
+  const child = runBinSync(
+    'osrm-routed',
+    this.expandOptions(options),
+    { env : this.environment },
+    this.log
+  );
+  this.saveChildOutput(child);
+  callback();
+});
 
-    this.When(/^I run "osrm-routed\s?(.*?)"$/, { timeout: this.TIMEOUT }, (options, callback) => {
-        this.runAndSafeOutput('osrm-routed', options, callback);
-    });
+When(
+  /^I run "osrm-(extract|contract|partition|customize)\s?(.*?)"$/,
+  function (binary, options, callback) {
+    const child = runBinSync(
+      `osrm-${binary}`,
+      this.expandOptions(options),
+      { env : this.environment },
+      this.log
+    );
+    this.saveChildOutput(child);
+    if (child.error != null)
+      return callback(child.error);
+    const stamp = `${this.osrmCacheFile}.stamp_${binary}`;
+    fs.writeFile(stamp, 'ok', callback);
+  }
+);
 
-    this.When(/^I run "osrm-(extract|contract|partition|customize)\s?(.*?)"$/, (binary, options, callback) => {
-        const stamp = this.processedCacheFile + '.stamp_' + binary;
-        this.runAndSafeOutput('osrm-' + binary, options, (err) => {
-            if (err) return callback(err);
-            fs.writeFile(stamp, 'ok', callback);
-        });
-    });
+When(
+  /^I try to run "(osrm-[a-z]+)\s?(.*?)"$/,
+  function (binary, options, callback) {
+    const child = runBinSync(
+      binary,
+      this.expandOptions(options),
+      { env : this.environment },
+      this.log
+    );
+    this.saveChildOutput(child);
+    callback();
+  },
+);
 
-    this.When(/^I try to run "(osrm-[a-z]+)\s?(.*?)"$/, (binary, options, callback) => {
-        this.runAndSafeOutput(binary, options, () => { callback(); });
-    });
+When(
+  /^I run "osrm-datastore\s?(.*?)"(?: with input "([^"]*)")?$/,
+  function (args, input, callback) {
+    const options = { env : this.environment };
+    if (input != null) // Check for both null and undefined
+      options.input = input;
+    const child = runBinSync(
+      'osrm-datastore',
+      this.expandOptions(args),
+      options,
+      this.log
+    );
+    this.saveChildOutput(child);
+    callback();
+  },
+);
 
-    this.When(/^I run "osrm-datastore\s?(.*?)"(?: with input "([^"]*)")?$/, (options, input, callback) => {
-        let child = this.runAndSafeOutput('osrm-datastore', options, callback);
-        if (input !== undefined)
-            child.stdin.write(input);
-    });
+Then(/^it should exit successfully$/, function () {
+  assert.equal(this.exitCode, 0);
+  assert.equal(this.termSignal, null);
+});
 
-    this.Then(/^it should exit successfully$/, () => {
-        assert.equal(this.exitCode, 0);
-        assert.equal(this.termSignal, '');
-    });
+Then(/^it should exit with an error$/, function () {
+  assert.ok(this.exitCode !== 0 || this.termSignal);
+});
 
-    this.Then(/^it should exit with an error$/, () => {
-        assert.ok(this.exitCode !== 0 || this.termSignal);
-    });
+Then(/^stdout should( not)? contain "(.*?)"$/, function (not, str) {
+  const contains = this.stdout.indexOf(str) > -1;
+  const isNegative = not != null; // Check for both null and undefined
 
-    this.Then(/^stdout should( not)? contain "(.*?)"$/, (not, str) => {
-        const contains = this.stdout.indexOf(str) > -1;
-        assert.ok(typeof not === 'undefined' ? contains : !contains,
-            'stdout ' + (typeof not === 'undefined' ? 'does not contain' : 'contains') + ' "' + str + '"');
-    });
+  assert.ok(
+    isNegative ? !contains : contains,
+    `stdout ${isNegative ? 'contains' : 'does not contain'} "${str}"`,
+  );
+});
 
-    this.Then(/^stderr should( not)? contain "(.*?)"$/, (not, str) => {
-        const contains = this.stderr.indexOf(str) > -1;
-        assert.ok(typeof not === 'undefined' ? contains : !contains,
-            'stderr ' + (typeof not === 'undefined' ? 'does not contain' : 'contains') + ' "' + str + '"');
-    });
+Then(/^stderr should( not)? contain "(.*?)"$/, function (not, str) {
+  const contains = this.stderr.indexOf(str) > -1;
+  const isNegative = not != null; // Check for both null and undefined
 
-    this.Then(/^stdout should contain \/(.*)\/$/, (regexStr) => {
-        const re = new RegExp(regexStr);
-        assert.ok(this.stdout.match(re));
-    });
+  assert.ok(
+    isNegative ? !contains : contains,
+    `stderr ${isNegative ? 'contains' : 'does not contain'} "${str}"`,
+  );
+});
 
-    this.Then(/^stderr should contain \/(.*)\/$/, (regexStr) => {
-        const re = new RegExp(regexStr);
-        assert.ok(this.stdout.match(re));
-    });
+Then(/^stdout should contain \/(.*)\/$/, function (regexStr) {
+  const re = new RegExp(regexStr);
+  assert.ok(this.stdout.match(re));
+});
 
-    this.Then(/^stdout should be empty$/, () => {
-        assert.equal(this.stdout.trim(), '');
-    });
+Then(/^stderr should contain \/(.*)\/$/, function (regexStr) {
+  const re = new RegExp(regexStr);
+  assert.ok(this.stdout.match(re));
+});
 
-    this.Then(/^stderr should be empty$/, () => {
-        assert.equal(this.stderr.trim(), '');
-    });
+Then(/^stdout should be empty$/, function () {
+  assert.equal(this.stdout.trim(), '');
+});
 
-    this.Then(/^stdout should contain (\d+) lines?$/, (lines) => {
-        assert.equal(this.stdout.split('\n').length - 1, parseInt(lines));
-    });
+Then(/^stderr should be empty$/, function () {
+  assert.equal(this.stderr.trim(), '');
+});
 
-    this.Then(/^stderr should contain (\d+) lines?$/, (lines) => {
-        assert.equal(this.stderr.split('\n').length - 1, parseInt(lines));
-    });
+Then(/^stdout should contain (\d+) lines?$/, function (lines) {
+  assert.equal(this.stdout.split('\n').length - 1, parseInt(lines));
+});
 
-    this.Given(/^the query options$/, (table, callback) => {
-        table.raw().forEach(tuple => {
-            this.queryParams[tuple[0]] = tuple[1];
-        });
+Then(/^stderr should contain (\d+) lines?$/, function (lines) {
+  assert.equal(this.stderr.split('\n').length - 1, parseInt(lines));
+});
 
-        callback();
-    });
-};
+Given(/^the query options$/, function (table, callback) {
+  table.raw().forEach((tuple) => {
+    this.queryParams[tuple[0]] = tuple[1];
+  });
+
+  callback();
+});

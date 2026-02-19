@@ -176,7 +176,7 @@ std::vector<CompressedNodeBasedGraphEdge> toEdgeList(const util::NodeBasedDynami
  * That includes:
  *  - extracting turn restrictions
  *  - splitting ways into (directional!) edge segments
- *  - checking if nodes are barriers or traffic signal
+ *  - checking if nodes are obstacles, that must be kept
  *  - discarding all tag information: All relevant type information for nodes/ways
  *    is extracted at this point.
  *
@@ -218,8 +218,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     NodeBasedGraphFactory node_based_graph_factory(scripting_environment,
                                                    parsed_osm_data.turn_restrictions,
                                                    parsed_osm_data.unresolved_maneuver_overrides,
-                                                   parsed_osm_data.traffic_signals,
-                                                   std::move(parsed_osm_data.barriers),
                                                    std::move(parsed_osm_data.osm_coordinates),
                                                    std::move(parsed_osm_data.osm_node_ids),
                                                    parsed_osm_data.edge_list,
@@ -257,7 +255,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     node_based_graph_factory.GetCompressedEdges().PrintStatistics();
 
-    const auto &barrier_nodes = node_based_graph_factory.GetBarriers();
     // stealing the annotation data from the node-based graph
     edge_based_nodes_container =
         EdgeBasedNodeDataContainer({}, std::move(node_based_graph_factory.GetAnnotationData()));
@@ -274,8 +271,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         BuildEdgeExpandedGraph(node_based_graph,
                                coordinates,
                                node_based_graph_factory.GetCompressedEdges(),
-                               barrier_nodes,
-                               parsed_osm_data.traffic_signals,
                                restriction_graph,
                                segregated_edges,
                                name_table,
@@ -294,7 +289,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                          edge_based_nodes_container,
                          coordinates,
                          node_based_graph_factory.GetCompressedEdges(),
-                         barrier_nodes,
                          restriction_graph,
                          name_table,
                          std::move(parsed_osm_data.turn_lane_map),
@@ -348,8 +342,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     util::Log() << "Expansion: " << nodes_per_second << " nodes/sec and " << edges_per_second
                 << " edges/sec";
-    util::Log() << "To prepare the data for routing, run: "
-                << "./osrm-contract " << config.base_path;
+    util::Log() << "To prepare the data for routing, run: " << "./osrm-partition "
+                << config.base_path;
 
     return 0;
 }
@@ -505,6 +499,7 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
             {
                 extractor_callbacks->ProcessNode(result.first, result.second);
             }
+
             number_of_ways += parsed_buffer.resulting_ways.size();
             for (const auto &result : parsed_buffer.resulting_ways)
             {
@@ -651,8 +646,6 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
     return ParsedOSMData{std::move(turn_lane_map),
                          std::move(extraction_containers.turn_restrictions),
                          std::move(extraction_containers.internal_maneuver_overrides),
-                         std::move(extraction_containers.internal_traffic_signals),
-                         std::move(extraction_containers.used_barrier_nodes),
                          std::move(osm_coordinates),
                          std::move(osm_node_ids),
                          std::move(extraction_containers.used_edges),
@@ -726,8 +719,6 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     const util::NodeBasedDynamicGraph &node_based_graph,
     const std::vector<util::Coordinate> &coordinates,
     const CompressedEdgeContainer &compressed_edge_container,
-    const std::unordered_set<NodeID> &barrier_nodes,
-    const TrafficSignals &traffic_signals,
     const RestrictionGraph &restriction_graph,
     const std::unordered_set<EdgeID> &segregated_edges,
     const NameTable &name_table,
@@ -747,8 +738,6 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     EdgeBasedGraphFactory edge_based_graph_factory(node_based_graph,
                                                    edge_based_nodes_container,
                                                    compressed_edge_container,
-                                                   barrier_nodes,
-                                                   traffic_signals,
                                                    coordinates,
                                                    name_table,
                                                    segregated_edges,
@@ -836,7 +825,6 @@ void Extractor::ProcessGuidanceTurns(
     const extractor::EdgeBasedNodeDataContainer &edge_based_node_container,
     const std::vector<util::Coordinate> &node_coordinates,
     const CompressedEdgeContainer &compressed_edge_container,
-    const std::unordered_set<NodeID> &barrier_nodes,
     const RestrictionGraph &restriction_graph,
     const NameTable &name_table,
     LaneDescriptionMap lane_description_map,
@@ -863,7 +851,7 @@ void Extractor::ProcessGuidanceTurns(
                                       edge_based_node_container,
                                       node_coordinates,
                                       compressed_edge_container,
-                                      barrier_nodes,
+                                      scripting_environment.m_obstacle_map,
                                       unconditional_node_restriction_map,
                                       way_restriction_map,
                                       name_table,

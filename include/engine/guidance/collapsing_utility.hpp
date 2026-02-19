@@ -34,7 +34,7 @@ inline bool hasWaypointType(const RouteStep &step)
 inline RouteStepIterator findPreviousTurn(RouteStepIterator current_step)
 {
     BOOST_ASSERT(!hasWaypointType(*current_step));
-    // find the first element preceeding the current step that has an actual turn type (not
+    // find the first element preceding the current step that has an actual turn type (not
     // necessarily announced)
     do
     {
@@ -49,7 +49,7 @@ inline RouteStepIterator findPreviousTurn(RouteStepIterator current_step)
 inline RouteStepIterator findNextTurn(RouteStepIterator current_step)
 {
     BOOST_ASSERT(!hasWaypointType(*current_step));
-    // find the first element preceeding the current step that has an actual turn type (not
+    // find the first element preceding the current step that has an actual turn type (not
     // necessarily announced)
     do
     {
@@ -179,7 +179,7 @@ inline bool areSameSide(const RouteStep &lhs, const RouteStep &rhs)
                step.maneuver.waypoint_type == WaypointType::None;
     };
 
-    boost::remove_erase_if(steps, not_is_valid);
+    steps.erase(std::remove_if(std::begin(steps), std::end(steps), not_is_valid), std::end(steps));
 
     // the steps should still include depart and arrive at least
     BOOST_ASSERT(steps.size() >= 2);

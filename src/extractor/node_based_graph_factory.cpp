@@ -17,17 +17,15 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
     ScriptingEnvironment &scripting_environment,
     std::vector<TurnRestriction> &turn_restrictions,
     std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
-    TrafficSignals &traffic_signals,
-    std::unordered_set<NodeID> &&barriers,
     std::vector<util::Coordinate> &&coordinates,
     extractor::PackedOSMIDs &&osm_node_ids,
     const std::vector<NodeBasedEdge> &edge_list,
     std::vector<NodeBasedEdgeAnnotation> &&annotation_data)
-    : annotation_data(std::move(annotation_data)), barriers(std::move(barriers)),
-      coordinates(std::move(coordinates)), osm_node_ids(std::move(osm_node_ids))
+    : annotation_data(std::move(annotation_data)), coordinates(std::move(coordinates)),
+      osm_node_ids(std::move(osm_node_ids))
 {
     BuildCompressedOutputGraph(edge_list);
-    Compress(scripting_environment, turn_restrictions, maneuver_overrides, traffic_signals);
+    Compress(scripting_environment, turn_restrictions, maneuver_overrides);
     CompressGeometry();
     CompressAnnotationData();
 }
@@ -75,13 +73,10 @@ void NodeBasedGraphFactory::BuildCompressedOutputGraph(const std::vector<NodeBas
 
 void NodeBasedGraphFactory::Compress(ScriptingEnvironment &scripting_environment,
                                      std::vector<TurnRestriction> &turn_restrictions,
-                                     std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
-                                     TrafficSignals &traffic_signals)
+                                     std::vector<UnresolvedManeuverOverride> &maneuver_overrides)
 {
     GraphCompressor graph_compressor;
-    graph_compressor.Compress(barriers,
-                              traffic_signals,
-                              scripting_environment,
+    graph_compressor.Compress(scripting_environment,
                               turn_restrictions,
                               maneuver_overrides,
                               compressed_output_graph,
@@ -143,7 +138,7 @@ void NodeBasedGraphFactory::CompressAnnotationData()
      * value - index of item in a set from begin. We need that map, because
      * std::distance(set.begin(), it) is too slow O(N). So any words in that step we reorder
      * annotation data to the order it stored in a set. Apply new id's to edge data.
-     * 3. Remove unused anootation_data items.
+     * 3. Remove unused annotation_data items.
      * 4. At final step just need to sort result annotation_data in the same order as set.
      * That makes id's stored in edge data valid.
      */

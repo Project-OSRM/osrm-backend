@@ -1,6 +1,7 @@
 #include "catch.hpp"
 
 #include <osmium/osm/area.hpp>
+#include <osmium/osm/item_type.hpp>
 
 TEST_CASE("object_id to area_id conversion") {
     REQUIRE( 46 == osmium::object_id_to_area_id( 23, osmium::item_type::way));

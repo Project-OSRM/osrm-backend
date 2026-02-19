@@ -10,6 +10,16 @@ You can add a :+1: emoji reaction to the issue if you want to express interest i
 
 # Developer
 
+We follow the [LLVM AI Tool policy](https://llvm.org/docs/AIToolPolicy.html).
+
+In short that means:
+- You are the author of your change and need to fully understand it regardless of how it was generated.
+- Your contribution should be worth more to the project than the time it takes to review it.
+- If your contribution is a large change and to signficiant amounts authored by AI tools, you should disclose that.
+- You are responsible for ensuring you have the right to license your contributions.
+
+If you can not follow these guidelines PLEASE REFRAIN FROM CONTRIBUTING.
+
 We use `clang-format` version `15` to consistently format the code base. There is a helper script under `scripts/format.sh`.
 The format is automatically checked by the `mason-linux-release` job of a Travis CI build.
 To save development time a local hook `.git/hooks/pre-push`
@@ -28,8 +38,8 @@ if [ x"$remote" = xorigin  ] ; then
     fi
 fi
 ```
-could check code format, modify a local repository and reject push due to unstaged formatting changes.
-Also `pre-push` hook  rejects direct pushes to `origin/master`.
+could check code format, modify a local repository and reject the push due to unstaged formatting changes.
+Also the `pre-push` hook rejects direct pushes to `origin/master`.
 
 ⚠️ `scripts/format.sh` checks all local files that match `*.cpp` or `*.hpp` patterns.
 
@@ -49,7 +59,7 @@ If your work is going in entirely the wrong direction, there is a good chance so
 Everyone is encouraged to read PRs of other people and give feedback.
 
 For every significant code change we require a pull request review before it is merged.
-If your pull request modifies the API this need to be signed of by a team discussion.
+If your pull request modifies the API this needs to be signed off by a team discussion.
 This means you will need to find another member of the team with commit access and request a review of your pull request.
 
 Once your pull request is reviewed you can merge it! If you don't have commit access, ping someone that has commit access.

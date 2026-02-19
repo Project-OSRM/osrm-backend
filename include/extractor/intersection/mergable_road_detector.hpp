@@ -6,6 +6,7 @@
 #include "extractor/intersection/have_identical_names.hpp"
 #include "extractor/name_table.hpp"
 #include "extractor/node_restriction_map.hpp"
+#include "extractor/obstacles.hpp"
 #include "extractor/turn_lane_types.hpp"
 
 #include "guidance/intersection.hpp"
@@ -47,7 +48,7 @@ class MergableRoadDetector
                          const std::vector<util::Coordinate> &node_coordinates,
                          const extractor::CompressedEdgeContainer &compressed_geometries,
                          const RestrictionMap &node_restriction_map,
-                         const std::unordered_set<NodeID> &barrier_nodes,
+                         const ObstacleMap &obstacle_nodes,
                          const TurnLanesIndexedArray &turn_lanes_data,
                          const extractor::NameTable &name_table,
                          const SuffixTable &street_name_suffix_table);
@@ -164,7 +165,7 @@ class MergableRoadDetector
     const std::vector<util::Coordinate> &node_coordinates;
     const extractor::CompressedEdgeContainer &compressed_geometries;
     const RestrictionMap &node_restriction_map;
-    const std::unordered_set<NodeID> &barrier_nodes;
+    const ObstacleMap &obstacle_nodes;
     const TurnLanesIndexedArray &turn_lanes_data;
 
     // name detection

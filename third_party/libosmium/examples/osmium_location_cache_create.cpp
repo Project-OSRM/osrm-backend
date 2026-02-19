@@ -26,6 +26,7 @@
 
 #include <cerrno>      // for errno
 #include <cstring>     // for strerror
+#include <exception>
 #include <fcntl.h>     // for open
 #include <iostream>    // for std::cout, std::cerr
 #include <string>      // for std::string

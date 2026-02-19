@@ -1,4 +1,4 @@
-var fs = require('fs');
+const fs = require('fs');
 
 /**
  * This file exports the content of your website, as a bunch of concatenated
@@ -11,6 +11,4 @@ var fs = require('fs');
  */
 module.exports =
       '# HTTP API\n' +
-      fs.readFileSync('./content/http.md', 'utf8') + '\n'+
-      '# libosrm C++ API\n' +
-      fs.readFileSync('./content/libosrm.md', 'utf8') + '\n';
+      fs.readFileSync('./content/http.md', 'utf8') + '\n';

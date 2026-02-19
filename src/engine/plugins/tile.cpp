@@ -10,7 +10,9 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
+#if __has_include(<boost/geometry/multi/geometries/multi_linestring.hpp>)
 #include <boost/geometry/multi/geometries/multi_linestring.hpp>
+#endif
 
 #include <vtzero/builder.hpp>
 #include <vtzero/geometry.hpp>

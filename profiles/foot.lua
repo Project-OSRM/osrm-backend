@@ -14,10 +14,12 @@ function setup()
       weight_name                   = 'duration',
       max_speed_for_map_matching    = 40/3.6, -- kmph -> m/s
       call_tagless_node_function    = false,
-      traffic_light_penalty         = 2,
+      traffic_signal_penalty        = 2,
       u_turn_penalty                = 2,
       continue_straight_at_waypoint = false,
       use_turn_restrictions         = false,
+      -- preserve short road crossings for pedestrian safety analysis
+      max_collapse_distance         = 10,
     },
 
     default_mode            = mode.walking,
@@ -70,7 +72,8 @@ function setup()
 
     avoid = Set {
       'impassable',
-      'proposed'
+      'proposed',
+      'motorroad'
     },
 
     speeds = Sequence {
@@ -150,7 +153,11 @@ function process_node(profile, node, result)
       local bollard = node:get_value_by_key("bollard")
       local rising_bollard = bollard and "rising" == bollard
 
-      if profile.barrier_blacklist[barrier] and not rising_bollard then
+      -- make an exception for fence with sensory=audible/audio (virtual livestock fences)
+      local sensory = node:get_value_by_key("sensory")
+      local audible_fence = barrier == "fence" and sensory and (sensory == "audible" or sensory == "audio")
+
+      if profile.barrier_blacklist[barrier] and not rising_bollard and not audible_fence then
         result.barrier = true
       end
     end
@@ -252,7 +259,7 @@ function process_turn (profile, turn)
   end
 
   if turn.has_traffic_light then
-     turn.duration = profile.properties.traffic_light_penalty
+     turn.duration = profile.properties.traffic_signal_penalty
   end
   if profile.properties.weight_name == 'routability' then
       -- penalize turns from non-local access only segments onto local access only tags

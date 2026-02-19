@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -160,9 +160,11 @@ namespace osmium {
 
         bool operator()(const osmium::OSMObject& lhs, const osmium::OSMObject& rhs) const noexcept {
             return const_tie(lhs.type(), lhs.id() > 0, lhs.positive_id(), rhs.version(),
-                        ((lhs.timestamp().valid() && rhs.timestamp().valid()) ? rhs.timestamp() : osmium::Timestamp())) <
+                        ((lhs.timestamp().valid() && rhs.timestamp().valid()) ? rhs.timestamp() : osmium::Timestamp()),
+                        rhs.visible()) <
                    const_tie(rhs.type(), rhs.id() > 0, rhs.positive_id(), lhs.version(),
-                        ((lhs.timestamp().valid() && rhs.timestamp().valid()) ? lhs.timestamp() : osmium::Timestamp()));
+                        ((lhs.timestamp().valid() && rhs.timestamp().valid()) ? lhs.timestamp() : osmium::Timestamp()),
+                        lhs.visible());
         }
 
         /// @pre lhs and rhs must not be nullptr

@@ -3,6 +3,7 @@
 
 #include "extractor/internal_extractor_edge.hpp"
 #include "extractor/maneuver_override.hpp"
+#include "extractor/obstacles.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/restriction.hpp"
 
@@ -72,6 +73,8 @@ class ScriptingEnvironment
                     std::vector<InputManeuverOverride> &resulting_maneuver_overrides) = 0;
 
     virtual bool HasLocationDependentData() const = 0;
+
+    ObstacleMap m_obstacle_map; // The obstacle map shared by all threads.
 };
 } // namespace extractor
 } // namespace osrm

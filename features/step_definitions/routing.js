@@ -1,20 +1,25 @@
-var d3 = require('d3-queue');
+// Step definitions for testing basic routing API functionality
+import d3 from 'd3-queue';
+import { When, Given } from '@cucumber/cucumber';
 
-module.exports = function () {
-    this.When(/^I route I should get$/, this.WhenIRouteIShouldGet);
 
-    this.When(/^I route (\d+) times I should get$/, { timeout: 100 * this.TIMEOUT }, (n, table, callback) => {
-        var q = d3.queue(1);
+When(/^I route I should get$/, function (table, callback) {
+  this.WhenIRouteIShouldGet(table, callback);
+});
 
-        for (var i=0; i<n; i++) {
-            q.defer(this.WhenIRouteIShouldGet, table);
-        }
+// Runs routing test multiple times for performance testing
+When(/^I route (\d+) times I should get$/, function (n, table, callback) {
+  const q = d3.queue(1);
 
-        q.awaitAll(callback);
-    });
+  for (let i=0; i<n; i++) {
+    q.defer(this.WhenIRouteIShouldGet, table);
+  }
 
-    this.Given(/^skip waypoints$/, (callback) => {
-        this.queryParams['skip_waypoints'] = true;
-        callback();
-    });
-};
+  q.awaitAll(callback);
+});
+
+// Sets skip_waypoints parameter for routing requests
+Given(/^skip waypoints$/, function (callback) {
+  this.queryParams['skip_waypoints'] = true;
+  callback();
+});

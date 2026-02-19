@@ -17,7 +17,7 @@ function setup()
   return {
     properties = {
       u_turn_penalty                = 20,
-      traffic_light_penalty         = 2,
+      traffic_signal_penalty        = 2,
       --weight_name                   = 'cyclability',
       weight_name                   = 'duration',
       process_call_tagless_node     = false,
@@ -221,7 +221,8 @@ function setup()
     avoid = Set {
       'impassable',
       'construction',
-      'proposed'
+      'proposed',
+      'motorroad'
     }
   }
 end
@@ -241,7 +242,11 @@ function process_node(profile, node, result)
   else
     local barrier = node:get_value_by_key("barrier")
     if barrier and "" ~= barrier then
-      if profile.barrier_blacklist[barrier] then
+      -- make an exception for fence with sensory=audible/audio (virtual livestock fences)
+      local sensory = node:get_value_by_key("sensory")
+      local audible_fence = barrier == "fence" and sensory and (sensory == "audible" or sensory == "audio")
+
+      if profile.barrier_blacklist[barrier] and not audible_fence then
         result.barrier = true
       end
     end
@@ -306,7 +311,8 @@ function handle_bicycle_tags(profile,way,result,data)
   data.barrier = way:get_value_by_key("barrier")
   data.oneway = way:get_value_by_key("oneway")
   data.oneway_bicycle = way:get_value_by_key("oneway:bicycle")
-  data.cycleway = way:get_value_by_key("cycleway")
+  local cycleway = way:get_value_by_key("cycleway")
+  data.cycleway = cycleway and cycleway or way:get_value_by_key("cycleway:both")
   data.cycleway_left = way:get_value_by_key("cycleway:left")
   data.cycleway_right = way:get_value_by_key("cycleway:right")
   data.duration = way:get_value_by_key("duration")
@@ -706,7 +712,7 @@ function process_turn(profile, turn)
   end
 
   if turn.has_traffic_light then
-     turn.duration = turn.duration + profile.properties.traffic_light_penalty
+     turn.duration = turn.duration + profile.properties.traffic_signal_penalty
   end
   if profile.properties.weight_name == 'cyclability' then
     turn.weight = turn.duration

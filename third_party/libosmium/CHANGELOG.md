@@ -12,6 +12,67 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+
+## [2.23.0] - 2026-01-18
+
+### Added
+
+* Functions to store and retrieve extra bit in osmium::Location. This allows
+  storing of one bit of information in a Location.
+* Function for comparing two TagLists.
+
+### Changed
+
+* Requires CMake 3.10 now.
+* Various small changes and code cleanups.
+
+### Fixed
+
+* Allow single varint encoded int instead of packed ints for tags and other
+  data in PBFs. (Fixes #389)
+* Regression: Report progress correctly when reading PBF files. Thanks to
+  victor.pavlychko@gmail.com.
+* Fix off-by-one error when printing numbers in debug output. Thanks to
+  @ginnyTheCat.
+* Fix i/o tests using mock (de)compression.
+* Fix error reading (large) bzip files that use concatenated bzip streams.
+  Thanks to yarray <08to09@gmail.com>.
+* Fix memory corruption error in ChangesetDiscussionBuilder. Thanks to
+  yarray <08to09@gmail.com>.
+* Fix for PBF reading from stdin: set binary mode. Thanks to Ildar
+  Khayrutdinov <ildarkhairutdin@gmail.com>.
+
+## [2.22.0] - 2025-03-17
+
+### Changed
+
+* Extend RelationsMapIndex to work with 64bit IDs. This should not change
+  anything for typical OSM use (where relation IDs fit in 32bit), but help
+  with users adding their own relations.
+* Removed deprecated support for regexes from osmium::tags::Filter, use
+  osmium::TagsFilter instead (`osmium/tags/regex_filter.hpp` removed).
+* Remove special cases disabling regex support for old C++ libs.
+* Various code cleanups.
+
+
+## [2.21.0] - 2025-01-13
+
+### Changed
+
+* Switched to C++14 as minimum requirement
+* Removed suport for Google Sparsehash
+* Removed support for projection using the Proj library (which only worked
+  for very old versions of Proj)
+* Various refactoring and code cleanups
+
+### Fixed
+
+* Fix problem where bz2 files were not read completely (#373)
+* Order deleted objects after visible ones in reverse id order. This fixes
+  a problem when merging diffs for different extracts.
+* Remove resource leak in temp file creation
+
+
 ## [2.20.0] - 2023-09-20
 
 ### Changed
@@ -1285,7 +1346,10 @@ long time. These will not be part of the next version of libosmium:
   Doxygen (up to version 1.8.8). This version contains a workaround to fix
   this.
 
-[unreleased]: https://github.com/osmcode/libosmium/compare/v2.20.0...HEAD
+[unreleased]: https://github.com/osmcode/libosmium/compare/v2.23.0...HEAD
+[2.23.0]: https://github.com/osmcode/libosmium/compare/v2.22.0...v2.23.0
+[2.22.0]: https://github.com/osmcode/libosmium/compare/v2.21.0...v2.22.0
+[2.21.0]: https://github.com/osmcode/libosmium/compare/v2.20.0...v2.21.0
 [2.20.0]: https://github.com/osmcode/libosmium/compare/v2.19.0...v2.20.0
 [2.19.0]: https://github.com/osmcode/libosmium/compare/v2.18.9...v2.19.0
 [2.18.0]: https://github.com/osmcode/libosmium/compare/v2.17.3...v2.18.0

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -153,6 +153,49 @@ namespace osmium {
     }; // class TagsFilterBase
 
     using TagsFilter = TagsFilterBase<bool>;
+
+    /**
+     * Compare two lists of tags ignoring tags matching the filter.
+     * Tag lists must be ordered in a consistent way.
+     * The filter must return "false" for all tags that should be ignored.
+     */
+    inline bool compare_tags(osmium::TagList const &tags1,
+                             osmium::TagList const &tags2,
+                             TagsFilter const &filter)
+    {
+        auto const end1 = tags1.cend();
+        auto const end2 = tags2.cend();
+
+        auto it1 = tags1.cbegin();
+        auto it2 = tags2.cbegin();
+
+        while (it1 != end1 && it2 != end2) {
+            if (!filter(*it1)) {
+                ++it1;
+                continue;
+            }
+            if (!filter(*it2)) {
+                ++it2;
+                continue;
+            }
+            if (*it1 == *it2) {
+                ++it1;
+                ++it2;
+                continue;
+            }
+            return false;
+        }
+
+        while (it1 != end1 && !filter(*it1)) {
+            ++it1;
+        }
+
+        while (it2 != end2 && !filter(*it2)) {
+            ++it2;
+        }
+
+        return it1 == end1 && it2 == end2;
+    }
 
 } // namespace osmium
 

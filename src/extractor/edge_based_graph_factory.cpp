@@ -39,16 +39,13 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const util::NodeBasedDynamicGraph &node_based_graph,
     EdgeBasedNodeDataContainer &node_data_container,
     const CompressedEdgeContainer &compressed_edge_container,
-    const std::unordered_set<NodeID> &barrier_nodes,
-    const TrafficSignals &traffic_signals,
     const std::vector<util::Coordinate> &coordinates,
     const NameTable &name_table,
     const std::unordered_set<EdgeID> &segregated_edges,
     const extractor::LaneDescriptionMap &lane_description_map)
     : m_edge_based_node_container(node_data_container), m_connectivity_checksum(0),
       m_number_of_edge_based_nodes(0), m_coordinates(coordinates),
-      m_node_based_graph(node_based_graph), m_barrier_nodes(barrier_nodes),
-      m_traffic_signals(traffic_signals), m_compressed_edge_container(compressed_edge_container),
+      m_node_based_graph(node_based_graph), m_compressed_edge_container(compressed_edge_container),
       name_table(name_table), segregated_edges(segregated_edges),
       lane_description_map(lane_description_map)
 {
@@ -492,7 +489,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                               m_coordinates,
                                                               m_compressed_edge_container,
                                                               unconditional_node_restriction_map,
-                                                              m_barrier_nodes,
+                                                              scripting_environment.m_obstacle_map,
                                                               turn_lanes_data,
                                                               name_table,
                                                               street_name_suffix_table);
@@ -585,26 +582,33 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 }
             });
 
+        // connected_roads.begin()
+        // turn
         // Generate edges for either artificial nodes or the main graph
-        const auto generate_edge = [this, &scripting_environment, weight_multiplier](
-                                       // what nodes will be used? In most cases this will be the id
-                                       // stored in the edge_data. In case of duplicated nodes (e.g.
-                                       // due to via-way restrictions), one/both of these might
-                                       // refer to a newly added edge based node
-                                       const auto edge_based_node_from,
-                                       const auto edge_based_node_to,
-                                       // the situation of the turn
-                                       const auto node_along_road_entering,
-                                       const auto node_based_edge_from,
-                                       const auto intersection_node,
-                                       const auto node_based_edge_to,
-                                       const auto &turn_angle,
-                                       const auto &road_legs_on_the_right,
-                                       const auto &road_legs_on_the_left,
-                                       const auto &edge_geometries)
+        const auto generate_edge =
+            [this, &scripting_environment, weight_multiplier](
+                // what nodes will be used? In most cases this will be the id
+                // stored in the edge_data. In case of duplicated nodes (e.g.
+                // due to via-way restrictions), one/both of these might
+                // refer to a newly added edge based node
+                const NodeID edge_based_node_from,
+                const NodeID edge_based_node_to,
+                // the situation of the turn
+                const NodeID node_along_road_entering,
+                const EdgeID node_based_edge_from,
+                const NodeID intersection_node,
+                const EdgeID node_based_edge_to,
+                const double &turn_angle,
+                const ExtractionTurnLeg &incoming_road_leg,
+                const ExtractionTurnLeg &outgoing_road_leg,
+                const std::vector<ExtractionTurnLeg> &road_legs_on_the_right,
+                const std::vector<ExtractionTurnLeg> &road_legs_on_the_left,
+                const intersection::IntersectionEdgeGeometries &edge_geometries) -> EdgeWithData
         {
             const auto &edge_data1 = m_node_based_graph.GetEdgeData(node_based_edge_from);
             const auto &edge_data2 = m_node_based_graph.GetEdgeData(node_based_edge_to);
+
+            const NodeID node_along_road_exiting = m_node_based_graph.GetTarget(node_based_edge_to);
 
             BOOST_ASSERT(nbe_to_ebn_mapping[node_based_edge_from] !=
                          nbe_to_ebn_mapping[node_based_edge_to]);
@@ -612,49 +616,54 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             BOOST_ASSERT(!edge_data2.reversed);
 
             // compute weight and duration penalties
-            // In theory we shouldn't get a directed traffic light on a turn, as it indicates that
-            // the traffic signal direction was potentially ambiguously annotated on the junction
-            // node But we'll check anyway.
-            const auto is_traffic_light =
-                m_traffic_signals.HasSignal(node_along_road_entering, intersection_node);
-            const auto is_uturn =
+            // In theory we shouldn't get a directed obstacle on a turn, as it indicates that
+            // the obstacle direction was potentially ambiguously annotated on the junction
+            // node. But we'll check anyway.
+            const bool is_traffic_light = scripting_environment.m_obstacle_map.any(
+                node_along_road_entering, intersection_node, Obstacle::Type::TrafficSignals);
+            const bool is_uturn =
                 guidance::getTurnDirection(turn_angle) == guidance::DirectionModifier::UTurn;
 
-            ExtractionTurn extracted_turn(
+            ExtractionTurn extracted_turn{
                 // general info
                 turn_angle,
-                road_legs_on_the_right.size() + road_legs_on_the_left.size() + 2 - is_uturn,
+                static_cast<int>(road_legs_on_the_right.size() + road_legs_on_the_left.size() + 2 -
+                                 is_uturn),
                 is_uturn,
                 is_traffic_light,
                 m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data)
                     .is_left_hand_driving,
                 // source info
-                edge_data1.flags.restricted,
+                edge_data1.flags.IsRestricted(),
                 m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data).travel_mode,
                 edge_data1.flags.road_classification.IsMotorwayClass(),
                 edge_data1.flags.road_classification.IsLinkClass(),
                 edge_data1.flags.road_classification.GetNumberOfLanes(),
                 edge_data1.flags.highway_turn_classification,
                 edge_data1.flags.access_turn_classification,
-                ((double)intersection::findEdgeLength(edge_geometries, node_based_edge_from) /
-                 from_alias<double>(edge_data1.duration)) *
-                    36,
+                static_cast<int>(
+                    intersection::findEdgeLength(edge_geometries, node_based_edge_from) /
+                    from_alias<double>(edge_data1.duration) * 36.0),
                 edge_data1.flags.road_classification.GetPriority(),
                 // target info
-                edge_data2.flags.restricted,
+                edge_data2.flags.IsRestricted(),
                 m_edge_based_node_container.GetAnnotation(edge_data2.annotation_data).travel_mode,
                 edge_data2.flags.road_classification.IsMotorwayClass(),
                 edge_data2.flags.road_classification.IsLinkClass(),
                 edge_data2.flags.road_classification.GetNumberOfLanes(),
                 edge_data2.flags.highway_turn_classification,
                 edge_data2.flags.access_turn_classification,
-                ((double)intersection::findEdgeLength(edge_geometries, node_based_edge_to) /
-                 from_alias<double>(edge_data2.duration)) *
-                    36,
+                static_cast<int>(intersection::findEdgeLength(edge_geometries, node_based_edge_to) /
+                                 from_alias<double>(edge_data2.duration) * 36.0),
                 edge_data2.flags.road_classification.GetPriority(),
                 // connected roads
+                incoming_road_leg,
+                outgoing_road_leg,
                 road_legs_on_the_right,
-                road_legs_on_the_left);
+                road_legs_on_the_left,
+                node_along_road_entering,
+                intersection_node,
+                node_along_road_exiting};
 
             scripting_environment.ProcessTurn(extracted_turn);
 
@@ -718,8 +727,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 auto buffer = std::make_shared<EdgesPipelineBuffer>();
                 buffer->nodes_processed = intersection_node_range.size();
 
-                for (auto intersection_node = intersection_node_range.begin(),
-                          end = intersection_node_range.end();
+                for (NodeID intersection_node = intersection_node_range.begin(),
+                            end = intersection_node_range.end();
                      intersection_node < end;
                      ++intersection_node)
                 {
@@ -761,32 +770,32 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     // an outgoing edge. Therefore, we have to search all connected edges for edges
                     // entering `b`
 
-                    for (const auto &incoming_edge : incoming_edges)
+                    for (const intersection::IntersectionEdge &incoming_edge : incoming_edges)
                     {
                         ++node_based_edge_counter;
 
-                        const auto connected_roads =
-                            extractor::intersection::getConnectedRoadsForEdgeGeometries(
+                        const intersection::IntersectionView connected_roads =
+                            intersection::getConnectedRoadsForEdgeGeometries(
                                 m_node_based_graph,
                                 m_edge_based_node_container,
                                 unconditional_node_restriction_map,
-                                m_barrier_nodes,
+                                scripting_environment.m_obstacle_map,
                                 turn_lanes_data,
                                 incoming_edge,
                                 edge_geometries,
                                 merged_edge_ids);
 
                         // check if this edge is part of a restriction via-way
-                        const auto is_restriction_via_edge =
+                        const bool is_restriction_via_edge =
                             way_restriction_map.IsViaWayEdge(incoming_edge.node, intersection_node);
 
-                        for (const auto &outgoing_edge : outgoing_edges)
+                        for (const intersection::IntersectionEdge &outgoing_edge : outgoing_edges)
                         {
-                            auto is_turn_allowed =
+                            const bool is_turn_allowed =
                                 intersection::isTurnAllowed(m_node_based_graph,
                                                             m_edge_based_node_container,
                                                             unconditional_node_restriction_map,
-                                                            m_barrier_nodes,
+                                                            scripting_environment.m_obstacle_map,
                                                             edge_geometries,
                                                             turn_lanes_data,
                                                             incoming_edge,
@@ -804,10 +813,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             OSRM_ASSERT(turn != connected_roads.end(),
                                         m_coordinates[intersection_node]);
 
-                            std::vector<ExtractionTurnLeg> road_legs_on_the_right;
-                            std::vector<ExtractionTurnLeg> road_legs_on_the_left;
-
-                            auto get_connected_road_info = [&](const auto &connected_edge)
+                            auto get_connected_road_info =
+                                [&](const auto &connected_edge) -> ExtractionTurnLeg
                             {
                                 const auto &edge_data =
                                     m_node_based_graph.GetEdgeData(connected_edge.eid);
@@ -841,22 +848,29 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                                     is_outgoing = true;
                                 }
+                                double distance = intersection::findEdgeLength(edge_geometries,
+                                                                               connected_edge.eid);
 
-                                return ExtractionTurnLeg(
-                                    edge_data.flags.restricted,
+                                return ExtractionTurnLeg{
+                                    edge_data.flags.IsRestricted(),
                                     edge_data.flags.road_classification.IsMotorwayClass(),
                                     edge_data.flags.road_classification.IsLinkClass(),
                                     edge_data.flags.road_classification.GetNumberOfLanes(),
                                     edge_data.flags.highway_turn_classification,
                                     edge_data.flags.access_turn_classification,
-                                    ((double)intersection::findEdgeLength(edge_geometries,
-                                                                          connected_edge.eid) /
-                                     from_alias<double>(edge_data.duration)) *
-                                        36,
+                                    static_cast<int>(36.0 * distance /
+                                                     from_alias<double>(edge_data.duration)),
+                                    distance,
                                     edge_data.flags.road_classification.GetPriority(),
                                     is_incoming,
-                                    is_outgoing);
+                                    is_outgoing};
                             };
+
+                            ExtractionTurnLeg incoming_road_leg =
+                                get_connected_road_info(connected_roads[0]);
+                            ExtractionTurnLeg outgoing_road_leg = get_connected_road_info(*turn);
+                            std::vector<ExtractionTurnLeg> road_legs_on_the_right;
+                            std::vector<ExtractionTurnLeg> road_legs_on_the_left;
 
                             // all connected roads on the right of a u turn
                             const auto is_uturn = guidance::getTurnDirection(turn->angle) ==
@@ -959,6 +973,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                   outgoing_edge.node,
                                                   outgoing_edge.edge,
                                                   turn->angle,
+                                                  incoming_road_leg,
+                                                  outgoing_road_leg,
                                                   road_legs_on_the_right,
                                                   road_legs_on_the_left,
                                                   edge_geometries);
@@ -1039,6 +1055,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                                             outgoing_edge.node,
                                                                             outgoing_edge.edge,
                                                                             turn->angle,
+                                                                            incoming_road_leg,
+                                                                            outgoing_road_leg,
                                                                             road_legs_on_the_right,
                                                                             road_legs_on_the_left,
                                                                             edge_geometries);
@@ -1090,6 +1108,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                                             outgoing_edge.node,
                                                                             outgoing_edge.edge,
                                                                             turn->angle,
+                                                                            incoming_road_leg,
+                                                                            outgoing_road_leg,
                                                                             road_legs_on_the_right,
                                                                             road_legs_on_the_left,
                                                                             edge_geometries);
@@ -1177,9 +1197,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 first_turn_edges.first,
                 first_turn_edges.second,
                 std::back_inserter(node_sequences),
-                [](const auto turn_edges) {
-                    return std::vector<NodeID>{turn_edges.second.first, turn_edges.second.second};
-                });
+                [](const auto turn_edges)
+                { return std::vector<NodeID>{turn_edges.second.first, turn_edges.second.second}; });
 
             std::for_each(std::next(turns.begin()),
                           turns.end(),

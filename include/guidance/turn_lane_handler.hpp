@@ -57,7 +57,7 @@ class TurnLaneHandler
                     const std::vector<util::Coordinate> &node_coordinates,
                     const extractor::CompressedEdgeContainer &compressed_geometries,
                     const extractor::RestrictionMap &node_restriction_map,
-                    const std::unordered_set<NodeID> &barrier_nodes,
+                    const extractor::ObstacleMap &obstacle_nodes,
                     const extractor::TurnLanesIndexedArray &turn_lanes_data,
                     extractor::LaneDescriptionMap &lane_description_map,
                     const TurnAnalysis &turn_analysis,
@@ -78,7 +78,7 @@ class TurnLaneHandler
     const std::vector<util::Coordinate> &node_coordinates;
     const extractor::CompressedEdgeContainer &compressed_geometries;
     const extractor::RestrictionMap &node_restriction_map;
-    const std::unordered_set<NodeID> &barrier_nodes;
+    const extractor::ObstacleMap &obstacle_nodes;
     const extractor::TurnLanesIndexedArray &turn_lanes_data;
 
     std::vector<std::uint32_t> turn_lane_offsets;

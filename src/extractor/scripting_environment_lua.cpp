@@ -6,11 +6,11 @@
 #include "extractor/extraction_segment.hpp"
 #include "extractor/extraction_turn.hpp"
 #include "extractor/extraction_way.hpp"
+#include "extractor/graph_compressor.hpp"
 #include "extractor/internal_extractor_edge.hpp"
 #include "extractor/maneuver_override_relation_parser.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
-#include "extractor/raster_source.hpp"
 #include "extractor/restriction_parser.hpp"
 
 #include "guidance/turn_instruction.hpp"
@@ -99,11 +99,12 @@ void handle_lua_error(const sol::protected_function_result &luares)
     const auto msg = luaerr.what();
     if (msg != nullptr)
     {
-        std::cerr << msg << "\n";
+        // util::Log is thread-safe
+        util::UnbufferedLog(logERROR) << msg << "\n";
     }
     else
     {
-        std::cerr << "unknown error\n";
+        util::UnbufferedLog(logERROR) << "unknown error\n";
     }
     throw util::exception("Lua error (see stderr for traceback)");
 }
@@ -218,6 +219,9 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "max_speed_for_map_matching",
         sol::property(&ProfileProperties::GetMaxSpeedForMapMatching,
                       &ProfileProperties::SetMaxSpeedForMapMatching),
+        "max_collapse_distance",
+        sol::property(&ProfileProperties::GetMaxCollapseDistance,
+                      &ProfileProperties::SetMaxCollapseDistance),
         "continue_straight_at_waypoint",
         &ProfileProperties::continue_straight_at_waypoint,
         "use_turn_restrictions",
@@ -303,40 +307,96 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
     context.state.new_enum("traffic_lights",
                            "none",
-                           extractor::TrafficLightClass::NONE,
+                           Obstacle::Direction::None,
                            "direction_all",
-                           extractor::TrafficLightClass::DIRECTION_ALL,
+                           Obstacle::Direction::Both,
                            "direction_forward",
-                           extractor::TrafficLightClass::DIRECTION_FORWARD,
+                           Obstacle::Direction::Forward,
                            "direction_reverse",
-                           extractor::TrafficLightClass::DIRECTION_REVERSE);
+                           Obstacle::Direction::Backward);
+
+    context.state.new_enum("obstacle_type", Obstacle::enum_type_initializer_list);
+    context.state.new_enum("obstacle_direction", Obstacle::enum_direction_initializer_list);
+
+    context.state.new_usertype<Obstacle>(
+        "Obstacle",
+        sol::constructors<Obstacle(Obstacle::Type),
+                          Obstacle(Obstacle::Type, Obstacle::Direction),
+                          Obstacle(Obstacle::Type, Obstacle::Direction, float, float)>(),
+        "type",
+        sol::readonly(&Obstacle::type),
+        "direction",
+        sol::readonly(&Obstacle::direction),
+        "duration",
+        sol::readonly(&Obstacle::duration),
+        "weight",
+        sol::readonly(&Obstacle::weight));
+
+    context.state.new_usertype<ObstacleMap>(
+        "ObstacleMap",
+        "add",
+        [](ObstacleMap &obstacles, const osmium::Node &from, Obstacle obstacle)
+        {
+            OSMNodeID id = to_alias<OSMNodeID>(from.id());
+            obstacles.emplace(id, obstacle);
+        },
+        "get",
+        sol::overload([](const ObstacleMap &om, NodeID to) { return om.get(to); },
+                      [](const ObstacleMap &om, NodeID from, NodeID to)
+                      { return om.get(from, to); },
+                      [](const ObstacleMap &om, NodeID from, NodeID to, Obstacle::Type type)
+                      { return om.get(from, to, type); }),
+        "any",
+        sol::overload([](const ObstacleMap &om, NodeID to) { return om.any(to); },
+                      [](const ObstacleMap &om, NodeID from, NodeID to)
+                      { return om.any(from, to, Obstacle::Type::All); },
+                      [](const ObstacleMap &om, NodeID from, NodeID to, Obstacle::Type type)
+                      { return om.any(from, to, type); }));
+
+    context.state["obstacle_map"] = std::ref(m_obstacle_map);
 
     context.state.new_usertype<ExtractionNode>(
         "ResultNode",
+        // for API compatibility only
         "traffic_lights",
-        sol::property([](const ExtractionNode &node) { return node.traffic_lights; },
-                      [](ExtractionNode &node, const sol::object &obj)
-                      {
-                          if (obj.is<bool>())
-                          {
-                              // The old approach of assigning a boolean traffic light
-                              // state to the node is converted to the class enum
-                              // TODO: Make a breaking API change and remove this option.
-                              bool val = obj.as<bool>();
-                              node.traffic_lights = (val) ? TrafficLightClass::DIRECTION_ALL
-                                                          : TrafficLightClass::NONE;
-                              return;
-                          }
-
-                          BOOST_ASSERT(obj.is<TrafficLightClass::Direction>());
-                          {
-                              TrafficLightClass::Direction val =
-                                  obj.as<TrafficLightClass::Direction>();
-                              node.traffic_lights = val;
-                          }
-                      }),
+        sol::property(
+            [&context, this](ExtractionNode &node, const sol::object &obj)
+            {
+                if (obj.is<Obstacle::Direction>())
+                {
+                    m_obstacle_map.emplace(
+                        to_alias<OSMNodeID>(node.node->id()),
+                        Obstacle{Obstacle::Type::TrafficSignals,
+                                 obj.as<Obstacle::Direction>(),
+                                 static_cast<float>(context.properties.GetTrafficSignalPenalty()),
+                                 0});
+                    return;
+                }
+                if (obj.is<bool>() && obj.as<bool>())
+                {
+                    // The old approach of assigning a boolean traffic light
+                    // state to the node
+                    // TODO: Make a breaking API change and remove this option.
+                    m_obstacle_map.emplace(
+                        to_alias<OSMNodeID>(node.node->id()),
+                        Obstacle{Obstacle::Type::TrafficSignals,
+                                 Obstacle::Direction::Both,
+                                 static_cast<float>(context.properties.GetTrafficSignalPenalty()),
+                                 0});
+                }
+            }),
+        // for API compatibility only
         "barrier",
-        &ExtractionNode::barrier);
+        sol::property(
+            [this](ExtractionNode &node, const sol::object &obj)
+            {
+                if (obj.is<bool>() && obj.as<bool>())
+                {
+                    m_obstacle_map.emplace(
+                        to_alias<OSMNodeID>(node.node->id()),
+                        Obstacle{Obstacle::Type::Barrier, Obstacle::Direction::Both});
+                }
+            }));
 
     context.state.new_usertype<RoadClassification>(
         "RoadClassification",
@@ -650,6 +710,10 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             if (max_speed_for_map_matching != sol::nullopt)
                 context.properties.SetMaxSpeedForMapMatching(max_speed_for_map_matching.value());
 
+            sol::optional<double> max_collapse_distance = properties["max_collapse_distance"];
+            if (max_collapse_distance != sol::nullopt)
+                context.properties.SetMaxCollapseDistance(max_collapse_distance.value());
+
             sol::optional<bool> continue_straight_at_waypoint =
                 properties["continue_straight_at_waypoint"];
             if (continue_straight_at_waypoint != sol::nullopt)
@@ -807,6 +871,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             &ExtractionTurnLeg::access_turn_classification,
             "speed",
             &ExtractionTurnLeg::speed,
+            "distance",
+            &ExtractionTurnLeg::distance,
             "priority_class",
             &ExtractionTurnLeg::priority_class,
             "is_incoming",
@@ -865,10 +931,21 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             "target_priority_class",
             &ExtractionTurn::target_priority_class,
 
+            "from",
+            &ExtractionTurn::from,
+            "via",
+            &ExtractionTurn::via,
+            "to",
+            &ExtractionTurn::to,
+            "source_road",
+            &ExtractionTurn::source_road,
+            "target_road",
+            &ExtractionTurn::target_road,
             "roads_on_the_right",
             &ExtractionTurn::roads_on_the_right,
             "roads_on_the_left",
             &ExtractionTurn::roads_on_the_left,
+
             "weight",
             &ExtractionTurn::weight,
             "duration",
@@ -975,13 +1052,13 @@ void Sol2ScriptingEnvironment::ProcessElements(
         case osmium::item_type::node:
         {
             const auto &node = static_cast<const osmium::Node &>(*entity);
-            // NOLINTNEXTLINE(bugprone-use-after-move)
-            result_node.clear();
+            result_node.node = &node;
             if (local_context.has_node_function &&
                 (!node.tags().empty() || local_context.properties.call_tagless_node_function))
             {
                 local_context.ProcessNode(node, result_node, relations);
             }
+            result_node.node = nullptr;
             resulting_nodes.push_back({node, result_node});
         }
         break;

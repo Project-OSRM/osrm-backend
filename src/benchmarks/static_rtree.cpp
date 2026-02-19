@@ -43,8 +43,8 @@ void benchmarkQuery(const std::vector<util::Coordinate> &queries,
     TIMER_STOP(query);
 
     std::cout << name << ":\n"
-              << TIMER_MSEC(query) << "ms"
-              << " ->  " << TIMER_MSEC(query) / queries.size() << " ms/query" << std::endl;
+              << TIMER_MSEC(query) << "ms" << " ->  " << TIMER_MSEC(query) / queries.size()
+              << " ms/query" << std::endl;
 }
 
 void benchmark(BenchStaticRTree &rtree, unsigned num_queries)
@@ -71,8 +71,7 @@ int main(int argc, char **argv)
 {
     if (argc < 4)
     {
-        std::cout << "./rtree-bench file.ramIndex file.fileIndx file.nodes"
-                  << "\n";
+        std::cout << "./rtree-bench file.ramIndex file.fileIndx file.nodes" << "\n";
         return 1;
     }
 

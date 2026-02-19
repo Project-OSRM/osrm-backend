@@ -81,7 +81,7 @@ Feature: Car - Handle traffic lights
         Given the profile file "car" initialized with
         """
         profile.properties.weight_name = 'distance'
-        profile.properties.traffic_light_penalty = 100000
+        profile.properties.traffic_signal_penalty = 1000
         """
 
         Given the node map
@@ -107,8 +107,8 @@ Feature: Car - Handle traffic lights
             | b    | traffic_signals |
 
         When I route I should get
-            | from | to | time      | distances | weight | #                                     |
-            | 1    | 2  | 100033.2s | 599.9m,0m | 599.8  | goes via the expensive traffic signal |
+            | from | to | time    | distances | weight | #                                     |
+            | 1    | 2  | 1033.2s | 599.9m,0m | 599.8  | goes via the expensive traffic signal |
 
 
 
@@ -243,7 +243,7 @@ Feature: Car - Handle traffic lights
             | a    | c  | abc,abc | _ibE_ibE?gJ?eJ |
 
 
-    Scenario: Traffic Signal Geometry - reverse signal
+    Scenario: Traffic Signal Geometry - backward signal
         Given the query options
             | overview   | full      |
             | geometries | polyline  |
@@ -259,7 +259,7 @@ Feature: Car - Handle traffic lights
 
         And the nodes
             | node | highway         | traffic_signals:direction |
-            | b    | traffic_signals | reverse                   |
+            | b    | traffic_signals | backward                  |
 
         When I route I should get
             | from | to | route   | geometry       |

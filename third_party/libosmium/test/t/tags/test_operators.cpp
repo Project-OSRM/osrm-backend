@@ -44,11 +44,11 @@ TEST_CASE("Ordering of tags") {
     }
     buffer.commit();
 
-    const auto& tl = buffer.get<const osmium::TagList>(0);
-    const osmium::Tag& t1 = *(tl.begin());
-    const osmium::Tag& t2 = *(std::next(tl.begin(), 1));
-    const osmium::Tag& t3 = *(std::next(tl.begin(), 2));
-    const osmium::Tag& t4 = *(std::next(tl.begin(), 3));
+    const auto& tag_list = buffer.get<const osmium::TagList>(0);
+    const osmium::Tag& t1 = *(tag_list.begin());
+    const osmium::Tag& t2 = *(std::next(tag_list.begin(), 1));
+    const osmium::Tag& t3 = *(std::next(tag_list.begin(), 2));
+    const osmium::Tag& t4 = *(std::next(tag_list.begin(), 3));
 
     REQUIRE(t2 < t1);
     REQUIRE(t1 < t3);

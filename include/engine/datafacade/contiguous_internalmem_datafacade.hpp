@@ -167,7 +167,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     util::vector_view<TurnPenalty> m_turn_duration_penalties;
     extractor::SegmentDataView segment_data;
     extractor::EdgeBasedNodeDataView edge_based_node_data;
-    std::optional<guidance::TurnDataView> turn_data;
+    std::optional<osrm::guidance::TurnDataView> turn_data;
 
     std::optional<util::vector_view<util::guidance::LaneTupleIdPair>> m_lane_tuple_id_pairs;
 
@@ -499,6 +499,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return m_profile_properties->max_speed_for_map_matching;
     }
 
+    double GetMaxCollapseDistance() const override final
+    {
+        return m_profile_properties->GetMaxCollapseDistance();
+    }
+
     const char *GetWeightName() const override final { return m_profile_properties->weight_name; }
 
     unsigned GetWeightPrecision() const override final
@@ -518,12 +523,13 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return intersection_bearings_view->GetBearingClass(node_based_node_id);
     }
 
-    guidance::TurnBearing PreTurnBearing(const EdgeID edge_based_edge_id) const override final
+    osrm::guidance::TurnBearing PreTurnBearing(const EdgeID edge_based_edge_id) const override final
     {
         CHECK_DATASET_DISABLED(turn_data, DATASET_TURN_DATA);
         return turn_data->GetPreTurnBearing(edge_based_edge_id);
     }
-    guidance::TurnBearing PostTurnBearing(const EdgeID edge_based_edge_id) const override final
+    osrm::guidance::TurnBearing
+    PostTurnBearing(const EdgeID edge_based_edge_id) const override final
     {
         CHECK_DATASET_DISABLED(turn_data, DATASET_TURN_DATA);
         return turn_data->GetPostTurnBearing(edge_based_edge_id);

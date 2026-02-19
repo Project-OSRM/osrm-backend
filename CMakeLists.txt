@@ -160,8 +160,9 @@ file(GLOB ServerGlob src/server/*.cpp src/server/**/*.cpp)
 file(GLOB EngineGlob src/engine/*.cpp src/engine/**/*.cpp)
 
 add_library(UTIL OBJECT ${UtilGlob})
-add_library(EXTRACTOR OBJECT ${ExtractorGlob})
-add_library(GUIDANCE OBJECT ${GuidanceGlob})
+# For historical reason the guidance and extract code are separate.
+# They are so entangled though (circular dependencies) that separate libraries are not feasible.
+add_library(EXTRACTOR OBJECT ${ExtractorGlob} ${GuidanceGlob})
 add_library(PARTITIONER OBJECT ${PartitionerGlob})
 add_library(CUSTOMIZER OBJECT ${CustomizerGlob})
 add_library(CONTRACTOR OBJECT ${ContractorGlob})
@@ -172,6 +173,9 @@ add_library(SERVER OBJECT ${ServerGlob})
 
 set_target_properties(UTIL PROPERTIES LINKER_LANGUAGE CXX)
 
+# We will otherwise get false-positive errors in the linker stage (boost/qi) that can't be disabled with pragmas
+set_property(TARGET SERVER PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
+
 add_executable(osrm-routed src/tools/routed.cpp $<TARGET_OBJECTS:SERVER> $<TARGET_OBJECTS:UTIL>)
 add_executable(osrm-extract src/tools/extract.cpp)
 add_executable(osrm-partition src/tools/partition.cpp)
@@ -181,11 +185,19 @@ add_executable(osrm-datastore src/tools/store.cpp $<TARGET_OBJECTS:MICROTAR> $<T
 add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_contract src/osrm/contractor.cpp $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_extract src/osrm/extractor.cpp $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
-add_library(osrm_guidance $<TARGET_OBJECTS:GUIDANCE> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_partition src/osrm/partitioner.cpp $<TARGET_OBJECTS:PARTITIONER> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_customize src/osrm/customizer.cpp $<TARGET_OBJECTS:CUSTOMIZER> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_update $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
+
+# ALIAS targets with :: provide compile-time safety: typos error at configure time, not link time
+add_library(osrm::osrm ALIAS osrm)
+add_library(osrm::contract ALIAS osrm_contract)
+add_library(osrm::extract ALIAS osrm_extract)
+add_library(osrm::partition ALIAS osrm_partition)
+add_library(osrm::customize ALIAS osrm_customize)
+add_library(osrm::update ALIAS osrm_update)
+add_library(osrm::store ALIAS osrm_store)
 
 # Explicitly set the build type to Release if no other type is specified
 # on the command line.  Without this, cmake defaults to an unoptimized,
@@ -268,6 +280,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   # using Visual Studio C++
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj") # avoid compiler error C1128 from scripting_environment_lua.cpp
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DWIN32_LEAN_AND_MEAN") # avoid compiler error C2011 from dual #include of winsock.h and winsock2.h
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8") # support Unicode in fmt library
   add_dependency_defines(-DBOOST_LIB_DIAGNOSTIC)
   add_dependency_defines(-D_CRT_SECURE_NO_WARNINGS)
   add_dependency_defines(-DNOMINMAX) # avoid min and max macros that can break compilation
@@ -285,6 +298,42 @@ if(UNIX AND NOT APPLE)
 endif()
 
 find_package(Threads REQUIRED)
+
+# Check for C++20 <format> with full chrono support that compiles, links and runs
+# This is necessary because some environments have the header but incomplete
+# implementation (e.g., Alpine GCC 14 missing chrono formatters, or Clang
+# with libstdc++ from older GCC lacking std::format symbols at link time)
+include(CheckCXXSourceRuns)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} /std:c++20")
+else()
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
+  set(CMAKE_REQUIRED_LIBRARIES "stdc++")
+endif()
+
+check_cxx_source_runs("
+  #include <chrono>
+  #include <format>
+  #include <numbers>
+  #include <string>
+  int main() {
+    // Test basic formatting
+    std::string s1 = std::format(\"{:.10g}\", std::numbers::pi);
+    // Test chrono formatting
+    auto now = std::chrono::system_clock::now();
+    auto secs = std::chrono::floor<std::chrono::seconds>(now);
+    std::string s2 = std::format(\"{:%FT%T}\", secs);
+    return (s1.empty() || s2.empty()) ? 1 : 0;
+  }
+" OSRM_HAS_STD_FORMAT)
+
+unset(CMAKE_REQUIRED_FLAGS)
+unset(CMAKE_REQUIRED_LIBRARIES)
+
+if(OSRM_HAS_STD_FORMAT)
+  add_definitions(-DOSRM_HAS_STD_FORMAT)
+endif()
 
 # Third-party libraries
 set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson/include")
@@ -326,7 +375,8 @@ endif()
 
 if (ENABLE_CONAN)
   set(Boost_USE_STATIC_LIBS ON)
-  find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+  find_package(Boost 1.70 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+
   find_package(TBB REQUIRED)
   find_package(EXPAT REQUIRED)
   find_package(BZip2 REQUIRED)
@@ -357,7 +407,8 @@ if (ENABLE_CONAN)
   # expat and bzip2 are used from conan rather than the system
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
 else()
-  find_package(Boost REQUIRED CONFIG COMPONENTS ${BOOST_COMPONENTS})
+  find_package(Boost 1.70 REQUIRED CONFIG COMPONENTS ${BOOST_COMPONENTS})
+
   find_package(TBB REQUIRED)
   find_package(EXPAT REQUIRED)
   find_package(BZip2 REQUIRED)
@@ -385,11 +436,19 @@ else()
   find_package(Doxygen)
   if(DOXYGEN_FOUND)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-    add_custom_target(doc
-      ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-      COMMENT "Generating API documentation with Doxygen" VERBATIM
-    )
+    if(BUILD_AS_SUBPROJECT)
+      add_custom_target(osrm_doc
+        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating API documentation with Doxygen" VERBATIM
+      )
+    else()
+      add_custom_target(doc
+        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating API documentation with Doxygen" VERBATIM
+      )
+    endif()
   endif()
   # note libosmium depends on expat and bzip2
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/cmake")
@@ -399,8 +458,6 @@ else()
   find_package(Osmium REQUIRED COMPONENTS io)
   include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
 endif()
-
-
 
 # prefix compilation with ccache by default if available and on clang or gcc
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
@@ -445,12 +502,6 @@ set(EXTRACTOR_LIBRARIES
     ${OSMIUM_LIBRARIES}
     ${TBB_LIBRARIES}
     ${ZLIB_LIBRARY}
-    ${MAYBE_COVERAGE_LIBRARIES})
-set(GUIDANCE_LIBRARIES
-    ${BOOST_BASE_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${LUA_LIBRARIES}
-    ${TBB_LIBRARIES}
     ${MAYBE_COVERAGE_LIBRARIES})
 set(PARTITIONER_LIBRARIES
     ${BOOST_ENGINE_LIBRARIES}
@@ -503,7 +554,7 @@ set(UTIL_LIBRARIES
 target_link_libraries(osrm ${ENGINE_LIBRARIES})
 target_link_libraries(osrm_update ${UPDATER_LIBRARIES})
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES} osrm_update osrm_store)
-target_link_libraries(osrm_extract osrm_guidance ${EXTRACTOR_LIBRARIES})
+target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_partition ${PARTITIONER_LIBRARIES})
 target_link_libraries(osrm_customize ${CUSTOMIZER_LIBRARIES} osrm_update osrm_store)
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
@@ -535,12 +586,41 @@ set_property(TARGET osrm-contract PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-datastore PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-routed PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 
+file(GLOB FlatbuffersGlob third_party/flatbuffers/include/flatbuffers/*.h)
+file(GLOB LibraryGlob include/osrm/*.hpp)
+file(GLOB ParametersGlob include/engine/api/*_parameters.hpp)
+set(ApiHeader include/engine/api/base_result.hpp)
+set(EngineHeader include/engine/status.hpp include/engine/engine_config.hpp include/engine/hint.hpp include/engine/bearing.hpp include/engine/approach.hpp include/engine/phantom_node.hpp)
+set(UtilHeader include/util/coordinate.hpp include/util/json_container.hpp include/util/typedefs.hpp include/util/alias.hpp include/util/exception.hpp include/util/bearing.hpp)
+set(ExtractorHeader include/extractor/extractor.hpp include/storage/io_config.hpp include/extractor/extractor_config.hpp include/extractor/travel_mode.hpp)
+set(PartitionerHeader include/partitioner/partitioner.hpp include/partitioner/partitioner_config.hpp)
+set(ContractorHeader include/contractor/contractor.hpp include/contractor/contractor_config.hpp)
+set(StorageHeader include/storage/storage.hpp include/storage/io_config.hpp include/storage/storage_config.hpp)
+install(FILES ${EngineHeader} DESTINATION include/osrm/engine)
+install(FILES ${UtilHeader} DESTINATION include/osrm/util)
+install(FILES ${StorageHeader} DESTINATION include/osrm/storage)
+install(FILES ${ExtractorHeader} DESTINATION include/osrm/extractor)
+install(FILES ${PartitionerHeader} DESTINATION include/osrm/partitioner)
+install(FILES ${ContractorHeader} DESTINATION include/osrm/contractor)
+install(FILES ${LibraryGlob} DESTINATION include/osrm)
+install(FILES ${ParametersGlob} DESTINATION include/osrm/engine/api)
+install(FILES ${ApiHeader} DESTINATION include/osrm/engine/api)
+install(FILES ${FlatbuffersGlob} DESTINATION include/flatbuffers)
+
 install(TARGETS osrm-extract DESTINATION bin)
 install(TARGETS osrm-partition DESTINATION bin)
 install(TARGETS osrm-customize DESTINATION bin)
 install(TARGETS osrm-contract DESTINATION bin)
 install(TARGETS osrm-datastore DESTINATION bin)
 install(TARGETS osrm-routed DESTINATION bin)
+
+install(TARGETS osrm DESTINATION lib)
+install(TARGETS osrm_extract DESTINATION lib)
+install(TARGETS osrm_partition DESTINATION lib)
+install(TARGETS osrm_customize DESTINATION lib)
+install(TARGETS osrm_update DESTINATION lib)
+install(TARGETS osrm_contract DESTINATION lib)
+install(TARGETS osrm_store DESTINATION lib)
 
 # Install profiles and support library to /usr/local/share/osrm/profiles by default
 set(DefaultProfilesDir profiles)
@@ -615,8 +695,13 @@ configure_file(
     "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake"
     IMMEDIATE @ONLY)
 
-add_custom_target(uninstall
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake)
+if(BUILD_AS_SUBPROJECT)
+  add_custom_target(osrm_uninstall
+      COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake)
+else()
+  add_custom_target(uninstall
+      COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake)
+endif()
 
 
 # Modular build system: each directory registered here provides its own CMakeLists.txt

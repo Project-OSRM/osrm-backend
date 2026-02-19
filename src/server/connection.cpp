@@ -1,227 +1,247 @@
 #include "server/connection.hpp"
 #include "server/request_handler.hpp"
-#include "server/request_parser.hpp"
+#include "util/format.hpp"
+#include "util/log.hpp"
 
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/bind.hpp>
+#include <boost/beast/http/field.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
-#include <fmt/format.h>
-#include <vector>
+#include <chrono>
+#include <cstdint>
 
 namespace osrm::server
 {
 
-Connection::Connection(boost::asio::io_context &io_context,
+static constexpr short KEEPALIVE_MAX_REQUESTS = 512;
+
+namespace bhttp = boost::beast::http;
+using tcp = boost::asio::ip::tcp;
+
+Connection::Connection(tcp::socket socket,
                        RequestHandler &handler,
+                       unsigned max_header_size,
                        short keepalive_timeout)
-    : strand(boost::asio::make_strand(io_context)), TCP_socket(strand), timer(strand),
-      request_handler(handler), keepalive_timeout(keepalive_timeout)
+    : stream_(std::move(socket)), request_handler_(handler), max_header_size_(max_header_size),
+      keepalive_timeout_(keepalive_timeout)
 {
+    stream_.expires_after(std::chrono::seconds(keepalive_timeout_));
 }
 
-boost::asio::ip::tcp::socket &Connection::socket() { return TCP_socket; }
+void Connection::start() { handle_read(); }
 
-/// Start the first asynchronous operation for the connection.
-void Connection::start()
+void Connection::handle_read()
 {
-    TCP_socket.async_read_some(boost::asio::buffer(incoming_data_buffer),
-                               boost::bind(&Connection::handle_read,
-                                           this->shared_from_this(),
-                                           boost::asio::placeholders::error,
-                                           boost::asio::placeholders::bytes_transferred));
-
-    if (keep_alive)
+    if (processed_requests_ >= KEEPALIVE_MAX_REQUESTS)
     {
-        // Ok, we know it is not a first request, as we switched to keepalive
-        timer.cancel();
-        timer.expires_from_now(boost::posix_time::seconds(keepalive_timeout));
-        timer.async_wait(std::bind(
-            &Connection::handle_timeout, this->shared_from_this(), std::placeholders::_1));
-    }
-}
-
-void Connection::handle_read(const boost::system::error_code &error, std::size_t bytes_transferred)
-{
-    if (error)
-    {
-        if (error != boost::asio::error::operation_aborted)
-        {
-            // Error not triggered by timer expiry, commence connection shutdown.
-            util::Log(logDEBUG) << "Connection read error: " << error.message();
-            handle_shutdown();
-        }
+        handle_close();
         return;
     }
 
+    request_ = {};
+    parser_.emplace();
+    // Note: The name is a bit of a misnomer, this includes the size of the GET request line.
+    // Some people parse huge GET requests for table requests, we need to make this configurable.
+    parser_->header_limit(max_header_size_);
+
+    stream_.expires_after(std::chrono::seconds(keepalive_timeout_));
+
+    auto self = shared_from_this();
+    bhttp::async_read(stream_,
+                      message_buffer_,
+                      *parser_,
+                      [self](boost::beast::error_code ec, std::size_t)
+                      {
+                          if (!ec)
+                          {
+                              self->request_ = self->parser_->release();
+                              self->parser_.reset();
+                              self->process_request();
+                          }
+                          else if (ec == bhttp::error::end_of_stream)
+                          {
+                              self->handle_close();
+                          }
+                          else
+                          {
+                              util::Log(logDEBUG) << "Connection read error: " << ec.message();
+                              self->handle_close();
+                          }
+                      });
+}
+
+void Connection::process_request()
+{
+    response_ = {};
+    response_.version(request_.version());
+
+    boost::asio::ip::address remote_address;
+    boost::beast::error_code endpoint_ec;
+    const auto endpoint = stream_.socket().remote_endpoint(endpoint_ec);
+    if (!endpoint_ec)
+    {
+        remote_address = endpoint.address();
+    }
+
+    try
+    {
+        request_handler_.HandleRequest(request_, response_, remote_address);
+    }
+    catch (const std::exception &e)
+    {
+        util::Log(logERROR) << "Request processing error: " << e.what();
+        SetInternalServerError(response_);
+    }
+
+    const bool keep_alive = should_keep_alive();
+    response_.keep_alive(keep_alive);
+
     if (keep_alive)
     {
-        timer.cancel();
-        timer.expires_from_now(boost::posix_time::seconds(0));
-    }
-
-    // no error detected, let's parse the request
-    http::compression_type compression_type(http::no_compression);
-    RequestParser::RequestStatus result;
-    std::tie(result, compression_type) =
-        request_parser.parse(current_request,
-                             incoming_data_buffer.data(),
-                             incoming_data_buffer.data() + bytes_transferred);
-
-    // the request has been parsed
-    if (result == RequestParser::RequestStatus::valid)
-    {
-
-        boost::system::error_code ec;
-        current_request.endpoint = TCP_socket.remote_endpoint(ec).address();
-        if (ec)
-        {
-            util::Log(logDEBUG) << "Socket remote endpoint error: " << ec.message();
-            handle_shutdown();
-            return;
-        }
-        request_handler.HandleRequest(current_request, current_reply);
-
-        if (boost::iequals(current_request.connection, "close"))
-        {
-            current_reply.headers.emplace_back("Connection", "close");
-        }
-        else
-        {
-            keep_alive = true;
-            current_reply.headers.emplace_back("Connection", "keep-alive");
-            current_reply.headers.emplace_back("Keep-Alive",
-                                               "timeout=" + fmt::to_string(keepalive_timeout) +
-                                                   ", max=" + fmt::to_string(processed_requests));
-        }
-
-        // compress the result w/ gzip/deflate if requested
-        switch (compression_type)
-        {
-        case http::deflate_rfc1951:
-            // use deflate for compression
-            current_reply.headers.insert(current_reply.headers.begin(),
-                                         {"Content-Encoding", "deflate"});
-            compressed_output = compress_buffers(current_reply.content, compression_type);
-            current_reply.set_size(static_cast<unsigned>(compressed_output.size()));
-            output_buffer = current_reply.headers_to_buffers();
-            output_buffer.push_back(boost::asio::buffer(compressed_output));
-            break;
-        case http::gzip_rfc1952:
-            // use gzip for compression
-            current_reply.headers.insert(current_reply.headers.begin(),
-                                         {"Content-Encoding", "gzip"});
-            compressed_output = compress_buffers(current_reply.content, compression_type);
-            current_reply.set_size(static_cast<unsigned>(compressed_output.size()));
-            output_buffer = current_reply.headers_to_buffers();
-            output_buffer.push_back(boost::asio::buffer(compressed_output));
-            break;
-        case http::no_compression:
-            // don't use any compression
-            current_reply.set_uncompressed_size();
-            output_buffer = current_reply.to_buffers();
-            break;
-        }
-        // write result to stream
-        boost::asio::async_write(TCP_socket,
-                                 output_buffer,
-                                 boost::bind(&Connection::handle_write,
-                                             this->shared_from_this(),
-                                             boost::asio::placeholders::error));
-    }
-    else if (result == RequestParser::RequestStatus::invalid)
-    { // request is not parseable
-        current_reply = http::reply::stock_reply(http::reply::bad_request);
-
-        boost::asio::async_write(TCP_socket,
-                                 current_reply.to_buffers(),
-                                 boost::bind(&Connection::handle_write,
-                                             this->shared_from_this(),
-                                             boost::asio::placeholders::error));
+        response_.set(bhttp::field::connection, "keep-alive");
+        response_.set("Keep-Alive",
+                      util::compat::format("timeout={}, max={}",
+                                           keepalive_timeout_,
+                                           KEEPALIVE_MAX_REQUESTS - processed_requests_));
     }
     else
     {
-        // we don't have a result yet, so continue reading
-        TCP_socket.async_read_some(boost::asio::buffer(incoming_data_buffer),
-                                   boost::bind(&Connection::handle_read,
-                                               this->shared_from_this(),
-                                               boost::asio::placeholders::error,
-                                               boost::asio::placeholders::bytes_transferred));
+        response_.set(bhttp::field::connection, "close");
     }
-}
 
-/// Handle completion of a write operation.
-void Connection::handle_write(const boost::system::error_code &error)
-{
-    if (!error)
+    const auto compression = determine_compression();
+    if (compression != http::no_compression && !response_.body().empty())
     {
-        if (keep_alive && processed_requests > 0)
+        auto compressed = compress_buffers(response_.body(), compression);
+        response_.body() = std::move(compressed);
+
+        if (compression == http::gzip_rfc1952)
         {
-            --processed_requests;
-            current_request = http::request();
-            current_reply = http::reply();
-            request_parser = RequestParser();
-            incoming_data_buffer = boost::array<char, 8192>();
-            output_buffer.clear();
-            this->start();
+            response_.set(bhttp::field::content_encoding, "gzip");
         }
-        else
+        else if (compression == http::deflate_rfc1951)
         {
-            handle_shutdown();
+            response_.set(bhttp::field::content_encoding, "deflate");
         }
+
+        response_.set(bhttp::field::vary, "Accept-Encoding");
     }
-    else
+
+    response_.prepare_payload();
+
+    ++processed_requests_;
+
+    handle_write();
+}
+
+void Connection::handle_write()
+{
+    auto self = shared_from_this();
+
+    stream_.expires_after(std::chrono::seconds(keepalive_timeout_));
+
+    bhttp::async_write(stream_,
+                       response_,
+                       [self](boost::beast::error_code ec, std::size_t)
+                       {
+                           if (!ec)
+                           {
+                               if (self->should_keep_alive())
+                               {
+                                   self->handle_read();
+                               }
+                               else
+                               {
+                                   self->handle_close();
+                               }
+                           }
+                           else
+                           {
+                               util::Log(logDEBUG) << "Connection write error: " << ec.message();
+                           }
+                       });
+}
+
+void Connection::handle_close()
+{
+    boost::beast::error_code ec;
+    (void)stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
+
+    // Don't worry about shutdown errors
+    if (ec && ec != boost::beast::errc::not_connected)
     {
-        util::Log(logDEBUG) << "Connection write error: " << error.message();
+        util::Log(logDEBUG) << "Connection shutdown error: " << ec.message();
     }
 }
 
-/// Handle completion of a timeout timer..
-void Connection::handle_timeout(boost::system::error_code ec)
+http::compression_type Connection::determine_compression()
 {
-    // We can get there for 3 reasons: spurious wakeup by timer.cancel(), which should be ignored
-    // Slow client with a delayed _first_ request, which should be ignored too
-    // Absent next request during waiting time in the keepalive mode - should stop right there.
-    if (ec != boost::asio::error::operation_aborted)
+    // Check Accept-Encoding header
+    auto it = request_.find(bhttp::field::accept_encoding);
+    if (it == request_.end())
     {
-        boost::system::error_code ignore_error;
-        // NOLINTNEXTLINE(bugprone-unused-return-value)
-        TCP_socket.cancel(ignore_error);
-        handle_shutdown();
+        return http::no_compression;
     }
+
+    std::string accept_encoding(it->value());
+
+    // Prefer gzip over deflate (following HTTP best practices)
+    if (accept_encoding.find("gzip") != std::string::npos)
+    {
+        return http::gzip_rfc1952;
+    }
+    else if (accept_encoding.find("deflate") != std::string::npos)
+    {
+        return http::deflate_rfc1951;
+    }
+
+    return http::no_compression;
 }
 
-void Connection::handle_shutdown()
+bool Connection::should_keep_alive() const
 {
-    // Cancel timer to ensure all resources are released immediately on shutdown.
-    timer.cancel();
-    // Initiate graceful connection closure.
-    boost::system::error_code ignore_error;
-    // NOLINTNEXTLINE(bugprone-unused-return-value)
-    TCP_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignore_error);
+    if (!request_.keep_alive())
+    {
+        return false;
+    }
+
+    if (processed_requests_ >= KEEPALIVE_MAX_REQUESTS)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 std::vector<char> Connection::compress_buffers(const std::vector<char> &uncompressed_data,
                                                const http::compression_type compression_type)
 {
-    boost::iostreams::gzip_params compression_parameters;
-
-    // there's a trade-off between speed and size. speed wins
-    compression_parameters.level = boost::iostreams::zlib::best_speed;
-    // check which compression flavor is used
-    if (http::deflate_rfc1951 == compression_type)
-    {
-        compression_parameters.noheader = true;
-    }
+    namespace bio = boost::iostreams;
 
     std::vector<char> compressed_data;
-    // plug data into boost's compression stream
-    boost::iostreams::filtering_ostream gzip_stream;
-    gzip_stream.push(boost::iostreams::gzip_compressor(compression_parameters));
-    gzip_stream.push(boost::iostreams::back_inserter(compressed_data));
-    gzip_stream.write(uncompressed_data.data(), uncompressed_data.size());
-    boost::iostreams::close(gzip_stream);
+    bio::filtering_ostream compressor;
+
+    if (compression_type == http::gzip_rfc1952)
+    {
+        bio::gzip_params params;
+        params.level = bio::zlib::best_speed;
+        compressor.push(bio::gzip_compressor(params));
+    }
+    else if (compression_type == http::deflate_rfc1951)
+    {
+        bio::gzip_params params;
+        params.level = bio::zlib::best_speed;
+        params.noheader = true; // deflate = gzip without header
+        compressor.push(bio::gzip_compressor(params));
+    }
+    else
+    {
+        return uncompressed_data; // No compression
+    }
+
+    compressor.push(bio::back_inserter(compressed_data));
+    compressor.write(uncompressed_data.data(), uncompressed_data.size());
+    bio::close(compressor);
 
     return compressed_data;
 }

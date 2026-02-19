@@ -20,7 +20,7 @@ struct TurnData final
     const int turn_angle;
     const EdgeWeight weight;
     const EdgeDuration duration;
-    const guidance::TurnInstruction turn_instruction;
+    const osrm::guidance::TurnInstruction turn_instruction;
 };
 
 using RTreeLeaf = datafacade::BaseDataFacade::RTreeLeaf;
