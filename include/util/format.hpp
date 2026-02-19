@@ -8,13 +8,27 @@
 #include <cmath>
 #include <format>
 #include <string>
+#include <string_view>
 
 namespace osrm::util::compat
 {
 // Use C++20 std::format when available
 using std::format;
-using std::runtime_format;
 using std::to_string;
+
+// std::runtime_format is only available in C++26; provide a compatible wrapper using std::vformat
+struct RuntimeFormatString
+{
+    std::string_view str;
+};
+
+inline RuntimeFormatString runtime_format(std::string_view s) { return {s}; }
+
+template <typename... Args>
+std::string format(RuntimeFormatString fmt, Args &&...args)
+{
+    return std::vformat(fmt.str, std::make_format_args(std::forward<Args>(args)...));
+}
 } // namespace osrm::util::compat
 
 #else // Fallback to fmt library
