@@ -24,8 +24,7 @@ struct RuntimeFormatString
 
 inline RuntimeFormatString runtime_format(std::string_view s) { return {s}; }
 
-template <typename... Args>
-std::string format(RuntimeFormatString fmt, Args &&...args)
+template <typename... Args> std::string format(RuntimeFormatString fmt, Args &&...args)
 {
     return std::vformat(fmt.str, std::make_format_args(std::forward<Args>(args)...));
 }
