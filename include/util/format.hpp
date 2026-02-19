@@ -13,6 +13,7 @@ namespace osrm::util::compat
 {
 // Use C++20 std::format when available
 using std::format;
+using std::runtime_format;
 using std::to_string;
 } // namespace osrm::util::compat
 
@@ -25,6 +26,7 @@ namespace osrm::util::compat
 {
 // Use fmt library for backward compatibility
 using fmt::format;
+using fmt::runtime;
 using fmt::to_string;
 } // namespace osrm::util::compat
 
