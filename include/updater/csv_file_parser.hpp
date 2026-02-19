@@ -5,6 +5,7 @@
 
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
+#include "util/format.hpp"
 #include "util/log.hpp"
 
 #include <tbb/parallel_for.h>
