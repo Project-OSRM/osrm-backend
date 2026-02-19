@@ -41,6 +41,8 @@ namespace osrm::util::compat
 using fmt::format;
 using fmt::runtime;
 using fmt::to_string;
+
+inline auto runtime_format(std::string_view s) { return fmt::runtime(s); }
 } // namespace osrm::util::compat
 
 #endif // OSRM_HAS_STD_FORMAT
