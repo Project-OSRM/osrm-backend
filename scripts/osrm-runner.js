@@ -8,7 +8,7 @@ import cla from 'command-line-args';
 import clu from 'command-line-usage';
 import ansi from 'ansi-escape-sequences';
 import * as turf from '@turf/turf';
-import jp from 'jsonpath';
+import { JSONPath } from 'jsonpath-plus';
 import { stringify as csv_stringify } from 'csv-stringify/sync';
 
 // Execute HTTP query against OSRM server and measure response times
@@ -25,7 +25,7 @@ const run_query = (query_options, filters, callback) => {
     res.on('end', () => {
       const elapsed = tic();
       const json = JSON.parse(body);
-      Promise.all(filters.map(filter => jp.query(json, filter)))
+      Promise.all(filters.map(filter => JSONPath({path: filter, json: json})))
         .then(values => callback(query_options.path, res.statusCode, ttfb, elapsed, values));
     });
   }).on('socket', (/*res*/) => {
