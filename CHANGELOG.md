@@ -11,6 +11,7 @@
       - ADDED: Add exception for audible fences (`barrier=fence` with `sensory=audible` or `sensory=audio`) that deter livestock but do not block vehicles [#6964](https://github.com/Project-OSRM/osrm-backend/issues/6964)
       - ADDED: Use `is_sidepath:of:name` and `street:name` as fallback names for unnamed sidewalks and sidepaths in foot and bicycle profiles [#7259](https://github.com/Project-OSRM/osrm-backend/issues/7259)
     - Build:
+      - FIXED: Upgrade tar npm dependency from 7.5.7 to 7.5.9 to address security vulnerability GHSA-83g3-92jg-28cx [#7365](https://github.com/Project-OSRM/osrm-backend/issues/7365)
       - FIXED: Documentation build fails with ESM/CommonJS conflict after adding "type": "module" [#7347](https://github.com/Project-OSRM/osrm-backend/issues/7347)
       - FIXED: Set `hwloc:shared=True` in Conan config as required by onetbb [#7342](https://github.com/Project-OSRM/osrm-backend/issues/7342)
       - CHANGED: Cucumber tests now can run in parallel and other improvements [#7309](https://github.com/Project-OSRM/osrm-backend/issues/7309)
@@ -41,6 +42,7 @@
       - CHANGED: Upgrade Cucumber-js to v12 [#7221](https://github.com/Project-OSRM/osrm-backend/pull/7221)
       - CHANGED: Add libcap-setcap to alpine dockerfile [#7241](https://github.com/Project-OSRM/osrm-backend/issues/7241)
       - FIXED: Minor misspellings found in source code, comments and documents [#7215](https://github.com/Project-OSRM/osrm-backend/pull/7215)
+      - ADDED: Regression tests for zero-speed segment updates and unit test for turn_id uniqueness [#7332](https://github.com/Project-OSRM/osrm-backend/issues/7332)
       - FIXED: Give correct urban/rural speed limits for Argentina [#7286](https://github.com/Project-OSRM/osrm-backend/pull/7286)
     - Profiles:
       - FIXED: Bicycle and foot profiles now don't route on motor roads [#6697](https://github.com/Project-OSRM/osrm-backend/pull/6697)
