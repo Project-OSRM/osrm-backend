@@ -5,6 +5,7 @@
 
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
+#include "util/format.hpp"
 #include "util/log.hpp"
 
 #include <tbb/parallel_for.h>
@@ -117,10 +118,12 @@ template <typename Key, typename Value> struct CSVFilesParser
                 while (begin_of_line >= mmap.begin() && *begin_of_line != '\n')
                     --begin_of_line;
                 auto line_number = std::count(mmap.begin(), first, '\n') + 1;
-                const auto message = boost::format("CSV file %1% malformed on line %2%:\n %3%\n") %
-                                     filename % std::to_string(line_number) %
-                                     std::string(begin_of_line + 1, std::find(first, last, '\n'));
-                throw util::exception(message.str() + SOURCE_REF);
+                const auto message = osrm::util::compat::format(
+                    "CSV file {} malformed on line {}:\n {}\n",
+                    filename,
+                    std::to_string(line_number),
+                    std::string(begin_of_line + 1, std::find(first, last, '\n')));
+                throw util::exception(message + SOURCE_REF);
             }
 
             util::Log() << "Loaded " << filename << " with " << result.size() << "values";
@@ -129,9 +132,9 @@ template <typename Key, typename Value> struct CSVFilesParser
         }
         catch (const boost::exception &e)
         {
-            const auto message = boost::format("exception in loading %1%:\n %2%") % filename %
-                                 boost::diagnostic_information(e);
-            throw util::exception(message.str() + SOURCE_REF);
+            const auto message = osrm::util::compat::format(
+                "exception in loading {}:\n {}", filename, boost::diagnostic_information(e));
+            throw util::exception(message + SOURCE_REF);
         }
     }
 

@@ -8,6 +8,7 @@
 #include <array>
 #include <cstdint>
 #include <map>
+#include <string>
 #include <unordered_set>
 
 namespace osrm::storage
