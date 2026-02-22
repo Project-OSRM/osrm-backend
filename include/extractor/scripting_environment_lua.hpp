@@ -1,7 +1,6 @@
 #ifndef SCRIPTING_ENVIRONMENT_LUA_HPP
 #define SCRIPTING_ENVIRONMENT_LUA_HPP
 
-#include "extractor/extraction_relation.hpp"
 #include "extractor/location_dependent_data.hpp"
 #include "extractor/raster_source.hpp"
 #include "extractor/scripting_environment.hpp"
@@ -35,6 +34,7 @@ struct LuaScriptingContext final
     void ProcessWay(const osmium::Way &,
                     ExtractionWay &result,
                     const ExtractionRelationContainer &relations);
+    void ProcessRelation(const osmium::Relation &, const ExtractionRelationContainer &relations);
 
     ProfileProperties properties;
     RasterContainer raster_sources;
@@ -44,11 +44,13 @@ struct LuaScriptingContext final
     bool has_node_function = false;
     bool has_way_function = false;
     bool has_segment_function = false;
+    bool has_relation_function = false;
 
     sol::protected_function turn_function;
     sol::protected_function way_function;
     sol::protected_function node_function;
     sol::protected_function segment_function;
+    sol::protected_function relation_function;
 
     int api_version = 4;
     sol::table profile_table;
@@ -87,15 +89,10 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     void ProcessTurn(ExtractionTurn &turn) override;
     void ProcessSegment(ExtractionSegment &segment) override;
 
-    void
-    ProcessElements(const osmium::memory::Buffer &buffer,
-                    const RestrictionParser &restriction_parser,
-                    const ManeuverOverrideRelationParser &maneuver_override_parser,
-                    const ExtractionRelationContainer &relations,
-                    std::vector<std::pair<const osmium::Node &, ExtractionNode>> &resulting_nodes,
-                    std::vector<std::pair<const osmium::Way &, ExtractionWay>> &resulting_ways,
-                    std::vector<InputTurnRestriction> &resulting_restrictions,
-                    std::vector<InputManeuverOverride> &resulting_maneuver_overrides) override;
+    void ProcessRelation(ScriptingResults &result_buffer) override;
+    void ProcessElements(ScriptingResults &result_buffer,
+                         const RestrictionParser &restriction_parser,
+                         const ManeuverOverrideRelationParser &maneuver_override_parser) override;
 
     bool HasLocationDependentData() const override { return !location_dependent_data.empty(); }
 

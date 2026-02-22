@@ -35,13 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "extractor/maneuver_override.hpp"
 #include "extractor/packed_osm_ids.hpp"
 
-#include "guidance/guidance_processing.hpp"
-#include "guidance/turn_data_container.hpp"
-
-#include "util/guidance/bearing_class.hpp"
-#include "util/guidance/entry_class.hpp"
-#include "util/guidance/turn_lanes.hpp"
-
 #include "restriction_graph.hpp"
 #include "util/typedefs.hpp"
 
