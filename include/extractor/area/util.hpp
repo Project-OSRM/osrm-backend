@@ -147,7 +147,7 @@ bool intersect(const TPoint *a,
 };
 
 /**
- * @brief Same as @ref intersect() but includes segmenmt endpoint.
+ * @brief Same as @ref intersect() but includes segment endpoint.
  */
 template <class TPoint, typename comp = std::less_equal<double>>
 bool intersect_closed(const TPoint *a,

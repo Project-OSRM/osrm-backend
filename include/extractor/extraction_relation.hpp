@@ -65,7 +65,7 @@ class RelationMember
     }
     friend bool operator<(const RelationMember &m, const RelationMember &o)
     {
-        return m.ref() < o.ref() || (m.ref() == o.ref() && m.type() < m.type());
+        return m.ref() < o.ref() || (m.ref() == o.ref() && m.type() < o.type());
     }
 };
 
