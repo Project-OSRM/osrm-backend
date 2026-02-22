@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+namespace {
+
 osmium::memory::Buffer generate_test_data() {
     using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 
@@ -32,6 +34,7 @@ osmium::memory::Buffer generate_test_data() {
     return buffer;
 }
 
+} // anonymous namespace
 
 TEST_CASE("Item stash handle") {
     const auto handle = osmium::ItemStash::handle_type{};
@@ -162,7 +165,7 @@ TEST_CASE("Fill item stash until it garbage collects") {
     // trigger compaction
     stash.add_item(node);
 
-    REQUIRE(stash.size() == num_items / 10 + 1);
+    REQUIRE(stash.size() == (num_items / 10) + 1);
     REQUIRE(stash.count_removed() == 0);
 }
 

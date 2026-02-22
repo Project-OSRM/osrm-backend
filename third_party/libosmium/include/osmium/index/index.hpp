@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -76,7 +76,7 @@ namespace osmium {
          * object, but it can be specialized.
          */
         template <typename T>
-        inline constexpr T empty_value() {
+        constexpr T empty_value() {
             return T{};
         }
 
@@ -86,7 +86,7 @@ namespace osmium {
          * the full range, so the max value is a good "empty" value.
          */
         template <>
-        inline constexpr size_t empty_value<size_t>() {
+        constexpr size_t empty_value<size_t>() {
             return std::numeric_limits<size_t>::max();
         }
 

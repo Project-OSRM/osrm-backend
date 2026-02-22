@@ -2,6 +2,10 @@
 
 #include <osmium/util/misc.hpp>
 
+#include <cstdint>
+
+namespace {
+
 template <typename T>
 void test_conv() {
     REQUIRE(osmium::detail::str_to_int<T>("0") == 0);
@@ -20,6 +24,8 @@ void test_conv() {
     REQUIRE(osmium::detail::str_to_int<T>("2 3") == 0);
     REQUIRE(osmium::detail::str_to_int<T>("9999999999999999999999") == 0);
 }
+
+} // anonymous namespace
 
 TEST_CASE("string to integer conversion") {
     test_conv<int>();

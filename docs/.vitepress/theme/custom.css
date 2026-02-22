@@ -1,0 +1,48 @@
+/* Custom styles for OSRM documentation */
+
+/* Endpoint highlighting styles */
+.endpoint {
+  display: flex;
+  align-items: stretch;
+  margin: 1rem 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+}
+
+.endpoint-method {
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.875rem;
+  background-color: var(--vp-c-brand-1);
+  color: white;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.endpoint-url {
+  padding: 0.75rem 1rem;
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  overflow-x: auto;
+}
+
+.endpoint-url .strong {
+  font-weight: 700;
+  color: var(--vp-c-brand-1);
+}
+
+/* Dark mode adjustments */
+.dark .endpoint {
+  background-color: var(--vp-c-bg-soft);
+}
+
+.dark .endpoint-method {
+  background-color: var(--vp-c-brand-2);
+}

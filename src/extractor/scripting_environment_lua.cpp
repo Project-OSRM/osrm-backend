@@ -230,6 +230,9 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "max_speed_for_map_matching",
         sol::property(&ProfileProperties::GetMaxSpeedForMapMatching,
                       &ProfileProperties::SetMaxSpeedForMapMatching),
+        "max_collapse_distance",
+        sol::property(&ProfileProperties::GetMaxCollapseDistance,
+                      &ProfileProperties::SetMaxCollapseDistance),
         "continue_straight_at_waypoint",
         &ProfileProperties::continue_straight_at_waypoint,
         "use_turn_restrictions",
@@ -755,6 +758,10 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                 properties["max_speed_for_map_matching"];
             if (max_speed_for_map_matching != sol::nullopt)
                 context.properties.SetMaxSpeedForMapMatching(max_speed_for_map_matching.value());
+
+            sol::optional<double> max_collapse_distance = properties["max_collapse_distance"];
+            if (max_collapse_distance != sol::nullopt)
+                context.properties.SetMaxCollapseDistance(max_collapse_distance.value());
 
             sol::optional<bool> continue_straight_at_waypoint =
                 properties["continue_straight_at_waypoint"];

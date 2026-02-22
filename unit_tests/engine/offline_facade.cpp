@@ -280,6 +280,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     bool GetContinueStraightDefault() const override { return false; }
     std::string GetTimestamp() const override { return ""; }
     double GetMapMatchingMaxSpeed() const override { return 0; }
+    double GetMaxCollapseDistance() const override { return 30.0; }
     const char *GetWeightName() const override { return ""; }
     unsigned GetWeightPrecision() const override { return 0; }
     double GetWeightMultiplier() const override { return 1; }

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -58,7 +58,7 @@ namespace osmium {
 
         namespace detail {
 
-            constexpr inline int lz4_default_compression_level() noexcept {
+            constexpr int lz4_default_compression_level() noexcept {
                 return 1; // LZ4_ACCELERATION_DEFAULT
             }
 

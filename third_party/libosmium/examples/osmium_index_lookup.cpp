@@ -25,12 +25,11 @@
 #include <algorithm>   // for std::all_of, std::equal_range
 #include <cstdlib>     // for std::exit
 #include <cstring>     // for std::strcmp
+#include <exception>
 #include <fcntl.h>     // for open
 #include <iostream>    // for std::cout, std::cerr
 #include <memory>      // for std::unique_ptr
 #include <string>      // for std::string
-#include <sys/stat.h>  // for open
-#include <sys/types.h> // for open
 #include <vector>      // for std::vector
 
 #ifdef _WIN32
@@ -320,6 +319,7 @@ public:
 
 }; // class Options
 
+namespace {
 
 // Factory function to create the right IndexAccess-derived class.
 template <typename TValue>
@@ -344,6 +344,8 @@ int run(const IndexAccess<TValue>& index, const Options& options) {
     }
     return index.search(options.search_keys()) ? 0 : 1;
 }
+
+} // anonymous namespace
 
 int main(int argc, char* argv[]) {
     // Parse command line options.

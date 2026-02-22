@@ -7,7 +7,9 @@
 #include "util/integer_range.hpp"
 #include "util/version.hpp"
 
+#include <cstring>
 #include <filesystem>
+#include <string>
 
 extern "C"
 {

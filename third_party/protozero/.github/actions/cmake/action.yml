@@ -1,0 +1,16 @@
+name: CMake
+
+runs:
+    using: composite
+    steps:
+      - name: Create build directory
+        run: mkdir build
+        shell: bash
+      - name: Configure
+        run: |
+          cmake -LA .. \
+            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+            -DPROTOZERO_DATA_VIEW=${PROTOZERO_DATA_VIEW} \
+            -DCMAKE_CXX_STANDARD=${CPP_VERSION}
+        shell: bash
+        working-directory: build

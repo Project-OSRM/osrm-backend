@@ -1,14 +1,18 @@
 #include "catch.hpp"
 
+// This file contains the same tests as test_location_extra.cpp, except those
+// tests specific to the location extra bit. OSMIUM_LOCATION_WITH_EXTRA_BIT is
+// not set.
+
 #include <osmium/osm/location.hpp>
 
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <iterator>
 #include <limits>
 #include <sstream>
 #include <string>
-#include <type_traits>
 
 // fails on MSVC and doesn't really matter
 // static_assert(std::is_literal_type<osmium::Location>::value, "osmium::Location not literal type");
@@ -161,9 +165,9 @@ TEST_CASE("Location hash") {
     if (sizeof(size_t) == 8) {
         REQUIRE(std::hash<osmium::Location>{}({0, 0}) == 0);
         REQUIRE(std::hash<osmium::Location>{}({0, 1}) == 1);
-        const int64_t a = std::hash<osmium::Location>{}({1, 0});
+        const auto a = std::hash<osmium::Location>{}({1, 0});
         REQUIRE(a == 0x100000000);
-        const int64_t b = std::hash<osmium::Location>{}({1, 1});
+        const auto b = std::hash<osmium::Location>{}({1, 1});
         REQUIRE(b == 0x100000001);
     } else {
         REQUIRE(std::hash<osmium::Location>{}({0, 0}) == 0);
@@ -172,6 +176,8 @@ TEST_CASE("Location hash") {
         REQUIRE(std::hash<osmium::Location>{}({1, 1}) == 0);
     }
 }
+
+namespace {
 
 void C(const char* s, int32_t v, const char* r = "") {
     std::string strm{"-"};
@@ -198,6 +204,8 @@ void F(const char* s) {
     data = &x;
     REQUIRE_THROWS_AS(osmium::detail::string_to_location_coordinate(data), osmium::invalid_location);
 }
+
+} // anonymous namespace
 
 TEST_CASE("Parsing coordinates from strings") {
     F("x");
@@ -350,6 +358,8 @@ TEST_CASE("Writing zero coordinate into string") {
     REQUIRE(buffer == "0");
 }
 
+namespace {
+
 void CW(int32_t v, const char* s) {
     std::string buffer;
 
@@ -360,6 +370,8 @@ void CW(int32_t v, const char* s) {
     REQUIRE(buffer[0] == '-');
     REQUIRE_FALSE(std::strcmp(buffer.c_str() + 1, s));
 }
+
+} // anonymous namespace
 
 TEST_CASE("Writing coordinate into string") {
     CW(  10000000, "1");

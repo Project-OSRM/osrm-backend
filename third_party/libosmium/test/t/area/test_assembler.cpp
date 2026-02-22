@@ -1,9 +1,11 @@
 #include "catch.hpp"
 
 #include <osmium/area/assembler.hpp>
+#include <osmium/area/assembler_config.hpp>
 #include <osmium/builder/attr.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm/area.hpp>
+#include <osmium/osm/way.hpp>
 
 using namespace osmium::builder::attr; // NOLINT(google-build-using-namespace)
 

@@ -138,7 +138,7 @@ void NodeBasedGraphFactory::CompressAnnotationData()
      * value - index of item in a set from begin. We need that map, because
      * std::distance(set.begin(), it) is too slow O(N). So any words in that step we reorder
      * annotation data to the order it stored in a set. Apply new id's to edge data.
-     * 3. Remove unused anootation_data items.
+     * 3. Remove unused annotation_data items.
      * 4. At final step just need to sort result annotation_data in the same order as set.
      * That makes id's stored in edge data valid.
      */

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -76,7 +76,7 @@ namespace osmium {
         class MultipolygonManager : public osmium::relations::RelationsManager<MultipolygonManager<TAssembler>, false, true, false> {
 
             using assembler_config_type = typename TAssembler::config_type;
-            const assembler_config_type m_assembler_config;
+            assembler_config_type m_assembler_config;
 
             area_stats m_stats;
 

@@ -7,7 +7,9 @@
 
 #include <array>
 #include <filesystem>
+#include <set>
 #include <string>
+#include <vector>
 
 namespace osrm::storage
 {
@@ -41,6 +43,34 @@ struct IOConfig
     }
 
     std::filesystem::path base_path;
+
+    // Print all required and optional input files to the output stream.
+    // Pass a seen set to deduplicate across multiple calls (e.g. when a tool
+    // lists files from both its own config and a nested updater config).
+    void ListInputFiles(std::ostream &out, std::set<std::string> &seen) const
+    {
+        for (const auto &file : required_input_files)
+        {
+            // Skip empty string (represents OSM input for extractor)
+            if (!file.empty() && seen.insert(file.string()).second)
+            {
+                out << "required " << file.string() << "\n";
+            }
+        }
+        for (const auto &file : optional_input_files)
+        {
+            if (seen.insert(file.string()).second)
+            {
+                out << "optional " << file.string() << "\n";
+            }
+        }
+    }
+
+    void ListInputFiles(std::ostream &out) const
+    {
+        std::set<std::string> seen;
+        ListInputFiles(out, seen);
+    }
 
   protected:
     // Infer the base path from the path of the .osrm file

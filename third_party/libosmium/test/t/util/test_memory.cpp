@@ -2,8 +2,6 @@
 
 #include <osmium/util/memory.hpp>
 
-#include <vector>
-
 TEST_CASE("Check memory usage") {
 #ifdef __linux__
     const osmium::MemoryUsage m1;

@@ -1,4 +1,4 @@
-# Open Source Routing Machine
+## Open Source Routing Machine
 
 [![osrm-backend CI](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml/badge.svg)](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml) [![Discord](https://img.shields.io/discord/1034487840219860992)](https://discord.gg/es9CdcCXcb)
 
@@ -33,8 +33,7 @@ Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 ## Contact
 
 - Discord: [join](https://discord.gg/es9CdcCXcb)
-- IRC: `irc.oftc.net`, channel: `#osrm` ([Webchat](https://webchat.oftc.net))
-- Mailinglist: `https://lists.openstreetmap.org/listinfo/osrm-talk`
+- BlueSky: [profile](https://bsky.app/profile/osrm.bsky.social)
 
 ## Quick Start
 
@@ -45,7 +44,7 @@ There are two pre-processing pipelines available:
 - Contraction Hierarchies (CH)
 - Multi-Level Dijkstra (MLD)
 
-we recommend using MLD by default except for special use-cases such as very large distance matrices where CH is still a better fit for the time being.
+We recommend using MLD by default except for special use cases such as very large distance matrices where CH is still a better fit for the time being.
 In the following we explain the MLD pipeline.
 If you want to use the CH pipeline instead replace `osrm-partition` and `osrm-customize` with a single `osrm-contract` and change the algorithm option for `osrm-routed` to `--algorithm ch`.
 
@@ -66,7 +65,7 @@ The flag `-v "${PWD}:/data"` creates the directory `/data` inside the docker con
     docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-partition /data/berlin-latest.osrm || echo "osrm-partition failed"
     docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-customize /data/berlin-latest.osrm || echo "osrm-customize failed"
 
-Note there is no `berlin-latest.osrm` file, but multiple `berlin-latest.osrm.*` files, i.e. `berlin-latest.osrm` is not file path, but "base" path referring to set of files and there is an option to omit this `.osrm` suffix completely(e.g. `osrm-partition /data/berlin-latest`).
+Note there is no `berlin-latest.osrm` file, but multiple `berlin-latest.osrm.*` files, i.e. `berlin-latest.osrm` is not a file path, but a "base" path referring to a set of files and there is an option to omit this `.osrm` suffix completely (e.g. `osrm-partition /data/berlin-latest`).
 
     docker run -t -i -p 5000:5000 -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-routed --algorithm mld /data/berlin-latest.osrm
 

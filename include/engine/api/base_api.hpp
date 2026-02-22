@@ -67,9 +67,8 @@ class BaseAPI
             std::transform(candidates.begin(),
                            candidates.end(),
                            seg_hints.begin(),
-                           [this](const auto &phantom) {
-                               return SegmentHint{phantom, facade.GetCheckSum()};
-                           });
+                           [this](const auto &phantom)
+                           { return SegmentHint{phantom, facade.GetCheckSum()}; });
 
             return json::makeWaypoint(
                 snapped_location,
@@ -135,9 +134,8 @@ class BaseAPI
             std::transform(candidates.begin(),
                            candidates.end(),
                            seg_hints.begin(),
-                           [this](const auto &phantom) {
-                               return SegmentHint{phantom, facade.GetCheckSum()};
-                           });
+                           [this](const auto &phantom)
+                           { return SegmentHint{phantom, facade.GetCheckSum()}; });
             Hint hint{std::move(seg_hints)};
             hint_string = builder->CreateString(hint.ToBase64());
         }

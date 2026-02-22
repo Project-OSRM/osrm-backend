@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -89,7 +89,7 @@ namespace osmium {
             }
 
             void write_line(const char* problem_type, osmium::object_id_type id1, osmium::object_id_type id2, osmium::Location loc1, osmium::Location loc2) {
-                auto ogr_linestring = std::unique_ptr<OGRLineString>{new OGRLineString{}};
+                auto ogr_linestring = std::make_unique<OGRLineString>();
                 ogr_linestring->addPoint(loc1.lon(), loc1.lat());
                 ogr_linestring->addPoint(loc2.lon(), loc2.lat());
 

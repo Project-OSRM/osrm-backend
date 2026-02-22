@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -32,15 +32,6 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
-
-// [[deprecated]] is only available in C++14, use this for the time being
-#ifdef __GNUC__
-# define OSMIUM_DEPRECATED __attribute__((deprecated))
-#elif defined(_MSC_VER)
-# define OSMIUM_DEPRECATED __declspec(deprecated)
-#else
-# define OSMIUM_DEPRECATED
-#endif
 
 // Set OSMIUM_DEFINE_EXPORT before including any osmium headers to add
 // the special attributes to all exception classes.

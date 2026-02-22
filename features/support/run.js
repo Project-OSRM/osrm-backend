@@ -1,58 +1,87 @@
-'use strict';
+// Process execution utilities for running OSRM binaries and managing subprocesses
+import child_process from 'node:child_process';
+import path from 'node:path';
 
-const path = require('path');
-const fs = require('fs');
-const util = require('util');
-const child_process = require('child_process');
+import { env } from '../support/env.js';
 
-module.exports = function () {
-  // replaces placeholders for in user supplied commands
-  this.expandOptions = (options) => {
-    let opts = options.slice();
-    let table = {
-      '{osm_file}': this.inputCacheFile,
-      '{processed_file}': this.processedCacheFile,
-      '{profile_file}': this.profileFile,
-      '{rastersource_file}': this.rasterCacheFile,
-      '{speeds_file}': this.speedsCacheFile,
-      '{penalties_file}': this.penaltiesCacheFile,
-      '{timezone_names}': this.TIMEZONE_NAMES
-    };
+/** Returns the full path to the binary. */
+export function mkBinPath(bin) {
+  return path.join(env.wp.buildPath, `${bin}${env.EXE}`);
+}
 
-    for (let k in table) {
-      opts = opts.replace(k, table[k]);
+/**
+ * Runs an osrm binary in asynchronous mode.
+ *
+ * Use case: osrm-routed.
+ *
+ * @param {string}   bin     The name of the binary, eg. osrm-routed
+ * @param {string[]} args    The arguments to the binary
+ * @param {object}   options Options passed to the spawn function
+ * @param {function} log     Function that consumes logs, eg world.log
+ */
+export function runBin(bin, args, options, log) {
+  const cmd = mkBinPath(bin);
+  const argsAsString = args.join(' ');
+  log(`running ${bin} as:\n${cmd} ${argsAsString}`);
+
+  const child = child_process.spawn(
+    cmd,
+    args,
+    options,
+  );
+
+  // we MUST consume these or the osrm-routed process will block
+  // we cannot send these to world.log() because output might happen between steps
+  child.stderr.on('data', (data) => log(data));
+  child.stdout.on('data', (data) => log(data));
+
+  child.on('error', (err) => {
+    log(`${bin} aborted with error ${err}`);
+    throw(err);
+  });
+  child.on('exit', (code, signal) => {
+    if (signal != null) {
+      const msg = `${bin} aborted with signal ${child.signal}`;
+      log(msg);
+      throw new Error(msg);
+    } else {
+      log(`${bin} completed with exit code ${code}`);
     }
+  });
+  return child;
+}
 
-    return opts;
-  };
+/**
+ * Runs an osrm binary in synchronous mode.
+ *
+ * Use case: osrm-extract and friends.
+ *
+ * @param {string}   bin     The name of the binary, eg. osrm-extract
+ * @param {string[]} args    The arguments to the binary
+ * @param {object}   options Options passed to the spawnSync function
+ * @param {function} log     Function that consumes logs, eg world.log
+ */
+export function runBinSync(bin, args, options, log) {
+  const cmd = mkBinPath(bin);
+  const argsAsString = args.join(' ');
+  log(`running ${bin} as:\n${cmd} ${argsAsString}`);
 
-  this.setupOutputLog = (process, log) => {
-    if (process.logFunc) {
-      process.stdout.removeListener('data', process.logFunc);
-      process.stderr.removeListener('data', process.logFunc);
-    }
-
-    process.logFunc = (message) => { log.write(message); };
-    process.stdout.on('data', process.logFunc);
-    process.stderr.on('data', process.logFunc);
-  };
-
-  this.runBin = (bin, options, env, callback) => {
-    let cmd = path.resolve(util.format('%s/%s%s', this.BIN_PATH, bin, this.EXE));
-    let opts = options.split(' ').filter((x) => { return x && x.length > 0; });
-    let log = fs.createWriteStream(this.scenarioLogFile, {'flags': 'a'});
-    log.write(util.format('*** running %s %s\n', cmd, options));
-    // we need to set a large maxbuffer here because we have long running processes like osrm-routed
-    // with lots of log output
-    let child = child_process.execFile(cmd, opts, {maxBuffer: 1024 * 1024 * 1000, env: env}, callback);
-    child.on('exit', function(code) {
-      log.write(util.format('*** %s exited with code %d\n', bin, code));
-      // remove listeners and close log file -> some tail messages can be lost
-      child.stdout.removeListener('data', child.logFunc);
-      child.stderr.removeListener('data', child.logFunc);
-      log.end();
-    }.bind(this));
-    this.setupOutputLog(child, log);
-    return child;
-  };
-};
+  const child = child_process.spawnSync(
+    cmd,
+    args,
+    options
+  );
+  if (child.stdout)
+    log(`${bin} stdout:\n${child.stdout}`);
+  if (child.stderr)
+    log(`${bin} stderr:\n${child.stderr}`);
+  if (child.status != null)
+    log(`${bin} completed with exit code ${child.status}`);
+  if (child.signal != null) {
+    const msg = `${bin} aborted with signal ${child.signal}`;
+    log(msg);
+    if (child.signal != 'SIGABRT') // some tests deliberately fail
+      throw new Error(msg);
+  }
+  return child;
+}

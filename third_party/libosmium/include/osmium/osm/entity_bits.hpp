@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -45,6 +45,8 @@ namespace osmium {
      */
     namespace osm_entity_bits {
 
+        // NOLINTBEGIN(clang-analyzer-optin.core.EnumCastOutOfRange)
+
         /**
          * Describes zero or more OSM entities.
          *
@@ -67,9 +69,18 @@ namespace osmium {
             nothing   = 0x00,
             node      = 0x01,
             way       = 0x02,
+            nw        = 0x03, ///< node or way object
             relation  = 0x04,
+            nr        = 0x05, ///< node or relation object
+            wr        = 0x06, ///< way or relation object
             nwr       = 0x07, ///< node, way, or relation object
             area      = 0x08,
+            na        = 0x09, ///< node or area object
+            wa        = 0x0a, ///< way or area object
+            nwa       = 0x0b, ///< node, way or area object
+            ra        = 0x0c, ///< relation or area object
+            nra       = 0x0d, ///< node, relation or area object
+            wra       = 0x0e, ///< way, relation or area object
             nwra      = 0x0f, ///< node, way, relation, or area object
             object    = 0x0f, ///< node, way, relation, or area object
             changeset = 0x10,
@@ -77,15 +88,15 @@ namespace osmium {
 
         }; // enum type
 
-        inline constexpr type operator|(const type lhs, const type rhs) noexcept {
+        constexpr type operator|(const type lhs, const type rhs) noexcept {
             return static_cast<type>(static_cast<unsigned char>(lhs) | static_cast<unsigned char>(rhs));
         }
 
-        inline constexpr type operator&(const type lhs, const type rhs) noexcept {
+        constexpr type operator&(const type lhs, const type rhs) noexcept {
             return static_cast<type>(static_cast<unsigned char>(lhs) & static_cast<unsigned char>(rhs));
         }
 
-        inline constexpr type operator~(const type value) noexcept {
+        constexpr type operator~(const type value) noexcept {
             return all & static_cast<type>(~static_cast<unsigned char>(value));
         }
 
@@ -106,13 +117,15 @@ namespace osmium {
          *      changeset.
          */
         inline type from_item_type(osmium::item_type item_type) noexcept {
-            const auto ut = static_cast<std::underlying_type<osmium::item_type>::type>(item_type);
+            const auto ut = static_cast<std::underlying_type_t<osmium::item_type>>(item_type);
             assert(ut <= 0x05);
             if (ut == 0) {
                 return nothing;
             }
             return static_cast<osmium::osm_entity_bits::type>(1U << (ut - 1U));
         }
+
+        // NOLINTEND(clang-analyzer-optin.core.EnumCastOutOfRange)
 
     } // namespace osm_entity_bits
 

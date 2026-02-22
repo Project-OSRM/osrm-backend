@@ -1197,9 +1197,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 first_turn_edges.first,
                 first_turn_edges.second,
                 std::back_inserter(node_sequences),
-                [](const auto turn_edges) {
-                    return std::vector<NodeID>{turn_edges.second.first, turn_edges.second.second};
-                });
+                [](const auto turn_edges)
+                { return std::vector<NodeID>{turn_edges.second.first, turn_edges.second.second}; });
 
             std::for_each(std::next(turns.begin()),
                           turns.end(),

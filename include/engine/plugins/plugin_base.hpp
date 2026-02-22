@@ -11,6 +11,7 @@
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
+#include "util/format.hpp"
 #include "util/integer_range.hpp"
 #include "util/json_container.hpp"
 
@@ -87,7 +88,7 @@ class BasePlugin
         };
         void operator()(std::string &str_result)
         {
-            str_result = str(boost::format("code=%1% message=%2%") % code % message);
+            str_result = osrm::util::compat::format("code={} message={}", code, message);
         };
     };
 

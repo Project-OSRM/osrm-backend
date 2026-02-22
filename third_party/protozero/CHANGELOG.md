@@ -14,6 +14,32 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 
+## [1.8.1] - 2025-07-15
+
+### Fixed
+
+- Fix buffer overrun in `get_bool()`
+- Fix test that checks that protozero also works with `std::string_view`
+
+
+## [1.8.0] - 2025-01-13
+
+### Changed
+
+- Switched to C++14 as minimum requirement. Modernised the code accordingly.
+- Only the tests need the Protobuf library when building.
+- Improve compatibility with various STL flavors.
+- Change license formatting to get recognized by license scanning tools.
+- Add lots of `const` in places where we can. Also fix some other issues
+  reported by clang-tidy.
+- Various other code cleanups.
+- Modernize documentation config, CMake config and CI workflows.
+
+### Fixed
+
+- `basic_pbf_builder` constructor can not be noexcept.
+
+
 ## [1.7.1] - 2022-01-10
 
 ### Changed
@@ -399,7 +425,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Make pbf reader and writer code endianess-aware.
 
 
-[unreleased]: https://github.com/osmcode/libosmium/compare/v1.7.1...HEAD
+[unreleased]: https://github.com/osmcode/libosmium/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/osmcode/libosmium/compare/v1.7.1...v1.8.0
 [1.7.1]: https://github.com/osmcode/libosmium/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/osmcode/libosmium/compare/v1.6.8...v1.7.0
 [1.6.8]: https://github.com/osmcode/libosmium/compare/v1.6.7...v1.6.8
