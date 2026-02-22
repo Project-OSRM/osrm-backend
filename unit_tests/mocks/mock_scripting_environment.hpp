@@ -31,7 +31,7 @@ class MockScriptingEnvironment : public extractor::ScriptingEnvironment
     void ProcessTurn(extractor::ExtractionTurn &) override final {}
     void ProcessSegment(extractor::ExtractionSegment &) override final {}
 
-    void ProcessRelation(extractor::ScriptingResults &) override final{};
+    void ProcessRelation(extractor::ScriptingResults &) override final {};
     void ProcessElements(extractor::ScriptingResults &,
                          const extractor::RestrictionParser &,
                          const extractor::ManeuverOverrideRelationParser &) override final
