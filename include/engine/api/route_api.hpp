@@ -186,26 +186,33 @@ class RouteAPI : public BaseAPI
     }
 
     std::optional<util::json::Value>
-    MakeGeometry(std::optional<std::vector<Coordinate>> &&annotations) const
+    MakeGeometry(std::optional<std::vector<Coordinate>> &&geometry) const
     {
         std::optional<util::json::Value> json_geometry;
-        if (annotations)
+        if (geometry)
         {
-            auto begin = annotations->begin();
-            auto end = annotations->end();
-            if (parameters.geometries == RouteParameters::GeometriesType::Polyline)
-            {
-                json_geometry = json::makePolyline<100000>(begin, end);
-            }
-            else if (parameters.geometries == RouteParameters::GeometriesType::Polyline6)
-            {
-                json_geometry = json::makePolyline<1000000>(begin, end);
-            }
-            else
-            {
-                BOOST_ASSERT(parameters.geometries == RouteParameters::GeometriesType::GeoJSON);
-                json_geometry = json::makeGeoJSONGeometry(begin, end);
-            }
+            json_geometry = MakeGeometry(*geometry);
+        }
+        return json_geometry;
+    }
+
+    util::json::Value MakeGeometry(const std::vector<Coordinate> &geometry) const
+    {
+        util::json::Value json_geometry;
+        auto begin = geometry.begin();
+        auto end = geometry.end();
+        if (parameters.geometries == RouteParameters::GeometriesType::Polyline)
+        {
+            json_geometry = json::makePolyline<100000>(begin, end);
+        }
+        else if (parameters.geometries == RouteParameters::GeometriesType::Polyline6)
+        {
+            json_geometry = json::makePolyline<1000000>(begin, end);
+        }
+        else
+        {
+            BOOST_ASSERT(parameters.geometries == RouteParameters::GeometriesType::GeoJSON);
+            json_geometry = json::makeGeoJSONGeometry(begin, end);
         }
         return json_geometry;
     }
@@ -389,6 +396,19 @@ class RouteAPI : public BaseAPI
                 summary_string = fb_result.CreateString(leg.summary);
             }
 
+            // Fill leg geometry if overview=by_legs
+            std::variant<flatbuffers::Offset<flatbuffers::String>,
+                         flatbuffers::Offset<flatbuffers::Vector<const fbresult::Position *>>>
+                leg_geometry_variant;
+            bool has_leg_geometry = false;
+
+            if (parameters.overview == RouteParameters::OverviewType::ByLegs)
+            {
+                leg_geometry_variant = MakeGeometry(
+                    fb_result, leg_geometry.locations.begin(), leg_geometry.locations.end());
+                has_leg_geometry = true;
+            }
+
             fbresult::LegBuilder legBuilder(fb_result);
             legBuilder.add_distance(leg.distance);
             legBuilder.add_duration(leg.duration);
@@ -403,6 +423,12 @@ class RouteAPI : public BaseAPI
             {
                 legBuilder.add_annotations(annotation_buffer);
             }
+
+            if (has_leg_geometry)
+            {
+                std::visit(GeometryVisitor<fbresult::LegBuilder>(legBuilder), leg_geometry_variant);
+            }
+
             routeLegs.emplace_back(legBuilder.Finish());
         }
         auto legs_vector = fb_result.CreateVector(routeLegs);
@@ -723,6 +749,16 @@ class RouteAPI : public BaseAPI
         auto route = guidance::assembleRoute(legs);
         std::optional<util::json::Value> json_overview = MakeGeometry(MakeOverview(leg_geometries));
 
+        std::vector<util::json::Value> json_overview_by_legs;
+        if (parameters.overview == RouteParameters::OverviewType::ByLegs)
+        {
+            json_overview_by_legs.reserve(leg_geometries.size());
+            for (const auto idx : util::irange<std::size_t>(0UL, leg_geometries.size()))
+            {
+                json_overview_by_legs.emplace_back(MakeGeometry(leg_geometries[idx].locations));
+            }
+        }
+
         std::vector<util::json::Value> step_geometries;
         const auto total_step_count =
             std::accumulate(legs.begin(),
@@ -871,6 +907,7 @@ class RouteAPI : public BaseAPI
 
         auto result = json::makeRoute(route,
                                       json::makeRouteLegs(std::move(legs),
+                                                          std::move(json_overview_by_legs),
                                                           std::move(step_geometries),
                                                           std::move(annotations)),
                                       std::move(json_overview),
@@ -1004,7 +1041,8 @@ class RouteAPI : public BaseAPI
     MakeOverview(const std::vector<guidance::LegGeometry> &leg_geometries) const
     {
         std::optional<std::vector<Coordinate>> overview;
-        if (parameters.overview != RouteParameters::OverviewType::False)
+        if (parameters.overview != RouteParameters::OverviewType::False &&
+            parameters.overview != RouteParameters::OverviewType::ByLegs)
         {
             const auto use_simplification =
                 parameters.overview == RouteParameters::OverviewType::Simplified;

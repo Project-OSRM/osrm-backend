@@ -61,7 +61,8 @@ struct RouteParameters : public BaseParameters
     {
         Simplified,
         Full,
-        False
+        False,
+        ByLegs
     };
     enum class AnnotationsType
     {
