@@ -37,6 +37,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomArrayEntryFixture
 
         std::uniform_int_distribution<> edge_udist(0, NUM_EDGES - 1);
         std::vector<unsigned> offsets;
+        offsets.reserve(NUM_NODES);
         for (unsigned i = 0; i < NUM_NODES; i++)
         {
             offsets.push_back(edge_udist(g));

@@ -1,98 +1,46 @@
 ---
-name: "Conan install"
+name: "Install Conan"
 description: |
   Runs conan install and caches dependencies.
 
-  This action installs conan and then runs `conan install`. All dependencies are cached.
+  This action runs `conan install`. All dependencies are cached.
 
-  Input environment variables
+  Prerequisites: Install Python requirements
 
-  BUILD_TYPE The cmake build type: Release or Debug.
-  CONAN_HOME The Conan home directory to use.
+  Input environment variables:
 
-  Output environment variables
-
-  CONAN_CMAKE_PRESET: Pass --preset $CONAN_CMAKE_PRESET to cmake.
-  PATH will contain the Python venv.
-  VIRTUAL_ENV the Python venv.
+  OSRM_CONFIG          The build type: Release or Debug.
+  BUILD_SHARED_LIBS    Whether to build shared libs or static ones.
+  CONAN_CACHE          The Conan cache directory to use.
+  CONAN_DOWNLOAD_CACHE The Conan download cache directory to use.
 
 runs:
   using: 'composite'
   steps:
-    - name: Restore Pip cache
-      uses: actions/cache/restore@v4
-      id: pip-cache-restore
-      with:
-        path: .venv
-        key: pip-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('requirements*.txt') }}
-        restore-keys: pip-${{ runner.os }}-${{ runner.arch }}-
-
-    - name: Install Conan
-      if: steps.pip-cache-restore.outputs.cache-hit != 'true'
-      id: install-conan
-      shell: bash
-      run: |
-        python -m venv .venv
-        if [[ ${{ runner.os }} == 'Windows' ]]; then
-          source .venv/Scripts/activate
-          python.exe -m pip install --upgrade pip
-        else
-          source .venv/bin/activate
-          python -m pip install --upgrade pip
-        fi
-        pip install -r requirements*.txt
-
-    - name: Activate Python Venv
-      id: activate-venv
-      shell: bash
-      run: |
-        if [[ ${{ runner.os }} == 'Windows' ]]; then
-          source .venv/Scripts/activate
-          echo "$VIRTUAL_ENV/Scripts" >> $GITHUB_PATH
-        else
-          source .venv/bin/activate
-          echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
-        fi
-        echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
-        echo "venv=$VIRTUAL_ENV"        >> $GITHUB_OUTPUT
-
-    - name: Save Pip cache
-      if: steps.pip-cache-restore.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v4
-      with:
-        path: .venv
-        key: ${{ steps.pip-cache-restore.outputs.cache-primary-key }}
-
     - name: Restore Conan download cache
       uses: actions/cache/restore@v4
       id: conan-download-cache-restore
       with:
         path: ${{ env.CONAN_DOWNLOAD_CACHE }}
-        key: conan-download-${{ runner.os }}-${{ runner.arch }}-${{ env.BUILD_TYPE }}-${{ hashFiles('conanfile.py') }}
-        restore-keys: conan-download-${{ runner.os }}-${{ runner.arch }}-${{ env.BUILD_TYPE }}-
+        key: conan-download-${{ runner.os }}-${{ runner.arch }}-${{ env.OSRM_CONFIG }}-${{ hashFiles('conanfile.py') }}
+        restore-keys: conan-download-${{ runner.os }}-${{ runner.arch }}-${{ env.OSRM_CONFIG }}-
 
     - name: Restore Conan cache
       uses: actions/cache/restore@v4
       id: conan-cache-restore
       with:
         path: ${{ env.CONAN_CACHE }}
-        key: conan-${{ runner.os }}-${{ runner.arch }}-${{ env.BUILD_TYPE }}-${{ env.BUILD_SHARED_LIBS}}-${{ hashFiles('conanfile.py', '.conan2/profiles/*', '.conan2/*.conf') }}
-        restore-keys: conan-${{ runner.os }}-${{ runner.arch }}-${{ env.BUILD_TYPE }}-${{ env.BUILD_SHARED_LIBS}}-
+        key: conan-${{ runner.os }}-${{ runner.arch }}-${{ env.OSRM_CONFIG }}-${{ env.BUILD_SHARED_LIBS}}-${{ hashFiles('conanfile.py', '.conan2/profiles/*', '.conan2/*.conf') }}
+        restore-keys: conan-${{ runner.os }}-${{ runner.arch }}-${{ env.OSRM_CONFIG }}-${{ env.BUILD_SHARED_LIBS}}-
 
     - name: Setup Conan environment
       shell: bash
       run: |
-        CONAN_OS_PROFILE=github-${RUNNER_OS,,} # lowercases the os
-        echo "CONAN_OS_PROFILE=${CONAN_OS_PROFILE}" >> $GITHUB_ENV
-
         echo "::group::conan install"
         conan profile detect --force
-        conan install -pr ${CONAN_OS_PROFILE} --build=missing -s build_type=${BUILD_TYPE}
+        conan install -pr ${CONAN_OS_PROFILE} --build=missing -s build_type=${OSRM_CONFIG}
+        cat build/conan.env >> $GITHUB_ENV
         conan remove "*" --lru=4w -c
-        echo "::endgroup::"
-
-        echo "::group::Conan cache contents"
-        conan list
         echo "::endgroup::"
 
         # outputs
@@ -105,6 +53,10 @@ runs:
     - name: Debug Conan environment
       shell: bash
       run: |
+        echo "::group::cat build/conan.env"
+        cat build/conan.env
+        echo "::endgroup::"
+
         echo "::group::ls"
         ls "${CONAN_GENERATORS_DIR}"
         echo "::endgroup::"
@@ -116,6 +68,23 @@ runs:
         echo "::group::cat CMakePresets.json"
         cat "${CONAN_GENERATORS_DIR}/CMakePresets.json"
         echo "::endgroup::"
+
+        echo "::group::cat conan-build-env.sh"
+        cat "build/conan-build-env.sh"
+        echo "::endgroup::"
+
+        echo "::group::cat conan-run-env.sh"
+        cat "build/conan-run-env.sh"
+        echo "::endgroup::"
+
+        echo "::group::Conan cache contents"
+        conan list
+        echo "::endgroup::"
+
+        # Set Conan build environment for future bash invocations. We cannot simply `cat
+        # conan-build-env.sh >> $GITHUB_ENV` because tecnically it is a shell file and
+        # may in future version contain commands.
+        echo "BASH_ENV=build/conan-build-env.sh" >> $GITHUB_ENV
 
     - name: Save Conan download cache
       uses: actions/cache/save@v4

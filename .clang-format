@@ -20,7 +20,7 @@ AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: false
 BinPackArguments: false
 BinPackParameters: false
-BraceWrapping:   
+BraceWrapping:
   AfterClass:      true
   AfterControlStatement: true
   AfterEnum:       true
@@ -87,4 +87,3 @@ Standard:        Cpp11
 TabWidth:        8
 UseTab:          Never
 ...
-

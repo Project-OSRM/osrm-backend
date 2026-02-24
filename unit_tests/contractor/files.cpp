@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(read_write_hsgr)
     std::unordered_map<std::string, ContractedMetric> reference_metrics = {
         {"duration", {std::move(reference_graph), std::move(reference_filters)}}};
 
-    TemporaryFile tmp{TEST_DATA_DIR "/read_write_hsgr_test.osrm.hsgr"};
+    TemporaryFile tmp{OSRM_TEST_DATA_DIR "/read_write_hsgr_test.osrm.hsgr"};
     contractor::files::writeGraph(tmp.path, reference_metrics, reference_connectivity_checksum);
 
     unsigned connectivity_checksum;

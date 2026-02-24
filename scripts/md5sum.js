@@ -8,7 +8,7 @@ const idx = process.argv.indexOf('-c');
 if (idx > -1) {
   const validate_file = process.argv[idx+1];
   if (!process.argv[idx+1]) {
-    console.error('Please pass arg to -c with a path to the data.md5sum file used to validate');
+    console.error('Please pass arg to -c with a path to the *.md5sum file used to validate');
     process.exit(1);
   }
   validate(validate_file);
@@ -17,7 +17,7 @@ if (idx > -1) {
   if (args.length > 0) {
     generate(args);
   } else {
-    console.error('Please pass either a list of files to generate an md5sum for or validate with "-c data.md5sum"');
+    console.error('Please pass either a list of files to generate an md5sum for or validate with "-c *.md5sum"');
     process.exit(1);
   }
 }

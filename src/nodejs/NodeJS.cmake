@@ -618,7 +618,7 @@ function(add_nodejs_module NAME)
         CXX_VISIBILITY_PRESET hidden
         POSITION_INDEPENDENT_CODE TRUE
         CMAKE_CXX_STANDARD_REQUIRED TRUE
-        CXX_STANDARD 11
+        CXX_STANDARD 20
     )
 
     # Handle link flag cases properly
@@ -632,9 +632,9 @@ function(add_nodejs_module NAME)
     # Only necessary on single-target generators (Make, Ninja)
     # Multi-target generators do this automatically
     # This (luckily) mirrors node-gyp conventions
-    if(NOT CMAKE_CONFIGURATION_TYPES)
-        set_property(TARGET ${NAME} PROPERTY
-            LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BUILD_TYPE}
-        )
-    endif()
+    # if(NOT CMAKE_CONFIGURATION_TYPES)
+    #     set_property(TARGET ${NAME} PROPERTY
+    #         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BUILD_TYPE}
+    #     )
+    # endif()
 endfunction()

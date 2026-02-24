@@ -5,22 +5,16 @@
   "type": "module",
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++ designed to run on OpenStreetMap data.",
   "dependencies": {
-    "@mapbox/node-pre-gyp": "^2.0.3",
+    "@mapbox/node-pre-gyp": "^2.0.0",
     "seedrandom": "^3.0.5"
-  },
-  "browserify": {
-    "transform": [
-      "babelify",
-      "brfs"
-    ]
   },
   "scripts": {
     "lint": "npx eslint features/",
     "test": "./scripts/cucumber_test_matrix.sh",
     "clean": "rm -rf test/cache",
-    "docs": "./scripts/build_api_docs.sh",
+    "docs": "make -C docs",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh",
-    "nodejs-tests": "make -C test/data && ./lib/binding_napi_v8/osrm-datastore test/data/ch/monaco.osrm && node test/nodejs/index.js | faucet",
+    "nodejs-tests": "make -C test/data && build/nodejs/lib/binding_napi_v8/osrm-datastore test/data/ch/monaco.osrm && node test/nodejs/index.js | faucet",
     "prepare": "husky"
   },
   "repository": {
@@ -37,38 +31,28 @@
     "node": ">=20.0.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.28.6",
-    "@babel/core": "^7.28.6",
-    "@babel/plugin-transform-class-properties": "^7.28.6",
-    "@babel/preset-env": "^7.28.6",
-    "@babel/preset-react": "^7.28.5",
     "@cucumber/cucumber": "^12.5.0",
-    "@mapbox/polyline": "1.2.1",
+    "@mapbox/polyline": "^1.2.1",
     "@turf/turf": "^7.3.2",
-    "acorn": "^8.15.0",
-    "ansi-escape-sequences": "6.2.4",
-    "babelify": "^10.0.0",
-    "browserify": "17.0.1",
+    "acorn": "^8.16.0",
+    "ansi-escape-sequences": "^6.2.4",
     "chalk": "^5.6.2",
     "cheap-ruler": "^4.0.0",
-    "command-line-args": "6.0.1",
-    "command-line-usage": "7.0.3",
+    "command-line-args": "^6.0.1",
+    "command-line-usage": "^7.0.3",
     "csv-stringify": "^6.6.0",
-    "d3-queue": "3.0.7",
-    "docbox": "^1.0.11",
-    "documentation": "^14.0.2",
-    "eslint": "^9.39.2",
+    "d3-queue": "^3.0.7",
+    "eslint": "^10.0.0",
     "faucet": "^0.0.4",
     "flatbuffers": "^25.9.23",
     "husky": "^9.1.7",
-    "jsonpath": "^1.1.1",
     "lint-staged": "^16.2.7",
-    "node-addon-api": "^8.5.0",
+    "node-addon-api": "^8.3.1",
     "node-cmake": "^2.5.1",
-    "tape": "5.9.0",
-    "uglify-js": "^3.17.0",
+    "tape": "^5.9.0",
     "wait-on": "^9.0.3",
-    "xmlbuilder": "15.1.1"
+    "xmlbuilder": "15.1.1",
+    "yargs": "^18.0.0"
   },
   "main": "lib/index.js",
   "binary": {

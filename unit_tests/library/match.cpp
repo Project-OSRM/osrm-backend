@@ -99,7 +99,7 @@ void test_match_skip_waypoints(bool use_json_only_api)
     const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    BOOST_CHECK(json_result.values.find("tracepoints") == json_result.values.end());
+    BOOST_CHECK(!json_result.values.contains("tracepoints"));
 }
 BOOST_AUTO_TEST_CASE(test_match_skip_waypoints_old_api) { test_match_skip_waypoints(true); }
 BOOST_AUTO_TEST_CASE(test_match_skip_waypoints_new_api) { test_match_skip_waypoints(false); }

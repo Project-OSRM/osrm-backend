@@ -284,7 +284,7 @@ RandIt filterPackedPathsByCellSharing(RandIt first,
     const auto level = 1;
     const auto get_cell = [&](auto node) { return partition.GetCell(level, node); };
 
-    const auto shortest_path = *first;
+    const auto &shortest_path = *first;
 
     if (shortest_path.path.empty())
         return last;

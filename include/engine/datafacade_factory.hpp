@@ -27,8 +27,8 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
     DataFacadeFactory() = default;
 
     template <typename AllocatorT>
-    DataFacadeFactory(std::shared_ptr<AllocatorT> allocator)
-        : DataFacadeFactory(allocator, has_exclude_flags)
+    DataFacadeFactory(const std::shared_ptr<AllocatorT> &allocator)
+        : DataFacadeFactory(std::move(allocator), has_exclude_flags)
     {
         BOOST_ASSERT_MSG(facades.size() >= 1, "At least one datafacade is needed");
     }
@@ -41,7 +41,7 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
   private:
     // Algorithm with exclude flags
     template <typename AllocatorT>
-    DataFacadeFactory(std::shared_ptr<AllocatorT> allocator, std::true_type)
+    DataFacadeFactory(const std::shared_ptr<AllocatorT> &allocator, std::true_type)
     {
         const auto &index = allocator->GetIndex();
         properties = index.template GetBlockPtr<extractor::ProfileProperties>("/common/properties");

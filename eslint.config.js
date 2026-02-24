@@ -1,12 +1,10 @@
-import { Linter } from 'eslint';
-
 /** @type {Linter.Config} */
 const config = [
   {
-    files: ["**/*.js"],
+    files: ['**/*.js', '**/*.mjs', '**/*.cjs'],
     languageOptions: {
       ecmaVersion: 2024,
-      sourceType: "module",
+      sourceType: 'module',
       globals: {
         es6: true,
         node: true,
@@ -17,7 +15,6 @@ const config = [
       quotes: ['warn', 'single'],
       'linebreak-style': ['error', 'unix'],
       semi: ['error', 'always'],
-      'no-console': ['warn'],
       'prefer-const': 'error',
       'no-var': 'error',
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],

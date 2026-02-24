@@ -1,0 +1,13 @@
+# source this from the project root directory
+# needed only once for every new shell
+# usage: source scripts/activate_venv
+
+export CONAN_HOME=`pwd`/.conan2
+
+case "$(uname)" in
+  CYGWIN*|MSYS*|MINGW*)
+    source .venv/Scripts/activate
+    ;;
+  *)
+    source .venv/bin/activate
+esac

@@ -16,23 +16,27 @@ defaults:
     shell: bash
 
 env:
+  # print commands
+  # SHELLOPTS: xtrace
+
   # paths
+  BUILD_DIR:   ${{ github.workspace }}/build
   TEST_DIR:    ${{ github.workspace }}/test
   LOG_DIR:     ${{ github.workspace }}/test/logs
   CI_DIR:      ${{ github.workspace }}/scripts/ci
   NODE_DIR:    ${{ github.workspace }}/.npm
-  NAPI_DIR:    ${{ github.workspace }}/lib/binding_napi_v8
+  NAPI_DIR:    ${{ github.workspace }}/build/nodejs/lib/binding_napi_v8
   CONAN_HOME:  ${{ github.workspace }}/.conan2
   CONAN_CACHE: ${{ github.workspace }}/.conan2/p
   CONAN_DOWNLOAD_CACHE: ${{ github.workspace }}/.conan2/downloads
 
-  BOOST_VERSION:     1.88.0
   CCACHE_DIR:        ${{ github.workspace }}/.ccache
   CCACHE_TEMPDIR:    /tmp/.ccache-temp
   CCACHE_COMPRESS:   1
   SCCACHE_DIR:       ${{ github.workspace }}/.sccache
   SCCACHE_CONF:      ${{ github.workspace }}/.sccacheconfig
   SCCACHE_ERROR_LOG: ${{ github.workspace }}/test/logs/sccache.log
+  # SCCACHE_LOG:       debug
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -49,234 +53,185 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: clang-21-release
-            node: 24
-            runs-on: ubuntu-24.04
-            CCOMPILER: clang-21
-            CXXCOMPILER: clang++-21
+          # - name: clang-21-release
+          #   runs-on: ubuntu-26.04
 
           - name: clang-20-release
-            node: 24
             runs-on: ubuntu-24.04
-            CCOMPILER: clang-20
-            CXXCOMPILER: clang++-20
+            BUILD_BENCHMARKS: ON
+            RUN_BENCHMARKS: ON
+            CMAKE_GENERATOR: Ninja
 
-          - name: clang-19-release
-            node: 24
+          - name: clang-20-debug-node-tidy
+            continue-on-error: true
             runs-on: ubuntu-24.04
-            CCOMPILER: clang-19
-            CXXCOMPILER: clang++-19
+            ENABLE_LTO: OFF
+            RUN_UNIT_TESTS: OFF
+            RUN_CUCUMBER_TESTS: OFF
+            BUILD_BENCHMARKS: ON
 
-          - name: clang-19-release-shared
-            node: 24
+          # - name: clang-20-debug-node-cov
+          #   continue-on-error: true
+          #   runs-on: ubuntu-24.04
+
+          - name: clang-19-release-node
             runs-on: ubuntu-24.04
-            CCOMPILER: clang-19
-            CXXCOMPILER: clang++-19
+
+          - name: clang-19-release-shared-node
+            runs-on: ubuntu-24.04
 
           - name: clang-19-debug-asan
             continue-on-error: true
-            node: 24
             runs-on: ubuntu-24.04
-            CCOMPILER: clang-19
-            CXXCOMPILER: clang++-19
-            ENABLE_ASAN: ON
             ENABLE_LTO: OFF
 
           - name: clang-19-debug-ubsan
             continue-on-error: true
-            node: 24
             runs-on: ubuntu-24.04
-            CCOMPILER: clang-19
-            CXXCOMPILER: clang++-19
-            ENABLE_UBSAN: ON
-            ENABLE_LTO: OFF
-
-          - name: clang-19-debug-tidy
-            continue-on-error: true
-            node: 24
-            runs-on: ubuntu-24.04
-            CCOMPILER: clang-19
-            CXXCOMPILER: clang++-19
-            ENABLE_CLANG_TIDY: ON
-            UNIT_TESTS: OFF
-            CUCUMBER_TESTS: OFF
             ENABLE_LTO: OFF
 
           - name: clang-18-release
-            node: 22
             runs-on: ubuntu-24.04
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
+            NODE_VERSION: 22
 
           - name: clang-17-release
-            node: 22
             runs-on: ubuntu-24.04
-            CCOMPILER: clang-17
-            CXXCOMPILER: clang++-17
+            NODE_VERSION: 22
 
           - name: clang-16-release
-            node: 20
             runs-on: ubuntu-24.04
-            CCOMPILER: clang-16
-            CXXCOMPILER: clang++-16
+            NODE_VERSION: 20
 
-          - name: gcc-15-release
-            node: 24
-            runs-on: ubuntu-24.04
-            CCOMPILER: gcc-15
-            CXXCOMPILER: g++-15
+          # - name: gcc-15-release
+          #   runs-on: ubuntu-26.04
 
           - name: gcc-14-release
-            node: 24
             runs-on: ubuntu-24.04
-            CCOMPILER: gcc-14
-            CXXCOMPILER: g++-14
 
           - name: gcc-13-release
-            node: 22
             runs-on: ubuntu-24.04
-            CCOMPILER: gcc-13
-            CXXCOMPILER: g++-13
-
-          - name: gcc-13-debug-cov
-            node: 22
-            runs-on: ubuntu-24.04
-            CCOMPILER: gcc-13
-            CXXCOMPILER: g++-13
-            ENABLE_COVERAGE: ON
-
-          - name: gcc-12-release
-            node: 20
-            runs-on: ubuntu-22.04
-            CCOMPILER: gcc-12
-            CXXCOMPILER: g++-12
+            NODE_VERSION: 22
 
           - name: conan-linux-release-node
-            node: 22
             runs-on: ubuntu-24.04
-            CCOMPILER: clang-19
-            CXXCOMPILER: clang++-19
+            CC: clang-19
+            CXX: clang++-19
 
           - name: conan-linux-release-shared-node
-            node: 22
             runs-on: ubuntu-24.04
-            CCOMPILER: clang-19
-            CXXCOMPILER: clang++-19
+            CC: clang-19
+            CXX: clang++-19
 
           - name: conan-linux-debug-node
-            node: 22
             runs-on: ubuntu-24.04
-            CCOMPILER: clang-19
-            CXXCOMPILER: clang++-19
-
-          - name: conan-macos-14-arm64-release-node
-            node: 22
-            runs-on: macos-14 # arm64
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            ENABLE_ASSERTIONS: ON
-
-          - name: conan-macos-15-x64-release-node
-            node: 22
-            runs-on: macos-15-intel # x86_64
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            ENABLE_ASSERTIONS: ON
-
-          - name: conan-macos-15-arm64-release-node
-            node: 22
-            runs-on: macos-15 # arm64
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            ENABLE_ASSERTIONS: ON
-
-          - name: conan-macos-15-arm64-release-shared-node
-            node: 22
-            runs-on: macos-15 # arm64
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            ENABLE_ASSERTIONS: ON
+            continue-on-error: true
+            CC: clang-19
+            CXX: clang++-19
+            CMAKE_GENERATOR: Ninja
 
           - name: conan-macos-26-arm64-release-node
-            node: 24
             runs-on: macos-26 # arm64
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            ENABLE_ASSERTIONS: ON
 
-          - name: conan-windows-2025-x64-release-node
-            node: 24
-            runs-on: windows-2025 # x64
-            USE_CCACHE: sccache
+          - name: conan-macos-15-x64-release-node
+            runs-on: macos-15-intel # x64
 
-          - name: conan-windows-2025-x64-release-shared-node
-            node: 24
+          - name: conan-macos-15-arm64-release-shared-node
+            runs-on: macos-15 # arm64
+
+          - name: conan-macos-15-arm64-release-node
+            runs-on: macos-15 # arm64
+            BUILD_BENCHMARKS: ON
+            RUN_BENCHMARKS: ON
+
+          - name: macos-15-arm64-release-node
+            runs-on: macos-15 # arm64
+            continue-on-error: true
+
+          - name: conan-macos-14-arm64-release-node
+            runs-on: macos-14 # arm64
+            NODE_VERSION: 22
+
+          - name: conan-windows-2025-vs2026-x64-release-node
+            runs-on: windows-2025-vs2026 # x64
+            continue-on-error: true
+            ENABLE_SCCACHE: ON
+
+          - name: conan-windows-2025-vs2022-x64-release-node
             runs-on: windows-2025 # x64
-            USE_CCACHE: sccache
+            continue-on-error: true
+            BUILD_BENCHMARKS: ON
+            RUN_BENCHMARKS: ON
+            ENABLE_SCCACHE: ON
+
+          - name: conan-windows-2022-x64-release-node
+            runs-on: windows-2022 # x64
+            continue-on-error: true
+            NODE_VERSION: 22
+            ENABLE_SCCACHE: ON
 
     name: ${{ matrix.name }}
-    continue-on-error: ${{ !matrix.continue-on-error == null && false || true }}
     runs-on: ${{ matrix.runs-on }}
-    env:
-      PUBLISH: OFF
-
-      BUILD_TYPE:           ${{ contains(matrix.name, 'debug')  && 'Debug' || 'Release' }}
-      BUILD_SHARED_LIBS:    ${{ contains(matrix.name, 'shared') && 'ON' || 'OFF' }}
-      BUILD_NODE_BINDINGS:  ${{ contains(matrix.name, 'node')   && 'ON' || 'OFF' }}
-
-      ENABLE_CONAN:         ${{ contains(matrix.name, 'conan')  && 'ON' || 'OFF' }}
-      NODE_PACKAGE_TESTS:   ${{ contains(matrix.name, 'node')   && 'ON' || 'OFF' }}
-      BUILD_NODE_PACKAGE:   ${{ contains(matrix.name, 'node')   && 'ON' || 'OFF' }}
-
-      CC:                ${{ matrix.CCOMPILER }}
-      CFLAGS:            ${{ matrix.CFLAGS }}
-      CXX:               ${{ matrix.CXXCOMPILER }}
-      CXXFLAGS:          ${{ matrix.CXXFLAGS }}
-
-      # default OFF
-      ENABLE_ASSERTIONS: ${{ matrix.ENABLE_ASSERTIONS }}
-      ENABLE_CLANG_TIDY: ${{ matrix.ENABLE_CLANG_TIDY }}
-      ENABLE_COVERAGE:   ${{ matrix.ENABLE_COVERAGE }}
-      ENABLE_ASAN:       ${{ matrix.ENABLE_ASAN }}
-      ENABLE_UBSAN:      ${{ matrix.ENABLE_UBSAN }}
-      # default ON
-      ENABLE_LTO:        ${{ (matrix.ENABLE_LTO     != 'OFF') && 'ON' || 'OFF' }}
-      UNIT_TESTS:        ${{ (matrix.UNIT_TESTS     != 'OFF') && 'ON' || 'OFF' }}
-      CUCUMBER_TESTS:    ${{ (matrix.CUCUMBER_TESTS != 'OFF') && 'ON' || 'OFF' }}
-      # default ccache
-      USE_CCACHE:        ${{ (matrix.USE_CCACHE == null) && 'ccache' || matrix.USE_CCACHE }}
+    continue-on-error: ${{ (matrix.continue-on-error != null) && matrix.continue-on-error || false }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Decode matrix
+        run: |
+          echo "::group::matrix"
+          echo '${{ toJSON(matrix) }}'
+          echo "::endgroup::"
+
+          echo '${{ toJSON(matrix) }}' | python scripts/ci/decode_matrix.py \
+               --cmake-presets-template scripts/ci/CMakePresets.template.json \
+               --cmake-presets CMakePresets.json --output matrix.env -
+
+          echo "::group::generated CMakePresets.json"
+          cat CMakePresets.json
+          echo "::endgroup::"
+
+          echo "::group::generated github environment"
+          cat matrix.env
+          echo "::endgroup::"
+
+          cat matrix.env >> $GITHUB_ENV
+
       - name: Setup environment
         run: |
+          uname
           uname -a
-          mkdir -p $TEST_DIR $LOG_DIR $CCACHE_DIR $SCCACHE_DIR
+          echo ${RUNNER_OS}
 
-          if [[ "${RUNNER_OS}" == "Linux" ]]; then
-            sudo apt-get update -y
-            sudo apt-get install -y ${CC} ${CXX} ccache zlib1g-dev
-            echo "JOBS=$((`nproc` + 1))" >>  $GITHUB_ENV
-          elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-            # install a version of bash that can do string lowercasing
-            brew install bash ccache
-            bash --version
-            echo "JOBS=$((`sysctl -n hw.ncpu` + 1))" >>  $GITHUB_ENV
-          elif [[ "${RUNNER_OS}" == "Windows" ]]; then
-            echo "JOBS=$((`nproc` + 1))" >>  $GITHUB_ENV
-            gendef --help || true
-            dlltool --help || true
-          fi
-          ccache --version
+          mkdir -p build $TEST_DIR $LOG_DIR $CCACHE_DIR $SCCACHE_DIR
+
+          case "${RUNNER_OS}" in
+            Linux)
+              sudo apt-get update -y
+              sudo apt-get install -y ${APT_GET_DEPS//:/ } make zlib1g-dev
+              echo "MAKE=make" >> $GITHUB_ENV
+              echo "TIME=/usr/bin/time" >> $GITHUB_ENV
+            ;;
+            macOS)
+              # install a current version of bash
+              brew install bash make ccache gnu-time
+              bash --version
+              echo "MAKE=gmake" >> $GITHUB_ENV
+              echo "TIME=gtime" >> $GITHUB_ENV
+            ;;
+            Windows)
+              echo "MAKE=make" >> $GITHUB_ENV
+              echo "TIME=time" >> $GITHUB_ENV
+              echo "PYTHONUTF8=1" >> $GITHUB_ENV
+            ;;
+          esac
 
       # Node
 
       - name: Install Node
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: Setup Node environment
@@ -288,9 +243,14 @@ jobs:
           fi
           npm ci --ignore-scripts
 
+      # Python
+
+      - name: Install Python
+        uses: ./.github/actions/install-python
+
       # Conan
 
-      - name: Run Conan install
+      - name: Install Conan
         if: env.ENABLE_CONAN == 'ON'
         uses: ./.github/actions/install-conan
 
@@ -299,7 +259,7 @@ jobs:
       - name: Restore CCache
         id: cache-ccache-restore
         uses: actions/cache/restore@v4
-        if: env.USE_CCACHE == 'ccache'
+        if: env.ENABLE_CCACHE == 'ON'
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ matrix.name }}-${{ github.sha }}
@@ -307,7 +267,7 @@ jobs:
             ccache-${{ matrix.name }}-
 
       - name: Install SCCache
-        if: env.USE_CCACHE == 'sccache'
+        if: env.ENABLE_SCCACHE == 'ON'
         uses: mozilla-actions/sccache-action@v0.0.9
         with:
           disable_annotations: true
@@ -315,7 +275,7 @@ jobs:
       - name: Restore SCCache
         id: cache-sccache-restore
         uses: actions/cache/restore@v4
-        if: env.USE_CCACHE == 'sccache'
+        if: env.ENABLE_SCCACHE == 'ON'
         with:
           path: ${{ env.SCCACHE_DIR }}
           key: sccache-${{ matrix.name }}-${{ github.sha }}
@@ -327,41 +287,37 @@ jobs:
       - name: Install dev dependencies
         if: env.ENABLE_CONAN != 'ON'
         run: |
-          if [[ "${RUNNER_OS}" == "Linux" ]]; then
-            # Install dev dependencies the traditional way
-            sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev libtbb-dev
-            if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
-                sudo apt-get install -y lcov
-            fi
-          fi
-
-          # for install-boost below
-          BOOST_PLATFORM=${{ matrix.runs-on }}
-          BOOST_PLATFORM=${BOOST_PLATFORM#ubuntu-}
-          BOOST_PLATFORM=${BOOST_PLATFORM#macos-}
-          BOOST_PLATFORM=${BOOST_PLATFORM#windows-}
-          echo "BOOST_PLATFORM=$BOOST_PLATFORM"
-          echo "BOOST_PLATFORM=$BOOST_PLATFORM" >> $GITHUB_ENV
-
-      - name: Install boost
-        if: env.ENABLE_CONAN != 'ON'
-        uses: MarkusJx/install-boost@v2
-        id: install-boost
-        with:
-          boost_version: ${{ env.BOOST_VERSION }}
-          platform_version: ${{ env.BOOST_PLATFORM }}
+          # Install dev dependencies the traditional way
+          case "${RUNNER_OS}" in
+            Linux)
+              sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev libtbb-dev libboost-all-dev
+            ;;
+            macOS)
+              brew install libzip lua tbb boost
+            ;;
+            Windows)
+              # nuget does not provide BoostConfig.cmake etc.
+              # nuget install libzip                      -x -OutputDirectory nuget
+              # nuget install libxml2-vc140-static-32_64  -x -OutputDirectory nuget
+              # nuget install lua                         -x -OutputDirectory nuget
+              # nuget install boost                       -x -OutputDirectory nuget
+              # nuget install inteltbb.devel.win          -x -OutputDirectory nuget
+              # choco has only half the packages, servers always time out
+              # choco install lua52 tbb boost-msvc-14.3
+              # vcpkg is the same as Conan only much slower
+              # vcpkg install boost bzip2 libxml2 libzip lua tbb
+            ;;
+          esac
 
       - name: Prepare for building
         run: |
-          echo "Boost_DIR=${{ steps.install-boost.outputs.BOOST_ROOT }}" >> $GITHUB_ENV
-
-          ccache --max-size=256M
-          ccache --zero-stats
+          if [[ "${ENABLE_CCACHE}" == "ON" ]]; then
+            ccache --version
+            ccache --max-size=256M
+            ccache --zero-stats
+          fi
 
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
-            if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
-              lcov --directory . --zerocounters # clean cached files
-            fi
             if [[ "$ENABLE_ASAN" == "ON" ]]; then
               export "LD_LIBRARY_PATH=$(dirname `clang -print-file-name=libclang_rt.asan-x86_64.so`):$LD_LIBRARY_PATH"
               echo "ASAN_OPTIONS=log_path=${LOG_DIR}/asan.log:print_suppressions=0:suppressions=${CI_DIR}/addresssanitizer.conf" >> $GITHUB_ENV
@@ -374,22 +330,6 @@ jobs:
             echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
           fi
 
-          # if [[ "${RUNNER_OS}" == "macOS" ]]; then
-          #   # missing from GCC path, needed for conan builds of libiconv, for example.
-          #   sudo xcode-select --switch /Library/Developer/CommandLineTools
-          #   echo "LIBRARY_PATH=${LIBRARY_PATH}:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib" >> $GITHUB_ENV
-          #   echo "CPATH=${CPATH}:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include" >> $GITHUB_ENV
-          # fi
-
-          if [[ "${ENABLE_CONAN}" == "ON" ]]; then
-            cat "$CONAN_GENERATORS_DIR/conan-build-env.sh"
-            source "$CONAN_GENERATORS_DIR/conan-build-env.sh"
-            # set Conan build environment for future bash invocations
-            echo "BASH_ENV=$CONAN_GENERATORS_DIR/conan-build-env.sh" >> $GITHUB_ENV
-          else
-            echo "BUILD_DIR=build/" >> $GITHUB_ENV
-          fi
-
           echo "::group::PATH"
           echo PATH=${PATH}
           echo LIBRARY_PATH=${LIBRARY_PATH}
@@ -399,25 +339,27 @@ jobs:
 
       - name: Cmake configure
         run: |
-          if [[ "${ENABLE_CONAN}" == "ON" ]]; then
-            cmake -B ${CONAN_BUILD_DIR} --preset ${CONAN_CMAKE_PRESET}
-          else
-            cmake -B ${BUILD_DIR} \
-                -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-                -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} \
-                -DBUILD_NODE_BINDINGS=${BUILD_NODE_BINDINGS:-OFF} \
-                -DUSE_CCACHE=${USE_CCACHE} \
-                -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
-                -DENABLE_CLANG_TIDY=${ENABLE_CLANG_TIDY:-OFF} \
-                -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} \
-                -DENABLE_ASAN=${ENABLE_ASAN:-OFF} \
-                -DENABLE_UBSAN=${ENABLE_UBSAN:-OFF} \
-                -DENABLE_LTO=${ENABLE_LTO:-ON}
-          fi
+          cmake --preset ${CMAKE_CONFIGURE_PRESET_NAME}
+          cat build/osrm-run.env >> $GITHUB_ENV
 
-      - name: Cmake build core
+      - name: Build core
         run: |
-          cmake --build ${CMAKE_BINARY_DIR} --config ${BUILD_TYPE} -j ${JOBS}
+          cmake --build --preset ${CMAKE_BUILD_PRESET_NAME}
+      - name: Build unit tests
+
+        if: env.BUILD_UNIT_TESTS == 'ON'
+        run: |
+          cmake --build --preset ${CMAKE_BUILD_PRESET_NAME} --target tests
+
+      - name: Build benchmarks
+        if: env.BUILD_BENCHMARKS == 'ON'
+        run: |
+          cmake --build --preset ${CMAKE_BUILD_PRESET_NAME} --target benchmarks
+
+      - name: Build Node package
+        if: env.BUILD_NODE_PACKAGE == 'ON'
+        run: |
+          ${CI_DIR}/build_node_package.sh
 
       - name: Debug build
         if: always()
@@ -426,30 +368,33 @@ jobs:
           ls -al ${OSRM_BUILD_DIR}
           echo "::endgroup::"
 
-          if [[ "${BUILD_NODE_BINDINGS}" == "ON" ]]; then
-            echo "::group::ls ${OSRM_NODEJS_BUILD_DIR}"
-            ls -al ${OSRM_NODEJS_BUILD_DIR}
-            echo "::endgroup::"
-          fi
+          echo "::group::ls ${OSRM_UNIT_TESTS_BUILD_DIR}"
+          ls -al ${OSRM_UNIT_TESTS_BUILD_DIR} || true
+          echo "::endgroup::"
 
-      - name: Cmake build unit tests
-        if: env.UNIT_TESTS == 'ON'
-        run: |
-          echo "::group::make tests"
-          cmake --build ${CMAKE_BINARY_DIR} --config ${BUILD_TYPE} -j ${JOBS} --target tests benchmarks
+          echo "::group::ls ${OSRM_BENCHMARKS_BUILD_DIR}"
+          ls -al ${OSRM_BENCHMARKS_BUILD_DIR} || true
+          echo "::endgroup::"
+
+          echo "::group::ls ${OSRM_NODEJS_BUILD_DIR}"
+          ls -al ${OSRM_NODEJS_BUILD_DIR} || true
+          echo "::endgroup::"
+
+          echo "::group::ls ${NAPI_DIR}"
+          ls -al ${NAPI_DIR} || true
           echo "::endgroup::"
 
       # Save compiler cache
 
       - name: Save CCache
-        if: always() && env.USE_CCACHE == 'ccache'
+        if: always() && env.ENABLE_CCACHE == 'ON'
         uses: actions/cache/save@v4
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ steps.cache-ccache-restore.outputs.cache-primary-key }}
 
       - name: Show CCache statistics
-        if: always() && env.USE_CCACHE == 'ccache'
+        if: always() && env.ENABLE_CCACHE == 'ON'
         run: |
           ccache -s
           echo "::group::ccache -p"
@@ -457,14 +402,14 @@ jobs:
           echo "::endgroup::"
 
       - name: Save SCCache
-        if: always() && env.USE_CCACHE == 'sccache'
+        if: always() && env.ENABLE_SCCACHE == 'ON'
         uses: actions/cache/save@v4
         with:
           path: ${{ env.SCCACHE_DIR }}
           key: ${{ steps.cache-sccache-restore.outputs.cache-primary-key }}
 
       - name: Show SCCache statistics
-        if: always() && env.USE_CCACHE == 'sccache'
+        if: env.ENABLE_SCCACHE == 'ON'
         run: |
           sccache --show-stats
           echo "::group::show log file"
@@ -476,10 +421,10 @@ jobs:
       - name: Prepare for testing
         run: |
           if [[ "${ENABLE_CONAN}" == "ON" ]]; then
-            cat "$CONAN_GENERATORS_DIR/conan-run-env.sh"
-            source "$CONAN_GENERATORS_DIR/conan-run-env.sh"
+            cat "build/conan-run-env.sh"
+            source "build/conan-run-env.sh"
             # set this environment for future bash invocations
-            echo "BASH_ENV=$CONAN_GENERATORS_DIR/conan-run-env.sh" >> $GITHUB_ENV
+            echo "BASH_ENV=build/conan-run-env.sh" >> $GITHUB_ENV
           fi
 
           echo "::group::PATH"
@@ -490,43 +435,52 @@ jobs:
           echo "::endgroup::"
 
       - name: Run unit tests
-        if: env.UNIT_TESTS == 'ON'
+        if: env.RUN_UNIT_TESTS == 'ON'
         run: |
-          make -C ${TEST_DIR}/data
+          echo "::group::ls make -C test/data monaco"
+          $MAKE -C "$TEST_DIR/data" monaco
+          echo "::endgroup::"
 
-          if [[ "${RUNNER_OS}" == "Windows" ]]; then
-            # Windows flunks a test
-            set +o errexit
-          fi
+          echo "::group::ls test/data/ch"
+          ls -al "$TEST_DIR/data/ch/" || true
+          echo "::endgroup::"
+          echo "::group::ls test/data/mld"
+          ls -al "$TEST_DIR/data/mld/" || true
+          echo "::endgroup::"
 
-          cd ${OSRM_UNIT_TESTS_BUILD_DIR}
-          for i in *-tests${EXECUTABLE_SUFFIX}; do
-            echo "::group::Running $i"
-            ./$i
-            echo "::endgroup::"
-          done
+          echo "::group::ctest info"
+          ctest --version
+          ctest --help
+          echo "::endgroup::"
+
+          ctest --preset ${CMAKE_TEST_PRESET_NAME} -L tests --no-tests=error -V -O ${LOG_DIR}/unit_test.log
 
       - name: Run Cucumber tests
-        if: env.CUCUMBER_TESTS == 'ON'
+        if: env.RUN_CUCUMBER_TESTS == 'ON'
         run: |
           npm test -- --parallel $JOBS
 
-      - name: Run Node package tests
-        if: env.NODE_PACKAGE_TESTS == 'ON'
-        uses: ./.github/actions/node-package-tests
+      - name: Run benchmarks
+        if: env.RUN_BENCHMARKS == 'ON'
+        continue-on-error: true
+        uses: ./.github/actions/benchmarks
 
-      - name: Upload test logs
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          if-no-files-found: ignore
-          name: ${{ matrix.name }}-test-logs
-          path: ${{ env.LOG_DIR }}
-
-      - name: Build Node package
-        if: env.BUILD_NODE_PACKAGE == 'ON'
+      - name: Run coverage
+        if: env.ENABLE_COVERAGE == 'XXX'
+        continue-on-error: true
         run: |
-          ${CI_DIR}/node_package.sh
+            # doesn't seem to work with tbb threads
+            # https://github.com/linux-test-project/lcov/discussions/234
+            cd "${OSRM_UNIT_TESTS_BUILD_DIR}"
+            lcov --directory . --zerocounters
+            llvm-profdata-${COMPILER_VERSION} merge -sparse *.profraw -o coverage.profdata
+            llvm-cov-${COMPILER_VERSION} export -format=lcov --instr-profile coverage.profdata \
+                osrm-extract -object osrm-contract -object osrm-partition -object osrm-customize > coverage.info
+            genhtml --ignore-errors inconsistent,corrupt,unsupported -o ${LOG_DIR} coverage.info
+
+      - name: Run Node tests
+        if: env.RUN_NODE_TESTS == 'ON'
+        uses: ./.github/actions/node-package-tests
 
       - name: Publish Node package
         if: env.BUILD_NODE_PACKAGE == 'ON' && env.PUBLISH == 'ON'
@@ -534,13 +488,28 @@ jobs:
         with:
           allowUpdates: true
           artifactErrorsFailBuild: true
-          artifacts: build/stage/**/*.tar.gz
+          artifacts: build/nodejs/build/stage/**/*.tar.gz
           omitBody: true
           omitBodyDuringUpdate: true
           omitName: true
           omitNameDuringUpdate: true
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Node package
+        if: env.BUILD_NODE_PACKAGE == 'ON'
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-package-${{ matrix.name }}
+          path: build/nodejs/build/stage/**/*.tar.gz
+
+      - name: Upload log files
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.name }}-test-logs
+          path: ${{ env.LOG_DIR }}
 
   ci-complete:
     runs-on: ubuntu-latest

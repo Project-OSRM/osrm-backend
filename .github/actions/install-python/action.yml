@@ -1,0 +1,35 @@
+---
+name: "Install Python"
+description: |
+  Installs python dependencies from requirements*.txt.
+
+  Prepends .venv/bin to PATH, so there is no need to activate at every future step.
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Restore Pip cache
+      uses: actions/cache/restore@v4
+      id: pip-cache-restore
+      with:
+        path: .venv
+        key: pip-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('requirements*.txt') }}
+        restore-keys: pip-${{ runner.os }}-${{ runner.arch }}-
+
+    - name: Install Python dependencies
+      id: install-conan
+      shell: bash
+      run: |
+        scripts/install_venv.sh
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
+          echo "$VIRTUAL_ENV/Scripts" >> $GITHUB_PATH
+        else
+          echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
+        fi
+
+    - name: Save Pip cache
+      if: steps.pip-cache-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: .venv
+        key: ${{ steps.pip-cache-restore.outputs.cache-primary-key }}

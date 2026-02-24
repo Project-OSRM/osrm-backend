@@ -13,7 +13,7 @@ using namespace osrm;
 
 BOOST_AUTO_TEST_CASE(list_tar_file)
 {
-    storage::tar::FileReader reader(TEST_DATA_DIR "/tar_test.tar",
+    storage::tar::FileReader reader(OSRM_TEST_DATA_DIR "/tar_test.tar",
                                     storage::tar::FileReader::HasNoFingerprint);
 
     std::vector<storage::tar::FileReader::FileEntry> file_list;
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(list_tar_file)
 
 BOOST_AUTO_TEST_CASE(read_tar_file)
 {
-    storage::tar::FileReader reader(TEST_DATA_DIR "/tar_test.tar",
+    storage::tar::FileReader reader(OSRM_TEST_DATA_DIR "/tar_test.tar",
                                     storage::tar::FileReader::HasNoFingerprint);
 
     char result_0[4];
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(read_tar_file)
 
 BOOST_AUTO_TEST_CASE(write_tar_file)
 {
-    TemporaryFile tmp{TEST_DATA_DIR "/tar_write_test.tar"};
+    TemporaryFile tmp{OSRM_TEST_DATA_DIR "/tar_write_test.tar"};
 
     std::uint64_t single_64bit_integer = 0xDEADBEEFAABBCCDD;
     std::uint32_t single_32bit_integer = 0xDEADBEEF;
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(write_tar_file)
 
 BOOST_AUTO_TEST_CASE(continue_write_tar_file)
 {
-    TemporaryFile tmp{TEST_DATA_DIR "/tar_continue_write_test.tar"};
+    TemporaryFile tmp{OSRM_TEST_DATA_DIR "/tar_continue_write_test.tar"};
 
     // more than 64 values to ensure we fill up more than one tar block of 512 bytes
     std::vector<std::uint64_t> vector_64bit = {0,
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(continue_write_tar_file)
 // Enable with ./storage-tests --run_test=tar/write_huge_tar_file
 BOOST_AUTO_TEST_CASE(write_huge_tar_file, *boost::unit_test::disabled())
 {
-    TemporaryFile tmp{TEST_DATA_DIR "/tar_huge_write_test.tar"};
+    TemporaryFile tmp{OSRM_TEST_DATA_DIR "/tar_huge_write_test.tar"};
 
     std::uint64_t reference_checksum = 0;
     {

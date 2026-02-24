@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(timezoner_test)
     std::time_t now = time(0);
     BOOST_CHECK_NO_THROW(Timezoner tz(json, now));
 
-    std::filesystem::path test_path(TEST_DATA_DIR "/test.geojson");
+    std::filesystem::path test_path(TEST_UPDATER_DATA_DIR "/test.geojson");
     BOOST_CHECK_NO_THROW(Timezoner tz(test_path, now));
 
     // missing opening bracket

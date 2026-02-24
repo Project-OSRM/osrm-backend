@@ -115,6 +115,9 @@ class Server : public std::enable_shared_from_this<Server>
             threads.emplace_back([this]() { io_context.run(); });
         }
 
+        // Note: the Cucumber test suite depends on this exact wording
+        util::Log() << "running and waiting for requests";
+
         // Wait for all threads to complete
         for (auto &thread : threads)
         {

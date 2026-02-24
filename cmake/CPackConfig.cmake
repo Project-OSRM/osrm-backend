@@ -14,8 +14,8 @@ SET(CPACK_PACKAGE_CONTACT "Project OSRM <info@project-osrm.org>")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.TXT")
 
 SET(CPACK_STRIP_FILES "TRUE")
-file(GLOB_RECURSE ProfileGlob ${CMAKE_SOURCE_DIR}/profiles/*)
-install(FILES ${ProfileGlob} DESTINATION "share/doc/${CPACK_PACKAGE_NAME}/profiles")
+# file(GLOB_RECURSE ProfileGlob ${CMAKE_SOURCE_DIR}/profiles/*)
+# install(FILES ${ProfileGlob} DESTINATION "share/doc/${CPACK_PACKAGE_NAME}/profiles")
 
 find_program(DPKG_PROGRAM dpkg DOC "dpkg program of Debian-based systems")
 if(DPKG_PROGRAM)

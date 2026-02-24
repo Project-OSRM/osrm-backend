@@ -4,7 +4,7 @@
 
 #include "osrm/exception.hpp"
 
-BOOST_AUTO_TEST_SUITE(table)
+BOOST_AUTO_TEST_SUITE(algorithm)
 
 BOOST_AUTO_TEST_CASE(test_incompatible_with_mld)
 {

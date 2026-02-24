@@ -1,80 +1,86 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.31)
+cmake_policy(SET CMP0042 NEW)
 
-message(STATUS "Building node_osrm")
-
+set(CMAKE_CXX_STANDARD 20)
 set(NAPI_VERSION 8)
 add_definitions(-DNAPI_VERSION=${NAPI_VERSION})
 
-set(BINDING_DIR "${PROJECT_SOURCE_DIR}/lib/binding_napi_v8")
-
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/src/nodejs")
-# list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/node_modules/node-cmake")
-
 include(NodeJS)
 nodejs_init()
 
-message(STATUS "Configuring node_osrm bindings for NodeJs ${NODEJS_VERSION}")
-
-
 add_nodejs_module(node_osrm node_osrm.cpp)
-set_target_properties(node_osrm PROPERTIES CXX_STANDARD 20)
+
 # TODO: we disable clang-tidy for this target, because it causes errors in third-party NodeJs related headers
 set_target_properties(node_osrm PROPERTIES CXX_CLANG_TIDY "")
 # TODO: we turn off some warnings for this target, because it causes errors in third-party NodeJs related headers
 target_no_warning(node_osrm suggest-destructor-override)
-target_no_warning(node_osrm suggest-override)
 
-# https://github.com/cjntaylor/node-cmake/issues/53#issuecomment-842357457
-execute_process(COMMAND node -p "require('node-addon-api').include" WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE NODE_ADDON_API_DIR)
-string(REPLACE "\n" "" NODE_ADDON_API_DIR ${NODE_ADDON_API_DIR})
-string(REPLACE "\"" "" NODE_ADDON_API_DIR ${NODE_ADDON_API_DIR})
+execute_process(COMMAND node -p "require('node-addon-api').include.replaceAll('\"', '')"
+                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE NODE_ADDON_API_DIR)
+string(STRIP ${NODE_ADDON_API_DIR} NODE_ADDON_API_DIR)
 
-target_include_directories(node_osrm SYSTEM PRIVATE ${NODE_ADDON_API_DIR})
+message(STATUS "-I ${NODE_ADDON_API_DIR}")
 
+target_include_directories(node_osrm PRIVATE "${NODE_ADDON_API_DIR}")
+target_link_libraries(node_osrm osrm_utils osrm_routed)
 
-target_link_libraries(node_osrm osrm_routed)
+mk_build_dir("OSRM_NODEJS_BUILD_DIR" "${CMAKE_CURRENT_BINARY_DIR}")
+push_env("OSRM_NODEJS_BUILD_DIR" "${OSRM_NODEJS_BUILD_DIR}")
 
-# node_osrm artifacts in ${BINDING_DIR} to depend targets on
-set(ARTIFACTS "")
+# Installation
+# as a prelude to building the nodejs package with gyp
 
-# Create the binding directory at config time
-# MSVC outputs a warning if we make a dependency on this and create it at run time:
-# "MSB8065: Custom build for item binding_dir succeeded, but specified output
-# binding_dir was not created.  Incremental compilation may not work correctly."
-file(MAKE_DIRECTORY ${BINDING_DIR})
+set(OSRM_NODEJS_INSTALL_DIR "${PROJECT_SOURCE_DIR}/build/nodejs")
+push_env("OSRM_NODEJS_INSTALL_DIR" "${OSRM_NODEJS_INSTALL_DIR}")
 
-set(OSRM_BINARIES osrm-extract osrm-contract osrm-routed osrm-datastore osrm-components osrm-partition osrm-customize)
-foreach(binary ${OSRM_BINARIES})
-  set(t "${BINDING_DIR}/${binary}${CMAKE_EXECUTABLE_SUFFIX}")
-  add_custom_command(OUTPUT "${t}"
-                     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${binary}> ${BINDING_DIR}
-                     DEPENDS ${binary})
-  list(APPEND ARTIFACTS "${t}")
-endforeach(binary)
+list(APPEND TARGETS node_osrm)
+list(APPEND TARGETS osrm_routed)
+list(APPEND TARGETS osrm_utils)
+foreach(binary components contract customize datastore extract partition routed)
+  list(APPEND TARGETS "osrm-${binary}")
+endforeach()
 
-# For Conan-enabled builds we copy over tbb's shared objects for packaging.
-# TODO: consider using statically linked tbb library (for node_osrm only!)
-if (ENABLE_CONAN)
-  foreach(libpath ${CONAN_LIB_DIRS_ONETBB})
-    file(GLOB TBBGlob ${libpath}/*.*)
-    foreach(filepath ${TBBGlob})
-      get_filename_component(filename ${filepath} NAME)
-      add_custom_command(OUTPUT "${BINDING_DIR}/${filename}"
-                         COMMAND ${CMAKE_COMMAND} -E copy ${filepath} ${BINDING_DIR}
-                         DEPENDS ${filepath})
-      list(APPEND ARTIFACTS "${BINDING_DIR}/${filename}")
-    endforeach()
-  endforeach()
-endif()
+foreach(t "${TARGETS}")
+  set_property(TARGET ${t} PROPERTY INSTALL_RPATH_USE_LINK_PATH FALSE)
+  if(APPLE)
+    set_property(TARGET ${t} PROPERTY INSTALL_RPATH "@loader_path")
+  endif()
+  if(LINUX)
+    set_property(TARGET ${t} PROPERTY INSTALL_RPATH "\$ORIGIN")
+  endif()
+endforeach()
 
+install(
+  TARGETS ${TARGETS}
+  DESTINATION "${OSRM_NODEJS_INSTALL_DIR}/lib/binding_napi_v${NAPI_VERSION}"
+  COMPONENT node_osrm
+  RUNTIME_DEPENDENCIES
+    PRE_EXCLUDE_REGEXES
+        [[api-ms-win-.*]]
+        [[ext-ms-.*]]
+        [[kernel32\.dll]]
+        [[libc\.so\..*]]
+        [[libgcc_s\.so\..*]]
+        [[libm\.so\..*]]
+        [[libstdc\+\+\.so\..*]]
+    POST_INCLUDE_REGEXES "conan2|boost|tbb|lua|bz2|zstd"
+    POST_EXCLUDE_REGEXES
+        [[.*/system32/.*\.dll]]
+        [[^/lib.*]]
+        [[^/usr/lib.*]]
+    # defined in conan_toolchain.cmake
+    DIRECTORIES ${CONAN_RUNTIME_LIB_DIRS}
+)
 
-add_custom_command(OUTPUT ${BINDING_DIR}/node_osrm.node
-                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:node_osrm> ${BINDING_DIR}
-                   DEPENDS node_osrm)
-list(APPEND ARTIFACTS "${BINDING_DIR}/node_osrm.node")
+install(
+  FILES "index.js"
+  DESTINATION "${OSRM_NODEJS_INSTALL_DIR}/lib"
+  COMPONENT node_osrm
+)
 
-
-message(STATUS "node_osrm artifacts will be copied to: ${BINDING_DIR}")
-add_custom_target(copy_artifacts ALL DEPENDS ${ARTIFACTS})
-
-post_build_dir("OSRM_NODEJS_BUILD_DIR")
+install(
+  FILES "${PROJECT_SOURCE_DIR}/package.json"
+  DESTINATION "${OSRM_NODEJS_INSTALL_DIR}"
+  COMPONENT node_osrm
+)

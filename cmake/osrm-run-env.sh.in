@@ -1,0 +1,23 @@
+# source this file, do not call it
+
+# auto-export everything
+set -a
+
+if [[ -f "build/matrix.env" ]]; then
+    source "build/matrix.env"
+fi
+
+if [[ -f "build/conan.env" ]]; then
+    source "build/conan.env"
+fi
+
+if [[ -f "build/conan-run-env.sh" ]]; then
+    source "build/conan-run-env.sh"
+    export LD_LIBRARY_PATH DYLD_LIBRARY_PATH PATH
+fi
+
+if [[ -f "build/osrm-run.env" ]]; then
+    source "build/osrm-run.env"
+fi
+
+set +a

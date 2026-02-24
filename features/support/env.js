@@ -4,7 +4,6 @@ import fs from 'node:fs';
 import http from 'node:http';
 import https from 'node:https';
 import path from 'node:path';
-import util from 'node:util';
 
 import { OSRMDatastoreLoader, OSRMDirectLoader, OSRMmmapLoader } from '../lib/osrm_loader.js';
 
@@ -69,27 +68,24 @@ class Env {
       path.join(wp.logsPath, `cucumber-global-${this.CUCUMBER_WORKER_ID}.log`),
       'a');
 
-    // heuristically detect .so/.a/.dll/.lib suffix
-    this.LIB = ['lib%s.a', 'lib%s.so', 'lib%s.dylib', '%s.dll', '%s.lib'].find((format) => {
-      try {
-        const lib = path.join(wp.buildPath, util.format(format, 'osrm'));
-        fs.accessSync(lib, fs.constants.F_OK);
-      } catch {
-        return false;
-      }
-      return true;
-    });
+    /** libraries responsible for the cached files */
+    this.libraries = [];
 
-    if (this.LIB === undefined) {
+    const re = /^(lib.*\.(a|so|dylib))|(.*\.(dll|lib))$/;
+    for (const filename of fs.readdirSync(wp.buildPath)) {
+      if (re.test(filename)) {
+        this.libraries.push(path.join(wp.buildPath, filename));
+      }
+    }
+
+    if (this.libraries.length == 0) {
       throw new Error(
-        '*** Unable to detect dynamic or static libosrm libraries',
+        '*** Unable to find osrm libraries',
       );
     }
 
     /** binaries responsible for the cached files */
     this.extractionBinaries = [];
-    /** libraries responsible for the cached files */
-    this.libraries = [];
     /** binaries that must be present */
     this.requiredBinaries = [];
 
@@ -100,10 +96,6 @@ class Env {
     }
     for (const i of 'routed'.split()) {
       this.requiredBinaries.push(path.join(wp.buildPath, `osrm-${i}${this.EXE}`));
-    }
-    for (const i of ['_extract', '_contract', '_customize', '_partition', '']) {
-      const lib = path.join(wp.buildPath, util.format(this.LIB, `osrm${i}`));
-      this.libraries.push(lib);
     }
 
     if (!fs.existsSync(wp.testPath)) {

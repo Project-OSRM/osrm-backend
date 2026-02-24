@@ -1,3 +1,14 @@
 # See: https://pip.pypa.io/en/latest/reference/requirements-file-format/#requirements-file-format
 
-conan == 2.24.0
+conan ~= 2.24
+numpy
+requests
+
+sphinx
+sphinx_rtd_theme
+myst-parser
+mdit-py-plugins
+linkify-it-py
+sphinx-design
+sphinxcontrib.httpdomain
+sphinxcontrib.mermaid

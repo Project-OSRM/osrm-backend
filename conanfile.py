@@ -1,5 +1,7 @@
+import json
 import os
 import re
+import subprocess
 import textwrap
 
 from conan import ConanFile
@@ -7,6 +9,11 @@ from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
 from conan.tools.cmake.cmakedeps.cmakedeps import CMakeDeps
 from conan.tools.env import VirtualBuildEnv, VirtualRunEnv
 from conan.tools.env.environment import _EnvVarPlaceHolder
+
+
+BUILD_ROOT = "build"
+""" The topmost directory in the build hierarchy. The binaries will be output in
+`Release` and `Debug` subdirectories of this directory. """
 
 
 class OsrmGenericBlock:
@@ -43,23 +50,49 @@ def _bash_path(path):
 class OsrmConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
 
-    options = {"shared": [True, False], "node_bindings": [True, False]}
+    # all options default to None because the real defaults are set in CMakeLists.txt
+    # fmt: off
+    options = {
+        "asan":          [None, False, True],
+        "assertions":    [None, False, True],
+        "ccache":        [None, False, True],
+        "coverage":      [None, False, True],
+        "debug_logging": [None, False, True],
+        "fuzzing":       [None, False, True],
+        "lto":           [None, False, True],
+        "node_package":  [None, False, True],
+        "sccache":       [None, False, True],
+        "shared":        [None, False, True],
+        "tsan":          [None, False, True],
+        "ubsan":         [None, False, True],
+        "cc":            [None, "ANY"],
+        "clang_tidy":    [None, "ANY"],
+        "cxx":           [None, "ANY"],
+        "generator":     [None, "ANY"],
+    }
+    # fmt: on
 
-    default_options = {"shared": False, "node_bindings": False}
+    def _getVarValue(self, varvalues):
+        """Returns var value as string, drops placeholders"""
+        values = []
+        for varvalue in varvalues._values:
+            if varvalue is not _EnvVarPlaceHolder:
+                values.append(varvalue)
+        return values
 
     def _writeEnvSh(self, env_vars):
         """
-        Usually Conan puts the environments for building and running into `conanbuild.sh`
-        and `conanrun.sh` and you are supposed to source those files.  The troubles start
-        when we run under Windows and use a bash shell, like we do on github CI.
+        Usually Conan puts the environments for building and running into
+        `conanbuild.sh` and `conanrun.sh` and you are supposed to source those files.
+        The trouble starts when you run under Windows but use a bash shell, like we do
+        on github CI.
 
-        With 5 different configuration entries you can configure Conan almost but not
-        quite entirely unlike the way we want.  To avoid that config hell we just write
-        the file ourselves.
+        Setting 5 different configuration entries we can configure Conan almost but not
+        quite entirely unlike the way we want.  To avoid that configuration hell we just
+        bypass Conan and write the file ourselves. Here goes:
         """
-
         scope = env_vars._scope
-        env_path = os.path.join(self.folders.generators_folder, f"conan-{scope}-env.sh")
+        env_path = os.path.join(self.recipe_folder, BUILD_ROOT, f"conan-{scope}-env.sh")
         with open(env_path, "w") as fp:
             for varname, varvalues in env_vars._values.items():
                 values = []
@@ -100,35 +133,68 @@ class OsrmConan(ConanFile):
                 self.options["onetbb"].shared = True
 
     def generate(self):
-        tc = CMakeToolchain(self)
-        # cache_variables end up in CMakePresets.json
-        # and can be recalled with `cmake --preset conan-relase`
-        # Note: this does not mean we are supporting all of these options yet in conan
-        tc.cache_variables["USE_CONAN"] = True
-        tc.cache_variables["BUILD_SHARED_LIBS"] = self.options.shared or _getOpt(
-            "BUILD_SHARED_LIBS"
-        )
-        tc.cache_variables["BUILD_NODE_BINDINGS"] = (
-            self.options.node_bindings or _getOpt("BUILD_NODE_BINDINGS")
-        )
-        tc.cache_variables["USE_CCACHE"] = os.environ.get("USE_CCACHE", "off")
-        for i in (
-            "ASSERTIONS",
-            "CCACHE",
-            "LTO",
-            "SCCACHE",
-            "ASAN",
-            "UBSAN",
-            "COVERAGE",
-            "CLANG_TIDY",
-        ):
-            tc.cache_variables[f"ENABLE_{i}"] = _getOpt(f"ENABLE_{i}")
+        def cache(env_name, cmake_name, option):
+            if env_name in os.environ:
+                tc.cache_variables[cmake_name] = os.environ[env_name]
+            # why != ? see: https://docs.conan.io/2/reference/conanfile/attributes.html#options
+            elif option != None:  # noqa: E711
+                tc.cache_variables[cmake_name] = option
+
+        def cache_bool(name, option):
+            if option != None:  # noqa: E711
+                tc.cache_variables[name] = option
+            elif name in os.environ:
+                tc.cache_variables[name] = (
+                    os.environ.get(name).lower() in boolean_true_expressions
+                )
+
+        cache_variables = {}
+        generator = None
+
+        # if `decode_matrix.py` output a `/CMakePresets.json`, copy the `cacheVariables`
+        # section
+        try:
+            cmake_presets = os.path.join(self.recipe_folder, "CMakePresets.json")
+            with open(cmake_presets, "r") as fp:
+                js = json.loads(fp.read())
+                preset = js["configurePresets"][0]
+                cache_variables.update(preset.get("cacheVariables", {}))
+                generator = preset.get("generator")
+        except IOError:
+            pass
+
+        if self.options.generator != None:  # noqa: E711
+            generator = str(self.options.generator)
+
+        tc = CMakeToolchain(self, generator=generator)
+        tc.cache_variables.update(cache_variables)
+
+        # CAVEAT: MISNOMER! cache_variables end up in CMakePresets.json
+        # and must be recalled with `cmake --preset conan-release`
+        # they do *NOT* automatically end up as cache variables in Cmake
+        # fmt: off
+        cache_bool("BUILD_SHARED_LIBS",    self.options.shared)
+        cache_bool("BUILD_NODE_PACKAGE",   self.options.node_package)
+        cache_bool("ENABLE_ASSERTIONS",    self.options.assertions)
+        cache_bool("ENABLE_COVERAGE",      self.options.coverage)
+        cache_bool("ENABLE_LTO",           self.options.lto)
+        cache_bool("ENABLE_CCACHE",        self.options.ccache)
+        cache_bool("ENABLE_SCCACHE",       self.options.sccache)
+        cache_bool("ENABLE_ASAN",          self.options.asan)
+        cache_bool("ENABLE_TSAN",          self.options.tsan)
+        cache_bool("ENABLE_UBSAN",         self.options.ubsan)
+        cache_bool("ENABLE_FUZZING",       self.options.fuzzing)
+        cache_bool("ENABLE_DEBUG_LOGGING", self.options.debug_logging)
+
+        cache("CC",         "CMAKE_C_COMPILER",     self.options.cc)
+        cache("CXX",        "CMAKE_CXX_COMPILER",   self.options.cxx)
+        cache("CLANG_TIDY", "CMAKE_CXX_CLANG_TIDY", self.options.clang_tidy)
+        # fmt: on
 
         # OSRM uses C++20
-        # replace the block that would set the cpp standard with our own custom block
-        # tc.blocks["cppstd"] = OsrmGenericBlock
+        # remove the block that would set the cpp standard
+        # tc.blocks.remove("cppstd")
         tc.blocks["generic"] = OsrmGenericBlock
-        tc.generate()
 
         # add variable names compatible with the non-conan build
         # eg. "LUA_LIBRARIES" in addition to "lua_LIBRARIES"
@@ -143,28 +209,41 @@ class OsrmConan(ConanFile):
         vre.generate()
         vbe.generate()
 
+        run_vars = vre.environment().vars(self, scope="run")
         self._writeEnvSh(vbe.environment().vars(self, scope="build"))
-        self._writeEnvSh(vre.environment().vars(self, scope="run"))
+        self._writeEnvSh(run_vars)
 
-        if "GITHUB_ENV" in os.environ:
-            with open(os.environ["GITHUB_ENV"], "a") as fp:
-                build_dir = _bash_path(self.folders.build_folder)
-                generators_dir = _bash_path(self.folders.generators_folder)
-                preset = f"conan-{self.settings.build_type}".lower()
-                if self.settings.os == "Windows":
-                    preset = "conan-default"
+        # Put an environment into the well-known location `build/conan.env`
+        with open(os.path.join(self.recipe_folder, BUILD_ROOT, "conan.env"), "w") as fp:
+            generators_dir = _bash_path(self.folders.generators_folder)
+            configure_preset = f"conan-{self.settings.build_type}".lower()
+            build_preset = configure_preset
+            test_preset = configure_preset
+            if self.settings.os == "Windows":
+                configure_preset = "conan-default"
 
-                fp.write(f"CONAN_BUILD_DIR={build_dir}\n")
-                fp.write(f"CONAN_GENERATORS_DIR={generators_dir}\n")
-                fp.write(f"CONAN_CMAKE_PRESET={preset}\n")
+            fp.write(f"CMAKE_CONFIGURE_PRESET_NAME={configure_preset}\n")
+            fp.write(f"CMAKE_BUILD_PRESET_NAME={build_preset}\n")
+            fp.write(f"CMAKE_TEST_PRESET_NAME={test_preset}\n")
+            fp.write(f"CONAN_GENERATORS_DIR={generators_dir}\n")
+
+            # for tools that do not understand CMakePresets.json like eg. cmake --install
+            fp.write(f"OSRM_CONFIG={self.settings.build_type}\n")
+
+        tc.cache_variables["USE_CONAN"] = True
+        tc.generate()
 
     def layout(self):
-        cmake_layout(self)
+        cmake_layout(self, build_folder=BUILD_ROOT)
 
     def build(self):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
+        if _getOpt("BUILD_NODE_PACKAGE") or self.options.node_package:
+            subprocess.call(
+                "scripts/ci/build_node_package.sh", shell=True, cwd=self.recipe_folder
+            )
 
 
 if __name__ == "__main__":

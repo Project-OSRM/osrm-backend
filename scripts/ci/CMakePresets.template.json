@@ -1,0 +1,37 @@
+{
+    "version": 3,
+    "vendor": {
+        "OSRM": {}
+    },
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 15,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "$name",
+            "displayName": "'$name' config",
+            "description": "'$name' configure using 'Unix Makefiles' generator",
+            "binaryDir": "$binary_dir"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "$name",
+            "configurePreset": "$name",
+            "configuration": "$config",
+            "jobs": $jobs
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "$name",
+            "configurePreset": "$name",
+            "configuration": "$config",
+            "execution": {
+                "jobs": $jobs
+            }
+        }
+    ]
+}

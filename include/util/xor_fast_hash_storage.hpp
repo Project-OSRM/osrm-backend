@@ -73,7 +73,7 @@ class XORFastHashStorage
 
   private:
     std::vector<HashCell> positions;
-    XORFastHash<MaxNumElements> fast_hasher;
+    XORFastHash fast_hasher;
     unsigned current_timestamp;
 };
 } // namespace osrm::util

@@ -1,0 +1,46 @@
+---
+name: "Run benchmarks"
+description: |
+  Runs the benchmarks
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Restore benchmark cache
+      uses: actions/cache/restore@v4
+      id: berlin-cache-restore
+      with:
+        path: ${{ env.TEST_DIR }}/data/berlin.osm.pbf
+        key: berlin-osm-pbf-
+
+    - name: Download benchmark data
+      if: steps.berlin-cache-restore.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        curl https://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf \
+            -o ${TEST_DIR}/data/berlin.osm.pbf --location --silent
+
+    - name: Run benchmarks
+      shell: bash
+      run: |
+        echo "::group::ls make -C test/data monaco berlin"
+        $MAKE -C "$TEST_DIR/data" monaco berlin
+        echo "::endgroup::"
+
+        # ctest --preset conan-release -L benchmarks --no-tests=error -V -O ${LOG_DIR}/unit_test.log
+
+        "${CI_DIR}/run_e2e_benchmarks.sh"
+        killall -9 osrm-routed || true
+
+        for i in "${LOG_DIR}/"*.bench; do
+          echo "::group::$i"
+          cat $i
+          echo "::endgroup::"
+        done
+
+    - name: Save benchmark cache
+      if: always() && steps.berlin-cache-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ env.TEST_DIR }}/data/berlin.osm.pbf
+        key: ${{ steps.berlin-cache-restore.outputs.cache-primary-key }}

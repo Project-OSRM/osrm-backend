@@ -26,8 +26,8 @@ template <class T> void dont_optimize_away(T &&datum) { T local = datum; }
 template <class T> void dont_optimize_away(T &&datum) { asm volatile("" : "+r"(datum)); }
 #endif
 
-template <std::size_t num_rounds, std::size_t num_entries, typename VectorT>
-auto measure_random_access()
+template <typename VectorT>
+auto measure_random_access(std::size_t num_rounds, std::size_t num_entries)
 {
     std::vector<std::size_t> indices(num_entries);
     std::iota(indices.begin(), indices.end(), 0);
@@ -62,13 +62,21 @@ auto measure_random_access()
     return Measurement{TIMER_MSEC(write), TIMER_MSEC(read)};
 }
 
-int main(int, char **)
+int main(int argc, char **argv)
 {
+    if (argc < 3)
+    {
+        std::cout << "Usage " << argv[0] << " ROUNDS SIZE";
+        return -1;
+    }
+
+    const std::size_t rounds = strtol(argv[1], nullptr, 10);
+    const std::size_t size = strtol(argv[2], nullptr, 10);
+
     util::LogPolicy::GetInstance().Unmute();
 
-    auto result_plain = measure_random_access<10000, 1000000, std::vector<std::uint32_t>>();
-    auto result_packed =
-        measure_random_access<10000, 1000000, util::PackedVector<std::uint32_t, 22>>();
+    auto result_plain = measure_random_access<std::vector<std::uint32_t>>(rounds, size);
+    auto result_packed = measure_random_access<util::PackedVector<std::uint32_t, 22>>(rounds, size);
 
     auto write_slowdown = result_packed.random_write_ms / result_plain.random_write_ms;
     auto read_slowdown = result_packed.random_read_ms / result_plain.random_read_ms;

@@ -1,69 +1,73 @@
-DATA_NAME:=monaco
-OSRM_BUILD_DIR?=../../build
-PROFILE_ROOT:=../../profiles
-SCRIPT_ROOT:=../../scripts
-OSRM_EXTRACT:=$(OSRM_BUILD_DIR)/osrm-extract$(EXECUTABLE_SUFFIX)
-OSRM_CONTRACT:=$(OSRM_BUILD_DIR)/osrm-contract$(EXECUTABLE_SUFFIX)
-OSRM_PARTITION:=$(OSRM_BUILD_DIR)/osrm-partition$(EXECUTABLE_SUFFIX)
-OSRM_CUSTOMIZE:=$(OSRM_BUILD_DIR)/osrm-customize$(EXECUTABLE_SUFFIX)
-OSRM_ROUTED:=$(OSRM_BUILD_DIR)/osrm-routed$(EXECUTABLE_SUFFIX)
-POLY2REQ:=$(SCRIPT_ROOT)/poly2req.js
-MD5SUM:=$(SCRIPT_ROOT)/md5sum.js
-TIMER:=$(SCRIPT_ROOT)/timer.js
-PROFILE:=$(PROFILE_ROOT)/car.lua
-TMP:=`node $(SCRIPT_ROOT)/get-tmp-dir.js`
+# Builds the monaco and berlin datasets into
+#
+# - test/data/ch
+# - test/data/mld
+# - test/data/tmp  # used as scratch
+#
+# Note: the files test/data/*.orsm.* may also come from library-extract-tests.
 
-all: data
+DATASETS = monaco berlin
 
-data: ch/$(DATA_NAME).osrm.hsgr mld/$(DATA_NAME).osrm.partition
+all: monaco
+
+monaco: verify  # verify first, extract later
+
+OSRM_EXTRACT:=$(OSRM_BUILD_DIR)/osrm-extract$(EXE)
+OSRM_CONTRACT:=$(OSRM_BUILD_DIR)/osrm-contract$(EXE)
+OSRM_PARTITION:=$(OSRM_BUILD_DIR)/osrm-partition$(EXE)
+OSRM_CUSTOMIZE:=$(OSRM_BUILD_DIR)/osrm-customize$(EXE)
+OSRM_ROUTED:=$(OSRM_BUILD_DIR)/osrm-routed$(EXE)
+MD5SUM:=$(PROJECT_SOURCE_DIR)/scripts/md5sum.js
+PROFILE:=$(PROJECT_SOURCE_DIR)/profiles/car.lua
+
+tmp/%.osrm.edges: %.osm.pbf $(PROFILE) $(OSRM_EXTRACT)
+	mkdir -p tmp
+	cp $< tmp/
+	@echo "Running osrm-extraction ..."
+	cd tmp && $(OSRM_EXTRACT) $< -p $(PROFILE) > /dev/null
+
+ch/%.osrm.hsgr: tmp/%.osrm.edges $(OSRM_CONTRACT)
+	mkdir -p ch
+	cp tmp/$*.osrm.* ch/
+	@echo "Running osrm-contract ..."
+	cd ch && $(OSRM_CONTRACT) $*.osrm > /dev/null
+
+mld/%.osrm.mldgr: tmp/%.osrm.edges $(OSRM_PARTITION) $(OSRM_CUSTOMIZE)
+	mkdir -p mld
+	cp tmp/$*.osrm.* mld/
+	@echo "Running osrm-partition ..."
+	cd mld && $(OSRM_PARTITION) $*.osrm > /dev/null
+	@echo "Running osrm-customize ..."
+	cd mld && $(OSRM_CUSTOMIZE) $*.osrm > /dev/null
+
+define OSRM_template =
+
+$(1): ch/$(1).osrm.hsgr mld/$(1).osrm.mldgr
+
+.PRECIOUS: tmp/$(1).osrm.edges
+
+clean-$(1):
+	-rm -rf ch/$(1).* mld/$(1).* tmp/$(1).*
+
+clean: clean-$(1)
+
+endef
+
+$(foreach ds,$(DATASETS),$(eval $(call OSRM_template,$(ds))))
+
+berlin.osm.pbf:
+	curl https://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf -o $@ --location --silent
+
+%.md5sum: %.osm.pbf
+	$(MD5SUM) $< > $@
 
 clean:
-	-rm -r $(DATA_NAME).*
-	-rm -r ch mld
+	-rm -rf *.osrm.*
 
-ch/$(DATA_NAME).osrm: $(DATA_NAME).osrm
-	mkdir -p ch
-	cp $(DATA_NAME).osrm.* ch/
+checksum: monaco.md5sum
 
-mld/$(DATA_NAME).osrm: $(DATA_NAME).osrm
-	mkdir -p mld
-	cp $(DATA_NAME).osrm.* mld/
+verify:
+	@echo -n "Verifying data file integrity "
+	@$(MD5SUM) -c monaco.md5sum
 
-$(DATA_NAME).osrm: $(DATA_NAME).osm.pbf $(DATA_NAME).poly $(PROFILE) $(OSRM_EXTRACT)
-	@echo "Verifying data file integrity..."
-	$(MD5SUM) -c data.md5sum
-	@echo "Running osrm-extract..."
-	$(TIMER) "osrm-extract\t$@" $(OSRM_EXTRACT) $< -p $(PROFILE)
-
-ch/$(DATA_NAME).osrm.hsgr: ch/$(DATA_NAME).osrm $(PROFILE) $(OSRM_CONTRACT)
-	@echo "Running osrm-contract..."
-	$(TIMER) "osrm-contract\t$@" $(OSRM_CONTRACT) $<
-
-mld/$(DATA_NAME).osrm.partition: mld/$(DATA_NAME).osrm $(PROFILE) $(OSRM_PARTITION)
-	@echo "Running osrm-partition..."
-	$(TIMER) "osrm-partition\t$@" $(OSRM_PARTITION) $<
-	$(TIMER) "osrm-customize\t$@" $(OSRM_CUSTOMIZE) $<
-
-$(DATA_NAME).requests: $(DATA_NAME).poly
-	$(POLY2REQ) $(DATA_NAME).poly > $(DATA_NAME).requests
-
-benchmark: data $(DATA_NAME).requests
-	@echo "Running benchmark..."
-	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=CH ch/$(DATA_NAME).osrm > /dev/null & echo "$$!" > osrm-routed.pid'
-	@sleep 1
-	$(TIMER) "queries\tCH" "cat $(DATA_NAME).requests | xargs curl &> /dev/null"
-	@cat osrm-routed.pid | xargs kill
-	@rm osrm-routed.pid
-	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=MLD mld/$(DATA_NAME).osrm > /dev/null & echo "$$!" > osrm-routed.pid'
-	@sleep 1
-	$(TIMER) "queries\tMLD" "cat $(DATA_NAME).requests | xargs curl &> /dev/null"
-	@cat osrm-routed.pid | xargs kill
-	@rm osrm-routed.pid
-	@echo "**** timings ***"
-	@cat $(TMP)/osrm.timings
-	@echo "****************"
-
-checksum:
-	$(MD5SUM) $(DATA_NAME).osm.pbf > data.md5sum
-
-.PHONY: clean checksum benchmark data
+.PHONY: all clean checksum verify $(DATASETS)

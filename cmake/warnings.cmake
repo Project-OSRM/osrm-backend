@@ -12,13 +12,13 @@ macro (add_warning flag)
     if (SUPPORTS_CXXFLAG_${underscored_flag})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W${flag}")
     else()
-        message (STATUS "Flag -W${flag} is unsupported")
+        # message (STATUS "Flag -W${flag} is unsupported")
     endif()
 
     if (SUPPORTS_CFLAG_${underscored_flag})
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -W${flag}")
     else()
-        message(STATUS "Flag -W${flag} is unsupported")
+        # message(STATUS "Flag -W${flag} is unsupported")
     endif()
 endmacro()
 
@@ -69,7 +69,7 @@ macro (target_add_warning target flag)
     if (SUPPORTS_CXXFLAG_${underscored_flag})
         target_compile_options (${target} PRIVATE "-W${flag}")
     else ()
-        message (STATUS "Flag -W${flag} is unsupported")
+        # message (STATUS "Flag -W${flag} is unsupported")
     endif ()
 endmacro ()
 
@@ -79,7 +79,7 @@ endmacro ()
 
 if(MSVC)
   # Set warning level 3 (default level with reasonable warnings)
-  msvc_warning_level(2)
+  msvc_warning_level(3)
   # set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 else()
   add_warning(all)
@@ -158,7 +158,7 @@ if(MSVC)
   msvc_disable_warning(5264)  # Variable declared but not used
 
   # these are flooding the logs
-  msvc_disable_warning(4068)  # Unknown Pragma (pragmas are  supposed to be unknown to other compilers!)
+  msvc_disable_warning(4068)  # Unknown Pragma (pragmas are supposed to be unknown to other compilers!)
   msvc_disable_warning(4244)  # Data conversion with possible loss
   msvc_disable_warning(4267)  # Data conversion with possible loss
 

@@ -60,6 +60,47 @@ void test_route_same_coordinates_fixture(bool use_json_only_api)
 
     const auto location = json::Array{{{7.437070}, {43.749248}}};
 
+    // object creation in two phases because MSVC goes out of heap space when trying to
+    // grok this in one piece
+    const auto steps = json::Array{
+        {{json::Object{{{"duration", 0.},
+                        {"distance", 0.},
+                        {"weight", 0.},
+                        {"geometry", "yw_jGupkl@??"},
+                        {"name", "Boulevard du Larvotto"},
+                        {"mode", "driving"},
+                        {"driving_side", "right"},
+                        {"maneuver",
+                         json::Object{{
+                             {"location", location},
+                             {"bearing_before", 0},
+                             {"bearing_after", 238},
+                             {"type", "depart"},
+                         }}},
+                        {"intersections",
+                         json::Array{{json::Object{{{"location", location},
+                                                    {"bearings", json::Array{{238}}},
+                                                    {"entry", json::Array{{json::True()}}},
+                                                    {"out", 0}}}}}}}}},
+
+         json::Object{{{"duration", 0.},
+                       {"distance", 0.},
+                       {"weight", 0.},
+                       {"geometry", "yw_jGupkl@"},
+                       {"name", "Boulevard du Larvotto"},
+                       {"mode", "driving"},
+                       {"driving_side", "right"},
+                       {"maneuver",
+                        json::Object{{{"location", location},
+                                      {"bearing_before", 238},
+                                      {"bearing_after", 0},
+                                      {"type", "arrive"}}}},
+                       {"intersections",
+                        json::Array{{json::Object{{{"location", location},
+                                                   {"bearings", json::Array{{58}}},
+                                                   {"entry", json::Array{{json::True()}}},
+                                                   {"in", 0}}}}}}}}}};
+
     json::Object reference{
         {{"code", "Ok"},
          {"waypoints",
@@ -72,60 +113,18 @@ void test_route_same_coordinates_fixture(bool use_json_only_api)
                                      {"distance", std::round(0.137249 * 1000000)},
                                      {"hint", ""}}}}}},
          {"routes",
-          json::Array{{json::Object{
-              {{"distance", 0.},
-               {"duration", 0.},
-               {"weight", 0.},
-               {"weight_name", "routability"},
-               {"geometry", "yw_jGupkl@??"},
-               {"legs",
-                json::Array{{json::Object{
-                    {{"distance", 0.},
-                     {"duration", 0.},
-                     {"weight", 0.},
-                     {"summary", "Boulevard du Larvotto"},
-                     {"steps",
-                      json::Array{{{json::Object{{{"duration", 0.},
-                                                  {"distance", 0.},
-                                                  {"weight", 0.},
-                                                  {"geometry", "yw_jGupkl@??"},
-                                                  {"name", "Boulevard du Larvotto"},
-                                                  {"mode", "driving"},
-                                                  {"driving_side", "right"},
-                                                  {"maneuver",
-                                                   json::Object{{
-                                                       {"location", location},
-                                                       {"bearing_before", 0},
-                                                       {"bearing_after", 238},
-                                                       {"type", "depart"},
-                                                   }}},
-                                                  {"intersections",
-                                                   json::Array{{json::Object{
-                                                       {{"location", location},
-                                                        {"bearings", json::Array{{238}}},
-                                                        {"entry", json::Array{{json::True()}}},
-                                                        {"out", 0}}}}}}}}},
-
-                                   json::Object{{{"duration", 0.},
-                                                 {"distance", 0.},
-                                                 {"weight", 0.},
-                                                 {"geometry", "yw_jGupkl@"},
-                                                 {"name", "Boulevard du Larvotto"},
-                                                 {"mode", "driving"},
-                                                 {"driving_side", "right"},
-                                                 {"maneuver",
-                                                  json::Object{{{"location", location},
-                                                                {"bearing_before", 238},
-                                                                {"bearing_after", 0},
-                                                                {"type", "arrive"}}}},
-                                                 {"intersections",
-                                                  json::Array{{json::Object{
-                                                      {{"location", location},
-                                                       {"bearings", json::Array{{58}}},
-                                                       {"entry", json::Array{{json::True()}}},
-                                                       {"in", 0}}}}}}
-
-                                   }}}}}}}}}}}}}}}}};
+          json::Array{
+              {json::Object{{{"distance", 0.},
+                             {"duration", 0.},
+                             {"weight", 0.},
+                             {"weight_name", "routability"},
+                             {"geometry", "yw_jGupkl@??"},
+                             {"legs",
+                              json::Array{{json::Object{{{"distance", 0.},
+                                                         {"duration", 0.},
+                                                         {"weight", 0.},
+                                                         {"summary", "Boulevard du Larvotto"},
+                                                         {"steps", steps}}}}}}}}}}}}};
 
     CHECK_EQUAL_JSON(reference, json_result);
 }
@@ -317,7 +316,7 @@ void test_route_same_coordinates_no_waypoints(bool use_json_only_api)
     const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    BOOST_CHECK(json_result.values.find("waypoints") == json_result.values.end());
+    BOOST_CHECK(!json_result.values.contains("waypoints"));
 
     const auto &routes = std::get<json::Array>(json_result.values.at("routes")).values;
     BOOST_REQUIRE_GT(routes.size(), 0);

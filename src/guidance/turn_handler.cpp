@@ -51,7 +51,7 @@ bool isEndOfRoad(const ConnectedRoad &,
 }
 
 template <typename InputIt>
-InputIt findOutermostForkCandidate(const InputIt begin, const InputIt end)
+InputIt findOutermostForkCandidate(const InputIt &begin, const InputIt &end)
 {
     static_assert(std::is_base_of<std::input_iterator_tag,
                                   typename std::iterator_traits<InputIt>::iterator_category>::value,

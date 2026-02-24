@@ -51,6 +51,16 @@ class Log
     virtual ~Log();
     std::mutex &get_mutex();
 
+    Log &operator<<(const char *data)
+    {
+        const auto &policy = LogPolicy::GetInstance();
+        if (!policy.IsMute() && level <= policy.GetLevel())
+        {
+            stream << data;
+        }
+        return *this;
+    }
+
     template <typename T> inline Log &operator<<(const T &data)
     {
         const auto &policy = LogPolicy::GetInstance();
@@ -73,7 +83,7 @@ class Log
 
     using manip = std::ostream &(std::ostream &);
 
-    inline Log &operator<<(manip &m)
+    Log &operator<<(manip &m)
     {
         const auto &policy = LogPolicy::GetInstance();
         if (!policy.IsMute() && level <= policy.GetLevel())

@@ -1,14 +1,2 @@
 # Profile for Windows-runners on github CI
 include(github)
-
-[conf]
-# Possible values: msys2, msys, cygwin, wsl, sfu
-# tools.microsoft.bash:subsystem=msys2
-
-# See: https://github.com/actions/runner-images/blob/main/images/windows/Windows2025-Readme.md
-# gitbash.exe   C:\Program Files\Git\bin\bash.exe
-# msys2bash.cmd C:\msys64\usr\bin\bash.exe
-# wslbash.exe   C:\Windows\System32\bash.exe
-# tools.microsoft.bash:path="C:\Program Files\Git\bin\bash.exe"
-
-# tools.microsoft.bash:active=True

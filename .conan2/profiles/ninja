@@ -1,0 +1,2 @@
+[conf]
+tools.cmake.cmaketoolchain:generator=Ninja
