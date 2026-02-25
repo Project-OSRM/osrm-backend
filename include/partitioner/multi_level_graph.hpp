@@ -189,8 +189,8 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
     template <typename ZipIterT>
     auto InitializeOffsetsFromSortedEdges(const MultiLevelPartition &mlp,
                                           const NodeID max_border_node_id,
-                                          ZipIterT edge_and_level_begin,
-                                          ZipIterT edge_and_level_end)
+                                          const ZipIterT &edge_and_level_begin,
+                                          const ZipIterT &edge_and_level_end)
     {
 
         auto num_levels = mlp.GetNumberOfLevels();

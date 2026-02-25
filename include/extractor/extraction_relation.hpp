@@ -99,7 +99,7 @@ class ExtractionRelationContainer
     {
         rel.Prepare();
 
-        BOOST_ASSERT(relations_data.find(rel.id.GetID()) == relations_data.end());
+        BOOST_ASSERT(!relations_data.contains(rel.id.GetID()));
         relations_data.insert(std::make_pair(rel.id.GetID(), std::move(rel)));
     }
 

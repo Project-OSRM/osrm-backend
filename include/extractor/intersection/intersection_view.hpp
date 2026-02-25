@@ -55,6 +55,10 @@ struct IntersectionViewData : IntersectionEdgeGeometry
 // common operations shared amongst all intersection types
 template <typename Self> struct EnableShapeOps
 {
+  private:
+    EnableShapeOps() = default;
+
+  public:
     // same as closest turn, but for bearings
     auto FindClosestBearing(double base_bearing) const
     {
@@ -100,6 +104,7 @@ template <typename Self> struct EnableShapeOps
   private:
     auto self() { return static_cast<Self *>(this); }
     auto self() const { return static_cast<const Self *>(this); }
+    friend Self;
 };
 
 struct IntersectionShape final : std::vector<IntersectionEdgeGeometry>, //
@@ -112,6 +117,10 @@ struct IntersectionShape final : std::vector<IntersectionEdgeGeometry>, //
 // Inherit to enable those operations on your compatible type. CRTP pattern.
 template <typename Self> struct EnableIntersectionOps
 {
+  private:
+    EnableIntersectionOps() = default;
+
+  public:
     // Find the turn whose angle offers the least angular deviation to the specified angle
     // For turn angles [0, 90, 260] and a query of 180 we return the 260 degree turn.
     auto findClosestTurn(double angle) const
@@ -221,6 +230,7 @@ template <typename Self> struct EnableIntersectionOps
   private:
     auto self() { return static_cast<Self *>(this); }
     auto self() const { return static_cast<const Self *>(this); }
+    friend Self;
 };
 
 struct IntersectionView final : std::vector<IntersectionViewData>,      //

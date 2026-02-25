@@ -152,19 +152,19 @@ return_code parseArguments(int argc,
         return return_code::fail;
     }
 
-    if (option_variables.count("version"))
+    if (option_variables.contains("version"))
     {
         std::cout << OSRM_VERSION << std::endl;
         return return_code::exit;
     }
 
-    if (option_variables.count("help"))
+    if (option_variables.contains("help"))
     {
         std::cout << visible_options;
         return return_code::exit;
     }
 
-    if (option_variables.count("list-inputs"))
+    if (option_variables.contains("list-inputs"))
     {
         partitioner::PartitionerConfig config;
         config.ListInputFiles(std::cout);
@@ -173,13 +173,13 @@ return_code parseArguments(int argc,
 
     boost::program_options::notify(option_variables);
 
-    if (!option_variables.count("input"))
+    if (!option_variables.contains("input"))
     {
         std::cout << visible_options;
         return return_code::fail;
     }
 
-    if (option_variables.count("max-cell-sizes"))
+    if (option_variables.contains("max-cell-sizes"))
     {
         config.max_cell_sizes = option_variables["max-cell-sizes"].as<MaxCellSizesArgument>().value;
 

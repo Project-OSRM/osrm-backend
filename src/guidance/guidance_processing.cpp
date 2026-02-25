@@ -309,7 +309,7 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
 
         tbb::filter<TurnsPipelineBufferPtr, void> guidance_output_stage(
             tbb::filter_mode::serial_in_order,
-            [&](auto buffer)
+            [&](const auto &buffer)
             {
                 guidance_progress.PrintAddition(buffer->nodes_processed);
 

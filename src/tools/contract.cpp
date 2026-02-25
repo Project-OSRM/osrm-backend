@@ -110,19 +110,19 @@ return_code parseArguments(int argc,
         return return_code::fail;
     }
 
-    if (option_variables.count("version"))
+    if (option_variables.contains("version"))
     {
         std::cout << OSRM_VERSION << std::endl;
         return return_code::exit;
     }
 
-    if (option_variables.count("help"))
+    if (option_variables.contains("help"))
     {
         std::cout << visible_options;
         return return_code::exit;
     }
 
-    if (option_variables.count("list-inputs"))
+    if (option_variables.contains("list-inputs"))
     {
         contractor::ContractorConfig config;
         std::set<std::string> seen;
@@ -133,7 +133,7 @@ return_code parseArguments(int argc,
 
     boost::program_options::notify(option_variables);
 
-    if (!option_variables.count("input"))
+    if (!option_variables.contains("input"))
     {
         std::cout << visible_options;
         return return_code::fail;
