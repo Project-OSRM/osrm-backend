@@ -193,7 +193,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
  *
  * @param packed_path_begin iterator pointing to the start of the NodeID list
  * @param packed_path_end iterator pointing to the end of the NodeID list
- * @param callback void(const std::pair<NodeID, NodeID>, const EdgeID &) called for each
+ * @param callback void(NodeID first, NodeID second, const EdgeID &) called for each
  * original edge found.
  */
 template <typename BidirectionalIterator, typename Callback>
@@ -254,7 +254,7 @@ void unpackPath(const DataFacade<Algorithm> &facade,
         else
         {
             // We found an original edge, call our callback.
-            std::forward<Callback>(callback)(edge, smaller_edge_id);
+            callback(edge.first, edge.second, smaller_edge_id);
         }
     }
 }
@@ -380,10 +380,10 @@ void unpackPath(const FacadeT &facade,
         unpackPath(facade,
                    packed_path_begin,
                    packed_path_end,
-                   [&](std::pair<NodeID, NodeID> &edge, const auto &edge_id)
+                   [&]([[maybe_unused]] NodeID first, NodeID second, const auto &edge_id)
                    {
-                       BOOST_ASSERT(edge.first == unpacked_nodes.back());
-                       unpacked_nodes.push_back(edge.second);
+                       BOOST_ASSERT(first == unpacked_nodes.back());
+                       unpacked_nodes.push_back(second);
                        unpacked_edges.push_back(edge_id);
                    });
     }

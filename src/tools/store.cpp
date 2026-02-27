@@ -197,32 +197,32 @@ bool generateDataStoreOptions(const int argc,
         return false;
     }
 
-    if (option_variables.count("version"))
+    if (option_variables.contains("version"))
     {
         util::Log() << OSRM_VERSION;
         return false;
     }
 
-    if (option_variables.count("help"))
+    if (option_variables.contains("help"))
     {
         util::Log() << visible_options;
         return false;
     }
 
-    if (option_variables.count("list-inputs"))
+    if (option_variables.contains("list-inputs"))
     {
         storage::StorageConfig config;
         config.ListInputFiles(std::cout);
         return false;
     }
 
-    if (option_variables.count("remove-locks"))
+    if (option_variables.contains("remove-locks"))
     {
         removeLocks();
         return false;
     }
 
-    if (option_variables.count("spring-clean"))
+    if (option_variables.contains("spring-clean"))
     {
         springClean();
         return false;

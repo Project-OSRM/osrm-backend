@@ -141,8 +141,8 @@ void test_table_three_coords_one_source_one_dest_matrix_no_waypoints(bool use_js
     }
 
     // waypoint arrays should be missing
-    BOOST_CHECK(json_result.values.find("destinations") == json_result.values.end());
-    BOOST_CHECK(json_result.values.find("sources") == json_result.values.end());
+    BOOST_CHECK(!json_result.values.contains("destinations"));
+    BOOST_CHECK(!json_result.values.contains("sources"));
 }
 BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix_no_waypoints_old_api)
 {

@@ -317,7 +317,7 @@ void test_route_same_coordinates_no_waypoints(bool use_json_only_api)
     const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    BOOST_CHECK(json_result.values.find("waypoints") == json_result.values.end());
+    BOOST_CHECK(!json_result.values.contains("waypoints"));
 
     const auto &routes = std::get<json::Array>(json_result.values.at("routes")).values;
     BOOST_REQUIRE_GT(routes.size(), 0);

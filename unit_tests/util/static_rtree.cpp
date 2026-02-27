@@ -114,8 +114,8 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
             data.u = edge_udist(g);
             data.v = edge_udist(g);
             data.is_startpoint = true;
-            if (used_edges.find(std::pair<unsigned, unsigned>(
-                    std::min(data.u, data.v), std::max(data.u, data.v))) == used_edges.end())
+            if (!used_edges.contains(std::pair<unsigned, unsigned>(std::min(data.u, data.v),
+                                                                   std::max(data.u, data.v))))
             {
                 edges.emplace_back(data);
                 used_edges.emplace(std::min(data.u, data.v), std::max(data.u, data.v));
@@ -200,6 +200,7 @@ void sampling_verify_rtree(RTreeT &rtree,
     std::uniform_int_distribution<> lat_udist(WORLD_MIN_LAT, WORLD_MAX_LAT);
     std::uniform_int_distribution<> lon_udist(WORLD_MIN_LON, WORLD_MAX_LON);
     std::vector<Coordinate> queries;
+    queries.reserve(num_samples);
     for (unsigned i = 0; i < num_samples; i++)
     {
         queries.emplace_back(FixedLongitude{lon_udist(g)}, FixedLatitude{lat_udist(g)});

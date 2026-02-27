@@ -1141,7 +1141,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         std::vector<EdgeWithData> delayed_data;
         tbb::filter<EdgesPipelineBufferPtr, void> output_stage(
             tbb::filter_mode::serial_in_order,
-            [&](auto buffer)
+            [&](const auto &buffer)
             {
                 routing_progress.PrintAddition(buffer->nodes_processed);
 
