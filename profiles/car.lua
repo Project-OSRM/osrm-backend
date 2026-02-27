@@ -46,6 +46,11 @@ function setup()
     vehicle_length = 4.8, -- in meters, 4.8m is the length of large or family car
     vehicle_weight = 2000, -- in kilograms
 
+    -- Optional: upper limit for all speeds (e.g., 87 for trucks)
+    -- When set, no derived speed will exceed this value
+    -- When nil (default), no additional capping is applied
+    vehicle_max_speed = nil, -- in km/h
+
     -- a list of suffixes to suppress in name change instructions. The suffixes also include common substrings of each other
     suffix_list = {
       'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'North', 'South', 'West', 'East', 'Nor', 'Sou', 'We', 'Ea'
@@ -458,6 +463,10 @@ function process_way(profile, way, result, relations)
     WayHandlers.speed,
     WayHandlers.maxspeed,
     WayHandlers.surface,
+
+    -- apply vehicle-specific maximum speed cap before calculating rates
+    WayHandlers.vehicle_speed_cap,
+
     WayHandlers.penalties,
 
     -- compute class labels
