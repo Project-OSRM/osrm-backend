@@ -162,3 +162,71 @@ OSRM will use 4/5 of the projected free-flow speed.
             | d    | e  | de,de | 64 km/h |
             | e    | f  | ef,ef | 80 km/h |
             | f    | g  | fg,fg | 96 km/h |
+    Scenario: Car - Vehicle maximum speed caps all derived speeds when set
+        Given the profile file "car" initialized with
+        """
+        profile.vehicle_max_speed = 87
+        """
+
+        Given the node map
+            """
+            a b c d e f
+            """
+
+        And the ways
+            | nodes | highway    | maxspeed |
+            | ab    | motorway   |          |
+            | bc    | trunk      | 120      |
+            | cd    | primary    | 80       |
+            | de    | secondary  | 60       |
+            | ef    | residential|          |
+
+        When I route I should get
+            | from | to | route | speed   |
+            | a    | b  | ab,ab | 87 km/h |
+            | b    | c  | bc,bc | 87 km/h |
+            | c    | d  | cd,cd | 64 km/h |
+            | d    | e  | de,de | 48 km/h |
+            | e    | f  | ef,ef | 25 km/h |
+
+    Scenario: Car - Vehicle maximum speed preserves default behavior when unset
+        Given the profile file "car" initialized with
+        """
+        profile.vehicle_max_speed = nil
+        """
+
+        Given the node map
+            """
+            a b c d e
+            """
+
+        And the ways
+            | nodes | highway   | maxspeed |
+            | ab    | motorway  |          |
+            | bc    | trunk     | 120      |
+            | cd    | primary   | 80       |
+            | de    | secondary | 60       |
+
+        When I route I should get
+            | from | to | route | speed   |
+            | a    | b  | ab,ab | 90 km/h |
+            | b    | c  | bc,bc | 96 km/h |
+            | c    | d  | cd,cd | 64 km/h |
+            | d    | e  | de,de | 48 km/h |
+
+    Scenario: Car - Vehicle maximum speed with forward/backward directions
+        Given the profile file "car" initialized with
+        """
+        profile.vehicle_max_speed = 87
+        """
+
+        Given a grid size of 100 meters
+
+        Then routability should be
+            | highway  | maxspeed | maxspeed:forward | maxspeed:backward | forw    | backw   |
+            | motorway |          |                  |                   | 87 km/h | 87 km/h |
+            | trunk    | 120      |                  |                   | 87 km/h | 87 km/h |
+            | primary  | 80       |                  |                   | 64 km/h | 64 km/h |
+            | primary  |          | 120              |                   | 87 km/h | 65 km/h |
+            | primary  |          |                  | 120               | 65 km/h | 87 km/h |
+            | primary  | 15       | 120              |                   | 87 km/h | 12 km/h |

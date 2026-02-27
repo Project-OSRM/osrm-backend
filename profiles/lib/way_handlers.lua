@@ -694,6 +694,20 @@ function WayHandlers.blocked_ways(profile,way,result,data)
   end
 end
 
+-- Apply vehicle-specific maximum speed cap
+-- This handler ensures that no derived speed exceeds the vehicle_max_speed
+-- if it is defined in the profile. When vehicle_max_speed is nil, no capping occurs.
+function WayHandlers.vehicle_speed_cap(profile,way,result,data)
+  if profile.vehicle_max_speed then
+    if result.forward_speed and result.forward_speed > 0 then
+      result.forward_speed = math.min(result.forward_speed, profile.vehicle_max_speed)
+    end
+    if result.backward_speed and result.backward_speed > 0 then
+      result.backward_speed = math.min(result.backward_speed, profile.vehicle_max_speed)
+    end
+  end
+end
+
 function WayHandlers.driving_side(profile, way, result, data)
    local driving_side = way:get_value_by_key('driving_side')
    if driving_side == nil then
