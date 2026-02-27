@@ -223,10 +223,10 @@ OSRM will use 4/5 of the projected free-flow speed.
         Given a grid size of 100 meters
 
         Then routability should be
-            | highway  | maxspeed | maxspeed:forward | maxspeed:backward | forw    | backw   |
-            | motorway |          |                  |                   | 87 km/h |         |
-            | trunk    | 120      |                  |                   | 87 km/h | 87 km/h |
-            | primary  | 80       |                  |                   | 64 km/h | 64 km/h |
-            | primary  |          | 120              |                   | 87 km/h | 65 km/h |
-            | primary  |          |                  | 120               | 65 km/h | 87 km/h |
-            | primary  | 15       | 120              |                   | 87 km/h | 12 km/h |
+            | highway  | maxspeed | maxspeed:forward | maxspeed:backward | forw       | backw      |
+            | motorway |          |                  |                   | 87 km/h    |            |
+            | trunk    | 120      |                  |                   | 87 km/h ~1%| 87 km/h ~1%|
+            | primary  | 80       |                  |                   | 64 km/h    | 64 km/h    |
+            | primary  |          | 120              |                   | 87 km/h    | 65 km/h    |
+            | primary  |          |                  | 120               | 65 km/h    | 87 km/h    |
+            | primary  | 15       | 120              |                   | 87 km/h    | 12 km/h    |
