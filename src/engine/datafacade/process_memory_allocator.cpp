@@ -1,8 +1,6 @@
 #include "engine/datafacade/process_memory_allocator.hpp"
 #include "storage/storage.hpp"
 
-#include "boost/assert.hpp"
-
 namespace osrm::engine::datafacade
 {
 

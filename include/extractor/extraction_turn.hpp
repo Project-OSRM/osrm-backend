@@ -6,8 +6,6 @@
 #include "extractor/travel_mode.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/numeric/conversion/cast.hpp>
-
 #include <vector>
 
 namespace osrm::extractor

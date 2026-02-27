@@ -11,7 +11,6 @@
 #include "util/guidance/turn_lanes.hpp"
 #include "util/log.hpp"
 
-#include <boost/optional/optional.hpp>
 #include <boost/tokenizer.hpp>
 
 #include <osmium/osm.hpp>

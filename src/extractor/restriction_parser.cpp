@@ -6,9 +6,6 @@
 #include "util/log.hpp"
 
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/optional/optional.hpp>
-#include <boost/ref.hpp>
-
 #include <osmium/osm.hpp>
 
 #include <algorithm>
