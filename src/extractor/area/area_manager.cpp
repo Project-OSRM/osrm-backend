@@ -10,7 +10,7 @@ namespace osrm::extractor::area
 /**
  * @brief Initialize the area manager
  *
- * @param algorithm_name The alogorithm to use for meshing. At present only one
+ * @param algorithm_name The algorithm to use for meshing. At present only one
  *                       algorithm is supported: 'visgraph+dijkstra'.
  */
 void AreaManager::init(const char *algorithm_name)
