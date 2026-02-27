@@ -82,6 +82,13 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
     if (!CheckAlgorithms(route_parameters, algorithms, result))
         return Status::Error;
 
+    if (!route_parameters.bearings.empty() && !default_radius.has_value() &&
+        route_parameters.radiuses.size() != route_parameters.bearings.size())
+    {
+        return Error(
+            "InvalidOptions", "Number of radiuses does not match number of bearings", result);
+    }
+
     const auto &facade = algorithms.GetFacade();
     auto phantom_node_pairs = GetPhantomNodes(facade, route_parameters);
     if (phantom_node_pairs.size() != route_parameters.coordinates.size())

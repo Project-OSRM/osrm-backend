@@ -64,6 +64,8 @@
 
 # 6.0.0 RC1
   - Changes from 5.27.1
+    - API:
+      - CHANGED: Require a `radius` parameter when using `bearings`. [#6572](https://github.com/Project-OSRM/osrm-backend/pull/6572)
     - Features
       - ADDED: Add generic support for obstacles [#7130](https://github.com/Project-OSRM/osrm-backend/pull/7130)
       - ADDED: Route pedestrians over highway=platform [#6993](https://github.com/Project-OSRM/osrm-backend/pull/6993)
