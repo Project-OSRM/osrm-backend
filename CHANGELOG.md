@@ -1,5 +1,9 @@
+# Changelog
+
 # Unreleased
   - Changes from 6.0.0
+    - Features
+      - ADDED: Pedestrian area routing [#7161](https://github.com/Project-OSRM/osrm-backend/pull/7161)
     - Routing:
       - FIXED: Crash when route starts or ends at `type=manoeuvre` relation via node [#7287](https://github.com/Project-OSRM/osrm-backend/issues/7287)
     - Extraction:
@@ -232,7 +236,7 @@
       - CHANGED: Docker build, enabled arm64 build layer [#6172](https://github.com/Project-OSRM/osrm-backend/pull/6172)
       - CHANGED: Docker build, enabled apt-get update/install caching in separate layer for build phase [#6175](https://github.com/Project-OSRM/osrm-backend/pull/6175)
       - FIXED: Bump CI complete meta job to ubuntu-20.04 [#6323](https://github.com/Project-OSRM/osrm-backend/pull/6323)
-      - CHANGED: Node packages are now scoped by @project-osrm [#6386](https://github.com/Project-OSRM/osrm-backend/issues/6386)
+      - CHANGED: Node packages are now scoped by \@project-osrm [#6386](https://github.com/Project-OSRM/osrm-backend/issues/6386)
     - Routing:
       - CHANGED: Lazily generate optional route path data [#6045](https://github.com/Project-OSRM/osrm-backend/pull/6045)
       - FIXED: Completed support for no_entry and no_exit turn restrictions. [#5988](https://github.com/Project-OSRM/osrm-backend/pull/5988)
@@ -267,7 +271,7 @@
     - Build:
       - CHANGED: Node binaries now use Github Releases for hosting [#6030](https://github.com/Project-OSRM/osrm-backend/pull/6030)
     - Misc:
-      - FIXED: Upgrade to @mapbox/node-pre-gyp fix various bugs with Node 12/14 [#5991](https://github.com/Project-OSRM/osrm-backend/pull/5991)
+      - FIXED: Upgrade to \@mapbox/node-pre-gyp fix various bugs with Node 12/14 [#5991](https://github.com/Project-OSRM/osrm-backend/pull/5991)
       - FIXED: `valid` type in documentation examples [#5990](https://github.com/Project-OSRM/osrm-backend/issues/5990)
       - FIXED: Remove redundant loading of .osrm.cell_metrics [#6019](https://github.com/Project-OSRM/osrm-backend/issues/6019)
       - CHANGED: Increase PackedOSMIDs size to 34 bits. This breaks the **data format** [#6020](https://github.com/Project-OSRM/osrm-backend/issues/6020)

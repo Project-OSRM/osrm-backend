@@ -1,10 +1,10 @@
-#include <boost/test/unit_test.hpp>
-
-#include "osrm/exception.hpp"
 #include "osrm/extractor.hpp"
 #include "osrm/extractor_config.hpp"
+#include "util/log.hpp"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/test/unit_test.hpp>
+
 #include <filesystem>
 #include <thread>
 
@@ -44,6 +44,19 @@ BOOST_AUTO_TEST_CASE(test_extract_with_valid_config)
     config.input_path = OSRM_TEST_DATA_DIR "/monaco.osm.pbf";
     config.UseDefaultOutputNames(OSRM_TEST_DATA_DIR "/monaco.osm.pbf");
     config.profile_path = OSRM_TEST_DATA_DIR "/../../profiles/car.lua";
+    config.small_component_size = 1000;
+    config.requested_num_threads = std::thread::hardware_concurrency();
+    BOOST_CHECK_NO_THROW(osrm::extract(config));
+}
+
+BOOST_AUTO_TEST_CASE(test_extract_with_valid_config_and_areas)
+{
+    // osrm::util::LogPolicy::GetInstance().SetLevel(logDEBUG);
+    // osrm::util::LogPolicy::GetInstance().Unmute();
+    osrm::ExtractorConfig config;
+    config.input_path = OSRM_TEST_DATA_DIR "/monaco.osm.pbf";
+    config.UseDefaultOutputNames(OSRM_TEST_DATA_DIR "/monaco.osm.pbf");
+    config.profile_path = OSRM_TEST_DATA_DIR "/../../profiles/foot_area.lua";
     config.small_component_size = 1000;
     config.requested_num_threads = std::thread::hardware_concurrency();
     BOOST_CHECK_NO_THROW(osrm::extract(config));
