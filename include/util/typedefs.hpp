@@ -69,14 +69,16 @@ struct turn_penalty
 } // namespace tag
 
 using OSMNodeID = osrm::Alias<std::uint64_t, tag::osm_node_id>;
-// clang-tidy fires `bugprone-throw-keyword-missing` here for unknown reason
-// NOLINTNEXTLINE(bugprone-throw-keyword-missing)
-static_assert(std::is_standard_layout<OSMNodeID>() && std::is_trivial<OSMNodeID>(),
-              "OSMNodeID is not a valid alias");
+static_assert(std::is_standard_layout<OSMNodeID>(), "OSMNodeID must have standard layout.");
+static_assert(std::is_trivially_default_constructible<OSMNodeID>(),
+              "OSMNodeID must be trivially default constructible.");
+static_assert(std::is_trivially_copyable<OSMNodeID>(), "OSMNodeID must be trivially copyable.");
+
 using OSMWayID = osrm::Alias<std::uint64_t, tag::osm_way_id>;
-// NOLINTNEXTLINE(bugprone-throw-keyword-missing)
-static_assert(std::is_standard_layout<OSMWayID>() && std::is_trivial<OSMWayID>(),
-              "OSMWayID is not a valid alias");
+static_assert(std::is_standard_layout<OSMWayID>(), "OSMWayID must have standard layout.");
+static_assert(std::is_trivially_default_constructible<OSMWayID>(),
+              "OSMWayID must be trivially default constructible.");
+static_assert(std::is_trivially_copyable<OSMWayID>(), "OSMWayID must be trivially copyable.");
 
 using DuplicatedNodeID = std::uint64_t;
 using RestrictionID = std::uint64_t;

@@ -9,6 +9,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <set>
 #include <thread>
 
 using namespace osrm;
@@ -28,6 +29,7 @@ return_code parseArguments(int argc,
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
     generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
+        "list-inputs", "List required and optional input file extensions")(
         "verbosity,l",
         boost::program_options::value<std::string>(&verbosity)->default_value("INFO"),
         std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str());
@@ -108,21 +110,30 @@ return_code parseArguments(int argc,
         return return_code::fail;
     }
 
-    if (option_variables.count("version"))
+    if (option_variables.contains("version"))
     {
         std::cout << OSRM_VERSION << std::endl;
         return return_code::exit;
     }
 
-    if (option_variables.count("help"))
+    if (option_variables.contains("help"))
     {
         std::cout << visible_options;
         return return_code::exit;
     }
 
+    if (option_variables.contains("list-inputs"))
+    {
+        customizer::CustomizationConfig config;
+        std::set<std::string> seen;
+        config.ListInputFiles(std::cout, seen);
+        config.updater_config.ListInputFiles(std::cout, seen);
+        return return_code::exit;
+    }
+
     boost::program_options::notify(option_variables);
 
-    if (!option_variables.count("input"))
+    if (!option_variables.contains("input"))
     {
         std::cout << visible_options;
         return return_code::fail;
@@ -177,6 +188,12 @@ catch (const osrm::RuntimeError &e)
     util::DumpMemoryStats();
     util::Log(logERROR) << e.what();
     return e.GetCode();
+}
+catch (const util::exception &e)
+{
+    util::DumpMemoryStats();
+    util::Log(logERROR) << e.what();
+    return EXIT_FAILURE;
 }
 catch (const std::bad_alloc &e)
 {

@@ -1,10 +1,10 @@
-#include <boost/format.hpp>
+#include "util/format.hpp"
 
 namespace osrm::server::service
 {
 
 const constexpr char PARAMETER_SIZE_MISMATCH_MSG[] =
-    "Number of elements in %1% size %2% does not match coordinate size %3%";
+    "Number of elements in {} size {} does not match coordinate size {}";
 
 template <typename ParamT>
 bool constrainParamSize(const char *msg_template,
@@ -15,7 +15,8 @@ bool constrainParamSize(const char *msg_template,
 {
     if (param.size() > 0 && param.size() != target_size)
     {
-        help = (boost::format(msg_template) % name % param.size() % target_size).str();
+        help = osrm::util::compat::format(
+            osrm::util::compat::runtime_format(msg_template), name, param.size(), target_size);
         return true;
     }
     return false;

@@ -68,6 +68,14 @@ parking_class = Set{
     'emergency_access'
 }
 
+local function to_number_uint(s)
+  local n = tonumber(s)
+  if n ~= nil and n > 0 and n % 1 == 0 then
+    return n
+  end
+  return nil
+end
+
 function Guidance.set_classification (highway, result, input_way)
   if motorway_types[highway] then
     result.road_classification.motorway_class = true
@@ -107,7 +115,7 @@ function Guidance.set_classification (highway, result, input_way)
 
   local lane_count = input_way:get_value_by_key("lanes")
   if lane_count then
-    local lc = tonumber(lane_count)
+    local lc = to_number_uint(lane_count)
     if lc ~= nil then
       result.road_classification.num_lanes = lc
     end
@@ -115,14 +123,14 @@ function Guidance.set_classification (highway, result, input_way)
     local total_count = 0
     local forward_count = input_way:get_value_by_key("lanes:forward")
     if forward_count then
-      local fc = tonumber(forward_count)
+      local fc = to_number_uint(forward_count)
       if fc ~= nil then
         total_count = fc
       end
     end
     local backward_count = input_way:get_value_by_key("lanes:backward")
     if backward_count then
-      local bc = tonumber(backward_count)
+      local bc = to_number_uint(backward_count)
       if bc ~= nil then
         total_count = total_count + bc
       end
@@ -136,11 +144,18 @@ end
 -- returns forward,backward psv lane count
 local function get_psv_counts(way,data)
   local psv_forward, psv_backward = Tags.get_forward_backward_by_key(way,data,'lanes:psv')
+  local taxi_forward, taxi_backward = Tags.get_forward_backward_by_key(way,data,'lanes:taxi')
+  local share_taxi_forward, share_taxi_backward = Tags.get_forward_backward_by_key(way,data,'lanes:share_taxi')
+  local minibus_forward, minibus_backward = Tags.get_forward_backward_by_key(way,data,'lanes:minibus')
+  local bus_forward, bus_backward = Tags.get_forward_backward_by_key(way,data,'lanes:bus')
+  psv_forward = psv_forward or taxi_forward or share_taxi_forward or minibus_forward or bus_forward
+  psv_backward = psv_backward or taxi_backward or share_taxi_backward or minibus_backward or bus_backward
+
   if psv_forward then
-    psv_forward = tonumber(psv_forward)
+    psv_forward = to_number_uint(psv_forward)
   end
   if psv_backward then
-    psv_backward = tonumber(psv_backward)
+    psv_backward = to_number_uint(psv_backward)
   end
   return psv_forward or 0,
          psv_backward or 0

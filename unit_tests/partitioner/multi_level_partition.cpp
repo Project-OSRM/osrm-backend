@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(cell_overflow_bits)
 
     BOOST_REQUIRE_EXCEPTION(MultiLevelPartition(levels, levels_to_num_cells),
                             util::exception,
-                            [](auto) { return true; });
+                            [](const auto &) { return true; });
 }
 
 BOOST_AUTO_TEST_SUITE_END()

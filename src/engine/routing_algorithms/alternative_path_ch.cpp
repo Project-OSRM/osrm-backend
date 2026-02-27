@@ -650,7 +650,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engi
         const NodeID u = current_edge.first;
         const NodeID v = current_edge.second;
 
-        if (nodes_in_path.find(v) != nodes_in_path.end())
+        if (nodes_in_path.contains(v))
         {
             // current_edge is on shortest path => sharing(v):=queue.GetKey(v);
             approximated_forward_sharing.emplace(v, forward_heap1.GetKey(v));
@@ -672,7 +672,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &engi
     {
         const NodeID u = current_edge.first;
         const NodeID v = current_edge.second;
-        if (nodes_in_path.find(v) != nodes_in_path.end())
+        if (nodes_in_path.contains(v))
         {
             // current_edge is on shortest path => sharing(u):=queue.GetKey(u);
             approximated_reverse_sharing.emplace(v, reverse_heap1.GetKey(v));

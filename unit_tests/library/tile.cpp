@@ -61,28 +61,28 @@ void validate_feature_layer(vtzero::layer layer)
 
         auto props = vtzero::create_properties_map<std::map<std::string, variant_type>>(feature);
 
-        BOOST_CHECK(props.find("speed") != props.end());
+        BOOST_CHECK(props.contains("speed"));
         BOOST_CHECK(props["speed"].type() == typeid(uint64_t));
 
-        BOOST_CHECK(props.find("rate") != props.end());
+        BOOST_CHECK(props.contains("rate"));
         BOOST_CHECK(props["rate"].type() == typeid(double));
 
-        BOOST_CHECK(props.find("weight") != props.end());
+        BOOST_CHECK(props.contains("weight"));
         BOOST_CHECK(props["weight"].type() == typeid(double));
 
-        BOOST_CHECK(props.find("duration") != props.end());
+        BOOST_CHECK(props.contains("duration"));
         BOOST_CHECK(props["duration"].type() == typeid(double));
 
-        BOOST_CHECK(props.find("is_small") != props.end());
+        BOOST_CHECK(props.contains("is_small"));
         BOOST_CHECK(props["is_small"].type() == typeid(bool));
 
-        BOOST_CHECK(props.find("is_startpoint") != props.end());
+        BOOST_CHECK(props.contains("is_startpoint"));
         BOOST_CHECK(props["is_startpoint"].type() == typeid(bool));
 
-        BOOST_CHECK(props.find("datasource") != props.end());
+        BOOST_CHECK(props.contains("datasource"));
         BOOST_CHECK(props["datasource"].type() == typeid(std::string));
 
-        BOOST_CHECK(props.find("name") != props.end());
+        BOOST_CHECK(props.contains("name"));
         BOOST_CHECK(props["name"].type() == typeid(std::string));
     }
 
@@ -109,22 +109,22 @@ void validate_turn_layer(vtzero::layer layer)
 
         auto props = vtzero::create_properties_map<std::map<std::string, variant_type>>(feature);
 
-        BOOST_CHECK(props.find("bearing_in") != props.end());
+        BOOST_CHECK(props.contains("bearing_in"));
         BOOST_CHECK(props["bearing_in"].type() == typeid(std::int64_t));
 
-        BOOST_CHECK(props.find("turn_angle") != props.end());
+        BOOST_CHECK(props.contains("turn_angle"));
         BOOST_CHECK(props["turn_angle"].type() == typeid(std::int64_t));
 
-        BOOST_CHECK(props.find("weight") != props.end());
+        BOOST_CHECK(props.contains("weight"));
         BOOST_CHECK(props["weight"].type() == typeid(float));
 
-        BOOST_CHECK(props.find("cost") != props.end());
+        BOOST_CHECK(props.contains("cost"));
         BOOST_CHECK(props["cost"].type() == typeid(float));
 
-        BOOST_CHECK(props.find("type") != props.end());
+        BOOST_CHECK(props.contains("type"));
         BOOST_CHECK(props["type"].type() == typeid(std::string));
 
-        BOOST_CHECK(props.find("modifier") != props.end());
+        BOOST_CHECK(props.contains("modifier"));
         BOOST_CHECK(props["modifier"].type() == typeid(std::string));
     }
 

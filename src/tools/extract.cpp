@@ -1,6 +1,7 @@
 #include "osrm/exception.hpp"
 #include "osrm/extractor.hpp"
 #include "osrm/extractor_config.hpp"
+#include "util/exception.hpp"
 #include "util/log.hpp"
 #include "util/meminfo.hpp"
 #include "util/version.hpp"
@@ -26,9 +27,10 @@ return_code parseArguments(int argc,
                            std::string &verbosity,
                            extractor::ExtractorConfig &extractor_config)
 {
-    // declare a group of options that will be a llowed only on command line
+    // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
     generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
+        "list-inputs", "List required and optional input file extensions")(
         "verbosity,l",
         boost::program_options::value<std::string>(&verbosity)->default_value("INFO"),
         std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str());
@@ -77,7 +79,10 @@ return_code parseArguments(int argc,
         boost::program_options::bool_switch(&extractor_config.dump_nbg_graph)
             ->implicit_value(true)
             ->default_value(false),
-        "Dump raw node-based graph to *.osrm file for debug purposes.");
+        "Dump raw node-based graph to *.osrm file for debug purposes.")(
+        "output,o",
+        boost::program_options::value<std::filesystem::path>(&extractor_config.output_path),
+        "Output base path for generated files (default: derived from input file name)");
 
     bool dummy;
     // hidden options, will be allowed on command line, but will not be
@@ -121,21 +126,28 @@ return_code parseArguments(int argc,
         return return_code::fail;
     }
 
-    if (option_variables.count("version"))
+    if (option_variables.contains("version"))
     {
         std::cout << OSRM_VERSION << std::endl;
         return return_code::exit;
     }
 
-    if (option_variables.count("help"))
+    if (option_variables.contains("help"))
     {
         std::cout << visible_options;
         return return_code::exit;
     }
 
+    if (option_variables.contains("list-inputs"))
+    {
+        extractor::ExtractorConfig config;
+        config.ListInputFiles(std::cout);
+        return return_code::exit;
+    }
+
     boost::program_options::notify(option_variables);
 
-    if (!option_variables.count("input"))
+    if (!option_variables.contains("input"))
     {
         std::cout << visible_options;
         return return_code::exit;
@@ -165,7 +177,14 @@ try
 
     util::LogPolicy::GetInstance().SetLevel(verbosity);
 
-    extractor_config.UseDefaultOutputNames(extractor_config.input_path);
+    if (!extractor_config.output_path.empty())
+    {
+        extractor_config.UseDefaultOutputNames(extractor_config.output_path);
+    }
+    else
+    {
+        extractor_config.UseDefaultOutputNames(extractor_config.input_path);
+    }
 
     if (1 > extractor_config.requested_num_threads)
     {
@@ -198,6 +217,12 @@ catch (const osrm::RuntimeError &e)
     util::DumpMemoryStats();
     util::Log(logERROR) << e.what();
     return e.GetCode();
+}
+catch (const util::exception &e)
+{
+    util::DumpMemoryStats();
+    util::Log(logERROR) << e.what();
+    return EXIT_FAILURE;
 }
 catch (const std::system_error &e)
 {

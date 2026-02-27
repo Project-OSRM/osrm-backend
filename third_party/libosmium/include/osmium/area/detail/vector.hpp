@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -73,37 +73,37 @@ namespace osmium {
             }; // struct vec
 
             // addition
-            constexpr inline vec operator+(const vec& lhs, const vec& rhs) noexcept {
+            constexpr vec operator+(const vec& lhs, const vec& rhs) noexcept {
                 return vec{lhs.x + rhs.x, lhs.y + rhs.y};
             }
 
             // subtraction
-            constexpr inline vec operator-(const vec& lhs, const vec& rhs) noexcept {
+            constexpr vec operator-(const vec& lhs, const vec& rhs) noexcept {
                 return vec{lhs.x - rhs.x, lhs.y - rhs.y};
             }
 
             // cross product
-            constexpr inline int64_t operator*(const vec& lhs, const vec& rhs) noexcept {
-                return lhs.x * rhs.y - lhs.y * rhs.x;
+            constexpr int64_t operator*(const vec& lhs, const vec& rhs) noexcept {
+                return (lhs.x * rhs.y) - (lhs.y * rhs.x);
             }
 
             // scale vector
-            constexpr inline vec operator*(double s, const vec& v) noexcept {
+            constexpr vec operator*(double s, const vec& v) noexcept {
                 return vec{static_cast<int64_t>(s * static_cast<double>(v.x)), static_cast<int64_t>(s * static_cast<double>(v.y))};
             }
 
             // scale vector
-            constexpr inline vec operator*(const vec& v, double s) noexcept {
+            constexpr vec operator*(const vec& v, double s) noexcept {
                 return vec{static_cast<int64_t>(s * static_cast<double>(v.x)), static_cast<int64_t>(s * static_cast<double>(v.y))};
             }
 
             // equality
-            constexpr inline bool operator==(const vec& lhs, const vec& rhs) noexcept {
+            constexpr bool operator==(const vec& lhs, const vec& rhs) noexcept {
                 return lhs.x == rhs.x && lhs.y == rhs.y;
             }
 
             // inequality
-            constexpr inline bool operator!=(const vec& lhs, const vec& rhs) noexcept {
+            constexpr bool operator!=(const vec& lhs, const vec& rhs) noexcept {
                 return !(lhs == rhs);
             }
 

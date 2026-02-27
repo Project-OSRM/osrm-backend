@@ -1,7 +1,10 @@
 #include "contractor/graph_contractor.hpp"
+#include "contractor/contracted_edge_container.hpp"
 #include "contractor/contractor_graph.hpp"
 #include "contractor/contractor_search.hpp"
+#include "contractor/graph_contractor_adaptors.hpp"
 #include "contractor/query_edge.hpp"
+#include "contractor/query_graph.hpp"
 #include "util/deallocating_vector.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
@@ -138,6 +141,7 @@ void ContractNode(ContractorThreadData *data,
                   const ContractorGraph &graph,
                   const NodeID node,
                   std::vector<EdgeWeight> &node_weights,
+                  const std::vector<bool> &contractable,
                   ContractionStats *stats = nullptr)
 {
     auto &heap = data->heap;
@@ -245,12 +249,24 @@ void ContractNode(ContractorThreadData *data,
         if (RUNSIMULATION)
         {
             const int constexpr SIMULATION_SEARCH_SPACE_SIZE = 1000;
-            search(heap, graph, number_of_targets, SIMULATION_SEARCH_SPACE_SIZE, max_weight, node);
+            search(heap,
+                   graph,
+                   contractable,
+                   number_of_targets,
+                   SIMULATION_SEARCH_SPACE_SIZE,
+                   max_weight,
+                   node);
         }
         else
         {
             const int constexpr FULL_SEARCH_SPACE_SIZE = 2000;
-            search(heap, graph, number_of_targets, FULL_SEARCH_SPACE_SIZE, max_weight, node);
+            search(heap,
+                   graph,
+                   contractable,
+                   number_of_targets,
+                   FULL_SEARCH_SPACE_SIZE,
+                   max_weight,
+                   node);
         }
         for (auto out_edge : graph.GetAdjacentEdgeRange(node))
         {
@@ -344,18 +360,20 @@ void ContractNode(ContractorThreadData *data,
 void ContractNode(ContractorThreadData *data,
                   const ContractorGraph &graph,
                   const NodeID node,
-                  std::vector<EdgeWeight> &node_weights)
+                  std::vector<EdgeWeight> &node_weights,
+                  const std::vector<bool> &contractable)
 {
-    ContractNode<false>(data, graph, node, node_weights, nullptr);
+    ContractNode<false>(data, graph, node, node_weights, contractable, nullptr);
 }
 
 ContractionStats SimulateNodeContraction(ContractorThreadData *data,
                                          const ContractorGraph &graph,
                                          const NodeID node,
-                                         std::vector<EdgeWeight> &node_weights)
+                                         std::vector<EdgeWeight> &node_weights,
+                                         const std::vector<bool> &contractable)
 {
     ContractionStats stats;
-    ContractNode<true>(data, graph, node, node_weights, &stats);
+    ContractNode<true>(data, graph, node, node_weights, contractable, &stats);
     return stats;
 }
 
@@ -487,7 +505,8 @@ bool UpdateNodeNeighbours(ContractorNodeData &node_data,
         if (node_data.contractable[u])
         {
             node_data.priorities[u] = EvaluateNodePriority(
-                SimulateNodeContraction(data, graph, u, node_data.weights), node_data.depths[u]);
+                SimulateNodeContraction(data, graph, u, node_data.weights, node_data.contractable),
+                node_data.depths[u]);
         }
     }
     return true;
@@ -618,19 +637,21 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     {
         util::UnbufferedLog log;
         log << "initializing node priorities...";
-        tbb::parallel_for(tbb::blocked_range<std::size_t>(0, remaining_nodes.size(), PQGrainSize),
-                          [&](const auto &range)
-                          {
-                              ContractorThreadData *data = thread_data_list.GetThreadData();
-                              for (auto x = range.begin(), end = range.end(); x != end; ++x)
-                              {
-                                  auto node = remaining_nodes[x].id;
-                                  BOOST_ASSERT(node_data.contractable[node]);
-                                  node_data.priorities[node] = EvaluateNodePriority(
-                                      SimulateNodeContraction(data, graph, node, node_data.weights),
-                                      node_data.depths[node]);
-                              }
-                          });
+        tbb::parallel_for(
+            tbb::blocked_range<std::size_t>(0, remaining_nodes.size(), PQGrainSize),
+            [&](const auto &range)
+            {
+                ContractorThreadData *data = thread_data_list.GetThreadData();
+                for (auto x = range.begin(), end = range.end(); x != end; ++x)
+                {
+                    auto node = remaining_nodes[x].id;
+                    BOOST_ASSERT(node_data.contractable[node]);
+                    node_data.priorities[node] = EvaluateNodePriority(
+                        SimulateNodeContraction(
+                            data, graph, node, node_data.weights, node_data.contractable),
+                        node_data.depths[node]);
+                }
+            });
         log << " ok.";
     }
 
@@ -688,7 +709,7 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
                 for (auto position = range.begin(), end = range.end(); position != end; ++position)
                 {
                     const NodeID node = remaining_nodes[position].id;
-                    ContractNode(data, graph, node, node_data.weights);
+                    ContractNode(data, graph, node, node_data.weights, node_data.contractable);
                 }
             });
 
@@ -772,6 +793,91 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     RenumberGraph(graph, new_to_old_node_id);
 
     return std::move(node_data.is_core);
+}
+
+using GraphAndFilter = std::tuple<QueryGraph, std::vector<std::vector<bool>>>;
+
+GraphAndFilter contractFullGraph(ContractorGraph contractor_graph,
+                                 std::vector<EdgeWeight> node_weights)
+{
+    auto num_nodes = contractor_graph.GetNumberOfNodes();
+    contractGraph(contractor_graph, std::move(node_weights));
+
+    auto edges = toEdges<QueryEdge>(std::move(contractor_graph));
+    std::vector<bool> edge_filter(edges.size(), true);
+
+    return GraphAndFilter{QueryGraph{num_nodes, edges}, {std::move(edge_filter)}};
+}
+
+GraphAndFilter contractExcludableGraph(ContractorGraph contractor_graph_,
+                                       std::vector<EdgeWeight> node_weights,
+                                       const std::vector<std::vector<bool>> &filters)
+{
+    if (filters.size() == 1)
+    {
+        if (std::all_of(filters.front().begin(), filters.front().end(), [](auto v) { return v; }))
+        {
+            return contractFullGraph(std::move(contractor_graph_), std::move(node_weights));
+        }
+    }
+
+    auto num_nodes = contractor_graph_.GetNumberOfNodes();
+    ContractedEdgeContainer edge_container;
+    ContractorGraph shared_core_graph;
+    std::vector<bool> is_shared_core;
+    {
+        ContractorGraph contractor_graph = std::move(contractor_graph_);
+        std::vector<bool> always_allowed(num_nodes, true);
+        for (const auto &filter : filters)
+        {
+            for (const auto node : util::irange<NodeID>(0, num_nodes))
+            {
+                always_allowed[node] = always_allowed[node] && filter[node];
+            }
+        }
+
+        // By not contracting all contractable nodes we avoid creating
+        // a very dense core. This increases the overall graph sizes a little bit
+        // but increases the final CH quality and contraction speed.
+        constexpr float BASE_CORE = 0.9f;
+        is_shared_core =
+            contractGraph(contractor_graph, std::move(always_allowed), node_weights, BASE_CORE);
+
+        // Add all non-core edges to container
+        {
+            auto non_core_edges = toEdges<QueryEdge>(contractor_graph);
+            auto new_end = std::remove_if(non_core_edges.begin(),
+                                          non_core_edges.end(),
+                                          [&](const auto &edge) {
+                                              return is_shared_core[edge.source] &&
+                                                     is_shared_core[edge.target];
+                                          });
+            non_core_edges.resize(new_end - non_core_edges.begin());
+            edge_container.Insert(std::move(non_core_edges));
+
+            for (const auto filter_index : util::irange<std::size_t>(0, filters.size()))
+            {
+                edge_container.Filter(filters[filter_index], filter_index);
+            }
+        }
+
+        // Extract core graph for further contraction
+        shared_core_graph = contractor_graph.Filter([&is_shared_core](const NodeID node)
+                                                    { return is_shared_core[node]; });
+    }
+
+    for (const auto &filter : filters)
+    {
+        auto filtered_core_graph =
+            shared_core_graph.Filter([&filter](const NodeID node) { return filter[node]; });
+
+        contractGraph(filtered_core_graph, is_shared_core, is_shared_core, node_weights);
+
+        edge_container.Merge(toEdges<QueryEdge>(std::move(filtered_core_graph)));
+    }
+
+    return GraphAndFilter{QueryGraph{num_nodes, edge_container.edges},
+                          edge_container.MakeEdgeFilters()};
 }
 
 } // namespace osrm::contractor

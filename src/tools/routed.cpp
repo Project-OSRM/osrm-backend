@@ -1,3 +1,4 @@
+#include "server/header_size.hpp"
 #include "server/server.hpp"
 #include "util/exception_utils.hpp"
 #include "util/log.hpp"
@@ -108,7 +109,8 @@ inline unsigned generateServerProgramOptions(const int argc,
                                              bool &trial,
                                              EngineConfig &config,
                                              int &requested_thread_num,
-                                             short &keepalive_timeout)
+                                             short &keepalive_timeout,
+                                             unsigned &max_header_size)
 {
     using boost::program_options::value;
     using std::filesystem::path;
@@ -117,9 +119,10 @@ inline unsigned generateServerProgramOptions(const int argc,
 
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()            //
-        ("version,v", "Show version")        //
-        ("help,h", "Show this help message") //
+    generic_options.add_options()                                           //
+        ("version,v", "Show version")                                       //
+        ("help,h", "Show this help message")                                //
+        ("list-inputs", "List required and optional input file extensions") //
         ("verbosity,l",
 #ifdef NDEBUG
          boost::program_options::value<std::string>(&config.verbosity)->default_value("INFO"),
@@ -187,7 +190,11 @@ inline unsigned generateServerProgramOptions(const int argc,
          "Max. radius size supported in map matching query. Default: unlimited.") //
         ("default-radius",
          value<double>(&config.default_radius)->default_value(-1.0),
-         "Default radius size for queries. Default: unlimited.");
+         "Default radius size for queries. Default: unlimited.")(
+            "max-header-size",
+            value<unsigned>(&max_header_size)->default_value(0),
+            "Maximum size of the HTTP headers (including GET request line). Default: auto (based "
+            "on maximum coordinates).");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
@@ -223,29 +230,41 @@ inline unsigned generateServerProgramOptions(const int argc,
         return INIT_FAILED;
     }
 
-    if (option_variables.count("version"))
+    if (option_variables.contains("version"))
     {
         std::cout << OSRM_VERSION << std::endl;
         return INIT_OK_DO_NOT_START_ENGINE;
     }
 
-    if (option_variables.count("help"))
+    if (option_variables.contains("help"))
     {
         std::cout << visible_options;
         return INIT_OK_DO_NOT_START_ENGINE;
     }
 
+    if (option_variables.contains("list-inputs"))
+    {
+        storage::StorageConfig storage_config;
+        storage_config.ListInputFiles(std::cout);
+        return INIT_OK_DO_NOT_START_ENGINE;
+    }
+
     boost::program_options::notify(option_variables);
 
-    if (!config.use_shared_memory && option_variables.count("base"))
+    if (max_header_size == 0)
+    {
+        max_header_size = server::deriveMaxHeaderSize(config);
+    }
+
+    if (!config.use_shared_memory && option_variables.contains("base"))
     {
         return INIT_OK_START_ENGINE;
     }
-    else if (config.use_shared_memory && !option_variables.count("base"))
+    else if (config.use_shared_memory && !option_variables.contains("base"))
     {
         return INIT_OK_START_ENGINE;
     }
-    else if (config.use_shared_memory && option_variables.count("base"))
+    else if (config.use_shared_memory && option_variables.contains("base"))
     {
         util::Log(logWARNING) << "Shared memory settings conflict with path settings.";
     }
@@ -271,6 +290,8 @@ try
 
     int requested_thread_num = 1;
     short keepalive_timeout = 5;
+    // Size of 0 means: Determine automatically based on coordinate limits.
+    unsigned max_header_size = 0;
     const unsigned init_result = generateServerProgramOptions(argc,
                                                               argv,
                                                               base_path,
@@ -279,7 +300,8 @@ try
                                                               trial_run,
                                                               config,
                                                               requested_thread_num,
-                                                              keepalive_timeout);
+                                                              keepalive_timeout,
+                                                              max_header_size);
     if (init_result == INIT_OK_DO_NOT_START_ENGINE)
     {
         return EXIT_SUCCESS;
@@ -320,6 +342,7 @@ try
     util::Log() << "IP address: " << ip_address;
     util::Log() << "IP port: " << ip_port;
     util::Log() << "Keepalive timeout: " << keepalive_timeout;
+    util::Log() << "Maximum header size: " << max_header_size;
 
 #ifndef _WIN32
     int sig = 0;
@@ -332,8 +355,8 @@ try
 #endif
 
     auto service_handler = std::make_unique<server::ServiceHandler>(config);
-    auto routing_server =
-        server::Server::CreateServer(ip_address, ip_port, requested_thread_num, keepalive_timeout);
+    auto routing_server = server::Server::CreateServer(
+        ip_address, ip_port, requested_thread_num, keepalive_timeout, max_header_size);
 
     routing_server->RegisterServiceHandler(std::move(service_handler));
 
@@ -392,6 +415,11 @@ catch (const osrm::RuntimeError &e)
 {
     util::Log(logERROR) << e.what();
     return e.GetCode();
+}
+catch (const util::exception &e)
+{
+    util::Log(logERROR) << e.what();
+    return EXIT_FAILURE;
 }
 catch (const std::bad_alloc &e)
 {

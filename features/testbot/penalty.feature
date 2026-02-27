@@ -5,26 +5,60 @@ Feature: Penalties
     Background:
         Given the profile "testbot"
 
+    # one OSM way through the obstacle (test graph compressor)
     Scenario: Traffic signals should incur a delay, without changing distance
         Given the node map
             """
             a b c
             d e f
+            g h i
             """
 
         And the nodes
             | node | highway         |
             | e    | traffic_signals |
+            | h    | crossing        |
 
         And the ways
             | nodes |
             | abc   |
             | def   |
+            | ghi   |
 
         When I route I should get
             | from | to | route   | time    | distance |
             | a    | c  | abc,abc | 20s +-1 | 200m +-1 |
             | d    | f  | def,def | 27s +-1 | 200m +-1 |
+            | g    | i  | ghi,ghi | 20s +-1 | 200m +-1 |
+
+    # two OSM ways connected at the obstacle
+    Scenario: Traffic signals should incur a delay, without changing distance
+        Given the node map
+            """
+            a b c
+            d e f
+            g h i
+            """
+
+        And the nodes
+            | node | highway         |
+            | e    | traffic_signals |
+            | h    | crossing        |
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | de    |
+            | ef    |
+            | gh    |
+            | hi    |
+
+        When I route I should get
+            | from | to | route | time    | distance |
+            | a    | c  | ab,bc | 20s +-1 | 200m +-1 |
+            | d    | f  | de,ef | 27s +-1 | 200m +-1 |
+            | g    | i  | gh,hi | 20s +-1 | 200m +-1 |
 
     # Penalties not on the phantom nodes
     Scenario: Traffic signals should incur a delay, without changing distance

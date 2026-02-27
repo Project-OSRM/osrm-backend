@@ -9,12 +9,10 @@ runs:
         sudo apt-get install -yq \
              doxygen \
              libboost-dev \
+             libbz2-dev \
              libgdal-dev \
              libgeos++-dev \
              liblz4-dev \
-             libproj-dev \
-             libsparsehash-dev \
              ruby-json \
              spatialite-bin
       shell: bash
-

@@ -43,8 +43,8 @@ void benchmarkQuery(const std::vector<util::Coordinate> &queries,
     TIMER_STOP(query);
 
     std::cout << name << ":\n"
-              << TIMER_MSEC(query) << "ms"
-              << " ->  " << TIMER_MSEC(query) / queries.size() << " ms/query" << std::endl;
+              << TIMER_MSEC(query) << "ms" << " ->  " << TIMER_MSEC(query) / queries.size()
+              << " ms/query" << std::endl;
 }
 
 void benchmark(BenchStaticRTree &rtree, unsigned num_queries)
@@ -53,6 +53,7 @@ void benchmark(BenchStaticRTree &rtree, unsigned num_queries)
     std::uniform_int_distribution<> lat_udist(WORLD_MIN_LAT, WORLD_MAX_LAT);
     std::uniform_int_distribution<> lon_udist(WORLD_MIN_LON, WORLD_MAX_LON);
     std::vector<util::Coordinate> queries;
+    queries.reserve(num_queries);
     for (unsigned i = 0; i < num_queries; i++)
     {
         queries.emplace_back(util::FixedLongitude{lon_udist(mt_rand)},
@@ -71,8 +72,7 @@ int main(int argc, char **argv)
 {
     if (argc < 4)
     {
-        std::cout << "./rtree-bench file.ramIndex file.fileIndx file.nodes"
-                  << "\n";
+        std::cout << "./rtree-bench file.ramIndex file.fileIndx file.nodes" << "\n";
         return 1;
     }
 

@@ -5,8 +5,8 @@
 #include <osmium/io/detail/read_write.hpp>
 #include <osmium/util/file.hpp>
 
-#include <stdexcept>
 #include <string>
+#include <system_error>
 
 TEST_CASE("file_size(int) and file_offset() of known file") {
     const std::string file_name{with_data_dir("t/util/known_file_size")};
@@ -28,7 +28,7 @@ TEST_CASE("file_size(const char*) of known file") {
 }
 
 TEST_CASE("file_size() with illegal fd should throw") {
-    REQUIRE_THROWS_AS(osmium::file_size(-1), std::system_error);
+    REQUIRE_THROWS_AS(osmium::file_size(999), std::system_error);
 }
 
 TEST_CASE("file_size() with unused fd should throw") {

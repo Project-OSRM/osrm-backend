@@ -81,7 +81,7 @@ struct RouteStep
     void Invalidate();
 
     // Elongate by another step in front
-    RouteStep &AddInFront(const RouteStep &preceeding_step);
+    RouteStep &AddInFront(const RouteStep &preceding_step);
 
     // Elongate by another step in back
     RouteStep &ElongateBy(const RouteStep &following_step);
@@ -132,18 +132,18 @@ inline void RouteStep::Invalidate()
 }
 
 // Elongate by another step in front
-inline RouteStep &RouteStep::AddInFront(const RouteStep &preceeding_step)
+inline RouteStep &RouteStep::AddInFront(const RouteStep &preceding_step)
 {
-    BOOST_ASSERT(preceeding_step.geometry_end == geometry_begin + 1);
-    BOOST_ASSERT(mode == preceeding_step.mode);
-    duration += preceeding_step.duration;
-    distance += preceeding_step.distance;
-    weight += preceeding_step.weight;
+    BOOST_ASSERT(preceding_step.geometry_end == geometry_begin + 1);
+    BOOST_ASSERT(mode == preceding_step.mode);
+    duration += preceding_step.duration;
+    distance += preceding_step.distance;
+    weight += preceding_step.weight;
 
-    geometry_begin = preceeding_step.geometry_begin;
+    geometry_begin = preceding_step.geometry_begin;
     intersections.insert(intersections.begin(),
-                         preceeding_step.intersections.begin(),
-                         preceeding_step.intersections.end());
+                         preceding_step.intersections.begin(),
+                         preceding_step.intersections.end());
 
     return *this;
 }

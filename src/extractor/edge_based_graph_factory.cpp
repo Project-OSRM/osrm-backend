@@ -1141,7 +1141,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         std::vector<EdgeWithData> delayed_data;
         tbb::filter<EdgesPipelineBufferPtr, void> output_stage(
             tbb::filter_mode::serial_in_order,
-            [&](auto buffer)
+            [&](const auto &buffer)
             {
                 routing_progress.PrintAddition(buffer->nodes_processed);
 
@@ -1197,9 +1197,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 first_turn_edges.first,
                 first_turn_edges.second,
                 std::back_inserter(node_sequences),
-                [](const auto turn_edges) {
-                    return std::vector<NodeID>{turn_edges.second.first, turn_edges.second.second};
-                });
+                [](const auto turn_edges)
+                { return std::vector<NodeID>{turn_edges.second.first, turn_edges.second.second}; });
 
             std::for_each(std::next(turns.begin()),
                           turns.end(),

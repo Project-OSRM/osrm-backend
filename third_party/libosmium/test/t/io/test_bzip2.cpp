@@ -7,14 +7,24 @@
 
 #include <string>
 
-static void read_from_decompressor(int fd) {
+namespace {
+
+void read_from_decompressor(int fd) {
     osmium::io::Bzip2Decompressor decomp{fd};
     decomp.read();
     decomp.close();
 }
 
+void write_to_compressor(int fd) {
+    osmium::io::Bzip2Compressor comp{fd, osmium::io::fsync::yes};
+    comp.write("foo");
+    comp.close();
+}
+
+} // anonymous namespace
+
 TEST_CASE("Invalid file descriptor of bzip2-compressed file") {
-    REQUIRE_THROWS(read_from_decompressor(-1));
+    REQUIRE_THROWS(read_from_decompressor(999));
 }
 
 TEST_CASE("Non-open file descriptor of bzip2-compressed file") {
@@ -99,12 +109,6 @@ TEST_CASE("Corrupted bzip2-compressed file") {
     REQUIRE(count == count_fds());
 }
 
-static void write_to_compressor(int fd) {
-    osmium::io::Bzip2Compressor comp{fd, osmium::io::fsync::yes};
-    comp.write("foo");
-    comp.close();
-}
-
 TEST_CASE("Compressor: Invalid file descriptor for bzip2-compressed file") {
     REQUIRE_THROWS(write_to_compressor(-1));
 }
@@ -135,7 +139,7 @@ TEST_CASE("Write bzip2-compressed file with implicit close") {
 
     const std::string output_file = "test_gzip_out.txt.bz2";
     const int fd = osmium::io::detail::open_for_writing(output_file, osmium::io::overwrite::allow);
-    REQUIRE(fd > 0);
+    REQUIRE(fd > 1);
 
     {
         osmium::io::Bzip2Compressor comp{fd, osmium::io::fsync::yes};

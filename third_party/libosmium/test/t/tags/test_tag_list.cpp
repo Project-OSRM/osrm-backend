@@ -4,6 +4,7 @@
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm/tag.hpp>
 
+#include <cstring>
 #include <map>
 #include <string>
 #include <utility>
@@ -62,7 +63,7 @@ TEST_CASE("create tag list") {
     SECTION("with TagListBuilder from char* with length") {
         {
             osmium::builder::TagListBuilder builder(buffer);
-            builder.add_tag("highway", strlen("highway"), "primary", strlen("primary"));
+            builder.add_tag("highway", std::strlen("highway"), "primary", std::strlen("primary"));
             builder.add_tag("nameXX", 4, "Main Street", 11);
         }
         buffer.commit();

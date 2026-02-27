@@ -66,7 +66,7 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
   public:
     RoutingAlgorithms(SearchEngineData<Algorithm> &heaps,
                       std::shared_ptr<const DataFacade<Algorithm>> facade)
-        : heaps(heaps), facade(facade)
+        : heaps(heaps), facade(std::move(facade))
     {
     }
 

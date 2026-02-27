@@ -17,6 +17,7 @@
 
 */
 
+#include <exception>
 #include <iostream> // for std::cout, std::cerr
 #include <string>   // for std::string
 

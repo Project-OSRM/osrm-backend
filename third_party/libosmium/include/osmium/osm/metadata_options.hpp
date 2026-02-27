@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -41,6 +41,8 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 
 namespace osmium {
+
+    // NOLINTBEGIN(clang-analyzer-optin.core.EnumCastOutOfRange)
 
     /**
      * Describes which metadata fields are available in an OSMObject. This is
@@ -218,6 +220,8 @@ namespace osmium {
         }
 
     }; // class metadata_options
+
+    // NOLINTEND(clang-analyzer-optin.core.EnumCastOutOfRange)
 
     template <typename TChar, typename TTraits>
     inline std::basic_ostream<TChar, TTraits>& operator<<(std::basic_ostream<TChar, TTraits>& out, const metadata_options& options) {

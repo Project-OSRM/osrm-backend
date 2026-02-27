@@ -60,7 +60,7 @@ Instructions should only be used when writing a feature located in `features/gui
 
 ### Write Tests to Scale
 
-OSRM is a navigation engine. Tests should always consider this background. 
+OSRM is a navigation engine. Tests should always consider this context. 
 
 An important implication is the grid size. If tests use a very small grid size, you run into the chance of instructions being omitted.
 For example:
@@ -397,7 +397,7 @@ To see the unprocessed turns, you should print the steps at the end of step asse
 
 If you see unexpected changes, you can consider adding the `locations` field to your test to study what location a turn is reported at.
 
-To study a test without post-processing impacts, you can create a copy of the case on a very large grid (like 2000 meters). In such a grid, `turn collapsing` would be essentially disable.
+To study a test without post-processing impacts, you can create a copy of the case on a very large grid (like 2000 meters). In such a grid, `turn collapsing` would be essentially disabled.
 
 Sadly, there is no general guideline.
 

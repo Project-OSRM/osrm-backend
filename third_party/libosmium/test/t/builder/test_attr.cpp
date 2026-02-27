@@ -5,11 +5,10 @@
 #include <osmium/osm.hpp>
 #include <osmium/osm/types.hpp>
 
-#include <cstdint>
+#include <cstddef>
 #include <initializer_list>
 #include <iterator>
 #include <string>
-#include <type_traits>
 #include <utility>
 #include <vector>
 

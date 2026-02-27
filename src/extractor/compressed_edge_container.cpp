@@ -185,8 +185,7 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
 
         // remove the list of edge_id_2
         m_edge_id_to_list_index_map.erase(edge_id_2);
-        BOOST_ASSERT(m_edge_id_to_list_index_map.end() ==
-                     m_edge_id_to_list_index_map.find(edge_id_2));
+        BOOST_ASSERT(!m_edge_id_to_list_index_map.contains(edge_id_2));
         edge_bucket_list2.clear();
         BOOST_ASSERT(0 == edge_bucket_list2.size());
         m_free_list.emplace_back(list_to_remove_index);

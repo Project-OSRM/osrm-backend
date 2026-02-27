@@ -21,11 +21,12 @@ using namespace osrm;
 
 void removeLocks() { storage::SharedMonitor<storage::SharedRegionRegister>::remove(); }
 
-void deleteRegion(const storage::SharedRegionRegister::ShmKey key)
+void deleteRegion(const storage::ProjID proj_id)
 {
-    if (storage::SharedMemory::RegionExists(key) && !storage::SharedMemory::Remove(key))
+    if (storage::RegionExists(proj_id) && !storage::Remove(proj_id))
     {
-        util::Log(logWARNING) << "could not delete shared memory region " << static_cast<int>(key);
+        util::Log(logWARNING) << "could not delete shared memory region "
+                              << static_cast<int>(proj_id);
     }
 }
 
@@ -44,14 +45,14 @@ void listRegions(bool show_blocks)
     {
         auto id = shared_register.Find(name);
         auto region = shared_register.GetRegion(id);
-        auto shm = osrm::storage::makeSharedMemory(region.shm_key);
-        osrm::util::Log() << name << "\t" << static_cast<int>(region.shm_key) << "\t"
+        auto shm = osrm::storage::makeSharedMemory(region.proj_id);
+        osrm::util::Log() << name << "\t" << static_cast<int>(region.proj_id) << "\t"
                           << region.timestamp << "\t" << shm->Size();
 
         if (show_blocks)
         {
             using namespace storage;
-            auto memory = makeSharedMemory(region.shm_key);
+            auto memory = makeSharedMemory(region.proj_id);
             io::BufferReader reader(reinterpret_cast<char *>(memory->Ptr()), memory->Size());
 
             std::unique_ptr<BaseDataLayout> layout = std::make_unique<ContiguousDataLayout>();
@@ -107,9 +108,10 @@ bool generateDataStoreOptions(const int argc,
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()            //
-        ("version,v", "Show version")        //
-        ("help,h", "Show this help message") //
+    generic_options.add_options()                                           //
+        ("version,v", "Show version")                                       //
+        ("help,h", "Show this help message")                                //
+        ("list-inputs", "List required and optional input file extensions") //
         ("verbosity,l",
          boost::program_options::value<std::string>(&verbosity)->default_value("INFO"),
          std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str()) //
@@ -195,25 +197,32 @@ bool generateDataStoreOptions(const int argc,
         return false;
     }
 
-    if (option_variables.count("version"))
+    if (option_variables.contains("version"))
     {
         util::Log() << OSRM_VERSION;
         return false;
     }
 
-    if (option_variables.count("help"))
+    if (option_variables.contains("help"))
     {
         util::Log() << visible_options;
         return false;
     }
 
-    if (option_variables.count("remove-locks"))
+    if (option_variables.contains("list-inputs"))
+    {
+        storage::StorageConfig config;
+        config.ListInputFiles(std::cout);
+        return false;
+    }
+
+    if (option_variables.contains("remove-locks"))
     {
         removeLocks();
         return false;
     }
 
-    if (option_variables.count("spring-clean"))
+    if (option_variables.contains("spring-clean"))
     {
         springClean();
         return false;
@@ -285,6 +294,11 @@ catch (const osrm::RuntimeError &e)
 {
     util::Log(logERROR) << e.what();
     return e.GetCode();
+}
+catch (const util::exception &e)
+{
+    util::Log(logERROR) << e.what();
+    return EXIT_FAILURE;
 }
 catch (const std::bad_alloc &e)
 {

@@ -19,8 +19,8 @@ void unpackEdge(const DataFacade<Algorithm> &facade,
     unpackPath(facade,
                path.begin(),
                path.end(),
-               [&unpacked_path](const std::pair<NodeID, NodeID> &edge, const auto & /* data */)
-               { unpacked_path.emplace_back(edge.first); });
+               [&unpacked_path](NodeID first, NodeID /* second */, const auto & /* data */)
+               { unpacked_path.emplace_back(first); });
     unpacked_path.emplace_back(to);
 }
 
@@ -43,7 +43,7 @@ void retrievePackedPathFromSingleHeap(const SearchEngineData<Algorithm>::QueryHe
     // all initial nodes will have itself as parent, or a node not in the heap
     // in case of a core search heap. We need a distinction between core entry nodes
     // and start nodes since otherwise start node specific code that assumes
-    // node == node.parent (e.g. the loop code) might get actived.
+    // node == node.parent (e.g. the loop code) might get activated.
     while (current_node_id != search_heap.GetData(current_node_id).parent &&
            search_heap.WasInserted(search_heap.GetData(current_node_id).parent))
     {
@@ -61,7 +61,7 @@ void retrievePackedPathFromSingleManyToManyHeap(
     // all initial nodes will have itself as parent, or a node not in the heap
     // in case of a core search heap. We need a distinction between core entry nodes
     // and start nodes since otherwise start node specific code that assumes
-    // node == node.parent (e.g. the loop code) might get actived.
+    // node == node.parent (e.g. the loop code) might get activated.
     while (current_node_id != search_heap.GetData(current_node_id).parent &&
            search_heap.WasInserted(search_heap.GetData(current_node_id).parent))
     {

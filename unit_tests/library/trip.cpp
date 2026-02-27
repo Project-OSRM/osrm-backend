@@ -98,7 +98,7 @@ void test_roundtrip_response_for_locations_in_small_component_skip_waypoints(boo
     const auto code = std::get<json::String>(json_result.values.at("code")).value;
     BOOST_CHECK_EQUAL(code, "Ok");
 
-    BOOST_CHECK(json_result.values.find("waypoints") == json_result.values.end());
+    BOOST_CHECK(!json_result.values.contains("waypoints"));
 }
 BOOST_AUTO_TEST_CASE(
     test_roundtrip_response_for_locations_in_small_component_skip_waypoints_old_api)

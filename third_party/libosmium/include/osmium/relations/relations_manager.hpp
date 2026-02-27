@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -75,7 +75,7 @@ namespace osmium {
 
             // All relations and members we are interested in will be kept
             // in here.
-            osmium::ItemStash m_stash{};
+            osmium::ItemStash m_stash;
 
             /// Database of all relations we are interested in.
             relations::RelationsDatabase m_relations_db;
@@ -86,7 +86,7 @@ namespace osmium {
             relations::MembersDatabase<osmium::Relation> m_member_relations_db;
 
             /// Output buffer.
-            osmium::memory::CallbackBuffer m_output{};
+            osmium::memory::CallbackBuffer m_output;
 
         public:
 
@@ -304,7 +304,7 @@ namespace osmium {
         template <typename TManager, bool TNodes, bool TWays, bool TRelations, bool TCheckOrder = true>
         class RelationsManager : public RelationsManagerBase {
 
-            using check_order_handler = typename std::conditional<TCheckOrder, osmium::handler::CheckOrder, osmium::handler::Handler>::type;
+            using check_order_handler = std::conditional_t<TCheckOrder, osmium::handler::CheckOrder, osmium::handler::Handler>;
 
             check_order_handler m_check_order_handler;
 

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -84,11 +84,11 @@ namespace osmium {
             }
 
             explicit FlexReader(const std::string& filename, TLocationHandler& location_handler, osmium::osm_entity_bits::type entities = osmium::osm_entity_bits::nwr) :
-                FlexReader(osmium::io::File(filename), location_handler, entities) {
+                FlexReader(osmium::io::File{filename}, location_handler, entities) {
             }
 
             explicit FlexReader(const char* filename, TLocationHandler& location_handler, osmium::osm_entity_bits::type entities = osmium::osm_entity_bits::nwr) :
-                FlexReader(osmium::io::File(filename), location_handler, entities) {
+                FlexReader(osmium::io::File{filename}, location_handler, entities) {
             }
 
             osmium::memory::Buffer read() {
@@ -117,7 +117,7 @@ namespace osmium {
             }
 
             void close() {
-                return m_reader.close();
+                m_reader.close();
             }
 
             bool eof() const {

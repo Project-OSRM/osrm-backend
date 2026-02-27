@@ -15,7 +15,7 @@ namespace osrm::contractor
 
 // Make sure to move in the input edge list!
 template <typename InputEdgeContainer>
-ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer input_edge_list)
+ContractorGraph toContractorGraph(NodeID number_of_nodes, const InputEdgeContainer &input_edge_list)
 {
     std::vector<ContractorEdge> edges;
     edges.reserve(input_edge_list.size() * 2);
@@ -116,7 +116,7 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, InputEdgeContainer inp
             }
         }
         else
-        { // insert seperate edges
+        { // insert separate edges
             if (forward_edge.data.weight != INVALID_EDGE_WEIGHT)
             {
                 edges[edge++] = forward_edge;

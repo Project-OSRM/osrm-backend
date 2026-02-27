@@ -60,12 +60,19 @@ Feature: Car - Handle physical limitation
 
     Scenario: Car - Limited by weight
         Then routability should be
-            | highway | maxweight | bothw |
-            | primary |           | x     |
-            | primary | 1         |       |
-            | primary | 2         | x     |
-            | primary | 3.5       | x     |
-            | primary | 35000 kg  | x     |
-            | primary | 8.9t      | x     |
-            | primary | 0.1 lbs   |       |
-            | primary | unsigned  | x     |
+            | highway | maxweightrating | maxweight | bothw |
+            | primary |                 |           | x     |
+            | primary |                 | 1         |       |
+            | primary |                 | 2         | x     |
+            | primary |                 | 3.5       | x     |
+            | primary |                 | 35000 kg  | x     |
+            | primary |                 | 8.9t      | x     |
+            | primary |                 | 0.1 lbs   |       |
+            | primary |                 | unsigned  | x     |
+            | primary | 1               |           |       |
+            | primary | 2               |           | x     |
+            | primary | 3.5             |           | x     |
+            | primary | 35000 kg        |           | x     |
+            | primary | 8.9t            |           | x     |
+            | primary | 0.1 lbs         |           |       |
+            | primary | 1               | 2         |       |

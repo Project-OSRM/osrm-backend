@@ -5,7 +5,7 @@
 
 This file is part of Osmium (https://osmcode.org/libosmium).
 
-Copyright 2013-2023 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2026 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -105,6 +105,14 @@ namespace osmium {
                 bool format_as_diff = false;
 
             }; // struct debug_output_options
+
+            // Space needed for printing numbers from 0 to num - 1
+            inline int print_width(std::size_t num) noexcept {
+                if (num <= 10) {
+                    return 1;
+                }
+                return static_cast<int>(std::log10(num - 1)) + 1;
+            }
 
             /**
              * Writes out one buffer with OSM data in Debug format.
@@ -392,7 +400,7 @@ namespace osmium {
                         *m_out += " (open)\n";
                     }
 
-                    const int width = static_cast<int>(std::log10(way.nodes().size())) + 1;
+                    const int width = print_width(way.nodes().size());
                     int n = 0;
                     for (const auto& node_ref : way.nodes()) {
                         write_diff();
@@ -427,7 +435,7 @@ namespace osmium {
                     output_int(relation.members().size());
                     *m_out += '\n';
 
-                    const int width = static_cast<int>(std::log10(relation.members().size())) + 1;
+                    const int width = print_width(relation.members().size());
                     int n = 0;
                     for (const auto& member : relation.members()) {
                         write_diff();
@@ -485,7 +493,7 @@ namespace osmium {
                         output_int(changeset.num_comments());
                         *m_out += '\n';
 
-                        const int width = static_cast<int>(std::log10(changeset.num_comments())) + 1;
+                        const int width = print_width(changeset.num_comments());
                         int n = 0;
                         for (const auto& comment : changeset.discussion()) {
                             write_counter(width, n++);

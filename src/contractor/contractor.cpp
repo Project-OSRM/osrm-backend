@@ -1,5 +1,4 @@
 #include "contractor/contractor.hpp"
-#include "contractor/contract_excludable_graph.hpp"
 #include "contractor/contracted_edge_container.hpp"
 #include "contractor/files.hpp"
 #include "contractor/graph_contractor.hpp"
@@ -39,18 +38,6 @@ int Contractor::Run()
 {
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
-
-    if (config.core_factor != 1.0)
-    {
-        util::Log(logWARNING)
-            << "Using core factor is deprecated and will be ignored. Falling back to CH.";
-        config.core_factor = 1.0;
-    }
-
-    if (config.use_cached_priority)
-    {
-        util::Log(logWARNING) << "Using cached priorities is deprecated and they will be ignored.";
-    }
 
     TIMER_START(preparing);
 
@@ -96,10 +83,10 @@ int Contractor::Run()
     QueryGraph query_graph;
     std::vector<std::vector<bool>> edge_filters;
     std::vector<std::vector<bool>> cores;
-    std::tie(query_graph, edge_filters) = contractExcludableGraph(
-        toContractorGraph(number_of_edge_based_nodes, std::move(edge_based_edge_list)),
-        std::move(node_weights),
-        node_filters);
+    std::tie(query_graph, edge_filters) =
+        contractExcludableGraph(toContractorGraph(number_of_edge_based_nodes, edge_based_edge_list),
+                                std::move(node_weights),
+                                node_filters);
     TIMER_STOP(contraction);
     util::Log() << "Contracted graph has " << query_graph.GetNumberOfEdges() << " edges.";
     util::Log() << "Contraction took " << TIMER_SEC(contraction) << " sec";

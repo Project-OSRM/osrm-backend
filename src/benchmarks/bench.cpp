@@ -148,6 +148,7 @@ ConfidenceInterval confidenceInterval(const std::vector<double> &data,
     for (int i = 0; i < num_samples; ++i)
     {
         std::vector<double> sample;
+        sample.reserve(data.size());
         for (size_t j = 0; j < data.size(); ++j)
         {
             sample.push_back(data[distribution(generator)]);
@@ -360,7 +361,7 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterati
                       if (benchmark.radius)
                       {
                           params.radiuses = std::vector<std::optional<double>>(
-                              params.coordinates.size(), std::make_optional(*benchmark.radius));
+                              params.coordinates.size(), benchmark.radius);
                       }
 
                       engine::api::ResultT result = json::Object();
@@ -369,8 +370,7 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterati
                       TIMER_STOP(routes);
 
                       auto &json_result = std::get<json::Object>(result);
-                      if (rc != Status::Ok ||
-                          json_result.values.find("routes") == json_result.values.end())
+                      if (rc != Status::Ok || !json_result.values.contains("routes"))
                       {
                           auto code = std::get<json::String>(json_result.values["code"]).value;
                           if (code != "NoSegment" && code != "NoRoute")
@@ -380,7 +380,6 @@ void runRouteBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterati
                       }
                       else
                       {
-
                           statistics.push(TIMER_MSEC(routes), iteration);
                       }
                   });
@@ -413,13 +412,10 @@ void runMatchBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterati
 
                       engine::api::MatchParameters params;
                       params.coordinates = gpsTraces.getRandomTrace();
-                      params.radiuses = {};
                       if (benchmark.radius)
                       {
-                          for (size_t index = 0; index < params.coordinates.size(); ++index)
-                          {
-                              params.radiuses.emplace_back(*benchmark.radius);
-                          }
+                          params.radiuses = std::vector<std::optional<double>>(
+                              params.coordinates.size(), benchmark.radius);
                       }
 
                       TIMER_START(match);
@@ -427,8 +423,7 @@ void runMatchBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterati
                       TIMER_STOP(match);
 
                       auto &json_result = std::get<json::Object>(result);
-                      if (rc != Status::Ok ||
-                          json_result.values.find("matchings") == json_result.values.end())
+                      if (rc != Status::Ok || !json_result.values.contains("matchings"))
                       {
                           auto code = std::get<json::String>(json_result.values["code"]).value;
                           if (code != "NoSegment" && code != "NoMatch")
@@ -480,8 +475,7 @@ void runNearestBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int itera
                       TIMER_STOP(nearest);
 
                       auto &json_result = std::get<json::Object>(result);
-                      if (rc != Status::Ok ||
-                          json_result.values.find("waypoints") == json_result.values.end())
+                      if (rc != Status::Ok || !json_result.values.contains("waypoints"))
                       {
                           auto code = std::get<json::String>(json_result.values["code"]).value;
                           if (code != "NoSegment")
@@ -534,8 +528,7 @@ void runTripBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iteratio
                       TIMER_STOP(trip);
 
                       auto &json_result = std::get<json::Object>(result);
-                      if (rc != Status::Ok ||
-                          json_result.values.find("trips") == json_result.values.end())
+                      if (rc != Status::Ok || !json_result.values.contains("trips"))
                       {
                           auto code = std::get<json::String>(json_result.values["code"]).value;
                           if (code != "NoSegment")
@@ -587,8 +580,7 @@ void runTableBenchmark(const OSRM &osrm, const GPSTraces &gpsTraces, int iterati
                       statistics.push(TIMER_MSEC(table), iteration);
 
                       auto &json_result = std::get<json::Object>(result);
-                      if (rc != Status::Ok ||
-                          json_result.values.find("durations") == json_result.values.end())
+                      if (rc != Status::Ok || !json_result.values.contains("durations"))
                       {
                           auto code = std::get<json::String>(json_result.values["code"]).value;
                           if (code != "NoSegment")

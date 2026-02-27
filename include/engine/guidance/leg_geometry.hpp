@@ -36,7 +36,7 @@ struct LegGeometry
         double distance; // distance in meters
 
         // Total duration of a segment, in seconds, NOT including
-        // the turn penalty if the segment preceeds a turn
+        // the turn penalty if the segment precedes a turn
         double duration;
         double weight; // weight value, NOT including the turn weight
 
