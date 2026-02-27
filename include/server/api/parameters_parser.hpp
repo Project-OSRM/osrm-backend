@@ -4,6 +4,8 @@
 #include "engine/api/base_parameters.hpp"
 #include "engine/api/tile_parameters.hpp"
 
+#include <optional>
+#include <string>
 #include <type_traits>
 
 namespace osrm::server::api
