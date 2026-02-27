@@ -463,10 +463,11 @@ function process_way(profile, way, result, relations)
     WayHandlers.speed,
     WayHandlers.maxspeed,
     WayHandlers.surface,
-    WayHandlers.penalties,
 
-    -- apply vehicle-specific maximum speed cap
+    -- apply vehicle-specific maximum speed cap before calculating rates
     WayHandlers.vehicle_speed_cap,
+
+    WayHandlers.penalties,
 
     -- compute class labels
     WayHandlers.classes,
