@@ -73,24 +73,9 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     BaseParametersGrammar(qi::rule<Iterator, Signature> &root_rule)
         : BaseParametersGrammar::base_type(root_rule)
     {
-        const auto add_hint = [](engine::api::BaseParameters &base_parameters,
-                                 const std::vector<std::string> &hint_strings)
-        {
-            if (!hint_strings.empty())
-            {
-                std::vector<engine::SegmentHint> location_hints(hint_strings.size());
-                std::transform(hint_strings.begin(),
-                               hint_strings.end(),
-                               location_hints.begin(),
-                               [](const auto &hint_string)
-                               { return engine::SegmentHint::FromBase64(hint_string); });
-                base_parameters.hints.push_back(engine::Hint{std::move(location_hints)});
-            }
-            else
-            {
-                base_parameters.hints.emplace_back(std::nullopt);
-            }
-        };
+        // hints parameter is deprecated and silently ignored
+        const auto add_hint = [](engine::api::BaseParameters &,
+                                 const std::vector<std::string> &) {};
 
         const auto add_bearing =
             [](engine::api::BaseParameters &base_parameters,

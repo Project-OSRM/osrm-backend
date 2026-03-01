@@ -179,25 +179,11 @@ class BasePlugin
             parameters.coordinates.size());
         BOOST_ASSERT(radiuses.size() == parameters.coordinates.size());
 
-        const bool use_hints = !parameters.hints.empty();
         const bool use_bearings = !parameters.bearings.empty();
         const bool use_approaches = !parameters.approaches.empty();
 
         for (const auto i : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
         {
-            if (use_hints && parameters.hints[i] && !parameters.hints[i]->segment_hints.empty() &&
-                parameters.hints[i]->IsValid(parameters.coordinates[i], facade))
-            {
-                for (const auto &seg_hint : parameters.hints[i]->segment_hints)
-                {
-                    phantom_nodes[i].push_back(PhantomNodeWithDistance{
-                        seg_hint.phantom,
-                        util::coordinate_calculation::greatCircleDistance(
-                            parameters.coordinates[i], seg_hint.phantom.location)});
-                }
-                continue;
-            }
-
             phantom_nodes[i] = facade.NearestPhantomNodesInRange(
                 parameters.coordinates[i],
                 radiuses[i],
@@ -218,7 +204,6 @@ class BasePlugin
         std::vector<std::vector<PhantomNodeWithDistance>> phantom_nodes(
             parameters.coordinates.size());
 
-        const bool use_hints = !parameters.hints.empty();
         const bool use_bearings = !parameters.bearings.empty();
         const bool use_radiuses = !parameters.radiuses.empty();
         const bool use_approaches = !parameters.approaches.empty();
@@ -226,19 +211,6 @@ class BasePlugin
         BOOST_ASSERT(parameters.IsValid());
         for (const auto i : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
         {
-            if (use_hints && parameters.hints[i] && !parameters.hints[i]->segment_hints.empty() &&
-                parameters.hints[i]->IsValid(parameters.coordinates[i], facade))
-            {
-                for (const auto &seg_hint : parameters.hints[i]->segment_hints)
-                {
-                    phantom_nodes[i].push_back(PhantomNodeWithDistance{
-                        seg_hint.phantom,
-                        util::coordinate_calculation::greatCircleDistance(
-                            parameters.coordinates[i], seg_hint.phantom.location)});
-                }
-                continue;
-            }
-
             phantom_nodes[i] = facade.NearestPhantomNodes(
                 parameters.coordinates[i],
                 number_of_results,
@@ -262,7 +234,6 @@ class BasePlugin
     {
         std::vector<PhantomCandidateAlternatives> alternatives(parameters.coordinates.size());
 
-        const bool use_hints = !parameters.hints.empty();
         const bool use_bearings = !parameters.bearings.empty();
         const bool use_radiuses = !parameters.radiuses.empty();
         const bool use_approaches = !parameters.approaches.empty();
@@ -271,17 +242,6 @@ class BasePlugin
         BOOST_ASSERT(parameters.IsValid());
         for (const auto i : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
         {
-            if (use_hints && parameters.hints[i] && !parameters.hints[i]->segment_hints.empty() &&
-                parameters.hints[i]->IsValid(parameters.coordinates[i], facade))
-            {
-                std::transform(parameters.hints[i]->segment_hints.begin(),
-                               parameters.hints[i]->segment_hints.end(),
-                               std::back_inserter(alternatives[i].first),
-                               [](const auto &seg_hint) { return seg_hint.phantom; });
-                // we don't set the second one - it will be marked as invalid
-                continue;
-            }
-
             alternatives[i] = facade.NearestCandidatesWithAlternativeFromBigComponent(
                 parameters.coordinates[i],
                 use_radiuses ? parameters.radiuses[i] : default_radius,

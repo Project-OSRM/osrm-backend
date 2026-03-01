@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                 RouteParameters::OverviewType::Simplified,
                                 std::optional<bool>{},
                                 coords_1,
-                                hints_4,
+                                std::vector<std::optional<engine::Hint>>{},
                                 std::vector<std::optional<double>>{},
                                 std::vector<std::optional<engine::Bearing>>{}};
     auto result_4 = parseParameters<RouteParameters>(
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_4.radiuses, result_4->radiuses);
     CHECK_EQUAL_RANGE(reference_4.approaches, result_4->approaches);
     CHECK_EQUAL_RANGE(reference_4.coordinates, result_4->coordinates);
-    CHECK_EQUAL_RANGE_OF_HINTS(reference_4.hints, result_4->hints);
+    BOOST_CHECK(result_4->hints.empty()); // hints are silently ignored from HTTP
 
     std::vector<std::optional<engine::Bearing>> bearings_4 = {
         std::nullopt,
@@ -353,7 +353,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                  RouteParameters::OverviewType::Simplified,
                                  std::optional<bool>{},
                                  coords_3,
-                                 hints_10,
+                                 std::vector<std::optional<engine::Hint>>{},
                                  std::vector<std::optional<double>>{},
                                  std::vector<std::optional<engine::Bearing>>{}};
     auto result_10 = parseParameters<RouteParameters>(
@@ -370,7 +370,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_10.radiuses, result_10->radiuses);
     CHECK_EQUAL_RANGE(reference_10.approaches, result_10->approaches);
     CHECK_EQUAL_RANGE(reference_10.coordinates, result_10->coordinates);
-    CHECK_EQUAL_RANGE_OF_HINTS(reference_10.hints, result_10->hints);
+    BOOST_CHECK(result_10->hints.empty()); // hints are silently ignored from HTTP
 
     // Do not generate Hints when they are explicitly disabled
     auto result_11 = parseParameters<RouteParameters>("1,2;3,4?generate_hints=false");
