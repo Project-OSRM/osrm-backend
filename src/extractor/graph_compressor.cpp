@@ -273,7 +273,9 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
                                              no_other_roads,
                                              no_other_roads,
                                              scripting_environment.m_obstacle_map.any(
-                                                 from, via, Obstacle::Type::TrafficSignals)};
+                                                 from, via, Obstacle::Type::TrafficSignals),
+                                             scripting_environment.m_obstacle_map.any(
+                                                 via, Obstacle::Type::Turning)};
                     scripting_environment.ProcessTurn(fake_turn);
                     penalties.duration +=
                         to_alias<EdgeDuration>(fake_turn.duration * SECOND_TO_DECISECOND);
