@@ -22,8 +22,6 @@
 namespace osrm::engine
 {
 
-struct Hint;
-
 namespace api::json
 {
 namespace detail
@@ -93,15 +91,9 @@ util::json::Object makeRoute(const guidance::Route &route,
                              std::optional<util::json::Value> geometry,
                              const char *weight_name);
 
-// Creates a Waypoint without Hint, see the Hint overload below
+// Creates a Waypoint
 util::json::Object
 makeWaypoint(const util::Coordinate &location, const double &distance, std::string name);
-
-// Creates a Waypoint with Hint, see the overload above when Hint is not needed
-util::json::Object makeWaypoint(const util::Coordinate &location,
-                                const double &distance,
-                                std::string name,
-                                const Hint &hint);
 
 util::json::Object makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps);
 

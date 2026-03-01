@@ -446,24 +446,16 @@ test('route: invalid bearing values', function(assert) {
         /Bearing must be an array of \[bearing, range\] or null/);
 });
 
-test('route: routes Monaco with hints', function(assert) {
-    assert.plan(5);
+test('route: routes Monaco (no hint in waypoints)', function(assert) {
+    assert.plan(3);
     const osrm = new OSRM(monaco_path);
     const options = {
         coordinates: two_test_coordinates,
     };
-    osrm.route(options, function(err, first) {
+    osrm.route(options, function(err, result) {
         assert.ifError(err);
-        assert.ok(first.waypoints);
-        const hints = first.waypoints.map(function(wp) { return wp.hint; });
-        assert.ok(hints.every(function(h) { return typeof h === 'string'; }));
-
-        options.hints = hints;
-
-        osrm.route(options, function(err, second) {
-            assert.ifError(err);
-            assert.deepEqual(first, second);
-        });
+        assert.ok(result.waypoints);
+        assert.ok(result.waypoints.every(function(wp) { return wp.hint === undefined; }));
     });
 });
 

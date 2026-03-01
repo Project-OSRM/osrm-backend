@@ -692,20 +692,7 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
         }
     }
 
-    if (obj.Has("generate_hints"))
-    {
-        Napi::Value generate_hints = obj.Get("generate_hints");
-        if (generate_hints.IsEmpty())
-            return false;
-
-        if (!generate_hints.IsBoolean())
-        {
-            ThrowError(args.Env(), "generate_hints must be of type Boolean");
-            return false;
-        }
-
-        params->generate_hints = generate_hints.ToBoolean().Value();
-    }
+    // generate_hints parameter is deprecated and silently ignored
 
     if (obj.Has("skip_waypoints"))
     {

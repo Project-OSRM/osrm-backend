@@ -33,7 +33,7 @@ To pass parameters to each location some options support an array-like encoding:
 |----------------|--------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 |bearings        |`{bearing};{bearing}[;{bearing} ...]`                   |Limits the search to segments with given bearing in degrees towards true north in a clockwise direction.                                                                                                     |
 |radiuses        |`{radius};{radius}[;{radius} ...]`                      |Limits the search to given radius in meters.                                                                                                                                                               |
-|generate\_hints |`true` (default), `false`                               |Adds a Hint to the response which can be used in subsequent requests, see `hints` parameter.                                                                                                               |
+|generate\_hints |`true`, `false`                                         |**Deprecated**. This parameter is silently ignored.                                                                                                                                                        |
 |hints           |`{hint};{hint}[;{hint} ...]`                            |**Deprecated**. This parameter is silently ignored.                                                                                                                                                        |
 |approaches      |`{approach};{approach}[;{approach} ...]`                |Restrict the direction on the road network at a waypoint, relative to the input coordinate.                                                                                                                    |
 |exclude         |`{class}[,{class}]`                                     |Additive list of classes to avoid, the order does not matter.                                                                                                                                                  |
@@ -46,7 +46,6 @@ Where the elements follow the following format:
 |------------|--------------------------------------------------------|
 |bearing     |`{value},{range}` `integer 0 .. 360,integer 0 .. 180`   |
 |radius      |`double >= 0` or `unlimited` (default)                  |
-|hint        |Base64 `string`                                         |
 |approach    |`curb`, `opposite` or `unrestricted` (default)          |
 |class       |A class name determined by the profile or `none`.       |
 

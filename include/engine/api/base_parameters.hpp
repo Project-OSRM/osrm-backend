@@ -46,8 +46,7 @@ namespace osrm::engine::api
  *
  * Holds member attributes:
  *  - coordinates: for specifying location(s) to services
- *  - hints: hint for the service to derive the position(s) in the road network more efficiently,
- *           optional per coordinate. Multiple hints can be provided for a coordinate.
+ *  - hints: deprecated; field retained for C++ API backward compatibility only, values are ignored
  *  - radiuses: limits the search for segments in the road network to given radius(es) in meter,
  *              optional per coordinate
  *  - bearings: limits the search for segments in the road network to given bearing(s) in degree
@@ -81,9 +80,6 @@ struct BaseParameters
     std::vector<std::string> exclude;
     std::optional<OutputFormatType> format = OutputFormatType::JSON;
 
-    // Adds hints to response which can be included in subsequent requests, see `hints` above.
-    bool generate_hints = true;
-
     // Remove waypoints array from the response.
     bool skip_waypoints = false;
 
@@ -94,13 +90,12 @@ struct BaseParameters
                    std::vector<std::optional<double>> radiuses_ = {},
                    std::vector<std::optional<Bearing>> bearings_ = {},
                    std::vector<std::optional<Approach>> approaches_ = {},
-                   bool generate_hints_ = true,
                    std::vector<std::string> exclude = {},
                    const SnappingType snapping_ = SnappingType::Default)
         : coordinates(std::move(coordinates_)), hints(std::move(hints_)),
           radiuses(std::move(radiuses_)), bearings(std::move(bearings_)),
           approaches(std::move(approaches_)), exclude(std::move(exclude)),
-          generate_hints(generate_hints_), snapping(snapping_)
+          snapping(snapping_)
     {
     }
 

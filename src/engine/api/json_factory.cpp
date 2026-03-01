@@ -2,7 +2,6 @@
 #include "guidance/turn_instruction.hpp"
 
 #include "engine/api/json_factory.hpp"
-#include "engine/hint.hpp"
 #include "engine/polyline_compressor.hpp"
 #include "util/integer_range.hpp"
 
@@ -243,17 +242,6 @@ makeWaypoint(const util::Coordinate &location, const double &distance, std::stri
     waypoint.values.emplace("location", detail::coordinateToLonLat(location));
     waypoint.values.emplace("name", std::move(name));
     waypoint.values.emplace("distance", distance);
-    return waypoint;
-}
-
-util::json::Object makeWaypoint(const util::Coordinate &location,
-                                const double &distance,
-                                std::string name,
-                                const Hint &location_hints)
-{
-    auto waypoint = makeWaypoint(location, distance, std::move(name));
-    waypoint.values.reserve(1);
-    waypoint.values.emplace("hint", location_hints.ToBase64());
     return waypoint;
 }
 

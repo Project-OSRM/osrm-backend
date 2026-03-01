@@ -173,7 +173,7 @@ tables.forEach(function(annotation) {
     });
 
     test('table: ' + annotation + ' throws on invalid arguments', function(assert) {
-        assert.plan(18);
+        assert.plan(17);
         const osrm = new OSRM(data_path);
         const options = {annotations: [annotation.slice(0,-1)]};
         assert.throws(function() { osrm.table(options); },
@@ -231,8 +231,6 @@ tables.forEach(function(annotation) {
         assert.doesNotThrow(function() { osrm.table(options, function(err, response) {}) },
             /You can either specify sources and destinations, or coordinates/);
 
-        assert.throws(function() { osrm.route({coordinates: two_test_coordinates, generate_hints: null}, function(err, route) {}) },
-            /generate_hints must be of type Boolean/);
         assert.throws(function() { osrm.route({coordinates: two_test_coordinates, skip_waypoints: null}, function(err, route) {}) },
             /skip_waypoints must be of type Boolean/);
     });
@@ -244,45 +242,22 @@ tables.forEach(function(annotation) {
             /First arg must be an object/);
     });
 
-    test('table: ' + annotation + ' table in Monaco with hints', function(assert) {
+    test('table: ' + annotation + ' in Monaco (no hint in waypoints)', function(assert) {
         assert.plan(5);
         const osrm = new OSRM(data_path);
         const options = {
             coordinates: two_test_coordinates,
-            generate_hints: true,   // true is default but be explicit here
             annotations: [annotation.slice(0,-1)]
         };
         osrm.table(options, function(err, table) {
             assert.ifError(err);
 
-            // Helper function to verify waypoint contains hint data
-            function assertHasHints(waypoint) {
-                assert.notStrictEqual(waypoint.hint, undefined);
-            }
-
-            table.sources.map(assertHasHints);
-            table.destinations.map(assertHasHints);
-        });
-    });
-
-    test('table: ' + annotation + ' table in Monaco without hints', function(assert) {
-        assert.plan(5);
-        const osrm = new OSRM(data_path);
-        const options = {
-            coordinates: two_test_coordinates,
-            generate_hints: false,  // true is default
-            annotations: [annotation.slice(0,-1)]
-        };
-        osrm.table(options, function(err, table) {
-            assert.ifError(err);
-
-            // Helper function to verify waypoint has no hint data
-            function assertHasNoHints(waypoint) {
+            function assertNoHint(waypoint) {
                 assert.strictEqual(waypoint.hint, undefined);
             }
 
-            table.sources.map(assertHasNoHints);
-            table.destinations.map(assertHasNoHints);
+            table.sources.map(assertNoHint);
+            table.destinations.map(assertNoHint);
         });
     });
 

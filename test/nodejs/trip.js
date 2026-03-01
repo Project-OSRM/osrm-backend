@@ -121,26 +121,19 @@ test('trip: routes Monaco using shared memory', function(assert) {
     });
 });
 
-test('trip: routes Monaco with hints', function(assert) {
-    assert.plan(5);
+test('trip: routes Monaco (no hint in waypoints)', function(assert) {
+    assert.plan(3);
     const osrm = new OSRM(data_path);
     const options = {
         coordinates: two_test_coordinates,
         steps: false
     };
-    osrm.trip(options, function(err, first) {
+    osrm.trip(options, function(err, result) {
         assert.ifError(err);
-        for (let t = 0; t < first.trips.length; t++) {
-            assert.ok(first.trips[t].geometry);
+        for (let t = 0; t < result.trips.length; t++) {
+            assert.ok(result.trips[t].geometry);
         }
-        const hints = first.waypoints.map(function(wp) { return wp.hint; });
-        assert.ok(hints.every(function(h) { return typeof h === 'string'; }));
-        options.hints = hints;
-
-        osrm.trip(options, function(err, second) {
-            assert.ifError(err);
-            assert.deepEqual(first, second);
-        });
+        assert.ok(result.waypoints.every(function(wp) { return wp.hint === undefined; }));
     });
 });
 

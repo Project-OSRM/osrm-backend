@@ -77,6 +77,9 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
         const auto add_hint = [](engine::api::BaseParameters &, const std::vector<std::string> &) {
         };
 
+        // generate_hints parameter is deprecated and silently ignored
+        const auto ignore_generate_hints = [](engine::api::BaseParameters &, bool) {};
+
         const auto add_bearing =
             [](engine::api::BaseParameters &base_parameters,
                boost::optional<boost::fusion::vector2<short, short>> bearing_range)
@@ -151,7 +154,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
 
         generate_hints_rule =
             qi::lit("generate_hints=") >
-            qi::bool_[ph::bind(&engine::api::BaseParameters::generate_hints, qi::_r1) = qi::_1];
+            qi::bool_[ph::bind(ignore_generate_hints, qi::_r1, qi::_1)]; // deprecated, silently ignored
 
         skip_waypoints_rule =
             qi::lit("skip_waypoints=") >
