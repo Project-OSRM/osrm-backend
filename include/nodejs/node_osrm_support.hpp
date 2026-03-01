@@ -648,54 +648,7 @@ inline bool argumentsToParameter(const Napi::CallbackInfo &args,
         }
     }
 
-    if (obj.Has("hints"))
-    {
-        Napi::Value hints = obj.Get("hints");
-        if (hints.IsEmpty())
-            return false;
-
-        if (!hints.IsArray())
-        {
-            ThrowError(args.Env(), "Hints must be an array of strings/null");
-            return false;
-        }
-
-        Napi::Array hints_array = hints.As<Napi::Array>();
-
-        if (hints_array.Length() != params->coordinates.size())
-        {
-            ThrowError(args.Env(), "Hints array must have the same length as coordinates array");
-            return false;
-        }
-
-        for (uint32_t i = 0; i < hints_array.Length(); ++i)
-        {
-            Napi::Value hint = hints_array.Get(i);
-            if (hint.IsEmpty())
-                return false;
-
-            if (hint.IsString())
-            {
-                if (hint.ToString().Utf8Value().length() == 0)
-                {
-                    ThrowError(args.Env(), "Hint cannot be an empty string");
-                    return false;
-                }
-
-                params->hints.emplace_back(
-                    osrm::engine::Hint::FromBase64(hint.ToString().Utf8Value()));
-            }
-            else if (hint.IsNull())
-            {
-                params->hints.emplace_back();
-            }
-            else
-            {
-                ThrowError(args.Env(), "Hint must be null or string");
-                return false;
-            }
-        }
-    }
+    // hints parameter is deprecated and silently ignored
 
     if (obj.Has("radiuses"))
     {

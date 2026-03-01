@@ -71,8 +71,6 @@ inline Result keep_all(const MatchParameters &params)
 
             if (result.was_waypoint[i])
                 result.parameters.waypoints.push_back(result.parameters.coordinates.size() - 1);
-            if (!params.hints.empty())
-                result.parameters.hints.push_back(params.hints[i]);
 
             if (!params.radiuses.empty())
                 result.parameters.radiuses.push_back(params.radiuses[i]);
@@ -167,8 +165,6 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
 
             if (result.was_waypoint[i])
                 result.parameters.waypoints.push_back(result.parameters.coordinates.size() - 1);
-            if (!params.hints.empty())
-                result.parameters.hints.push_back(params.hints[i]);
 
             if (!params.radiuses.empty())
                 result.parameters.radiuses.push_back(params.radiuses[i]);

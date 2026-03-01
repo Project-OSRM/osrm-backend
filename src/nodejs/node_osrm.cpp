@@ -276,7 +276,7 @@ inline void asyncForTiles(const Napi::CallbackInfo &info,
  * @param {Array} [options.bearings] Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
  * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
- * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
+ * @param {Array} [options.hints] Deprecated. This parameter is silently ignored.
  * @param {Array} [options.exclude] List of classes to avoid, order does not matter.
  * @param {Boolean} [options.generate_hints=true]  Whether or not adds a Hint to the response which can be used in subsequent requests.
  * @param {Boolean} [options.alternatives=false] Search for alternative routes.
@@ -328,7 +328,7 @@ Napi::Value Engine::route(const Napi::CallbackInfo &info)
  * @param {Array} [options.bearings] Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
  * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
- * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
+ * @param {Array} [options.hints] Deprecated. This parameter is silently ignored.
  * @param {Boolean} [options.generate_hints=true]  Whether or not adds a Hint to the response which can be used in subsequent requests.
  * @param {Number} [options.number=1] Number of nearest segments that should be returned.
  * Must be an integer greater than or equal to `1`.
@@ -374,7 +374,7 @@ Napi::Value Engine::nearest(const Napi::CallbackInfo &info)
  * @param {Array} [options.bearings] Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
  * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
- * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
+ * @param {Array} [options.hints] Deprecated. This parameter is silently ignored.
  * @param {Boolean} [options.generate_hints=true] Whether or not adds a Hint to the response which can be used in subsequent requests.
  * @param {Array} [options.sources] An array of `index` elements (`0 <= integer < #coordinates`) to use
  *                                  location with given index as source. Default is to use all.
@@ -471,7 +471,7 @@ Napi::Value Engine::tile(const Napi::CallbackInfo &info)
  * @param {Array} [options.coordinates] The coordinates this request will use, coordinates as `[{lon},{lat}]` values, in decimal degrees.
  * @param {Array} [options.bearings] Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
- * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
+ * @param {Array} [options.hints] Deprecated. This parameter is silently ignored.
  * @param {Boolean} [options.generate_hints=true] Whether or not adds a Hint to the response which can be used in subsequent requests.
  * @param {Boolean} [options.steps=false] Return route steps for each route.
  * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all.
@@ -550,7 +550,7 @@ Napi::Value Engine::match(const Napi::CallbackInfo &info)
  * @param {Array} [options.bearings] Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
  *                                   Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
  * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters. Can be `double >= 0` or `null` (unlimited, default).
- * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
+ * @param {Array} [options.hints] Deprecated. This parameter is silently ignored.
  * @param {Boolean} [options.generate_hints=true] Whether or not adds a Hint to the response which can be used in subsequent requests.
  * @param {Boolean} [options.steps=false] Return route steps for each route.
  * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all.

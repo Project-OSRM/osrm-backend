@@ -68,7 +68,7 @@ test('trip: throws with too few or invalid args', function(assert) {
 });
 
 test('trip: throws with bad params', function(assert) {
-    assert.plan(14);
+    assert.plan(11);
     const osrm = new OSRM(data_path);
     assert.throws(function () { osrm.trip({coordinates: []}, function(err) {}) });
     assert.throws(function() { osrm.trip({}, function(err, trip) {}) },
@@ -85,21 +85,9 @@ test('trip: throws with bad params', function(assert) {
         coordinates: [three_test_coordinates[0][0], three_test_coordinates[0][1]]
     }, function(err, trip) {}) },
         /Coordinates must be an array of \(lon\/lat\) pairs/);
-    assert.throws(function() { osrm.trip({
-        coordinates: two_test_coordinates,
-        hints: null
-    }, function(err, trip) {}) },
-        /Hints must be an array of strings\/null/);
     const options = {
         coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
-        hints: three_test_coordinates[0]
     };
-    assert.throws(function() { osrm.trip(options, function(err, trip) {}); },
-        /Hint must be null or string/);
-    options.hints = [null];
-    assert.throws(function() { osrm.trip(options, function(err, trip) {}); },
-        /Hints array must have the same length as coordinates array/);
-    delete options.hints;
     options.geometries = 'false';
     assert.throws(function() { osrm.trip(options, function(err, trip) {}); },
         /'geometries' param must be one of \[polyline, polyline6, geojson\]/);
