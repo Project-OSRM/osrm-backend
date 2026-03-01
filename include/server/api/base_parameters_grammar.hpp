@@ -74,8 +74,8 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
         : BaseParametersGrammar::base_type(root_rule)
     {
         // hints parameter is deprecated and silently ignored
-        const auto add_hint = [](engine::api::BaseParameters &,
-                                 const std::vector<std::string> &) {};
+        const auto add_hint = [](engine::api::BaseParameters &, const std::vector<std::string> &) {
+        };
 
         const auto add_bearing =
             [](engine::api::BaseParameters &base_parameters,
