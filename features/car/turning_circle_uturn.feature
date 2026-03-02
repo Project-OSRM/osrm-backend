@@ -108,9 +108,9 @@ Feature: Car - Use turning circles for u-turns
             | d    | turning_circle |
 
         When I route I should get
-            | waypoints | route     | turns                           |
-            | a,d       | abc,cd    | depart,turn left,arrive         |
-            | d,a       | cd,abc    | depart,turn right,arrive        |
+            | waypoints | route       | turns                            |
+            | a,d       | abc,cd,cd   | depart,new name right,arrive     |
+            | d,a       | cd,abc,abc  | depart,new name left,arrive      |
 
     Scenario: Car - Regular u-turn without turning facility still penalized
         Given the node map
@@ -125,8 +125,8 @@ Feature: Car - Use turning circles for u-turns
         # Note: No turning facility nodes defined
 
         When I route I should get
-            | waypoints | bearings     | route       | turns                        |
-            | a,a       | 90,10 270,10 | abcd,abcd   | depart,continue uturn,arrive |
+            | waypoints | bearings     | route             | turns                        |
+            | a,a       | 90,10 270,10 | abcd,abcd,abcd    | depart,continue uturn,arrive |
 
     Scenario: Car - Turning circle on one-way should respect direction
         Given the node map
