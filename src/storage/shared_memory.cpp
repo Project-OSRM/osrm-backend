@@ -72,8 +72,8 @@ bool RegionExists(const ProjID proj_id)
     }
     catch (...)
     {
+        return false;
     }
-    return false;
 }
 
 bool Remove(const ProjID proj_id)
@@ -112,6 +112,7 @@ void WaitForDetach(const ProjID proj_id, int timeout)
     catch (interprocess_exception &)
     {
         // already detached
+        return;
     }
 }
 
@@ -155,8 +156,8 @@ bool RegionExists(const ProjID proj_id)
     }
     catch (...)
     {
+        return false;
     }
-    return false;
 }
 
 bool Remove(const ProjID proj_id)
@@ -182,6 +183,7 @@ void WaitForDetach(const ProjID proj_id, int timeout)
     catch (interprocess_exception &)
     {
         // already detached
+        return;
     }
 }
 
