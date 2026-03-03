@@ -47,9 +47,13 @@ void test_route_same_coordinates_fixture(bool use_json_only_api)
     const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
     BOOST_CHECK(rc == Status::Ok);
 
-    // Round value to 6 decimal places for double comparison later
+    // unset snapping dependent hint
     for (auto &itr : std::get<json::Array>(json_result.values["waypoints"]).values)
     {
+        // Hint values aren't stable, so blank it out
+        std::get<json::Object>(itr).values["hint"] = "";
+
+        // Round value to 6 decimal places for double comparison later
         std::get<json::Object>(itr).values["distance"] = std::round(
             std::get<json::Number>(std::get<json::Object>(itr).values["distance"]).value * 1000000);
     }
@@ -61,10 +65,12 @@ void test_route_same_coordinates_fixture(bool use_json_only_api)
          {"waypoints",
           json::Array{{json::Object{{{"name", "Boulevard du Larvotto"},
                                      {"location", location},
-                                     {"distance", std::round(0.137249 * 1000000)}}}},
+                                     {"distance", std::round(0.137249 * 1000000)},
+                                     {"hint", ""}}},
                        json::Object{{{"name", "Boulevard du Larvotto"},
                                      {"location", location},
-                                     {"distance", std::round(0.137249 * 1000000)}}}}}},
+                                     {"distance", std::round(0.137249 * 1000000)},
+                                     {"hint", ""}}}}}},
          {"routes",
           json::Array{{json::Object{
               {{"distance", 0.},
