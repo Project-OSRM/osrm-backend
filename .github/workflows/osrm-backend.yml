@@ -508,6 +508,11 @@ jobs:
             conan profile detect --force
           fi
 
+          CMAKE_EXPORT_COMPILE_COMMANDS=OFF
+          if [[ "${ENABLE_CLANG_TIDY}" == "ON" ]]; then
+            CMAKE_EXPORT_COMPILE_COMMANDS=ON
+          fi
+
           ccache --zero-stats
           cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                    -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
@@ -519,7 +524,7 @@ jobs:
                    -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
                    -DENABLE_CCACHE=ON \
                    -DENABLE_LTO=${ENABLE_LTO:-ON} \
-                   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+                   -DCMAKE_EXPORT_COMPILE_COMMANDS=${CMAKE_EXPORT_COMPILE_COMMANDS} \
                    -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
 
           if [[ "${ENABLE_CLANG_TIDY}" == "ON" ]]; then
