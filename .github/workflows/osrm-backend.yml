@@ -523,7 +523,8 @@ jobs:
                    -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
 
           if [[ "${ENABLE_CLANG_TIDY}" == "ON" ]]; then
-            python3 -c "import json, subprocess, sys; files = sorted({entry['file'] for entry in json.load(open('compile_commands.json'))}); sys.exit(next((result.returncode for result in (subprocess.run(['clang-tidy', '--warnings-as-errors=*', '--header-filter=.*', '-p', '.', file]) for file in files) if result.returncode), 0))"
+            jq -r '.[].file' compile_commands.json | sort -u > /tmp/clang-tidy-files.txt
+            xargs -r -d '\n' -P "${JOBS}" -n 1 clang-tidy --warnings-as-errors=* --header-filter=.* -p . < /tmp/clang-tidy-files.txt
           else
             make --jobs=${JOBS}
           fi
