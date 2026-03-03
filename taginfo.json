@@ -187,6 +187,7 @@
         {"key": "maxspeed", "value": "GB:nsl_single"},
         {"key": "maxspeed", "value": "GB:nsl_dual"},
         {"key": "maxspeed", "value": "GB:motorway"},
+        {"key": "maxspeed", "value": "LV:living_street"},
         {"key": "maxspeed", "value": "NL:rural"},
         {"key": "maxspeed", "value": "NL:trunk"},
         {"key": "maxspeed", "value": "NO:rural"},

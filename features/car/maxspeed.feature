@@ -65,6 +65,13 @@ OSRM will use 4/5 of the projected free-flow speed.
             | primary | 15       |                  | 60                | 12 km/h | 48 km/h |
             | primary | 15       | 30               | 60                | 24 km/h | 48 km/h |
 
+    Scenario: Car - Latvia living_street symbolic maxspeed uses 20 km/h
+        Given a grid size of 100 meters
+
+        Then routability should be
+            | highway       | maxspeed          | forw        | backw       |
+            | living_street | LV:living_street  | 16 km/h +-1 | 16 km/h +-1 |
+
     Scenario: Car - Maxspeed should not allow routing on unroutable ways
         Then routability should be
             | highway   | railway | access | maxspeed | maxspeed:forward | maxspeed:backward | bothw |
