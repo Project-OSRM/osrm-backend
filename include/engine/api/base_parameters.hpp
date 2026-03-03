@@ -94,8 +94,7 @@ struct BaseParameters
                    const SnappingType snapping_ = SnappingType::Default)
         : coordinates(std::move(coordinates_)), hints(std::move(hints_)),
           radiuses(std::move(radiuses_)), bearings(std::move(bearings_)),
-          approaches(std::move(approaches_)), exclude(std::move(exclude)),
-          snapping(snapping_)
+          approaches(std::move(approaches_)), exclude(std::move(exclude)), snapping(snapping_)
     {
     }
 

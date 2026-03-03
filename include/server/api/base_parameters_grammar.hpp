@@ -154,7 +154,8 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
 
         generate_hints_rule =
             qi::lit("generate_hints=") >
-            qi::bool_[ph::bind(ignore_generate_hints, qi::_r1, qi::_1)]; // deprecated, silently ignored
+            qi::bool_[ph::bind(
+                ignore_generate_hints, qi::_r1, qi::_1)]; // deprecated, silently ignored
 
         skip_waypoints_rule =
             qi::lit("skip_waypoints=") >
