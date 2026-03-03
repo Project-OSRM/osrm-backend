@@ -519,9 +519,14 @@ jobs:
                    -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
                    -DENABLE_CCACHE=ON \
                    -DENABLE_LTO=${ENABLE_LTO:-ON} \
+                   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
                    -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
 
-          make --jobs=${JOBS}
+          if [[ "${ENABLE_CLANG_TIDY}" == "ON" ]]; then
+            python3 -c "import json, subprocess, sys; files = sorted({entry['file'] for entry in json.load(open('compile_commands.json'))}); sys.exit(next((result.returncode for result in (subprocess.run(['clang-tidy', '--warnings-as-errors=*', '--header-filter=.*', '-p', '.', file]) for file in files) if result.returncode), 0))"
+          else
+            make --jobs=${JOBS}
+          fi
 
           if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
             make tests --jobs=${JOBS}
@@ -554,32 +559,32 @@ jobs:
           npm test -- --parallel $JOBS
 
       - name: Use Node 20
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_CLANG_TIDY != 'ON' }}
         uses: actions/setup-node@v4
         with:
           node-version: 20
       - name: Run Node package tests on Node 20
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_CLANG_TIDY != 'ON' }}
         run: |
           node --version
           npm run nodejs-tests
       - name: Use Node 22
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_CLANG_TIDY != 'ON' }}
         uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Run Node package tests on Node 22
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_CLANG_TIDY != 'ON' }}
         run: |
           node --version
           npm run nodejs-tests
       - name: Use Node latest
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_CLANG_TIDY != 'ON' }}
         uses: actions/setup-node@v4
         with:
           node-version: latest
       - name: Run Node package tests on Node-latest
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' && matrix.ENABLE_CLANG_TIDY != 'ON' }}
         run: |
           node --version
           npm run nodejs-tests
