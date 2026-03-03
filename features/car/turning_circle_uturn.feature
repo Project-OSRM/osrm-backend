@@ -4,7 +4,7 @@ Feature: Car - Use turning circles for u-turns
     Background:
         Given the profile "car"
 
-    Scenario: Car - Should prefer turning_circle for u-turn over direct u-turn
+    Scenario: Car - Should use turning_circle for u-turn when direct u-turn is restricted
         Given the node map
             """
             a---b---c
@@ -21,11 +21,15 @@ Feature: Car - Use turning circles for u-turns
             | node | highway        |
             | d    | turning_circle |
 
-        When I route I should get
-            | waypoints | route       | turns                           |
-            | a,a       | abc,bd,abc  | depart,turn right,turn right,arrive |
+        And the relations
+            | type        | way:from | node:via | way:to | restriction |
+            | restriction | abc      | b        | abc    | no_u_turn   |
 
-    Scenario: Car - U-turn at turning_loop should have no penalty
+        When I route I should get
+            | waypoints | bearings     | route                 | turns                                             |
+            | a,a       | 90,10 270,10 | abc,bd,bd,abc,abc     | depart,turn right,continue uturn,turn left,arrive |
+
+    Scenario: Car - Should use turning_loop for u-turn when direct u-turn is restricted
         Given the node map
             """
             a---b---c---d
@@ -42,11 +46,15 @@ Feature: Car - Use turning circles for u-turns
             | node | highway      |
             | e    | turning_loop |
 
-        When I route I should get
-            | waypoints | route         | turns                               |
-            | a,a       | abcd,be,abcd  | depart,turn right,turn right,arrive |
+        And the relations
+            | type        | way:from | node:via | way:to | restriction |
+            | restriction | abcd     | b        | abcd   | no_u_turn   |
 
-    Scenario: Car - U-turn at mini_roundabout should work
+        When I route I should get
+            | waypoints | bearings     | route                   | turns                                             |
+            | a,a       | 90,10 270,10 | abcd,be,be,abcd,abcd    | depart,turn right,continue uturn,turn left,arrive |
+
+    Scenario: Car - Should use mini_roundabout for u-turn when direct u-turn is restricted
         Given the node map
             """
             a---b---c---d
@@ -63,9 +71,13 @@ Feature: Car - Use turning circles for u-turns
             | node | highway         |
             | e    | mini_roundabout |
 
+        And the relations
+            | type        | way:from | node:via | way:to | restriction |
+            | restriction | abcd     | b        | abcd   | no_u_turn   |
+
         When I route I should get
-            | waypoints | route         | turns                               |
-            | a,a       | abcd,be,abcd  | depart,turn right,turn right,arrive |
+            | waypoints | bearings     | route                   | turns                                             |
+            | a,a       | 90,10 270,10 | abcd,be,be,abcd,abcd    | depart,turn right,continue uturn,turn left,arrive |
 
     Scenario: Car - Multiple turning facilities, use closest
         Given the node map
@@ -87,8 +99,8 @@ Feature: Car - Use turning circles for u-turns
             | g    | turning_loop   |
 
         When I route I should get
-            | waypoints | route       | turns                               |
-            | a,a       | abcde,bf,abcde  | depart,turn right,turn right,arrive |
+            | waypoints | bearings     | route                       | turns                                             |
+            | a,a       | 90,10 270,10 | abcde,bf,bf,abcde,abcde     | depart,turn right,continue uturn,turn left,arrive |
 
     Scenario: Car - Dead end with turning_circle
         Given the node map
@@ -146,5 +158,5 @@ Feature: Car - Use turning circles for u-turns
             | d    | turning_circle |
 
         When I route I should get
-            | waypoints | route       |
-            | a,a       | abc,bd,abc  |
+            | waypoints | bearings     | route         | turns                        |
+            | a,a       | 90,10 270,10 | abc,abc,abc   | depart,continue uturn,arrive |
