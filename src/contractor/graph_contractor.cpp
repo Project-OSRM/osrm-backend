@@ -122,7 +122,7 @@ struct ThreadDataContainer
 };
 
 // This bias function takes up 22 assembly instructions in total on X86
-inline bool Bias(const util::XORFastHash<> &fast_hash, const NodeID a, const NodeID b)
+inline bool Bias(const util::XORFastHash &fast_hash, const NodeID a, const NodeID b)
 {
     const unsigned short hasha = fast_hash(a);
     const unsigned short hashb = fast_hash(b);
@@ -512,7 +512,7 @@ bool UpdateNodeNeighbours(ContractorNodeData &node_data,
     return true;
 }
 
-bool IsNodeIndependent(const util::XORFastHash<> &hash,
+bool IsNodeIndependent(const util::XORFastHash &hash,
                        const std::vector<float> &priorities,
                        const std::vector<NodeID> &new_to_old_node_id,
                        const ContractorGraph &graph,
@@ -586,7 +586,6 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
                                 double core_factor)
 {
     BOOST_ASSERT(node_weights_.size() == graph.GetNumberOfNodes());
-    util::XORFastHash<> fast_hash;
 
     // for the preperation we can use a big grain size, which is much faster (probably cache)
     const constexpr size_t PQGrainSize = 100000;
@@ -663,7 +662,7 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     util::UnbufferedLog log;
     util::Percent p(log, remaining_nodes.size());
 
-    const util::XORFastHash<> hash;
+    const util::XORFastHash hash;
 
     std::size_t next_renumbering = number_of_nodes * 0.35;
     while (remaining_nodes.size() > number_of_core_nodes)
