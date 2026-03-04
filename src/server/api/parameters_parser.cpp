@@ -54,6 +54,7 @@ std::optional<ParameterT> parseParameters(std::string::iterator &iter,
     {
         // this can happen if we get bad numeric values in the request, just handle
         // as normal parser error
+        return std::nullopt;
     }
 
     return std::nullopt;

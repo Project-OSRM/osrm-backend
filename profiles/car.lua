@@ -303,6 +303,7 @@ function setup()
       ["gb:nsl_single"] = (60*1609)/1000,
       ["gb:nsl_dual"] = (70*1609)/1000,
       ["gb:motorway"] = (70*1609)/1000,
+      ["lv:living_street"] = 20,
       ["nl:rural"] = 80,
       ["nl:trunk"] = 100,
       ['no:rural'] = 80,
