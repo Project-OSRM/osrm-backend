@@ -19,10 +19,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm::engine
-{
-
-namespace api::json
+namespace osrm::engine::api::json
 {
 namespace detail
 {
@@ -100,7 +97,6 @@ util::json::Object makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps)
 util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
                                 std::vector<util::json::Value> step_geometries,
                                 std::vector<util::json::Object> annotations);
-} // namespace api::json
-} // namespace osrm::engine
+} // namespace osrm::engine::api::json
 
 #endif // ENGINE_GUIDANCE_API_RESPONSE_GENERATOR_HPP_

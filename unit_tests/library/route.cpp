@@ -173,6 +173,9 @@ void test_route_same_coordinates(bool use_json_only_api)
         const auto latitude = std::get<json::Number>(location[1]).value;
         BOOST_CHECK(longitude >= -180. && longitude <= 180.);
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
+
+        const auto hint = std::get<json::String>(waypoint_object.values.at("hint")).value;
+        BOOST_CHECK(hint.empty());
     }
 
     const auto &routes = std::get<json::Array>(json_result.values.at("routes")).values;

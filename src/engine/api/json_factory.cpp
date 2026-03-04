@@ -237,11 +237,12 @@ util::json::Object
 makeWaypoint(const util::Coordinate &location, const double &distance, std::string name)
 {
     util::json::Object waypoint;
-    waypoint.values.reserve(3);
+    waypoint.values.reserve(4);
 
     waypoint.values.emplace("location", detail::coordinateToLonLat(location));
     waypoint.values.emplace("name", std::move(name));
     waypoint.values.emplace("distance", distance);
+    waypoint.values.emplace("hint", std::string{});
     return waypoint;
 }
 
