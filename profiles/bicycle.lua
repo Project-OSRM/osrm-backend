@@ -21,7 +21,7 @@ function setup()
       --weight_name                   = 'cyclability',
       weight_name                   = 'duration',
       process_call_tagless_node     = false,
-      max_speed_for_map_matching    = 110/3.6, -- kmph -> m/s
+      max_speed_for_map_matching    = 40/3.6, -- kmph -> m/s (reduced from 110 to realistic bicycle speed)
       use_turn_restrictions         = false,
       continue_straight_at_waypoint = false,
       mode_change_penalty           = 30,
@@ -305,9 +305,6 @@ function handle_bicycle_tags(profile,way,result,data)
 
   -- other tags
   data.junction = way:get_value_by_key("junction")
-  data.maxspeed = Measure.get_max_speed(way:get_value_by_key ("maxspeed")) or 0
-  data.maxspeed_forward = Measure.get_max_speed(way:get_value_by_key("maxspeed:forward")) or 0
-  data.maxspeed_backward = Measure.get_max_speed(way:get_value_by_key("maxspeed:backward")) or 0
   data.barrier = way:get_value_by_key("barrier")
   data.oneway = way:get_value_by_key("oneway")
   data.oneway_bicycle = way:get_value_by_key("oneway:bicycle")
@@ -333,8 +330,18 @@ function handle_bicycle_tags(profile,way,result,data)
   -- width should be after bike_push
   width_handler(profile,way,result,data)
 
-  -- maxspeed
-  limit( result, data.maxspeed, data.maxspeed_forward, data.maxspeed_backward )
+  -- Apply realistic maximum speed cap for bicycles (30 km/h)
+  -- Note: We do NOT apply motor vehicle maxspeed tags to bicycles as they
+  -- represent legal limits for cars, not realistic cycling speeds.
+  -- The 30 km/h cap prevents unrealistic speeds on downhills while allowing
+  -- normal cycling speeds of 15-25 km/h.
+  local bicycle_max_speed = 30
+  if result.forward_speed > bicycle_max_speed then
+    result.forward_speed = bicycle_max_speed
+  end
+  if result.backward_speed > bicycle_max_speed then
+    result.backward_speed = bicycle_max_speed
+  end
 
   -- not routable if no speed assigned
   -- this avoid assertions in debug builds
@@ -636,9 +643,6 @@ function process_way(profile, way, result)
     access = nil,
 
     junction = nil,
-    maxspeed = nil,
-    maxspeed_forward = nil,
-    maxspeed_backward = nil,
     barrier = nil,
     oneway = nil,
     oneway_bicycle = nil,
