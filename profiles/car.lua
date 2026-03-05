@@ -534,7 +534,12 @@ function process_turn(profile, turn)
     end
 
     if turn.is_u_turn then
-      turn.duration = turn.duration + profile.properties.u_turn_penalty
+      if turn.has_turning_facility then
+        -- Small penalty for u-turns at designated turning facilities (turning_circle, turning_loop, mini_roundabout)
+        turn.duration = turn.duration + 5
+      else
+        turn.duration = turn.duration + profile.properties.u_turn_penalty
+      end
     end
   end
 

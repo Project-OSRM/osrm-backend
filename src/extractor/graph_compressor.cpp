@@ -265,15 +265,17 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
                                                              EdgePenalties &penalties)
                 {
                     // generate an artificial turn for the turn penalty generation
-                    ExtractionTurn fake_turn{from,
-                                             via,
-                                             to,
-                                             from_edge,
-                                             to_edge,
-                                             no_other_roads,
-                                             no_other_roads,
-                                             scripting_environment.m_obstacle_map.any(
-                                                 from, via, Obstacle::Type::TrafficSignals)};
+                    ExtractionTurn fake_turn{
+                        from,
+                        via,
+                        to,
+                        from_edge,
+                        to_edge,
+                        no_other_roads,
+                        no_other_roads,
+                        scripting_environment.m_obstacle_map.any(
+                            from, via, Obstacle::Type::TrafficSignals),
+                        scripting_environment.m_obstacle_map.any(via, Obstacle::Type::Turning)};
                     scripting_environment.ProcessTurn(fake_turn);
                     penalties.duration +=
                         to_alias<EdgeDuration>(fake_turn.duration * SECOND_TO_DECISECOND);
