@@ -39,6 +39,9 @@ function setup()
     width                     = nil, -- Cargo bike could 0.5 width, in meters
     exclude_cargo_bike        = false,
 
+    -- Maximum speed for recreational cycling
+    vehicle_max_speed         = 21, -- in km/h, realistic for recreational bikers
+
     allowed_start_modes = Set {
       mode.cycling,
       mode.pushing_bike
@@ -336,17 +339,6 @@ function handle_bicycle_tags(profile,way,result,data)
   -- Apply maxspeed to respect legal speed limits when lower than bicycle speed
   -- This ensures bicycles adhere to speed restrictions (e.g., maxspeed=10 in residential areas)
   limit( result, data.maxspeed, data.maxspeed_forward, data.maxspeed_backward )
-
-  -- Apply realistic maximum speed cap for bicycles (30 km/h)
-  -- This prevents unrealistic speeds on downhills while allowing
-  -- normal cycling speeds of 15-25 km/h
-  local bicycle_max_speed = 30
-  if result.forward_speed > bicycle_max_speed then
-    result.forward_speed = bicycle_max_speed
-  end
-  if result.backward_speed > bicycle_max_speed then
-    result.backward_speed = bicycle_max_speed
-  end
 
   -- not routable if no speed assigned
   -- this avoid assertions in debug builds
@@ -687,6 +679,9 @@ function process_way(profile, way, result)
 
     -- compute speed taking into account way type, maxspeed tags, etc.
     WayHandlers.surface,
+
+    -- apply vehicle-specific maximum speed cap (e.g., 21 km/h for recreational bikers)
+    WayHandlers.vehicle_speed_cap,
 
     -- handle turn lanes and road classification, used for guidance
     WayHandlers.classification,
