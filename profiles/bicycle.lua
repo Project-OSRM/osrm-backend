@@ -7,7 +7,6 @@ Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 TrafficSignal = require("lib/traffic_signal")
 find_access_tag = require("lib/access").find_access_tag
-limit = require("lib/maxspeed").limit
 Measure = require("lib/measure")
 
 function setup()
