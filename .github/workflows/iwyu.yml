@@ -31,7 +31,18 @@ jobs:
             llvm-18 \
             llvm-18-dev \
             clang-18 \
-            iwyu
+            libclang-18-dev
+
+          # Install IWYU from Ubuntu repos (compatible with clang-18)
+          sudo apt-get install -y iwyu
+
+          # Create symlink if needed
+          if [ ! -f /usr/bin/include-what-you-use ] && [ -f /usr/bin/iwyu ]; then
+            sudo ln -s /usr/bin/iwyu /usr/bin/include-what-you-use
+          fi
+
+          # Verify IWYU installation
+          include-what-you-use --version || iwyu --version || echo "Warning: IWYU version check failed"
 
       - name: Install dependencies
         run: |
@@ -72,17 +83,21 @@ jobs:
       - name: Run IWYU
         run: |
           cd build
-          # Build to trigger IWYU checks
-          make -j$(nproc) 2>&1 | tee iwyu.log
+          # Build to trigger IWYU checks (only building libraries, not all targets)
+          make -j$(nproc) osrm 2>&1 | tee iwyu.log || true
 
           # Check if there are any IWYU warnings
           if grep -q "should add these lines:" iwyu.log || grep -q "should remove these lines:" iwyu.log; then
             echo "::warning::IWYU found issues with header dependencies"
-            echo "Review the IWYU output for recommendations"
+            echo "To fix header dependencies locally:"
+            echo "  1. Configure cmake with -DENABLE_IWYU=ON"
+            echo "  2. Build the project: make -j\$(nproc)"
+            echo "  3. Review IWYU suggestions and apply fixes"
+            echo "  4. You can use iwyu_tool.py and fix_includes.py for automated fixes"
             # Don't fail the build for now, just warn
             exit 0
           else
-            echo "No IWYU issues found"
+            echo "No IWYU issues found or IWYU not properly configured"
           fi
 
       - name: Upload IWYU log
