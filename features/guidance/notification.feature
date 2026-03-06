@@ -20,8 +20,8 @@ Feature: Notification on turn onto mode change
             | de    | primary |       |       |
 
         When I route I should get
-            | waypoints | route     | turns                                        | modes                          |
-            | a,e       | ,ferry,,  | depart,turn right,notification right,arrive  | driving,ferry,driving,driving  |
+            | waypoints | route     | turns                                        | modes | locations |
+            | a,e       | ,ferry,,  | depart,turn right,notification right,arrive  | driving,ferry,driving,driving | |
 
     Scenario: Turn onto a Ferry
         Given the node map
@@ -39,9 +39,9 @@ Feature: Notification on turn onto mode change
             | gef   | primary |       |       |
 
         When I route I should get
-            | waypoints | route     | turns                                                      | modes                                   |
-            | g,h       | ,ferry,,, | depart,turn right,notification straight,turn right,arrive  | driving,ferry,driving,driving,driving   |
-            | b,g       | ,,ferry,, | depart,turn right,notification straight,turn left,arrive   | driving,driving,ferry,driving,driving   |
+            | waypoints | route     | turns                                                      | modes | locations |
+            | g,h       | ,ferry,,, | depart,turn right,notification straight,turn right,arrive  | driving,ferry,driving,driving,driving | |
+            | b,g       | ,,ferry,, | depart,turn right,notification straight,turn left,arrive   | driving,driving,ferry,driving,driving | |
 
     Scenario: Straight onto a Ferry
         Given the node map
@@ -59,5 +59,5 @@ Feature: Notification on turn onto mode change
             | df    | primary |       |         |
 
         When I route I should get
-            | waypoints | route     | turns                                                  | modes                           |
-            | a,f       | ,ferry,,  | depart,notification right,notification right,arrive    | driving,ferry,driving,driving   |
+            | waypoints | route     | turns                                                  | modes | locations |
+            | a,f       | ,ferry,,  | depart,notification right,notification right,arrive    | driving,ferry,driving,driving | |

@@ -23,8 +23,8 @@ Feature: Exit Numbers and Names
             | ef     | motorway_link | ExitRamp |              |
 
        When I route I should get
-            | waypoints | route                      | turns                               | exits |
-            | a,f       | MainRoad,ExitRamp,ExitRamp | depart,off ramp slight right,arrive | ,3,   |
+            | waypoints | route                      | turns                               | exits | locations |
+            | a,f       | MainRoad,ExitRamp,ExitRamp | depart,off ramp slight right,arrive | ,3, | |
 
 
     Scenario: Exit number on the way, motorway junction node tag missing, multiple numbers
@@ -41,8 +41,8 @@ Feature: Exit Numbers and Names
             | ef     | motorway_link | ExitRamp |              |
 
        When I route I should get
-            | waypoints | route                      | turns                               | exits    |
-            | a,f       | MainRoad,ExitRamp,ExitRamp | depart,off ramp slight right,arrive | ,10; 12, |
+            | waypoints | route                      | turns                               | exits | locations |
+            | a,f       | MainRoad,ExitRamp,ExitRamp | depart,off ramp slight right,arrive | ,10; 12, | |
 
 
     Scenario: Exit number on the ways after the motorway junction, multiple exits
@@ -66,9 +66,9 @@ Feature: Exit Numbers and Names
             | gh     | motorway_link | ExitRamp |              |
 
        When I route I should get
-            | waypoints | route                      | turns                               | exits |
-            | a,f       | MainRoad,ExitRamp,ExitRamp | depart,off ramp slight right,arrive | ,3,   |
-            | a,h       | MainRoad,ExitRamp,ExitRamp | depart,off ramp right,arrive        | ,3,   |
+            | waypoints | route                      | turns                               | exits | locations |
+            | a,f       | MainRoad,ExitRamp,ExitRamp | depart,off ramp slight right,arrive | ,3, | |
+            | a,h       | MainRoad,ExitRamp,ExitRamp | depart,off ramp right,arrive        | ,3, | |
 
 
 
@@ -93,6 +93,6 @@ Feature: Exit Numbers and Names
             | cf     | motorway_link |                  | 393          | yes    | Great America Parkway;Bowers Avenue |
 
        When I route I should get
-            | waypoints | route                             | turns                               | exits    | destinations                                                               |
-            | a,e       | Bayshore Freeway,Bayshore Freeway | depart,arrive                       | ,        | ,                                                                          |
-            | a,f       | Bayshore Freeway,,                | depart,off ramp slight right,arrive | ,393,393 | ,Great America Parkway, Bowers Avenue,Great America Parkway, Bowers Avenue |
+            | waypoints | route                             | turns                               | exits    | destinations | locations |
+            | a,e       | Bayshore Freeway,Bayshore Freeway | depart,arrive                       | ,        | , | |
+            | a,f       | Bayshore Freeway,,                | depart,off ramp slight right,arrive | ,393,393 | ,Great America Parkway, Bowers Avenue,Great America Parkway, Bowers Avenue | |

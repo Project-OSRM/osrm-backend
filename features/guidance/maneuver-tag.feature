@@ -35,7 +35,7 @@ Feature: Maneuver tag support
             | maneuver  | cgi      | c        | cde    | fork      | turn     | slight_right |
 
         When I route I should get
-            | waypoints | route                               | turns                                    |
+            | waypoints | route                               | turns | locations |
         # Testing directly connected from/to
             | a,j       | A Street,C Street,J Street,J Street | depart,turn sharp right,turn left,arrive |
             | b,g       | A Street,C Street,C Street          | depart,turn sharp right,arrive           |
@@ -68,8 +68,8 @@ Feature: Maneuver tag support
             | maneuver | abc      | cgi     | ij     | c        | turn     | sharp_right |
 
         When I route I should get
-            | waypoints | route                               | turns                                    |
-            | a,j       | A Street,C Street,J Street,J Street | depart,turn sharp right,turn left,arrive |
+            | waypoints | route                               | turns | locations |
+            | a,j       | A Street,C Street,J Street,J Street | depart,turn sharp right,turn left,arrive | |
 
 
     Scenario: multiple via-way
@@ -97,8 +97,8 @@ Feature: Maneuver tag support
             | maneuver | abc      | cg      | gi      | ij     | c        | turn     | sharp_right |
 
         When I route I should get
-            | waypoints | route                               | turns                                    |
-            | a,j       | A Street,C Street,J Street,J Street | depart,turn sharp right,end of road left,arrive |
+            | waypoints | route                               | turns | locations |
+            | a,j       | A Street,C Street,J Street,J Street | depart,turn sharp right,end of road left,arrive | |
 
 
     Scenario: Use maneuver tag to announce a particular turn type
@@ -139,8 +139,8 @@ Feature: Maneuver tag support
             | maneuver | mh       | m        | mt     | turn     | left      |
 
         When I route I should get
-            | waypoints | route                        | turns                        |
-            | h,t       | CA-120,Priest Rd,Priest Rd   | depart,turn left,arrive      |
+            | waypoints | route                        | turns | locations |
+            | h,t       | CA-120,Priest Rd,Priest Rd   | depart,turn left,arrive | |
   #original | h,t       | CA-120,Priest Rd,Priest Rd   | depart,turn straight,arrive  |
 
     Scenario: Use maneuver tag to announce lane guidance
@@ -177,8 +177,8 @@ Feature: Maneuver tag support
             | maneuver | ab       | b        | bc      | cd     | suppress |
 
         When I route I should get
-            | waypoints | route                         | turns                    |
-            | a,d       | Marsh Rd,Marsh Rd,Marsh Rd    | depart,turn uturn,arrive |
+            | waypoints | route                         | turns | locations |
+            | a,d       | Marsh Rd,Marsh Rd,Marsh Rd    | depart,turn uturn,arrive | |
   #original | a,d       | Marsh Rd,service,Marsh Rd,Marsh Rd | depart,turn left,turn left,arrive |
 
     Scenario: Use maneuver tag to suppress a turn
@@ -227,9 +227,9 @@ Feature: Maneuver tag support
             | maneuver | zy       | y, p     | yp      | pb     | suppress | invalid relation: multiple node:via |
 
         When I route I should get
-            | waypoints | route                 | turns                                        |
-            | z,t       | NY Ave,395,395        | depart,on ramp left,arrive                   |
-            | z,b       | NY Ave,,4th St,4th St | depart,on ramp left,fork slight right,arrive |
+            | waypoints | route                 | turns | locations |
+            | z,t       | NY Ave,395,395        | depart,on ramp left,arrive | |
+            | z,b       | NY Ave,,4th St,4th St | depart,on ramp left,fork slight right,arrive | |
 
     Scenario: Gracefully handles maneuvers that are redundant for the profile
         Given the node map
@@ -250,8 +250,8 @@ Feature: Maneuver tag support
             | maneuver | abc      | c        | cdf    | turn     | slight_left |
 
         When I route I should get
-            | waypoints | route             | turns         |
-            | a,f       | A Street,A Street | depart,arrive |
+            | waypoints | route             | turns | locations |
+            | a,f       | A Street,A Street | depart,arrive | |
 
     Scenario: Handles uncompressed nodes in maneuver path
         Given the node map
@@ -279,8 +279,8 @@ Feature: Maneuver tag support
             | maneuver | abc      | e        | cde     | ei     | turn     | sharp_right |
 
         When I route I should get
-            | waypoints | route                               | turns                                     |
-            | a,i       | A Street,C Street,F Street,F Street | depart,turn right,turn sharp right,arrive |
+            | waypoints | route                               | turns | locations |
+            | a,i       | A Street,C Street,F Street,F Street | depart,turn right,turn sharp right,arrive | |
 
 
     Scenario: Can be used with turn restrictions
@@ -322,8 +322,8 @@ Feature: Maneuver tag support
             | restriction | bc       | bde,eg   | gi     | no_left_turn  |
 
         When I route I should get
-            | waypoints | route                                        | turns                                                |
-            | a,e       | A Street,C Street,C Street                   | depart,turn sharp right,arrive                       |
-            | b,f       | C Street,D Street,D Street                   | depart,turn sharp left,arrive                        |
-            | c,h       | B Street,E Street,F Street,F Street          | depart,turn left,turn slight right,arrive            |
-            | c,i       | B Street,A Street,E Street,G Street,G Street | depart,turn uturn,turn right,end of road left,arrive |
+            | waypoints | route                                        | turns | locations |
+            | a,e       | A Street,C Street,C Street                   | depart,turn sharp right,arrive | |
+            | b,f       | C Street,D Street,D Street                   | depart,turn sharp left,arrive | |
+            | c,h       | B Street,E Street,F Street,F Street          | depart,turn left,turn slight right,arrive | |
+            | c,i       | B Street,A Street,E Street,G Street,G Street | depart,turn uturn,turn right,end of road left,arrive | |

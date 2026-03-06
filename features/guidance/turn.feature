@@ -21,19 +21,19 @@ Feature: Simple Turns
             | eb     | primary |
 
        When I route I should get
-            | waypoints | route    | turns                           |
-            | a,c       | ab,cb,cb | depart,turn left,arrive         |
-            | a,e       | ab,eb    | depart,arrive                   |
-            | a,d       | ab,db,db | depart,turn right,arrive        |
-            | c,a       | cb,ab,ab | depart,turn right,arrive        |
-            | c,d       | cb,db    | depart,arrive                   |
-            | c,e       | cb,eb,eb | depart,turn left,arrive         |
-            | d,a       | db,ab,ab | depart,turn left,arrive         |
-            | d,c       | db,cb    | depart,arrive                   |
-            | d,e       | db,eb,eb | depart,turn right,arrive        |
-            | e,a       | eb,ab    | depart,arrive                   |
-            | e,c       | eb,cb,cb | depart,turn right,arrive        |
-            | e,d       | eb,db,db | depart,turn left,arrive         |
+            | waypoints | route    | turns | locations |
+            | a,c       | ab,cb,cb | depart,turn left,arrive | |
+            | a,e       | ab,eb    | depart,arrive | |
+            | a,d       | ab,db,db | depart,turn right,arrive | |
+            | c,a       | cb,ab,ab | depart,turn right,arrive | |
+            | c,d       | cb,db    | depart,arrive | |
+            | c,e       | cb,eb,eb | depart,turn left,arrive | |
+            | d,a       | db,ab,ab | depart,turn left,arrive | |
+            | d,c       | db,cb    | depart,arrive | |
+            | d,e       | db,eb,eb | depart,turn right,arrive | |
+            | e,a       | eb,ab    | depart,arrive | |
+            | e,c       | eb,cb,cb | depart,turn right,arrive | |
+            | e,d       | eb,db,db | depart,turn left,arrive | |
 
     Scenario: Rotated Four Way Intersection
         Given the node map
@@ -51,19 +51,19 @@ Feature: Simple Turns
             | eb     | primary |
 
        When I route I should get
-            | waypoints | route    | turns                           |
-            | a,c       | ab,cb,cb | depart,turn left,arrive         |
-            | a,e       | ab,eb    | depart,arrive                   |
-            | a,d       | ab,db,db | depart,turn right,arrive        |
-            | c,a       | cb,ab,ab | depart,turn right,arrive        |
-            | c,d       | cb,db    | depart,arrive                   |
-            | c,e       | cb,eb,eb | depart,turn left,arrive         |
-            | d,a       | db,ab,ab | depart,turn left,arrive         |
-            | d,c       | db,cb    | depart,arrive                   |
-            | d,e       | db,eb,eb | depart,turn right,arrive        |
-            | e,a       | eb,ab    | depart,arrive                   |
-            | e,c       | eb,cb,cb | depart,turn right,arrive        |
-            | e,d       | eb,db,db | depart,turn left,arrive         |
+            | waypoints | route    | turns | locations |
+            | a,c       | ab,cb,cb | depart,turn left,arrive | |
+            | a,e       | ab,eb    | depart,arrive | |
+            | a,d       | ab,db,db | depart,turn right,arrive | |
+            | c,a       | cb,ab,ab | depart,turn right,arrive | |
+            | c,d       | cb,db    | depart,arrive | |
+            | c,e       | cb,eb,eb | depart,turn left,arrive | |
+            | d,a       | db,ab,ab | depart,turn left,arrive | |
+            | d,c       | db,cb    | depart,arrive | |
+            | d,e       | db,eb,eb | depart,turn right,arrive | |
+            | e,a       | eb,ab    | depart,arrive | |
+            | e,c       | eb,cb,cb | depart,turn right,arrive | |
+            | e,d       | eb,db,db | depart,turn left,arrive | |
 
 
     Scenario: Four Way Intersection Through Street
@@ -81,19 +81,19 @@ Feature: Simple Turns
             | db     | primary |
 
        When I route I should get
-            | waypoints | route      | turns                           |
-            | a,c       | abe,cb,cb  | depart,turn left,arrive         |
-            | a,e       | abe,abe    | depart,arrive                   |
-            | a,d       | abe,db,db  | depart,turn right,arrive        |
-            | c,a       | cb,abe,abe | depart,turn right,arrive        |
-            | c,d       | cb,db      | depart,arrive                   |
-            | c,e       | cb,abe,abe | depart,turn left,arrive         |
-            | d,a       | db,abe,abe | depart,turn left,arrive         |
-            | d,c       | db,cb      | depart,arrive                   |
-            | d,e       | db,abe,abe | depart,turn right,arrive        |
-            | e,a       | abe,abe    | depart,arrive                   |
-            | e,c       | abe,cb,cb  | depart,turn right,arrive        |
-            | e,d       | abe,db,db  | depart,turn left,arrive         |
+            | waypoints | route      | turns | locations |
+            | a,c       | abe,cb,cb  | depart,turn left,arrive | |
+            | a,e       | abe,abe    | depart,arrive | |
+            | a,d       | abe,db,db  | depart,turn right,arrive | |
+            | c,a       | cb,abe,abe | depart,turn right,arrive | |
+            | c,d       | cb,db      | depart,arrive | |
+            | c,e       | cb,abe,abe | depart,turn left,arrive | |
+            | d,a       | db,abe,abe | depart,turn left,arrive | |
+            | d,c       | db,cb      | depart,arrive | |
+            | d,e       | db,abe,abe | depart,turn right,arrive | |
+            | e,a       | abe,abe    | depart,arrive | |
+            | e,c       | abe,cb,cb  | depart,turn right,arrive | |
+            | e,d       | abe,db,db  | depart,turn left,arrive | |
 
     Scenario: Four Way Intersection Double Through Street
         Given the node map
@@ -109,19 +109,19 @@ Feature: Simple Turns
             | cbd    | primary |
 
        When I route I should get
-            | waypoints | route       | turns                    |
-            | a,c       | abe,cbd,cbd | depart,turn left,arrive  |
-            | a,e       | abe,abe     | depart,arrive            |
-            | a,d       | abe,cbd,cbd | depart,turn right,arrive |
-            | c,a       | cbd,abe,abe | depart,turn right,arrive |
-            | c,d       | cbd,cbd     | depart,arrive            |
-            | c,e       | cbd,abe,abe | depart,turn left,arrive  |
-            | d,a       | cbd,abe,abe | depart,turn left,arrive  |
-            | d,c       | cbd,cbd     | depart,arrive            |
-            | d,e       | cbd,abe,abe | depart,turn right,arrive |
-            | e,a       | abe,abe     | depart,arrive            |
-            | e,c       | abe,cbd,cbd | depart,turn right,arrive |
-            | e,d       | abe,cbd,cbd | depart,turn left,arrive  |
+            | waypoints | route       | turns | locations |
+            | a,c       | abe,cbd,cbd | depart,turn left,arrive | |
+            | a,e       | abe,abe     | depart,arrive | |
+            | a,d       | abe,cbd,cbd | depart,turn right,arrive | |
+            | c,a       | cbd,abe,abe | depart,turn right,arrive | |
+            | c,d       | cbd,cbd     | depart,arrive | |
+            | c,e       | cbd,abe,abe | depart,turn left,arrive | |
+            | d,a       | cbd,abe,abe | depart,turn left,arrive | |
+            | d,c       | cbd,cbd     | depart,arrive | |
+            | d,e       | cbd,abe,abe | depart,turn right,arrive | |
+            | e,a       | abe,abe     | depart,arrive | |
+            | e,c       | abe,cbd,cbd | depart,turn right,arrive | |
+            | e,d       | abe,cbd,cbd | depart,turn left,arrive | |
 
     Scenario: Three Way Intersection
         Given the node map
@@ -137,11 +137,11 @@ Feature: Simple Turns
             | db     | primary |
 
        When I route I should get
-            | waypoints | route    | turns                           |
-            | a,c       | ab,cb,cb | depart,turn left,arrive         |
-            | a,d       | ab,db    | depart,arrive                   |
-            | d,c       | db,cb,cb | depart,turn right,arrive        |
-            | d,a       | db,ab    | depart,arrive                   |
+            | waypoints | route    | turns | locations |
+            | a,c       | ab,cb,cb | depart,turn left,arrive | |
+            | a,d       | ab,db    | depart,arrive | |
+            | d,c       | db,cb,cb | depart,turn right,arrive | |
+            | d,a       | db,ab    | depart,arrive | |
 
     Scenario: Three Way Intersection - Meeting Oneways
         Given the node map
@@ -157,9 +157,9 @@ Feature: Simple Turns
             | db     | primary | yes    |
 
        When I route I should get
-            | waypoints | route    | turns                           |
-            | a,c       | ab,bc,bc | depart,turn left,arrive         |
-            | d,c       | db,bc,bc | depart,turn right,arrive        |
+            | waypoints | route    | turns | locations |
+            | a,c       | ab,bc,bc | depart,turn left,arrive | |
+            | d,c       | db,bc,bc | depart,turn right,arrive | |
 
     Scenario: Three Way Intersection on Through Street
         Given the node map
@@ -174,11 +174,11 @@ Feature: Simple Turns
             | db     | primary |
 
        When I route I should get
-            | waypoints | route     | turns                    |
-            | a,c       | abc,abc   | depart,arrive            |
-            | a,d       | abc,db,db | depart,turn left,arrive  |
-            | c,a       | abc,abc   | depart,arrive            |
-            | c,d       | abc,db,db | depart,turn right,arrive |
+            | waypoints | route     | turns | locations |
+            | a,c       | abc,abc   | depart,arrive | |
+            | a,d       | abc,db,db | depart,turn left,arrive | |
+            | c,a       | abc,abc   | depart,arrive | |
+            | c,d       | abc,db,db | depart,turn right,arrive | |
 
      Scenario: High Degree Intersection
         Given the node map
@@ -204,14 +204,14 @@ Feature: Simple Turns
             | ai    | primary |
 
         When I route I should get
-            | waypoints | route    | turns                           |
-            | b,c       | ab,ac,ac | depart,turn sharp left,arrive   |
-            | b,d       | ab,ad,ad | depart,turn left,arrive         |
-            | b,e       | ab,ae,ae | depart,turn slight left,arrive  |
-            | b,f       | ab,af    | depart,arrive                   |
-            | b,g       | ab,ag,ag | depart,turn slight right,arrive |
-            | b,h       | ab,ah,ah | depart,turn right,arrive        |
-            | b,i       | ab,ai,ai | depart,turn sharp right,arrive  |
+            | waypoints | route    | turns | locations |
+            | b,c       | ab,ac,ac | depart,turn sharp left,arrive | |
+            | b,d       | ab,ad,ad | depart,turn left,arrive | |
+            | b,e       | ab,ae,ae | depart,turn slight left,arrive | |
+            | b,f       | ab,af    | depart,arrive | |
+            | b,g       | ab,ag,ag | depart,turn slight right,arrive | |
+            | b,h       | ab,ah,ah | depart,turn right,arrive | |
+            | b,i       | ab,ai,ai | depart,turn sharp right,arrive | |
 
     Scenario: Disturbed High Degree Intersection
         Given the node map
@@ -237,14 +237,14 @@ Feature: Simple Turns
             | ai    | primary |
 
         When I route I should get
-            | waypoints | route    | turns                           |
-            | b,c       | ab,ac,ac | depart,turn sharp left,arrive   |
-            | b,d       | ab,ad,ad | depart,turn left,arrive         |
-            | b,e       | ab,ae,ae | depart,turn slight left,arrive  |
-            | b,f       | ab,af    | depart,arrive                   |
-            | b,g       | ab,ag,ag | depart,turn slight right,arrive |
-            | b,h       | ab,ah,ah | depart,turn right,arrive        |
-            | b,i       | ab,ai,ai | depart,turn sharp right,arrive  |
+            | waypoints | route    | turns | locations |
+            | b,c       | ab,ac,ac | depart,turn sharp left,arrive | |
+            | b,d       | ab,ad,ad | depart,turn left,arrive | |
+            | b,e       | ab,ae,ae | depart,turn slight left,arrive | |
+            | b,f       | ab,af    | depart,arrive | |
+            | b,g       | ab,ag,ag | depart,turn slight right,arrive | |
+            | b,h       | ab,ah,ah | depart,turn right,arrive | |
+            | b,i       | ab,ai,ai | depart,turn sharp right,arrive | |
 
     Scenario: Turn instructions at high latitude
         Given the node locations
@@ -272,11 +272,11 @@ Feature: Simple Turns
             | wy    |
 
         When I route I should get
-            | from | to | route    | turns                    |
-            | a    | c  | ab,bc,bc | depart,turn left,arrive  |
-            | c    | a  | bc,ab,ab | depart,turn right,arrive |
-            | x    | z  | xy,yz,yz | depart,turn right,arrive |
-            | z    | x  | yz,xy,xy | depart,turn left,arrive  |
+            | from | to | route    | turns | locations |
+            | a    | c  | ab,bc,bc | depart,turn left,arrive | |
+            | c    | a  | bc,ab,ab | depart,turn right,arrive | |
+            | x    | z  | xy,yz,yz | depart,turn right,arrive | |
+            | z    | x  | yz,xy,xy | depart,turn left,arrive | |
 
     Scenario: Three Way Similar Sharp Turns
         Given the node map
@@ -293,11 +293,11 @@ Feature: Simple Turns
             | bd    | primary |
 
         When I route I should get
-            | waypoints | route    | turns                          |
-            | a,c       | ab,bc,bc | depart,turn sharp right,arrive |
-            | a,d       | ab,bd,bd | depart,turn sharp right,arrive |
-            | d,c       | bd,bc,bc | depart,turn sharp left,arrive  |
-            | d,a       | bd,ab,ab | depart,turn sharp left,arrive  |
+            | waypoints | route    | turns | locations |
+            | a,c       | ab,bc,bc | depart,turn sharp right,arrive | |
+            | a,d       | ab,bd,bd | depart,turn sharp right,arrive | |
+            | d,c       | bd,bc,bc | depart,turn sharp left,arrive | |
+            | d,a       | bd,ab,ab | depart,turn sharp left,arrive | |
 
     Scenario: Left Turn Assignment (1)
         Given the node map
@@ -314,8 +314,8 @@ Feature: Simple Turns
             | be    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                          |
-            | a,d       | abc,bd,bd | depart,turn slight left,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn slight left,arrive | |
 
     Scenario: Left Turn Assignment (2)
         Given the node map
@@ -333,8 +333,8 @@ Feature: Simple Turns
             | be    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                   |
-            | a,d       | abc,bd,bd | depart,turn left,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn left,arrive | |
 
     Scenario: Left Turn Assignment (3)
         Given the node map
@@ -353,8 +353,8 @@ Feature: Simple Turns
             | be    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                   |
-            | a,d       | abc,bd,bd | depart,turn left,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn left,arrive | |
 
     Scenario: Left Turn Assignment (4)
         Given the node map
@@ -374,8 +374,8 @@ Feature: Simple Turns
             | be    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                   |
-            | a,d       | abc,bd,bd | depart,turn left,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn left,arrive | |
 
     Scenario: Left Turn Assignment (5)
         Given the node map
@@ -394,8 +394,8 @@ Feature: Simple Turns
             | be    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                   |
-            | a,d       | abc,bd,bd | depart,turn left,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn left,arrive | |
 
     Scenario: Left Turn Assignment (6)
         Given the node map
@@ -413,8 +413,8 @@ Feature: Simple Turns
             | be    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                         |
-            | a,d       | abc,bd,bd | depart,turn sharp left,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn sharp left,arrive | |
 
     Scenario: Left Turn Assignment (7)
         Given the node map
@@ -431,8 +431,8 @@ Feature: Simple Turns
             | be    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                         |
-            | a,d       | abc,bd,bd | depart,turn sharp left,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn sharp left,arrive | |
 
     Scenario: Right Turn Assignment (1)
         Given the node map
@@ -449,8 +449,8 @@ Feature: Simple Turns
             | be    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                           |
-            | a,d       | abc,bd,bd | depart,turn slight right,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn slight right,arrive | |
 
     Scenario: Right Turn Assignment (2)
         Given the node map
@@ -468,8 +468,8 @@ Feature: Simple Turns
             | be    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                    |
-            | a,d       | abc,bd,bd | depart,turn right,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn right,arrive | |
 
     Scenario: Right Turn Assignment (3)
         Given the node map
@@ -488,8 +488,8 @@ Feature: Simple Turns
             | be    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                    |
-            | a,d       | abc,bd,bd | depart,turn right,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn right,arrive | |
 
     Scenario: Right Turn Assignment (4)
         Given the node map
@@ -509,8 +509,8 @@ Feature: Simple Turns
             | be    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                    |
-            | a,d       | abc,bd,bd | depart,turn right,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn right,arrive | |
 
     Scenario: Right Turn Assignment (5)
         Given the node map
@@ -529,8 +529,8 @@ Feature: Simple Turns
             | be    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                    |
-            | a,d       | abc,bd,bd | depart,turn right,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn right,arrive | |
 
     Scenario: Right Turn Assignment (6)
         Given the node map
@@ -549,8 +549,8 @@ Feature: Simple Turns
             | be    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                          |
-            | a,d       | abc,bd,bd | depart,turn sharp right,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn sharp right,arrive | |
 
     Scenario: Right Turn Assignment (7)
         Given the node map
@@ -568,8 +568,8 @@ Feature: Simple Turns
             | be    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                          |
-            | a,d       | abc,bd,bd | depart,turn sharp right,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn sharp right,arrive | |
 
    Scenario: Right Turn Assignment Two Turns
         Given the node map
@@ -589,9 +589,9 @@ Feature: Simple Turns
             | bf    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                          |
-            | a,d       | abc,bd,bd | depart,turn sharp right,arrive |
-            | a,e       | abc,be,be | depart,turn right,arrive       |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn sharp right,arrive | |
+            | a,e       | abc,be,be | depart,turn right,arrive | |
 
    Scenario: Right Turn Assignment Two Turns (2)
         Given the node map
@@ -611,9 +611,9 @@ Feature: Simple Turns
             | bf    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                           |
-            | a,d       | abc,bd,bd | depart,turn right,arrive        |
-            | a,e       | abc,be,be | depart,turn slight right,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn right,arrive | |
+            | a,e       | abc,be,be | depart,turn slight right,arrive | |
 
    Scenario: Right Turn Assignment Two Turns (3)
         Given the node map
@@ -633,9 +633,9 @@ Feature: Simple Turns
             | bf    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                           |
-            | a,d       | abc,bd,bd | depart,turn right,arrive        |
-            | a,e       | abc,be,be | depart,turn slight right,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn right,arrive | |
+            | a,e       | abc,be,be | depart,turn slight right,arrive | |
 
    Scenario: Right Turn Assignment Two Turns (4)
         Given the node map
@@ -655,9 +655,9 @@ Feature: Simple Turns
             | bf    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                           |
-            | a,d       | abc,bd,bd | depart,turn right,arrive        |
-            | a,e       | abc,be,be | depart,turn slight right,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn right,arrive | |
+            | a,e       | abc,be,be | depart,turn slight right,arrive | |
 
    Scenario: Right Turn Assignment Three Turns
         Given the node map
@@ -677,10 +677,10 @@ Feature: Simple Turns
             | bg    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                           |
-            | a,d       | abc,bd,bd | depart,turn sharp right,arrive  |
-            | a,e       | abc,be,be | depart,turn right,arrive        |
-            | a,f       | abc,bf,bf | depart,turn slight right,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn sharp right,arrive | |
+            | a,e       | abc,be,be | depart,turn right,arrive | |
+            | a,f       | abc,bf,bf | depart,turn slight right,arrive | |
 
     Scenario: Slight Turn involving Oneways
         Given the node map
@@ -698,10 +698,10 @@ Feature: Simple Turns
             | dbe   | primary | no     |
 
         When I route I should get
-            | waypoints | route   | turns         |
-            | a,c       | abc,abc | depart,arrive |
-            | d,e       | dbe,dbe | depart,arrive |
-            | e,d       | dbe,dbe | depart,arrive |
+            | waypoints | route   | turns | locations |
+            | a,c       | abc,abc | depart,arrive | |
+            | d,e       | dbe,dbe | depart,arrive | |
+            | e,d       | dbe,dbe | depart,arrive | |
 
     Scenario: Slight Turn involving Oneways
         Given the node map
@@ -720,10 +720,10 @@ Feature: Simple Turns
             | dbe   | primary | no     |
 
         When I route I should get
-            | waypoints | route   | turns         |
-            | a,c       | abc,abc | depart,arrive |
-            | d,e       | dbe,dbe | depart,arrive |
-            | e,d       | dbe,dbe | depart,arrive |
+            | waypoints | route   | turns | locations |
+            | a,c       | abc,abc | depart,arrive | |
+            | d,e       | dbe,dbe | depart,arrive | |
+            | e,d       | dbe,dbe | depart,arrive | |
 
 
     Scenario: Slight Turn involving Oneways - Name Change
@@ -743,10 +743,10 @@ Feature: Simple Turns
             | be    | primary | no     |
 
         When I route I should get
-            | waypoints | route   | turns         |
-            | a,c       | abc,abc | depart,arrive |
-            | d,e       | db,be   | depart,arrive |
-            | e,d       | be,db   | depart,arrive |
+            | waypoints | route   | turns | locations |
+            | a,c       | abc,abc | depart,arrive | |
+            | d,e       | db,be   | depart,arrive | |
+            | e,d       | be,db   | depart,arrive | |
 
      Scenario: Right Turn Assignment Three Conflicting Turns with invalid - 1
         Given the node map
@@ -766,9 +766,9 @@ Feature: Simple Turns
             | bg    | primary | no     |
 
         When I route I should get
-            | waypoints | route     | turns                           |
-            | a,e       | abc,eb,eb | depart,turn right,arrive        |
-            | a,f       | abc,fb,fb | depart,turn slight right,arrive |
+            | waypoints | route     | turns | locations |
+            | a,e       | abc,eb,eb | depart,turn right,arrive | |
+            | a,f       | abc,fb,fb | depart,turn slight right,arrive | |
 
      Scenario: Right Turn Assignment Three Conflicting Turns with invalid - 2
         Given the node map
@@ -788,9 +788,9 @@ Feature: Simple Turns
             | bg    | primary | yes    |
 
         When I route I should get
-            | waypoints | route     | turns                           |
-            | a,d       | abc,bd,bd | depart,turn right,arrive        |
-            | a,f       | abc,bf,bf | depart,turn slight right,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn right,arrive | |
+            | a,f       | abc,bf,bf | depart,turn slight right,arrive | |
 
     Scenario: Right Turn Assignment Three Conflicting Turns with invalid - 3
         Given the node map
@@ -810,9 +810,9 @@ Feature: Simple Turns
             | bg    | primary | no     |
 
         When I route I should get
-            | waypoints | route     | turns                          |
-            | a,d       | abc,db,db | depart,turn sharp right,arrive |
-            | a,e       | abc,be,be | depart,turn right,arrive       |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,db,db | depart,turn sharp right,arrive | |
+            | a,e       | abc,be,be | depart,turn right,arrive | |
 
     Scenario: Conflicting Turns with well distinguished turn
         Given the node map
@@ -831,10 +831,10 @@ Feature: Simple Turns
             | bf    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                           |
-            | a,d       | abc,bd,bd | depart,turn slight right,arrive |
-            | a,e       | abc,be,be | depart,turn right,arrive        |
-            | a,f       | abc,bf,bf | depart,turn sharp right,arrive  |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn slight right,arrive | |
+            | a,e       | abc,be,be | depart,turn right,arrive | |
+            | a,f       | abc,bf,bf | depart,turn sharp right,arrive | |
 
     Scenario: Conflicting Turns with well distinguished turn (back)
         Given the node map
@@ -853,10 +853,10 @@ Feature: Simple Turns
             | bf    | primary |
 
         When I route I should get
-            | waypoints | route     | turns                           |
-            | a,d       | abc,bd,bd | depart,turn sharp right,arrive  |
-            | a,e       | abc,be,be | depart,turn right,arrive        |
-            | a,f       | abc,bf,bf | depart,turn slight right,arrive |
+            | waypoints | route     | turns | locations |
+            | a,d       | abc,bd,bd | depart,turn sharp right,arrive | |
+            | a,e       | abc,be,be | depart,turn right,arrive | |
+            | a,f       | abc,bf,bf | depart,turn slight right,arrive | |
 
     Scenario: Turn Lane on Splitting up Road
         Given the node map
@@ -882,10 +882,10 @@ Feature: Simple Turns
             | restriction | ehb      | be     | b        | no_left_turn |
 
         When I route I should get
-            | waypoints | route            | turns                   |
-            | a,d       | road,road        | depart,arrive           |
-            | d,i       | road,cross,cross | depart,turn left,arrive |
-            | d,g       | road,road        | depart,arrive           |
+            | waypoints | route            | turns | locations |
+            | a,d       | road,road        | depart,arrive | |
+            | d,i       | road,cross,cross | depart,turn left,arrive | |
+            | d,g       | road,road        | depart,arrive | |
 
      Scenario: Go onto turning major road
         Given the node map
@@ -904,10 +904,10 @@ Feature: Simple Turns
             | bd    | residential | in   |     1 |
 
         When I route I should get
-            | waypoints | turns                   | route        |
-            | a,c       | depart,arrive           | road,road    |
-            | d,a       | depart,turn left,arrive | in,road,road |
-            | d,c       | depart,arrive           | in,road      |
+            | waypoints | turns                   | route | locations |
+            | a,c       | depart,arrive           | road,road | |
+            | d,a       | depart,turn left,arrive | in,road,road | |
+            | d,c       | depart,arrive           | in,road | |
 
     Scenario: Channing Street
         Given the node map
@@ -933,9 +933,9 @@ Feature: Simple Turns
             | gch   | North Capitol Street Northeast | primary     | yes    |
 
         When I route I should get
-            | waypoints | turns                   | route                                                                                   |
-            | a,d       | depart,arrive           | Channing Street Northeast,Channing Street Northwest                                     |
-            | a,h       | depart,turn left,arrive | Channing Street Northeast,North Capitol Street Northeast,North Capitol Street Northeast |
+            | waypoints | turns                   | route | locations |
+            | a,d       | depart,arrive           | Channing Street Northeast,Channing Street Northwest | |
+            | a,h       | depart,turn left,arrive | Channing Street Northeast,North Capitol Street Northeast,North Capitol Street Northeast | |
 
     Scenario: V St NW, Florida Ave NW: Turn Instruction
     # https://www.mapillary.com/app/?focus=map&lat=38.91815595&lng=-77.03880249&z=17&pKey=sCxepTOCTZD3OoBXuqGEOw
@@ -956,8 +956,8 @@ Feature: Simple Turns
             | yd    | Champlain St NW                | residential |        |
 
         When I route I should get
-            | waypoints | turns                   | route                                 |
-            | a,e       | depart,turn left,arrive | V St NW,Florida Ave NW,Florida Ave NW |
+            | waypoints | turns                   | route | locations |
+            | a,e       | depart,turn left,arrive | V St NW,Florida Ave NW,Florida Ave NW | |
 
     # http://www.openstreetmap.org/node/182805179
     Scenario: Make Sharp Left at Traffic Signal
@@ -991,8 +991,8 @@ Feature: Simple Turns
             | kh    | kh                             | trunk_link  | yes    |
 
         When I route I should get
-            | waypoints | turns                                        | route                                                         |
-            | a,q       | depart,off ramp right,turn sharp left,arrive | Blue Star Memorial Hwy,bcde,Centreville Road,Centreville Road |
+            | waypoints | turns                                        | route | locations |
+            | a,q       | depart,off ramp right,turn sharp left,arrive | Blue Star Memorial Hwy,bcde,Centreville Road,Centreville Road | |
 
     @todo
     # https://www.openstreetmap.org/#map=20/52.51609/13.41080
@@ -1012,9 +1012,9 @@ Feature: Simple Turns
             | ec    | Molkenmarkt   | secondary | yes    |
 
         When I route I should get
-            | waypoints | turns         | route                     |
-            | a,d       | depart,arrive | Molkenmarkt,Stralauer Str |
-            | e,d       | depart,arrive | Molkenmarkt,Stralauer Str |
+            | waypoints | turns         | route | locations |
+            | a,d       | depart,arrive | Molkenmarkt,Stralauer Str | |
+            | e,d       | depart,arrive | Molkenmarkt,Stralauer Str | |
 
     Scenario: Unnecessary Slight Left onto Stralauer Strasse
         Given the node map
@@ -1032,9 +1032,9 @@ Feature: Simple Turns
             | ec    | Molkenmarkt   | secondary | yes    |
 
         When I route I should get
-            | waypoints | turns         | route                     |
-            | a,d       | depart,arrive | Molkenmarkt,Stralauer Str |
-            | e,d       | depart,arrive | Molkenmarkt,Stralauer Str |
+            | waypoints | turns         | route | locations |
+            | a,d       | depart,arrive | Molkenmarkt,Stralauer Str | |
+            | e,d       | depart,arrive | Molkenmarkt,Stralauer Str | |
 
      # http://www.openstreetmap.org/#map=18/39.28158/-76.62291
      @3002
@@ -1051,9 +1051,9 @@ Feature: Simple Turns
             | bd    | primary_link |      |
 
         When I route I should get
-            | waypoints | turns                           | route     |
-            | a,c       | depart,arrive                   | road,road |
-            | a,d       | depart,turn slight right,arrive | road,,    |
+            | waypoints | turns                           | route | locations |
+            | a,c       | depart,arrive                   | road,road | |
+            | a,d       | depart,turn slight right,arrive | road,, | |
 
      # http://www.openstreetmap.org/#map=18/39.28158/-76.62291
      @3002
@@ -1071,9 +1071,9 @@ Feature: Simple Turns
             | edf   | primary_link |      |
 
         When I route I should get
-            | waypoints | turns                           | route     |
-            | a,c       | depart,arrive                   | road,road |
-            | a,f       | depart,turn slight right,arrive | road,,    |
+            | waypoints | turns                           | route | locations |
+            | a,c       | depart,arrive                   | road,road | |
+            | a,f       | depart,turn slight right,arrive | road,, | |
 
     # http://www.openstreetmap.org/#map=18/39.28158/-76.62291
     @3002
@@ -1090,9 +1090,9 @@ Feature: Simple Turns
             | bd    | primary_link |      |
 
         When I route I should get
-            | waypoints | turns                          | route     |
-            | a,c       | depart,arrive                  | road,road |
-            | a,d       | depart,turn slight left,arrive | road,,    |
+            | waypoints | turns                          | route | locations |
+            | a,c       | depart,arrive                  | road,road | |
+            | a,d       | depart,turn slight left,arrive | road,, | |
 
      # http://www.openstreetmap.org/#map=18/39.28158/-76.62291
      @3002
@@ -1110,9 +1110,9 @@ Feature: Simple Turns
             | edf   | primary_link |      |
 
         When I route I should get
-            | waypoints | turns                          | route     |
-            | a,f       | depart,turn slight left,arrive | road,,    |
-            | a,c       | depart,arrive                  | road,road |
+            | waypoints | turns                          | route | locations |
+            | a,f       | depart,turn slight left,arrive | road,, | |
+            | a,c       | depart,arrive                  | road,road | |
 
     Scenario: Non-Obvious Turn Next to service road
         Given the node map
@@ -1147,8 +1147,8 @@ Feature: Simple Turns
             | bd     | service |         |
 
        When I route I should get
-            | waypoints | route              | turns                   |
-            | a,c       | in,through,through | depart,turn left,arrive |
+            | waypoints | route              | turns | locations |
+            | a,c       | in,through,through | depart,turn left,arrive | |
 
     # http://www.openstreetmap.org/#map=19/52.51556/13.41832
     Scenario: No Slight Right at Stralauer Strasse
@@ -1177,8 +1177,8 @@ Feature: Simple Turns
             | kchm  | Alexanderstr  | primary   | yes    |
 
         When I route I should get
-            | waypoints | turns          | route                      |
-            | a,e       | depart,arrive  | Stralauer Str,Holzmarktstr |
+            | waypoints | turns          | route | locations |
+            | a,e       | depart,arrive  | Stralauer Str,Holzmarktstr | |
 
     Scenario: No Slight Right at Stralauer Strasse -- less extreme
         Given the node map
@@ -1206,8 +1206,8 @@ Feature: Simple Turns
             | kchm  | Alexanderstr  | primary   | yes    |
 
         When I route I should get
-            | waypoints | turns         | route                      |
-            | a,e       | depart,arrive | Stralauer Str,Holzmarktstr |
+            | waypoints | turns         | route | locations |
+            | a,e       | depart,arrive | Stralauer Str,Holzmarktstr | |
 
     Scenario: No Slight Right at Stralauer Strasse
         Given the node map
@@ -1235,8 +1235,8 @@ Feature: Simple Turns
             | kchm  | Alexanderstr  | primary   | yes    |
 
         When I route I should get
-            | waypoints | turns         | route                      |
-            | a,d       | depart,arrive | Stralauer Str,Holzmarktstr |
+            | waypoints | turns         | route | locations |
+            | a,d       | depart,arrive | Stralauer Str,Holzmarktstr | |
 
     #http://www.openstreetmap.org/#map=19/49.48761/8.47618
     @todo @3365
@@ -1259,9 +1259,9 @@ Feature: Simple Turns
             | fbg   | Fried  |      | yes    |
 
         When I route I should get
-            | waypoints | route              | turns                       |
-            | a,d       | Goethe,Fried,Fried | depart,continue left,arrive |
-            | a,g       | Goethe,Fried,Fried | depart,turn right,arrive    |
+            | waypoints | route              | turns | locations |
+            | a,d       | Goethe,Fried,Fried | depart,continue left,arrive | |
+            | a,g       | Goethe,Fried,Fried | depart,turn right,arrive | |
 
 	# Conflicting roads (https://www.openstreetmap.org/export#map=19/37.57805/-77.46049)
 	Scenario: Turning at forklike structure
@@ -1279,8 +1279,8 @@ Feature: Simple Turns
             | eb    | some | yes    | tertiary_link |
 
         When I route I should get
-            | waypoints | route       | turns                           |
-            | a,d       | foo,bar,bar | depart,turn slight right,arrive |
+            | waypoints | route       | turns | locations |
+            | a,d       | foo,bar,bar | depart,turn slight right,arrive | |
 
     Scenario: UTurn onto ramp
         Given the node map
@@ -1299,8 +1299,8 @@ Feature: Simple Turns
 
 
         When I route I should get
-            | waypoints | route   | ref         | turns                                         |
-            | a,h       | Road,,, | ,,C 42,C 42 | depart,on ramp right,merge slight left,arrive |
+            | waypoints | route   | ref         | turns | locations |
+            | a,h       | Road,,, | ,,C 42,C 42 | depart,on ramp right,merge slight left,arrive | |
 
     Scenario: UTurn onto ramp (same ref)
         Given the node map
@@ -1319,8 +1319,8 @@ Feature: Simple Turns
 
 
         When I route I should get
-            | waypoints | route           | ref             | turns                                         |
-            | a,h       | Road,,,         | C 42,,C 42,C 42 | depart,on ramp right,merge slight left,arrive |
+            | waypoints | route           | ref             | turns | locations |
+            | a,h       | Road,,,         | C 42,,C 42,C 42 | depart,on ramp right,merge slight left,arrive | |
 
     Scenario: End of road, T-intersection, no obvious turn, only one road allowed
         Given the node map
@@ -1349,8 +1349,8 @@ Feature: Simple Turns
             | restriction | be       | ef     | e        | only_right_turn |
 
        When I route I should get
-            | waypoints | route    | turns                   |
-            | a,d       | ab,dc,dc | depart,turn left,arrive |
+            | waypoints | route    | turns | locations |
+            | a,d       | ab,dc,dc | depart,turn left,arrive | |
 
 
     # https://www.openstreetmap.org/node/1332083066
@@ -1369,9 +1369,9 @@ Feature: Simple Turns
             | befg  | primary | yes    |
 
        When I route I should get
-            | waypoints | route        | turns                           |
-            | a,d       | ab,bcd,bcd   | depart,fork slight right,arrive |
-            | a,g       | ab,befg,befg | depart,fork slight left,arrive  |
+            | waypoints | route        | turns | locations |
+            | a,d       | ab,bcd,bcd   | depart,fork slight right,arrive | |
+            | a,g       | ab,befg,befg | depart,fork slight left,arrive | |
 
 	@routing @car
     Scenario: No turn instruction when turning from unnamed onto unnamed
@@ -1399,9 +1399,9 @@ Feature: Simple Turns
             | bc    | secondary   |      |       |
 
         When I route I should get
-            | from | to | route | ref          | turns                    |
-            | d    | c  | ,,    | L 460,,      | depart,turn right,arrive |
-            | c    | d  | ,,    | ,L 460,L 460 | depart,turn left,arrive  |
+            | from | to | route | ref          | turns | locations |
+            | d    | c  | ,,    | L 460,,      | depart,turn right,arrive | |
+            | c    | d  | ,,    | ,L 460,L 460 | depart,turn left,arrive | |
 
     # https://www.openstreetmap.org/#map=18/52.25130/10.42545
     Scenario: Turn for roads with no name, ref changes
@@ -1427,8 +1427,8 @@ Feature: Simple Turns
             | ce    | residential |      | Heinrichshöhe |
 
        When I route I should get
-            | waypoints | route     | turns                    |
-            | a,f       | ,,        | depart,turn right,arrive |
+            | waypoints | route     | turns | locations |
+            | a,f       | ,,        | depart,turn right,arrive | |
 
     # https://www.openstreetmap.org/#map=18/52.24071/10.29066
     Scenario: Turn for roads with no name, ref changes
@@ -1460,6 +1460,6 @@ Feature: Simple Turns
             | etcpf | primary     | B 1  |               | no     |
 
        When I route I should get
-            | waypoints | route | turns                   |
-            | e,x       | ,,    | depart,turn left,arrive |
-            | f,a       | ,,    | depart,turn left,arrive |
+            | waypoints | route | turns | locations |
+            | e,x       | ,,    | depart,turn left,arrive | |
+            | f,a       | ,,    | depart,turn left,arrive | |

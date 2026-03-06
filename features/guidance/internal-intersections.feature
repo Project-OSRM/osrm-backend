@@ -27,9 +27,9 @@ Feature: Internal Intersection Model
           | hij   | yes    | Snowden River Parkway |
 
         When I route I should get
-          | waypoints | route                                                              | turns                        | # |
-          | a,k       | Broken Land Parkway,Broken Land Parkway                            | depart,arrive                ||
-          | l,b       | Broken Land Parkway,Broken Land Parkway                            | depart,arrive                ||
+          | waypoints | route                                                              | turns                        | # | locations |
+          | a,k       | Broken Land Parkway,Broken Land Parkway                            | depart,arrive | |
+          | l,b       | Broken Land Parkway,Broken Land Parkway                            | depart,arrive | |
 #         | g,j       | Patuxent Woods Drive,Snowden River Parkway,Snowden River Parkway   | depart,continue,arrive       | did not work as expected - might be another issue to handle in post process? |
 #         | f,c       | Snowden River Parkway,Patuxent Woods Drive,Patuxent Woods Drive    | depart,continue,arrive       | did not work as expected - might be another issue to handle in post process? |
           | a,c       | Broken Land Parkway,Patuxent Woods Drive,Patuxent Woods Drive      | depart,turn right,arrive     ||

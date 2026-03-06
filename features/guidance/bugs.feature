@@ -33,8 +33,8 @@ Feature: Features related to bugs
             | e    | traffic_signals |
 
         When I route I should get
-            | waypoints | route     | turns         |
-            | 1,2       | top,right | depart,arrive |
+            | waypoints | route     | turns | locations |
+            | 1,2       | top,right | depart,arrive | |
 
     @3156
     Scenario: Incorrect lanes tag
@@ -65,8 +65,8 @@ Feature: Features related to bugs
             | bc    | Merritt to Apricot | residential |
 
         When I route I should get
-            | waypoints | route | intersections  |
-            | a,c       | Pear to Merrit,Merritt to Apricot,Merritt to Apricot | true:0;true:0 false:180;true:180  |
+            | waypoints | route | intersections | locations |
+            | a,c       | Pear to Merrit,Merritt to Apricot,Merritt to Apricot | true:0;true:0 false:180;true:180 | |
 
 
     # https://github.com/Project-OSRM/osrm-backend/issues/6373

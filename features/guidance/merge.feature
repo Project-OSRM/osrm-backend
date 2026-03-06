@@ -21,9 +21,9 @@ Feature: Merging
             | eb    | primary |
 
        When I route I should get
-            | waypoints | route      | turns                       |
-            | d,c       | db,abc,abc | depart,turn straight,arrive |
-            | e,c       | eb,abc,abc | depart,turn straight,arrive |
+            | waypoints | route      | turns | locations |
+            | d,c       | db,abc,abc | depart,turn straight,arrive | |
+            | e,c       | eb,abc,abc | depart,turn straight,arrive | |
 
     @merge
     Scenario: Merge on Three Way Intersection Right
@@ -39,8 +39,8 @@ Feature: Merging
             | db    | primary |
 
        When I route I should get
-            | waypoints | route      | turns                       |
-            | d,c       | db,abc,abc | depart,turn straight,arrive |
+            | waypoints | route      | turns | locations |
+            | d,c       | db,abc,abc | depart,turn straight,arrive | |
 
     @merge @negative
     Scenario: Don't Merge on Short-Three Way Intersection Right
@@ -56,8 +56,8 @@ Feature: Merging
             | db    | primary |
 
        When I route I should get
-            | waypoints | route      | turns                          |
-            | d,c       | db,abc,abc | depart,turn slight left,arrive |
+            | waypoints | route      | turns | locations |
+            | d,c       | db,abc,abc | depart,turn slight left,arrive | |
 
 
     @merge
@@ -74,8 +74,8 @@ Feature: Merging
             | db    | primary |
 
        When I route I should get
-            | waypoints | route      | turns                       |
-            | d,c       | db,abc,abc | depart,turn straight,arrive |
+            | waypoints | route      | turns | locations |
+            | d,c       | db,abc,abc | depart,turn straight,arrive | |
 
     @merge
     Scenario: Merge onto a turning road
@@ -106,9 +106,9 @@ Feature: Merging
             | fd    | residential | in   |
 
         When I route I should get
-            | waypoints | turns                         | route        |
-            | f,e       | depart,turn straight,arrive   | in,road,road |
-            | f,a       | depart,turn sharp left,arrive | in,road,road |
+            | waypoints | turns                         | route | locations |
+            | f,e       | depart,turn straight,arrive   | in,road,road | |
+            | f,a       | depart,turn sharp left,arrive | in,road,road | |
 
     @merge
     Scenario: Merge onto a motorway
@@ -124,8 +124,8 @@ Feature: Merging
             | db    |      | motorway_link | yes    |
 
         When I route I should get
-            | waypoints | route      | turns                            |
-            | d,c       | ,A100,A100 | depart,merge slight right,arrive |
+            | waypoints | route      | turns | locations |
+            | d,c       | ,A100,A100 | depart,merge slight right,arrive | |
 
 
     # https://www.openstreetmap.org/way/254299122
@@ -145,5 +145,5 @@ Feature: Merging
             | cf    |      | 1B           | motorway_link | yes    |
 
         When I route I should get
-            | waypoints | route      | turns                           |
-            | e,d       | ,A100,A100 | depart,merge slight left,arrive |
+            | waypoints | route      | turns | locations |
+            | e,d       | ,A100,A100 | depart,merge slight left,arrive | |
