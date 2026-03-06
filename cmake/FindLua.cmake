@@ -47,7 +47,7 @@ unset(_lua_append_versions)
 
 # this is a function only to have all the variables inside go away automatically
 function(_lua_set_version_vars)
-    set(LUA_VERSIONS5 5.4 5.3 5.2 5.1 5.0)
+    set(LUA_VERSIONS5 5.5 5.4 5.3 5.2 5.1 5.0)
 
     if (Lua_FIND_VERSION_EXACT)
         if (Lua_FIND_VERSION_COUNT GREATER 1)
@@ -102,22 +102,36 @@ function(_lua_check_header_version _hdr_file)
     # At least 5.[012] have different ways to express the version
     # so all of them need to be tested. Lua 5.2 defines LUA_VERSION
     # and LUA_RELEASE as joined by the C preprocessor, so avoid those.
+    # Lua 5.5+ uses integer macros (LUA_VERSION_MAJOR_N) rather than
+    # string literals for the version components.
     file(STRINGS "${_hdr_file}" lua_version_strings
          REGEX "^#define[ \t]+LUA_(RELEASE[ \t]+\"Lua [0-9]|VERSION([ \t]+\"Lua [0-9]|_[MR])).*")
 
+    # Lua 5.2–5.4: LUA_VERSION_MAJOR/MINOR/RELEASE are string literals ("5", "4", …)
     string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION_MAJOR[ \t]+\"([0-9])\"[ \t]*;.*" "\\1" LUA_VERSION_MAJOR ";${lua_version_strings};")
     if (LUA_VERSION_MAJOR MATCHES "^[0-9]+$")
         string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION_MINOR[ \t]+\"([0-9])\"[ \t]*;.*" "\\1" LUA_VERSION_MINOR ";${lua_version_strings};")
         string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION_RELEASE[ \t]+\"([0-9])\"[ \t]*;.*" "\\1" LUA_VERSION_PATCH ";${lua_version_strings};")
         set(LUA_VERSION_STRING "${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}.${LUA_VERSION_PATCH}")
     else ()
-        string(REGEX REPLACE ".*;#define[ \t]+LUA_RELEASE[ \t]+\"Lua ([0-9.]+)\"[ \t]*;.*" "\\1" LUA_VERSION_STRING ";${lua_version_strings};")
-        if (NOT LUA_VERSION_STRING MATCHES "^[0-9.]+$")
-            string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION[ \t]+\"Lua ([0-9.]+)\"[ \t]*;.*" "\\1" LUA_VERSION_STRING ";${lua_version_strings};")
+        # Lua 5.5+: LUA_VERSION_MAJOR_N/MINOR_N/RELEASE_N are plain integers
+        file(STRINGS "${_hdr_file}" lua_version_strings_n
+             REGEX "^#define[ \t]+LUA_VERSION_(MAJOR|MINOR|RELEASE)_N[ \t]+[0-9]+")
+        string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION_MAJOR_N[ \t]+([0-9]+)[ \t]*;.*" "\\1" LUA_VERSION_MAJOR ";${lua_version_strings_n};")
+        if (LUA_VERSION_MAJOR MATCHES "^[0-9]+$")
+            string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION_MINOR_N[ \t]+([0-9]+)[ \t]*;.*" "\\1" LUA_VERSION_MINOR ";${lua_version_strings_n};")
+            string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION_RELEASE_N[ \t]+([0-9]+)[ \t]*;.*" "\\1" LUA_VERSION_PATCH ";${lua_version_strings_n};")
+            set(LUA_VERSION_STRING "${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}.${LUA_VERSION_PATCH}")
+        else ()
+            # Lua 5.0–5.1: fall back to LUA_RELEASE / LUA_VERSION string literals
+            string(REGEX REPLACE ".*;#define[ \t]+LUA_RELEASE[ \t]+\"Lua ([0-9.]+)\"[ \t]*;.*" "\\1" LUA_VERSION_STRING ";${lua_version_strings};")
+            if (NOT LUA_VERSION_STRING MATCHES "^[0-9.]+$")
+                string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION[ \t]+\"Lua ([0-9.]+)\"[ \t]*;.*" "\\1" LUA_VERSION_STRING ";${lua_version_strings};")
+            endif ()
+            string(REGEX REPLACE "^([0-9]+)\\.[0-9.]*$" "\\1" LUA_VERSION_MAJOR "${LUA_VERSION_STRING}")
+            string(REGEX REPLACE "^[0-9]+\\.([0-9]+)[0-9.]*$" "\\1" LUA_VERSION_MINOR "${LUA_VERSION_STRING}")
+            string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9]).*" "\\1" LUA_VERSION_PATCH "${LUA_VERSION_STRING}")
         endif ()
-        string(REGEX REPLACE "^([0-9]+)\\.[0-9.]*$" "\\1" LUA_VERSION_MAJOR "${LUA_VERSION_STRING}")
-        string(REGEX REPLACE "^[0-9]+\\.([0-9]+)[0-9.]*$" "\\1" LUA_VERSION_MINOR "${LUA_VERSION_STRING}")
-        string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9]).*" "\\1" LUA_VERSION_PATCH "${LUA_VERSION_STRING}")
     endif ()
     foreach (ver IN LISTS _lua_append_versions)
         if (ver STREQUAL "${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}")
