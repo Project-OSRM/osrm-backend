@@ -17,7 +17,6 @@ std::string getWrongOptionHelp(const engine::api::NearestParameters &parameters)
 
     const auto coord_size = parameters.coordinates.size();
 
-    constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG, "hints", parameters.hints, coord_size, help);
     constrainParamSize(
         PARAMETER_SIZE_MISMATCH_MSG, "bearings", parameters.bearings, coord_size, help);
     constrainParamSize(

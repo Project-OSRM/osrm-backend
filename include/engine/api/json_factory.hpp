@@ -19,12 +19,7 @@
 #include <string>
 #include <vector>
 
-namespace osrm::engine
-{
-
-struct Hint;
-
-namespace api::json
+namespace osrm::engine::api::json
 {
 namespace detail
 {
@@ -93,22 +88,15 @@ util::json::Object makeRoute(const guidance::Route &route,
                              std::optional<util::json::Value> geometry,
                              const char *weight_name);
 
-// Creates a Waypoint without Hint, see the Hint overload below
+// Creates a Waypoint
 util::json::Object
 makeWaypoint(const util::Coordinate &location, const double &distance, std::string name);
-
-// Creates a Waypoint with Hint, see the overload above when Hint is not needed
-util::json::Object makeWaypoint(const util::Coordinate &location,
-                                const double &distance,
-                                std::string name,
-                                const Hint &hint);
 
 util::json::Object makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps);
 
 util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
                                 std::vector<util::json::Value> step_geometries,
                                 std::vector<util::json::Object> annotations);
-} // namespace api::json
-} // namespace osrm::engine
+} // namespace osrm::engine::api::json
 
 #endif // ENGINE_GUIDANCE_API_RESPONSE_GENERATOR_HPP_

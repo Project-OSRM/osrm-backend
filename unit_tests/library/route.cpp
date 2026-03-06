@@ -175,7 +175,7 @@ void test_route_same_coordinates(bool use_json_only_api)
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
 
         const auto hint = std::get<json::String>(waypoint_object.values.at("hint")).value;
-        BOOST_CHECK(!hint.empty());
+        BOOST_CHECK(hint.empty());
     }
 
     const auto &routes = std::get<json::Array>(json_result.values.at("routes")).values;
@@ -482,34 +482,6 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_across_components_new_api
     test_route_response_for_locations_across_components(false);
 }
 
-void test_route_user_disables_generating_hints(bool use_json_only_api)
-{
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
-
-    using namespace osrm;
-
-    RouteParameters params;
-    params.steps = true;
-    params.coordinates.push_back(get_dummy_location());
-    params.coordinates.push_back(get_dummy_location());
-    params.generate_hints = false;
-
-    json::Object json_result;
-    const auto rc = run_route_json(osrm, params, json_result, use_json_only_api);
-    BOOST_CHECK(rc == Status::Ok);
-
-    for (auto waypoint : std::get<json::Array>(json_result.values["waypoints"]).values)
-        BOOST_CHECK_EQUAL(std::get<json::Object>(waypoint).values.count("hint"), 0);
-}
-BOOST_AUTO_TEST_CASE(test_route_user_disables_generating_hints_old_api)
-{
-    test_route_user_disables_generating_hints(true);
-}
-BOOST_AUTO_TEST_CASE(test_route_user_disables_generating_hints_new_api)
-{
-    test_route_user_disables_generating_hints(false);
-}
-
 void speed_annotation_matches_duration_and_distance(bool use_json_only_api)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
@@ -630,8 +602,6 @@ BOOST_AUTO_TEST_CASE(test_route_serialize_fb)
         const auto latitude = waypoint->location()->latitude();
         BOOST_CHECK(longitude >= -180. && longitude <= 180.);
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
-
-        BOOST_CHECK(!waypoint->hint()->str().empty());
     }
 
     BOOST_CHECK(fb->routes() != nullptr);

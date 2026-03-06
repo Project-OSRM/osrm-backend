@@ -72,8 +72,6 @@ BOOST_AUTO_TEST_CASE(invalid_route_urls)
                       29UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&hints=;;; ;"),
                       32UL);
-    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?generate_hints=notboolean"),
-                      23UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&geometries=foo"),
                       34UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&overview=foo"),
@@ -231,7 +229,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                 RouteParameters::OverviewType::Simplified,
                                 std::optional<bool>{},
                                 coords_1,
-                                hints_4,
+                                std::vector<std::optional<engine::Hint>>{},
                                 std::vector<std::optional<double>>{},
                                 std::vector<std::optional<engine::Bearing>>{}};
     auto result_4 = parseParameters<RouteParameters>(
@@ -247,7 +245,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_4.radiuses, result_4->radiuses);
     CHECK_EQUAL_RANGE(reference_4.approaches, result_4->approaches);
     CHECK_EQUAL_RANGE(reference_4.coordinates, result_4->coordinates);
-    CHECK_EQUAL_RANGE_OF_HINTS(reference_4.hints, result_4->hints);
+    BOOST_CHECK(result_4->hints.empty()); // hints are silently ignored from HTTP
 
     std::vector<std::optional<engine::Bearing>> bearings_4 = {
         std::nullopt,
@@ -353,7 +351,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                  RouteParameters::OverviewType::Simplified,
                                  std::optional<bool>{},
                                  coords_3,
-                                 hints_10,
+                                 std::vector<std::optional<engine::Hint>>{},
                                  std::vector<std::optional<double>>{},
                                  std::vector<std::optional<engine::Bearing>>{}};
     auto result_10 = parseParameters<RouteParameters>(
@@ -370,20 +368,14 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_10.radiuses, result_10->radiuses);
     CHECK_EQUAL_RANGE(reference_10.approaches, result_10->approaches);
     CHECK_EQUAL_RANGE(reference_10.coordinates, result_10->coordinates);
-    CHECK_EQUAL_RANGE_OF_HINTS(reference_10.hints, result_10->hints);
+    BOOST_CHECK(result_10->hints.empty()); // hints are silently ignored from HTTP
 
-    // Do not generate Hints when they are explicitly disabled
+    // generate_hints is deprecated and silently ignored; verify parsing still succeeds
     auto result_11 = parseParameters<RouteParameters>("1,2;3,4?generate_hints=false");
     BOOST_CHECK(result_11);
-    BOOST_CHECK_EQUAL(result_11->generate_hints, false);
 
     auto result_12 = parseParameters<RouteParameters>("1,2;3,4?generate_hints=true");
     BOOST_CHECK(result_12);
-    BOOST_CHECK_EQUAL(result_12->generate_hints, true);
-
-    auto result_13 = parseParameters<RouteParameters>("1,2;3,4");
-    BOOST_CHECK(result_13);
-    BOOST_CHECK_EQUAL(result_13->generate_hints, true);
 
     // parse none annotations value correctly
     RouteParameters reference_14{};

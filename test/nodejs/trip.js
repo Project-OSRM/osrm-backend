@@ -68,7 +68,7 @@ test('trip: throws with too few or invalid args', function(assert) {
 });
 
 test('trip: throws with bad params', function(assert) {
-    assert.plan(14);
+    assert.plan(11);
     const osrm = new OSRM(data_path);
     assert.throws(function () { osrm.trip({coordinates: []}, function(err) {}) });
     assert.throws(function() { osrm.trip({}, function(err, trip) {}) },
@@ -85,21 +85,9 @@ test('trip: throws with bad params', function(assert) {
         coordinates: [three_test_coordinates[0][0], three_test_coordinates[0][1]]
     }, function(err, trip) {}) },
         /Coordinates must be an array of \(lon\/lat\) pairs/);
-    assert.throws(function() { osrm.trip({
-        coordinates: two_test_coordinates,
-        hints: null
-    }, function(err, trip) {}) },
-        /Hints must be an array of strings\/null/);
     const options = {
         coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
-        hints: three_test_coordinates[0]
     };
-    assert.throws(function() { osrm.trip(options, function(err, trip) {}); },
-        /Hint must be null or string/);
-    options.hints = [null];
-    assert.throws(function() { osrm.trip(options, function(err, trip) {}); },
-        /Hints array must have the same length as coordinates array/);
-    delete options.hints;
     options.geometries = 'false';
     assert.throws(function() { osrm.trip(options, function(err, trip) {}); },
         /'geometries' param must be one of \[polyline, polyline6, geojson\]/);
@@ -133,26 +121,19 @@ test('trip: routes Monaco using shared memory', function(assert) {
     });
 });
 
-test('trip: routes Monaco with hints', function(assert) {
-    assert.plan(5);
+test('trip: routes Monaco (no hint in waypoints)', function(assert) {
+    assert.plan(3);
     const osrm = new OSRM(data_path);
     const options = {
         coordinates: two_test_coordinates,
         steps: false
     };
-    osrm.trip(options, function(err, first) {
+    osrm.trip(options, function(err, result) {
         assert.ifError(err);
-        for (let t = 0; t < first.trips.length; t++) {
-            assert.ok(first.trips[t].geometry);
+        for (let t = 0; t < result.trips.length; t++) {
+            assert.ok(result.trips[t].geometry);
         }
-        const hints = first.waypoints.map(function(wp) { return wp.hint; });
-        assert.ok(hints.every(function(h) { return typeof h === 'string'; }));
-        options.hints = hints;
-
-        osrm.trip(options, function(err, second) {
-            assert.ifError(err);
-            assert.deepEqual(first, second);
-        });
+        assert.ok(result.waypoints.every(function(wp) { return wp.hint === undefined; }));
     });
 });
 

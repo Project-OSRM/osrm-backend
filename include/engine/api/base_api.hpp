@@ -6,7 +6,6 @@
 #include "engine/datafacade/datafacade_base.hpp"
 
 #include "engine/api/json_factory.hpp"
-#include "engine/hint.hpp"
 #include "util/coordinate_calculation.hpp"
 
 #include <memory>
@@ -61,28 +60,11 @@ class BaseAPI
 
         const auto &snapped_location = candidatesSnappedLocation(candidates);
         const auto &input_location = candidatesInputLocation(candidates);
-        if (parameters.generate_hints)
-        {
-            std::vector<SegmentHint> seg_hints(candidates.size());
-            std::transform(candidates.begin(),
-                           candidates.end(),
-                           seg_hints.begin(),
-                           [this](const auto &phantom)
-                           { return SegmentHint{phantom, facade.GetCheckSum()}; });
 
-            return json::makeWaypoint(
-                snapped_location,
-                util::coordinate_calculation::greatCircleDistance(snapped_location, input_location),
-                waypoint_name,
-                {std::move(seg_hints)});
-        }
-        else
-        {
-            return json::makeWaypoint(
-                snapped_location,
-                util::coordinate_calculation::greatCircleDistance(snapped_location, input_location),
-                waypoint_name);
-        }
+        return json::makeWaypoint(
+            snapped_location,
+            util::coordinate_calculation::greatCircleDistance(snapped_location, input_location),
+            waypoint_name);
     }
 
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
@@ -127,28 +109,11 @@ class BaseAPI
                  INTERSECTION_DELIMITER);
         auto name_string = builder->CreateString(waypoint_name);
 
-        flatbuffers::Offset<flatbuffers::String> hint_string;
-        if (parameters.generate_hints)
-        {
-            std::vector<SegmentHint> seg_hints(candidates.size());
-            std::transform(candidates.begin(),
-                           candidates.end(),
-                           seg_hints.begin(),
-                           [this](const auto &phantom)
-                           { return SegmentHint{phantom, facade.GetCheckSum()}; });
-            Hint hint{std::move(seg_hints)};
-            hint_string = builder->CreateString(hint.ToBase64());
-        }
-
         auto waypoint = std::make_unique<fbresult::WaypointBuilder>(*builder);
         waypoint->add_location(&location);
         waypoint->add_distance(static_cast<float>(
             util::coordinate_calculation::greatCircleDistance(snapped_location, input_location)));
         waypoint->add_name(name_string);
-        if (parameters.generate_hints)
-        {
-            waypoint->add_hint(hint_string);
-        }
         return waypoint;
     }
 

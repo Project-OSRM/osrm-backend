@@ -113,7 +113,7 @@ test('route: provides no alternatives by default, but when requested it may (not
 });
 
 test('route: throws with bad params', function(assert) {
-    assert.plan(11);
+    assert.plan(9);
     const osrm = new OSRM(monaco_path);
     assert.throws(function () { osrm.route({coordinates: []}, function(err) {}) });
     assert.throws(function() { osrm.route({}, function(err, route) {}) },
@@ -128,17 +128,8 @@ test('route: throws with bad params', function(assert) {
         /Lng\/Lat coordinates must be within world bounds \(-180 < lng < 180, -90 < lat < 90\)/);
     assert.throws(function() { osrm.route({coordinates: [[13.438640], [52.519930]]}, function(err, route) {}) },
         /Coordinates must be an array of \(lon\/lat\) pairs/);
-    assert.throws(function() { osrm.route({coordinates: two_test_coordinates, hints: null}, function(err, route) {}) },
-        /Hints must be an array of strings\/null/);
     assert.throws(function() { osrm.route({coordinates: two_test_coordinates, steps: null}, function(err, route) {}) });
     assert.throws(function() { osrm.route({coordinates: two_test_coordinates, annotations: null}, function(err, route) {}) });
-    const options = {
-        coordinates: two_test_coordinates,
-        alternateRoute: false,
-        hints: three_test_coordinates[0]
-    };
-    assert.throws(function() { osrm.route(options, function(err, route) {}) },
-        /Hint must be null or string/);
 });
 
 test('route: routes Monaco using shared memory', function(assert) {
@@ -455,24 +446,16 @@ test('route: invalid bearing values', function(assert) {
         /Bearing must be an array of \[bearing, range\] or null/);
 });
 
-test('route: routes Monaco with hints', function(assert) {
-    assert.plan(5);
+test('route: routes Monaco (no hint in waypoints)', function(assert) {
+    assert.plan(3);
     const osrm = new OSRM(monaco_path);
     const options = {
         coordinates: two_test_coordinates,
     };
-    osrm.route(options, function(err, first) {
+    osrm.route(options, function(err, result) {
         assert.ifError(err);
-        assert.ok(first.waypoints);
-        const hints = first.waypoints.map(function(wp) { return wp.hint; });
-        assert.ok(hints.every(function(h) { return typeof h === 'string'; }));
-
-        options.hints = hints;
-
-        osrm.route(options, function(err, second) {
-            assert.ifError(err);
-            assert.deepEqual(first, second);
-        });
+        assert.ok(result.waypoints);
+        assert.ok(result.waypoints.every(function(wp) { return wp.hint === undefined; }));
     });
 });
 
@@ -488,17 +471,22 @@ test('route: routes Monaco with null hints', function(assert) {
     });
 });
 
-test('route: throws on bad hints', function(assert) {
+test('route: hints are silently ignored', function(assert) {
     assert.plan(2);
     const osrm = new OSRM(monaco_path);
-    assert.throws(function() { osrm.route({
+    // hints are deprecated and silently ignored
+    osrm.route({
         coordinates: two_test_coordinates,
         hints: ['', '']
-    }, function(err, route) {})}, /Hint cannot be an empty string/);
-    assert.throws(function() { osrm.route({
+    }, function(err, route) {
+        assert.ifError(err);
+    });
+    osrm.route({
         coordinates: two_test_coordinates,
         hints: [null]
-    }, function(err, route) {})}, /Hints array must have the same length as coordinates array/);
+    }, function(err, route) {
+        assert.ifError(err);
+    });
 });
 
 test('route: routes Monaco with valid radius values', function(assert) {

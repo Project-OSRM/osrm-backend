@@ -54,9 +54,8 @@ Returns the fastest route between two or more coordinates while visiting the way
     *   `options.bearings` **[Array][5]?** Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
         Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
     *   `options.radiuses` **[Array][5]?** Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
-    *   `options.hints` **[Array][5]?** Hints for the coordinate snapping. Array of base64 encoded strings.
+    *   `options.hints` **[Array][5]?** Deprecated. This parameter is silently ignored.
     *   `options.exclude` **[Array][5]?** List of classes to avoid, order does not matter.
-    *   `options.generate_hints` **[Boolean][4]** Whether or not adds a Hint to the response which can be used in subsequent requests. (optional, default `true`)
     *   `options.alternatives` **[Boolean][4]** Search for alternative routes. (optional, default `false`)
     *   `options.alternatives` **[Number][6]** Search for up to this many alternative routes.
         *Please note that even if alternative routes are requested, a result cannot be guaranteed.* (optional, default `0`)
@@ -100,8 +99,7 @@ Note: `coordinates` in the general options only supports a single `{longitude},{
     *   `options.bearings` **[Array][5]?** Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
         Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
     *   `options.radiuses` **[Array][5]?** Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
-    *   `options.hints` **[Array][5]?** Hints for the coordinate snapping. Array of base64 encoded strings.
-    *   `options.generate_hints` **[Boolean][4]** Whether or not adds a Hint to the response which can be used in subsequent requests. (optional, default `true`)
+    *   `options.hints` **[Array][5]?** Deprecated. This parameter is silently ignored.
     *   `options.number` **[Number][6]** Number of nearest segments that should be returned.
         Must be an integer greater than or equal to `1`. (optional, default `1`)
     *   `options.approaches` **[Array][5]?** Restrict the direction on the road network at a waypoint, relative to the input coordinate. Can be `null` (unrestricted, default), `curb` or `opposite`.
@@ -140,8 +138,7 @@ Optionally returns distance table.
     *   `options.bearings` **[Array][5]?** Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
         Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
     *   `options.radiuses` **[Array][5]?** Limits the coordinate snapping to streets in the given radius in meters. Can be `null` (unlimited, default) or `double >= 0`.
-    *   `options.hints` **[Array][5]?** Hints for the coordinate snapping. Array of base64 encoded strings.
-    *   `options.generate_hints` **[Boolean][4]** Whether or not adds a Hint to the response which can be used in subsequent requests. (optional, default `true`)
+    *   `options.hints` **[Array][5]?** Deprecated. This parameter is silently ignored.
     *   `options.sources` **[Array][5]?** An array of `index` elements (`0 <= integer < #coordinates`) to use
         location with given index as source. Default is to use all.
     *   `options.destinations` **[Array][5]?** An array of `index` elements (`0 <= integer < #coordinates`) to use location with given index as destination. Default is to use all.
@@ -224,8 +221,7 @@ if they can not be matched successfully.
     *   `options.coordinates` **[Array][5]?** The coordinates this request will use, coordinates as `[{lon},{lat}]` values, in decimal degrees.
     *   `options.bearings` **[Array][5]?** Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
         Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
-    *   `options.hints` **[Array][5]?** Hints for the coordinate snapping. Array of base64 encoded strings.
-    *   `options.generate_hints` **[Boolean][4]** Whether or not adds a Hint to the response which can be used in subsequent requests. (optional, default `true`)
+    *   `options.hints` **[Array][5]?** Deprecated. This parameter is silently ignored.
     *   `options.steps` **[Boolean][4]** Return route steps for each route. (optional, default `false`)
     *   `options.annotations` **([Array][5] | [Boolean][4])** An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all. (optional, default `false`)
     *   `options.geometries` **[String][3]** Returned route geometry format (influences overview and per step). Can also be `geojson`. (optional, default `polyline`)
@@ -295,8 +291,7 @@ Right now, the following combinations are possible:
     *   `options.bearings` **[Array][5]?** Limits the search to segments with given bearing in degrees towards true north in clockwise direction.
         Can be `null` or an array of `[{value},{range}]` with `integer 0 .. 360,integer 0 .. 180`.
     *   `options.radiuses` **[Array][5]?** Limits the coordinate snapping to streets in the given radius in meters. Can be `double >= 0` or `null` (unlimited, default).
-    *   `options.hints` **[Array][5]?** Hints for the coordinate snapping. Array of base64 encoded strings.
-    *   `options.generate_hints` **[Boolean][4]** Whether or not adds a Hint to the response which can be used in subsequent requests. (optional, default `true`)
+    *   `options.hints` **[Array][5]?** Deprecated. This parameter is silently ignored.
     *   `options.steps` **[Boolean][4]** Return route steps for each route. (optional, default `false`)
     *   `options.annotations` **([Array][5] | [Boolean][4])** An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all. (optional, default `false`)
     *   `options.geometries` **[String][3]** Returned route geometry format (influences overview and per step). Can also be `geojson`. (optional, default `polyline`)
